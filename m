@@ -2,126 +2,90 @@ Return-Path: <SRS0=4gsO=O4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 778F6C43387
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 16:48:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A097C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 17:09:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 513DD217D9
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 16:48:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAB33218D8
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Dec 2018 17:09:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729882AbeLSQsF convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Dec 2018 11:48:05 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:39681 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728797AbeLSQsF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Dec 2018 11:48:05 -0500
-Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 1FF03206FF; Wed, 19 Dec 2018 17:48:02 +0100 (CET)
-Received: from xps13 (aaubervilliers-681-1-38-38.w90-88.abo.wanadoo.fr [90.88.157.38])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 8AC842039F;
-        Wed, 19 Dec 2018 17:48:01 +0100 (CET)
-Date:   Wed, 19 Dec 2018 17:48:01 +0100
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     Marek =?UTF-8?B?QmVow7pu?= <marek.behun@nic.cz>
-Cc:     Nadav Haklai <nadavh@marvell.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>
-Subject: Re: [PATCH v2 03/12] PCI: aardvark: Add PHY support
-Message-ID: <20181219174801.1d611436@xps13>
-In-Reply-To: <20181219162835.5ff9c33c@dellmb.labs.office.nic.cz>
-References: <20181212102142.16053-1-miquel.raynal@bootlin.com>
-        <20181212102142.16053-4-miquel.raynal@bootlin.com>
-        <20181214014701.373b220b@nic.cz>
-        <20181214015712.31f749ea@nic.cz>
-        <20181217170724.58421a29@xps13>
-        <20181217223430.182d01d8@nic.cz>
-        <20181218091817.4a8a5d42@xps13>
-        <20181218092314.725af970@xps13>
-        <20181218140920.6935db39@nic.cz>
-        <20181218144130.3f1a75de@xps13>
-        <20181219162835.5ff9c33c@dellmb.labs.office.nic.cz>
-Organization: Bootlin
-X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S1729316AbeLSRJS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Dec 2018 12:09:18 -0500
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:55815 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726555AbeLSRJS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Dec 2018 12:09:18 -0500
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id AE3822801BBD8;
+        Wed, 19 Dec 2018 18:09:15 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 6B22A1DD452; Wed, 19 Dec 2018 18:09:15 +0100 (CET)
+Date:   Wed, 19 Dec 2018 18:09:15 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Kedar A Dongre <kedar.a.dongre@intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH] PCI: Blacklist power management of Gigabyte X299
+ DESIGNARE EX PCIe ports
+Message-ID: <20181219170915.3bojdcf7h7kiesyu@wunner.de>
+References: <20181204112048.35378-1-mika.westerberg@linux.intel.com>
+ <20181217202827.GC28981@google.com>
+ <20181218085518.GI2469@lahna.fi.intel.com>
+ <20181218205850.GA12763@google.com>
+ <20181219132324.GS2469@lahna.fi.intel.com>
+ <20181219144518.GC12763@google.com>
+ <20181219151558.GU2469@lahna.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181219151558.GU2469@lahna.fi.intel.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Marek,
-
-Marek Behún <marek.behun@nic.cz> wrote on Wed, 19 Dec 2018 16:28:35
-+0100:
-
-> Hi,
-> 
-> One thing for which I would like to be able to disable comphy is that
-> each consumes about 100mW of power. On Turris Mox we configure the
-> comphys to SGMII1, PCIe and USB3 modes. If there is no USB device
-> plugged, the USB3 phy can be disabled, and save 100mW of power. If the
-> PCIe extension module is not present, the PCIe can too be disabled, and
-> if there is no switch nor SFP module present, so can SGMII1.
-
-Indeed not all PHY types implement ->power_off() (see in ATF code).
-Better ask Marvell directly for that.
-
-> 
-> The other reason is this: if the SGMII phy is set to 1G mode, and then
-> powered on second time in 2.5G mode, will it work? I would like to
-
-This should work, yes.
-
-> patch mvneta driver to power on/off the comphy, if the device node is
-> present in device tree. But then the system can request such a change
-> (SGMII to 2500BASE-X or back).
-> 
-> Marek
-> 
-> On Tue, 18 Dec 2018 14:41:30 +0100
-> Miquel Raynal <miquel.raynal@bootlin.com> wrote:
-> 
-> > Hi Marek,
-> > 
-> > Marek Behun <marek.behun@nic.cz> wrote on Tue, 18 Dec 2018 14:09:20
-> > +0100:
-> >   
-> > > > [2]
-> > > > https://github.com/ARM-software/arm-trusted-firmware/blob/master/drivers/marvell/comphy/phy-comphy-3700.c      
+On Wed, Dec 19, 2018 at 05:15:58PM +0200, Mika Westerberg wrote:
+> On Wed, Dec 19, 2018 at 08:45:19AM -0600, Bjorn Helgaas wrote:
+> > On Wed, Dec 19, 2018 at 03:23:24PM +0200, Mika Westerberg wrote:
+> > > On Tue, Dec 18, 2018 at 02:58:50PM -0600, Bjorn Helgaas wrote:
+> > > > > > For example, it looks like PCI_EXP_FLAGS_SLOT is set, but Linux
+> > > > > > basically ignores it.  Maybe if PCI_EXP_FLAGS_SLOT is set but we
+> > > > > > aren't using pciehp, we should assume any hotplug would be handled via
+> > > > > > acpiphp?  And in that case, we should avoid doing anything that would
+> > > > > > prevent platform firmware from enumerating things below the bridge?
 > > > 
-> > > Yes, I used mainline atf (it did not work out of the box with 18.09
-> > > atf-marvell of course). But there is no _power_off function for
-> > > SGMII, nor a digital_reset function like in cp110 implementation.    
+> > > Actually it looks like it would break power management of other
+> > > components such as xHCI and Thunderbolt controller which are connected
+> > > to a downstream port that has "Slot implemented" set as well.
 > > 
-> > Indeed, but why would you need one? Just use the helpers from the core
-> > and if there is no implementation, nothing should happen and the
-> > helper should exit without error. Just call
-> > phy_set_mode()/phy_power_on() an you should be good.
-> > 
-> > 
-> > Thanks,
-> > Miquèl  
+> > To be precise, I think you mean that if we avoided power management on
+> > ports with "Slot Implemented", ports leading to xHCI and Thunderbolt
+> > would consume more power but would work correctly, right?  And the
+> > theory is that those ports work even if the OS puts them into D3
+> > because the firmware is smart enough to wake them up before poking
+> > things below them?  Doesn't that make the port's power state out of
+> > sync with what the OS thinks it is?
 > 
+> I think better example where this fails is normal Thunderbolt device
+> (not host) which includes PCIe switch and there is an PCIe endpoint, say
+> network interface connected to one of the downstream ports. That
+> downstream port has "Slot implemented" set but is not hotplug capable.
+> 
+> So the device would work correctly but if you take the recent "Runtime
+> D3, RTD3" system such as Lenovo Carbon X1 6th gen it keeps the whole
+> PCIe hierarchy from entering D3cold. I would rather not to break that ;-)
 
-For the record, I found out what was wrong in my code, toggling the
-reset lines do not produce random effects anymore.
-
+Yeah but as you say, those are Downstream Ports.  What if you constrain
+it to Root Ports?
 
 Thanks,
-Miquèl
+
+Lukas
