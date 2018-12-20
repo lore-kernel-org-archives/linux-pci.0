@@ -2,138 +2,135 @@ Return-Path: <SRS0=yvM8=O5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7383C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 18:20:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90487C43387
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 19:50:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB2F3218EA
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 18:20:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62A0F218D3
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 19:50:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545330051;
-	bh=xOUnmiNRx5wLcPgA8iSEH0hBpM+bMV4YzNGQIl86Ftw=;
+	s=default; t=1545335402;
+	bh=CfjC8duhK8Hp21eeKdeGvDK/DSapzWMqpqZLC8LNDxQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=mmxzXec6vKx1lUX29uWYBAQ5liu+cqz+F9twujHteuSbPJFpCh5+257q/HdVPqDvr
-	 Ym2d90/qN59MUaojItQtCmacCq/JJWDSK9si2sEVXjOezM03gVdNaAgnQ/w0UjLQV+
-	 /Pjo5QfOQrVjwwuH8SHGt9v/cdF0A8MDYV1NVm3c=
+	b=bYQKAuFAa+s3ToBNAaYbhqn1LlrPDJaA/J9fNPLM1hj16Yyh5MwX3pS1bopgrjcEP
+	 YDcYXRwTAsLFsKkysYcX6MBErSOclpWiRZFPaRmHCVX3Vcap4LgLugsiauykKReFZ2
+	 4SyEp2Nr8Ce39S5EmsVn84yXHe4nAp7ccuH69SlM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388689AbeLTSUq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Dec 2018 13:20:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55284 "EHLO mail.kernel.org"
+        id S1728613AbeLTTt4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Dec 2018 14:49:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49440 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729178AbeLTSUp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Dec 2018 13:20:45 -0500
-Received: from localhost (173-25-171-118.client.mchsi.com [173.25.171.118])
+        id S1728528AbeLTTt4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Dec 2018 14:49:56 -0500
+Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A6556218D9;
-        Thu, 20 Dec 2018 18:20:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 89AD0218D3;
+        Thu, 20 Dec 2018 19:49:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545330044;
-        bh=xOUnmiNRx5wLcPgA8iSEH0hBpM+bMV4YzNGQIl86Ftw=;
+        s=default; t=1545335394;
+        bh=CfjC8duhK8Hp21eeKdeGvDK/DSapzWMqpqZLC8LNDxQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=As0NrL4Jd7yKG7guJpbus72PT70Ir4V6cEelpFtEU53Dway9QBZrH1mtcx9xrrJnz
-         0bnW71MnlNW+dJjSu7F7+455x3xqy500vH5/yEIJfeQl67qJcEE1nr0rj1MA9OgUGk
-         FSD8xToTZpIf9V+tLTEHYdJkQLI7WsheYtT5Me44=
-Date:   Thu, 20 Dec 2018 12:20:43 -0600
+        b=SpN8s6sXczIwhk51ja3KV830FBvSZ72vh+WdT1oatM0XTAi2bOCV5Kz08mwQXyN7m
+         uLRo+yrFgEayJLJRS0I3f5S1BR4JZW2meW3LqxFgfR32JMHVXuE4/eVNaoOP5+YRWF
+         He1mZMMtfi13hz2qRnO1wygc5/peuovcy7V0BhhY=
+Date:   Thu, 20 Dec 2018 13:49:50 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jianjun Wang <jianjun.wang@mediatek.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        ryder.lee@mediatek.com, robh+dt@kernel.org, matthias.bgg@gmail.com,
-        linux-pci@vger.kernel.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, youlin.pei@mediatek.com,
-        linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        honghui.zhang@mediatek.com, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/2] PCI: mediatek: Add controller support for MT7629
-Message-ID: <20181220182043.GC183878@google.com>
-References: <1544058553-10936-1-git-send-email-jianjun.wang@mediatek.com>
- <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
- <20181213145517.GB4701@google.com>
- <1545034779.8528.8.camel@mhfsdcap03>
- <20181217143247.GK20725@google.com>
- <20181217154645.GA24864@e107981-ln.cambridge.arm.com>
- <1545124764.25199.3.camel@mhfsdcap03>
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, xuyandong <xuyandong2@huawei.com>,
+        stable@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+        Jesse Barnes <jbarnes@virtuousgeek.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: avoid bridge feature re-probing on hotplug
+Message-ID: <20181220194950.GD183878@google.com>
+References: <20181218004455.20186-1-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1545124764.25199.3.camel@mhfsdcap03>
+In-Reply-To: <20181218004455.20186-1-mst@redhat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 05:19:24PM +0800, Jianjun Wang wrote:
-> On Mon, 2018-12-17 at 15:46 +0000, Lorenzo Pieralisi wrote:
-> > On Mon, Dec 17, 2018 at 08:32:47AM -0600, Bjorn Helgaas wrote:
-> > > On Mon, Dec 17, 2018 at 04:19:39PM +0800, Jianjun Wang wrote:
-> > > > On Thu, 2018-12-13 at 08:55 -0600, Bjorn Helgaas wrote:
-> > > > > On Thu, Dec 06, 2018 at 09:09:13AM +0800, Jianjun Wang wrote:
-> > > > > > The read value of BAR0 is 0xffff_ffff, it's size will be
-> > > > > > calculated as 4GB in arm64 but bogus alignment values at
-> > > > > > arm32, the pcie device and devices behind this bridge will
-> > > > > > not be enabled. Fix it's BAR0 resource size to guarantee
-> > > > > > the pcie devices will be enabled correctly.
-> > > > > 
-> > > > > So this is a hardware erratum?  Per spec, a memory BAR has
-> > > > > bit 0 hardwired to 0, and an IO BAR has bit 1 hardwired to
-> > > > > 0.
-> > > > 
-> > > > Yes, it only works properly on 64bit platform.
-> > > 
-> > > I don't understand.  BARs are supposed to work the same
-> > > regardless of whether it's a 32- or 64-bit platform.  If this is
-> > > a workaround for a hardware defect, please just say that
-> > > explicitly.
-> > 
-> > I do not understand this either. First thing to do is to describe
-> > the problem properly so that we can actually find a solution to
-> > it.
+Hi Michael,
+
+On Mon, Dec 17, 2018 at 07:45:41PM -0500, Michael S. Tsirkin wrote:
+> commit 1f82de10d6b1 ("PCI/x86: don't assume prefetchable ranges are 64bit")
+> added probing of bridge support for 64 bit memory each time bridge is
+> re-enumerated.
 > 
-> This BAR0 is a 64-bit memory BAR, the HW default values for this BAR
-> is 0xffff_ffff_0000_0000 and it could not be changed except by
-> config write operation.
-
-If you literally get 0xffff_ffff_0000_0000 when reading the BAR, that
-is out of spec because the low-order 4 bits of a 64-bit memory BAR
-cannot all be zero.
-
-A 64-bit BAR consumes two DWORDS in config space.  For a 64-bit BAR0,
-the DWORD at 0x10 contains the low-order bits, and the DWORD at 0x14
-contains the upper 32 bits.  Bits 0-3 of the low-order DWORD (the
-one at 0x10) are read-only, and in this case should contain the value
-0b1100 (0xc).  That means the range is prefetchable (bit 3 == 1) and
-the BAR is 64 bits (bits 2:1 == 10).
-
-> The calculated BAR size will be 0 in 32-bit platform since the
-> phys_addr_t is a 32bit value in 32-bit platform.
-
-Either (1) this is a hardware defect that feeds incorrect data to the
-BAR size calculation, or (2) there's a problem in the BAR size
-calculation code.  We need to figure out which one and work around or
-fix it correctly.
-
-> Actually MediaTek's HW does not using this BAR0, just omit it when
-> assign resource is totally fine.
-
-It's totally fine to work around hardware defects, but we have to
-clearly understand the problem so we do it correctly.  For example, we
-probably can't just clear out the BAR0 resource in the pci_dev,
-because the BAR in the hardware device still contains a value, and if
-we enable memory decoding for the device, it will still respond to the
-region described by the BAR.
-
-> When assign the resource for each device, software will check the
-> resource alignment first, and the resource of length zero will be
-> regarded as a bogus alignment resource, it will be ignored and won't
-> claim a resource parent for it.
+> Unfortunately this probing is destructive if any device behind
+> the bridge is in use at this time.
 > 
-> When drivers try to enable the PCIe devices, the software will enable
-> it's resources, but it will return an error number when found a
-> unclaimed resource, in that case, the flow of enable devices will be
-> interrupted and PCIe devices won't work properly.
+> This was observed in the field, see
+> https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg01711.html
+> and specifically
+> https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
 > 
-> Thanks.
+> There's no real need to re-probe the bridge features as the
+> registers in question never change - detect that using
+> the memory flag being set (it's always set on the 1st pass since
+> all PCI2PCI bridges support memory forwarding) and skip the probing.
+> Thus, only the first call will perform the disruptive probing and sets
+> the resource flags as required - which we can be reasonably sure happens
+> before any devices have been configured.
+> Avoiding repeated calls to pci_bridge_check_ranges might be even nicer.
+> Unfortunately I couldn't come up with a clean way to do it without a
+> major probing code refactoring.
+
+I'm OK with major probe code refactoring as long as it's done
+carefully.  Doing a special-case fix like this solves the immediate
+problem but adds to the long-term maintenance problem.
+
+As far as I can tell, everything in pci_bridge_check_ranges() should
+be done once at enumeration-time, e.g., in the pci_read_bridge_bases()
+path, and pci_bridge_check_ranges() itself should be removed.
+
+If that turns out to be impossible for some reason, we need a comment
+explaining why.
+
+> Reported-by: xuyandong <xuyandong2@huawei.com>
+> Tested-by: xuyandong <xuyandong2@huawei.com>
+> Cc: stable@vger.kernel.org
+> Cc: Yinghai Lu <yinghai@kernel.org>
+> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
 > 
+> Please review and consider for stable.
+> 
+> changes from v1:
+> 	comment and commit log updates to address comments by Bjorn.
+> 
+>  drivers/pci/setup-bus.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index ed960436df5e..d5c25d465d97 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -741,6 +741,16 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
+>  	struct resource *b_res;
+>  
+>  	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+> +
+> +	/*
+> +	 * Don't re-check after this was called once already:
+> +	 * important since bridge might be in use.
+> +	 * Note: this is only reliable because as per spec all PCI to PCI
+> +	 * bridges support memory unconditionally so IORESOURCE_MEM is set.
+> +	 */
+> +	if (b_res[1].flags & IORESOURCE_MEM)
+> +		return;
+> +
+>  	b_res[1].flags |= IORESOURCE_MEM;
+>  
+>  	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> -- 
+> MST
