@@ -2,126 +2,136 @@ Return-Path: <SRS0=yvM8=O5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21F6DC43387
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 14:50:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED453C43387
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 15:00:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDEA22186A
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 14:50:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2FE9218D3
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 15:00:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1545318017;
+	bh=PgdcFzzFJRfg9e6GuRKfjwKRt1qszJo4vAoki4ZdPow=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=XjKdjshIz4N5Fl0tuXMi7uhyuUmgCeQEpw4zMKlqVQNLtbloLag+3+r/qRsGHgnGv
+	 KP+Q4/BFbdSrXKq3M6WPwuRQxCcOpALBC0+aGqCpXcwJuhcjA7Oa4yfVeCkWOzyQKR
+	 B5Dr/++Ao1Txa59HZxO+3nyJYLOm/cANPovvQaJo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728528AbeLTOuH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Dec 2018 09:50:07 -0500
-Received: from foss.arm.com ([217.140.101.70]:57248 "EHLO foss.arm.com"
+        id S1728307AbeLTPAQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Dec 2018 10:00:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41194 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727972AbeLTOuH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Dec 2018 09:50:07 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 932BFA78;
-        Thu, 20 Dec 2018 06:50:06 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 39AA43F575;
-        Thu, 20 Dec 2018 06:50:05 -0800 (PST)
-Date:   Thu, 20 Dec 2018 14:49:56 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Richard Zhu <hongxing.zhu@nxp.com>
-Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [v5] PCI: imx: make msi work without CONFIG_PCIEPORTBUS=y
-Message-ID: <20181220144956.GA7041@e107981-ln.cambridge.arm.com>
-References: <1545193599-11604-1-git-send-email-hongxing.zhu@nxp.com>
+        id S1725681AbeLTPAQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Dec 2018 10:00:16 -0500
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 86A48218D4;
+        Thu, 20 Dec 2018 15:00:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1545318015;
+        bh=PgdcFzzFJRfg9e6GuRKfjwKRt1qszJo4vAoki4ZdPow=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=pdnUMcCFDBFzHEAMdpyHRqX9GgShwKo+QWg59/9Oe4NJ82DCoTOfLtLzZYMANPtwQ
+         L0sUq2vX5mD6Af6yxTOnQuLhXBpFkmQnsid16WJWPW1iqe/fF8awRHmT6MQ7y6YWYx
+         uTqdoLMVoIEznpEq3UtzC3+ivOhjCz4zQIY5fcgI=
+Received: by mail-qt1-f182.google.com with SMTP id n21so2087877qtl.6;
+        Thu, 20 Dec 2018 07:00:15 -0800 (PST)
+X-Gm-Message-State: AA+aEWZD9ZHfvcQaslGzxG/VXmjuRWEdT70KEsKyW5DwZHqucR/NtYdH
+        jX1DIFWQD/fMmHqQCC4HYheZb7t44w32ujKQ6A==
+X-Google-Smtp-Source: AFSGD/UI6ZKZCM3DWOK3vRuT6L0eQh3X21IsbTvynvSnAaNVyobUIJbREiqUsj9quGSzKi6VGzTplbsMOKm35Uj5ark=
+X-Received: by 2002:a0c:f212:: with SMTP id h18mr26745039qvk.106.1545318014699;
+ Thu, 20 Dec 2018 07:00:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1545193599-11604-1-git-send-email-hongxing.zhu@nxp.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+References: <20181218040702.29231-1-andrew.smirnov@gmail.com>
+ <20181218040702.29231-4-andrew.smirnov@gmail.com> <20181218151533.GA2922@bogus>
+ <VI1PR04MB5533533242C036C5CF6352BAEEBD0@VI1PR04MB5533.eurprd04.prod.outlook.com>
+ <CAL_JsqJb24ZpM7qQfy_F7RUVEGyceBAXOndbZcTMh3a__k38UQ@mail.gmail.com>
+ <CAHQ1cqEMxxo9JGN5be4XQWAtPz7nC2JyLCr3qasnD5QK7_hOYQ@mail.gmail.com> <1545268969.22930.77.camel@impinj.com>
+In-Reply-To: <1545268969.22930.77.camel@impinj.com>
+From:   Rob Herring <robh@kernel.org>
+Date:   Thu, 20 Dec 2018 09:00:01 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJBxZw225qqWfCFa8UqADtGOUCjFogo6Pb2bd8bKwz3nA@mail.gmail.com>
+Message-ID: <CAL_JsqJBxZw225qqWfCFa8UqADtGOUCjFogo6Pb2bd8bKwz3nA@mail.gmail.com>
+Subject: Re: [PATCH v3 3/3] PCI: imx6: Add support for i.MX8MQ
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     Lucas Stach <l.stach@pengutronix.de>,
+        Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Dong Aisheng <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        devicetree@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Dec 19, 2018 at 04:45:04AM +0000, Richard Zhu wrote:
-> Assertion of the MSI Enable bit of RC's MSI CAP is mandatory required to
-> trigger MSI on i.MX6 PCIe.
-> This bit would be asserted when CONFIG_PCIEPORTBUS=y.
-> Thus, the MSI works fine on i.MX6 PCIe before the commit "f3fdfc4".
-> 
-> Assert it unconditionally when MSI is enabled.
-> Otherwise, the MSI wouldn't be triggered although the EP is present and
-> the MSIs are assigned.
-> 
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
-> Changes v1 -> v2:
-> * Assert the MSI_EN unconditionally when MSI is supported.
-> Changes v2 -> v3:
-> * Remove the IS_ENABLED(CONFIG_PCI_MSI) since the driver depends on
-> PCI_MSI_IRQ_DOMAIN
-> * Extended with a check for pci_msi_enabled() to see if the user
-> explicitly want legacy IRQs
-> Changes v3 -> v4:
-> * Refer to Bjorn's comments, refine the subject and commit log and change
-> the PCI_MSI_CAP to PCIE_RC_IMX6_MSI_CAP.
-> Changes v4 -> v5:
-> * Correct one spell mistake from PCIE_RC_MSI_IMX6_CAP to
-> PCIE_RC_IMX6_MSI_CAP.
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index e563ca9..73542dd 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -82,6 +82,7 @@ struct imx6_pcie {
->  #define PHY_PLL_LOCK_WAIT_USLEEP_MAX	200
->  
->  /* PCIe Root Complex registers (memory-mapped) */
-> +#define PCIE_RC_IMX6_MSI_CAP			0x50
->  #define PCIE_RC_LCR				0x7c
->  #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1	0x1
->  #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2	0x2
-> @@ -999,6 +1000,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  	struct resource *dbi_base;
->  	struct device_node *node = dev->of_node;
->  	int ret;
-> +	u16 val;
->  
->  	imx6_pcie = devm_kzalloc(dev, sizeof(*imx6_pcie), GFP_KERNEL);
->  	if (!imx6_pcie)
-> @@ -1149,6 +1151,14 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  	if (ret < 0)
->  		return ret;
->  
-> +	if (pci_msi_enabled()) {
-> +		val = dw_pcie_readw_dbi(pci, PCIE_RC_IMX6_MSI_CAP +
-> +				PCI_MSI_FLAGS);
-> +		val |= PCI_MSI_FLAGS_ENABLE;
-> +		dw_pcie_writew_dbi(pci, PCIE_RC_IMX6_MSI_CAP +
-> +				PCI_MSI_FLAGS, val);
-> +	}
-> +
->  	return 0;
->  }
+On Wed, Dec 19, 2018 at 7:22 PM Trent Piepho <tpiepho@impinj.com> wrote:
+>
+> On Wed, 2018-12-19 at 16:47 -0800, Andrey Smirnov wrote:
+> >
+> > > > This series initially added explicit offsets but I suggested a single
+> > > > "controller-id" because:
+> > > >   * There are multiple bit and byte offsets
+> > > >   * Other imx8 SOCs also have 2x pcie with other bit/byte offsets
+> > > >
+> > > > Hiding this behind a compatible string and single "controller-id" seem
+> > > > preferable to elaborating register maps in dt bindings. It also makes
+> > > > upgrades simpler: if features are added which use other bits there is no
+> > > > need to describe them in DT and deal with compatibility headaches.
+> > >
+> > > You already have an id for the controllers: the address. Use that if
+> > > you don't want to put the register offsets in DT.
+> > >
+> >
+> > Lucas, are you on board with this?
+>
+> Does address here mean the address from the controller's reg property?
 
-Hi Richard,
+Yes.
 
-the patch is OK with me (even though I have to take for granted how the
-IMX MSI logic works), the commit log isn't. So please update it with
-Bjorn's version:
+> How do you map that address to the controller's index?  A giant table
+> of every soc so the soc type plus controller register address pair than
+> can be looked up in the driver?
 
-https://lore.kernel.org/linux-pci/20181219141241.GB12763@google.com/
+You only need the 2-Nth instance addresses. A non-matching address can
+be instance 0.
 
-*inclusive* of the Fixes: tag.
+> I.e., on iMX8MQ the controller at 0x33800000 is controller 0 and so on
+> for every possible SoC address combination?
+>
+> Not really a fan of that.
 
-With the commit log updated as per the link above:
+Well, this was not my first suggestion.
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> The situation here is that some registers for these controllers are
+> interleaved, right?  I.e., there's one register somewhere where bit 0
+> means enable controller 0 and bit 1 means enable controller 1 and so
+> on.
+
+So? The only difference here is an additional mapping step.
+
+> Isn't cell-index already the standard device tree property for this
+> kind of setup?
+>
+> I know cell-index was historically also (ab)used in an attempt to
+> provide a fixed kernel device enumeration order, something now handled
+> better by chosen node aliases.
+
+Don't use cell-index. Consider it a deprecated relic from OF that is
+not used on FDT (though there probably are some cases it did get
+used).
+
+Rob
