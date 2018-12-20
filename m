@@ -2,173 +2,66 @@ Return-Path: <SRS0=yvM8=O5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0E6EC43387
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 05:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B0DC43387
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 07:54:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A70D20815
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 05:55:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A783921720
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 07:54:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="HABeBbvN"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=verge.net.au header.i=@verge.net.au header.b="WdsHeC44"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729519AbeLTFzJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Dec 2018 00:55:09 -0500
-Received: from mail-eopbgr70070.outbound.protection.outlook.com ([40.107.7.70]:56681
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726716AbeLTFzJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Dec 2018 00:55:09 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OaPLmRewb4oIlWPTlK2mi+x78CxkW6vUFBrMhaAi5WA=;
- b=HABeBbvNLcR5F/5hsdACNdxRj2byhvcVWApIUx8n8TO0Qliw4BzbOif6VGiNpzF0ZFLR0zf7S9FRoed8YbnTcF835e+QRAttW2KOSXQoTNwEkqLwRuA/qbD1grP6kSy50xZ7rKGYnyW1KhsaPGEHYVPqLRuxFibX1wsYh0OnU4c=
-Received: from AM0PR0402MB3570.eurprd04.prod.outlook.com (52.133.46.11) by
- AM0PR0402MB3379.eurprd04.prod.outlook.com (52.133.45.12) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1425.22; Thu, 20 Dec 2018 05:52:07 +0000
-Received: from AM0PR0402MB3570.eurprd04.prod.outlook.com
- ([fe80::94f8:5fdd:f384:8af8]) by AM0PR0402MB3570.eurprd04.prod.outlook.com
- ([fe80::94f8:5fdd:f384:8af8%8]) with mapi id 15.20.1425.025; Thu, 20 Dec 2018
- 05:52:07 +0000
-From:   Richard Zhu <hongxing.zhu@nxp.com>
-To:     Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Smirnov <andrew.smirnov@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        Sven Van Asbroeck <thesven73@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Trent Piepho <tpiepho@impinj.com>
-Subject: RE: [v4] PCI: imx: make msi work without CONFIG_PCIEPORTBUS=y
-Thread-Topic: [v4] PCI: imx: make msi work without CONFIG_PCIEPORTBUS=y
-Thread-Index: AQHUk3htX9ByhenO70SYEZSF8G6UHqWGIt2AgAAbxoCAAOoa0A==
-Date:   Thu, 20 Dec 2018 05:52:07 +0000
-Message-ID: <AM0PR0402MB35709190DBBF8498237105838CBF0@AM0PR0402MB3570.eurprd04.prod.outlook.com>
-References: <1544768762-18124-1-git-send-email-hongxing.zhu@nxp.com>
-         <20181219141241.GB12763@google.com>
- <1545234725.5874.38.camel@pengutronix.de>
-In-Reply-To: <1545234725.5874.38.camel@pengutronix.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=hongxing.zhu@nxp.com; 
-x-originating-ip: [119.31.174.66]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM0PR0402MB3379;6:eIJM2o8sGlwVRYmmp5x+9umMbvMSz6cAU1WRgkNeJoTAUBfKmDUcMmD2UGRwfazpcgnbc/U8upSzalqRWfu80ZkWreIuzBbkQoRlWxvZ13XWgjGiRvQgMb1G1Z9JfXa/RY22FVHxDjp4zm9ALR/H20yiIvZjuB7R53HwPoe372p5inEtoPH1g+lLYamTs4I/P95X34oLR6I8hvZ+iH+FO/+EAjTFpPh+KgLXezNDJL6cV7fHhzm3DqM2fnLSQBhIA/gVwnKxLukxDqXl7KXIT8emqIOp0D7lGT+nDvSEE9qvBp/Nmywur7e8uV9pD6b2yU8//ZAIsinJBSrnz37tJfFdNhY5rRHqVDN+e+uqpLnjiYbkSxBDIJ270kYGyeO3j9TKtSkgGZnEkMQrR72z8aw+WFSVu0gUvnZlPk4e0jyQt4u/rt6BicR/GZJRQmGqs93q93qH33GiARImbB7gPA==;5:QYdkoBxxumXl7wtndXZFLQe4oOTQm9j5H+7QKgUQPTqpNIBkSskwLqUis877XEFMZxAiOn0snenUlgXMtdlKSPt8S7YHVgZdGn8GylONf3ZaqJeOMcpEoOIIaI78zkM6WC1tSdpgA/YwyFtt/Hj1trwSIx4kezlpoYe4RsCqQJg=;7:QaQbiL+0LI0pabIWNBTXzef7InH2BY45NaMvze/rJ6C9qwyQ5b6LJjn9QpCnBzxTNCfCYWSa7trcqBqjM/x8e50Fa6rDF1IdUGf8hqINETBmJ/BSbPRebXYt6clhKizCMG/4Lex3NeFLlrJmTQcajA==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: b4265b45-1f70-468e-a2d3-08d6663f46ca
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600074)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:AM0PR0402MB3379;
-x-ms-traffictypediagnostic: AM0PR0402MB3379:
-x-microsoft-antispam-prvs: <AM0PR0402MB3379B59333824D08E4411EAC8CBF0@AM0PR0402MB3379.eurprd04.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(8211001083)(3230021)(999002)(5005026)(6040522)(2401047)(8121501046)(3231475)(944501520)(52105112)(93006095)(93001095)(3002001)(10201501046)(6055026)(149066)(150057)(6041310)(20161123562045)(20161123558120)(20161123564045)(20161123560045)(201703131423095)(201702281528075)(20161123555045)(201703061421075)(201703061406153)(201708071742011)(7699051)(76991095);SRVR:AM0PR0402MB3379;BCL:0;PCL:0;RULEID:;SRVR:AM0PR0402MB3379;
-x-forefront-prvs: 0892FA9A88
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(376002)(366004)(346002)(136003)(39860400002)(13464003)(54534003)(199004)(189003)(81156014)(8676002)(105586002)(2906002)(8936002)(81166006)(33656002)(71200400001)(106356001)(99286004)(71190400001)(74316002)(476003)(486006)(305945005)(256004)(14444005)(7736002)(76176011)(66066001)(26005)(97736004)(68736007)(966005)(53546011)(53936002)(6506007)(11346002)(7416002)(14454004)(86362001)(102836004)(45080400002)(6436002)(186003)(110136005)(3846002)(54906003)(316002)(6116002)(25786009)(4326008)(7696005)(39060400002)(55016002)(229853002)(446003)(6306002)(9686003)(6246003)(5660300001)(478600001);DIR:OUT;SFP:1101;SCL:1;SRVR:AM0PR0402MB3379;H:AM0PR0402MB3570.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: nxp.com does not designate
- permitted sender hosts)
-x-microsoft-antispam-message-info: OcL7UkflOURgPGRd0mOmKLoN5EwV/+mORAJfHAEubqP3WoZJkSAAbosKyS/f49MTLo3TeC3gW+OT8cqO0fyM7SXcNvNy88YRGISS0Au4OWVlpsU5xpEIDJGc7GI2F+Jol1eiNa6aBihBoO2FLlXn9Ctaa6dQZC1MmWF3zvTKQ0Y6j/x/6Cz6tAPq3zf/1plNb3OoYTWvgJnsUy1j/Uc4f0a33McdfMIHZTDcEj3Uv0Pp8HtUfNw1j+ZdCyvymIBSPCU5NrrK10+7mKi/0DrSnVNpO5/PBtYO5+EmoQbOq4NLGEnjJoSpXjOzE1oJWaAo
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1730468AbeLTHyG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Dec 2018 02:54:06 -0500
+Received: from kirsty.vergenet.net ([202.4.237.240]:57826 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729907AbeLTHyF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Dec 2018 02:54:05 -0500
+Received: from penelope.horms.nl (softbank060150141248.bbtec.net [60.150.141.248])
+        by kirsty.vergenet.net (Postfix) with ESMTPA id 429BF25B770;
+        Thu, 20 Dec 2018 18:54:03 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=verge.net.au; s=mail;
+        t=1545292443; bh=45ty2YZkhogdS8nGfqTrMAo/uAr7LAV9nW8qyk7noTY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WdsHeC449lBKNmaEAKVAEyeNcqaxUUIO19kyjUxi/e24vmy3uJwD0h8xtTUIR1hgE
+         WojBSH/K5kqW2nDfVlWHrHlg7hkbCR5cGCbYwqPsW/6OKqWPEfXDj+u0g/Bcn/LZzE
+         qi28vMzvJSm/dpbcTybIDxPQhI78d4wy9bELhUU8=
+Received: by penelope.horms.nl (Postfix, from userid 7100)
+        id AB4F6E218FB; Wed, 19 Dec 2018 23:54:01 -0800 (PST)
+Date:   Thu, 20 Dec 2018 16:54:01 +0900
+From:   Simon Horman <horms@verge.net.au>
+To:     Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Chris Paterson <Chris.Paterson2@renesas.com>,
+        Biju Das <biju.das@bp.renesas.com>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH v2] dt-bindings: PCI: rcar: Add device tree support for
+ r8a774c0
+Message-ID: <20181220075401.dkm6vh3de5jsd6kx@verge.net.au>
+References: <1545134562-22450-1-git-send-email-fabrizio.castro@bp.renesas.com>
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b4265b45-1f70-468e-a2d3-08d6663f46ca
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Dec 2018 05:52:07.5461
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR0402MB3379
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1545134562-22450-1-git-send-email-fabrizio.castro@bp.renesas.com>
+Organisation: Horms Solutions BV
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGkgQmpvcm46DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjYXMg
-U3RhY2ggW21haWx0bzpsLnN0YWNoQHBlbmd1dHJvbml4LmRlXQ0KPiBTZW50OiAyMDE45bm0MTLm
-nIgxOeaXpSAyMzo1Mg0KPiBUbzogQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fhc0BrZXJuZWwub3JnPjsg
-UmljaGFyZCBaaHUNCj4gPGhvbmd4aW5nLnpodUBueHAuY29tPg0KPiBDYzogTG9yZW56byBQaWVy
-YWxpc2kgPGxvcmVuem8ucGllcmFsaXNpQGFybS5jb20+OyBBbmRyZXcgU21pcm5vdg0KPiA8YW5k
-cmV3LnNtaXJub3ZAZ21haWwuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gbGlu
-dXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
-YWQub3JnOyBTdmVuIFZhbg0KPiBBc2Jyb2VjayA8dGhlc3ZlbjczQGdtYWlsLmNvbT47IE5pa2xh
-cyBDYXNzZWwgPG5pa2xhcy5jYXNzZWxAYXhpcy5jb20+Ow0KPiBLaXNob24gVmlqYXkgQWJyYWhh
-bSBJIDxraXNob25AdGkuY29tPjsgR3VzdGF2byBQaW1lbnRlbA0KPiA8Z3VzdGF2by5waW1lbnRl
-bEBzeW5vcHN5cy5jb20+OyBTaGF3biBMaW4gPHNoYXduLmxpbkByb2NrLWNoaXBzLmNvbT47DQo+
-IFRyZW50IFBpZXBobyA8dHBpZXBob0BpbXBpbmouY29tPg0KPiBTdWJqZWN0OiBSZTogW3Y0XSBQ
-Q0k6IGlteDogbWFrZSBtc2kgd29yayB3aXRob3V0IENPTkZJR19QQ0lFUE9SVEJVUz15DQo+IA0K
-PiBBbSBNaXR0d29jaCwgZGVuIDE5LjEyLjIwMTgsIDA4OjEyIC0wNjAwIHNjaHJpZWIgQmpvcm4g
-SGVsZ2FhczoNCj4gPiBbK2NjIFN2ZW4sIFRyZW50LCBldCBhbCBmcm9tIHJlbGF0ZWQgcmVwb3J0
-Og0KPiA+IGh0dHBzOi8vZW1lYTAxLnNhZmVsaW5rcy5wcm90ZWN0aW9uLm91dGxvb2suY29tLz91
-cmw9aHR0cHMlM0ElMkYlMkZsb3INCj4gPg0KPiBlLmtlcm5lbC5vcmclMkZsaW51eC1wY2klMkYy
-MDE4MTIxODIxMDQ0NC41OTUwLTEtVGhlU3ZlbjczJTQwZ29vZ2xlDQo+IG1haQ0KPiA+DQo+IGwu
-Y29tJmFtcDtkYXRhPTAyJTdDMDElN0Nob25neGluZy56aHUlNDBueHAuY29tJTdDMDViYTNiNWJi
-NDJjDQo+IDRkYjliZjNiDQo+ID4NCj4gMDhkNjY1YzlmMTdiJTdDNjg2ZWExZDNiYzJiNGM2ZmE5
-MmNkOTljNWMzMDE2MzUlN0MwJTdDMCU3QzYzNg0KPiA4MDgzMTUzNDcNCj4gPg0KPiA3ODA0NjYm
-YW1wO3NkYXRhPXRhN2ZmajlFUEdvcUFqRGlTMU9SdlI2NUEySWhNVXBiMkVuZHo5JTJCNnpNNA0K
-PiAlM0QmYW1wOw0KPiA+IHJlc2VydmVkPTBdDQo+ID4NCj4gPiBPbiBGcmksIERlYyAxNCwgMjAx
-OCBhdCAwNjo0NDoxNUFNICswMDAwLCBSaWNoYXJkIFpodSB3cm90ZToNCj4gPiA+IEFzc2VydGlv
-biBvZiB0aGUgTVNJIEVuYWJsZSBiaXQgb2YgUkMncyBNU0kgQ0FQIGlzIG1hbmRhdG9yeQ0KPiA+
-ID4gcmVxdWlyZWQgdG8gdHJpZ2dlciBNU0kgb24gaS5NWDYgUENJZS4NCj4gPiA+IFRoaXMgYml0
-IHdvdWxkIGJlIGFzc2VydGVkIHdoZW4gQ09ORklHX1BDSUVQT1JUQlVTPXkuDQo+ID4gPiBUaHVz
-LCB0aGUgTVNJIHdvcmtzIGZpbmUgb24gaS5NWDYgUENJZSBiZWZvcmUgdGhlIGNvbW1pdCAiZjNm
-ZGZjNCIuDQo+ID4gPg0KPiA+ID4gQXNzZXJ0IGl0IHVuY29uZGl0aW9uYWxseSB3aGVuIE1TSSBp
-cyBlbmFibGVkLg0KPiA+ID4gT3RoZXJ3aXNlLCB0aGUgTVNJIHdvdWxkbid0IGJlIHRyaWdnZXJl
-ZCBhbHRob3VnaCB0aGUgRVAgaXMgcHJlc2VudA0KPiA+ID4gYW5kIHRoZSBNU0lzIGFyZSBhc3Np
-Z25lZC4NCj4gPg0KPiA+IE9LLCBJIHRoaW5rIEkgZmluYWxseSB1bmRlcnN0YW5kIG1vc3Qgb2Yg
-d2hhdCdzIGdvaW5nIG9uLsKgwqBQbGVhc2UNCj4gPiBjaGVjayB0aGUgZm9sbG93aW5nIHBvc3Np
-YmxlIGNoYW5nZWxvZyB0ZXh0Og0KPiA+DQo+ID4gwqAgVGhlIE1TSSBFbmFibGUgYml0IGluIHRo
-ZSBNU0kgQ2FwYWJpbGl0eSAoUENJZSByNC4wLCBzZWMgNy43LjEuMikNCj4gPiDCoCBjb250cm9s
-cyB3aGV0aGVyIGEgRnVuY3Rpb24gY2FuIHJlcXVlc3Qgc2VydmljZSB1c2luZyBNU0kuDQo+ID4N
-Cj4gPiDCoCBpLk1YNiBSb290IFBvcnRzIGltcGxlbWVudCB0aGUgTVNJIENhcGFiaWxpdHkgYW5k
-IG1heSB1c2UgTVNJIHRvDQo+ID4gwqAgcmVxdWVzdCBzZXJ2aWNlIGZvciBldmVudHMgbGlrZSBQ
-TUUsIGhvdHBsdWcsIEFFUiwgZXRjLsKgwqBJbg0KPiA+IMKgIGFkZGl0aW9uLCBvbiBpLk1YNiwg
-dGhlIE1TSSBFbmFibGUgYml0IGNvbnRyb2xzIGRlbGl2ZXJ5IG9mIE1TSQ0KPiA+IMKgIGludGVy
-cnVwdHMgZnJvbSBjb21wb25lbnRzIGJlbG93IHRoZSBSb290IFBvcnQuDQo+ID4NCj4gPiDCoCBQ
-cmlvciB0byBmM2ZkZmM0YWMzYTIgKCJQQ0k6IFJlbW92ZSBob3N0IGRyaXZlciBLY29uZmlnIHNl
-bGVjdGlvbiBvZg0KPiA+IMKgIENPTkZJR19QQ0lFUE9SVEJVUyIpLCBlbmFibGluZyBDT05GSUdf
-UENJX0lNWDYgYXV0b21hdGljYWxseQ0KPiBhbHNvDQo+ID4gwqAgZW5hYmxlZCBDT05GSUdfUENJ
-RVBPUlRCVVMsIGFuZCB3aGVuIHBvcnRkcnYgY2xhaW1lZCB0aGUgUm9vdA0KPiBQb3J0cywNCj4g
-PiDCoCBpdCBzZXQgdGhlIE1TSSBFbmFibGUgYml0IHNvIGl0IGNvdWxkIHVzZSBQTUUsIGhvdHBs
-dWcsIEFFUiwgZXRjLg0KPiA+IMKgIEFzIGEgc2lkZSBlZmZlY3QsIHRoYXQgYWxzbyBlbmFibGVk
-IGRlbGl2ZXJ5IG9mIE1TSSBpbnRlcnJ1cHRzIGZyb20NCj4gPiDCoCBkb3duc3RyZWFtIGNvbXBv
-bmVudHMuDQo+ID4NCj4gPiDCoCBBZnRlciBmM2ZkZmM0YWMzYTIsIHRoZSBpbXg2cS1wY2llIGRy
-aXZlciBjYW4gb3BlcmF0ZSB3aXRob3V0DQo+ID4gwqAgcG9ydGRydiwgYnV0IHRoYXQgbWVhbnMg
-aW14NnEtcGNpZSBtdXN0IHNldCB0aGUgTVNJIEVuYWJsZSBiaXQNCj4gPiDCoCBpdHNlbGYgaWYg
-ZG93bnN0cmVhbSBjb21wb25lbnRzIHVzZSBNU0kuDQo+ID4NCj4gPiDCoCBGaXhlczogZjNmZGZj
-NGFjM2EyICgiUENJOiBSZW1vdmUgaG9zdCBkcml2ZXIgS2NvbmZpZyBzZWxlY3Rpb24gb2YNCj4g
-PiBDT05GSUdfUENJRVBPUlRCVVMiKQ0KPiA+DQo+ID4gSSBzdGlsbCBkb24ndCB1bmRlcnN0YW5k
-IGV4YWN0bHkgKmhvdyogTVNJIEVuYWJsZSBhZmZlY3RzIE1TSSBmcm9tDQo+ID4gZG93bnN0cmVh
-bSBjb21wb25lbnRzLCBzaW5jZSB0aGUgZG93bnN0cmVhbSBjb21wb25lbnQganVzdCBkb2VzIGEN
-Cj4gRE1BDQo+ID4gd3JpdGUsIGFuZCB0aGUgUm9vdCBQb3J0IGNhbid0IHRlbGwgd2hldGhlciB0
-aGUgd3JpdGUgaXMgdG8gbWVtb3J5IG9yDQo+ID4gaW50ZXJydXB0IGNvbnRyb2xsZXIgdW5sZXNz
-IHRoZSBSb290IFBvcnQga25vd3Mgd2hlcmUgdGhlIE1TSSB0YXJnZXRzDQo+ID4gYXJlLCBlLmcu
-LCBpZiB0aGUgaW50ZXJydXB0IGNvbnRyb2xsZXIgaXMgYWN0dWFsbHkgcGFydCBvZiB0aGUgUkMu
-DQo+DQpbUmljaGFyZCBaaHVdIFRoYW5rcyBhIGxvdCBmb3IgeW91ciBraW5kbHkgaGVscCB0byBj
-cmFmdCB0aGUgY29tbWl0IGxvZy4NCkknbSB0b3RhbGx5IGZpbmUgd2l0aCBpdC4NCkp1c3QgbGlr
-ZSBMdWNhcyBzYWlkIGJlbG93LCB0aGUgTVNJIHRyaWdnZXIgY29uZGl0aW9ucyBhcmUgcGFydCBv
-ZiB0aGUgZ2x1ZSBsb2dpYw0KV2hlbiBpbnRlZ3JhdGUgdGhpcyBJUCBpbnRvIGlNWDYgU09DLiAN
-ClRoZSBNU0kgRW5hYmxlIGJpdCBzZXQgb2YgUkMgaXMgb25lIG9mIHRoZSBtYW5kYXRvcnkgcmVx
-dWlyZWQgY29uZGl0aW9uIHRvDQp0cmlnZ2VyIE1TSSBmcm9tIEVQLg0KDQpCZXN0IFJlZ2FyZHMN
-ClJpY2hhcmQgWmh1DQogDQo+IFRoZSBjb250cm9sbGVyIHRlcm1pbmF0aW5nIHRoZSBNU0kgd3Jp
-dGUgaXMgcGFydCBvZiB0aGUgRFdDIFBDSWUgaG9zdA0KPiBjb250cm9sbGVyIG9uIGkuTVg2LCB3
-aGljaCBpcyBxdWVzdGlvbmFibGUgYXQgbGVhc3Qgd2hlbiB5b3UgdGhpbmsgYWJvdXQgaG93DQo+
-IGEgTVNJIHNob3VsZCBiZSBzZWxmLXN5bmNocm9uaXppbmcgdG8gbWVtb3J5IHdyaXRlcywgYnV0
-IHRoYXQncyByZWFsaXR5Li4uDQo+IA0KPiBBcyB0byB3aHkgdGhlIGNvbnRyb2xsZXIgbmVlZHMg
-dGhlIE1TSSBFbmFibGUgYml0IHNldCwgSSBoYXZlIG5vIGlkZWEuDQo+IEJ1dCB0aGVuIHRoZSBE
-V0MgY29udHJvbGxlciBpcyBrbm93biB0byBoYXZlIHNvbWUgZnVua3kgZGVzaWduIGxpbWl0YXRp
-b25zDQo+IHJlZ2FyZGluZyBNU0ksIGxpa2Ugbm90IGZvcndhcmRpbmcgbGVnYWN5IFBDSSBpbnRl
-cnJ1cHRzIGFueW1vcmUgd2hlbiBNU0kgaXMNCj4gZW5hYmxlZCwgc28gaXQncyBub3QgdG90YWxs
-eSBzdXJwcmlzaW5nIHRoYXQgd2UgbmVlZCBzb21lIHF1aXJreSBzZXR1cCBoZXJlLg0KPiANCj4g
-UmVnYXJkcywNCj4gTHVjYXMNCg==
+On Tue, Dec 18, 2018 at 12:02:42PM +0000, Fabrizio Castro wrote:
+> Add PCIe support for the RZ/G2E (a.k.a. R8A774C0).
+> 
+> Signed-off-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+
