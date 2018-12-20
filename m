@@ -2,82 +2,188 @@ Return-Path: <SRS0=yvM8=O5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8092C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 19:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28F21C43387
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 20:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6846621901
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 19:57:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC33E21905
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Dec 2018 20:07:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545335837;
-	bh=7pG6TAj/AzIf3A+xAqvvaDsdYDkro5cW52tehw4Phko=;
+	s=default; t=1545336473;
+	bh=5IJq36Mnqum9AvJT9vqPPi+IUGmFL1wkTL6Hzxs5Mkk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ZJFYZWmcEyk0LvbtnBR3wvv3JqPzhemHeq/0Wj7d4ihDyMnonZZT7N3/Z/iPrlmtv
-	 pIbJMDOrPV2SOw5rVqIdxJndwt4E6AnixLRJASVz6o2VaVPQdTUo/MDdWdFKcQiMHA
-	 0tnxi5vzRnyKCqkm+DEuGuDrFKQYcYujrMyzb1Rs=
+	b=AkjxQnis8lH/BCQu3qB560cxNKTRXeJm5bqvrmma8p3ZciB/AGoaegCptZVUhYHXB
+	 Zqi49hgpqA7vw1mGIiJ/gz9xIuXuQNST5f/0hjT3GiBlGglloLT+/4X3IfCsU9nysf
+	 rvVOqHMre9VAXEzfQlXPb1N3+7TxLpUSRu0rA/8k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731293AbeLTT5Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Dec 2018 14:57:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53280 "EHLO mail.kernel.org"
+        id S1731636AbeLTUHx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Dec 2018 15:07:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57426 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725372AbeLTT5Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Dec 2018 14:57:16 -0500
+        id S1728835AbeLTUHx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Dec 2018 15:07:53 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AABFD21773;
-        Thu, 20 Dec 2018 19:57:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F036D218FD;
+        Thu, 20 Dec 2018 20:07:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545335836;
-        bh=7pG6TAj/AzIf3A+xAqvvaDsdYDkro5cW52tehw4Phko=;
+        s=default; t=1545336472;
+        bh=5IJq36Mnqum9AvJT9vqPPi+IUGmFL1wkTL6Hzxs5Mkk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AU9rgW29BWE/rhOhr87N808AcL0678HftamCQSCzVdE1XyoVIe0R7fUjPIV7HLgY0
-         kDNk8EJiVkZV3yQk6PjqjBCsKOcs9yE0uK9gJuP/ucN18Az1+5kARHeJH+NQO3YAy2
-         ZAwsZveJeG1KjBtjfYBLyZE/nsbmGVqNTK8Bikzk=
-Date:   Thu, 20 Dec 2018 13:57:14 -0600
+        b=rJOdstN+nCAw+WU2+WNMgkx/Pzu9voi+dbJJSyjxDYnb8T1Zl7rC9J4L/YxQS4a1t
+         MU/R0AMcCBWc4rRRCjZOH8Uh5af2xOHYwud3tH7MZBd5FWth2zJEBeEEUt3GqCWXCm
+         9cbnLvM96oWX+kX7d9+LSKtYH5jdD/ekssAIkasI=
+Date:   Thu, 20 Dec 2018 14:07:50 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Dave Hansen <dave.hansen@intel.com>
-Cc:     Jonathan Cameron <jonathan.cameron@huawei.com>,
-        linux-pci@vger.kernel.org, x86@kernel.org, linuxarm@huawei.com,
-        Ingo Molnar <mingo@kernel.org>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>, martin@geanix.com
-Subject: Re: [PATCH V2] x86: Fix an issue with invalid ACPI NUMA config
-Message-ID: <20181220195714.GE183878@google.com>
-References: <20181211094737.71554-1-Jonathan.Cameron@huawei.com>
- <a5a938d3-ecc9-028a-3b28-610feda8f3f8@intel.com>
- <20181212093914.00002aed@huawei.com>
- <20181220151225.GB183878@google.com>
- <65f5bb93-b6be-d6dd-6976-e2761f6f2a7b@intel.com>
+To:     Sebastian Ott <sebott@linux.ibm.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Russell Currey <ruscur@russell.cc>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 1/2] PCI/IOV: provide flag to skip VF scanning
+Message-ID: <20181220200750.GF183878@google.com>
+References: <20181217173546.GA4106@infradead.org>
+ <20181218101650.23089-1-sebott@linux.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <65f5bb93-b6be-d6dd-6976-e2761f6f2a7b@intel.com>
+In-Reply-To: <20181218101650.23089-1-sebott@linux.ibm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 20, 2018 at 09:13:12AM -0800, Dave Hansen wrote:
-> On 12/20/18 7:12 AM, Bjorn Helgaas wrote:
-> >> Other than the error we might be able to use acpi_map_pxm_to_online_node
-> >> for this, or call both acpi_map_pxm_to_node and acpi_map_pxm_to_online_node
-> >> and compare the answers to verify we are getting the node we want?
-> > Where are we at with this?  It'd be nice to resolve it for v4.21, but
-> > it's a little out of my comfort zone, so I don't want to apply it
-> > unless there's clear consensus that this is the right fix.
+Hi Sebastian,
+
+On Tue, Dec 18, 2018 at 11:16:49AM +0100, Sebastian Ott wrote:
+> Provide a flag to skip scanning for new VFs after SRIOV enablement.
+> This can be set by implementations for which the VFs are already
+> reported by other means.
 > 
-> I still think the fix in this patch sweeps the problem under the rug too
-> much.  But, it just might be the best single fix for backports, for
-> instance.
+> Signed-off-by: Sebastian Ott <sebott@linux.ibm.com>
+> ---
+>  drivers/pci/iov.c   | 48 ++++++++++++++++++++++++++++++++++++------------
+>  include/linux/pci.h |  1 +
+>  2 files changed, 37 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 9616eca3182f..3aa115ed3a65 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -252,6 +252,27 @@ int __weak pcibios_sriov_disable(struct pci_dev *pdev)
+>  	return 0;
+>  }
+>  
+> +static int sriov_add_vfs(struct pci_dev *dev, u16 num_vfs)
+> +{
+> +	unsigned int i;
+> +	int rc;
+> +
+> +	if (dev->no_vf_scan)
+> +		return 0;
+> +
+> +	for (i = 0; i < num_vfs; i++) {
+> +		rc = pci_iov_add_virtfn(dev, i);
+> +		if (rc)
+> +			goto failed;
+> +	}
+> +	return 0;
+> +failed:
+> +	while (i--)
+> +		pci_iov_remove_virtfn(dev, i);
+> +
+> +	return rc;
+> +}
 
-Sounds like we should first find the best fix, then worry about how to
-backport it.  So I think we have a little more noodling to do, and
-I'll defer this for now.
+I think the strategy is fine, but can you restructure the patches
+like this:
 
-Bjorn
+  1) Factor out sriov_add_vfs() and sriov_dev_vfs().  This makes no
+     functional change at all.
+
+  2) Add dev->no_vf_scan, set it in the s390 pcibios_add_device(), and
+     test it in sriov_add_vfs(), and sriov_del_vfs().
+
+I think both pieces will be easier to review that way.
+
+>  static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  {
+>  	int rc;
+> @@ -337,21 +358,15 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	msleep(100);
+>  	pci_cfg_access_unlock(dev);
+>  
+> -	for (i = 0; i < initial; i++) {
+> -		rc = pci_iov_add_virtfn(dev, i);
+> -		if (rc)
+> -			goto failed;
+> -	}
+> +	rc = sriov_add_vfs(dev, initial);
+> +	if (rc)
+> +		goto err_pcibios;
+>  
+>  	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
+>  	iov->num_VFs = nr_virtfn;
+>  
+>  	return 0;
+>  
+> -failed:
+> -	while (i--)
+> -		pci_iov_remove_virtfn(dev, i);
+> -
+>  err_pcibios:
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+> @@ -368,17 +383,26 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	return rc;
+>  }
+>  
+> -static void sriov_disable(struct pci_dev *dev)
+> +static void sriov_del_vfs(struct pci_dev *dev)
+>  {
+> -	int i;
+>  	struct pci_sriov *iov = dev->sriov;
+> +	int i;
+>  
+> -	if (!iov->num_VFs)
+> +	if (dev->no_vf_scan)
+>  		return;
+>  
+>  	for (i = 0; i < iov->num_VFs; i++)
+>  		pci_iov_remove_virtfn(dev, i);
+> +}
+> +
+> +static void sriov_disable(struct pci_dev *dev)
+> +{
+> +	struct pci_sriov *iov = dev->sriov;
+> +
+> +	if (!iov->num_VFs)
+> +		return;
+>  
+> +	sriov_del_vfs(dev);
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+>  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 11c71c4ecf75..f70b9ccd3e86 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -405,6 +405,7 @@ struct pci_dev {
+>  	unsigned int	non_compliant_bars:1;	/* Broken BARs; ignore them */
+>  	unsigned int	is_probed:1;		/* Device probing in progress */
+>  	unsigned int	link_active_reporting:1;/* Device capable of reporting link active */
+> +	unsigned int	no_vf_scan:1;		/* Don't scan for VF's after VF enablement */
+>  	pci_dev_flags_t dev_flags;
+>  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>  
+> -- 
+> 2.13.4
+> 
