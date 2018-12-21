@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 728ACC43387
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EC87C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 331D421903
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E26F21903
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KTqzBDIw"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ShvpZPrv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387731AbeLUH14 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Dec 2018 02:27:56 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:41636 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387698AbeLUH14 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Dec 2018 02:27:56 -0500
-Received: by mail-pl1-f193.google.com with SMTP id u6so2104774plm.8;
-        Thu, 20 Dec 2018 23:27:55 -0800 (PST)
+        id S1730639AbeLUHaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Dec 2018 02:30:04 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:42665 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387631AbeLUH1y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Dec 2018 02:27:54 -0500
+Received: by mail-pf1-f196.google.com with SMTP id 64so2177445pfr.9;
+        Thu, 20 Dec 2018 23:27:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HjLeQTWp5O7b44WjnLWHOp2yQfeZyWOrOmzsZ5Uzh4Y=;
-        b=KTqzBDIwbk8ZHx2tP5xo+RJ6k0Rtiom1wUPdSfWrQLfmWAWIcDeb9pZBilfkdAy0L2
-         16e1Y+iBEIA2ewRbwsdjFjZj2+cvI0wWoN1bCikxwzltvLQVp0WzC+ehLcBuf1qQqpIK
-         HKwGJmRDYq8XLNMn76kI2T7ZeB174SgVkSwl0FiwW7Wnt/HKaEZ/qL1HcOQ2VtlAzwAR
-         JvyZdIN5aklji9Ik6z01yKMCx0d22urVSNlTu9nIJMZ3rTgYFacEs7JiEqfbEMHPYxMr
-         09UD9dXs2keLcKMbiFFjm22Hle8Px1eR5itAbRLp5WIhADejfBAm94pbaChoH+D3M3fJ
-         1u9Q==
+        bh=dUwToKhhL89vx1LjgzipUu4yk4Mqqx0vIAofTHjHZac=;
+        b=ShvpZPrvcZfDw0J1ASzD0s3YT+jY0oS1MadiUlCWWjzz5X5zDssoIvCHAloq9QV5xC
+         NjF1rpzikWkybtHcGu4YjiZKY4KAoohtfSZsMzW1qJB+ZSiDdNcHxyug7LkwUWD5OpTk
+         qmksrnvAHxMg9bf3m5lOM4e7opmqBfi2JuMtRoBinthmsui86Y5DvN1TzH8lKSWPBgWh
+         xCjIGY45Q6rwEo5Bm/5Vo8c6WxKZO2lCzUp0tchyY/Odxeyts6XvWLZjmlZhEtuekZCE
+         UlTYTDThf99GmmFa6/nTdxRaY+Jr7AJymU93pMSI6FDUAjJHf3J/K4+4q5TDxLV9RDrS
+         PerA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HjLeQTWp5O7b44WjnLWHOp2yQfeZyWOrOmzsZ5Uzh4Y=;
-        b=OJRTTHy645Yyisvzn78HW29sPGZRXJvVpI2nrJAUN5btnAwDMbCJWLApvbGiiSFl0O
-         gyQgVysFxTQjSDvnkQ0n343E4LzWSO34eWH6MKyL6cI4iL8mBn2vZjxjblXYlrRRuT6h
-         EfVGw7Rps1/X0ZRZ6Thf86AM5kxWWMXdFx9D4+QWT9NSwllaSJqC9LhDLo7B+6hFBxkF
-         PXSt5EOO9vyqc8BYYjE7A1SF6pgmKftok245dDrVappISnkEmU7iyRx7P7QjRL1/Kg2U
-         IPY4x/9MlRmjnGqPHBeuxCN3dTkPv8K5Tq6WVsdi1AiXH78j2E2AiyoWOSaMKjaMvxsz
-         gpNw==
-X-Gm-Message-State: AJcUukeDQfgV894tJOnimCftECO9X07Ha3Vh0kwOemWt68jB2vzu/cuR
-        ZYssStT5a8p+h2X7q4RkxnBEIwpE
-X-Google-Smtp-Source: ALg8bN7D4v9/OXU3SC/7OBc9bHk3mU9wKahu3Y3BLBBhoK5P7vGe6/FObat6UBE2nlztKwrrrd7oAA==
-X-Received: by 2002:a17:902:f64:: with SMTP id 91mr1437737ply.132.1545377274451;
-        Thu, 20 Dec 2018 23:27:54 -0800 (PST)
+        bh=dUwToKhhL89vx1LjgzipUu4yk4Mqqx0vIAofTHjHZac=;
+        b=EhpsuuXV3TGAN0ycM5PrmJo45kMjY11LpmvEhlhVIsjT6pCKX6RyGXt/xb6w9VpWNC
+         Ei8BK4jK/lM+HNykHA5SBx2fwCjbXWuj39fbXko+tYWOJ7cFobgi+1sQvotQ6+aBbWXC
+         O4DmIOl1ST7w1S4CDPOX5VTdbogj9fJG6RKuXbijCSffXI+5vN+TkMaeqEft36MdYwMX
+         YbLneWqEwBeUIDxgvkdkPC37y1+Xxb8s5M+RlXTPCqzo0853/5Td08IPWu3uisGSxtp1
+         OhqjOIDVxuYSqFNVGHQTxzjoheVj3Ph+7mV7CZM5Bc6hmnLi4sNKgrAIxiACWftPOMSC
+         3DwA==
+X-Gm-Message-State: AA+aEWZbgoYqRy3NlJ0sNLTYk8Tar61RClVoJic2UgR7wJ+65RiAbN/U
+        o7XSV6x//kl8T7lePq8RitF/O+0f
+X-Google-Smtp-Source: AFSGD/VUQQi8yisb9aoewB9+qE7nuQLuYz8kYTpt3NojM7V2vPNF3ZlRLRnTQ6Sz6/Yix3QYYdtGqw==
+X-Received: by 2002:a62:a99:: with SMTP id 25mr1380678pfk.121.1545377272845;
+        Thu, 20 Dec 2018 23:27:52 -0800 (PST)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id t90sm44971921pfj.23.2018.12.20.23.27.52
+        by smtp.gmail.com with ESMTPSA id t90sm44971921pfj.23.2018.12.20.23.27.51
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 20 Dec 2018 23:27:53 -0800 (PST)
+        Thu, 20 Dec 2018 23:27:52 -0800 (PST)
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
@@ -66,9 +66,9 @@ Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         "A.s. Dong" <aisheng.dong@nxp.com>,
         Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 08/21] PCI: designware: Share code for dw_pcie_rd/wr_other_conf()
-Date:   Thu, 20 Dec 2018 23:27:03 -0800
-Message-Id: <20181221072716.29017-9-andrew.smirnov@gmail.com>
+Subject: [PATCH 07/21] PCI: designware: Make use of IS_ALIGNED()
+Date:   Thu, 20 Dec 2018 23:27:02 -0800
+Message-Id: <20181221072716.29017-8-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181221072716.29017-1-andrew.smirnov@gmail.com>
 References: <20181221072716.29017-1-andrew.smirnov@gmail.com>
@@ -79,10 +79,9 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Default implementation of pcie_rd_other_conf() and
-dw_pcie_wd_other_conf() share more than 80% of their code. Move shared
-code into a dedicated subroutine and convert pcie_rd_other_conf() and
-dw_pcie_wd_other_conf() to use it. No functional change intended.
+Make the intent a bit more clear as well as get rid of explicit
+arithmetic by using IS_ALIGNED() to determine if "addr" is aligned to
+"size". No functional change intended.
 
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -98,107 +97,31 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- .../pci/controller/dwc/pcie-designware-host.c | 61 +++++++------------
- 1 file changed, 23 insertions(+), 38 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 721d60a5d9e4..8f957cd6901b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -512,8 +512,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	return ret;
- }
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 93ef8c31fb39..67236379c61a 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -22,7 +22,7 @@
  
--static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
--				 u32 devfn, int where, int size, u32 *val)
-+static int dw_pcie_access_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-+				     u32 devfn, int where, int size, u32 *val,
-+				     bool write)
+ int dw_pcie_read(void __iomem *addr, int size, u32 *val)
  {
- 	int ret, type;
- 	u32 busdev, cfg_size;
-@@ -521,9 +522,6 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	void __iomem *va_cfg_base;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	if ((uintptr_t)addr & (size - 1)) {
++	if (!IS_ALIGNED((uintptr_t)addr, size)) {
+ 		*val = 0;
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 	}
+@@ -43,7 +43,7 @@ int dw_pcie_read(void __iomem *addr, int size, u32 *val)
  
--	if (pp->ops->rd_other_conf)
--		return pp->ops->rd_other_conf(pp, bus, devfn, where, size, val);
--
- 	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
- 		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
- 
-@@ -542,7 +540,11 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_read(va_cfg_base + where, size, val);
-+	if (write)
-+		ret = dw_pcie_write(va_cfg_base + where, size, *val);
-+	else
-+		ret = dw_pcie_read(va_cfg_base + where, size, val);
-+
- 	if (pci->num_viewport <= 2)
- 		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
- 					  PCIE_ATU_TYPE_IO, pp->io_base,
-@@ -551,43 +553,26 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	return ret;
- }
- 
-+static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-+				 u32 devfn, int where, int size, u32 *val)
-+{
-+	if (pp->ops->rd_other_conf)
-+		return pp->ops->rd_other_conf(pp, bus, devfn, where,
-+					      size, val);
-+
-+	return dw_pcie_access_other_conf(pp, bus, devfn, where, size, val,
-+					 false);
-+}
-+
- static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 				 u32 devfn, int where, int size, u32 val)
+ int dw_pcie_write(void __iomem *addr, int size, u32 val)
  {
--	int ret, type;
--	u32 busdev, cfg_size;
--	u64 cpu_addr;
--	void __iomem *va_cfg_base;
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--
- 	if (pp->ops->wr_other_conf)
--		return pp->ops->wr_other_conf(pp, bus, devfn, where, size, val);
--
--	busdev = PCIE_ATU_BUS(bus->number) | PCIE_ATU_DEV(PCI_SLOT(devfn)) |
--		 PCIE_ATU_FUNC(PCI_FUNC(devfn));
-+		return pp->ops->wr_other_conf(pp, bus, devfn, where,
-+					      size, val);
+-	if ((uintptr_t)addr & (size - 1))
++	if (!IS_ALIGNED((uintptr_t)addr, size))
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
  
--	if (bus->parent->number == pp->root_bus_nr) {
--		type = PCIE_ATU_TYPE_CFG0;
--		cpu_addr = pp->cfg0_base;
--		cfg_size = pp->cfg0_size;
--		va_cfg_base = pp->va_cfg0_base;
--	} else {
--		type = PCIE_ATU_TYPE_CFG1;
--		cpu_addr = pp->cfg1_base;
--		cfg_size = pp->cfg1_size;
--		va_cfg_base = pp->va_cfg1_base;
--	}
--
--	dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
--				  type, cpu_addr,
--				  busdev, cfg_size);
--	ret = dw_pcie_write(va_cfg_base + where, size, val);
--	if (pci->num_viewport <= 2)
--		dw_pcie_prog_outbound_atu(pci, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_IO, pp->io_base,
--					  pp->io_bus_addr, pp->io_size);
--
--	return ret;
-+	return dw_pcie_access_other_conf(pp, bus, devfn, where, size, &val,
-+					 true);
- }
- 
- static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
+ 	if (size == 4)
 -- 
 2.19.1
 
