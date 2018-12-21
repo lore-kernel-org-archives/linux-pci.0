@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97BF8C43387
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA52C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:28:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 651B821903
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:28:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FD5621903
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:28:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bLSqRc9d"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TLiKURRB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388601AbeLUH2W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Dec 2018 02:28:22 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:38951 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388687AbeLUH2T (ORCPT
+        id S1729744AbeLUH22 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Dec 2018 02:28:28 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:36754 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388661AbeLUH2T (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Dec 2018 02:28:19 -0500
-Received: by mail-pf1-f196.google.com with SMTP id r136so2180675pfc.6;
-        Thu, 20 Dec 2018 23:28:19 -0800 (PST)
+Received: by mail-pf1-f195.google.com with SMTP id b85so2188412pfc.3;
+        Thu, 20 Dec 2018 23:28:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8dhLzSnPx3HKyxwtCcSuNx1W6yfU30Y/Wfx+1/N/Vew=;
-        b=bLSqRc9dwd9ei5Ve+zw/9pLETxqpu8pBnK9BeL8a2X3DonypYSPOmVeYpocbvhAmZi
-         OblCtyzJyjuoDulFLvvONYRpinSVdrHXiYRe7vPro4Eq5n7SH0FsQcTZiOh9xsv09uYF
-         yroXC7ScFFbGTjW9qaa+z67bAKFqMkdzQZvLO4G9Z2Zw2JfJKj2ypNX5GlKIhEuhKqWw
-         JUO1ml2sFBMha9Tp2dl9KpDVUqhf9mTY5MutviY1sIP6RFa3R3fuUL+F8d4h5J6bl6A/
-         JFkOcIQwYFNHwR61CL2e4DT/DxT4PmmtA8Hct8PEsbpyqA/QxKlMlYUPa5xeMvs1twYZ
-         dGZg==
+        bh=ceA3OOHkrp0/rBgfzfMs4oo9EwOqW1+SB1EA7e79xlA=;
+        b=TLiKURRBbXaznllUhiqXzwJmMzNw9zNpxqRqosDaxG7rXC5+tiqPlP5vHq/TDxHkEg
+         pivODxC1imDMsSrrqPKMbzS25+VaONbZAm834Vt+t/7BONwc++ZWNO1HVALX+Lseh3gf
+         RUX95M11hEaQ+QrCxmaJ+pwo2VgmV2oPxHMhKcmnkkRq7Ry/1roNPNKdKif5NZO0XfRk
+         xWbRoeFMmOltYYW0BV/y0jri+x2f01mptdX6QMsJ5tqWAQqgMQWl6BGaePye33jHOyoZ
+         S1P8Cj2+BuNOwzltRmfkJTTq6DwqwFyAIt1AV/OJOECI0EopA5qGxpV+2/74tMSoSBZi
+         jVxg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8dhLzSnPx3HKyxwtCcSuNx1W6yfU30Y/Wfx+1/N/Vew=;
-        b=K6tIIA9oWiO0dynSyk+5Wdo7dDP4gcIpEoLAV6u86LZ56RMBSSajs5VAmmlaUyzLYW
-         QDHLGU0oBy58a4M7BrGy6gq2xO1lKl9RY5VcP+D4S8+oUgE5ur5RjdMgjLrRNDUPvgRE
-         cXCB0Djj9VwASVtTIBG6/gZAOiirQGdZTxpz6j2cE4yjm5zXzbyQ7S5H6C9YZKJqRb8C
-         6cprfusSkZ+hAjJ3iUoe+Sfg62kvLqFXSu8Obd1vimOwy2vdZCdXwgnEK61wKo+BzSZQ
-         uMJp6j1T8AG7QviMW1f6qa864NrvjVQFbpiG90yFN26QwOXjwGgUZwGuz/U3h2Y7LciP
-         TiMg==
-X-Gm-Message-State: AA+aEWZKAW8c8u9ezmAx4gtvX4hKBkwZ9HEc4Fxp7ltMyDLdTDn8l+QC
-        DmRd2yYacNgayU2idXVZ/v4pNjZr
-X-Google-Smtp-Source: ALg8bN7J7z15Vw9jy9SjMTeALt7WAUznlJJWop7q8AhJdKts8Qxw224THgFRSQek6rXMFVsm083Vkg==
-X-Received: by 2002:a62:34c6:: with SMTP id b189mr1424691pfa.229.1545377298459;
-        Thu, 20 Dec 2018 23:28:18 -0800 (PST)
+        bh=ceA3OOHkrp0/rBgfzfMs4oo9EwOqW1+SB1EA7e79xlA=;
+        b=E9M4WYGp121P37HElRvHqN7885mcBz+0Na9pnhqtr7eyEaZHztQuO67D64/m6RiNYk
+         FMP1d2ASdAglhs3rT+0vOb1jxo1wUA0Z1g9PK6p0H2RIKwHcSHNzZ7AKKcn5HypLKPUl
+         jnU4KELNXHFOVIpHY+xDPrZOVPLTKgZ10Jlr3qn9uyeKAbxyIOrQp+btY1gCA0EHKam+
+         myQ03Dk2L4tePnNTfnqZWXNFZuWOtUbq8Ctn5JkPbfPeegxdbe39VyahC1a+lfuJD5z/
+         pWwZnaqXDBzqlGByCAzPLWscxBAKbVAaHgSpF032ERa3f7MbjszB4rgh2wlxoqr/7rMf
+         Nkhg==
+X-Gm-Message-State: AJcUukcLciaZZjUbBpY9iYmtGSM6yPb/ULw/m2QjYu9rMWQS8yOq1giE
+        DCdBt1g6IA57t1pkNYZXBNmWHZDM
+X-Google-Smtp-Source: ALg8bN5zSz1wxg+PBVvIZ84CcYmXtIjNqUGxU8XxDrd1F6hHjuSlR1HFpP0O4hXHsxF4/BZSSjKQxg==
+X-Received: by 2002:a63:a611:: with SMTP id t17mr1326464pge.338.1545377296834;
+        Thu, 20 Dec 2018 23:28:16 -0800 (PST)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id t90sm44971921pfj.23.2018.12.20.23.28.16
+        by smtp.gmail.com with ESMTPSA id t90sm44971921pfj.23.2018.12.20.23.28.15
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 20 Dec 2018 23:28:17 -0800 (PST)
+        Thu, 20 Dec 2018 23:28:16 -0800 (PST)
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
@@ -66,9 +66,9 @@ Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         "A.s. Dong" <aisheng.dong@nxp.com>,
         Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 21/21] PCI: designware: Remove superfluous shifting in definitions
-Date:   Thu, 20 Dec 2018 23:27:16 -0800
-Message-Id: <20181221072716.29017-22-andrew.smirnov@gmail.com>
+Subject: [PATCH 20/21] PCI: designware: Make use of GENMASK/FIELD_PREP
+Date:   Thu, 20 Dec 2018 23:27:15 -0800
+Message-Id: <20181221072716.29017-21-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181221072716.29017-1-andrew.smirnov@gmail.com>
 References: <20181221072716.29017-1-andrew.smirnov@gmail.com>
@@ -79,8 +79,10 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Surrounding definitions no longer use explicit shift, so "<< 0" here
-serve no purpose. Remove them. No functional change intended.
+Convert various mult-bit fields to be defined using
+GENMASK/FIELD_PREP. This way bit field boundaries are defined in a
+single place only as well as defined in a way that makes it easier to
+verify them against reference manual. No functional change intended.
 
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -96,35 +98,70 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.h | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.h | 29 +++++++++++---------
+ 1 file changed, 16 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 0de653284fca..636689fd4ee7 100644
+index 348e91b6daa2..0de653284fca 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -63,14 +63,14 @@
- #define PCIE_ATU_VIEWPORT		0x900
- #define PCIE_ATU_REGION_INBOUND		BIT(31)
- #define PCIE_ATU_REGION_OUTBOUND	0
--#define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
--#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
--#define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
-+#define PCIE_ATU_REGION_INDEX2		0x2
-+#define PCIE_ATU_REGION_INDEX1		0x1
-+#define PCIE_ATU_REGION_INDEX0		0x0
- #define PCIE_ATU_CR1			0x904
--#define PCIE_ATU_TYPE_MEM		(0x0 << 0)
--#define PCIE_ATU_TYPE_IO		(0x2 << 0)
--#define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
--#define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
-+#define PCIE_ATU_TYPE_MEM		0x0
-+#define PCIE_ATU_TYPE_IO		0x2
-+#define PCIE_ATU_TYPE_CFG0		0x4
-+#define PCIE_ATU_TYPE_CFG1		0x5
- #define PCIE_ATU_CR2			0x908
- #define PCIE_ATU_ENABLE			BIT(31)
- #define PCIE_ATU_BAR_MODE_ENABLE	BIT(30)
+@@ -11,6 +11,7 @@
+ #ifndef _PCIE_DESIGNWARE_H
+ #define _PCIE_DESIGNWARE_H
+ 
++#include <linux/bitfield.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/irq.h>
+ #include <linux/msi.h>
+@@ -30,11 +31,12 @@
+ 
+ /* Synopsys-specific PCIe configuration registers */
+ #define PCIE_PORT_LINK_CONTROL		0x710
+-#define PORT_LINK_MODE_MASK		(0x3f << 16)
+-#define PORT_LINK_MODE_1_LANES		(0x1 << 16)
+-#define PORT_LINK_MODE_2_LANES		(0x3 << 16)
+-#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
+-#define PORT_LINK_MODE_8_LANES		(0xf << 16)
++#define PORT_LINK_MODE_MASK		GENMASK(21, 16)
++#define PORT_LINK_MODE(n)		FIELD_PREP(PORT_LINK_MODE_MASK, n)
++#define PORT_LINK_MODE_1_LANES		PORT_LINK_MODE(0x1)
++#define PORT_LINK_MODE_2_LANES		PORT_LINK_MODE(0x3)
++#define PORT_LINK_MODE_4_LANES		PORT_LINK_MODE(0x7)
++#define PORT_LINK_MODE_8_LANES		PORT_LINK_MODE(0xf)
+ 
+ #define PCIE_PORT_DEBUG0		0x728
+ #define PORT_LOGIC_LTSSM_STATE_MASK	0x1f
+@@ -45,11 +47,12 @@
+ 
+ #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
+ #define PORT_LOGIC_SPEED_CHANGE		BIT(17)
+-#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1f << 8)
+-#define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
+-#define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
+-#define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
+-#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
++#define PORT_LOGIC_LINK_WIDTH_MASK	GENMASK(12, 8)
++#define PORT_LOGIC_LINK_WIDTH(n)	FIELD_PREP(PORT_LOGIC_LINK_WIDTH_MASK, n)
++#define PORT_LOGIC_LINK_WIDTH_1_LANES	PORT_LOGIC_LINK_WIDTH(0x1)
++#define PORT_LOGIC_LINK_WIDTH_2_LANES	PORT_LOGIC_LINK_WIDTH(0x2)
++#define PORT_LOGIC_LINK_WIDTH_4_LANES	PORT_LOGIC_LINK_WIDTH(0x4)
++#define PORT_LOGIC_LINK_WIDTH_8_LANES	PORT_LOGIC_LINK_WIDTH(0x8)
+ 
+ #define PCIE_MSI_ADDR_LO		0x820
+ #define PCIE_MSI_ADDR_HI		0x824
+@@ -75,9 +78,9 @@
+ #define PCIE_ATU_UPPER_BASE		0x910
+ #define PCIE_ATU_LIMIT			0x914
+ #define PCIE_ATU_LOWER_TARGET		0x918
+-#define PCIE_ATU_BUS(x)			(((x) & 0xff) << 24)
+-#define PCIE_ATU_DEV(x)			(((x) & 0x1f) << 19)
+-#define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
++#define PCIE_ATU_BUS(x)			FIELD_PREP(GENMASK(31, 24), x)
++#define PCIE_ATU_DEV(x)			FIELD_PREP(GENMASK(23, 19), x)
++#define PCIE_ATU_FUNC(x)		FIELD_PREP(GENMASK(18, 16), x)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
+ #define PCIE_MISC_CONTROL_1_OFF		0x8BC
 -- 
 2.19.1
 
