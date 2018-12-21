@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09DEBC43387
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D69E0C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB41721903
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A627621906
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Dec 2018 07:30:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rrBrVyti"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D+v8BjIw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387465AbeLUH1v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Dec 2018 02:27:51 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:46214 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732384AbeLUH1r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Dec 2018 02:27:47 -0500
-Received: by mail-pf1-f195.google.com with SMTP id c73so2168143pfe.13;
-        Thu, 20 Dec 2018 23:27:47 -0800 (PST)
+        id S1729539AbeLUHaP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Dec 2018 02:30:15 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:37420 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387432AbeLUH1u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Dec 2018 02:27:50 -0500
+Received: by mail-pf1-f193.google.com with SMTP id y126so2186980pfb.4;
+        Thu, 20 Dec 2018 23:27:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=fltZQbZSIQgUXi/Z+xP/+nOzCe8SxwJBjLTLp8RDlGA=;
-        b=rrBrVytiDnat/KCHZDBMlr2Q4rK7dzYqetel/FN3IPPM07pVdKgmLf2nl+yaPN4i6h
-         reGL4tQFU2bZ2oANOA6ueS9c2dh55HWlgZu+eJYLmRT+yoJI/NuEDPdgVEbbYr3z7b58
-         nxs3DDTX2GiLuvPhpBByWtA/l2/F+7TZ2BxmRRt/Qpv5mkJFlQ0iSkk3imIeRrJdRmzA
-         1bvBZEkw46EzOinWphj81lvnvNm3BzQxrRSAV3xEDW7IalBojTLDVV9IdQJTEhExudwK
-         h6SmNPoY9y06VaT8Ed83PqIHZI7LcknkWGdqsoy6aaZIqqg9wFMsiXq45cElV9ur7Vz1
-         z4XQ==
+        bh=J1XPUyhdugQdjD1RjA8TcbqShFQ6vNfPgtVDRPKD26M=;
+        b=D+v8BjIwaeBkHWCUn0SIc9Vauqh6k/EcRAx/6NL+x5IkPsPR441bJb8zpvorrru7tf
+         WQpOaXEz0F1I4yQjIp9cCpkZZstdoQUvPF3cliFgyAXSrybbqb/8LC1ZPsZ/pgufsNk1
+         AqoNPMrKD5/PZcnFX859gEz7gy30NgnwpnnDc2apCYY1C/yyrzFwKlpvRbN19PuE17mw
+         +WDInCgOVD3V4o4MLInCLYjY7gnhvqx71hXA3y/rOjwfCq96gemXDtl252k3YS+E2Rbb
+         76bKO8WtEZwQ1BWm8+h7aJDHIQopoRuLzD2zYjXfyDwD9usA8s80o2WQvuznD7ZxgcER
+         j7Bw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=fltZQbZSIQgUXi/Z+xP/+nOzCe8SxwJBjLTLp8RDlGA=;
-        b=kAnOJGLLHiV5r14TYwKzBcn7eAu0ppSyDy6jlrdpPu3rWJ/M1bzgwk6jeYPxpWb7/0
-         S0y2NvZWZa1/r5GYGhMKCWMCLVaQ6Qm20VkxpzR84oQ7Nx2AMXinGxwEPJk+Mk5lehHI
-         RqlxWmtiAwUR9AHcK5dvO0ExOha1G6uE6/xXN133mLxE2VbfhyfEW1/Jd/+83JsltuQZ
-         V9ON/fH6kD+gMlbj/wMqGH6BmR7XxZnFnDKAWNJifwxkZUGuQiKrPytTsg+I1y+h72A0
-         KUg21OiYRCZCT3PuNmjtzyIaCUOi/+p5JZl3KYSAr+qSE8AdwtPtvJ2uAqx/b3hrYl6g
-         tIIQ==
-X-Gm-Message-State: AJcUukdf8Pr8Fzcer6AWvisxHWQzDbOie0aP6v81BqPNAxL4Lna/0a/u
-        xDmxMR1CYEZC+1CzaO+1WHQvIMAY
-X-Google-Smtp-Source: ALg8bN7so8dNzKUeH8NV9oDrLTu7hCW6lX/cL+aAyLv7GoPIg1L2wuobljjFpsXFADTv8zZvuVc/Sw==
-X-Received: by 2002:a63:ae01:: with SMTP id q1mr1321976pgf.402.1545377266708;
-        Thu, 20 Dec 2018 23:27:46 -0800 (PST)
+        bh=J1XPUyhdugQdjD1RjA8TcbqShFQ6vNfPgtVDRPKD26M=;
+        b=FNR5LcGb6LNCSN7wNwbCm6TLui4I/L+U7tYlKSKmQ/wXkVqJOwVzb1KgzOP4+2cMXi
+         k+ysMilWqD5GZeASBCiGdAWMArtedA2eFqQYUrOSeKGKqea+sR6yF7XbjxXV13gPLzbD
+         HhvAC5WUlIsJgHpY5gVNJv2CRFfHCumQVnNmNwb+VCYnFP/D18hMI6tZIxeo+fI4XKON
+         /dOcCieWa1B4SNizM570SQqCZRFCrCpOwgbonHaDR4zv8WS2cOgA6iTEFhSdLimz1VXR
+         3CHPW+j45lUkWPjqp0WWaO4Jj+6l6YrbckNJ+5VZx4lOPKCFG9FjvhIIxiyXHSI1kLMr
+         w7eQ==
+X-Gm-Message-State: AJcUukdIdnnbzHDsTemJUdIkIvHxQcCzchfL2j40X0Y/5mFJ8att+LjZ
+        RiUTT9kbfGO5/sjJzfXCr0MMZXFv
+X-Google-Smtp-Source: ALg8bN7DefFb9r+kRTFCRUxMnRCb2jxCddzSWYYkcXZREmCl0oq4M1VuRrjtSzH7qve+8RIUv4nlxw==
+X-Received: by 2002:a63:70c:: with SMTP id 12mr1315807pgh.352.1545377268946;
+        Thu, 20 Dec 2018 23:27:48 -0800 (PST)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id t90sm44971921pfj.23.2018.12.20.23.27.44
+        by smtp.gmail.com with ESMTPSA id t90sm44971921pfj.23.2018.12.20.23.27.46
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 20 Dec 2018 23:27:45 -0800 (PST)
+        Thu, 20 Dec 2018 23:27:48 -0800 (PST)
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
@@ -66,9 +66,9 @@ Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         "A.s. Dong" <aisheng.dong@nxp.com>,
         Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 04/21] PCI: imx6: Remove duplicate macro definitions
-Date:   Thu, 20 Dec 2018 23:26:59 -0800
-Message-Id: <20181221072716.29017-5-andrew.smirnov@gmail.com>
+Subject: [PATCH 05/21] PCI: imx6: Remove PCIE_PL_PFLR_* constants
+Date:   Thu, 20 Dec 2018 23:27:00 -0800
+Message-Id: <20181221072716.29017-6-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20181221072716.29017-1-andrew.smirnov@gmail.com>
 References: <20181221072716.29017-1-andrew.smirnov@gmail.com>
@@ -79,9 +79,9 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Both PCIE_LINK_WIDTH_SPEED_CONTROL and PORT_LOGIC_SPEED_CHANGE are
-already defined in pcie-desingware.h, so drop duplicate definintion in
-pci-imx6.c. No functional change intended.
+Code using these constants was removed in commit a71280722eeb ("PCI:
+imx6: Remove LTSSM disable workaround"). No functional change
+intended.
 
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -101,19 +101,19 @@ Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
  1 file changed, 3 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index e990030564d8..2265f4b40e39 100644
+index 2265f4b40e39..60803f1f16f8 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -100,9 +100,6 @@ struct imx6_pcie {
- #define PCIE_PHY_STAT (PL_OFFSET + 0x110)
- #define PCIE_PHY_STAT_ACK_LOC 16
+@@ -82,9 +82,6 @@ struct imx6_pcie {
  
--#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
--#define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
--
- /* PHY registers (not memory-mapped) */
- #define PCIE_PHY_ATEOVRD			0x10
- #define  PCIE_PHY_ATEOVRD_EN			(0x1 << 2)
+ /* PCIe Port Logic registers (memory-mapped) */
+ #define PL_OFFSET 0x700
+-#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+-#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
+-#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+ #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+ #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+ #define PCIE_PHY_DEBUG_R1_XMLH_LINK_IN_TRAINING	(1 << 29)
 -- 
 2.19.1
 
