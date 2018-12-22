@@ -6,70 +6,84 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_NEOMUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B145AC43387
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Dec 2018 17:18:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27E6FC43387
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Dec 2018 17:28:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8903721A48
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Dec 2018 17:18:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02A30219D6
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Dec 2018 17:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388171AbeLVRSj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 22 Dec 2018 12:18:39 -0500
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:43675 "EHLO
+        id S1732740AbeLVR2j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 22 Dec 2018 12:28:39 -0500
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:40969 "EHLO
         bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726009AbeLVRSj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Dec 2018 12:18:39 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        with ESMTP id S1728109AbeLVR2j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Dec 2018 12:28:39 -0500
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 6001C30000885;
-        Sat, 22 Dec 2018 08:51:31 +0100 (CET)
+        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 5D6C630000CC2;
+        Sat, 22 Dec 2018 09:03:17 +0100 (CET)
 Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 332F831866; Sat, 22 Dec 2018 08:51:31 +0100 (CET)
-Date:   Sat, 22 Dec 2018 08:51:31 +0100
+        id 328BBEB941; Sat, 22 Dec 2018 09:03:17 +0100 (CET)
+Date:   Sat, 22 Dec 2018 09:03:17 +0100
 From:   Lukas Wunner <lukas@wunner.de>
 To:     Sinan Kaya <okaya@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        Maxime Ripard <maxime.ripard@bootlin.com>,
-        David Airlie <airlied@linux.ie>, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-acpi@vger.kernel.org,
-        Sean Paul <sean@poorly.run>
-Subject: Re: [PATCH v1 03/11] vga-switcheroo: make PCI dependency explicit
-Message-ID: <20181222075131.hv75vvoffzzzakqi@wunner.de>
+Cc:     linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 06/11] platform/x86: apple-gmux: hide PCI specific code
+Message-ID: <20181222080317.qicyihyauia6n63w@wunner.de>
 References: <20181222001452.7474-1-okaya@kernel.org>
- <20181222001452.7474-4-okaya@kernel.org>
+ <20181222001452.7474-7-okaya@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181222001452.7474-4-okaya@kernel.org>
+In-Reply-To: <20181222001452.7474-7-okaya@kernel.org>
 User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Dec 22, 2018 at 12:14:44AM +0000, Sinan Kaya wrote:
-> This driver depends on the PCI infrastructure but the dependency has not
-> been explicitly called out.
+On Sat, Dec 22, 2018 at 12:14:47AM +0000, Sinan Kaya wrote:
+> Code is scanning PCI bus to find out if it is switchable or not. If
+> CONFIG_PCI is not set, assume unswitchable.
 > 
 > Signed-off-by: Sinan Kaya <okaya@kernel.org>
-
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
-
 > ---
->  drivers/gpu/vga/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/platform/x86/apple-gmux.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
-> index b677e5d524e6..d5f1d8e1c6f8 100644
-> --- a/drivers/gpu/vga/Kconfig
-> +++ b/drivers/gpu/vga/Kconfig
-> @@ -21,6 +21,7 @@ config VGA_SWITCHEROO
->  	bool "Laptop Hybrid Graphics - GPU switching support"
->  	depends on X86
->  	depends on ACPI
-> +	depends on PCI
->  	select VGA_ARB
->  	help
->  	  Many laptops released in 2008/9/10 have two GPUs with a multiplexer
-> -- 
-> 2.19.0
+> diff --git a/drivers/platform/x86/apple-gmux.c b/drivers/platform/x86/apple-gmux.c
+> index fd2ffebc868f..b552b54bf58b 100644
+> --- a/drivers/platform/x86/apple-gmux.c
+> +++ b/drivers/platform/x86/apple-gmux.c
+> @@ -742,8 +742,12 @@ static int gmux_probe(struct pnp_dev *pnp, const struct pnp_device_id *id)
+>  	 * If Thunderbolt is present, the external DP port is not fully
+>  	 * switchable. Force its AUX channel to the discrete GPU.
+>  	 */
+> +#ifdef CONFIG_PCI
+>  	gmux_data->external_switchable =
+>  		!bus_for_each_dev(&pci_bus_type, NULL, NULL, is_thunderbolt);
+> +#else
+> +	gmux_data->external_switchable = false;
+> +#endif
+>  	if (!gmux_data->external_switchable)
+>  		gmux_write8(gmux_data, GMUX_PORT_SWITCH_EXTERNAL, 3);
+
+This driver is only used on 2008+ MacBook Pros and the 2013+ Mac Pro,
+all of which have PCI and are pretty much unusable with CONFIG_PCI=n.
+
+So it is okay to just add "depends on PCI" for this driver, as you did
+with other drivers, and I think that's preferrable to an #ifdef.
+
+You can also drop the "platform/x86: " prefix from the subject if you
+like, all previous commits to this driver just use "apple-gmux: ".
+
+If you are okay with these changes, feel free to add my Reviewed-by
+when respinning.
+
+Thanks,
+
+Lukas
