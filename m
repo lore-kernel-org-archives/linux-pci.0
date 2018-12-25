@@ -2,100 +2,69 @@ Return-Path: <SRS0=LLyr=PC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C66C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Dec 2018 13:34:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2193BC43387
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Dec 2018 23:21:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A688921908
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Dec 2018 13:34:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E54F1218C3
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Dec 2018 23:21:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1545744840;
-	bh=j5nUKZW4Zuf5jlhdElcyjPJnMlLaOlu/C4IPsUzEhwg=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=JcOGGcvwGbkcWV+9KtRU5VguH4BrjSYFKMNjYmtHXjgp5Ni42DutbxxVkubsKyS3l
-	 7JaKl9ycTB3eXHHJbqsebeqk57e0JZtNk9k3pc7UmHWYwRm2OhraAVxzBCS9pMcCCi
-	 zd2JORZhIT3ifzWd256uvjqqSPRIPIg1UCi7haM0=
+	s=default; t=1545780075;
+	bh=b5Fh1jRt2HDuJR/inF6v5s/HeQfOfFBXS5UnQuSVeaM=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=c9V6oUZBoueM/eeWF6w+OTUHgJPC/mKzFcI/CV2ThdImqfRHbP71vqzxSderC37nD
+	 PyckgX0SkQCkycpkKp9A6x4oEou30kc2Gilwh9bPp0BtJ6N83CijHllOCrxnFH/Rmc
+	 80o7Oz/EG3n/vu1vtnAmwGEol8up8waSU+rsePUQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725884AbeLYNd4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Dec 2018 08:33:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36126 "EHLO mail.kernel.org"
+        id S1727200AbeLYXVG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Dec 2018 18:21:06 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44354 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725851AbeLYNd4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Dec 2018 08:33:56 -0500
-Received: from mail-oi1-f179.google.com (mail-oi1-f179.google.com [209.85.167.179])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7A4E52229E;
-        Tue, 25 Dec 2018 13:33:55 +0000 (UTC)
+        id S1726827AbeLYXUG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Dec 2018 18:20:06 -0500
+Subject: Re: [GIT PULL] ACPI updates for v4.21-rc1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1545744835;
-        bh=j5nUKZW4Zuf5jlhdElcyjPJnMlLaOlu/C4IPsUzEhwg=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=qGmHRTYuLIATHBBBMY8039gt+Ja6GJIlBeF958ZLBbNT0A7lJqJqgTPDns0UfIDuv
-         NWKqdyeANrsexs+ot4lT/boGmh/l8oF1RRfFHtR+akzJ24WA/H1tvsCi1fj04eb+0s
-         lCd21rLRgC4C8gD7YH89yKyI9B575RBsMV/Dxrhc=
-Received: by mail-oi1-f179.google.com with SMTP id c206so11500796oib.0;
-        Tue, 25 Dec 2018 05:33:55 -0800 (PST)
-X-Gm-Message-State: AA+aEWbjVuDbCGU6yhuZejT82MpTNTaLX2ERGcnNkdxHjWDvo+Sq2bFa
-        MQKC9EpzFcJ2Q16d6gm0TW0ty5jVAxrWKu2Jdc4=
-X-Google-Smtp-Source: AFSGD/XVv17Lm+ig99BwA9BZJIRolyNMaAfyalz1JoGWOpwhtHDis5stqhNaogwPTLXLtvt6AdHeZgGKdSAHjeDnqMM=
-X-Received: by 2002:aca:c186:: with SMTP id r128mr10979240oif.52.1545744834780;
- Tue, 25 Dec 2018 05:33:54 -0800 (PST)
-MIME-Version: 1.0
-References: <20181222001452.7474-1-okaya@kernel.org> <20181222001452.7474-7-okaya@kernel.org>
- <20181222080317.qicyihyauia6n63w@wunner.de> <CAHp75VfTmWN4bTNPaTL2KYYUWARvix67ynx2cKGzhO3o-0VY=g@mail.gmail.com>
-In-Reply-To: <CAHp75VfTmWN4bTNPaTL2KYYUWARvix67ynx2cKGzhO3o-0VY=g@mail.gmail.com>
-From:   Sinan Kaya <Okaya@kernel.org>
-Date:   Tue, 25 Dec 2018 16:33:43 +0300
-X-Gmail-Original-Message-ID: <CAK9iUCMUELeXMaqnXWxGKaEKX6OkfpWxvSxWiGjuNpvxneCk0g@mail.gmail.com>
-Message-ID: <CAK9iUCMUELeXMaqnXWxGKaEKX6OkfpWxvSxWiGjuNpvxneCk0g@mail.gmail.com>
-Subject: Re: [PATCH v1 06/11] platform/x86: apple-gmux: hide PCI specific code
-To:     Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc:     Lukas Wunner <lukas@wunner.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        "platform-driver-x86@vger.kernel.org" 
-        <platform-driver-x86@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        s=default; t=1545780005;
+        bh=b5Fh1jRt2HDuJR/inF6v5s/HeQfOfFBXS5UnQuSVeaM=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=ENARSGB8yAhWakcieVxM2qcQipBn5iD3Ymf5gvrGJNbEb0s33BmWh9kvCMnh7HFoP
+         o85nZuIG+XIQk7geoJLxAOXOS4bLwciK6J6csROk6NkPwa7+cBg1+ejX9zSqvUwIVu
+         X3DAFk3l7x27inBiMGUCQph+oRzzyPh+q5bCcjBE=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <CAJZ5v0iskAJZADqKOncZ01wAD4CysUwUwqtTB-3kAu8umMfGBQ@mail.gmail.com>
+References: <CAJZ5v0iskAJZADqKOncZ01wAD4CysUwUwqtTB-3kAu8umMfGBQ@mail.gmail.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <CAJZ5v0iskAJZADqKOncZ01wAD4CysUwUwqtTB-3kAu8umMfGBQ@mail.gmail.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git
+ acpi-4.21-rc1
+X-PR-Tracked-Commit-Id: 3eb85368460d942005ba305829e279d0fe4767e0
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: e6d1315006383e525595bb3337d08bccec373ccc
+Message-Id: <20181225232005.23808.55336.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
+Date:   Tue, 25 Dec 2018 23:20:05 +0000
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Dec 24, 2018 at 5:05 AM Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
->
->
->
-> On Saturday, December 22, 2018, Lukas Wunner <lukas@wunner.de> wrote:
->>
->> On Sat, Dec 22, 2018 at 12:14:47AM +0000, Sinan Kaya wrote:
->> > Code is scanning PCI bus to find out if it is switchable or not. If
->> > CONFIG_PCI is not set, assume unswitchable.
->> >
->>
->> You can also drop the "platform/x86: " prefix from the subject if you
->> like, all previous commits to this driver just use "apple-gmux: ".
->>
->> If you are okay with these changes, feel free to add my Reviewed-by
->> when respinning.
->>
-> I'm not okay with dropping prefix. You can but may not, please, remove the prefix.
->
+The pull request you sent on Fri, 21 Dec 2018 12:08:11 +0100:
 
-You mean 'keep the prefix' above, right?
+> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git acpi-4.21-rc1
 
-What is the consensus?
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/e6d1315006383e525595bb3337d08bccec373ccc
 
->
-> --
-> With Best Regards,
-> Andy Shevchenko
->
->
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
