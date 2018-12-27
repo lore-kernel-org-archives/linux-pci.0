@@ -2,310 +2,98 @@ Return-Path: <SRS0=7J7L=PE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FAD0C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Dec 2018 19:33:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C105EC43387
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Dec 2018 22:16:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECB1821741
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Dec 2018 19:33:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AyvkoPpt"
+	by mail.kernel.org (Postfix) with ESMTP id 8460020811
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Dec 2018 22:16:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729179AbeL0Tdz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Dec 2018 14:33:55 -0500
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:39845 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729174AbeL0Tdy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Dec 2018 14:33:54 -0500
-Received: by mail-oi1-f195.google.com with SMTP id i6so15801970oia.6;
-        Thu, 27 Dec 2018 11:33:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=9ZmSDtrc4SxKCH60qTzxvtHrnkMHL8LJ6Qgqlx0RZic=;
-        b=AyvkoPpt7lPyHan/LvWkvhNUsE7xe2IWlPXwFOZ+H9I7k5S16snoHQrLdnXJzguxIe
-         y7Wc89IrgovpoQHUjVLhJdfSPvFxy3FbhzCDWlZxqrrYo4ZqyCEBGS+mklmK/+nuZ91g
-         76IMGUY7DfwKbaRZuXWEJ9pVKtA3JHGoUA2cuBlTzTM9DDJZpegs6/yHXPnaWUiPYOlO
-         tgnibhwtSGiN3Xej9TD8Sm5tlQoTpvBP+sOLlaUqXK4Q3RguE7O+7Wr01lkryFzzJpdK
-         axB0+vFgAOqx7W56JRxtcSr5XKMdEDEvlxz0rL0cTgdTmaa2poomhyqLWbZjdGNoMHko
-         GFYQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9ZmSDtrc4SxKCH60qTzxvtHrnkMHL8LJ6Qgqlx0RZic=;
-        b=rto4M+jyf1ts1V8LZSWQ9xGrp5zZ6lV6zScfIQLUDtjoRPdWiSasMgC5QnAFfI/+0N
-         W5BaKIhzN2R/brnW+NVaIdwqqFZLMXkbcZXVylcTBTNvV8jMmxyCrcmqR4qD6QeYCrJH
-         ydLXOaXUAJg1jarvmrdZUo1igP86wwSZjz15MJR0iOcwSd632C+YUJ390RcIS4Eg9k64
-         Jk7DnW6cPYUskQlhEOzzghTHWirgxV85jXz4r1sy2RohDcCve+kwT1T5yCqzFizxvTNN
-         WYWK+KBUrUQ/4S5gPW/BDAqTz0Gj18Q/XzkQdH/DKkEoWX7EVDhiynZzZQgCI4pIzdPQ
-         HR6Q==
-X-Gm-Message-State: AJcUukeRThjNnjUKTJLNu6KBc/ncojl0IRm2PXtAb98EZhCnHLHVqhbR
-        fIsN4xlRdMq1I+JGOQWqBfOwBhyVV+0=
-X-Google-Smtp-Source: AFSGD/VNpVqgfd7F69nEm3UViH+CnTwtmfhR2hCG48uo/+L6oWzLUtIUXv5nDpXJaDeXNdN4PctpiA==
-X-Received: by 2002:aca:cfca:: with SMTP id f193mr15536528oig.141.1545939233467;
-        Thu, 27 Dec 2018 11:33:53 -0800 (PST)
-Received: from nuclearis2-1.gtech (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
-        by smtp.gmail.com with ESMTPSA id o189sm19427451oif.23.2018.12.27.11.33.52
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 27 Dec 2018 11:33:52 -0800 (PST)
-Subject: Re: [PATCH v2] PCI: pciehp: Report degraded links via link bandwidth
- notification
-To:     helgaas@kernel.org
-Cc:     alex_gagniuc@dellteam.com, Austin.Bolen@dell.com,
-        Shyam.Iyer@dell.com, Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        id S1733138AbeL0WQr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Dec 2018 17:16:47 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:59996 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1733136AbeL0WQq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Dec 2018 17:16:46 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7BA852D2BFE;
+        Thu, 27 Dec 2018 22:16:46 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-19.pek2.redhat.com [10.72.8.19])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F40B55DAA0;
+        Thu, 27 Dec 2018 22:16:39 +0000 (UTC)
+Date:   Fri, 28 Dec 2018 06:16:33 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@fb.com>, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org,
         Keith Busch <keith.busch@intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-References: <20181129230454.GF178809@google.com>
- <20181207182021.16344-1-mr.nuke.me@gmail.com>
-From:   "Alex G." <mr.nuke.me@gmail.com>
-Message-ID: <de1c3bb4-1997-5ef1-3cfa-0eba10391327@gmail.com>
-Date:   Thu, 27 Dec 2018 13:33:51 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.3.1
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] nvme pci: try to allocate multiple irq vectors again
+ in case of -EINVAL
+Message-ID: <20181227221631.GA22073@ming.t460p>
+References: <20181226103755.2101-1-ming.lei@redhat.com>
+ <20181226103755.2101-3-ming.lei@redhat.com>
+ <20181226182027.GA5866@lst.de>
+ <20181227082136.GA14423@ming.t460p>
+ <20181227130834.GA22967@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20181207182021.16344-1-mr.nuke.me@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181227130834.GA22967@lst.de>
+User-Agent: Mutt/1.9.1 (2017-09-22)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Thu, 27 Dec 2018 22:16:46 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 12/7/18 12:20 PM, Alexandru Gagniuc wrote:
-> A warning is generated when a PCIe device is probed with a degraded
-> link, but there was no similar mechanism to warn when the link becomes
-> degraded after probing. The Link Bandwidth Notification provides this
-> mechanism.
+On Thu, Dec 27, 2018 at 02:08:34PM +0100, Christoph Hellwig wrote:
+> On Thu, Dec 27, 2018 at 04:21:38PM +0800, Ming Lei wrote:
+> > On Wed, Dec 26, 2018 at 07:20:27PM +0100, Christoph Hellwig wrote:
+> > > On Wed, Dec 26, 2018 at 06:37:55PM +0800, Ming Lei wrote:
+> > > > It is observed on QEMU that pci_alloc_irq_vectors_affinity() may
+> > > > returns -EINVAL when the requested number is too big(such as 64).
+> > > 
+> > > Which is not how this API is supposed to work and documented to work.
+> > > 
+> > > We need to fix pci_alloc_irq_vectors_affinity to not return a spurious
+> > > error and just return the allocated number of vectors instead of
+> > > hacking around that in drivers.
+> > 
+> > Yeah, you are right.
+> > 
+> > The issue is that QEMU nvme-pci is MSIX-capable only, and hasn't MSI
+> > capability.
+> > 
+> > __pci_enable_msix_range() actually returns -ENOSPC, but __pci_enable_msi_range()
+> > returns -EINVAL because dev->msi_cap is zero.
+> > 
+> > Maybe we need the following fix?
 > 
-> Use the link bandwidth notification interrupt to detect bandwidth
-> changes, and rescan the bandwidth, looking for the weakest point. This
-> is the same logic used in probe().
-> 
-> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> ---
+> Should it matter?  We still get a negative vecs back, and still fall
+> back to the next option.  Unless ther are no irqs available at all
+> for the selected types pci_alloc_irq_vectors_affinity should never
+> return an error.
 
-ping.
+The patch in last email does fix this issue.
 
-> Changes since v1:
->   * Layer on top of the pcie port service drivers, instead of hotplug service.
-> 
-> This patch needs to be applied on top of:
-> 	PCI: Add missing include to drivers/pci.h
-> 
-> Anticipated FAQ:
-> 
-> Q: Why is this unconditionally compiled in?
-> A: The symmetrical check in pci probe() is also always compiled in.
-> 
-> Q: Why call module_init() instead of adding a call in pcie_init_services() ?
-> A: A call in pcie_init_services() also requires a prototype in portdrv.h, a
-> non-static implementation in bw_notification.c. Using module_init() is
-> functionally equivalent, and takes less code.
-> 
-> Q: Why print only on degraded links and not when a link is back to full speed?
-> For symmetry with PCI probe(). Although I see a benefit in conveying that a
-> link is back to full speed, I expect this to be extremely rare. Secondary bus
-> reset is usually needed to retrain at full bandwidth.
-> 
-> 
->   drivers/pci/pcie/Makefile          |   1 +
->   drivers/pci/pcie/bw_notification.c | 107 +++++++++++++++++++++++++++++
->   drivers/pci/pcie/portdrv.h         |   4 +-
->   drivers/pci/pcie/portdrv_core.c    |  14 ++--
->   4 files changed, 121 insertions(+), 5 deletions(-)
->   create mode 100644 drivers/pci/pcie/bw_notification.c
-> 
-> diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-> index ab514083d5d4..f1d7bc1e5efa 100644
-> --- a/drivers/pci/pcie/Makefile
-> +++ b/drivers/pci/pcie/Makefile
-> @@ -3,6 +3,7 @@
->   # Makefile for PCI Express features and port driver
->   
->   pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o
-> +pcieportdrv-y			+= bw_notification.o
->   
->   obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
->   
-> diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
-> new file mode 100644
-> index 000000000000..64391ea9a172
-> --- /dev/null
-> +++ b/drivers/pci/pcie/bw_notification.c
-> @@ -0,0 +1,107 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * PCI Express Bandwidth notification services driver
-> + * Author: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> + *
-> + * Copyright (C) 2018, Dell Inc
-> + *
-> + * The PCIe bandwidth notification provides a way to notify the operating system
-> + * when the link width or data rate changes. This capability is required for all
-> + * root ports and downstream ports supporting links wider than x1 and/or
-> + * multiple link speeds.
-> + *
-> + * This service port driver hooks into the bandwidth notification interrupt and
-> + * warns when links become degraded in operation.
-> + */
-> +
-> +#include <linux/module.h>
-> +
-> +#include "../pci.h"
-> +#include "portdrv.h"
-> +
-> +static bool pcie_link_bandwidth_notification_supported(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +	u32 lnk_cap;
-> +
-> +	ret = pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnk_cap);
-> +	return (ret == PCIBIOS_SUCCESSFUL) && (lnk_cap & PCI_EXP_LNKCAP_LBNC);
-> +}
-> +
-> +static void pcie_enable_link_bandwidth_notification(struct pci_dev *dev)
-> +{
-> +	u16 lnk_ctl;
-> +
-> +	pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnk_ctl);
-> +	lnk_ctl |= PCI_EXP_LNKCTL_LBMIE;
-> +	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnk_ctl);
-> +}
-> +
-> +static void pcie_disable_link_bandwidth_notification(struct pci_dev *dev)
-> +{
-> +	u16 lnk_ctl;
-> +
-> +	pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &lnk_ctl);
-> +	lnk_ctl &= ~PCI_EXP_LNKCTL_LBMIE;
-> +	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnk_ctl);
-> +}
-> +
-> +static irqreturn_t pcie_bw_notification_irq(int irq, void *context)
-> +{
-> +	struct pcie_device *srv = context;
-> +	struct pci_dev *port = srv->port;
-> +	struct pci_dev *dev;
-> +	u16 link_status, events;
-> +	int ret;
-> +
-> +	ret = pcie_capability_read_word(port, PCI_EXP_LNKSTA, &link_status);
-> +	events = link_status & PCI_EXP_LNKSTA_LBMS;
-> +
-> +	if (!events || ret != PCIBIOS_SUCCESSFUL)
-> +		return IRQ_NONE;
-> +
-> +	/* Print status from upstream link partner, not this downstream port. */
-> +	list_for_each_entry(dev, &port->subordinate->devices, bus_list)
-> +		__pcie_print_link_status(dev, false);
-> +
-> +	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
-> +	return IRQ_HANDLED;
-> +}
-> +
-> +static int pcie_bandwidth_notification_probe(struct pcie_device *srv)
-> +{
-> +	int ret;
-> +
-> +	/* Single-width or single-speed ports do not have to support this. */
-> +	if (!pcie_link_bandwidth_notification_supported(srv->port))
-> +		return -ENODEV;
-> +
-> +	ret = devm_request_irq(&srv->device, srv->irq, pcie_bw_notification_irq,
-> +			       IRQF_SHARED, "PCIe BW notif", srv);
-> +	if (ret)
-> +		return ret;
-> +
-> +	pcie_enable_link_bandwidth_notification(srv->port);
-> +
-> +	return 0;
-> +}
-> +
-> +static void pcie_bandwidth_notification_remove(struct pcie_device *srv)
-> +{
-> +	pcie_disable_link_bandwidth_notification(srv->port);
-> +}
-> +
-> +static struct pcie_port_service_driver pcie_bandwidth_notification_driver = {
-> +	.name		= "pcie_bw_notification",
-> +	.port_type	= PCI_EXP_TYPE_DOWNSTREAM,
-> +	.service	= PCIE_PORT_SERVICE_BwNOTIF,
-> +	.probe		= pcie_bandwidth_notification_probe,
-> +	.remove		= pcie_bandwidth_notification_remove,
-> +};
-> +
-> +static int __init pcie_bandwidth_notification_service_init(void)
-> +{
-> +	return pcie_port_service_register(&pcie_bandwidth_notification_driver);
-> +}
-> +
-> +module_init(pcie_bandwidth_notification_service_init);
-> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-> index e495f04394d0..46652469ffaa 100644
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -20,8 +20,10 @@
->   #define PCIE_PORT_SERVICE_HP		(1 << PCIE_PORT_SERVICE_HP_SHIFT)
->   #define PCIE_PORT_SERVICE_DPC_SHIFT	3	/* Downstream Port Containment */
->   #define PCIE_PORT_SERVICE_DPC		(1 << PCIE_PORT_SERVICE_DPC_SHIFT)
-> +#define PCIE_PORT_SERVICE_BWNOTIF_SHIFT	4	/* Bandwidth notification */
-> +#define PCIE_PORT_SERVICE_BwNOTIF	(1 << PCIE_PORT_SERVICE_BWNOTIF_SHIFT)
->   
-> -#define PCIE_PORT_DEVICE_MAXSERVICES   4
-> +#define PCIE_PORT_DEVICE_MAXSERVICES   5
->   
->   #ifdef CONFIG_PCIEAER
->   int pcie_aer_init(void);
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index f458ac9cb70c..86455ff7ced9 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -99,7 +99,7 @@ static int pcie_message_numbers(struct pci_dev *dev, int mask,
->    */
->   static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
->   {
-> -	int nr_entries, nvec;
-> +	int nr_entries, nvec, pcie_irq;
->   	u32 pme = 0, aer = 0, dpc = 0;
->   
->   	/* Allocate the maximum possible number of MSI/MSI-X vectors */
-> @@ -136,9 +136,12 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
->   	}
->   
->   	/* PME and hotplug share an MSI/MSI-X vector */
-> -	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
-> -		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pci_irq_vector(dev, pme);
-> -		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pci_irq_vector(dev, pme);
-> +	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP |
-> +		    PCIE_PORT_SERVICE_BwNOTIF)) {
-> +		pcie_irq = pci_irq_vector(dev, pme);
-> +		irqs[PCIE_PORT_SERVICE_PME_SHIFT] = pcie_irq;
-> +		irqs[PCIE_PORT_SERVICE_HP_SHIFT] = pcie_irq;
-> +		irqs[PCIE_PORT_SERVICE_BWNOTIF_SHIFT] = pcie_irq;
->   	}
->   
->   	if (mask & PCIE_PORT_SERVICE_AER)
-> @@ -250,6 +253,9 @@ static int get_port_device_capability(struct pci_dev *dev)
->   	    pci_aer_available() && services & PCIE_PORT_SERVICE_AER)
->   		services |= PCIE_PORT_SERVICE_DPC;
->   
-> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM)
-> +		services |= PCIE_PORT_SERVICE_BwNOTIF;
-> +
->   	return services;
->   }
->   
-> 
+In this case, the number of NVMe PCI's MSI-X table entries is 64, so
+__pci_enable_msix_range() return -ENOSPC when we ask for 65.
+
+However, the following __pci_enable_msi_range() returns -EINVAL because
+the NVMe PCI isn't capable of MSI, then this error is returned from
+pci_alloc_irq_vectors_affinity() finally to NVMe driver.
+
+Of course, -EINVAL makes a difference because the current code only
+tries to assign one irq vector in this case, and it shouldn't be
+returned from pci_alloc_irq_vectors_affinity(), given there is enough
+msix entries for fallback, right?
+
+Thanks,
+Ming
