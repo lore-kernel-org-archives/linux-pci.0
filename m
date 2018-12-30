@@ -2,168 +2,147 @@ Return-Path: <SRS0=5lyS=PH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A28E3C43612
-	for <linux-pci@archiver.kernel.org>; Sun, 30 Dec 2018 01:06:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3E8EC43387
+	for <linux-pci@archiver.kernel.org>; Sun, 30 Dec 2018 11:06:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F9DB217F4
-	for <linux-pci@archiver.kernel.org>; Sun, 30 Dec 2018 01:06:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1546131991;
-	bh=YtaPTXGknpyU/bcWB2uz0k5w2UEfoyeiuTnK+iJnJ/Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=TzcOqATNE4hndivQAUE5eawNJB/TCOvxFNXp2FJnzOreQLXxysYZ9uTHsFtLDvavC
-	 Tr+mZRQm/8AMoQZ3pL56nXgc8DFGVh+yLS7zg1fYwPBYKGkHQPF02aITHzr8q7X/xl
-	 TBHcZ+b5iPHQhtgl6L5E7H4ncVtQAKEN2dZWL6Kg=
+	by mail.kernel.org (Postfix) with ESMTP id 62C7820855
+	for <linux-pci@archiver.kernel.org>; Sun, 30 Dec 2018 11:06:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T/k2YsSW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725860AbeL3BGa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Dec 2018 20:06:30 -0500
-Received: from mail.kernel.org ([198.145.29.99]:33570 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725858AbeL3BGa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 29 Dec 2018 20:06:30 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A95B220866;
-        Sun, 30 Dec 2018 01:06:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1546131988;
-        bh=YtaPTXGknpyU/bcWB2uz0k5w2UEfoyeiuTnK+iJnJ/Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JutblmnK5sLieLI4VTbKTDtf7zYBSWqgOQ/YlAefQY1MBefA347szUcXUSFck0p7k
-         vDZOv1g9oP9avd6eHV6X/6AMIZaI9zjQP96RYJpKLSCv4TVUQ/y/+U72gxOTJ2czX3
-         1nIB/eOE/pT7eY8i6jxUnk7u3BMe7Vf6MYe8EBE0=
-Date:   Sat, 29 Dec 2018 19:06:26 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Koen Vandeputte <koen.vandeputte@ncentric.com>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Tim Harvey <tharvey@gateworks.com>,
-        Russell King <linux@armlinux.org.uk>, stable@vger.kernel.org,
-        Robin Leblon <robin.leblon@ncentric.com>,
-        Olof Johansson <olof@lixom.net>,
-        Krzysztof Halasa <khalasa@piap.pl>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] arm: cns3xxx: fix writing to wrong PCI registers after
- alignment
-Message-ID: <20181230010625.GC159477@google.com>
-References: <20181218111743.25566-1-koen.vandeputte@ncentric.com>
+        id S1725972AbeL3LGY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 30 Dec 2018 06:06:24 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:35737 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725971AbeL3LGY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 30 Dec 2018 06:06:24 -0500
+Received: by mail-wr1-f65.google.com with SMTP id 96so24532437wrb.2
+        for <linux-pci@vger.kernel.org>; Sun, 30 Dec 2018 03:06:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:subject:cc:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=7uTH9rrc/5536CWxDXni6P4TMwJvDumLBnGklSMZ0Tg=;
+        b=T/k2YsSWcBKAGtyDJxWVHUi2LFOBB2/soNsFkU+rhP4b1gqZoJGYvdo+b6ogU1RJNq
+         3UCa/FRAvsugR496uW5Xu4vhsy9xNXLwyGNJekapEuSIVYV5wUCmU8hpZ1VfnMpCr+Pw
+         byTwnSYRxp1ZlNWnugccKkU+MvcFYJji6n6qSoRbzzkI70/xaROUG82ZEfgfSjCk1Fv+
+         XxLesy7/gbXBDbUSC2N6XfOyQitdAS75GjOEugWPF3SBqyTv7s1o/YxEgt//CVYy4rWi
+         vKascwNnrKkIXBMd9xADN28HkfdRWyjLggyMp7UmRc+aoWLyZQCF5HV4M9/YLXoQcPw+
+         04tQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:cc:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=7uTH9rrc/5536CWxDXni6P4TMwJvDumLBnGklSMZ0Tg=;
+        b=CkXMvjcohNL12irAVbHmBzYUJQne4BVzLsQjd15LJavtii0jBMxV2YZ1wUBdZO/Foh
+         rOzBd8K8QoXmQF02TG8lBzD/+NF5v+iXLu0rM6xm1c0HqoVGkduHfoB1gDb2eqDGWOXg
+         Cmp6PRSg30UsNamYo2wXN3SWv4MMzGjinORvIKo7xh2mDJxO/NpjbkeKs9QafMCL0TL9
+         H3VWaJCNuAUARf2aNRJYzc4sSBKvT0DGaRNd0jWZq65eA/hmMJc4Zgp8VyDzdqSGzxoc
+         Awrqu5m2FhM8IrXIKi11JjYNYkEg7aOE0jGm6eQgdpqCDg7sGQPrRHL3HdaACAxb8ffR
+         NNLA==
+X-Gm-Message-State: AJcUukdpkfVt7ope/5jo1P2Cu+koYqdzFJZvWUufTXAmjjdoLAQRq8A/
+        uI5dLBYfAhPCu1ALjXkGGgJsooGO
+X-Google-Smtp-Source: ALg8bN5OO92MoSCn0lW97DXcCPBjciqf9WT9mmuNJj260TcpzbB7s4vbOGvRuuKrmLV8jkux9TezrQ==
+X-Received: by 2002:adf:e509:: with SMTP id j9mr32382938wrm.76.1546167982369;
+        Sun, 30 Dec 2018 03:06:22 -0800 (PST)
+Received: from ?IPv6:2003:ea:8bcf:e300:91d:395e:672d:52a9? (p200300EA8BCFE300091D395E672D52A9.dip0.t-ipconnect.de. [2003:ea:8bcf:e300:91d:395e:672d:52a9])
+        by smtp.googlemail.com with ESMTPSA id q9sm49770810wrp.0.2018.12.30.03.06.21
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 30 Dec 2018 03:06:21 -0800 (PST)
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH RFC] PCI/PME: fix PME runtime PM handling
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Message-ID: <1e0c3baa-c2bb-0a91-19ca-65f4784b1424@gmail.com>
+Date:   Sun, 30 Dec 2018 12:06:14 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181218111743.25566-1-koen.vandeputte@ncentric.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc linux-pci]
+I face the issue that no PME is generated if the network cable is
+re-plugged. To explain that in a little more detail:
+r8169 driver enters runtime suspend 10 seconds after cable is detached.
+LinkUp detection is armed and device enters D3hot. When the cable is
+re-plugged Linkup should generate a PME and device is resumed.
+But system receives no PME from the device.
 
-On Tue, Dec 18, 2018 at 12:17:43PM +0100, Koen Vandeputte wrote:
-> Originally, cns3xxx used it's own functions for mapping, reading and writing registers.
-> 
-> Commit 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
-> removed the internal PCI config write function in favor of the generic one:
-> 
-> cns3xxx_pci_write_config() --> pci_generic_config_write()
-> 
-> cns3xxx_pci_write_config() expected aligned addresses, being produced by cns3xxx_pci_map_bus()
-> while the generic one pci_generic_config_write() actually expects the real address
-> as both the function and hardware are capable of byte-aligned writes.
-> 
-> This currently leads to pci_generic_config_write() writing
-> to the wrong registers on some ocasions.
-> 
-> First issue seen due to this:
-> 
-> - driver ath9k gets loaded
-> - The driver wants to write value 0xA8 to register PCI_LATENCY_TIMER, located at 0x0D
-> - cns3xxx_pci_map_bus() aligns the address to 0x0C
-> - pci_generic_config_write() effectively writes 0xA8 into register 0x0C (CACHE_LINE_SIZE)
-> 
-> This seems to cause some slight instability when certain PCI devices are used.
-> 
-> Another issue example caused by this this is the PCI bus numbering,
-> where the primary bus is higher than the secondary, which is impossible.
-> 
-> Before:
-> 
-> 00:00.0 PCI bridge: Cavium, Inc. Device 3400 (rev 01) (prog-if 00 [Normal decode])
->     Flags: bus master, fast devsel, latency 0, IRQ 255
->     Bus: primary=02, secondary=01, subordinate=ff, sec-latency=0
-> 
-> After fix:
-> 
-> 00:00.0 PCI bridge: Cavium, Inc. Device 3400 (rev 01) (prog-if 00 [Normal decode])
->     Flags: bus master, fast devsel, latency 0, IRQ 255
->     Bus: primary=00, secondary=01, subordinate=02, sec-latency=0
-> 
-> And very likely some more ..
-> 
-> Fix all by omitting the alignment being done in the mapping function.
-> 
-> Fixes: 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
-> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Krzysztof Halasa <khalasa@piap.pl>
-> CC: Olof Johansson <olof@lixom.net>
-> CC: Robin Leblon <robin.leblon@ncentric.com>
-> CC: Rob Herring <robh@kernel.org>
-> CC: Russell King <linux@armlinux.org.uk>
-> CC: Tim Harvey <tharvey@gateworks.com>
-> CC: stable@vger.kernel.org # v4.0+
-> ---
->  arch/arm/mach-cns3xxx/pcie.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-> index 318394ed5c7a..5e11ad3164e0 100644
-> --- a/arch/arm/mach-cns3xxx/pcie.c
-> +++ b/arch/arm/mach-cns3xxx/pcie.c
-> @@ -83,7 +83,7 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
->  	} else /* remote PCI bus */
->  		base = cnspci->cfg1_regs + ((busno & 0xf) << 20);
->  
-> -	return base + (where & 0xffc) + (devfn << 12);
-> +	return base + where + (devfn << 12);
+Wake-on-LAN from S3 works perfectly fine and generates a PME.
 
-802b7c06adc7 replaced cns3xxx_pci_write_config(), which always used
-__raw_writel() so it only did 32-bit accesses, with
-pci_generic_config_write(), which uses writeb/writew/writel()
-depending on the size.
+After checking the pcie pme code and some experiments I found that
+the following fixes the issue for me. Now system receives the PME
+and properly runtime-resumes the network device.
 
-802b7c06adc7 also converted cns3xxx_pci_read_config() from always
-using __raw_readl() (a 32-bit access) to using
-pci_generic_config_read32(), which also always does a 32-bit access.
+But I'm no expert in PCIe and PME, therefore I'm not sure whether
+the fix is correct. Please advise.
 
-This makes me think the cnx3xxx hardware is only capable of 32-bit
-accesses, and this patch should change the driver to use
-pci_generic_config_write32() instead of pci_generic_config_write() in
-addition to the mapping fix above.
+Adding also Mika as author of 0e157e528604 ("PCI/PME: Implement
+runtime PM callbacks").
 
-What do you think?
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ drivers/pci/pcie/pme.c | 29 ++---------------------------
+ 1 file changed, 2 insertions(+), 27 deletions(-)
 
-I don't think hardware that only supports 32-bit PCI writes can be
-quite spec-compliant (see the comments in
-pci_generic_config_write32()).  So (1) you may see an additional
-dmesg warning when you convert to use it, and (2) it's possible that
-there may still be instability related to the corruption caused by
-using a 32-bit write when an 8-bit write was intended.
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 0dbcf4290..285ea0ed2 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -432,31 +432,6 @@ static void pcie_pme_remove(struct pcie_device *srv)
+ 	kfree(get_service_data(srv));
+ }
+ 
+-static int pcie_pme_runtime_suspend(struct pcie_device *srv)
+-{
+-	struct pcie_pme_service_data *data = get_service_data(srv);
+-
+-	spin_lock_irq(&data->lock);
+-	pcie_pme_interrupt_enable(srv->port, false);
+-	pcie_clear_root_pme_status(srv->port);
+-	data->noirq = true;
+-	spin_unlock_irq(&data->lock);
+-
+-	return 0;
+-}
+-
+-static int pcie_pme_runtime_resume(struct pcie_device *srv)
+-{
+-	struct pcie_pme_service_data *data = get_service_data(srv);
+-
+-	spin_lock_irq(&data->lock);
+-	pcie_pme_interrupt_enable(srv->port, true);
+-	data->noirq = false;
+-	spin_unlock_irq(&data->lock);
+-
+-	return 0;
+-}
+-
+ static struct pcie_port_service_driver pcie_pme_driver = {
+ 	.name		= "pcie_pme",
+ 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+@@ -464,8 +439,8 @@ static struct pcie_port_service_driver pcie_pme_driver = {
+ 
+ 	.probe		= pcie_pme_probe,
+ 	.suspend	= pcie_pme_suspend,
+-	.runtime_suspend = pcie_pme_runtime_suspend,
+-	.runtime_resume	= pcie_pme_runtime_resume,
++	.runtime_suspend = pcie_pme_suspend,
++	.runtime_resume	= pcie_pme_resume,
+ 	.resume		= pcie_pme_resume,
+ 	.remove		= pcie_pme_remove,
+ };
+-- 
+2.20.1
 
->  }
->  
->  static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
-> -- 
-> 2.17.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
