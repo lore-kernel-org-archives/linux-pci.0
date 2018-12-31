@@ -2,109 +2,107 @@ Return-Path: <SRS0=55Kx=PI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED154C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 31 Dec 2018 20:40:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA96C43387
+	for <linux-pci@archiver.kernel.org>; Mon, 31 Dec 2018 21:51:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8C8F218A1
-	for <linux-pci@archiver.kernel.org>; Mon, 31 Dec 2018 20:40:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E057218A4
+	for <linux-pci@archiver.kernel.org>; Mon, 31 Dec 2018 21:51:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1546288852;
-	bh=bXn5PAxPmJETDf7IGQcCLV2q8CDe7Qpa3PLg0V7bzS8=;
+	s=default; t=1546293112;
+	bh=lfK3GxwgUiKaWzacXZIra3yuRYiusEdxckeGdrEwxI0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=B0zAldEfftvOJ4zyBI12ErDkEQDkkSnTvt7Z422poeCaUvECUBiGg2EytqzMUBAF5
-	 K+iWS5MO9N+xZiJWH98n9umCrJagfNSElVny+43ENlUI6k2EhjdqDLS/bkR32RPNMr
-	 akSwuv/5KBW4fkV9tDnBmrMUz6/MUTQqKJCferVI=
+	b=clZFTdzwqd7rgAliloj5Eq3FjKCpvfwd2Emijp5nUG67gY7Z3PI48iP/MhxJXC0mL
+	 hq+/+nrqrTmsPoDgK1h9Xt8kCg4y60p/tfkjP9IP4wcwx9RsR4OpFWPbzEJIZK1mwx
+	 nt8ga/6S/7/a0hWN9I9BcjK9xRp1J9JeKOEVKIwo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727574AbeLaUkw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 31 Dec 2018 15:40:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52394 "EHLO mail.kernel.org"
+        id S1727574AbeLaVvv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 31 Dec 2018 16:51:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45334 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727624AbeLaUkv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Dec 2018 15:40:51 -0500
+        id S1727416AbeLaVvv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Dec 2018 16:51:51 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9CFF921019;
-        Mon, 31 Dec 2018 20:40:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7C11620B1F;
+        Mon, 31 Dec 2018 21:51:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1546288850;
-        bh=bXn5PAxPmJETDf7IGQcCLV2q8CDe7Qpa3PLg0V7bzS8=;
+        s=default; t=1546293110;
+        bh=lfK3GxwgUiKaWzacXZIra3yuRYiusEdxckeGdrEwxI0=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aTYR1Zxi26Rp+SN7/3G2m+gYVKwErVNsjVHpWFL5sTx5WxMR6Mon/ZJGs/ZtmozxZ
-         mw6+Iu9qEh6oz93zYpsX3T2eqRkrdyJMyrUWMNQHMrfhqCTSsAVRmMbQreg4gr9N4d
-         4l7OSzdzo9BflPdNxunHwPtSpk+kPjN/aKjPTUFc=
-Date:   Mon, 31 Dec 2018 14:40:48 -0600
+        b=a+AfmnbrfZEMvigZu9mMS4iHWbqtAAFzZYEKHIxfM9NHffGC20+e++aOPRwQEcbl4
+         ttqTpKGd+WUCT/Kt1JeTGFtKe/3RMAeGT1b4VxmP/o9lGjXwVuwpzHNcpDJ/F2NIlq
+         EmxXiZfeW2CYhr2FTBPatacp7F7m44Wwdk+YqbQo=
+Date:   Mon, 31 Dec 2018 15:51:47 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kangjie Lu <kjlu@umn.edu>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        linux-samsung-soc@vger.kernel.org, Kukjin Kim <kgene@kernel.org>,
-        pakki001@umn.edu, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] pci: dwc: add a check for resetting gpio
-Message-ID: <20181231204048.GG159477@google.com>
-References: <20181226022236.71682-1-kjlu@umn.edu>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@fb.com>,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 2/2] nvme pci: try to allocate multiple irq vectors again
+ in case of -EINVAL
+Message-ID: <20181231215147.GH159477@google.com>
+References: <20181226103755.2101-1-ming.lei@redhat.com>
+ <20181226103755.2101-3-ming.lei@redhat.com>
+ <20181226182027.GA5866@lst.de>
+ <20181227082136.GA14423@ming.t460p>
+ <20181227130834.GA22967@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181226022236.71682-1-kjlu@umn.edu>
+In-Reply-To: <20181227130834.GA22967@lst.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Kangjie,
-
-Thanks for the patch.
-
-On Tue, Dec 25, 2018 at 08:22:36PM -0600, Kangjie Lu wrote:
-> devm_gpio_request_one() could fail. The fix checks its status and issues
-> an error if it fails.
+On Thu, Dec 27, 2018 at 02:08:34PM +0100, Christoph Hellwig wrote:
+> On Thu, Dec 27, 2018 at 04:21:38PM +0800, Ming Lei wrote:
+> > On Wed, Dec 26, 2018 at 07:20:27PM +0100, Christoph Hellwig wrote:
+> > > On Wed, Dec 26, 2018 at 06:37:55PM +0800, Ming Lei wrote:
+> > > > It is observed on QEMU that pci_alloc_irq_vectors_affinity() may
+> > > > returns -EINVAL when the requested number is too big(such as 64).
+> > > 
+> > > Which is not how this API is supposed to work and documented to work.
+> > > 
+> > > We need to fix pci_alloc_irq_vectors_affinity to not return a spurious
+> > > error and just return the allocated number of vectors instead of
+> > > hacking around that in drivers.
+> > 
+> > Yeah, you are right.
+> > 
+> > The issue is that QEMU nvme-pci is MSIX-capable only, and hasn't MSI
+> > capability.
+> > 
+> > __pci_enable_msix_range() actually returns -ENOSPC, but __pci_enable_msi_range()
+> > returns -EINVAL because dev->msi_cap is zero.
+> > 
+> > Maybe we need the following fix?
 > 
-> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
-> ---
->  drivers/pci/controller/dwc/pci-exynos.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
-> index cee5f2f590e2..e3a045e215d2 100644
-> --- a/drivers/pci/controller/dwc/pci-exynos.c
-> +++ b/drivers/pci/controller/dwc/pci-exynos.c
-> @@ -226,9 +226,12 @@ static void exynos_pcie_assert_reset(struct exynos_pcie *ep)
->  	struct dw_pcie *pci = ep->pci;
->  	struct device *dev = pci->dev;
->  
-> -	if (ep->reset_gpio >= 0)
-> -		devm_gpio_request_one(dev, ep->reset_gpio,
-> -				GPIOF_OUT_INIT_HIGH, "RESET");
-> +	if (ep->reset_gpio >= 0) {
-> +		if (devm_gpio_request_one(dev, ep->reset_gpio,
-> +				GPIOF_OUT_INIT_HIGH, "RESET"))
-> +			dev_err(dev, "Failed requesting reset gpio %d\n",
-> +					ep->reset_gpio);
-> +	}
+> Should it matter?  We still get a negative vecs back, and still fall
+> back to the next option.  
 
-Even before your patch, this code doesn't make sense to me.
+I'm not sure how it matters either, since
+pci_alloc_irq_vectors_affinity() will fail either way.  It *would* be
+nice to return the correct error in case the caller uses it to emit a
+message.
 
-devm_gpio_request_one() is a setup function and should be called in
-the probe path.  The "assert_reset" path should do something like
-gpio_set_value().  See other callers, e.g.,
+But if the caller wants to use -ENOSPC to reduce @min_vecs and try
+again, that sounds like an incorrect use of the interface -- the
+caller should have just used the smaller @min_vecs the first time
+around.
 
-  imx6_pcie_probe()
-  histb_pcie_probe()
-  mvebu_pcie_parse_port()
+> Unless ther are no irqs available at all
+> for the selected types pci_alloc_irq_vectors_affinity should never
+> return an error.
 
-I'm skeptical that exynos_pcie_assert_reset() ever worked as intended,
-so let's straighten that out before worrying about checking the return
-code from devm_gpio_request_one().
+I don't quite understand this last sentence.  If @min_vecs == 5 and
+the device only supports 4 MSI-X and 4 MSI vectors, the function
+comment says we should fail with -ENOSPC.
 
-The result should be two patches: (1) fix the devm_gpio_request_one()
-usage, and (2) check the devm_gpio_request_one() return value.
-
->  }
+Bjorn
