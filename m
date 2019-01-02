@@ -2,86 +2,74 @@ Return-Path: <SRS0=YnKd=PK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55B4FC43387
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 06:04:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63C77C43387
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 06:17:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2488C2089F
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 06:04:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3045A218B0
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 06:17:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727558AbfABGEJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Jan 2019 01:04:09 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:6017 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727360AbfABGEJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jan 2019 01:04:09 -0500
-X-UUID: 23eadf837a9b47388a0b368ad424e620-20190102
-X-UUID: 23eadf837a9b47388a0b368ad424e620-20190102
-Received: from mtkcas07.mediatek.inc [(172.21.101.84)] by mailgw01.mediatek.com
-        (envelope-from <honghui.zhang@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 123869111; Wed, 02 Jan 2019 14:03:58 +0800
-Received: from mtkcas09.mediatek.inc (172.21.101.178) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Wed, 2 Jan 2019 14:03:56 +0800
-Received: from localhost.localdomain (10.17.3.153) by mtkcas09.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Wed, 2 Jan 2019 14:03:56 +0800
-From:   <honghui.zhang@mediatek.com>
-To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>
-CC:     <youlin.pei@mediatek.com>, <jianjun.wang@mediatek.com>,
-        Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: [PATCH] PCI: Mediatek: Use resource_size function on resource object
-Date:   Wed, 2 Jan 2019 14:03:53 +0800
-Message-ID: <1546409033-20412-1-git-send-email-honghui.zhang@mediatek.com>
-X-Mailer: git-send-email 2.6.4
-MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+        id S1727556AbfABGRC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Jan 2019 01:17:02 -0500
+Received: from mga11.intel.com ([192.55.52.93]:32951 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726344AbfABGRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Jan 2019 01:17:02 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 Jan 2019 22:17:01 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,429,1539673200"; 
+   d="scan'208";a="122580311"
+Received: from lftan-mobl.gar.corp.intel.com (HELO ubuntu) ([10.226.248.90])
+  by orsmga002.jf.intel.com with SMTP; 01 Jan 2019 22:16:55 -0800
+Received: by ubuntu (sSMTP sendmail emulation); Wed, 02 Jan 2019 14:16:51 +0800
+From:   Ley Foon Tan <ley.foon.tan@intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, lftan.linux@gmail.com,
+        Ley Foon Tan <ley.foon.tan@intel.com>
+Subject: [PATCH v3 0/2] Add Stratix 10 PCIe Root Port support
+Date:   Wed,  2 Jan 2019 14:16:47 +0800
+Message-Id: <1546409810-37630-1-git-send-email-ley.foon.tan@intel.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Add PCIe Root Port support for Stratix 10 device and also update
+device tree binding documentation.
 
-drivers/pci/pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
+v2 -> v3:
+---------
+- Rename Stratix10 to Stratix 10.
+- Change bool s10_flag to enum version.
 
-Generated by: scripts/coccinelle/api/resource_size.cocci
+v1 -> v2:
+---------
+- Add define S10_TLP_FMTTYPE_* macros.
+- Remove initialize structure members to NULL/zero.
+- Rename *_funcs to *_data.
+- Update comment and fix coding style warning from checkpatch.pl.
+- Rename StratixXX to stratix10.
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+History:
+--------
+[v1]: https://lkml.org/lkml/2018/12/26/68
+[v2]: https://lkml.org/lkml/2018/12/31/46
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index e307166..0168376 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- 	struct resource *mem = &pcie->mem;
- 	const struct mtk_pcie_soc *soc = port->pcie->soc;
- 	u32 val;
--	size_t size;
- 	int err;
- 
- 	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-@@ -706,8 +705,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- 		mtk_pcie_enable_msi(port);
- 
- 	/* Set AHB to PCIe translation windows */
--	size = mem->end - mem->start;
--	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
-+	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(resource_size(mem)));
- 	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
- 
- 	val = upper_32_bits(mem->start);
--- 
-2.6.4
+Ley Foon Tan (2):
+  PCI: altera: Add Stratix 10 PCIe support
+  dt-bindings: PCI: altera: Add altr,pcie-root-port-2.0
+
+ .../devicetree/bindings/pci/altera-pcie.txt        |    4 +-
+ drivers/pci/controller/Kconfig                     |    2 +-
+ drivers/pci/controller/pcie-altera.c               |  246 ++++++++++++++++++--
+ 3 files changed, 226 insertions(+), 26 deletions(-)
 
