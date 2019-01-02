@@ -4,71 +4,68 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E595AC43387
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 09:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49972C43387
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 10:17:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B1806206C0
-	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 09:37:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14AD32073F
+	for <linux-pci@archiver.kernel.org>; Wed,  2 Jan 2019 10:17:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="LCc2Untk"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="RjFjLG7R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726670AbfABJht (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 2 Jan 2019 04:37:49 -0500
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:48640 "EHLO
+        id S1728716AbfABKRG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 2 Jan 2019 05:17:06 -0500
+Received: from smtprelay.synopsys.com ([198.182.60.111]:50170 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726499AbfABJht (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jan 2019 04:37:49 -0500
+        with ESMTP id S1726499AbfABKRG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Jan 2019 05:17:06 -0500
 Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id AD18710C1189;
-        Wed,  2 Jan 2019 01:37:47 -0800 (PST)
+        by smtprelay.synopsys.com (Postfix) with ESMTP id BC3D910C1225;
+        Wed,  2 Jan 2019 02:17:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1546421869; bh=2qNiGqzha50XcWrAprcnnSRTovjLYD7B/givc4nhFQ0=;
+        t=1546424225; bh=wxJi1wjnP2O1RFdQq+JpmzFD++SKjdnAhXh8JrHpfGI=;
         h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=LCc2UntkIjecTdVEhB3sxa7jrWCvQr+7aDZDMTQSxLKko0zV/W9nTpjeynJupC2pn
-         tw1GOY18Yph3wPgJyebA68D9LKlsLweNMFZmS+GVjFs2NX4HBvYSlUAWXkMtbWJ8Tv
-         dmdPv6JT+1UJ5cFAfdTDZu8tVexoPh5AoXjPIR8kptke/cc7xEgPZVGR9unUGs6IlH
-         DI+9bW6yr5+LdefO02ymXPCCuSPFwqveOsdqdWc5KLNiRsnMUexNSkwkLioAvjyyHR
-         ttA1X9l779ZyFMr9dlGAizRbWfpu8qtSVj9Ob24P6mXISiyiA6Ejf9tyTt0Uqqf1I+
-         B3JPuAvjFn4dA==
-Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2-vip.internal.synopsys.com [10.12.239.238])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 1300637AC;
-        Wed,  2 Jan 2019 01:37:47 -0800 (PST)
+        b=RjFjLG7R7t3vznz6BFwX+9qOfwI2icWAK0P+9OqRwvi2t/HgNJFxejypzfWV2JwE7
+         tlMHrrgJqVPH67ae9SC8ZeOG5aCAQ0XoqBeQvz9Hp+3QvANe8GKxLedG9H/qEQecuv
+         OjX+7L8wvFzd6l6t43Epi04BYdDXSE7ghzPa3FYkYZ0II5SM6q2WLwQEsAWA9OofVQ
+         iylCWERyEyT2uF5OTbKZBTfgXk1brWBFXf2ySNgxNMz3SApkFVNIY3RrR63d4+sShS
+         a/4tY7R7ungxyZtsSKB+375y5u7yWibS8IrZN6xwRYfz1SMl5Lb91L/Tmibdat53Mq
+         5dj5UI3OuXXWg==
+Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 8D4EC34A2;
+        Wed,  2 Jan 2019 02:17:05 -0800 (PST)
 Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WEHTC2.internal.synopsys.com (10.12.239.237) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 2 Jan 2019 01:37:46 -0800
+ US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Wed, 2 Jan 2019 02:17:05 -0800
 Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
  DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 2 Jan 2019 10:37:44 +0100
+ (TLS) id 14.3.408.0; Wed, 2 Jan 2019 11:17:03 +0100
 Received: from [10.107.25.131] (10.107.25.131) by
  DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 2 Jan 2019 10:37:44 +0100
-Subject: Re: [PATCH 07/21] PCI: designware: Make use of IS_ALIGNED()
-To:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        "linux-imx@nxp.com" <linux-imx@nxp.com>,
+ (TLS) id 14.3.408.0; Wed, 2 Jan 2019 11:17:03 +0100
+Subject: Re: [PATCH 07/10] PCI: dwc: Add support to use non default
+ msi_irq_chip
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Marc Zyngier <marc.zyngier@arm.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
         <linux-arm-kernel@lists.infradead.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20181221072716.29017-1-andrew.smirnov@gmail.com>
- <20181221072716.29017-8-andrew.smirnov@gmail.com>
+References: <20181219124207.13479-1-kishon@ti.com>
+ <20181219124207.13479-8-kishon@ti.com>
 From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <9b275993-c511-50d3-e18e-b421010c1bba@synopsys.com>
-Date:   Wed, 2 Jan 2019 09:33:01 +0000
+Message-ID: <d84eb74c-4006-b4ce-19b3-9f2e0f33e5a8@synopsys.com>
+Date:   Wed, 2 Jan 2019 10:12:32 +0000
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.3.3
 MIME-Version: 1.0
-In-Reply-To: <20181221072716.29017-8-andrew.smirnov@gmail.com>
+In-Reply-To: <20181219124207.13479-8-kishon@ti.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -80,53 +77,67 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Hi,
 
-On 21/12/2018 07:27, Andrey Smirnov wrote:
-> Make the intent a bit more clear as well as get rid of explicit
-> arithmetic by using IS_ALIGNED() to determine if "addr" is aligned to
-> "size". No functional change intended.
-> 
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Fabio Estevam <fabio.estevam@nxp.com>
-> Cc: Chris Healy <cphealy@gmail.com>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Leonard Crestez <leonard.crestez@nxp.com>
-> Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-> Cc: Richard Zhu <hongxing.zhu@nxp.com>
-> Cc: linux-imx@nxp.com
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-> ---
->  drivers/pci/controller/dwc/pcie-designware.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 93ef8c31fb39..67236379c61a 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -22,7 +22,7 @@
->  
->  int dw_pcie_read(void __iomem *addr, int size, u32 *val)
->  {
-> -	if ((uintptr_t)addr & (size - 1)) {
-> +	if (!IS_ALIGNED((uintptr_t)addr, size)) {
->  		*val = 0;
->  		return PCIBIOS_BAD_REGISTER_NUMBER;
->  	}
-> @@ -43,7 +43,7 @@ int dw_pcie_read(void __iomem *addr, int size, u32 *val)
->  
->  int dw_pcie_write(void __iomem *addr, int size, u32 val)
->  {
-> -	if ((uintptr_t)addr & (size - 1))
-> +	if (!IS_ALIGNED((uintptr_t)addr, size))
->  		return PCIBIOS_BAD_REGISTER_NUMBER;
->  
->  	if (size == 4)
-> 
+On 19/12/2018 12:42, Kishon Vijay Abraham I wrote:
+> Platforms using Designware IP uses dw_pci_msi_bottom_irq_chip for
+> configuring the MSI controller logic within the Designware IP. However
+> certain platforms like Keystone (K2G) which uses Desingware IP has
+> it's own MSI controller logic. For handling such platforms,
+> the irqchip ops uses msi_irq_ack, msi_set_irq, msi_clear_irq callback
+> functions.
 
-Sounds good.
+Keystone also uses get_msi_addr and get_msi_data callbacks, do you want to
+update the description to add those references as well?
+
+> 
+> Add support to use different msi_irq_chip with default as
+> dw_pci_msi_bottom_irq_chip. This is in preparation to get rid off
+> msi_irq_ack, msi_set_irq, msi_clear_irq and other Keystone specific
+> dw_pcie_host_ops.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 5 ++++-
+>  drivers/pci/controller/dwc/pcie-designware.h      | 1 +
+>  2 files changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 0fa9e8fdce66..db21bd11f153 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -245,7 +245,7 @@ static int dw_pcie_irq_domain_alloc(struct irq_domain *domain,
+>  
+>  	for (i = 0; i < nr_irqs; i++)
+>  		irq_domain_set_info(domain, virq + i, bit + i,
+> -				    &dw_pci_msi_bottom_irq_chip,
+> +				    pp->msi_irq_chip,
+>  				    pp, handle_edge_irq,
+>  				    NULL, NULL);
+>  
+> @@ -277,6 +277,9 @@ int dw_pcie_allocate_domains(struct pcie_port *pp)
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>  	struct fwnode_handle *fwnode = of_node_to_fwnode(pci->dev->of_node);
+>  
+> +	if (!pp->msi_irq_chip)
+> +		pp->msi_irq_chip = &dw_pci_msi_bottom_irq_chip;
+> +
+>  	pp->irq_domain = irq_domain_create_linear(fwnode, pp->num_vectors,
+>  					       &dw_pcie_msi_domain_ops, pp);
+>  	if (!pp->irq_domain) {
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 0989d880ac46..0873ee4084aa 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -168,6 +168,7 @@ struct pcie_port {
+>  	struct irq_domain	*irq_domain;
+>  	struct irq_domain	*msi_domain;
+>  	dma_addr_t		msi_data;
+> +	struct irq_chip		*msi_irq_chip;
+>  	u32			num_vectors;
+>  	u32			irq_status[MAX_MSI_CTRLS];
+>  	raw_spinlock_t		lock;
+> 
 
 Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 
+Regards,
+Gustavo
