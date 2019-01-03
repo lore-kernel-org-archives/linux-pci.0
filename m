@@ -6,64 +6,138 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC34C43387
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Jan 2019 21:11:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09FBDC43444
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jan 2019 21:11:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3160C2070C
+	by mail.kernel.org (Postfix) with ESMTP id D43472070C
 	for <linux-pci@archiver.kernel.org>; Thu,  3 Jan 2019 21:11:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727345AbfACVLq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Jan 2019 16:11:46 -0500
+        id S1727378AbfACVLr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Jan 2019 16:11:47 -0500
 Received: from mga02.intel.com ([134.134.136.20]:39360 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726906AbfACVLq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Jan 2019 16:11:46 -0500
+        id S1726906AbfACVLr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Jan 2019 16:11:47 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
   by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Jan 2019 13:11:46 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.56,436,1539673200"; 
-   d="scan'208";a="103738154"
+   d="scan'208";a="103738161"
 Received: from unknown (HELO localhost.lm.intel.com) ([10.232.112.69])
-  by orsmga007.jf.intel.com with ESMTP; 03 Jan 2019 13:11:45 -0800
+  by orsmga007.jf.intel.com with ESMTP; 03 Jan 2019 13:11:46 -0800
 From:   Keith Busch <keith.busch@intel.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Sagi Grimberg <sagi@grimberg.me>,
         Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org,
         Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
 Cc:     Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 1/4] nvme-pci: Set tagset nr_maps just once
-Date:   Thu,  3 Jan 2019 14:09:51 -0700
-Message-Id: <20190103210954.11129-1-keith.busch@intel.com>
+Subject: [PATCH 2/4] nvme-pci: Distribute io queue types after creation
+Date:   Thu,  3 Jan 2019 14:09:52 -0700
+Message-Id: <20190103210954.11129-2-keith.busch@intel.com>
 X-Mailer: git-send-email 2.13.6
+In-Reply-To: <20190103210954.11129-1-keith.busch@intel.com>
+References: <20190103210954.11129-1-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The driver overwrites the intermediate nr_map assignments to
-HCTX_MAX_TYPES, so remove those unnecessary temporary settings.
+The dev->io_queues types were set based on the results of the nvme set
+feature "number of queues" and the IRQ allocation. This does not mean
+that we're going to actually successfully allocate and create those IO
+queues. A failure there will cause blk-mq to have NULL hctx's because
+the map's nr_hw_queues accounts for more queues than were actually
+created.
 
+Adjust the io_queue types after we've created them when we've less than
+originally desired.
+
+Fixes: 3b6592f70ad7b ("nvme: utilize two queue maps, one for reads and one for writes")
 Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/nvme/host/pci.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/nvme/host/pci.c | 46 ++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 40 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 5a0bf6a24d50..98332d0a80f0 100644
+index 98332d0a80f0..1481bb6d9c42 100644
 --- a/drivers/nvme/host/pci.c
 +++ b/drivers/nvme/host/pci.c
-@@ -2291,9 +2291,6 @@ static int nvme_dev_add(struct nvme_dev *dev)
- 	if (!dev->ctrl.tagset) {
- 		dev->tagset.ops = &nvme_mq_ops;
- 		dev->tagset.nr_hw_queues = dev->online_queues - 1;
--		dev->tagset.nr_maps = 2; /* default + read */
--		if (dev->io_queues[HCTX_TYPE_POLL])
--			dev->tagset.nr_maps++;
- 		dev->tagset.nr_maps = HCTX_MAX_TYPES;
- 		dev->tagset.timeout = NVME_IO_TIMEOUT;
- 		dev->tagset.numa_node = dev_to_node(dev->dev);
+@@ -1733,6 +1733,30 @@ static int nvme_pci_configure_admin_queue(struct nvme_dev *dev)
+ 	return result;
+ }
+ 
++static void nvme_distribute_queues(struct nvme_dev *dev, unsigned int io_queues)
++{
++	unsigned int irq_queues, this_p_queues = dev->io_queues[HCTX_TYPE_POLL],
++		     this_w_queues = dev->io_queues[HCTX_TYPE_DEFAULT];
++
++	if (!io_queues) {
++		dev->io_queues[HCTX_TYPE_POLL] = 0;
++		dev->io_queues[HCTX_TYPE_DEFAULT] = 0;
++		dev->io_queues[HCTX_TYPE_READ] = 0;
++		return;
++	}
++
++	if (this_p_queues >= io_queues)
++		this_p_queues = io_queues - 1;
++	irq_queues = io_queues - this_p_queues;
++
++	if (this_w_queues > irq_queues)
++		this_w_queues = irq_queues;
++
++	dev->io_queues[HCTX_TYPE_POLL] = this_p_queues;
++	dev->io_queues[HCTX_TYPE_DEFAULT] = this_w_queues;
++	dev->io_queues[HCTX_TYPE_READ] = irq_queues - this_w_queues;
++}
++
+ static int nvme_create_io_queues(struct nvme_dev *dev)
+ {
+ 	unsigned i, max, rw_queues;
+@@ -1761,6 +1785,13 @@ static int nvme_create_io_queues(struct nvme_dev *dev)
+ 			break;
+ 	}
+ 
++	/*
++	 * If we've created less than expected io queues, redistribute the
++	 * dev->io_queues[] types accordingly.
++	 */
++	if (dev->online_queues - 1 != dev->max_qid)
++		nvme_distribute_queues(dev, dev->online_queues - 1);
++
+ 	/*
+ 	 * Ignore failing Create SQ/CQ commands, we can continue with less
+ 	 * than the desired amount of queues, and even a controller without
+@@ -2185,11 +2216,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	result = max(result - 1, 1);
+ 	dev->max_qid = result + dev->io_queues[HCTX_TYPE_POLL];
+ 
+-	dev_info(dev->ctrl.device, "%d/%d/%d default/read/poll queues\n",
+-					dev->io_queues[HCTX_TYPE_DEFAULT],
+-					dev->io_queues[HCTX_TYPE_READ],
+-					dev->io_queues[HCTX_TYPE_POLL]);
+-
+ 	/*
+ 	 * Should investigate if there's a performance win from allocating
+ 	 * more queues than interrupt vectors; it might allow the submission
+@@ -2203,7 +2229,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 		return result;
+ 	}
+ 	set_bit(NVMEQ_ENABLED, &adminq->flags);
+-	return nvme_create_io_queues(dev);
++	result = nvme_create_io_queues(dev);
++
++	if (!result)
++		dev_info(dev->ctrl.device, "%d/%d/%d default/read/poll queues\n",
++					dev->io_queues[HCTX_TYPE_DEFAULT],
++					dev->io_queues[HCTX_TYPE_READ],
++					dev->io_queues[HCTX_TYPE_POLL]);
++	return result;
++
+ }
+ 
+ static void nvme_del_queue_end(struct request *req, blk_status_t error)
 -- 
 2.14.4
 
