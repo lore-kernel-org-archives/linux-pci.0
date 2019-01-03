@@ -2,109 +2,247 @@ Return-Path: <SRS0=ToWj=PL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD29C43387
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Jan 2019 17:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE02AC43387
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jan 2019 17:36:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9EED4217F5
-	for <linux-pci@archiver.kernel.org>; Thu,  3 Jan 2019 17:35:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SDcqMCQR"
+	by mail.kernel.org (Postfix) with ESMTP id C0018208E3
+	for <linux-pci@archiver.kernel.org>; Thu,  3 Jan 2019 17:36:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731856AbfACRfW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Jan 2019 12:35:22 -0500
-Received: from mail-qt1-f196.google.com ([209.85.160.196]:37445 "EHLO
-        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731831AbfACRfW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Jan 2019 12:35:22 -0500
-Received: by mail-qt1-f196.google.com with SMTP id t33so37690754qtt.4;
-        Thu, 03 Jan 2019 09:35:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=m0Kdi7xBjgPQg1KD4ifF0vqMDBe5DwAExOchMlsKCrU=;
-        b=SDcqMCQRNX1PTTYu4g+6kWJInLw3cZ6KGstUtioosQ8sIZ0LT5i1uina6WB3asRReK
-         F9+izMdXdlL4ppxbYfoaoMdZ2KQqhGV8wh4NuyNkgwt3RqgF1ZwsUsD1EWrLAqo+ScbB
-         kk0dDX0CVHZQV5/Ghryuw89vKWSnJyvsasBYXHyapc6fqvB1UEn2ETFHT2gwplOoOswF
-         1P5dwtOiDv1nR8YV5/BNEL4yCIUKvGnx1KiIYqHNCpDM1l4DQEjjTSoMs84mQPcACOAe
-         L7RV0Ui3qSigDY++Zs4tEIKhlM7cx4V4bvO2WeyFTgVcnxDIp/xGUdTEpDhN0uw6rLtk
-         UJ9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=m0Kdi7xBjgPQg1KD4ifF0vqMDBe5DwAExOchMlsKCrU=;
-        b=MT6NzIYkw+t6I5j6VvZ52jWLcBgDKsiAeIpvUx8fJN4l7rqgUCbxszz+17S53Zekr5
-         S0vAfmnAmbR5/5vgHTKb2MKpXOf22ylR7YInaDaaldrihdcXatV1Wg0a2w0O2Odxzyct
-         7rjcAC1GnjRXSemJ15b19/TB5btihCGN6GEL3bcbzPgRDzSwZ5DuO/cEIl9iC0llkbjq
-         0iwtMAJOj4Lnf+YbQx+xdUmTDJq1PN72e9LGVvE1p5aPkX6SJYyBHFDgQg5iQbRRZkHy
-         oINxnzuwrQJeSxtYMElLUy05WjOIDk4UgxWk0DlIqPdF9L6l1UI8aM/dW0/PoK4VUC5U
-         KywQ==
-X-Gm-Message-State: AJcUukeXOWmoXq6uwUBf1zDabgQIeFkiP851DRKlcyQEK+94w31DtUra
-        H2NmFlRS8KQ+r7phS/6uUzgXUsf+lbaV6lytGSo=
-X-Google-Smtp-Source: AFSGD/XnJxO4NlcralXln8fOwuDG3rBEcH+iCSOoRmt35AbwvTII1lcqTDMKnV5oji7UfDuBkhvI32phyph+FXu+ub8=
-X-Received: by 2002:ac8:164a:: with SMTP id x10mr47624276qtk.67.1546536920554;
- Thu, 03 Jan 2019 09:35:20 -0800 (PST)
+        id S1731097AbfACRgF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Jan 2019 12:36:05 -0500
+Received: from mga11.intel.com ([192.55.52.93]:7052 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730250AbfACRgF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Jan 2019 12:36:05 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Jan 2019 09:36:02 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,435,1539673200"; 
+   d="scan'208";a="123033583"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.72.86])
+  by orsmga002.jf.intel.com with ESMTP; 03 Jan 2019 09:36:00 -0800
+Received: from andy by smile with local (Exim 4.92-RC3)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1gf6uV-00039S-4c; Thu, 03 Jan 2019 19:35:59 +0200
+Date:   Thu, 3 Jan 2019 19:35:59 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <joao.pinto@synopsys.com>
+Subject: Re: [RFC 4/6] dma: Add Synopsys eDMA IP PCIe glue-logic
+Message-ID: <20190103173559.GW10650@smile.fi.intel.com>
+References: <cover.1544610287.git.gustavo.pimentel@synopsys.com>
+ <b3cf38fc1cb81f9f14df96e2332e612e23ebf918.1544610287.git.gustavo.pimentel@synopsys.com>
+ <20181212132528.GT10650@smile.fi.intel.com>
+ <e77540c3-0715-667a-8494-2f442b347b06@synopsys.com>
 MIME-Version: 1.0
-References: <20181207190720.18517-1-hch@lst.de> <20181207190720.18517-3-hch@lst.de>
- <CA+8MBb+9prWYSmp25K-LMUv1_0eekvFqXhoj87CV9zcaXfMDGg@mail.gmail.com> <20190103072356.GA24163@lst.de>
-In-Reply-To: <20190103072356.GA24163@lst.de>
-From:   Tony Luck <tony.luck@gmail.com>
-Date:   Thu, 3 Jan 2019 09:35:08 -0800
-Message-ID: <CA+8MBbKXTRGLn1Wvpp1avQCZ186i5Cbo0puvSoNNuKO7_AcwZg@mail.gmail.com>
-Subject: Re: [PATCH 02/15] swiotlb: remove dma_mark_clean
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     iommu@lists.linux-foundation.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Jesper Dangaard Brouer <brouer@redhat.com>,
-        Tariq Toukan <tariqt@mellanox.com>,
-        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
-        =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        linux-pci@vger.kernel.org,
-        "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-        X86-ML <x86@kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e77540c3-0715-667a-8494-2f442b347b06@synopsys.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 2, 2019 at 11:23 PM Christoph Hellwig <hch@lst.de> wrote:
-> I think something like the patch below should fix it:
->
-> diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-> index ccd56f5df8cd..8d7396bd1790 100644
-> --- a/arch/ia64/Kconfig
-> +++ b/arch/ia64/Kconfig
-> @@ -31,7 +31,7 @@ config IA64
->         select HAVE_MEMBLOCK_NODE_MAP
->         select HAVE_VIRT_CPU_ACCOUNTING
->         select ARCH_HAS_DMA_COHERENT_TO_PFN if SWIOTLB
-> -       select ARCH_HAS_SYNC_DMA_FOR_CPU
-> +       select ARCH_HAS_SYNC_DMA_FOR_CPU if SWIOTLB
+On Thu, Dec 13, 2018 at 02:40:40PM +0000, Gustavo Pimentel wrote:
+> On 12/12/2018 13:25, Andy Shevchenko wrote:
+> > On Wed, Dec 12, 2018 at 12:13:24PM +0100, Gustavo Pimentel wrote:
 
-Close. But no cigar. Now I get:
+> > It seems this driver somehow written as a copy-paste of existing pieces w/o good reasons to do such.
+> 
 
-  CC      arch/ia64/mm/init.o
-arch/ia64/mm/init.c:75:6: error: redefinition of =E2=80=98arch_sync_dma_for=
-_cpu=E2=80=99
-./include/linux/dma-noncoherent.h:61:20: note: previous definition of
-=E2=80=98arch_sync_dma_for_cpu=E2=80=99 was here
-make[1]: *** [arch/ia64/mm/init.o] Error 1
-make: *** [arch/ia64/mm/init.o] Error 2
+(1)
+
+> What do you mean? It's true I relied on existing drivers to develop this
+> solution, but is not it supposed to be so?
+
+See below.
+
+> >> +enum dw_edma_pcie_bar {
+> >> +	BAR_0,
+> >> +	BAR_1,
+> >> +	BAR_2,
+> >> +	BAR_3,
+> >> +	BAR_4,
+> >> +	BAR_5
+> >> +};
+> > 
+> > Why do you need this at all?
+> 
+> See my answer below.
+> 
+> > 
+> >> +static const struct dw_edma_pcie_data snps_edda_data = {
+> >> +	// eDMA registers location
+> >> +	.regs_bar			= BAR_0,
+> >> +	.regs_off			= 0x1000,	//   4 KBytes
+> >> +	// eDMA memory linked list location
+> >> +	.ll_bar				= BAR_2,
+> >> +	.ll_off				= 0,		//   0 KBytes
+> >> +	.ll_sz				= 0x20000,	// 128 KBytes
+> >> +	// Other
+> >> +	.version			= 0,
+> >> +	.mode				= EDMA_MODE_UNROLL,
+> >> +};
+> > 
+> > Huh? Isn't this 
+> 
+> The eDMA is a hardware block (with requires some configuration) accessible
+> through a PCIe EndPoint, unfortunately there isn't any way for now (at least)
+> through an PCIe capability for instance to detect those configurations
+> automatically, therefore the only way to pass that configuration is to associate
+> it to PCIe Vendor(0x16c3) and Device (0xedda) Id.
+> 
+> To interact with eDMA hardware block the driver needs to access the eDMA
+> registers and the only way to do it is through PCIe mapping. In this those
+> registers will be available on BAR 0, with a offset of 4KB from the start.
+> 
+> The driver also requires a memory space (RAM) to create a linked list
+> descriptors and pass the first descriptor address to the eDMA hardware block so
+> that it can start performing the transfer autonomously. Once again this memory
+> space is provide through PCIe on BAR 2. This linked list space is in the
+> beginning and it's restricted to a size of 128KB.
+> 
+> Since this eDMA hardware block (more specifically eDMA registers) can evolve in
+> the future, I choosed to put here a version in order to have a driver that can
+> be easily adaptable and reusable without much effort.
+
+(2)
+
+> >> +	err = pci_try_set_mwi(pdev);
+> >> +	if (err) {
+> >> +		dev_err(dev, "%s DMA memory write invalidate\n",
+> >> +			pci_name(pdev));
+> >> +		return err;
+> >> +	}
+> > 
+> > Are you sure you need this?
+> 
+> I'm not sure, probably not. I saw using this being use on /dma/dw/pci.c driver.
+> I'll test without it.
+
+That's exactly the point what I referred to in (1) above.
+Looks like here is cargo-cult programming done without understanding why.
+I dunno how many other cases in the driver like this.
+
+> >> +	dev_info(dev, "Mode:\t%s\n",
+> >> +		 dw->mode == EDMA_MODE_LEGACY ? "Legacy" : "Unroll");
+> >> +
+> > 
+> > 
+> >> +	dev_info(dev, "Registers:\tBAR=%u, off=0x%.16llx B, addr=0x%.8lx\n",
+> >> +		 pdata->regs_bar, pdata->regs_off,
+> >> +		 (unsigned long) dw->regs);
+> > 
+> > Oh, no, don't do casting when printing something. In only rare cases it's needed, not here.
+> 
+> I've put the cast to remove the following warning:
+> 
+> drivers/dma/dw-edma/dw-edma-pcie.c:138:15:  warning: format ‘%lx’ expects
+> argument of type ‘long unsigned int’, but argument 6 has type ‘void *’
+
+...and as I said this is wrong. Please, find suitable specifiers for your case.
+
+> >> +	if (pdev->msi_cap && pdev->msi_enabled) {
+> >> +		cap_off = pdev->msi_cap + PCI_MSI_FLAGS;
+> >> +		pci_read_config_word(pdev, cap_off, &flags);
+> >> +		if (flags & PCI_MSI_FLAGS_ENABLE) {
+> >> +			cap_off = pdev->msi_cap + PCI_MSI_ADDRESS_LO;
+> >> +			pci_read_config_dword(pdev, cap_off, &addr_lo);
+> >> +
+> >> +			if (flags & PCI_MSI_FLAGS_64BIT) {
+> >> +				cap_off = pdev->msi_cap + PCI_MSI_ADDRESS_HI;
+> >> +				pci_read_config_dword(pdev, cap_off, &addr_hi);
+> >> +				cap_off = pdev->msi_cap + PCI_MSI_DATA_64;
+> >> +			} else {
+> >> +				addr_hi = 0;
+> >> +				cap_off = pdev->msi_cap + PCI_MSI_DATA_32;
+> >> +			}
+> >> +
+> >> +			dw->msi_addr = addr_hi;
+> >> +			dw->msi_addr <<= 32;
+> >> +			dw->msi_addr |= addr_lo;
+> >> +
+> >> +			pci_read_config_dword(pdev, cap_off, &(dw->msi_data));
+> >> +			dw->msi_data &= 0xffff;
+> >> +
+> >> +			dev_info(dev,
+> >> +				 "MSI:\t\taddr=0x%.16llx, data=0x%.8x, nr=%d\n",
+> >> +				 dw->msi_addr, dw->msi_data, pdev->irq);
+> >> +		}
+> >> +	}
+> >> +
+> >> +	if (pdev->msix_cap && pdev->msix_enabled) {
+> >> +		u32 offset;
+> >> +		u8 bir;
+> >> +
+> >> +		cap_off = pdev->msix_cap + PCI_MSIX_FLAGS;
+> >> +		pci_read_config_word(pdev, cap_off, &flags);
+> >> +
+> >> +		if (flags & PCI_MSIX_FLAGS_ENABLE) {
+> >> +			cap_off = pdev->msix_cap + PCI_MSIX_TABLE;
+> >> +			pci_read_config_dword(pdev, cap_off, &offset);
+> >> +
+> >> +			bir = offset & PCI_MSIX_TABLE_BIR;
+> >> +			offset &= PCI_MSIX_TABLE_OFFSET;
+> >> +
+> >> +			reg = pcim_iomap_table(pdev)[bir];
+> >> +			reg += offset;
+> >> +
+> >> +			addr_lo = readl(reg + PCI_MSIX_ENTRY_LOWER_ADDR);
+> >> +			addr_hi = readl(reg + PCI_MSIX_ENTRY_UPPER_ADDR);
+> >> +			dw->msi_addr = addr_hi;
+> >> +			dw->msi_addr <<= 32;
+> >> +			dw->msi_addr |= addr_lo;
+> >> +
+> >> +			dw->msi_data = readl(reg + PCI_MSIX_ENTRY_DATA);
+> >> +
+> >> +			dev_info(dev,
+> >> +				 "MSI-X:\taddr=0x%.16llx, data=0x%.8x, nr=%d\n",
+> >> +				 dw->msi_addr, dw->msi_data, pdev->irq);
+> >> +		}
+> >> +	}
+> > 
+> > What is this? Why?
+> 
+> I need to find the PCIe interrupt vector address and value (either for MSI or
+> MSI-X, depends what the system has selected) in order to configure eDMA later to
+> generate the (done or abort) interruptions.
+
+It seems rather hackish way to do something which should be done by PCI/driver core.
+But perhaps Bjorn and others familiar with PCI endpoint facility can share more.
+Also this applies to (2) above.
+
+> >> +	if (!pdev->msi_enabled && !pdev->msix_enabled) {
+> 
+> I'm not finding it. Can you tell me what it is?
+> 
+> Note: pci_msi_enabled() on msi.c returns if MSI has not been disabled by the
+> command-line option pci=nomsi
+
+Can you look a bit more carefully? For example, assume that 'dev' (sub)prefix
+in the name of function would tell something about scope of application.
+
+pci_dev_...() ?
+
+> > There is a helper from PCI core for this.
+
+-- 
+With Best Regards,
+Andy Shevchenko
 
 
--Tony
