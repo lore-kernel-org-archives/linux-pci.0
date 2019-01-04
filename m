@@ -2,115 +2,130 @@ Return-Path: <SRS0=mKou=PM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B5DDC43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:52:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC82DC43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 21:45:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 566C721872
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:52:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NnQSsnbz"
+	by mail.kernel.org (Postfix) with ESMTP id BEA6121872
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 21:45:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726660AbfADSwY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 13:52:24 -0500
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:38398 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726135AbfADSwY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 13:52:24 -0500
-Received: by mail-wm1-f65.google.com with SMTP id m22so2117944wml.3;
-        Fri, 04 Jan 2019 10:52:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=EyuUEfuTmvLhi67JS1rUvXvyUvFfSZPSyZaSd19L4GQ=;
-        b=NnQSsnbz4YbBYK57SjeCoU/J+ug6Tmj8kMnUjyShlT+W4E0eEIL2be8pRzNgFuYlaK
-         +FQhAYfblbB4mwxlXQ6ZxVSyFhLEyRsm2HZtWrGnAZIOM35BcNnee4gutE2TjrESNzRh
-         to4jXNx2R3/SP/tKxPfpBhoReJ67XxP/FTQBqgkvTNhmkkGZqDvHdAbV2cxXc+6ALMaI
-         +fv3pch4Pt4DGTU139scBJkC1KU1tl0C0gUr83gEiL0o8BE4lEXkrrhmRyXRIC//RJEE
-         sqtae4CgPXuHH7/YCDTdhEdMU4LzBo4xe95v4y+sYwYo6FCSSppyLAgw8MecrixYFaet
-         mpEw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=EyuUEfuTmvLhi67JS1rUvXvyUvFfSZPSyZaSd19L4GQ=;
-        b=JBWhMH5NIqAsJTHyro9Zyibkoy8L8VQiFfYf/96ZokSPe+HqZMwQyoG9X+d+VuJWLq
-         Qb+dGUcXRASCHJMhxTO9stHKbDWwWcqjW2PZ+LTlqj0SsUmox34hNOAcF/XUZ196IlJf
-         qtokqPCgVz+QTFIOthDVgGepLAdVJzb5OYMoZaW/O24/YnMD66cwqRUhjwfT9YStCWJO
-         V6LXBYmNj9CWd17ieLAZ5RLS9gAi2ht/PVogWq0slCeBXXsjBa3ALfR8azYjvAXtNhIl
-         CmrPsCmJy3Is/rMo64lIE3a5AS4pmLUivsZPkpHEIokSTnwO9Ux6XmNUz5+tHVmIgXBE
-         6nlg==
-X-Gm-Message-State: AJcUukcSUgGpX3Rxy5zQKb+d78NUZ68rKw27uQw1kBa7O2CYiZWNmJXC
-        MxBj2CFF50jnB5q1tFPzhEWDbRUhmbQLkPEbDAs=
-X-Google-Smtp-Source: ALg8bN5kCCB961KFTPcrrskQbky8VXN0Wm99dD6nYDN4XYlp9012ACMUURVoxrUAHBpzrHCfOe70Il70mxSksZCrYR8=
-X-Received: by 2002:a1c:760c:: with SMTP id r12mr2032207wmc.127.1546627941636;
- Fri, 04 Jan 2019 10:52:21 -0800 (PST)
+        id S1726253AbfADVpU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 16:45:20 -0500
+Received: from avon.wwwdotorg.org ([104.237.132.123]:47944 "EHLO
+        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726094AbfADVpT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 16:45:19 -0500
+Received: from swarren-lx1.nvidia.com (unknown [216.228.112.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by avon.wwwdotorg.org (Postfix) with ESMTPSA id EF6511C0144;
+        Fri,  4 Jan 2019 14:45:16 -0700 (MST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
+From:   Stephen Warren <swarren@wwwdotorg.org>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Stephen Warren <swarren@nvidia.com>,
+        Arnd Bergmann <arnd@arndb.de>, Faiz Abbas <faiz_abbas@ti.com>,
+        Harro Haan <hrhaan@gmail.com>,
+        Jingoo Han <jg1.han@samsung.com>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Juergen Beisert <jbe@pengutronix.de>,
+        Marek Vasut <marex@denx.de>,
+        Matthias Mann <m.mann@arkona-technologies.de>,
+        Mohit Kumar <mohit.kumar@st.com>,
+        Pratyush Anand <pratyush.anand@st.com>,
+        Richard Zhu <hong-xing.zhu@freescale.com>,
+        Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+        Siva Reddy Kallam <siva.kallam@samsung.com>,
+        Srikanth T Shivanand <ts.srikanth@samsung.com>,
+        Tim Harvey <tharvey@gateworks.com>
+Subject: [PATCH] PCI: dwc: fix MSI IRQ handler ordering
+Date:   Fri,  4 Jan 2019 14:45:09 -0700
+Message-Id: <20190104214509.16891-1-swarren@wwwdotorg.org>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <20181221072716.29017-1-andrew.smirnov@gmail.com>
- <20181221072716.29017-8-andrew.smirnov@gmail.com> <9b275993-c511-50d3-e18e-b421010c1bba@synopsys.com>
- <ddbf72a52cd5b6c5e2cba2c6f301d12be651e220.camel@perches.com>
-In-Reply-To: <ddbf72a52cd5b6c5e2cba2c6f301d12be651e220.camel@perches.com>
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-Date:   Fri, 4 Jan 2019 10:52:10 -0800
-Message-ID: <CAHQ1cqGbeJjKyGW1xed+nqTOyMNG6NFe-o-3cHbRfyBvYTrK_Q@mail.gmail.com>
-Subject: Re: [PATCH 07/21] PCI: designware: Make use of IS_ALIGNED()
-To:     Joe Perches <joe@perches.com>
-Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        "linux-imx@nxp.com" <linux-imx@nxp.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-NVConfidentiality: public
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 4, 2019 at 10:38 AM Joe Perches <joe@perches.com> wrote:
->
-> On Wed, 2019-01-02 at 09:33 +0000, Gustavo Pimentel wrote:
-> > On 21/12/2018 07:27, Andrey Smirnov wrote:
-> > > Make the intent a bit more clear as well as get rid of explicit
-> > > arithmetic by using IS_ALIGNED() to determine if "addr" is aligned to
-> > > "size". No functional change intended.
-> []
-> > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> []
-> > > @@ -22,7 +22,7 @@
-> > >
-> > >  int dw_pcie_read(void __iomem *addr, int size, u32 *val)
-> > >  {
-> > > -   if ((uintptr_t)addr & (size - 1)) {
-> > > +   if (!IS_ALIGNED((uintptr_t)addr, size)) {
->
-> The (uintptr_t) cast could probably be removed as well.
->
+From: Stephen Warren <swarren@nvidia.com>
 
-Unfortunately no. IS_ALIGNED(x, a) is going to expand (((x) &
-((typeof(x))(a) - 1)) == 0), so we'll end up with (((addr) & ((void
-*)(size) - 1)) which has two problems:
+The current code does this when handling MSI IRQs:
 
-1. It tries to use & operator on two  void * pointers
-2. On 64-bit platforms (e.g. AArch64) it will try to cast an "int" to
-a pointer, resulting in "warning: cast to pointer from integer of
-different size"
+a) Process the irq.
+b) Clear the latched IRQ status.
 
-When working on it, I initially wrote the code without the cast, but
-was quickly reprimanded by GCC and had to add it back in.
+If a new IRQ occurs any time after (a) has read the IRQ status for the
+last time and before (b), it will be lost. For example, this occurs in
+practice when using a Marvell 9171 AHCI controller with NCQ enabled;
+many command timeouts occur with certain disk access patterns.
 
-Thanks,
-Andrey Smirnov
+Fix the code to do the following instead, so that if any new IRQs are
+raised during the processing of the IRQ, the IRQ status is not cleared,
+so that the IRQ is not lost.
+
+a) Clear the latched IRQ status.
+b) Process the IRQ.
+
+This change reverts commit 8c934095fa2f ("PCI: dwc: Clear MSI interrupt
+status after it is handled, not before")
+
+This change re-applies commit ca1658921b63 ("PCI: designware: Fix
+missing MSI IRQs")
+
+Signed-off-by: Stephen Warren <swarren@nvidia.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Faiz Abbas <faiz_abbas@ti.com>
+Cc: Harro Haan <hrhaan@gmail.com>
+Cc: Jingoo Han <jg1.han@samsung.com>
+Cc: Joao Pinto <jpinto@synopsys.com>
+Cc: Juergen Beisert <jbe@pengutronix.de>
+Cc: Marek Vasut <marex@denx.de>
+Cc: Matthias Mann <m.mann@arkona-technologies.de>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Pratyush Anand <pratyush.anand@st.com>
+Cc: Richard Zhu <hong-xing.zhu@freescale.com>
+Cc: Sean Cross <xobs@kosagi.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+Cc: Tim Harvey <tharvey@gateworks.com>
+---
+Note: This issue was found in downstream NVIDIA 4.9 and 4.14 kernels.
+However, the exact same code structure is present in mainline and I have
+no reason to believe the problem would not reproduce there. I have
+compile tested but not runtime tested it in mainline, since my board is
+not yet supported in mainline.
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 692dd1b264fb..7fd6c56a6f35 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -98,10 +98,10 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 			irq = irq_find_mapping(pp->irq_domain,
+ 					       (i * MAX_MSI_IRQS_PER_CTRL) +
+ 					       pos);
+-			generic_handle_irq(irq);
+ 			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
+ 						(i * MSI_REG_CTRL_BLOCK_SIZE),
+ 					    4, 1 << pos);
++			generic_handle_irq(irq);
+ 			pos++;
+ 		}
+ 	}
+-- 
+2.20.1
+
