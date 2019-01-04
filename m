@@ -2,68 +2,141 @@ Return-Path: <SRS0=mKou=PM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 601BBC43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 15:55:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87175C43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 16:53:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3AB1B21874
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 15:55:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F121218CD
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 16:53:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uF2/qmwU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726983AbfADPzF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 10:55:05 -0500
-Received: from mga04.intel.com ([192.55.52.120]:39257 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726232AbfADPzF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jan 2019 10:55:05 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Jan 2019 07:55:04 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,439,1539673200"; 
-   d="scan'208";a="123284594"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.69])
-  by orsmga002.jf.intel.com with ESMTP; 04 Jan 2019 07:55:04 -0800
-Date:   Fri, 4 Jan 2019 08:53:24 -0700
-From:   Keith Busch <keith.busch@intel.com>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
+        id S1726891AbfADQx5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 11:53:57 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:35967 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726053AbfADQx5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 11:53:57 -0500
+Received: by mail-pl1-f196.google.com with SMTP id g9so17675165plo.3;
+        Fri, 04 Jan 2019 08:53:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KHC/zMtIBsgOaORZM1PGs7BI8KoWKlR6MHjCuPkH680=;
+        b=uF2/qmwUquF5L+bNLOVzyUlm3r6wjN9Uv+W37NpsWru0ExE/Lk7SNsuucBVo2wAf4+
+         C5w7D8dkBZcoDOD2VZpxjKxBrV4aA+KqFHr97HrJXc2mVXpRWxUC3gnJ4ALm8oOC4QCN
+         +GPGO+GeskloIq3NtNnedtrJCviBH6uWwasjBuVaUpYsHY2v1a321o6cJtoLD0NMihkP
+         Teh3P0sVuGG9tZZpJ6g0zMya3C3fu4xxYB9TPVLC5P8FtlQujNyXFgpbCALZyLEUVwbY
+         gZ7EoVHkJQbyZ3hTO2sMdSgarMUqKam6i9ns5n+qM5P8Cv55usZjR3HjZSPo/ZpQocP/
+         IDyw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=KHC/zMtIBsgOaORZM1PGs7BI8KoWKlR6MHjCuPkH680=;
+        b=ZX74V8VFiCnYqij8qauGxRjMsz7tFWxTIsp6ZF2UxlQa5h2LhGQfhMfcfg01S9hzDz
+         0AiTYjfzsMVS+o1RdRKvyTOquBEtoiSoIOhWi6l2YMLNLx7aolKC6tMn+FMDAjSt/V06
+         tIoyDGIM0rS0Dx/sC49+R9x5lhcjqsKBUG0sMDNkcgzc+U+KGiJHM4epv+Iquad5QF1A
+         +sxplHyP87b3sKvapXrwsOvUzHcmNyRBzJ/Tjsh2vJ3WxAZWmDG+31yuP7i/L06hMKbt
+         jz8KyRJM4N3OiCe8UUoO1//IcxOZ0cG6MLVS5/U2ze9TCU8mfiew9F4og48Wx+PaF38p
+         5URg==
+X-Gm-Message-State: AJcUukczXKXrn1enfjTRdDh+FLVqKaMzLAW04u/GCH7Q/noFRDPA3NO0
+        OY3WkS0hXmeY4NrztHQMYGM=
+X-Google-Smtp-Source: ALg8bN5VITyWQzPo2idOKEn1GD9kVo+ZZ+YuJPiFgVMh5C6p12jU3RIH5eJtV0LS4Yzh1O6kw+kqlg==
+X-Received: by 2002:a17:902:4d46:: with SMTP id o6mr49524570plh.302.1546620836177;
+        Fri, 04 Jan 2019 08:53:56 -0800 (PST)
+Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
+        by smtp.gmail.com with ESMTPSA id p67sm101900564pfg.44.2019.01.04.08.53.53
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 04 Jan 2019 08:53:55 -0800 (PST)
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2 2/4] nvme-pci: Distribute io queue types after creation
-Message-ID: <20190104155324.GA12342@localhost.localdomain>
-References: <20190103225033.11249-1-keith.busch@intel.com>
- <20190103225033.11249-3-keith.busch@intel.com>
- <20190104023121.GB31330@ming.t460p>
- <20190104072106.GA9948@ming.t460p>
+Subject: [PATCH v4 0/4] PCIE support for i.MX8MQ
+Date:   Fri,  4 Jan 2019 08:53:31 -0800
+Message-Id: <20190104165335.13205-1-andrew.smirnov@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190104072106.GA9948@ming.t460p>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 03:21:07PM +0800, Ming Lei wrote:
-> Thinking about the patch further: after pci_alloc_irq_vectors_affinity()
-> is returned, queue number for non-polled queues can't be changed at will,
-> because we have to make sure to spread all CPUs on each queue type, and
-> the mapping has been fixed by pci_alloc_irq_vectors_affinity() already.
-> 
-> So looks the approach in this patch may be wrong.
+Everyone:
 
-That's a bit of a problem, and not a new one. We always had to allocate
-vectors before creating IRQ driven CQ's, but the vector affinity is
-created before we know if the queue-pair can be created. Should the
-queue creation fail, there may be CPUs that don't have a queue.
+This series contains changes I made in order to enable support of PCIE
+IP block on i.MX8MQ SoCs.
 
-Does this mean the pci msi API is wrong? It seems like we'd need to
-initially allocate vectors without PCI_IRQ_AFFINITY, then have the
-kernel set affinity only after completing the queue-pair setup.
+Changes since [v3]:
+
+ - Based on feedback from NXP, DIRECT_SPEED_CHANGE quirk was expanded
+   to cover both i.MX7 and i.MX8MQ
+
+ - Code setting device type in GPR12 moved to a standalone function
+
+ - Explicit "fsl,controller-id" binding was dropped, replaced by using
+   controller physical address to determine logical ID
+
+ - Dropped Reviewed-by from Lucas for patch 4/4 due to the change
+   above (haven't heard explicit "yea" for it from him)
+
+Changes since [v2], [fixes]:
+
+ - Incorporated [patch] introducing drvdata
+
+ - i.MX6 PHY operation gating converted to a single patch and to use a
+   dedicated flag instead of doing explicit variant check
+
+ - Kconfig entry changed to use ARM64 && ARCH_MXC
+
+ - Dropped FALLTHROUGH annotations
+
+Changes since [v1]:
+
+ - Driver changed to use single "fsl,controller-id" property to
+   distinguish between two intances of PCIE IP block
+
+ - All code pertaining to L1SS was dropped to simplify the patch
+
+ - Documented additions to DT bindings
+
+Feedback is welcome!
+
+Thanks,
+Andrey Smirnov
+
+[v3] https://lore.kernel.org/linux-arm-kernel/20181218040702.29231-1-andrew.smirnov@gmail.com
+[patch] https://patchwork.kernel.org/patch/10712261/
+[fixes] https://lore.kernel.org/linux-arm-kernel/20181216230916.22982-1-andrew.smirnov@gmail.com
+[v2] https://lore.kernel.org/linux-arm-kernel/20181206073545.10967-1-andrew.smirnov@gmail.com
+[v1] https://lore.kernel.org/linux-arm-kernel/20181117181225.10737-1-andrew.smirnov@gmail.com/
+
+Andrey Smirnov (4):
+  PCI: imx6: introduce drvdata
+  PCI: imx6: Mark PHY functions as i.MX6 specific
+  PCI: imx6: Convert DIRECT_SPEED_CHANGE quirk code to use a flag
+  PCI: imx6: Add support for i.MX8MQ
+
+ .../bindings/pci/fsl,imx6q-pcie.txt           |   3 +-
+ drivers/pci/controller/dwc/Kconfig            |   4 +-
+ drivers/pci/controller/dwc/pci-imx6.c         | 150 +++++++++++++++---
+ 3 files changed, 133 insertions(+), 24 deletions(-)
+
+-- 
+2.20.1
+
