@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A379EC43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEA0FC43444
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 78A5F21872
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3A2B21872
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="odqTjkGm"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iEoo1a/O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728877AbfADRuU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 12:50:20 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:40651 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728856AbfADRuO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 12:50:14 -0500
-Received: by mail-pl1-f193.google.com with SMTP id u18so17726605plq.7;
-        Fri, 04 Jan 2019 09:50:14 -0800 (PST)
+        id S1728799AbfADRuN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 12:50:13 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:46553 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728830AbfADRuN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 12:50:13 -0500
+Received: by mail-pl1-f196.google.com with SMTP id t13so17718730ply.13;
+        Fri, 04 Jan 2019 09:50:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=smdD9M2YSE1AOghnOpWt9rwK4kDd0JsF0HnKCn2DuJU=;
-        b=odqTjkGm12K4IG7dhiJR/Ldk4BrRbMGJwKZ5NN0FMikHY6exsnheg/PUKCX4tP/ZhO
-         3OK8vBUSevmn55+OSq4+JSTdbaCmnMHVuFJXMrecrW1FJlRIGC0s2sxuD7v6ABcIqCz8
-         zge2uOu/5aItwK/nFBEluYgZTJkQn+Gry4X2RRxlbLlYE1E1Rx7wMPuhQXu7FnHEpPzR
-         6JcFr1VcaJJt5ed6yiqF+isMKu7jGWAiaJ4+RbgVmYOv3Y8IVCsUYOtZIlsWCrRPhx3y
-         OANpKALDhlvo9X4nwvaJCniSuD4gR0FQ7yNQSxWh/8mlIFvMewVj3JQ4heyc7upI/oj/
-         nlRQ==
+        bh=wgbDW5dpUQt98rEUFIyBYJEI6ndB9gcDqUzY7mel/6s=;
+        b=iEoo1a/OKkKJZtfMoSTJBNRwLRmxHYiy5BELr0ZahkEJGPUnWHwAwbGSGWVnA2K3N8
+         DWThaSV1BEmfcBxiAl1ghAgv91foOjqkSX4pMTvTNUCjzCLNrdOz1weDJPulXHqesjzh
+         eo5y6w4t7zvPtU5sktiCfCu1pXpsRxMjWppuO9SHLgmgKT9gXL2SX8Wfj6adxuE+Rugt
+         GNg31n1h4+XGXfq7q7scRS3JKuR0gATy2gkluOWZDDgVBnj+gkDP79Tcl6mcoJ0SV7QR
+         2uJGVeXBm/wDHSiTwgvW5dPiDfSObElXccqjn1ADPmRyVU/oijZ3B9efIS2HA31eCYsK
+         FvuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=smdD9M2YSE1AOghnOpWt9rwK4kDd0JsF0HnKCn2DuJU=;
-        b=h3UiMGtaoEOjp65BA1kc3uvxan30YsC3FyZw11xJViepRengM3nUeaSog28haBYcqC
-         1VOT+urMPfKFUr2gBC5l7b3m9LfURtpXRFN6BTcgHOSxijDOUpiv+A5obPwtsMEM0gHP
-         aOPoiVoNPMBh1FU6UCfYb/czpyDkkzTU4eyksew+a2yX+66cnuf4JuvCBWyyyhMb39xH
-         iOrBeSGs5mtHW5IGgHsdYCpwaXCKKdibYvc6DVgJpNaWQFe9erKdD4jsSMvw7B5S54HH
-         k1VLKC2JvMBpT/kg0urL9zudFdXbOKfNQDugnCq44Dw7txGijOGwBkqytPbIWawjCLcD
-         tMlQ==
-X-Gm-Message-State: AJcUukeQrX8PEQlLejQlnf0WlCFQSgIZWRcNQ6S2IWzt5PhPcResGJjy
-        lYbJ1k+VE8hKOT/WasS6sRl6OiReiAw=
-X-Google-Smtp-Source: ALg8bN5qQdMltuObfh6awk76R3n49OZJYHiTOTK09WcJejGUwexLIMohtoIHao0UtMQAlWHg3BT+TQ==
-X-Received: by 2002:a17:902:8306:: with SMTP id bd6mr52122019plb.217.1546624213731;
-        Fri, 04 Jan 2019 09:50:13 -0800 (PST)
+        bh=wgbDW5dpUQt98rEUFIyBYJEI6ndB9gcDqUzY7mel/6s=;
+        b=r15BFLgmVEGcWausMZX0/AtVHYZoYD4kTVZ+nfr8DHD5g5nc/588u6UTI2StSQeIQt
+         Z38Y5awggrIFr0EkcboJm1vT4cv5/MEhx19UOZebMqP1KWxXtSPcS/ST4+X8bH3jOm6G
+         0k05mcVwEPLvzV+IFZatxMY9u8tD+VCOtooM3ankRwSCmQKoMD1Qhh3eSvErnj3lBin3
+         OomUyoe0sPPGAJ/1d0mFP44uGgbj8hvhY3MEq7ADzRfUCM3am08TPpHdWXkUApbHT2vc
+         OvLpw+y+apa9lcNtD4GZX4MVw+pb27f5ghjgIJOVasxmQKolsNQaY4nFohVMNOGE3fgO
+         mdDw==
+X-Gm-Message-State: AJcUukegV9vrZvO1H62dJ63i1lEbAvGqQRnz9drOCR9ZfZ6EnpXhNqbY
+        Q0Y0ucqt65uCQxKPpF4Ri3S1mW0/Ztw=
+X-Google-Smtp-Source: ALg8bN7DWXymiFDJPJKMM8BjkzXwfxTzSSAkZlFhar78VPcv/On4+5l+ipcw6E2WWjhb9eRrCzZmFw==
+X-Received: by 2002:a17:902:2a66:: with SMTP id i93mr50874325plb.113.1546624211721;
+        Fri, 04 Jan 2019 09:50:11 -0800 (PST)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id i193sm100699632pgc.22.2019.01.04.09.50.11
+        by smtp.gmail.com with ESMTPSA id i193sm100699632pgc.22.2019.01.04.09.50.09
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 04 Jan 2019 09:50:12 -0800 (PST)
+        Fri, 04 Jan 2019 09:50:11 -0800 (PST)
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
@@ -67,9 +67,9 @@ Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         "A.s. Dong" <aisheng.dong@nxp.com>,
         Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 17/20] PCI: imx6: Simplify bit operations in imx6_setup_phy_mpll()
-Date:   Fri,  4 Jan 2019 09:49:22 -0800
-Message-Id: <20190104174925.17153-18-andrew.smirnov@gmail.com>
+Subject: [PATCH v2 16/20] PCI: imx6: Use common mask in imx6_pcie_reset_phy()
+Date:   Fri,  4 Jan 2019 09:49:21 -0800
+Message-Id: <20190104174925.17153-17-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190104174925.17153-1-andrew.smirnov@gmail.com>
 References: <20190104174925.17153-1-andrew.smirnov@gmail.com>
@@ -80,8 +80,8 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Simplify bit operations in imx6_setup_phy_mpll() by using
-GENMASK/FIELD_PREP. No functional change intended.
+Simplify imx6_pcie_reset_phy() by using common mask. No functional
+change intended.
 
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -97,48 +97,38 @@ Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 130f577670c8..d8aef9da476f 100644
+index befbc09c9c41..130f577670c8 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -113,12 +113,10 @@ struct imx6_pcie {
- /* PHY registers (not memory-mapped) */
- #define PCIE_PHY_ATEOVRD			0x10
- #define  PCIE_PHY_ATEOVRD_EN			BIT(2)
--#define  PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT	0
--#define  PCIE_PHY_ATEOVRD_REF_CLKDIV_MASK	0x1
-+#define  PCIE_PHY_ATEOVRD_REF_CLKDIV		BIT(0)
+@@ -247,21 +247,21 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, u16 data)
  
- #define PCIE_PHY_MPLL_OVRD_IN_LO		0x11
--#define  PCIE_PHY_MPLL_MULTIPLIER_SHIFT		2
--#define  PCIE_PHY_MPLL_MULTIPLIER_MASK		0x7f
-+#define  PCIE_PHY_MPLL_MULTIPLIER		GENMASK(8, 2)
- #define  PCIE_PHY_MPLL_MULTIPLIER_OVRD		BIT(9)
+ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
+ {
++	const u16 mask = PHY_RX_OVRD_IN_LO_RX_DATA_EN |
++			 PHY_RX_OVRD_IN_LO_RX_PLL_EN;
+ 	u16 tmp;
  
- #define PHY_RX_OVRD_IN_LO 0x1005
-@@ -641,16 +639,14 @@ static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
- 	}
+ 	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_IMX6_PHY))
+ 		return;
  
- 	pcie_phy_read(imx6_pcie, PCIE_PHY_MPLL_OVRD_IN_LO, &val);
--	val &= ~(PCIE_PHY_MPLL_MULTIPLIER_MASK <<
--		 PCIE_PHY_MPLL_MULTIPLIER_SHIFT);
--	val |= mult << PCIE_PHY_MPLL_MULTIPLIER_SHIFT;
-+	val &= ~PCIE_PHY_MPLL_MULTIPLIER;
-+	val |= FIELD_PREP(PCIE_PHY_MPLL_MULTIPLIER, mult);
- 	val |= PCIE_PHY_MPLL_MULTIPLIER_OVRD;
- 	pcie_phy_write(imx6_pcie, PCIE_PHY_MPLL_OVRD_IN_LO, val);
+ 	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
+-	tmp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+-		PHY_RX_OVRD_IN_LO_RX_PLL_EN);
++	tmp |= mask;
+ 	pcie_phy_write(imx6_pcie, PHY_RX_OVRD_IN_LO, tmp);
  
- 	pcie_phy_read(imx6_pcie, PCIE_PHY_ATEOVRD, &val);
--	val &= ~(PCIE_PHY_ATEOVRD_REF_CLKDIV_MASK <<
--		 PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT);
--	val |= div << PCIE_PHY_ATEOVRD_REF_CLKDIV_SHIFT;
-+	val &= ~PCIE_PHY_ATEOVRD_REF_CLKDIV;
-+	val |= FIELD_PREP(PCIE_PHY_ATEOVRD_REF_CLKDIV, div);
- 	val |= PCIE_PHY_ATEOVRD_EN;
- 	pcie_phy_write(imx6_pcie, PCIE_PHY_ATEOVRD, val);
+ 	usleep_range(2000, 3000);
+ 
+ 	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
+-	tmp &= ~(PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+-		  PHY_RX_OVRD_IN_LO_RX_PLL_EN);
++	tmp &= ~mask;
+ 	pcie_phy_write(imx6_pcie, PHY_RX_OVRD_IN_LO, tmp);
+ }
  
 -- 
 2.20.1
