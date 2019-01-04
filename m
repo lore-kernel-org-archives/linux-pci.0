@@ -6,55 +6,76 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D0CC43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:35:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 129A9C43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:37:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3F44218F0
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:35:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2603218FD
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:37:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728599AbfADSfX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 13:35:23 -0500
-Received: from mga17.intel.com ([192.55.52.151]:36551 "EHLO mga17.intel.com"
+        id S1726891AbfADShI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 13:37:08 -0500
+Received: from mga12.intel.com ([192.55.52.136]:32950 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728949AbfADSfU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jan 2019 13:35:20 -0500
+        id S1726262AbfADShI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Jan 2019 13:37:08 -0500
 X-Amp-Result: UNKNOWN
 X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Jan 2019 10:35:21 -0800
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Jan 2019 10:37:07 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.56,439,1539673200"; 
-   d="scan'208";a="123320342"
+   d="scan'208";a="115502961"
 Received: from unknown (HELO localhost.localdomain) ([10.232.112.69])
-  by orsmga002.jf.intel.com with ESMTP; 04 Jan 2019 10:35:19 -0800
-Date:   Fri, 4 Jan 2019 11:33:40 -0700
+  by orsmga003.jf.intel.com with ESMTP; 04 Jan 2019 10:37:06 -0800
+Date:   Fri, 4 Jan 2019 11:35:27 -0700
 From:   Keith Busch <keith.busch@intel.com>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
-        Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2 4/4] nvme-pci: Use PCI to handle IRQ reduce and retry
-Message-ID: <20190104183339.GA12508@localhost.localdomain>
+Cc:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCHv2 2/4] nvme-pci: Distribute io queue types after creation
+Message-ID: <20190104183527.GB12508@localhost.localdomain>
 References: <20190103225033.11249-1-keith.busch@intel.com>
- <20190103225033.11249-5-keith.busch@intel.com>
- <20190104181938.GB25730@lst.de>
+ <20190103225033.11249-3-keith.busch@intel.com>
+ <20190104023121.GB31330@ming.t460p>
+ <20190104072106.GA9948@ming.t460p>
+ <20190104155324.GA12342@localhost.localdomain>
+ <20190104181726.GA25730@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190104181938.GB25730@lst.de>
+In-Reply-To: <20190104181726.GA25730@lst.de>
 User-Agent: Mutt/1.9.1 (2017-09-22)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 07:19:38PM +0100, Christoph Hellwig wrote:
-> I can't say I am a huge fan of the complex callback.  If we just made
-> the number of read vs write queues a factor instead of invidual
-> scalar numbers we could just handle this in the irq code without
-> the callback, and the concept might actually be understandable by
-> mere humans..
+On Fri, Jan 04, 2019 at 07:17:26PM +0100, Christoph Hellwig wrote:
+> On Fri, Jan 04, 2019 at 08:53:24AM -0700, Keith Busch wrote:
+> > On Fri, Jan 04, 2019 at 03:21:07PM +0800, Ming Lei wrote:
+> > > Thinking about the patch further: after pci_alloc_irq_vectors_affinity()
+> > > is returned, queue number for non-polled queues can't be changed at will,
+> > > because we have to make sure to spread all CPUs on each queue type, and
+> > > the mapping has been fixed by pci_alloc_irq_vectors_affinity() already.
+> > > 
+> > > So looks the approach in this patch may be wrong.
+> > 
+> > That's a bit of a problem, and not a new one. We always had to allocate
+> > vectors before creating IRQ driven CQ's, but the vector affinity is
+> > created before we know if the queue-pair can be created. Should the
+> > queue creation fail, there may be CPUs that don't have a queue.
+> > 
+> > Does this mean the pci msi API is wrong? It seems like we'd need to
+> > initially allocate vectors without PCI_IRQ_AFFINITY, then have the
+> > kernel set affinity only after completing the queue-pair setup.
+> 
+> We can't just easily do that, as we want to allocate the memory for
+> the descriptors on the correct node.  But we can just free the
+> vectors and try again if we have to.
 
-Okay, we could express this as a ratio. I'll explore that path a bit
-more.
+I've come to the same realization that switching modes after allocation
+can't be easily accomodated. Teardown and retry with a reduced queue
+count looks like the easiest solution.
