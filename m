@@ -2,130 +2,233 @@ Return-Path: <SRS0=mKou=PM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC82DC43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 21:45:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A550BC43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 22:35:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BEA6121872
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 21:45:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60389218D8
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 22:35:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1546641359;
+	bh=eLFx5QsO2PNppJ6lUJMQmQuIs2Dj1CrYe2EsOqMxe2I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=uOtrpVOzoNsq8hti4qeI4rH9yFJBj1Ssd9A91YIEjlAGXsrotCh/i0Byq6Xdh7VAq
+	 gc1TvP9C8wM6bJes9iOtHS2aimohs5zv3/myDpz+M1IqIUZbPxcYfCSZfIw7gdPtCf
+	 qxW9J4UwQ/qtZ7lw6aq58Yw95We8Y0MCl5L/8GXY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726253AbfADVpU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 16:45:20 -0500
-Received: from avon.wwwdotorg.org ([104.237.132.123]:47944 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbfADVpT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 16:45:19 -0500
-Received: from swarren-lx1.nvidia.com (unknown [216.228.112.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        id S1726149AbfADWf6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 17:35:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35394 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726094AbfADWf6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Jan 2019 17:35:58 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by avon.wwwdotorg.org (Postfix) with ESMTPSA id EF6511C0144;
-        Fri,  4 Jan 2019 14:45:16 -0700 (MST)
-X-Virus-Status: Clean
-X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
-From:   Stephen Warren <swarren@wwwdotorg.org>
-To:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Stephen Warren <swarren@nvidia.com>,
-        Arnd Bergmann <arnd@arndb.de>, Faiz Abbas <faiz_abbas@ti.com>,
-        Harro Haan <hrhaan@gmail.com>,
-        Jingoo Han <jg1.han@samsung.com>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Juergen Beisert <jbe@pengutronix.de>,
-        Marek Vasut <marex@denx.de>,
-        Matthias Mann <m.mann@arkona-technologies.de>,
-        Mohit Kumar <mohit.kumar@st.com>,
-        Pratyush Anand <pratyush.anand@st.com>,
-        Richard Zhu <hong-xing.zhu@freescale.com>,
-        Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
-        Siva Reddy Kallam <siva.kallam@samsung.com>,
-        Srikanth T Shivanand <ts.srikanth@samsung.com>,
-        Tim Harvey <tharvey@gateworks.com>
-Subject: [PATCH] PCI: dwc: fix MSI IRQ handler ordering
-Date:   Fri,  4 Jan 2019 14:45:09 -0700
-Message-Id: <20190104214509.16891-1-swarren@wwwdotorg.org>
-X-Mailer: git-send-email 2.20.1
+        by mail.kernel.org (Postfix) with ESMTPSA id 6BBD021872;
+        Fri,  4 Jan 2019 22:35:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1546641357;
+        bh=eLFx5QsO2PNppJ6lUJMQmQuIs2Dj1CrYe2EsOqMxe2I=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=XzV0gi+iQKIxYUK/HMd1lq4DF/tCcVtbCHdiJEq1Fw+ovpTISAmmhrokB8xKF+Gz+
+         8CKjBKv8R+OZcIqSA5VhfBanhZXrd6D45nKp2Lk+QbFN5SoY6tSw43si3LBMxP+MzV
+         UVt5fhI+kKW7t2g2e2jex4ge8LDErOiEfWlgVLn4=
+Date:   Fri, 4 Jan 2019 16:35:31 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Ming Lei <ming.lei@redhat.com>, linux-nvme@lists.infradead.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCHv2 3/4] PCI/MSI: Handle vector reduce and retry
+Message-ID: <20190104223531.GA223506@google.com>
+References: <20190103225033.11249-1-keith.busch@intel.com>
+ <20190103225033.11249-4-keith.busch@intel.com>
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190103225033.11249-4-keith.busch@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Stephen Warren <swarren@nvidia.com>
+On Thu, Jan 03, 2019 at 03:50:32PM -0700, Keith Busch wrote:
+> The struct irq_affinity nr_sets forced the driver to handle reducing the
+> vector count on allocation failures because the set distribution counts
+> are driver specific. The change to this API requires very different usage
+> than before, and introduced new error corner cases that weren't being
+> handled. It is also less efficient since the driver doesn't actually
+> know what a proper vector count it should use since it only sees the
+> error code and can only reduce by one instead of going straight to a
+> possible vector count like PCI is able to do.
+> 
+> Provide a driver specific callback for managed irq set creation so that
+> PCI can take a min and max vectors as before to handle the reduce and
+> retry logic.
+> 
+> The usage is not particularly obvious for this new feature, so append
+> documentation for driver usage.
+> 
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+>  Documentation/PCI/MSI-HOWTO.txt | 36 +++++++++++++++++++++++++++++++++++-
+>  drivers/pci/msi.c               | 20 ++++++--------------
+>  include/linux/interrupt.h       |  5 +++++
+>  3 files changed, 46 insertions(+), 15 deletions(-)
+> 
+> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+> index 618e13d5e276..391b1f369138 100644
+> --- a/Documentation/PCI/MSI-HOWTO.txt
+> +++ b/Documentation/PCI/MSI-HOWTO.txt
+> @@ -98,7 +98,41 @@ The flags argument is used to specify which type of interrupt can be used
+>  by the device and the driver (PCI_IRQ_LEGACY, PCI_IRQ_MSI, PCI_IRQ_MSIX).
+>  A convenient short-hand (PCI_IRQ_ALL_TYPES) is also available to ask for
+>  any possible kind of interrupt.  If the PCI_IRQ_AFFINITY flag is set,
+> -pci_alloc_irq_vectors() will spread the interrupts around the available CPUs.
+> +pci_alloc_irq_vectors() will spread the interrupts around the available
+> +CPUs. Vector affinities allocated under the PCI_IRQ_AFFINITY flag are
+> +managed by the kernel, and are not tunable from user space like other
+> +vectors.
+> +
+> +When your driver requires a more complex vector affinity configuration
+> +than a default spread of all vectors, the driver may use the following
+> +function:
+> +
+> +  int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+> +				   unsigned int max_vecs, unsigned int flags,
+> +				   const struct irq_affinity *affd);
+> +
+> +The 'struct irq_affinity *affd' allows a driver to specify additional
+> +characteristics for how a driver wants the vector management to occur. The
+> +'pre_vectors' and 'post_vectors' fields define how many vectors the driver
+> +wants to not participate in kernel managed affinities, and whether those
+> +special vectors are at the beginning or the end of the vector space.
 
-The current code does this when handling MSI IRQs:
+How are the pre_vectors and post_vectors handled?  Do they get
+assigned to random CPUs?  Current CPU?  Are their assignments tunable
+from user space?
 
-a) Process the irq.
-b) Clear the latched IRQ status.
+> +It may also be the case that a driver wants multiple sets of fully
+> +affinitized vectors. For example, a single PCI function may provide
+> +different high performance services that want full CPU affinity for each
+> +service independent of other services. In this case, the driver may use
+> +the struct irq_affinity's 'nr_sets' field to specify how many groups of
+> +vectors need to be spread across all the CPUs, and fill in the 'sets'
+> +array to say how many vectors the driver wants in each set.
 
-If a new IRQ occurs any time after (a) has read the IRQ status for the
-last time and before (b), it will be lost. For example, this occurs in
-practice when using a Marvell 9171 AHCI controller with NCQ enabled;
-many command timeouts occur with certain disk access patterns.
+I think the issue here is IRQ vectors, and "services" and whether
+they're high performance are unnecessary concepts.
 
-Fix the code to do the following instead, so that if any new IRQs are
-raised during the processing of the IRQ, the IRQ status is not cleared,
-so that the IRQ is not lost.
+What does irq_affinity.sets point to?  I guess it's a table of
+integers where the table size is the number of sets and each entry is
+the number of vectors in the set?
 
-a) Clear the latched IRQ status.
-b) Process the IRQ.
+So we'd have something like this:
 
-This change reverts commit 8c934095fa2f ("PCI: dwc: Clear MSI interrupt
-status after it is handled, not before")
+  pre_vectors     # vectors [0..pre_vectors) (pre_vectors >= 0)
+  set 0           # vectors [pre_vectors..pre_vectors+set0) (set0 >= 1)
+  set 1           # vectors [pre_vectors+set0..pre_vectors+set0+set1) (set1 >= 1)
+  ...
+  post_vectors    # vectors [pre_vectors+set0..pre_vectors+set0+set1+setN+post_vectors)
 
-This change re-applies commit ca1658921b63 ("PCI: designware: Fix
-missing MSI IRQs")
+where the vectors in set0 are spread across all CPUs, those in set1
+are independently spread across all CPUs, etc?
 
-Signed-off-by: Stephen Warren <swarren@nvidia.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Faiz Abbas <faiz_abbas@ti.com>
-Cc: Harro Haan <hrhaan@gmail.com>
-Cc: Jingoo Han <jg1.han@samsung.com>
-Cc: Joao Pinto <jpinto@synopsys.com>
-Cc: Juergen Beisert <jbe@pengutronix.de>
-Cc: Marek Vasut <marex@denx.de>
-Cc: Matthias Mann <m.mann@arkona-technologies.de>
-Cc: Mohit Kumar <mohit.kumar@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>
-Cc: Richard Zhu <hong-xing.zhu@freescale.com>
-Cc: Sean Cross <xobs@kosagi.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
-Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
-Cc: Tim Harvey <tharvey@gateworks.com>
----
-Note: This issue was found in downstream NVIDIA 4.9 and 4.14 kernels.
-However, the exact same code structure is present in mainline and I have
-no reason to believe the problem would not reproduce there. I have
-compile tested but not runtime tested it in mainline, since my board is
-not yet supported in mainline.
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I would guess there may be device-specific restrictions on the mapping
+of of these vectors to sets, so the PCI core probably can't assume the
+sets can be of arbitrary size, contiguous, etc.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 692dd1b264fb..7fd6c56a6f35 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -98,10 +98,10 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 			irq = irq_find_mapping(pp->irq_domain,
- 					       (i * MAX_MSI_IRQS_PER_CTRL) +
- 					       pos);
--			generic_handle_irq(irq);
- 			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
- 						(i * MSI_REG_CTRL_BLOCK_SIZE),
- 					    4, 1 << pos);
-+			generic_handle_irq(irq);
- 			pos++;
- 		}
- 	}
--- 
-2.20.1
-
+> +When using multiple affinity 'sets', the error handling for vector
+> +reduction and retry becomes more complicated since the PCI core
+> +doesn't know how to redistribute the vector count across the sets. In
+> +order to provide this error handling, the driver must also provide the
+> +'recalc_sets()' callback and set the 'priv' data needed for the driver
+> +specific vector distribution. The driver's callback is responsible to
+> +ensure the sum of the vector counts across its sets matches the new
+> +vector count that PCI can allocate.
+>  
+>  To get the Linux IRQ numbers passed to request_irq() and free_irq() and the
+>  vectors, use the following function:
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 7a1c8a09efa5..b93ac49be18d 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1035,13 +1035,6 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  	if (maxvec < minvec)
+>  		return -ERANGE;
+>  
+> -	/*
+> -	 * If the caller is passing in sets, we can't support a range of
+> -	 * vectors. The caller needs to handle that.
+> -	 */
+> -	if (affd && affd->nr_sets && minvec != maxvec)
+> -		return -EINVAL;
+> -
+>  	if (WARN_ON_ONCE(dev->msi_enabled))
+>  		return -EINVAL;
+>  
+> @@ -1061,6 +1054,9 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  				return -ENOSPC;
+>  		}
+>  
+> +		if (nvec != maxvec && affd && affd->recalc_sets)
+> +			affd->recalc_sets((struct irq_affinity *)affd, nvec);
+> +
+>  		rc = msi_capability_init(dev, nvec, affd);
+>  		if (rc == 0)
+>  			return nvec;
+> @@ -1093,13 +1089,6 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+>  	if (maxvec < minvec)
+>  		return -ERANGE;
+>  
+> -	/*
+> -	 * If the caller is passing in sets, we can't support a range of
+> -	 * supported vectors. The caller needs to handle that.
+> -	 */
+> -	if (affd && affd->nr_sets && minvec != maxvec)
+> -		return -EINVAL;
+> -
+>  	if (WARN_ON_ONCE(dev->msix_enabled))
+>  		return -EINVAL;
+>  
+> @@ -1110,6 +1099,9 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+>  				return -ENOSPC;
+>  		}
+>  
+> +		if (nvec != maxvec && affd && affd->recalc_sets)
+> +			affd->recalc_sets((struct irq_affinity *)affd, nvec);
+> +
+>  		rc = __pci_enable_msix(dev, entries, nvec, affd);
+>  		if (rc == 0)
+>  			return nvec;
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index c672f34235e7..01c06829ff43 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -249,12 +249,17 @@ struct irq_affinity_notify {
+>   *			the MSI(-X) vector space
+>   * @nr_sets:		Length of passed in *sets array
+>   * @sets:		Number of affinitized sets
+> + * @recalc_sets:	Recalculate sets if the previously requested allocation
+> + *			failed
+> + * @priv:		Driver private data
+>   */
+>  struct irq_affinity {
+>  	int	pre_vectors;
+>  	int	post_vectors;
+>  	int	nr_sets;
+>  	int	*sets;
+> +	void	(*recalc_sets)(struct irq_affinity *, unsigned int);
+> +	void	*priv;
+>  };
+>  
+>  /**
+> -- 
+> 2.14.4
+> 
