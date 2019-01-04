@@ -2,237 +2,117 @@ Return-Path: <SRS0=mKou=PM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13155C43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 08:02:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92257C43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 08:09:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C29BB20665
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 08:02:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="lZlBt0Ss"
+	by mail.kernel.org (Postfix) with ESMTP id 6409720665
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 08:09:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726792AbfADICw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 03:02:52 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:51598 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725931AbfADICv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 03:02:51 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0482gYD097176;
-        Fri, 4 Jan 2019 02:02:42 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1546588962;
-        bh=L0dPQSGqHSXfOXxIthIO1CQnqLFynJUHpTEk8mQDTNY=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=lZlBt0SsSsjPW1Fhw81oWNOn6u/I/iDjlOzfmWuMLMPG1tkJGAugeXaBzWyVvXRJx
-         KKBWNeRJHw7bq4/E24DmyYVoLO65oeYR0vqd8dBfLg+YQIPbcpZRwOZdyp6pjzmRAV
-         FbiSLr8suSo0WUDeEbAW/JXCgGscsNag4tF1/IN4=
-Received: from DFLE113.ent.ti.com (dfle113.ent.ti.com [10.64.6.34])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0482fQn049695
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 4 Jan 2019 02:02:42 -0600
-Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE113.ent.ti.com
- (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Fri, 4
- Jan 2019 02:02:41 -0600
-Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Fri, 4 Jan 2019 02:02:41 -0600
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0482bQ2011476;
-        Fri, 4 Jan 2019 02:02:38 -0600
-Subject: Re: [PATCH V2] PCI: dwc ep: cache config until DBI regs available
-To:     Stephen Warren <swarren@wwwdotorg.org>
-CC:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
-        Trent Piepho <tpiepho@impinj.com>,
-        Stephen Warren <swarren@nvidia.com>
-References: <20181126230958.8175-1-swarren@wwwdotorg.org>
- <340ed2c5-cb11-0aea-5430-5da5b509d805@ti.com>
- <b4a19329-3fd0-6242-5e31-8270d2c0a3e4@wwwdotorg.org>
- <27179f56-c7be-a55e-46ef-8ebc144e8547@wwwdotorg.org>
- <f86f4b8e-6b62-e921-eee2-1cf7ff0266ff@ti.com>
- <8982f057-881d-ffe7-6c26-e6a9844cbc0a@wwwdotorg.org>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ced15b0c-7dd8-0969-39bb-f4891012ce45@ti.com>
-Date:   Fri, 4 Jan 2019 13:32:10 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S1726459AbfADIJM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 03:09:12 -0500
+Received: from verein.lst.de ([213.95.11.211]:38433 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725931AbfADIJM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Jan 2019 03:09:12 -0500
+Received: by newverein.lst.de (Postfix, from userid 2407)
+        id A853368AFE; Fri,  4 Jan 2019 09:09:10 +0100 (CET)
+Date:   Fri, 4 Jan 2019 09:09:10 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Tony Luck <tony.luck@gmail.com>
+Cc:     Christoph Hellwig <hch@lst.de>, iommu@lists.linux-foundation.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Jesper Dangaard Brouer <brouer@redhat.com>,
+        Tariq Toukan <tariqt@mellanox.com>,
+        Ilias Apalodimas <ilias.apalodimas@linaro.org>,
+        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        linux-pci@vger.kernel.org,
+        "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+        X86-ML <x86@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 02/15] swiotlb: remove dma_mark_clean
+Message-ID: <20190104080910.GA15221@lst.de>
+References: <20181207190720.18517-1-hch@lst.de> <20181207190720.18517-3-hch@lst.de> <CA+8MBb+9prWYSmp25K-LMUv1_0eekvFqXhoj87CV9zcaXfMDGg@mail.gmail.com> <20190103072356.GA24163@lst.de> <CA+8MBbKXTRGLn1Wvpp1avQCZ186i5Cbo0puvSoNNuKO7_AcwZg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <8982f057-881d-ffe7-6c26-e6a9844cbc0a@wwwdotorg.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+In-Reply-To: <CA+8MBbKXTRGLn1Wvpp1avQCZ186i5Cbo0puvSoNNuKO7_AcwZg@mail.gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Stephen,
+One more ifdef to rescue..
 
-On 02/01/19 10:04 PM, Stephen Warren wrote:
-> On 12/19/18 7:37 AM, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On 14/12/18 10:31 PM, Stephen Warren wrote:
->>> On 12/11/18 10:23 AM, Stephen Warren wrote:
->>>> On 12/10/18 9:36 PM, Kishon Vijay Abraham I wrote:
->>>>> Hi,
->>>>>
->>>>> On 27/11/18 4:39 AM, Stephen Warren wrote:
->>>>>> From: Stephen Warren <swarren@nvidia.com>
->>>>>>
->>>>>> Some implementations of the DWC PCIe endpoint controller do not allow
->>>>>> access to DBI registers until the attached host has started REFCLK,
->>>>>> released PERST, and the endpoint driver has initialized clocking of the
->>>>>> DBI registers based on that. One such system is NVIDIA's T194 SoC. The
->>>>>> PCIe endpoint subsystem and DWC driver currently don't work on such
->>>>>> hardware, since they assume that all endpoint configuration can happen
->>>>>> at any arbitrary time.
->>>>>>
->>>>>> Enhance the DWC endpoint driver to support such systems by caching all
->>>>>> endpoint configuration in software, and only writing the configuration
->>>>>> to hardware once it's been initialized. This is implemented by splitting
->>>>>> all endpoint controller ops into two functions; the first which simply
->>>>>> records/caches the desired configuration whenever called by the
->>>>>> associated function driver and optionally calls the second, and the
->>>>>> second which actually programs the configuration into hardware, which
->>>>>> may be called either by the first function, or later when it's known
->>>>>> that the DBI registers are available.
->>>>
->>>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c
->>>>>> b/drivers/pci/controller/dwc/pcie-designware-ep.c
->>>>
->>>>>> +void dw_pcie_set_regs_available(struct dw_pcie *pci)
->>>>>> +{
->>>>>
->>>>> When will this function be invoked? Does the wrapper get an interrupt when
->>>>> refclk is enabled where this function will be invoked?
->>>>
->>>> Yes, there's an IRQ from the HW that indicates when PEXRST is released. I
->>>> don't recall right now if this IRQ is something that exists for all DWC
->>>> instantiations, or is Tegra-specific.
->>>>
->>>>>> +    struct dw_pcie_ep *ep = &(pci->ep);
->>>>>> +    int i;
->>>>>> +
->>>>>> +    ep->hw_regs_not_available = false;
->>>>>
->>>>> This can race with epc_ops.
->>>>>
->>>>>> +
->>>>>> +    dw_pcie_ep_write_header_regs(ep);
->>>>>> +    for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
->>>>>> +        dw_pcie_prog_inbound_atu(pci, i,
->>>>>> +            ep->cached_inbound_atus[i].bar,
->>>>>> +            ep->cached_inbound_atus[i].cpu_addr,
->>>>>> +            ep->cached_inbound_atus[i].as_type);
->>>>>
->>>>> Depending on the context in which this function is invoked, programming
->>>>> inbound/outbound ATU can also race with EPC ops.
->>>>   >
->>>>>> +        dw_pcie_ep_set_bar_regs(ep, 0, ep->cached_inbound_atus[i].bar);
->>>>>> +    }
->>>>>> +    for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
->>>>>> +        dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
->>>>>> +            ep->cached_outbound_atus[i].addr,
->>>>>> +            ep->cached_outbound_atus[i].pci_addr,
->>>>>> +            ep->cached_outbound_atus[i].size);
->>>>>> +    dw_pcie_dbi_ro_wr_en(pci);
->>>>>> +    dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
->>>>>> +    dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
->>>>>> +    dw_pcie_dbi_ro_wr_dis(pci);
->>>>>
->>>>> IMHO we should add a new epc ops ->epc_init() which indicates if the EPC is
->>>>> ready to be initialized or not. Only if the epc_init indicates it's ready
->>>>> to be
->>>>> initialized, the endpoint function driver should go ahead with further
->>>>> initialization. Or else it should wait for a notification from EPC to
->>>>> indicate
->>>>> when it's ready to be initialized.
->>>>
->>>> (Did you mean epf op or epc op?)
->>>>
->>>> I'm not sure how exactly how that would work; do you want the DWC core driver
->>>> or the endpoint subsystem to poll that epc op to find out when the HW is
->>>> ready to be initialized? Or do you envisage the controller driver still
->>>> calling dw_pcie_set_regs_available() (possibly renamed), which in turn calls
->>>> ->epc_init() calls for some reason?
->>>>
->>>> If you don't want to cache the endpoint configuration, perhaps you want:
->>>>
->>>> a) Endpoint function doesn't pro-actively call the endpoint controller
->>>> functions to configure the endpoint.
->>>>
->>>> b) When endpoint HW is ready, the relevant driver calls pci_epc_ready() (or
->>>> whatever name), which lets the core know the HW can be configured. Perhaps
->>>> this schedules a work queue item to implement locking to avoid the races you
->>>> mentioned.
->>>>
->>>> c) Endpoint core calls pci_epf_init() which calls epf op ->init().
->>>>
->>>> One gotcha with this approach, which the caching approach helps avoid:
->>>>
->>>> Once PEXRST is released, the system must respond to PCIe enumeration requests
->>>> within 50ms. Thus, SW must very quickly respond to the IRQ indicating PEXRST
->>>> release and program the endpoint configuration into HW. By caching the
->>>> configuration in the DWC driver and immediately/synchronously applying it in
->>>> the PEXRST IRQ handler, we reduce the number of steps and amount of code
->>>> taken to program the HW, so it should get done pretty quickly. If instead we
->>>> call back into the endpoint function driver's ->init() op, we run the risk of
->>>> that op doing other stuff besides just calling the endpoint HW configuration
->>>> APIs (e.g. perhaps the function driver defers memory buffer allocation or
->>>> IOVA programming to that ->init function) which in turns makes it much less
->>>> likely the 50ms requirement will be hit. Perhaps we can solve this by naming
->>>> the op well and providing lots of comments, but my guess is that endpoint
->>>> function authors won't notice that...
->>>
->>> Kishon,
->>>
->>> Do you have any further details exactly how you'd prefer this to work? Does the
->>> approach I describe in points a/b/c above sound like what you want? Thanks.
->>
->> Agree with your PERST comment.
->>
->> What I have in mind is we add a new epc_init() ops. I feel there are more uses
->> for it (For e.g I have an internal patch which uses epc_init to initialize DMA.
->> Hopefully I'll post it soon).
->> If you look at pci_epf_test, pci_epf_test_bind() is where the function actually
->> starts to write to HW (i.e using pci_epc_*).
->> So before the endpoint function invokes pci_epc_write_header(), it should
->> invoke epc_init(). Only if that succeeds, it should go ahead with other
->> initialization.
->> If epc_init_* fails, we can have a particular error value to indicate the
->> controller is waiting for clock from host (so that we don't return error from
->> ->bind()). Once the controller receives the clock, it can send an atomic
->> notification to the endpoint function driver to indicate it is ready to be
->> initialized. (Atomic notification makes it easy to handle for multi function
->> endpoint devices.)
->> The endpoint function can then initialize the controller.
->> I think except for pci_epf_test_alloc_space() all other functions are
->> configuring the HW (in pci_epf_test_bind). pci_epf_test_alloc_space() could be
->> moved to pci_epf_test_probe() so there are no expensive operations to be done
->> once the controller is ready to be initialized.
->> I have epc_init() and the atomic notification part already implemented and I'm
->> planning to post it before next week. Once that is merged, we might have to
->> reorder function in pci_epf_test driver and you have to return the correct
->> error value for epc_init() if the clock is not there.
-> 
-> Kishon, did you manage to post the patches that implement epc_init()? If so, a
-> link would be appreciated. Thanks.
+Btw, do you know why we only play these mark clean bits for swiotlb
+and not for the various iommus?
 
-I haven't posted the patches yet. Sorry for the delay. Give me some more time
-please (till next week).
+Also do you have any good receipe to build an ia64 cross compiler on
+a recent Debian system?  Unlike most architectures Debian doesn't have
+a pre-built one, and the script from the kernel buіldbot doesn't work
+either unfortunately.
 
-Thanks
-Kishon
+---
+From 3f5f3297aa989cf27b3fe10e2d010422332574b3 Mon Sep 17 00:00:00 2001
+From: Christoph Hellwig <hch@lst.de>
+Date: Fri, 4 Jan 2019 09:06:05 +0100
+Subject: ia64: fix compile without swiotlb
+
+Some non-generic ia64 configs don't build swiotlb, and thus should not
+pull in the generic non-coherent DMA infrastructure.
+
+Fixes: 68c608345c ("swiotlb: remove dma_mark_clean")
+Reported-by: Tony Luck <tony.luck@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ arch/ia64/Kconfig   | 2 +-
+ arch/ia64/mm/init.c | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index ccd56f5df8cd..8d7396bd1790 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -31,7 +31,7 @@ config IA64
+ 	select HAVE_MEMBLOCK_NODE_MAP
+ 	select HAVE_VIRT_CPU_ACCOUNTING
+ 	select ARCH_HAS_DMA_COHERENT_TO_PFN if SWIOTLB
+-	select ARCH_HAS_SYNC_DMA_FOR_CPU
++	select ARCH_HAS_SYNC_DMA_FOR_CPU if SWIOTLB
+ 	select VIRT_TO_BUS
+ 	select ARCH_DISCARD_MEMBLOCK
+ 	select GENERIC_IRQ_PROBE
+diff --git a/arch/ia64/mm/init.c b/arch/ia64/mm/init.c
+index 055382622f07..29d841525ca1 100644
+--- a/arch/ia64/mm/init.c
++++ b/arch/ia64/mm/init.c
+@@ -67,6 +67,7 @@ __ia64_sync_icache_dcache (pte_t pte)
+ 	set_bit(PG_arch_1, &page->flags);	/* mark page as clean */
+ }
+ 
++#ifdef CONFIG_SWIOTLB
+ /*
+  * Since DMA is i-cache coherent, any (complete) pages that were written via
+  * DMA can be marked as "clean" so that lazy_mmu_prot_update() doesn't have to
+@@ -81,6 +82,7 @@ void arch_sync_dma_for_cpu(struct device *dev, phys_addr_t paddr,
+ 		set_bit(PG_arch_1, &pfn_to_page(pfn)->flags);
+ 	} while (++pfn <= PHYS_PFN(paddr + size - 1));
+ }
++#endif
+ 
+ inline void
+ ia64_set_rbs_bot (void)
+-- 
+2.20.1
+
