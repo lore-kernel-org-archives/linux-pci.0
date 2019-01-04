@@ -6,151 +6,121 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24882C43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 02:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4340C43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 02:41:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECE34217F5
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 02:31:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F602217F5
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 02:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725945AbfADCbf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 3 Jan 2019 21:31:35 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:42586 "EHLO mx1.redhat.com"
+        id S1726199AbfADClc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 3 Jan 2019 21:41:32 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:40854 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725919AbfADCbf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Jan 2019 21:31:35 -0500
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        id S1726181AbfADClc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Jan 2019 21:41:32 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id CB4C41B7C;
-        Fri,  4 Jan 2019 02:31:34 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5DD9686675;
+        Fri,  4 Jan 2019 02:41:32 +0000 (UTC)
 Received: from ming.t460p (ovpn-8-21.pek2.redhat.com [10.72.8.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C42261001F41;
-        Fri,  4 Jan 2019 02:31:27 +0000 (UTC)
-Date:   Fri, 4 Jan 2019 10:31:22 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1AEED5D9C6;
+        Fri,  4 Jan 2019 02:41:23 +0000 (UTC)
+Date:   Fri, 4 Jan 2019 10:41:18 +0800
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Keith Busch <keith.busch@intel.com>
 Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Sagi Grimberg <sagi@grimberg.me>,
         linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2 2/4] nvme-pci: Distribute io queue types after creation
-Message-ID: <20190104023121.GB31330@ming.t460p>
+Subject: Re: [PATCHv2 4/4] nvme-pci: Use PCI to handle IRQ reduce and retry
+Message-ID: <20190104024117.GC31330@ming.t460p>
 References: <20190103225033.11249-1-keith.busch@intel.com>
- <20190103225033.11249-3-keith.busch@intel.com>
+ <20190103225033.11249-5-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190103225033.11249-3-keith.busch@intel.com>
+In-Reply-To: <20190103225033.11249-5-keith.busch@intel.com>
 User-Agent: Mutt/1.9.1 (2017-09-22)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Fri, 04 Jan 2019 02:31:34 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Fri, 04 Jan 2019 02:41:32 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 03, 2019 at 03:50:31PM -0700, Keith Busch wrote:
-> The dev->io_queues types were set based on the results of the nvme set
-> feature "number of queues" and the IRQ allocation. This result does not
-> mean we're going to successfully allocate and create those IO queues,
-> though. A failure there will cause blk-mq to have NULL hctx's because the
-> map's nr_hw_queues accounts for more queues than were actually created.
+On Thu, Jan 03, 2019 at 03:50:33PM -0700, Keith Busch wrote:
+> Restore error handling for vector allocation back to the PCI core.
 > 
-> Adjust the io_queue types after we've created them when we have less than
-> originally desired.
-> 
-> Fixes: 3b6592f70ad7b ("nvme: utilize two queue maps, one for reads and one for writes")
 > Signed-off-by: Keith Busch <keith.busch@intel.com>
 > ---
->  drivers/nvme/host/pci.c | 46 ++++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 40 insertions(+), 6 deletions(-)
+>  drivers/nvme/host/pci.c | 77 ++++++++++++++-----------------------------------
+>  1 file changed, 21 insertions(+), 56 deletions(-)
 > 
 > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> index 98332d0a80f0..1481bb6d9c42 100644
+> index 1481bb6d9c42..f3ef09a8e8f9 100644
 > --- a/drivers/nvme/host/pci.c
 > +++ b/drivers/nvme/host/pci.c
-> @@ -1733,6 +1733,30 @@ static int nvme_pci_configure_admin_queue(struct nvme_dev *dev)
->  	return result;
+> @@ -2059,37 +2059,43 @@ static int nvme_setup_host_mem(struct nvme_dev *dev)
+>  	return ret;
 >  }
 >  
-> +static void nvme_distribute_queues(struct nvme_dev *dev, unsigned int io_queues)
-> +{
-> +	unsigned int irq_queues, this_p_queues = dev->io_queues[HCTX_TYPE_POLL],
-> +		     this_w_queues = dev->io_queues[HCTX_TYPE_DEFAULT];
-> +
-> +	if (!io_queues) {
-> +		dev->io_queues[HCTX_TYPE_POLL] = 0;
-> +		dev->io_queues[HCTX_TYPE_DEFAULT] = 0;
-> +		dev->io_queues[HCTX_TYPE_READ] = 0;
-> +		return;
-> +	}
-> +
-> +	if (this_p_queues >= io_queues)
-> +		this_p_queues = io_queues - 1;
-> +	irq_queues = io_queues - this_p_queues;
-> +
-> +	if (this_w_queues > irq_queues)
-> +		this_w_queues = irq_queues;
-> +
-> +	dev->io_queues[HCTX_TYPE_POLL] = this_p_queues;
-> +	dev->io_queues[HCTX_TYPE_DEFAULT] = this_w_queues;
-> +	dev->io_queues[HCTX_TYPE_READ] = irq_queues - this_w_queues;
-> +}
-> +
->  static int nvme_create_io_queues(struct nvme_dev *dev)
+> -static void nvme_calc_io_queues(struct nvme_dev *dev, unsigned int irq_queues)
+> +static void nvme_calc_io_queues(struct irq_affinity *affd, unsigned int nvecs)
 >  {
->  	unsigned i, max, rw_queues;
-> @@ -1761,6 +1785,13 @@ static int nvme_create_io_queues(struct nvme_dev *dev)
->  			break;
+> +	struct nvme_dev *dev = affd->priv;
+>  	unsigned int this_w_queues = write_queues;
+>  
+>  	/*
+>  	 * Setup read/write queue split
+>  	 */
+> -	if (irq_queues == 1) {
+> +	if (nvecs == 1) {
+
+The above line can be 'nvecs <= 2', cause when nvecs is 2, one is for
+admin queue, another can be for DEFAULT.
+
+>  		dev->io_queues[HCTX_TYPE_DEFAULT] = 1;
+>  		dev->io_queues[HCTX_TYPE_READ] = 0;
+> -		return;
+> +		goto set_sets;
 >  	}
 >  
-> +	/*
-> +	 * If we've created less than expected io queues, redistribute the
-> +	 * dev->io_queues[] types accordingly.
-> +	 */
-> +	if (dev->online_queues - 1 != dev->max_qid)
-> +		nvme_distribute_queues(dev, dev->online_queues - 1);
-> +
 >  	/*
->  	 * Ignore failing Create SQ/CQ commands, we can continue with less
->  	 * than the desired amount of queues, and even a controller without
-> @@ -2185,11 +2216,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
->  	result = max(result - 1, 1);
->  	dev->max_qid = result + dev->io_queues[HCTX_TYPE_POLL];
+>  	 * If 'write_queues' is set, ensure it leaves room for at least
+>  	 * one read queue
+>  	 */
+> -	if (this_w_queues >= irq_queues)
+> -		this_w_queues = irq_queues - 1;
+> +	if (this_w_queues >= nvecs - 1)
+> +		this_w_queues = nvecs - 1;
+
+If we want to leave room for one read queue, 'this_w_queues' should be
+set as 'nvecs - 2' given nvecs covers admin queue.
+
 >  
-> -	dev_info(dev->ctrl.device, "%d/%d/%d default/read/poll queues\n",
-> -					dev->io_queues[HCTX_TYPE_DEFAULT],
-> -					dev->io_queues[HCTX_TYPE_READ],
-> -					dev->io_queues[HCTX_TYPE_POLL]);
-> -
 >  	/*
->  	 * Should investigate if there's a performance win from allocating
->  	 * more queues than interrupt vectors; it might allow the submission
-> @@ -2203,7 +2229,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
->  		return result;
+>  	 * If 'write_queues' is set to zero, reads and writes will share
+>  	 * a queue set.
+>  	 */
+>  	if (!this_w_queues) {
+> -		dev->io_queues[HCTX_TYPE_DEFAULT] = irq_queues;
+> +		dev->io_queues[HCTX_TYPE_DEFAULT] = nvecs - 1;
+>  		dev->io_queues[HCTX_TYPE_READ] = 0;
+>  	} else {
+>  		dev->io_queues[HCTX_TYPE_DEFAULT] = this_w_queues;
+> -		dev->io_queues[HCTX_TYPE_READ] = irq_queues - this_w_queues;
+> +		dev->io_queues[HCTX_TYPE_READ] = nvecs - this_w_queues - 1;
 >  	}
->  	set_bit(NVMEQ_ENABLED, &adminq->flags);
-> -	return nvme_create_io_queues(dev);
-> +	result = nvme_create_io_queues(dev);
-> +
-> +	if (!result)
-> +		dev_info(dev->ctrl.device, "%d/%d/%d default/read/poll queues\n",
-> +					dev->io_queues[HCTX_TYPE_DEFAULT],
-> +					dev->io_queues[HCTX_TYPE_READ],
-> +					dev->io_queues[HCTX_TYPE_POLL]);
-> +	return result;
-> +
->  }
->  
->  static void nvme_del_queue_end(struct request *req, blk_status_t error)
-> -- 
-> 2.14.4
-> 
 
-This way should be better given it covers irq allocation failure and
-queue creating/initialization failure.
+In above change, looks you starts to consider admin queue vector, which
+is obvious one issue in current code.
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+So I'd suggest to fix nvme_calc_io_queues() in one standalone patch,
+just what I posted, given this patch doesn't do "Restore error
+handling for vector allocation back to the PCI core" only.
+
+http://lists.infradead.org/pipermail/linux-nvme/2018-December/021879.html
 
 Thanks,
 Ming
