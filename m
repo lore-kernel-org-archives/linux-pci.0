@@ -2,164 +2,237 @@ Return-Path: <SRS0=mKou=PM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEBE4C43612
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 07:21:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13155C43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 08:02:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B57C7205C9
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 07:21:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C29BB20665
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 08:02:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="lZlBt0Ss"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726174AbfADHVW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 02:21:22 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:57690 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726167AbfADHVW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jan 2019 02:21:22 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9016746263;
-        Fri,  4 Jan 2019 07:21:21 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-36.pek2.redhat.com [10.72.8.36])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 48127600D6;
-        Fri,  4 Jan 2019 07:21:11 +0000 (UTC)
-Date:   Fri, 4 Jan 2019 15:21:07 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Keith Busch <keith.busch@intel.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2 2/4] nvme-pci: Distribute io queue types after creation
-Message-ID: <20190104072106.GA9948@ming.t460p>
-References: <20190103225033.11249-1-keith.busch@intel.com>
- <20190103225033.11249-3-keith.busch@intel.com>
- <20190104023121.GB31330@ming.t460p>
+        id S1726792AbfADICw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 03:02:52 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:51598 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725931AbfADICv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 03:02:51 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0482gYD097176;
+        Fri, 4 Jan 2019 02:02:42 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1546588962;
+        bh=L0dPQSGqHSXfOXxIthIO1CQnqLFynJUHpTEk8mQDTNY=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=lZlBt0SsSsjPW1Fhw81oWNOn6u/I/iDjlOzfmWuMLMPG1tkJGAugeXaBzWyVvXRJx
+         KKBWNeRJHw7bq4/E24DmyYVoLO65oeYR0vqd8dBfLg+YQIPbcpZRwOZdyp6pjzmRAV
+         FbiSLr8suSo0WUDeEbAW/JXCgGscsNag4tF1/IN4=
+Received: from DFLE113.ent.ti.com (dfle113.ent.ti.com [10.64.6.34])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0482fQn049695
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 4 Jan 2019 02:02:42 -0600
+Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE113.ent.ti.com
+ (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Fri, 4
+ Jan 2019 02:02:41 -0600
+Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE115.ent.ti.com
+ (10.64.6.36) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Fri, 4 Jan 2019 02:02:41 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0482bQ2011476;
+        Fri, 4 Jan 2019 02:02:38 -0600
+Subject: Re: [PATCH V2] PCI: dwc ep: cache config until DBI regs available
+To:     Stephen Warren <swarren@wwwdotorg.org>
+CC:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <linux-pci@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Stephen Warren <swarren@nvidia.com>
+References: <20181126230958.8175-1-swarren@wwwdotorg.org>
+ <340ed2c5-cb11-0aea-5430-5da5b509d805@ti.com>
+ <b4a19329-3fd0-6242-5e31-8270d2c0a3e4@wwwdotorg.org>
+ <27179f56-c7be-a55e-46ef-8ebc144e8547@wwwdotorg.org>
+ <f86f4b8e-6b62-e921-eee2-1cf7ff0266ff@ti.com>
+ <8982f057-881d-ffe7-6c26-e6a9844cbc0a@wwwdotorg.org>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <ced15b0c-7dd8-0969-39bb-f4891012ce45@ti.com>
+Date:   Fri, 4 Jan 2019 13:32:10 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190104023121.GB31330@ming.t460p>
-User-Agent: Mutt/1.9.1 (2017-09-22)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Fri, 04 Jan 2019 07:21:21 +0000 (UTC)
+In-Reply-To: <8982f057-881d-ffe7-6c26-e6a9844cbc0a@wwwdotorg.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 10:31:21AM +0800, Ming Lei wrote:
-> On Thu, Jan 03, 2019 at 03:50:31PM -0700, Keith Busch wrote:
-> > The dev->io_queues types were set based on the results of the nvme set
-> > feature "number of queues" and the IRQ allocation. This result does not
-> > mean we're going to successfully allocate and create those IO queues,
-> > though. A failure there will cause blk-mq to have NULL hctx's because the
-> > map's nr_hw_queues accounts for more queues than were actually created.
-> > 
-> > Adjust the io_queue types after we've created them when we have less than
-> > originally desired.
-> > 
-> > Fixes: 3b6592f70ad7b ("nvme: utilize two queue maps, one for reads and one for writes")
-> > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> > ---
-> >  drivers/nvme/host/pci.c | 46 ++++++++++++++++++++++++++++++++++++++++------
-> >  1 file changed, 40 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> > index 98332d0a80f0..1481bb6d9c42 100644
-> > --- a/drivers/nvme/host/pci.c
-> > +++ b/drivers/nvme/host/pci.c
-> > @@ -1733,6 +1733,30 @@ static int nvme_pci_configure_admin_queue(struct nvme_dev *dev)
-> >  	return result;
-> >  }
-> >  
-> > +static void nvme_distribute_queues(struct nvme_dev *dev, unsigned int io_queues)
-> > +{
-> > +	unsigned int irq_queues, this_p_queues = dev->io_queues[HCTX_TYPE_POLL],
-> > +		     this_w_queues = dev->io_queues[HCTX_TYPE_DEFAULT];
-> > +
-> > +	if (!io_queues) {
-> > +		dev->io_queues[HCTX_TYPE_POLL] = 0;
-> > +		dev->io_queues[HCTX_TYPE_DEFAULT] = 0;
-> > +		dev->io_queues[HCTX_TYPE_READ] = 0;
-> > +		return;
-> > +	}
-> > +
-> > +	if (this_p_queues >= io_queues)
-> > +		this_p_queues = io_queues - 1;
-> > +	irq_queues = io_queues - this_p_queues;
-> > +
-> > +	if (this_w_queues > irq_queues)
-> > +		this_w_queues = irq_queues;
-> > +
-> > +	dev->io_queues[HCTX_TYPE_POLL] = this_p_queues;
-> > +	dev->io_queues[HCTX_TYPE_DEFAULT] = this_w_queues;
-> > +	dev->io_queues[HCTX_TYPE_READ] = irq_queues - this_w_queues;
-> > +}
-> > +
-> >  static int nvme_create_io_queues(struct nvme_dev *dev)
-> >  {
-> >  	unsigned i, max, rw_queues;
-> > @@ -1761,6 +1785,13 @@ static int nvme_create_io_queues(struct nvme_dev *dev)
-> >  			break;
-> >  	}
-> >  
-> > +	/*
-> > +	 * If we've created less than expected io queues, redistribute the
-> > +	 * dev->io_queues[] types accordingly.
-> > +	 */
-> > +	if (dev->online_queues - 1 != dev->max_qid)
-> > +		nvme_distribute_queues(dev, dev->online_queues - 1);
-> > +
-> >  	/*
-> >  	 * Ignore failing Create SQ/CQ commands, we can continue with less
-> >  	 * than the desired amount of queues, and even a controller without
-> > @@ -2185,11 +2216,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
-> >  	result = max(result - 1, 1);
-> >  	dev->max_qid = result + dev->io_queues[HCTX_TYPE_POLL];
-> >  
-> > -	dev_info(dev->ctrl.device, "%d/%d/%d default/read/poll queues\n",
-> > -					dev->io_queues[HCTX_TYPE_DEFAULT],
-> > -					dev->io_queues[HCTX_TYPE_READ],
-> > -					dev->io_queues[HCTX_TYPE_POLL]);
-> > -
-> >  	/*
-> >  	 * Should investigate if there's a performance win from allocating
-> >  	 * more queues than interrupt vectors; it might allow the submission
-> > @@ -2203,7 +2229,15 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
-> >  		return result;
-> >  	}
-> >  	set_bit(NVMEQ_ENABLED, &adminq->flags);
-> > -	return nvme_create_io_queues(dev);
-> > +	result = nvme_create_io_queues(dev);
-> > +
-> > +	if (!result)
-> > +		dev_info(dev->ctrl.device, "%d/%d/%d default/read/poll queues\n",
-> > +					dev->io_queues[HCTX_TYPE_DEFAULT],
-> > +					dev->io_queues[HCTX_TYPE_READ],
-> > +					dev->io_queues[HCTX_TYPE_POLL]);
-> > +	return result;
-> > +
-> >  }
-> >  
-> >  static void nvme_del_queue_end(struct request *req, blk_status_t error)
-> > -- 
-> > 2.14.4
-> > 
+Hi Stephen,
+
+On 02/01/19 10:04 PM, Stephen Warren wrote:
+> On 12/19/18 7:37 AM, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On 14/12/18 10:31 PM, Stephen Warren wrote:
+>>> On 12/11/18 10:23 AM, Stephen Warren wrote:
+>>>> On 12/10/18 9:36 PM, Kishon Vijay Abraham I wrote:
+>>>>> Hi,
+>>>>>
+>>>>> On 27/11/18 4:39 AM, Stephen Warren wrote:
+>>>>>> From: Stephen Warren <swarren@nvidia.com>
+>>>>>>
+>>>>>> Some implementations of the DWC PCIe endpoint controller do not allow
+>>>>>> access to DBI registers until the attached host has started REFCLK,
+>>>>>> released PERST, and the endpoint driver has initialized clocking of the
+>>>>>> DBI registers based on that. One such system is NVIDIA's T194 SoC. The
+>>>>>> PCIe endpoint subsystem and DWC driver currently don't work on such
+>>>>>> hardware, since they assume that all endpoint configuration can happen
+>>>>>> at any arbitrary time.
+>>>>>>
+>>>>>> Enhance the DWC endpoint driver to support such systems by caching all
+>>>>>> endpoint configuration in software, and only writing the configuration
+>>>>>> to hardware once it's been initialized. This is implemented by splitting
+>>>>>> all endpoint controller ops into two functions; the first which simply
+>>>>>> records/caches the desired configuration whenever called by the
+>>>>>> associated function driver and optionally calls the second, and the
+>>>>>> second which actually programs the configuration into hardware, which
+>>>>>> may be called either by the first function, or later when it's known
+>>>>>> that the DBI registers are available.
+>>>>
+>>>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>>>>> b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>>>
+>>>>>> +void dw_pcie_set_regs_available(struct dw_pcie *pci)
+>>>>>> +{
+>>>>>
+>>>>> When will this function be invoked? Does the wrapper get an interrupt when
+>>>>> refclk is enabled where this function will be invoked?
+>>>>
+>>>> Yes, there's an IRQ from the HW that indicates when PEXRST is released. I
+>>>> don't recall right now if this IRQ is something that exists for all DWC
+>>>> instantiations, or is Tegra-specific.
+>>>>
+>>>>>> +    struct dw_pcie_ep *ep = &(pci->ep);
+>>>>>> +    int i;
+>>>>>> +
+>>>>>> +    ep->hw_regs_not_available = false;
+>>>>>
+>>>>> This can race with epc_ops.
+>>>>>
+>>>>>> +
+>>>>>> +    dw_pcie_ep_write_header_regs(ep);
+>>>>>> +    for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
+>>>>>> +        dw_pcie_prog_inbound_atu(pci, i,
+>>>>>> +            ep->cached_inbound_atus[i].bar,
+>>>>>> +            ep->cached_inbound_atus[i].cpu_addr,
+>>>>>> +            ep->cached_inbound_atus[i].as_type);
+>>>>>
+>>>>> Depending on the context in which this function is invoked, programming
+>>>>> inbound/outbound ATU can also race with EPC ops.
+>>>>   >
+>>>>>> +        dw_pcie_ep_set_bar_regs(ep, 0, ep->cached_inbound_atus[i].bar);
+>>>>>> +    }
+>>>>>> +    for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
+>>>>>> +        dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
+>>>>>> +            ep->cached_outbound_atus[i].addr,
+>>>>>> +            ep->cached_outbound_atus[i].pci_addr,
+>>>>>> +            ep->cached_outbound_atus[i].size);
+>>>>>> +    dw_pcie_dbi_ro_wr_en(pci);
+>>>>>> +    dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
+>>>>>> +    dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
+>>>>>> +    dw_pcie_dbi_ro_wr_dis(pci);
+>>>>>
+>>>>> IMHO we should add a new epc ops ->epc_init() which indicates if the EPC is
+>>>>> ready to be initialized or not. Only if the epc_init indicates it's ready
+>>>>> to be
+>>>>> initialized, the endpoint function driver should go ahead with further
+>>>>> initialization. Or else it should wait for a notification from EPC to
+>>>>> indicate
+>>>>> when it's ready to be initialized.
+>>>>
+>>>> (Did you mean epf op or epc op?)
+>>>>
+>>>> I'm not sure how exactly how that would work; do you want the DWC core driver
+>>>> or the endpoint subsystem to poll that epc op to find out when the HW is
+>>>> ready to be initialized? Or do you envisage the controller driver still
+>>>> calling dw_pcie_set_regs_available() (possibly renamed), which in turn calls
+>>>> ->epc_init() calls for some reason?
+>>>>
+>>>> If you don't want to cache the endpoint configuration, perhaps you want:
+>>>>
+>>>> a) Endpoint function doesn't pro-actively call the endpoint controller
+>>>> functions to configure the endpoint.
+>>>>
+>>>> b) When endpoint HW is ready, the relevant driver calls pci_epc_ready() (or
+>>>> whatever name), which lets the core know the HW can be configured. Perhaps
+>>>> this schedules a work queue item to implement locking to avoid the races you
+>>>> mentioned.
+>>>>
+>>>> c) Endpoint core calls pci_epf_init() which calls epf op ->init().
+>>>>
+>>>> One gotcha with this approach, which the caching approach helps avoid:
+>>>>
+>>>> Once PEXRST is released, the system must respond to PCIe enumeration requests
+>>>> within 50ms. Thus, SW must very quickly respond to the IRQ indicating PEXRST
+>>>> release and program the endpoint configuration into HW. By caching the
+>>>> configuration in the DWC driver and immediately/synchronously applying it in
+>>>> the PEXRST IRQ handler, we reduce the number of steps and amount of code
+>>>> taken to program the HW, so it should get done pretty quickly. If instead we
+>>>> call back into the endpoint function driver's ->init() op, we run the risk of
+>>>> that op doing other stuff besides just calling the endpoint HW configuration
+>>>> APIs (e.g. perhaps the function driver defers memory buffer allocation or
+>>>> IOVA programming to that ->init function) which in turns makes it much less
+>>>> likely the 50ms requirement will be hit. Perhaps we can solve this by naming
+>>>> the op well and providing lots of comments, but my guess is that endpoint
+>>>> function authors won't notice that...
+>>>
+>>> Kishon,
+>>>
+>>> Do you have any further details exactly how you'd prefer this to work? Does the
+>>> approach I describe in points a/b/c above sound like what you want? Thanks.
+>>
+>> Agree with your PERST comment.
+>>
+>> What I have in mind is we add a new epc_init() ops. I feel there are more uses
+>> for it (For e.g I have an internal patch which uses epc_init to initialize DMA.
+>> Hopefully I'll post it soon).
+>> If you look at pci_epf_test, pci_epf_test_bind() is where the function actually
+>> starts to write to HW (i.e using pci_epc_*).
+>> So before the endpoint function invokes pci_epc_write_header(), it should
+>> invoke epc_init(). Only if that succeeds, it should go ahead with other
+>> initialization.
+>> If epc_init_* fails, we can have a particular error value to indicate the
+>> controller is waiting for clock from host (so that we don't return error from
+>> ->bind()). Once the controller receives the clock, it can send an atomic
+>> notification to the endpoint function driver to indicate it is ready to be
+>> initialized. (Atomic notification makes it easy to handle for multi function
+>> endpoint devices.)
+>> The endpoint function can then initialize the controller.
+>> I think except for pci_epf_test_alloc_space() all other functions are
+>> configuring the HW (in pci_epf_test_bind). pci_epf_test_alloc_space() could be
+>> moved to pci_epf_test_probe() so there are no expensive operations to be done
+>> once the controller is ready to be initialized.
+>> I have epc_init() and the atomic notification part already implemented and I'm
+>> planning to post it before next week. Once that is merged, we might have to
+>> reorder function in pci_epf_test driver and you have to return the correct
+>> error value for epc_init() if the clock is not there.
 > 
-> This way should be better given it covers irq allocation failure and
-> queue creating/initialization failure.
-> 
-> Reviewed-by: Ming Lei <ming.lei@redhat.com>
+> Kishon, did you manage to post the patches that implement epc_init()? If so, a
+> link would be appreciated. Thanks.
 
-Thinking about the patch further: after pci_alloc_irq_vectors_affinity()
-is returned, queue number for non-polled queues can't be changed at will,
-because we have to make sure to spread all CPUs on each queue type, and
-the mapping has been fixed by pci_alloc_irq_vectors_affinity() already.
+I haven't posted the patches yet. Sorry for the delay. Give me some more time
+please (till next week).
 
-So looks the approach in this patch may be wrong.
-
-Thanks,
-Ming
+Thanks
+Kishon
