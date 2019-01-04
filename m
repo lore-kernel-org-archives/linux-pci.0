@@ -2,80 +2,92 @@ Return-Path: <SRS0=mKou=PM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 129A9C43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:37:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49266C43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2603218FD
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:37:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 212C521872
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 18:44:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbfADShI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 13:37:08 -0500
-Received: from mga12.intel.com ([192.55.52.136]:32950 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726262AbfADShI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jan 2019 13:37:08 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 04 Jan 2019 10:37:07 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,439,1539673200"; 
-   d="scan'208";a="115502961"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.69])
-  by orsmga003.jf.intel.com with ESMTP; 04 Jan 2019 10:37:06 -0800
-Date:   Fri, 4 Jan 2019 11:35:27 -0700
-From:   Keith Busch <keith.busch@intel.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2 2/4] nvme-pci: Distribute io queue types after creation
-Message-ID: <20190104183527.GB12508@localhost.localdomain>
-References: <20190103225033.11249-1-keith.busch@intel.com>
- <20190103225033.11249-3-keith.busch@intel.com>
- <20190104023121.GB31330@ming.t460p>
- <20190104072106.GA9948@ming.t460p>
- <20190104155324.GA12342@localhost.localdomain>
- <20190104181726.GA25730@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190104181726.GA25730@lst.de>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+        id S1726405AbfADSop (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 13:44:45 -0500
+Received: from smtprelay0093.hostedemail.com ([216.40.44.93]:46046 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726262AbfADSop (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 13:44:45 -0500
+X-Greylist: delayed 403 seconds by postgrey-1.27 at vger.kernel.org; Fri, 04 Jan 2019 13:44:44 EST
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave03.hostedemail.com (Postfix) with ESMTP id DDB321802FA51
+        for <linux-pci@vger.kernel.org>; Fri,  4 Jan 2019 18:38:02 +0000 (UTC)
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay05.hostedemail.com (Postfix) with ESMTP id 3F1EF1802FA29;
+        Fri,  4 Jan 2019 18:38:01 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: wish49_b837086a7342
+X-Filterd-Recvd-Size: 2433
+Received: from XPS-9350.home (unknown [47.151.153.53])
+        (Authenticated sender: joe@perches.com)
+        by omf09.hostedemail.com (Postfix) with ESMTPA;
+        Fri,  4 Jan 2019 18:37:59 +0000 (UTC)
+Message-ID: <ddbf72a52cd5b6c5e2cba2c6f301d12be651e220.camel@perches.com>
+Subject: Re: [PATCH 07/21] PCI: designware: Make use of IS_ALIGNED()
+From:   Joe Perches <joe@perches.com>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Andrey Smirnov <andrew.smirnov@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        "linux-imx@nxp.com" <linux-imx@nxp.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Fri, 04 Jan 2019 10:37:57 -0800
+In-Reply-To: <9b275993-c511-50d3-e18e-b421010c1bba@synopsys.com>
+References: <20181221072716.29017-1-andrew.smirnov@gmail.com>
+         <20181221072716.29017-8-andrew.smirnov@gmail.com>
+         <9b275993-c511-50d3-e18e-b421010c1bba@synopsys.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.30.1-1build1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 07:17:26PM +0100, Christoph Hellwig wrote:
-> On Fri, Jan 04, 2019 at 08:53:24AM -0700, Keith Busch wrote:
-> > On Fri, Jan 04, 2019 at 03:21:07PM +0800, Ming Lei wrote:
-> > > Thinking about the patch further: after pci_alloc_irq_vectors_affinity()
-> > > is returned, queue number for non-polled queues can't be changed at will,
-> > > because we have to make sure to spread all CPUs on each queue type, and
-> > > the mapping has been fixed by pci_alloc_irq_vectors_affinity() already.
-> > > 
-> > > So looks the approach in this patch may be wrong.
-> > 
-> > That's a bit of a problem, and not a new one. We always had to allocate
-> > vectors before creating IRQ driven CQ's, but the vector affinity is
-> > created before we know if the queue-pair can be created. Should the
-> > queue creation fail, there may be CPUs that don't have a queue.
-> > 
-> > Does this mean the pci msi API is wrong? It seems like we'd need to
-> > initially allocate vectors without PCI_IRQ_AFFINITY, then have the
-> > kernel set affinity only after completing the queue-pair setup.
-> 
-> We can't just easily do that, as we want to allocate the memory for
-> the descriptors on the correct node.  But we can just free the
-> vectors and try again if we have to.
+On Wed, 2019-01-02 at 09:33 +0000, Gustavo Pimentel wrote:
+> On 21/12/2018 07:27, Andrey Smirnov wrote:
+> > Make the intent a bit more clear as well as get rid of explicit
+> > arithmetic by using IS_ALIGNED() to determine if "addr" is aligned to
+> > "size". No functional change intended.
+[]
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+[]
+> > @@ -22,7 +22,7 @@
+> >  
+> >  int dw_pcie_read(void __iomem *addr, int size, u32 *val)
+> >  {
+> > -	if ((uintptr_t)addr & (size - 1)) {
+> > +	if (!IS_ALIGNED((uintptr_t)addr, size)) {
 
-I've come to the same realization that switching modes after allocation
-can't be easily accomodated. Teardown and retry with a reduced queue
-count looks like the easiest solution.
+The (uintptr_t) cast could probably be removed as well.
+
+> > @@ -43,7 +43,7 @@ int dw_pcie_read(void __iomem *addr, int size, u32 *val)
+> >  
+> >  int dw_pcie_write(void __iomem *addr, int size, u32 val)
+> >  {
+> > -	if ((uintptr_t)addr & (size - 1))
+> > +	if (!IS_ALIGNED((uintptr_t)addr, size))
+> >  		return PCIBIOS_BAD_REGISTER_NUMBER;
+
+here too
+
