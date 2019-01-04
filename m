@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D966C43387
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D67EC43387
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 72AB821872
-	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FD3A21872
+	for <linux-pci@archiver.kernel.org>; Fri,  4 Jan 2019 17:51:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="puOa+Oa5"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cIQDFnbb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728199AbfADRvi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 12:51:38 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:34810 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728677AbfADRtz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 12:49:55 -0500
-Received: by mail-pg1-f196.google.com with SMTP id j10so17791758pga.1;
-        Fri, 04 Jan 2019 09:49:53 -0800 (PST)
+        id S1728638AbfADRtx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 4 Jan 2019 12:49:53 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:46376 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728670AbfADRtw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Jan 2019 12:49:52 -0500
+Received: by mail-pg1-f193.google.com with SMTP id w7so17760159pgp.13;
+        Fri, 04 Jan 2019 09:49:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=QhqhT8k9cRoxWOByjnw4+D3pr2bPAqv3RKgBmGiID7Y=;
-        b=puOa+Oa5mf9v7e1IlYNfFflOsFbHuywQvz56JQu5xhuT1CWhPCFLj5SYPYM0yYmSxf
-         /3ltIOT1DOuf/cpIxyBhUhuMcaU4KjjEeEw1v4Vp+uJ3/5Wswg9DE0gIpvZBEf4NTwgG
-         g/Z+0G0NDf6OlV+Ajjkw/F4DhmocblP0TRHEL3hokf2GHWJ5twOYmMsVgsUhoPqohYz7
-         zbbrvcYT13Eyp+txwqEY8zgTO1SEd+AEvdzWdSzcHuZwLdtEfyg5o2uw7tTj3v0ngKwP
-         hQfOk4ZWVwOUb0AxvHfRCFHbgaChQbx7CK2zY/tDmCMQZNrW/4FH8cjdhfuUu68LEUd7
-         YgPQ==
+        bh=3VOwOJYTEi9UR4UgeiKLcvLz0osJ4eyuFQfv798N0kw=;
+        b=cIQDFnbbZQ7zun0bPoYcKlx4CAsV3EdWh8sQLP0WqF9Y45of71SulNq2FVC8xni2F0
+         NW7GmTzooeTKpkIuN/g2s879lKeRldJQNhRxB0FpP7j+m9mBmZSSyHklkczn+yfZI6Xz
+         BWjQl6TtJNNh964Grs9JFAUqrD7oAmW5nRJ2vasVyDn0pnMm4PgKlkEXdSLibNVdsi8w
+         9xQEhxC6V6KwlpXt+wbL7QbIigPIGkuTpl8zWtYUvmupl+q4L2ENNZE7OMPHDlWdDH+7
+         Ekno1l0RTMm69qLLs6FPaiUl5Zamvg+3jST6R9lJMWCOY0AGyEIR4DZahVRmpH7z1jlw
+         Ww+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=QhqhT8k9cRoxWOByjnw4+D3pr2bPAqv3RKgBmGiID7Y=;
-        b=a1WtZqmv1gP53u1/FYll/7VURzn6hbo7Iq/dWrZnkBT+dX1m8lrZOc245wnQkUwuOh
-         d1yzt4s5TA6DsGNJqd895mP6v/3UGiVC6SChDBtsj43qjaE7HEmaz9A2Ozc8v+g3kGbh
-         mM2uHJSYGQrZIaebeS4JOPsynn+k1eC5/kvrGieTSoc37078eHYaYw5NuAW81LHv/+Hr
-         s4z+eg+iAHZ1fvWmd5pkxw8uZ8pJfz3xs6Gqqw8bjnmbufWNVJDe1zWkhvE5EUYuSomQ
-         rN7FFkTXOEi9FnkKxlKoamzmVyYdxAWcehzPNmll7YYqVqENCUIjfBFRVypYx+XfGtOV
-         9KQA==
-X-Gm-Message-State: AJcUukffKE2Ddvn4VfRrgaXcn/g4l7eAkRYdc87XYCuA/DF2LdTpML3u
-        GSbDKXhzg5ykNwYtENidvcozq50ebw8=
-X-Google-Smtp-Source: ALg8bN4LPvul9EoVP+PUo/2OYcZzz1whMoTFA5PuuZ/nPLmsezd3LBKPNU19q/O3Rnl3lTb/V3kfzg==
-X-Received: by 2002:a63:c00b:: with SMTP id h11mr2485051pgg.429.1546624193159;
-        Fri, 04 Jan 2019 09:49:53 -0800 (PST)
+        bh=3VOwOJYTEi9UR4UgeiKLcvLz0osJ4eyuFQfv798N0kw=;
+        b=Wf0ZmAqFNOlb0ADZX9nJ+59HSrMG+PdHTFlXp+VUZHfoh0OGyJ2bfWuIzjpPkfeluE
+         ZXGwBp9/VtG7I2rImPH7qFLwO2+v4fQgg+1jgbyGzAssMpdtvAsTpqsQlufMLUhUSkVZ
+         Nve+5TSE38oiUwei6h1tPHnQa/6LSnrx7vP/9h+WxHX4/r14PBMA3KYrTNV+Fj+5U58n
+         WZHSKQ66dFhBYZ+d/fpFMj5nkM19mMdVakHpt8tSOcQ7XLEkeZZLZ+N7kTf4R1v+OtDy
+         8ElVT9nkpORAP3Y1BE+IKKaPIZqOVZPq79ASUXQpSLHbsIyq10H8PuXKEUH6ybRVX/Yg
+         Z/YQ==
+X-Gm-Message-State: AJcUuke5cXHH+bFDZwDL7q04PlapwJjCmpq3DNBZ6DeB3NS9DIZoXDOV
+        Ey9vloWQlTqX/OIvLrHoKWhwoZND+8A=
+X-Google-Smtp-Source: ALg8bN63AGT6KHsPf4+9iTaT+C2aMgpdrT4E6ZaEu9GWtQHOwSDB5//W1Fa3tk9pOsUCFndg/m44ow==
+X-Received: by 2002:a63:1904:: with SMTP id z4mr2364785pgl.135.1546624191241;
+        Fri, 04 Jan 2019 09:49:51 -0800 (PST)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id i193sm100699632pgc.22.2019.01.04.09.49.51
+        by smtp.gmail.com with ESMTPSA id i193sm100699632pgc.22.2019.01.04.09.49.49
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 04 Jan 2019 09:49:52 -0800 (PST)
+        Fri, 04 Jan 2019 09:49:50 -0800 (PST)
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
@@ -66,11 +66,10 @@ Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         Leonard Crestez <leonard.crestez@nxp.com>,
         "A.s. Dong" <aisheng.dong@nxp.com>,
         Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: [PATCH v2 07/20] PCI: dwc: Make use of IS_ALIGNED()
-Date:   Fri,  4 Jan 2019 09:49:12 -0800
-Message-Id: <20190104174925.17153-8-andrew.smirnov@gmail.com>
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 06/20] PCI: imx6: Remove PCIE_PHY_RX_ASIC_OUT* constants
+Date:   Fri,  4 Jan 2019 09:49:11 -0800
+Message-Id: <20190104174925.17153-7-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190104174925.17153-1-andrew.smirnov@gmail.com>
 References: <20190104174925.17153-1-andrew.smirnov@gmail.com>
@@ -81,9 +80,8 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Make the intent a bit more clear as well as get rid of explicit
-arithmetic by using IS_ALIGNED() to determine if "addr" is aligned to
-"size". No functional change intended.
+Code using these constants was removed in commit a77c5422d758 ("PCI:
+imx6: Remove broken Gen2 workaround"). No functional change intended.
 
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -97,34 +95,25 @@ Cc: linux-imx@nxp.com
 Cc: linux-arm-kernel@lists.infradead.org
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 93ef8c31fb39..67236379c61a 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -22,7 +22,7 @@
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index a7192b9e0e71..282b09076fea 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -123,9 +123,6 @@ struct imx6_pcie {
+ #define  PCIE_PHY_MPLL_MULTIPLIER_MASK		0x7f
+ #define  PCIE_PHY_MPLL_MULTIPLIER_OVRD		(0x1 << 9)
  
- int dw_pcie_read(void __iomem *addr, int size, u32 *val)
- {
--	if ((uintptr_t)addr & (size - 1)) {
-+	if (!IS_ALIGNED((uintptr_t)addr, size)) {
- 		*val = 0;
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 	}
-@@ -43,7 +43,7 @@ int dw_pcie_read(void __iomem *addr, int size, u32 *val)
- 
- int dw_pcie_write(void __iomem *addr, int size, u32 val)
- {
--	if ((uintptr_t)addr & (size - 1))
-+	if (!IS_ALIGNED((uintptr_t)addr, size))
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
- 
- 	if (size == 4)
+-#define PCIE_PHY_RX_ASIC_OUT 0x100D
+-#define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
+-
+ #define PHY_RX_OVRD_IN_LO 0x1005
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
 -- 
 2.20.1
 
