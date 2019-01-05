@@ -2,80 +2,133 @@ Return-Path: <SRS0=A2IS=PN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	TVD_SPACE_RATIO autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADFE1C43387
-	for <linux-pci@archiver.kernel.org>; Sat,  5 Jan 2019 00:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D78F5C43387
+	for <linux-pci@archiver.kernel.org>; Sat,  5 Jan 2019 17:51:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6546C21872
-	for <linux-pci@archiver.kernel.org>; Sat,  5 Jan 2019 00:43:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB1A8218E2
+	for <linux-pci@archiver.kernel.org>; Sat,  5 Jan 2019 17:51:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=impinj.com header.i=@impinj.com header.b="F1Jbt2mU"
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="ITdm6f4f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726036AbfAEAnH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 4 Jan 2019 19:43:07 -0500
-Received: from mail-eopbgr680137.outbound.protection.outlook.com ([40.107.68.137]:20832
-        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725862AbfAEAnH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Jan 2019 19:43:07 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=impinj.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ZTmBLALdRePkUM9WRtm7VzkGBLjhoQC2rgeq89sUXZE=;
- b=F1Jbt2mUef0tth0/7hnSiR6iAJmEkOM9QYf2GvzNyUv6SupiGIxa1Y14i2ibSQk4B8tGHeEX0jZVlthPgd7ku55ywvSKNHabkJW7CUDI8sMqDbDaEbJNAYHcsad6X1z0MUlxWtkG0pi8HQ/ithXJwuGJ5nbN7EjfreUTcOWRdk8=
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com (10.167.236.38) by
- MWHPR0601MB3593.namprd06.prod.outlook.com (10.167.173.36) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1495.6; Sat, 5 Jan 2019 00:43:03 +0000
-Received: from MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::c067:6414:a064:fa37]) by MWHPR0601MB3708.namprd06.prod.outlook.com
- ([fe80::c067:6414:a064:fa37%4]) with mapi id 15.20.1495.005; Sat, 5 Jan 2019
- 00:43:03 +0000
-From:   Trent Piepho <tpiepho@impinj.com>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: unsubsribe
-Thread-Topic: unsubsribe
-Thread-Index: AQHUpI+deSKGQs0SdUGU4LQqmzMPYQ==
-Date:   Sat, 5 Jan 2019 00:43:03 +0000
-Message-ID: <1546648982.14247.30.camel@impinj.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=tpiepho@impinj.com; 
-x-originating-ip: [216.207.205.253]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;MWHPR0601MB3593;6:7anSDigB25lydh+AQF0P3JpRqChvrH2wa1gfq0DjeFz9a5RQakApgZnUnX9tb/mRnQ1njdaFrXB9tCg9njqozodkLAGfNCWRxIRgRB8o0B2x34nDTRpdjyWmu9Xw89HuVB1xTUjAFSrs3odgefVuvQ8Scg1YXg+u1t+21cUaruarxtMI7VoddpUHDvqVVop82evZqYeGymHi3Nt6nnQ239GEf2D99ggxBJcITqDOcJds3nPRm5niNhjHCTcVElHf+/eLcbMeGFqjbYGZpvdhXdrd2k0PxhvoYnwp0YakUf6PjqwsHNN846iHkAAmHi+zd4ojrR5LeOIg9b0KJj82aBKvxMvcj+iJN6NAzFqm6/Ra4h2fklFkMyFSnmm2x2vJ/SWfzGaYD/W3PQmuzbiQ0ZHKqphbv8tjrF8W/qbV1nTxp3TauWGHaQGKfNCv3Ulp+gd5iQ4XyW3KA/0NWVGdaA==;5:pFsokkTD4Lk8CNxQH1ngRZKO7RSztJw4PR7BqYttv45lHq2a/zO5UgbkXlGyaEP6YN/a8sajJ949ChM/t5bEzyZU6fs3COJr4FSxVpczAbijLFRrOVL7NwpuTfVauyW8NX0ZoUy2lJUKzXRNXSyjppryPPyLaPVTs0u/OQujtnfbo6+hBOWCK4WSqJ2Jk9BoW7bWTGoVep4s/3BKLIRn8Q==;7:6VL5oVz/OMyOhb7cKl+tCRVCkmhWeDnsrDcC0eTm907Kr+7n0aP+z4enhOIX3yhOW9EnlcAPslAzFz0nUTcGxIA9mPwhLcgntL7gIOFy5oglBs+65Mz7sjyxZo5l/2H5oz6MvcA+tbC1Uo9WMaYhyQ==
-x-ms-exchange-antispam-srfa-diagnostics: SOS;
-x-ms-office365-filtering-correlation-id: fe984ded-4cba-443a-8bdf-08d672a6c059
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(2017052603328)(7153060)(7193020);SRVR:MWHPR0601MB3593;
-x-ms-traffictypediagnostic: MWHPR0601MB3593:
-x-microsoft-antispam-prvs: <MWHPR0601MB359321AEFE3114444F27D4EED38F0@MWHPR0601MB3593.namprd06.prod.outlook.com>
-x-forefront-prvs: 09086FB5C5
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(396003)(346002)(39840400004)(366004)(376002)(189003)(199004)(3846002)(6116002)(486006)(86362001)(6486002)(26005)(6506007)(19618925003)(102836004)(97736004)(8676002)(81166006)(8936002)(81156014)(316002)(6436002)(305945005)(478600001)(558084003)(2616005)(476003)(7736002)(6916009)(5640700003)(14454004)(4270600006)(25786009)(2906002)(221733001)(68736007)(2351001)(66066001)(53936002)(6512007)(3480700005)(106356001)(2501003)(256004)(71190400001)(71200400001)(5660300001)(7116003)(186003)(36756003)(99286004)(105586002)(103116003)(166393002)(220243001);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR0601MB3593;H:MWHPR0601MB3708.namprd06.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: impinj.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: IL+fk8S6RqTyIvFV5T76EajLBRe0Bj+3fmiqsgzppypxavEgY5lBGLZf8kx0LNNrQX3l23ME5CX0+RhkiGwKWt1Pep1X9Z9FQcF7XrnAR9ZoBBKWCrfadz39bn6N/uN6az/Bh/bQcxEQ6FOhM6EuN0u3IDlGZ8mKGVKynUoZwVFLIgGCMSoOs6NhAuQHueckjIv3YWo48IMJBYITgz+DWspSRbBkTdLHCTAYnQxXL8t4esTgTgwhoacZSUgSrqIkYk1stxk2uBI30jrdbGI10RJKfjBARLXfjT+exT3ZnWWRqFnKIw3EQY7UmZIeEeUe
-spamdiagnosticoutput: 1:99
-spamdiagnosticmetadata: NSPM
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        id S1726406AbfAERvU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 5 Jan 2019 12:51:20 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:42570 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726355AbfAERvT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Jan 2019 12:51:19 -0500
+Received: by mail-pg1-f193.google.com with SMTP id d72so18836181pga.9
+        for <linux-pci@vger.kernel.org>; Sat, 05 Jan 2019 09:51:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=bmFtkiMzY0SjcGgWZDnXoB7lrhs+dKojhnWxuZ4Ulkg=;
+        b=ITdm6f4fW8QautoLRLSG1phMTMj2iuQLmLxDF+T0kN82TxeVV1j00miE0Oo3PslMCO
+         bQ6TrG8UQ73pjOcXA73iW8aR45Cz3HAKFz1BtvLEMpdNyFCiN+B0jqgWcVENVyqR4KFO
+         L5ovF35IgXPwJPIKg7TAaWZqEjbmpgkemK+oaQeTp+BUBv639FtVLUCnYThlsw7U4klp
+         jBo9vtXrHIXYU7FZLG3b2aIODlSkG9va85ecBLN7eFKCWvCc3DOsKnE+og9x/fEarDIu
+         XQEFOyMEksq4jWcLbKWF9i2JUj8D+iy3tHD47fDvNw0diAQaD4T/Ej+zYg/cHJeDKJ4J
+         fFkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=bmFtkiMzY0SjcGgWZDnXoB7lrhs+dKojhnWxuZ4Ulkg=;
+        b=p9D8X8Drd0Oyr35QK4m380VQaY+IHaiDWFKBiwvzQF3gnllp48uurSV/aIAD+woOfT
+         zyZuk0Pzwpr4Js7c9EQsKlfkGzhZZgFEAFEitLGnsengoWNNkoqD/B73OO3cQ7caUjQH
+         el6m0D0sVpJmSgwnqAv0ZTFzVjHJta4FDX7s5PhSHC9E2PPEnMx44xxEZMJk1U60zr7x
+         v1X2UqbTSB6E9go330hr1MvqsTfbk6PO1dZCtm0QOtq/+bx+tTm3wS+8m5wYpbFSErZ4
+         1as3yBcNQhFIVariMTcufBSLWFbQu7CJd5x+gb9q0nMz6KLB8fARNK6A+o4pPXI336/o
+         3nFg==
+X-Gm-Message-State: AJcUukcmgi+LshnNOn2H2pNRV7ieE/E+W1XitqFBAU6YLEYTAamTFTG+
+        y2nXs8vPRBmzaKAXU8++IzN3sA==
+X-Google-Smtp-Source: ALg8bN5CWdV0l04sM6sKg6mHb4H5KfjJ+9BVYkv5JG/kj/c+dIa75hYcEg6kHnIsIdFDi+ZgYRVb9g==
+X-Received: by 2002:a63:1d59:: with SMTP id d25mr24839142pgm.180.1546710678704;
+        Sat, 05 Jan 2019 09:51:18 -0800 (PST)
+Received: from ziepe.ca (S010614cc2056d97f.ed.shawcable.net. [174.3.196.123])
+        by smtp.gmail.com with ESMTPSA id y71sm119832456pfi.123.2019.01.05.09.51.17
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sat, 05 Jan 2019 09:51:17 -0800 (PST)
+Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1gfq6P-00045X-0F; Sat, 05 Jan 2019 10:51:17 -0700
+Date:   Sat, 5 Jan 2019 10:51:16 -0700
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     David Gibson <david@gibson.dropbear.id.au>
+Cc:     Leon Romanovsky <leon@kernel.org>, davem@davemloft.net,
+        saeedm@mellanox.com, ogerlitz@mellanox.com, tariqt@mellanox.com,
+        bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org, sbest@redhat.com, paulus@samba.org,
+        benh@kernel.crashing.org
+Subject: Re: [PATCH] PCI: Add no-D3 quirk for Mellanox ConnectX-[45]
+Message-ID: <20190105175116.GB14238@ziepe.ca>
+References: <20181206041951.22413-1-david@gibson.dropbear.id.au>
+ <20181206064509.GM15544@mtr-leonro.mtl.com>
+ <20190104034401.GA2801@umbus.fritz.box>
 MIME-Version: 1.0
-X-OriginatorOrg: impinj.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fe984ded-4cba-443a-8bdf-08d672a6c059
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jan 2019 00:43:03.6110
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 6de70f0f-7357-4529-a415-d8cbb7e93e5e
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR0601MB3593
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190104034401.GA2801@umbus.fritz.box>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-unsubscribe linux-pci=
+On Fri, Jan 04, 2019 at 02:44:01PM +1100, David Gibson wrote:
+> On Thu, Dec 06, 2018 at 08:45:09AM +0200, Leon Romanovsky wrote:
+> > On Thu, Dec 06, 2018 at 03:19:51PM +1100, David Gibson wrote:
+> > > Mellanox ConnectX-5 IB cards (MT27800) seem to cause a call trace when
+> > > unbound from their regular driver and attached to vfio-pci in order to pass
+> > > them through to a guest.
+> > >
+> > > This goes away if the disable_idle_d3 option is used, so it looks like a
+> > > problem with the hardware handling D3 state.  To fix that more permanently,
+> > > use a device quirk to disable D3 state for these devices.
+> > >
+> > > We do this by renaming the existing quirk_no_ata_d3() more generally and
+> > > attaching it to the ConnectX-[45] devices (0x15b3:0x1013).
+> > >
+> > > Signed-off-by: David Gibson <david@gibson.dropbear.id.au>
+> > >  drivers/pci/quirks.c | 17 +++++++++++------
+> > >  1 file changed, 11 insertions(+), 6 deletions(-)
+> > >
+> > 
+> > Hi David,
+> > 
+> > Thank for your patch,
+> > 
+> > I would like to reproduce the calltrace before moving forward,
+> > but have trouble to reproduce the original issue.
+> > 
+> > I'm working with vfio-pci and CX-4/5 cards on daily basis,
+> > tried manually enter into D3 state now, and it worked for me.
+> 
+> Interesting.  I've investigated this further, though I don't have as
+> many new clues as I'd like.  The problem occurs reliably, at least on
+> one particular type of machine (a POWER8 "Garrison" with ConnectX-4).
+> I don't yet know if it occurs with other machines, I'm having trouble
+> getting access to other machines with a suitable card.  I didn't
+> manage to reproduce it on a different POWER8 machine with a
+> ConnectX-5, but I don't know if it's the difference in machine or
+> difference in card revision that's important.
+
+Make sure the card has the latest firmware is always good advice..
+
+> So possibilities that occur to me:
+>   * It's something specific about how the vfio-pci driver uses D3
+>     state - have you tried rebinding your device to vfio-pci?
+>   * It's something specific about POWER, either the kernel or the PCI
+>     bridge hardware
+>   * It's something specific about this particular type of machine
+
+Does the EEH indicate what happend to actually trigger it?
+
+Jason
