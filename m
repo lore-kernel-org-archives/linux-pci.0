@@ -2,68 +2,80 @@ Return-Path: <SRS0=pf5Q=PO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29701C43387
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Jan 2019 02:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0FBBC43387
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Jan 2019 02:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E946B222A9
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Jan 2019 02:40:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1546742444;
-	bh=rezS+zYbN0k4ywPFmy+CdY/TqBeHhtPBP4M7yatUiXw=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=fGHL+lEWYCrRj/EV5gtdNXOnmKA7w9vYLoTnYYtUT9hqbBbHoaXPUC6BknP14/5/c
-	 NBixlInyqz/oiAuzexrdgIlVTOuCwC58Pb+MhJ1bCKV53uatbaxgTV/t96ICWl+Kzw
-	 afZ7OqjX8oiik2xHiM94d28PLTqcYTYn4ZVymkSo=
+	by mail.kernel.org (Postfix) with ESMTP id AF489222C3
+	for <linux-pci@archiver.kernel.org>; Sun,  6 Jan 2019 02:56:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726588AbfAFCkF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 5 Jan 2019 21:40:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36576 "EHLO mail.kernel.org"
+        id S1726378AbfAFC45 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 5 Jan 2019 21:56:57 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:42630 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726574AbfAFCkE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 5 Jan 2019 21:40:04 -0500
-Subject: Re: [GIT PULL] PCI changes for v4.21
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1546742404;
-        bh=rezS+zYbN0k4ywPFmy+CdY/TqBeHhtPBP4M7yatUiXw=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=BLlwpQuUkIWPApOm78qY3+kvXMuRIa2x+8rmp1xov8hL6KF6G+285fwvEvW2QXkrK
-         MASNsmA/tqSlPfNL45a6tZNrqkU/8po9u7H200GvHBnkfHQzgutX6CV4RmGT2oQg3D
-         qUUfT+G9r9DC5QtB9G2nJuZj33tQ8gBC6KSPj63w=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20190103150552.GA168876@google.com>
-References: <20190103150552.GA168876@google.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20190103150552.GA168876@google.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
- tags/pci-v4.21-changes
-X-PR-Tracked-Commit-Id: 72199051af6205049e96ee7ed34f4fc5f44d1baf
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 926b02d3eb547daa1d56cf9b586f31b270488b77
-Message-Id: <20190106024004.13237.32005.pr-tracker-bot@pdx-korg-gitolite-1.ci.codeaurora.org>
-Date:   Sun, 06 Jan 2019 02:40:04 +0000
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+        id S1726375AbfAFC45 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 5 Jan 2019 21:56:57 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E3B0487621;
+        Sun,  6 Jan 2019 02:56:56 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-18.pek2.redhat.com [10.72.8.18])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C7C225D75E;
+        Sun,  6 Jan 2019 02:56:49 +0000 (UTC)
+Date:   Sun, 6 Jan 2019 10:56:45 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Keith Busch <keith.busch@intel.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCHv2 2/4] nvme-pci: Distribute io queue types after creation
+Message-ID: <20190106025643.GB20802@ming.t460p>
+References: <20190103225033.11249-1-keith.busch@intel.com>
+ <20190103225033.11249-3-keith.busch@intel.com>
+ <20190104023121.GB31330@ming.t460p>
+ <20190104072106.GA9948@ming.t460p>
+ <20190104155324.GA12342@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190104155324.GA12342@localhost.localdomain>
+User-Agent: Mutt/1.9.1 (2017-09-22)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Sun, 06 Jan 2019 02:56:57 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pull request you sent on Thu, 3 Jan 2019 09:05:52 -0600:
+On Fri, Jan 04, 2019 at 08:53:24AM -0700, Keith Busch wrote:
+> On Fri, Jan 04, 2019 at 03:21:07PM +0800, Ming Lei wrote:
+> > Thinking about the patch further: after pci_alloc_irq_vectors_affinity()
+> > is returned, queue number for non-polled queues can't be changed at will,
+> > because we have to make sure to spread all CPUs on each queue type, and
+> > the mapping has been fixed by pci_alloc_irq_vectors_affinity() already.
+> > 
+> > So looks the approach in this patch may be wrong.
+> 
+> That's a bit of a problem, and not a new one. We always had to allocate
+> vectors before creating IRQ driven CQ's, but the vector affinity is
+> created before we know if the queue-pair can be created. Should the
+> queue creation fail, there may be CPUs that don't have a queue.
+> 
+> Does this mean the pci msi API is wrong? It seems like we'd need to
+> initially allocate vectors without PCI_IRQ_AFFINITY, then have the
+> kernel set affinity only after completing the queue-pair setup.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.21-changes
+I think this kind of API style(two stages) is more clean, and
+error-immune.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/926b02d3eb547daa1d56cf9b586f31b270488b77
+- pci_alloc_irq_vectors() is only for allocating irq vectors
+- pci_set_irq_vectors_affnity() is for spreading affinity at will
 
-Thank you!
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+Thanks,
+Ming
