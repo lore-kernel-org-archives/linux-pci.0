@@ -6,198 +6,147 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0438CC43612
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 15:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E67C43387
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 17:16:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D252F217D4
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 15:01:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 609722173C
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 17:16:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727570AbfAGPBl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jan 2019 10:01:41 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:10008 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727242AbfAGPBk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Jan 2019 10:01:40 -0500
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727433AbfAGRQe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jan 2019 12:16:34 -0500
+Received: from avon.wwwdotorg.org ([104.237.132.123]:53856 "EHLO
+        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727351AbfAGRQe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2019 12:16:34 -0500
+Received: from [10.20.204.51] (unknown [216.228.112.24])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 589DA2D7F3;
-        Mon,  7 Jan 2019 15:01:40 +0000 (UTC)
-Received: from redhat.com (ovpn-122-143.rdu2.redhat.com [10.10.122.143])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 9490760192;
-        Mon,  7 Jan 2019 15:01:38 +0000 (UTC)
-Date:   Mon, 7 Jan 2019 10:01:38 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, xuyandong <xuyandong2@huawei.com>,
-        stable@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-        Jesse Barnes <jbarnes@virtuousgeek.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: avoid bridge feature re-probing on hotplug
-Message-ID: <20190107095840-mutt-send-email-mst@kernel.org>
-References: <20181218004455.20186-1-mst@redhat.com>
- <20181220194950.GD183878@google.com>
- <20181220161052-mutt-send-email-mst@kernel.org>
- <20181220223158.GG183878@google.com>
- <20181220173535-mutt-send-email-mst@kernel.org>
+        by avon.wwwdotorg.org (Postfix) with ESMTPSA id 029CE1C00E7;
+        Mon,  7 Jan 2019 10:16:30 -0700 (MST)
+X-Virus-Status: Clean
+X-Virus-Scanned: clamav-milter 0.100.2 at avon.wwwdotorg.org
+Subject: Re: [PATCH] PCI: dwc: fix MSI IRQ handler ordering
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Stephen Warren <swarren@nvidia.com>,
+        Arnd Bergmann <arnd@arndb.de>, Faiz Abbas <faiz_abbas@ti.com>,
+        Harro Haan <hrhaan@gmail.com>,
+        Jingoo Han <jg1.han@samsung.com>,
+        Joao Pinto <joao.pinto@synopsys.com>,
+        Juergen Beisert <jbe@pengutronix.de>,
+        Marek Vasut <marex@denx.de>,
+        Matthias Mann <m.mann@arkona-technologies.de>,
+        Mohit Kumar <mohit.kumar@st.com>,
+        Pratyush Anand <pratyush.anand@st.com>,
+        Richard Zhu <hong-xing.zhu@freescale.com>,
+        Sean Cross <xobs@kosagi.com>, Shawn Guo <shawn.guo@linaro.org>,
+        Siva Reddy Kallam <siva.kallam@samsung.com>,
+        Srikanth T Shivanand <ts.srikanth@samsung.com>,
+        Tim Harvey <tharvey@gateworks.com>
+References: <20190104214509.16891-1-swarren@wwwdotorg.org>
+ <520c9d1b-8b1f-46ac-687a-fdb703328567@synopsys.com>
+From:   Stephen Warren <swarren@wwwdotorg.org>
+Message-ID: <567e726d-e3c5-c48d-ec99-af1c1576180f@wwwdotorg.org>
+Date:   Mon, 7 Jan 2019 10:16:29 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181220173535-mutt-send-email-mst@kernel.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Mon, 07 Jan 2019 15:01:40 +0000 (UTC)
+In-Reply-To: <520c9d1b-8b1f-46ac-687a-fdb703328567@synopsys.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 20, 2018 at 05:36:03PM -0500, Michael S. Tsirkin wrote:
-> On Thu, Dec 20, 2018 at 04:31:58PM -0600, Bjorn Helgaas wrote:
-> > On Thu, Dec 20, 2018 at 04:26:54PM -0500, Michael S. Tsirkin wrote:
-> > > On Thu, Dec 20, 2018 at 01:49:50PM -0600, Bjorn Helgaas wrote:
-> > > > On Mon, Dec 17, 2018 at 07:45:41PM -0500, Michael S. Tsirkin wrote:
-> > > > > commit 1f82de10d6b1 ("PCI/x86: don't assume prefetchable ranges are 64bit")
-> > > > > added probing of bridge support for 64 bit memory each time bridge is
-> > > > > re-enumerated.
-> > > > > 
-> > > > > Unfortunately this probing is destructive if any device behind
-> > > > > the bridge is in use at this time.
-> > > > > 
-> > > > > This was observed in the field, see
-> > > > > https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg01711.html
-> > > > > and specifically
-> > > > > https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
-> > > > > 
-> > > > > There's no real need to re-probe the bridge features as the
-> > > > > registers in question never change - detect that using
-> > > > > the memory flag being set (it's always set on the 1st pass since
-> > > > > all PCI2PCI bridges support memory forwarding) and skip the probing.
-> > > > > Thus, only the first call will perform the disruptive probing and sets
-> > > > > the resource flags as required - which we can be reasonably sure happens
-> > > > > before any devices have been configured.
-> > > > > Avoiding repeated calls to pci_bridge_check_ranges might be even nicer.
-> > > > > Unfortunately I couldn't come up with a clean way to do it without a
-> > > > > major probing code refactoring.
-> > > > 
-> > > > I'm OK with major probe code refactoring as long as it's done
-> > > > carefully.  Doing a special-case fix like this solves the immediate
-> > > > problem but adds to the long-term maintenance problem.
-> > > > 
-> > > > As far as I can tell, everything in pci_bridge_check_ranges() should
-> > > > be done once at enumeration-time, e.g., in the pci_read_bridge_bases()
-> > > > path, and pci_bridge_check_ranges() itself should be removed.
-> > > > 
-> > > > If that turns out to be impossible for some reason, we need a comment
-> > > > explaining why.
-> > > 
-> > > Maybe possible but I am not sure how.
-> > > 
-> > > Here's why:
-> > > 
-> > > Upon hotplug we want to poke at new bridges if any, but not the old
-> > > ones.  The issue is that e.g. with ACPI hotplug the event that Linux
-> > > knows how to handle is by design a heavy weight bus rescan.
-> > 
-> > Yeah, it's tricky.  But I don't think it's PCI or ACPI that makes this
-> > tricky; I think it's just the historical baggage of the PCI core
-> > design that makes it hard.
-> > 
-> > Even in the ACPI hotplug path, I think we use this pci_scan_device()
-> > path:
-> > 
-> >   pci_scan_device
-> >     pci_setup_device
-> >       case PCI_HEADER_TYPE_NORMAL:
-> >         pci_read_bases(6)             # normal PCI BARs
-> >       case PCI_HEADER_TYPE_BRIDGE:
-> >         pci_read_bases(2)             # bridge BARs (not windows)
-> > 
-> > Unfortunately that path doesn't call pci_read_bridge_bases() to read
-> > the bridge windows; that currently happens in pcibios_fixup_bus(),
-> > which is only called from pci_scan_child_bus_extend().
-> > 
-> > This is a broken design because reading the bridge apertures is not at
-> > all platform-specific, so it shouldn't be done in a pcibios hook.
-> > And, more to the issue at hand, it shouldn't be done in
-> > pci_scan_child_bus() either.  We might have to *update* the windows
-> > when scanning child buses, but we should be able to do the work of
-> > finding out what windows are implemented and their properties
-> > somewhere in the pci_setup_device() path.
-> > 
-> > > Specifically 
-> > > 
-> > > pci_read_bridge_bases does not
-> > > seem to be called on ACPI hotplug path.
-> > > 
-> > > Rather,
-> > > 
-> > > pci_assign_unassigned_root_bus_resources
-> > > pci_assign_unassigned_bridge_resources
-> > > 
-> > > would be the two functions in question.
-> > > 
-> > > 
-> > > Would above explanation be sufficient? If not, since I understand your
-> > > reluctance to pile up hacks, would you be open to doing the suggested
-> > > rewrite yourself? Me and xuyandong can help test it.
-> > 
-> > I'll be on vacation or holiday most of the time until the new year,
-> > but I put a reminder on my calendar to look at this again then.  I'm
-> > pretty sure we've tried to unravel this in the past, but I can't
-> > remember what issues we tripped over.  Maybe we can make some progress
-> > by restricting the problem we're trying to solve.
-> > 
-> > Thanks for bringing this up!  This is a wart in the PCI core that has
-> > bothered me for a long time, and maybe this is the incentive we need
-> > to make some progress on it.
-> > 
-> > Bjorn
+On 1/7/19 2:36 AM, Gustavo Pimentel wrote:
+> Hi Stephen,
 > 
+> On 04/01/2019 21:45, Stephen Warren wrote:
+>> From: Stephen Warren <swarren@nvidia.com>
+>>
+>> The current code does this when handling MSI IRQs:
+>>
+>> a) Process the irq.
+>> b) Clear the latched IRQ status.
+>>
+>> If a new IRQ occurs any time after (a) has read the IRQ status for the
+>> last time and before (b), it will be lost. For example, this occurs in
+>> practice when using a Marvell 9171 AHCI controller with NCQ enabled;
+>> many command timeouts occur with certain disk access patterns.
+>>
+>> Fix the code to do the following instead, so that if any new IRQs are
+>> raised during the processing of the IRQ, the IRQ status is not cleared,
+>> so that the IRQ is not lost.
+>>
+>> a) Clear the latched IRQ status.
+>> b) Process the IRQ.
+>>
+>> This change reverts commit 8c934095fa2f ("PCI: dwc: Clear MSI interrupt
+>> status after it is handled, not before")
+>>
+>> This change re-applies commit ca1658921b63 ("PCI: designware: Fix
+>> missing MSI IRQs")
+>>
+>> Signed-off-by: Stephen Warren <swarren@nvidia.com>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Faiz Abbas <faiz_abbas@ti.com>
+>> Cc: Harro Haan <hrhaan@gmail.com>
+>> Cc: Jingoo Han <jg1.han@samsung.com>
+>> Cc: Joao Pinto <jpinto@synopsys.com>
+>> Cc: Juergen Beisert <jbe@pengutronix.de>
+>> Cc: Marek Vasut <marex@denx.de>
+>> Cc: Matthias Mann <m.mann@arkona-technologies.de>
+>> Cc: Mohit Kumar <mohit.kumar@st.com>
+>> Cc: Pratyush Anand <pratyush.anand@st.com>
+>> Cc: Richard Zhu <hong-xing.zhu@freescale.com>
+>> Cc: Sean Cross <xobs@kosagi.com>
+>> Cc: Shawn Guo <shawn.guo@linaro.org>
+>> Cc: Siva Reddy Kallam <siva.kallam@samsung.com>
+>> Cc: Srikanth T Shivanand <ts.srikanth@samsung.com>
+>> Cc: Tim Harvey <tharvey@gateworks.com>
+>> ---
+>> Note: This issue was found in downstream NVIDIA 4.9 and 4.14 kernels.
+>> However, the exact same code structure is present in mainline and I have
+>> no reason to believe the problem would not reproduce there. I have
+>> compile tested but not runtime tested it in mainline, since my board is
+>> not yet supported in mainline.
+>> ---
+>>   drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+>> index 692dd1b264fb..7fd6c56a6f35 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+>> @@ -98,10 +98,10 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>   			irq = irq_find_mapping(pp->irq_domain,
+>>   					       (i * MAX_MSI_IRQS_PER_CTRL) +
+>>   					       pos);
+>> -			generic_handle_irq(irq);
+>>   			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
+>>   						(i * MSI_REG_CTRL_BLOCK_SIZE),
+>>   					    4, 1 << pos);
+>> +			generic_handle_irq(irq);
+>>   			pos++;
+>>   		}
+>>   	}
 > 
-> Sounds good, let me know when I can help with testing.
+> This fix was already suggested by Trent Piepho, however, after review by Marc
+> Zyngier and some information obtained from Synopsys IP development team, the
+> following set of patches was generated to correct the problem.
+> 
+> 830920e065e9 ("PCI: dwc: Use interrupt masking instead of disabling")
+> fce5423e4f43 ("PCI: dwc: Take lock when ACKing an interrupt")
+> 3f7bb2ec20ce ("PCI: dwc: Move interrupt acking into the proper callback")
 
-Ping.
-
-I guess I'll just have put this patch in the RHEL kernel for now.
-No point in keeping kernels crashing until we can
-make it perfect ...
-
-> > > > > Reported-by: xuyandong <xuyandong2@huawei.com>
-> > > > > Tested-by: xuyandong <xuyandong2@huawei.com>
-> > > > > Cc: stable@vger.kernel.org
-> > > > > Cc: Yinghai Lu <yinghai@kernel.org>
-> > > > > Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> > > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > > > ---
-> > > > > 
-> > > > > Please review and consider for stable.
-> > > > > 
-> > > > > changes from v1:
-> > > > >   comment and commit log updates to address comments by Bjorn.
-> > > > > 
-> > > > >  drivers/pci/setup-bus.c | 10 ++++++++++
-> > > > >  1 file changed, 10 insertions(+)
-> > > > > 
-> > > > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > > > > index ed960436df5e..d5c25d465d97 100644
-> > > > > --- a/drivers/pci/setup-bus.c
-> > > > > +++ b/drivers/pci/setup-bus.c
-> > > > > @@ -741,6 +741,16 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-> > > > >   struct resource *b_res;
-> > > > >  
-> > > > >   b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-> > > > > +
-> > > > > + /*
-> > > > > +  * Don't re-check after this was called once already:
-> > > > > +  * important since bridge might be in use.
-> > > > > +  * Note: this is only reliable because as per spec all PCI to PCI
-> > > > > +  * bridges support memory unconditionally so IORESOURCE_MEM is set.
-> > > > > +  */
-> > > > > + if (b_res[1].flags & IORESOURCE_MEM)
-> > > > > +         return;
-> > > > > +
-> > > > >   b_res[1].flags |= IORESOURCE_MEM;
-> > > > >  
-> > > > >   pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > > > > -- 
-> > > > > MST
+OK. I assume that dw_pci_bottom_ack() gets called before 
+dw_handle_msi_irq() for each IRQ? In which case, the last of those 3 
+changes is essentially identical to the patch I proposed, it's just that 
+the acking is handled in a separate function rather than earlier in the 
+same function.
