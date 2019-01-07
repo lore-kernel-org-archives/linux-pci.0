@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-13.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B873C43387
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 06:44:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0C70C43387
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 06:44:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A1812085A
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 06:44:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9010B2146F
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 06:44:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="cPMWIu4+"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="GpSd2ahK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726696AbfAGGoQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jan 2019 01:44:16 -0500
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:39084 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726273AbfAGGoF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2019 01:44:05 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x076hmMG055443;
-        Mon, 7 Jan 2019 00:43:48 -0600
+        id S1726404AbfAGGoE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jan 2019 01:44:04 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:36794 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726647AbfAGGoE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2019 01:44:04 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x076hDVM021658;
+        Mon, 7 Jan 2019 00:43:13 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1546843428;
-        bh=f30RSmXMqhsV1n1NfMeTlD3ATOBh5scl1ryG7fV6mJI=;
+        s=ti-com-17Q1; t=1546843393;
+        bh=7BZqM5lihQv/21d7TmC8rclZDArMN5iGSCdWQmZG2ac=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=cPMWIu4+7qq27qo54hUDefYDXUDaThbqVdSejCnoCYNyp/VdX9nYYY4mbrDvvoQPW
-         5jWsckn+8lCbRJxAyDHPOk7tHlEf8nYih9zxDiwZcan9qiJJFm9KMxh1tbZha6EhKW
-         hHz/1HhhZ6rugky0oM9w2OHDqskQScOC+ThLX6/4=
-Received: from DLEE106.ent.ti.com (dlee106.ent.ti.com [157.170.170.36])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x076hm5j021466
+        b=GpSd2ahKxWrTJHYfGwg4GDpLvKh0L4Hw63vMjt0GgWfYhz3t0Tlms+AU4zWrLNmv+
+         suQe5kIkYsPpL4cwBCt8SHYsORNsaRcSB9X1+jEy1C0Zo4P0QB3MJMopHSQbN6gR11
+         6dpkF2HyhJtqdvqNg+kowP9Zbcv+bUzeL6mc8r5g=
+Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x076hDEN038427
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 7 Jan 2019 00:43:48 -0600
-Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 7 Jan 2019 00:43:13 -0600
+Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 7
- Jan 2019 00:43:47 -0600
-Received: from dflp32.itg.ti.com (10.64.6.15) by DLEE115.ent.ti.com
- (157.170.170.26) with Microsoft SMTP Server (version=TLS1_0,
+ Jan 2019 00:43:13 -0600
+Received: from dflp32.itg.ti.com (10.64.6.15) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 7 Jan 2019 00:43:48 -0600
+ Mon, 7 Jan 2019 00:43:13 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x076gfoB002672;
-        Mon, 7 Jan 2019 00:43:43 -0600
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x076gfo3002672;
+        Mon, 7 Jan 2019 00:43:09 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -60,9 +60,9 @@ CC:     Jingoo Han <jingoohan1@gmail.com>,
         <linux-kernel@vger.kernel.org>,
         <linux-rockchip@lists.infradead.org>,
         <linux-arm-kernel@lists.infradead.org>, <kishon@ti.com>
-Subject: [PATCH 14/15] PCI: designware-plat: Remove setting epc->features in Designware plat EP driver
-Date:   Mon, 7 Jan 2019 12:11:47 +0530
-Message-ID: <20190107064148.10152-15-kishon@ti.com>
+Subject: [PATCH 06/15] PCI: cadence: Populate ->get_features() cdns_pcie_epc_ops
+Date:   Mon, 7 Jan 2019 12:11:39 +0530
+Message-ID: <20190107064148.10152-7-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190107064148.10152-1-kishon@ti.com>
 References: <20190107064148.10152-1-kishon@ti.com>
@@ -74,35 +74,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that pci-epf-test uses get_features callback and
-dw_plat_pcie_epc_features in Designware plat EP driver already indicates
-it doesn't support linkup notification and is MSIX capable, remove setting
-epc->features which is not used anymore by the endpoint function driver.
+Populate ->get_features() dw_pcie_ep_ops to return the EPC features
+supported by Cadence PCIe endpoint controller.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-plat.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/pci/controller/pcie-cadence-ep.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
-index bd0516afc86f..3be87126aef3 100644
---- a/drivers/pci/controller/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
-@@ -70,14 +70,10 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- static void dw_plat_pcie_ep_init(struct dw_pcie_ep *ep)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
--	struct pci_epc *epc = ep->epc;
- 	enum pci_barno bar;
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++)
- 		dw_pcie_ep_reset_bar(pci, bar);
--
--	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
--	epc->features |= EPC_FEATURE_MSIX_AVAILABLE;
+diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
+index c3a088910f48..14c2545bb17e 100644
+--- a/drivers/pci/controller/pcie-cadence-ep.c
++++ b/drivers/pci/controller/pcie-cadence-ep.c
+@@ -411,6 +411,18 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
+ 	return 0;
  }
  
- static int dw_plat_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
++static const struct pci_epc_features cdns_pcie_epc_features = {
++	.linkup_notifier = false,
++	.msi_capable = true,
++	.msix_capable = false,
++};
++
++static const struct pci_epc_features*
++cdns_pcie_ep_get_features(struct pci_epc *epc, u8 func_no)
++{
++	return &cdns_pcie_epc_features;
++}
++
+ static const struct pci_epc_ops cdns_pcie_epc_ops = {
+ 	.write_header	= cdns_pcie_ep_write_header,
+ 	.set_bar	= cdns_pcie_ep_set_bar,
+@@ -421,6 +433,7 @@ static const struct pci_epc_ops cdns_pcie_epc_ops = {
+ 	.get_msi	= cdns_pcie_ep_get_msi,
+ 	.raise_irq	= cdns_pcie_ep_raise_irq,
+ 	.start		= cdns_pcie_ep_start,
++	.get_features	= cdns_pcie_ep_get_features,
+ };
+ 
+ static const struct of_device_id cdns_pcie_ep_of_match[] = {
 -- 
 2.17.1
 
