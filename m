@@ -3,42 +3,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E368DC43387
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 13:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3392C43612
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 13:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BAEEF21736
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 13:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 845F02147C
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 13:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729426AbfAGNB5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jan 2019 08:01:57 -0500
-Received: from mga11.intel.com ([192.55.52.93]:49058 "EHLO mga11.intel.com"
+        id S1731181AbfAGNJp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jan 2019 08:09:45 -0500
+Received: from mga17.intel.com ([192.55.52.151]:36962 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730703AbfAGNB4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Jan 2019 08:01:56 -0500
+        id S1727700AbfAGNJo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Jan 2019 08:09:44 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Jan 2019 05:01:55 -0800
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Jan 2019 05:09:44 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.56,451,1539673200"; 
-   d="scan'208";a="308170903"
+   d="scan'208";a="309629132"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga006.fm.intel.com with ESMTP; 07 Jan 2019 05:01:53 -0800
+  by fmsmga005.fm.intel.com with ESMTP; 07 Jan 2019 05:09:41 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 8D837141; Mon,  7 Jan 2019 15:01:52 +0200 (EET)
+        id 10B2B141; Mon,  7 Jan 2019 15:09:40 +0200 (EET)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Kedar A Dongre <kedar.a.dongre@intel.com>,
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>,
         Lukas Wunner <lukas@wunner.de>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Oza Pawandeep <poza@codeaurora.org>, wangzhou1@hisilicon.com,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-Subject: [PATCH v2] PCI: Block power management of certain ports with slot implemented bit set
-Date:   Mon,  7 Jan 2019 16:01:52 +0300
-Message-Id: <20190107130152.83350-1-mika.westerberg@linux.intel.com>
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH RESEND] PCI: pciehp: Assign ctrl->slot_ctrl before writing it to hardware
+Date:   Mon,  7 Jan 2019 16:09:40 +0300
+Message-Id: <20190107130940.83680-1-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.19.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -47,94 +49,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
-connected to Alpine Ridge Thunderbolt controller. This port has slot
-implemented bit set in the config space but other than that it is not
-hotplug capable in the sense we are expecting in Linux (it has
-dev->is_hotplug_bridge set to 0):
+Shameerali reported that running v4.20-rc1 as QEMU guest, the PCIe
+hotplug port times out during boot:
 
-00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
-        Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
-        Memory behind bridge: 78000000-8fffffff [size=384M]
-        Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
-        ...
-        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-        ...
-                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
-                        Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-                        Changed: MRL- PresDet+ LinkState+
+  pciehp 0000:00:01.0:pcie004: Timeout on hotplug command 0x03f1 (issued 1016 msec ago)
+  pciehp 0000:00:01.0:pcie004: Timeout on hotplug command 0x03f1 (issued 1024 msec ago)
+  pciehp 0000:00:01.0:pcie004: Failed to check link status
+  pciehp 0000:00:01.0:pcie004: Timeout on hotplug command 0x02f1 (issued 2520 msec ago)
 
-This system is using ACPI based hotplug to notify the OS that it needs
-to rescan the PCI bus (ACPI hotplug).
+The issue was bisected down to commit 720d6a671a6e ("PCI: pciehp: Do not
+handle events if interrupts are masked") and was further analyzed by the
+reporter to be caused by the fact that pciehp first updates the hardware
+and only then cache the ctrl->slot_ctrl in pcie_do_write_cmd(). If the
+interrupt happens before we cache the value, pciehp_isr() reads value 0
+and decides that the interrupt was not meant for it causing the above
+timeout to trigger.
 
-If there is nothing connected to any of the Thunderbolt ports the root
-port will not have any runtime PM active children and is thus
-automatically runtime suspended pretty soon after boot by PCI PM core.
-Now, when a device is connected the BIOS SMI handler responsible for
-enumerating newly added devices is not able to find anything because the
-port is in D3.
+Fix by moving ctrl->slot_ctrl assignment to happen before it is written
+to the hardware.
 
-For this reason we block power management of PCIe root and downstream
-ports that have slot implemented set and have node in ACPI namespace.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=202031
-Reported-by: Kedar A Dongre <kedar.a.dongre@intel.com>
+Fixes: 720d6a671a6e ("PCI: pciehp: Do not handle events if interrupts are masked")
+Reported-by: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
 Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
-Changes from v1:
+The original patch was sent 14 Nov 2018 but was never applied so resending.
 
- - Block PM for all root and downstream ports with slot implemented bit set
-   and has an ACPI companion.
+  https://patchwork.kernel.org/patch/10682715/
 
-The previous version can be found here:
+ drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  https://patchwork.kernel.org/patch/10711553/
-
- drivers/pci/pci.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c9d8e3c837de..04bdbcf1dfb7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2510,10 +2510,14 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-  */
- bool pci_bridge_d3_possible(struct pci_dev *bridge)
- {
-+	int type;
-+
- 	if (!pci_is_pcie(bridge))
- 		return false;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 7dd443aea5a5..cd9eae650aa5 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -156,9 +156,9 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 	slot_ctrl |= (cmd & mask);
+ 	ctrl->cmd_busy = 1;
+ 	smp_mb();
++	ctrl->slot_ctrl = slot_ctrl;
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+ 	ctrl->cmd_started = jiffies;
+-	ctrl->slot_ctrl = slot_ctrl;
  
--	switch (pci_pcie_type(bridge)) {
-+	type = pci_pcie_type(bridge);
-+
-+	switch (type) {
- 	case PCI_EXP_TYPE_ROOT_PORT:
- 	case PCI_EXP_TYPE_UPSTREAM:
- 	case PCI_EXP_TYPE_DOWNSTREAM:
-@@ -2546,6 +2550,18 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		if (bridge->is_hotplug_bridge)
- 			return false;
- 
-+		/*
-+		 * Some systems such as Gigabyte X299 the root port is
-+		 * not marked hotplug capable but ACPI based hotplug is
-+		 * still used to bring in the Thunderbolt controller. To
-+		 * make sure those ports do not enter D3 and possibly
-+		 * confuse the BIOS SMI handler, block D3 for them.
-+		 */
-+		if (has_acpi_companion(&bridge->dev) &&
-+		    type != PCI_EXP_TYPE_UPSTREAM &&
-+		    pcie_caps_reg(bridge) & PCI_EXP_FLAGS_SLOT)
-+			return false;
-+
- 		/*
- 		 * It should be safe to put PCIe ports from 2015 or newer
- 		 * to D3.
+ 	/*
+ 	 * Controllers with the Intel CF118 and similar errata advertise
 -- 
 2.19.2
 
