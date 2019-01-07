@@ -1,81 +1,138 @@
-Return-Path: <SRS0=pf5Q=PO=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=70A0=PP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0FBBC43387
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Jan 2019 02:56:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5D52C43387
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 06:43:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF489222C3
-	for <linux-pci@archiver.kernel.org>; Sun,  6 Jan 2019 02:56:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75B1D2085A
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 06:43:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="kZPHA6oK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726378AbfAFC45 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 5 Jan 2019 21:56:57 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:42630 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726375AbfAFC45 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 5 Jan 2019 21:56:57 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E3B0487621;
-        Sun,  6 Jan 2019 02:56:56 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-18.pek2.redhat.com [10.72.8.18])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C7C225D75E;
-        Sun,  6 Jan 2019 02:56:49 +0000 (UTC)
-Date:   Sun, 6 Jan 2019 10:56:45 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Keith Busch <keith.busch@intel.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, Bjorn Helgaas <helgaas@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2 2/4] nvme-pci: Distribute io queue types after creation
-Message-ID: <20190106025643.GB20802@ming.t460p>
-References: <20190103225033.11249-1-keith.busch@intel.com>
- <20190103225033.11249-3-keith.busch@intel.com>
- <20190104023121.GB31330@ming.t460p>
- <20190104072106.GA9948@ming.t460p>
- <20190104155324.GA12342@localhost.localdomain>
+        id S1726285AbfAGGnG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jan 2019 01:43:06 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:36580 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725771AbfAGGnG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2019 01:43:06 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x076gj8U021418;
+        Mon, 7 Jan 2019 00:42:45 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1546843365;
+        bh=DSaAqsEfEzTCywHsfjCCo04K82q4H4Dl4uu8P0Qbj8E=;
+        h=From:To:CC:Subject:Date;
+        b=kZPHA6oKtBt1ZBJwMnyd7XEFM3Wof6RkU8UM+/WBldwlDlTJ9C4TudSECdkNDY3uT
+         45/oMF49uYteHJENr2aMvBzAL0fQEfhHFhnYw53lhFjygBFUwsVtn+T3FQaS0Ob1/M
+         kuiWp+HxVP10lXqyVFFtPGWLZavoseBONQMM0zWE=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x076gj8A070684
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 7 Jan 2019 00:42:45 -0600
+Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 7
+ Jan 2019 00:42:45 -0600
+Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE101.ent.ti.com
+ (10.64.6.22) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Mon, 7 Jan 2019 00:42:45 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x076gfnv002672;
+        Mon, 7 Jan 2019 00:42:41 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Alan Douglas <adouglas@cadence.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+CC:     Jingoo Han <jingoohan1@gmail.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-rockchip@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kishon@ti.com>
+Subject: [PATCH 00/15] PCI: endpoint: Cleanup EPC features
+Date:   Mon, 7 Jan 2019 12:11:33 +0530
+Message-ID: <20190107064148.10152-1-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190104155324.GA12342@localhost.localdomain>
-User-Agent: Mutt/1.9.1 (2017-09-22)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Sun, 06 Jan 2019 02:56:57 +0000 (UTC)
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 04, 2019 at 08:53:24AM -0700, Keith Busch wrote:
-> On Fri, Jan 04, 2019 at 03:21:07PM +0800, Ming Lei wrote:
-> > Thinking about the patch further: after pci_alloc_irq_vectors_affinity()
-> > is returned, queue number for non-polled queues can't be changed at will,
-> > because we have to make sure to spread all CPUs on each queue type, and
-> > the mapping has been fixed by pci_alloc_irq_vectors_affinity() already.
-> > 
-> > So looks the approach in this patch may be wrong.
-> 
-> That's a bit of a problem, and not a new one. We always had to allocate
-> vectors before creating IRQ driven CQ's, but the vector affinity is
-> created before we know if the queue-pair can be created. Should the
-> queue creation fail, there may be CPUs that don't have a queue.
-> 
-> Does this mean the pci msi API is wrong? It seems like we'd need to
-> initially allocate vectors without PCI_IRQ_AFFINITY, then have the
-> kernel set affinity only after completing the queue-pair setup.
+Hi Lorenzo,
 
-I think this kind of API style(two stages) is more clean, and
-error-immune.
+The Endpoint controller driver uses features member in 'struct pci_epc'
+to advertise the list of supported features to the endpoint function
+driver.
 
-- pci_alloc_irq_vectors() is only for allocating irq vectors
-- pci_set_irq_vectors_affnity() is for spreading affinity at will
+There are a few shortcomings with this approach.
+  *) Certain endpoint controllers support fixed size BAR (e.g. TI's
+     AM654 uses Designware configuration with fixed size BAR). The
+     size of each BARs cannot be passed to the endpoint function
+     driver.
+  *) Too many macros for handling EPC features.
+     (EPC_FEATURE_NO_LINKUP_NOTIFIER, EPC_FEATURE_BAR_MASK,
+      EPC_FEATURE_MSIX_AVAILABLE, EPC_FEATURE_SET_BAR,
+      EPC_FEATURE_GET_BAR)
+  *) Endpoint controllers are directly modifying struct pci_epc
+     members. (I have plans to move struct pci_epc to
+     drivers/pci/endpoint so that pci_epc members are referenced
+     only by endpoint core).
 
+To overcome the above shortcomings, introduced pci_epc_get_features()
+API, pci_epc_features structure and a ->get_features() callback.
 
-Thanks,
-Ming
+Also added a patch to set BAR flags in pci_epf_alloc_space and
+remove it from pci-epf-test function driver.
+
+Tested on TI's DRA7xx platform.
+
+Thanks
+Kishon
+
+Kishon Vijay Abraham I (15):
+  PCI: endpoint: Add new pci_epc_ops to get EPC features
+  PCI: dwc: Add ->get_features() callback function in dw_pcie_ep_ops
+  PCI: designware-plat: Populate ->get_features() dw_pcie_ep_ops
+  PCI: pci-dra7xx: Populate ->get_features() dw_pcie_ep_ops
+  PCI: rockchip: Populate ->get_features() dw_pcie_ep_ops
+  PCI: cadence: Populate ->get_features() cdns_pcie_epc_ops
+  PCI: endpoint: Add helper to get first unreserved BAR
+  PCI: endpoint: Fix pci_epf_alloc_space to set correct MEM TYPE flags
+  PCI: pci-epf-test: Remove setting epf_bar flags in function driver
+  PCI: pci-epf-test: Do not allocate next BARs memory if current BAR is
+    64Bit
+  PCI: pci-epf-test: Use pci_epc_get_features to get EPC features
+  PCI: cadence: Remove pci_epf_linkup from Cadence EP driver
+  PCI: rockchip: Remove pci_epf_linkup from Rockchip EP driver
+  PCI: designware-plat: Remove setting epc->features in Designware plat
+    EP driver
+  PCI: endpoint: Remove features member in struct pci_epc
+
+ drivers/pci/controller/dwc/pci-dra7xx.c       | 13 +++
+ .../pci/controller/dwc/pcie-designware-ep.c   | 12 +++
+ .../pci/controller/dwc/pcie-designware-plat.c | 17 +++-
+ drivers/pci/controller/dwc/pcie-designware.h  |  1 +
+ drivers/pci/controller/pcie-cadence-ep.c      | 25 +++---
+ drivers/pci/controller/pcie-rockchip-ep.c     | 16 +++-
+ drivers/pci/endpoint/functions/pci-epf-test.c | 80 ++++++++++---------
+ drivers/pci/endpoint/pci-epc-core.c           | 52 ++++++++++++
+ drivers/pci/endpoint/pci-epf-core.c           |  3 +
+ include/linux/pci-epc.h                       | 30 +++++--
+ 10 files changed, 185 insertions(+), 64 deletions(-)
+
+-- 
+2.17.1
+
