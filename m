@@ -2,122 +2,87 @@ Return-Path: <SRS0=70A0=PP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 392ABC43613
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 13:45:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC8FBC43387
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 14:36:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEF392173C
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 13:45:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ncentric-com.20150623.gappssmtp.com header.i=@ncentric-com.20150623.gappssmtp.com header.b="jenRUwhy"
+	by mail.kernel.org (Postfix) with ESMTP id A6E9D2173C
+	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 14:36:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728378AbfAGNp5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jan 2019 08:45:57 -0500
-Received: from mail-ed1-f67.google.com ([209.85.208.67]:36058 "EHLO
-        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728364AbfAGNp5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Jan 2019 08:45:57 -0500
-Received: by mail-ed1-f67.google.com with SMTP id f23so930850edb.3
-        for <linux-pci@vger.kernel.org>; Mon, 07 Jan 2019 05:45:55 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ncentric-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=b2DAOrsaqCpd7/c8SqsFrjOiq3UmHX0O+L9w4u3BsTM=;
-        b=jenRUwhyHvUWELIvIH+8BYorQ0IClHpOHqijBtjNPwjd5zYHPLoxKBuyGMbWIXUuA+
-         YDH+9xih6RaHmuPbHGYPQDqXvJLbCyo+Jruc8QGAW11FfjEcwfPeC28bhCgKDuQZtDuD
-         lAnQwB1DcB4fs5ts/UB9RXYYQnb3liquKTJj4NTQOXVJChg8T4Cgk5GdUzKxwZmSRz4G
-         8UzjOQ4exCXjo/bcCvK4rNAetCfLx/xDE1e5ldO69DqU0iJDCm3oj5LQT0DXkeGRcnvB
-         Cc+SVqXwcLgkPq5gJKq2pbF1gcPb5eOwS+TyQScfS12yOuhzgMNSwXRawygQO/Ktq45w
-         o4VQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=b2DAOrsaqCpd7/c8SqsFrjOiq3UmHX0O+L9w4u3BsTM=;
-        b=fz7CFt2k1pao2z9OvCvSYDx2Tfp+T1amXrTgqEh9+WBl7UT5R9Njs0XKgRMbLamCee
-         ZEZmT28kADQtdkeXnShARPp4R4ZJO7CQXSFP2bRN8oQergMfxfHSIEccJeChUhCbBYnK
-         JsbPqUV/REQj7MhDixpq3MeldX2psAHpCAwWKeENBCvCIevuyRbBgjZ3yyc/a3k12E0W
-         QjC55xQbKhWpp2xTOCgj2a8kfP1GGQTraDrIAvW9Zccoh40KlXVOsAJtdJn0ERK5/K2r
-         l1ibzOD8t81NuGMDarQovM4tUAHQ8zW5fshsVj5GrAgBI97kKm3+RstZMJM6GFpo/INy
-         TtAQ==
-X-Gm-Message-State: AJcUuke8L4L68cxvBybm9YKnYK1fphUswEVGXXUtsn20RkuLnaGozfKQ
-        bT/7VKfkklKsZkptYTkvMOAlduhaYpU=
-X-Google-Smtp-Source: ALg8bN6G5eKBh+PZUJ6qp7Q7aqCNOoPkrOuvt4eUW7pAr0qgzvCo5/nNidyT0WQ/OjRF1KxI+fq2fg==
-X-Received: by 2002:a17:906:938e:: with SMTP id l14-v6mr11121227ejx.246.1546868755214;
-        Mon, 07 Jan 2019 05:45:55 -0800 (PST)
-Received: from kvdp-BRIX.cmb.citymesh.com ([91.179.126.85])
-        by smtp.gmail.com with ESMTPSA id n18-v6sm14017427ejy.17.2019.01.07.05.45.54
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 07 Jan 2019 05:45:54 -0800 (PST)
-From:   Koen Vandeputte <koen.vandeputte@ncentric.com>
-To:     linux-arm-kernel@lists.infradead.org
-Cc:     linux-pci@vger.kernel.org,
-        Koen Vandeputte <koen.vandeputte@ncentric.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Krzysztof Halasa <khalasa@piap.pl>,
-        Olof Johansson <olof@lixom.net>,
-        Robin Leblon <robin.leblon@ncentric.com>,
-        Rob Herring <robh@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Tim Harvey <tharvey@gateworks.com>, stable@vger.kernel.org
-Subject: [PATCH v2 2/2] arm: cns3xxx: use actual size reads for PCIe
-Date:   Mon,  7 Jan 2019 14:45:10 +0100
-Message-Id: <20190107134510.32494-2-koen.vandeputte@ncentric.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
-References: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
+        id S1728348AbfAGOgI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jan 2019 09:36:08 -0500
+Received: from gloria.sntech.de ([185.11.138.130]:34932 "EHLO gloria.sntech.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727854AbfAGOgI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Jan 2019 09:36:08 -0500
+Received: from wf0848.dip.tu-dresden.de ([141.76.183.80] helo=phil.localnet)
+        by gloria.sntech.de with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <heiko@sntech.de>)
+        id 1ggW0R-0003eu-5K; Mon, 07 Jan 2019 15:35:55 +0100
+From:   Heiko Stuebner <heiko@sntech.de>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Alan Douglas <adouglas@cadence.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 00/15] PCI: endpoint: Cleanup EPC features
+Date:   Mon, 07 Jan 2019 15:35:54 +0100
+Message-ID: <1936135.agpnLP3rXd@phil>
+In-Reply-To: <20190107064148.10152-1-kishon@ti.com>
+References: <20190107064148.10152-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-commit 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
-reimplemented cns3xxx_pci_read_config() using pci_generic_config_read32(),
-which preserved the property of only doing 32-bit reads.
+Am Montag, 7. Januar 2019, 07:41:33 CET schrieb Kishon Vijay Abraham I:
+> Hi Lorenzo,
+> 
+> The Endpoint controller driver uses features member in 'struct pci_epc'
+> to advertise the list of supported features to the endpoint function
+> driver.
+> 
+> There are a few shortcomings with this approach.
+>   *) Certain endpoint controllers support fixed size BAR (e.g. TI's
+>      AM654 uses Designware configuration with fixed size BAR). The
+>      size of each BARs cannot be passed to the endpoint function
+>      driver.
+>   *) Too many macros for handling EPC features.
+>      (EPC_FEATURE_NO_LINKUP_NOTIFIER, EPC_FEATURE_BAR_MASK,
+>       EPC_FEATURE_MSIX_AVAILABLE, EPC_FEATURE_SET_BAR,
+>       EPC_FEATURE_GET_BAR)
+>   *) Endpoint controllers are directly modifying struct pci_epc
+>      members. (I have plans to move struct pci_epc to
+>      drivers/pci/endpoint so that pci_epc members are referenced
+>      only by endpoint core).
+> 
+> To overcome the above shortcomings, introduced pci_epc_get_features()
+> API, pci_epc_features structure and a ->get_features() callback.
+> 
+> Also added a patch to set BAR flags in pci_epf_alloc_space and
+> remove it from pci-epf-test function driver.
+> 
+> Tested on TI's DRA7xx platform.
 
-It also replaced cns3xxx_pci_write_config() with pci_generic_config_write(),
-so it changed writes from always being 32 bits to being the actual size,
-which works just fine.
+While I don't have that much PCI experience and hence cannot judge
+this cleanup as a whole, I can at least say, that my Rockchip rk3399
+still does find its PCIE-connected wifi card, so this series on rk3399
 
-Due to:
-- The documentation does not mention that only 32 bit access is allowed.
-- Writes are already executed using the actual size
-- Extensive testing shows that 8b, 16b and 32b reads work as intended
+Tested-by: Heiko Stuebner <heiko@sntech.de>
 
-It makes perfectly sense to also swap 32 bit reading in favor of actual size.
 
-Fixes: 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Krzysztof Halasa <khalasa@piap.pl>
-CC: Olof Johansson <olof@lixom.net>
-CC: Robin Leblon <robin.leblon@ncentric.com>
-CC: Rob Herring <robh@kernel.org>
-CC: Russell King <linux@armlinux.org.uk>
-CC: Tim Harvey <tharvey@gateworks.com>
-CC: stable@vger.kernel.org # v4.0+
----
- arch/arm/mach-cns3xxx/pcie.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-index 5e11ad3164e0..95a11d5b3587 100644
---- a/arch/arm/mach-cns3xxx/pcie.c
-+++ b/arch/arm/mach-cns3xxx/pcie.c
-@@ -93,7 +93,7 @@ static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
- 	u32 mask = (0x1ull << (size * 8)) - 1;
- 	int shift = (where % 4) * 8;
- 
--	ret = pci_generic_config_read32(bus, devfn, where, size, val);
-+	ret = pci_generic_config_read(bus, devfn, where, size, val);
- 
- 	if (ret == PCIBIOS_SUCCESSFUL && !bus->number && !devfn &&
- 	    (where & 0xffc) == PCI_CLASS_REVISION)
--- 
-2.17.1
 
