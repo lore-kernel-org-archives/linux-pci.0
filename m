@@ -2,331 +2,105 @@ Return-Path: <SRS0=3dpc=PQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 493EBC43444
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 08:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 097F2C43387
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 09:35:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D6DE20665
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 08:23:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C759E218A1
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 09:35:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728197AbfAHIXf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Jan 2019 03:23:35 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:52901 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727894AbfAHIXe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2019 03:23:34 -0500
-Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1ggmfR-00043V-Ny; Tue, 08 Jan 2019 09:23:21 +0100
-Message-ID: <1546935801.3580.22.camel@pengutronix.de>
-Subject: Re: [PATCH v4 4/4] PCI: imx6: Add support for i.MX8MQ
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+        id S1727689AbfAHJfM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jan 2019 04:35:12 -0500
+Received: from mga07.intel.com ([134.134.136.100]:12675 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727295AbfAHJfL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Jan 2019 04:35:11 -0500
+X-Amp-Result: UNSCANNABLE
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Jan 2019 01:35:11 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,453,1539673200"; 
+   d="scan'208";a="115071569"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
+  by fmsmga008.fm.intel.com with SMTP; 08 Jan 2019 01:35:07 -0800
+Received: by lahna (sSMTP sendmail emulation); Tue, 08 Jan 2019 11:35:07 +0200
+Date:   Tue, 8 Jan 2019 11:35:07 +0200
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
-        linux-imx@nxp.com, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Date:   Tue, 08 Jan 2019 09:23:21 +0100
-In-Reply-To: <20190104165335.13205-5-andrew.smirnov@gmail.com>
-References: <20190104165335.13205-1-andrew.smirnov@gmail.com>
-         <20190104165335.13205-5-andrew.smirnov@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.22.6-1+deb9u1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Kedar A Dongre <kedar.a.dongre@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v2] PCI: Block power management of certain ports with
+ slot implemented bit set
+Message-ID: <20190108093507.GX2469@lahna.fi.intel.com>
+References: <20190107130152.83350-1-mika.westerberg@linux.intel.com>
+ <CAJZ5v0iJfUK6FDQ=W6=2+wEG2GHKDT5r_aoRapUn4Qi0FTjaGg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJZ5v0iJfUK6FDQ=W6=2+wEG2GHKDT5r_aoRapUn4Qi0FTjaGg@mail.gmail.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Freitag, den 04.01.2019, 08:53 -0800 schrieb Andrey Smirnov:
-> Add code needed to support i.MX8MQ variant.
+On Mon, Jan 07, 2019 at 02:13:14PM +0100, Rafael J. Wysocki wrote:
+> On Mon, Jan 7, 2019 at 2:01 PM Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> >
+> > Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
+> > connected to Alpine Ridge Thunderbolt controller. This port has slot
+> > implemented bit set in the config space but other than that it is not
+> > hotplug capable in the sense we are expecting in Linux (it has
+> > dev->is_hotplug_bridge set to 0):
+> >
+> > 00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
+> >         Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
+> >         Memory behind bridge: 78000000-8fffffff [size=384M]
+> >         Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
+> >         ...
+> >         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+> >         ...
+> >                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+> >                         Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
+> >                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+> >                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+> >                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+> >                         Changed: MRL- PresDet+ LinkState+
+> >
+> > This system is using ACPI based hotplug to notify the OS that it needs
+> > to rescan the PCI bus (ACPI hotplug).
+> >
+> > If there is nothing connected to any of the Thunderbolt ports the root
+> > port will not have any runtime PM active children and is thus
+> > automatically runtime suspended pretty soon after boot by PCI PM core.
+> > Now, when a device is connected the BIOS SMI handler responsible for
+> > enumerating newly added devices is not able to find anything because the
+> > port is in D3.
+> >
+> > For this reason we block power management of PCIe root and downstream
+> > ports that have slot implemented set and have node in ACPI namespace.
+> >
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=202031
+> > Reported-by: Kedar A Dongre <kedar.a.dongre@intel.com>
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > 
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Fabio Estevam <fabio.estevam@nxp.com>
-> > Cc: Chris Healy <cphealy@gmail.com>
-> > Cc: Lucas Stach <l.stach@pengutronix.de>
-> > Cc: Leonard Crestez <leonard.crestez@nxp.com>
-> > Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-> > Cc: Richard Zhu <hongxing.zhu@nxp.com>
-> > Cc: Rob Herring <robh@kernel.org>,
-> > Cc: devicetree@vger.kernel.org,
-> Cc: linux-imx@nxp.com
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Thanks!
 
-> ---
->  .../bindings/pci/fsl,imx6q-pcie.txt           |  3 +-
->  drivers/pci/controller/dwc/Kconfig            |  4 +-
->  drivers/pci/controller/dwc/pci-imx6.c         | 77 ++++++++++++++++++-
->  3 files changed, 79 insertions(+), 5 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index d514c1f2365f..920ca93870a8 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -9,6 +9,7 @@ Required properties:
-> >  	- "fsl,imx6sx-pcie",
-> >  	- "fsl,imx6qp-pcie"
-> >  	- "fsl,imx7d-pcie"
-> > +	- "fsl,imx8mq-pcie"
->  - reg: base address and length of the PCIe controller
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
-> @@ -45,7 +46,7 @@ Additional required properties for imx6sx-pcie:
->    PCIE_PHY power domains
->  - power-domain-names: Must be "pcie", "pcie_phy"
->  
-> -Additional required properties for imx7d-pcie:
-> +Additional required properties for imx7d-pcie and imx8mq-pcie:
->  - power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
->  - resets: Must contain phandles to PCIe-related reset lines exposed by SRC
->    IP block
-> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> index 6aafec3fad00..83ea318ad989 100644
-> --- a/drivers/pci/controller/dwc/Kconfig
-> +++ b/drivers/pci/controller/dwc/Kconfig
-> @@ -89,8 +89,8 @@ config PCI_EXYNOS
-> >  	select PCIE_DW_HOST
->  
->  config PCI_IMX6
-> > -	bool "Freescale i.MX6/7 PCIe controller"
-> > -	depends on SOC_IMX6Q || SOC_IMX7D || (ARM && COMPILE_TEST)
-> > +	bool "Freescale i.MX6/7/8 PCIe controller"
-> > +	depends on SOC_IMX6Q || SOC_IMX7D || (ARM64 && ARCH_MXC) || ((ARM || ARM64) && COMPILE_TEST)
-> >  	depends on PCI_MSI_IRQ_DOMAIN
-> >  	select PCIE_DW_HOST
->  
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 75ee0cd7af3b..dd9d8732f6ba 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -8,6 +8,7 @@
-> >   * Author: Sean Cross <xobs@kosagi.com>
->   */
->  
-> +#include <linux/bitfield.h>
->  #include <linux/clk.h>
->  #include <linux/delay.h>
->  #include <linux/gpio.h>
-> @@ -32,6 +33,12 @@
->  
->  #include "pcie-designware.h"
->  
-> > +#define IMX8MQ_GPR_PCIE_REF_USE_PAD		BIT(9)
-> > +#define IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN	BIT(10)
-> > +#define IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE	BIT(11)
-> > +#define IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE	GENMASK(11, 8)
-> > +#define IMX8MQ_PCIE2_BASE_ADDR			0x33c00000
-> +
-> >  #define to_imx6_pcie(x)	dev_get_drvdata((x)->dev)
->  
->  enum imx6_pcie_variants {
-> @@ -39,6 +46,7 @@ enum imx6_pcie_variants {
-> >  	IMX6SX,
-> >  	IMX6QP,
-> >  	IMX7D,
-> > +	IMX8MQ,
->  };
->  
-> >  #define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
-> @@ -58,6 +66,7 @@ struct imx6_pcie {
-> > >  	struct clk		*pcie_inbound_axi;
-> > >  	struct clk		*pcie;
-> > >  	struct regmap		*iomuxc_gpr;
-> > > +	u32			controller_id;
-> > >  	struct reset_control	*pciephy_reset;
-> > >  	struct reset_control	*apps_reset;
-> > >  	struct reset_control	*turnoff_reset;
-> @@ -276,6 +285,7 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
-> >  	pcie_phy_write(imx6_pcie, PHY_RX_OVRD_IN_LO, tmp);
->  }
->  
-> +#ifdef CONFIG_ARM
->  /*  Added for PCI abort handling */
->  static int imx6q_pcie_abort_handler(unsigned long addr,
-> >  		unsigned int fsr, struct pt_regs *regs)
-> @@ -309,6 +319,7 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
->  
-> >  	return 1;
->  }
-> +#endif
->  
->  static int imx6_pcie_attach_pd(struct device *dev)
->  {
-> @@ -353,6 +364,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
->  
-> >  	switch (imx6_pcie->drvdata->variant) {
-> >  	case IMX7D:
-> > +	case IMX8MQ:
-> >  		reset_control_assert(imx6_pcie->pciephy_reset);
-> >  		reset_control_assert(imx6_pcie->apps_reset);
-> >  		break;
-> @@ -387,10 +399,17 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
-> >  	}
->  }
->  
-> +static unsigned int imx6_pcie_grp_offset(const struct imx6_pcie *imx6_pcie)
-> +{
-> > +	WARN_ON(imx6_pcie->drvdata->variant != IMX8MQ);
-> > +	return imx6_pcie->controller_id == 1 ? IOMUXC_GPR16 : IOMUXC_GPR14;
-> +}
-> +
->  static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
->  {
-> >  	struct dw_pcie *pci = imx6_pcie->pci;
-> >  	struct device *dev = pci->dev;
-> > +	unsigned int offset;
-> >  	int ret = 0;
->  
-> >  	switch (imx6_pcie->drvdata->variant) {
-> @@ -421,6 +440,19 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
-> >  		break;
-> >  	case IMX7D:
-> >  		break;
-> > +	case IMX8MQ:
-> > +		offset = imx6_pcie_grp_offset(imx6_pcie);
-> > +		/*
-> > +		 * Set the over ride low and enabled
-> > +		 * make sure that REF_CLK is turned on.
-> > +		 */
-> > +		regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> > +				   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE,
-> > +				   0);
-> > +		regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
-> > +				   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN,
-> > +				   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN);
-> > +		break;
-> >  	}
->  
-> >  	return ret;
-> @@ -497,6 +529,9 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
-> >  	}
->  
-> >  	switch (imx6_pcie->drvdata->variant) {
-> > +	case IMX8MQ:
-> > +		reset_control_deassert(imx6_pcie->pciephy_reset);
-> > +		break;
-> >  	case IMX7D:
-> >  		reset_control_deassert(imx6_pcie->pciephy_reset);
-> >  		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
-> @@ -532,9 +567,37 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
-> >  	}
->  }
->  
-> +static void imx6_pcie_configure_type(struct imx6_pcie *imx6_pcie)
-> +{
-> > +	unsigned int mask, val;
-> +
-> > +	if (imx6_pcie->drvdata->variant == IMX8MQ &&
-> > +	    imx6_pcie->controller_id == 1) {
-> > +		mask   = IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE;
-> > +		val    = FIELD_PREP(IMX8MQ_GPR12_PCIE2_CTRL_DEVICE_TYPE,
-> > +				    PCI_EXP_TYPE_ROOT_PORT);
-> > +	} else {
-> > +		mask = IMX6Q_GPR12_DEVICE_TYPE;
-> > +		val  = FIELD_PREP(IMX6Q_GPR12_DEVICE_TYPE,
-> > +				  PCI_EXP_TYPE_ROOT_PORT);
-> > +	}
-> +
-> > +	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, mask, val);
-> +}
-> +
->  static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
->  {
-> >  	switch (imx6_pcie->drvdata->variant) {
-> > +	case IMX8MQ:
-> > +		/*
-> > +		 * TODO: Currently this code assumes external
-> > +		 * oscillator is being used
-> > +		 */
-> > +		regmap_update_bits(imx6_pcie->iomuxc_gpr,
-> > +				   imx6_pcie_grp_offset(imx6_pcie),
-> > +				   IMX8MQ_GPR_PCIE_REF_USE_PAD,
-> > +				   IMX8MQ_GPR_PCIE_REF_USE_PAD);
-> > +		break;
-> >  	case IMX7D:
-> >  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> >  				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
-> @@ -570,8 +633,7 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
-> >  		break;
-> >  	}
->  
-> > -	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> > -			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
-> > +	imx6_pcie_configure_type(imx6_pcie);
->  }
->  
->  static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
-> @@ -668,6 +730,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
-> >  				   IMX6Q_GPR12_PCIE_CTL_2);
-> >  		break;
-> >  	case IMX7D:
-> > +	case IMX8MQ:
-> >  		reset_control_deassert(imx6_pcie->apps_reset);
-> >  		break;
-> >  	}
-> @@ -1008,6 +1071,10 @@ static int imx6_pcie_probe(struct platform_device *pdev)
-> >  		}
-> >  		break;
-> >  	case IMX7D:
-> > +	case IMX8MQ:
-> > +		if (dbi_base->start == IMX8MQ_PCIE2_BASE_ADDR)
-> > +			imx6_pcie->controller_id = 1;
-> +
-> >  		imx6_pcie->pciephy_reset = devm_reset_control_get_exclusive(dev,
-> >  									    "pciephy");
-> >  		if (IS_ERR(imx6_pcie->pciephy_reset)) {
-> @@ -1115,6 +1182,9 @@ static const struct imx6_pcie_drvdata drvdata[] = {
-> >  	[IMX7D] = {
-> >  		.variant = IMX7D,
-> >  	},
-> > +	[IMX8MQ] = {
-> > +		.variant = IMX8MQ,
-> > +	},
->  };
->  
->  static const struct of_device_id imx6_pcie_of_match[] = {
-> @@ -1122,6 +1192,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
-> >  	{ .compatible = "fsl,imx6sx-pcie", .data = &drvdata[IMX6SX], },
-> >  	{ .compatible = "fsl,imx6qp-pcie", .data = &drvdata[IMX6QP], },
-> >  	{ .compatible = "fsl,imx7d-pcie",  .data = &drvdata[IMX7D],  },
-> > +	{ .compatible = "fsl,imx8mq-pcie", .data = &drvdata[IMX8MQ], } ,
-> >  	{},
->  };
->  
-> @@ -1138,6 +1209,7 @@ static struct platform_driver imx6_pcie_driver = {
->  
->  static int __init imx6_pcie_init(void)
->  {
-> +#ifdef CONFIG_ARM
-> >  	/*
-> >  	 * Since probe() can be deferred we need to make sure that
-> >  	 * hook_fault_code is not called after __init memory is freed
-> @@ -1147,6 +1219,7 @@ static int __init imx6_pcie_init(void)
-> >  	 */
-> >  	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
-> >  			"external abort on non-linefetch");
-> +#endif
->  
-> >  	return platform_driver_register(&imx6_pcie_driver);
->  }
+However, I'm having second toughts about this because I remembered that
+people put a lot of effort getting discrete graphics with power resource
+attached to the root port powering off properly. If the root port
+matches the criteria in this patch it will not be able to go into D3
+anymore. It might affect others such as M.2 connected NVMe or WiFi chip
+as well. For that reason I would still prefer blacklist, at least for now.
