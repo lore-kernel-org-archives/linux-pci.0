@@ -2,85 +2,107 @@ Return-Path: <SRS0=3dpc=PQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94099C43387
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 12:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68359C43387
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 15:03:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F89C21019
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 12:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36FA920850
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 15:03:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1546959816;
+	bh=Ni2jY8BSlUw+zzt7FwhubZ0FnbgogMb5ITHx8PCr7Ok=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=fDvdEkxuD+TNEsVH2ZXoN8KvmiFzrLVt12yUJe+008T0zCO6YmDBjlcpbVUei4DnF
+	 a89LuWpfrhF5j1C5aFO8z3NfiUGUKfTlJfRIg1r6B1LzXLLwKEWOSOYd3QBbea1xnJ
+	 rJixONffktP3Ckq6hx+JE0FA8QDL4FuwCKVkj6J4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727368AbfAHMqE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Jan 2019 07:46:04 -0500
-Received: from mga07.intel.com ([134.134.136.100]:30225 "EHLO mga07.intel.com"
+        id S1728185AbfAHPDf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jan 2019 10:03:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41318 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727236AbfAHMqE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Jan 2019 07:46:04 -0500
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Jan 2019 04:46:03 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,454,1539673200"; 
-   d="scan'208";a="136369891"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by fmsmga001.fm.intel.com with SMTP; 08 Jan 2019 04:46:00 -0800
-Received: by lahna (sSMTP sendmail emulation); Tue, 08 Jan 2019 14:45:59 +0200
-Date:   Tue, 8 Jan 2019 14:45:59 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Peter Wu <peter@lekensteyn.nl>
-Cc:     Lukas Wunner <lukas@wunner.de>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Kedar A Dongre <kedar.a.dongre@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: Block power management of certain ports with
- slot implemented bit set
-Message-ID: <20190108124559.GZ2469@lahna.fi.intel.com>
-References: <20190107130152.83350-1-mika.westerberg@linux.intel.com>
- <CAJZ5v0iJfUK6FDQ=W6=2+wEG2GHKDT5r_aoRapUn4Qi0FTjaGg@mail.gmail.com>
- <20190108093507.GX2469@lahna.fi.intel.com>
- <20190108101600.5qbeks5ux6wgpbpy@wunner.de>
- <20190108105824.GC23218@al>
+        id S1727295AbfAHPDf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Jan 2019 10:03:35 -0500
+Received: from localhost (173-25-171-118.client.mchsi.com [173.25.171.118])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6612B20827;
+        Tue,  8 Jan 2019 15:03:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1546959814;
+        bh=Ni2jY8BSlUw+zzt7FwhubZ0FnbgogMb5ITHx8PCr7Ok=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZSCB//w5DwA84EPH7K4vetwRQx007y0QhwnfN0mGRqvui5mPa5zKj2K6HmJgQmw++
+         SxPno4mEY18O08dH4fzeJdXZv/TuxRW0Pb7hEs4ycVPS1ia/FGqlFUB80kg44tIuTB
+         AshZVdX6/woDkcQNoofjIoJzAt8XfCGhOl7Pq0Xs=
+Date:   Tue, 8 Jan 2019 09:03:33 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org, Corentin Labbe <clabbe@baylibre.com>
+Subject: Re: [PATCH] PCI: amlogic: Fix build failure due to missing gpio
+ header
+Message-ID: <20190108150333.GA96414@google.com>
+References: <20190107172223.28881-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190108105824.GC23218@al>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+In-Reply-To: <20190107172223.28881-1-lorenzo.pieralisi@arm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 08, 2019 at 11:58:24AM +0100, Peter Wu wrote:
-> > Would this patch:
-> > 
-> >     https://patchwork.ozlabs.org/patch/1021317/
-> > 
-> > break runtime D3cold for the discrete GPU on Optimus laptops such as
-> > your Clevo P651RA?  Specifically, is the Root Port above the GPU
-> > marked "(Slot+)" in lspci -vv?  (There doesn't seem to be raw lspci
-> > output in https://github.com/Lekensteyn/acpi-stuff)
+On Mon, Jan 07, 2019 at 05:22:23PM +0000, Lorenzo Pieralisi wrote:
+> From: Corentin Labbe <clabbe@baylibre.com>
 > 
-> Thanks for bringing this into my attention. There are a couple of full
-> lspci dumps, for example for the Dell XPS 9560.
-> https://github.com/Lekensteyn/acpi-stuff/blob/master/d3test/XPS9560/lspci-bare-metal.txt
-> This has upstream port 00:01.0 attached to GPU 01:00.0
+> Building the driver when GPIOLIB=n is not selected is causing the
+> following compilation failure:
 > 
->     00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor PCIe Controller (x16) [8086:1901] (rev 05) (prog-if 00 [Normal decode])
->         ...
->         Capabilities: [a0] Express (v2) Root Port (Slot+), MSI 00
+> drivers/pci/controller/dwc/pci-meson.c: In function 'meson_pcie_assert_reset':
+> drivers/pci/controller/dwc/pci-meson.c:290:2: error: implicit declaration of function 'gpiod_set_value_cansleep'; did you mean 'gpio_set_value_cansleep'? [-Werror=implicit-function-declaration]
+>   gpiod_set_value_cansleep(mp->reset_gpio, 0);
+>   ^~~~~~~~~~~~~~~~~~~~~~~~
+>   gpio_set_value_cansleep
+> drivers/pci/controller/dwc/pci-meson.c: In function 'meson_pcie_probe':
+> drivers/pci/controller/dwc/pci-meson.c:540:19: error: implicit declaration of function 'devm_gpiod_get'; did you mean 'devm_gpio_free'? [-Werror=implicit-function-declaration]
+>   mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+>                    ^~~~~~~~~~~~~~
+>                    devm_gpio_free
+> drivers/pci/controller/dwc/pci-meson.c:540:48: error: 'GPIOD_OUT_LOW' undeclared (first use in this function); did you mean 'GPIOF_INIT_LOW'?
+>   mp->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+>                                                 ^~~~~~~~~~~~~
+>                                                 GPIOF_INIT_LOW
 > 
-> and would indeed be negatively affected by this patch. I can observe the
-> same for the Clevo P651RA (for which I can also send the full lspci dump
-> if you need).
+> Add the missing linux/gpio/consumer.h header to fix it.
+> 
+> Fixes: 9c0ef6d34fdb ("PCI: amlogic: Add the Amlogic Meson PCIe
+> controller driver")
+> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+> [lorenzo.pieralisi@arm.com: commit log]
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-Thanks both.
+Applied to for-linus for v5.0, thanks!
 
-I guess that leaves us the blacklist. I can re-send it rebased on top of
-v5.0-rc1 if there are no objections.
+> ---
+>  drivers/pci/controller/dwc/pci-meson.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+> index 241ebe0c4505..e35e9eaa50ee 100644
+> --- a/drivers/pci/controller/dwc/pci-meson.c
+> +++ b/drivers/pci/controller/dwc/pci-meson.c
+> @@ -8,6 +8,7 @@
+>  
+>  #include <linux/clk.h>
+>  #include <linux/delay.h>
+> +#include <linux/gpio/consumer.h>
+>  #include <linux/of_device.h>
+>  #include <linux/of_gpio.h>
+>  #include <linux/pci.h>
+> -- 
+> 2.19.2
+> 
