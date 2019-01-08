@@ -3,26 +3,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3135C43612
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:26:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30F73C43387
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:26:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B9492087F
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:26:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0955C20883
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:26:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729597AbfAHQ0A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Jan 2019 11:26:00 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:44868 "EHLO mail.bootlin.com"
+        id S1729614AbfAHQ0H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jan 2019 11:26:07 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:44849 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729157AbfAHQYs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728853AbfAHQYs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 8 Jan 2019 11:24:48 -0500
 Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 760FC20A11; Tue,  8 Jan 2019 17:24:46 +0100 (CET)
+        id C15AD20A08; Tue,  8 Jan 2019 17:24:45 +0100 (CET)
 Received: from localhost.localdomain (aaubervilliers-681-1-45-241.w90-88.abo.wanadoo.fr [90.88.163.241])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 1DA7C207A3;
-        Tue,  8 Jan 2019 17:24:46 +0100 (CET)
+        by mail.bootlin.com (Postfix) with ESMTPSA id 608AB207A3;
+        Tue,  8 Jan 2019 17:24:45 +0100 (CET)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Gregory Clement <gregory.clement@bootlin.com>,
         Jason Cooper <jason@lakedaemon.net>,
@@ -39,9 +39,9 @@ Cc:     <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
         Maxime Chevallier <maxime.chevallier@bootlin.com>,
         Nadav Haklai <nadavh@marvell.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v3 04/15] PCI: aardvark: Add PHY support
-Date:   Tue,  8 Jan 2019 17:24:29 +0100
-Message-Id: <20190108162441.5278-5-miquel.raynal@bootlin.com>
+Subject: [PATCH v3 02/15] PCI: aardvark: Configure more registers in the configuration helper
+Date:   Tue,  8 Jan 2019 17:24:27 +0100
+Message-Id: <20190108162441.5278-3-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190108162441.5278-1-miquel.raynal@bootlin.com>
 References: <20190108162441.5278-1-miquel.raynal@bootlin.com>
@@ -52,111 +52,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The IP needs its PHY to be properly configured to work. While the PHY
-is usually already configured by the bootloader, we will need this
-feature when adding S2RAM support. Take care of registering and
-configuring the PHY from the driver itself.
+Mimic U-Boot configuration to be sure all hardware registers are set
+properly. This will be needed for future S2RAM operation.
 
-Suggested-by: Grzegorz Jaszczyk <jaz@semihalf.com>
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/pci/controller/pci-aardvark.c | 62 +++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
+ drivers/pci/controller/pci-aardvark.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index b1b8897d2d28..27ec79defa57 100644
+index 18120e312ae1..0f50163ae072 100644
 --- a/drivers/pci/controller/pci-aardvark.c
 +++ b/drivers/pci/controller/pci-aardvark.c
-@@ -17,6 +17,7 @@
- #include <linux/pci.h>
- #include <linux/init.h>
- #include <linux/platform_device.h>
-+#include <linux/phy/phy.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- 
-@@ -203,6 +204,7 @@ struct advk_pcie {
- 	u16 msi_msg;
- 	int root_bus_nr;
- 	struct pci_bridge_emul bridge;
-+	struct phy *phy;
- };
- 
- static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
-@@ -998,6 +1000,62 @@ static int advk_pcie_setup_clk(struct advk_pcie *pcie)
- 	return ret;
- }
- 
-+static void __maybe_unused advk_pcie_disable_phy(struct advk_pcie *pcie)
-+{
-+	phy_power_off(pcie->phy);
-+	phy_exit(pcie->phy);
-+}
-+
-+static int advk_pcie_enable_phy(struct advk_pcie *pcie)
-+{
-+	int ret;
-+
-+	if (!pcie->phy)
-+		return 0;
-+
-+	ret = phy_init(pcie->phy);
-+	if (ret)
-+		return ret;
-+
-+	ret = phy_set_mode(pcie->phy, PHY_MODE_PCIE);
-+	if (ret) {
-+		phy_exit(pcie->phy);
-+		return ret;
-+	}
-+
-+	ret = phy_power_on(pcie->phy);
-+	if (ret) {
-+		phy_exit(pcie->phy);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int advk_pcie_setup_phy(struct advk_pcie *pcie)
-+{
-+	struct device *dev = &pcie->pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	int ret = 0;
-+
-+	pcie->phy = devm_of_phy_get(dev, node, NULL);
-+	if (IS_ERR(pcie->phy) && (PTR_ERR(pcie->phy) == -EPROBE_DEFER))
-+		return PTR_ERR(pcie->phy);
-+
-+	/* Old bindings miss the PHY handle */
-+	if (IS_ERR(pcie->phy)) {
-+		dev_warn(dev, "PHY unavailable (%ld)\n", PTR_ERR(pcie->phy));
-+		pcie->phy = NULL;
-+		return 0;
-+	}
-+
-+	ret = advk_pcie_enable_phy(pcie);
-+	if (ret)
-+		dev_err(dev, "Failed to initialize PHY (%d)\n", ret);
-+
-+	return ret;
-+}
-+
- static int advk_pcie_probe(struct platform_device *pdev)
+@@ -100,6 +100,8 @@
+ #define     PCIE_CORE_CTRL2_STRICT_ORDER_ENABLE	BIT(5)
+ #define     PCIE_CORE_CTRL2_OB_WIN_ENABLE	BIT(6)
+ #define     PCIE_CORE_CTRL2_MSI_ENABLE		BIT(10)
++#define PCIE_PHY_REFCLK				(CONTROL_BASE_ADDR + 0x14)
++#define     PCIE_PHY_REFCLK_BUF_CTRL		0x1342
+ #define PCIE_MSG_LOG_REG			(CONTROL_BASE_ADDR + 0x30)
+ #define PCIE_ISR0_REG				(CONTROL_BASE_ADDR + 0x40)
+ #define PCIE_MSG_PM_PME_MASK			BIT(7)
+@@ -243,6 +245,9 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
  {
- 	struct device *dev = &pdev->dev;
-@@ -1037,6 +1095,10 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
+ 	u32 reg;
  
-+	ret = advk_pcie_setup_phy(pcie);
-+	if (ret)
-+		return ret;
++	/* Set HW Reference Clock Buffer Control */
++	advk_writel(pcie, PCIE_PHY_REFCLK_BUF_CTRL, PCIE_PHY_REFCLK);
 +
- 	advk_pcie_setup_hw(pcie);
+ 	/* Set to Direct mode */
+ 	reg = advk_readl(pcie, CTRL_CONFIG_REG);
+ 	reg &= ~(CTRL_MODE_MASK << CTRL_MODE_SHIFT);
+@@ -274,6 +279,15 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 		PCIE_CORE_CTRL2_TD_ENABLE;
+ 	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
  
- 	advk_sw_pci_bridge_init(pcie);
++	/* Set PCIe Device Control and Status 1 PF0 register */
++	reg = PCIE_CORE_DEV_CTRL_STATS_RELAX_ORDER_DISABLE |
++		PCIE_CORE_DEV_CTRL_STATS_SNOOP_DISABLE;
++	advk_writel(pcie, reg, PCIE_CORE_DEV_CTRL_STATS_REG);
++
++	/* Program PCIe Control 2 to disable strict ordering */
++	reg = PCIE_CORE_CTRL2_RESERVED | PCIE_CORE_CTRL2_TD_ENABLE;
++	advk_writel(pcie, reg, PCIE_CORE_CTRL2_REG);
++
+ 	/* Set GEN2 */
+ 	reg = advk_readl(pcie, PCIE_CORE_CTRL0_REG);
+ 	reg &= ~PCIE_GEN_SEL_MSK;
 -- 
 2.19.1
 
