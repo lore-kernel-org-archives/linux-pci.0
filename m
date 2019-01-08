@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7661AC43387
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EF5BC43387
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:25:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 502FF2087F
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:25:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FF7A2087F
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 16:25:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729555AbfAHQZo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Jan 2019 11:25:44 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:44893 "EHLO mail.bootlin.com"
+        id S1729579AbfAHQZv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jan 2019 11:25:51 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:44897 "EHLO mail.bootlin.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729288AbfAHQYu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1729317AbfAHQYu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 8 Jan 2019 11:24:50 -0500
 Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 8E83B20A16; Tue,  8 Jan 2019 17:24:47 +0100 (CET)
+        id 4498920A24; Tue,  8 Jan 2019 17:24:48 +0100 (CET)
 Received: from localhost.localdomain (aaubervilliers-681-1-45-241.w90-88.abo.wanadoo.fr [90.88.163.241])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 2E93E209C2;
+        by mail.bootlin.com (Postfix) with ESMTPSA id DEDF2209C2;
         Tue,  8 Jan 2019 17:24:47 +0100 (CET)
 From:   Miquel Raynal <miquel.raynal@bootlin.com>
 To:     Gregory Clement <gregory.clement@bootlin.com>,
@@ -39,9 +39,9 @@ Cc:     <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
         Maxime Chevallier <maxime.chevallier@bootlin.com>,
         Nadav Haklai <nadavh@marvell.com>,
         Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v3 07/15] PCI: aardvark: Add suspend to RAM support
-Date:   Tue,  8 Jan 2019 17:24:32 +0100
-Message-Id: <20190108162441.5278-8-miquel.raynal@bootlin.com>
+Subject: [PATCH v3 09/15] dt-bindings: PCI: aardvark: Describe the PHY property
+Date:   Tue,  8 Jan 2019 17:24:34 +0100
+Message-Id: <20190108162441.5278-10-miquel.raynal@bootlin.com>
 X-Mailer: git-send-email 2.19.1
 In-Reply-To: <20190108162441.5278-1-miquel.raynal@bootlin.com>
 References: <20190108162441.5278-1-miquel.raynal@bootlin.com>
@@ -52,92 +52,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add suspend and resume callbacks. The priority of these are
-"_noirq()", to workaround early access to the registers done by the
-PCI core through the ->read()/->write() callbacks at resume time.
+Document the possibility to reference a PHY.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pci-aardvark.c | 45 ++++++++++++++++++++++++++-
- 1 file changed, 44 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/pci/aardvark-pci.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 3fb14e37eb59..999bbe27761a 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -1028,7 +1028,7 @@ static int advk_pcie_setup_clk(struct advk_pcie *pcie)
- 	return ret;
- }
+diff --git a/Documentation/devicetree/bindings/pci/aardvark-pci.txt b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
+index 9d19ebfea189..a440f182ccf8 100644
+--- a/Documentation/devicetree/bindings/pci/aardvark-pci.txt
++++ b/Documentation/devicetree/bindings/pci/aardvark-pci.txt
+@@ -21,6 +21,10 @@ contain the following properties:
+    define the mapping of the PCIe interface to interrupt numbers.
+  - bus-range: PCI bus numbers covered
  
--static void __maybe_unused advk_pcie_disable_phy(struct advk_pcie *pcie)
-+static void advk_pcie_disable_phy(struct advk_pcie *pcie)
- {
- 	phy_power_off(pcie->phy);
- 	phy_exit(pcie->phy);
-@@ -1119,6 +1119,47 @@ static int advk_pcie_setup_reset_gpio(struct advk_pcie *pcie)
- 	return 0;
- }
- 
-+static int __maybe_unused advk_pcie_suspend(struct device *dev)
-+{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
++The following are optional properties:
 +
-+	advk_pcie_disable_phy(pcie);
++ - phys: the PCIe PHY handle
 +
-+	clk_disable_unprepare(pcie->clk);
-+
-+	return 0;
-+}
-+
-+static int __maybe_unused advk_pcie_resume(struct device *dev)
-+{
-+	struct advk_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
-+
-+	ret = clk_prepare_enable(pcie->clk);
-+	if (ret)
-+		return ret;
-+
-+	ret = advk_pcie_enable_phy(pcie);
-+	if (ret)
-+		return ret;
-+
-+	advk_pcie_setup_hw(pcie);
-+
-+	advk_sw_pci_bridge_init(pcie);
-+
-+	return 0;
-+}
-+
-+/*
-+ * The PCI core will try to reconfigure the bus quite early in the resume path.
-+ * We must use the _noirq() alternatives to ensure the controller is ready when
-+ * the core uses the ->read()/->write() callbacks.
-+ */
-+static const struct dev_pm_ops advk_pcie_dev_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(advk_pcie_suspend,
-+				      advk_pcie_resume)
-+};
-+
- static int advk_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -1133,6 +1174,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
- 
- 	pcie = pci_host_bridge_priv(bridge);
- 	pcie->pdev = pdev;
-+	platform_set_drvdata(pdev, pcie);
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	pcie->base = devm_ioremap_resource(dev, res);
-@@ -1210,6 +1252,7 @@ static struct platform_driver advk_pcie_driver = {
- 	.driver = {
- 		.name = "advk-pcie",
- 		.of_match_table = advk_pcie_of_match_table,
-+		.pm = &advk_pcie_dev_pm_ops,
- 		/* Driver unloading/unbinding currently not supported */
- 		.suppress_bind_attrs = true,
- 	},
+ In addition, the Device Tree describing an Aardvark PCIe controller
+ must include a sub-node that describes the legacy interrupt controller
+ built into the PCIe controller. This sub-node must have the following
+@@ -50,6 +54,7 @@ Example:
+ 				<0 0 0 2 &pcie_intc 1>,
+ 				<0 0 0 3 &pcie_intc 2>,
+ 				<0 0 0 4 &pcie_intc 3>;
++		phys = <&comphy1 0>;
+ 		pcie_intc: interrupt-controller {
+ 			interrupt-controller;
+ 			#interrupt-cells = <1>;
 -- 
 2.19.1
 
