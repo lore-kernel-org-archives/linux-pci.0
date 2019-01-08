@@ -2,152 +2,104 @@ Return-Path: <SRS0=3dpc=PQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B1AEC43387
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 06:07:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0861DC43612
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 06:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6A272089F
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 06:07:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1546927658;
-	bh=jDJvaN+uOakVMbxAqNGZOEwg7W7AOFW6nx5YuUUJJdA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=iK5XB4Bev5CzBJTxBmhZNexJZG6JjCPyPbG0nnU7dBXqP3H78Q+s2GSLCL4aEdVyf
-	 T37nj9sYfw4xOJxe8s53tP4ekqF6zFqnMv6BK7bi21dwpAMu+HaWjVDLVvsLfKlVfB
-	 deskuU5hi5PUBZ2hnxbCFoDGZEpS4zmPEmK34340=
+	by mail.kernel.org (Postfix) with ESMTP id CACA32183F
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 06:10:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=piap.pl header.i=@piap.pl header.b="dEhNdTE2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727657AbfAHGHi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Jan 2019 01:07:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52650 "EHLO mail.kernel.org"
+        id S1727523AbfAHGKd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jan 2019 01:10:33 -0500
+Received: from ni.piap.pl ([195.187.100.4]:37078 "EHLO ni.piap.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727408AbfAHGHi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Jan 2019 01:07:38 -0500
-Received: from localhost (unknown [77.138.135.184])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1727408AbfAHGKd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Jan 2019 01:10:33 -0500
+Received: from t19.piap.pl (OSB1819.piap.pl [10.0.9.19])
+        (using TLSv1.2 with cipher AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 98EB920700;
-        Tue,  8 Jan 2019 06:07:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1546927657;
-        bh=jDJvaN+uOakVMbxAqNGZOEwg7W7AOFW6nx5YuUUJJdA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=nIlnt6hsOhlE9yZKhq/xJk+VVs4JEYbBGNurC/WdoIZnHv6cVXlGA8ZlB+lvgEmPb
-         0mxbtdcuVpqEZuSlVM+fB6t8IfRDKtSslA8cKXt3YS71XCuor0qnHx/HxzuZUH3VJH
-         IRoL+lC2tjj52LUqidmbxlCp7yXtKyFSkqC0PLAQ=
-Date:   Tue, 8 Jan 2019 08:07:34 +0200
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        David Gibson <david@gibson.dropbear.id.au>,
-        davem@davemloft.net, saeedm@mellanox.com, ogerlitz@mellanox.com,
-        tariqt@mellanox.com, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        netdev@vger.kernel.org, alex.williamson@redhat.com,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-        sbest@redhat.com, paulus@samba.org
-Subject: Re: [PATCH] PCI: Add no-D3 quirk for Mellanox ConnectX-[45]
-Message-ID: <20190108060734.GH3632@mtr-leonro.mtl.com>
-References: <20181206041951.22413-1-david@gibson.dropbear.id.au>
- <20181206064509.GM15544@mtr-leonro.mtl.com>
- <20190104034401.GA2801@umbus.fritz.box>
- <20190105175116.GB14238@ziepe.ca>
- <c1296ee9120a6a04dc75d0fdb2a641c722cb65d6.camel@kernel.crashing.org>
- <20190108040129.GE5336@ziepe.ca>
+        by ni.piap.pl (Postfix) with ESMTPSA id DCE36443165;
+        Tue,  8 Jan 2019 07:10:26 +0100 (CET)
+DKIM-Filter: OpenDKIM Filter v2.11.0 ni.piap.pl DCE36443165
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=piap.pl; s=mail;
+        t=1546927827; bh=uoBagCH+67tI29OPEiGnuMlwv6BRBdtEVv6doUPb5EQ=;
+        h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
+        b=dEhNdTE2jQe1w9Hv85tUFBouQ+B1wLxesQH7EEqlybYz2fTdE+Vp/H7Abl0Y7ux9W
+         m93IEy1pO854zX51E3s60PUWFeTH85lDjrXI1nQM7XdyPd4LHemIcbbxW7ftxQJjb8
+         LUc5XZqaYQsBql21RnTu6Zsg7vH4y7mbonQG8SCc=
+From:   khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To:     Koen Vandeputte <koen.vandeputte@ncentric.com>
+Cc:     linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+        Robin Leblon <robin.leblon@ncentric.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Tim Harvey <tharvey@gateworks.com>, stable@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] arm: cns3xxx: use actual size reads for PCIe
+References: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
+        <20190107134510.32494-2-koen.vandeputte@ncentric.com>
+Date:   Tue, 08 Jan 2019 07:10:26 +0100
+In-Reply-To: <20190107134510.32494-2-koen.vandeputte@ncentric.com> (Koen
+        Vandeputte's message of "Mon, 7 Jan 2019 14:45:10 +0100")
+Message-ID: <m37efffzn1.fsf@t19.piap.pl>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="QNDPHrPUIc00TOLW"
-Content-Disposition: inline
-In-Reply-To: <20190108040129.GE5336@ziepe.ca>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-KLMS-Rule-ID: 1
+X-KLMS-Message-Action: clean
+X-KLMS-AntiSpam-Lua-Profiles: 133775 [Jan 08 2019]
+X-KLMS-AntiSpam-Version: 5.8.3.0
+X-KLMS-AntiSpam-Envelope-From: khalasa@piap.pl
+X-KLMS-AntiSpam-Rate: 0
+X-KLMS-AntiSpam-Status: not_detected
+X-KLMS-AntiSpam-Method: none
+X-KLMS-AntiSpam-Info: LuaCore: 232 232 27ac0ce265d8cfe64c397d431e1d2387c92c9415, {Tracking_DKIM, one}, {Tracking_marketers, sender}, {Tracking_ sender_matches_from}, {Tracking_subj_double_letters}, {Tracking_weird_subj_double_letters}, {Tracking_text_let_digits}, Auth:dkim=pass header.d=piap.pl
+X-KLMS-AntiSpam-Interceptor-Info: scan successful
+X-KLMS-AntiPhishing: Clean, 2018/12/29 09:49:57
+X-KLMS-AntiVirus: Kaspersky Security 8.0 for Linux Mail Server, version 8.0.1.721, bases: 2019/01/08 00:26:00 #9315795
+X-KLMS-AntiVirus-Status: Clean, skipped
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Koen Vandeputte <koen.vandeputte@ncentric.com> writes:
 
---QNDPHrPUIc00TOLW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Mon, Jan 07, 2019 at 09:01:29PM -0700, Jason Gunthorpe wrote:
-> On Sun, Jan 06, 2019 at 09:43:46AM +1100, Benjamin Herrenschmidt wrote:
-> > On Sat, 2019-01-05 at 10:51 -0700, Jason Gunthorpe wrote:
-> > >
-> > > > Interesting.  I've investigated this further, though I don't have as
-> > > > many new clues as I'd like.  The problem occurs reliably, at least on
-> > > > one particular type of machine (a POWER8 "Garrison" with ConnectX-4).
-> > > > I don't yet know if it occurs with other machines, I'm having trouble
-> > > > getting access to other machines with a suitable card.  I didn't
-> > > > manage to reproduce it on a different POWER8 machine with a
-> > > > ConnectX-5, but I don't know if it's the difference in machine or
-> > > > difference in card revision that's important.
-> > >
-> > > Make sure the card has the latest firmware is always good advice..
-> > >
-> > > > So possibilities that occur to me:
-> > > >   * It's something specific about how the vfio-pci driver uses D3
-> > > >     state - have you tried rebinding your device to vfio-pci?
-> > > >   * It's something specific about POWER, either the kernel or the PCI
-> > > >     bridge hardware
-> > > >   * It's something specific about this particular type of machine
-> > >
-> > > Does the EEH indicate what happend to actually trigger it?
-> >
-> > In a very cryptic way that requires manual parsing using non-public
-> > docs sadly but yes. From the look of it, it's a completion timeout.
-> >
-> > Looks to me like we don't get a response to a config space access
-> > during the change of D state. I don't know if it's the write of the D3
-> > state itself or the read back though (it's probably detected on the
-> > read back or a subsequent read, but that doesn't tell me which specific
-> > one failed).
+> commit 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
+> reimplemented cns3xxx_pci_read_config() using pci_generic_config_read32(),
+> which preserved the property of only doing 32-bit reads.
 >
-> If it is just one card doing it (again, check you have latest
-> firmware) I wonder if it is a sketchy PCI-E electrical link that is
-> causing a long re-training cycle? Can you tell if the PCI-E link is
-> permanently gone or does it eventually return?
+> It also replaced cns3xxx_pci_write_config() with pci_generic_config_write(),
+> so it changed writes from always being 32 bits to being the actual size,
+> which works just fine.
 >
-> Does the card work in Gen 3 when it starts? Is there any indication of
-> PCI-E link errors?
+> Due to:
+> - The documentation does not mention that only 32 bit access is allowed.
+> - Writes are already executed using the actual size
+> - Extensive testing shows that 8b, 16b and 32b reads work as intended
 >
-> Everytime or sometimes?
->
-> POWER 8 firmware is good? If the link does eventually come back, is
-> the POWER8's D3 resumption timeout long enough?
->
-> If this doesn't lead to an obvious conclusion you'll probably need to
-> connect to IBM's Mellanox support team to get more information from
-> the card side.
+> It makes perfectly sense to also swap 32 bit reading in favor of actual size.
 
-+1, I tried to find any Mellanox-internal bugs related to your issue
-and didn't find anything concrete.
+Acked-by: Krzysztof Halasa <khalasa@piap.pl>
 
-Thanks
+> --- a/arch/arm/mach-cns3xxx/pcie.c
+> +++ b/arch/arm/mach-cns3xxx/pcie.c
+> @@ -93,7 +93,7 @@ static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+>  	u32 mask = (0x1ull << (size * 8)) - 1;
+>  	int shift = (where % 4) * 8;
+>  
+> -	ret = pci_generic_config_read32(bus, devfn, where, size, val);
+> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
+>  
+>  	if (ret == PCIBIOS_SUCCESSFUL && !bus->number && !devfn &&
+>  	    (where & 0xffc) == PCI_CLASS_REVISION)
 
->
-> Jason
+-- 
+Krzysztof Halasa
 
---QNDPHrPUIc00TOLW
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBAgAGBQJcND4mAAoJEORje4g2clinWmYQALc1t9Jj1WUm7zYVTd84U3pI
-gnGibiWBO2l7MI+MYk14ZBFGEYJlskNRHIigRcOFEkzha5dy6p2JOnQyS3yBvHjO
-Bl3JfvqJLZ6gq4EFqtQlvuH8TaJrkB2L3rxTmWXhbNVcxIw5SIyylhpVDgSncpde
-MtP+XC7viTd15bBrYBTqVJsjr0LnIUfyPzBpDcn6vHht6iPln3pUv90T7w49/Vkm
-EgDUN3bNYjyXbX07sj78Z5t8UuKv0UcQ2oGAWmA/YLGo04XZRQFcUlu4BnWT2YOf
-9z4yHBx/KdBMpxtRue74mqHitFjSu9u+Na5Leq6j3davuFg000q+f3AfE8nCWqLp
-DraqvSZKIhAiCFpQAcBAzEvVM0QzaKS8xqftPpnZ+509cnAwzRzlKDAO3xzyaXNN
-KM56HOXCPSJPvf0uCsTr3zTLpsAnzm1QOSt3J6SW4DxvBPTsdrvro08UQErbUAVL
-VieGklltiu+OeNY2DsCE6JSlxFIMOxMql3zVf5vD9GR7zzhtYA+sgVJssOzBMEY5
-4yHnrg42lQ3OvjBF686S5xFHJ13hNHvd4CvdUiNvlncJS14zlEiFoGzmnk4+44bu
-LSXy8AVLNDtmqk2WG+DlrCZPnm6zp1wC8mvvkvywSpbrWVEkBn2DIlfK788i1BoR
-UMzhWxopBvsJGk41pwm3
-=BVjQ
------END PGP SIGNATURE-----
-
---QNDPHrPUIc00TOLW--
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
