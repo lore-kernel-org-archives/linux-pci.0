@@ -1,129 +1,82 @@
-Return-Path: <SRS0=70A0=PP=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=3dpc=PQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3D30C43387
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 22:57:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 154E9C43387
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 03:15:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 794FA2087F
-	for <linux-pci@archiver.kernel.org>; Mon,  7 Jan 2019 22:57:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6146206A3
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 03:15:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726742AbfAGW5W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 7 Jan 2019 17:57:22 -0500
-Received: from mga14.intel.com ([192.55.52.115]:56705 "EHLO mga14.intel.com"
+        id S1727535AbfAHDPG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 7 Jan 2019 22:15:06 -0500
+Received: from inva020.nxp.com ([92.121.34.13]:52450 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726668AbfAGW5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Jan 2019 17:57:22 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Jan 2019 14:57:21 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,451,1539673200"; 
-   d="scan'208";a="114916979"
-Received: from jprestwo.jf.intel.com ([10.54.74.49])
-  by fmsmga008.fm.intel.com with ESMTP; 07 Jan 2019 14:57:21 -0800
-Message-ID: <e0edb0e102ad2ba386a47e97b4e9930fdce71728.camel@linux.intel.com>
-Subject: Re: [PATCH] PCI: quirks: add vendor ID for AR9462 card
-From:   James Prestwood <james.prestwood@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bharat Bhushan <bharat.bhushan@nxp.com>,
-        linux-kernel@vger.kernel.org
-Date:   Mon, 07 Jan 2019 15:02:11 -0800
-In-Reply-To: <20190107220811.GA165042@google.com>
-References: <20190107213248.3034-1-james.prestwood@linux.intel.com>
-         <20190107220811.GA165042@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1727521AbfAHDPF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 7 Jan 2019 22:15:05 -0500
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 3BA1A1A04EA;
+        Tue,  8 Jan 2019 04:15:03 +0100 (CET)
+Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 4F7BF1A02A6;
+        Tue,  8 Jan 2019 04:14:51 +0100 (CET)
+Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 0FFC8402CA;
+        Tue,  8 Jan 2019 11:14:37 +0800 (SGT)
+From:   Xiaowei Bao <xiaowei.bao@nxp.com>
+To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
+        lorenzo.pieralisi@arm.com, arnd@arndb.de,
+        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com, kstewart@linuxfoundation.org,
+        cyrille.pitchen@free-electrons.com, pombredanne@nexb.com,
+        shawn.lin@rock-chips.com, niklas.cassel@axis.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org
+Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: [PATCHv4 4/4] misc: pci_endpoint_test: Add the layerscape EP device support
+Date:   Tue,  8 Jan 2019 11:09:22 +0800
+Message-Id: <20190108030922.24031-4-xiaowei.bao@nxp.com>
+X-Mailer: git-send-email 2.14.1
+In-Reply-To: <20190108030922.24031-1-xiaowei.bao@nxp.com>
+References: <20190108030922.24031-1-xiaowei.bao@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 2019-01-07 at 16:08 -0600, Bjorn Helgaas wrote:
-> [+cc Alex, Bharat, LKML]
-> 
-> Hi James,
-> 
-> Thanks for finding this issue and for the patch.
-> 
-> Is there any chance you have a PCIe analyzer and could investigate
-> what's going on at that level?  The bus reset should be fairly
-> similar
-> to what happens on a cold boot, and obviously *that* works, so I
-> wonder if we can figure out what the difference here is.
+Add the layerscape EP device support in pci_endpoint_test driver.
 
-I don't have a PCIe analyzer (unless thats just a piece of software I
-could download). Maybe I should have included a cover letter about what
-exactly is happening in my testing:
+Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+---
+v2:
+ - no change
+v3:
+ - no change
+v4:
+ - delate the comments.
 
-I am using PCI passthough with various wireless hardware, all of which
-worked fine except this Ath9k card. If I tried to pass through this
-card my host machine would completely lock up/freeze when starting the
-VM, and I would have to hard reboot. I asked on the linux-wireless
-mailing list (since it seemed to be specific to the Ath9k card) and it
-was suggested to add that line to quirks.c, which did resolve the
-issue.
+ drivers/misc/pci_endpoint_test.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Beyond that, its really all I know. I am not at all knowledgeable about
-how PCI actually works :) (or really what this patch is even doing).
-Since it was so simple and fixed my issue I figured I should try and
-upstream it.
-
-I wish I could be of more help hardware wise. If there is anything
-software wise I could run to get more info I can do that.
-
-Thanks,
-James
-> 
-> If this is actually broken somehow in the hardware, can you dig up a
-> hardware erratum and include a URL here?
-> 
-> If there's any chance we could fix or work around this in the kernel,
-> I'd rather do that than extend this quirk to more devices.
-> 
-> FWIW, here's a similar report, which hasn't been resolved yet:
-> 
-https://lore.kernel.org/linux-pci/20181127083454.26560-1-Bharat.Bhushan@nxp.com
-> 
-> On Mon, Jan 07, 2019 at 01:32:48PM -0800, James Prestwood wrote:
-> > This card has similar issues with bus reset as the others present
-> > in
-> > this list.
-> > 
-> > Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
-> > ---
-> >  drivers/pci/quirks.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index ef7143a274e0..d9d4a95b0309 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3379,6 +3379,7 @@
-> > DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030,
-> > quirk_no_bus_reset);
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032,
-> > quirk_no_bus_reset);
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c,
-> > quirk_no_bus_reset);
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033,
-> > quirk_no_bus_reset);
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0034,
-> > quirk_no_bus_reset);
-> >  
-> >  /*
-> >   * Root port on some Cavium CN8xxx chips do not successfully
-> > complete a bus
-> > -- 
-> > 2.17.1
-> > 
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 896e2df..29582fe 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -788,6 +788,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
+ 	{ }
+ };
+-- 
+1.7.1
 
