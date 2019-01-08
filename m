@@ -2,140 +2,252 @@ Return-Path: <SRS0=3dpc=PQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B45C43387
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 11:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE8C6C43387
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 12:06:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE1862087F
-	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 11:39:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B70420651
+	for <linux-pci@archiver.kernel.org>; Tue,  8 Jan 2019 12:06:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=lekensteyn.nl header.i=@lekensteyn.nl header.b="AcZtlXtp"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="eeXjO40u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727368AbfAHLjN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 8 Jan 2019 06:39:13 -0500
-Received: from lekensteyn.nl ([178.21.112.251]:59513 "EHLO lekensteyn.nl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727107AbfAHLjM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Jan 2019 06:39:12 -0500
-X-Greylist: delayed 2434 seconds by postgrey-1.27 at vger.kernel.org; Tue, 08 Jan 2019 06:39:11 EST
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lekensteyn.nl; s=s2048-2015-q1;
-        h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date; bh=GkkBMi9rK4MY2T/zGv2N61kd/bH3KUwoSZkccuMtahg=;
-        b=AcZtlXtpimm6QfXL3Qr3wX/Lb4KZv+g6SKRcnTHxuL15pxSDK/swW0tJ2ZaOR68YnHcZYczvowWPupg3Z4bJLm9qgBIEA5/aurLT5RsEy+dAob+En/vs8MTeQSGHRhqBhTjrz2vtuAT6ivkINCc/5cMz2KXYb33o0AVrq0CFbHqhD+Q5LuhQ37pS1WGi5Bx4ZAns3vRKnUpv7RU62caLy3rIKix9jt+RX1LAErNkEudbHC/Uf570KZ8/6QRzaBIEntNUgiwgYycYrvrGIDH6lVVZOD/f23wk7YmN3a8tHnPWUJm9X2QT2gM1BKrJbX/t5ynkcGXNv+WlTOM37FCKMw==;
-Received: by lekensteyn.nl with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.84_2)
-        (envelope-from <peter@lekensteyn.nl>)
-        id 1ggp5X-0005W6-1z; Tue, 08 Jan 2019 11:58:28 +0100
-Date:   Tue, 8 Jan 2019 11:58:24 +0100
-From:   Peter Wu <peter@lekensteyn.nl>
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
+        id S1728859AbfAHMGU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 8 Jan 2019 07:06:20 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:42124 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727295AbfAHMGU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Jan 2019 07:06:20 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x08C66cN008908;
+        Tue, 8 Jan 2019 06:06:06 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1546949166;
+        bh=oC5n8oiG33oGUIN5lj6XAKibGLZEGOuHHzWS0oi/EUI=;
+        h=Subject:From:To:CC:References:Date:In-Reply-To;
+        b=eeXjO40uIpfhwz4559yGJJRM6pwhlB0OiE6J9xK8W/VuojnHOn6EiBFYIw1xX84IL
+         2Yf6QlZNvTUZ3LRr2MgtwH7hbIcHvX5D2klfAWqt0kgDBZ210+jsfL1sD+mMLKyVrZ
+         gTe90t8YgVJk1DqkMIMgCwHxdYsY9bMUSaxdeXhg=
+Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x08C66lV042956
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 8 Jan 2019 06:06:06 -0600
+Received: from DFLE111.ent.ti.com (10.64.6.32) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Tue, 8
+ Jan 2019 06:06:06 -0600
+Received: from dflp33.itg.ti.com (10.64.6.16) by DFLE111.ent.ti.com
+ (10.64.6.32) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Tue, 8 Jan 2019 06:06:05 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x08C61d5025984;
+        Tue, 8 Jan 2019 06:06:03 -0600
+Subject: Re: [PATCH V2] PCI: dwc ep: cache config until DBI regs available
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Stephen Warren <swarren@wwwdotorg.org>
+CC:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Kedar A Dongre <kedar.a.dongre@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: Block power management of certain ports with
- slot implemented bit set
-Message-ID: <20190108105824.GC23218@al>
-References: <20190107130152.83350-1-mika.westerberg@linux.intel.com>
- <CAJZ5v0iJfUK6FDQ=W6=2+wEG2GHKDT5r_aoRapUn4Qi0FTjaGg@mail.gmail.com>
- <20190108093507.GX2469@lahna.fi.intel.com>
- <20190108101600.5qbeks5ux6wgpbpy@wunner.de>
+        <linux-pci@vger.kernel.org>, Vidya Sagar <vidyas@nvidia.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Stephen Warren <swarren@nvidia.com>
+References: <20181126230958.8175-1-swarren@wwwdotorg.org>
+ <340ed2c5-cb11-0aea-5430-5da5b509d805@ti.com>
+ <b4a19329-3fd0-6242-5e31-8270d2c0a3e4@wwwdotorg.org>
+ <27179f56-c7be-a55e-46ef-8ebc144e8547@wwwdotorg.org>
+ <f86f4b8e-6b62-e921-eee2-1cf7ff0266ff@ti.com>
+ <8982f057-881d-ffe7-6c26-e6a9844cbc0a@wwwdotorg.org>
+ <ced15b0c-7dd8-0969-39bb-f4891012ce45@ti.com>
+Message-ID: <79710923-1cff-dce8-bd73-326d7921d621@ti.com>
+Date:   Tue, 8 Jan 2019 17:35:30 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190108101600.5qbeks5ux6wgpbpy@wunner.de>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <ced15b0c-7dd8-0969-39bb-f4891012ce45@ti.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lukas,
+Hi Stephen,
 
-On Tue, Jan 08, 2019 at 11:16:00AM +0100, Lukas Wunner wrote:
-> Hi Peter,
+On 04/01/19 1:32 PM, Kishon Vijay Abraham I wrote:
+> Hi Stephen,
 > 
-> On Tue, Jan 08, 2019 at 11:35:07AM +0200, Mika Westerberg wrote:
-> > On Mon, Jan 07, 2019 at 02:13:14PM +0100, Rafael J. Wysocki wrote:
-> > > On Mon, Jan 7, 2019 at 2:01 PM Mika Westerberg
-> > > <mika.westerberg@linux.intel.com> wrote:
-> > > >
-> > > > Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
-> > > > connected to Alpine Ridge Thunderbolt controller. This port has slot
-> > > > implemented bit set in the config space but other than that it is not
-> > > > hotplug capable in the sense we are expecting in Linux (it has
-> > > > dev->is_hotplug_bridge set to 0):
-> > > >
-> > > > 00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
-> > > >         Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
-> > > >         Memory behind bridge: 78000000-8fffffff [size=384M]
-> > > >         Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
-> > > >         ...
-> > > >         Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-> > > >         ...
-> > > >                 SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
-> > > >                         Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
-> > > >                 SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-> > > >                         Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-> > > >                 SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-> > > >                         Changed: MRL- PresDet+ LinkState+
-> > > >
-> > > > This system is using ACPI based hotplug to notify the OS that it needs
-> > > > to rescan the PCI bus (ACPI hotplug).
-> > > >
-> > > > If there is nothing connected to any of the Thunderbolt ports the root
-> > > > port will not have any runtime PM active children and is thus
-> > > > automatically runtime suspended pretty soon after boot by PCI PM core.
-> > > > Now, when a device is connected the BIOS SMI handler responsible for
-> > > > enumerating newly added devices is not able to find anything because the
-> > > > port is in D3.
-> > > >
-> > > > For this reason we block power management of PCIe root and downstream
-> > > > ports that have slot implemented set and have node in ACPI namespace.
-> > > >
-> > > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=202031
-> > > > Reported-by: Kedar A Dongre <kedar.a.dongre@intel.com>
-> > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > 
-> > > Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > Thanks!
-> > 
-> > However, I'm having second toughts about this because I remembered that
-> > people put a lot of effort getting discrete graphics with power resource
-> > attached to the root port powering off properly. If the root port
-> > matches the criteria in this patch it will not be able to go into D3
-> > anymore. It might affect others such as M.2 connected NVMe or WiFi chip
-> > as well. For that reason I would still prefer blacklist, at least for now.
+> On 02/01/19 10:04 PM, Stephen Warren wrote:
+>> On 12/19/18 7:37 AM, Kishon Vijay Abraham I wrote:
+>>> Hi,
+>>>
+>>> On 14/12/18 10:31 PM, Stephen Warren wrote:
+>>>> On 12/11/18 10:23 AM, Stephen Warren wrote:
+>>>>> On 12/10/18 9:36 PM, Kishon Vijay Abraham I wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> On 27/11/18 4:39 AM, Stephen Warren wrote:
+>>>>>>> From: Stephen Warren <swarren@nvidia.com>
+>>>>>>>
+>>>>>>> Some implementations of the DWC PCIe endpoint controller do not allow
+>>>>>>> access to DBI registers until the attached host has started REFCLK,
+>>>>>>> released PERST, and the endpoint driver has initialized clocking of the
+>>>>>>> DBI registers based on that. One such system is NVIDIA's T194 SoC. The
+>>>>>>> PCIe endpoint subsystem and DWC driver currently don't work on such
+>>>>>>> hardware, since they assume that all endpoint configuration can happen
+>>>>>>> at any arbitrary time.
+>>>>>>>
+>>>>>>> Enhance the DWC endpoint driver to support such systems by caching all
+>>>>>>> endpoint configuration in software, and only writing the configuration
+>>>>>>> to hardware once it's been initialized. This is implemented by splitting
+>>>>>>> all endpoint controller ops into two functions; the first which simply
+>>>>>>> records/caches the desired configuration whenever called by the
+>>>>>>> associated function driver and optionally calls the second, and the
+>>>>>>> second which actually programs the configuration into hardware, which
+>>>>>>> may be called either by the first function, or later when it's known
+>>>>>>> that the DBI registers are available.
+>>>>>
+>>>>>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>>>>>> b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>>>>>
+>>>>>>> +void dw_pcie_set_regs_available(struct dw_pcie *pci)
+>>>>>>> +{
+>>>>>>
+>>>>>> When will this function be invoked? Does the wrapper get an interrupt when
+>>>>>> refclk is enabled where this function will be invoked?
+>>>>>
+>>>>> Yes, there's an IRQ from the HW that indicates when PEXRST is released. I
+>>>>> don't recall right now if this IRQ is something that exists for all DWC
+>>>>> instantiations, or is Tegra-specific.
+>>>>>
+>>>>>>> +    struct dw_pcie_ep *ep = &(pci->ep);
+>>>>>>> +    int i;
+>>>>>>> +
+>>>>>>> +    ep->hw_regs_not_available = false;
+>>>>>>
+>>>>>> This can race with epc_ops.
+>>>>>>
+>>>>>>> +
+>>>>>>> +    dw_pcie_ep_write_header_regs(ep);
+>>>>>>> +    for_each_set_bit(i, ep->ib_window_map, ep->num_ib_windows) {
+>>>>>>> +        dw_pcie_prog_inbound_atu(pci, i,
+>>>>>>> +            ep->cached_inbound_atus[i].bar,
+>>>>>>> +            ep->cached_inbound_atus[i].cpu_addr,
+>>>>>>> +            ep->cached_inbound_atus[i].as_type);
+>>>>>>
+>>>>>> Depending on the context in which this function is invoked, programming
+>>>>>> inbound/outbound ATU can also race with EPC ops.
+>>>>>   >
+>>>>>>> +        dw_pcie_ep_set_bar_regs(ep, 0, ep->cached_inbound_atus[i].bar);
+>>>>>>> +    }
+>>>>>>> +    for_each_set_bit(i, ep->ob_window_map, ep->num_ob_windows)
+>>>>>>> +        dw_pcie_prog_outbound_atu(pci, i, PCIE_ATU_TYPE_MEM,
+>>>>>>> +            ep->cached_outbound_atus[i].addr,
+>>>>>>> +            ep->cached_outbound_atus[i].pci_addr,
+>>>>>>> +            ep->cached_outbound_atus[i].size);
+>>>>>>> +    dw_pcie_dbi_ro_wr_en(pci);
+>>>>>>> +    dw_pcie_writew_dbi(pci, PCI_MSI_FLAGS, ep->cached_msi_flags);
+>>>>>>> +    dw_pcie_writew_dbi(pci, PCI_MSIX_FLAGS, ep->cached_msix_flags);
+>>>>>>> +    dw_pcie_dbi_ro_wr_dis(pci);
+>>>>>>
+>>>>>> IMHO we should add a new epc ops ->epc_init() which indicates if the EPC is
+>>>>>> ready to be initialized or not. Only if the epc_init indicates it's ready
+>>>>>> to be
+>>>>>> initialized, the endpoint function driver should go ahead with further
+>>>>>> initialization. Or else it should wait for a notification from EPC to
+>>>>>> indicate
+>>>>>> when it's ready to be initialized.
+>>>>>
+>>>>> (Did you mean epf op or epc op?)
+>>>>>
+>>>>> I'm not sure how exactly how that would work; do you want the DWC core driver
+>>>>> or the endpoint subsystem to poll that epc op to find out when the HW is
+>>>>> ready to be initialized? Or do you envisage the controller driver still
+>>>>> calling dw_pcie_set_regs_available() (possibly renamed), which in turn calls
+>>>>> ->epc_init() calls for some reason?
+>>>>>
+>>>>> If you don't want to cache the endpoint configuration, perhaps you want:
+>>>>>
+>>>>> a) Endpoint function doesn't pro-actively call the endpoint controller
+>>>>> functions to configure the endpoint.
+>>>>>
+>>>>> b) When endpoint HW is ready, the relevant driver calls pci_epc_ready() (or
+>>>>> whatever name), which lets the core know the HW can be configured. Perhaps
+>>>>> this schedules a work queue item to implement locking to avoid the races you
+>>>>> mentioned.
+>>>>>
+>>>>> c) Endpoint core calls pci_epf_init() which calls epf op ->init().
+>>>>>
+>>>>> One gotcha with this approach, which the caching approach helps avoid:
+>>>>>
+>>>>> Once PEXRST is released, the system must respond to PCIe enumeration requests
+>>>>> within 50ms. Thus, SW must very quickly respond to the IRQ indicating PEXRST
+>>>>> release and program the endpoint configuration into HW. By caching the
+>>>>> configuration in the DWC driver and immediately/synchronously applying it in
+>>>>> the PEXRST IRQ handler, we reduce the number of steps and amount of code
+>>>>> taken to program the HW, so it should get done pretty quickly. If instead we
+>>>>> call back into the endpoint function driver's ->init() op, we run the risk of
+>>>>> that op doing other stuff besides just calling the endpoint HW configuration
+>>>>> APIs (e.g. perhaps the function driver defers memory buffer allocation or
+>>>>> IOVA programming to that ->init function) which in turns makes it much less
+>>>>> likely the 50ms requirement will be hit. Perhaps we can solve this by naming
+>>>>> the op well and providing lots of comments, but my guess is that endpoint
+>>>>> function authors won't notice that...
+>>>>
+>>>> Kishon,
+>>>>
+>>>> Do you have any further details exactly how you'd prefer this to work? Does the
+>>>> approach I describe in points a/b/c above sound like what you want? Thanks.
+>>>
+>>> Agree with your PERST comment.
+>>>
+>>> What I have in mind is we add a new epc_init() ops. I feel there are more uses
+>>> for it (For e.g I have an internal patch which uses epc_init to initialize DMA.
+>>> Hopefully I'll post it soon).
+>>> If you look at pci_epf_test, pci_epf_test_bind() is where the function actually
+>>> starts to write to HW (i.e using pci_epc_*).
+>>> So before the endpoint function invokes pci_epc_write_header(), it should
+>>> invoke epc_init(). Only if that succeeds, it should go ahead with other
+>>> initialization.
+>>> If epc_init_* fails, we can have a particular error value to indicate the
+>>> controller is waiting for clock from host (so that we don't return error from
+>>> ->bind()). Once the controller receives the clock, it can send an atomic
+>>> notification to the endpoint function driver to indicate it is ready to be
+>>> initialized. (Atomic notification makes it easy to handle for multi function
+>>> endpoint devices.)
+>>> The endpoint function can then initialize the controller.
+>>> I think except for pci_epf_test_alloc_space() all other functions are
+>>> configuring the HW (in pci_epf_test_bind). pci_epf_test_alloc_space() could be
+>>> moved to pci_epf_test_probe() so there are no expensive operations to be done
+>>> once the controller is ready to be initialized.
+>>> I have epc_init() and the atomic notification part already implemented and I'm
+>>> planning to post it before next week. Once that is merged, we might have to
+>>> reorder function in pci_epf_test driver and you have to return the correct
+>>> error value for epc_init() if the clock is not there.
+>>
+>> Kishon, did you manage to post the patches that implement epc_init()? If so, a
+>> link would be appreciated. Thanks.
 > 
-> Would this patch:
-> 
->     https://patchwork.ozlabs.org/patch/1021317/
-> 
-> break runtime D3cold for the discrete GPU on Optimus laptops such as
-> your Clevo P651RA?  Specifically, is the Root Port above the GPU
-> marked "(Slot+)" in lspci -vv?  (There doesn't seem to be raw lspci
-> output in https://github.com/Lekensteyn/acpi-stuff)
+> I haven't posted the patches yet. Sorry for the delay. Give me some more time
+> please (till next week).
 
-Thanks for bringing this into my attention. There are a couple of full
-lspci dumps, for example for the Dell XPS 9560.
-https://github.com/Lekensteyn/acpi-stuff/blob/master/d3test/XPS9560/lspci-bare-metal.txt
-This has upstream port 00:01.0 attached to GPU 01:00.0
+I have posted one set of cleanup for EPC features [1] by introducing
+epc_get_features(). Some of the things I initially thought should be in
+epc_init actually fits in epc_get_features. However I still believe for your
+usecase we should introduce ->epc_init().
 
-    00:01.0 PCI bridge [0604]: Intel Corporation Xeon E3-1200 v5/E3-1500 v5/6th Gen Core Processor PCIe Controller (x16) [8086:1901] (rev 05) (prog-if 00 [Normal decode])
-        ...
-        Capabilities: [a0] Express (v2) Root Port (Slot+), MSI 00
+Thanks
+Kishon
 
-and would indeed be negatively affected by this patch. I can observe the
-same for the Clevo P651RA (for which I can also send the full lspci dump
-if you need).
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+[1] -> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1891393.html
+> 
+> Thanks
+> Kishon
+> 
