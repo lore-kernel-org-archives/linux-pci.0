@@ -2,141 +2,110 @@ Return-Path: <SRS0=X3es=PR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C437FC43387
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Jan 2019 12:37:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 431EAC43387
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Jan 2019 15:27:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0CAC206B6
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Jan 2019 12:37:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D8442173B
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Jan 2019 15:27:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Pi+EHYZI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730499AbfAIMhR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Jan 2019 07:37:17 -0500
-Received: from ozlabs.org ([203.11.71.1]:50549 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730438AbfAIMhR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 9 Jan 2019 07:37:17 -0500
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by ozlabs.org (Postfix) with ESMTPSA id 43ZTCs0zQVz9sDL;
-        Wed,  9 Jan 2019 23:37:13 +1100 (AEDT)
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Martin Schwidefsky <schwidefsky@de.ibm.com>,
-        Heiko Carstens <heiko.carstens@de.ibm.com>,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Kconfig label updates
-In-Reply-To: <20190108223024.GA147017@google.com>
-References: <20190108223024.GA147017@google.com>
-Date:   Wed, 09 Jan 2019 23:37:09 +1100
-Message-ID: <87tviiroqy.fsf@concordia.ellerman.id.au>
+        id S1730783AbfAIP1x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Jan 2019 10:27:53 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:46033 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730335AbfAIP1w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Jan 2019 10:27:52 -0500
+Received: by mail-pg1-f193.google.com with SMTP id y4so3437714pgc.12
+        for <linux-pci@vger.kernel.org>; Wed, 09 Jan 2019 07:27:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=2C2snWHRKLn4kJkXeCP/a0zp+l931OoPJBmot/AY+to=;
+        b=Pi+EHYZI8+1oSpoFdQsBOc/c6MrQgQnuh5OclYtJ8xs+7ULX+FfM1A4Cjq6EWahovv
+         DoZ+qy6g/3Cps2qzTs9+D6QUr+4TqTcLZMM9vepBc9Sfh+5RT3Ey437A0kDaSlozKrZT
+         k3c0AWq23fvEd9fOTemTlyISYThWPBBdUbKT6/mnwdHkH209I084DnU0tYtzbMFXm+eb
+         vw2MdD2zyhx+YyGFRXUpt9QLLpXO/6Y03RLNj0Y3PCZRerL3gchzOBALO6LjMQzDIWxx
+         NIYuDv2FYJ7RC//2nud0BZhT0HINYs81IlQZZ4AziLrs1o4hKw67r1QEpddBiCNPl81X
+         5q3A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=2C2snWHRKLn4kJkXeCP/a0zp+l931OoPJBmot/AY+to=;
+        b=OjyISyIAYfo7NNFqK8+AvgLvq7Q7tsIBhZKh+zU+mOf/LOTyYzGjuiapq47UWFIhuj
+         HBY+ObjZTtQMw3uYFI7i4B5mTHPA4R4kBNMusg19DoAED4CqDeEzJ29jiD9WjHblMcy1
+         N7M4xp8joOt9iQywCxONH+ndoqKZoYfEtcUb8vj/inl8Z+a6uqchuBS8WVgX+gvsaYS2
+         3WBEtUTr4EbbAGW8Ql8naMPyj6LzFxde/ne6MTC2LrdRifgxMgXuhthVKdwTdL6PWrrJ
+         PVX/zGVDMELrnT+KD+a0vt2MbA666jOCEavNcvuOp5Z7aGKbIWxCv0HOMYGwqnNoyhkW
+         tgvA==
+X-Gm-Message-State: AJcUukd3WjsfggnR+0JpJa3N6KGG4+hK5jk2YrGHhAa4dchquQFNrrPs
+        0shBfteS7U216GXnJechLfndIw==
+X-Google-Smtp-Source: ALg8bN5PTEFkU4DezniC2nJ1wMZFeOhp+djX6Fu+GXxks1fE0U3Rr6SDT2Jtedp2XLffR6m4r01rjA==
+X-Received: by 2002:a63:e80e:: with SMTP id s14mr5796633pgh.30.1547047671865;
+        Wed, 09 Jan 2019 07:27:51 -0800 (PST)
+Received: from ziepe.ca (S010614cc2056d97f.ed.shawcable.net. [174.3.196.123])
+        by smtp.gmail.com with ESMTPSA id f62sm88015706pgc.67.2019.01.09.07.27.50
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 09 Jan 2019 07:27:50 -0800 (PST)
+Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1ghFll-000255-FV; Wed, 09 Jan 2019 08:27:49 -0700
+Date:   Wed, 9 Jan 2019 08:27:49 -0700
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc:     David Gibson <david@gibson.dropbear.id.au>,
+        Leon Romanovsky <leon@kernel.org>, davem@davemloft.net,
+        saeedm@mellanox.com, ogerlitz@mellanox.com, tariqt@mellanox.com,
+        bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org,
+        alex.williamson@redhat.com, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org, sbest@redhat.com, paulus@samba.org,
+        Alexey Kardashevskiy <aik@au1.ibm.com>
+Subject: Re: [PATCH] PCI: Add no-D3 quirk for Mellanox ConnectX-[45]
+Message-ID: <20190109152749.GA6890@ziepe.ca>
+References: <20181206041951.22413-1-david@gibson.dropbear.id.au>
+ <20181206064509.GM15544@mtr-leonro.mtl.com>
+ <20190104034401.GA2801@umbus.fritz.box>
+ <20190105175116.GB14238@ziepe.ca>
+ <c1296ee9120a6a04dc75d0fdb2a641c722cb65d6.camel@kernel.crashing.org>
+ <20190108040129.GE5336@ziepe.ca>
+ <012d24d58a542ed44c8af9f517f1bd61ab912037.camel@kernel.crashing.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <012d24d58a542ed44c8af9f517f1bd61ab912037.camel@kernel.crashing.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+On Wed, Jan 09, 2019 at 04:09:02PM +1100, Benjamin Herrenschmidt wrote:
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
-> Hi,
->
-> I want to update the PCI Kconfig labels so they're more consistent and
-> useful to users, something like the patch below.  IIUC, the items
-> below are all IBM-related; please correct me if not.
->
-> I'd also like to expand (or remove) "RPA" because Google doesn't find
-> anything about "IBM RPA", except Robotic Process Automation, which I
-> think must be something else.
+> > POWER 8 firmware is good? If the link does eventually come back, is
+> > the POWER8's D3 resumption timeout long enough?
+> > 
+> > If this doesn't lead to an obvious conclusion you'll probably need to
+> > connect to IBM's Mellanox support team to get more information from
+> > the card side.
+> 
+> We are IBM :-) So far, it seems to be that the card is doing something
+> not quite right, but we don't know what. We might need to engage
+> Mellanox themselves.
 
-Yeah I think just remove it, it's not a well known term and is unlikely
-to help anyone these days.
+Sorry, it was unclear, I ment the support team for IBM inside Mellanox
+..
 
-It stands for "RISC Platform Architecture", which was some kind of
-specification for Power machines back in the day, but from what I can
-tell it was never used in marketing or manuals much (hence so few hits
-on Google).
+There might be internal debugging available that can show if the card
+is detecting the beacon, how far it gets in renegotiation, etc.
 
-> Is there some text expansion of RPA that we could use that would be
-> meaningful to a user, i.e., something he/she might find on a nameplate
-> or in a user manual?
+From all the mails it really has the feel of a PCI-E interop problem between
+these two specific chips..
 
-No I don't think so.
-
-> Ideally the PCI Kconfig labels would match the terms used in
-> arch/.../Kconfig, e.g.,
->
->   config PPC_POWERNV
->     bool "IBM PowerNV (Non-Virtualized) platform support"
->
->   config PPC_PSERIES
->     bool "IBM pSeries & new (POWER5-based) iSeries"
-
-TBH these are pretty unhelpful too. PowerNV is not a marketing name and
-so doesn't appear anywhere much in official manuals or brochures and
-it's also used on non-IBM branded machines. And pSeries & iSeries were
-marketing names but are no longer used.
-
-We should probably update that text, but we can do that later, rather
-than blocking this patch.
-
-> diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
-> index e9f78eb390d2..1c1d145bfd84 100644
-> --- a/drivers/pci/hotplug/Kconfig
-> +++ b/drivers/pci/hotplug/Kconfig
-> @@ -112,7 +112,7 @@ config HOTPLUG_PCI_SHPC
->  	  When in doubt, say N.
->  
->  config HOTPLUG_PCI_POWERNV
-> -	tristate "PowerPC PowerNV PCI Hotplug driver"
-> +	tristate "IBM PowerNV PCI Hotplug driver"
-
-This is used in non-IBM machines as well.
-
-So perhaps: ?
-
-	tristate "IBM/OpenPower PowerNV (bare metal) PCI Hotplug driver"
-
-> @@ -125,10 +125,11 @@ config HOTPLUG_PCI_POWERNV
->  	  When in doubt, say N.
->  
->  config HOTPLUG_PCI_RPA
-> -	tristate "RPA PCI Hotplug driver"
-> +	tristate "IBM Power Systems RPA PCI Hotplug driver"
-
-I think just drop RPA here.
-
->  	depends on PPC_PSERIES && EEH
->  	help
->  	  Say Y here if you have a RPA system that supports PCI Hotplug.
-
-s/RPA/IBM Power Systems/
-
-> +	  This includes the earlier pSeries and iSeries.
-
-To be complete:
-	  This includes the earlier System p, System i, pSeries and iSeries.
-
->  
->  	  To compile this driver as a module, choose M here: the
->  	  module will be called rpaphp.
-> @@ -136,7 +137,7 @@ config HOTPLUG_PCI_RPA
->  	  When in doubt, say N.
->  
->  config HOTPLUG_PCI_RPA_DLPAR
-> -	tristate "RPA Dynamic Logical Partitioning for I/O slots"
-> +	tristate "IBM RPA Dynamic Logical Partitioning for I/O slots"
-
-Again just drop RPA.
-
-
-cheers
+Jason
