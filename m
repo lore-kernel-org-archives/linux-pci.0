@@ -5,71 +5,97 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BD20C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jan 2019 08:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39B0CC43387
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jan 2019 12:10:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E408214DA
-	for <linux-pci@archiver.kernel.org>; Thu, 10 Jan 2019 08:17:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1574A2173B
+	for <linux-pci@archiver.kernel.org>; Thu, 10 Jan 2019 12:10:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727488AbfAJIRP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 10 Jan 2019 03:17:15 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:17103 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726137AbfAJIRP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Jan 2019 03:17:15 -0500
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id CD6ACBBDE14BBB5BFA80;
-        Thu, 10 Jan 2019 16:17:13 +0800 (CST)
-Received: from [127.0.0.1] (10.63.141.25) by DGGEMS401-HUB.china.huawei.com
- (10.3.19.201) with Microsoft SMTP Server id 14.3.408.0; Thu, 10 Jan 2019
- 16:17:12 +0800
-From:   Dongdong Liu <liudongdong3@huawei.com>
-Subject: [Bug report] PCIe NVME SSD hotplug surprise removal issue
-To:     <bhelgaas@google.com>, <keith.busch@intel.com>,
-        <linux-pci@vger.kernel.org>
-Message-ID: <252786ac-fc97-0c17-4219-d47d1d394def@huawei.com>
-Date:   Thu, 10 Jan 2019 16:17:12 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.4.0
+        id S1728214AbfAJMKw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 10 Jan 2019 07:10:52 -0500
+Received: from gloria.sntech.de ([185.11.138.130]:54710 "EHLO gloria.sntech.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726969AbfAJMKw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Jan 2019 07:10:52 -0500
+Received: from wf0848.dip.tu-dresden.de ([141.76.183.80] helo=phil.localnet)
+        by gloria.sntech.de with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <heiko@sntech.de>)
+        id 1ghZAW-0002x4-0E; Thu, 10 Jan 2019 13:10:40 +0100
+From:   Heiko Stuebner <heiko@sntech.de>
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Alan Douglas <adouglas@cadence.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 00/15] PCI: endpoint: Cleanup EPC features
+Date:   Thu, 10 Jan 2019 13:10:39 +0100
+Message-ID: <17209565.32fjuqOkZh@phil>
+In-Reply-To: <ce1e4bab-5c7c-5593-d28f-2187a04baef6@ti.com>
+References: <20190107064148.10152-1-kishon@ti.com> <1936135.agpnLP3rXd@phil> <ce1e4bab-5c7c-5593-d28f-2187a04baef6@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.63.141.25]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn, Keith
+Am Donnerstag, 10. Januar 2019, 06:05:00 CET schrieb Kishon Vijay Abraham I:
+> Hi Heiko,
+> 
+> On 07/01/19 8:05 PM, Heiko Stuebner wrote:
+> > Am Montag, 7. Januar 2019, 07:41:33 CET schrieb Kishon Vijay Abraham I:
+> >> Hi Lorenzo,
+> >>
+> >> The Endpoint controller driver uses features member in 'struct pci_epc'
+> >> to advertise the list of supported features to the endpoint function
+> >> driver.
+> >>
+> >> There are a few shortcomings with this approach.
+> >>   *) Certain endpoint controllers support fixed size BAR (e.g. TI's
+> >>      AM654 uses Designware configuration with fixed size BAR). The
+> >>      size of each BARs cannot be passed to the endpoint function
+> >>      driver.
+> >>   *) Too many macros for handling EPC features.
+> >>      (EPC_FEATURE_NO_LINKUP_NOTIFIER, EPC_FEATURE_BAR_MASK,
+> >>       EPC_FEATURE_MSIX_AVAILABLE, EPC_FEATURE_SET_BAR,
+> >>       EPC_FEATURE_GET_BAR)
+> >>   *) Endpoint controllers are directly modifying struct pci_epc
+> >>      members. (I have plans to move struct pci_epc to
+> >>      drivers/pci/endpoint so that pci_epc members are referenced
+> >>      only by endpoint core).
+> >>
+> >> To overcome the above shortcomings, introduced pci_epc_get_features()
+> >> API, pci_epc_features structure and a ->get_features() callback.
+> >>
+> >> Also added a patch to set BAR flags in pci_epf_alloc_space and
+> >> remove it from pci-epf-test function driver.
+> >>
+> >> Tested on TI's DRA7xx platform.
+> > 
+> > While I don't have that much PCI experience and hence cannot judge
+> > this cleanup as a whole, I can at least say, that my Rockchip rk3399
+> > still does find its PCIE-connected wifi card, so this series on rk3399
+> > 
+> > Tested-by: Heiko Stuebner <heiko@sntech.de>
+> 
+> Thank you for testing this series with PCIe controller configured in RC mode.
+> It would be great if it could be tested with EP mode too.
+> 
+> Thanks for the help.
 
-The lspci -tv topology is as below.
-  +-[0000:80]-+-00.0-[81]----00.0  Huawei Technologies Co., Ltd. Device 3714
-  |           +-02.0-[82]----00.0  Huawei Technologies Co., Ltd. Device 3714
-  |           +-04.0-[83]----00.0  Huawei Technologies Co., Ltd. Device 3714
-  |           +-06.0-[84]----00.0  Huawei Technologies Co., Ltd. Device 3714
-  |                   +-08.0-[|           +-0c.0-[86]--
-  |           +-10.0-[87]----00.0  Huawei Technologies Co., Ltd. Device 3714
+Sadly I don't have hardware for that, but the support was done by Shawn,
+maybe he can help with testing EP mode and will hopefully see this mail
+and give it a spin.
 
-Then surprise removal 87:00.0 NVME SSD card. The issue is as below.
-The SSD card is still present.
+Heiko
 
-[  178.610064] pciehp 0000:80:10.0:pcie004: Slot(36): Link Down
-[  178.725009] iommu: Removing device 0000:87:00.0 from group 12
-[  178.731278] pciehp 0000:80:10.0:pcie004: Slot(36): Card present
-[  180.731129] pcieport 0000:80:10.0: Data Link Layer Link Active not set in 1000 msec
-[  182.243128] pciehp 0000:80:10.0:pcie004: Failed to check link status
-
-Then lspci -s 80:10.0 -vvv|grep -i SltSta
-SltSta:Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock
-We can see the card is not present (PresDet-).
-
-Data Link Layer State Changed (link down) event reported
-prior to Presence Detect Changed (card is not present).
-Current code pciehp_handle_presence_or_link_change() seems have such issue.
-
-Any idea to resolve the issue.
-
-Thanks,
-Dongdong
 
