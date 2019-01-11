@@ -2,78 +2,119 @@ Return-Path: <SRS0=/dOL=PT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67F43C43387
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 07:30:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03EDDC43387
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 10:22:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29AB42146F
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 07:30:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0EDB2146F
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 10:22:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1547191843;
-	bh=fzSZSFiP4VR+dmAh+cdvz597Uc/jfSi2xf908v063sk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=gdokQRRHhae9c1DpPXQwxmczfQtwspCzF6gFbTeHoP1/l42I7qEzpwbqEYQCYVfie
-	 tv226h6Ud28SgevbsYGV8Dp2G7tZqRJNyuVDRkD5Xg7xZ8itVHKH30K+kCC+mvQiLv
-	 MHIxfb+6+9GVyeImC/GfR9pMxUX2LSQb7R/qRA9c=
+	s=default; t=1547202172;
+	bh=PG/GZyqPfjIhNBMJUTI5rw6jwpPQEx5pW77TEkiNFRo=;
+	h=From:Date:Subject:To:Cc:List-ID:From;
+	b=Q9FGlYMiFiEcorSYdCX3WkOJhtzIkvXsOEcWXdWfZ3RxCvRDKM1JVxXpdljD8bbYa
+	 D/1gZWX35tAB/jF780dMkSAxmu6DRT/9BaMpApwBUU2FhZ5idsex/YX4S8HWe93MA1
+	 dudXOQA9dzjYISQibbYifpP9kpt1BvgHUajPn1g0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730873AbfAKHam (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jan 2019 02:30:42 -0500
-Received: from mail.kernel.org ([198.145.29.99]:49526 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727723AbfAKHam (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Jan 2019 02:30:42 -0500
-Received: from dragon (61-216-91-114.HINET-IP.hinet.net [61.216.91.114])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5A41F2084C;
-        Fri, 11 Jan 2019 07:30:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1547191841;
-        bh=fzSZSFiP4VR+dmAh+cdvz597Uc/jfSi2xf908v063sk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XvQBDYewI2FrGtNHurTzb9vl6bp6Q5v/fK/u4W5XQkcLO+JSVytdFfGLH6uw8Af8P
-         0FG8S15i34RxMWs6Zt/IHmEA2rraKf1ER2KRS0vO+soe4MKsCf1ud4aC/glNte0tzC
-         BrjRK0TQxYX1pSJSyGYREG4+6WEpmkcQ9qdkcLrA=
-Date:   Fri, 11 Jan 2019 15:30:28 +0800
-From:   Shawn Guo <shawnguo@kernel.org>
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        Leo Li <leoyang.li@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>
-Subject: Re: [PATCHv3 2/5] arm64: dts: layerscape: add num-viewport property
- for PCIe DT nodes
-Message-ID: <20190111073026.GE32649@dragon>
-References: <20181218041956.41809-1-Zhiqiang.Hou@nxp.com>
- <20181218041956.41809-3-Zhiqiang.Hou@nxp.com>
+        id S1730786AbfAKKWq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jan 2019 05:22:46 -0500
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:34988 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725807AbfAKKWq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2019 05:22:46 -0500
+Received: by mail-oi1-f195.google.com with SMTP id v6so11798292oif.2;
+        Fri, 11 Jan 2019 02:22:44 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=dj0OX87eiD5eXmDpyMWeS/s/LtaeLGorc2Nd49cmBBg=;
+        b=VSg3wvPHAGtQqK3ZU1iqJTLqfpg7+uBloCBT/2bNbku5LqFRMjdv00rgRhyYTsmGvv
+         a0fCFSi/DqZ3VOQwwbom1OZ4XZYOO5S2vf55u6w5NUB8az6PO3FEZ+yE7dbJyQ1uG+AU
+         xwEoSyORe3KkvSoPmXDTJ77rzD/MHFSe68fjHDCrG6cknsdf4f8UfXJIiesEhOuAAddT
+         g75UEtVOsbW2b+mvleCe5c0teDSKNA6iVfyvouWXSNxZQNCqwbHDUfZ+OCegNs3nijo+
+         6a/WWpJUx1zE5UdZevm++O6P9nHLWT245Q0jVfjgVITh6tPyh9AHs7pl/GdRFwig2svM
+         6w9Q==
+X-Gm-Message-State: AJcUukcFVnKFIkHt00MtkDBngbb7NaOBmxRjs6kdn4pA0kuEuUTnCaM8
+        JH9M0gZmGiCrxPIVcE/CMN96cajunT5OKDd0/DUEKxv5
+X-Google-Smtp-Source: ALg8bN5UaXCzrzp0sDBPOySkzWLsi3xSm3RL1z8CyTi3z+ispuLQhun8YpiIKFMi6iZaoHUbb/d5CxQU86svdl2RMBg=
+X-Received: by 2002:aca:195:: with SMTP id 143mr8284453oib.322.1547202164506;
+ Fri, 11 Jan 2019 02:22:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181218041956.41809-3-Zhiqiang.Hou@nxp.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 11 Jan 2019 11:22:33 +0100
+Message-ID: <CAJZ5v0jRxHZJW5aW5NPLx2pcD1g5dhYzdyUw_PUTRekhOsqeyQ@mail.gmail.com>
+Subject: [GIT PULL] ACPI fixes for v5.0-rc2
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Dec 18, 2018 at 04:19:32AM +0000, Z.q. Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> Add num-viewport property for PCIe DT nodes to specify how many
-> viewports are implemented.
-> 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Hi Linus,
 
-Applied, thanks.
+Please pull from the tag
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ acpi-5.0-rc2
+
+with top-most commit 65a4f3a1efda8e0cc2516301fc3ad64e3eca716c
+
+ Merge branches 'acpi-pci', 'acpi-power' and 'acpi-misc'
+
+on top of commit bfeffd155283772bbe78c6a05dec7c0128ee500c
+
+ Linux 5.0-rc1
+
+to receive ACPI fixes for 5.0-rc2.
+
+This fix a build failure introduced recently, fix the xpower PMIC
+ACPI driver, clean up the handling of duplicate entries in _PRx
+power resource lists and fix addresses in NUMA-related messages on
+32-bit with PAE.
+
+Specifics:
+
+ - Fix build failures with both CONFIG_NLS and CONFIG_PCI unset that
+   can occur since ACPI can be built without PCI now (Sinan Kaya).
+
+ - Clean up the handling of duplicate entries in power resource lists
+   returned by _PRx evaluation to avoid triggering WARN_ON() on
+   attempts to add duplicate symlinks in sysfs (Hans de Goede).
+
+ - Fix issues with the TS current-source switching on systems using
+   the xpower PMIC by avoiding to update unrelated bits in the TS
+   pin-ctrl register and avoiding to unconditionally enable TS
+   current-source on systems where it is not used (Hans de Goede).
+
+ - Fix addresses in NUMA-related messages on 32-bit with PAE which
+   can be truncated due to integer type conversions (Chao Fan).
+
+Thanks!
+
+
+---------------
+
+Chao Fan (1):
+      ACPI: NUMA: Use correct type for printing addresses on i386-PAE
+
+Hans de Goede (2):
+      ACPI: power: Skip duplicate power resource references in _PRx
+      ACPI / PMIC: xpower: Fix TS-pin current-source handling
+
+Sinan Kaya (1):
+      ACPI: Fix build failure when CONFIG_NLS is set to 'n'
+
+---------------
+
+ drivers/acpi/Kconfig                  |  1 +
+ drivers/acpi/numa.c                   |  6 ++---
+ drivers/acpi/pmic/intel_pmic_xpower.c | 41 ++++++++++++++++++++++++++++-------
+ drivers/acpi/power.c                  | 22 +++++++++++++++++++
+ 4 files changed, 59 insertions(+), 11 deletions(-)
