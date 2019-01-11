@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9008BC43387
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 15:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FE14C43612
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 15:43:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5614820700
+	by mail.kernel.org (Postfix) with ESMTP id D5CCA20700
 	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 15:43:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Cjj9yDbM"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Xh5HaAgd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731969AbfAKPny (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jan 2019 10:43:54 -0500
-Received: from mta-01.yadro.com ([89.207.88.251]:40074 "EHLO mta-01.yadro.com"
+        id S1731970AbfAKPnz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jan 2019 10:43:55 -0500
+Received: from mta-01.yadro.com ([89.207.88.251]:40066 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731859AbfAKPny (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1731088AbfAKPny (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 11 Jan 2019 10:43:54 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 41E44419BD
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2019 15:37:30 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id C06FD419B9
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2019 15:37:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1547221049; x=1549035450; bh=Yj9lGaxnkQxL4mgWzyDOoIwRhCzn6tHdSBJ
-        wM8CucLg=; b=Cjj9yDbMDOWhTjKJFPyfsMGN9o9vvgH2ByE/tuyJdMQ87l8OFCQ
-        KEXLjfOO3DSSCIwElKUmFWgV+3JTN8UwTi9wOTWQNWTXNGSfnm0PfNqnJGVBNz6s
-        Z5bsOFGKRo/GXCi1bHbV67fBtXIXbwxykv9POjL+Q2uOUwrCTZ8ZZuBc=
+        1547221042; x=1549035443; bh=hCcqWUEOeHKpsKqTX40npQA0JC4L81ub3lt
+        tuK53l5M=; b=Xh5HaAgdTGsANecJOtbq6xfVGK0xwDm7zkROkpJVD2cJ6Z04lY4
+        8N1z7u6TE1b/u0GDdslMyD2m0Cl7GyFacqLDzdWVrKkvFO8smGLHWe2nuVAyOrgc
+        Z4jU8a3lCs8AvB+HBtTS4j4MuQuGDWGhZ0DeC86zy+fyDZUxryBtZqbQ=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id CpbUxCh5zRfl for <linux-pci@vger.kernel.org>;
-        Fri, 11 Jan 2019 18:37:29 +0300 (MSK)
+        with ESMTP id vaKQgf0lTJwT for <linux-pci@vger.kernel.org>;
+        Fri, 11 Jan 2019 18:37:22 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id B514841996
-        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2019 18:37:24 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 2B52741994
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jan 2019 18:37:22 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 11
- Jan 2019 18:37:24 +0300
+ Jan 2019 18:37:21 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC v2 16/21] PCI: Enable bridge's I/O and MEM access for hotplugged devices
-Date:   Fri, 11 Jan 2019 18:37:02 +0300
-Message-ID: <20190111153707.10140-17-s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC v2 03/21] PCI: hotplug: Add a flag for the movable BARs feature
+Date:   Fri, 11 Jan 2019 18:36:49 +0300
+Message-ID: <20190111153707.10140-4-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190111153707.10140-1-s.miroshnichenko@yadro.com>
 References: <20190111153707.10140-1-s.miroshnichenko@yadro.com>
@@ -67,33 +67,116 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-After updating the bridge window resources, the PCI_COMMAND_IO and
-PCI_COMMAND_MEMORY bits of the bridge must be addressed as well.
+If a new PCIe device has been hot-plugged between the two active ones
+without big enough gap between their BARs, these BARs should be moved
+if their drivers support this feature. The drivers should be notified
+and paused during the procedure:
+
+1)                 dev 8 (new)
+                       |
+                       v
+.. |  dev 3  |  dev 3  |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+
+2)                             dev 8
+                                 |
+                                 v
+.. |  dev 3  |  dev 3  | -->           --> |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  | -->           --> |  BAR 0  |  BAR 0  |
+
+ 3)
+
+.. |  dev 3  |  dev 3  |  dev 8  |  dev 8  |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+
+Thus, prior reservation of memory regions by BIOS/bootloader/firmware
+is not required anymore for the PCIe hotplug.
+
+The PCI_MOVABLE_BARS flag is set by the platform is this feature is
+supported and tested, but can be overridden by the following command
+line option:
+    pcie_movable_bars={ off | force }
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/pci.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ .../admin-guide/kernel-parameters.txt         |  7 ++++++
+ drivers/pci/pci.c                             | 24 +++++++++++++++++++
+ include/linux/pci.h                           |  2 ++
+ 3 files changed, 33 insertions(+)
 
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index b799bcf67d7b..2165c4b5aea6 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3387,6 +3387,13 @@
+ 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
+ 			all PCIe root ports use INTx for all services).
+ 
++	pcie_movable_bars=[PCIE]
++			Override the movable BARs support detection:
++		off
++			Disable even if supported by the platform
++		force
++			Enable even if not explicitly declared as supported
++
+ 	pcmv=		[HW,PCMCIA] BadgePAD 4
+ 
+ 	pd_ignore_unused
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a5266f31b612..633aa2570008 100644
+index 5580ddc5b9b1..71e056771e67 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -1602,6 +1602,14 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 		pci_enable_bridge(bridge);
+@@ -139,6 +139,30 @@ static int __init pcie_port_pm_setup(char *str)
+ }
+ __setup("pcie_port_pm=", pcie_port_pm_setup);
  
- 	if (pci_is_enabled(dev)) {
-+		int i, bars = 0;
++static bool pcie_movable_bars_off;
++static bool pcie_movable_bars_force;
++static int __init pcie_movable_bars_setup(char *str)
++{
++	if (!strcmp(str, "off"))
++		pcie_movable_bars_off = true;
++	else if (!strcmp(str, "force"))
++		pcie_movable_bars_force = true;
++	return 1;
++}
++__setup("pcie_movable_bars=", pcie_movable_bars_setup);
 +
-+		for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++) {
-+			if (dev->resource[i].flags & (IORESOURCE_MEM | IORESOURCE_IO))
-+				bars |= (1 << i);
-+		}
-+		do_pci_enable_device(dev, bars);
++bool pci_movable_bars_enabled(void)
++{
++	if (pcie_movable_bars_off)
++		return false;
 +
- 		if (!dev->is_busmaster)
- 			pci_set_master(dev);
- 		mutex_unlock(&dev->enable_mutex);
++	if (pcie_movable_bars_force)
++		return true;
++
++	return pci_has_flag(PCI_MOVABLE_BARS);
++}
++EXPORT_SYMBOL(pci_movable_bars_enabled);
++
+ /* Time to wait after a reset for device to become responsive */
+ #define PCIE_RESET_READY_POLL_MS 60000
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 65f1d8c2f082..84751f0931cd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -862,6 +862,7 @@ enum {
+ 	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* Enable domains in /proc */
+ 	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
+ 	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
++	PCI_MOVABLE_BARS	= 0x00000080,	/* Runtime BAR reassign after hotplug */
+ };
+ 
+ /* These external functions are only available when PCI support is enabled */
+@@ -1341,6 +1342,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
++bool pci_movable_bars_enabled(void);
+ 
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
 -- 
 2.20.1
 
