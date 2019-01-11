@@ -6,83 +6,95 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E728C43387
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 06:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0BF3C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 06:06:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A1B520675
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 06:00:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C53A20872
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 06:06:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728376AbfAKGAY convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jan 2019 01:00:24 -0500
-Received: from mga11.intel.com ([192.55.52.93]:34452 "EHLO mga11.intel.com"
+        id S1729429AbfAKGGP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jan 2019 01:06:15 -0500
+Received: from ozlabs.org ([203.11.71.1]:58421 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727578AbfAKGAY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Jan 2019 01:00:24 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jan 2019 22:00:24 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,464,1539673200"; 
-   d="scan'208";a="134930843"
-Received: from lftan-mobl.gar.corp.intel.com (HELO ubuntu) ([10.226.248.70])
-  by fmsmga004.fm.intel.com with SMTP; 10 Jan 2019 22:00:22 -0800
-Received: by ubuntu (sSMTP sendmail emulation); Fri, 11 Jan 2019 14:00:16 +0800
-Message-ID: <1547186416.35646.4.camel@intel.com>
-Subject: Re: [PATCH v3 0/2] Add Stratix 10 PCIe Root Port support
-From:   Ley Foon Tan <ley.foon.tan@intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, lftan.linux@gmail.com
-Date:   Fri, 11 Jan 2019 14:00:16 +0800
-In-Reply-To: <1546409810-37630-1-git-send-email-ley.foon.tan@intel.com>
-References: <1546409810-37630-1-git-send-email-ley.foon.tan@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Mailer: Evolution 3.18.5.2-0ubuntu3.1 
-Mime-Version: 1.0
+        id S1728869AbfAKGGP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Jan 2019 01:06:15 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by ozlabs.org (Postfix) with ESMTPSA id 43bXRm3Kxfz9sCs;
+        Fri, 11 Jan 2019 17:06:12 +1100 (AEDT)
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Kconfig label updates
+In-Reply-To: <83241c8b-8f44-162b-b42a-0f4f9bb858e7@linux.vnet.ibm.com>
+References: <20190108223024.GA147017@google.com> <87tviiroqy.fsf@concordia.ellerman.id.au> <83241c8b-8f44-162b-b42a-0f4f9bb858e7@linux.vnet.ibm.com>
+Date:   Fri, 11 Jan 2019 17:06:12 +1100
+Message-ID: <874lafg23v.fsf@concordia.ellerman.id.au>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2019-01-02 at 14:16 +0800, Ley Foon Tan wrote:
-> Add PCIe Root Port support for Stratix 10 device and also update
-> device tree binding documentation.
-> 
-> v2 -> v3:
-> ---------
-> - Rename Stratix10 to Stratix 10.
-> - Change bool s10_flag to enum version.
-> 
-> v1 -> v2:
-> ---------
-> - Add define S10_TLP_FMTTYPE_* macros.
-> - Remove initialize structure members to NULL/zero.
-> - Rename *_funcs to *_data.
-> - Update comment and fix coding style warning from checkpatch.pl.
-> - Rename StratixXX to stratix10.
-> 
-> History:
-> --------
-> [v1]: https://lkml.org/lkml/2018/12/26/68
-> [v2]: https://lkml.org/lkml/2018/12/31/46
-> 
-> Ley Foon Tan (2):
->   PCI: altera: Add Stratix 10 PCIe support
->   dt-bindings: PCI: altera: Add altr,pcie-root-port-2.0
-> 
->  .../devicetree/bindings/pci/altera-pcie.txt        |    4 +-
->  drivers/pci/controller/Kconfig                     |    2 +-
->  drivers/pci/controller/pcie-altera.c               |  246
-> ++++++++++++++++++--
->  3 files changed, 226 insertions(+), 26 deletions(-)
-> 
-Hi,
+Tyrel Datwyler <tyreld@linux.vnet.ibm.com> writes:
+> On 01/09/2019 04:37 AM, Michael Ellerman wrote:
+>> Bjorn Helgaas <helgaas@kernel.org> writes:
+>>> I want to update the PCI Kconfig labels so they're more consistent and
+>>> useful to users, something like the patch below.  IIUC, the items
+>>> below are all IBM-related; please correct me if not.
+>>>
+>>> I'd also like to expand (or remove) "RPA" because Google doesn't find
+>>> anything about "IBM RPA", except Robotic Process Automation, which I
+>>> think must be something else.
+>> 
+>> Yeah I think just remove it, it's not a well known term and is unlikely
+>> to help anyone these days.
+>> 
+>> It stands for "RISC Platform Architecture", which was some kind of
+>> specification for Power machines back in the day, but from what I can
+>> tell it was never used in marketing or manuals much (hence so few hits
+>> on Google).
+>
+> It is basically the predecessor to PAPR "Power Architecture Platform Reference".
+> Which the LoPAPR document is available through power.org. Not sure if there is
+> any desire to adopt PAPR in place of RPA. It is the platform reference doc that
+> outlines how we do DLPAR and PCI Hotplug.
 
-Any further comment on these patches?
+True. But a user is unlikely to know "PAPR" either, and it googles badly.
 
-Regards
-Ley Foon
+LoPAPR I guess is better, you can google for it, though I'm not entirely
+sure if everything used by this code is actually in LoPAPR, because some
+bits of PAPR were ripped out of LoPAPR.
+
+>>> Ideally the PCI Kconfig labels would match the terms used in
+>>> arch/.../Kconfig, e.g.,
+>>>
+>>>   config PPC_POWERNV
+>>>     bool "IBM PowerNV (Non-Virtualized) platform support"
+>>>
+>>>   config PPC_PSERIES
+>>>     bool "IBM pSeries & new (POWER5-based) iSeries"
+>> 
+>> TBH these are pretty unhelpful too. PowerNV is not a marketing name and
+>> so doesn't appear anywhere much in official manuals or brochures and
+>> it's also used on non-IBM branded machines. And pSeries & iSeries were
+>> marketing names but are no longer used.
+>
+> pseries is still used as a machine type for PAPR compliant qemu/kvm instances.
+
+Yeah so I guess it's helpful for someone configuring a kernel with that
+in mind.
+
+But if you've bought an IBM branded system the "pseries" name is not
+used anywhere AFAIK.
+
+cheers
