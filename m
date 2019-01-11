@@ -7,77 +7,93 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 919F4C43387
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 14:59:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA42C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 15:02:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 58DC22133F
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 14:59:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C70620874
+	for <linux-pci@archiver.kernel.org>; Fri, 11 Jan 2019 15:02:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1547218755;
-	bh=964eseWC+a5uNB5Bz8quszPDxhHTwysLcQtKrQLjIHM=;
+	s=default; t=1547218968;
+	bh=xxlTdTds1EgVnz1D9wGgpHBcLFHxWcHUx2+evsCrUIU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=NXAMnk7mvPCiod8w/Ud3qA6WOFy07YyoOq/fRDQfLy3Nt/rEZTfn9feJEP7HSHjTW
-	 wUVoIw26xJ5Os2Qqv+EGbWghfssf1JRlkUqDRbaZgKn6IhnQbAeZDktDDw8uaBb0fV
-	 /typn2ZwYMDC21JA9jI1thF6FX8y2E6xDlsGhDaI=
+	b=XRS+QMrU3nly4UHzF0U7qraDNC4oq0q/vLl+CxmUxxoj2W2BaWI2mSNGaPLPZuaXR
+	 +6n1aj7K2s8Vj5maVJn0JekeMHy51buXHqdPlUigdvimJ3KV91aWWXBbzfgPqvObrJ
+	 W7343o8l5YoXZvid8yiwGUIDY318BaHiLus0VRok=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389722AbfAKO7I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Jan 2019 09:59:08 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:37465 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387948AbfAKO7H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2019 09:59:07 -0500
-Received: by mail-ot1-f65.google.com with SMTP id s13so4830118otq.4;
-        Fri, 11 Jan 2019 06:59:07 -0800 (PST)
+        id S2389178AbfAKPCk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 11 Jan 2019 10:02:40 -0500
+Received: from mail-oi1-f170.google.com ([209.85.167.170]:36463 "EHLO
+        mail-oi1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389171AbfAKOb0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Jan 2019 09:31:26 -0500
+Received: by mail-oi1-f170.google.com with SMTP id x23so12337297oix.3;
+        Fri, 11 Jan 2019 06:31:25 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=DEiE0eIWL0l52ydQkBLYPcSEvU6l2DyGvvRi/3/8IPk=;
-        b=CKIUnlV3rrp6bZDEcEvrXvjxN0ZMHRBj4LgsA8y55n3yCqOO7cJGxlZmQplVDMbY/L
-         m+guzOoZPQ/zF/X/0GGp7AgWoUuKGWRILDtTqVrPbscNXd90ZVBWi0d05w6dg2hjqpQN
-         JCUvwHTVFbUwsXCjcwSgn44frg1WyX1POvL0Y/NWpfDBMAMzsYDvHbLTw00qigIUlWoD
-         0t01O9rmo/P63FkjVEN1lU1I4TsCwZKhKaz4mEiDLpjF+OTm1TJgC6lR6IJ7rk+HEaXy
-         JCIP60dr/gP3PlGfOBW3TbuNe7aeHIhRNGhoh/9a1R8LeLEGhnh+02zEOZ+5hWzBT2VY
-         5c3A==
-X-Gm-Message-State: AJcUukevZUAs7wX+3zxvD6f74BZmsB8i7uStF1Cw7dpu6FYUICqxmzFu
-        YXFgIkVHNgfE7l62P1d89Q==
-X-Google-Smtp-Source: ALg8bN4O7gK3lpkKCyIQNbgyjf7eQe0KJylqNMvLXQkuVV1pz1b0Y4gGIta4cvdqp3dJM9WkFZyIuQ==
-X-Received: by 2002:a9d:6f0b:: with SMTP id n11mr9161006otq.363.1547218747249;
-        Fri, 11 Jan 2019 06:59:07 -0800 (PST)
+        bh=fVy93fNR+ZKX3Oyx2564C6JZXIF8X9/cPZx9J8v4si4=;
+        b=sVaP7BhqZ6E6VAjRTyMvSW5AO1rQYH9M55KhesCGyZuGCeruiQDuDQDSTSFPmqX2Eu
+         gfwpSA2lGmd+dALGBj6R7OZUlFMqUH3Lg1fsFDJInkNKlqFetTHrzl26K2+I6+dxgJkW
+         VMvd0zPmjMxYt4miSuwPVpwgHFSMtmkRP5gD0UEFb9+ZfUHElUvcrVY6Qb0fxcFCRfST
+         Y7loifIrNyPadzqyti5nyvyBWmz/zclCcYnY10RyzgmtTj8RGtdkrcvbvUHX6SPzWum1
+         w8i1/ajs65FnjIzaQYNRtKOwu5gXBoITWYoLTej7Nm8APf87oIxOdeYHlRhrHVqYfdiY
+         NUjQ==
+X-Gm-Message-State: AJcUukf6qNaaIil7qlDLcYTKFmcb3ztQAU5oJi2esJVAdYFOBEBXToAW
+        rkTeKsBJqWgqFSsgRLcZ7g==
+X-Google-Smtp-Source: ALg8bN4WsQm0l3CE4srtcBiKuMuAevRTcBgPlfPUqntmq9IuC1T6tqgtGT5vBulJsp2Blm2mGs2dsg==
+X-Received: by 2002:aca:bf06:: with SMTP id p6mr8778071oif.269.1547217084941;
+        Fri, 11 Jan 2019 06:31:24 -0800 (PST)
 Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id b2sm10744632oia.8.2019.01.11.06.59.06
+        by smtp.gmail.com with ESMTPSA id x9sm32990078otq.73.2019.01.11.06.31.23
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 11 Jan 2019 06:59:06 -0800 (PST)
-Date:   Fri, 11 Jan 2019 08:59:06 -0600
+        Fri, 11 Jan 2019 06:31:24 -0800 (PST)
+Date:   Fri, 11 Jan 2019 08:31:23 -0600
 From:   Rob Herring <robh@kernel.org>
-To:     Ley Foon Tan <ley.foon.tan@intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, lftan.linux@gmail.com,
-        Ley Foon Tan <ley.foon.tan@intel.com>
-Subject: Re: [PATCH v3 2/2] dt-bindings: PCI: altera: Add
- altr,pcie-root-port-2.0
-Message-ID: <20190111145906.GA1299@bogus>
-References: <1546409810-37630-1-git-send-email-ley.foon.tan@intel.com>
- <1546409810-37630-3-git-send-email-ley.foon.tan@intel.com>
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
+        lorenzo.pieralisi@arm.com, arnd@arndb.de,
+        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com, kstewart@linuxfoundation.org,
+        cyrille.pitchen@free-electrons.com, pombredanne@nexb.com,
+        shawn.lin@rock-chips.com, niklas.cassel@axis.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: Re: [PATCHv4 1/4] dt-bindings: add DT binding for the layerscape
+ PCIe controller with EP mode
+Message-ID: <20190111143123.GA6960@bogus>
+References: <20190108030922.24031-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1546409810-37630-3-git-send-email-ley.foon.tan@intel.com>
+In-Reply-To: <20190108030922.24031-1-xiaowei.bao@nxp.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed,  2 Jan 2019 14:16:49 +0800, Ley Foon Tan wrote:
-> Add support for altr,pcie-root-port-2.0.
+On Tue,  8 Jan 2019 11:09:19 +0800, Xiaowei Bao wrote:
+> Add the documentation for the Device Tree binding for the layerscape PCIe
+> controller with EP mode.
 > 
-> Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 > ---
->  .../devicetree/bindings/pci/altera-pcie.txt        |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
+> v2:
+>  - Add the SoC specific compatibles.
+> v3:
+>  - modify the commit message.
+> v4:
+>  - no change.
+> 
+>  .../devicetree/bindings/pci/layerscape-pci.txt     |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
 > 
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Please add Acked-by/Reviewed-by tags when posting new versions. However,
+there's no need to repost patches *only* to add the tags. The upstream
+maintainer will do that for acks received on the version they apply.
+
+If a tag was not added on purpose, please state why and what changed.
