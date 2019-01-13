@@ -2,123 +2,112 @@ Return-Path: <SRS0=Wepl=PV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F034DC43387
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Jan 2019 12:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44E16C43387
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Jan 2019 12:38:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3DFB20879
-	for <linux-pci@archiver.kernel.org>; Sun, 13 Jan 2019 12:30:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16F692063F
+	for <linux-pci@archiver.kernel.org>; Sun, 13 Jan 2019 12:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725881AbfAMMab (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 13 Jan 2019 07:30:31 -0500
-Received: from guitar.tcltek.co.il ([192.115.133.116]:52903 "EHLO
+        id S1726434AbfAMMiE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 13 Jan 2019 07:38:04 -0500
+Received: from guitar.tcltek.co.il ([192.115.133.116]:52915 "EHLO
         mx.tkos.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725875AbfAMMab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 13 Jan 2019 07:30:31 -0500
-Received: from tarshish.tkos.co.il (unknown [10.0.8.6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726302AbfAMMiD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 13 Jan 2019 07:38:03 -0500
+Received: from tarshish (unknown [10.0.8.6])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx.tkos.co.il (Postfix) with ESMTPS id 8793D4400E1;
-        Sun, 13 Jan 2019 14:30:27 +0200 (IST)
+        by mx.tkos.co.il (Postfix) with ESMTPS id 1469B4400E1;
+        Sun, 13 Jan 2019 14:38:01 +0200 (IST)
+References: <024cc24efa7b99186750f90c91880b29357d379d.1547123182.git.baruch@tkos.co.il> <94cd23a60c647020dd87a923684b59255b89f02c.1547123182.git.baruch@tkos.co.il> <20190110125548.GA29612@lunn.ch> <8736q0irwy.fsf@tarshish> <20190110131912.GB29612@lunn.ch> <87zhs8h5ej.fsf@tarshish>
+User-agent: mu4e 1.0; emacs 26.1
 From:   Baruch Siach <baruch@tkos.co.il>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+To:     Andrew Lunn <andrew@lunn.ch>
+Cc:     linux-pwm@vger.kernel.org,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Sven Auhagen <sven.auhagen@voleatech.de>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Sven Auhagen <sven.auhagen@voleatech.de>,
         Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
+        linux-gpio@vger.kernel.org, linux-pci@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Gregory Clement <gregory.clement@bootlin.com>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Baruch Siach <baruch@tkos.co.il>
-Subject: [PATCH] Revert "PCI: armada8k: Add support for gpio controlled reset signal"
-Date:   Sun, 13 Jan 2019 14:28:14 +0200
-Message-Id: <2e0f1e9d250b6ee1b3039362affc411751a3cd4a.1547382494.git.baruch@tkos.co.il>
-X-Mailer: git-send-email 2.20.1
+        linux-arm-kernel@lists.infradead.org,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 2/2] PCI: armada8k: don't toggle reset twice
+In-reply-to: <87zhs8h5ej.fsf@tarshish>
+Date:   Sun, 13 Jan 2019 14:38:00 +0200
+Message-ID: <87pnt0vil3.fsf@tarshish>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This reverts commit 3d71746c420c1c1c27cf5c4e48f8fa0a6cfdc185.
+Hi Andrew,
 
-That commit breaks boot on Macchiatobin when a Mellanox NIC is in the
-PCIe slot.
+On Thu, Jan 10 2019, Baruch Siach wrote:
+> On Thu, Jan 10 2019, Andrew Lunn wrote:
+>>> Sven Auhagen reported the same issue with Intel NIC attached to
+>>> mini-PCIe slots on a custom Armada 8K design.
+>>
+>> O.K. so that suggests the issue is on the Armada side.
+>>
+>>> How would you suggest to investigate this issue?
+>>
+>> I presume reboot works O.K? So it is possible to toggle the reset
+>> multiple times, but reboot must do something additional which makes it
+>> work? Do you have sources for the bootloader?
+>
+> The bootloader is current U-Boot master as BL33 of Marvell provided ATF
+> version 18.12, current latest.
+>
+>> Are there status bits in the comphy about the state of the link? Maybe
+>> comphy needs to be kicked to reestablish the link?
+>
+> Maybe. The U-Boot comphy PCIe initialization routine
+> comphy_pcie_power_up() is long and complex.
+>
+> The ATF code also carries PCIe comphy initialization with this text:
+>
+> https://github.com/MarvellEmbeddedProcessors/atf-marvell/blob/atf-v1.5-armada-18.12/drivers/marvell/comphy/phy-comphy-cp110.c#L1170
+>
+>         /* In Armada 8K DB boards, PCIe initialization can be executed
+>          * only once (PCIe reset performed during chip power on and
+>          * it cannot be executed via GPIO later).
+>          * This means that power on can be executed only once, so let's
+>          * mark if the caller is bootloader or Linux.
+>          * If bootloader -> run power on.
+>          * If Linux -> exit.
+>          *
+>          * TODO: In MacciatoBIN, PCIe reset is connected via GPIO,
+>          * so after GPIO reset is added to Linux Kernel, it can be
+>          * powered-on by Linux.
+>          */
+>         if (!called_from_uboot)
+>                 return ret;
 
-It turns out that full reset cycle requires first comphy serdes
-initialization. Reset signal toggle without comphy initialization makes
-access to PCI configuration registers stall indefinitely. U-Boot toggles
-the Macchiatobin PCIe reset line already at boot, after initializing the
-comphy serdes.
+Another look at this comment made me realize that we need comphy
+initialization support in the kernel for PCIe reset to work correctly.
 
-So while commit 3d71746c42 enables PCIe on platforms that U-Boot does
-not (yet) touch the reset line (like Clearfog GT-8K), it breaks PCIe
-(and boot) on the Macchiatobin.
+The workaround that this patch proposes will not solve the problem for
+v5.0, since the GPIO get_direction patch will only appear in v5.1.
 
-Revert commit 3d71746c42 entirely for now to fix the Macchaitobin
-regression. Proper PCIe reset support would require PCIe comphy setup
-support. That must wait for another kernel release.
+So the only viable solution for v5.0 is to revert the gpio reset signal
+patch (commit 3d71746c42).
 
-Reported-by: Sven Auhagen <sven.auhagen@voleatech.de>
-Signed-off-by: Baruch Siach <baruch@tkos.co.il>
----
- drivers/pci/controller/dwc/pcie-armada8k.c | 16 ----------------
- 1 file changed, 16 deletions(-)
+Thanks for your review.
 
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index b171b6bc15c8..0c389a30ef5d 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -22,7 +22,6 @@
- #include <linux/resource.h>
- #include <linux/of_pci.h>
- #include <linux/of_irq.h>
--#include <linux/gpio/consumer.h>
- 
- #include "pcie-designware.h"
- 
-@@ -30,7 +29,6 @@ struct armada8k_pcie {
- 	struct dw_pcie *pci;
- 	struct clk *clk;
- 	struct clk *clk_reg;
--	struct gpio_desc *reset_gpio;
- };
- 
- #define PCIE_VENDOR_REGS_OFFSET		0x8000
-@@ -139,12 +137,6 @@ static int armada8k_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct armada8k_pcie *pcie = to_armada8k_pcie(pci);
- 
--	if (pcie->reset_gpio) {
--		/* assert and then deassert the reset signal */
--		gpiod_set_value_cansleep(pcie->reset_gpio, 1);
--		msleep(100);
--		gpiod_set_value_cansleep(pcie->reset_gpio, 0);
--	}
- 	dw_pcie_setup_rc(pp);
- 	armada8k_pcie_establish_link(pcie);
- 
-@@ -257,14 +249,6 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 		goto fail_clkreg;
- 	}
- 
--	/* Get reset gpio signal and hold asserted (logically high) */
--	pcie->reset_gpio = devm_gpiod_get_optional(dev, "reset",
--						   GPIOD_OUT_HIGH);
--	if (IS_ERR(pcie->reset_gpio)) {
--		ret = PTR_ERR(pcie->reset_gpio);
--		goto fail_clkreg;
--	}
--
- 	platform_set_drvdata(pdev, pcie);
- 
- 	ret = armada8k_add_pcie_port(pcie, pdev);
--- 
-2.20.1
+baruch
 
+--
+     http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
+=}------------------------------------------------ooO--U--Ooo------------{=
+   - baruch@tkos.co.il - tel: +972.52.368.4656, http://www.tkos.co.il -
