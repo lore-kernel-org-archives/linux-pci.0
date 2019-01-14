@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1F50C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4342FC43387
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2E412086D
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:27:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15B5620896
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tk77drck"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="hFhA8QE8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726774AbfANN1s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jan 2019 08:27:48 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:41154 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726717AbfANN1r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:27:47 -0500
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDQh1v041581;
-        Mon, 14 Jan 2019 07:26:43 -0600
+        id S1726771AbfANN14 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Jan 2019 08:27:56 -0500
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:41344 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726717AbfANN1z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:27:55 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDQmWa019648;
+        Mon, 14 Jan 2019 07:26:48 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1547472403;
-        bh=CF5ivThAeVhsXGcV5WpV6w68ilrQQqK8YE1SR4Z9I10=;
+        s=ti-com-17Q1; t=1547472408;
+        bh=0PiaQYnV59ccfwEhn8gPR5j82jBP2sS0jMXzDzaA8TY=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=tk77drck6OKnLY9dkDBCKf0sySURytF9x0xxMOPFRCwcQZacNAStG107CmJDsQSmR
-         r9+a5K2+EQ8KCsvpdbW4C/MY0hSXsdSyzqEbAPOAFj0g958OSBIGxdAPUCIUsSc3kt
-         WtPG9Dy6s5YO1Q06AsX4zxT97WE4I625be1FHFCQ=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDQhtG089758
+        b=hFhA8QE82uMeSb5OF7qMlUx6XubeLPJNUbOTu8pcgaQaL98xcm7YrnF8fMnDsopih
+         7trFXBk+ZF6gKvoVgNkgxThAyfJOGvhWTOXhA+L2cb8LCuqsAyoBQnprtQsrnsGoCv
+         mUKcD/laa7eRygEsk9MHJAKduAPXVkBzQRUa1WBg=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDQmfb095069
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Jan 2019 07:26:43 -0600
-Received: from DFLE113.ent.ti.com (10.64.6.34) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 14 Jan 2019 07:26:48 -0600
+Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 14
- Jan 2019 07:26:42 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE113.ent.ti.com
- (10.64.6.34) with Microsoft SMTP Server (version=TLS1_0,
+ Jan 2019 07:26:46 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE101.ent.ti.com
+ (10.64.6.22) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 14 Jan 2019 07:26:42 -0600
+ Mon, 14 Jan 2019 07:26:47 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWi028516;
-        Mon, 14 Jan 2019 07:26:38 -0600
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWj028516;
+        Mon, 14 Jan 2019 07:26:43 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -61,62 +61,85 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH 22/24] PCI: designware-ep: Use aligned ATU window for raising MSI interrupts
-Date:   Mon, 14 Jan 2019 18:54:22 +0530
-Message-ID: <20190114132424.6445-23-kishon@ti.com>
+Subject: [PATCH 23/24] misc: pci_endpoint_test: Add support to test PCI EP in AM654x
+Date:   Mon, 14 Jan 2019 18:54:23 +0530
+Message-ID: <20190114132424.6445-24-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190114132424.6445-1-kishon@ti.com>
 References: <20190114132424.6445-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Certain platforms like K2G reguires the outbound ATU window to be
-aligned. The alignment size is already present in mem->page_size.
-Use the alignment size present in mem->page_size to configre a
-aligned ATU window. In order to raise an interrupt, CPU has to write
-to address offset from the start of the window unlike before where
-writes were always to the beginning of the ATU window.
+TI's AM654x PCIe EP has a restriction that BAR_0 is mapped to
+application registers. "PCIe Inbound Address Translation" section in
+AM65x Sitara Processors TRM (SPRUID7 – April 2018) describes BAR0 is
+reserved. Configure pci_endpoint_test to use BAR_2 instead.
+Also set alignment to 64K since "PCIe Subsystem Address Translation"
+section in TRM indicates minimum ATU window size is 64K.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/misc/pci_endpoint_test.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 47cc06bac91f..f557e83bc34c 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -397,6 +397,7 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct pci_epc *epc = ep->epc;
-+	unsigned int aligned_offset;
- 	u16 msg_ctrl, msg_data;
- 	u32 msg_addr_lower, msg_addr_upper, reg;
- 	u64 msg_addr;
-@@ -422,13 +423,15 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 		reg = ep->msi_cap + PCI_MSI_DATA_32;
- 		msg_data = dw_pcie_readw_dbi(pci, reg);
- 	}
--	msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-+	aligned_offset = msg_addr_lower & (epc->mem->page_size - 1);
-+	msg_addr = ((u64)msg_addr_upper) << 32 |
-+			(msg_addr_lower & ~aligned_offset);
- 	ret = dw_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys, msg_addr,
- 				  epc->mem->page_size);
- 	if (ret)
- 		return ret;
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 896e2df9400f..6dfaeeaeec0a 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -75,6 +75,11 @@
+ #define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
+ #define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
  
--	writel(msg_data | (interrupt_num - 1), ep->msi_mem);
-+	writel(msg_data | (interrupt_num - 1), ep->msi_mem + aligned_offset);
++#define PCI_DEVICE_ID_TI_AM654			0xb00c
++
++#define is_am654_pci_dev(pdev)		\
++		((pdev)->device == PCI_DEVICE_ID_TI_AM654)
++
+ static DEFINE_IDA(pci_endpoint_test_ida);
  
- 	dw_pcie_ep_unmap_addr(epc, func_no, ep->msi_mem_phys);
+ #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
+@@ -588,6 +593,7 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ 	int ret = -EINVAL;
+ 	enum pci_barno bar;
+ 	struct pci_endpoint_test *test = to_endpoint_test(file->private_data);
++	struct pci_dev *pdev = test->pdev;
  
+ 	mutex_lock(&test->mutex);
+ 	switch (cmd) {
+@@ -595,6 +601,8 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
+ 		bar = arg;
+ 		if (bar < 0 || bar > 5)
+ 			goto ret;
++		if (is_am654_pci_dev(pdev) && bar == BAR_0)
++			goto ret;
+ 		ret = pci_endpoint_test_bar(test, bar);
+ 		break;
+ 	case PCITEST_LEGACY_IRQ:
+@@ -785,10 +793,18 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 	pci_disable_device(pdev);
+ }
+ 
++static const struct pci_endpoint_test_data am654_data = {
++	.test_reg_bar = BAR_2,
++	.alignment = SZ_64K,
++};
++
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
++	  .driver_data = (kernel_ulong_t)&am654_data
++	},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
 -- 
 2.17.1
 
