@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73304C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EF7CC43444
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B1992087E
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 644FF20651
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="az+c5PAy"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="bgyT0zhx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726909AbfANN0s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jan 2019 08:26:48 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:37462 "EHLO
+        id S1726869AbfANN0p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Jan 2019 08:26:45 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:37452 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726899AbfANN0s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:26:48 -0500
+        with ESMTP id S1726653AbfANN0o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:26:44 -0500
 Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDQEa8098245;
-        Mon, 14 Jan 2019 07:26:14 -0600
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDQIVD098267;
+        Mon, 14 Jan 2019 07:26:18 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1547472374;
-        bh=JBZ+KApRI2tD19Gjs/0efSSSLgbMPMBQuRhTfDhOm2w=;
+        s=ti-com-17Q1; t=1547472378;
+        bh=1cBzf8O7pgKPJLJpe2QIGf7wnuv4q+HWdzVaE+h4hbQ=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=az+c5PAyuQYI/R4OJ6Yb4NImGUbk5jupD15MptWEu+9jq8Vjepl8fvI5GhZ1VDFtN
-         0JBWxlxcCdNaFAo0lsw1aXpSFqGOMvp4NY2uqZGX2+fQHS3qFXPyDTuI4BO1JRlt9B
-         ieAwuUla1SUZN6P/xy1KzbzAtIDHBP37WeZD57bc=
-Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDQExh057326
+        b=bgyT0zhx5yihzelR3UnzYLsdRrwtvMLZBQv1133Pw15tSLJDry174Vqrccylk2Enf
+         koOPPMuTnDtK7qMlQ+gJaVWzsENRihV3LeNXCLud6WVxwxMRLDBrR0s/BVhrLZkHVA
+         3Wu5aseWTX/8eIp+CssiQmY0bAqdW0Ov823EsLYo=
+Received: from DFLE111.ent.ti.com (dfle111.ent.ti.com [10.64.6.32])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDQIYC057353
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Jan 2019 07:26:14 -0600
-Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 14 Jan 2019 07:26:18 -0600
+Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE111.ent.ti.com
+ (10.64.6.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 14
- Jan 2019 07:26:13 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_0,
+ Jan 2019 07:26:18 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 14 Jan 2019 07:26:12 -0600
+ Mon, 14 Jan 2019 07:26:18 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWc028516;
-        Mon, 14 Jan 2019 07:26:09 -0600
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWd028516;
+        Mon, 14 Jan 2019 07:26:14 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -61,9 +61,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH 16/24] PCI: endpoint: Add support to allocate aligned buffers to be mapped in BARs
-Date:   Mon, 14 Jan 2019 18:54:16 +0530
-Message-ID: <20190114132424.6445-17-kishon@ti.com>
+Subject: [PATCH 17/24] PCI: dwc: Add const qualifier to struct dw_pcie_ep_ops
+Date:   Mon, 14 Jan 2019 18:54:17 +0530
+Message-ID: <20190114132424.6445-18-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190114132424.6445-1-kishon@ti.com>
 References: <20190114132424.6445-1-kishon@ti.com>
@@ -75,115 +75,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Modify pci_epf_alloc_space API to take alignment size as argument in
-order to argument in order to allocate aligned buffers to be mapped to
-BARs.
-
-Add 'align' parameter to epc_features which can be used by platform
-drivers to specifiy the BAR allocation alignment requirements and use
-this while invoking pci_epf_alloc_space.
-
-This is mainly required for Synopsys Designware PCIe core which masks
-the lower bits based on the BAR size (See "I/O and MEM Match Modes"
-section in DesignWare Cores PCI Express Controller Databook version
-4.90a).
+Add const qualifier to struct dw_pcie_ep_ops member of
+struct dw_pcie_ep.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/functions/pci-epf-test.c |  5 +++--
- drivers/pci/endpoint/pci-epf-core.c           | 10 ++++++++--
- include/linux/pci-epc.h                       |  2 ++
- include/linux/pci-epf.h                       |  3 ++-
- 4 files changed, 15 insertions(+), 5 deletions(-)
+ drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
+ drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 2e0fb231ce0c..faffae2551ed 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -438,7 +438,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 	epc_features = epf_test->epc_features;
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 15620cfa617b..b4fbb4be212f 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -401,7 +401,7 @@ dra7xx_pcie_get_features(struct dw_pcie_ep *ep)
+ 	return &dra7xx_pcie_epc_features;
+ }
  
- 	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
--				   test_reg_bar);
-+				   test_reg_bar, epc_features->align);
- 	if (!base) {
- 		dev_err(dev, "Failed to allocated register space\n");
- 		return -ENOMEM;
-@@ -453,7 +453,8 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 		if (!!(epc_features->reserved_bar & (1 << bar)))
- 			continue;
+-static struct dw_pcie_ep_ops pcie_ep_ops = {
++static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.ep_init = dra7xx_pcie_ep_init,
+ 	.raise_irq = dra7xx_pcie_raise_irq,
+ 	.get_features = dra7xx_pcie_get_features,
+diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+index dba83abfe764..d00252bd8fae 100644
+--- a/drivers/pci/controller/dwc/pcie-artpec6.c
++++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+@@ -444,7 +444,7 @@ static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	return 0;
+ }
  
--		base = pci_epf_alloc_space(epf, bar_size[bar], bar);
-+		base = pci_epf_alloc_space(epf, bar_size[bar], bar,
-+					   epc_features->align);
- 		if (!base)
- 			dev_err(dev, "Failed to allocate space for BAR%d\n",
- 				bar);
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 8bfdcd291196..fb1306de8f40 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -109,10 +109,12 @@ EXPORT_SYMBOL_GPL(pci_epf_free_space);
-  * pci_epf_alloc_space() - allocate memory for the PCI EPF register space
-  * @size: the size of the memory that has to be allocated
-  * @bar: the BAR number corresponding to the allocated register space
-+ * @align: alignment size for the allocation region
-  *
-  * Invoke to allocate memory for the PCI EPF register space.
-  */
--void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
-+void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
-+			  size_t align)
- {
- 	void *space;
- 	struct device *dev = epf->epc->dev.parent;
-@@ -120,7 +122,11 @@ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
- 
- 	if (size < 128)
- 		size = 128;
--	size = roundup_pow_of_two(size);
-+
-+	if (align)
-+		size = ALIGN(size, align);
-+	else
-+		size = roundup_pow_of_two(size);
- 
- 	space = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
- 	if (!space) {
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index c3ffa3917f88..f641badc2c61 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -109,6 +109,7 @@ struct pci_epc {
-  * @reserved_bar: bitmap to indicate reserved BAR unavailable to function driver
-  * @bar_fixed_64bit: bitmap to indicate fixed 64bit BARs
-  * @bar_fixed_size: Array specifying the size supported by each BAR
-+ * @align: alignment size required for BAR buffer allocation
-  */
- struct pci_epc_features {
- 	unsigned int	linkup_notifier : 1;
-@@ -117,6 +118,7 @@ struct pci_epc_features {
- 	u8	reserved_bar;
- 	u8	bar_fixed_64bit;
- 	u64	bar_fixed_size[BAR_5 + 1];
-+	size_t	align;
+-static struct dw_pcie_ep_ops pcie_ep_ops = {
++static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.ep_init = artpec6_pcie_ep_init,
+ 	.raise_irq = artpec6_pcie_raise_irq,
  };
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 3be87126aef3..0852f42ad844 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -108,7 +108,7 @@ dw_plat_pcie_get_features(struct dw_pcie_ep *ep)
+ 	return &dw_plat_pcie_epc_features;
+ }
  
- #define to_pci_epc(device) container_of((device), struct pci_epc, dev)
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index ec02f58758c8..2d6f07556682 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -149,7 +149,8 @@ void pci_epf_destroy(struct pci_epf *epf);
- int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 			      struct module *owner);
- void pci_epf_unregister_driver(struct pci_epf_driver *driver);
--void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar);
-+void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
-+			  size_t align);
- void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar);
- int pci_epf_bind(struct pci_epf *epf);
- void pci_epf_unbind(struct pci_epf *epf);
+-static struct dw_pcie_ep_ops pcie_ep_ops = {
++static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.ep_init = dw_plat_pcie_ep_init,
+ 	.raise_irq = dw_plat_pcie_ep_raise_irq,
+ 	.get_features = dw_plat_pcie_get_features,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 4ab2e3dbd6bb..8a941f2fffcb 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -193,7 +193,7 @@ struct dw_pcie_ep_ops {
+ 
+ struct dw_pcie_ep {
+ 	struct pci_epc		*epc;
+-	struct dw_pcie_ep_ops	*ops;
++	const struct dw_pcie_ep_ops *ops;
+ 	phys_addr_t		phys_base;
+ 	size_t			addr_size;
+ 	size_t			page_size;
 -- 
 2.17.1
 
