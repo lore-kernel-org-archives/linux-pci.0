@@ -2,94 +2,65 @@ Return-Path: <SRS0=hqs4=PW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D99EC43387
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 07:19:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A8BCC43387
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 10:42:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 180A520659
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 07:19:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 026BB20656
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 10:42:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726542AbfANHTP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jan 2019 02:19:15 -0500
-Received: from guitar.tcltek.co.il ([192.115.133.116]:52956 "EHLO
-        mx.tkos.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726449AbfANHTO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Jan 2019 02:19:14 -0500
-Received: from sapphire.tkos.co.il (unknown [10.0.4.3])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726187AbfANKmw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Jan 2019 05:42:52 -0500
+Received: from ozlabs.org ([203.11.71.1]:42437 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726064AbfANKmw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Jan 2019 05:42:52 -0500
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by mx.tkos.co.il (Postfix) with ESMTPS id 14ED44405BD;
-        Mon, 14 Jan 2019 09:19:11 +0200 (IST)
-Date:   Mon, 14 Jan 2019 09:19:09 +0200
-From:   Baruch Siach <baruch@tkos.co.il>
-To:     Linus Walleij <linus.walleij@linaro.org>
-Cc:     Andrew Lunn <andrew@lunn.ch>, linux-pwm@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sven Auhagen <sven.auhagen@voleatech.de>,
-        Jason Cooper <jason@lakedaemon.net>,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH 2/2] PCI: armada8k: don't toggle reset twice
-Message-ID: <20190114071909.5cz4pg4bsdo7htob@sapphire.tkos.co.il>
-References: <024cc24efa7b99186750f90c91880b29357d379d.1547123182.git.baruch@tkos.co.il>
- <94cd23a60c647020dd87a923684b59255b89f02c.1547123182.git.baruch@tkos.co.il>
- <20190110125548.GA29612@lunn.ch>
- <8736q0irwy.fsf@tarshish>
- <20190110131912.GB29612@lunn.ch>
- <87zhs8h5ej.fsf@tarshish>
- <87pnt0vil3.fsf@tarshish>
- <20190113154028.GB4635@lunn.ch>
- <CACRpkdY6UPcWds3swtRM_OMu3hCJcdicbo29b5JEcRBNC4L+vg@mail.gmail.com>
+        by ozlabs.org (Postfix) with ESMTPSA id 43dVRY21Ynz9s9G;
+        Mon, 14 Jan 2019 21:42:49 +1100 (AEDT)
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     Segher Boessenkool <segher@kernel.crashing.org>
+Cc:     Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-s390@vger.kernel.org,
+        Heiko Carstens <heiko.carstens@de.ibm.com>,
+        linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+        linux-pci@vger.kernel.org,
+        Martin Schwidefsky <schwidefsky@de.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: Kconfig label updates
+In-Reply-To: <20190111112024.GD14180@gate.crashing.org>
+References: <20190108223024.GA147017@google.com> <87tviiroqy.fsf@concordia.ellerman.id.au> <83241c8b-8f44-162b-b42a-0f4f9bb858e7@linux.vnet.ibm.com> <874lafg23v.fsf@concordia.ellerman.id.au> <20190111112024.GD14180@gate.crashing.org>
+Date:   Mon, 14 Jan 2019 21:42:48 +1100
+Message-ID: <87muo3zfiv.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACRpkdY6UPcWds3swtRM_OMu3hCJcdicbo29b5JEcRBNC4L+vg@mail.gmail.com>
-User-Agent: NeoMutt/20180716
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Linus,
+Segher Boessenkool <segher@kernel.crashing.org> writes:
 
-On Mon, Jan 14, 2019 at 12:35:01AM +0100, Linus Walleij wrote:
-> On Sun, Jan 13, 2019 at 4:40 PM Andrew Lunn <andrew@lunn.ch> wrote:
-> > > Another look at this comment made me realize that we need comphy
-> > > initialization support in the kernel for PCIe reset to work correctly.
-> > >
-> > > The workaround that this patch proposes will not solve the problem for
-> > > v5.0, since the GPIO get_direction patch will only appear in v5.1.
-> >
-> > You could ask for it to be applied to v5.0 since a real fix depends on
-> > it.
-> 
-> If it makes a piece of hardware work that was working before and
-> now is not working as a result of other kernel changes I would
-> definately apply it because that is a clear cut regression.
-> 
-> I am under the impression that this is the case?
+> On Fri, Jan 11, 2019 at 05:06:12PM +1100, Michael Ellerman wrote:
+>> Tyrel Datwyler <tyreld@linux.vnet.ibm.com> writes:
+>> > It is basically the predecessor to PAPR "Power Architecture Platform Reference".
+>> > Which the LoPAPR document is available through power.org. Not sure if there is
+>> > any desire to adopt PAPR in place of RPA. It is the platform reference doc that
+>> > outlines how we do DLPAR and PCI Hotplug.
+>> 
+>> True. But a user is unlikely to know "PAPR" either, and it googles badly.
+>
+> Googling for "powerpc papr" works fine afais?  With a working link to a
+> pdf on the first page and all!
 
-The gpio-mvebu get_direction support enables a workaround for a regression 
-introduced in commit 3d71746c420c1 on the Macchiatobin platform. An 
-alternative solution is to revert the offending commit. The revert will not 
-break any known platform that has been previously supported in mainline 
-kernel. I tend to think that revert is a better course of action.
+True if you know to add "powerpc".
 
-It is up to the PCI maintainers to decide.
+I only get a link to LoPAPR, which is similar but not identical. If
+there's a link to PAPR then someone is in trouble :)
 
-baruch
-
--- 
-     http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
-=}------------------------------------------------ooO--U--Ooo------------{=
-   - baruch@tkos.co.il - tel: +972.2.679.5364, http://www.tkos.co.il -
+cheers
