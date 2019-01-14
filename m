@@ -2,268 +2,318 @@ Return-Path: <SRS0=hqs4=PW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD08C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 11:18:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ACBCC43387
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 11:42:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A37920656
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 11:18:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F0372086D
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 11:42:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="MnarZvli"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="B5J2We1j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726552AbfANLSR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jan 2019 06:18:17 -0500
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:45852 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726467AbfANLSQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 06:18:16 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EBGQCi112768;
-        Mon, 14 Jan 2019 05:16:26 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1547464586;
-        bh=2uDrXrY9NBnXdAPSRPaCNiNMbVveMwv8owns43GbBkk=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=MnarZvlipwvByteR3HR6kltcgVuYCM0wZpb5rzGs4pZVXqEnEZBpmj1sk9kt2QyF4
-         POUlhOGDIdZ2IpMJHyexPlsRBF9xR64X1xu08d98srBPQvUZ4mSDpDC3vV33FKErrk
-         Hkmr5VYlTuIxOxMrjwC0UdeXhHXDpTVPOgQCbPiM=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EBGQAU024080
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Jan 2019 05:16:26 -0600
-Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 14
- Jan 2019 05:16:25 -0600
-Received: from dflp32.itg.ti.com (10.64.6.15) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 14 Jan 2019 05:16:25 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EBFd1d011560;
-        Mon, 14 Jan 2019 05:16:22 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        id S1726515AbfANLmr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Jan 2019 06:42:47 -0500
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:38684 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726437AbfANLmr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 06:42:47 -0500
+Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 9317624E0F81;
+        Mon, 14 Jan 2019 03:42:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1547466167; bh=tjyI30pq+gRxRfGgJFK8IsypcHtuZc1SmD/n1cUr3EQ=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=B5J2We1jSX1Am5t7x7p5W8TKKzg89MpIwwMSee6Ir0g7iLediHeEa+Ku5bSW8FXJM
+         iDASeEpvLLm4WquoaIozi8ORkp26FFIbl8Uk6puqezadC6byDXln9oSNEvbaWXBPrT
+         JK8dplSXzXIpeRWDzvl1QfVZ8XpZONOJYYUqMoLnyaXoR0jZTT1tLm+H0uwP3C3bYH
+         VXVYfVLI3CzppDd9dAzK0ntzGcjMYtL798SW+xZ30B8226a/57UIzfA4YKlWWw/8fP
+         bAV7YCpEozw5ppC0N+/hslcH2C+3KOp15WR+cLhv6JSTPUUXbp+yu2MJqkHDCWqllx
+         Btn6qDcUbML9g==
+Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2-vip.internal.synopsys.com [10.12.239.238])
+        by mailhost.synopsys.com (Postfix) with ESMTP id D4294574E;
+        Mon, 14 Jan 2019 03:42:45 -0800 (PST)
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ US01WEHTC2.internal.synopsys.com (10.12.239.237) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 14 Jan 2019 03:42:45 -0800
+Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
+ DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 14 Jan 2019 12:42:43 +0100
+Received: from [10.107.25.131] (10.107.25.131) by
+ DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 14 Jan 2019 12:42:43 +0100
+Subject: Re: [RFC v3 5/7] dmaengine: Add Synopsys eDMA IP PCIe glue-logic
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Alan Douglas <adouglas@cadence.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>
-CC:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-rockchip@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 11/15] PCI: pci-epf-test: Use pci_epc_get_features to get EPC features
-Date:   Mon, 14 Jan 2019 16:45:09 +0530
-Message-ID: <20190114111513.21618-12-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190114111513.21618-1-kishon@ti.com>
-References: <20190114111513.21618-1-kishon@ti.com>
+        Joao Pinto <joao.pinto@synopsys.com>,
+        Jose Abreu <jose.abreu@synopsys.com>,
+        Luis Oliveira <luis.oliveira@synopsys.com>,
+        Vitor Soares <vitor.soares@synopsys.com>,
+        Nelson Costa <nelson.costa@synopsys.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>
+References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
+ <a70d096e96f34cd9ea773da519965076d74d12ec.1547230339.git.gustavo.pimentel@synopsys.com>
+ <20190111194705.GU9170@smile.fi.intel.com>
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <916f319b-9e45-6d78-4ecc-850feda84bb3@synopsys.com>
+Date:   Mon, 14 Jan 2019 11:38:02 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+In-Reply-To: <20190111194705.GU9170@smile.fi.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.107.25.131]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use pci_epc_get_features to get EPC features such as linkup
-notifier support, MSI/MSIX capable, BAR configuration etc and use it
-for configuring pci-epf-test. Since these features are now obtained
-directly from EPC driver, remove pci_epf_test_data which was initially
-added to have EPC features in endpoint function driver.
+On 11/01/2019 19:47, Andy Shevchenko wrote:
+> On Fri, Jan 11, 2019 at 07:33:41PM +0100, Gustavo Pimentel wrote:
+>> Synopsys eDMA IP is normally distributed along with Synopsys PCIe
+>> EndPoint IP (depends of the use and licensing agreement).
+>>
+>> This IP requires some basic configurations, such as:
+>>  - eDMA registers BAR
+>>  - eDMA registers offset
+>>  - eDMA registers size
+>>  - eDMA linked list memory BAR
+>>  - eDMA linked list memory offset
+>>  - eDMA linked list memory sze
+>>  - eDMA data memory BAR
+>>  - eDMA data memory offset
+>>  - eDMA data memory size
+>>  - eDMA version
+>>  - eDMA mode
+>>  - IRQs available for eDMA
+>>
+>> As a working example, PCIe glue-logic will attach to a Synopsys PCIe
+>> EndPoint IP prototype kit (Vendor ID = 0x16c3, Device ID = 0xedda),
+>> which has built-in an eDMA IP with this default configuration:
+>>  - eDMA registers BAR = 0
+>>  - eDMA registers offset = 0x00001000 (4 Kbytes)
+>>  - eDMA registers size = 0x00002000 (8 Kbytes)
+>>  - eDMA linked list memory BAR = 2
+>>  - eDMA linked list memory offset = 0x00000000 (0 Kbytes)
+>>  - eDMA linked list memory size = 0x00800000 (8 Mbytes)
+>>  - eDMA data memory BAR = 2
+>>  - eDMA data memory offset = 0x00800000 (8 Mbytes)
+>>  - eDMA data memory size = 0x03800000 (56 Mbytes)
+>>  - eDMA version = 0
+>>  - eDMA mode = EDMA_MODE_UNROLL
+>>  - IRQs = 1
+>>
+>> This driver can be compile as built-in or external module in kernel.
+>>
+>> To enable this driver just select DW_EDMA_PCIE option in kernel
+>> configuration, however it requires and selects automatically DW_EDMA
+>> option too.
+>>
+> 
+>> Changes:
+>> RFC v1->RFC v2:
+> 
+> Changes go after '--- ' line.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 87 ++++++++++++-------
- 1 file changed, 54 insertions(+), 33 deletions(-)
+At the last Linux Plumbers Conference there were some subsystem maintainers who
+asked that the track changes be included in the description as a way to not lose
+the previous work done. That why I put it before the '---' line, but it's
+indifferent to me, I can put it after the '---' line.
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index ade296180383..2e0fb231ce0c 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -47,9 +47,8 @@ struct pci_epf_test {
- 	void			*reg[6];
- 	struct pci_epf		*epf;
- 	enum pci_barno		test_reg_bar;
--	bool			linkup_notifier;
--	bool			msix_available;
- 	struct delayed_work	cmd_handler;
-+	const struct pci_epc_features *epc_features;
- };
- 
- struct pci_epf_test_reg {
-@@ -71,11 +70,6 @@ static struct pci_epf_header test_header = {
- 	.interrupt_pin	= PCI_INTERRUPT_INTA,
- };
- 
--struct pci_epf_test_data {
--	enum pci_barno	test_reg_bar;
--	bool		linkup_notifier;
--};
--
- static size_t bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
- 
- static int pci_epf_test_copy(struct pci_epf_test *epf_test)
-@@ -402,10 +396,16 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 	struct device *dev = &epf->dev;
- 	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
- 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
-+	const struct pci_epc_features *epc_features;
-+
-+	epc_features = epf_test->epc_features;
- 
- 	for (bar = BAR_0; bar <= BAR_5; bar++) {
- 		epf_bar = &epf->bar[bar];
- 
-+		if (!!(epc_features->reserved_bar & (1 << bar)))
-+			continue;
-+
- 		ret = pci_epc_set_bar(epc, epf->func_no, epf_bar);
- 		if (ret) {
- 			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-@@ -433,6 +433,9 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 	void *base;
- 	int bar;
- 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
-+	const struct pci_epc_features *epc_features;
-+
-+	epc_features = epf_test->epc_features;
- 
- 	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
- 				   test_reg_bar);
-@@ -446,6 +449,10 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 		epf_bar = &epf->bar[bar];
- 		if (bar == test_reg_bar)
- 			continue;
-+
-+		if (!!(epc_features->reserved_bar & (1 << bar)))
-+			continue;
-+
- 		base = pci_epf_alloc_space(epf, bar_size[bar], bar);
- 		if (!base)
- 			dev_err(dev, "Failed to allocate space for BAR%d\n",
-@@ -458,25 +465,50 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 	return 0;
- }
- 
-+static void pci_epf_configure_bar(struct pci_epf *epf,
-+				  const struct pci_epc_features *epc_features)
-+{
-+	struct pci_epf_bar *epf_bar;
-+	bool bar_fixed_64bit;
-+	int i;
-+
-+	for (i = BAR_0; i <= BAR_5; i++) {
-+		epf_bar = &epf->bar[i];
-+		bar_fixed_64bit = !!(epc_features->bar_fixed_64bit & (1 << i));
-+		if (bar_fixed_64bit)
-+			epf_bar->flags |= PCI_BASE_ADDRESS_MEM_TYPE_64;
-+		if (epc_features->bar_fixed_size[i])
-+			bar_size[i] = epc_features->bar_fixed_size[i];
-+	}
-+}
-+
- static int pci_epf_test_bind(struct pci_epf *epf)
- {
- 	int ret;
- 	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
- 	struct pci_epf_header *header = epf->header;
-+	const struct pci_epc_features *epc_features;
-+	enum pci_barno test_reg_bar = BAR_0;
- 	struct pci_epc *epc = epf->epc;
- 	struct device *dev = &epf->dev;
-+	bool linkup_notifier = false;
-+	bool msix_capable = false;
-+	bool msi_capable = true;
- 
- 	if (WARN_ON_ONCE(!epc))
- 		return -EINVAL;
- 
--	if (epc->features & EPC_FEATURE_NO_LINKUP_NOTIFIER)
--		epf_test->linkup_notifier = false;
--	else
--		epf_test->linkup_notifier = true;
--
--	epf_test->msix_available = epc->features & EPC_FEATURE_MSIX_AVAILABLE;
-+	epc_features = pci_epc_get_features(epc, epf->func_no);
-+	if (epc_features) {
-+		linkup_notifier = epc_features->linkup_notifier;
-+		msix_capable = epc_features->msix_capable;
-+		msi_capable = epc_features->msi_capable;
-+		test_reg_bar = pci_epc_get_first_free_bar(epc_features);
-+		pci_epf_configure_bar(epf, epc_features);
-+	}
- 
--	epf_test->test_reg_bar = EPC_FEATURE_GET_BAR(epc->features);
-+	epf_test->test_reg_bar = test_reg_bar;
-+	epf_test->epc_features = epc_features;
- 
- 	ret = pci_epc_write_header(epc, epf->func_no, header);
- 	if (ret) {
-@@ -492,13 +524,15 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 	if (ret)
- 		return ret;
- 
--	ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
--	if (ret) {
--		dev_err(dev, "MSI configuration failed\n");
--		return ret;
-+	if (msi_capable) {
-+		ret = pci_epc_set_msi(epc, epf->func_no, epf->msi_interrupts);
-+		if (ret) {
-+			dev_err(dev, "MSI configuration failed\n");
-+			return ret;
-+		}
- 	}
- 
--	if (epf_test->msix_available) {
-+	if (msix_capable) {
- 		ret = pci_epc_set_msix(epc, epf->func_no, epf->msix_interrupts);
- 		if (ret) {
- 			dev_err(dev, "MSI-X configuration failed\n");
-@@ -506,7 +540,7 @@ static int pci_epf_test_bind(struct pci_epf *epf)
- 		}
- 	}
- 
--	if (!epf_test->linkup_notifier)
-+	if (!linkup_notifier)
- 		queue_work(kpcitest_workqueue, &epf_test->cmd_handler.work);
- 
- 	return 0;
-@@ -523,17 +557,6 @@ static int pci_epf_test_probe(struct pci_epf *epf)
- {
- 	struct pci_epf_test *epf_test;
- 	struct device *dev = &epf->dev;
--	const struct pci_epf_device_id *match;
--	struct pci_epf_test_data *data;
--	enum pci_barno test_reg_bar = BAR_0;
--	bool linkup_notifier = true;
--
--	match = pci_epf_match_device(pci_epf_test_ids, epf);
--	data = (struct pci_epf_test_data *)match->driver_data;
--	if (data) {
--		test_reg_bar = data->test_reg_bar;
--		linkup_notifier = data->linkup_notifier;
--	}
- 
- 	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
- 	if (!epf_test)
-@@ -541,8 +564,6 @@ static int pci_epf_test_probe(struct pci_epf *epf)
- 
- 	epf->header = &test_header;
- 	epf_test->epf = epf;
--	epf_test->test_reg_bar = test_reg_bar;
--	epf_test->linkup_notifier = linkup_notifier;
- 
- 	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
- 
--- 
-2.17.1
+> 
+>>  - Replace comments // (C99 style) by /**/
+>>  - Merge two pcim_iomap_regions() calls into just one call
+>>  - Remove pci_try_set_mwi() call
+>>  - Replace some dev_info() by dev_dbg() to reduce *noise*
+>>  - Remove pci_name(pdev) call after being call dw_edma_remove()
+>>  - Remove all power management support
+>>  - Fix the headers of the .c and .h files according to the most recent
+>>    convention
+>>  - Fix errors and checks pointed out by checkpatch with --strict option
+>>  - Replace patch small description tag from dma by dmaengine
+>> RFC v2->RFC v3:
+>>  - Fix printk variable of phys_addr_t type
+>>  - Fix missing variable initialization (chan->configured)
+>>  - Change linked list size to 512 Kbytes
+>>  - Add data memory information
+>>  - Add register size information
+>>  - Add comments or improve existing ones
+>>  - Add possibility to work with multiple IRQs feature
+>>  - Replace MSI and MSI-X enable condition by pci_dev_msi_enabled()
+>>  - Replace code to acquire MSI(-X) address and data by
+>>    get_cached_msi_msg()
+> 
+>> +enum dw_edma_pcie_bar {
+>> +	BAR_0,
+>> +	BAR_1,
+>> +	BAR_2,
+>> +	BAR_3,
+>> +	BAR_4,
+>> +	BAR_5
+>> +};
+> 
+> pci-epf.h has this.
+> Why duplicate?
 
+I can use that header sure. Thanks.
+
+> 
+> 
+> What else is being duplicated from PCI core?
+> 
+>> +static bool disable_msix;
+>> +module_param(disable_msix, bool, 0644);
+>> +MODULE_PARM_DESC(disable_msix, "Disable MSI-X interrupts");
+> 
+> Why?!
+> We are no allow new module parameters without very strong arguments.
+
+Since this is a reference driver and might be used to test customized HW
+solutions, I added this parameter to allow the possibility to test the solution
+forcing the MSI feature binding. This is required specially if who will test
+this solution has a Root Complex with both features available (MSI and MSI-X),
+because the Kernel will give always preference to MSI-X binding (assuming that
+the EP has also both features available).
+
+> 
+>> +
+>> +static int dw_edma_pcie_probe(struct pci_dev *pdev,
+>> +			      const struct pci_device_id *pid)
+>> +{
+>> +	const struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
+>> +	struct device *dev = &pdev->dev;
+>> +	struct dw_edma_chip *chip;
+>> +	struct dw_edma *dw;
+>> +	unsigned int irq_flags = PCI_IRQ_MSI;
+>> +	int err, nr_irqs, i;
+>> +
+> 
+>> +	if (!pdata) {
+>> +		dev_err(dev, "%s missing data structure\n", pci_name(pdev));
+>> +		return -EFAULT;
+>> +	}
+> 
+> Useless check.
+
+Why? It's just a precaution, isn't it a good practice always to think of the
+worst case?
+
+> 
+>> +
+>> +	/* Enable PCI device */
+>> +	err = pcim_enable_device(pdev);
+>> +	if (err) {
+>> +		dev_err(dev, "%s enabling device failed\n", pci_name(pdev));
+>> +		return err;
+>> +	}
+>> +
+>> +	/* Mapping PCI BAR regions */
+>> +	err = pcim_iomap_regions(pdev, BIT(pdata->rg_bar) |
+>> +				       BIT(pdata->ll_bar) |
+>> +				       BIT(pdata->dt_bar),
+>> +				 pci_name(pdev));
+>> +	if (err) {
+> 
+>> +		dev_err(dev, "%s eDMA BAR I/O remapping failed\n",
+>> +			pci_name(pdev));
+> 
+> Isn't it pci_err() ?
+> Same comment for the rest similar cases above and below.
+
+Ok, I'll replace all dev_* function in this file.
+Thanks.
+
+> 
+>> +		return err;
+>> +	}
+>> +
+>> +	pci_set_master(pdev);
+>> +
+>> +	nr_irqs = pci_alloc_irq_vectors(pdev, 1, pdata->irqs_cnt, irq_flags);
+>> +	if (nr_irqs < 1) {
+>> +		dev_err(dev, "%s failed to alloc IRQ vector (Number of IRQs=%u)\n",
+>> +			pci_name(pdev), nr_irqs);
+>> +		return -EPERM;
+>> +	}
+>> +
+>> +	/* Data structure initialization */
+>> +	chip->dw = dw;
+>> +	chip->dev = dev;
+>> +	chip->id = pdev->devfn;
+>> +	chip->irq = pdev->irq;
+>> +
+> 
+>> +	if (!pcim_iomap_table(pdev))
+>> +		return -EACCES;
+> 
+> Never happen condition. Thus useless.
+
+pcim_iomap_table() can return NULL in case of allocation failure. Besides that,
+isn't it a good practice always to think of the worst case?
+
+> 
+>> +	dev_info(dev, "DesignWare eDMA PCIe driver loaded completely\n");
+> 
+> Useless.
+
+It's helpful for bring up, I can pass it to dbg.
+
+> 
+>> +}
+>> +
+>> +static void dw_edma_pcie_remove(struct pci_dev *pdev)
+>> +{
+>> +	struct dw_edma_chip *chip = pci_get_drvdata(pdev);
+>> +	struct device *dev = &pdev->dev;
+>> +	int err;
+>> +
+>> +	/* Stopping eDMA driver */
+>> +	err = dw_edma_remove(chip);
+>> +	if (err)
+>> +		dev_warn(dev, "can't remove device properly: %d\n", err);
+>> +
+>> +	/* Freeing IRQs */
+>> +	pci_free_irq_vectors(pdev);
+>> +
+>> +	dev_info(dev, "DesignWare eDMA PCIe driver unloaded completely\n");
+> 
+> Ditto.
+
+It's helpful for bring up, I can pass it to dbg.
+
+> 
+>> +}
+> 
+>> +MODULE_DEVICE_TABLE(pci, dw_edma_pcie_id_table);
+>> +
+>> +static struct pci_driver dw_edma_pcie_driver = {
+>> +	.name		= "dw-edma-pcie",
+>> +	.id_table	= dw_edma_pcie_id_table,
+>> +	.probe		= dw_edma_pcie_probe,
+>> +	.remove		= dw_edma_pcie_remove,
+> 
+> Power management?
+
+I've removed the power management for now, since with my current setup I don't
+have the necessary conditions to test it. I prefer not submitting that code for now.
+
+> 
+>> +};
+> 
+
+Thanks for the inputs Andy! They have been pretty good!
+
+Regards,
+Gustavo
