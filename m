@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC7D6C43444
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:25:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9158FC43387
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:26:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DB322086D
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:25:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 638BA2086D
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:26:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="mF9gl4t4"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="SKjVgiWT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726718AbfANNZg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jan 2019 08:25:36 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:37158 "EHLO
+        id S1726561AbfANN0I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Jan 2019 08:26:08 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:37304 "EHLO
         fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726563AbfANNZg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:25:36 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDPFgY098049;
-        Mon, 14 Jan 2019 07:25:15 -0600
+        with ESMTP id S1726545AbfANN0I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:26:08 -0500
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDPKb0098063;
+        Mon, 14 Jan 2019 07:25:20 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1547472315;
-        bh=ZOxErDAenCR4nywVOJbopTCQfMydSgJQFf0ad6hjYzM=;
+        s=ti-com-17Q1; t=1547472320;
+        bh=fRCs1u9heVGXhJdOX/5kFPoouLrzDR4CIAvdI4U5mZU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=mF9gl4t4rXakuReor+2NmekbjsQHsDqFnPgnchwmK4VZN6lkWMgbMt2i9Hrbs9sVA
-         5OjgHTqe7DqYPpyhsRIKH7tVjh0J2pQSEKQzrbFFNzrIbF6HrP7Ynw+qoh7LXh1csZ
-         vwFIz4CZLWkI424EW72IKOGyj+wr0H50ETrC7zlE=
-Received: from DFLE113.ent.ti.com (dfle113.ent.ti.com [10.64.6.34])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDPFhj011765
+        b=SKjVgiWTPNKi9M141DjVIVi13fIItZeEen+LkOkVdfDjQkP02nfm8hhqkQZjn3wK2
+         VCyMies27BaNrsspb2Zyo0mcEtja9auPdzatQncPhF94AA+Q9TLDWneohJsyY0a/3z
+         4oAcmYCfikqghDVcIDrptGXvMrBAHKN60m7qypRs=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDPKaf088730
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Jan 2019 07:25:15 -0600
-Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE113.ent.ti.com
- (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 14 Jan 2019 07:25:20 -0600
+Received: from DFLE113.ent.ti.com (10.64.6.34) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 14
- Jan 2019 07:25:15 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_0,
+ Jan 2019 07:25:19 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE113.ent.ti.com
+ (10.64.6.34) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 14 Jan 2019 07:25:15 -0600
+ Mon, 14 Jan 2019 07:25:20 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWQ028516;
-        Mon, 14 Jan 2019 07:25:11 -0600
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWR028516;
+        Mon, 14 Jan 2019 07:25:15 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -61,9 +61,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH 04/24] PCI: keystone: Perform host initialization in a single function
-Date:   Mon, 14 Jan 2019 18:54:04 +0530
-Message-ID: <20190114132424.6445-5-kishon@ti.com>
+Subject: [PATCH 05/24] PCI: keystone: Use platform_get_resource_byname to get memory resources
+Date:   Mon, 14 Jan 2019 18:54:05 +0530
+Message-ID: <20190114132424.6445-6-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190114132424.6445-1-kishon@ti.com>
 References: <20190114132424.6445-1-kishon@ti.com>
@@ -75,99 +75,59 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-No functional change. Instead of having two functions
-ks_pcie_add_pcie_port and ks_pcie_dw_host_init for initializing host,
-have a single function to perform all the host initialization.
+Use platform_get_resource_byname() instead of platform_get_resource() which
+uses index to get memory resources. While at that get the memory resource
+defined specifically for configuration space instead of deriving the
+configuration space address from dbics address space. Since pci-keystone
+driver has never worked out of the box in mainline kernel, dt backward
+compatibility is ignored.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 63 +++++++++--------------
- 1 file changed, 23 insertions(+), 40 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index f63268aee2de..3f917ffa9105 100644
+index 3f917ffa9105..88766d4cb50c 100644
 --- a/drivers/pci/controller/dwc/pci-keystone.c
 +++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -446,45 +446,6 @@ static int ks_pcie_start_link(struct dw_pcie *pci)
- 	return 0;
- }
+@@ -44,7 +44,6 @@
+ #define CFG_TYPE1			BIT(24)
  
--/**
-- * ks_pcie_dw_host_init() - initialize host for v3_65 dw hardware
-- *
-- * Ioremap the register resources, initialize legacy irq domain
-- * and call dw_pcie_v3_65_host_init() API to initialize the Keystone
-- * PCI host controller.
-- */
--static int __init ks_pcie_dw_host_init(struct keystone_pcie *ks_pcie)
--{
--	struct dw_pcie *pci = ks_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
--	struct device *dev = pci->dev;
--	struct platform_device *pdev = to_platform_device(dev);
--	struct resource *res;
--
+ #define OB_SIZE				0x030
+-#define SPACE0_REMOTE_CFG_OFFSET	0x1000
+ #define OB_OFFSET_INDEX(n)		(0x200 + (8 * (n)))
+ #define OB_OFFSET_HI(n)			(0x204 + (8 * (n)))
+ #define OB_ENABLEN			BIT(0)
+@@ -790,21 +789,19 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 	struct resource *res;
+ 	int ret;
+ 
 -	/* Index 0 is the config reg. space address */
 -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
--	if (IS_ERR(pci->dbi_base))
--		return PTR_ERR(pci->dbi_base);
--
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbics");
+ 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
+ 	if (IS_ERR(pci->dbi_base))
+ 		return PTR_ERR(pci->dbi_base);
+ 
 -	/*
 -	 * We set these same and is used in pcie rd/wr_other_conf
 -	 * functions
 -	 */
 -	pp->va_cfg0_base = pci->dbi_base + SPACE0_REMOTE_CFG_OFFSET;
--	pp->va_cfg1_base = pp->va_cfg0_base;
--
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
++	pp->va_cfg0_base = devm_pci_remap_cfg_resource(dev, res);
++	if (IS_ERR(pp->va_cfg0_base))
++		return PTR_ERR(pp->va_cfg0_base);
++
+ 	pp->va_cfg1_base = pp->va_cfg0_base;
+ 
 -	/* Index 1 is the application reg. space address */
 -	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
--	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
--	if (IS_ERR(ks_pcie->va_app_base))
--		return PTR_ERR(ks_pcie->va_app_base);
--
--	ks_pcie->app = *res;
--
--	return dw_pcie_host_init(pp);
--}
--
- static void ks_pcie_quirk(struct pci_dev *dev)
- {
- 	struct pci_bus *bus = dev->bus;
-@@ -826,10 +787,32 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
- 	struct dw_pcie *pci = ks_pcie->pci;
- 	struct pcie_port *pp = &pci->pp;
- 	struct device *dev = &pdev->dev;
-+	struct resource *res;
- 	int ret;
- 
-+	/* Index 0 is the config reg. space address */
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
-+	if (IS_ERR(pci->dbi_base))
-+		return PTR_ERR(pci->dbi_base);
-+
-+	/*
-+	 * We set these same and is used in pcie rd/wr_other_conf
-+	 * functions
-+	 */
-+	pp->va_cfg0_base = pci->dbi_base + SPACE0_REMOTE_CFG_OFFSET;
-+	pp->va_cfg1_base = pp->va_cfg0_base;
-+
-+	/* Index 1 is the application reg. space address */
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(ks_pcie->va_app_base))
-+		return PTR_ERR(ks_pcie->va_app_base);
-+
-+	ks_pcie->app = *res;
-+
- 	pp->ops = &ks_pcie_host_ops;
--	ret = ks_pcie_dw_host_init(ks_pcie);
-+	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "failed to initialize host\n");
- 		return ret;
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "app");
+ 	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ks_pcie->va_app_base))
+ 		return PTR_ERR(ks_pcie->va_app_base);
 -- 
 2.17.1
 
