@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB244C43387
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:26:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8AB0C43614
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:26:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8AC882086D
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:26:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB8602086D
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:26:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="I7BLWIMk"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="fQ2FpcpH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726743AbfANN0I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jan 2019 08:26:08 -0500
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:37306 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726554AbfANN0I (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:26:08 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDPUeB098095;
-        Mon, 14 Jan 2019 07:25:30 -0600
+        id S1726826AbfANN0d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Jan 2019 08:26:33 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:35074 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726526AbfANN0c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:26:32 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDPeY5106802;
+        Mon, 14 Jan 2019 07:25:40 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1547472330;
-        bh=Oy9h1kP8jbCXe+8kD93AkYommSwhxCLq/ir/s6HONHk=;
+        s=ti-com-17Q1; t=1547472340;
+        bh=7srJLFU2H5APGDHmyq9l+0rZG+OkuO025oUKh/xV4Ug=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=I7BLWIMkCXUivjd681dUFmq9w/8i0HBJxqyMjwzlhD6gZVkxjv9NSCKZ9cHLWJozz
-         gNL7mZSacsXulhaqrB71ZNrD/e0a+/JcIa7294hkMz8BuxMpfBgGj6tUymevrAhYGw
-         gVMADyVZk9/IIPqteaKo5Zce70edB/Sv7omySTY4=
-Received: from DLEE111.ent.ti.com (dlee111.ent.ti.com [157.170.170.22])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDPU5q056610
+        b=fQ2FpcpHFi9fBft51sGEOe6H5m2YVZz+0j8PiSKYDXcJMdAQeBYBTzGk8mwtul2H+
+         2PvNpZW7bcN2E0ttMYe846KuE/7Mfl3L9aJVvVabvIkW4Tx2v6vrCyZlWUh5ImqgGp
+         dlGVQXcCEZDXYY0mptaqcFLubJuAeCsxFzwtK84k=
+Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDPdbp094124
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Jan 2019 07:25:30 -0600
-Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 14 Jan 2019 07:25:39 -0600
+Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 14
- Jan 2019 07:25:29 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DLEE108.ent.ti.com
- (157.170.170.38) with Microsoft SMTP Server (version=TLS1_0,
+ Jan 2019 07:25:40 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DLEE101.ent.ti.com
+ (157.170.170.31) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 14 Jan 2019 07:25:30 -0600
+ Mon, 14 Jan 2019 07:25:39 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWT028516;
-        Mon, 14 Jan 2019 07:25:25 -0600
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWV028516;
+        Mon, 14 Jan 2019 07:25:35 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -61,9 +61,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH 07/24] dt-bindings: PCI: Add dt-binding to configure PCIe mode
-Date:   Mon, 14 Jan 2019 18:54:07 +0530
-Message-ID: <20190114132424.6445-8-kishon@ti.com>
+Subject: [PATCH 09/24] dt-bindings: PCI: Document "atu" reg-names
+Date:   Mon, 14 Jan 2019 18:54:09 +0530
+Message-ID: <20190114132424.6445-10-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190114132424.6445-1-kishon@ti.com>
 References: <20190114132424.6445-1-kishon@ti.com>
@@ -75,27 +75,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add "ti,syscon-pcie-mode" dt-binding to hold phandle to the syscon
-register that should be used to configure PCIe in RC mode or EP mode.
+Document "atu" reg-names required to get the register space for ATU in
+Synopsys designware core version >= 4.80.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- Documentation/devicetree/bindings/pci/pci-keystone.txt | 2 ++
- 1 file changed, 2 insertions(+)
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index 3a551687cfa2..8ee07197a063 100644
---- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -23,6 +23,8 @@ pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
- 
- ti,syscon-pcie-id : phandle to the device control module required to set device
- 		    id and vendor id.
-+ti,syscon-pcie-mode : phandle to the device control module required to configure
-+		      PCI in either RC mode or EP mode.
- 
-  Example:
- 	pcie_msi_intc: msi-interrupt-controller {
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index c124f9bc11f3..5561a1c060d0 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -4,8 +4,11 @@ Required properties:
+ - compatible:
+ 	"snps,dw-pcie" for RC mode;
+ 	"snps,dw-pcie-ep" for EP mode;
+-- reg: Should contain the configuration address space.
+-- reg-names: Must be "config" for the PCIe configuration space.
++- reg: For designware cores version < 4.80 contains the configuration
++       address space. For designware core version >= 4.80, contains
++       the configuration and ATU address space
++- reg-names: Must be "config" for the PCIe configuration space and "atu" for
++	     the ATU address space.
+     (The old way of getting the configuration address space from "ranges"
+     is deprecated and should be avoided.)
+ - num-lanes: number of lanes to use
 -- 
 2.17.1
 
