@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21570C43444
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8065C43444
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3E1E20651
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7791320651
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Jan 2019 13:28:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="UexewYwf"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="oQwcW9+v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726861AbfANN0p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726858AbfANN0p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 14 Jan 2019 08:26:45 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:35108 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726851AbfANN0n (ORCPT
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:37448 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726854AbfANN0n (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Jan 2019 08:26:43 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDPnhR106834;
-        Mon, 14 Jan 2019 07:25:49 -0600
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0EDPs7b098170;
+        Mon, 14 Jan 2019 07:25:54 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1547472349;
-        bh=5utE+jodqQLD4g3Pt/AHbdOGuOmz2jyxoVSY0CpmSSw=;
+        s=ti-com-17Q1; t=1547472354;
+        bh=GogJmhPjCHQln5mVKUVQZbQ+wSVFSwsYqqaCZro7fL4=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=UexewYwfuHEcVRAYewKVPjpC+xxXDwqrCAqKCw2vcqt+sYJbM3lXDUeDwjzaBiHj4
-         xHIARdb88JXKBTTT7SDOg9wTmLF064a9xEsmWqcc19strsqiLYZN2GzkuEVrSz87fi
-         WeLKtMV7pt4he7NC1pcJ+oJAsAa8fQetoWk7xtaY=
+        b=oQwcW9+vGGXoQFzkFFMkyS+/zrvRPAh6e8C6iKuoM321++ugdV9tsIdhwMx4bUefT
+         q2c6YRMMK5tmUormImD1GnWa5OSED4Q1P9ROShpg0uhaRBPXB2zI1b+ETJyqCPIlw0
+         eOOzcDA/5QjxHbYmskQxV04UEJWa8F7ohOM13sac=
 Received: from DLEE109.ent.ti.com (dlee109.ent.ti.com [157.170.170.41])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDPnqL056742
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0EDPsSB088982
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 14 Jan 2019 07:25:49 -0600
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE109.ent.ti.com
+        Mon, 14 Jan 2019 07:25:54 -0600
+Received: from DLEE100.ent.ti.com (157.170.170.30) by DLEE109.ent.ti.com
  (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 14
- Jan 2019 07:25:49 -0600
-Received: from dlep32.itg.ti.com (157.170.170.100) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_0,
+ Jan 2019 07:25:54 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Mon, 14 Jan 2019 07:25:49 -0600
+ Mon, 14 Jan 2019 07:25:54 -0600
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWX028516;
-        Mon, 14 Jan 2019 07:25:45 -0600
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0EDOoWY028516;
+        Mon, 14 Jan 2019 07:25:49 -0600
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -61,9 +61,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH 11/24] PCI: dwc: Fix ATU identification for designware version >= 4.80
-Date:   Mon, 14 Jan 2019 18:54:11 +0530
-Message-ID: <20190114132424.6445-12-kishon@ti.com>
+Subject: [PATCH 12/24] PCI: keystone: Prevent ARM32 specific code to be compiled for ARM64
+Date:   Mon, 14 Jan 2019 18:54:12 +0530
+Message-ID: <20190114132424.6445-13-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190114132424.6445-1-kishon@ti.com>
 References: <20190114132424.6445-1-kishon@ti.com>
@@ -75,62 +75,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Synopsys designware version >= 4.80 uses a separate register space
-for programming ATU. The current code identifies if there exists a
-separate register space by accessing the register address of ATUs
-in designware version < 4.80. Accessing this address results in
-abort in the case of K2G.
-
-Fix it here by adding "version" member to struct dw_pcie. This should
-be set by platform specific drivers and designware core will use it
-to identify if the platform has a separate ATU space. For platforms
-which hasn't populated the version member, the old method of
-identification will still be used.
+hook_fault_code is an ARM32 specific API for hooking into data abort.
+Since pci-keystone.c will be used for AM65X platforms which is an
+ARM64 platform, allow hook_fault_code to be compiled only for ARM32.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 14 ++++++++------
- drivers/pci/controller/dwc/pcie-designware.h |  1 +
- 2 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 78539452c265..37506aba22fe 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -358,13 +358,15 @@ void dw_pcie_setup(struct dw_pcie *pci)
- 	struct device *dev = pci->dev;
- 	struct device_node *np = dev->of_node;
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index d1ecf826dfe8..9d7cedd96505 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -693,6 +693,7 @@ static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
+ 	return ret;
+ }
  
--	/* Get iATU unroll support */
--	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
--	dev_dbg(pci->dev, "iATU unroll: %s\n",
--		pci->iatu_unroll_enabled ? "enabled" : "disabled");
-+	if (pci->version >= 0x480A || (!pci->version &&
-+				       dw_pcie_iatu_unroll_enabled(pci))) {
-+		pci->iatu_unroll_enabled = true;
-+		if (!pci->atu_base)
-+			pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
-+	}
-+	dev_dbg(pci->dev, "iATU unroll: %s\n", pci->iatu_unroll_enabled ?
-+		"enabled" : "disabled");
++#ifdef CONFIG_ARM
+ /*
+  * When a PCI device does not exist during config cycles, keystone host gets a
+  * bus error instead of returning 0xffffffff. This handler always returns 0
+@@ -712,6 +713,7 @@ static int ks_pcie_fault(unsigned long addr, unsigned int fsr,
  
--	if (pci->iatu_unroll_enabled && !pci->atu_base)
--		pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
+ 	return 0;
+ }
++#endif
  
- 	ret = of_property_read_u32(np, "num-lanes", &lanes);
- 	if (ret)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index ea4b215b605d..4ab2e3dbd6bb 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -231,6 +231,7 @@ struct dw_pcie {
- 	struct pcie_port	pp;
- 	struct dw_pcie_ep	ep;
- 	const struct dw_pcie_ops *ops;
-+	unsigned int		version;
- };
+ static int __init ks_pcie_init_id(struct keystone_pcie *ks_pcie)
+ {
+@@ -761,12 +763,14 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
+ 	if (ret < 0)
+ 		return ret;
  
- #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
++#ifdef CONFIG_ARM
+ 	/*
+ 	 * PCIe access errors that result into OCP errors are caught by ARM as
+ 	 * "External aborts"
+ 	 */
+ 	hook_fault_code(17, ks_pcie_fault, SIGBUS, 0,
+ 			"Asynchronous external abort");
++#endif
+ 
+ 	ks_pcie_start_link(pci);
+ 	dw_pcie_wait_for_link(pci);
 -- 
 2.17.1
 
