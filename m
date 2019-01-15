@@ -2,113 +2,87 @@ Return-Path: <SRS0=HN6g=PX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB2DBC43387
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 17:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBE5C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 19:31:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A649E20675
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 17:32:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90CC420859
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 19:31:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1547580700;
+	bh=N2YUdzl883TdV8bLGP6F/YGpKbcaOFleF/tMLmeYRq0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Hv9Nl43lsgnwM6CXbDxDRWqUseZF6CwIAaLcpqdTsIAyyyZW3ZFDmntm9GD8pfmjf
+	 DXHsfnvtvl+PQc41AxOHbM05N+AhAkJiE8SH1YZbVkyepgOvBuwI96OYQFIfj3cmrT
+	 DaNzt0s6rv6NmAlQ+9fa2oCYQd+XKRwfieAwNrVY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728133AbfAORcI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Jan 2019 12:32:08 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:53146 "EHLO ale.deltatee.com"
+        id S1732008AbfAOTbj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Jan 2019 14:31:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52916 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726022AbfAORcH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Jan 2019 12:32:07 -0500
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1gjSZK-0000Ss-Fh; Tue, 15 Jan 2019 10:32:07 -0700
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1gjSZJ-0003sE-TW; Tue, 15 Jan 2019 10:32:05 -0700
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Stephen Bates <sbates@raithlin.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Date:   Tue, 15 Jan 2019 10:32:03 -0700
-Message-Id: <20190115173203.14850-1-logang@deltatee.com>
-X-Mailer: git-send-email 2.19.0
+        id S1731685AbfAOTbj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Jan 2019 14:31:39 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CB83320657;
+        Tue, 15 Jan 2019 19:31:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1547580699;
+        bh=N2YUdzl883TdV8bLGP6F/YGpKbcaOFleF/tMLmeYRq0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CEJCAW/VPkb4bsH10p7HnT0dvXaf3kxr+CRdLsDNVrjjNiGNF6h3BqO/DJsQwMfaJ
+         UVBjuC4qGF6lAOh1ZQ/CVjFwMQWJa/UNKB5V+fFu86OGjPL2gFAANep5vHozHHVlZg
+         yNlMolDRR+QHKhsGM714+novCqawcp9NnyLf21k0=
+Date:   Tue, 15 Jan 2019 13:31:35 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        linux-nvme@lists.infradead.org
+Subject: Re: [PATCH] PCI/MSI: preference to returning -ENOSPC from
+ pci_alloc_irq_vectors_affinity
+Message-ID: <20190115193135.GH33971@google.com>
+References: <20190103013106.26452-1-ming.lei@redhat.com>
+ <20190114232338.GE33971@google.com>
+ <20190115131140.GB28672@lst.de>
+ <05cb9e71-e455-a717-c64c-b5242ec38bad@kernel.dk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, bhelgaas@google.com, sbates@raithlin.com, logang@deltatee.com, jarkko.nikula@linux.intel.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH] PCI: fix using __initdata memory after free in disable_acs_redir parameter
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <05cb9e71-e455-a717-c64c-b5242ec38bad@kernel.dk>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The disable_acs_redir parameter stores a pointer to the string passed to
-pci_setup(). However, the string passed to PCI setup is actually a
-temporary copy allocated in static __initdata memory. After init, once
-the memory is freed, it is no longer valid to reference this pointer.
+On Tue, Jan 15, 2019 at 09:22:45AM -0700, Jens Axboe wrote:
+> On 1/15/19 6:11 AM, Christoph Hellwig wrote:
+> > On Mon, Jan 14, 2019 at 05:23:39PM -0600, Bjorn Helgaas wrote:
+> >> Applied to pci/msi for v5.1, thanks!
+> >>
+> >> If this is something that should be in v5.0, let me know and include the
+> >> justification, e.g., something we already merged for v5.0 or regression
+> >> info, etc, and a Fixes: line, and I'll move it to for-linus.
+> > 
+> > I'd be tempted to queues this up for 5.0.  Ming, what is your position?
+> 
+> I think we should - the API was introduced in this series, I think there's
+> little (to no) reason NOT to fix it for 5.0.
 
-This bug was noticed in v5.0-rc1 after a change in commit c5eb1190074c
-("PCI / PM: Allow runtime PM without callback functions") caused
-pci_disable_acs_redir() to be called during shutdown which manifested
-as an unable to handle kernel paging request at:
+I'm guessing the justification goes something like this (I haven't
+done all the research, so I'll leave it to Ming to fill in the details):
 
-RIP: 0010:pci_enable_acs+0x3f/0x1e0
-Call Trace:
-   pci_restore_state.part.44+0x159/0x3c0
-   pci_restore_standard_config+0x33/0x40
-   pci_pm_runtime_resume+0x2b/0xd0
-   ? pci_restore_standard_config+0x40/0x40
-   __rpm_callback+0xbc/0x1b0
-   rpm_callback+0x1f/0x70
-   ? pci_restore_standard_config+0x40/0x40
-    rpm_resume+0x4f9/0x710
-   ? pci_conf1_read+0xb6/0xf0
-   ? pci_conf1_write+0xb2/0xe0
-   __pm_runtime_resume+0x47/0x70
-   pci_device_shutdown+0x1e/0x60
-   device_shutdown+0x14a/0x1f0
-   kernel_restart+0xe/0x50
-   __do_sys_reboot+0x1ee/0x210
-   ? __fput+0x144/0x1d0
-   do_writev+0x5e/0xf0
-   ? do_writev+0x5e/0xf0
-   do_syscall_64+0x48/0xf0
-   entry_SYSCALL_64_after_hwframe+0x44/0xa9
+  pci_alloc_irq_vectors_affinity() was added in v4.x by XXXX ("...").
+  It had this return value defect then, but its min_vecs/max_vecs
+  parameters removed the need for callers to interatively reduce the
+  number of IRQs requested and retry the allocation, so they didn't
+  need to distinguish -ENOSPC from -EINVAL.
 
-It was also likely possible to trigger this bug when hotplugging PCI
-devices.
-
-To fix this, instead of storing a pointer, we use kstrdup to copy the
-disable_acs_redir_param to its own buffer which will never be freed.
-
-Fixes: aaca43fda742 ("PCI: Add "pci=disable_acs_redir=" parameter for peer-to-peer support")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c9d8e3c837de..c25acace7d91 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6195,7 +6195,8 @@ static int __init pci_setup(char *str)
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
- 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
--				disable_acs_redir_param = str + 18;
-+				disable_acs_redir_param =
-+					kstrdup(str + 18, GFP_KERNEL);
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
--- 
-2.19.0
-
+  In v5.0, XXX ("...") added IRQ sets to the interface, which
+  reintroduced the need to check for -ENOSPC and possibly reduce the
+  number of IRQs requested and retry the allocation.
