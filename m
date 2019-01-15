@@ -2,96 +2,78 @@ Return-Path: <SRS0=HN6g=PX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAB63C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 05:45:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81806C43387
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 09:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6CAF20656
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 05:45:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A5242085A
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 09:13:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727494AbfAOFph (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Jan 2019 00:45:37 -0500
-Received: from mga01.intel.com ([192.55.52.88]:15224 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727211AbfAOFph (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Jan 2019 00:45:37 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Jan 2019 21:45:36 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,480,1539673200"; 
-   d="scan'208";a="106654907"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.72.86])
-  by orsmga007.jf.intel.com with ESMTP; 14 Jan 2019 21:45:32 -0800
-Received: from andy by smile with local (Exim 4.92-RC4)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1gjHXX-0000eC-HH; Tue, 15 Jan 2019 07:45:31 +0200
-Date:   Tue, 15 Jan 2019 07:45:31 +0200
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        Joao Pinto <joao.pinto@synopsys.com>,
-        Jose Abreu <jose.abreu@synopsys.com>,
-        Luis Oliveira <luis.oliveira@synopsys.com>,
-        Vitor Soares <vitor.soares@synopsys.com>,
-        Nelson Costa <nelson.costa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-Subject: Re: [RFC v3 7/7] dmaengine: Add Synopsys eDMA IP test and sample
- driver
-Message-ID: <20190115054531.GC9170@smile.fi.intel.com>
-References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <cc195ac53839b318764c8f6502002cd6d933a923.1547230339.git.gustavo.pimentel@synopsys.com>
- <20190111194819.GV9170@smile.fi.intel.com>
- <2de7f43e-0702-9ab3-b24c-a1b212e18f7c@synopsys.com>
+        id S1727328AbfAOJNE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Jan 2019 04:13:04 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:34598 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725929AbfAOJNE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Jan 2019 04:13:04 -0500
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 48E438F15FAE12AFEC8E;
+        Tue, 15 Jan 2019 17:13:02 +0800 (CST)
+Received: from [127.0.0.1] (10.202.226.43) by DGGEMS410-HUB.china.huawei.com
+ (10.3.19.210) with Microsoft SMTP Server id 14.3.408.0; Tue, 15 Jan 2019
+ 17:13:00 +0800
+Subject: Re: Please remove warnings from msi.c:1269 and blk-mq-pci.c:52 some
+ day
+To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <keith.busch@intel.com>
+References: <AM0PR06MB3969BE1DFD53EFF6228E1A0AA1800@AM0PR06MB3969.eurprd06.prod.outlook.com>
+ <CAErSpo5B2m406Mk6SUUcnmF31OEa8vC5YQTKB0ws3z3F5y_fEw@mail.gmail.com>
+ <20190114170338.GA27149@localhost.localdomain>
+ <20190114180207.GC27149@localhost.localdomain> <20190114180516.GA8858@lst.de>
+ <a97735d4-b82b-d09f-7729-0e74d95475c9@kernel.dk>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        fin4478 fin4478 <fin4478@hotmail.com>,
+        Dou Liyang <douliyangs@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        <linux-nvme@lists.infradead.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <4893cfbb-f2db-cec5-e5b8-68e836d243f1@huawei.com>
+Date:   Tue, 15 Jan 2019 09:12:53 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2de7f43e-0702-9ab3-b24c-a1b212e18f7c@synopsys.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <a97735d4-b82b-d09f-7729-0e74d95475c9@kernel.dk>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.226.43]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jan 14, 2019 at 11:44:22AM +0000, Gustavo Pimentel wrote:
-> On 11/01/2019 19:48, Andy Shevchenko wrote:
-> > On Fri, Jan 11, 2019 at 07:33:43PM +0100, Gustavo Pimentel wrote:
-> >> Add Synopsys eDMA IP test and sample driver to be use for testing
-> >> purposes and also as a reference for any developer who needs to
-> >> implement and use Synopsys eDMA.
-> >>
-> >> This driver can be compile as built-in or external module in kernel.
-> >>
-> >> To enable this driver just select DW_EDMA_TEST option in kernel
-> >> configuration, however it requires and selects automatically DW_EDMA
-> >> option too.
-> >>
-> > 
-> > Hmm... This doesn't explain what's wrong with dmatest module.
-> 
-> There isn't anything wrong with dmatest module, that I know of. In beginning I
-> was planning to used it, however only works with MEM_TO_MEM transfers, that's
-> why I created a similar module but for MEM_TO_DEV and DEV_TO_MEM with
-> scatter-gather and cyclic transfers type for my use case. I don't know if can be
-> applied to other cases, if that is feasible, I'm glad to share it.
+On 14/01/2019 18:05, Jens Axboe wrote:
+> On 1/14/19 11:05 AM, Christoph Hellwig wrote:
+>> On Mon, Jan 14, 2019 at 11:02:07AM -0700, Keith Busch wrote:
+>>> User fin4478 <fin4478@hotmail.com> informs me Ming's patch above fixes
+>>> the warnings, but responding to the mailing lists from that email account
+>>> are blocked for "security or policy reasons" and requested I forward
+>>> the successful test result.
+>>>
+>>> Christoph, Jens: may we queue this up for -rc3?
+>>
+>> It is in my local queue for -rc3 already.
+>
 
-What I'm trying to tell is that the dmatest driver would be nice to have such
-capability.
+Any chance we could have this included in linux-next?
 
--- 
-With Best Regards,
-Andy Shevchenko
+Cheers
+
+> Great, thanks.
+>
 
 
