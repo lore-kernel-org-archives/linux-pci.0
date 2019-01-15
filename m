@@ -2,204 +2,142 @@ Return-Path: <SRS0=HN6g=PX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3890DC43387
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 04:07:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46FCEC43387
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 05:44:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 032E120651
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 04:07:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E29020656
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 05:44:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727036AbfAOEHa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Jan 2019 23:07:30 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:47430 "EHLO mx1.redhat.com"
+        id S1727792AbfAOFoF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Jan 2019 00:44:05 -0500
+Received: from mga06.intel.com ([134.134.136.31]:36166 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726769AbfAOEHa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Jan 2019 23:07:30 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 594FC3DE03;
-        Tue, 15 Jan 2019 04:07:29 +0000 (UTC)
-Received: from redhat.com (ovpn-124-229.rdu2.redhat.com [10.10.124.229])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 35AB75D9CA;
-        Tue, 15 Jan 2019 04:07:28 +0000 (UTC)
-Date:   Mon, 14 Jan 2019 23:07:27 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, xuyandong <xuyandong2@huawei.com>,
-        stable@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
-        Jesse Barnes <jbarnes@virtuousgeek.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: avoid bridge feature re-probing on hotplug
-Message-ID: <20190114230507-mutt-send-email-mst@kernel.org>
-References: <20181218004455.20186-1-mst@redhat.com>
- <20181220194950.GD183878@google.com>
- <20181220161052-mutt-send-email-mst@kernel.org>
- <20181220223158.GG183878@google.com>
- <20181220173535-mutt-send-email-mst@kernel.org>
+        id S1727211AbfAOFoF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Jan 2019 00:44:05 -0500
+X-Amp-Result: UNSCANNABLE
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Jan 2019 21:44:04 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,480,1539673200"; 
+   d="scan'208";a="108303389"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.72.86])
+  by orsmga006.jf.intel.com with ESMTP; 14 Jan 2019 21:44:00 -0800
+Received: from andy by smile with local (Exim 4.92-RC4)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1gjHW3-0000d6-07; Tue, 15 Jan 2019 07:43:59 +0200
+Date:   Tue, 15 Jan 2019 07:43:58 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <joao.pinto@synopsys.com>,
+        Jose Abreu <jose.abreu@synopsys.com>,
+        Luis Oliveira <luis.oliveira@synopsys.com>,
+        Vitor Soares <vitor.soares@synopsys.com>,
+        Nelson Costa <nelson.costa@synopsys.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>
+Subject: Re: [RFC v3 5/7] dmaengine: Add Synopsys eDMA IP PCIe glue-logic
+Message-ID: <20190115054358.GB9170@smile.fi.intel.com>
+References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
+ <a70d096e96f34cd9ea773da519965076d74d12ec.1547230339.git.gustavo.pimentel@synopsys.com>
+ <20190111194705.GU9170@smile.fi.intel.com>
+ <916f319b-9e45-6d78-4ecc-850feda84bb3@synopsys.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181220173535-mutt-send-email-mst@kernel.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Tue, 15 Jan 2019 04:07:29 +0000 (UTC)
+In-Reply-To: <916f319b-9e45-6d78-4ecc-850feda84bb3@synopsys.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 20, 2018 at 05:36:03PM -0500, Michael S. Tsirkin wrote:
-> On Thu, Dec 20, 2018 at 04:31:58PM -0600, Bjorn Helgaas wrote:
-> > On Thu, Dec 20, 2018 at 04:26:54PM -0500, Michael S. Tsirkin wrote:
-> > > On Thu, Dec 20, 2018 at 01:49:50PM -0600, Bjorn Helgaas wrote:
-> > > > On Mon, Dec 17, 2018 at 07:45:41PM -0500, Michael S. Tsirkin wrote:
-> > > > > commit 1f82de10d6b1 ("PCI/x86: don't assume prefetchable ranges are 64bit")
-> > > > > added probing of bridge support for 64 bit memory each time bridge is
-> > > > > re-enumerated.
-> > > > > 
-> > > > > Unfortunately this probing is destructive if any device behind
-> > > > > the bridge is in use at this time.
-> > > > > 
-> > > > > This was observed in the field, see
-> > > > > https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg01711.html
-> > > > > and specifically
-> > > > > https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
-> > > > > 
-> > > > > There's no real need to re-probe the bridge features as the
-> > > > > registers in question never change - detect that using
-> > > > > the memory flag being set (it's always set on the 1st pass since
-> > > > > all PCI2PCI bridges support memory forwarding) and skip the probing.
-> > > > > Thus, only the first call will perform the disruptive probing and sets
-> > > > > the resource flags as required - which we can be reasonably sure happens
-> > > > > before any devices have been configured.
-> > > > > Avoiding repeated calls to pci_bridge_check_ranges might be even nicer.
-> > > > > Unfortunately I couldn't come up with a clean way to do it without a
-> > > > > major probing code refactoring.
-> > > > 
-> > > > I'm OK with major probe code refactoring as long as it's done
-> > > > carefully.  Doing a special-case fix like this solves the immediate
-> > > > problem but adds to the long-term maintenance problem.
-> > > > 
-> > > > As far as I can tell, everything in pci_bridge_check_ranges() should
-> > > > be done once at enumeration-time, e.g., in the pci_read_bridge_bases()
-> > > > path, and pci_bridge_check_ranges() itself should be removed.
-> > > > 
-> > > > If that turns out to be impossible for some reason, we need a comment
-> > > > explaining why.
-> > > 
-> > > Maybe possible but I am not sure how.
-> > > 
-> > > Here's why:
-> > > 
-> > > Upon hotplug we want to poke at new bridges if any, but not the old
-> > > ones.  The issue is that e.g. with ACPI hotplug the event that Linux
-> > > knows how to handle is by design a heavy weight bus rescan.
-> > 
-> > Yeah, it's tricky.  But I don't think it's PCI or ACPI that makes this
-> > tricky; I think it's just the historical baggage of the PCI core
-> > design that makes it hard.
-> > 
-> > Even in the ACPI hotplug path, I think we use this pci_scan_device()
-> > path:
-> > 
-> >   pci_scan_device
-> >     pci_setup_device
-> >       case PCI_HEADER_TYPE_NORMAL:
-> >         pci_read_bases(6)             # normal PCI BARs
-> >       case PCI_HEADER_TYPE_BRIDGE:
-> >         pci_read_bases(2)             # bridge BARs (not windows)
-> > 
-> > Unfortunately that path doesn't call pci_read_bridge_bases() to read
-> > the bridge windows; that currently happens in pcibios_fixup_bus(),
-> > which is only called from pci_scan_child_bus_extend().
-> > 
-> > This is a broken design because reading the bridge apertures is not at
-> > all platform-specific, so it shouldn't be done in a pcibios hook.
-> > And, more to the issue at hand, it shouldn't be done in
-> > pci_scan_child_bus() either.  We might have to *update* the windows
-> > when scanning child buses, but we should be able to do the work of
-> > finding out what windows are implemented and their properties
-> > somewhere in the pci_setup_device() path.
-> > 
-> > > Specifically 
-> > > 
-> > > pci_read_bridge_bases does not
-> > > seem to be called on ACPI hotplug path.
-> > > 
-> > > Rather,
-> > > 
-> > > pci_assign_unassigned_root_bus_resources
-> > > pci_assign_unassigned_bridge_resources
-> > > 
-> > > would be the two functions in question.
-> > > 
-> > > 
-> > > Would above explanation be sufficient? If not, since I understand your
-> > > reluctance to pile up hacks, would you be open to doing the suggested
-> > > rewrite yourself? Me and xuyandong can help test it.
-> > 
-> > I'll be on vacation or holiday most of the time until the new year,
-> > but I put a reminder on my calendar to look at this again then.  I'm
-> > pretty sure we've tried to unravel this in the past, but I can't
-> > remember what issues we tripped over.  Maybe we can make some progress
-> > by restricting the problem we're trying to solve.
-> > 
-> > Thanks for bringing this up!  This is a wart in the PCI core that has
-> > bothered me for a long time, and maybe this is the incentive we need
-> > to make some progress on it.
-> > 
-> > Bjorn
-> 
-> 
-> Sounds good, let me know when I can help with testing.
+On Mon, Jan 14, 2019 at 11:38:02AM +0000, Gustavo Pimentel wrote:
+> On 11/01/2019 19:47, Andy Shevchenko wrote:
+> > On Fri, Jan 11, 2019 at 07:33:41PM +0100, Gustavo Pimentel wrote:
 
-FWIW this patch has been in -next through my tree for a while now with
-no ill effects. And the bug it fixes is real. So ... nudge nudge ...
-
-Would you consider merging if I added a bg fat FIXME on top
-saying the fact that we re-probe multiple times is
-a sign that probing needs to be cleaned up?
-
+> >> +static bool disable_msix;
+> >> +module_param(disable_msix, bool, 0644);
+> >> +MODULE_PARM_DESC(disable_msix, "Disable MSI-X interrupts");
+> > 
+> > Why?!
+> > We are no allow new module parameters without very strong arguments.
 > 
-> > > > > Reported-by: xuyandong <xuyandong2@huawei.com>
-> > > > > Tested-by: xuyandong <xuyandong2@huawei.com>
-> > > > > Cc: stable@vger.kernel.org
-> > > > > Cc: Yinghai Lu <yinghai@kernel.org>
-> > > > > Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> > > > > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > > > > ---
-> > > > > 
-> > > > > Please review and consider for stable.
-> > > > > 
-> > > > > changes from v1:
-> > > > >   comment and commit log updates to address comments by Bjorn.
-> > > > > 
-> > > > >  drivers/pci/setup-bus.c | 10 ++++++++++
-> > > > >  1 file changed, 10 insertions(+)
-> > > > > 
-> > > > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > > > > index ed960436df5e..d5c25d465d97 100644
-> > > > > --- a/drivers/pci/setup-bus.c
-> > > > > +++ b/drivers/pci/setup-bus.c
-> > > > > @@ -741,6 +741,16 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
-> > > > >   struct resource *b_res;
-> > > > >  
-> > > > >   b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-> > > > > +
-> > > > > + /*
-> > > > > +  * Don't re-check after this was called once already:
-> > > > > +  * important since bridge might be in use.
-> > > > > +  * Note: this is only reliable because as per spec all PCI to PCI
-> > > > > +  * bridges support memory unconditionally so IORESOURCE_MEM is set.
-> > > > > +  */
-> > > > > + if (b_res[1].flags & IORESOURCE_MEM)
-> > > > > +         return;
-> > > > > +
-> > > > >   b_res[1].flags |= IORESOURCE_MEM;
-> > > > >  
-> > > > >   pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > > > > -- 
-> > > > > MST
+> Since this is a reference driver and might be used to test customized HW
+> solutions, I added this parameter to allow the possibility to test the solution
+> forcing the MSI feature binding. This is required specially if who will test
+> this solution has a Root Complex with both features available (MSI and MSI-X),
+> because the Kernel will give always preference to MSI-X binding (assuming that
+> the EP has also both features available).
+
+Yes, you may do it for testing purposes, but it doesn't fit the kernel standards.
+
+> >> +	if (!pdata) {
+> >> +		dev_err(dev, "%s missing data structure\n", pci_name(pdev));
+> >> +		return -EFAULT;
+> >> +	}
+> > 
+> > Useless check.
+> 
+> Why? It's just a precaution, isn't it a good practice always to think of the
+> worst case?
+
+You just can put an implicit requirement of pdata rather than doing this
+useless check. I don't believe it would make sense to have NULL pdata for the
+driver since it wouldn't be functional anyhow.
+
+> >> +	/* Mapping PCI BAR regions */
+> >> +	err = pcim_iomap_regions(pdev, BIT(pdata->rg_bar) |
+> >> +				       BIT(pdata->ll_bar) |
+> >> +				       BIT(pdata->dt_bar),
+> >> +				 pci_name(pdev));
+> >> +	if (err) {
+
+> >> +		return err;
+> >> +	}
+
+> >> +	if (!pcim_iomap_table(pdev))
+> >> +		return -EACCES;
+> > 
+> > Never happen condition. Thus useless.
+> 
+> pcim_iomap_table() can return NULL in case of allocation failure. Besides that,
+> isn't it a good practice always to think of the worst case?
+
+No, it can't in the conditions your have in the code. See above the lines I left.
+If pcim_iomap_regions() successfully finished...
+
+> >> +	dev_info(dev, "DesignWare eDMA PCIe driver loaded completely\n");
+> > 
+> > Useless.
+> 
+> It's helpful for bring up, I can pass it to dbg.
+
+It just shows that someone didn't use existing tools and features. This message and similar are useless.
+Hint: initcall_debug.
+
+> >> +	dev_info(dev, "DesignWare eDMA PCIe driver unloaded completely\n");
+> > 
+> > Ditto.
+> 
+> It's helpful for bring up, I can pass it to dbg.
+
+Ditto.
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
