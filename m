@@ -1,203 +1,137 @@
-Return-Path: <SRS0=HN6g=PX=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=IDzV=PY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E860C43387
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 23:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10952C43612
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 03:51:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD9E92086D
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Jan 2019 23:49:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1547596148;
-	bh=+GeTLL7s5e2GXsRUAtRD0sS81iR+S/emNrERpxaRdCk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=oO22PkrOBYk76FHfj8Dh6CnnlvRmyccxyzTqoUUl2eEBmNPUC7ksZhSQ+u5yU+9/G
-	 edEKXlYTvuKIuTsBpf7EKZuB16/P5qeuqR2aLAhxAHl82M+pikqDQv6AR4g7K4Mzbh
-	 IfnNjZT5QBC84BjJkNK7D5Wv/uo81AXvLLOSfUYE=
+	by mail.kernel.org (Postfix) with ESMTP id D1C0920866
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 03:51:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="P3FMbxrh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731496AbfAOXtH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Jan 2019 18:49:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45842 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729691AbfAOXtH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Jan 2019 18:49:07 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 83B5820645;
-        Tue, 15 Jan 2019 23:49:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1547596145;
-        bh=+GeTLL7s5e2GXsRUAtRD0sS81iR+S/emNrERpxaRdCk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=bR5nlU8yYEzeoRmajDoSFhkAuVs4+VK0PDoNxq4rmqq6H5ZgWwxiF6QJF+gt7bclQ
-         hj0eDfNw+tjwCwL08NXLvu4duu20NUWrq52oBxn2WUoJTa+KNskOVeqtkb3s+mjtN/
-         Iiz+z3lBUYl09TCR7KKvNKMHsppknZHCSX/B2DoI=
-Date:   Tue, 15 Jan 2019 17:49:04 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
-        linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        linux-nvme@lists.infradead.org
-Subject: Re: [PATCH] PCI/MSI: preference to returning -ENOSPC from
- pci_alloc_irq_vectors_affinity
-Message-ID: <20190115234904.GB158366@google.com>
-References: <20190103013106.26452-1-ming.lei@redhat.com>
- <20190114232338.GE33971@google.com>
- <20190115131140.GB28672@lst.de>
- <05cb9e71-e455-a717-c64c-b5242ec38bad@kernel.dk>
- <20190115193135.GH33971@google.com>
- <20190115224631.GA22558@ming.t460p>
+        id S1731482AbfAPDva (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Jan 2019 22:51:30 -0500
+Received: from mail-eopbgr70051.outbound.protection.outlook.com ([40.107.7.51]:33872
+        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728627AbfAPDva (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Jan 2019 22:51:30 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7cOQzKhNfmgqmTA6jsCoRIhXkNvxfm895Heiz2O4TuQ=;
+ b=P3FMbxrhCVWbSWr2xnNeIlhA/QzjutbjSadeln5SuQ3wAxnoQbvay6x5Tu7CxAZKsdrV/xkZTZfwrqVYVnaPmwzQWJf/Y3iJugChiV06KaYWvUTEQylhSmEUH5aHnPn+UJuznkHBmRJ8erjJ1JvlBZb9C2RQY66uKDMSpDeaGpo=
+Received: from AM5PR04MB3299.eurprd04.prod.outlook.com (10.173.255.158) by
+ AM5PR04MB2945.eurprd04.prod.outlook.com (10.173.254.13) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1516.14; Wed, 16 Jan 2019 03:50:45 +0000
+Received: from AM5PR04MB3299.eurprd04.prod.outlook.com
+ ([fe80::e96c:f353:8099:c2a3]) by AM5PR04MB3299.eurprd04.prod.outlook.com
+ ([fe80::e96c:f353:8099:c2a3%5]) with mapi id 15.20.1537.018; Wed, 16 Jan 2019
+ 03:50:45 +0000
+From:   Xiaowei Bao <xiaowei.bao@nxp.com>
+To:     Rob Herring <robh@kernel.org>
+CC:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>, "kishon@ti.com" <kishon@ti.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        "kstewart@linuxfoundation.org" <kstewart@linuxfoundation.org>,
+        "cyrille.pitchen@free-electrons.com" 
+        <cyrille.pitchen@free-electrons.com>,
+        "pombredanne@nexb.com" <pombredanne@nexb.com>,
+        "shawn.lin@rock-chips.com" <shawn.lin@rock-chips.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: RE: [PATCHv4 1/4] dt-bindings: add DT binding for the layerscape PCIe
+ controller with EP mode
+Thread-Topic: [PATCHv4 1/4] dt-bindings: add DT binding for the layerscape
+ PCIe controller with EP mode
+Thread-Index: AQHUpwBaZZB7USYgk0+FGeuMpQ+mBqWqJqaAgAcnwJA=
+Date:   Wed, 16 Jan 2019 03:50:44 +0000
+Message-ID: <AM5PR04MB32998AF3C7BA8EB9AF659646F5820@AM5PR04MB3299.eurprd04.prod.outlook.com>
+References: <20190108030922.24031-1-xiaowei.bao@nxp.com>
+ <20190111143123.GA6960@bogus>
+In-Reply-To: <20190111143123.GA6960@bogus>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=xiaowei.bao@nxp.com; 
+x-originating-ip: [119.31.174.73]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;AM5PR04MB2945;6:amHWAzFa3LJG0XWr6U9v0KL5UzK4fjggczYCLwrtUE4JUr339bfhz/tTMIWCwYtwdEr8xyJmQFkH0neTBlLP1KvtNKfW5rQdw2+vC1itTMNCLBebw/6Kz2ziMh0MTf8N5Z5/quX02Lwz811vldWgciGnIGpTXkjy1Vl0HYRcDBUpnvknqvOODZdqt73sucrAskjrFFz1o652eTPXW9FtDt7YIBkQHGoOaDRXLIG3daGnNNGP/NrdLxzkJ/xLQ3+EByyW5apsKi9o9+GFVtDEX3XcT08oSQb2BvtPGpH1hppuc5Pqd0ckDeRFOXyI3B/CcWR84Toj99ppEcJN/Ay+xj7L+cNEb7zQvj0FGjg1kECa9fopbv+TC9IoLVrVm/s/QW5DTTX+DJJjmb5yguichXfo3bEzKy7nCiXIRSrQqH9qtcsL2BPu0dg4PgBarcHlq6nUUF++22GDbLYj3iaEDA==;5:AgDRfU3/SYJwjptA6Zmc0vpkvDSuHB23y2U1pb1rUd/fey2JgWvSBbw4AGGubzkRrQMz8NAJSwocxycagjVFXygFJRBl39DUfhiAoxw9xdZYn3zMCndU5+WnqIutve+wxfGH+4L8wi14DmuqngpZUolJFYUFyN1vTJkUOGTpDVggEOdGwOXeso4VjDtAC8puZJcUSFzpmei9vHyo9FqENw==;7:nPN9V31qPaaC9oH2jg0bmfQkQtuwWlQU/tY9Qt1aNWMApP9EE1VQWjV4ejKOFx3NrFjhQoRWHiBOeB1I2YEfo+Yf1QswwGfcqcRYiRxtQh4RWwJTmdWrOBEB/LEJhRh8MurnO5AgrGxEGJKyWTBPjw==
+x-ms-office365-filtering-correlation-id: a5407ca8-dda5-4ff0-687d-08d67b65cb42
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600109)(711020)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM5PR04MB2945;
+x-ms-traffictypediagnostic: AM5PR04MB2945:
+x-microsoft-antispam-prvs: <AM5PR04MB2945A32729848A4FE7A7B56FF5820@AM5PR04MB2945.eurprd04.prod.outlook.com>
+x-forefront-prvs: 091949432C
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(396003)(376002)(346002)(136003)(366004)(189003)(199004)(13464003)(68736007)(33656002)(99286004)(486006)(54906003)(44832011)(7416002)(5660300001)(6246003)(74316002)(8936002)(229853002)(53936002)(14454004)(4326008)(6436002)(66066001)(478600001)(81156014)(316002)(81166006)(6916009)(8676002)(9686003)(25786009)(7736002)(305945005)(86362001)(55016002)(102836004)(105586002)(106356001)(14444005)(53546011)(6506007)(256004)(26005)(7696005)(76176011)(6116002)(71200400001)(476003)(3846002)(446003)(11346002)(2906002)(186003)(71190400001)(97736004);DIR:OUT;SFP:1101;SCL:1;SRVR:AM5PR04MB2945;H:AM5PR04MB3299.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: bfCCtXHwJUiLK1rlULMdiVZDbuep4HdBsN57Sby15W99c6NDyXuOV1v6xphOyqxAA6a6tpjX7UdPOUCQBiqQ8z7hUrK3WBxGlAF67ZfnTrtT4wXWkGL4Ta2gOMCtP9+1d+o3IXZS1QM4NF6TNYzA2Kp4yGMj8si/sv18FWwgN8hWY+Z2SjCbEsnebIOWrb0Qp32f9z6pbNSr5Qk4Q/F9kNzhe0vNR8dg+hNloIjcT9Oh1VQl5QcVXEOamIcgwXQsSL37ZBngdBlnmpf6PzuB8CqDbUpYlMSsHLULXUJbt951zBIeKLiNIASm2XURrMDN7vnX9Nc0Sdcwp0JU5ilGYNtSaOVhB2T4ZA64yenB2qqoGc1D/604J/hMI7Es02aoEVazsEmeKyGDY48LxDxQN52qcIfh9yjpeMLYK9T99ec=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190115224631.GA22558@ming.t460p>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a5407ca8-dda5-4ff0-687d-08d67b65cb42
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jan 2019 03:50:45.0833
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR04MB2945
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 16, 2019 at 06:46:32AM +0800, Ming Lei wrote:
-> Hi Bjorn,
-> 
-> I think Christoph and Jens are correct, we should make this patch into
-> 5.0 because the issue is triggered since 3b6592f70ad7b4c2 ("nvme: utilize
-> two queue maps, one for reads and one for writes"), which is merged to
-> 5.0-rc.
-> 
-> For example, before 3b6592f70ad7b4c2, one nvme controller may be
-> allocated 64 irq vectors; but after that commit, only 1 irq vector
-> is assigned to this controller.
-> 
-> On Tue, Jan 15, 2019 at 01:31:35PM -0600, Bjorn Helgaas wrote:
-> > On Tue, Jan 15, 2019 at 09:22:45AM -0700, Jens Axboe wrote:
-> > > On 1/15/19 6:11 AM, Christoph Hellwig wrote:
-> > > > On Mon, Jan 14, 2019 at 05:23:39PM -0600, Bjorn Helgaas wrote:
-> > > >> Applied to pci/msi for v5.1, thanks!
-> > > >>
-> > > >> If this is something that should be in v5.0, let me know and include the
-> > > >> justification, e.g., something we already merged for v5.0 or regression
-> > > >> info, etc, and a Fixes: line, and I'll move it to for-linus.
-> > > > 
-> > > > I'd be tempted to queues this up for 5.0.  Ming, what is your position?
-> > > 
-> > > I think we should - the API was introduced in this series, I think there's
-> > > little (to no) reason NOT to fix it for 5.0.
-> > 
-> > I'm guessing the justification goes something like this (I haven't
-> > done all the research, so I'll leave it to Ming to fill in the details):
-> > 
-> >   pci_alloc_irq_vectors_affinity() was added in v4.x by XXXX ("...").
-> 
-> dca51e7892fa3b ("nvme: switch to use pci_alloc_irq_vectors")
-> 
-> >   It had this return value defect then, but its min_vecs/max_vecs
-> >   parameters removed the need for callers to interatively reduce the
-> >   number of IRQs requested and retry the allocation, so they didn't
-> >   need to distinguish -ENOSPC from -EINVAL.
-> > 
-> >   In v5.0, XXX ("...") added IRQ sets to the interface, which
-> 
-> 3b6592f70ad7b4c2 ("nvme: utilize two queue maps, one for reads and one for writes")
-> 
-> >   reintroduced the need to check for -ENOSPC and possibly reduce the
-> >   number of IRQs requested and retry the allocation.
-
-We're fixing a PCI core defect, so we should mention the relevant PCI
-core commits, not the nvme-specific ones.  I looked them up for you
-and moved this to for-linus for v5.0.
-
-
-commit 77f88abd4a6f73a1a68dbdc0e3f21575fd508fc3
-Author: Ming Lei <ming.lei@redhat.com>
-Date:   Tue Jan 15 17:31:29 2019 -0600
-
-    PCI/MSI: Return -ENOSPC from pci_alloc_irq_vectors_affinity()
-    
-    The API of pci_alloc_irq_vectors_affinity() says it returns -ENOSPC if
-    fewer than @min_vecs interrupt vectors are available for @dev.
-    
-    However, if a device supports MSI-X but not MSI and a caller requests
-    @min_vecs that can't be satisfied by MSI-X, we previously returned -EINVAL
-    (from the failed attempt to enable MSI), not -ENOSPC.
-    
-    When -ENOSPC is returned, callers may reduce the number IRQs they request
-    and try again.  Most callers can use the @min_vecs and @max_vecs
-    parameters to avoid this retry loop, but that doesn't work when using IRQ
-    affinity "nr_sets" because rebalancing the sets is driver-specific.
-    
-    This return value bug has been present since pci_alloc_irq_vectors() was
-    added in v4.10 by aff171641d18 ("PCI: Provide sensible IRQ vector
-    alloc/free routines"), but it wasn't an issue because @min_vecs/@max_vecs
-    removed the need for callers to iteratively reduce the number of IRQs
-    requested and retry the allocation, so they didn't need to distinguish
-    -ENOSPC from -EINVAL.
-    
-    In v5.0, 6da4b3ab9a6e ("genirq/affinity: Add support for allocating
-    interrupt sets") added IRQ sets to the interface, which reintroduced the
-    need to check for -ENOSPC and possibly reduce the number of IRQs requested
-    and retry the allocation.
-    
-    Signed-off-by: Ming Lei <ming.lei@redhat.com>
-    [bhelgaas: changelog]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Cc: Jens Axboe <axboe@fb.com>
-    Cc: Keith Busch <keith.busch@intel.com>
-    Cc: Christoph Hellwig <hch@lst.de>
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 7a1c8a09efa5..4c0b47867258 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1168,7 +1168,8 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 				   const struct irq_affinity *affd)
- {
- 	static const struct irq_affinity msi_default_affd;
--	int vecs = -ENOSPC;
-+	int msix_vecs = -ENOSPC;
-+	int msi_vecs = -ENOSPC;
- 
- 	if (flags & PCI_IRQ_AFFINITY) {
- 		if (!affd)
-@@ -1179,16 +1180,17 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 	}
- 
- 	if (flags & PCI_IRQ_MSIX) {
--		vecs = __pci_enable_msix_range(dev, NULL, min_vecs, max_vecs,
--				affd);
--		if (vecs > 0)
--			return vecs;
-+		msix_vecs = __pci_enable_msix_range(dev, NULL, min_vecs,
-+						    max_vecs, affd);
-+		if (msix_vecs > 0)
-+			return msix_vecs;
- 	}
- 
- 	if (flags & PCI_IRQ_MSI) {
--		vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs, affd);
--		if (vecs > 0)
--			return vecs;
-+		msi_vecs = __pci_enable_msi_range(dev, min_vecs, max_vecs,
-+						  affd);
-+		if (msi_vecs > 0)
-+			return msi_vecs;
- 	}
- 
- 	/* use legacy irq if allowed */
-@@ -1199,7 +1201,9 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 		}
- 	}
- 
--	return vecs;
-+	if (msix_vecs == -ENOSPC)
-+		return -ENOSPC;
-+	return msi_vecs;
- }
- EXPORT_SYMBOL(pci_alloc_irq_vectors_affinity);
- 
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBSb2IgSGVycmluZyA8cm9iaEBr
+ZXJuZWwub3JnPiANClNlbnQ6IDIwMTnE6jHUwjExyNUgMjI6MzENClRvOiBYaWFvd2VpIEJhbyA8
+eGlhb3dlaS5iYW9AbnhwLmNvbT4NCkNjOiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyByb2JoK2R0QGtl
+cm5lbC5vcmc7IG1hcmsucnV0bGFuZEBhcm0uY29tOyBzaGF3bmd1b0BrZXJuZWwub3JnOyBMZW8g
+TGkgPGxlb3lhbmcubGlAbnhwLmNvbT47IGtpc2hvbkB0aS5jb207IGxvcmVuem8ucGllcmFsaXNp
+QGFybS5jb207IGFybmRAYXJuZGIuZGU7IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBNLmgu
+IExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdrYWkgSHUgPG1pbmdrYWkuaHVAbnhw
+LmNvbT47IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPjsga3N0ZXdhcnRAbGludXhmb3VuZGF0
+aW9uLm9yZzsgY3lyaWxsZS5waXRjaGVuQGZyZWUtZWxlY3Ryb25zLmNvbTsgcG9tYnJlZGFubmVA
+bmV4Yi5jb207IHNoYXduLmxpbkByb2NrLWNoaXBzLmNvbTsgbmlrbGFzLmNhc3NlbEBheGlzLmNv
+bTsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7
+IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
+cmFkZWFkLm9yZzsgbGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmc7IFhpYW93ZWkgQmFvIDx4
+aWFvd2VpLmJhb0BueHAuY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSHY0IDEvNF0gZHQtYmluZGlu
+Z3M6IGFkZCBEVCBiaW5kaW5nIGZvciB0aGUgbGF5ZXJzY2FwZSBQQ0llIGNvbnRyb2xsZXIgd2l0
+aCBFUCBtb2RlDQoNCk9uIFR1ZSwgIDggSmFuIDIwMTkgMTE6MDk6MTkgKzA4MDAsIFhpYW93ZWkg
+QmFvIHdyb3RlOg0KPiBBZGQgdGhlIGRvY3VtZW50YXRpb24gZm9yIHRoZSBEZXZpY2UgVHJlZSBi
+aW5kaW5nIGZvciB0aGUgbGF5ZXJzY2FwZSANCj4gUENJZSBjb250cm9sbGVyIHdpdGggRVAgbW9k
+ZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFhpYW93ZWkgQmFvIDx4aWFvd2VpLmJhb0BueHAuY29t
+Pg0KPiAtLS0NCj4gdjI6DQo+ICAtIEFkZCB0aGUgU29DIHNwZWNpZmljIGNvbXBhdGlibGVzLg0K
+PiB2MzoNCj4gIC0gbW9kaWZ5IHRoZSBjb21taXQgbWVzc2FnZS4NCj4gdjQ6DQo+ICAtIG5vIGNo
+YW5nZS4NCj4gDQo+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2ku
+dHh0ICAgICB8ICAgIDMgKysrDQo+ICAxIGZpbGVzIGNoYW5nZWQsIDMgaW5zZXJ0aW9ucygrKSwg
+MCBkZWxldGlvbnMoLSkNCj4gDQoNClBsZWFzZSBhZGQgQWNrZWQtYnkvUmV2aWV3ZWQtYnkgdGFn
+cyB3aGVuIHBvc3RpbmcgbmV3IHZlcnNpb25zLiBIb3dldmVyLCB0aGVyZSdzIG5vIG5lZWQgdG8g
+cmVwb3N0IHBhdGNoZXMgKm9ubHkqIHRvIGFkZCB0aGUgdGFncy4gVGhlIHVwc3RyZWFtIG1haW50
+YWluZXIgd2lsbCBkbyB0aGF0IGZvciBhY2tzIHJlY2VpdmVkIG9uIHRoZSB2ZXJzaW9uIHRoZXkg
+YXBwbHkuDQoNCklmIGEgdGFnIHdhcyBub3QgYWRkZWQgb24gcHVycG9zZSwgcGxlYXNlIHN0YXRl
+IHdoeSBhbmQgd2hhdCBjaGFuZ2VkLg0KW1hpYW93ZWkgQmFvXSBIaSBSb2IsIHRoYW5rcyBhIGxv
+dCBmb3IgeW91ciBjb21tZW50cywgaWYgdGhlIHBhdGNoZXMgaGF2ZSBuZXcgdXBkYXRlLCBJIHdp
+bGwgYWRkIHRoZSBBY2tlZC1ieS9SZXZpZXdlZC1ieSwgdGhhbmtzLg0KDQo=
