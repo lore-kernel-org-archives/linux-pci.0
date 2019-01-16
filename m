@@ -2,189 +2,146 @@ Return-Path: <SRS0=IDzV=PY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B53C43387
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 14:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7501C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 14:22:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A3E820657
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 14:06:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="CL2juzBp"
+	by mail.kernel.org (Postfix) with ESMTP id BF2EC20859
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 14:22:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387939AbfAPOGz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jan 2019 09:06:55 -0500
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:51610 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733035AbfAPOGz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 09:06:55 -0500
-Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 0F87A24E21E0;
-        Wed, 16 Jan 2019 06:06:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1547647615; bh=nuYid/MPdLAjZvon8pDX1xdHMs9K8I43TIZLXDe8T9U=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=CL2juzBpC95hm7xkoVVCvOz58ti5K35MxlkiC0jSM1WpKyuLettlkZWbbRcj92VYz
-         qmn1iNxkrtGZj6ELZpEqQn8BDMFWGdKqstK7IuB5D3z2NebGxaWdtcvfbAWcVc/P8u
-         Bsk5cmKxPBX+RUmWD4eFlz1X8ZuXATiVV9B18vIX5sddKXZq33YX93Je3PxuVSisI0
-         IpNlIrd2Fj9RKlQ7F4aA4jYq6QXAc6IqinWgTDxoXxFAVOA6FNA2RgzKutSEeYT/6H
-         SIM1SRh/X8v4TFCWtRoBUzbCVdAsM27h5905EbDtE43uaxQ2AAcGaFgXbW4du+nJw6
-         2p7Sg4bchGR4A==
-Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 627985562;
-        Wed, 16 Jan 2019 06:06:54 -0800 (PST)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 06:06:54 -0800
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 15:06:52 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 15:06:51 +0100
-Subject: Re: [RFC v3 2/7] dmaengine: Add Synopsys eDMA IP version 0 support
-To:     Jose Abreu <jose.abreu@synopsys.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>
-CC:     Vinod Koul <vkoul@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        Joao Pinto <joao.pinto@synopsys.com>,
-        Luis Oliveira <luis.oliveira@synopsys.com>,
-        Vitor Soares <vitor.soares@synopsys.com>,
-        Nelson Costa <nelson.costa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <eb8fee407dbeb515100a2039d1b3464ce12452d4.1547230339.git.gustavo.pimentel@synopsys.com>
- <c7c2ff4a-5766-d829-ac3f-43fc280a457a@synopsys.com>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <5fbdc016-138c-ced0-4dd5-9791bee9d34c@synopsys.com>
-Date:   Wed, 16 Jan 2019 14:02:10 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        id S2387530AbfAPOWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jan 2019 09:22:39 -0500
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:58669 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387494AbfAPOWj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 09:22:39 -0500
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id EA663280074F4;
+        Wed, 16 Jan 2019 15:22:35 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id A3F255B1C; Wed, 16 Jan 2019 15:22:35 +0100 (CET)
+Date:   Wed, 16 Jan 2019 15:22:35 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Dongdong Liu <liudongdong3@huawei.com>
+Cc:     helgaas@kernel.org, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, linuxarm@huawei.com,
+        john.garry@huawei.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [RFC PATCH] PCI: hotplug: Fix surprise removal report card
+ present and link failed
+Message-ID: <20190116142235.6drd6avwk3e7rtwd@wunner.de>
+References: <1547649064-19019-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <c7c2ff4a-5766-d829-ac3f-43fc280a457a@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1547649064-19019-1-git-send-email-liudongdong3@huawei.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jose,
+[cc += Mika]
 
-On 16/01/2019 10:33, Jose Abreu wrote:
-> Hi Gustavo,
+On Wed, Jan 16, 2019 at 10:31:04PM +0800, Dongdong Liu wrote:
+> The lspci -tv topology is as below.
+>  +-[0000:80]-+-00.0-[81]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>  |           +-02.0-[82]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>  |           +-04.0-[83]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>  |           +-06.0-[84]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>  |           +-10.0-[87]----00.0  Huawei Technologies Co., Ltd. Device 3714
 > 
-> On 1/11/2019 6:33 PM, Gustavo Pimentel wrote:
->> Add support for the eDMA IP version 0 driver for both register maps (legacy
->> and unroll).
->>
->> The legacy register mapping was the initial implementation, which consisted
->> in having all registers belonging to channels multiplexed, which could be
->> change anytime (which could led a race-condition) by view port register
->> (access to only one channel available each time).
->>
->> This register mapping is not very effective and efficient in a multithread
->> environment, which has led to the development of unroll registers mapping,
->> which consists of having all channels registers accessible any time by
->> spreading all channels registers by an offset between them.
->>
->> This version supports a maximum of 16 independent channels (8 write +
->> 8 read), which can run simultaneously.
->>
->> Implements a scatter-gather transfer through a linked list, where the size
->> of linked list depends on the allocated memory divided equally among all
->> channels.
->>
->> Each linked list descriptor can transfer from 1 byte to 4 Gbytes and is
->> alignmented to DWORD.
->>
->> Both SAR (Source Address Register) and DAR (Destination Address Register)
->> are alignmented to byte.
->>
->> Changes:
->> RFC v1->RFC v2:
->>  - Replace comments // (C99 style) by /**/
->>  - Replace magic numbers by defines
->>  - Replace boolean return from ternary operation by a double negation
->>    operation
->>  - Replace QWORD_HI/QWORD_LO macros by upper_32_bits()/lower_32_bits()
->>  - Fix the headers of the .c and .h files according to the most recent
->>    convention
->>  - Fix errors and checks pointed out by checkpatch with --strict option
->>  - Replace patch small description tag from dma by dmaengine
->>  - Refactor code to replace atomic_t by u32 variable type
->> RFC v2->RFC v3:
->>  - Code rewrite to use FIELD_PREP() and FIELD_GET()
->>  - Add define to magic numbers
->>  - Fix minor bugs
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> Cc: Vinod Koul <vkoul@kernel.org>
->> Cc: Dan Williams <dan.j.williams@intel.com>
->> Cc: Eugeniy Paltsev <paltsev@synopsys.com>
->> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->> Cc: Russell King <rmk+kernel@armlinux.org.uk>
->> Cc: Niklas Cassel <niklas.cassel@linaro.org>
->> Cc: Joao Pinto <jpinto@synopsys.com>
->> Cc: Jose Abreu <jose.abreu@synopsys.com>
->> Cc: Luis Oliveira <lolivei@synopsys.com>
->> Cc: Vitor Soares <vitor.soares@synopsys.com>
->> Cc: Nelson Costa <nelson.costa@synopsys.com>
->> Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
+> Then surprise removal 87:00.0 NVME SSD card. The message is as below.
 > 
->> +void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
->> +{
->> +	struct dw_edma_chan *chan = chunk->chan;
->> +	struct dw_edma *dw = chan->chip->dw;
->> +	u32 tmp;
->> +	u64 llp;
->> +
->> +	dw_edma_v0_core_write_chunk(chunk);
->> +
->> +	if (first) {
->> +		/* Enable engine */
->> +		SET_RW(dw, chan->dir, engine_en, BIT(0));
->> +		/* Interrupt unmask - done, abort */
->> +		tmp = GET_RW(dw, chan->dir, int_mask);
->> +		tmp &= ~FIELD_PREP(EDMA_V0_DONE_INT_MASK, BIT(chan->id));
->> +		tmp &= ~FIELD_PREP(EDMA_V0_ABORT_INT_MASK, BIT(chan->id));
->> +		SET_RW(dw, chan->dir, int_mask, tmp);
->> +		/* Linked list error */
->> +		tmp = GET_RW(dw, chan->dir, linked_list_err_en);
->> +		tmp |= FIELD_PREP(EDMA_V0_LINKED_LIST_ERR_MASK, BIT(chan->id));
->> +		SET_RW(dw, chan->dir, linked_list_err_en, tmp);
->> +		/* Channel control */
->> +		SET_CH(dw, chan->dir, chan->id, ch_control1,
->> +		       (DW_EDMA_V0_CCS | DW_EDMA_V0_LLE));
->> +		/* Linked list - low, high */
->> +		llp = cpu_to_le64(chunk->ll_region.paddr);
->> +		SET_CH(dw, chan->dir, chan->id, llp_low, lower_32_bits(llp));
->> +		SET_CH(dw, chan->dir, chan->id, llp_high, upper_32_bits(llp));
->> +	}
->> +	/* Doorbell */
-> 
-> Not sure if DMA subsystem does this but maybe you need some kind
-> of barrier to ensure everything is coherent before granting
-> control to eDMA ?
+> pciehp 0000:80:10.0:pcie004: Slot(36): Link Down
+> iommu: Removing device 0000:87:00.0 from group 12
+> pciehp 0000:80:10.0:pcie004: Slot(36): Card present
+> pcieport 0000:80:10.0: Data Link Layer Link Active not set in 1000 msec
+> pciehp 0000:80:10.0:pcie004: Failed to check link status
 
-Each readl and writel inside of helper macros (SET_RW/GETRW and SET_CH/GET_CH)
-has a memory barrier, that grants that the coherency, however this is platform
-dependent.
+What is the problem that you're trying to fix?  That these messages
+are logged?  Or is there a bigger issue?  If the only problem are the
+messages, then I feel that the current behavior is a feature, not a bug.
+We could probably tone down the "Failed to check link status" message's
+severity.  (Currently it's KERN_ERR, all the other messages are KERN_INFO.)
+
+
+> The NVME SSD card is permited to surprise removal with slot power on
+> on the D06 board. The hotplug port's POWER_CTRL(ctrl) is false.
+
+I don't quite follow:  Does the hotplug port have a Power Controller but
+misrepresents that fact in the Slot Capabilities register?
+
+
+> Data link layer state changed (link down) event reported prior to presence
+> detect changed (card is not present) when surprise removal.
+
+It's normal that PDS and DLLSC events are received in varying order and with
+significant delays.  (I've seen 244 msec once with Thunderbolt between
+PDS- and DLLSC-.)
+
+
+> Current code pciehp_handle_presence_or_link_change() handle link down event,
+> then check the card present, but at this time presence detect state have
+> not updated, so have such issue. If surprise removal and power controller
+> present is not implemented, wait for at least 1 second before checking
+> card present to fix the issue.
+
+Thunderbolt doesn't have a Power Controller either and this change would
+imply that if Thunderbolt devices are quickly swapped, bringing up the
+replaced device would take longer than it takes now.  So I'm not really
+happy about this change.
+
+Thanks,
+
+Lukas
 
 > 
->> +	SET_RW(dw, chan->dir, doorbell,
->> +	       FIELD_PREP(EDMA_V0_DOORBELL_CH_MASK, chan->id));
->> +}
->> +
-
-Thanks!
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> ---
+>  drivers/pci/hotplug/pciehp_ctrl.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 3f3df4c..ef8952d 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -216,6 +216,7 @@ void pciehp_handle_disable_request(struct controller *ctrl)
+>  void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+>  {
+>  	bool present, link_active;
+> +	bool safe_removal = SAFE_REMOVAL;
+>  
+>  	/*
+>  	 * If the slot is on and presence or link has changed, turn it off.
+> @@ -236,6 +237,7 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+>  			ctrl_info(ctrl, "Slot(%s): Card not present\n",
+>  				  slot_name(ctrl));
+>  		pciehp_disable_slot(ctrl, SURPRISE_REMOVAL);
+> +		safe_removal = SURPRISE_REMOVAL;
+>  		break;
+>  	default:
+>  		mutex_unlock(&ctrl->state_lock);
+> @@ -244,6 +246,15 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+>  
+>  	/* Turn the slot on if it's occupied or link is up */
+>  	mutex_lock(&ctrl->state_lock);
+> +	/*
+> +	 * if surprise removal and power controller present is not implemented,
+> +	 * wait for at least 1 second before checking card present as
+> +	 * data link layer state changed (link down) event reported
+> +	 * prior to presence detect changed (card is not present).
+> +	 */
+> +	if (!safe_removal && !POWER_CTRL(ctrl))
+> +		msleep(1000);
+> +
+>  	present = pciehp_card_present(ctrl);
+>  	link_active = pciehp_check_link_active(ctrl);
+>  	if (!present && !link_active) {
+> -- 
+> 1.9.1
