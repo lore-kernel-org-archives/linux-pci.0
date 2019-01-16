@@ -2,183 +2,121 @@ Return-Path: <SRS0=IDzV=PY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3C5C43387
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 12:01:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0DBBC43387
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 13:56:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA764206C2
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 12:01:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="iG2mxDB4"
+	by mail.kernel.org (Postfix) with ESMTP id C88E2206C2
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 13:56:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390036AbfAPMBF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jan 2019 07:01:05 -0500
-Received: from smtprelay.synopsys.com ([198.182.47.9]:48152 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390001AbfAPMBE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 07:01:04 -0500
-Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 79B3A24E0600;
-        Wed, 16 Jan 2019 04:01:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1547640064; bh=XhTYBVG0GNTpvdt/A6CyJAYXyqExqLZEAX3Sa7dxaFg=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=iG2mxDB4LMgVRHryJEAmELGy+EG9JRrP8BiMf/iS3DhD5nqPAHKet0tL4LT7Bnp0t
-         aPBznLJNgG+qxRTR/Xdz5iMnhcaArvlNMgaofjRfM4FbvLGiAweutG9KKnZ0ztoQfg
-         vB4kQo6dMh/UHHledYJ8Ar8Hffy8OhhV+F0spvObA6dRmzkXRt8fjS8KfS6SCH1YPl
-         9y7GK/uQ5jxHpSkhIW7x9VWNBvamJ+tl44LNEJcGt3tJ1L57X/RYKC5rnQCteUHK3S
-         Le5XAsS+C6qfWi//+LEZm4jn6b03JHNIhGxRHXfjTG/sUDTCQF3inv82qTW63a/w+2
-         4APxFRG/ibCsg==
-Received: from us01wehtc1.internal.synopsys.com (us01wehtc1-vip.internal.synopsys.com [10.12.239.236])
-        by mailhost.synopsys.com (Postfix) with ESMTP id 5FD295D5D;
-        Wed, 16 Jan 2019 04:01:04 -0800 (PST)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- us01wehtc1.internal.synopsys.com (10.12.239.235) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 04:01:04 -0800
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 13:01:02 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 13:01:02 +0100
-Subject: Re: [RFC v3 7/7] dmaengine: Add Synopsys eDMA IP test and sample
- driver
-To:     Jose Abreu <jose.abreu@synopsys.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>
-CC:     Vinod Koul <vkoul@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        Joao Pinto <joao.pinto@synopsys.com>,
-        Jose Abreu <jose.abreu@synopsys.com>,
-        Luis de Oliveira <luis.oliveira@synopsys.com>,
-        Vitor Soares <vitor.soares@synopsys.com>,
-        Nelson Costa <nelson.costa@synopsys.com>,
-        "Pedro Sousa" <pedrom.sousa@synopsys.com>
-References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <cc195ac53839b318764c8f6502002cd6d933a923.1547230339.git.gustavo.pimentel@synopsys.com>
- <1876fee2-9f8c-925c-a9ab-cf69fe6693a1@synopsys.com>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <488fda69-6e92-00ae-a5f2-2fe099a0ac8f@synopsys.com>
-Date:   Wed, 16 Jan 2019 11:56:20 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        id S1733254AbfAPN4N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jan 2019 08:56:13 -0500
+Received: from szxga06-in.huawei.com ([45.249.212.32]:52784 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727935AbfAPN4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Jan 2019 08:56:13 -0500
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id BE81E2B175610BBC9578;
+        Wed, 16 Jan 2019 21:56:10 +0800 (CST)
+Received: from linux-ioko.site (10.71.200.31) by
+ DGGEMS412-HUB.china.huawei.com (10.3.19.212) with Microsoft SMTP Server id
+ 14.3.408.0; Wed, 16 Jan 2019 21:56:02 +0800
+From:   Dongdong Liu <liudongdong3@huawei.com>
+To:     <helgaas@kernel.org>, <lukas@wunner.de>,
+        <lorenzo.pieralisi@arm.com>
+CC:     <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+        <john.garry@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
+Subject: [RFC PATCH] PCI: hotplug: Fix surprise removal report card present and link failed
+Date:   Wed, 16 Jan 2019 22:31:04 +0800
+Message-ID: <1547649064-19019-1-git-send-email-liudongdong3@huawei.com>
+X-Mailer: git-send-email 1.9.1
 MIME-Version: 1.0
-In-Reply-To: <1876fee2-9f8c-925c-a9ab-cf69fe6693a1@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+Content-Type: text/plain
+X-Originating-IP: [10.71.200.31]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Jose,
+The lspci -tv topology is as below.
+ +-[0000:80]-+-00.0-[81]----00.0  Huawei Technologies Co., Ltd. Device 3714
+ |           +-02.0-[82]----00.0  Huawei Technologies Co., Ltd. Device 3714
+ |           +-04.0-[83]----00.0  Huawei Technologies Co., Ltd. Device 3714
+ |           +-06.0-[84]----00.0  Huawei Technologies Co., Ltd. Device 3714
+ |           +-10.0-[87]----00.0  Huawei Technologies Co., Ltd. Device 3714
 
-On 16/01/2019 10:45, Jose Abreu wrote:
-> Hi Gustavo,
-> 
-> On 1/11/2019 6:33 PM, Gustavo Pimentel wrote:
->> Add Synopsys eDMA IP test and sample driver to be use for testing
->> purposes and also as a reference for any developer who needs to
->> implement and use Synopsys eDMA.
->>
->> This driver can be compile as built-in or external module in kernel.
->>
->> To enable this driver just select DW_EDMA_TEST option in kernel
->> configuration, however it requires and selects automatically DW_EDMA
->> option too.
->>
->> Changes:
->> RFC v1->RFC v2:
->>  - No changes
->> RFC v2->RFC v3:
->>  - Add test module
->>
->> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->> Cc: Vinod Koul <vkoul@kernel.org>
->> Cc: Dan Williams <dan.j.williams@intel.com>
->> Cc: Eugeniy Paltsev <paltsev@synopsys.com>
->> Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->> Cc: Russell King <rmk+kernel@armlinux.org.uk>
->> Cc: Niklas Cassel <niklas.cassel@linaro.org>
->> Cc: Joao Pinto <jpinto@synopsys.com>
->> Cc: Jose Abreu <jose.abreu@synopsys.com>
->> Cc: Luis Oliveira <lolivei@synopsys.com>
->> Cc: Vitor Soares <vitor.soares@synopsys.com>
->> Cc: Nelson Costa <nelson.costa@synopsys.com>
->> Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
-> 
->> +static int dw_edma_test_add_channel(struct dw_edma_test_info *info,
->> +				    struct dma_chan *chan,
->> +				    u32 channel)
->> +{
->> +	struct dw_edma_test_params *params = &info->params;
->> +	struct dw_edma_test_thread *thread;
->> +	struct dw_edma_test_chan *tchan;
->> +
->> +	tchan = kvmalloc(sizeof(*tchan), GFP_KERNEL);
->> +	if (!tchan)
->> +		return -ENOMEM;
->> +
->> +	tchan->chan = chan;
->> +
->> +	thread = kvzalloc(sizeof(*thread), GFP_KERNEL);
->> +	if (!thread) {
->> +		kvfree(tchan);
->> +		return -ENOMEM;
->> +	}
->> +
->> +	thread->info = info;
->> +	thread->chan = tchan->chan;
->> +	switch (channel) {
->> +	case EDMA_CH_WR:
->> +		thread->direction = DMA_DEV_TO_MEM;
->> +		break;
->> +	case EDMA_CH_RD:
->> +		thread->direction = DMA_MEM_TO_DEV;
->> +		break;
->> +	default:
->> +		kvfree(tchan);
-> 
-> You are leaking thread here.
+Then surprise removal 87:00.0 NVME SSD card. The message is as below.
 
-Yes, indeed.
+pciehp 0000:80:10.0:pcie004: Slot(36): Link Down
+iommu: Removing device 0000:87:00.0 from group 12
+pciehp 0000:80:10.0:pcie004: Slot(36): Card present
+pcieport 0000:80:10.0: Data Link Layer Link Active not set in 1000 msec
+pciehp 0000:80:10.0:pcie004: Failed to check link status
 
-> 
->> +		return -EPERM;
->> +	}
->> +	thread->test_done.wait = &thread->done_wait;
->> +	init_waitqueue_head(&thread->done_wait);
->> +
->> +	if (!params->repetitions)
->> +		thread->task = kthread_create(dw_edma_test_sg, thread, "%s",
->> +					      dma_chan_name(chan));
->> +	else
->> +		thread->task = kthread_create(dw_edma_test_cyclic, thread, "%s",
->> +					      dma_chan_name(chan));
->> +
->> +	if (IS_ERR(thread->task)) {
->> +		pr_err("failed to create thread %s\n", dma_chan_name(chan));
->> +		kvfree(tchan);
->> +		kvfree(thread);
->> +		return -EPERM;
->> +	}
->> +
->> +	tchan->thread = thread;
->> +	dev_dbg(chan->device->dev, "add thread %s\n", dma_chan_name(chan));
->> +	list_add_tail(&tchan->node, &info->channels);
->> +
->> +	return 0;
->> +}
->> +
+Then lspci -s 80:10.0 -vvv|grep -i SltSta
+SltSta:Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock
+We can see the card is not present (PresDet-).
 
-Thanks!
+pciehp 0000:80:10.0:pcie004: Slot #36 AttnBtn- PwrCtrl- MRL- AttnInd+
+PwrInd+ HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+
+The NVME SSD card is permited to surprise removal with slot power on
+on the D06 board. The hotplug port's POWER_CTRL(ctrl) is false.
+
+Data link layer state changed (link down) event reported prior to presence
+detect changed (card is not present) when surprise removal.
+
+Current code pciehp_handle_presence_or_link_change() handle link down event,
+then check the card present, but at this time presence detect state have
+not updated, so have such issue. If surprise removal and power controller
+present is not implemented, wait for at least 1 second before checking
+card present to fix the issue.
+
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 3f3df4c..ef8952d 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -216,6 +216,7 @@ void pciehp_handle_disable_request(struct controller *ctrl)
+ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ {
+ 	bool present, link_active;
++	bool safe_removal = SAFE_REMOVAL;
+ 
+ 	/*
+ 	 * If the slot is on and presence or link has changed, turn it off.
+@@ -236,6 +237,7 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ 			ctrl_info(ctrl, "Slot(%s): Card not present\n",
+ 				  slot_name(ctrl));
+ 		pciehp_disable_slot(ctrl, SURPRISE_REMOVAL);
++		safe_removal = SURPRISE_REMOVAL;
+ 		break;
+ 	default:
+ 		mutex_unlock(&ctrl->state_lock);
+@@ -244,6 +246,15 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ 
+ 	/* Turn the slot on if it's occupied or link is up */
+ 	mutex_lock(&ctrl->state_lock);
++	/*
++	 * if surprise removal and power controller present is not implemented,
++	 * wait for at least 1 second before checking card present as
++	 * data link layer state changed (link down) event reported
++	 * prior to presence detect changed (card is not present).
++	 */
++	if (!safe_removal && !POWER_CTRL(ctrl))
++		msleep(1000);
++
+ 	present = pciehp_card_present(ctrl);
+ 	link_active = pciehp_check_link_active(ctrl);
+ 	if (!present && !link_active) {
+-- 
+1.9.1
+
