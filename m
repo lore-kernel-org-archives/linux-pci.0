@@ -5,92 +5,81 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07CE9C43387
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 17:08:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32860C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 18:30:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D248620675
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 17:08:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0317520866
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 18:30:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391492AbfAPRIL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jan 2019 12:08:11 -0500
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:37239 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731892AbfAPRIL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 12:08:11 -0500
-Received: by mail-qt1-f195.google.com with SMTP id t33so7982634qtt.4;
-        Wed, 16 Jan 2019 09:08:10 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Iut53ajDZwejWXOJq/UH8hYrcibU0xqZb3TTB/RaIWI=;
-        b=f+16SA4we678ZL/MiUdvkBJpkBUoJJOVp+kqF7iWKKiA+zuiArJgRH51c18exwWhQF
-         QK6W2IAQrb2vk+F9HyTKkOZnxQIbgmmUcFUARNRNs2+ffehKc5Kr70gP1WCLnYAg7ngg
-         ykv0vCeVo4tssnjVaHBUK6EgLb+iNF6/HqxUWSVOPfadsyuEKNk/vYYEfHIYpdBfCH+d
-         SNWfrs/vdWGAFg3kZ13gR+4eqGOC7pNClEWESiS3zw4P8RtH+9axuVfNUvjhdMequ15h
-         0EI4vUTZs1ubuNv2yDvpC58nWIVzEBmV6kxDYQGYsH0lATg+us0kJOPJ0LP4oKfA5ZOg
-         IORg==
-X-Gm-Message-State: AJcUukcEoF4JccIJqzVIbY0PhozkXamszUmUqjzGRBKE+XsmTdYLThcn
-        NHdJ5EZWRVGjpYlZ/ug4TaTgIW3+xJaSaUaob+A=
-X-Google-Smtp-Source: ALg8bN6THlJ+VDFvaDKYtxZFBUshcqjqnem21NCamdeWBDwdiEawpdBfpUSWlt7ClPKe8zigd71B5fU/VrgPz8+dbIo=
-X-Received: by 2002:ac8:2c34:: with SMTP id d49mr7985332qta.152.1547658489626;
- Wed, 16 Jan 2019 09:08:09 -0800 (PST)
+        id S1728862AbfAPSag (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jan 2019 13:30:36 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:35230 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728489AbfAPSag (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Jan 2019 13:30:36 -0500
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtp (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1gjpxR-0003Sc-G2; Wed, 16 Jan 2019 11:30:34 -0700
+To:     Jarkko Nikula <jarkko.nikula@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Stephen Bates <sbates@raithlin.com>
+References: <20190115173203.14850-1-logang@deltatee.com>
+ <48a93172-25a2-d6a6-e908-7d27249f1bc2@linux.intel.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <44629b35-8315-c090-eca7-ca1e9347ba13@deltatee.com>
+Date:   Wed, 16 Jan 2019 11:30:32 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.3.0
 MIME-Version: 1.0
-References: <20190116163253.23780-1-vincent.whitchurch@axis.com>
-In-Reply-To: <20190116163253.23780-1-vincent.whitchurch@axis.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Wed, 16 Jan 2019 18:07:53 +0100
-Message-ID: <CAK8P3a2ifu9X+SXgoDPSFMYwnKr=Yex8_tD4qRimcOQAhuEa8Q@mail.gmail.com>
-Subject: Re: [PATCH 0/8] Virtio-over-PCIe on non-MIC
-To:     Vincent Whitchurch <vincent.whitchurch@axis.com>
-Cc:     sudeep.dutt@intel.com, ashutosh.dixit@intel.com,
-        gregkh <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Vincent Whitchurch <rabinv@axis.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-ntb@googlegroups.com, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <48a93172-25a2-d6a6-e908-7d27249f1bc2@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: sbates@raithlin.com, bhelgaas@google.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, jarkko.nikula@linux.intel.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH] PCI: fix using __initdata memory after free in
+ disable_acs_redir parameter
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 16, 2019 at 5:33 PM Vincent Whitchurch
-<vincent.whitchurch@axis.com> wrote:
->
-> The Virtio-over-PCIe framework living under drivers/misc/mic/vop implements a
-> generic framework to use virtio between two Linux systems, given shared memory
-> and a couple of interrupts.  It does not actually require the Intel MIC
-> hardware, x86-64, or even PCIe for that matter.  This patch series makes it
-> buildable on more systems and adds a loopback driver to test it without special
-> hardware.
->
-> Note that I don't have access to Intel MIC hardware so some testing of the
-> patchset (especially the patch "vop: Use consistent DMA") on that platform
-> would be appreciated, to ensure that the series does not break anything there.
 
-Hi Vincent,
 
-First of all, I think it is a very good idea to make virtio over PCIe avaialable
-more generally. Your patches also make sense here, they mostly fix
-portability bugs, so no objection there.
+On 2019-01-16 2:37 a.m., Jarkko Nikula wrote:
+> So this doesn't happen if you revert c5eb1190074c?
 
-I think we need to take a step back though and discuss what combinations
-we actually do want to support. I have not actually read the whole mic/vop
-driver, so I don't know if this would be a good fit as a generic interface --
-it may or may not be, and any other input would be helpful.
+Yes, but the bug was fully mine in the disable_acs_redir code. That
+patch only just made it noticable to me.
 
-Aside from that, I should note that we have two related subsystems
-in the kernel: the PCIe endpoint subsystem maintained by Kishon and
-Lorenzo, and the NTB subsystem maintained by Jon, Dave and Allen.
+> I guess this is due dev->state_saved being true set by 
+> pci_pm_runtime_suspend() -> pci_save_state() after my patch and now 
+> pci_pm_runtime_resume() -> pci_restore_standard_config() -> 
+> pci_restore_state() reach the pci_enable_acs(). I think this is possible 
+> to trigger also before my patch if device has the runtime PM callback 
+> defined?
 
-In order to properly support virtio over PCIe, I would hope we can come
-up with a user space interface that looks the same way for configuring
-virtio drivers in mic, pcie-endpoint and ntb, if at all possible. Have
-you looked at those two subsystems?
+Yes, I also think it was possible to trigger without that patch. I just
+never hit it.
 
-        Arnd
+> I wasn't able to trigger this but I saw
+> "PCI: Can't parse disable_acs_redir parameter: " followed by a few lines 
+> of junk during boot when I defined pci=disable_acs_redir=0000:00:xy.z 
+> which disappear after your patch.
+
+Yes, I guess in theory, it will also depend what happens to the RAM the
+parameter pointer points too. On my system it's panicing trying to
+access unallocated RAM, on yours it may be reading RAM that's used for
+another purpose and spewing garbage because of it.
+
+> Tested-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+> Reviewed-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
+
+Thanks!
+
+Logan
