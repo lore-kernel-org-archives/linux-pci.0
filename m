@@ -6,45 +6,46 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C26C43387
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 10:33:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76DE4C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 10:45:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A8B7206C2
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 10:33:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4460920657
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 10:45:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="DHsrkH7d"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="Wo5AhgDf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731941AbfAPKdk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jan 2019 05:33:40 -0500
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:45828 "EHLO
+        id S2392182AbfAPKpi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jan 2019 05:45:38 -0500
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:46166 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731965AbfAPKdk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 05:33:40 -0500
-Received: from mailhost.synopsys.com (mailhost2.synopsys.com [10.13.184.66])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 02AB824E0600;
-        Wed, 16 Jan 2019 02:33:40 -0800 (PST)
+        with ESMTP id S2392180AbfAPKpi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 05:45:38 -0500
+Received: from mailhost.synopsys.com (mailhost3.synopsys.com [10.12.238.238])
+        by smtprelay.synopsys.com (Postfix) with ESMTP id C57A924E013C;
+        Wed, 16 Jan 2019 02:45:37 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1547634820; bh=pfl0E3F7BNxZvxvmFVSIpoTPwRnnbaXw6/O4v6IcIHQ=;
+        t=1547635537; bh=D88w4o+R9EI7482Y4gbwVarIS+5jOupFuMbyFH3iTJs=;
         h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=DHsrkH7dJPwUjLpPSE97AMQvFBmLah/fvErScXhCyJhtRM+YzmILxIgUsrFL+wPzz
-         YfNliO7KdZYnXZgA8mSMbPeHBgHO9HFk+PWG0JM/5v02MkK/CDFxS3t/QoU5Uz9otw
-         EZNA80ncDf2nYwFOoDDG4MVjkWXMcm09Ac36ENSWMaLb2kgAFh3wPRS7WHFoCCLOUT
-         qeGpKR/qT1YGw6t2VGiHOcka8ZPySZ8Lxw4B51SfsB8rFX/V/ruEb+QvLxMibbTAVi
-         eUKPdxyYBCFnsaPrjDE/yg/E1/r5XULe+47zumuPS/bmRnn1z/ACb0d9erRIdNw39V
-         uDuCVw8xstj1g==
+        b=Wo5AhgDfQX7Zm1gnafjhFZ+Wv9zJJOHcUeGfRhnd1GB2LODx+sQkUVY3HxfEnX/Ig
+         5A7PMbZirejt3UeLaYFZnL8Nyq/Dy9KcDNUVu+zlyi+ZjUwHXHDqHZVT1FUOjk/6vU
+         vsfaRrH4m8RepWjZo+CZGVuhMYdSbbBqihQOwk2iaZzKY8nubr9meTUmmAbb2SR6Zv
+         X18QdclRV556Lki0vO2x8QKvBLY5zNKHD2XrlTeZeLO/yI2m/0x4EGVzCDZOkgJweE
+         47ASSNsDoO8q/Tg58emqGeX/lXQ92+bDHHRqzvy5NfTL03uUEmPC1ppNPl6YqjIplE
+         ImYhCY94QcHqQ==
 Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        by mailhost.synopsys.com (Postfix) with ESMTP id DFEE24694;
-        Wed, 16 Jan 2019 02:33:39 -0800 (PST)
+        by mailhost.synopsys.com (Postfix) with ESMTP id A9B2F3760;
+        Wed, 16 Jan 2019 02:45:37 -0800 (PST)
 Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
  US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 02:33:39 -0800
+ (TLS) id 14.3.408.0; Wed, 16 Jan 2019 02:45:37 -0800
 Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
  DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 11:33:37 +0100
+ (TLS) id 14.3.408.0; Wed, 16 Jan 2019 11:45:35 +0100
 Received: from [10.107.19.24] (10.107.19.24) by
  DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 11:33:37 +0100
-Subject: Re: [RFC v3 2/7] dmaengine: Add Synopsys eDMA IP version 0 support
+ (TLS) id 14.3.408.0; Wed, 16 Jan 2019 11:45:35 +0100
+Subject: Re: [RFC v3 7/7] dmaengine: Add Synopsys eDMA IP test and sample
+ driver
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         <linux-pci@vger.kernel.org>, <dmaengine@vger.kernel.org>
 CC:     Vinod Koul <vkoul@kernel.org>,
@@ -60,14 +61,14 @@ CC:     Vinod Koul <vkoul@kernel.org>,
         Nelson Costa <nelson.costa@synopsys.com>,
         "Pedro Sousa" <pedrom.sousa@synopsys.com>
 References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <eb8fee407dbeb515100a2039d1b3464ce12452d4.1547230339.git.gustavo.pimentel@synopsys.com>
+ <cc195ac53839b318764c8f6502002cd6d933a923.1547230339.git.gustavo.pimentel@synopsys.com>
 From:   Jose Abreu <jose.abreu@synopsys.com>
-Message-ID: <c7c2ff4a-5766-d829-ac3f-43fc280a457a@synopsys.com>
-Date:   Wed, 16 Jan 2019 10:33:35 +0000
+Message-ID: <1876fee2-9f8c-925c-a9ab-cf69fe6693a1@synopsys.com>
+Date:   Wed, 16 Jan 2019 10:45:32 +0000
 User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <eb8fee407dbeb515100a2039d1b3464ce12452d4.1547230339.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cc195ac53839b318764c8f6502002cd6d933a923.1547230339.git.gustavo.pimentel@synopsys.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -80,48 +81,21 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Hi Gustavo,
 
 On 1/11/2019 6:33 PM, Gustavo Pimentel wrote:
-> Add support for the eDMA IP version 0 driver for both register maps (legacy
-> and unroll).
+> Add Synopsys eDMA IP test and sample driver to be use for testing
+> purposes and also as a reference for any developer who needs to
+> implement and use Synopsys eDMA.
 > 
-> The legacy register mapping was the initial implementation, which consisted
-> in having all registers belonging to channels multiplexed, which could be
-> change anytime (which could led a race-condition) by view port register
-> (access to only one channel available each time).
+> This driver can be compile as built-in or external module in kernel.
 > 
-> This register mapping is not very effective and efficient in a multithread
-> environment, which has led to the development of unroll registers mapping,
-> which consists of having all channels registers accessible any time by
-> spreading all channels registers by an offset between them.
-> 
-> This version supports a maximum of 16 independent channels (8 write +
-> 8 read), which can run simultaneously.
-> 
-> Implements a scatter-gather transfer through a linked list, where the size
-> of linked list depends on the allocated memory divided equally among all
-> channels.
-> 
-> Each linked list descriptor can transfer from 1 byte to 4 Gbytes and is
-> alignmented to DWORD.
-> 
-> Both SAR (Source Address Register) and DAR (Destination Address Register)
-> are alignmented to byte.
+> To enable this driver just select DW_EDMA_TEST option in kernel
+> configuration, however it requires and selects automatically DW_EDMA
+> option too.
 > 
 > Changes:
 > RFC v1->RFC v2:
->  - Replace comments // (C99 style) by /**/
->  - Replace magic numbers by defines
->  - Replace boolean return from ternary operation by a double negation
->    operation
->  - Replace QWORD_HI/QWORD_LO macros by upper_32_bits()/lower_32_bits()
->  - Fix the headers of the .c and .h files according to the most recent
->    convention
->  - Fix errors and checks pointed out by checkpatch with --strict option
->  - Replace patch small description tag from dma by dmaengine
->  - Refactor code to replace atomic_t by u32 variable type
+>  - No changes
 > RFC v2->RFC v3:
->  - Code rewrite to use FIELD_PREP() and FIELD_GET()
->  - Add define to magic numbers
->  - Fix minor bugs
+>  - Add test module
 > 
 > Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 > Cc: Vinod Koul <vkoul@kernel.org>
@@ -137,42 +111,63 @@ On 1/11/2019 6:33 PM, Gustavo Pimentel wrote:
 > Cc: Nelson Costa <nelson.costa@synopsys.com>
 > Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
 
-> +void dw_edma_v0_core_start(struct dw_edma_chunk *chunk, bool first)
+> +static int dw_edma_test_add_channel(struct dw_edma_test_info *info,
+> +				    struct dma_chan *chan,
+> +				    u32 channel)
 > +{
-> +	struct dw_edma_chan *chan = chunk->chan;
-> +	struct dw_edma *dw = chan->chip->dw;
-> +	u32 tmp;
-> +	u64 llp;
+> +	struct dw_edma_test_params *params = &info->params;
+> +	struct dw_edma_test_thread *thread;
+> +	struct dw_edma_test_chan *tchan;
 > +
-> +	dw_edma_v0_core_write_chunk(chunk);
+> +	tchan = kvmalloc(sizeof(*tchan), GFP_KERNEL);
+> +	if (!tchan)
+> +		return -ENOMEM;
 > +
-> +	if (first) {
-> +		/* Enable engine */
-> +		SET_RW(dw, chan->dir, engine_en, BIT(0));
-> +		/* Interrupt unmask - done, abort */
-> +		tmp = GET_RW(dw, chan->dir, int_mask);
-> +		tmp &= ~FIELD_PREP(EDMA_V0_DONE_INT_MASK, BIT(chan->id));
-> +		tmp &= ~FIELD_PREP(EDMA_V0_ABORT_INT_MASK, BIT(chan->id));
-> +		SET_RW(dw, chan->dir, int_mask, tmp);
-> +		/* Linked list error */
-> +		tmp = GET_RW(dw, chan->dir, linked_list_err_en);
-> +		tmp |= FIELD_PREP(EDMA_V0_LINKED_LIST_ERR_MASK, BIT(chan->id));
-> +		SET_RW(dw, chan->dir, linked_list_err_en, tmp);
-> +		/* Channel control */
-> +		SET_CH(dw, chan->dir, chan->id, ch_control1,
-> +		       (DW_EDMA_V0_CCS | DW_EDMA_V0_LLE));
-> +		/* Linked list - low, high */
-> +		llp = cpu_to_le64(chunk->ll_region.paddr);
-> +		SET_CH(dw, chan->dir, chan->id, llp_low, lower_32_bits(llp));
-> +		SET_CH(dw, chan->dir, chan->id, llp_high, upper_32_bits(llp));
+> +	tchan->chan = chan;
+> +
+> +	thread = kvzalloc(sizeof(*thread), GFP_KERNEL);
+> +	if (!thread) {
+> +		kvfree(tchan);
+> +		return -ENOMEM;
 > +	}
-> +	/* Doorbell */
+> +
+> +	thread->info = info;
+> +	thread->chan = tchan->chan;
+> +	switch (channel) {
+> +	case EDMA_CH_WR:
+> +		thread->direction = DMA_DEV_TO_MEM;
+> +		break;
+> +	case EDMA_CH_RD:
+> +		thread->direction = DMA_MEM_TO_DEV;
+> +		break;
+> +	default:
+> +		kvfree(tchan);
 
-Not sure if DMA subsystem does this but maybe you need some kind
-of barrier to ensure everything is coherent before granting
-control to eDMA ?
+You are leaking thread here.
 
-> +	SET_RW(dw, chan->dir, doorbell,
-> +	       FIELD_PREP(EDMA_V0_DOORBELL_CH_MASK, chan->id));
+> +		return -EPERM;
+> +	}
+> +	thread->test_done.wait = &thread->done_wait;
+> +	init_waitqueue_head(&thread->done_wait);
+> +
+> +	if (!params->repetitions)
+> +		thread->task = kthread_create(dw_edma_test_sg, thread, "%s",
+> +					      dma_chan_name(chan));
+> +	else
+> +		thread->task = kthread_create(dw_edma_test_cyclic, thread, "%s",
+> +					      dma_chan_name(chan));
+> +
+> +	if (IS_ERR(thread->task)) {
+> +		pr_err("failed to create thread %s\n", dma_chan_name(chan));
+> +		kvfree(tchan);
+> +		kvfree(thread);
+> +		return -EPERM;
+> +	}
+> +
+> +	tchan->thread = thread;
+> +	dev_dbg(chan->device->dev, "add thread %s\n", dma_chan_name(chan));
+> +	list_add_tail(&tchan->node, &info->channels);
+> +
+> +	return 0;
 > +}
 > +
