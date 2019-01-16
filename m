@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27330C43612
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B277C43387
 	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 10:14:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EB63C208E4
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 10:14:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BBD620840
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 10:14:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="D82nbeIH"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="GAh9Us2S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389381AbfAPKO2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2389372AbfAPKO2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 16 Jan 2019 05:14:28 -0500
-Received: from smtprelay.synopsys.com ([198.182.60.111]:33040 "EHLO
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:45158 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389383AbfAPKO2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 05:14:28 -0500
+        with ESMTP id S2389378AbfAPKO1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 05:14:27 -0500
 Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id 11A0210C1695;
-        Wed, 16 Jan 2019 02:14:28 -0800 (PST)
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 4A3C324E224F;
+        Wed, 16 Jan 2019 02:14:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1547633668; bh=uA6qbseqHwCa5BtKvSKzULlLoVbYiRGD1ednhCfc3O0=;
+        t=1547633667; bh=R0BnOwd1xmsgG9UtmSPqTXJqiXJrphN/oSnWoPxmBMs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=D82nbeIHhBV1veKezecnn6MB2cPBH98W79gMpuc/l48E5x/bMdKA3+8JI/XTdiSCk
-         ItqO658K5c4tjIwexaNbyWUDr3l0zrxwJZi7lySKFq3F2k+DLXhtLZ+mEdiSx9WeiP
-         gh1Yf5NB8N+QC8eEDQRtq2mD9dFkaRePaihkAAmvNxlHLo7W6G4CcF5tMh8DPMtxO5
-         KL/XaKbTAV/ueyV6o9vnUD+LsBLahIArEgINv+DU9YW242HOquwCffrpaSAlzlb3+6
-         eO/tIdWIXBJxjLN4HCwyUCyQa6Ub1hoMPNW1K0gnzJLzlkAJrjqZsSVukz/POhU17A
-         OeF32MAwnKGAw==
+        b=GAh9Us2SIbUHwWco2QZ+Jg2VA1Cnm6hvARj0FccFNsdvwlhpJquzfP5vnsipOZTye
+         HBfv3y7F/tPgFkfmSfGQW6QnVr1s4r73SH9DbEY+U/Q2HBCXwtB1lQrKTGGXXat48E
+         91RJPwcyvNwGPwirH0ChBuJLX2JcZ8KuChVOmex4KhcldCbuyp3NAkDNjta+2TldJW
+         F7z/hEnnl/1+Gsh5ikOBY3Gge+IPharhNEcjLNS3bJxTxzfzaYGp+hC21b18DoQXDL
+         XUrvkYOCKHtdIosydunUfFRWS/pyf38A+wOKpcQPINkGfNW0rsN3n4jIM641mznPz3
+         5n/XiH8yWclfA==
 Received: from de02.synopsys.com (germany.internal.synopsys.com [10.225.17.21])
-        by mailhost.synopsys.com (Postfix) with ESMTP id D22465823;
+        by mailhost.synopsys.com (Postfix) with ESMTP id 1405B581E;
         Wed, 16 Jan 2019 02:14:27 -0800 (PST)
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by de02.synopsys.com (Postfix) with ESMTP id 78DCE3F692;
+        by de02.synopsys.com (Postfix) with ESMTP id 464093F689;
         Wed, 16 Jan 2019 11:14:26 +0100 (CET)
 From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org
@@ -46,9 +46,9 @@ Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Joao Pinto <joao.pinto@synopsys.com>,
         Jingoo Han <jingoohan1@gmail.com>
-Subject: [PATCH 7/9] PCI: dwc: Improve code readability and simplifies mask/unmask operations
-Date:   Wed, 16 Jan 2019 11:14:20 +0100
-Message-Id: <eba21fed997cdf148bc03cb459c12d1a32a77a8f.1547631485.git.gustavo.pimentel@synopsys.com>
+Subject: [PATCH 4/9] PCI: dwc: Replace variable name from data to d on dw_pci_setup_msi_msg()
+Date:   Wed, 16 Jan 2019 11:14:17 +0100
+Message-Id: <1737c59f842c0274824615a1bfb6ff64ad9d69fd.1547631485.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1547631485.git.gustavo.pimentel@synopsys.com>
 References: <cover.1547631485.git.gustavo.pimentel@synopsys.com>
@@ -59,81 +59,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Improve code readability and simplifies mask/unmask operations by
-inverting the applied logic (no functional change is intended).
+Replace variable from data to d to maintain coherency between similar
+functions, such as dw_pci_setup_msi_msg().
 
-Replace variable name from irq_status to irq_mask, since its goal is to
-keep track of which interuptions are mask or not.
-
-Replace bit rotation operation (1 << bit) by BIT(bit), which simplifies
-code reading.
+No functional change is intended.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Joao Pinto <jpinto@synopsys.com>
 Cc: Jingoo Han <jingoohan1@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 12 ++++++------
- drivers/pci/controller/dwc/pcie-designware.h      |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 768e16a..d53e6f7 100644
+index 36e284c..0c6e19a 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -164,9 +164,9 @@ static void dw_pci_bottom_mask(struct irq_data *d)
- 		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
- 		bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+@@ -120,9 +120,9 @@ static void dw_chained_msi_isr(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
  
--		pp->irq_status[ctrl] &= ~(1 << bit);
-+		pp->irq_mask[ctrl] |= BIT(bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
--				    ~pp->irq_status[ctrl]);
-+				    pp->irq_mask[ctrl]);
- 	}
+-static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
++static void dw_pci_setup_msi_msg(struct irq_data *d, struct msi_msg *msg)
+ {
+-	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
++	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	u64 msi_target;
  
- 	raw_spin_unlock_irqrestore(&pp->lock, flags);
-@@ -187,9 +187,9 @@ static void dw_pci_bottom_unmask(struct irq_data *d)
- 		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
- 		bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+@@ -135,12 +135,12 @@ static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 	msg->address_hi = upper_32_bits(msi_target);
  
--		pp->irq_status[ctrl] |= 1 << bit;
-+		pp->irq_mask[ctrl] &= ~BIT(bit);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
--				    ~pp->irq_status[ctrl]);
-+				    pp->irq_mask[ctrl]);
- 	}
+ 	if (pp->ops->get_msi_data)
+-		msg->data = pp->ops->get_msi_data(pp, data->hwirq);
++		msg->data = pp->ops->get_msi_data(pp, d->hwirq);
+ 	else
+-		msg->data = data->hwirq;
++		msg->data = d->hwirq;
  
- 	raw_spin_unlock_irqrestore(&pp->lock, flags);
-@@ -665,13 +665,13 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+-		(int)data->hwirq, msg->address_hi, msg->address_lo);
++		(int)d->hwirq, msg->address_hi, msg->address_lo);
+ }
  
- 	/* Initialize IRQ Status array */
- 	for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
-+		pp->irq_mask[ctrl] = ~0;
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK +
- 					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
--				    4, ~0);
-+				    4, pp->irq_mask[ctrl]);
- 		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE +
- 					(ctrl * MSI_REG_CTRL_BLOCK_SIZE),
- 				    4, ~0);
--		pp->irq_status[ctrl] = 0;
- 	}
- 
- 	/* Setup RC BARs */
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 9943d8c..2790002 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -177,7 +177,7 @@ struct pcie_port {
- 	struct irq_domain	*msi_domain;
- 	dma_addr_t		msi_data;
- 	u32			num_vectors;
--	u32			irq_status[MAX_MSI_CTRLS];
-+	u32			irq_mask[MAX_MSI_CTRLS];
- 	raw_spinlock_t		lock;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
+ static int dw_pci_msi_set_affinity(struct irq_data *irq_data,
 -- 
 2.7.4
 
