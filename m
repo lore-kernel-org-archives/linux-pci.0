@@ -4,47 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B546C43387
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 11:57:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF3C5C43387
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 12:01:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F1A820859
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 11:57:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA764206C2
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Jan 2019 12:01:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="SxG+dOt5"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="iG2mxDB4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389705AbfAPL5p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Jan 2019 06:57:45 -0500
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:48042 "EHLO
+        id S2390036AbfAPMBF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Jan 2019 07:01:05 -0500
+Received: from smtprelay.synopsys.com ([198.182.47.9]:48152 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389674AbfAPL5p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 06:57:45 -0500
+        with ESMTP id S2390001AbfAPMBE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Jan 2019 07:01:04 -0500
 Received: from mailhost.synopsys.com (mailhost1.synopsys.com [10.12.238.239])
-        by smtprelay.synopsys.com (Postfix) with ESMTP id E822824E0E70;
-        Wed, 16 Jan 2019 03:57:44 -0800 (PST)
+        by smtprelay.synopsys.com (Postfix) with ESMTP id 79B3A24E0600;
+        Wed, 16 Jan 2019 04:01:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1547639865; bh=fgJAwhZZORKEAeKxgr+YSPr7zPWKtllQy/tyCy88uQs=;
+        t=1547640064; bh=XhTYBVG0GNTpvdt/A6CyJAYXyqExqLZEAX3Sa7dxaFg=;
         h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=SxG+dOt5016dKU2NOIzgTcfG9jczBef7/1x0Ju++ccAtek/+8gHL8HeFf/KmpjGIX
-         S2qmzaeUiaUoSHyzWEPgd0BgaMlqGnSXhudbBxkdp6mBF34AITTVDcW4s9J3GV5YrL
-         bI6joyN+aI/Vv/yO29tfSYqTsJG89ccEG8x9HHQYzdALZPk7Tj1+I4Hgsn4VcJcsr0
-         79PPMCP9T3P3CMTrrD8P5TbWkT8iDMZGCu6C73zJlsuRj3xvMyNQvTXZkXaQRUngPz
-         GGs0Z/fCMI8Io/T+cU6eBAqdgfWvZKddmkXjWZLjhkkCuRpVNyAAL0nUcYhjC/KX3y
-         caTt7v5H6YyJw==
-Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
-        by mailhost.synopsys.com (Postfix) with ESMTP id B752452E4;
-        Wed, 16 Jan 2019 03:57:44 -0800 (PST)
+        b=iG2mxDB4LMgVRHryJEAmELGy+EG9JRrP8BiMf/iS3DhD5nqPAHKet0tL4LT7Bnp0t
+         aPBznLJNgG+qxRTR/Xdz5iMnhcaArvlNMgaofjRfM4FbvLGiAweutG9KKnZ0ztoQfg
+         vB4kQo6dMh/UHHledYJ8Ar8Hffy8OhhV+F0spvObA6dRmzkXRt8fjS8KfS6SCH1YPl
+         9y7GK/uQ5jxHpSkhIW7x9VWNBvamJ+tl44LNEJcGt3tJ1L57X/RYKC5rnQCteUHK3S
+         Le5XAsS+C6qfWi//+LEZm4jn6b03JHNIhGxRHXfjTG/sUDTCQF3inv82qTW63a/w+2
+         4APxFRG/ibCsg==
+Received: from us01wehtc1.internal.synopsys.com (us01wehtc1-vip.internal.synopsys.com [10.12.239.236])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 5FD295D5D;
+        Wed, 16 Jan 2019 04:01:04 -0800 (PST)
 Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 03:57:44 -0800
+ us01wehtc1.internal.synopsys.com (10.12.239.235) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Wed, 16 Jan 2019 04:01:04 -0800
 Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
  DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 12:57:42 +0100
+ (TLS) id 14.3.408.0; Wed, 16 Jan 2019 13:01:02 +0100
 Received: from [10.107.25.131] (10.107.25.131) by
  DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 16 Jan 2019 12:57:42 +0100
-Subject: Re: [RFC v3 1/7] dmaengine: Add Synopsys eDMA IP core driver
+ (TLS) id 14.3.408.0; Wed, 16 Jan 2019 13:01:02 +0100
+Subject: Re: [RFC v3 7/7] dmaengine: Add Synopsys eDMA IP test and sample
+ driver
 To:     Jose Abreu <jose.abreu@synopsys.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -62,15 +63,15 @@ CC:     Vinod Koul <vkoul@kernel.org>,
         Nelson Costa <nelson.costa@synopsys.com>,
         "Pedro Sousa" <pedrom.sousa@synopsys.com>
 References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <d2b6e8bed0c5077425b913e551794ed126d74fb2.1547230339.git.gustavo.pimentel@synopsys.com>
- <e374b2fe-23bd-0bc5-be17-abced19bb4f7@synopsys.com>
+ <cc195ac53839b318764c8f6502002cd6d933a923.1547230339.git.gustavo.pimentel@synopsys.com>
+ <1876fee2-9f8c-925c-a9ab-cf69fe6693a1@synopsys.com>
 From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <c28eb503-d17f-5551-a03d-55dad36d0494@synopsys.com>
-Date:   Wed, 16 Jan 2019 11:53:00 +0000
+Message-ID: <488fda69-6e92-00ae-a5f2-2fe099a0ac8f@synopsys.com>
+Date:   Wed, 16 Jan 2019 11:56:20 +0000
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <e374b2fe-23bd-0bc5-be17-abced19bb4f7@synopsys.com>
+In-Reply-To: <1876fee2-9f8c-925c-a9ab-cf69fe6693a1@synopsys.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -82,51 +83,25 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 Hi Jose,
 
-On 16/01/2019 10:21, Jose Abreu wrote:
+On 16/01/2019 10:45, Jose Abreu wrote:
 > Hi Gustavo,
 > 
 > On 1/11/2019 6:33 PM, Gustavo Pimentel wrote:
->> Add Synopsys eDMA IP core driver to kernel.
->>
->> This core driver, initializes and configures the eDMA IP using vma-helpers
->> functions and dma-engine subsystem.
->>
->> Also creates an abstration layer through callbacks allowing different
->> registers mappings in the future, organized in to versions.
+>> Add Synopsys eDMA IP test and sample driver to be use for testing
+>> purposes and also as a reference for any developer who needs to
+>> implement and use Synopsys eDMA.
 >>
 >> This driver can be compile as built-in or external module in kernel.
 >>
->> To enable this driver just select DW_EDMA option in kernel configuration,
->> however it requires and selects automatically DMA_ENGINE and
->> DMA_VIRTUAL_CHANNELS option too.
+>> To enable this driver just select DW_EDMA_TEST option in kernel
+>> configuration, however it requires and selects automatically DW_EDMA
+>> option too.
 >>
 >> Changes:
 >> RFC v1->RFC v2:
->>  - Replace comments // (C99 style) by /**/
->>  - Fix the headers of the .c and .h files according to the most recent
->>    convention
->>  - Fix errors and checks pointed out by checkpatch with --strict option
->>  - Replace patch small description tag from dma by dmaengine
->>  - Change some dev_info() into dev_dbg()
->>  - Remove unnecessary zero initialization after kzalloc
->>  - Remove direction validation on config() API, since the direction
->>    parameter is deprecated
->>  - Refactor code to replace atomic_t by u32 variable type
->>  - Replace start_transfer() name by dw_edma_start_transfer()
->>  - Add spinlock to dw_edma_device_prep_slave_sg()
->>  - Add spinlock to dw_edma_free_chunk()
->>  - Simplify switch case into if on dw_edma_device_pause(),
->>    dw_edma_device_resume() and dw_edma_device_terminate_all()
+>>  - No changes
 >> RFC v2->RFC v3:
->>  - Add driver parameter to disable msix feature
->>  - Fix printk variable of phys_addr_t type
->>  - Fix printk variable of __iomem type
->>  - Fix printk variable of size_t type
->>  - Add comments or improve existing ones
->>  - Add possibility to work with multiple IRQs feature
->>  - Fix source and destination addresses
->>  - Add define to magic numbers
->>  - Add DMA cyclic transfer feature
+>>  - Add test module
 >>
 >> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 >> Cc: Vinod Koul <vkoul@kernel.org>
@@ -142,396 +117,68 @@ On 16/01/2019 10:21, Jose Abreu wrote:
 >> Cc: Nelson Costa <nelson.costa@synopsys.com>
 >> Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
 > 
-> 
->> +static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc)
+>> +static int dw_edma_test_add_channel(struct dw_edma_test_info *info,
+>> +				    struct dma_chan *chan,
+>> +				    u32 channel)
 >> +{
->> +	struct dw_edma_chan *chan = desc->chan;
->> +	struct dw_edma *dw = chan->chip->dw;
->> +	struct dw_edma_chunk *chunk;
+>> +	struct dw_edma_test_params *params = &info->params;
+>> +	struct dw_edma_test_thread *thread;
+>> +	struct dw_edma_test_chan *tchan;
 >> +
->> +	chunk = kvzalloc(sizeof(*chunk), GFP_NOWAIT);
->> +	if (unlikely(!chunk))
->> +		return NULL;
+>> +	tchan = kvmalloc(sizeof(*tchan), GFP_KERNEL);
+>> +	if (!tchan)
+>> +		return -ENOMEM;
 >> +
->> +	INIT_LIST_HEAD(&chunk->list);
->> +	chunk->chan = chan;
->> +	chunk->cb = !(desc->chunks_alloc % 2);
->> +	chunk->ll_region.paddr = dw->ll_region.paddr + chan->ll_off;
->> +	chunk->ll_region.vaddr = dw->ll_region.vaddr + chan->ll_off;
+>> +	tchan->chan = chan;
 >> +
->> +	if (desc->chunk) {
->> +		/* Create and add new element into the linked list */
->> +		desc->chunks_alloc++;
->> +		dev_dbg(chan2dev(chan), "alloc new chunk element (%d)\n",
->> +			desc->chunks_alloc);
->> +		list_add_tail(&chunk->list, &desc->chunk->list);
->> +		dw_edma_alloc_burst(chunk);
-> 
-> No return check ?
-
-Nice catch! I'll do a return check.
-
-> 
->> +	} else {
->> +		/* List head */
->> +		chunk->burst = NULL;
->> +		desc->chunks_alloc = 0;
->> +		desc->chunk = chunk;
->> +		dev_dbg(chan2dev(chan), "alloc new chunk head\n");
+>> +	thread = kvzalloc(sizeof(*thread), GFP_KERNEL);
+>> +	if (!thread) {
+>> +		kvfree(tchan);
+>> +		return -ENOMEM;
 >> +	}
 >> +
->> +	return chunk;
->> +}
->> +
->> +static struct dw_edma_desc *dw_edma_alloc_desc(struct dw_edma_chan *chan)
->> +{
->> +	struct dw_edma_desc *desc;
->> +
->> +	dev_dbg(chan2dev(chan), "alloc new descriptor\n");
->> +
->> +	desc = kvzalloc(sizeof(*desc), GFP_NOWAIT);
->> +	if (unlikely(!desc))
->> +		return NULL;
->> +
->> +	desc->chan = chan;
->> +	dw_edma_alloc_chunk(desc);
-> 
-> No return check ?
-
-Ditto.
-
-> 
->> +
->> +	return desc;
->> +}
->> +
-> 
->> +static void dw_edma_start_transfer(struct dw_edma_chan *chan)
->> +{
->> +	struct virt_dma_desc *vd;
->> +	struct dw_edma_desc *desc;
->> +	struct dw_edma_chunk *child;
->> +	const struct dw_edma_core_ops *ops = chan2ops(chan);
-> 
-> Reverse tree order here and in remaining functions ...
-
-Ok, I'll do that.
-
-> 
->> +
->> +	vd = vchan_next_desc(&chan->vc);
->> +	if (!vd)
->> +		return;
->> +
->> +	desc = vd2dw_edma_desc(vd);
->> +	if (!desc)
->> +		return;
->> +
->> +	child = list_first_entry_or_null(&desc->chunk->list,
->> +					 struct dw_edma_chunk, list);
->> +	if (!child)
->> +		return;
->> +
->> +	ops->start(child, !desc->xfer_sz);
->> +	desc->xfer_sz += child->ll_region.sz;
->> +	dev_dbg(chan2dev(chan), "transfer of %u bytes started\n",
->> +		child->ll_region.sz);
->> +
->> +	dw_edma_free_burst(child);
->> +	if (child->bursts_alloc)
->> +		dev_dbg(chan2dev(chan),	"%u bursts still allocated\n",
->> +			child->bursts_alloc);
->> +	list_del(&child->list);
->> +	kvfree(child);
->> +	desc->chunks_alloc--;
->> +}
->> +
-> 
->> +int dw_edma_probe(struct dw_edma_chip *chip)
->> +{
->> +	struct dw_edma *dw = chip->dw;
->> +	struct device *dev = chip->dev;
->> +	const struct dw_edma_core_ops *ops;
->> +	size_t ll_chunk = dw->ll_region.sz;
->> +	size_t dt_chunk = dw->dt_region.sz;
->> +	u32 ch_tot;
->> +	int i, j, err;
->> +
->> +	raw_spin_lock_init(&dw->lock);
-> 
-> Why raw ?
-
-Marc Zyngier told me some time ago raw spin locks it would preferable, since it
-doesn't bring any additional effect for the mainline kernel, but will make it
-work correctly if you use the RT patches.
-
-> 
->> +
->> +	/* Callback operation selection accordingly to eDMA version */
->> +	switch (dw->version) {
+>> +	thread->info = info;
+>> +	thread->chan = tchan->chan;
+>> +	switch (channel) {
+>> +	case EDMA_CH_WR:
+>> +		thread->direction = DMA_DEV_TO_MEM;
+>> +		break;
+>> +	case EDMA_CH_RD:
+>> +		thread->direction = DMA_MEM_TO_DEV;
+>> +		break;
 >> +	default:
->> +		dev_err(dev, "unsupported version\n");
+>> +		kvfree(tchan);
+> 
+> You are leaking thread here.
+
+Yes, indeed.
+
+> 
+>> +		return -EPERM;
+>> +	}
+>> +	thread->test_done.wait = &thread->done_wait;
+>> +	init_waitqueue_head(&thread->done_wait);
+>> +
+>> +	if (!params->repetitions)
+>> +		thread->task = kthread_create(dw_edma_test_sg, thread, "%s",
+>> +					      dma_chan_name(chan));
+>> +	else
+>> +		thread->task = kthread_create(dw_edma_test_cyclic, thread, "%s",
+>> +					      dma_chan_name(chan));
+>> +
+>> +	if (IS_ERR(thread->task)) {
+>> +		pr_err("failed to create thread %s\n", dma_chan_name(chan));
+>> +		kvfree(tchan);
+>> +		kvfree(thread);
 >> +		return -EPERM;
 >> +	}
 >> +
->> +	pm_runtime_get_sync(dev);
-> 
-> Why do you need to increase usage count at probe ? And shouldn't
-> this be after pm_runtime_enable() ?
-
-It shouldn't be there. I'll remove it.
-
-> 
->> +
->> +	/* Find out how many write channels are supported by hardware */
->> +	dw->wr_ch_cnt = ops->ch_count(dw, EDMA_DIR_WRITE);
->> +	if (!dw->wr_ch_cnt) {
->> +		dev_err(dev, "invalid number of write channels(0)\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	/* Find out how many read channels are supported by hardware */
->> +	dw->rd_ch_cnt = ops->ch_count(dw, EDMA_DIR_READ);
->> +	if (!dw->rd_ch_cnt) {
->> +		dev_err(dev, "invalid number of read channels(0)\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	dev_dbg(dev, "Channels:\twrite=%d, read=%d\n",
->> +		dw->wr_ch_cnt, dw->rd_ch_cnt);
->> +
->> +	ch_tot = dw->wr_ch_cnt + dw->rd_ch_cnt;
->> +
->> +	/* Allocate channels */
->> +	dw->chan = devm_kcalloc(dev, ch_tot, sizeof(*dw->chan), GFP_KERNEL);
->> +	if (!dw->chan)
->> +		return -ENOMEM;
->> +
->> +	/* Calculate the linked list chunk for each channel */
->> +	ll_chunk /= roundup_pow_of_two(ch_tot);
->> +
->> +	/* Calculate the linked list chunk for each channel */
->> +	dt_chunk /= roundup_pow_of_two(ch_tot);
->> +
->> +	/* Disable eDMA, only to establish the ideal initial conditions */
->> +	ops->off(dw);
->> +
->> +	snprintf(dw->name, sizeof(dw->name), "dw-edma-core:%d", chip->id);
->> +
->> +	/* Request IRQs */
->> +	if (dw->nr_irqs != 1) {
->> +		dev_err(dev, "invalid number of irqs (%u)\n", dw->nr_irqs);
->> +		return -EINVAL;
->> +	}
->> +
->> +	for (i = 0; i < dw->nr_irqs; i++) {
->> +		err = devm_request_irq(dev, pci_irq_vector(to_pci_dev(dev), i),
->> +				       dw_edma_interrupt_all,
->> +				       IRQF_SHARED, dw->name, chip);
->> +		if (err)
->> +			return err;
->> +	}
->> +
->> +	/* Create write channels */
->> +	INIT_LIST_HEAD(&dw->wr_edma.channels);
->> +	for (i = 0; i < dw->wr_ch_cnt; i++) {
->> +		struct dw_edma_chan *chan = &dw->chan[i];
->> +		struct dw_edma_region *dt_region;
->> +
->> +		dt_region = devm_kzalloc(dev, sizeof(*dt_region), GFP_KERNEL);
->> +		if (!dt_region)
->> +			return -ENOMEM;
->> +
->> +		chan->vc.chan.private = dt_region;
->> +
->> +		chan->chip = chip;
->> +		chan->id = i;
->> +		chan->dir = EDMA_DIR_WRITE;
->> +		chan->configured = false;
->> +		chan->request = EDMA_REQ_NONE;
->> +		chan->status = EDMA_ST_IDLE;
->> +
->> +		chan->ll_off = (ll_chunk * i);
->> +		chan->ll_max = (ll_chunk / EDMA_LL_SZ) - 1;
->> +
->> +		chan->dt_off = (dt_chunk * i);
->> +
->> +		dev_dbg(dev, "L. List:\tChannel write[%u] off=0x%.8lx, max_cnt=%u\n",
->> +			i, chan->ll_off, chan->ll_max);
->> +
->> +		memcpy(&chan->msi, &dw->msi[0], sizeof(chan->msi));
->> +
->> +		dev_dbg(dev, "MSI:\t\tChannel write[%u] addr=0x%.8x%.8x, data=0x%.8x\n",
->> +			i, chan->msi.address_hi, chan->msi.address_lo,
->> +			chan->msi.data);
->> +
->> +		chan->vc.desc_free = vchan_free_desc;
->> +		vchan_init(&chan->vc, &dw->wr_edma);
->> +
->> +		dt_region->paddr = dw->dt_region.paddr + chan->dt_off;
->> +		dt_region->vaddr = dw->dt_region.vaddr + chan->dt_off;
->> +		dt_region->sz = dt_chunk;
->> +
->> +		dev_dbg(dev, "Data:\tChannel write[%u] off=0x%.8lx\n",
->> +			i, chan->dt_off);
->> +	}
->> +	dma_cap_zero(dw->wr_edma.cap_mask);
->> +	dma_cap_set(DMA_SLAVE, dw->wr_edma.cap_mask);
->> +	dma_cap_set(DMA_CYCLIC, dw->wr_edma.cap_mask);
->> +	dw->wr_edma.directions = BIT(DMA_DEV_TO_MEM);
->> +	dw->wr_edma.chancnt = dw->wr_ch_cnt;
->> +
->> +	/* Create read channels */
->> +	INIT_LIST_HEAD(&dw->rd_edma.channels);
->> +	for (j = 0; j < dw->rd_ch_cnt; j++, i++) {
->> +		struct dw_edma_chan *chan = &dw->chan[i];
->> +		struct dw_edma_region *dt_region;
->> +
->> +		dt_region = devm_kzalloc(dev, sizeof(*dt_region), GFP_KERNEL);
->> +		if (!dt_region)
->> +			return -ENOMEM;
->> +
->> +		chan->vc.chan.private = dt_region;
->> +
->> +		chan->chip = chip;
->> +		chan->id = j;
->> +		chan->dir = EDMA_DIR_READ;
->> +		chan->configured = false;
->> +		chan->request = EDMA_REQ_NONE;
->> +		chan->status = EDMA_ST_IDLE;
->> +
->> +		chan->ll_off = (ll_chunk * i);
->> +		chan->ll_max = (ll_chunk / EDMA_LL_SZ) - 1;
->> +
->> +		chan->dt_off = (dt_chunk * i);
->> +
->> +		dev_dbg(dev, "L. List:\tChannel read[%u] off=0x%.8lx, max_cnt=%u\n",
->> +			j, chan->ll_off, chan->ll_max);
->> +
->> +		memcpy(&chan->msi, &dw->msi[0], sizeof(chan->msi));
->> +
->> +		dev_dbg(dev, "MSI:\t\tChannel read[%u] addr=0x%.8x%.8x, data=0x%.8x\n",
->> +			j, chan->msi.address_hi, chan->msi.address_lo,
->> +			chan->msi.data);
->> +
->> +		chan->vc.desc_free = vchan_free_desc;
->> +		vchan_init(&chan->vc, &dw->rd_edma);
->> +
->> +		dt_region->paddr = dw->dt_region.paddr + chan->dt_off;
->> +		dt_region->vaddr = dw->dt_region.vaddr + chan->dt_off;
->> +		dt_region->sz = dt_chunk;
->> +
->> +		dev_dbg(dev, "Data:\tChannel read[%u] off=0x%.8lx\n",
->> +			i, chan->dt_off);
->> +	}
->> +	dma_cap_zero(dw->rd_edma.cap_mask);
->> +	dma_cap_set(DMA_SLAVE, dw->rd_edma.cap_mask);
->> +	dma_cap_set(DMA_CYCLIC, dw->rd_edma.cap_mask);
->> +	dw->rd_edma.directions = BIT(DMA_MEM_TO_DEV);
->> +	dw->rd_edma.chancnt = dw->rd_ch_cnt;
->> +
->> +	/* Set DMA channels  capabilities */
->> +	SET_BOTH_CH(src_addr_widths, BIT(DMA_SLAVE_BUSWIDTH_4_BYTES));
->> +	SET_BOTH_CH(dst_addr_widths, BIT(DMA_SLAVE_BUSWIDTH_4_BYTES));
->> +	SET_BOTH_CH(residue_granularity, DMA_RESIDUE_GRANULARITY_DESCRIPTOR);
->> +
->> +	SET_BOTH_CH(dev, dev);
->> +
->> +	SET_BOTH_CH(device_alloc_chan_resources, dw_edma_alloc_chan_resources);
->> +	SET_BOTH_CH(device_free_chan_resources, dw_edma_free_chan_resources);
->> +
->> +	SET_BOTH_CH(device_config, dw_edma_device_config);
->> +	SET_BOTH_CH(device_pause, dw_edma_device_pause);
->> +	SET_BOTH_CH(device_resume, dw_edma_device_resume);
->> +	SET_BOTH_CH(device_terminate_all, dw_edma_device_terminate_all);
->> +	SET_BOTH_CH(device_issue_pending, dw_edma_device_issue_pending);
->> +	SET_BOTH_CH(device_tx_status, dw_edma_device_tx_status);
->> +	SET_BOTH_CH(device_prep_slave_sg, dw_edma_device_prep_slave_sg);
->> +	SET_BOTH_CH(device_prep_dma_cyclic, dw_edma_device_prep_dma_cyclic);
->> +
->> +	/* Power management */
->> +	pm_runtime_enable(dev);
->> +
->> +	/* Register DMA device */
->> +	err = dma_async_device_register(&dw->wr_edma);
->> +	if (err)
->> +		goto err_pm_disable;
->> +
->> +	err = dma_async_device_register(&dw->rd_edma);
->> +	if (err)
->> +		goto err_pm_disable;
->> +
->> +	/* Turn debugfs on */
->> +	err = ops->debugfs_on(chip);
->> +	if (err) {
->> +		dev_err(dev, "unable to create debugfs structure\n");
->> +		goto err_pm_disable;
->> +	}
->> +
->> +	dev_info(dev, "DesignWare eDMA controller driver loaded completely\n");
->> +
->> +	return 0;
->> +
->> +err_pm_disable:
->> +	pm_runtime_disable(dev);
->> +
->> +	return err;
->> +}
->> +EXPORT_SYMBOL_GPL(dw_edma_probe);
->> +
->> +int dw_edma_remove(struct dw_edma_chip *chip)
->> +{
->> +	struct dw_edma *dw = chip->dw;
->> +	struct device *dev = chip->dev;
->> +	const struct dw_edma_core_ops *ops = dw->ops;
->> +	struct dw_edma_chan *chan, *_chan;
->> +	int i;
->> +
->> +	/* Disable eDMA */
->> +	if (ops)
->> +		ops->off(dw);
->> +
->> +	/* Free irqs */
-> 
-> But devm will automatically free it, no ?
-
-Yes, it shouldn't be there. I'll remove it.
-
-> 
->> +	for (i = 0; i < dw->nr_irqs; i++) {
->> +		if (pci_irq_vector(to_pci_dev(dev), i) < 0)
->> +			continue;
->> +
->> +		devm_free_irq(dev, pci_irq_vector(to_pci_dev(dev), i), chip);
->> +	}
->> +
->> +	/* Power management */
->> +	pm_runtime_disable(dev);
->> +
->> +	list_for_each_entry_safe(chan, _chan, &dw->wr_edma.channels,
->> +				 vc.chan.device_node) {
->> +		list_del(&chan->vc.chan.device_node);
->> +		tasklet_kill(&chan->vc.task);
->> +	}
->> +
->> +	list_for_each_entry_safe(chan, _chan, &dw->rd_edma.channels,
->> +				 vc.chan.device_node) {
->> +		list_del(&chan->vc.chan.device_node);
->> +		tasklet_kill(&chan->vc.task);
->> +	}
->> +
->> +	/* Deregister eDMA device */
->> +	dma_async_device_unregister(&dw->wr_edma);
->> +	dma_async_device_unregister(&dw->rd_edma);
->> +
->> +	/* Turn debugfs off */
->> +	if (ops)
->> +		ops->debugfs_off();
->> +
->> +	dev_info(dev, "DesignWare eDMA controller driver unloaded complete\n");
+>> +	tchan->thread = thread;
+>> +	dev_dbg(chan->device->dev, "add thread %s\n", dma_chan_name(chan));
+>> +	list_add_tail(&tchan->node, &info->channels);
 >> +
 >> +	return 0;
 >> +}
->> +EXPORT_SYMBOL_GPL(dw_edma_remove);
+>> +
 
 Thanks!
