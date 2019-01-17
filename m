@@ -2,114 +2,154 @@ Return-Path: <SRS0=Lbw5=PZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 787D9C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 18:30:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEEF1C43387
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 19:02:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5223020657
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 18:30:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94F8A20868
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 19:02:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="EXJeUjyx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727487AbfAQSau (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Jan 2019 13:30:50 -0500
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:58207 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727277AbfAQSau (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2019 13:30:50 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 4A3942800B488;
-        Thu, 17 Jan 2019 19:30:47 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id EA80814075A; Thu, 17 Jan 2019 19:30:46 +0100 (CET)
-Date:   Thu, 17 Jan 2019 19:30:46 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Dongdong Liu <liudongdong3@huawei.com>
-Cc:     helgaas@kernel.org, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, linuxarm@huawei.com,
-        john.garry@huawei.com,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [RFC PATCH] PCI: hotplug: Fix surprise removal report card
- present and link failed
-Message-ID: <20190117183046.gvwf7rwi7eqgtkbg@wunner.de>
-References: <1547649064-19019-1-git-send-email-liudongdong3@huawei.com>
- <20190116142235.6drd6avwk3e7rtwd@wunner.de>
- <aeec5f59-1f41-65d0-b2c1-7a606e32e58b@huawei.com>
+        id S1726905AbfAQTCx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Jan 2019 14:02:53 -0500
+Received: from esa3.dell-outbound.iphmx.com ([68.232.153.94]:22600 "EHLO
+        esa3.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725967AbfAQTCw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2019 14:02:52 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
+  t=1547751742; x=1579287742;
+  h=cc:from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=kW74RBM+b8D648eSCazvqQ4T+1Ka2zli1qG6o6gvb3A=;
+  b=EXJeUjyxgnXCQ8BLYrfYmz2FK20gToJkRNbc7qz8X1rAfY09zHBXqgfM
+   631eMXXS6Yz/l01h+WOfc92eUdIDo+0NY6yjQ8h6m58sZnFO1KMx+Ixk4
+   hRt9s6cRLwJMTDP03jvQW56MdPrp3GZ2HI21LNel4Xt9Wle3t3oX2+Qqe
+   c=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2ElAAD70EBchiWd50NjHAEBAQQBAQc?=
+ =?us-ascii?q?EAQGBUwUBAQsBg1kSMYxwjRSXfoF7CwEBhGyCfTYHDQEDAQECAQECAQECEAE?=
+ =?us-ascii?q?BAQoJCwgpL4I6IoJvAQEBAQIBEig/BQsCAQgYHhBXAgQBGhqDAIF6CJ9lPQK?=
+ =?us-ascii?q?BbokHAQEBgh6KM45VgRGDEoUBhWACi1qKfIpgWgkFkgYgkgstiVOQZwIEAgQ?=
+ =?us-ascii?q?FAhSBTQ6BenCDPYImDgmOHkABikWBHwEB?=
+X-IPAS-Result: =?us-ascii?q?A2ElAAD70EBchiWd50NjHAEBAQQBAQcEAQGBUwUBAQsBg?=
+ =?us-ascii?q?1kSMYxwjRSXfoF7CwEBhGyCfTYHDQEDAQECAQECAQECEAEBAQoJCwgpL4I6I?=
+ =?us-ascii?q?oJvAQEBAQIBEig/BQsCAQgYHhBXAgQBGhqDAIF6CJ9lPQKBbokHAQEBgh6KM?=
+ =?us-ascii?q?45VgRGDEoUBhWACi1qKfIpgWgkFkgYgkgstiVOQZwIEAgQFAhSBTQ6BenCDP?=
+ =?us-ascii?q?YImDgmOHkABikWBHwEB?=
+Received: from mx0b-00154901.pphosted.com (HELO mx0a-00154901.pphosted.com) ([67.231.157.37])
+  by esa3.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 17 Jan 2019 13:02:21 -0600
+Received: from pps.filterd (m0089484.ppops.net [127.0.0.1])
+        by mx0b-00154901.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x0HJ2jUQ081522;
+        Thu, 17 Jan 2019 14:02:50 -0500
+Received: from esa6.dell-outbound2.iphmx.com (esa6.dell-outbound2.iphmx.com [68.232.154.99])
+        by mx0b-00154901.pphosted.com with ESMTP id 2q2r5m2nx4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 17 Jan 2019 14:02:50 -0500
+Cc:     <Austin.Bolen@dell.com>, <keith.busch@intel.com>,
+        <Shyam.Iyer@dell.com>, <lukas@wunner.de>, <okaya@kernel.org>,
+        <rjw@rjwysocki.net>, <lenb@kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Received: from ausc60ps301.us.dell.com ([143.166.148.206])
+  by esa6.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 18 Jan 2019 01:02:49 +0600
+X-LoopCount0: from 10.166.134.83
+X-IronPort-AV: E=Sophos;i="5.56,489,1539666000"; 
+   d="scan'208";a="1247205003"
+From:   <Alex_Gagniuc@Dellteam.com>
+To:     <helgaas@kernel.org>, <mr.nuke.me@gmail.com>
+Subject: Re: [RFC] PCI / ACPI: Implementing Type 3 _HPX records
+Thread-Topic: [RFC] PCI / ACPI: Implementing Type 3 _HPX records
+Thread-Index: AQHUqTnurHiSjfxvdkuUWWPIsLecJQ==
+Date:   Thu, 17 Jan 2019 19:02:47 +0000
+Message-ID: <edf8493f2c184bd6b28d269fe5aa337a@ausx13mps321.AMER.DELL.COM>
+References: <20190110231136.31163-1-mr.nuke.me@gmail.com>
+ <20190114200120.GA33971@google.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.178.128.192]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aeec5f59-1f41-65d0-b2c1-7a606e32e58b@huawei.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-01-17_06:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=837 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1901170133
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 17, 2019 at 08:07:13PM +0800, Dongdong Liu wrote:
-> ??? 2019/1/16 22:22, Lukas Wunner ??????:
-> > On Wed, Jan 16, 2019 at 10:31:04PM +0800, Dongdong Liu wrote:
-> > > The lspci -tv topology is as below.
-> > >  +-[0000:80]-+-00.0-[81]----00.0  Huawei Technologies Co., Ltd. Device 3714
-> > >  |           +-02.0-[82]----00.0  Huawei Technologies Co., Ltd. Device 3714
-> > >  |           +-04.0-[83]----00.0  Huawei Technologies Co., Ltd. Device 3714
-> > >  |           +-06.0-[84]----00.0  Huawei Technologies Co., Ltd. Device 3714
-> > >  |           +-10.0-[87]----00.0  Huawei Technologies Co., Ltd. Device 3714
-> > > 
-> > > Then surprise removal 87:00.0 NVME SSD card. The message is as below.
-> > > 
-> > > pciehp 0000:80:10.0:pcie004: Slot(36): Link Down
-> > > iommu: Removing device 0000:87:00.0 from group 12
-> > > pciehp 0000:80:10.0:pcie004: Slot(36): Card present
-> > > pcieport 0000:80:10.0: Data Link Layer Link Active not set in 1000 msec
-> > > pciehp 0000:80:10.0:pcie004: Failed to check link status
-> > 
-> > What is the problem that you're trying to fix?  That these messages
-> > are logged?  Or is there a bigger issue?  If the only problem are the
-> > messages, then I feel that the current behavior is a feature, not a bug.
-> > We could probably tone down the "Failed to check link status" message's
-> > severity.  (Currently it's KERN_ERR, all the other messages are KERN_INFO.)
-> 
-> Yes, the only problem is the messages, looks not good,
-> as the card have been removed from board, the message still show
-> card present and failed to check link status.
-> Only tone down the "Failed to check link status" message's severity
-> seems not good enough.
-
-Well, getting messages like this is par for the course with PCIe hotplug.
-
-E.g. some older Thunderbolt controllers do not support MSI on their
-hotplug ports, but only INTx.  If multiple such devices are daisy-
-chained, they'll share an interrupt, so whenever a device is hot-removed,
-a "pciehp_isr: no response from device" message is logged with
-KERN_INFO severity because the hot-removed device was inaccessible
-for its interrupt handler.  The interrupt didn't come from the
-hot-removed device of course but from another one further upstream
-in the daisy-chain where the plug event occurred.  We can't do much
-better with such broken hardware.
-
-The reason you're seeing messages is because it takes an unusually
-long time for the controller to clear the Presence Detect State bit
-after a Data Link Layer State Changed event upon hot-removal.
-That's arguably a quirk of the hardware you're dealing with.
-
-pciehp cannot tell whether the Presence Detect State bit is set
-because a new card is already present in the slot or if it's trailing
-hot-removal and will be cleared shortly.  The protocol doesn't allow
-for a clear disambiguation, so pciehp copes by optimistically trying
-to bring up the slot, and giving up after a certain delay.
-
-There is other quirky hardware out there which flaps the Presence
-Detect State and Data Link Layer Link Active bits a couple of times
-before they become stable, which is why pciehp needs to try for a
-certain period to bring up the slot.
-
-Again, we could probably tone down or remove some of the messages,
-but that might make it harder to diagnose when something really
-doesn't work.  It's Bjorn's call anyway.
-
-Thanks,
-
-Lukas
+Hi Bjorn=0A=
+=0A=
+On 1/14/19 2:01 PM, Bjorn Helgaas wrote:=0A=
+> On Thu, Jan 10, 2019 at 05:11:27PM -0600, Alexandru Gagniuc wrote:=0A=
+>> _HPX Type 3 is intended to be more generic and allow configuration of=0A=
+>> settings not possible with Type 2 tables. For example, FW could ensure=
+=0A=
+>> that the completion timeout value is set accordingly throughout the PCI=
+=0A=
+>> tree; some switches require very special handling.=0A=
+>>=0A=
+>> Type 3 can come in an arbitrary number of ACPI packages. With the older=
+=0A=
+>> types we only ever had one descriptor. We could get lazy and store it=0A=
+>> on the stack. The current flow is to parse the HPX table=0A=
+>> --pci_get_hp_params()-- and then program the PCIe device registers.=0A=
+>>=0A=
+>> In the current flow, we'll need to malloc(). Here's what I tried:=0A=
+>>   1) devm_kmalloc() on the pci_dev=0A=
+>>    This ended up giving me NULL dereference at boot time.=0A=
+> =0A=
+> Yeah, I don't think devm_*() is going to work because that's part of the=
+=0A=
+> driver binding model; this is in the PCI core and this use is not related=
+=0A=
+> to the lifetime of a driver's binding to a device.=0A=
+> =0A=
+>>   2) Add a cleanup function to be called after writing the PCIe register=
+s=0A=
+>>=0A=
+>> This RFC implements method 2. The HPX3 stuff is still NDA'd, but the=0A=
+>> housekeeping parts are in here. Is this a good way to do things? I'm not=
+=0A=
+>> too sure about the need to call cleanup() on a stack variable. But if=0A=
+>> not that, then what else?=0A=
+> =0A=
+> pci_get_hp_params() is currently exported, but only used inside=0A=
+> drivers/pci, so I think it could be unexported.=0A=
+=0A=
+It can.=0A=
+=0A=
+> I don't remember if there's a reason why things are split between=0A=
+> pci_get_hp_params(), which runs _HPX or _HPP, and the program_hpp_type*()=
+=0A=
+> functions.  If we could get rid of that split, we could get rid of struct=
+=0A=
+> hotplug_params and do the configuration directly in the pci_get_hp_params=
+()=0A=
+> path.  I think that would simplify the memory management.=0A=
+=0A=
+Thanks for the in-depth analysis. I'm working on a proof-of-concept =0A=
+patch to do what you suggested. On downside though, is that we may have =0A=
+to parse some things twice.=0A=
+=0A=
+Another thing, I've been thinking is, why not store the hotplug =0A=
+parameters from ACPI with the pci_bus struct. That way, you only need to =
+=0A=
+parse ACPI once per bus, instead of each time a device is probed. There =0A=
+would be some memory overhead, but the hotplug structures are =0A=
+(thankfully) still relatively small. I could try a proof of concept for =0A=
+this idea as well... let me know.=0A=
+=0A=
+Alex=0A=
