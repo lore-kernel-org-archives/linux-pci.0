@@ -2,117 +2,174 @@ Return-Path: <SRS0=Lbw5=PZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE86C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 10:54:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C46AC43387
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 12:07:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D867E20657
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 10:54:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EFBA20851
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 12:07:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727709AbfAQKyr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Jan 2019 05:54:47 -0500
-Received: from bastet.se.axis.com ([195.60.68.11]:44098 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725990AbfAQKyr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2019 05:54:47 -0500
-Received: from localhost (localhost [127.0.0.1])
-        by bastet.se.axis.com (Postfix) with ESMTP id A801B18582;
-        Thu, 17 Jan 2019 11:54:43 +0100 (CET)
-X-Axis-User: NO
-X-Axis-NonUser: YES
-X-Virus-Scanned: Debian amavisd-new at bastet.se.axis.com
-Received: from bastet.se.axis.com ([IPv6:::ffff:127.0.0.1])
-        by localhost (bastet.se.axis.com [::ffff:127.0.0.1]) (amavisd-new, port 10024)
-        with LMTP id MOgDnb2tF8EW; Thu, 17 Jan 2019 11:54:42 +0100 (CET)
-Received: from boulder03.se.axis.com (boulder03.se.axis.com [10.0.8.17])
-        by bastet.se.axis.com (Postfix) with ESMTPS id 4C9251857F;
-        Thu, 17 Jan 2019 11:54:42 +0100 (CET)
-Received: from boulder03.se.axis.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0C4681E081;
-        Thu, 17 Jan 2019 11:54:42 +0100 (CET)
-Received: from boulder03.se.axis.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id F30CF1E080;
-        Thu, 17 Jan 2019 11:54:41 +0100 (CET)
-Received: from seth.se.axis.com (unknown [10.0.2.172])
-        by boulder03.se.axis.com (Postfix) with ESMTP;
-        Thu, 17 Jan 2019 11:54:41 +0100 (CET)
-Received: from lnxartpec.se.axis.com (lnxartpec.se.axis.com [10.88.4.9])
-        by seth.se.axis.com (Postfix) with ESMTP id E4E0E1885;
-        Thu, 17 Jan 2019 11:54:41 +0100 (CET)
-Received: by lnxartpec.se.axis.com (Postfix, from userid 10564)
-        id E16A380B46; Thu, 17 Jan 2019 11:54:41 +0100 (CET)
-Date:   Thu, 17 Jan 2019 11:54:41 +0100
-From:   Vincent Whitchurch <vincent.whitchurch@axis.com>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     sudeep.dutt@intel.com, ashutosh.dixit@intel.com,
-        gregkh <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-ntb@googlegroups.com, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>
-Subject: Re: [PATCH 0/8] Virtio-over-PCIe on non-MIC
-Message-ID: <20190117105441.eqediwlekofp2srg@axis.com>
-References: <20190116163253.23780-1-vincent.whitchurch@axis.com>
- <CAK8P3a2ifu9X+SXgoDPSFMYwnKr=Yex8_tD4qRimcOQAhuEa8Q@mail.gmail.com>
+        id S1725878AbfAQMH0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Jan 2019 07:07:26 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2255 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725872AbfAQMH0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Jan 2019 07:07:26 -0500
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id EA785B104751EFBA7BE4;
+        Thu, 17 Jan 2019 20:07:23 +0800 (CST)
+Received: from [127.0.0.1] (10.63.141.25) by DGGEMS410-HUB.china.huawei.com
+ (10.3.19.210) with Microsoft SMTP Server id 14.3.408.0; Thu, 17 Jan 2019
+ 20:07:14 +0800
+Subject: Re: [RFC PATCH] PCI: hotplug: Fix surprise removal report card
+ present and link failed
+To:     Lukas Wunner <lukas@wunner.de>
+References: <1547649064-19019-1-git-send-email-liudongdong3@huawei.com>
+ <20190116142235.6drd6avwk3e7rtwd@wunner.de>
+CC:     <helgaas@kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+        <john.garry@huawei.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+From:   Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <aeec5f59-1f41-65d0-b2c1-7a606e32e58b@huawei.com>
+Date:   Thu, 17 Jan 2019 20:07:13 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a2ifu9X+SXgoDPSFMYwnKr=Yex8_tD4qRimcOQAhuEa8Q@mail.gmail.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
-X-TM-AS-GCONF: 00
+In-Reply-To: <20190116142235.6drd6avwk3e7rtwd@wunner.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.63.141.25]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 16, 2019 at 06:07:53PM +0100, Arnd Bergmann wrote:
-> On Wed, Jan 16, 2019 at 5:33 PM Vincent Whitchurch <vincent.whitchurch@axis.com> wrote:
-> > The Virtio-over-PCIe framework living under drivers/misc/mic/vop implements a
-> > generic framework to use virtio between two Linux systems, given shared memory
-> > and a couple of interrupts.  It does not actually require the Intel MIC
-> > hardware, x86-64, or even PCIe for that matter.  This patch series makes it
-> > buildable on more systems and adds a loopback driver to test it without special
-> > hardware.
-> >
-> > Note that I don't have access to Intel MIC hardware so some testing of the
-> > patchset (especially the patch "vop: Use consistent DMA") on that platform
-> > would be appreciated, to ensure that the series does not break anything there.
-> 
-> I think we need to take a step back though and discuss what combinations
-> we actually do want to support. I have not actually read the whole mic/vop
-> driver, so I don't know if this would be a good fit as a generic interface --
-> it may or may not be, and any other input would be helpful.
+Hi Lukas
 
-The MIC driver as a whole is uninteresting as a generic interface since
-it is quite tied to the Intel hardware.  The VOP parts though are
-logically separated and have no relation to that hardware, even if the
-ioctls are called MIC_VIRTIO_*.
+Many thanks for your reply.
 
-The samples/mic/mpssd/mpssd.c code handles both the boot of the MIC
-(sysfs) and the VOP parts (ioctls).
+在 2019/1/16 22:22, Lukas Wunner 写道:
+> [cc += Mika]
+>
+> On Wed, Jan 16, 2019 at 10:31:04PM +0800, Dongdong Liu wrote:
+>> The lspci -tv topology is as below.
+>>  +-[0000:80]-+-00.0-[81]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>>  |           +-02.0-[82]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>>  |           +-04.0-[83]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>>  |           +-06.0-[84]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>>  |           +-10.0-[87]----00.0  Huawei Technologies Co., Ltd. Device 3714
+>>
+>> Then surprise removal 87:00.0 NVME SSD card. The message is as below.
+>>
+>> pciehp 0000:80:10.0:pcie004: Slot(36): Link Down
+>> iommu: Removing device 0000:87:00.0 from group 12
+>> pciehp 0000:80:10.0:pcie004: Slot(36): Card present
+>> pcieport 0000:80:10.0: Data Link Layer Link Active not set in 1000 msec
+>> pciehp 0000:80:10.0:pcie004: Failed to check link status
+>
+> What is the problem that you're trying to fix?  That these messages
+> are logged?  Or is there a bigger issue?  If the only problem are the
+> messages, then I feel that the current behavior is a feature, not a bug.
+> We could probably tone down the "Failed to check link status" message's
+> severity.  (Currently it's KERN_ERR, all the other messages are KERN_INFO.)
+>
 
-> Aside from that, I should note that we have two related subsystems
-> in the kernel: the PCIe endpoint subsystem maintained by Kishon and
-> Lorenzo, and the NTB subsystem maintained by Jon, Dave and Allen.
-> 
-> In order to properly support virtio over PCIe, I would hope we can come
-> up with a user space interface that looks the same way for configuring
-> virtio drivers in mic, pcie-endpoint and ntb, if at all possible. Have
-> you looked at those two subsystems?
+Yes, the only problem is the messages, looks not good,
+as the card have been removed from board, the message still show
+card present and failed to check link status.
+Only tone down the "Failed to check link status" message's severity seems not
+good enough.
 
-pcie-endpoint is a generic framework that allows Linux to act as an
-endpoint and set up the BARs, etc.  mic appears to have Intel
-MIC-specific code for this (pre-dating pcie-endpoint) but this is
-separate from the vop code.  pcie-endpoint and vop do not have
-overlapping functionality and can be used together.
+>
+>> The NVME SSD card is permited to surprise removal with slot power on
+>> on the D06 board. The hotplug port's POWER_CTRL(ctrl) is false.
+>
+> I don't quite follow:  Does the hotplug port have a Power Controller but
+> misrepresents that fact in the Slot Capabilities register?
+>
+Yes, SlotCap:  PwrCtrl- HotPlug+ Surprise+
+The port support Hot-Plug Surprise without Power Controller Present.
 
-I'm not familiar with NTB, but from a quick look it seems to be tied to
-special hardware, and I don't see any virtio-related code there.  A vop
-backend for NTB-backend would presumably work to allow virtio
-functionality there.
+>
+>> Data link layer state changed (link down) event reported prior to presence
+>> detect changed (card is not present) when surprise removal.
+>
+> It's normal that PDS and DLLSC events are received in varying order and with
+> significant delays.  (I've seen 244 msec once with Thunderbolt between
+> PDS- and DLLSC-.)
+>
+Thanks for clarifying this.
+>
+>> Current code pciehp_handle_presence_or_link_change() handle link down event,
+>> then check the card present, but at this time presence detect state have
+>> not updated, so have such issue. If surprise removal and power controller
+>> present is not implemented, wait for at least 1 second before checking
+>> card present to fix the issue.
+>
+> Thunderbolt doesn't have a Power Controller either and this change would
+> imply that if Thunderbolt devices are quickly swapped, bringing up the
+> replaced device would take longer than it takes now.  So I'm not really
+> happy about this change.
+
+I got your point, any suggestion to resolve the message problem ?
+
+Thanks,
+Dongdong
+>
+> Thanks,
+>
+> Lukas
+>
+>>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> ---
+>>  drivers/pci/hotplug/pciehp_ctrl.c | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+>> index 3f3df4c..ef8952d 100644
+>> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+>> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+>> @@ -216,6 +216,7 @@ void pciehp_handle_disable_request(struct controller *ctrl)
+>>  void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+>>  {
+>>  	bool present, link_active;
+>> +	bool safe_removal = SAFE_REMOVAL;
+>>
+>>  	/*
+>>  	 * If the slot is on and presence or link has changed, turn it off.
+>> @@ -236,6 +237,7 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+>>  			ctrl_info(ctrl, "Slot(%s): Card not present\n",
+>>  				  slot_name(ctrl));
+>>  		pciehp_disable_slot(ctrl, SURPRISE_REMOVAL);
+>> +		safe_removal = SURPRISE_REMOVAL;
+>>  		break;
+>>  	default:
+>>  		mutex_unlock(&ctrl->state_lock);
+>> @@ -244,6 +246,15 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+>>
+>>  	/* Turn the slot on if it's occupied or link is up */
+>>  	mutex_lock(&ctrl->state_lock);
+>> +	/*
+>> +	 * if surprise removal and power controller present is not implemented,
+>> +	 * wait for at least 1 second before checking card present as
+>> +	 * data link layer state changed (link down) event reported
+>> +	 * prior to presence detect changed (card is not present).
+>> +	 */
+>> +	if (!safe_removal && !POWER_CTRL(ctrl))
+>> +		msleep(1000);
+>> +
+>>  	present = pciehp_card_present(ctrl);
+>>  	link_active = pciehp_check_link_active(ctrl);
+>>  	if (!present && !link_active) {
+>> --
+>> 1.9.1
+>
+> .
+>
+
