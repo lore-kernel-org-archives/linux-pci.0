@@ -2,87 +2,114 @@ Return-Path: <SRS0=Lbw5=PZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6B73C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 16:34:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 787D9C43387
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 18:30:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B63AD20851
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 16:34:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5223020657
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 18:30:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728423AbfAQQe2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Jan 2019 11:34:28 -0500
-Received: from mail-qk1-f194.google.com ([209.85.222.194]:32918 "EHLO
-        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbfAQQe2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2019 11:34:28 -0500
-Received: by mail-qk1-f194.google.com with SMTP id d15so6387625qkj.0;
-        Thu, 17 Jan 2019 08:34:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=hUO7lExNQVYdMiiSDFiWk5Lp0j1l6DWAJJFEEl3Aahk=;
-        b=DUQsi8Me/LivjJFnPZ1+MA5QkBLgnSoN9PjxQcjpU2AYszRTSISnPtwlOXjxB1ripD
-         wbqexaXLzQg4m8YNlQXHq0R6hbkQhKw8/oQC3X5868F3sT4dN5rbBS76ruAL51iJodgT
-         VtB2PWrZ975UGO9SATUuW9OygvvPqGeEX5LYbLyWbxSnbfvC1PdRPAXN1tDeo2V59uHt
-         5WzvBn1O6hcEmROgxM8PV0JFFap3cGtb1CE+dzax7Ck57DAYLIS9IAfkski2RDQ0lN96
-         GHTGa9VdX31cEXjWPfc05fWkoCR0qA8GIO0e3DvOgEBjmTqRx9RJjVzM1jGr6/HJz5oU
-         q2XQ==
-X-Gm-Message-State: AJcUukcd1yJfGEk54PvhIx2LN/zdvXmBQc6ayNd5W96io5DExGD4wxzm
-        b1b/rfriJP+Qbrgs2NvDoAbG61bED+0OFqQGJoo=
-X-Google-Smtp-Source: ALg8bN7uzTOGwhhASLlM7aRXMlET30fleysyAgvuNFSq8k0HgcIGlnz60xrkuROnjPDwQ7+P26YkjVvwikBmypkQRxE=
-X-Received: by 2002:a37:bdc6:: with SMTP id n189mr11338192qkf.330.1547742866885;
- Thu, 17 Jan 2019 08:34:26 -0800 (PST)
+        id S1727487AbfAQSau (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Jan 2019 13:30:50 -0500
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:58207 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727277AbfAQSau (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2019 13:30:50 -0500
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 4A3942800B488;
+        Thu, 17 Jan 2019 19:30:47 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id EA80814075A; Thu, 17 Jan 2019 19:30:46 +0100 (CET)
+Date:   Thu, 17 Jan 2019 19:30:46 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Dongdong Liu <liudongdong3@huawei.com>
+Cc:     helgaas@kernel.org, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, linuxarm@huawei.com,
+        john.garry@huawei.com,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [RFC PATCH] PCI: hotplug: Fix surprise removal report card
+ present and link failed
+Message-ID: <20190117183046.gvwf7rwi7eqgtkbg@wunner.de>
+References: <1547649064-19019-1-git-send-email-liudongdong3@huawei.com>
+ <20190116142235.6drd6avwk3e7rtwd@wunner.de>
+ <aeec5f59-1f41-65d0-b2c1-7a606e32e58b@huawei.com>
 MIME-Version: 1.0
-References: <20190116163253.23780-1-vincent.whitchurch@axis.com>
- <CAK8P3a2ifu9X+SXgoDPSFMYwnKr=Yex8_tD4qRimcOQAhuEa8Q@mail.gmail.com>
- <20190117105441.eqediwlekofp2srg@axis.com> <CAK8P3a2HtSJCLVdLcs=f0b5wv-k-6E_Z4Pt3Yp_kazUZh-Ek9A@mail.gmail.com>
- <20190117151906.odvozs6kz3uvx32y@axis.com> <CAK8P3a17cw3LrbGOf=TxyfK70CHDy-bjbYkvrsvaQ9OM8nPeFQ@mail.gmail.com>
- <20190117162601.tbmi4ounrnktzjga@axis.com>
-In-Reply-To: <20190117162601.tbmi4ounrnktzjga@axis.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Thu, 17 Jan 2019 17:34:10 +0100
-Message-ID: <CAK8P3a3qoxXZqrAuusw++dAU8csHDLHkPNhojjO0AF3FL3jZBg@mail.gmail.com>
-Subject: Re: [PATCH 0/8] Virtio-over-PCIe on non-MIC
-To:     Vincent Whitchurch <vincent.whitchurch@axis.com>
-Cc:     sudeep.dutt@intel.com, ashutosh.dixit@intel.com,
-        gregkh <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-ntb@googlegroups.com, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aeec5f59-1f41-65d0-b2c1-7a606e32e58b@huawei.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 17, 2019 at 5:26 PM Vincent Whitchurch
-<vincent.whitchurch@axis.com> wrote:
-> On Thu, Jan 17, 2019 at 04:53:25PM +0100, Arnd Bergmann wrote:
-> > On Thu, Jan 17, 2019 at 4:19 PM Vincent Whitchurch
+On Thu, Jan 17, 2019 at 08:07:13PM +0800, Dongdong Liu wrote:
+> ??? 2019/1/16 22:22, Lukas Wunner ??????:
+> > On Wed, Jan 16, 2019 at 10:31:04PM +0800, Dongdong Liu wrote:
+> > > The lspci -tv topology is as below.
+> > >  +-[0000:80]-+-00.0-[81]----00.0  Huawei Technologies Co., Ltd. Device 3714
+> > >  |           +-02.0-[82]----00.0  Huawei Technologies Co., Ltd. Device 3714
+> > >  |           +-04.0-[83]----00.0  Huawei Technologies Co., Ltd. Device 3714
+> > >  |           +-06.0-[84]----00.0  Huawei Technologies Co., Ltd. Device 3714
+> > >  |           +-10.0-[87]----00.0  Huawei Technologies Co., Ltd. Device 3714
+> > > 
+> > > Then surprise removal 87:00.0 NVME SSD card. The message is as below.
+> > > 
+> > > pciehp 0000:80:10.0:pcie004: Slot(36): Link Down
+> > > iommu: Removing device 0000:87:00.0 from group 12
+> > > pciehp 0000:80:10.0:pcie004: Slot(36): Card present
+> > > pcieport 0000:80:10.0: Data Link Layer Link Active not set in 1000 msec
+> > > pciehp 0000:80:10.0:pcie004: Failed to check link status
+> > 
+> > What is the problem that you're trying to fix?  That these messages
+> > are logged?  Or is there a bigger issue?  If the only problem are the
+> > messages, then I feel that the current behavior is a feature, not a bug.
+> > We could probably tone down the "Failed to check link status" message's
+> > severity.  (Currently it's KERN_ERR, all the other messages are KERN_INFO.)
+> 
+> Yes, the only problem is the messages, looks not good,
+> as the card have been removed from board, the message still show
+> card present and failed to check link status.
+> Only tone down the "Failed to check link status" message's severity
+> seems not good enough.
 
-> > Ok, this seems fine so far. So the vop-host-backend is a regular PCI
-> > driver that implements the VOP protocol from the host side, and it
-> > can talk to either a MIC, or another guest-backend written for the PCI-EP
-> > framework to implement the same protocol, right?
->
-> Yes, but just to clarify:  the placement of the device page and the way
-> to communicate the location of the device page address and any other
-> information needed by the guest-backend are hardware-specific so there
-> is no generic vop-host-backend implementation which can talk to both a
-> MIC and to something else.
+Well, getting messages like this is par for the course with PCIe hotplug.
 
-I'm not sure I understand what is hardware specific about it. Shouldn't
-it be possible to define at least a vop-host-backend that could work with
-any guest-backend running on the PCI-EP framework?
+E.g. some older Thunderbolt controllers do not support MSI on their
+hotplug ports, but only INTx.  If multiple such devices are daisy-
+chained, they'll share an interrupt, so whenever a device is hot-removed,
+a "pciehp_isr: no response from device" message is logged with
+KERN_INFO severity because the hot-removed device was inaccessible
+for its interrupt handler.  The interrupt didn't come from the
+hot-removed device of course but from another one further upstream
+in the daisy-chain where the plug event occurred.  We can't do much
+better with such broken hardware.
 
-This may have to be different from the interface used on MIC, but
-generally speaking that is what I expect from a PCI device.
+The reason you're seeing messages is because it takes an unusually
+long time for the controller to clear the Presence Detect State bit
+after a Data Link Layer State Changed event upon hot-removal.
+That's arguably a quirk of the hardware you're dealing with.
 
-       Arnd
+pciehp cannot tell whether the Presence Detect State bit is set
+because a new card is already present in the slot or if it's trailing
+hot-removal and will be cleared shortly.  The protocol doesn't allow
+for a clear disambiguation, so pciehp copes by optimistically trying
+to bring up the slot, and giving up after a certain delay.
+
+There is other quirky hardware out there which flaps the Presence
+Detect State and Data Link Layer Link Active bits a couple of times
+before they become stable, which is why pciehp needs to try for a
+certain period to bring up the slot.
+
+Again, we could probably tone down or remove some of the messages,
+but that might make it harder to diagnose when something really
+doesn't work.  It's Bjorn's call anyway.
+
+Thanks,
+
+Lukas
