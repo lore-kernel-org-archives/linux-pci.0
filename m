@@ -1,86 +1,83 @@
-Return-Path: <SRS0=Lbw5=PZ=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=ljL/=P2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8E4C43387
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 22:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8AD7C43612
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 04:23:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7074C20868
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Jan 2019 22:17:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 910B920855
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 04:23:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MaO13wyC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728019AbfAQWR6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Jan 2019 17:17:58 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:44976 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727819AbfAQWR6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Jan 2019 17:17:58 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1gkFyr-000871-SN; Thu, 17 Jan 2019 15:17:46 -0700
-To:     Vincent Whitchurch <vincent.whitchurch@axis.com>,
-        Arnd Bergmann <arnd@arndb.de>
-Cc:     sudeep.dutt@intel.com, ashutosh.dixit@intel.com,
-        gregkh <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
+        id S1727032AbfAREXg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Jan 2019 23:23:36 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:33504 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726955AbfAREXg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2019 23:23:36 -0500
+Received: by mail-pl1-f196.google.com with SMTP id z23so5773518plo.0
+        for <linux-pci@vger.kernel.org>; Thu, 17 Jan 2019 20:23:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=lkyUh9icSEKOoKzJdnqtktOdVMrgPrWedNRK3nkMezA=;
+        b=MaO13wyCdWwhnawBbm4ve7FF5FpVb7kVh6+cZesvH30M+nkS3k/Q2w3V6yRq6J41IR
+         M2g2R94lvqnxaY5a1gUT6QDVRQv3TEcXuHl9wbH7rdXOAY1SoON9GRV7q9sqiTvojlhC
+         Z+aBhMjWYo1SDgHXbTMHFbMI8BWrSFX7fT91E=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=lkyUh9icSEKOoKzJdnqtktOdVMrgPrWedNRK3nkMezA=;
+        b=bnPLcIlheMgHXtX/qxlDcLYTg6ul6SipC/zRgU6CZN9cA19tmHjrIweLd4RUQMLCOJ
+         i2p5upadyDPgWC2N8UM/nPH81qPUsJboH3wBT5gm26oidV0/8/EV4wWkkzs1nM90V18t
+         xqo3c3B7/cVECJoPhhW6HNSnkfSyvWJvPyMbMkiWqJl7WOXujR4W91BxMtw/7jCrAqGk
+         2bk6Hitrizhqz7NJ4MR+EnHkOjGgDeuFwoOvQ+vHskbE9z1/IRtRcX6YXS2Iz3f6F0ZQ
+         3V/OawcGznU4hvaSAtExBdFXKhIlKbCGBW/SC1VJUa+gQiRXCkmwsNgIvEvhhzEl2yM4
+         XjEw==
+X-Gm-Message-State: AJcUukfeKqM9rK2vtvQKm2C9+D90IGM3ba+tO6MrOsLmTNIVxkh1Xz2w
+        n3+tZJbmB/xF0mBaaB4onFgsEg==
+X-Google-Smtp-Source: ALg8bN7BQHSNE42r7oE7vtISOSH1+C1FDA5Sz2z/shhdLGBd9Nft8N4KdD3bTC0EVW3tYj6GJ4erGg==
+X-Received: by 2002:a17:902:1105:: with SMTP id d5mr17166964pla.47.1547785415103;
+        Thu, 17 Jan 2019 20:23:35 -0800 (PST)
+Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id l19sm7339642pfi.71.2019.01.17.20.23.31
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Thu, 17 Jan 2019 20:23:34 -0800 (PST)
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-ntb@googlegroups.com, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>
-References: <20190116163253.23780-1-vincent.whitchurch@axis.com>
- <CAK8P3a2ifu9X+SXgoDPSFMYwnKr=Yex8_tD4qRimcOQAhuEa8Q@mail.gmail.com>
- <20190117105441.eqediwlekofp2srg@axis.com>
- <CAK8P3a2HtSJCLVdLcs=f0b5wv-k-6E_Z4Pt3Yp_kazUZh-Ek9A@mail.gmail.com>
- <20190117151906.odvozs6kz3uvx32y@axis.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <62e5f3e7-e2e3-c6ce-b8f6-99a5342c1494@deltatee.com>
-Date:   Thu, 17 Jan 2019 15:17:41 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-In-Reply-To: <20190117151906.odvozs6kz3uvx32y@axis.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: allenbh@gmail.com, dave.jiang@intel.com, jdmason@kudzu.us, linux-ntb@googlegroups.com, linux-pci@vger.kernel.org, lorenzo.pieralisi@arm.com, kishon@ti.com, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, ashutosh.dixit@intel.com, sudeep.dutt@intel.com, arnd@arndb.de, vincent.whitchurch@axis.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH 0/8] Virtio-over-PCIe on non-MIC
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>
+Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [PATCH 0/3] Add IPROC PCIe new features
+Date:   Fri, 18 Jan 2019 09:53:20 +0530
+Message-Id: <1547785403-32268-1-git-send-email-srinath.mannam@broadcom.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add changes related to IPROC PCIe RC IP new features.
 
+This patch set is based on Linux-5.0-rc2.
 
-On 2019-01-17 8:19 a.m., Vincent Whitchurch wrote:
-> On the endpoint, the PCIe endpoint driver sets up (hardcoded) BARs and
-> memory regions as required to allow the endpoint and the root complex to
-> access each other's memory.
+Srinath Mannam (3):
+  PCI: iproc: Add feature to set order mode
+  PCI: iproc: CRS state check in config request
+  PCI: iproc: Add PCIe 32bit outbound memory configuration
 
-This statement describes NTB hardware pretty well. In essence that's
-what an NTB device is: a BAR that maps to a window in other hosts memory.
+ drivers/pci/controller/pcie-iproc.c | 172 +++++++++++++++++++++++++++++++++++-
+ drivers/pci/controller/pcie-iproc.h |  16 ++++
+ 2 files changed, 184 insertions(+), 4 deletions(-)
 
-Right now the entire NTB upstream software stack (ntb_transport and
-ntb_netdev) is specific to that ecosystem and only exposes a network
-device so the hosts can communicate. This code works but has some issues
-and was never able to perform at full PCIe line speeds (which everyone
-expects). So it's not clear to me if anyone is doing anything real with
-it. The companies that are working on NTB, that I'm aware of, have
-mostly done their own out-of-tree stuff.
+-- 
+2.7.4
 
-It would be interesting to unify ntb_transport with the virtio stack
-because I suspect they do very similar things right now and there's a
-lot more devices above virtio than just a network device. However, the
-main problem people working on NTB face (besides performance) is trying
-to get multi-host working in a general and sensible way given that the
-hardware typically has limited BAR resources (among other limitations).
-
-Logan
