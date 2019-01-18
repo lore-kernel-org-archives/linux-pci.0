@@ -2,120 +2,125 @@ Return-Path: <SRS0=ljL/=P2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88751C43612
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 04:23:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA1A8C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 11:24:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 594B12087E
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 04:23:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="J6knWjID"
+	by mail.kernel.org (Postfix) with ESMTP id A37CE2086D
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 11:24:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1547810683;
+	bh=PUisAjVa3cv5X1Xh6/0uP915h1Husuc43o0Ccl7AMXQ=;
+	h=From:Date:Subject:To:Cc:List-ID:From;
+	b=HiB/YKbLRhkCTQDhbZerpLeCAuGgq+qI5tG+XK5S4hpCi6dJevuRGGUS0XGYig6E6
+	 l/xw4KKBP4qjXH6jcjnj5hDp6PuYBpvvJvk++wmyUxljIL1T/HzBhleTC+Qku8NWvT
+	 gZgYKFIlTn6Chc4qjyIZn8zvRdyzL7ah3BfBvM88=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727164AbfAREXr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Jan 2019 23:23:47 -0500
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:42730 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727159AbfAREXq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Jan 2019 23:23:46 -0500
-Received: by mail-pf1-f194.google.com with SMTP id 64so5912700pfr.9
-        for <linux-pci@vger.kernel.org>; Thu, 17 Jan 2019 20:23:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=gd0kst7cuRr2aJzLZ1SyEXPC1v7Rd0v/exoBmWBr5Lk=;
-        b=J6knWjIDQCLGBYyOXOnhUuv743heQ74vXvmaqSmUkO1oZX5huX+onum4NfQtdxgpbb
-         Ft0MKPck9Y6biFY4zI0ebMMZISj8MEh5yqmF1yIMZ3Me+iY5+Jf4OkalnKyPQVsYn7XK
-         YZb1KjhuP0EExGOcK1VRuEJD9k9drzCx6CF7M=
+        id S1727001AbfARLYh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Jan 2019 06:24:37 -0500
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:44650 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726990AbfARLYh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2019 06:24:37 -0500
+Received: by mail-ot1-f68.google.com with SMTP id f18so14032150otl.11;
+        Fri, 18 Jan 2019 03:24:37 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=gd0kst7cuRr2aJzLZ1SyEXPC1v7Rd0v/exoBmWBr5Lk=;
-        b=rlHdmD9maf53qa7lCVeR+3jYQj9NBuKvxaZ4KRznL2iuhr5ThqCjGTuDg6dmKHmB5+
-         Kq9QbqHwKuCfB31UcYl0PC3bch+mhMTsPxdEsu6vK6FwzcN16rJScfvM6vrSl8Wim50L
-         sB1dmrm1Neow9KVzlg3gg74OQPPc0Xg/DxtN6Y13sflKAWZgSTZnHiojfggxqz08YG1I
-         rgdG/ew8YQxoNUka7zykp/yA3yXjxMAs43kIYVjuCcf9++scd7vwBje6HDUMgd2mtpZe
-         RmXpxBP+sVrZAmpBigPwqbNCGgbAkbBkXFI9P7pUrCweRI9qdD051k4noXUZ3phZAn1a
-         FPRw==
-X-Gm-Message-State: AJcUukfieTYyYKiiGylU9SDarDoVs1ioKByBpx+aKEDeufe+hvDRxfYO
-        LlIMTQPLhQd4rmEMmi822QKAsA==
-X-Google-Smtp-Source: ALg8bN4xUhsQZmsQKGkIZWSEBZvlmxLxy7BOBQ1tFZqVPkqp9bzI+oflrZWZ611rODzPAe0rCfzdHg==
-X-Received: by 2002:a63:ab08:: with SMTP id p8mr15772500pgf.87.1547785425262;
-        Thu, 17 Jan 2019 20:23:45 -0800 (PST)
-Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id l19sm7339642pfi.71.2019.01.17.20.23.41
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 17 Jan 2019 20:23:44 -0800 (PST)
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH 3/3] PCI: iproc: Add PCIe 32bit outbound memory configuration
-Date:   Fri, 18 Jan 2019 09:53:23 +0530
-Message-Id: <1547785403-32268-4-git-send-email-srinath.mannam@broadcom.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1547785403-32268-1-git-send-email-srinath.mannam@broadcom.com>
-References: <1547785403-32268-1-git-send-email-srinath.mannam@broadcom.com>
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=rbRF+RcGW7kmODdnnEmQMjVFOTRo3Te5UWzYrvsUTX4=;
+        b=Rhf/NATMbqsAMcilPhyf1aF6QY6Ivi9+FttShjOp8ERqbe0AOcIWrY1jYtIlujUGXm
+         21JPgNCi6BC0ux5cRLJ4FeHdxey4S4wb94gdJuQY+GXnM4WpGrZqkZ6cXq1EEEqoysNn
+         1M6crrtQL0bquNlp/Gphfn0U+vmfhr32+bMDsp9uVJM+F/XQytfe7+2zHnZC576VZGNT
+         nl2dTcjwJsjydtAu+YkfQpRWi+V6D/JpEtG1jrWbOjxA0w8eKeqsFkeLjwXMpu27xzRE
+         3keoxCN126CXF0Sly9wLesvywvwrzxOB0n7BrtvCd4AO+AB89Y2v4UU4XOgjB7HRgpDg
+         pOKw==
+X-Gm-Message-State: AJcUukcybuUt5rCdUlHi7YxFhVjtFHBMyFtHCL1f6QhTpMuvbBPVOj+m
+        l8S4uhDtRdKLglmKfuZ1gVP9jggrz9F+JQ1DOAg=
+X-Google-Smtp-Source: ALg8bN4gZduNZVppIjQrTuFafiC1SE9TWt9qzHWTQlYg6FB3zwVsojIkaFaRjo6NLY8xGuFYZ1TpY4RLlYMT2LoaCcM=
+X-Received: by 2002:a9d:5f06:: with SMTP id f6mr11826020oti.258.1547810676653;
+ Fri, 18 Jan 2019 03:24:36 -0800 (PST)
+MIME-Version: 1.0
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 18 Jan 2019 12:24:25 +0100
+Message-ID: <CAJZ5v0jiK=zLP4cUsw=y9ea7PLHHgy=xshAsHFhTgyDJH+kOiQ@mail.gmail.com>
+Subject: [GIT PULL] ACPI fixes for v5.0-rc3
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-IPROC PCIe RC supports outbound memory mapping with SOC address inside
-4GB address boundary, which is 32 bit AXI address.
-This patch add the support.
+Hi Linus,
 
-Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-Reviewed-by: Vikram Prakash <vikram.prakash@broadcom.com>
----
- drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+Please pull from the tag
 
-diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-index ee89d56..4d0e63b 100644
---- a/drivers/pci/controller/pcie-iproc.c
-+++ b/drivers/pci/controller/pcie-iproc.c
-@@ -982,8 +982,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
- 			resource_size_t window_size =
- 				ob_map->window_sizes[size_idx] * SZ_1M;
- 
--			if (size < window_size)
--				continue;
-+			/*
-+			 * Keep iterating until we reach the last window and
-+			 * with the minimal window size at index zero. In this
-+			 * case, we take a compromise by mapping it using the
-+			 * minimum window size that can be supported
-+			 */
-+			if (size < window_size) {
-+				if (size_idx > 0 || window_idx > 0)
-+					continue;
-+
-+				/*
-+				 * For the corner case of reaching the minimal
-+				 * window size that can be supported on the
-+				 * last window
-+				 */
-+				axi_addr = ALIGN_DOWN(axi_addr, window_size);
-+				pci_addr = ALIGN_DOWN(pci_addr, window_size);
-+				size = window_size;
-+			}
- 
- 			if (!IS_ALIGNED(axi_addr, window_size) ||
- 			    !IS_ALIGNED(pci_addr, window_size)) {
--- 
-2.7.4
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ acpi-5.0-rc3
 
+with top-most commit 11ee2a3808aebbec73096551a716dea03d417fcb
+
+ Merge branch 'acpi-pci'
+
+on top of commit 1c7fc5cbc33980acd13d668f1c8f0313d6ae9fd8
+
+ Linux 5.0-rc2
+
+to receive ACPI fixes for 5.0-rc3.
+
+These fix an ACPI initialization ordering issue introduced in
+the 4.17 time frame and causing functional problems to appear on
+multiple systems and fix some fallout of the recent change to
+enable building kernels with ACPI support and without PCI.
+
+Specifics:
+
+ - Restore the ACPI initialization ordering changed implicitly by the
+   module-level AML handling rework during the 4.17 development cycle
+   that caused the EC address space handler based on information from
+   ECDT to be set up before loading AML definition blocks, making it
+   effectively not accessible by AML on some systems that don't work
+   as expected any more (Rafael Wysocki).
+
+ - Add direct dependencies on PCI to Kconfig in multiple places for
+   code that depends on both ACPI and PCI, but the PCI dependency
+   was implicitly satisfied by the ACPI dependency before, to prevent
+   invalid configurations from being created, for example by
+   randconfig (Sinan Kaya).
+
+Thanks!
+
+
+---------------
+
+Rafael J. Wysocki (1):
+      ACPI: EC: Look for ECDT EC after calling acpi_load_tables()
+
+Sinan Kaya (8):
+      ACPI / LPSS: Make PCI dependency explicit
+      ata: pata_acpi: Make PCI dependency explicit
+      vga-switcheroo: make PCI dependency explicit
+      platform/x86: intel_ips: make PCI dependency explicit
+      platform/x86: intel_pmc: Make PCI dependency explicit
+      platform/x86: apple-gmux: Make PCI dependency explicit
+      x86/intel/lpss: Make PCI dependency explicit
+      drivers: thermal: int340x_thermal: Make PCI dependency explicit
+
+---------------
+
+ arch/x86/Kconfig                              |  2 +-
+ drivers/acpi/Makefile                         |  3 ++-
+ drivers/acpi/bus.c                            | 24 ++++++++++++------------
+ drivers/acpi/internal.h                       |  4 ++++
+ drivers/ata/Kconfig                           |  2 +-
+ drivers/gpu/vga/Kconfig                       |  1 +
+ drivers/platform/x86/Kconfig                  |  6 +++---
+ drivers/thermal/intel/int340x_thermal/Kconfig |  2 +-
+ 8 files changed, 25 insertions(+), 19 deletions(-)
