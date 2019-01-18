@@ -2,122 +2,156 @@ Return-Path: <SRS0=ljL/=P2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 194C3C43387
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 16:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F989C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 16:52:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E472120896
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 16:02:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D493D2146F
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 16:52:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727490AbfARQCk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Jan 2019 11:02:40 -0500
-Received: from mail-qk1-f194.google.com ([209.85.222.194]:37970 "EHLO
-        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727481AbfARQCk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2019 11:02:40 -0500
-Received: by mail-qk1-f194.google.com with SMTP id m17so856621qki.5;
-        Fri, 18 Jan 2019 08:02:39 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=SDodKVKZE68GaTWQnw/8diyvuXpkz6/WYntpU/2umcM=;
-        b=Vj1vvq09GGlCHLuKcAjh8pL9We6h99Y6gJ1ogFR4LwKYjsD2fF/qGYLXXJDWYwPIbz
-         +/MQexgZW0vL3deOdE7I4UF+4ekC+LgJD+wZ2w+lokCkcQcbnxFl/j6MiCj5L6me5rZ2
-         ZDp6rX26oEkukQDgCKipYcRrq1wLwLOOIzxjyaKozw0AsujwMvP0UqN5fcRGGlKk+4w6
-         nQS+b+ZIulTc2Q6eZFkviS/Zvjs0Nq3dDz3MLyedKj8oHG0N5f0s3C/bt7bvWzhhkHtd
-         0Ibbx75MX3AAld3MaXU4POyKDdB3o7tdQ47m1VsR43TJJAA9bRRebgYgxuprBuZK9O2g
-         mOxQ==
-X-Gm-Message-State: AJcUukcdVdG7eAXvnsxWTUXkrsqWwmTTH535rCqLyhdH0Eofi+TeWnCE
-        nV8QRCrfOQxsADqu2Wic8qMgDHq3NQyh6qZvuL4=
-X-Google-Smtp-Source: ALg8bN6pE87HFJeIEYKnf1asy3R2yG9dZIxH+fpuakhGTiL3Whec42E8wvd9lm9HoVlK17a+U5oWtuQtlXKiaYl5cVw=
-X-Received: by 2002:a37:324a:: with SMTP id y71mr15685363qky.291.1547827358315;
- Fri, 18 Jan 2019 08:02:38 -0800 (PST)
+        id S1728034AbfARQwJ convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Jan 2019 11:52:09 -0500
+Received: from mail.bootlin.com ([62.4.15.54]:58379 "EHLO mail.bootlin.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727481AbfARQwI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Jan 2019 11:52:08 -0500
+Received: by mail.bootlin.com (Postfix, from userid 110)
+        id 3BF76207A3; Fri, 18 Jan 2019 17:52:06 +0100 (CET)
+Received: from localhost (alyon-652-1-26-46.w109-213.abo.wanadoo.fr [109.213.9.46])
+        by mail.bootlin.com (Postfix) with ESMTPSA id 28F1A2074A;
+        Fri, 18 Jan 2019 17:51:54 +0100 (CET)
+From:   Gregory CLEMENT <gregory.clement@bootlin.com>
+To:     Miquel Raynal <miquel.raynal@bootlin.com>
+Cc:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Antoine Tenart <antoine.tenart@bootlin.com>,
+        Maxime Chevallier <maxime.chevallier@bootlin.com>,
+        Nadav Haklai <nadavh@marvell.com>
+Subject: Re: [PATCH v3 00/15] Bring suspend to RAM support to PCIe Aardvark driver
+References: <20190108162441.5278-1-miquel.raynal@bootlin.com>
+Date:   Fri, 18 Jan 2019 17:51:52 +0100
+In-Reply-To: <20190108162441.5278-1-miquel.raynal@bootlin.com> (Miquel
+        Raynal's message of "Tue, 8 Jan 2019 17:24:25 +0100")
+Message-ID: <87va2llxhz.fsf@FE-laptop>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
 MIME-Version: 1.0
-References: <b143b40446c1870fb8d422b364ead95d54552be9.1527264077.git.lsun@mellanox.com>
- <1541089538-175682-1-git-send-email-lsun@mellanox.com> <1541089538-175682-5-git-send-email-lsun@mellanox.com>
-In-Reply-To: <1541089538-175682-5-git-send-email-lsun@mellanox.com>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Fri, 18 Jan 2019 17:02:21 +0100
-Message-ID: <CAK8P3a2NRbEaS_EJNtBaZ3GCUtRiH2rUDRzJFjvcw2ZacZM1qw@mail.gmail.com>
-Subject: Re: [PATCH v6 5/9] soc: mellanox: host: Add the common host side
- Rshim driver
-To:     Liming Sun <lsun@mellanox.com>
-Cc:     Olof Johansson <olof@lixom.net>, David Woods <dwoods@mellanox.com>,
-        Robin Murphy <robin.murphy@arm.com>, arm-soc <arm@kernel.org>,
-        DTML <devicetree@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Vincent Whitchurch <vincent.whitchurch@axis.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-ntb@googlegroups.com, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 1, 2018 at 5:49 PM Liming Sun <lsun@mellanox.com> wrote:
+Hi Miquel,
+ 
+ On mar., janv. 08 2019, Miquel Raynal <miquel.raynal@bootlin.com> wrote:
+
+> Hello,
 >
-> An external host can connect to a Mellanox BlueField SoC via an
-> interface called Rshim. The Rshim driver provides boot, console,
-> and networking services over this interface. This commit is
-> the common driver where the other backend (transport) driver will
-> use.
+> As part of an effort to bring suspend to RAM support to Armada 3700
+> SoCs (main target: ESPRESSObin), this series handles the work around
+> the PCIe IP.
 >
-> Reviewed-by: David Woods <dwoods@mellanox.com>
-> Signed-off-by: Liming Sun <lsun@mellanox.com>
+> First, more configuration is done in the 'setup' helper as inspired
+> from the U-Boot driver. This is needed to entirely initialize the IP
+> during future resume operation (patch 1).
+>
+> Then, reset GPIO, PHY and clock support are introduced (patch 2-4). As
+> current device trees do not provide the corresponding properties, not
+> finding one of these properties is not an error and just produces a
+> warning. However, if the property is present, an error during PHY
+> initialization will fail the probe of the driver.
+>
+> Note: To be sure the clock will be resumed before this driver, a first
+> series adding links between clocks and consumers has been submitted,
+> see [1]. Anyway, having the clock series applied first is not needed.
+>
+> Patch 5 adds suspend/resume hooks, re-using all the above.
+>
+> Finally, bindings and device trees are updated to reflect the hardware
+> (patch 6-12). While the clock depends on the SoC, the reset GPIO and
+> the PHY depends on the board so the clock is added in the
+> armada-37xx.dtsi file while the two other properties are added in
+> armada-3720-espressobin.dts.
+>
+> [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2019-January/623885.html
+>
+> Thanks,
+> Miquèl
+>
+>
+> Changes since v2:
+> =================
+> * Minor patches reordering.
+> * Added pinctrl patches from Gregory Clement fixing the PCIe pins. His
+>   changes implied modifications in the DT/bindings patches adding PCIe
+>   reset pin support.
 
-Hi Liming,
+Actually these patches are not in this series. You propably meant that
+this series is depend on these patches.
 
-I've taken a new look at your patch series for drivers/soc/ now,
-thanks for your continued submissions.
+If needed, for peoaple who wanted to test this series, the pinctrl
+changes are now in linux-next and also in pinctrl/for-next.
 
-This is again just a set of very high-level comments, but I think we
-should resolve some of the fundamental questions first.
-Incidentally, Vincent Whitchurch has recently posted another
-patch series with a very similar intention, but for other hardware
-and taking a different approach.
+Gregpry
 
-In both cases, the idea is to use virtio based drivers to provide
-services from a host machine into another Linux instance running
-on an embedded system behind a PCIe slot or similar. Your
-Bluefield SoC patches are well written, but are intentionally
-kept specific to a particular use case and tied to one piece
-of hardware. In contrast, Vincent uses the existing code from
-drivers/misc/mic/vop/ that is equally hardware specific, but he
-extends it to be applicable to other hardware as well.
+> * Added a new patch that enlarges the PIO timeout of the driver
+>   (explanations in the commit log).
+> * With the timeout changed, removed the "experimental delay" that was
+>   needed at resume time before accessing any register.
+>
+> Changes since v1:
+> =================
+> * Change the capitalization in commit titles to follow the PCI
+>   subsystem rules.
+> * Added Suggested-by tag to the patch adding PHY support and to the
+>   patch adding the PHY property in the DT.
+> * Added Rob's Reviewed-by tags on bindings.
+> * I am following the discussion about calling functions that might
+>   sleep in a NOIRQ context. As there is no real problem yet (as per my
+>   understanding), I did not change anything on this regard.
+>
+>
+> Miquel Raynal (15):
+>   PCI: aardvark: Enlarge PIO timeout
+>   PCI: aardvark: Configure more registers in the configuration helper
+>   PCI: aardvark: Add clock support
+>   PCI: aardvark: Add PHY support
+>   PCI: aardvark: Add PCIe warm reset support
+>   PCI: aardvark: Add external reset GPIO support
+>   PCI: aardvark: Add suspend to RAM support
+>   dt-bindings: PCI: aardvark: Describe the clocks property
+>   dt-bindings: PCI: aardvark: Describe the PHY property
+>   dt-bindings: PCI: aardvark: Describe the PCIe endpoint card reset pins
+>   dt-bindings: PCI: aardvark: Describe the reset-gpios property
+>   ARM64: dts: marvell: armada-37xx: declare PCIe clock
+>   ARM64: dts: marvell: armada-3720-espressobin: declare PCIe PHY
+>   ARM64: dts: marvell: armada-37xx: declare PCIe reset pin
+>   ARM64: dts: marvell: armada-3720-espressobin: declare PCIe warm reset
+>     pin
+>
+>  .../devicetree/bindings/pci/aardvark-pci.txt  |  14 ++
+>  .../dts/marvell/armada-3720-espressobin.dts   |   3 +
+>  arch/arm64/boot/dts/marvell/armada-37xx.dtsi  |  10 +
+>  drivers/pci/controller/pci-aardvark.c         | 217 +++++++++++++++++-
+>  4 files changed, 243 insertions(+), 1 deletion(-)
+>
+> -- 
+> 2.19.1
+>
 
-It would be good if you could look at each other's approaches
-to see where we could take it from here. I think ideally we
-should have a common driver framework for doing the same
-thing across both of your devices and as well as others.
-
-That would also resolve my main concern about the drivers,
-which is the placement in drivers/soc/ for a set of drivers
-that are unlike most drivers in that directory not mean for
-running on the SoC itself in order drive unusual functionality
-on the SoC, but are (at least partially) meant for running on
-a host machine to communicate with that SoC over PCIe
-or USB.
-
-As an example, your network driver should really be placed
-in drivers/net/, though it is unclear to me how it relates
-to the existing virtio_net driver. In the case of mic/vop,
-the idea is to use virtio_net on the device side, but have
-vhost_net or a user space implementation on the host side,
-but that is apparently not what you do here. Can you
-explain why?
-
-Another high-level question I have is on how your various
-drivers relate to one another. This should normally be
-explained in the 0/9 email, but I don't seem to have received
-such a mail. I see that you have multiple back-end drivers
-for the underlying transport, with one of them based on USB.
-Have you come up with a way to use the same high-level
-driver such as the network link over this USB back-end,
-or is this for something else?
-
-      Arnd
+-- 
+Gregory Clement, Bootlin
+Embedded Linux and Kernel engineering
+http://bootlin.com
