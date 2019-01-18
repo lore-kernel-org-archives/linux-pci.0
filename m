@@ -2,149 +2,122 @@ Return-Path: <SRS0=ljL/=P2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0EF9C43387
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 15:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 194C3C43387
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 16:02:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAEDF2086D
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 15:51:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E472120896
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Jan 2019 16:02:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727384AbfARPv1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Jan 2019 10:51:27 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:60812 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727323AbfARPv0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Jan 2019 10:51:26 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C4ED337E85;
-        Fri, 18 Jan 2019 15:51:25 +0000 (UTC)
-Received: from redhat.com (ovpn-120-143.rdu2.redhat.com [10.10.120.143])
-        by smtp.corp.redhat.com (Postfix) with SMTP id CEC895C554;
-        Fri, 18 Jan 2019 15:51:20 +0000 (UTC)
-Date:   Fri, 18 Jan 2019 10:51:20 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        virtio-dev@lists.oasis-open.org, joro@8bytes.org,
-        jasowang@redhat.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        bhelgaas@google.com, frowand.list@gmail.com,
-        kvmarm@lists.cs.columbia.edu, eric.auger@redhat.com,
-        tnowicki@caviumnetworks.com, kevin.tian@intel.com,
-        marc.zyngier@arm.com, robin.murphy@arm.com, will.deacon@arm.com,
-        lorenzo.pieralisi@arm.com, bharat.bhushan@nxp.com
-Subject: Re: [PATCH v7 0/7] Add virtio-iommu driver
-Message-ID: <20190118103235-mutt-send-email-mst@kernel.org>
-References: <20190115121959.23763-1-jean-philippe.brucker@arm.com>
+        id S1727490AbfARQCk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Jan 2019 11:02:40 -0500
+Received: from mail-qk1-f194.google.com ([209.85.222.194]:37970 "EHLO
+        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727481AbfARQCk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Jan 2019 11:02:40 -0500
+Received: by mail-qk1-f194.google.com with SMTP id m17so856621qki.5;
+        Fri, 18 Jan 2019 08:02:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=SDodKVKZE68GaTWQnw/8diyvuXpkz6/WYntpU/2umcM=;
+        b=Vj1vvq09GGlCHLuKcAjh8pL9We6h99Y6gJ1ogFR4LwKYjsD2fF/qGYLXXJDWYwPIbz
+         +/MQexgZW0vL3deOdE7I4UF+4ekC+LgJD+wZ2w+lokCkcQcbnxFl/j6MiCj5L6me5rZ2
+         ZDp6rX26oEkukQDgCKipYcRrq1wLwLOOIzxjyaKozw0AsujwMvP0UqN5fcRGGlKk+4w6
+         nQS+b+ZIulTc2Q6eZFkviS/Zvjs0Nq3dDz3MLyedKj8oHG0N5f0s3C/bt7bvWzhhkHtd
+         0Ibbx75MX3AAld3MaXU4POyKDdB3o7tdQ47m1VsR43TJJAA9bRRebgYgxuprBuZK9O2g
+         mOxQ==
+X-Gm-Message-State: AJcUukcdVdG7eAXvnsxWTUXkrsqWwmTTH535rCqLyhdH0Eofi+TeWnCE
+        nV8QRCrfOQxsADqu2Wic8qMgDHq3NQyh6qZvuL4=
+X-Google-Smtp-Source: ALg8bN6pE87HFJeIEYKnf1asy3R2yG9dZIxH+fpuakhGTiL3Whec42E8wvd9lm9HoVlK17a+U5oWtuQtlXKiaYl5cVw=
+X-Received: by 2002:a37:324a:: with SMTP id y71mr15685363qky.291.1547827358315;
+ Fri, 18 Jan 2019 08:02:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190115121959.23763-1-jean-philippe.brucker@arm.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Fri, 18 Jan 2019 15:51:26 +0000 (UTC)
+References: <b143b40446c1870fb8d422b364ead95d54552be9.1527264077.git.lsun@mellanox.com>
+ <1541089538-175682-1-git-send-email-lsun@mellanox.com> <1541089538-175682-5-git-send-email-lsun@mellanox.com>
+In-Reply-To: <1541089538-175682-5-git-send-email-lsun@mellanox.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Fri, 18 Jan 2019 17:02:21 +0100
+Message-ID: <CAK8P3a2NRbEaS_EJNtBaZ3GCUtRiH2rUDRzJFjvcw2ZacZM1qw@mail.gmail.com>
+Subject: Re: [PATCH v6 5/9] soc: mellanox: host: Add the common host side
+ Rshim driver
+To:     Liming Sun <lsun@mellanox.com>
+Cc:     Olof Johansson <olof@lixom.net>, David Woods <dwoods@mellanox.com>,
+        Robin Murphy <robin.murphy@arm.com>, arm-soc <arm@kernel.org>,
+        DTML <devicetree@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Vincent Whitchurch <vincent.whitchurch@axis.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-ntb@googlegroups.com, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Thu, Nov 1, 2018 at 5:49 PM Liming Sun <lsun@mellanox.com> wrote:
+>
+> An external host can connect to a Mellanox BlueField SoC via an
+> interface called Rshim. The Rshim driver provides boot, console,
+> and networking services over this interface. This commit is
+> the common driver where the other backend (transport) driver will
+> use.
+>
+> Reviewed-by: David Woods <dwoods@mellanox.com>
+> Signed-off-by: Liming Sun <lsun@mellanox.com>
 
-On Tue, Jan 15, 2019 at 12:19:52PM +0000, Jean-Philippe Brucker wrote:
-> Implement the virtio-iommu driver, following specification v0.9 [1].
-> 
-> This is a simple rebase onto Linux v5.0-rc2. We now use the
-> dev_iommu_fwspec_get() helper introduced in v5.0 instead of accessing
-> dev->iommu_fwspec, but there aren't any functional change from v6 [2].
-> 
-> Our current goal for virtio-iommu is to get a paravirtual IOMMU working
-> on Arm, and enable device assignment to guest userspace. In this
-> use-case the mappings are static, and don't require optimal performance,
-> so this series tries to keep things simple. However there is plenty more
-> to do for features and optimizations, and having this base in v5.1 would
-> be good. Given that most of the changes are to drivers/iommu, I believe
-> the driver and future changes should go via the IOMMU tree.
-> 
-> You can find Linux driver and kvmtool device on v0.9.2 branches [3],
-> module and x86 support on virtio-iommu/devel. Also tested with Eric's
-> QEMU device [4]. Please note that the series depends on Robin's
-> probe-deferral fix [5], which will hopefully land in v5.0.
-> 
-> [1] Virtio-iommu specification v0.9, sources and pdf
->     git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.9
->     http://jpbrucker.net/virtio-iommu/spec/v0.9/virtio-iommu-v0.9.pdf
-> 
-> [2] [PATCH v6 0/7] Add virtio-iommu driver
->     https://lists.linuxfoundation.org/pipermail/iommu/2018-December/032127.html
-> 
-> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.9.2
->     git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.9.2
-> 
-> [4] [RFC v9 00/17] VIRTIO-IOMMU device
->     https://www.mail-archive.com/qemu-devel@nongnu.org/msg575578.html
-> 
-> [5] [PATCH] iommu/of: Fix probe-deferral
->     https://www.spinics.net/lists/arm-kernel/msg698371.html
+Hi Liming,
 
-Thanks for the work!
-So really my only issue with this is that there's no
-way for the IOMMU to describe the devices that it
-covers.
+I've taken a new look at your patch series for drivers/soc/ now,
+thanks for your continued submissions.
 
-As a result that is then done in a platform-specific way.
+This is again just a set of very high-level comments, but I think we
+should resolve some of the fundamental questions first.
+Incidentally, Vincent Whitchurch has recently posted another
+patch series with a very similar intention, but for other hardware
+and taking a different approach.
 
-And this means that for example it does not solve the problem that e.g.
-some power people have in that their platform simply does not have a way
-to specify which devices are covered by the IOMMU.
+In both cases, the idea is to use virtio based drivers to provide
+services from a host machine into another Linux instance running
+on an embedded system behind a PCIe slot or similar. Your
+Bluefield SoC patches are well written, but are intentionally
+kept specific to a particular use case and tied to one piece
+of hardware. In contrast, Vincent uses the existing code from
+drivers/misc/mic/vop/ that is equally hardware specific, but he
+extends it to be applicable to other hardware as well.
 
-Solving that problem would make me much more excited about
-this device.
+It would be good if you could look at each other's approaches
+to see where we could take it from here. I think ideally we
+should have a common driver framework for doing the same
+thing across both of your devices and as well as others.
 
-On the other hand I can see that while there have been some
-developments most of the code has been stable for quite a while now.
+That would also resolve my main concern about the drivers,
+which is the placement in drivers/soc/ for a set of drivers
+that are unlike most drivers in that directory not mean for
+running on the SoC itself in order drive unusual functionality
+on the SoC, but are (at least partially) meant for running on
+a host machine to communicate with that SoC over PCIe
+or USB.
 
-So what I am trying to do right about now, is making a small module that
-loads early and pokes at the IOMMU sufficiently to get the data about
-which devices use the IOMMU out of it using standard virtio config
-space.  IIUC it's claimed to be impossible without messy changes to the
-boot sequence.
+As an example, your network driver should really be placed
+in drivers/net/, though it is unclear to me how it relates
+to the existing virtio_net driver. In the case of mic/vop,
+the idea is to use virtio_net on the device side, but have
+vhost_net or a user space implementation on the host side,
+but that is apparently not what you do here. Can you
+explain why?
 
-If I succeed at least on some platforms I'll ask that this design is
-worked into this device, minimizing info that goes through DT/ACPI.  If
-I see I can't make it in time to meet the next merge window, I plan
-merging the existing patches using DT (barring surprises).
+Another high-level question I have is on how your various
+drivers relate to one another. This should normally be
+explained in the 0/9 email, but I don't seem to have received
+such a mail. I see that you have multiple back-end drivers
+for the underlying transport, with one of them based on USB.
+Have you come up with a way to use the same high-level
+driver such as the network link over this USB back-end,
+or is this for something else?
 
-As I only have a very small amount of time to spend on this attempt, If
-someone else wants to try doing that in parallel, that would be great!
-
-
-> Jean-Philippe Brucker (7):
->   dt-bindings: virtio-mmio: Add IOMMU description
->   dt-bindings: virtio: Add virtio-pci-iommu node
->   of: Allow the iommu-map property to omit untranslated devices
->   PCI: OF: Initialize dev->fwnode appropriately
->   iommu: Add virtio-iommu driver
->   iommu/virtio: Add probe request
->   iommu/virtio: Add event queue
-> 
->  .../devicetree/bindings/virtio/iommu.txt      |   66 +
->  .../devicetree/bindings/virtio/mmio.txt       |   30 +
->  MAINTAINERS                                   |    7 +
->  drivers/iommu/Kconfig                         |   11 +
->  drivers/iommu/Makefile                        |    1 +
->  drivers/iommu/virtio-iommu.c                  | 1158 +++++++++++++++++
->  drivers/of/base.c                             |   10 +-
->  drivers/pci/of.c                              |    7 +
->  include/uapi/linux/virtio_ids.h               |    1 +
->  include/uapi/linux/virtio_iommu.h             |  161 +++
->  10 files changed, 1449 insertions(+), 3 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/virtio/iommu.txt
->  create mode 100644 drivers/iommu/virtio-iommu.c
->  create mode 100644 include/uapi/linux/virtio_iommu.h
-> 
-> -- 
-> 2.19.1
+      Arnd
