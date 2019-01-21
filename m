@@ -2,94 +2,97 @@ Return-Path: <SRS0=cv1o=P5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE776C2F3BE
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 13:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0409AC2F420
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 14:37:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CE082085A
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 13:36:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pE1RYGpY"
+	by mail.kernel.org (Postfix) with ESMTP id BE0882089F
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 14:37:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548081439;
+	bh=Y/g2iDkfkIrQOfww0ByuoTOYvkPpUMrXjww2OJLERa0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=fvBgpoBesNGSklQT73XPLd9bFXUX3pgKJ9FcmaaORAyqkRpMR17isRV9cutkxDxZP
+	 6fybU2PrWCzYVcGOIwRsQfZSDVG2EtnVTK1Llo53kEtMfhg6TmdVmM85d73ZvkzmFT
+	 cm2yIFm+62QBH1DKMLwm+N3btr6dXsDo+3Rq1XQk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728693AbfAUNg7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Jan 2019 08:36:59 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:56854 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728982AbfAUNg6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2019 08:36:58 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.22/8.16.0.22) with SMTP id x0LDSwbE023703;
-        Mon, 21 Jan 2019 13:36:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2018-07-02;
- bh=VeapZkuR0cIdLclyZaeUTkTP3ZAnzxD9j4NtyBXQXWI=;
- b=pE1RYGpYMJf6wr7Ley2UOIFQJsSLmk+bHdodQMPIlR7mLEQrEAq2tUyFN3j7hnftHiMt
- lJTY67R8iYsJrFO+Hcq8mvJTzi8SUJXoU53nhBym19AxWZ45P0T6KYXCalSDwZkTlq4y
- uSobxWtkY6wbLMMyBdnOQXRXwMmhuurR6DMOQP65po2VpfOOPlOvvQhkyZrBurNK0UJA
- 3X1k7fDmJnUQdWQi0KxEXU62tzVPrMi55EBViIbj7Wj4cdcrs7RBEihs1jGnShl2Y27Z
- wplnb9G8fXTeyfSOSSfLKNjYuS1BY0TrPOrwhaPyBBiG8FOwRnFYB9V/9yjjxTJlIZSu xw== 
-Received: from aserv0022.oracle.com (aserv0022.oracle.com [141.146.126.234])
-        by userp2120.oracle.com with ESMTP id 2q3vhrep9q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 21 Jan 2019 13:36:51 +0000
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserv0022.oracle.com (8.14.4/8.14.4) with ESMTP id x0LDaoHE011808
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 21 Jan 2019 13:36:50 GMT
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x0LDanmL022836;
-        Mon, 21 Jan 2019 13:36:50 GMT
-Received: from kadam (/197.157.34.164)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 21 Jan 2019 05:36:49 -0800
-Date:   Mon, 21 Jan 2019 16:36:28 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     Ajay Kaher <akaher@vmware.com>
-Cc:     linux-pci@vger.kernel.org, haiyangz@microsoft.com,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        devel@linuxdriverproject.org
-Subject: Re: [PATCH 1/3] PCI: hv: Allocate physically contiguous hypercall
- params buffer
-Message-ID: <20190121133628.GI4482@kadam>
-References: <1547758038-5255-1-git-send-email-akaher@vmware.com>
- <1547758038-5255-2-git-send-email-akaher@vmware.com>
- <20190121131942.GH4482@kadam>
+        id S1729341AbfAUOhO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jan 2019 09:37:14 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:45744 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729185AbfAUOhM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2019 09:37:12 -0500
+Received: by mail-ot1-f66.google.com with SMTP id 32so20652321ota.12;
+        Mon, 21 Jan 2019 06:37:12 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=yCZE0qmHTsavb3lVKD5eIngzqW5FGtladyA6/TKyrl0=;
+        b=Wn9d1KfPaN4rT/o+ISxVyt/Hvx4vcrlizOe2ivntof2oIwE1Jix3oVGxN4HcWS054j
+         iS0jGGKEzR1d0syBVuYZnQzUwOmAPr97BbitzaWvdOr7LpQ16DawbiVotX2O+jb5ttj2
+         q1Cv5oLdAouDQoMgklKDnLHugHjxGDwm5PfsFGmK5pG5UaCDrYtuFxylOTLJ6kt7Ak9I
+         ojk4m+4nk63q1vVDcxmAgi2ECqU0mNT74POzGanJz7wadThc/mizcqKM/UZ1TT0IEfnb
+         UvuXDmw9oifZ+I2JS0eRGwSvnd+8XoxlelTw3E/pk1H/6NvM8W5epJ3WeTIvKF7VzS2A
+         PvcQ==
+X-Gm-Message-State: AJcUukdsk83+QEBKlpre6BEqgrcqLrGhkUxA8rKupeDSXd2MnYPffNnT
+        c20ukpHJukQBQZBftTeFVg==
+X-Google-Smtp-Source: ALg8bN70Q4ksOHrrmPpNmJxNmO3jRYxHaViWwUELu9sncCjtnH94eEs9zdYbjYPjPBO5KUeNXVTrgw==
+X-Received: by 2002:a9d:77d4:: with SMTP id w20mr19070332otl.196.1548081431955;
+        Mon, 21 Jan 2019 06:37:11 -0800 (PST)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id y25sm5426170otk.50.2019.01.21.06.37.11
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 21 Jan 2019 06:37:11 -0800 (PST)
+Date:   Mon, 21 Jan 2019 08:37:10 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     bhelgaas@google.com, mark.rutland@arm.com, shawnguo@kernel.org,
+        leoyang.li@nxp.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
+        arnd@arndb.de, gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com, kstewart@linuxfoundation.org,
+        cyrille.pitchen@free-electrons.com, pombredanne@nexb.com,
+        shawn.lin@rock-chips.com, niklas.cassel@axis.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCHv5 1/4] dt-bindings: add DT binding for the layerscape
+ PCIe controller with EP mode
+Message-ID: <20190121143710.GA10941@bogus>
+References: <20190121094500.10657-1-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190121131942.GH4482@kadam>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=5900 definitions=9142 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=963
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1901210107
+In-Reply-To: <20190121094500.10657-1-xiaowei.bao@nxp.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jan 21, 2019 at 04:19:42PM +0300, Dan Carpenter wrote:
-> On Fri, Jan 18, 2019 at 02:17:16AM +0530, Ajay Kaher wrote:
-> > hv_do_hypercall() assumes that we pass a segment from a physically
-> > contiguous buffer.  A buffer allocated on the stack may not work if
-> > CONFIG_VMAP_STACK=y is set.
-> > 
-> > Use kmalloc() to allocate this buffer.
-> > 
+On Mon, Jan 21, 2019 at 05:44:57PM +0800, Xiaowei Bao wrote:
+> Add the documentation for the Device Tree binding for the layerscape PCIe
+> controller with EP mode.
 > 
-> Since you're going to need to resend this anyway, can you add in the
-> commit message what this looks like from a user perspective?  Presumably
-> it's an occasional crash?
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> Reviewed-by: Minghuan Lian <minghuan.lian@nxp.com>
+> Reviewed-by: Zhiqiang Hou <zhiqiang.hou@nxp.com>
+> ---
+> v2:
+>  - Add the SoC specific compatibles.
+> v3:
+>  - modify the commit message.
+> v4:
+>  - no change.
+> v5:
+>  - no change.
+
+Still missing my R-by tag from v3.
+
 > 
-
-Never mind.  I didn't realize this was a two year old patch.
-
-regards,
-dan carpenter
-
+>  .../devicetree/bindings/pci/layerscape-pci.txt     |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
