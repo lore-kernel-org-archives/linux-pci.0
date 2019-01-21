@@ -2,486 +2,211 @@ Return-Path: <SRS0=cv1o=P5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BFA8C31681
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 17:42:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D08D5C31680
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 19:22:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E84022089F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 17:42:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9110321721
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 19:22:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FKW0lOV0"
+	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="Rlp3dl07"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727646AbfAURmn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Jan 2019 12:42:43 -0500
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:39542 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725908AbfAURmn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2019 12:42:43 -0500
-Received: by mail-oi1-f193.google.com with SMTP id i6so15186375oia.6;
-        Mon, 21 Jan 2019 09:42:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=vWt9yDzRnpznXrayd/ZIPSRXb5hm/11PQ6c/FyrfH98=;
-        b=FKW0lOV0Do6WswE8vjCDt346BCPpgb3OBeSnHaP6gY6mLLKjnWfhiRRF/7Zp/JpgEP
-         RMXHZzwK7tU2YAk+h8h9FTUUdDQgvISICE2iJ0WwZgJUi6iQOi2i1eMnQsAlX0hxlvst
-         NdU8YObcKK7K7fxOyJ265tuKZL9BiJNw9OK3MzqbK/VLa/ZJlCv9VvZrVJ6lx6FDQto2
-         mn+hcVprghxh/SoAR2jataiMbgfAIAI6Kf4y8joPo+3OQw2PalYPrYMXd3h68XVkPQAa
-         ZZts30PKLd4aD/DsnCW8ZzuJJfe2reAijbpo0DOqA70pYGWFaKZ9L26zgiw60uHSa1b6
-         b+nw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=vWt9yDzRnpznXrayd/ZIPSRXb5hm/11PQ6c/FyrfH98=;
-        b=Iz59Fc0SXcF4VzQGfpKpWWiWiCTKsk8vBr7z/G8pI22MQg6P1FWHVx7FH/e7clK+m5
-         KEl2+QfsHijRFQtuJWLpznAx7gasdsmgubT86sr9eZsZaEPWwpWR1ZDXL+83BFfyMxkp
-         rbG7/VCf0tx1vm8kYARD0b3fbq5AqUTSu6eizazn870Sl7XaAP39ESQperl8uTtUAUis
-         Huegern9jMlgetZac3pcFDboPXtRGg8Df06ALC+EIAoqF7ZJiNhaxQdm0uDfbsQ8ocdW
-         MOLHXZNAihTtZgcuY+GCOx62l+Os8+NzVdJ5k1hxijrlRiOpfSmk3AuPjLNA6GMT8ffy
-         w+eg==
-X-Gm-Message-State: AJcUukf7rgKkm+yis68FAjc9itUtEx47Ts5SG7rGxKtafDLHCgrNRmi1
-        lLRbWZ5MSBsUPmri75Qn+sI=
-X-Google-Smtp-Source: ALg8bN49fkhabll4P0ZBf5LjSIZDTq6Z0d6alU4u9ngw0DS/pnmeIcMyjFgmime1CRdjWfva6SQ95g==
-X-Received: by 2002:aca:4506:: with SMTP id s6mr5934777oia.115.1548092560475;
-        Mon, 21 Jan 2019 09:42:40 -0800 (PST)
-Received: from nuclearis2-1.lan (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
-        by smtp.gmail.com with ESMTPSA id h25sm6111277otj.27.2019.01.21.09.42.39
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 21 Jan 2019 09:42:39 -0800 (PST)
-From:   Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To:     bhelgaas@google.com
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RFC v2] PCI / ACPI: Implementing Type 3 _HPX records
-Date:   Mon, 21 Jan 2019 11:42:23 -0600
-Message-Id: <20190121174225.15835-1-mr.nuke.me@gmail.com>
-X-Mailer: git-send-email 2.19.2
-In-Reply-To: <20190114200120.GA33971@google.com>
-References: <20190114200120.GA33971@google.com>
+        id S1727726AbfAUTWs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jan 2019 14:22:48 -0500
+Received: from mail-eopbgr40058.outbound.protection.outlook.com ([40.107.4.58]:65367
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727646AbfAUTWr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Jan 2019 14:22:47 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QbKnFUTEA9RElEoXsVoJ/FcNsFfpk9fL1OWMEdP2a+0=;
+ b=Rlp3dl07KX6XeCnzj/hIQOTL51XVqfarmILIAYfiYMgTiNhIxtsZduZ38B+tmAB1X+EP6p+GTWAquoJWYst08xq9zwoDZaGQZ1JkhldUlpcNqdzoAKi3vFs91RO6mNWepokfRF7KKWg23c1nyCS8ugjQ2JVrrifaLUTqGH69y4I=
+Received: from DB6PR05MB3223.eurprd05.prod.outlook.com (10.175.232.149) by
+ DB6PR05MB3461.eurprd05.prod.outlook.com (10.170.223.24) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1537.24; Mon, 21 Jan 2019 19:22:41 +0000
+Received: from DB6PR05MB3223.eurprd05.prod.outlook.com
+ ([fe80::d935:9a6c:c7a3:1320]) by DB6PR05MB3223.eurprd05.prod.outlook.com
+ ([fe80::d935:9a6c:c7a3:1320%2]) with mapi id 15.20.1537.031; Mon, 21 Jan 2019
+ 19:22:41 +0000
+From:   Liming Sun <lsun@mellanox.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+CC:     Olof Johansson <olof@lixom.net>, David Woods <dwoods@mellanox.com>,
+        Robin Murphy <robin.murphy@arm.com>, arm-soc <arm@kernel.org>,
+        DTML <devicetree@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Vincent Whitchurch <vincent.whitchurch@axis.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "linux-ntb@googlegroups.com" <linux-ntb@googlegroups.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: RE: [PATCH v6 5/9] soc: mellanox: host: Add the common host side
+ Rshim driver
+Thread-Topic: [PATCH v6 5/9] soc: mellanox: host: Add the common host side
+ Rshim driver
+Thread-Index: AQHUcgMEWmkOtMRYOEe8dmJo8nndDKW1ql2AgASf0nA=
+Date:   Mon, 21 Jan 2019 19:22:41 +0000
+Message-ID: <DB6PR05MB32233FF89600716711441C04A19F0@DB6PR05MB3223.eurprd05.prod.outlook.com>
+References: <b143b40446c1870fb8d422b364ead95d54552be9.1527264077.git.lsun@mellanox.com>
+ <1541089538-175682-1-git-send-email-lsun@mellanox.com>
+ <1541089538-175682-5-git-send-email-lsun@mellanox.com>
+ <CAK8P3a2NRbEaS_EJNtBaZ3GCUtRiH2rUDRzJFjvcw2ZacZM1qw@mail.gmail.com>
+In-Reply-To: <CAK8P3a2NRbEaS_EJNtBaZ3GCUtRiH2rUDRzJFjvcw2ZacZM1qw@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=lsun@mellanox.com; 
+x-originating-ip: [216.156.69.42]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;DB6PR05MB3461;6:DOhumki9ZAur9SKpHcy6sKep8NEs0klcqaouU+puA1mScNOrtWRQSxekF/BpVJfSQgVE5RJI2X5gesgXzVOGKErMZOineQlNHXieQwqNyEx2LtfJDIip2pRhJfNGT9gDkC45Dyahw03H5nLmZqIXQOakYz3S4r4SG9+m7qYgljk/cy/h94Gm9PrBbm6XrVCP45wVDYTubOsbSgTasDl+Jz9ljkYAUzCipdz6rZGjMyCeg10aapBdSamXrxuh9ygN0VM27ZsHXDeVAiEAE69T4vVBwpWn5hfL656sQGdWRMVXkomBWzgVhEt11laV3145w8Oi/P8pFu7LZ83Qhcg7SmWbtZqVmEPFj4x1rdFpdHwV03phxvtiyzGFWEvfN4vXg4/0XcqZdND+ZwtSot6NG+Rz7bTwTT/DHY/VJkVimOzultLMfQB2g/QRxT7w2yO7OjJU7f00UN4WzpMgQAJEjg==;5:Ck/GJNY8Mz14rOSPStz+CM9W7hgwY+S1pxLJKJJp8dX3nosrFaq5ksnjLQoiDqlpF4zuDiEC446+Txfg4yFQmQBle3k+GL5DPyVK/5Wy7OQVTYvgEJX5ayapSItezpWY+aLYObTaSkc0aOPycZdBOELcXN2Sw1XUZ3keEeuK0ptjGbDIcER5LvJeXcPxQdCp3gCMXNMm+MGEVC+YuW3vrg==;7:Zyb/lVWWdENfKZDjyJH/303RZWROtogrCtvwSVhKAPMcpEcenDjj2tO/iF0TElEadyX75gqPWz/Y8mgAgT+CqKUBp6kJ8Tf904SHfIr7XixpNlG5Bevgq2E5K3dZ+5xhwH10sWazQFLrb8JM/8X2WA==
+x-ms-exchange-antispam-srfa-diagnostics: SOS;
+x-ms-office365-filtering-correlation-id: bf79ac90-ac69-4c3f-354e-08d67fd5d01c
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600109)(711020)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:DB6PR05MB3461;
+x-ms-traffictypediagnostic: DB6PR05MB3461:
+x-microsoft-antispam-prvs: <DB6PR05MB34619B09B8E16F4920D931A0A19F0@DB6PR05MB3461.eurprd05.prod.outlook.com>
+x-forefront-prvs: 0924C6A0D5
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(39860400002)(136003)(376002)(346002)(366004)(13464003)(189003)(199004)(7696005)(86362001)(55016002)(446003)(486006)(4326008)(74316002)(9686003)(6916009)(33656002)(229853002)(25786009)(476003)(6436002)(2906002)(11346002)(71200400001)(71190400001)(97736004)(6116002)(3846002)(316002)(99286004)(68736007)(53546011)(7736002)(54906003)(478600001)(305945005)(6506007)(76176011)(102836004)(14444005)(256004)(93886005)(186003)(81166006)(7416002)(53936002)(105586002)(66066001)(26005)(14454004)(6246003)(81156014)(106356001)(8676002)(8936002);DIR:OUT;SFP:1101;SCL:1;SRVR:DB6PR05MB3461;H:DB6PR05MB3223.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: mellanox.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: MkvCh3CI4SAHbZqv66xacflpxHdu9R4+G4cMxj5375LQFX7Pv9aLUWape7xsQZp/WlFEYFFabvp/JI6Skg5zOlKb6zW77s+0Ev/1ybE3s0ETqz89EjTpyDDLvpwrz4K/Vn0dbNmrwP/w7UAfk5mo7RvR5c/2e8GEM9QYD+dWB51RyIP1Xe9qk8rzEOWTIgOF2mcPk5Ol6/raDRShCevTByRtFdzbN3T3ZpG+hZAdVBDASsTQ6wLLDIvb9ksJOOtgbUeUiQ9xHRU2kshQchUsk3a97wVQNFngG2z+9AHTl9bFvHu4LVclZsGXV2jVwoM+neKkz7Hzrg0zhOrRfiXdoHqtO64iz4swT+ZRXvT1AmKt8DZBFo3FYV+1Irbt3IgR93OHLoutXTBHLBgueWU0e0OzKCsqdSoBDlRAtV9JvO8=
+spamdiagnosticoutput: 1:99
+spamdiagnosticmetadata: NSPM
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: Mellanox.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bf79ac90-ac69-4c3f-354e-08d67fd5d01c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Jan 2019 19:22:41.4837
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB6PR05MB3461
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-_HPX Type 3 is intended to be more generic and allow configuration of
-settings not possible with Type 2 tables. For example, FW could ensure
-that the completion timeout value is set accordingly throughout the PCI
-tree.
-
-Type 3 can come in an arbitrary number of ACPI packages. With the older
-types we only ever had one descriptor. We could get lazy and store it
-on the stack. The current flow is to parse the HPX table
---pci_get_hp_params()-- and then program the PCIe device registers.
-
-In the current flow, we'll need to malloc(). Here's what I tried:
- 1) devm_kmalloc() on the pci_dev
-  This ended up giving me NULL dereference at boot time.
- 2) Add a cleanup function to be called after writing the PCIe registers
-  More complicated than it's worth
- 3) Intertwine parsing and programming registers
-
-This RFC implements method 3. The HPX3 stuff is still NDA'd, but the
-housekeeping parts are in here. This is 3 changes squashed into one.
-I've chosen to _ops approach to avoid moving the programming code to
-pci-acpi.c. If it is deemed that it's better to move it, I have
-nothing against it.
----
- drivers/pci/pci-acpi.c      | 164 +++++++++++++++++++++++++-----------
- drivers/pci/probe.c         |  34 +++++---
- include/linux/pci_hotplug.h |  23 +++--
- 3 files changed, 152 insertions(+), 69 deletions(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index e1949f7efd9c..034676c71916 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -119,7 +119,7 @@ phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle)
- }
- 
- static acpi_status decode_type0_hpx_record(union acpi_object *record,
--					   struct hotplug_params *hpx)
-+					   struct hpp_type0 *hpx0)
- {
- 	int i;
- 	union acpi_object *fields = record->package.elements;
-@@ -132,12 +132,11 @@ static acpi_status decode_type0_hpx_record(union acpi_object *record,
- 		for (i = 2; i < 6; i++)
- 			if (fields[i].type != ACPI_TYPE_INTEGER)
- 				return AE_ERROR;
--		hpx->t0 = &hpx->type0_data;
--		hpx->t0->revision        = revision;
--		hpx->t0->cache_line_size = fields[2].integer.value;
--		hpx->t0->latency_timer   = fields[3].integer.value;
--		hpx->t0->enable_serr     = fields[4].integer.value;
--		hpx->t0->enable_perr     = fields[5].integer.value;
-+		hpx0->revision        = revision;
-+		hpx0->cache_line_size = fields[2].integer.value;
-+		hpx0->latency_timer   = fields[3].integer.value;
-+		hpx0->enable_serr     = fields[4].integer.value;
-+		hpx0->enable_perr     = fields[5].integer.value;
- 		break;
- 	default:
- 		printk(KERN_WARNING
-@@ -149,7 +148,7 @@ static acpi_status decode_type0_hpx_record(union acpi_object *record,
- }
- 
- static acpi_status decode_type1_hpx_record(union acpi_object *record,
--					   struct hotplug_params *hpx)
-+					   struct hpp_type1 *hpx1)
- {
- 	int i;
- 	union acpi_object *fields = record->package.elements;
-@@ -162,11 +161,10 @@ static acpi_status decode_type1_hpx_record(union acpi_object *record,
- 		for (i = 2; i < 5; i++)
- 			if (fields[i].type != ACPI_TYPE_INTEGER)
- 				return AE_ERROR;
--		hpx->t1 = &hpx->type1_data;
--		hpx->t1->revision      = revision;
--		hpx->t1->max_mem_read  = fields[2].integer.value;
--		hpx->t1->avg_max_split = fields[3].integer.value;
--		hpx->t1->tot_max_split = fields[4].integer.value;
-+		hpx1->revision      = revision;
-+		hpx1->max_mem_read  = fields[2].integer.value;
-+		hpx1->avg_max_split = fields[3].integer.value;
-+		hpx1->tot_max_split = fields[4].integer.value;
- 		break;
- 	default:
- 		printk(KERN_WARNING
-@@ -178,7 +176,7 @@ static acpi_status decode_type1_hpx_record(union acpi_object *record,
- }
- 
- static acpi_status decode_type2_hpx_record(union acpi_object *record,
--					   struct hotplug_params *hpx)
-+					   struct hpp_type2 *hpx2)
- {
- 	int i;
- 	union acpi_object *fields = record->package.elements;
-@@ -191,24 +189,23 @@ static acpi_status decode_type2_hpx_record(union acpi_object *record,
- 		for (i = 2; i < 18; i++)
- 			if (fields[i].type != ACPI_TYPE_INTEGER)
- 				return AE_ERROR;
--		hpx->t2 = &hpx->type2_data;
--		hpx->t2->revision      = revision;
--		hpx->t2->unc_err_mask_and      = fields[2].integer.value;
--		hpx->t2->unc_err_mask_or       = fields[3].integer.value;
--		hpx->t2->unc_err_sever_and     = fields[4].integer.value;
--		hpx->t2->unc_err_sever_or      = fields[5].integer.value;
--		hpx->t2->cor_err_mask_and      = fields[6].integer.value;
--		hpx->t2->cor_err_mask_or       = fields[7].integer.value;
--		hpx->t2->adv_err_cap_and       = fields[8].integer.value;
--		hpx->t2->adv_err_cap_or        = fields[9].integer.value;
--		hpx->t2->pci_exp_devctl_and    = fields[10].integer.value;
--		hpx->t2->pci_exp_devctl_or     = fields[11].integer.value;
--		hpx->t2->pci_exp_lnkctl_and    = fields[12].integer.value;
--		hpx->t2->pci_exp_lnkctl_or     = fields[13].integer.value;
--		hpx->t2->sec_unc_err_sever_and = fields[14].integer.value;
--		hpx->t2->sec_unc_err_sever_or  = fields[15].integer.value;
--		hpx->t2->sec_unc_err_mask_and  = fields[16].integer.value;
--		hpx->t2->sec_unc_err_mask_or   = fields[17].integer.value;
-+		hpx2->revision      = revision;
-+		hpx2->unc_err_mask_and      = fields[2].integer.value;
-+		hpx2->unc_err_mask_or       = fields[3].integer.value;
-+		hpx2->unc_err_sever_and     = fields[4].integer.value;
-+		hpx2->unc_err_sever_or      = fields[5].integer.value;
-+		hpx2->cor_err_mask_and      = fields[6].integer.value;
-+		hpx2->cor_err_mask_or       = fields[7].integer.value;
-+		hpx2->adv_err_cap_and       = fields[8].integer.value;
-+		hpx2->adv_err_cap_or        = fields[9].integer.value;
-+		hpx2->pci_exp_devctl_and    = fields[10].integer.value;
-+		hpx2->pci_exp_devctl_or     = fields[11].integer.value;
-+		hpx2->pci_exp_lnkctl_and    = fields[12].integer.value;
-+		hpx2->pci_exp_lnkctl_or     = fields[13].integer.value;
-+		hpx2->sec_unc_err_sever_and = fields[14].integer.value;
-+		hpx2->sec_unc_err_sever_or  = fields[15].integer.value;
-+		hpx2->sec_unc_err_mask_and  = fields[16].integer.value;
-+		hpx2->sec_unc_err_mask_or   = fields[17].integer.value;
- 		break;
- 	default:
- 		printk(KERN_WARNING
-@@ -219,17 +216,68 @@ static acpi_status decode_type2_hpx_record(union acpi_object *record,
- 	return AE_OK;
- }
- 
--static acpi_status acpi_run_hpx(acpi_handle handle, struct hotplug_params *hpx)
-+static acpi_status parse_hpx3_register(struct hpp_type3 *hpx3,
-+				       union acpi_object *reg_fields)
-+{
-+	/* Parse fields blurb */
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status program_type3_hpx_record(struct pci_dev *dev,
-+					   union acpi_object *record,
-+					   const struct hotplug_program_ops *hp_ops)
-+{
-+	union acpi_object *fields = record->package.elements;
-+	u32 desc_count, expected_length, revision;
-+	union acpi_object *reg_fields;
-+	struct hpp_type3 hpx3;
-+	acpi_status ret;
-+	int i;
-+
-+	revision = fields[1].integer.value;
-+	switch (revision) {
-+	case 1:
-+		desc_count = fields[2].integer.value;
-+		expected_length = 3 + desc_count * 14;
-+
-+		if (record->package.count != expected_length)
-+			return AE_ERROR;
-+
-+		for (i = 2; i < expected_length; i++)
-+			if (fields[i].type != ACPI_TYPE_INTEGER)
-+				return AE_ERROR;
-+
-+		for (i = 0; i < desc_count; i++) {
-+			reg_fields = fields + 3 + i * 14;
-+			ret = parse_hpx3_register(&hpx3, reg_fields);
-+			if (ret != AE_OK)
-+				return ret;
-+			hp_ops->program_type3(dev, &hpx3);
-+		}
-+
-+		break;
-+	default:
-+		printk(KERN_WARNING
-+			"%s: Type 3 Revision %d record not supported\n",
-+			__func__, revision);
-+		return AE_ERROR;
-+	}
-+	return AE_OK;
-+}
-+
-+static acpi_status acpi_run_hpx(struct pci_dev *dev, acpi_handle handle,
-+				const struct hotplug_program_ops *hp_ops)
- {
- 	acpi_status status;
- 	struct acpi_buffer buffer = {ACPI_ALLOCATE_BUFFER, NULL};
- 	union acpi_object *package, *record, *fields;
-+	struct hpp_type0 hpx0;
-+	struct hpp_type1 hpx1;
-+	struct hpp_type2 hpx2;
- 	u32 type;
- 	int i;
- 
--	/* Clear the return buffer with zeros */
--	memset(hpx, 0, sizeof(struct hotplug_params));
--
- 	status = acpi_evaluate_object(handle, "_HPX", NULL, &buffer);
- 	if (ACPI_FAILURE(status))
- 		return status;
-@@ -257,17 +305,28 @@ static acpi_status acpi_run_hpx(acpi_handle handle, struct hotplug_params *hpx)
- 		type = fields[0].integer.value;
- 		switch (type) {
- 		case 0:
--			status = decode_type0_hpx_record(record, hpx);
-+			memset(&hpx0, 0, sizeof(hpx0));
-+			status = decode_type0_hpx_record(record, &hpx0);
- 			if (ACPI_FAILURE(status))
- 				goto exit;
-+			hp_ops->program_type0(dev, &hpx0);
- 			break;
- 		case 1:
--			status = decode_type1_hpx_record(record, hpx);
-+			memset(&hpx1, 0, sizeof(hpx1));
-+			status = decode_type1_hpx_record(record, &hpx1);
- 			if (ACPI_FAILURE(status))
- 				goto exit;
-+			hp_ops->program_type1(dev, &hpx1);
- 			break;
- 		case 2:
--			status = decode_type2_hpx_record(record, hpx);
-+			memset(&hpx2, 0, sizeof(hpx2));
-+			status = decode_type2_hpx_record(record, &hpx2);
-+			if (ACPI_FAILURE(status))
-+				goto exit;
-+			hp_ops->program_type2(dev, &hpx2);
-+			break;
-+		case 3:
-+			status = program_type3_hpx_record(dev, record, hp_ops);
- 			if (ACPI_FAILURE(status))
- 				goto exit;
- 			break;
-@@ -283,14 +342,16 @@ static acpi_status acpi_run_hpx(acpi_handle handle, struct hotplug_params *hpx)
- 	return status;
- }
- 
--static acpi_status acpi_run_hpp(acpi_handle handle, struct hotplug_params *hpp)
-+static acpi_status acpi_run_hpp(struct pci_dev *dev, acpi_handle handle,
-+				const struct hotplug_program_ops *hp_ops)
- {
- 	acpi_status status;
- 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
- 	union acpi_object *package, *fields;
-+	struct hpp_type0 hpp0;
- 	int i;
- 
--	memset(hpp, 0, sizeof(struct hotplug_params));
-+	memset(&hpp0, 0, sizeof(hpp0));
- 
- 	status = acpi_evaluate_object(handle, "_HPP", NULL, &buffer);
- 	if (ACPI_FAILURE(status))
-@@ -311,12 +372,13 @@ static acpi_status acpi_run_hpp(acpi_handle handle, struct hotplug_params *hpp)
- 		}
- 	}
- 
--	hpp->t0 = &hpp->type0_data;
--	hpp->t0->revision        = 1;
--	hpp->t0->cache_line_size = fields[0].integer.value;
--	hpp->t0->latency_timer   = fields[1].integer.value;
--	hpp->t0->enable_serr     = fields[2].integer.value;
--	hpp->t0->enable_perr     = fields[3].integer.value;
-+	hpp0.revision        = 1;
-+	hpp0.cache_line_size = fields[0].integer.value;
-+	hpp0.latency_timer   = fields[1].integer.value;
-+	hpp0.enable_serr     = fields[2].integer.value;
-+	hpp0.enable_perr     = fields[3].integer.value;
-+
-+	hp_ops->program_type0(dev, &hpp0);
- 
- exit:
- 	kfree(buffer.pointer);
-@@ -328,7 +390,8 @@ static acpi_status acpi_run_hpp(acpi_handle handle, struct hotplug_params *hpp)
-  * @dev - the pci_dev for which we want parameters
-  * @hpp - allocated by the caller
-  */
--int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
-+int pci_acpi_program_hp_params(struct pci_dev *dev,
-+			       const struct hotplug_program_ops *hp_ops)
- {
- 	acpi_status status;
- 	acpi_handle handle, phandle;
-@@ -351,10 +414,10 @@ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
- 	 * this pci dev.
- 	 */
- 	while (handle) {
--		status = acpi_run_hpx(handle, hpp);
-+		status = acpi_run_hpx(dev, handle, hp_ops);
- 		if (ACPI_SUCCESS(status))
- 			return 0;
--		status = acpi_run_hpp(handle, hpp);
-+		status = acpi_run_hpp(dev, handle, hp_ops);
- 		if (ACPI_SUCCESS(status))
- 			return 0;
- 		if (acpi_is_root_bridge(handle))
-@@ -366,7 +429,6 @@ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
- 	}
- 	return -ENODEV;
- }
--EXPORT_SYMBOL_GPL(pci_get_hp_params);
- 
- /**
-  * pciehp_is_native - Check whether a hotplug port is handled by the OS
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 257b9f6f2ebb..de4394421f70 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1979,6 +1979,23 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 	 */
- }
- 
-+static void program_hpp_type3_register(struct pci_dev *dev,
-+				       const struct hpp_type3 *hpx3)
-+{
-+	/* Complicated ACPI-mandated blurb */
-+}
-+
-+static void program_hpp_type3(struct pci_dev *dev, struct hpp_type3 *hpx3)
-+{
-+	if (!hpx3)
-+		return;
-+
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	program_hpp_type3_register(dev, hpx3);
-+}
-+
- int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
- {
- 	struct pci_host_bridge *host;
-@@ -2131,8 +2148,12 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
- 
- static void pci_configure_device(struct pci_dev *dev)
- {
--	struct hotplug_params hpp;
--	int ret;
-+	static const struct hotplug_program_ops hp_ops = {
-+		.program_type0 = program_hpp_type0,
-+		.program_type1 = program_hpp_type1,
-+		.program_type2 = program_hpp_type2,
-+		.program_type3 = program_hpp_type3,
-+	};
- 
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev, NULL);
-@@ -2140,14 +2161,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 	pci_configure_ltr(dev);
- 	pci_configure_eetlp_prefix(dev);
- 
--	memset(&hpp, 0, sizeof(hpp));
--	ret = pci_get_hp_params(dev, &hpp);
--	if (ret)
--		return;
--
--	program_hpp_type2(dev, hpp.t2);
--	program_hpp_type1(dev, hpp.t1);
--	program_hpp_type0(dev, hpp.t0);
-+	pci_acpi_program_hp_params(dev, &hp_ops);
- }
- 
- static void pci_release_capabilities(struct pci_dev *dev)
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index 7acc9f91e72b..9487abddaa69 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -124,18 +124,25 @@ struct hpp_type2 {
- 	u32 sec_unc_err_mask_or;
- };
- 
--struct hotplug_params {
--	struct hpp_type0 *t0;		/* Type0: NULL if not available */
--	struct hpp_type1 *t1;		/* Type1: NULL if not available */
--	struct hpp_type2 *t2;		/* Type2: NULL if not available */
--	struct hpp_type0 type0_data;
--	struct hpp_type1 type1_data;
--	struct hpp_type2 type2_data;
-+/*
-+ * PCI Express Setting Record (Type 3)
-+ * The ACPI overlords can never get enough
-+ */
-+struct hpp_type3 {
-+	u32 crap_describing_entry_contents;
-+};
-+
-+struct hotplug_program_ops {
-+	void (*program_type0)(struct pci_dev *dev, struct hpp_type0 *hpp);
-+	void (*program_type1)(struct pci_dev *dev, struct hpp_type1 *hpp);
-+	void (*program_type2)(struct pci_dev *dev, struct hpp_type2 *hpp);
-+	void (*program_type3)(struct pci_dev *dev, struct hpp_type3 *hpp);
- };
- 
- #ifdef CONFIG_ACPI
- #include <linux/acpi.h>
--int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp);
-+int pci_acpi_program_hp_params(struct pci_dev *dev,
-+			       const struct hotplug_program_ops *hp_ops);
- bool pciehp_is_native(struct pci_dev *bridge);
- int acpi_get_hp_hw_control_from_firmware(struct pci_dev *bridge);
- bool shpchp_is_native(struct pci_dev *bridge);
--- 
-2.19.2
-
+VGhhbmtzIEFybmQgZm9yIHRoZSBjb21tZW50cy4gVGhlIDAvOSBlbWFpbCB3YXMgc2VudCBvdXQg
+anVzdCBub3cgdG8NCmFkZCBtb3JlIGRldGFpbHMgYWJvdXQgdGhlIGRlc2lnbiBhbmQgY2hhbmdl
+cy4gUGxlYXNlIGFsc28gc2VlIG15IHJlc3BvbnNlDQpiZWxvdy4NCg0KLSBMaW1pbmcNCg0KPiAt
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFy
+bmRiLmRlPg0KPiBTZW50OiBGcmlkYXksIEphbnVhcnkgMTgsIDIwMTkgMTE6MDIgQU0NCj4gVG86
+IExpbWluZyBTdW4gPGxzdW5AbWVsbGFub3guY29tPg0KPiBDYzogT2xvZiBKb2hhbnNzb24gPG9s
+b2ZAbGl4b20ubmV0PjsgRGF2aWQgV29vZHMgPGR3b29kc0BtZWxsYW5veC5jb20+OyBSb2JpbiBN
+dXJwaHkgPHJvYmluLm11cnBoeUBhcm0uY29tPjsgYXJtLXNvYw0KPiA8YXJtQGtlcm5lbC5vcmc+
+OyBEVE1MIDxkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZz47IExpbnV4IEFSTSA8bGludXgtYXJt
+LWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnPjsgVmluY2VudCBXaGl0Y2h1cmNoDQo+IDx2aW5j
+ZW50LndoaXRjaHVyY2hAYXhpcy5jb20+OyBsaW51eC1wY2kgPGxpbnV4LXBjaUB2Z2VyLmtlcm5l
+bC5vcmc+OyBsaW51eC1udGJAZ29vZ2xlZ3JvdXBzLmNvbTsgQ2hyaXN0b3BoIEhlbGx3aWcgPGhj
+aEBsc3QuZGU+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjYgNS85XSBzb2M6IG1lbGxhbm94OiBo
+b3N0OiBBZGQgdGhlIGNvbW1vbiBob3N0IHNpZGUgUnNoaW0gZHJpdmVyDQo+IA0KPiBPbiBUaHUs
+IE5vdiAxLCAyMDE4IGF0IDU6NDkgUE0gTGltaW5nIFN1biA8bHN1bkBtZWxsYW5veC5jb20+IHdy
+b3RlOg0KPiA+DQo+ID4gQW4gZXh0ZXJuYWwgaG9zdCBjYW4gY29ubmVjdCB0byBhIE1lbGxhbm94
+IEJsdWVGaWVsZCBTb0MgdmlhIGFuDQo+ID4gaW50ZXJmYWNlIGNhbGxlZCBSc2hpbS4gVGhlIFJz
+aGltIGRyaXZlciBwcm92aWRlcyBib290LCBjb25zb2xlLA0KPiA+IGFuZCBuZXR3b3JraW5nIHNl
+cnZpY2VzIG92ZXIgdGhpcyBpbnRlcmZhY2UuIFRoaXMgY29tbWl0IGlzDQo+ID4gdGhlIGNvbW1v
+biBkcml2ZXIgd2hlcmUgdGhlIG90aGVyIGJhY2tlbmQgKHRyYW5zcG9ydCkgZHJpdmVyIHdpbGwN
+Cj4gPiB1c2UuDQo+ID4NCj4gPiBSZXZpZXdlZC1ieTogRGF2aWQgV29vZHMgPGR3b29kc0BtZWxs
+YW5veC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogTGltaW5nIFN1biA8bHN1bkBtZWxsYW5veC5j
+b20+DQo+IA0KPiBIaSBMaW1pbmcsDQo+IA0KPiBJJ3ZlIHRha2VuIGEgbmV3IGxvb2sgYXQgeW91
+ciBwYXRjaCBzZXJpZXMgZm9yIGRyaXZlcnMvc29jLyBub3csDQo+IHRoYW5rcyBmb3IgeW91ciBj
+b250aW51ZWQgc3VibWlzc2lvbnMuDQo+IA0KPiBUaGlzIGlzIGFnYWluIGp1c3QgYSBzZXQgb2Yg
+dmVyeSBoaWdoLWxldmVsIGNvbW1lbnRzLCBidXQgSSB0aGluayB3ZQ0KPiBzaG91bGQgcmVzb2x2
+ZSBzb21lIG9mIHRoZSBmdW5kYW1lbnRhbCBxdWVzdGlvbnMgZmlyc3QuDQo+IEluY2lkZW50YWxs
+eSwgVmluY2VudCBXaGl0Y2h1cmNoIGhhcyByZWNlbnRseSBwb3N0ZWQgYW5vdGhlcg0KPiBwYXRj
+aCBzZXJpZXMgd2l0aCBhIHZlcnkgc2ltaWxhciBpbnRlbnRpb24sIGJ1dCBmb3Igb3RoZXIgaGFy
+ZHdhcmUNCj4gYW5kIHRha2luZyBhIGRpZmZlcmVudCBhcHByb2FjaC4NCj4gDQo+IEluIGJvdGgg
+Y2FzZXMsIHRoZSBpZGVhIGlzIHRvIHVzZSB2aXJ0aW8gYmFzZWQgZHJpdmVycyB0byBwcm92aWRl
+DQo+IHNlcnZpY2VzIGZyb20gYSBob3N0IG1hY2hpbmUgaW50byBhbm90aGVyIExpbnV4IGluc3Rh
+bmNlIHJ1bm5pbmcNCj4gb24gYW4gZW1iZWRkZWQgc3lzdGVtIGJlaGluZCBhIFBDSWUgc2xvdCBv
+ciBzaW1pbGFyLiBZb3VyDQo+IEJsdWVmaWVsZCBTb0MgcGF0Y2hlcyBhcmUgd2VsbCB3cml0dGVu
+LCBidXQgYXJlIGludGVudGlvbmFsbHkNCj4ga2VwdCBzcGVjaWZpYyB0byBhIHBhcnRpY3VsYXIg
+dXNlIGNhc2UgYW5kIHRpZWQgdG8gb25lIHBpZWNlDQo+IG9mIGhhcmR3YXJlLiBJbiBjb250cmFz
+dCwgVmluY2VudCB1c2VzIHRoZSBleGlzdGluZyBjb2RlIGZyb20NCj4gZHJpdmVycy9taXNjL21p
+Yy92b3AvIHRoYXQgaXMgZXF1YWxseSBoYXJkd2FyZSBzcGVjaWZpYywgYnV0IGhlDQo+IGV4dGVu
+ZHMgaXQgdG8gYmUgYXBwbGljYWJsZSB0byBvdGhlciBoYXJkd2FyZSBhcyB3ZWxsLg0KPiANCj4g
+SXQgd291bGQgYmUgZ29vZCBpZiB5b3UgY291bGQgbG9vayBhdCBlYWNoIG90aGVyJ3MgYXBwcm9h
+Y2hlcw0KPiB0byBzZWUgd2hlcmUgd2UgY291bGQgdGFrZSBpdCBmcm9tIGhlcmUuIEkgdGhpbmsg
+aWRlYWxseSB3ZQ0KPiBzaG91bGQgaGF2ZSBhIGNvbW1vbiBkcml2ZXIgZnJhbWV3b3JrIGZvciBk
+b2luZyB0aGUgc2FtZQ0KPiB0aGluZyBhY3Jvc3MgYm90aCBvZiB5b3VyIGRldmljZXMgYW5kIGFz
+IHdlbGwgYXMgb3RoZXJzLg0KDQpZZXMsIEkgY2hlY2tlZCBkcml2ZXJzL21pc2MvbWljL3ZvcCBh
+bmQgVmluY2VudCBXaGl0Y2h1cmNoJ3MgcGF0Y2hlcyANCihWaXJ0aW8tb3Zlci1QQ0llIG9uIG5v
+bi1NSUMpIGFuZCByZWxhdGVkIGNvbW1lbnRzLiBJIGtpbmQgb2YgZmVlbCANCnRoYXQgYmVzaWRl
+cyB0aGUgY29tbW9uIHZpcnRpbyBpbmZyYXN0cnVjdHVyZSwgdGhlcmUgc2VlbXMgbm90IG11Y2gN
+CnRvIGJlIHJldXNlZCBpbiB0aGUgcmVzdCBvZiBpbXBsZW1lbnRhdGlvbiB5ZXQsIHRob3VnaCB0
+aGV5IGFyZSB0cnlpbmcNCnRvIGRvIHRoZSBzaW1pbGFyIHRoaW5ncy4gIChGZWVsIGZyZWUgdG8g
+Y29ycmVjdCBtZSBpZiBJIG1pc3VuZGVyc3Rvb2QgaXQuKQ0KDQpJIGp1c3Qgc3VibWl0dGVkIHRo
+ZSBwYXRjaCAwLzkgdG8gZXhwbGFpbiBzb21lIGRldGFpbHMgb2YgdGhlIHJzaGltDQpjb21wb25l
+bnQgYW5kIHRoZSBkcml2ZXIgcGF0Y2hlcy4gQ291bGQgeW91IGhlbHAgdGFrZSBhIGxvb2s/DQoN
+ClRoZSByc2hpbSBkcml2ZXIgb2YgQmx1ZUZpZWxkIFNvQyBoYXMgYSBmZXcgbW9yZSBmdW5jdGlv
+bmFsaXRpZXMgDQp3aGljaCBhcmUgdmVyeSBIVy1zcGVjaWZpYy4gU29tZSBuZWVkcyBkcml2ZXIg
+c3VwcG9ydCBmcm9tIGJvdGggDQpBUk0gdGFyZ2V0IGFuZCB0aGUgZXh0ZXJuYWwgaG9zdCwgc29t
+ZSBvbmx5IG5lZWRzIGV4dGVybmFsIGhvc3QgDQpkcml2ZXIgc3VwcG9ydC4NCg0KQXMgZm9yIGNv
+bW1vbiBmcmFtZXdvcmssIHdlIHVzZWQgdG8gaW1wbGVtZW50IHRoZSBkcml2ZXJzIGJhc2VkIG9u
+DQp0aGUgcmVtb3RlIHByb2MgKERvY3VtZW50YXRpb24vcmVtb3RlcHJvYy50eHQpLCB3aGljaCBz
+ZWVtcyBtb3JlDQpjbG9zZSB0byB3aGF0IHdlIHdhbnRlZCAoaW4gbXkgaHVtYmxlIG9waW5pb24p
+LiBMYXRlciBkdWUgdG8gbW9yZSANCmZ1bmN0aW9uYWxpdGllcyB0byBhZGQgYW5kIHRoZSBsYWNr
+IG9mIHJlbW90ZSBwcm9jIGluIG9sZCBrZXJuZWxzLCB3ZSANCmNoYW5nZWQgdG8gdXNlIHZpcnRp
+byBmcmFtZXdvcmsgZGlyZWN0bHksIHdoaWNoIHNlZW1zIHZlcnkgaGVscGZ1bCBhbmQNCnNhdmVk
+IHF1aXRlIHNvbWUgZHJpdmVyIHdvcmsuDQoNCj4gDQo+IFRoYXQgd291bGQgYWxzbyByZXNvbHZl
+IG15IG1haW4gY29uY2VybiBhYm91dCB0aGUgZHJpdmVycywNCj4gd2hpY2ggaXMgdGhlIHBsYWNl
+bWVudCBpbiBkcml2ZXJzL3NvYy8gZm9yIGEgc2V0IG9mIGRyaXZlcnMNCj4gdGhhdCBhcmUgdW5s
+aWtlIG1vc3QgZHJpdmVycyBpbiB0aGF0IGRpcmVjdG9yeSBub3QgbWVhbiBmb3INCj4gcnVubmlu
+ZyBvbiB0aGUgU29DIGl0c2VsZiBpbiBvcmRlciBkcml2ZSB1bnVzdWFsIGZ1bmN0aW9uYWxpdHkN
+Cj4gb24gdGhlIFNvQywgYnV0IGFyZSAoYXQgbGVhc3QgcGFydGlhbGx5KSBtZWFudCBmb3IgcnVu
+bmluZyBvbg0KPiBhIGhvc3QgbWFjaGluZSB0byBjb21tdW5pY2F0ZSB3aXRoIHRoYXQgU29DIG92
+ZXIgUENJZQ0KPiBvciBVU0IuDQo+IA0KPiBBcyBhbiBleGFtcGxlLCB5b3VyIG5ldHdvcmsgZHJp
+dmVyIHNob3VsZCByZWFsbHkgYmUgcGxhY2VkDQo+IGluIGRyaXZlcnMvbmV0LywgdGhvdWdoIGl0
+IGlzIHVuY2xlYXIgdG8gbWUgaG93IGl0IHJlbGF0ZXMNCj4gdG8gdGhlIGV4aXN0aW5nIHZpcnRp
+b19uZXQgZHJpdmVyLiBJbiB0aGUgY2FzZSBvZiBtaWMvdm9wLA0KPiB0aGUgaWRlYSBpcyB0byB1
+c2UgdmlydGlvX25ldCBvbiB0aGUgZGV2aWNlIHNpZGUsIGJ1dCBoYXZlDQo+IHZob3N0X25ldCBv
+ciBhIHVzZXIgc3BhY2UgaW1wbGVtZW50YXRpb24gb24gdGhlIGhvc3Qgc2lkZSwNCj4gYnV0IHRo
+YXQgaXMgYXBwYXJlbnRseSBub3Qgd2hhdCB5b3UgZG8gaGVyZS4gQ2FuIHlvdQ0KPiBleHBsYWlu
+IHdoeT8NCg0KWWVzLCBJIGFjdHVhbGx5IGhhdmUgdGhlIHNhbWUgY29uY2VybnMgd2hlcmUgdGhl
+IGhvc3Qgc2lkZQ0KZHJpdmVycyBzaG91bGQgZ28uICBGb3Igbm93IHRoZXIncmUganVzdCBhZGRl
+ZCBmb3IgY29kZSByZXZpZXcNCnB1cnBvc2UuIGRyaXZlcnMvc29jLyBzZWVtcyBub3QgYSBnb29k
+IHBsYWNlLiBPbmUgdGhvdWdodA0KaXMgdG8gbW92ZSB0aGUgcnNoaW1fbmV0LCByc2hpbV9wY2ll
+IGFuZCByc2hpbV9wY2llX2xmIGJhY2tlbmQNCmRyaXZlciB0byBkcml2ZXJzL25ldC9ldGhlcm5l
+dC9NZWxsYW5veC9yc2hpbS8gYW5kIG1vdmUgdGhlDQpyc2hpbSBjb21tb24gZHJpdmVyIHRvIGRy
+aXZlcnMvY2hhciBhcyBpdCBjcmVhdGVzIHRoZSBjaGFyYWN0ZXINCmRldmljZXM/DQoNClRoZSBk
+ZXZpY2Ugc2lkZSBvZiB0aGlzIHBhdGNoIHVzZXMgdGhlIHZpcnRpb19uZXQgZHJpdmVyIGFzIHdl
+bGwuIA0KDQpUaGUgaG9zdCBzaWRlIGlzIG5vdCBqdXN0IGZvciBuZXR3b3JraW5nLCB3aGljaCB3
+YXMgbWVudGlvbmVkIA0KaW4gdGhlIDAvOSBwYXRjaC4gVGhlIGhvc3Qgc2lkZSBkcml2ZXIgbWFu
+YWdlcyB0aGUgd2hvbGUgcnNoaW0NCmNvbXBvbmVudCBhbmQgaXMgY2FsbGVkIHRoZSAncnNoaW0n
+IGRyaXZlci4gSXQgaW5jbHVkZXMgZHJpdmVyDQp0byBhY2Nlc3MgdGhlIFRtRmlmbywgd2hlcmUg
+dmlydGlvX25ldCBpcyB1c2VkIHRvIHByb3ZpZGUgDQpuZXR3b3JraW5nIHN1cHBvcnQuIEl0IG5l
+ZWRzIHRvIHRhbGsgdG8gdGhlIGNvbW1vbg0KZHJpdmVyIHRoZW4gdGhlIFVTQiBvciBQQ0llIGJh
+Y2tlbmQgZHJpdmVyLiAgSXQgc2VlbXMgdG8gbWUgdGhhdA0Kdmhvc3RfbmV0IGRvZXNuJ3QgcXVp
+dGUgZml0IHRoaXMgbW9kZWwgYW5kIG1pZ2h0IG1ha2UgaXQgDQpvdmVyLWNvbXBsaWNhdGVkLg0K
+DQo+IA0KPiBBbm90aGVyIGhpZ2gtbGV2ZWwgcXVlc3Rpb24gSSBoYXZlIGlzIG9uIGhvdyB5b3Vy
+IHZhcmlvdXMNCj4gZHJpdmVycyByZWxhdGUgdG8gb25lIGFub3RoZXIuIFRoaXMgc2hvdWxkIG5v
+cm1hbGx5IGJlDQo+IGV4cGxhaW5lZCBpbiB0aGUgMC85IGVtYWlsLCBidXQgSSBkb24ndCBzZWVt
+IHRvIGhhdmUgcmVjZWl2ZWQNCj4gc3VjaCBhIG1haWwuIEkgc2VlIHRoYXQgeW91IGhhdmUgbXVs
+dGlwbGUgYmFjay1lbmQgZHJpdmVycw0KPiBmb3IgdGhlIHVuZGVybHlpbmcgdHJhbnNwb3J0LCB3
+aXRoIG9uZSBvZiB0aGVtIGJhc2VkIG9uIFVTQi4NCj4gSGF2ZSB5b3UgY29tZSB1cCB3aXRoIGEg
+d2F5IHRvIHVzZSB0aGUgc2FtZSBoaWdoLWxldmVsDQo+IGRyaXZlciBzdWNoIGFzIHRoZSBuZXR3
+b3JrIGxpbmsgb3ZlciB0aGlzIFVTQiBiYWNrLWVuZCwNCj4gb3IgaXMgdGhpcyBmb3Igc29tZXRo
+aW5nIGVsc2U/DQoNClllcywgMC85IGhhcyBiZWVuIHNlbnQuIFNvcnJ5IEkgc2hvdWxkIGhhdmUg
+cHJvdmlkZWQgc2luY2UgYmVnaW5uaW5nLg0KDQpUaGUgVVNCIChvciBQQ0llKSBwcm92aWRlIHRo
+ZSBnZW5lcmFsIHRyYW5zcG9ydCB0byBhY2Nlc3MgdGhlIFJTaGltDQpjb21wb25lbnQsIGZvciBu
+ZXR3b3JraW5nLCBjb25zb2xlLCByZWdpc3RlciBhY2Nlc3MsIGJvb3Qgc2VydmljZSwNCmV0Yy4g
+U28gaXQncyBub3QganVzdCBmb3IgbmV0d29yayBsaW5rLiBUaGUgaW1wbGVtZW50YXRpb24gc2Vl
+bXMgdmVyeQ0KSFcgc3BlY2lmaWMsIHN1Y2ggYXMgcHJvdmlkaW5nIEFQSXMgbGlrZSByc2hpbV91
+c2JfcmVhZF9yc2hpbSgpDQphbmQgcnNoaW1fdXNiX3dyaXRlX3JzaGltKCkuIEluIFBDSWUgYmFj
+a2VuZCBpdCBoYXMgc2ltaWxhciBBUElzDQpsaWtlIHJzaGltX3BjaWVfcmVhZCgpLCByc2hpbV9w
+Y2llX3dyaXRlKCkuDQoNCk5vdCB2ZXJ5IGNsZWFyIGFib3V0IHdoYXQgeW91IG1lYW50IHRoZSAi
+IHRoZSBzYW1lIGhpZ2gtbGV2ZWwgZHJpdmVyIA0Kc3VjaCBhcyB0aGUgbmV0d29yayBsaW5rIG92
+ZXIgdGhpcyBVU0IgYmFjay1lbmQiLiBEbyB5b3UgbWVhbiB1c2luZw0KYW55IGV4aXN0aW5nIG5l
+dHdvcmsgb3ZlciBVU0IgZnJhbWV3b3JrIG9yIHByb3ZpZGUgc29tZSBtZWNoYW5pc20NCnRvIGJl
+IHJldXNlZCBieSBvdGhlciBuZXR3b3JrIG92ZXIgVVNCIGRyaXZlcj8NCg0KQnkgdGhlIHdheSwg
+dGhlIDAvOSBoYXMgYmVlbiBzZW50LiBDb3VsZCB5b3UgaGVscCB0YWtlIGEgbG9vayB3aGV0aGVy
+IA0KaXQgY2xhcmlmaWVzIGEgbGl0dGxlIGJpdCBvciBub3Q/DQoNCj4gDQo+ICAgICAgIEFybmQN
+Cg==
