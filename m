@@ -1,117 +1,110 @@
-Return-Path: <SRS0=1Q+I=P4=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=cv1o=P5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A837C636A2
-	for <linux-pci@archiver.kernel.org>; Sun, 20 Jan 2019 15:16:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A1C9C282F6
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 09:19:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D76A2085A
-	for <linux-pci@archiver.kernel.org>; Sun, 20 Jan 2019 15:16:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC6D92084A
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 09:19:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="fBAMGhL9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725910AbfATPQy convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 20 Jan 2019 10:16:54 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:57305 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725908AbfATPQx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 20 Jan 2019 10:16:53 -0500
-Received: by mail.bootlin.com (Postfix, from userid 110)
-        id D61FB2074A; Sun, 20 Jan 2019 16:16:50 +0100 (CET)
-Received: from xps13 (unknown [77.136.42.183])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 9EF3D206A7;
-        Sun, 20 Jan 2019 16:16:49 +0100 (CET)
-Date:   Sun, 20 Jan 2019 16:16:48 +0100
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     Gregory CLEMENT <gregory.clement@bootlin.com>
-Cc:     Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        <devicetree@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH v3 00/15] Bring suspend to RAM support to PCIe Aardvark
- driver
-Message-ID: <20190120161648.102191be@xps13>
-In-Reply-To: <87va2llxhz.fsf@FE-laptop>
-References: <20190108162441.5278-1-miquel.raynal@bootlin.com>
-        <87va2llxhz.fsf@FE-laptop>
-Organization: Bootlin
-X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S1726566AbfAUJTZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jan 2019 04:19:25 -0500
+Received: from smtprelay.synopsys.com ([198.182.47.9]:52890 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726353AbfAUJTZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2019 04:19:25 -0500
+Received: from mailhost.synopsys.com (unknown [10.13.135.209])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay.synopsys.com (Postfix) with ESMTPS id 9861424E22F7;
+        Mon, 21 Jan 2019 01:19:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1548062364; bh=s+MFA0gmbKpIZgk5L8Ci30hZHWObtu9PQfgUY9RK5lA=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=fBAMGhL94UkVEqti71fIDjG/LR2xFu3e6FRZVi4nU/O8/CdN+ER/6r4xvqipkCw3x
+         w4VuOl8LGgpP16OR8qpRYRJsUNfQrjqcdzppdM3e1KPJoQZIjubZLZWcxQ3Ma/ImMS
+         H/jTcRFHpJWXCFJzXEVC2YtYbmwLcTQMlwl/MmGb2mZ05vMCux4Il+pQUFf1A9/FWz
+         1cwfDuQJbKbwCqPqzDrbJsS0E60IB+dziHf+O3EMRS+aE6eyttK67yHmVzQDM3jaAy
+         taVCzNiHLDZ6GrDXtenqvpg59GKQi0RddDd6HtLe8OGVL3glweuqffCyVIqCnFTxYq
+         ksD7rWjxN97aA==
+Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2.internal.synopsys.com [10.12.239.237])
+        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mailhost.synopsys.com (Postfix) with ESMTPS id 35932A00E4;
+        Mon, 21 Jan 2019 09:19:22 +0000 (UTC)
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ US01WEHTC2.internal.synopsys.com (10.12.239.237) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 21 Jan 2019 01:19:22 -0800
+Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
+ DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 21 Jan 2019 10:19:20 +0100
+Received: from [10.107.25.131] (10.107.25.131) by
+ DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 21 Jan 2019 10:19:20 +0100
+Subject: Re: [RFC v3 1/7] dmaengine: Add Synopsys eDMA IP core driver
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC:     Jose Abreu <jose.abreu@synopsys.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
+        Russell King <rmk+kernel@armlinux.org.uk>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        Joao Pinto <joao.pinto@synopsys.com>,
+        "Luis de Oliveira" <luis.oliveira@synopsys.com>,
+        Vitor Soares <vitor.soares@synopsys.com>,
+        Nelson Costa <nelson.costa@synopsys.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>
+References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
+ <d2b6e8bed0c5077425b913e551794ed126d74fb2.1547230339.git.gustavo.pimentel@synopsys.com>
+ <e374b2fe-23bd-0bc5-be17-abced19bb4f7@synopsys.com>
+ <c28eb503-d17f-5551-a03d-55dad36d0494@synopsys.com>
+ <20190119162152.GE9170@smile.fi.intel.com>
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <35c5c304-356d-1796-33e5-11f48cce704f@synopsys.com>
+Date:   Mon, 21 Jan 2019 09:14:36 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <20190119162152.GE9170@smile.fi.intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.107.25.131]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Gregory,
-
-Gregory CLEMENT <gregory.clement@bootlin.com> wrote on Fri, 18 Jan 2019
-17:51:52 +0100:
-
-> Hi Miquel,
->  
->  On mar., janv. 08 2019, Miquel Raynal <miquel.raynal@bootlin.com> wrote:
+On 19/01/2019 16:21, Andy Shevchenko wrote:
+> On Wed, Jan 16, 2019 at 11:53:00AM +0000, Gustavo Pimentel wrote:
+>> On 16/01/2019 10:21, Jose Abreu wrote:
+>>> On 1/11/2019 6:33 PM, Gustavo Pimentel wrote:
 > 
-> > Hello,
-> >
-> > As part of an effort to bring suspend to RAM support to Armada 3700
-> > SoCs (main target: ESPRESSObin), this series handles the work around
-> > the PCIe IP.
-> >
-> > First, more configuration is done in the 'setup' helper as inspired
-> > from the U-Boot driver. This is needed to entirely initialize the IP
-> > during future resume operation (patch 1).
-> >
-> > Then, reset GPIO, PHY and clock support are introduced (patch 2-4). As
-> > current device trees do not provide the corresponding properties, not
-> > finding one of these properties is not an error and just produces a
-> > warning. However, if the property is present, an error during PHY
-> > initialization will fail the probe of the driver.
-> >
-> > Note: To be sure the clock will be resumed before this driver, a first
-> > series adding links between clocks and consumers has been submitted,
-> > see [1]. Anyway, having the clock series applied first is not needed.
-> >
-> > Patch 5 adds suspend/resume hooks, re-using all the above.
-> >
-> > Finally, bindings and device trees are updated to reflect the hardware
-> > (patch 6-12). While the clock depends on the SoC, the reset GPIO and
-> > the PHY depends on the board so the clock is added in the
-> > armada-37xx.dtsi file while the two other properties are added in
-> > armada-3720-espressobin.dts.
-> >
-> > [1] http://lists.infradead.org/pipermail/linux-arm-kernel/2019-January/623885.html
-> >
-> > Thanks,
-> > Miquèl
-> >
-> >
-> > Changes since v2:
-> > =================
-> > * Minor patches reordering.
-> > * Added pinctrl patches from Gregory Clement fixing the PCIe pins. His
-> >   changes implied modifications in the DT/bindings patches adding PCIe
-> >   reset pin support.  
+>>>> +	/* Free irqs */
+>>>
+>>> But devm will automatically free it, no ?
+>>
+>> Yes, it shouldn't be there. I'll remove it.
 > 
-> Actually these patches are not in this series. You propably meant that
-> this series is depend on these patches.
+> It depends. If the driver is using tasklets it must free it explicitly like this.
+
+In this driver I'm not using tasklets.
+
 > 
-> If needed, for peoaple who wanted to test this series, the pinctrl
-> changes are now in linux-next and also in pinctrl/for-next.
+> P.S. devm_*_irq() is quite doubtful to have in the first place.
 
-Absolutely, this is what I meant, thanks for clarifying.
+For curiosity, why?
 
-Thanks,
-Miquèl
+> 	
+> 
+
