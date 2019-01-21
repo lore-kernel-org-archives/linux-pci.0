@@ -2,166 +2,277 @@ Return-Path: <SRS0=cv1o=P5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F28C282DB
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 10:22:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B99C7112F
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 11:02:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D58F2089F
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 10:22:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C03262085A
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Jan 2019 11:02:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="DF9YKcBF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726451AbfAUKWW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 21 Jan 2019 05:22:22 -0500
-Received: from mga12.intel.com ([192.55.52.136]:40733 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725908AbfAUKWW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 21 Jan 2019 05:22:22 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 21 Jan 2019 02:22:21 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,502,1539673200"; 
-   d="scan'208";a="111449670"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by orsmga008.jf.intel.com with SMTP; 21 Jan 2019 02:22:17 -0800
-Received: by lahna (sSMTP sendmail emulation); Mon, 21 Jan 2019 12:22:17 +0200
-Date:   Mon, 21 Jan 2019 12:22:17 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Lukas Wunner <lukas@wunner.de>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: pciehp: Disable Data Link Layer State Changed
- event on suspend
-Message-ID: <20190121102217.GM14577@lahna.fi.intel.com>
-References: <20190107143959.75267-1-mika.westerberg@linux.intel.com>
- <20190107143959.75267-3-mika.westerberg@linux.intel.com>
- <20190115002410.GF33971@google.com>
+        id S1727745AbfAULCY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 21 Jan 2019 06:02:24 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:35420 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727785AbfAULCM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Jan 2019 06:02:12 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0LB1XeP021658;
+        Mon, 21 Jan 2019 05:01:33 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1548068493;
+        bh=hhMlffWEnXAfq4XJujl8J/Qv93eZrx3xg3jx0yFJq28=;
+        h=Subject:To:References:From:Date:In-Reply-To;
+        b=DF9YKcBFXA6+kLbmXwxno3SusuryxTxXrzwpZ4mXj9A9Uimtdx9A6vKwl35/3NuoT
+         LgcN6MrbK3MO8NcoNmNSr/qArx1SreI0+YxtKasPA3XA0XFhL+m3eU+fN3aaK3c30Y
+         Qqzwlz4V1jFgtGpWhKG0jYaKN2iIn9/V7xjNFLK4=
+Received: from DLEE115.ent.ti.com (dlee115.ent.ti.com [157.170.170.26])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0LB1XcI022472
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 21 Jan 2019 05:01:33 -0600
+Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Mon, 21
+ Jan 2019 05:01:33 -0600
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Mon, 21 Jan 2019 05:01:33 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0LB1Rur003956;
+        Mon, 21 Jan 2019 05:01:28 -0600
+Subject: Re: [PATCHv5 3/4] pci: layerscape: Add the EP mode support.
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <shawnguo@kernel.org>, <leoyang.li@nxp.com>,
+        <lorenzo.pieralisi@arm.com>, <arnd@arndb.de>,
+        <gregkh@linuxfoundation.org>, <minghuan.Lian@nxp.com>,
+        <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <kstewart@linuxfoundation.org>,
+        <cyrille.pitchen@free-electrons.com>, <pombredanne@nexb.com>,
+        <shawn.lin@rock-chips.com>, <niklas.cassel@axis.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linuxppc-dev@lists.ozlabs.org>
+References: <20190121094500.10657-1-xiaowei.bao@nxp.com>
+ <20190121094500.10657-3-xiaowei.bao@nxp.com>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <0791e307-17c5-6f47-ae89-73bb5dc0f232@ti.com>
+Date:   Mon, 21 Jan 2019 16:31:00 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190115002410.GF33971@google.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190121094500.10657-3-xiaowei.bao@nxp.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+Hi Xiaowei,
 
-Sorry for the delay - I was on a business trip.
-
-On Mon, Jan 14, 2019 at 06:24:10PM -0600, Bjorn Helgaas wrote:
-> On Mon, Jan 07, 2019 at 05:39:59PM +0300, Mika Westerberg wrote:
-> > Commit 0e157e528604 ("PCI/PME: Implement runtime PM callbacks") tried to
-> > solve an issue where the hierarchy immediately wakes up when it is
-> > transitioned into D3cold. It turns out preventing PME propagation in
-> > some PCIe hierarchies not supporting D3cold.
+On 21/01/19 3:14 PM, Xiaowei Bao wrote:
+> Add the PCIe EP mode support for layerscape platform.
 > 
-> I can't quite parse this last sentence.  Is it missing a word?
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> Reviewed-by: Minghuan Lian <minghuan.lian@nxp.com>
+> Reviewed-by: Zhiqiang Hou <zhiqiang.hou@nxp.com>
 
-No, but I'm not native speaker :)
+This patch looks good to me, except for using epc->features which I've tried to
+get rid of in [1]. After Lorenzo's review, one of us have to change it to the
+new design.
 
-> > I looked more closely what might cause the immediate wakeup. It happens
-> > when the ACPI power resource of the root port is turned off. The AML
-> > code associated with the _OFF() method of the ACPI power resource
-> > executes PCIe L2/3 ready transition and waits it to complete.
+Thanks
+Kishon
+
+[1] -> https://patchwork.kernel.org/project/linux-pci/list/?series=66177
+> ---
+> v2:
+>  - remove the EP mode check function.
+> v3:
+>  - modif the return value when enter default case.
+> v4:
+>  - no change.
+> v5:
+>  - no change.
 > 
-> waits *for* it ...
-
-
-OK.
-
-> > Right
-> > after the L2/3 ready transition is started the root port receives PME
-> > from the downstream port.
-> > 
-> > The simplest hierarchy where this happens looks like this:
-> > 
-> >   00:1d.0 PCIe Root port
-> >     ^
-> >     |
-> >     v
-> >     05:00.0 PCIe switch #1 upstream port
-> >       06:01.0 PCIe switch #1 downstream hotplug port
-> >         ^
-> >         |
-> >         v
-> >         08:00.0 Pcie switch #2 upstream port
-> > 
-> > It seems that the PCIe link between the two switches, before
-> > PME_Turn_Off/PME_TO_Ack is complete for the whole hierarchy, goes
-> > inactive and triggers PME towards the root port bringing it back to D0.
-> > Disabling Data Link Layer State Changed event (DLLSCE) prevents the
-> > issue and still allows the downstream hotplug port to notice when a
-> > device is plugged/unplugged.
+>  drivers/pci/controller/dwc/Makefile            |    2 +-
+>  drivers/pci/controller/dwc/pci-layerscape-ep.c |  146 ++++++++++++++++++++++++
+>  2 files changed, 147 insertions(+), 1 deletions(-)
+>  create mode 100644 drivers/pci/controller/dwc/pci-layerscape-ep.c
 > 
-> I don't understand the "link goes inactive and triggers PME" part.  Is
-> that prescribed by the spec, or is this implementation-specific
-> behavior, or even a bug?
-
-It is not directly described in the spec (unfortunately). In general
-they leave a lot for the reader to interpret instead of explaining how
-the thing is supposed to be programmed in different situations :(
-
-This is the behavior I see when the hierarchy goes into D3cold. I don't
-have any equipment that would let me see what exactly happens there. The
-above is my guess of what happens.
-
-> Are there spec references that would be useful here?  PCIe r4.0, sec
-> 5.2 seems like one starting point.  5.3.1.4.2?  5.3.3.2.1 and
-> following sections seem like they should be very relevant, but I
-> haven't studied it in detail.
-
-Sure, I can add those references to the changelog.
-
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=202103
-> > Fixes: 0e157e528604 ("PCI/PME: Implement runtime PM callbacks")
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> >  drivers/pci/hotplug/pciehp_hpc.c | 10 ++++++++--
-> >  1 file changed, 8 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> > index cd9eae650aa5..6fdaa8d48ebe 100644
-> > --- a/drivers/pci/hotplug/pciehp_hpc.c
-> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> > @@ -736,12 +736,18 @@ void pcie_clear_hotplug_events(struct controller *ctrl)
-> >  
-> >  void pcie_enable_interrupt(struct controller *ctrl)
-> >  {
-> > -	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_HPIE, PCI_EXP_SLTCTL_HPIE);
-> > +	u16 mask;
-> > +
-> > +	mask = PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_DLLSCE;
-> > +	pcie_write_cmd(ctrl, mask, mask);
-> >  }
-> >  
-> >  void pcie_disable_interrupt(struct controller *ctrl)
-> >  {
-> > -	pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_HPIE);
-> > +	u16 mask;
-> > +
+> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+> index 7bcdcdf..b5f3b83 100644
+> --- a/drivers/pci/controller/dwc/Makefile
+> +++ b/drivers/pci/controller/dwc/Makefile
+> @@ -8,7 +8,7 @@ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+>  obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+>  obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+>  obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone.o
+> -obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+> +obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o pci-layerscape-ep.o
+>  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+>  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+> diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> new file mode 100644
+> index 0000000..dafb528
+> --- /dev/null
+> +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> @@ -0,0 +1,146 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * PCIe controller EP driver for Freescale Layerscape SoCs
+> + *
+> + * Copyright (C) 2018 NXP Semiconductor.
+> + *
+> + * Author: Xiaowei Bao <xiaowei.bao@nxp.com>
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/init.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/of_address.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +
+> +#include "pcie-designware.h"
+> +
+> +#define PCIE_DBI2_OFFSET		0x1000	/* DBI2 base address*/
+> +
+> +struct ls_pcie_ep {
+> +	struct dw_pcie		*pci;
+> +};
+> +
+> +#define to_ls_pcie_ep(x)	dev_get_drvdata((x)->dev)
+> +
+> +static int ls_pcie_establish_link(struct dw_pcie *pci)
+> +{
+> +	return 0;
+> +}
+> +
+> +static const struct dw_pcie_ops ls_pcie_ep_ops = {
+> +	.start_link = ls_pcie_establish_link,
+> +};
+> +
+> +static const struct of_device_id ls_pcie_ep_of_match[] = {
+> +	{ .compatible = "fsl,ls-pcie-ep",},
+> +	{ },
+> +};
+> +
+> +static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	struct pci_epc *epc = ep->epc;
+> +	enum pci_barno bar;
+> +
+> +	for (bar = BAR_0; bar <= BAR_5; bar++)
+> +		dw_pcie_ep_reset_bar(pci, bar);
+> +
+> +	epc->features |= EPC_FEATURE_NO_LINKUP_NOTIFIER;
+> +}
+> +
+> +static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> +				  enum pci_epc_irq_type type, u16 interrupt_num)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +
+> +	switch (type) {
+> +	case PCI_EPC_IRQ_LEGACY:
+> +		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
+> +	case PCI_EPC_IRQ_MSI:
+> +		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
+> +	case PCI_EPC_IRQ_MSIX:
+> +		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
+> +	default:
+> +		dev_err(pci->dev, "UNKNOWN IRQ type\n");
+> +		return -EINVAL;
+> +	}
+> +}
+> +
+> +static struct dw_pcie_ep_ops pcie_ep_ops = {
+> +	.ep_init = ls_pcie_ep_init,
+> +	.raise_irq = ls_pcie_ep_raise_irq,
+> +};
+> +
+> +static int __init ls_add_pcie_ep(struct ls_pcie_ep *pcie,
+> +					struct platform_device *pdev)
+> +{
+> +	struct dw_pcie *pci = pcie->pci;
+> +	struct device *dev = pci->dev;
+> +	struct dw_pcie_ep *ep;
+> +	struct resource *res;
+> +	int ret;
+> +
+> +	ep = &pci->ep;
+> +	ep->ops = &pcie_ep_ops;
+> +
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
+> +	if (!res)
+> +		return -EINVAL;
+> +
+> +	ep->phys_base = res->start;
+> +	ep->addr_size = resource_size(res);
+> +
+> +	ret = dw_pcie_ep_init(ep);
+> +	if (ret) {
+> +		dev_err(dev, "failed to initialize endpoint\n");
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct dw_pcie *pci;
+> +	struct ls_pcie_ep *pcie;
+> +	struct resource *dbi_base;
+> +	int ret;
+> +
+> +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+> +	if (!pcie)
+> +		return -ENOMEM;
+> +
+> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> +	if (!pci)
+> +		return -ENOMEM;
+> +
+> +	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
+> +	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
+> +	if (IS_ERR(pci->dbi_base))
+> +		return PTR_ERR(pci->dbi_base);
+> +
+> +	pci->dbi_base2 = pci->dbi_base + PCIE_DBI2_OFFSET;
+> +	pci->dev = dev;
+> +	pci->ops = &ls_pcie_ep_ops;
+> +	pcie->pci = pci;
+> +
+> +	platform_set_drvdata(pdev, pcie);
+> +
+> +	ret = ls_add_pcie_ep(pcie, pdev);
+> +
+> +	return ret;
+> +}
+> +
+> +static struct platform_driver ls_pcie_ep_driver = {
+> +	.driver = {
+> +		.name = "layerscape-pcie-ep",
+> +		.of_match_table = ls_pcie_ep_of_match,
+> +		.suppress_bind_attrs = true,
+> +	},
+> +};
+> +builtin_platform_driver_probe(ls_pcie_ep_driver, ls_pcie_ep_probe);
 > 
-> I think some sort of comment here would be useful.  It's pretty hard
-> for the casual reader to figure out what things need to be masked.
-
-Sure, I'll add a comment.
-
-> > +	mask = PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_DLLSCE;
-> > +	pcie_write_cmd(ctrl, 0, mask);
-> >  }
-> >  
-> >  /*
-> > -- 
-> > 2.19.2
-> > 
