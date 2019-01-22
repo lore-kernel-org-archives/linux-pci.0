@@ -2,248 +2,370 @@ Return-Path: <SRS0=s1t5=P6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92D93C282C3
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 19:02:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E6CAC282C3
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 19:58:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5C54720856
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 19:02:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE115217F5
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 19:58:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548183778;
-	bh=F1KX6J60q2GNOg73R42rFHpljMQq8hr0egpPmPFEquo=;
-	h=Subject:From:To:Cc:Date:List-ID:From;
-	b=KbEhnlRGg3oxY2nMgfs7ZrAfEakqYwMtEsvKfTyWB7XQvU1s1OYKKaoKwmnCats5V
-	 sz3Txn3nZA5r4yy704OCigrHno5qTh1SqjAjAhRIJWYWWg6tGVesYYtaCUW+RT00/H
-	 HbQ3A5Y/dVf+eg33dS/dpJiCE5lpq84X255n7XlU=
+	s=default; t=1548187121;
+	bh=iKLci5owJws7gdXV9W4d6/9BY5O+zPZghR0unYeE1ns=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=iK06hKviZ3OynSrcge4HAtjsUNgsWeWPlEFmTbd5e5BoM/Gavs3G75GLOnixFvfmq
+	 cFDR4SUDBeuYaYwqz3ylU6pWKR+ohPIxPm9NFL5YTvVtCjPYO5lEK5c39YDfjLl6+c
+	 2+6544bzaJA69wanaYdQ3OJ1NGlsgfqsw7VB4FJI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726167AbfAVTC5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Jan 2019 14:02:57 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41260 "EHLO mail.kernel.org"
+        id S1726021AbfAVT6l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Jan 2019 14:58:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:35956 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726042AbfAVTC5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Jan 2019 14:02:57 -0500
+        id S1726009AbfAVT6l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Jan 2019 14:58:41 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8EFAD205C9;
-        Tue, 22 Jan 2019 19:02:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 448702084A;
+        Tue, 22 Jan 2019 19:58:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548183776;
-        bh=F1KX6J60q2GNOg73R42rFHpljMQq8hr0egpPmPFEquo=;
-        h=Subject:From:To:Cc:Date:From;
-        b=FMNjLz3GldWv26FYi1oybMRV8eauigGBciSgpXX4YLluhueg/JTy649ZszliSmJdA
-         W0PHcBySoXd8VojQgHQMwYvNIjlIUR0wfnfiTUlmkRg/vIPvuvBL+X0fZk2lvWjvGu
-         GX2kjgjpxkxKAr3Sn4fyozKVreoByNhd0iq8yGqg=
-Subject: [PATCH] PCI: Probe bridge window attributes once at enumeration-time
+        s=default; t=1548187119;
+        bh=iKLci5owJws7gdXV9W4d6/9BY5O+zPZghR0unYeE1ns=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=fJGAUhICA3LG48wG7UZilznlhHOQ3JJ0RAIceG4RBsdAmDwq7OidhqMv3otZSnnud
+         IH4mhMwoPCiTei7qZFCjd6HqXTl6gmKUsUk1JENli90BOJ2etWZv2MrcAYPgD47qvA
+         mOe3eAk7dA3PxVt1AowOsvSBDHtp6qgRFUddjI5I=
+Date:   Tue, 22 Jan 2019 13:58:38 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     "Michael S. Tsirkin" <mst@redhat.com>,
-        xuyandong <xuyandong2@huawei.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Jesse Barnes <jbarnes@virtuousgeek.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Ofer Hayut <ofer@lightbitslabs.com>,
-        Roy Shterman <roys@lightbitslabs.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Wangzhou \(B\)" <wangzhou1@hisilicon.com>,
-        linux-kernel@vger.kernel.org
-Date:   Tue, 22 Jan 2019 13:02:54 -0600
-Message-ID: <154818377425.41851.650909794935936003.stgit@bhelgaas-glaptop.roam.corp.google.com>
-User-Agent: StGit/0.18
+To:     Michael Bringmann <mwb@linux.vnet.ibm.com>
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+        Thomas Falcon <tlfalcon@linux.vnet.ibm.com>,
+        Juliet Kim <minkim@us.ibm.com>
+Subject: Re: [RFC 5/6] powerpc/pci/hotplug: Use common drcinfo parsing
+Message-ID: <20190122195838.GC14636@google.com>
+References: <20181214204914.16435.59083.stgit@powerkvm6.aus.stglabs.ibm.com>
+ <20181214205120.16435.46952.stgit@powerkvm6.aus.stglabs.ibm.com>
+ <20190115002857.GG33971@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190115002857.GG33971@google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Mon, Jan 14, 2019 at 06:28:57PM -0600, Bjorn Helgaas wrote:
+> On Fri, Dec 14, 2018 at 02:51:31PM -0600, Michael Bringmann wrote:
+> > The implementation of the pseries-specific drc info properties
+> > is currently implemented in pseries-specific and non-pseries-specific
+> > files.  This patch set uses a new implementation of the device-tree
+> > parsing code for the properties.
+> > 
+> > This patch refactors parsing of the pseries-specific drc-info properties
+> > out of rpaphp_core.c to use the common parser.  In the case where an
+> > architecture does not use these properties, an __weak copy of the
+> > function is provided with dummy return values.  Changes include creating
+> > appropriate callback functions and passing callback-specific data
+> > blocks into arch_find_drc_match.  All functions that were used just
+> > to support the previous parsing implementation have been moved.
+> > 
+> > Signed-off-by: Michael Bringmann <mwb@linux.vnet.ibm.com>
+> 
+> This is fine with me.  Any rpaphp_core.c maintainers want to comment?
+> Tyrel?
+> 
+> $ ./scripts/get_maintainer.pl -f drivers/pci/hotplug/rpaphp_core.c
+> Tyrel Datwyler <tyreld@linux.vnet.ibm.com> (supporter:IBM Power PCI Hotplug Driver for RPA-compliant...)
+> Benjamin Herrenschmidt <benh@kernel.crashing.org> (supporter:LINUX FOR POWERPC (32-BIT AND 64-BIT))
+> Paul Mackerras <paulus@samba.org> (supporter:LINUX FOR POWERPC (32-BIT AND 64-BIT))
+> Michael Ellerman <mpe@ellerman.id.au> (supporter:LINUX FOR POWERPC (32-BIT AND 64-BIT))
 
-pci_bridge_check_ranges() determines whether a bridge supports the optional
-I/O and prefetchable memory windows and sets the flag bits in the bridge
-resources.  This *could* be done once during enumeration except that the
-resource allocation code completely clears the flag bits, e.g., in the
-pci_assign_unassigned_bridge_resources() path.
+This looks like part of a larger series, but I only got this patch.  So I
+assume you'll route this elsewhere along with the rest of the series.
+Here's my ack if it's useful:
 
-The problem with pci_bridge_check_ranges() in the resource allocation path
-is that we may allocate resources after devices have been claimed by
-drivers, and pci_bridge_check_ranges() *changes* the window registers to
-determine whether they're writable.  This may break concurrent accesses to
-devices behind the bridge.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Add a new pci_read_bridge_windows() to determine whether a bridge supports
-the optional windows, call it once during enumeration, remember the
-results, and change pci_bridge_check_ranges() so it doesn't touch the
-bridge windows but sets the flag bits based on those remembered results.
-
-Link: https://lore.kernel.org/linux-pci/1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com
-Link: https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
-Reported-by: xuyandong <xuyandong2@huawei.com>
-Tested-by: xuyandong <xuyandong2@huawei.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Ofer Hayut <ofer@lightbitslabs.com>
-Cc: Roy Shterman <roys@lightbitslabs.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/pci/probe.c     |   52 +++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c |   45 ++++-------------------------------------
- include/linux/pci.h     |    3 +++
- 3 files changed, 59 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 257b9f6f2ebb..2ef8b954c65a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -348,6 +348,57 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
- 	}
- }
- 
-+static void pci_read_bridge_windows(struct pci_dev *bridge)
-+{
-+	u16 io;
-+	u32 pmem, tmp;
-+
-+	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-+	if (!io) {
-+		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-+		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-+		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-+	}
-+	if (io)
-+		bridge->io_window = 1;
-+
-+	/*
-+	 * DECchip 21050 pass 2 errata: the bridge may miss an address
-+	 * disconnect boundary by one PCI data phase.  Workaround: do not
-+	 * use prefetching on this device.
-+	 */
-+	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
-+		return;
-+
-+	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-+	if (!pmem) {
-+		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
-+					       0xffe0fff0);
-+		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-+		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
-+	}
-+	if (!pmem)
-+		return;
-+
-+	bridge->pref_window = 1;
-+
-+	if ((pmem & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
-+
-+		/*
-+		 * Bridge claims to have a 64-bit prefetchable memory
-+		 * window; verify that the upper bits are actually
-+		 * writable.
-+		 */
-+		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &pmem);
-+		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-+				       0xffffffff);
-+		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
-+		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, pmem);
-+		if (tmp)
-+			bridge->pref_64_window = 1;
-+	}
-+}
-+
- static void pci_read_bridge_io(struct pci_bus *child)
- {
- 	struct pci_dev *dev = child->self;
-@@ -1739,6 +1790,7 @@ int pci_setup_device(struct pci_dev *dev)
- 		pci_read_irq(dev);
- 		dev->transparent = ((dev->class & 0xff) == 1);
- 		pci_read_bases(dev, 2, PCI_ROM_ADDRESS1);
-+		pci_read_bridge_windows(dev);
- 		set_pcie_hotplug_bridge(dev);
- 		pos = pci_find_capability(dev, PCI_CAP_ID_SSVID);
- 		if (pos) {
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ed960436df5e..1941bb0a6c13 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -735,58 +735,21 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
-    base/limit registers must be read-only and read as 0. */
- static void pci_bridge_check_ranges(struct pci_bus *bus)
- {
--	u16 io;
--	u32 pmem;
- 	struct pci_dev *bridge = bus->self;
--	struct resource *b_res;
-+	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
- 
--	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
- 	b_res[1].flags |= IORESOURCE_MEM;
- 
--	pci_read_config_word(bridge, PCI_IO_BASE, &io);
--	if (!io) {
--		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
--		pci_read_config_word(bridge, PCI_IO_BASE, &io);
--		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
--	}
--	if (io)
-+	if (bridge->io_window)
- 		b_res[0].flags |= IORESOURCE_IO;
- 
--	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
--	    disconnect boundary by one PCI data phase.
--	    Workaround: do not use prefetching on this device. */
--	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
--		return;
--
--	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
--	if (!pmem) {
--		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
--					       0xffe0fff0);
--		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
--		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
--	}
--	if (pmem) {
-+	if (bridge->pref_window) {
- 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
--		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
--		    PCI_PREF_RANGE_TYPE_64) {
-+		if (bridge->pref_64_window) {
- 			b_res[2].flags |= IORESOURCE_MEM_64;
- 			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
- 		}
- 	}
--
--	/* double check if bridge does support 64 bit pref */
--	if (b_res[2].flags & IORESOURCE_MEM_64) {
--		u32 mem_base_hi, tmp;
--		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
--					 &mem_base_hi);
--		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
--					       0xffffffff);
--		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
--		if (!tmp)
--			b_res[2].flags &= ~IORESOURCE_MEM_64;
--		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
--				       mem_base_hi);
--	}
- }
- 
- /* Helper function for sizing routines: find first available
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 65f1d8c2f082..40b327b814aa 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -373,6 +373,9 @@ struct pci_dev {
- 	bool		match_driver;		/* Skip attaching driver */
- 
- 	unsigned int	transparent:1;		/* Subtractive decode bridge */
-+	unsigned int	io_window:1;		/* Bridge has I/O window */
-+	unsigned int	pref_window:1;		/* Bridge has pref mem window */
-+	unsigned int	pref_64_window:1;	/* Pref mem window is 64-bit */
- 	unsigned int	multifunction:1;	/* Multi-function device */
- 
- 	unsigned int	is_busmaster:1;		/* Is busmaster */
-
+> > ---
+> >  drivers/pci/hotplug/rpaphp_core.c |  232 ++++---------------------------------
+> >  1 file changed, 28 insertions(+), 204 deletions(-)
+> > 
+> > diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+> > index bcd5d35..9ad7384 100644
+> > --- a/drivers/pci/hotplug/rpaphp_core.c
+> > +++ b/drivers/pci/hotplug/rpaphp_core.c
+> > @@ -154,182 +154,18 @@ static enum pci_bus_speed get_max_bus_speed(struct slot *slot)
+> >  	return speed;
+> >  }
+> >  
+> > -static int get_children_props(struct device_node *dn, const int **drc_indexes,
+> > -		const int **drc_names, const int **drc_types,
+> > -		const int **drc_power_domains)
+> > -{
+> > -	const int *indexes, *names, *types, *domains;
+> > -
+> > -	indexes = of_get_property(dn, "ibm,drc-indexes", NULL);
+> > -	names = of_get_property(dn, "ibm,drc-names", NULL);
+> > -	types = of_get_property(dn, "ibm,drc-types", NULL);
+> > -	domains = of_get_property(dn, "ibm,drc-power-domains", NULL);
+> > -
+> > -	if (!indexes || !names || !types || !domains) {
+> > -		/* Slot does not have dynamically-removable children */
+> > -		return -EINVAL;
+> > -	}
+> > -	if (drc_indexes)
+> > -		*drc_indexes = indexes;
+> > -	if (drc_names)
+> > -		/* &drc_names[1] contains NULL terminated slot names */
+> > -		*drc_names = names;
+> > -	if (drc_types)
+> > -		/* &drc_types[1] contains NULL terminated slot types */
+> > -		*drc_types = types;
+> > -	if (drc_power_domains)
+> > -		*drc_power_domains = domains;
+> > -
+> > -	return 0;
+> > -}
+> > -
+> > -
+> >  /* Verify the existence of 'drc_name' and/or 'drc_type' within the
+> > - * current node.  First obtain it's my-drc-index property.  Next,
+> > - * obtain the DRC info from it's parent.  Use the my-drc-index for
+> > - * correlation, and obtain/validate the requested properties.
+> > + * current node.
+> >   */
+> >  
+> > -static int rpaphp_check_drc_props_v1(struct device_node *dn, char *drc_name,
+> > -				char *drc_type, unsigned int my_index)
+> > -{
+> > -	char *name_tmp, *type_tmp;
+> > -	const int *indexes, *names;
+> > -	const int *types, *domains;
+> > -	int i, rc;
+> > -
+> > -	rc = get_children_props(dn->parent, &indexes, &names, &types, &domains);
+> > -	if (rc < 0) {
+> > -		return -EINVAL;
+> > -	}
+> > -
+> > -	name_tmp = (char *) &names[1];
+> > -	type_tmp = (char *) &types[1];
+> > -
+> > -	/* Iterate through parent properties, looking for my-drc-index */
+> > -	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
+> > -		if ((unsigned int) indexes[i + 1] == my_index)
+> > -			break;
+> > -
+> > -		name_tmp += (strlen(name_tmp) + 1);
+> > -		type_tmp += (strlen(type_tmp) + 1);
+> > -	}
+> > -
+> > -	if (((drc_name == NULL) || (drc_name && !strcmp(drc_name, name_tmp))) &&
+> > -	    ((drc_type == NULL) || (drc_type && !strcmp(drc_type, type_tmp))))
+> > -		return 0;
+> > -
+> > -	return -EINVAL;
+> > -}
+> > -
+> > -static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+> > -				char *drc_type, unsigned int my_index)
+> > -{
+> > -	struct property *info;
+> > -	unsigned int entries;
+> > -	struct of_drc_info drc;
+> > -	const __be32 *value;
+> > -	char cell_drc_name[MAX_DRC_NAME_LEN];
+> > -	int j, fndit;
+> > -
+> > -	info = of_find_property(dn->parent, "ibm,drc-info", NULL);
+> > -	if (info == NULL)
+> > -		return -EINVAL;
+> > -
+> > -	value = of_prop_next_u32(info, NULL, &entries);
+> > -	if (!value)
+> > -		return -EINVAL;
+> > -
+> > -	for (j = 0; j < entries; j++) {
+> > -		of_read_drc_info_cell(&info, &value, &drc);
+> > -
+> > -		/* Should now know end of current entry */
+> > -
+> > -		if (my_index > drc.last_drc_index)
+> > -			continue;
+> > -
+> > -		fndit = 1;
+> > -		break;
+> > -	}
+> > -	/* Found it */
+> > -
+> > -	if (fndit)
+> > -		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix, 
+> > -			my_index);
+> > -
+> > -	if (((drc_name == NULL) ||
+> > -	     (drc_name && !strcmp(drc_name, cell_drc_name))) &&
+> > -	    ((drc_type == NULL) ||
+> > -	     (drc_type && !strcmp(drc_type, drc.drc_type))))
+> > -		return 0;
+> > -
+> > -	return -EINVAL;
+> > -}
+> > -
+> >  int rpaphp_check_drc_props(struct device_node *dn, char *drc_name,
+> >  			char *drc_type)
+> >  {
+> > -	const unsigned int *my_index;
+> > -
+> > -	my_index = of_get_property(dn, "ibm,my-drc-index", NULL);
+> > -	if (!my_index) {
+> > -		/* Node isn't DLPAR/hotplug capable */
+> > -		return -EINVAL;
+> > -	}
+> > -
+> > -	if (firmware_has_feature(FW_FEATURE_DRC_INFO))
+> > -		return rpaphp_check_drc_props_v2(dn, drc_name, drc_type,
+> > -						*my_index);
+> > -	else
+> > -		return rpaphp_check_drc_props_v1(dn, drc_name, drc_type,
+> > -						*my_index);
+> > +	return arch_find_drc_match(dn, NULL, drc_type, drc_name,
+> > +				true, false, NULL);
+> >  }
+> >  EXPORT_SYMBOL_GPL(rpaphp_check_drc_props);
+> >  
+> > -
+> > -static int is_php_type(char *drc_type)
+> > -{
+> > -	unsigned long value;
+> > -	char *endptr;
+> > -
+> > -	/* PCI Hotplug nodes have an integer for drc_type */
+> > -	value = simple_strtoul(drc_type, &endptr, 10);
+> > -	if (endptr == drc_type)
+> > -		return 0;
+> > -
+> > -	return 1;
+> > -}
+> > -
+> > -/**
+> > - * is_php_dn() - return 1 if this is a hotpluggable pci slot, else 0
+> > - * @dn: target &device_node
+> > - * @indexes: passed to get_children_props()
+> > - * @names: passed to get_children_props()
+> > - * @types: returned from get_children_props()
+> > - * @power_domains:
+> > - *
+> > - * This routine will return true only if the device node is
+> > - * a hotpluggable slot. This routine will return false
+> > - * for built-in pci slots (even when the built-in slots are
+> > - * dlparable.)
+> > - */
+> > -static int is_php_dn(struct device_node *dn, const int **indexes,
+> > -		const int **names, const int **types, const int **power_domains)
+> > -{
+> > -	const int *drc_types;
+> > -	int rc;
+> > -
+> > -	rc = get_children_props(dn, indexes, names, &drc_types, power_domains);
+> > -	if (rc < 0)
+> > -		return 0;
+> > -
+> > -	if (!is_php_type((char *) &drc_types[1]))
+> > -		return 0;
+> > -
+> > -	*types = drc_types;
+> > -	return 1;
+> > -}
+> > -
+> >  /**
+> >   * rpaphp_add_slot -- declare a hotplug slot to the hotplug subsystem.
+> >   * @dn: device node of slot
+> > @@ -346,54 +182,42 @@ static int is_php_dn(struct device_node *dn, const int **indexes,
+> >   *
+> >   * To remove a slot, it suffices to call rpaphp_deregister_slot().
+> >   */
+> > -int rpaphp_add_slot(struct device_node *dn)
+> > +
+> > +static int rpaphp_add_slot_cb(struct device_node *dn,
+> > +			u32 drc_index, char *drc_name, char *drc_type,
+> > +			u32 drc_power_domain, void *data)
+> >  {
+> >  	struct slot *slot;
+> >  	int retval = 0;
+> > -	int i;
+> > -	const int *indexes, *names, *types, *power_domains;
+> > -	char *name, *type;
+> > -
+> > -	if (!dn->name || strcmp(dn->name, "pci"))
+> > -		return 0;
+> > -
+> > -	/* If this is not a hotplug slot, return without doing anything. */
+> > -	if (!is_php_dn(dn, &indexes, &names, &types, &power_domains))
+> > -		return 0;
+> > -
+> > -	dbg("Entry %s: dn=%pOF\n", __func__, dn);
+> >  
+> > -	/* register PCI devices */
+> > -	name = (char *) &names[1];
+> > -	type = (char *) &types[1];
+> > -	for (i = 0; i < be32_to_cpu(indexes[0]); i++) {
+> > -		int index;
+> > +	slot = alloc_slot_struct(dn, drc_index, drc_name, drc_power_domain);
+> > +	if (!slot)
+> > +		return -ENOMEM;
+> >  
+> > -		index = be32_to_cpu(indexes[i + 1]);
+> > -		slot = alloc_slot_struct(dn, index, name,
+> > -					 be32_to_cpu(power_domains[i + 1]));
+> > -		if (!slot)
+> > -			return -ENOMEM;
+> > +	slot->type = simple_strtoul(drc_type, NULL, 10);
+> > +	if (retval)
+> > +		return -EINVAL;
+> >  
+> > -		slot->type = simple_strtoul(type, NULL, 10);
+> > +	dbg("Found drc-index:0x%x drc-name:%s drc-type:%s\n",
+> > +		drc_index, drc_name, drc_type);
+> >  
+> > -		dbg("Found drc-index:0x%x drc-name:%s drc-type:%s\n",
+> > -				index, name, type);
+> > +	retval = rpaphp_enable_slot(slot);
+> > +	if (!retval)
+> > +		retval = rpaphp_register_slot(slot);
+> >  
+> > -		retval = rpaphp_enable_slot(slot);
+> > -		if (!retval)
+> > -			retval = rpaphp_register_slot(slot);
+> > +	if (retval)
+> > +		dealloc_slot_struct(slot);
+> >  
+> > -		if (retval)
+> > -			dealloc_slot_struct(slot);
+> > +	return retval;
+> > +}
+> >  
+> > -		name += strlen(name) + 1;
+> > -		type += strlen(type) + 1;
+> > -	}
+> > -	dbg("%s - Exit: rc[%d]\n", __func__, retval);
+> > +int rpaphp_add_slot(struct device_node *dn)
+> > +{
+> > +	if (!dn->name || strcmp(dn->name, "pci"))
+> > +		return 0;
+> >  
+> > -	/* XXX FIXME: reports a failure only if last entry in loop failed */
+> > -	return retval;
+> > +	return arch_find_drc_match(dn, rpaphp_add_slot_cb,
+> > +			NULL, NULL, false, true, NULL);
+> >  }
+> >  EXPORT_SYMBOL_GPL(rpaphp_add_slot);
+> >  
+> > 
