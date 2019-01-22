@@ -3,94 +3,104 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D2BDC282C3
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 06:39:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6887C282C3
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 06:45:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B5D1205C9
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 06:39:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E13821736
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 06:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726872AbfAVGjO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Jan 2019 01:39:14 -0500
-Received: from inva020.nxp.com ([92.121.34.13]:49406 "EHLO inva020.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726174AbfAVGjO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Jan 2019 01:39:14 -0500
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C13111A01FD;
-        Tue, 22 Jan 2019 07:39:11 +0100 (CET)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 375CC1A00A7;
-        Tue, 22 Jan 2019 07:39:02 +0100 (CET)
-Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 73486402A6;
-        Tue, 22 Jan 2019 14:38:50 +0800 (SGT)
-From:   Xiaowei Bao <xiaowei.bao@nxp.com>
-To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
-        lorenzo.pieralisi@arm.com, arnd@arndb.de,
-        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
-        mingkai.hu@nxp.com, roy.zang@nxp.com, kstewart@linuxfoundation.org,
-        cyrille.pitchen@free-electrons.com, pombredanne@nexb.com,
-        shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org
-Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCHv6 1/4] dt-bindings: add DT binding for the layerscape PCIe controller with EP mode
-Date:   Tue, 22 Jan 2019 14:33:25 +0800
-Message-Id: <20190122063328.25228-1-xiaowei.bao@nxp.com>
-X-Mailer: git-send-email 2.14.1
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S1726127AbfAVGp5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Jan 2019 01:45:57 -0500
+Received: from youngberry.canonical.com ([91.189.89.112]:49478 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726208AbfAVGp4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jan 2019 01:45:56 -0500
+Received: from 61-220-137-37.hinet-ip.hinet.net ([61.220.137.37] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1glpoj-0003zl-0U; Tue, 22 Jan 2019 06:45:49 +0000
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+To:     rjw@rjwysocki.net
+Cc:     lenb@kernel.org, bhelgaas@google.com, jeffrey.t.kirsher@intel.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: [PATCH] PCI / ACPI: Don't clear pme_poll on device that has unreliable ACPI wake
+Date:   Tue, 22 Jan 2019 14:45:44 +0800
+Message-Id: <20190122064544.27426-1-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the documentation for the Device Tree binding for the layerscape PCIe
-controller with EP mode.
+There are some e1000e devices can only be woken up from D3 one time, by
+plugging ethernet cable. Subsequent cable plugging does set PME bit
+correctly, but it still doesn't get woken up.
 
-Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-Reviewed-by: Minghuan Lian <minghuan.lian@nxp.com>
-Reviewed-by: Zhiqiang Hou <zhiqiang.hou@nxp.com>
-Reviewed-by: Rob Herring <robh+dt@kernel.org>
+Since e1000e connects to the root complex directly, we rely on ACPI to
+wake it up. In this case, the GPE from _PRW only works once and stops
+working after that.
+
+So introduce a new PCI quirk, to avoid clearing pme_poll flag for buggy
+platform firmwares that have unreliable GPE wake.
+
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 ---
-v2:
- - Add the SoC specific compatibles.
-v3:
- - modify the commit message.
-v4:
- - no change.
-v5:
- - no change.
-v6:
- - no change.
+ drivers/pci/pci-acpi.c | 2 +-
+ drivers/pci/quirks.c   | 8 ++++++++
+ include/linux/pci.h    | 1 +
+ 3 files changed, 10 insertions(+), 1 deletion(-)
 
- .../devicetree/bindings/pci/layerscape-pci.txt     |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index 9b2b8d6..e20ceaa 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -13,6 +13,7 @@ information.
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index e1949f7efd9c..184e2fc8a294 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -430,7 +430,7 @@ static void pci_acpi_wake_dev(struct acpi_device_wakeup_context *context)
  
- Required properties:
- - compatible: should contain the platform identifier such as:
-+  RC mode:
-         "fsl,ls1021a-pcie"
-         "fsl,ls2080a-pcie", "fsl,ls2085a-pcie"
-         "fsl,ls2088a-pcie"
-@@ -20,6 +21,8 @@ Required properties:
-         "fsl,ls1046a-pcie"
-         "fsl,ls1043a-pcie"
-         "fsl,ls1012a-pcie"
-+  EP mode:
-+	"fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep"
- - reg: base addresses and lengths of the PCIe controller register blocks.
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
+ 	pci_dev = to_pci_dev(context->dev);
+ 
+-	if (pci_dev->pme_poll)
++	if (pci_dev->pme_poll && !pci_dev->unreliable_acpi_wake)
+ 		pci_dev->pme_poll = false;
+ 
+ 	if (pci_dev->current_state == PCI_D3cold) {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b0a413f3f7ca..ed4863496fa8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4948,6 +4948,14 @@ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_AMD, PCI_ANY_ID,
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+ 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+ 
++static void quirk_unreliable_acpi_wake(struct pci_dev *pdev)
++{
++	pci_info(pdev, "ACPI Wake unreliable, always poll PME\n");
++	pdev->unreliable_acpi_wake = 1;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15bb, quirk_unreliable_acpi_wake);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15bd, quirk_unreliable_acpi_wake);
++
+ /*
+  * Some IDT switches incorrectly flag an ACS Source Validation error on
+  * completions for config read requests even though PCIe r4.0, sec
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 65f1d8c2f082..d22065c1576f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -331,6 +331,7 @@ struct pci_dev {
+ 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
+ 					   can be generated */
+ 	unsigned int	pme_poll:1;	/* Poll device's PME status bit */
++	unsigned int	unreliable_acpi_wake:1;	/* ACPI Wake doesn't always work */
+ 	unsigned int	d1_support:1;	/* Low power state D1 is supported */
+ 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
+ 	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
 -- 
-1.7.1
+2.17.1
 
