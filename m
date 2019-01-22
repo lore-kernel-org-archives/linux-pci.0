@@ -2,147 +2,117 @@ Return-Path: <SRS0=s1t5=P6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDA7AC282C5
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 06:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4D2FC282C3
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 07:12:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 930D020861
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 06:50:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91346205C9
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 07:12:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726953AbfAVGuk convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Jan 2019 01:50:40 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:49555 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726853AbfAVGuj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jan 2019 01:50:39 -0500
-Received: from mail-pf1-f198.google.com ([209.85.210.198])
-        by youngberry.canonical.com with esmtps (TLS1.0:RSA_AES_128_CBC_SHA1:16)
-        (Exim 4.76)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1glptN-0004L9-GU
-        for linux-pci@vger.kernel.org; Tue, 22 Jan 2019 06:50:37 +0000
-Received: by mail-pf1-f198.google.com with SMTP id e89so17567535pfb.17
-        for <linux-pci@vger.kernel.org>; Mon, 21 Jan 2019 22:50:37 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=oD0F81rGvS3sGoFVD/u+0PkA8WS8jGUV1TJvWS7JNo0=;
-        b=lFGCAv8Zn8Xrz0X//q6191hYWWh7afI9DZ6I6mg2/2n4wgUVslYO/NlpAsiPwlUgBT
-         YHYqdJGGcjAoWuLFHq/oPW+I7uqDCc3zG/2rO+wy4u6PUGgCQBLOEjcCheLPrFk0U/X3
-         L95ZQ88fIl1opEM80KwI+pmhoXjM49rx03dO9OhiRtBSFKXDAuaZn5NziozcJZJbbgql
-         z1R4VN2p4wrA4ZkGlSv8HgdwdKqmqR8nM4bifUMnsKddks0Hxb2yO6+MK3gGOFTx1slv
-         wP/aXK1mKChxjOIzCLgVEeAVkrqnUdm+Bj0tYD/INuJCzRIl55m5Fh/Sg0XzAFdghp4B
-         GinA==
-X-Gm-Message-State: AJcUukfBeMp1SfgWS+PAyQ4SpSjwab+8iL+ylkb0eIvKEmM/spc1IZxu
-        jUY/UeDuLh+oSZuNq0UJYYYqsYP1LpvE9+5OkuEXBE/Zu1sa2PUMjMyiEon5LE1ACtYao9m7Yox
-        dkbVNFh0Djs7P8b36xN6VWhfBoNxRbIbtDxdsjg==
-X-Received: by 2002:a62:c613:: with SMTP id m19mr32654460pfg.207.1548139836197;
-        Mon, 21 Jan 2019 22:50:36 -0800 (PST)
-X-Google-Smtp-Source: ALg8bN4EPhjBA0wMpiPkhvYnW7hASHktLHT72NtfYUxRbFkcrxjLdXVsQ77WCgMgoKfmOIWgZ3wOkg==
-X-Received: by 2002:a62:c613:: with SMTP id m19mr32654449pfg.207.1548139835883;
-        Mon, 21 Jan 2019 22:50:35 -0800 (PST)
-Received: from 2001-b011-380f-13aa-b45c-a4ba-4b7e-e3b3.dynamic-ip6.hinet.net (2001-b011-380f-13aa-b45c-a4ba-4b7e-e3b3.dynamic-ip6.hinet.net. [2001:b011:380f:13aa:b45c:a4ba:4b7e:e3b3])
-        by smtp.gmail.com with ESMTPSA id i193sm53208773pgc.22.2019.01.21.22.50.33
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 21 Jan 2019 22:50:35 -0800 (PST)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 12.2 \(3445.102.3\))
-Subject: Re: [PATCH] PCI / ACPI: Don't clear pme_poll on device that has
- unreliable ACPI wake
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <20190122064544.27426-1-kai.heng.feng@canonical.com>
-Date:   Tue, 22 Jan 2019 14:50:31 +0800
-Cc:     Len Brown <lenb@kernel.org>, bhelgaas@google.com,
-        jeffrey.t.kirsher@intel.com, intel-wired-lan@lists.osuosl.org,
-        netdev@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: 8BIT
-Message-Id: <8B11DF49-9E4A-43D1-899D-10BABDAAAD7E@canonical.com>
-References: <20190122064544.27426-1-kai.heng.feng@canonical.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
-X-Mailer: Apple Mail (2.3445.102.3)
+        id S1727059AbfAVHMz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Jan 2019 02:12:55 -0500
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:60815 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726423AbfAVHMz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jan 2019 02:12:55 -0500
+Received: from pty.hi.pengutronix.de ([2001:67c:670:100:1d::c5])
+        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1glqEu-0005ki-8J; Tue, 22 Jan 2019 08:12:52 +0100
+Received: from ukl by pty.hi.pengutronix.de with local (Exim 4.89)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1glqEt-00072w-Lr; Tue, 22 Jan 2019 08:12:51 +0100
+Date:   Tue, 22 Jan 2019 08:12:51 +0100
+From:   Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Leonard Crestez <leonard.crestez@nxp.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Lukas F . Hartmann" <lukas@mntmn.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        "kernel@pengutronix.de" <kernel@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH 1/2] PCI: imx: Fix probe failure without power domain
+Message-ID: <20190122071251.tgdwnunxksa45n5q@pengutronix.de>
+References: <cover.1548110502.git.leonard.crestez@nxp.com>
+ <375a852ae9170a5f8f53fdd364a7fb7ea642e89c.1548110502.git.leonard.crestez@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <375a852ae9170a5f8f53fdd364a7fb7ea642e89c.1548110502.git.leonard.crestez@nxp.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c5
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-> On Jan 22, 2019, at 14:45, Kai-Heng Feng <kai.heng.feng@canonical.com> wrote:
+On Mon, Jan 21, 2019 at 10:50:04PM +0000, Leonard Crestez wrote:
+> On chips without a separate power domain for PCI (such as 6q/6qp) the
+> imx6_pcie_attach_pd function incorrectly returns an error.
 > 
-> There are some e1000e devices can only be woken up from D3 one time, by
-> plugging ethernet cable. Subsequent cable plugging does set PME bit
-> correctly, but it still doesn't get woken up.
+> Fix by returning 0 if dev_pm_domain_attach_by_name doesn't find
+> anything.
 > 
-> Since e1000e connects to the root complex directly, we rely on ACPI to
-> wake it up. In this case, the GPE from _PRW only works once and stops
-> working after that.
-> 
-> So introduce a new PCI quirk, to avoid clearing pme_poll flag for buggy
-> platform firmwares that have unreliable GPE wake.
-
-Forgot this:
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=202181
-
-> 
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> Fixes: 3f7cceeab895 ("PCI: imx: Add multi-pd support")
+> Reported-by: Lukas F.Hartmann <lukas@mntmn.com>
+> Signed-off-by: Leonard Crestez <leonard.crestez@nxp.com>
 > ---
-> drivers/pci/pci-acpi.c | 2 +-
-> drivers/pci/quirks.c   | 8 ++++++++
-> include/linux/pci.h    | 1 +
-> 3 files changed, 10 insertions(+), 1 deletion(-)
+>  drivers/pci/controller/dwc/pci-imx6.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> index e1949f7efd9c..184e2fc8a294 100644
-> --- a/drivers/pci/pci-acpi.c
-> +++ b/drivers/pci/pci-acpi.c
-> @@ -430,7 +430,7 @@ static void pci_acpi_wake_dev(struct acpi_device_wakeup_context *context)
-> 
-> 	pci_dev = to_pci_dev(context->dev);
-> 
-> -	if (pci_dev->pme_poll)
-> +	if (pci_dev->pme_poll && !pci_dev->unreliable_acpi_wake)
-> 		pci_dev->pme_poll = false;
-> 
-> 	if (pci_dev->current_state == PCI_D3cold) {
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b0a413f3f7ca..ed4863496fa8 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4948,6 +4948,14 @@ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_AMD, PCI_ANY_ID,
-> DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
-> 			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
-> 
-> +static void quirk_unreliable_acpi_wake(struct pci_dev *pdev)
-> +{
-> +	pci_info(pdev, "ACPI Wake unreliable, always poll PME\n");
-> +	pdev->unreliable_acpi_wake = 1;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15bb, quirk_unreliable_acpi_wake);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15bd, quirk_unreliable_acpi_wake);
-> +
-> /*
->  * Some IDT switches incorrectly flag an ACS Source Validation error on
->  * completions for config read requests even though PCIe r4.0, sec
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 65f1d8c2f082..d22065c1576f 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -331,6 +331,7 @@ struct pci_dev {
-> 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
-> 					   can be generated */
-> 	unsigned int	pme_poll:1;	/* Poll device's PME status bit */
-> +	unsigned int	unreliable_acpi_wake:1;	/* ACPI Wake doesn't always work */
-> 	unsigned int	d1_support:1;	/* Low power state D1 is supported */
-> 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
-> 	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 52e47dac028f..ac5f6ae0b254 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -308,10 +308,13 @@ static int imx6_pcie_attach_pd(struct device *dev)
+>  		return 0;
+>  
+>  	imx6_pcie->pd_pcie = dev_pm_domain_attach_by_name(dev, "pcie");
+>  	if (IS_ERR(imx6_pcie->pd_pcie))
+>  		return PTR_ERR(imx6_pcie->pd_pcie);
+> +	/* Do nothing when power domain missing */
+> +	if (!imx6_pcie->pd_pcie)
+> +		return 0;
+
+As I said in the mail that proposed this patch for testing: I think it
+would be better to change dev_pm_domain_attach_by_name to not return an
+error indication by returning NULL or an ERR_PTR value. (Or change
+device_link_add to accept NULL if NULL is a dummy value.)
+
+Just repeating it here to have it near the actual patch.
+
+Best regards
+Uwe
+
+>  	link = device_link_add(dev, imx6_pcie->pd_pcie,
+>  			DL_FLAG_STATELESS |
+>  			DL_FLAG_PM_RUNTIME |
+>  			DL_FLAG_RPM_ACTIVE);
+>  	if (!link) {
 > -- 
 > 2.17.1
 > 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
 
+-- 
+Pengutronix e.K.                           | Uwe Kleine-König            |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
