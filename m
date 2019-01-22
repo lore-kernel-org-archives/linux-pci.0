@@ -7,114 +7,133 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32386C282C3
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 20:20:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B3BC282C3
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 23:51:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01827217F5
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 20:20:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6134121841
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 23:51:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548188439;
-	bh=5ziCHOV8ZUAvvDOzEMcRPrlvW0YUizC8EC/qZLv3Z1o=;
+	s=default; t=1548201098;
+	bh=jRtKrT4Fr7OvfKk4AgXDaAaRHxzbmYtL0pFNCei9/wk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=eLl6YJvrBCESuwZHvFgNzgLQ0Srq+TXDEKOKhhoJfNcgWtYEdlREBkqXFJ3AZEKjt
-	 DWZLn2+xWLz8oVsIxcLaEE0MsOca+HkTh09oUG5WTsKMe8HWDUtp5weBLi3Ue4qI+W
-	 zyKeQsdCIpdZKm26zb9I/E52an2x428IpK0BomT0=
+	b=ZuXoJhkIIGiqYGfIevfi0pjZ9+0hwawAhebwiLsaF9d1FbGcH5+rhno2rfH8uEBeB
+	 UrqOG1PkVqZYzwEIskYTXxNUN9ipx0IbaSp0zfl/Rw8+4nWa3Z7r/anMWxq9JBYtX4
+	 7aWFbQfhvjWWRlCdbOMCoTF25+F8USQF9CJTRFIc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725913AbfAVUUi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Jan 2019 15:20:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46136 "EHLO mail.kernel.org"
+        id S1726938AbfAVXvh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Jan 2019 18:51:37 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725925AbfAVUUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Jan 2019 15:20:38 -0500
+        id S1726175AbfAVXvh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Jan 2019 18:51:37 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4AB4520866;
-        Tue, 22 Jan 2019 20:20:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7BB0A20684;
+        Tue, 22 Jan 2019 23:51:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548188437;
-        bh=5ziCHOV8ZUAvvDOzEMcRPrlvW0YUizC8EC/qZLv3Z1o=;
+        s=default; t=1548201095;
+        bh=jRtKrT4Fr7OvfKk4AgXDaAaRHxzbmYtL0pFNCei9/wk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RbWc/jj4LDnrdATEqBjHPy0xSDU0Z7f5e1MG8pT1xwR05wmTmH0KMSWi++rjmKHV+
-         CyECWzQGJ7R0+J/f+eDLq8BC/u2ndKBh/GHaMuQdD3hxxf7czt4ZwgBSDKxzK0LQwe
-         cNrcaE/DiCps2pnZGTgDa/RMBGH8mt6AizM34u4A=
-Date:   Tue, 22 Jan 2019 14:20:35 -0600
+        b=g0uW0n1vQBxtxOP9LF8OZsVXNphbuE9MT570h0I4Gn1NiFTb4hRg1xkJD+AY4H3dK
+         6/5aDn7XqVNi4Yzx9BTWtOMsDe7nGPEMxJlVxIJ1AKhBwJ0Qs3owm5C6QniSUapTiF
+         xZ0fOy8UEmywsnHE8KVoC04yc8ILSZ9jpuwZabDM=
+Date:   Tue, 22 Jan 2019 17:51:34 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        Michael Bringmann <mwb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] PCI: Use of_node_name_eq for node name comparisons
-Message-ID: <20190122202035.GD14636@google.com>
-References: <20181205195050.4759-18-robh@kernel.org>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     rjw@rjwysocki.net, lenb@kernel.org, jeffrey.t.kirsher@intel.com,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI / ACPI: Don't clear pme_poll on device that has
+ unreliable ACPI wake
+Message-ID: <20190122235134.GE14636@google.com>
+References: <20190122064544.27426-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181205195050.4759-18-robh@kernel.org>
+In-Reply-To: <20190122064544.27426-1-kai.heng.feng@canonical.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Michael B]
-
-On Wed, Dec 05, 2018 at 01:50:34PM -0600, Rob Herring wrote:
-> Convert string compares of DT node names to use of_node_name_eq helper
-> instead. This removes direct access to the node name pointer.
+On Tue, Jan 22, 2019 at 02:45:44PM +0800, Kai-Heng Feng wrote:
+> There are some e1000e devices can only be woken up from D3 one time, by
+> plugging ethernet cable. Subsequent cable plugging does set PME bit
+> correctly, but it still doesn't get woken up.
 > 
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: linux-pci@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
+> Since e1000e connects to the root complex directly, we rely on ACPI to
+> wake it up. In this case, the GPE from _PRW only works once and stops
+> working after that.
+> 
+> So introduce a new PCI quirk, to avoid clearing pme_poll flag for buggy
+> platform firmwares that have unreliable GPE wake.
 
-I applied the pci/of.c change to pci/misc for v5.1, thanks!
+This quirk applies to all 0x15bb (E1000_DEV_ID_PCH_CNP_I219_LM7) and
+0x15bd (E1000_DEV_ID_PCH_CNP_I219_LM6) devices.  The e1000e driver
+claims about a zillion different device IDs.
 
-I dropped the rpaphp_core.c part because there's another patch
-in-flight [1] that touches the same code, and it would be easier if
-Michael picked up this change and added it to his series.
+I would be surprised if these two devices are defective but all the
+others work correctly.  Could it be that there is a problem with the
+wiring on this particular motherboard or with the ACPI _PRW methods
+(or the way Linux interprets them) in this firmware?
 
-Bjorn
+Would you mind attaching a complete dmesg log and "sudo lspci -vvv"
+output to the bugzilla, please?
 
-[1] https://lore.kernel.org/lkml/20181214205120.16435.46952.stgit@powerkvm6.aus.stglabs.ibm.com/
-
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 > ---
->  drivers/pci/hotplug/rpaphp_core.c | 2 +-
->  drivers/pci/of.c                  | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>  drivers/pci/pci-acpi.c | 2 +-
+>  drivers/pci/quirks.c   | 8 ++++++++
+>  include/linux/pci.h    | 1 +
+>  3 files changed, 10 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-> index bcd5d357ca23..7697d9c92b98 100644
-> --- a/drivers/pci/hotplug/rpaphp_core.c
-> +++ b/drivers/pci/hotplug/rpaphp_core.c
-> @@ -354,7 +354,7 @@ int rpaphp_add_slot(struct device_node *dn)
->  	const int *indexes, *names, *types, *power_domains;
->  	char *name, *type;
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index e1949f7efd9c..184e2fc8a294 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -430,7 +430,7 @@ static void pci_acpi_wake_dev(struct acpi_device_wakeup_context *context)
 >  
-> -	if (!dn->name || strcmp(dn->name, "pci"))
-> +	if (!of_node_name_eq(dn, "pci"))
->  		return 0;
+>  	pci_dev = to_pci_dev(context->dev);
 >  
->  	/* If this is not a hotplug slot, return without doing anything. */
-> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> index 4c4217d0c3f1..3d32da15c215 100644
-> --- a/drivers/pci/of.c
-> +++ b/drivers/pci/of.c
-> @@ -113,7 +113,7 @@ struct device_node *of_pci_find_child_device(struct device_node *parent,
->  		 * a fake root for all functions of a multi-function
->  		 * device we go down them as well.
->  		 */
-> -		if (!strcmp(node->name, "multifunc-device")) {
-> +		if (of_node_name_eq(node, "multifunc-device")) {
->  			for_each_child_of_node(node, node2) {
->  				if (__of_pci_pci_compare(node2, devfn)) {
->  					of_node_put(node);
+> -	if (pci_dev->pme_poll)
+> +	if (pci_dev->pme_poll && !pci_dev->unreliable_acpi_wake)
+>  		pci_dev->pme_poll = false;
+>  
+>  	if (pci_dev->current_state == PCI_D3cold) {
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b0a413f3f7ca..ed4863496fa8 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4948,6 +4948,14 @@ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_AMD, PCI_ANY_ID,
+>  DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
+>  			      PCI_CLASS_MULTIMEDIA_HD_AUDIO, 8, quirk_gpu_hda);
+>  
+> +static void quirk_unreliable_acpi_wake(struct pci_dev *pdev)
+> +{
+> +	pci_info(pdev, "ACPI Wake unreliable, always poll PME\n");
+> +	pdev->unreliable_acpi_wake = 1;
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15bb, quirk_unreliable_acpi_wake);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x15bd, quirk_unreliable_acpi_wake);
+> +
+>  /*
+>   * Some IDT switches incorrectly flag an ACS Source Validation error on
+>   * completions for config read requests even though PCIe r4.0, sec
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 65f1d8c2f082..d22065c1576f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -331,6 +331,7 @@ struct pci_dev {
+>  	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
+>  					   can be generated */
+>  	unsigned int	pme_poll:1;	/* Poll device's PME status bit */
+> +	unsigned int	unreliable_acpi_wake:1;	/* ACPI Wake doesn't always work */
+>  	unsigned int	d1_support:1;	/* Low power state D1 is supported */
+>  	unsigned int	d2_support:1;	/* Low power state D2 is supported */
+>  	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
 > -- 
-> 2.19.1
+> 2.17.1
 > 
