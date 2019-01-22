@@ -2,234 +2,134 @@ Return-Path: <SRS0=s1t5=P6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C465C282C3
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 09:37:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C7E2C282C3
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 09:44:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D703218D0
-	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 09:37:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73DF720879
+	for <linux-pci@archiver.kernel.org>; Tue, 22 Jan 2019 09:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727026AbfAVJhq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 22 Jan 2019 04:37:46 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:24551 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727468AbfAVJhq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jan 2019 04:37:46 -0500
-X-UUID: 14877d4decc842329470e2c683941130-20190122
-X-UUID: 14877d4decc842329470e2c683941130-20190122
-Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
-        (envelope-from <jianjun.wang@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1136838786; Tue, 22 Jan 2019 17:37:38 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Tue, 22 Jan 2019 17:37:37 +0800
-Received: from localhost.localdomain (10.17.3.153) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Tue, 22 Jan 2019 17:37:37 +0800
-From:   Jianjun Wang <jianjun.wang@mediatek.com>
-To:     <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
+        id S1727710AbfAVJok (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 22 Jan 2019 04:44:40 -0500
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:36813 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727274AbfAVJoj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Jan 2019 04:44:39 -0500
+Received: from pty.hi.pengutronix.de ([2001:67c:670:100:1d::c5])
+        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1glsbf-0006MS-Io; Tue, 22 Jan 2019 10:44:31 +0100
+Received: from ukl by pty.hi.pengutronix.de with local (Exim 4.89)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1glsbe-0003Vh-HH; Tue, 22 Jan 2019 10:44:30 +0100
+Date:   Tue, 22 Jan 2019 10:44:30 +0100
+From:   Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Leonard Crestez <leonard.crestez@nxp.com>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Lukas F . Hartmann" <lukas@mntmn.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        "kernel@pengutronix.de" <kernel@pengutronix.de>,
+        Shawn Guo <shawnguo@kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
         <linux-arm-kernel@lists.infradead.org>,
-        <honghui.zhang@mediatek.com>, <youlin.pei@mediatek.com>,
-        <jianjun.wang@mediatek.com>
-Subject: [v1] PCI: mediatek: Remove MSI inner domain
-Date:   Tue, 22 Jan 2019 17:37:35 +0800
-Message-ID: <1548149855-3225-1-git-send-email-jianjun.wang@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Kevin Hilman <khilman@kernel.org>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Jon Hunter <jonathanh@nvidia.com>
+Subject: Re: [PATCH 1/2] PCI: imx: Fix probe failure without power domain
+Message-ID: <20190122094430.rg76mkemz5wvk5t3@pengutronix.de>
+References: <cover.1548110502.git.leonard.crestez@nxp.com>
+ <375a852ae9170a5f8f53fdd364a7fb7ea642e89c.1548110502.git.leonard.crestez@nxp.com>
+ <20190122071251.tgdwnunxksa45n5q@pengutronix.de>
+ <VI1PR04MB5533DE236150B01461555A5BEE980@VI1PR04MB5533.eurprd04.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <VI1PR04MB5533DE236150B01461555A5BEE980@VI1PR04MB5533.eurprd04.prod.outlook.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c5
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is no need to create the inner domain as a parent for MSI domian,
-some feature has been implemented by MSI framework.
+On Tue, Jan 22, 2019 at 09:17:22AM +0000, Leonard Crestez wrote:
+> On 1/22/2019 9:12 AM, Uwe Kleine-König wrote:
+> > On Mon, Jan 21, 2019 at 10:50:04PM +0000, Leonard Crestez wrote:
+> >> On chips without a separate power domain for PCI (such as 6q/6qp) the
+> >> imx6_pcie_attach_pd function incorrectly returns an error.
+> >>
+> >> Fix by returning 0 if dev_pm_domain_attach_by_name doesn't find
+> >> anything.
+> >>
+> >> Fixes: 3f7cceeab895 ("PCI: imx: Add multi-pd support")
+> >>
+> >> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> >> @@ -308,10 +308,13 @@ static int imx6_pcie_attach_pd(struct device *dev)
+> >>   		return 0;
+> >>   
+> >>   	imx6_pcie->pd_pcie = dev_pm_domain_attach_by_name(dev, "pcie");
+> >>   	if (IS_ERR(imx6_pcie->pd_pcie))
+> >>   		return PTR_ERR(imx6_pcie->pd_pcie);
+> >> +	/* Do nothing when power domain missing */
+> >> +	if (!imx6_pcie->pd_pcie)
+> >> +		return 0;
+> > 
+> > As I said in the mail that proposed this patch for testing: I think it
+> > would be better to change dev_pm_domain_attach_by_name to not return an
+> > error indication by returning NULL or an ERR_PTR value. (Or change
+> > device_link_add to accept NULL if NULL is a dummy value.)
+> > 
+> > Just repeating it here to have it near the actual patch.
+> 
+> Link to that previous discussion: 
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2019-January/626859.html
+> 
+> I'm not sure what you mean. Should dev_pm_domain_attach_by_name return 
+> ERR_PTR(-ENOENT) for name not found? It would still require special 
+> handling for callers.
 
-Remove the inner domain and its irq chip, it will be more closer to
-hardware implementation.
+Yes, callers would still need to handle an error, but they only need to
+check for IS_ERR(retval) instead of IS_ERR(retval) && retval != NULL.
 
-Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 86 +++++++++++---------------
- 1 file changed, 37 insertions(+), 49 deletions(-)
+> The device_link_add function already returns NULL if the consumer or 
+> supplier is NULL but that's also the only way it signals failure. Maybe 
+> that function should be adjusted to return ERR_PTR instead?
+> 
+> Changing core API for a driver bug seems inappropriate.
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 8d05df56158b..f996a9a6331f 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -169,7 +169,6 @@ struct mtk_pcie_soc {
-  * @slot: port slot
-  * @irq: GIC irq
-  * @irq_domain: legacy INTx IRQ domain
-- * @inner_domain: inner IRQ domain
-  * @msi_domain: MSI IRQ domain
-  * @lock: protect the msi_irq_in_use bitmap
-  * @msi_irq_in_use: bit map for assigned MSI IRQ
-@@ -190,7 +189,6 @@ struct mtk_pcie_port {
- 	u32 slot;
- 	int irq;
- 	struct irq_domain *irq_domain;
--	struct irq_domain *inner_domain;
- 	struct irq_domain *msi_domain;
- 	struct mutex lock;
- 	DECLARE_BITMAP(msi_irq_in_use, MTK_MSI_IRQS_NUM);
-@@ -418,22 +416,15 @@ static void mtk_msi_ack_irq(struct irq_data *data)
- 	u32 hwirq = data->hwirq;
- 
- 	writel(1 << hwirq, port->base + PCIE_IMSI_STATUS);
-+	writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
- }
- 
--static struct irq_chip mtk_msi_bottom_irq_chip = {
--	.name			= "MTK MSI",
--	.irq_compose_msi_msg	= mtk_compose_msi_msg,
--	.irq_set_affinity	= mtk_msi_set_affinity,
--	.irq_ack		= mtk_msi_ack_irq,
--};
--
--static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
--				     unsigned int nr_irqs, void *args)
-+static irq_hw_number_t mtk_pcie_msi_get_hwirq(struct msi_domain_info *info,
-+					      msi_alloc_info_t *arg)
- {
--	struct mtk_pcie_port *port = domain->host_data;
--	unsigned long bit;
-+	struct mtk_pcie_port *port = info->chip_data;
-+	irq_hw_number_t bit;
- 
--	WARN_ON(nr_irqs != 1);
- 	mutex_lock(&port->lock);
- 
- 	bit = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
-@@ -446,18 +437,14 @@ static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int vir
- 
- 	mutex_unlock(&port->lock);
- 
--	irq_domain_set_info(domain, virq, bit, &mtk_msi_bottom_irq_chip,
--			    domain->host_data, handle_edge_irq,
--			    NULL, NULL);
--
--	return 0;
-+	return bit;
- }
- 
--static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
--				     unsigned int virq, unsigned int nr_irqs)
-+static void mtk_pcie_msi_free(struct irq_domain *domain,
-+			      struct msi_domain_info *info, unsigned int virq)
- {
- 	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
--	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(d);
-+	struct mtk_pcie_port *port = info->chip_data;
- 
- 	mutex_lock(&port->lock);
- 
-@@ -468,46 +455,50 @@ static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
- 		__clear_bit(d->hwirq, port->msi_irq_in_use);
- 
- 	mutex_unlock(&port->lock);
--
--	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
- }
- 
--static const struct irq_domain_ops msi_domain_ops = {
--	.alloc	= mtk_pcie_irq_domain_alloc,
--	.free	= mtk_pcie_irq_domain_free,
-+static struct msi_domain_ops mtk_msi_domain_ops = {
-+	.get_hwirq	= mtk_pcie_msi_get_hwirq,
-+	.msi_free	= mtk_pcie_msi_free,
- };
- 
- static struct irq_chip mtk_msi_irq_chip = {
--	.name		= "MTK PCIe MSI",
--	.irq_ack	= irq_chip_ack_parent,
--	.irq_mask	= pci_msi_mask_irq,
--	.irq_unmask	= pci_msi_unmask_irq,
-+	.name			= "MTK PCIe",
-+	.irq_compose_msi_msg	= mtk_compose_msi_msg,
-+	.irq_write_msi_msg	= pci_msi_domain_write_msg,
-+	.irq_set_affinity	= mtk_msi_set_affinity,
-+	.irq_ack		= mtk_msi_ack_irq,
-+	.irq_mask		= pci_msi_mask_irq,
-+	.irq_unmask		= pci_msi_unmask_irq,
- };
- 
- static struct msi_domain_info mtk_msi_domain_info = {
--	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--		   MSI_FLAG_PCI_MSIX),
--	.chip	= &mtk_msi_irq_chip,
-+	.flags		= (MSI_FLAG_USE_DEF_DOM_OPS |
-+			   MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_PCI_MSIX),
-+	.ops		= &mtk_msi_domain_ops,
-+	.chip		= &mtk_msi_irq_chip,
-+	.handler	= handle_edge_irq,
-+	.handler_name	= "MSI",
- };
- 
- static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
- {
--	struct fwnode_handle *fwnode = of_node_to_fwnode(port->pcie->dev->of_node);
-+	struct device *dev = port->pcie->dev;
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
-+	struct msi_domain_info *info;
- 
- 	mutex_init(&port->lock);
- 
--	port->inner_domain = irq_domain_create_linear(fwnode, MTK_MSI_IRQS_NUM,
--						      &msi_domain_ops, port);
--	if (!port->inner_domain) {
--		dev_err(port->pcie->dev, "failed to create IRQ domain\n");
-+	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
-+	if (!info)
- 		return -ENOMEM;
--	}
- 
--	port->msi_domain = pci_msi_create_irq_domain(fwnode, &mtk_msi_domain_info,
--						     port->inner_domain);
-+	memcpy(info, &mtk_msi_domain_info, sizeof(*info));
-+	info->chip_data = port;
-+
-+	port->msi_domain = pci_msi_create_irq_domain(fwnode, info, NULL);
- 	if (!port->msi_domain) {
--		dev_err(port->pcie->dev, "failed to create MSI domain\n");
--		irq_domain_remove(port->inner_domain);
-+		dev_err(dev, "failed to create MSI domain\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -541,8 +532,6 @@ static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
- 		if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 			if (port->msi_domain)
- 				irq_domain_remove(port->msi_domain);
--			if (port->inner_domain)
--				irq_domain_remove(port->inner_domain);
- 		}
- 
- 		irq_dispose_mapping(port->irq);
-@@ -619,12 +608,11 @@ static void mtk_pcie_intr_handler(struct irq_desc *desc)
- 
- 			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
- 				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
--					virq = irq_find_mapping(port->inner_domain, bit);
-+					virq = irq_find_mapping(
-+							port->msi_domain, bit);
- 					generic_handle_irq(virq);
- 				}
- 			}
--			/* Clear MSI interrupt status */
--			writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
- 		}
- 	}
- 
+Well, if the driver bug is there because the API is used in a wrong way
+and the right way is strange, fixing the API and checking other users
+for similar mistakes is the right thing to do.
+
+> The current imx6_pcie_attach_pd code is complicated because it tries to 
+> distinguish between "multi pd" and "no pd / single pd". I wish there was 
+> a way for these PM_RUNTIME device_links to be setup automatically in 
+> core and have multi-PD behave the same as a single PD.
+> 
+> There aren't many multi-PD users but commit 6494a9ad86de ("usb: xhci: 
+> tegra: Add genpd support") seems to do pretty much the same thing.
+
+I don't know enough about power domains to follow this argumentation in
+the time I have available.
+
+Best regards
+Uwe
+
 -- 
-2.20.1
-
+Pengutronix e.K.                           | Uwe Kleine-König            |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
