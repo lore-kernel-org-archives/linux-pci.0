@@ -2,344 +2,150 @@ Return-Path: <SRS0=s0ql=P7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6798CC282C0
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Jan 2019 13:10:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0869C282C0
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Jan 2019 13:18:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20FF22133D
-	for <linux-pci@archiver.kernel.org>; Wed, 23 Jan 2019 13:10:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548249004;
-	bh=o6DQUVz+6vCdivvnlinheFVyKFvCfnt6SQmN2iiwEcM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=zPaD0i0ngoO7/FZrOW7m/WdYf7dIlJEgkMSEQT0UucZlN4XQGEnv4spu6wdHljgzR
-	 wslLdBSosa0zt5eS4RVh1niJrV6d+6jxdcrMvPnMtYFhuDarsPlE+8gbkox765LWbA
-	 fRD76c+K5cxSq0YWvOUCMnF0xuiikc7tRfF7fk7s=
+	by mail.kernel.org (Postfix) with ESMTP id AC4BE21848
+	for <linux-pci@archiver.kernel.org>; Wed, 23 Jan 2019 13:18:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YSImpivu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726057AbfAWNKD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 23 Jan 2019 08:10:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42362 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725995AbfAWNKD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Jan 2019 08:10:03 -0500
-Received: from localhost (unknown [106.200.229.238])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4C43620855;
-        Wed, 23 Jan 2019 13:10:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548249002;
-        bh=o6DQUVz+6vCdivvnlinheFVyKFvCfnt6SQmN2iiwEcM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=is3FyitpmqwQgU/oWNtZNc5uVkOi4mJrhIpsJiWIuyclapbpTZwJ89AO/dR9wjOJo
-         cB4OSghVsnzDs7UY2m63Tq53mNzThrUamvRpF48lDXe2vCFReltceFqBAR9wleiFWN
-         3/ZwvyEuptq/LRfTOl1phWr0FXZF8p15+K+mgYf0=
-Date:   Wed, 23 Jan 2019 18:38:29 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        Joao Pinto <joao.pinto@synopsys.com>,
-        Jose Abreu <jose.abreu@synopsys.com>,
-        Luis Oliveira <luis.oliveira@synopsys.com>,
-        Vitor Soares <vitor.soares@synopsys.com>,
-        Nelson Costa <nelson.costa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-Subject: Re: [RFC v3 1/7] dmaengine: Add Synopsys eDMA IP core driver
-Message-ID: <20190123130829.GQ4635@vkoul-mobl>
-References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <d2b6e8bed0c5077425b913e551794ed126d74fb2.1547230339.git.gustavo.pimentel@synopsys.com>
- <20190120114425.GV4635@vkoul-mobl>
- <14acfcee-b367-be9c-714b-de0508ff1a7d@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <14acfcee-b367-be9c-714b-de0508ff1a7d@synopsys.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1726141AbfAWNSf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 23 Jan 2019 08:18:35 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:42871 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725991AbfAWNSf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Jan 2019 08:18:35 -0500
+Received: by mail-pf1-f196.google.com with SMTP id 64so1172263pfr.9;
+        Wed, 23 Jan 2019 05:18:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=yeQZUst3szUtse1rNYD2HazCWJM4cvJaQarIDmvvznI=;
+        b=YSImpivuAaM/+DsgeLKyDRWYoeqPbSwffNXc/wFkdvxOjBtd2gxJVwxvzaFcix2pKe
+         FghV7Di/C+6KWf2pnNMjkIlAcTupNsmPmtylXZCnwD7s2qLlLlr1xnxCFRRiukJrZCjd
+         siSEHEkbcGoI/RJ4oLP3dyPSZgVjhOKEM9cOc4luwyHiOnEf+3/8xqOGESbhUY+1BplW
+         1lLJCn3iBwQFbe3X8AYLhnpOz54jH2X+EDQ78nM/U8ZO5e82RyEr7wRadRiKwG+zpBe6
+         kDkVtT3s4O8BeiICT39HzoHCijWljPruMc+5/7If4K3b+Gvl2y15q5+lirezEPUjrDTZ
+         ek0A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=yeQZUst3szUtse1rNYD2HazCWJM4cvJaQarIDmvvznI=;
+        b=R9kIdS6IbLH4HN7FcL/MskGkugG7oCA0+cFOrUl4Sp5grYHcmEEFoqBb1CYUOEUlcb
+         QdEXk4eicOz6cBZjancKlYuPQVWzBIqFS7OZFV9+4aiPvXDRXGmHlW+C9TKJULkO2CuC
+         SD7fqMgVdudAAA9L1pLR572oRmB+QfZRqoPJBE3XgcpD7sjvQpE5yWL8zhxWeBOmPdLl
+         ShfZWwkgSNocFfnEmeRAmwPOB5HG51uEemjIxIWI5uuVLRPLjj300bLgNFqbzJ11iY25
+         VtWRHxLFX7fT7KODBCxOqcW5Fg3D5HE6T4+sNizUEftEE3T6S7sNj3oegJs12i76LMnj
+         mh9A==
+X-Gm-Message-State: AJcUukdeUaOnEXP/QkocABqAS4ZeE/cnphWRJemRT/chnRuClq+Zg4yc
+        tUZPl4OpBw8hftREdgp2iJ4lLQ2Q
+X-Google-Smtp-Source: ALg8bN7ccCtmYRO3R5jkWXvc/9sj29EcqWS83JoJh3SqZmtYYZtir88racON8tOlzgYbBj0siVfa/A==
+X-Received: by 2002:a63:9e58:: with SMTP id r24mr2005711pgo.264.1548249514168;
+        Wed, 23 Jan 2019 05:18:34 -0800 (PST)
+Received: from hyd1358.caveonetworks.com. ([115.113.156.2])
+        by smtp.googlemail.com with ESMTPSA id r187sm64600381pfc.63.2019.01.23.05.18.31
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 23 Jan 2019 05:18:33 -0800 (PST)
+From:   sundeep.lkml@gmail.com
+To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     sean.stalley@intel.com, sgoutham@marvell.com, helgaas@kernel.org,
+        Subbaraya Sundeep <sbhatta@marvell.com>
+Subject: [v3 PATCH 1/2] PCI: read fixed bus numbers in EA for type 1 functions
+Date:   Wed, 23 Jan 2019 18:48:00 +0530
+Message-Id: <1548249481-24645-1-git-send-email-sundeep.lkml@gmail.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 21-01-19, 15:48, Gustavo Pimentel wrote:
-> On 20/01/2019 11:44, Vinod Koul wrote:
-> > On 11-01-19, 19:33, Gustavo Pimentel wrote:
-> >> Add Synopsys eDMA IP core driver to kernel.
-> >>
-> >> This core driver, initializes and configures the eDMA IP using vma-helpers
-> >> functions and dma-engine subsystem.
-> > 
-> > A description of eDMA IP will help review the driver
-> 
-> I've the IP description on the cover-letter, but I'll bring it to this patch, if
-> it helps.
+From: Subbaraya Sundeep <sbhatta@marvell.com>
 
-yeah cover doesnt get applied, changelog are very important
-documentation for kernel
+As per the spec - ECN_Enhanced_Allocation_23_Oct_2014_Final
+and section 6.9.1.2, EA capability contains fixed secondary
+and subordinate bus numbers for type 1 functions.
+This patch adds support to read the fixed bus numbers
+from EA capability for bridge.
 
-> >> @@ -0,0 +1,1059 @@
-> >> +// SPDX-License-Identifier: GPL-2.0
-> >> +/*
-> >> + * Copyright (c) 2018 Synopsys, Inc. and/or its affiliates.
-> > 
-> > 2019 now
-> 
-> I've changed to "Copyright (c) 2018-present Synopsys, Inc. and/or its
-> affiliates." this way it's always up to date and I also kept 2018, because it
-> was the date that I started to develop this driver, if you don't mind.
+Signed-off-by: Subbaraya Sundeep <sbhatta@marvell.com>
+---
+v3:
+  As per Bjorn's suggestion placed EA stuff in pci_ea_init and
+  captured bus numbers in pci_dev
+v2:
+  None just added Sean
 
-yeah 18 is fine :) it need to end with current year always
+ drivers/pci/pci.c             | 10 ++++++++--
+ include/linux/pci.h           |  4 ++++
+ include/uapi/linux/pci_regs.h |  4 ++++
+ 3 files changed, 16 insertions(+), 2 deletions(-)
 
-> >> +static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc)
-> >> +{
-> >> +	struct dw_edma_chan *chan = desc->chan;
-> >> +	struct dw_edma *dw = chan->chip->dw;
-> >> +	struct dw_edma_chunk *chunk;
-> >> +
-> >> +	chunk = kvzalloc(sizeof(*chunk), GFP_NOWAIT);
-> >> +	if (unlikely(!chunk))
-> >> +		return NULL;
-> >> +
-> >> +	INIT_LIST_HEAD(&chunk->list);
-> >> +	chunk->chan = chan;
-> >> +	chunk->cb = !(desc->chunks_alloc % 2);
-> > 
-> > cb ..?
-> 
-> CB = change bit, is a property of this eDMA IP. Basically it is a kind of
-> handshake which serves to validate whether the linked list has been updated or
-> not, especially useful in cases of recycled linked list elements (every linked
-> list recycle is a new chunk, this will allow to differentiate each chunk).
-
-okay please add that somewhere. Also it would help me if you explain
-what is chunk and other terminologies used in this driver
-
-> >> +static int dw_edma_device_config(struct dma_chan *dchan,
-> >> +				 struct dma_slave_config *config)
-> >> +{
-> >> +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> >> +	const struct dw_edma_core_ops *ops = chan2ops(chan);
-> >> +	unsigned long flags;
-> >> +	int err = 0;
-> >> +
-> >> +	spin_lock_irqsave(&chan->vc.lock, flags);
-> >> +
-> >> +	if (!config) {
-> >> +		err = -EINVAL;
-> >> +		goto err_config;
-> >> +	}
-> >> +
-> >> +	if (chan->status != EDMA_ST_IDLE) {
-> >> +		dev_err(chan2dev(chan), "channel is busy or paused\n");
-> >> +		err = -EPERM;
-> > 
-> > this is not correct behaviour, device_config can be called anytime and
-> > values can take affect on next transaction submitted..
-> 
-> Hum, I thought we could only reconfigure after transfer being finished.
-
-Nope, anytime. They take effect for next prepare when you use it
-
-> >> +	dev_dbg(chan2dev(chan), "addr(physical) src=%pa, dst=%pa\n",
-> >> +		&config->src_addr, &config->dst_addr);
-> >> +
-> >> +	chan->src_addr = config->src_addr;
-> >> +	chan->dst_addr = config->dst_addr;
-> >> +
-> >> +	err = ops->device_config(dchan);
-> > 
-> > what does this do?
-> 
-> This is an initialization procedure to setup interrupts (data and addresses) to
-> each channel on the eDMA IP,  in order to be triggered after transfer being
-> completed or aborted. Due the fact the config() can be called at anytime,
-> doesn't make sense to have this procedure here, I'll moved it to probe().
-
-Yeah I am not still convinced about having another layer! Have you
-though about using common lib for common parts ..?
-
-> > this looks incorrect interpretation to me. The status is to be retrieved
-> > for the given cookie passed and given that you do not even use this
-> > argument tells me that you have understood this as 'channel' status
-> > reporting, which is not correct
-> 
-> Yes, you're right, my interpretation assumes this function reports
-> channel/transaction status. What would be the correct implementation?
-> Something like this?
-> 
-> {
-> 	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> 	const struct dw_edma_core_ops *ops = chan2ops(chan);
-> 	struct dw_edma_desc *desc;
-> 	struct virt_dma_desc *vd;
-> 	unsigned long flags;
-> 	enum dma_status ret;
-> 	u32 residue = 0;
-> 
-> 	spin_lock_irqsave(&chan->vc.lock, flags);
-> 
-> 	ret = dma_cookie_status(chan, cookie, txstate);
-> 	if (ret == DMA_COMPLETE)
-> 		goto ret_status;
-> 
-> 	vd = vchan_next_desc(&chan->vc);
-> 	if (!vd)
-> 		goto ret_status;
-> 
-> 	desc = vd2dw_edma_desc(vd);
-> 	if (!desc)
-> 		residue = desc->alloc_sz - desc->xfer_sz;
-> 		
-> 	if (ret == DMA_IN_PROGRESS && chan->status == EDMA_ST_PAUSE)
-> 		ret = DMA_PAUSED;
-
-this looks better, please do keep in mind txstate can be null, so
-residue caln can be skipped
-
-> >> +static struct dma_async_tx_descriptor *
-> >> +dw_edma_device_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
-> >> +			     unsigned int sg_len,
-> >> +			     enum dma_transfer_direction direction,
-> >> +			     unsigned long flags, void *context)
-> >> +{
-> >> +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
-> >> +	struct dw_edma_desc *desc;
-> >> +	struct dw_edma_chunk *chunk;
-> >> +	struct dw_edma_burst *burst;
-> >> +	struct scatterlist *sg;
-> >> +	unsigned long sflags;
-> >> +	phys_addr_t src_addr;
-> >> +	phys_addr_t dst_addr;
-> >> +	int i;
-> >> +
-> >> +	if (sg_len < 1) {
-> >> +		dev_err(chan2dev(chan), "invalid sg length %u\n", sg_len);
-> >> +		return NULL;
-> >> +	}
-> >> +
-> >> +	if (direction == DMA_DEV_TO_MEM && chan->dir == EDMA_DIR_WRITE) {
-> > 
-> > what is the second part of the check, can you explain that, who sets
-> > chan->dir?
-> 
-> The chan->dir is set on probe() during the process of configuring each channel.
-
-So you have channels that are unidirectional?
-
-> >> +		dev_dbg(chan2dev(chan),	"prepare operation (WRITE)\n");
-> >> +	} else if (direction == DMA_MEM_TO_DEV && chan->dir == EDMA_DIR_READ) {
-> >> +		dev_dbg(chan2dev(chan),	"prepare operation (READ)\n");
-> >> +	} else {
-> >> +		dev_err(chan2dev(chan), "invalid direction\n");
-> >> +		return NULL;
-> >> +	}
-> >> +
-> >> +	if (!chan->configured) {
-> >> +		dev_err(chan2dev(chan), "(prep_slave_sg) channel not configured\n");
-> >> +		return NULL;
-> >> +	}
-> >> +
-> >> +	if (chan->status != EDMA_ST_IDLE) {
-> >> +		dev_err(chan2dev(chan), "channel is busy or paused\n");
-> >> +		return NULL;
-> >> +	}
-> > 
-> > No, wrong again. The txn must be prepared and then on submit added to a
-> > queue. You are writing a driver for dmaengine, surely you dont expect
-> > the channel to be free and then do a txn.. that would be very
-> > inefficient!
-> 
-> I did not realize that the flow could be as you mentioned. The documentation I
-> read about the subsystem did not give me this idea. Thank you for clarifying me.
-
-I think we have improved  that part a lot, please do feel free to point
-out inconsistency
-See DMA usage in Documentation/driver-api/dmaengine/client.rst
-
-> >> +int dw_edma_probe(struct dw_edma_chip *chip)
-> >> +{
-> >> +	struct dw_edma *dw = chip->dw;
-> >> +	struct device *dev = chip->dev;
-> >> +	const struct dw_edma_core_ops *ops;
-> >> +	size_t ll_chunk = dw->ll_region.sz;
-> >> +	size_t dt_chunk = dw->dt_region.sz;
-> >> +	u32 ch_tot;
-> >> +	int i, j, err;
-> >> +
-> >> +	raw_spin_lock_init(&dw->lock);
-> >> +
-> >> +	/* Callback operation selection accordingly to eDMA version */
-> >> +	switch (dw->version) {
-> >> +	default:
-> >> +		dev_err(dev, "unsupported version\n");
-> >> +		return -EPERM;
-> >> +	}
-> > 
-> > So we have only one case which returns error, was this code tested?
-> 
-> Yes it was, but I understand what your point of view.
-> This was done like this, because I wanna to segment the patch series like this:
->  1) Adding eDMA driver core, which contains the driver skeleton and the whole
-> logic associated.
->  2) and 3) Adding the callbacks for the eDMA register mapping version 0 (it will
-> appear in the future a new version, I thought that this new version would came
-> while I was trying to get the feedback about this patch series, therefore would
-> have another 2 patches for the version 1 isolated and independent from the
-> version 0).
->  4) and 5) Adding the PCIe glue-logic and device ID associated.
->  6) Adding maintainer for this driver.
->  7) Adding a test driver.
-> 
-> Since this switch will only have the associated case on patch 2, that why on
-> patch 1 doesn't appear any possibility.
-> 
-> If you feel logic to squash patch 2 with patch 1, just say something and I'll do
-> it for you :)
-
-well each patch should build and work on its own, otherwise we get
-problems :) But since this is a new driver it is okay. Anyway this patch
-is quite _huge_ so lets not add more to it..
-
-I would have moved the callback check to subsequent one..
-
-> >> +	pm_runtime_get_sync(dev);
-> >> +
-> >> +	/* Find out how many write channels are supported by hardware */
-> >> +	dw->wr_ch_cnt = ops->ch_count(dw, EDMA_DIR_WRITE);
-> >> +	if (!dw->wr_ch_cnt) {
-> >> +		dev_err(dev, "invalid number of write channels(0)\n");
-> >> +		return -EINVAL;
-> >> +	}
-> >> +
-> >> +	/* Find out how many read channels are supported by hardware */
-> >> +	dw->rd_ch_cnt = ops->ch_count(dw, EDMA_DIR_READ);
-> >> +	if (!dw->rd_ch_cnt) {
-> >> +		dev_err(dev, "invalid number of read channels(0)\n");
-> >> +		return -EINVAL;
-> >> +	}
-> >> +
-> >> +	dev_dbg(dev, "Channels:\twrite=%d, read=%d\n",
-> >> +		dw->wr_ch_cnt, dw->rd_ch_cnt);
-> >> +
-> >> +	ch_tot = dw->wr_ch_cnt + dw->rd_ch_cnt;
-> >> +
-> >> +	/* Allocate channels */
-> >> +	dw->chan = devm_kcalloc(dev, ch_tot, sizeof(*dw->chan), GFP_KERNEL);
-> > 
-> > you may use struct_size() here
-> 
-> Hum, this would be useful if I wanted to allocate the dw struct as well, right?
-> Since dw struct is already allocated, it looks like this can't be used, or am I
-> missing something?
-
-yeah you can allocate dw + chan one shot...
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c25acac..484b63e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2909,6 +2909,7 @@ void pci_ea_init(struct pci_dev *dev)
+ 	u8 num_ent;
+ 	int offset;
+ 	int i;
++	u32 dw;
+ 
+ 	/* find PCI EA capability in list */
+ 	ea = pci_find_capability(dev, PCI_CAP_ID_EA);
+@@ -2922,9 +2923,14 @@ void pci_ea_init(struct pci_dev *dev)
+ 
+ 	offset = ea + PCI_EA_FIRST_ENT;
+ 
+-	/* Skip DWORD 2 for type 1 functions */
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
++	/* Note fixed bus numbers for type 1 functions */
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
++		pci_read_config_dword(dev, offset, &dw);
++		dev->fixed_sec_busnr = dw & PCI_EA_FIXED_SEC_BUS;
++		dev->fixed_sub_busnr = (dw & PCI_EA_FIXED_SUB_BUS) >>
++					PCI_EA_FIXED_SUB_SHIFT;
+ 		offset += 4;
++	}
+ 
+ 	/* parse each EA entry */
+ 	for (i = 0; i < num_ent; ++i)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 65f1d8c..3e9a3ae 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -459,6 +459,10 @@ struct pci_dev {
+ 	char		*driver_override; /* Driver name to force a match */
+ 
+ 	unsigned long	priv_flags;	/* Private flags for the PCI driver */
++
++	/* bus numbers from EA capability if this device is a bridge */
++	u8 fixed_sec_busnr; /* Fixed Secondary Bus number */
++	u8 fixed_sub_busnr; /* Fixed Subordinate Bus number */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e1e9888..51e9ac0 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -372,6 +372,10 @@
+ #define PCI_EA_FIRST_ENT_BRIDGE	8	/* First EA Entry for Bridges */
+ #define  PCI_EA_ES		0x00000007 /* Entry Size */
+ #define  PCI_EA_BEI		0x000000f0 /* BAR Equivalent Indicator */
++/* Fixed Secondary and Subordinate bus numbers in EA for Bridge */
++#define   PCI_EA_FIXED_SEC_BUS		0xff
++#define   PCI_EA_FIXED_SUB_BUS		0xff00
++#define   PCI_EA_FIXED_SUB_SHIFT	8
+ /* 0-5 map to BARs 0-5 respectively */
+ #define   PCI_EA_BEI_BAR0		0
+ #define   PCI_EA_BEI_BAR5		5
 -- 
-~Vinod
+1.8.3.1
+
