@@ -2,92 +2,136 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE9A3C282C5
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 10:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E95DC282C6
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 11:57:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8534C218A6
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 10:46:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="mFcoIGHV"
+	by mail.kernel.org (Postfix) with ESMTP id 097E4218AE
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 11:57:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727390AbfAXKqP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 05:46:15 -0500
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:55352 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727363AbfAXKqP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 05:46:15 -0500
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0OAkB25015903;
-        Thu, 24 Jan 2019 04:46:11 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1548326771;
-        bh=LURlEazdlsViq/bSZlZwQimKeprMkOuAEx+h6N1PDkM=;
-        h=From:To:CC:Subject:Date;
-        b=mFcoIGHVFg6MclMIvWAmMGzkBNVhaN7gjna47o7PcBCUV/lfRirQYw6qc+3aldayq
-         sSH1iw1b3D7JizremAcIM6yET6ainSdpE39NXDaZBqb2czza46+x1cHPxgs4nCx67N
-         mxhhQxA8B3CSRLLYdmOcuTnpm3E7u5Cft0QClmFg=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0OAkBN6049658
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 24 Jan 2019 04:46:11 -0600
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Thu, 24
- Jan 2019 04:46:10 -0600
-Received: from dflp33.itg.ti.com (10.64.6.16) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Thu, 24 Jan 2019 04:46:10 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0OAk8TC003193;
-        Thu, 24 Jan 2019 04:46:08 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: dra7xx: Invoke phy_set_mode API to set PHY mode to PHY_MODE_PCIE
-Date:   Thu, 24 Jan 2019 16:15:37 +0530
-Message-ID: <20190124104537.22271-1-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
+        id S1727573AbfAXL5E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 06:57:04 -0500
+Received: from foss.arm.com ([217.140.101.70]:55518 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726105AbfAXL5E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jan 2019 06:57:04 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AB622EBD;
+        Thu, 24 Jan 2019 03:57:03 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D864B3F237;
+        Thu, 24 Jan 2019 03:57:01 -0800 (PST)
+Date:   Thu, 24 Jan 2019 11:56:56 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Koen Vandeputte <koen.vandeputte@ncentric.com>
+Cc:     linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Olof Johansson <olof@lixom.net>,
+        Robin Leblon <robin.leblon@ncentric.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>, stable@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] arm: cns3xxx: fix writing to wrong PCI registers
+ after alignment
+Message-ID: <20190124115656.GA23362@e107981-ln.cambridge.arm.com>
+References: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Certain PHYs used with PCIe controller can also be used with other
-controllers such as USB or SATA. In order to configure the PHY
-to work with PCIe controller, invoke phy_set_mode API with mode
-set to PHY_MODE_PCIE.
+On Mon, Jan 07, 2019 at 02:45:09PM +0100, Koen Vandeputte wrote:
+> Originally, cns3xxx used it's own functions for mapping, reading and writing registers.
+> 
+> Commit 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
+> removed the internal PCI config write function in favor of the generic one:
+> 
+> cns3xxx_pci_write_config() --> pci_generic_config_write()
+> 
+> cns3xxx_pci_write_config() expected aligned addresses, being produced by cns3xxx_pci_map_bus()
+> while the generic one pci_generic_config_write() actually expects the real address
+> as both the function and hardware are capable of byte-aligned writes.
+> 
+> This currently leads to pci_generic_config_write() writing
+> to the wrong registers on some ocasions.
+> 
+> First issue seen due to this:
+> 
+> - driver ath9k gets loaded
+> - The driver wants to write value 0xA8 to register PCI_LATENCY_TIMER, located at 0x0D
+> - cns3xxx_pci_map_bus() aligns the address to 0x0C
+> - pci_generic_config_write() effectively writes 0xA8 into register 0x0C (CACHE_LINE_SIZE)
+> 
+> This seems to cause some slight instability when certain PCI devices are used.
+> 
+> Another issue example caused by this this is the PCI bus numbering,
+> where the primary bus is higher than the secondary, which is impossible.
+> 
+> Before:
+> 
+> 00:00.0 PCI bridge: Cavium, Inc. Device 3400 (rev 01) (prog-if 00 [Normal decode])
+>     Flags: bus master, fast devsel, latency 0, IRQ 255
+>     Bus: primary=02, secondary=01, subordinate=ff, sec-latency=0
+> 
+> After fix:
+> 
+> 00:00.0 PCI bridge: Cavium, Inc. Device 3400 (rev 01) (prog-if 00 [Normal decode])
+>     Flags: bus master, fast devsel, latency 0, IRQ 255
+>     Bus: primary=00, secondary=01, subordinate=02, sec-latency=0
+> 
+> And very likely some more ..
+> 
+> Fix all by omitting the alignment being done in the mapping function.
+> 
+> Fixes: 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
+> Acked-by: Krzysztof Halasa <khalasa@piap.pl>
+> Acked-by: Tim Harvey <tharvey@gateworks.com>
+> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Olof Johansson <olof@lixom.net>
+> CC: Robin Leblon <robin.leblon@ncentric.com>
+> CC: Rob Herring <robh@kernel.org>
+> CC: Russell King <linux@armlinux.org.uk>
+> CC: stable@vger.kernel.org # v4.0+
+> ---
+>  arch/arm/mach-cns3xxx/pcie.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/controller/dwc/pci-dra7xx.c | 4 ++++
- 1 file changed, 4 insertions(+)
+I have applied both patches to pci/arm-cns3xxx for v5.1, however I had
+to reformat and rewrite both logs (commit line wrappings,
+capitalization, etc.) so have a look.
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index efb26096ccb5..b287dbf6914c 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -517,6 +517,10 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
- 	int i;
- 
- 	for (i = 0; i < phy_count; i++) {
-+		ret = phy_set_mode(dra7xx->phy[i], PHY_MODE_PCIE);
-+		if (ret < 0)
-+			goto err_phy;
-+
- 		ret = phy_init(dra7xx->phy[i]);
- 		if (ret < 0)
- 			goto err_phy;
--- 
-2.17.1
+Thanks,
+Lorenzo
 
+> 
+> 
+> V2:
+> --> resend to be in sync with new second patch
+> --> added acked-by's based on patch comments
+> 
+> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
+> index 318394ed5c7a..5e11ad3164e0 100644
+> --- a/arch/arm/mach-cns3xxx/pcie.c
+> +++ b/arch/arm/mach-cns3xxx/pcie.c
+> @@ -83,7 +83,7 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
+>  	} else /* remote PCI bus */
+>  		base = cnspci->cfg1_regs + ((busno & 0xf) << 20);
+>  
+> -	return base + (where & 0xffc) + (devfn << 12);
+> +	return base + where + (devfn << 12);
+>  }
+>  
+>  static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
+> -- 
+> 2.17.1
+> 
