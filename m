@@ -2,238 +2,159 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A0B5C282C5
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 20:05:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66DD2C282C6
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 20:15:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D141C218D0
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 20:05:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548360318;
-	bh=KBil2V4mn9rIrGvctvF+AA+Sf2jqYkG8jZ6Dtp6wUQE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=TAUX8QyVbMj98HWm7Uz5GJivdFiYBRhpW9AhpahiQB92NdgB/Cx0yZpJyD4N8sxUz
-	 pXICRY9x7c6fdnJE2Y87UMrfAYwSR++DMcW4/zNYpG9PVolo1eLgk3E7GoGKg8Ocpc
-	 BWITmQxW9EOxDSk6eq6eHsoUN8Av9mikENlrw3zM=
+	by mail.kernel.org (Postfix) with ESMTP id 343D4218D0
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 20:15:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RJqcCvBg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728934AbfAXUFM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 15:05:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60082 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728565AbfAXUFL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Jan 2019 15:05:11 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4396821855;
-        Thu, 24 Jan 2019 20:05:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548360310;
-        bh=KBil2V4mn9rIrGvctvF+AA+Sf2jqYkG8jZ6Dtp6wUQE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=L2m9VQTFmfl58CLgs3uEPTzPbdl/KXMSPhBahzDNX94BNnmhvO3e3xxqAl0HmBVtD
-         pN1Nf7tFO1YtegT72Sp9la3jjEw/5ORCX00SbGk+sNsHzxhvoKNDngAktT/q429o1/
-         WN+YfJJteDisAbkdoFOAjLydSJUGIjSu+ruTVRBI=
-Date:   Thu, 24 Jan 2019 14:05:09 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kai Heng Feng <kai.heng.feng@canonical.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, jeffrey.t.kirsher@intel.com,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI / ACPI: Don't clear pme_poll on device that has
- unreliable ACPI wake
-Message-ID: <20190124200508.GH14636@google.com>
-References: <20190122064544.27426-1-kai.heng.feng@canonical.com>
- <20190122235134.GE14636@google.com>
- <91E74111-5BB6-4604-A1D7-B537AB42C317@canonical.com>
- <20190124151524.GF14636@google.com>
- <FFC6EC3F-3608-41FC-8B14-815D1747C4B6@canonical.com>
+        id S1730807AbfAXUPp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 15:15:45 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:46208 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730800AbfAXUPp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 15:15:45 -0500
+Received: by mail-pg1-f195.google.com with SMTP id w7so3129941pgp.13;
+        Thu, 24 Jan 2019 12:15:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=4NEECKxkIUpvSN6zGsm7tNAQxLgNjozzJMg2Nudc0PU=;
+        b=RJqcCvBgMG0Q/XC6PGvQ5QszTlMA+suu93hO/bhOexDj7OObXbuQBG1QtGs8qZ7MvZ
+         F8uK+BGzNl9gAXprVwm/loJ1VoU5Dz0cXAKH2RCQ1wb5wGaL7tnHDV1JLxE9CBmrBFlH
+         mXI1DjJvzF/Nu21A9+/z/c5u9diWHThTyqvNd+qFC2m/2qcmhyzQ5T4T0gM0pnnjfVgj
+         +lZOUQtX32ve4QlT1ge9HMwF7VYW8KlCeXNSVrHfpBgYTwfZG0kv9ExHPVvMrC0lu3Mr
+         b+3+oXybnrnIYaHqShSRRvl0XUPipWbEtYiYh50HuOQ9H3WPcQrWaVflOtK602xCqlqk
+         +LMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=4NEECKxkIUpvSN6zGsm7tNAQxLgNjozzJMg2Nudc0PU=;
+        b=HLFYHjj0xU45Ld+BYootPquCB5V7rUCct4jTCJO9vKZS+j9IcAUTbe28elky1wjg/F
+         tdp8CF64c5VoIsuu7Coq+ph4d76WBSQrZ0fw+n5MBy/K+gw8wAv9nFPQcb78yeeIfM4q
+         HcVCuzMaNvpOVcnAzecaiSDX93Y1vTRgd2QiVMjvvh3fqzE4uqZLf0svcwE6XkKux/n5
+         ejtLf3ZIWgB9JhvozEw6iksLmMyFJR2mmY7NwkdYQKBEewwTxZ2Cfthx7F+7odK1RA6W
+         IX//zS2siJig0n688TOwiwrZZCVAkKGJR5IPL/0s0POpX7MLUJ8J42kNN0J3zbtCozh3
+         Mn9w==
+X-Gm-Message-State: AJcUukeCKyoUIJnCrtoGlXfE6+lXrSOyvewfahcckEdtBMfxyUWjqDEx
+        jELCE76SLTq7CnXfDmCZXmc=
+X-Google-Smtp-Source: ALg8bN5wc8PK4BpLsVxaYdb1/pXiP2on/lOSfG0Pg5rcjdSUgjFpchPBfotz7EQbS5vfcc0YXdhbmg==
+X-Received: by 2002:a63:6506:: with SMTP id z6mr707698pgb.334.1548360944257;
+        Thu, 24 Jan 2019 12:15:44 -0800 (PST)
+Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
+        by smtp.gmail.com with ESMTPSA id m65sm53062646pfg.180.2019.01.24.12.15.42
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 24 Jan 2019 12:15:43 -0800 (PST)
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v6 2/4] PCI: imx6: Mark PHY functions as i.MX6 specific
+Date:   Thu, 24 Jan 2019 12:15:20 -0800
+Message-Id: <20190124201522.8973-3-andrew.smirnov@gmail.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190124201522.8973-1-andrew.smirnov@gmail.com>
+References: <20190124201522.8973-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <FFC6EC3F-3608-41FC-8B14-815D1747C4B6@canonical.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 24, 2019 at 11:29:37PM +0800, Kai Heng Feng wrote:
-> > On Jan 24, 2019, at 11:15 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Jan 23, 2019 at 03:17:37PM +0800, Kai Heng Feng wrote:
-> >>> On Jan 23, 2019, at 7:51 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >>> On Tue, Jan 22, 2019 at 02:45:44PM +0800, Kai-Heng Feng wrote:
-> >>>> There are some e1000e devices can only be woken up from D3 one time, by
-> >>>> plugging ethernet cable. Subsequent cable plugging does set PME bit
-> >>>> correctly, but it still doesn't get woken up.
-> >>>> 
-> >>>> Since e1000e connects to the root complex directly, we rely on ACPI to
-> >>>> wake it up. In this case, the GPE from _PRW only works once and stops
-> >>>> working after that.
-> >>>> 
-> >>>> So introduce a new PCI quirk, to avoid clearing pme_poll flag for buggy
-> >>>> platform firmwares that have unreliable GPE wake.
-> >>> 
-> >>> This quirk applies to all 0x15bb (E1000_DEV_ID_PCH_CNP_I219_LM7) and
-> >>> 0x15bd (E1000_DEV_ID_PCH_CNP_I219_LM6) devices.  The e1000e driver
-> >>> claims about a zillion different device IDs.
-> >>> 
-> >>> I would be surprised if these two devices are defective but all the
-> >>> others work correctly.  Could it be that there is a problem with the
-> >>> wiring on this particular motherboard or with the ACPI _PRW methods
-> >>> (or the way Linux interprets them) in this firmware?
-> >> 
-> >> If this is a motherboard issue or platform specific, do you prefer to use
-> >> DMI matches here?
-> > 
-> > I'm not sure what the problem is yet, so let's hold off on the exact
-> > structure of the fix.
-> 
-> I think DMI table can put in e1000e driver instead of PCI quirk.
+PCIE PHY IP block on i.MX7D differs from the one used on i.MX6 family,
+so none of the code in current implementation of imx6_setup_phy_mpll()
+is applicable.
 
-I don't think we should add a quirk or DMI table yet because we
-haven't gotten to the root cause of this problem.  If the root cause
-is a problem in the Linux code, adding a quirk will mask the problem
-for this specific system, but will leave other systems with similar
-problems.
+Tested-by: Trent Piepho <tpiepho@impinj.com>
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: Chris Healy <cphealy@gmail.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Leonard Crestez <leonard.crestez@nxp.com>
+Cc: "A.s. Dong" <aisheng.dong@nxp.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: linux-imx@nxp.com
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-> > If I understand correctly, e1000e wakeup works once, but doesn't work
-> > after that.  Your lspci (from after that first wakeup, from
-> > https://bugzilla.kernel.org/attachment.cgi?id=280691) shows this:
-> > 
-> >  00:14.0 XHC  XHCI USB
-> >    Flags: PMEClk- DSI- D1- D2- ... PME(D0-,D1-,D2-,D3hot+,D3cold+)
-> >    Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-> >  00:1f.3 HDAS audio
-> >    Flags: PMEClk- DSI- D1- D2- ... PME(D0-,D1-,D2-,D3hot+,D3cold+)
-> >    Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=0 PME-
-> >  00:1f.6 GLAN e1000e
-> >    Flags: PMEClk- DSI+ D1- D2- ... PME(D0+,D1-,D2-,D3hot+,D3cold+)
-> >    Status: D3 NoSoftRst+ PME-Enable+ DSel=0 DScale=1 PME+
-> > 
-> > So the e1000e PME_Status bit is still set, which means it probably
-> > won't generate another PME interrupt, which would explain why wakeup
-> > doesn't work.  To test this theory, can you try this:
-> > 
-> >  - sleep
-> >  - wakeup via e1000e
-> >  # DEV=00:1f.6
-> >  # lspci -vvs $DEV
-> >  # setpci -s $DEV CAP_PM+4.W
-> >  # setpci -s $DEV CAP_PM+4.W=0x8100
-> >  - sleep
-> >  - attempt another wakeup via e1000e
-> > 
-> > If this second wakeup works, it would suggest that PME_Status isn't
-> > being cleared correctly.  I see code, e.g., in
-> > acpi_setup_gpe_for_wake(), that *looks* like it would arrange to clear
-> > it, but I'm not very familiar with it.  Maybe there's some issue with
-> > multiple devices sharing an "implicit notification" situation like
-> > this.
-> 
-> The PME status is being cleared correctly.
-
-I was hoping to understand this better via the experiment above, but
-I'm still confused.  Here's the scenario as I understand it:
-
-  0) fresh boot
-  1) e1000e PME_Status should be 0
-  2) sleep
-  3) wakeup via e1000e succeeds
-  4) e1000e PME_Status should be 0
-  5) sleep
-  6) wakeup via e1000e fails
-  7) wakeup via USB succeeds
-  8) e1000e PME_Status should be 0, but is actually 1
-
-If I understand correctly, the bugzilla lspci
-(https://bugzilla.kernel.org/attachment.cgi?id=280691) was collected
-at point 8, and it shows PME_Status=1 when it should be 0.
-
-If we write a 1 to PME_Status to clear it, and it remains set, that's
-obviously a hardware defect, and Intel should document that in an
-erratum, and a quirk would be the appropriate way to work around it.
-But I doubt that's what's happening.
-
-If e1000e changes PME_Status from 0 to 1 and we don't get an interrupt
-(in this case, an SCI triggering GPE 0x6d), the problem is something
-in the path outside e1000e.  Since the wakeup works the first time, we
-know e1000e is *capable* of generating an interrupt, and the problem
-is probably something in the way we acknowledge it.
-
-I want to make sure we're executing the code that clears
-PCI_PM_CTRL_PME_STATUS.  Would you mind applying the patch below,
-turning on CONFIG_ACPI_DEBUG, booting with
-
-  acpi.debug_layer=0x00000004 acpi.debug_level=0x00000004
-
-and collecting the dmesg log?  I think you can also set these debug
-flags via /sys/module/acpi/parameters/debug_* if that's easier.
-
-> The lspci is captured after I plugged the ethernet cable second time,
-> i.e. PME is set but not being woken up.
-> 
-> Kai-Heng
-
-Bjorn
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c9d8e3c837de..91a70ffdd3a1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1927,7 +1927,7 @@ void pcie_clear_root_pme_status(struct pci_dev *dev)
- bool pci_check_pme_status(struct pci_dev *dev)
- {
- 	int pmcsr_pos;
--	u16 pmcsr;
-+	u16 pmcsr, pmcsr_orig;
- 	bool ret = false;
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index efff3d5e9162..c55d93c1187d 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -41,8 +41,11 @@ enum imx6_pcie_variants {
+ 	IMX7D,
+ };
  
- 	if (!dev->pm_cap)
-@@ -1939,6 +1939,7 @@ bool pci_check_pme_status(struct pci_dev *dev)
- 		return false;
- 
- 	/* Clear PME status. */
-+	pmcsr_orig = pmcsr;
- 	pmcsr |= PCI_PM_CTRL_PME_STATUS;
- 	if (pmcsr & PCI_PM_CTRL_PME_ENABLE) {
- 		/* Disable PME to avoid interrupt flood. */
-@@ -1948,6 +1949,9 @@ bool pci_check_pme_status(struct pci_dev *dev)
- 
- 	pci_write_config_word(dev, pmcsr_pos, pmcsr);
- 
-+	pci_read_config_word(dev, pmcsr_pos, &pmcsr);
-+	pci_info(dev, "%s PM_CTRL %#06x -> %#06x\n", __func__, pmcsr_orig, pmcsr);
++#define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
 +
- 	return ret;
- }
+ struct imx6_pcie_drvdata {
+ 	enum imx6_pcie_variants variant;
++	u32 flags;
+ };
  
-@@ -2027,18 +2031,22 @@ static void pci_pme_list_scan(struct work_struct *work)
- 
- static void __pci_pme_active(struct pci_dev *dev, bool enable)
+ struct imx6_pcie {
+@@ -256,6 +259,9 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
  {
--	u16 pmcsr;
-+	u16 pmcsr, pmcsr_orig;
+ 	u32 tmp;
  
- 	if (!dev->pme_support)
- 		return;
- 
- 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-+	pmcsr_orig = pmcsr;
- 	/* Clear PME_Status by writing 1 to it and enable PME# */
- 	pmcsr |= PCI_PM_CTRL_PME_STATUS | PCI_PM_CTRL_PME_ENABLE;
- 	if (!enable)
- 		pmcsr &= ~PCI_PM_CTRL_PME_ENABLE;
- 
- 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
++	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_IMX6_PHY))
++		return;
 +
-+	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-+	pci_info(dev, "%s PM_CTRL %#06x -> %#06x\n", __func__, pmcsr_orig, pmcsr);
- }
+ 	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
+ 	tmp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
+ 		PHY_RX_OVRD_IN_LO_RX_PLL_EN);
+@@ -573,6 +579,9 @@ static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
+ 	int mult, div;
+ 	u32 val;
  
- /**
++	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_IMX6_PHY))
++		return 0;
++
+ 	switch (phy_rate) {
+ 	case 125000000:
+ 		/*
+@@ -1088,12 +1097,15 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ static const struct imx6_pcie_drvdata drvdata[] = {
+ 	[IMX6Q] = {
+ 		.variant = IMX6Q,
++		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
+ 	},
+ 	[IMX6SX] = {
+ 		.variant = IMX6SX,
++		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
+ 	},
+ 	[IMX6QP] = {
+ 		.variant = IMX6QP,
++		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
+ 	},
+ 	[IMX7D] = {
+ 		.variant = IMX7D,
+-- 
+2.20.1
+
