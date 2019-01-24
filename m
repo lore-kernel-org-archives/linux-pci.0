@@ -2,126 +2,139 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8736DC282C3
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 12:45:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7602C282C3
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 13:12:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 603F720855
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 12:45:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B5DF21855
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 13:12:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727596AbfAXMpb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 07:45:31 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56222 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726014AbfAXMpb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Jan 2019 07:45:31 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 765A4EBD;
-        Thu, 24 Jan 2019 04:45:31 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id CC0143F237;
-        Thu, 24 Jan 2019 04:45:29 -0800 (PST)
-Date:   Thu, 24 Jan 2019 12:45:27 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>, marc.zyngier@arm.com
-Cc:     Murali Karicheri <m-karicheri2@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/10] PCI: keystone: Use "dummy_irq_chip" instead of new
- irqchip for legacy interrupt handling
-Message-ID: <20190124124526.GC23362@e107981-ln.cambridge.arm.com>
-References: <20181219124207.13479-1-kishon@ti.com>
- <20181219124207.13479-3-kishon@ti.com>
+        id S1727841AbfAXNMS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 08:12:18 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:53234 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727798AbfAXNMS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jan 2019 08:12:18 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EC6AE796E5;
+        Thu, 24 Jan 2019 13:12:17 +0000 (UTC)
+Received: from vitty.brq.redhat.com.redhat.com (unknown [10.43.2.155])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DDD5B6CDB0;
+        Thu, 24 Jan 2019 13:12:14 +0000 (UTC)
+From:   Vitaly Kuznetsov <vkuznets@redhat.com>
+To:     Maya Nakamura <m.maya.nakamura@gmail.com>
+Cc:     linux-kernel@vger.kernel.org,
+        driverdev-devel@linuxdriverproject.org, haiyangz@microsoft.com,
+        marcelo.cerri@canonical.com, lorenzo.pieralisi@arm.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org, kys@microsoft.com,
+        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
+        jasowang@redhat.com, mikelley@microsoft.com,
+        Alexander.Levin@microsoft.com
+Subject: Re: [PATCH 1/2] PCI: hv: Replace hv_vp_set with hv_vpset
+In-Reply-To: <87ffdc2eb0642301516378feb1416cf7450bf6c1.1548232616.git.m.maya.nakamura@gmail.com>
+References: <cover.1548232616.git.m.maya.nakamura@gmail.com> <87ffdc2eb0642301516378feb1416cf7450bf6c1.1548232616.git.m.maya.nakamura@gmail.com>
+Date:   Thu, 24 Jan 2019 14:12:13 +0100
+Message-ID: <87sgxi19oy.fsf@vitty.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181219124207.13479-3-kishon@ti.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Type: text/plain
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Thu, 24 Jan 2019 13:12:18 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Dec 19, 2018 at 06:11:59PM +0530, Kishon Vijay Abraham I wrote:
-> Instead of creating a new irqchip with empty callback functions, use
-> dummy_irq_chip. Since there is nothing to do in the irqchip callback
-> functions, use handle_simple_irq instead of handle_level_irq.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Maya Nakamura <m.maya.nakamura@gmail.com> writes:
+
+> Remove a duplicate definition of VP set (hv_vp_set) and use the common
+> definition (hv_vpset) that is used in other places.
+>
+> Signed-off-by: Maya Nakamura <m.maya.nakamura@gmail.com>
 > ---
->  drivers/pci/controller/dwc/pci-keystone.c | 24 ++---------------------
->  1 file changed, 2 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-> index 5286a480f76b..1ef443009da5 100644
-> --- a/drivers/pci/controller/dwc/pci-keystone.c
-> +++ b/drivers/pci/controller/dwc/pci-keystone.c
-> @@ -266,31 +266,12 @@ static irqreturn_t ks_pcie_handle_error_irq(struct keystone_pcie *ks_pcie)
->  	return IRQ_HANDLED;
->  }
+>  drivers/pci/controller/pci-hyperv.c | 25 ++++++++++++-------------
+>  1 file changed, 12 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index 9ba4d12c179c..da8b58d8630d 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -393,12 +393,6 @@ struct hv_interrupt_entry {
 >  
-> -static void ks_pcie_ack_legacy_irq(struct irq_data *d)
-> -{
-> -}
-> -
-> -static void ks_pcie_mask_legacy_irq(struct irq_data *d)
-> -{
-> -}
-> -
-> -static void ks_pcie_unmask_legacy_irq(struct irq_data *d)
-> -{
-> -}
-> -
-> -static struct irq_chip ks_pcie_legacy_irq_chip = {
-> -	.name = "Keystone-PCI-Legacy-IRQ",
-> -	.irq_ack = ks_pcie_ack_legacy_irq,
-> -	.irq_mask = ks_pcie_mask_legacy_irq,
-> -	.irq_unmask = ks_pcie_unmask_legacy_irq,
+>  #define HV_VP_SET_BANK_COUNT_MAX	5 /* current implementation limit */
+>  
+> -struct hv_vp_set {
+> -	u64	format;			/* 0 (HvGenericSetSparse4k) */
+> -	u64	valid_banks;
+> -	u64	masks[HV_VP_SET_BANK_COUNT_MAX];
 > -};
 > -
->  static int ks_pcie_init_legacy_irq_map(struct irq_domain *d,
->  				       unsigned int irq,
->  				       irq_hw_number_t hw_irq)
->  {
-> -	irq_set_chip_and_handler(irq, &ks_pcie_legacy_irq_chip,
-> -				 handle_level_irq);
-> +	irq_set_chip_and_handler(irq, &dummy_irq_chip,
-> +				 handle_simple_irq);
-
-Hi Kishon,
-
-thanks for putting it together. I think I'd rather move some of
-the logic for acking the interrupt in ks_pcie_handle_legacy_irq()
-into proper irq_chip methods than using a dummy_irq_chip (that
-Marc wants to deprecate).
-
-Also, the flow handler should be handle_level_irq() since that's
-what legacy IRQs are.
-
-I hope Marc can chime in when he has a minute to help you finalize this.
-
-Overall you are doing the right thing and I would like to get this
-series merged for v5.1.
-
-Thanks,
-Lorenzo
-
->  	irq_set_chip_data(irq, d->host_data);
->  
->  	return 0;
-> @@ -298,7 +279,6 @@ static int ks_pcie_init_legacy_irq_map(struct irq_domain *d,
->  
->  static const struct irq_domain_ops ks_pcie_legacy_irq_domain_ops = {
->  	.map = ks_pcie_init_legacy_irq_map,
-> -	.xlate = irq_domain_xlate_onetwocell,
+>  /*
+>   * flags for hv_device_interrupt_target.flags
+>   */
+> @@ -410,7 +404,7 @@ struct hv_device_interrupt_target {
+>  	u32	flags;
+>  	union {
+>  		u64		 vp_mask;
+> -		struct hv_vp_set vp_set;
+> +		struct hv_vpset vp_set;
+>  	};
 >  };
 >  
->  /**
-> -- 
-> 2.17.1
-> 
+> @@ -460,12 +454,16 @@ struct hv_pcibus_device {
+>  	struct msi_controller msi_chip;
+>  	struct irq_domain *irq_domain;
+>  
+> -	/* hypercall arg, must not cross page boundary */
+> -	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+> -
+>  	spinlock_t retarget_msi_interrupt_lock;
+>  
+>  	struct workqueue_struct *wq;
+> +
+> +	/* hypercall arg, must not cross page boundary */
+> +	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+> +
+> +	/*
+> +	 * Don't put anything here: retarget_msi_interrupt_params must be last
+> +	 */
+
+
+This change seems to be unrelated and not anyhow described in the commit
+message - or did I miss something?
+
+>  };
+>  
+>  /*
+> @@ -955,12 +953,13 @@ static void hv_irq_unmask(struct irq_data *data)
+>  		 */
+>  		params->int_target.flags |=
+>  			HV_DEVICE_INTERRUPT_TARGET_PROCESSOR_SET;
+> -		params->int_target.vp_set.valid_banks =
+> +		params->int_target.vp_set.valid_bank_mask =
+>  			(1ull << HV_VP_SET_BANK_COUNT_MAX) - 1;
+>  
+>  		/*
+>  		 * var-sized hypercall, var-size starts after vp_mask (thus
+> -		 * vp_set.format does not count, but vp_set.valid_banks does).
+> +		 * vp_set.format does not count, but vp_set.valid_bank_mask
+> +		 * does).
+>  		 */
+>  		var_size = 1 + HV_VP_SET_BANK_COUNT_MAX;
+>  
+> @@ -974,7 +973,7 @@ static void hv_irq_unmask(struct irq_data *data)
+>  				goto exit_unlock;
+>  			}
+>  
+> -			params->int_target.vp_set.masks[cpu_vmbus / 64] |=
+> +			params->int_target.vp_set.bank_contents[cpu_vmbus / 64]	|=
+>  				(1ULL << (cpu_vmbus & 63));
+>  		}
+>  	} else {
+
+-- 
+Vitaly
