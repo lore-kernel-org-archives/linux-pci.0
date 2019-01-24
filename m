@@ -2,173 +2,94 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 435D6C282C5
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 606B3C282C6
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 09:25:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EB3B218A2
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:43:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Nr04hESD"
+	by mail.kernel.org (Postfix) with ESMTP id 38C1A2184C
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 09:25:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727603AbfAXInn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 03:43:43 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:40985 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727598AbfAXInm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 03:43:42 -0500
-Received: by mail-wr1-f68.google.com with SMTP id x10so5486241wrs.8
-        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2019 00:43:41 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=wcC/ahQ5gPh5GGtxDUwG3QmvMzNYe68M+L0cnRtfxnA=;
-        b=Nr04hESD3WKZRwFKATaiNJz5yZrxXRW94oywd4/jIsFQTiUzIgZplRxM/B4oSzbrNa
-         eBa5F2fFneULcsuNhDo8I0jC69EYWL+AYtzRsa9N4zBiB+VGTvsZivIHWAu808/P4FzP
-         ow24WLWSkrddwFjhCTo1bacoF/xjnEetDdoTI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=wcC/ahQ5gPh5GGtxDUwG3QmvMzNYe68M+L0cnRtfxnA=;
-        b=cibnvNc0d5fl2Jr9Q0BU1WliD5xhixQmn3jnViasW3DQxwV4WjeqZE1VZaWOuKmfkp
-         VwjEwdZGpa8sDR8+d5uUbSfRaMeJ8SxnzsJdvSA879daqaTVNhpXRL90G1CF/Y5D3gD8
-         43pOnC0EAHROud782PCOp7PVFN8/HjatAPWCZGlWp/JuiaLJAoMhnObII0PVQcma3FRM
-         Z1yuOoAHOo3HbnZ1NJU3jECnNMYa9ID4isGJUWNrFROZB2s9E4uTisitg8BgcKAtUxmk
-         vdvbmaxDQpKfGoi1+M/UYNw3TJ8R/Lt1bAJDspK2hTJgzMjGSHVNjEQ9j4O0T4vEDEFI
-         gUYA==
-X-Gm-Message-State: AJcUukcr6GQRz11aJjn7BF6PG/3QGO8tqI8vHCwvxnYfHuuhRoq4OtGK
-        dcVIwGO971dauqjLGzJ/CLYh0WnVjJ9kTiW/Tjk6Uw==
-X-Google-Smtp-Source: ALg8bN6x2BxQNBWDyBvML0RVKhEpb5CLTfuYY/s0DVIdJrc/fJV0l7oRPQHJdU62bjXa5KRgXAGCN9k6zvu+gB8otQw=
-X-Received: by 2002:adf:e3c8:: with SMTP id k8mr6178425wrm.83.1548319420857;
- Thu, 24 Jan 2019 00:43:40 -0800 (PST)
+        id S1726050AbfAXJZq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 04:25:46 -0500
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:32931 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726045AbfAXJZq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 04:25:46 -0500
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 1FA2F2800B6DE;
+        Thu, 24 Jan 2019 10:25:44 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 67152562EF; Thu, 24 Jan 2019 10:25:44 +0100 (CET)
+Date:   Thu, 24 Jan 2019 10:25:44 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Alex_Gagniuc@Dellteam.com
+Cc:     linux-pci@vger.kernel.org, bhelgaas@google.com,
+        keith.busch@intel.com, Austin.Bolen@dell.com
+Subject: Re: PCI: hotplug: Erroneous removal of hotplug PCI devices
+Message-ID: <20190124092544.of7xrgrjb4tfejgx@wunner.de>
+References: <356432a0556d4da59f8ba5cf1d750019@ausx13mps317.AMER.DELL.COM>
+ <20190123185420.2pennvzvkuhqfmtj@wunner.de>
+ <20190123190723.rnt5llkek5st7ddt@wunner.de>
+ <c43a8be3d0754d78a8c10b2ddb0a5c37@ausx13mps317.AMER.DELL.COM>
 MIME-Version: 1.0
-References: <1547785403-32268-1-git-send-email-srinath.mannam@broadcom.com>
- <1547785403-32268-3-git-send-email-srinath.mannam@broadcom.com> <20190118150851.GC25249@google.com>
-In-Reply-To: <20190118150851.GC25249@google.com>
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Thu, 24 Jan 2019 14:13:29 +0530
-Message-ID: <CABe79T4Pk4BtqaeV_hsJb+PXRoz9ToregVtqskcMqAiwtJSyMQ@mail.gmail.com>
-Subject: Re: [PATCH 2/3] PCI: iproc: CRS state check in config request
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c43a8be3d0754d78a8c10b2ddb0a5c37@ausx13mps317.AMER.DELL.COM>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+On Wed, Jan 23, 2019 at 11:50:30PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> nvme issue aside, the device is removed. Then, a few seconds later, we 
+> see Link Up and Card Present events, but no pciehp_isr() invocation. I 
+> think it all happens in one pciehp_handle_presence_or_link_change(), so 
+> pciehp_ist() is held up for a few seconds -- but that's a matter for a 
+> different thread.
 
-Thanks for review, please see my comments below inline.
+Yes, that's normal and expected.  The rationale is that we only know that
+link or presence has changed.  It could even have changed multiple times.
+Even if the link is now back up, we don't know if it's still the same card.
+So the slot is brought down and if it's currently occupied or the link is
+up, the slot is brought up again.
 
-On Fri, Jan 18, 2019 at 8:38 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Fri, Jan 18, 2019 at 09:53:22AM +0530, Srinath Mannam wrote:
-> > In the current implementation, config read of 0xffff0001 data
-> > is assumed as CRS completion. but sometimes 0xffff0001 can be
-> > a valid data.
-> > IPROC PCIe RC has a register to show config request status flags
-> > like SC, UR, CRS and CA.
-> > So that extra check is added in the code to confirm the CRS
-> > state using this register before reissue config request.
->
-> s/. but/.  But/  (Sentences start with a capital letter.)
-will change. Thanks.
->
-> Please wrap this text correctly.  If it's a single paragraph, wrap it so
-> the lines are filled.  It *looks* like it's intended to be separate
-> paragraphs; they should be separated by blank lines.
-will change. Thanks.
->
-> > Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> > Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> > ---
-> >  drivers/pci/controller/pcie-iproc.c | 23 +++++++++++++++++++++--
-> >  1 file changed, 21 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> > index 13ce80f..ee89d56 100644
-> > --- a/drivers/pci/controller/pcie-iproc.c
-> > +++ b/drivers/pci/controller/pcie-iproc.c
-> > @@ -63,6 +63,10 @@
-> >  #define APB_ERR_EN_SHIFT             0
-> >  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
-> >
-> > +#define CFG_RD_SUCCESS                       0
-> > +#define CFG_RD_UR                    1
-> > +#define CFG_RD_CRS                   2
-> > +#define CFG_RD_CA                    3
-> >  #define CFG_RETRY_STATUS             0xffff0001
-> >  #define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milliseconds */
-> >
-> > @@ -300,6 +304,9 @@ enum iproc_pcie_reg {
-> >       IPROC_PCIE_IARR4,
-> >       IPROC_PCIE_IMAP4,
-> >
-> > +     /* config read status */
-> > +     IPROC_PCIE_CFG_RD_STATUS,
-> > +
-> >       /* link status */
-> >       IPROC_PCIE_LINK_STATUS,
-> >
-> > @@ -370,6 +377,7 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
-> >       [IPROC_PCIE_IMAP3]              = 0xe08,
-> >       [IPROC_PCIE_IARR4]              = 0xe68,
-> >       [IPROC_PCIE_IMAP4]              = 0xe70,
-> > +     [IPROC_PCIE_CFG_RD_STATUS]      = 0xee0,
-> >       [IPROC_PCIE_LINK_STATUS]        = 0xf0c,
-> >       [IPROC_PCIE_APB_ERR_EN]         = 0xf40,
-> >       [IPROC_PCIE_ORDERING_CFG]       = 0x2000,
-> > @@ -501,10 +509,12 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
-> >       return (pcie->base + offset);
-> >  }
-> >
-> > -static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-> > +static unsigned int iproc_pcie_cfg_retry(struct iproc_pcie *pcie,
-> > +                                      void __iomem *cfg_data_p)
-> >  {
-> >       int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
-> >       unsigned int data;
-> > +     u32 status;
-> >
-> >       /*
-> >        * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
-> > @@ -525,6 +535,15 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-> >        */
-> >       data = readl(cfg_data_p);
-> >       while (data == CFG_RETRY_STATUS && timeout--) {
-> > +             /*
-> > +              * CRS state is set in CFG_RD status register
-> > +              * This will handle the case where CFG_RETRY_STATUS is
-> > +              * valid config data.
-> > +              */
-> > +             status = iproc_pcie_read_reg(pcie, IPROC_PCIE_CFG_RD_STATUS);
-> > +             if (status != CFG_RD_CRS)
-> > +                     return data;
-> > +
-> >               udelay(1);
-> >               data = readl(cfg_data_p);
-> >       }
-> > @@ -603,7 +622,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-> >       if (!cfg_data_p)
-> >               return PCIBIOS_DEVICE_NOT_FOUND;
-> >
-> > -     data = iproc_pcie_cfg_retry(cfg_data_p);
-> > +     data = iproc_pcie_cfg_retry(pcie, cfg_data_p);
-> >
-> >       *val = data;
-> >       if (size <= 2)
-> > --
-> > 2.7.4
-> >
+It would of course be possible to come up with more complicated schemes to
+try to handle odd behavior such as a belated presence change after a link
+change, but then it also becomes more complicated to reason about the
+scheme's correctness and ensure that other types of odd behavior (such as
+presence hardwired to zero) are still handled correctly.
+
+Thanks,
+
+Lukas
+
+> [  785.007640] nvme 0000:b1:00.0: enabling device (0000 -> 0002)
+> [  785.099567] pcieport 0000:b0:04.0: ZOPA: Status(0x00000040): 
+> presence-detected
+> [  785.099574] pcieport 0000:b0:04.0: ZOPA: Events(0x00000008): 
+> presence-detect-changed
+> [  785.099580] pcieport 0000:b0:04.0: ZOPA: Queued up(0x00000008): 
+> presence-detect-changed
+> [  785.099582] pcieport 0000:b0:04.0: ZOPA: pciehp_isr: exiting
+> [  785.099611] pcieport 0000:b0:04.0: ZOPA: pciehp_ist: Entered with 
+> events(0x00000008): presence-detect-changed
+> [  785.099615] pciehp 0000:b0:04.0:pcie204: ZOPA: 
+> pciehp_handle_presence_or_link_change: locked &ctrl->state_lock
+> [  785.099618] pciehp 0000:b0:04.0:pcie204: ZOPA: 
+> pciehp_handle_presence_or_link_change unlocked (POWEROFF)
+> [  785.099621] pciehp 0000:b0:04.0:pcie204: Slot(178): Card not present
+> [  788.756953] nvme nvme4: failed to mark controller CONNECTING
+> [  788.756958] nvme nvme4: Removing after probe failure status: 0
+> [  788.763317] pciehp 0000:b0:04.0:pcie204: ZOPA: 
+> pciehp_handle_presence_or_link_change unlocked (POWERON)
+> [  788.763322] pciehp 0000:b0:04.0:pcie204: Slot(178): Card present
+> [  788.763349] pciehp 0000:b0:04.0:pcie204: Slot(178): Link Up
+> [  788.892432] pci 0000:b1:00.0: [8086:0a55] type 00 class 0x010802
+> [  788.892474] pci 0000:b1:00.0: reg 0x10: [mem 0xe1500000-0xe1503fff 64bit]
+> 
