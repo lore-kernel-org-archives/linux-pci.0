@@ -2,139 +2,138 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7602C282C3
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 13:12:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21DA4C282C3
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 13:12:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B5DF21855
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 13:12:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F233A21855
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 13:12:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727841AbfAXNMS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 08:12:18 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:53234 "EHLO mx1.redhat.com"
+        id S1728085AbfAXNMb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 08:12:31 -0500
+Received: from mga14.intel.com ([192.55.52.115]:1083 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727798AbfAXNMS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Jan 2019 08:12:18 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EC6AE796E5;
-        Thu, 24 Jan 2019 13:12:17 +0000 (UTC)
-Received: from vitty.brq.redhat.com.redhat.com (unknown [10.43.2.155])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DDD5B6CDB0;
-        Thu, 24 Jan 2019 13:12:14 +0000 (UTC)
-From:   Vitaly Kuznetsov <vkuznets@redhat.com>
-To:     Maya Nakamura <m.maya.nakamura@gmail.com>
-Cc:     linux-kernel@vger.kernel.org,
-        driverdev-devel@linuxdriverproject.org, haiyangz@microsoft.com,
-        marcelo.cerri@canonical.com, lorenzo.pieralisi@arm.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org, kys@microsoft.com,
-        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
-        jasowang@redhat.com, mikelley@microsoft.com,
-        Alexander.Levin@microsoft.com
-Subject: Re: [PATCH 1/2] PCI: hv: Replace hv_vp_set with hv_vpset
-In-Reply-To: <87ffdc2eb0642301516378feb1416cf7450bf6c1.1548232616.git.m.maya.nakamura@gmail.com>
-References: <cover.1548232616.git.m.maya.nakamura@gmail.com> <87ffdc2eb0642301516378feb1416cf7450bf6c1.1548232616.git.m.maya.nakamura@gmail.com>
-Date:   Thu, 24 Jan 2019 14:12:13 +0100
-Message-ID: <87sgxi19oy.fsf@vitty.brq.redhat.com>
+        id S1727798AbfAXNMb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jan 2019 08:12:31 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Jan 2019 05:12:30 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,516,1539673200"; 
+   d="scan'208";a="117080875"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga007.fm.intel.com with ESMTP; 24 Jan 2019 05:12:28 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id E6FA1D4; Thu, 24 Jan 2019 15:12:27 +0200 (EET)
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     Kedar A Dongre <kedar.a.dongre@intel.com>,
+        Lukas Wunner <lukas@wunner.de>, Peter Wu <peter@lekensteyn.nl>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: [PATCH v3] PCI: Blacklist power management of Gigabyte X299 DESIGNARE EX PCIe ports
+Date:   Thu, 24 Jan 2019 16:12:27 +0300
+Message-Id: <20190124131227.45612-1-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Thu, 24 Jan 2019 13:12:18 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Maya Nakamura <m.maya.nakamura@gmail.com> writes:
+Gigabyte X299 DESIGNARE EX motherboard has one PCIe root port that is
+connected to an Alpine Ridge Thunderbolt controller. This port has slot
+implemented bit set in the config space but other than that it is not
+hotplug capable in the sense we are expecting in Linux (it has
+dev->is_hotplug_bridge set to 0):
 
-> Remove a duplicate definition of VP set (hv_vp_set) and use the common
-> definition (hv_vpset) that is used in other places.
->
-> Signed-off-by: Maya Nakamura <m.maya.nakamura@gmail.com>
-> ---
->  drivers/pci/controller/pci-hyperv.c | 25 ++++++++++++-------------
->  1 file changed, 12 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index 9ba4d12c179c..da8b58d8630d 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -393,12 +393,6 @@ struct hv_interrupt_entry {
->  
->  #define HV_VP_SET_BANK_COUNT_MAX	5 /* current implementation limit */
->  
-> -struct hv_vp_set {
-> -	u64	format;			/* 0 (HvGenericSetSparse4k) */
-> -	u64	valid_banks;
-> -	u64	masks[HV_VP_SET_BANK_COUNT_MAX];
-> -};
-> -
->  /*
->   * flags for hv_device_interrupt_target.flags
->   */
-> @@ -410,7 +404,7 @@ struct hv_device_interrupt_target {
->  	u32	flags;
->  	union {
->  		u64		 vp_mask;
-> -		struct hv_vp_set vp_set;
-> +		struct hv_vpset vp_set;
->  	};
->  };
->  
-> @@ -460,12 +454,16 @@ struct hv_pcibus_device {
->  	struct msi_controller msi_chip;
->  	struct irq_domain *irq_domain;
->  
-> -	/* hypercall arg, must not cross page boundary */
-> -	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-> -
->  	spinlock_t retarget_msi_interrupt_lock;
->  
->  	struct workqueue_struct *wq;
-> +
-> +	/* hypercall arg, must not cross page boundary */
-> +	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-> +
-> +	/*
-> +	 * Don't put anything here: retarget_msi_interrupt_params must be last
-> +	 */
+00:1c.4 PCI bridge: Intel Corporation 200 Series PCH PCI Express Root Port #5
+        Bus: primary=00, secondary=05, subordinate=46, sec-latency=0
+        Memory behind bridge: 78000000-8fffffff [size=384M]
+        Prefetchable memory behind bridge: 00003800f8000000-00003800ffffffff [size=128M]
+        ...
+        Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+        ...
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+                        Slot #8, PowerLimit 25.000W; Interlock- NoCompl+
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+                        Changed: MRL- PresDet+ LinkState+
 
+This system is using ACPI based hotplug to notify the OS that it needs
+to rescan the PCI bus (ACPI hotplug).
 
-This change seems to be unrelated and not anyhow described in the commit
-message - or did I miss something?
+If there is nothing connected in any of the Thunderbolt ports the root
+port will not have any runtime PM active children and is thus
+automatically runtime suspended pretty soon after boot by PCI PM core.
+Now, when a device is connected the BIOS SMI handler responsible for
+enumerating newly added devices is not able to find anything because the
+port is in D3.
 
->  };
->  
->  /*
-> @@ -955,12 +953,13 @@ static void hv_irq_unmask(struct irq_data *data)
->  		 */
->  		params->int_target.flags |=
->  			HV_DEVICE_INTERRUPT_TARGET_PROCESSOR_SET;
-> -		params->int_target.vp_set.valid_banks =
-> +		params->int_target.vp_set.valid_bank_mask =
->  			(1ull << HV_VP_SET_BANK_COUNT_MAX) - 1;
->  
->  		/*
->  		 * var-sized hypercall, var-size starts after vp_mask (thus
-> -		 * vp_set.format does not count, but vp_set.valid_banks does).
-> +		 * vp_set.format does not count, but vp_set.valid_bank_mask
-> +		 * does).
->  		 */
->  		var_size = 1 + HV_VP_SET_BANK_COUNT_MAX;
->  
-> @@ -974,7 +973,7 @@ static void hv_irq_unmask(struct irq_data *data)
->  				goto exit_unlock;
->  			}
->  
-> -			params->int_target.vp_set.masks[cpu_vmbus / 64] |=
-> +			params->int_target.vp_set.bank_contents[cpu_vmbus / 64]	|=
->  				(1ULL << (cpu_vmbus & 63));
->  		}
->  	} else {
+Prevent this from happening by blacklisting PCI power management of this
+particular Gigabyte system.
 
+Reported-by: Kedar A Dongre <kedar.a.dongre@intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+Hi,
+
+This is pretty much the same as v1 but I added Rafael's tag and rebased it
+on top of v5.0-rc3. The alternative approach in v2 breaks power management
+of certain discrete graphics so use blacklist for now.
+
+v2: https://patchwork.kernel.org/patch/10750549/
+v1: https://patchwork.kernel.org/patch/10711553/
+
+ drivers/pci/pci.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c25acace7d91..47ceef050782 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2501,6 +2501,23 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+ 		pm_runtime_put_sync(parent);
+ }
+ 
++static const struct dmi_system_id bridge_d3_blacklist[] = {
++	{
++		/*
++		 * Gigabyte X299 root port is not marked as hotplug
++		 * capable which allows Linux to power manage it.
++		 * However, this confuses the BIOS SMI handler so don't
++		 * power manage root ports on that system.
++		 */
++		.ident = "X299 DESIGNARE EX-CF",
++		.matches = {
++			DMI_MATCH(DMI_BOARD_VENDOR, "Gigabyte Technology Co., Ltd."),
++			DMI_MATCH(DMI_BOARD_NAME, "X299 DESIGNARE EX-CF"),
++		},
++	},
++	{ }
++};
++
+ /**
+  * pci_bridge_d3_possible - Is it possible to put the bridge into D3
+  * @bridge: Bridge to check
+@@ -2546,6 +2563,9 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ 		if (bridge->is_hotplug_bridge)
+ 			return false;
+ 
++		if (dmi_check_system(bridge_d3_blacklist))
++			return false;
++
+ 		/*
+ 		 * It should be safe to put PCIe ports from 2015 or newer
+ 		 * to D3.
 -- 
-Vitaly
+2.20.1
+
