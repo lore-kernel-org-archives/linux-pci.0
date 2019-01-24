@@ -2,136 +2,127 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E95DC282C6
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 11:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3581C282C3
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 12:26:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 097E4218AE
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 11:57:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95FD6218AD
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 12:26:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727573AbfAXL5E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 06:57:04 -0500
-Received: from foss.arm.com ([217.140.101.70]:55518 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726105AbfAXL5E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Jan 2019 06:57:04 -0500
+        id S1727443AbfAXM06 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 07:26:58 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55852 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726105AbfAXM05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jan 2019 07:26:57 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id AB622EBD;
-        Thu, 24 Jan 2019 03:57:03 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 24FACEBD;
+        Thu, 24 Jan 2019 04:26:57 -0800 (PST)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D864B3F237;
-        Thu, 24 Jan 2019 03:57:01 -0800 (PST)
-Date:   Thu, 24 Jan 2019 11:56:56 +0000
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 10B133F237;
+        Thu, 24 Jan 2019 04:26:54 -0800 (PST)
+Date:   Thu, 24 Jan 2019 12:26:52 +0000
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Koen Vandeputte <koen.vandeputte@ncentric.com>
-Cc:     linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Olof Johansson <olof@lixom.net>,
-        Robin Leblon <robin.leblon@ncentric.com>,
-        Rob Herring <robh@kernel.org>,
-        Russell King <linux@armlinux.org.uk>, stable@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] arm: cns3xxx: fix writing to wrong PCI registers
- after alignment
-Message-ID: <20190124115656.GA23362@e107981-ln.cambridge.arm.com>
-References: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
+To:     Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] PCIE support for i.MX8MQ
+Message-ID: <20190124122652.GB23362@e107981-ln.cambridge.arm.com>
+References: <20190112215601.9535-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
+In-Reply-To: <20190112215601.9535-1-andrew.smirnov@gmail.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jan 07, 2019 at 02:45:09PM +0100, Koen Vandeputte wrote:
-> Originally, cns3xxx used it's own functions for mapping, reading and writing registers.
+On Sat, Jan 12, 2019 at 01:55:57PM -0800, Andrey Smirnov wrote:
+> Everyone:
 > 
-> Commit 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
-> removed the internal PCI config write function in favor of the generic one:
+> This series contains changes I made in order to enable support of PCIE
+> IP block on i.MX8MQ SoCs.
 > 
-> cns3xxx_pci_write_config() --> pci_generic_config_write()
+> Changes since [v4]:
 > 
-> cns3xxx_pci_write_config() expected aligned addresses, being produced by cns3xxx_pci_map_bus()
-> while the generic one pci_generic_config_write() actually expects the real address
-> as both the function and hardware are capable of byte-aligned writes.
+>  - Collected Reviewed-by from Lucas
 > 
-> This currently leads to pci_generic_config_write() writing
-> to the wrong registers on some ocasions.
+>  - Replaced ((ARM || ARM64) && COMPILE_TEST) with COMPILE_TEST as per
+>    suggestion from Rob
 > 
-> First issue seen due to this:
+> Changes since [v3]:
 > 
-> - driver ath9k gets loaded
-> - The driver wants to write value 0xA8 to register PCI_LATENCY_TIMER, located at 0x0D
-> - cns3xxx_pci_map_bus() aligns the address to 0x0C
-> - pci_generic_config_write() effectively writes 0xA8 into register 0x0C (CACHE_LINE_SIZE)
+>  - Based on feedback from NXP, DIRECT_SPEED_CHANGE quirk was expanded
+>    to cover both i.MX7 and i.MX8MQ
 > 
-> This seems to cause some slight instability when certain PCI devices are used.
+>  - Code setting device type in GPR12 moved to a standalone function
 > 
-> Another issue example caused by this this is the PCI bus numbering,
-> where the primary bus is higher than the secondary, which is impossible.
+>  - Explicit "fsl,controller-id" binding was dropped, replaced by using
+>    controller physical address to determine logical ID
 > 
-> Before:
+>  - Dropped Reviewed-by from Lucas for patch 4/4 due to the change
+>    above (haven't heard explicit "yea" for it from him)
 > 
-> 00:00.0 PCI bridge: Cavium, Inc. Device 3400 (rev 01) (prog-if 00 [Normal decode])
->     Flags: bus master, fast devsel, latency 0, IRQ 255
->     Bus: primary=02, secondary=01, subordinate=ff, sec-latency=0
+> Changes since [v2], [fixes]:
 > 
-> After fix:
+>  - Incorporated [patch] introducing drvdata
 > 
-> 00:00.0 PCI bridge: Cavium, Inc. Device 3400 (rev 01) (prog-if 00 [Normal decode])
->     Flags: bus master, fast devsel, latency 0, IRQ 255
->     Bus: primary=00, secondary=01, subordinate=02, sec-latency=0
+>  - i.MX6 PHY operation gating converted to a single patch and to use a
+>    dedicated flag instead of doing explicit variant check
 > 
-> And very likely some more ..
+>  - Kconfig entry changed to use ARM64 && ARCH_MXC
 > 
-> Fix all by omitting the alignment being done in the mapping function.
+>  - Dropped FALLTHROUGH annotations
 > 
-> Fixes: 802b7c06adc7 ("ARM: cns3xxx: Convert PCI to use generic config accessors")
-> Acked-by: Krzysztof Halasa <khalasa@piap.pl>
-> Acked-by: Tim Harvey <tharvey@gateworks.com>
-> Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Olof Johansson <olof@lixom.net>
-> CC: Robin Leblon <robin.leblon@ncentric.com>
-> CC: Rob Herring <robh@kernel.org>
-> CC: Russell King <linux@armlinux.org.uk>
-> CC: stable@vger.kernel.org # v4.0+
-> ---
->  arch/arm/mach-cns3xxx/pcie.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Changes since [v1]:
+> 
+>  - Driver changed to use single "fsl,controller-id" property to
+>    distinguish between two intances of PCIE IP block
+> 
+>  - All code pertaining to L1SS was dropped to simplify the patch
+> 
+>  - Documented additions to DT bindings
+> 
+> Feedback is welcome!
+> 
+> Thanks,
+> Andrey Smirnov
+> 
+> [v4] https://lore.kernel.org/linux-arm-kernel/20190104165335.13205-1-andrew.smirnov@gmail.com
+> [v3] https://lore.kernel.org/linux-arm-kernel/20181218040702.29231-1-andrew.smirnov@gmail.com
+> [patch] https://patchwork.kernel.org/patch/10712261/
+> [fixes] https://lore.kernel.org/linux-arm-kernel/20181216230916.22982-1-andrew.smirnov@gmail.com
+> [v2] https://lore.kernel.org/linux-arm-kernel/20181206073545.10967-1-andrew.smirnov@gmail.com
+> [v1] https://lore.kernel.org/linux-arm-kernel/20181117181225.10737-1-andrew.smirnov@gmail.com/
+> 
+> Andrey Smirnov (4):
+>   PCI: imx6: introduce drvdata
+>   PCI: imx6: Mark PHY functions as i.MX6 specific
+>   PCI: imx6: Convert DIRECT_SPEED_CHANGE quirk code to use a flag
+>   PCI: imx6: Add support for i.MX8MQ
+> 
+>  .../bindings/pci/fsl,imx6q-pcie.txt           |   3 +-
+>  drivers/pci/controller/dwc/Kconfig            |   4 +-
+>  drivers/pci/controller/dwc/pci-imx6.c         | 150 +++++++++++++++---
+>  3 files changed, 133 insertions(+), 24 deletions(-)
 
-I have applied both patches to pci/arm-cns3xxx for v5.1, however I had
-to reformat and rewrite both logs (commit line wrappings,
-capitalization, etc.) so have a look.
+Please read this:
+
+https://lore.kernel.org/linux-pci/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com/
+
+reformat the patches, repost and I will merge them.
 
 Thanks,
 Lorenzo
-
-> 
-> 
-> V2:
-> --> resend to be in sync with new second patch
-> --> added acked-by's based on patch comments
-> 
-> diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-> index 318394ed5c7a..5e11ad3164e0 100644
-> --- a/arch/arm/mach-cns3xxx/pcie.c
-> +++ b/arch/arm/mach-cns3xxx/pcie.c
-> @@ -83,7 +83,7 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
->  	} else /* remote PCI bus */
->  		base = cnspci->cfg1_regs + ((busno & 0xf) << 20);
->  
-> -	return base + (where & 0xffc) + (devfn << 12);
-> +	return base + where + (devfn << 12);
->  }
->  
->  static int cns3xxx_pci_read_config(struct pci_bus *bus, unsigned int devfn,
-> -- 
-> 2.17.1
-> 
