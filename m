@@ -2,94 +2,92 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 606B3C282C6
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 09:25:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE9A3C282C5
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 10:46:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38C1A2184C
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 09:25:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8534C218A6
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 10:46:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="mFcoIGHV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726050AbfAXJZq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 04:25:46 -0500
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:32931 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726045AbfAXJZq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 04:25:46 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 1FA2F2800B6DE;
-        Thu, 24 Jan 2019 10:25:44 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 67152562EF; Thu, 24 Jan 2019 10:25:44 +0100 (CET)
-Date:   Thu, 24 Jan 2019 10:25:44 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Alex_Gagniuc@Dellteam.com
-Cc:     linux-pci@vger.kernel.org, bhelgaas@google.com,
-        keith.busch@intel.com, Austin.Bolen@dell.com
-Subject: Re: PCI: hotplug: Erroneous removal of hotplug PCI devices
-Message-ID: <20190124092544.of7xrgrjb4tfejgx@wunner.de>
-References: <356432a0556d4da59f8ba5cf1d750019@ausx13mps317.AMER.DELL.COM>
- <20190123185420.2pennvzvkuhqfmtj@wunner.de>
- <20190123190723.rnt5llkek5st7ddt@wunner.de>
- <c43a8be3d0754d78a8c10b2ddb0a5c37@ausx13mps317.AMER.DELL.COM>
+        id S1727390AbfAXKqP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 05:46:15 -0500
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:55352 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727363AbfAXKqP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 05:46:15 -0500
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0OAkB25015903;
+        Thu, 24 Jan 2019 04:46:11 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1548326771;
+        bh=LURlEazdlsViq/bSZlZwQimKeprMkOuAEx+h6N1PDkM=;
+        h=From:To:CC:Subject:Date;
+        b=mFcoIGHVFg6MclMIvWAmMGzkBNVhaN7gjna47o7PcBCUV/lfRirQYw6qc+3aldayq
+         sSH1iw1b3D7JizremAcIM6yET6ainSdpE39NXDaZBqb2czza46+x1cHPxgs4nCx67N
+         mxhhQxA8B3CSRLLYdmOcuTnpm3E7u5Cft0QClmFg=
+Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0OAkBN6049658
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 24 Jan 2019 04:46:11 -0600
+Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Thu, 24
+ Jan 2019 04:46:10 -0600
+Received: from dflp33.itg.ti.com (10.64.6.16) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Thu, 24 Jan 2019 04:46:10 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0OAk8TC003193;
+        Thu, 24 Jan 2019 04:46:08 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: dra7xx: Invoke phy_set_mode API to set PHY mode to PHY_MODE_PCIE
+Date:   Thu, 24 Jan 2019 16:15:37 +0530
+Message-ID: <20190124104537.22271-1-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c43a8be3d0754d78a8c10b2ddb0a5c37@ausx13mps317.AMER.DELL.COM>
-User-Agent: NeoMutt/20170113 (1.7.2)
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 23, 2019 at 11:50:30PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> nvme issue aside, the device is removed. Then, a few seconds later, we 
-> see Link Up and Card Present events, but no pciehp_isr() invocation. I 
-> think it all happens in one pciehp_handle_presence_or_link_change(), so 
-> pciehp_ist() is held up for a few seconds -- but that's a matter for a 
-> different thread.
+Certain PHYs used with PCIe controller can also be used with other
+controllers such as USB or SATA. In order to configure the PHY
+to work with PCIe controller, invoke phy_set_mode API with mode
+set to PHY_MODE_PCIE.
 
-Yes, that's normal and expected.  The rationale is that we only know that
-link or presence has changed.  It could even have changed multiple times.
-Even if the link is now back up, we don't know if it's still the same card.
-So the slot is brought down and if it's currently occupied or the link is
-up, the slot is brought up again.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-It would of course be possible to come up with more complicated schemes to
-try to handle odd behavior such as a belated presence change after a link
-change, but then it also becomes more complicated to reason about the
-scheme's correctness and ensure that other types of odd behavior (such as
-presence hardwired to zero) are still handled correctly.
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index efb26096ccb5..b287dbf6914c 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -517,6 +517,10 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
+ 	int i;
+ 
+ 	for (i = 0; i < phy_count; i++) {
++		ret = phy_set_mode(dra7xx->phy[i], PHY_MODE_PCIE);
++		if (ret < 0)
++			goto err_phy;
++
+ 		ret = phy_init(dra7xx->phy[i]);
+ 		if (ret < 0)
+ 			goto err_phy;
+-- 
+2.17.1
 
-Thanks,
-
-Lukas
-
-> [  785.007640] nvme 0000:b1:00.0: enabling device (0000 -> 0002)
-> [  785.099567] pcieport 0000:b0:04.0: ZOPA: Status(0x00000040): 
-> presence-detected
-> [  785.099574] pcieport 0000:b0:04.0: ZOPA: Events(0x00000008): 
-> presence-detect-changed
-> [  785.099580] pcieport 0000:b0:04.0: ZOPA: Queued up(0x00000008): 
-> presence-detect-changed
-> [  785.099582] pcieport 0000:b0:04.0: ZOPA: pciehp_isr: exiting
-> [  785.099611] pcieport 0000:b0:04.0: ZOPA: pciehp_ist: Entered with 
-> events(0x00000008): presence-detect-changed
-> [  785.099615] pciehp 0000:b0:04.0:pcie204: ZOPA: 
-> pciehp_handle_presence_or_link_change: locked &ctrl->state_lock
-> [  785.099618] pciehp 0000:b0:04.0:pcie204: ZOPA: 
-> pciehp_handle_presence_or_link_change unlocked (POWEROFF)
-> [  785.099621] pciehp 0000:b0:04.0:pcie204: Slot(178): Card not present
-> [  788.756953] nvme nvme4: failed to mark controller CONNECTING
-> [  788.756958] nvme nvme4: Removing after probe failure status: 0
-> [  788.763317] pciehp 0000:b0:04.0:pcie204: ZOPA: 
-> pciehp_handle_presence_or_link_change unlocked (POWERON)
-> [  788.763322] pciehp 0000:b0:04.0:pcie204: Slot(178): Card present
-> [  788.763349] pciehp 0000:b0:04.0:pcie204: Slot(178): Link Up
-> [  788.892432] pci 0000:b1:00.0: [8086:0a55] type 00 class 0x010802
-> [  788.892474] pci 0000:b1:00.0: reg 0x10: [mem 0xe1500000-0xe1503fff 64bit]
-> 
