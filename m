@@ -2,100 +2,103 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B98C6C282C3
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 05:37:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C844C282C5
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 875512184C
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 05:37:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B08E2184C
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:30:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g11UTlqG"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="sdJRgCmd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725287AbfAXFhF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 00:37:05 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:35730 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726151AbfAXFg6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 00:36:58 -0500
-Received: by mail-wr1-f65.google.com with SMTP id 96so5074965wrb.2
-        for <linux-pci@vger.kernel.org>; Wed, 23 Jan 2019 21:36:57 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=qcZH7cC6exfKxobfl1ESzgn6ZuhKgr3b9rR3EXyUKz0=;
-        b=g11UTlqGHb4re09Bz6qphfUusi21Oo9FJmq7u1jrmiBI+r74qLgd6V00Bk5Z1Rlsij
-         Bre3tMOtIwglov+QtWRZQZS0gTOhE7mBWFTKjjOZ7++FObDeke6r4ZKEDMoja9tthEPr
-         yQ3gVLKkk3PYG5XthY6KDnINSsFEa3qH6I8l8=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=qcZH7cC6exfKxobfl1ESzgn6ZuhKgr3b9rR3EXyUKz0=;
-        b=pQN1IuXTywzxldmbUPxBfbpxHcAdStqK2YyR/2o7r4Nr83nq1eK1yWubhN9wmYBQUE
-         OZMSHdkg4kg91meOcnns8yEd+WGuyt6PqMGuaPGuyhLYmE83WLK/IXJ3oyAG4GuMTPSK
-         x/LpgNzbtI1ovLH7HMwXKk5pJrx3o0Gc6wBLSPDhgX/EHqjuEVuOtNv21mE4ygSJQloP
-         ePDrhDRnSIXuI0vIl+VNGwh2ZGVTEf3lhniVO+WuuR/tRGT1jIIHpaLGBOXjwUz82r9W
-         E1wIsBZ1NZN5GVmJkAbaAvgaoL6qC4YriBPQ3nOX8/kJe1p9ZZpPLzBbctCNggntWg6H
-         synQ==
-X-Gm-Message-State: AJcUukd9gSda6G3Tq04IVdkpTPogiIY27i1OLYwvYM+RBCYax0bJcLw8
-        apRtbRjGNglqf0wdSliq5q1FPykyQSul1WtJT21Faw==
-X-Google-Smtp-Source: ALg8bN5XwwfwWAn8am9FawfFKsVmG1HXntlLk3XWIua/NbW5xyrom/V7kEXWUHTdHbceMlspy5/TcB8rw/0bzfcUaeo=
-X-Received: by 2002:adf:e3c8:: with SMTP id k8mr5543499wrm.83.1548308216235;
- Wed, 23 Jan 2019 21:36:56 -0800 (PST)
+        id S1727451AbfAXIai (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 03:30:38 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:39790 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726212AbfAXIai (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 03:30:38 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0O8UWWT098735;
+        Thu, 24 Jan 2019 02:30:32 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1548318632;
+        bh=4MdR0ga7d28v/h7qjL+PcjxkpY64yBu0ItQ7YJ4O6ZE=;
+        h=From:To:CC:Subject:Date;
+        b=sdJRgCmdHHCo/Jr2IqbAtR5ccQQWFdR7XsIffPWof8x0S4UKT9+C6WjV9LcMkX1Q5
+         qjUiJsrul692vY0WGOyBRDT/Y1ZFpWw9KR5Gt548QMaE4Y0S0gdZ+WXfWQgLrkB5zJ
+         EX6WjzsPLbamFXjT8oAOpMBTBDv+LTkChm0Ia4P8=
+Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0O8UWbW111606
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 24 Jan 2019 02:30:32 -0600
+Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Thu, 24
+ Jan 2019 02:30:32 -0600
+Received: from dlep32.itg.ti.com (157.170.170.100) by DFLE110.ent.ti.com
+ (10.64.6.31) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Thu, 24 Jan 2019 02:30:32 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0O8UTbY012320;
+        Thu, 24 Jan 2019 02:30:29 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh+dt@kernel.org>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3 0/3] PCI: dra7xx: Support PCIe x2 lane mode
+Date:   Thu, 24 Jan 2019 13:59:54 +0530
+Message-ID: <20190124082957.29077-1-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-References: <1547785403-32268-1-git-send-email-srinath.mannam@broadcom.com> <20190118144149.GA25249@google.com>
-In-Reply-To: <20190118144149.GA25249@google.com>
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Thu, 24 Jan 2019 11:06:44 +0530
-Message-ID: <CABe79T6=2uf1SrpDEm9s3smDkcR0JB-Gq8VwDF4yL8zBL6w0zw@mail.gmail.com>
-Subject: Re: [PATCH 0/3] Add IPROC PCIe new features
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+Previous version of the patch series can be found here [1]
 
-Thank you for the review. I will address your comments in the next patchset.
+Patch series adds support to enable x2 lane mode in dra74/dra76 and
+dra72 based boards in pci-dra7xx driver. It introduces new compatible
+strings in order to enable x2 lane mode support.
 
-Regards,
-Srinath.
+Changes from v2:
+*) Have a single syscon dt property for configuring x2 lanes
+*) Fix minor comments given by Lorenzo (falling back to 1 lane mode,
+   remove unused structure member).
 
-On Fri, Jan 18, 2019 at 8:11 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Fri, Jan 18, 2019 at 09:53:20AM +0530, Srinath Mannam wrote:
-> > Add changes related to IPROC PCIe RC IP new features.
-> >
-> > This patch set is based on Linux-5.0-rc2.
-> >
-> > Srinath Mannam (3):
-> >   PCI: iproc: Add feature to set order mode
->
-> Since this apparently refers to a PCIe feature, the subject should use the
-> exact terminology used in the PCIe spec.
->
-> >   PCI: iproc: CRS state check in config request
->
-> This subject should start with a verb, not "CRS".
->
-> >   PCI: iproc: Add PCIe 32bit outbound memory configuration
-> >
-> >  drivers/pci/controller/pcie-iproc.c | 172 +++++++++++++++++++++++++++++++++++-
-> >  drivers/pci/controller/pcie-iproc.h |  16 ++++
-> >  2 files changed, 184 insertions(+), 4 deletions(-)
-> >
-> > --
-> > 2.7.4
-> >
+Changes from v1:
+*) Added ti prefix to syscon-lane-conf and syscon-lane-sel as
+   suggested to Rob
+*) Merged "PCI: dwc: dra7xx: Add support for SoC specific compatible
+   strings" and "PCI: dwc: pci-dra7xx: Enable x2 mode support" into
+   a single patch.
+*) Fixed $subject as suggested by Bjorn
+*) Added x2 lane mode support for DRA72x
+
+The dts changes and phy changes will be sent as a separate series.
+
+[1] ->  https://lkml.org/lkml/2017/12/19/175
+
+Kishon Vijay Abraham I (3):
+  dt-bindings: PCI: dra7xx: Add SoC specific compatible strings
+  dt-bindings: PCI: dra7xx: Add properties to enable x2 lane in dra7
+  PCI: dra7xx: Enable x2 mode support for dra74x, dra76x and dra72x
+
+ .../devicetree/bindings/pci/ti-pci.txt        | 11 ++-
+ drivers/pci/controller/dwc/pci-dra7xx.c       | 77 +++++++++++++++++++
+ 2 files changed, 86 insertions(+), 2 deletions(-)
+
+-- 
+2.17.1
+
