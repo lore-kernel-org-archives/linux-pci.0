@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF87AC282C6
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:40:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 435D6C282C5
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:43:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92C2E218A2
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:40:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EB3B218A2
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 08:43:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ae4+3Qtg"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Nr04hESD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727296AbfAXIkd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 03:40:33 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:45805 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725939AbfAXIkd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 03:40:33 -0500
-Received: by mail-wr1-f65.google.com with SMTP id t6so5445391wrr.12
-        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2019 00:40:30 -0800 (PST)
+        id S1727603AbfAXInn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 03:43:43 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:40985 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727598AbfAXInm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 03:43:42 -0500
+Received: by mail-wr1-f68.google.com with SMTP id x10so5486241wrs.8
+        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2019 00:43:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=oWW3lVqjpkD2o+GvV/1GBM+nsjlneFXeYRkbpMWPj+0=;
-        b=ae4+3Qtg84CZP+IZMJMx2bm6NDNk9FQzl95h6r0LpLY//Ql4ycxrxK1Wt7EEsLA3ah
-         w5ISJw+BpPNv/oh8e0hTGV+cqP2r9wLAI1S3r5YOmAyLl31W7sYiwjSNZDkqXYPM3plG
-         3CBmcstnXQFjN3pE8KYp6Qy6sFEijLRqILy4g=
+        bh=wcC/ahQ5gPh5GGtxDUwG3QmvMzNYe68M+L0cnRtfxnA=;
+        b=Nr04hESD3WKZRwFKATaiNJz5yZrxXRW94oywd4/jIsFQTiUzIgZplRxM/B4oSzbrNa
+         eBa5F2fFneULcsuNhDo8I0jC69EYWL+AYtzRsa9N4zBiB+VGTvsZivIHWAu808/P4FzP
+         ow24WLWSkrddwFjhCTo1bacoF/xjnEetDdoTI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=oWW3lVqjpkD2o+GvV/1GBM+nsjlneFXeYRkbpMWPj+0=;
-        b=VRDNGBMIqqvYtWr3UR7VE5ahnLFL+MIEg/0n2qppeHB6wvs3cUCoBkRLudTmKtNfAK
-         u/6J1j7SBZ6zv46wNqtis8t8Nj5n4wzJwILc5bc3lgrmvKmqX3d76CyErnXw0awzQOXd
-         cF+Ddi2Qe/nWp186cll4r0VFpiaZb7cMbufNTioCnd9at83DdL5RCfb6OvSUuwuRzlST
-         gK8BL2LqlwhvPADxWSPP33WgXB/ltlB65uRa9/K8U61rVRYuIkdB9Io1evAp+kkI07I8
-         EkWHvgDV4E6JmUhzvA2EOBdtdQ8Jp54qbmsJz9ZYXkA3lIxC05CLDq/x00AuDv2MkwHl
-         h4EA==
-X-Gm-Message-State: AJcUukexJ0ls3rqWf/W8AEvV8fRC8Elqf76Kdto9NfytRcO60VKTpPRF
-        Quc4lV4ER7lrDj6PUIr3u9UOcM/Mz3dgyDRtc7CVGQ==
-X-Google-Smtp-Source: ALg8bN6N8gVg7A40PfEcel2wnaXsX2dVN7hGzrsAb55yJzMKFLuSu9mkDFhvD/n9bZLSJioMVzerXigXlhND2xWjWpA=
-X-Received: by 2002:adf:ee46:: with SMTP id w6mr6302217wro.261.1548319229939;
- Thu, 24 Jan 2019 00:40:29 -0800 (PST)
+        bh=wcC/ahQ5gPh5GGtxDUwG3QmvMzNYe68M+L0cnRtfxnA=;
+        b=cibnvNc0d5fl2Jr9Q0BU1WliD5xhixQmn3jnViasW3DQxwV4WjeqZE1VZaWOuKmfkp
+         VwjEwdZGpa8sDR8+d5uUbSfRaMeJ8SxnzsJdvSA879daqaTVNhpXRL90G1CF/Y5D3gD8
+         43pOnC0EAHROud782PCOp7PVFN8/HjatAPWCZGlWp/JuiaLJAoMhnObII0PVQcma3FRM
+         Z1yuOoAHOo3HbnZ1NJU3jECnNMYa9ID4isGJUWNrFROZB2s9E4uTisitg8BgcKAtUxmk
+         vdvbmaxDQpKfGoi1+M/UYNw3TJ8R/Lt1bAJDspK2hTJgzMjGSHVNjEQ9j4O0T4vEDEFI
+         gUYA==
+X-Gm-Message-State: AJcUukcr6GQRz11aJjn7BF6PG/3QGO8tqI8vHCwvxnYfHuuhRoq4OtGK
+        dcVIwGO971dauqjLGzJ/CLYh0WnVjJ9kTiW/Tjk6Uw==
+X-Google-Smtp-Source: ALg8bN6x2BxQNBWDyBvML0RVKhEpb5CLTfuYY/s0DVIdJrc/fJV0l7oRPQHJdU62bjXa5KRgXAGCN9k6zvu+gB8otQw=
+X-Received: by 2002:adf:e3c8:: with SMTP id k8mr6178425wrm.83.1548319420857;
+ Thu, 24 Jan 2019 00:43:40 -0800 (PST)
 MIME-Version: 1.0
 References: <1547785403-32268-1-git-send-email-srinath.mannam@broadcom.com>
- <1547785403-32268-2-git-send-email-srinath.mannam@broadcom.com> <20190118150713.GB25249@google.com>
-In-Reply-To: <20190118150713.GB25249@google.com>
+ <1547785403-32268-3-git-send-email-srinath.mannam@broadcom.com> <20190118150851.GC25249@google.com>
+In-Reply-To: <20190118150851.GC25249@google.com>
 From:   Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Thu, 24 Jan 2019 14:10:18 +0530
-Message-ID: <CABe79T741K-jPpkgCWWOoFRGY2Nf3zs1ea=NO=sLke=WJUT9iA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] PCI: iproc: Add feature to set order mode
+Date:   Thu, 24 Jan 2019 14:13:29 +0530
+Message-ID: <CABe79T4Pk4BtqaeV_hsJb+PXRoz9ToregVtqskcMqAiwtJSyMQ@mail.gmail.com>
+Subject: Re: [PATCH 2/3] PCI: iproc: CRS state check in config request
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Ray Jui <rjui@broadcom.com>,
@@ -72,317 +72,103 @@ Hi Bjorn,
 
 Thanks for review, please see my comments below inline.
 
-On Fri, Jan 18, 2019 at 8:37 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Fri, Jan 18, 2019 at 8:38 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
 >
-> On Fri, Jan 18, 2019 at 09:53:21AM +0530, Srinath Mannam wrote:
-> > Order mode in RX header of incoming pcie packets can be override to
-> > strict or loose order based on requirement.
-> > Sysfs entry is provided to set dynamic and default order modes of upstream
-> > traffic.
+> On Fri, Jan 18, 2019 at 09:53:22AM +0530, Srinath Mannam wrote:
+> > In the current implementation, config read of 0xffff0001 data
+> > is assumed as CRS completion. but sometimes 0xffff0001 can be
+> > a valid data.
+> > IPROC PCIe RC has a register to show config request status flags
+> > like SC, UR, CRS and CA.
+> > So that extra check is added in the code to confirm the CRS
+> > state using this register before reissue config request.
 >
-> s/pcie/PCIe/
+> s/. but/.  But/  (Sentences start with a capital letter.)
 will change. Thanks.
 >
-> If this is two paragraphs, insert a blank line between.  If it's one
-> paragraph, reflow it so it reads like one paragraph.
->
+> Please wrap this text correctly.  If it's a single paragraph, wrap it so
+> the lines are filled.  It *looks* like it's intended to be separate
+> paragraphs; they should be separated by blank lines.
 will change. Thanks.
-> Are you talking about the Relaxed Ordering bit in the TLP Attributes
-> field?  If so, please use the exact language used in the spec and
-> include a reference, e.g., to PCIe r4.0, sec 2.2.6.4, 2.4, etc.
 >
-Yes Relax ordering bit in TLP. I will use spec reference. Thanks.
-> I'm hesitant about a new sysfs file for this.  That automatically
-> creates a user-space dependency on this iProc feature.  Who would use
-> this file?
->
-This is the specific feature given in iProc, used to improve
-performance for the endpoints which does not support
-ordering configuration at its end.
-This is the reason we used sysfs file, which allows user to change
-ordering based on endpoint used and requirement.
-we are using these sysfs files to configure ordering to improve
-performance in NVMe endpoints with SPDK/DPDK drivers.
-If we enable this default in kernel, then it is applicable to all
-endpoints connected. But it may not required for all endpoints.
-
-> > To improve performance in few endpoints we required to modify the
-> > ordering attributes. Using this feature we can override order modes of RX
-> > packets at IPROC RC.
-> >
-> > Ex:
-> > In PCIe based NVMe SSD endpoints data read/writes from disk is using
-> > Queue pairs (submit/completion). After completion of block read/write,
-> > EP writes completion command to completion queue to notify RC.
-> > So that all data transfers before completion command write are not
-> > required to strict order except completion command. It means previous all
-> > packets before completion command write to RC should be written to memory
-> > and acknowledged.
->
-> IIUC, if Enable Relaxed Ordering in the endpoint's Device Control
-> register is set, the device is permitted to set the Relaxed Ordering
-> bit in TLPs it initiates.  So I would think that if we set Enable
-> Relaxed Ordering correctly, the NVMe endpoint should be able to
-> use Relaxed Ordering for the data transfers and strict ordering (the
-> default) for the completion command.  What am I missing?
->
-As per NVMe spec Enable Relaxed ordering is implementation specific all cards
-may not support.
-
-> This sysfs file apparently affects the Root Port/Root Complex
-> behavior, not the Endpoint's behavior.  Does that mean iProc ignores
-> the Relaxed Ordering bit by default, and you're providing a knob that
-With sysfs file setting, ordering attributes of all TLPs directed to
-specific memory window
-can be override iProc layer based on settings.
-TLPs to one memory window can keep as strict order and other memory windows can
-set to strict order.
-Using sysfs file ordering settings can configure and revert back to default.
-> makes it pay attention to it?  If that's the case, why wouldn't you
-> enable iProc support for Relaxed Ordering always, by default?
->
-Option is given to user, because few endpoints may support ordering
-configuration internally.
-few EPs doesn't support. Based on requirement user can configure
-ordering settings.
-
 > > Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
 > > Reviewed-by: Ray Jui <ray.jui@broadcom.com>
 > > ---
-> >  drivers/pci/controller/pcie-iproc.c | 128 ++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/controller/pcie-iproc.h |  16 +++++
-> >  2 files changed, 144 insertions(+)
+> >  drivers/pci/controller/pcie-iproc.c | 23 +++++++++++++++++++++--
+> >  1 file changed, 21 insertions(+), 2 deletions(-)
 > >
 > > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> > index c20fd6b..13ce80f 100644
+> > index 13ce80f..ee89d56 100644
 > > --- a/drivers/pci/controller/pcie-iproc.c
 > > +++ b/drivers/pci/controller/pcie-iproc.c
-> > @@ -57,6 +57,9 @@
-> >  #define PCIE_DL_ACTIVE_SHIFT         2
-> >  #define PCIE_DL_ACTIVE                       BIT(PCIE_DL_ACTIVE_SHIFT)
-> >
-> > +#define MPS_MRRS_CFG_MPS_SHIFT               0
-> > +#define MPS_MRRS_CFG_MRRS_SHIFT              16
-> > +
+> > @@ -63,6 +63,10 @@
 > >  #define APB_ERR_EN_SHIFT             0
 > >  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
 > >
-> > @@ -91,6 +94,14 @@
+> > +#define CFG_RD_SUCCESS                       0
+> > +#define CFG_RD_UR                    1
+> > +#define CFG_RD_CRS                   2
+> > +#define CFG_RD_CA                    3
+> >  #define CFG_RETRY_STATUS             0xffff0001
+> >  #define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milliseconds */
 > >
-> >  #define IPROC_PCIE_REG_INVALID               0xffff
+> > @@ -300,6 +304,9 @@ enum iproc_pcie_reg {
+> >       IPROC_PCIE_IARR4,
+> >       IPROC_PCIE_IMAP4,
 > >
-> > +#define RO_FIELD(window)             BIT((window) << 1)
-> > +#define RO_VALUE(window)             BIT(((window) << 1) + 1)
-> > +/* All Windows are allowed */
-> > +#define RO_ALL_WINDOW                        0x33333333
-> > +/* Wait on All Windows */
-> > +#define RO_FIELD_ALL_WINDOW          0x11111111
-> > +#define DYNAMIC_ORDER_MODE           0x5
+> > +     /* config read status */
+> > +     IPROC_PCIE_CFG_RD_STATUS,
 > > +
-> >  /**
-> >   * iProc PCIe outbound mapping controller specific parameters
-> >   *
-> > @@ -295,6 +306,15 @@ enum iproc_pcie_reg {
-> >       /* enable APB error for unsupported requests */
-> >       IPROC_PCIE_APB_ERR_EN,
+> >       /* link status */
+> >       IPROC_PCIE_LINK_STATUS,
 > >
-> > +     /* Ordering Mode configuration registers */
-> > +     IPROC_PCIE_ORDERING_CFG,
-> > +     IPROC_PCIE_MPS_MRRS_CFG,
-> > +     IPROC_PCIE_IMAP0_RO_CONTROL,
-> > +     IPROC_PCIE_IMAP1_RO_CONTROL,
-> > +     IPROC_PCIE_IMAP2_RO_CONTROL,
-> > +     IPROC_PCIE_IMAP3_RO_CONTROL,
-> > +     IPROC_PCIE_IMAP4_RO_CONTROL,
-> > +
-> >       /* total number of core registers */
-> >       IPROC_PCIE_MAX_NUM_REG,
-> >  };
-> > @@ -352,6 +372,13 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
+> > @@ -370,6 +377,7 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
+> >       [IPROC_PCIE_IMAP3]              = 0xe08,
+> >       [IPROC_PCIE_IARR4]              = 0xe68,
 > >       [IPROC_PCIE_IMAP4]              = 0xe70,
+> > +     [IPROC_PCIE_CFG_RD_STATUS]      = 0xee0,
 > >       [IPROC_PCIE_LINK_STATUS]        = 0xf0c,
 > >       [IPROC_PCIE_APB_ERR_EN]         = 0xf40,
-> > +     [IPROC_PCIE_ORDERING_CFG]       = 0x2000,
-> > +     [IPROC_PCIE_MPS_MRRS_CFG]       = 0x2008,
-> > +     [IPROC_PCIE_IMAP0_RO_CONTROL]   = 0x201c,
-> > +     [IPROC_PCIE_IMAP1_RO_CONTROL]   = 0x2020,
-> > +     [IPROC_PCIE_IMAP2_RO_CONTROL]   = 0x2024,
-> > +     [IPROC_PCIE_IMAP3_RO_CONTROL]   = 0x2028,
-> > +     [IPROC_PCIE_IMAP4_RO_CONTROL]   = 0x202c,
-> >  };
-> >
-> >  /* iProc PCIe PAXC v1 registers */
-> > @@ -1401,6 +1428,97 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
-> >       return 0;
+> >       [IPROC_PCIE_ORDERING_CFG]       = 0x2000,
+> > @@ -501,10 +509,12 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
+> >       return (pcie->base + offset);
 > >  }
 > >
-> > +static
-> > +ssize_t order_mode_show(struct device *dev,
-> > +                     struct device_attribute *attr,
-> > +                     char *buff)
->
-> Please format the same as the rest of the file, i.e.,
->
->   static ssize_t order_mode_show(struct device *dev, ...
->
-> > +{
-> > +     struct pci_host_bridge *host = to_pci_host_bridge(dev);
-> > +     struct iproc_pcie *pcie = pci_host_bridge_priv(host);
-> > +
-> > +     return sprintf(buff, "Current PAXB order configuration %d\n",
-> > +                    pcie->order_cfg);
-> > +}
-> > +
-> > +static void pcie_iproc_set_dynamic_order(struct iproc_pcie *pcie)
-> > +{
-> > +     u32 val = 0, mps;
-> > +
-> > +     /* Set all IMAPs to relaxed order in dynamic order mode */
-> > +     iproc_pcie_write_reg(pcie, IPROC_PCIE_ORDERING_CFG,
-> > +                          DYNAMIC_ORDER_MODE);
-> > +     iproc_pcie_write_reg(pcie, IPROC_PCIE_IMAP0_RO_CONTROL,
-> > +                          RO_ALL_WINDOW);
-> > +     iproc_pcie_write_reg(pcie, IPROC_PCIE_IMAP1_RO_CONTROL,
-> > +                          RO_ALL_WINDOW);
-> > +     iproc_pcie_write_reg(pcie, IPROC_PCIE_IMAP2_RO_CONTROL,
-> > +                          RO_ALL_WINDOW);
-> > +     iproc_pcie_write_reg(pcie, IPROC_PCIE_IMAP3_RO_CONTROL,
-> > +                          RO_ALL_WINDOW);
-> > +     iproc_pcie_write_reg(pcie, IPROC_PCIE_IMAP4_RO_CONTROL,
-> > +                          RO_ALL_WINDOW);
-> > +
-> > +     /* PAXB MPS/MRRS settings configuration */
-> > +     iproc_pci_raw_config_read32(pcie, 0, IPROC_PCI_EXP_CAP + PCI_EXP_DEVCTL,
-> > +                                 2, &mps);
-> > +     mps = (mps & PCI_EXP_DEVCTL_PAYLOAD) >> 5;
-> > +     /* set MRRS to match system MPS */
-> > +     val |= (mps << MPS_MRRS_CFG_MRRS_SHIFT);
-> > +     /* set MPS to 4096 bytes */
-> > +     val |= (0x5 << MPS_MRRS_CFG_MPS_SHIFT);
-> > +     iproc_pcie_write_reg(pcie, IPROC_PCIE_MPS_MRRS_CFG, val);
-> > +}
-> > +
-> > +static
-> > +ssize_t order_mode_store(struct device *dev,
-> > +                      struct device_attribute *attr,
-> > +                      const char *buf,
-> > +                      size_t count)
->
-> Fix formatting as above.
->
-> > +{
-> > +     struct pci_host_bridge *host = to_pci_host_bridge(dev);
-> > +     struct iproc_pcie *pcie = pci_host_bridge_priv(host);
-> > +     unsigned long  val, regval;
-> > +
-> > +     if (kstrtoul(buf, 0, &val) < 0)
-> > +             return -EINVAL;
-> > +
-> > +     if (val > PAXB_ORDER_DEV_MEM_ONLY) {
-> > +             dev_err(dev, "Invalid Value passed %lu\n", val);
-> > +             dev_err(dev, "0: Everything in strict order\n");
-> > +             dev_err(dev, "1: Only IMAP2 in strict order\n");
-> > +             dev_err(dev, "2: Only device memory in strict order (MSI/MSIX)\n");
-> > +             return -EINVAL;
-> > +     }
-> > +
-> > +     if (val == pcie->order_cfg)
-> > +             return count;
-> > +
-> > +     switch (val) {
-> > +     case PAXB_ORDER_IMAP2_ONLY:
-> > +             pcie_iproc_set_dynamic_order(pcie);
-> > +             regval = RO_ALL_WINDOW;
-> > +             regval &= ~(RO_VALUE(0));
-> > +             /* Set IMAP2 to strict order */
-> > +             iproc_pcie_write_reg(pcie, IPROC_PCIE_IMAP2_RO_CONTROL, regval);
-> > +             dev_info(dev, "RO_IMAP2 set to %#lx\n", regval);
-> > +             break;
-> > +     case PAXB_ORDER_DEV_MEM_ONLY:
-> > +             pcie_iproc_set_dynamic_order(pcie);
-> > +             /* Set IMAP0 to strict order */
-> > +             iproc_pcie_write_reg(pcie, IPROC_PCIE_IMAP0_RO_CONTROL,
-> > +                                  RO_FIELD_ALL_WINDOW);
-> > +             dev_info(dev, "RO_IMAP0 set to %#x\n", RO_FIELD_ALL_WINDOW);
-> > +             break;
-> > +     default:
-> > +             iproc_pcie_write_reg(pcie, IPROC_PCIE_ORDERING_CFG, 0);
-> > +             break;
-> > +     }
-> > +     pcie->order_cfg = val;
-> > +     return count;
-> > +}
-> > +
-> > +static DEVICE_ATTR_RW(order_mode);
-> > +
-> >  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+> > -static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+> > +static unsigned int iproc_pcie_cfg_retry(struct iproc_pcie *pcie,
+> > +                                      void __iomem *cfg_data_p)
 > >  {
-> >       struct device *dev;
-> > @@ -1484,6 +1602,11 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+> >       int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
+> >       unsigned int data;
+> > +     u32 status;
 > >
-> >       pci_bus_add_devices(host->bus);
-> >
-> > +     if (pcie->type == IPROC_PCIE_PAXB_V2) {
-> > +             ret = device_create_file(&host->dev, &dev_attr_order_mode);
-> > +             if (ret < 0)
-> > +                     goto err_power_off_phy;
-> > +     }
-> >       return 0;
-> >
-> >  err_power_off_phy:
-> > @@ -1496,6 +1619,11 @@ EXPORT_SYMBOL(iproc_pcie_setup);
-> >
-> >  int iproc_pcie_remove(struct iproc_pcie *pcie)
-> >  {
-> > +     struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+> >       /*
+> >        * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
+> > @@ -525,6 +535,15 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+> >        */
+> >       data = readl(cfg_data_p);
+> >       while (data == CFG_RETRY_STATUS && timeout--) {
+> > +             /*
+> > +              * CRS state is set in CFG_RD status register
+> > +              * This will handle the case where CFG_RETRY_STATUS is
+> > +              * valid config data.
+> > +              */
+> > +             status = iproc_pcie_read_reg(pcie, IPROC_PCIE_CFG_RD_STATUS);
+> > +             if (status != CFG_RD_CRS)
+> > +                     return data;
 > > +
-> > +     if (pcie->type == IPROC_PCIE_PAXB_V2)
-> > +             device_remove_file(&host->dev, &dev_attr_order_mode);
-> > +
-> >       pci_stop_root_bus(pcie->root_bus);
-> >       pci_remove_root_bus(pcie->root_bus);
+> >               udelay(1);
+> >               data = readl(cfg_data_p);
+> >       }
+> > @@ -603,7 +622,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> >       if (!cfg_data_p)
+> >               return PCIBIOS_DEVICE_NOT_FOUND;
 > >
-> > diff --git a/drivers/pci/controller/pcie-iproc.h b/drivers/pci/controller/pcie-iproc.h
-> > index 4f03ea5..6e100cd 100644
-> > --- a/drivers/pci/controller/pcie-iproc.h
-> > +++ b/drivers/pci/controller/pcie-iproc.h
-> > @@ -24,6 +24,18 @@ enum iproc_pcie_type {
-> >  };
+> > -     data = iproc_pcie_cfg_retry(cfg_data_p);
+> > +     data = iproc_pcie_cfg_retry(pcie, cfg_data_p);
 > >
-> >  /**
-> > + * PAXB Dynamic ordering modes
-> > + * PAXB_ORDER_EVERYTHING: Everything in strict order
-> > + * PAXB_ORDER_IMAP2_ONLY: Only IMAP2 memory window strict order
-> > + * PAXB_ORDER_DEV_MEM_ONLY: Only device memory (MSI/MSIX) is strict order
-> > + */
-> > +enum paxb_order_cfg {
-> > +     PAXB_ORDER_EVERYTHING,
-> > +     PAXB_ORDER_IMAP2_ONLY,
-> > +     PAXB_ORDER_DEV_MEM_ONLY,
-> > +};
-> > +
-> > +/**
-> >   * iProc PCIe outbound mapping
-> >   * @axi_offset: offset from the AXI address to the internal address used by
-> >   * the iProc PCIe core
-> > @@ -74,6 +86,8 @@ struct iproc_msi;
-> >   * @ib: inbound mapping related parameters
-> >   * @ib_map: outbound mapping region related parameters
-> >   *
-> > + * @order_cfg: indicates current value of the order mode.
-> > + *
-> >   * @need_msi_steer: indicates additional configuration of the iProc PCIe
-> >   * controller is required to steer MSI writes to external interrupt controller
-> >   * @msi: MSI data
-> > @@ -102,6 +116,8 @@ struct iproc_pcie {
-> >       struct iproc_pcie_ib ib;
-> >       const struct iproc_pcie_ib_map *ib_map;
-> >
-> > +     enum paxb_order_cfg order_cfg;
-> > +
-> >       bool need_msi_steer;
-> >       struct iproc_msi *msi;
-> >  };
+> >       *val = data;
+> >       if (size <= 2)
 > > --
 > > 2.7.4
 > >
