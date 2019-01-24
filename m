@@ -2,126 +2,120 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DF32C282C3
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 21:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDB96C282C3
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 22:11:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54E1B218A6
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 21:44:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83DD8218D2
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 22:11:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dell.com header.i=@dell.com header.b="MoLGdsF7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726269AbfAXVoC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 16:44:02 -0500
-Received: from guitar.tcltek.co.il ([192.115.133.116]:53484 "EHLO
-        mx.tkos.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726095AbfAXVoC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Jan 2019 16:44:02 -0500
-Received: from tarshish.tkos.co.il (unknown [10.0.8.6])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mx.tkos.co.il (Postfix) with ESMTPS id 6438744087E;
-        Thu, 24 Jan 2019 23:43:59 +0200 (IST)
-From:   Baruch Siach <baruch@tkos.co.il>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Andrew Lunn <andrew@lunn.ch>, Baruch Siach <baruch@tkos.co.il>,
-        Sven Auhagen <sven.auhagen@voleatech.de>,
-        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Russell King <linux@armlinux.org.uk>,
-        linux-arm-kernel@lists.infradead.org,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: [PATCH v2] Revert "PCI: armada8k: Add support for gpio controlled reset signal"
-Date:   Thu, 24 Jan 2019 23:42:45 +0200
-Message-Id: <fac224459214193f89bbfdc0d058879ace50fe2c.1548366165.git.baruch@tkos.co.il>
-X-Mailer: git-send-email 2.20.1
+        id S1726015AbfAXWL4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 17:11:56 -0500
+Received: from esa1.dell-outbound.iphmx.com ([68.232.153.90]:42419 "EHLO
+        esa1.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725991AbfAXWL4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 17:11:56 -0500
+X-Greylist: delayed 664 seconds by postgrey-1.27 at vger.kernel.org; Thu, 24 Jan 2019 17:11:56 EST
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dell.com; i=@dell.com; q=dns/txt; s=smtpout;
+  t=1548367913; x=1579903913;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=AQXJATamgwFvlhU+5qaEPpN1G7Yichp7m8/7wH7cw5U=;
+  b=MoLGdsF7WaSf/FfURo6/QRNLiOe/t4Nki5H07DkwzzapB8ug+kw4Jjf7
+   idgfZE7otOE4SIa1mOXgr8YlNFi0NTNN3SyFJGBHAS/F6ix8+/VDQzyzo
+   I+DF6TH52Ehv+cJ2rmBJNASjLQJfkcDWocqyKvff55KS53Eh/PEShrC/U
+   w=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2EGAAAoNUpchyeV50NkGwEBAQEDAQE?=
+ =?us-ascii?q?BBwMBAQGBUQYBAQELAYJZgRQVHIwRX4sUgg2BfpYJgXsLAQGBd4J1gwYiNAk?=
+ =?us-ascii?q?NAQMBAQIBAQIBAQIQAQEBFQkIKS+COiKCbwEBAQECARIoPwULAgEIGB4QVwI?=
+ =?us-ascii?q?EAQ0NGoMAgXoIoE09AoFuiQcBAQGCHoovjEGCFoERgmQuhQGFYAKiLQcCkh4?=
+ =?us-ascii?q?gkh+KDJEEAgQCBAUCFIFGN4FYcIM9gjSOJ0ABikCBHwEB?=
+X-IPAS-Result: =?us-ascii?q?A2EGAAAoNUpchyeV50NkGwEBAQEDAQEBBwMBAQGBUQYBA?=
+ =?us-ascii?q?QELAYJZgRQVHIwRX4sUgg2BfpYJgXsLAQGBd4J1gwYiNAkNAQMBAQIBAQIBA?=
+ =?us-ascii?q?QIQAQEBFQkIKS+COiKCbwEBAQECARIoPwULAgEIGB4QVwIEAQ0NGoMAgXoIo?=
+ =?us-ascii?q?E09AoFuiQcBAQGCHoovjEGCFoERgmQuhQGFYAKiLQcCkh4gkh+KDJEEAgQCB?=
+ =?us-ascii?q?AUCFIFGN4FYcIM9gjSOJ0ABikCBHwEB?=
+Received: from mx0a-00154901.pphosted.com ([67.231.149.39])
+  by esa1.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 24 Jan 2019 16:00:42 -0600
+Received: from pps.filterd (m0090351.ppops.net [127.0.0.1])
+        by mx0b-00154901.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x0OLw4ko031214
+        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2019 17:00:52 -0500
+Received: from esa1.dell-outbound2.iphmx.com (esa1.dell-outbound2.iphmx.com [68.232.153.201])
+        by mx0b-00154901.pphosted.com with ESMTP id 2q7hqa9mc9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-pci@vger.kernel.org>; Thu, 24 Jan 2019 17:00:52 -0500
+From:   <Austin.Bolen@dell.com>
+To:     <keith.busch@intel.com>, <Austin.Bolen@dell.com>
+Received: from ausxipps306.us.dell.com ([143.166.148.156])
+  by esa1.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 25 Jan 2019 04:00:51 +0600
+X-LoopCount0: from 10.166.134.89
+X-IronPort-AV: E=Sophos;i="5.56,518,1539666000"; 
+   d="scan'208";a="264746659"
+CC:     <Alex_Gagniuc@Dellteam.com>, <linux-pci@vger.kernel.org>,
+        <bhelgaas@google.com>, <lukas@wunner.de>
+Subject: Re: PCI: hotplug: Erroneous removal of hotplug PCI devices
+Thread-Topic: PCI: hotplug: Erroneous removal of hotplug PCI devices
+Thread-Index: AQHUs0hi5mR8YZ0nPk+DZaS87pNxDw==
+Date:   Thu, 24 Jan 2019 22:00:49 +0000
+Message-ID: <8242ccdc28e04fca9f9264ec75112b8b@AUSX13MPC131.AMER.DELL.COM>
+References: <356432a0556d4da59f8ba5cf1d750019@ausx13mps317.AMER.DELL.COM>
+ <20190123184453.GB6629@localhost.localdomain>
+ <b32e6ca62ae2494f98450df81ca1ee14@AUSX13MPC131.AMER.DELL.COM>
+ <20190124202020.GB9600@localhost.localdomain>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.143.242.75]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-01-24_14:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1901240149
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This reverts commit 3d71746c420c1c1c27cf5c4e48f8fa0a6cfdc185.
-
-That commit breaks boot on Macchiatobin when a Mellanox NIC is in the
-PCIe slot.
-
-It turns out that full reset cycle requires first comphy serdes
-initialization. Reset signal toggle without comphy initialization makes
-access to PCI configuration registers stall indefinitely. U-Boot toggles
-the Macchiatobin PCIe reset line already at boot, after initializing the
-comphy serdes.
-
-So while commit 3d71746c42 ("PCI: armada8k: Add support for gpio
-controlled reset signal") enables PCIe on platforms that U-Boot does
-not (yet) touch the reset line (like Clearfog GT-8K), it breaks PCIe
-(and boot) on the Macchiatobin.
-
-Revert commit 3d71746c42 ("PCI: armada8k: Add support for gpio
-controlled reset signal") entirely for now to fix the Macchaitobin
-regression. Proper PCIe reset support would require PCIe comphy setup
-support. That must wait for another kernel release.
-
-Reported-by: Sven Auhagen <sven.auhagen@voleatech.de>
-Signed-off-by: Baruch Siach <baruch@tkos.co.il>
----
-v2: Add commit title to commit id mentions
----
- drivers/pci/controller/dwc/pcie-armada8k.c | 16 ----------------
- 1 file changed, 16 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index b171b6bc15c8..0c389a30ef5d 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -22,7 +22,6 @@
- #include <linux/resource.h>
- #include <linux/of_pci.h>
- #include <linux/of_irq.h>
--#include <linux/gpio/consumer.h>
- 
- #include "pcie-designware.h"
- 
-@@ -30,7 +29,6 @@ struct armada8k_pcie {
- 	struct dw_pcie *pci;
- 	struct clk *clk;
- 	struct clk *clk_reg;
--	struct gpio_desc *reset_gpio;
- };
- 
- #define PCIE_VENDOR_REGS_OFFSET		0x8000
-@@ -139,12 +137,6 @@ static int armada8k_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct armada8k_pcie *pcie = to_armada8k_pcie(pci);
- 
--	if (pcie->reset_gpio) {
--		/* assert and then deassert the reset signal */
--		gpiod_set_value_cansleep(pcie->reset_gpio, 1);
--		msleep(100);
--		gpiod_set_value_cansleep(pcie->reset_gpio, 0);
--	}
- 	dw_pcie_setup_rc(pp);
- 	armada8k_pcie_establish_link(pcie);
- 
-@@ -257,14 +249,6 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 		goto fail_clkreg;
- 	}
- 
--	/* Get reset gpio signal and hold asserted (logically high) */
--	pcie->reset_gpio = devm_gpiod_get_optional(dev, "reset",
--						   GPIOD_OUT_HIGH);
--	if (IS_ERR(pcie->reset_gpio)) {
--		ret = PTR_ERR(pcie->reset_gpio);
--		goto fail_clkreg;
--	}
--
- 	platform_set_drvdata(pdev, pcie);
- 
- 	ret = armada8k_add_pcie_port(pcie, pdev);
--- 
-2.20.1
-
+On 1/24/2019 2:21 PM, Keith Busch wrote:=0A=
+> =0A=
+=0A=
+<snip>=0A=
+=0A=
+=0A=
+> My copy of the 5.0-0.9 spec missed out on this ECN. The new changes look=
+=0A=
+> like it more clearly defines expected software and hardware behavior,=0A=
+> so I'm looking forward to seeing the hardware implementations. Thanks=0A=
+> for driving that.=0A=
+> =0A=
+=0A=
+You're welcome!  And yes, this ECN is not yet in 5.0 draft but should be =
+=0A=
+there soon.  Much of what is in the ECN can be implemented with existing =
+=0A=
+DPC hardware.  There are associated ECNs in ACPI and PCI Firmware =0A=
+Specifications as well.  The ACPI spec changes will not be public until =0A=
+the 6.3 spec is released (soon).  The PCI Firmware Specification changes =
+=0A=
+should be ratified in a few weeks as well.  In the meantime, UEFI org =0A=
+(which ACPI is a part of) has a git repo accessible to UEFI forum =0A=
+members where the Linux code to support these new async hot-plug =0A=
+mechanisms is being developed.  Will be made public once the specs are =0A=
+public.=0A=
+=0A=
+Thanks,=0A=
+Austin=0A=
