@@ -2,110 +2,129 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52AFCC282C3
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 14:17:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B20C282C3
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 14:52:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 27557218CD
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 14:17:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D528B218AE
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 14:52:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727600AbfAXOR3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 09:17:29 -0500
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:59477 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727596AbfAXOR3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Jan 2019 09:17:29 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout3.hostsharing.net (Postfix) with ESMTPS id A0BE51019EC30;
-        Thu, 24 Jan 2019 15:17:27 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 5312D495B; Thu, 24 Jan 2019 15:17:27 +0100 (CET)
-Date:   Thu, 24 Jan 2019 15:17:27 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+        id S1727955AbfAXOwZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 09:52:25 -0500
+Received: from foss.arm.com ([217.140.101.70]:57990 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727755AbfAXOwZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jan 2019 09:52:25 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A11D4A78;
+        Thu, 24 Jan 2019 06:52:24 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 41D6F3F5AF;
+        Thu, 24 Jan 2019 06:52:22 -0800 (PST)
+Date:   Thu, 24 Jan 2019 14:52:19 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Kedar A Dongre <kedar.a.dongre@intel.com>,
-        Peter Wu <peter@lekensteyn.nl>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v3] PCI: Blacklist power management of Gigabyte X299
- DESIGNARE EX PCIe ports
-Message-ID: <20190124141727.22yy26pypwh5y5pl@wunner.de>
-References: <20190124131227.45612-1-mika.westerberg@linux.intel.com>
- <20190124132542.wqofwg7bswnn5g3j@wunner.de>
- <20190124134426.GN14577@lahna.fi.intel.com>
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Alan Douglas <adouglas@cadence.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 00/15] PCI: endpoint: Cleanup EPC features
+Message-ID: <20190124145219.GD23362@e107981-ln.cambridge.arm.com>
+References: <20190107064148.10152-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190124134426.GN14577@lahna.fi.intel.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <20190107064148.10152-1-kishon@ti.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 24, 2019 at 03:44:26PM +0200, Mika Westerberg wrote:
-> On Thu, Jan 24, 2019 at 02:25:42PM +0100, Lukas Wunner wrote:
-> > On Thu, Jan 24, 2019 at 04:12:27PM +0300, Mika Westerberg wrote:
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -2501,6 +2501,23 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-> > >  		pm_runtime_put_sync(parent);
-> > >  }
-> > >  
-> > > +static const struct dmi_system_id bridge_d3_blacklist[] = {
-> > > +	{
-> > > +		/*
-> > > +		 * Gigabyte X299 root port is not marked as hotplug
-> > > +		 * capable which allows Linux to power manage it.
-> > > +		 * However, this confuses the BIOS SMI handler so don't
-> > > +		 * power manage root ports on that system.
-> > > +		 */
-> > > +		.ident = "X299 DESIGNARE EX-CF",
-> > > +		.matches = {
-> > > +			DMI_MATCH(DMI_BOARD_VENDOR, "Gigabyte Technology Co., Ltd."),
-> > > +			DMI_MATCH(DMI_BOARD_NAME, "X299 DESIGNARE EX-CF"),
-> > > +		},
-> > > +	},
-> > > +	{ }
-> > > +};
-> > 
-> > Unfortunately this doesn't take my comment voiced Jan 8 into account:
-> > 
-> >    "Please constrain either the blacklist entry for the Gigabyte mainboard
-> >     or the blacklist check itself to x86 using IS_ENABLED() or #ifdef to
-> >     avoid code bloat on other arches."
-> >     https://patchwork.kernel.org/patch/10750549/#22408911
+On Mon, Jan 07, 2019 at 12:11:33PM +0530, Kishon Vijay Abraham I wrote:
+> Hi Lorenzo,
 > 
-> I tried to take it into account based on what you said:
+> The Endpoint controller driver uses features member in 'struct pci_epc'
+> to advertise the list of supported features to the endpoint function
+> driver.
 > 
->   Please constrain either the blacklist entry for the Gigabyte mainboard
+> There are a few shortcomings with this approach.
+>   *) Certain endpoint controllers support fixed size BAR (e.g. TI's
+>      AM654 uses Designware configuration with fixed size BAR). The
+>      size of each BARs cannot be passed to the endpoint function
+>      driver.
+>   *) Too many macros for handling EPC features.
+>      (EPC_FEATURE_NO_LINKUP_NOTIFIER, EPC_FEATURE_BAR_MASK,
+>       EPC_FEATURE_MSIX_AVAILABLE, EPC_FEATURE_SET_BAR,
+>       EPC_FEATURE_GET_BAR)
+>   *) Endpoint controllers are directly modifying struct pci_epc
+>      members. (I have plans to move struct pci_epc to
+>      drivers/pci/endpoint so that pci_epc members are referenced
+>      only by endpoint core).
 > 
-> so I constrained it to Gigabyte motherboard using DMI entry. Maybe I
-> misunderstood you. Sorry about that.
+> To overcome the above shortcomings, introduced pci_epc_get_features()
+> API, pci_epc_features structure and a ->get_features() callback.
+> 
+> Also added a patch to set BAR flags in pci_epf_alloc_space and
+> remove it from pci-epf-test function driver.
+> 
+> Tested on TI's DRA7xx platform.
 
-What I meant is that you could encapsulate the struct dmi_system_id for
-the Gigabyte mainboard in "#ifdef CONFIG_X86" / "#endif".
+Hi Kishon,
 
+I have no major objections to this series but I would like to see some
+testing done in EP mode (on test platforms other than DRA7XX) to make
+sure it does not break anything.
 
-> > Note that CONFIG_DMI may be enabled on arm64 and ia64 which have no use
-> > for this quirk.
-
-The rationale for this sentence was that the compiler might be smart
-enough to optimize bridge_d3_blacklist[] away if CONFIG_DMI is not
-defined, but it might be defined on arm64 and ia64 so on those arches
-you'd still be including an unnecessary DMI entry.
-
-Granted those few bytes won't hurt, but people might come after you and
-amend the blacklist, if the #ifdef is already in place they'll know to
-add their entry within the #ifdef or add a new #ifdef if the quirk isn't
-for x86, thus neatly keeping generic code free of arch-specific quirks.
+Please do help Kishon get some testing done.
 
 Thanks,
+Lorenzo
 
-Lukas
+> Thanks
+> Kishon
+> 
+> Kishon Vijay Abraham I (15):
+>   PCI: endpoint: Add new pci_epc_ops to get EPC features
+>   PCI: dwc: Add ->get_features() callback function in dw_pcie_ep_ops
+>   PCI: designware-plat: Populate ->get_features() dw_pcie_ep_ops
+>   PCI: pci-dra7xx: Populate ->get_features() dw_pcie_ep_ops
+>   PCI: rockchip: Populate ->get_features() dw_pcie_ep_ops
+>   PCI: cadence: Populate ->get_features() cdns_pcie_epc_ops
+>   PCI: endpoint: Add helper to get first unreserved BAR
+>   PCI: endpoint: Fix pci_epf_alloc_space to set correct MEM TYPE flags
+>   PCI: pci-epf-test: Remove setting epf_bar flags in function driver
+>   PCI: pci-epf-test: Do not allocate next BARs memory if current BAR is
+>     64Bit
+>   PCI: pci-epf-test: Use pci_epc_get_features to get EPC features
+>   PCI: cadence: Remove pci_epf_linkup from Cadence EP driver
+>   PCI: rockchip: Remove pci_epf_linkup from Rockchip EP driver
+>   PCI: designware-plat: Remove setting epc->features in Designware plat
+>     EP driver
+>   PCI: endpoint: Remove features member in struct pci_epc
+> 
+>  drivers/pci/controller/dwc/pci-dra7xx.c       | 13 +++
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 12 +++
+>  .../pci/controller/dwc/pcie-designware-plat.c | 17 +++-
+>  drivers/pci/controller/dwc/pcie-designware.h  |  1 +
+>  drivers/pci/controller/pcie-cadence-ep.c      | 25 +++---
+>  drivers/pci/controller/pcie-rockchip-ep.c     | 16 +++-
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 80 ++++++++++---------
+>  drivers/pci/endpoint/pci-epc-core.c           | 52 ++++++++++++
+>  drivers/pci/endpoint/pci-epf-core.c           |  3 +
+>  include/linux/pci-epc.h                       | 30 +++++--
+>  10 files changed, 185 insertions(+), 64 deletions(-)
+> 
+> -- 
+> 2.17.1
+> 
