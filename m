@@ -2,102 +2,92 @@ Return-Path: <SRS0=Sdll=QA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E99FC282C3
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 17:48:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 819CAC282C3
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 18:18:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16D5A218A6
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 17:48:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4513E218D2
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Jan 2019 18:18:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548353910;
+	bh=ZMQksBnxGnwTw4zpE/Hr2u4GQO3dSNtgcl3zn6+bOnw=;
+	h=Subject:To:Cc:References:From:Date:In-Reply-To:List-ID:From;
+	b=oGHPoAEWJnjF2Q01aL3yrmw3siavb9V3MvLEOB7zuENSRgpAwattGFL/SUfSASS8p
+	 xQK3iLjj2zAiq+NLdEYN/Ld+CvhbAP4Zazh9WpeMKJoZe/XiIqWABkdVUplCdGK3uJ
+	 FPHGrNELfLHVaa42AuAJspXvjf5I9+dfARe5tGHg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729228AbfAXRs1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Jan 2019 12:48:27 -0500
-Received: from mx2.suse.de ([195.135.220.15]:51304 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728130AbfAXRrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Jan 2019 12:47:46 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 34B63B0DA;
-        Thu, 24 Jan 2019 17:47:45 +0000 (UTC)
-From:   Thomas Bogendoerfer <tbogendoerfer@suse.de>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        James Hogan <jhogan@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Paul Burton <paul.burton@mips.com>,
-        Ralf Baechle <ralf@linux-mips.org>
-Subject: [PATCH 4/7] MIPS: SGI-IP27: do xtalk scanning later
-Date:   Thu, 24 Jan 2019 18:47:25 +0100
-Message-Id: <20190124174728.28812-5-tbogendoerfer@suse.de>
-X-Mailer: git-send-email 2.13.7
-In-Reply-To: <20190124174728.28812-1-tbogendoerfer@suse.de>
-References: <20190124174728.28812-1-tbogendoerfer@suse.de>
+        id S1726173AbfAXSS3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Jan 2019 13:18:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46642 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725936AbfAXSS2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Jan 2019 13:18:28 -0500
+Received: from [10.84.151.11] (unknown [167.220.149.11])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7C0E8218AF;
+        Thu, 24 Jan 2019 18:18:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548353908;
+        bh=ZMQksBnxGnwTw4zpE/Hr2u4GQO3dSNtgcl3zn6+bOnw=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=twqho3sFTszEMHLkHI3z/zs3Xk+U0b63kBnrJofmOcA4/qxwraP3oPXEXRDpNL7Rs
+         7KUDuwYJU1xQGR4lobszJjUsC6llQgSqURjVSHTR/3BFg3V38VTIqC0047WCG/XsBn
+         ehXx2n5qS1fxjgyHyHPq0KXXrppmlg5lXg03c4f0=
+Subject: Re: [PATCH] PCI/ERR: Fix run error recovery callbacks for all
+ affected devices
+To:     Dongdong Liu <liudongdong3@huawei.com>, helgaas@kernel.org,
+        keith.busch@intel.com
+Cc:     linux-pci@vger.kernel.org, linuxarm@huawei.com,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1548337810-69892-1-git-send-email-liudongdong3@huawei.com>
+From:   Sinan Kaya <okaya@kernel.org>
+Message-ID: <ea302148-7778-d295-4fca-cec436b64e28@kernel.org>
+Date:   Thu, 24 Jan 2019 13:18:26 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+In-Reply-To: <1548337810-69892-1-git-send-email-liudongdong3@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move xtalk scanning to a later boot stage to be able using things like
-kmalloc and friends.
+On 1/24/2019 8:50 AM, Dongdong Liu wrote:
+> The patch [1] PCI/ERR: Run error recovery callbacks for all affected
+> devices have broken the non-fatal error handling logic in patch [2].
+> For non-fatal error, link is reliable, so no need to reset link,
+> handle non-fatal error for all subordinates seems incorrect.
+> Restore the non-fatal errors process logic.
+> 
+> [1] PCI/ERR: Run error recovery callbacks for all affected devices   #4.20
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=bfcb79fca19d267712e425af1dd48812c40dec0c
+> 
+> [2] PCI/AER: Report non-fatal errors only to the affected endpoint  #4.15
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=v5.0-rc2&id=86acc790717fb60fb51ea3095084e331d8711c74
+> 
+> Fixes: bfcb79fca19d ("PCI/ERR: Run error recovery callbacks for all affected devices")
+> Reported-by: Xiaofei Tan<tanxiaofei@huawei.com>
+> Signed-off-by: Dongdong Liu<liudongdong3@huawei.com>
+> Cc: Keith Busch<keith.busch@intel.com>
+> Cc: Bjorn Helgaas<bhelgaas@google.com>
 
-Signed-off-by: Thomas Bogendoerfer <tbogendoerfer@suse.de>
----
- arch/mips/sgi-ip27/ip27-init.c  |  3 ---
- arch/mips/sgi-ip27/ip27-xtalk.c | 13 ++++++++++++-
- 2 files changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/arch/mips/sgi-ip27/ip27-init.c b/arch/mips/sgi-ip27/ip27-init.c
-index 83399e578b61..aba985cf07c0 100644
---- a/arch/mips/sgi-ip27/ip27-init.c
-+++ b/arch/mips/sgi-ip27/ip27-init.c
-@@ -52,8 +52,6 @@ EXPORT_SYMBOL_GPL(sn_cpu_info);
- 
- extern void pcibr_setup(cnodeid_t);
- 
--extern void xtalk_probe_node(cnodeid_t nid);
--
- static void per_hub_init(cnodeid_t cnode)
- {
- 	struct hub_data *hub = hub_data(cnode);
-@@ -71,7 +69,6 @@ static void per_hub_init(cnodeid_t cnode)
- 	REMOTE_HUB_S(nasid, IIO_ICTO, 0xff);
- 
- 	hub_rtc_init(cnode);
--	xtalk_probe_node(cnode);
- 
- #ifdef CONFIG_REPLICATE_EXHANDLERS
- 	/*
-diff --git a/arch/mips/sgi-ip27/ip27-xtalk.c b/arch/mips/sgi-ip27/ip27-xtalk.c
-index 4fe5678ba74d..ce06aaa115ae 100644
---- a/arch/mips/sgi-ip27/ip27-xtalk.c
-+++ b/arch/mips/sgi-ip27/ip27-xtalk.c
-@@ -99,7 +99,7 @@ static int xbow_probe(nasid_t nasid)
- 	return 0;
- }
- 
--void xtalk_probe_node(cnodeid_t nid)
-+static void xtalk_probe_node(cnodeid_t nid)
- {
- 	volatile u64		hubreg;
- 	nasid_t			nasid;
-@@ -133,3 +133,14 @@ void xtalk_probe_node(cnodeid_t nid)
- 		break;
- 	}
- }
-+
-+static int __init xtalk_init(void)
-+{
-+	cnodeid_t cnode;
-+
-+	for_each_online_node(cnode)
-+		xtalk_probe_node(cnode);
-+
-+	return 0;
-+}
-+arch_initcall(xtalk_init);
--- 
-2.13.7
+According to what I see in the code, link will be reset only if the AER
+severity is AER_FATAL.
 
+	} else if (info->severity == AER_NONFATAL)
+		pcie_do_recovery(dev, pci_channel_io_normal,
+				 PCIE_PORT_SERVICE_AER);
+	else if (info->severity == AER_FATAL)
+		pcie_do_recovery(dev, pci_channel_io_frozen,
+				 PCIE_PORT_SERVICE_AER);
+
+Can you show the path where it leads to link reset and severity is AER_NONFATAL?
