@@ -2,105 +2,98 @@ Return-Path: <SRS0=mKlk=QB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2221FC282C0
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 10:05:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B24BC282C0
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 10:14:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F0291218A2
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 10:05:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB88F2184B
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 10:14:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="g9PzHzGp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729145AbfAYKFd convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Jan 2019 05:05:33 -0500
-Received: from mail.bootlin.com ([62.4.15.54]:43287 "EHLO mail.bootlin.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727914AbfAYKFd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Jan 2019 05:05:33 -0500
-Received: by mail.bootlin.com (Postfix, from userid 110)
-        id 9753120798; Fri, 25 Jan 2019 11:05:30 +0100 (CET)
-Received: from xps13 (aaubervilliers-681-1-87-206.w90-88.abo.wanadoo.fr [90.88.29.206])
-        by mail.bootlin.com (Postfix) with ESMTPSA id 315D6206A6;
-        Fri, 25 Jan 2019 11:05:30 +0100 (CET)
-Date:   Fri, 25 Jan 2019 11:05:30 +0100
-From:   Miquel Raynal <miquel.raynal@bootlin.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH v3 00/15] Bring suspend to RAM support to PCIe Aardvark
- driver
-Message-ID: <20190125110530.0ff11a54@xps13>
-In-Reply-To: <20190123170509.GB1157@e107981-ln.cambridge.arm.com>
-References: <20190108162441.5278-1-miquel.raynal@bootlin.com>
-        <20190123170509.GB1157@e107981-ln.cambridge.arm.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 3.17.1 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+        id S1728697AbfAYKOG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Jan 2019 05:14:06 -0500
+Received: from mail-yw1-f65.google.com ([209.85.161.65]:39324 "EHLO
+        mail-yw1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728469AbfAYKOF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2019 05:14:05 -0500
+Received: by mail-yw1-f65.google.com with SMTP id k188so3679749ywa.6
+        for <linux-pci@vger.kernel.org>; Fri, 25 Jan 2019 02:14:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=RMdk5cmmpnbcM5aDvhKNw8euAJU+GnQUtHbH0E7iD/U=;
+        b=g9PzHzGp8la7oxzZTPfTFoQm9IFcfqOdD7nOidKQb/q+pllpO6tb036MeN79ZAGaRz
+         x5eLsgaA5vhvk2rd2o3M0JqT3IRxlGIgTDFMcUNCMSur1wHfyspOd8kQ6rZSbTqsSnZR
+         LRRXlA8xxOPEGrWT3NKM8TbNdUu8LClFN8DNA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=RMdk5cmmpnbcM5aDvhKNw8euAJU+GnQUtHbH0E7iD/U=;
+        b=OzDN91sM2WI4p6qU5F4DMHQ+cb+rL8v049xZaGEkhcZQ5I1Rq/onMbwUhxhVnfnGcN
+         EpU8rXTD9ciKDnTU43OPSpqxdsoovySa7uUXFXkUBulClzsOsQ+nrJnsCxmwxZJEIF1N
+         2ywz8wwhVXXYMkK1ArFgX1Ld+5wMFZ1v0+AsvTtCNV146RjgF4yOM0/nC8sq8wjArbgq
+         leYxB+M8pWPWf/45SQ9vqsCjR9vLVbDoA7X3dbAolFLmrrKMZ/at6qLZk3LLlzpS/+Kt
+         +j2HeeGZ4X9wuVOp1DAxtDZ2/wiJ7sKqTInEvI3edJerIkzAQ9U4w8A5RGN0iAmOOP/S
+         Ztaw==
+X-Gm-Message-State: AJcUukf/c2SMBri4UtB0jbNR1ZJ7KLtjQdu1uUgERT16ksARxJFK3xLg
+        kwRn37Y8ikIX8hP9uL9SKaBYOw==
+X-Google-Smtp-Source: ALg8bN5QB5ob6Y0xv1UaOJgip5bvq68c7tU+9rz7aINOL1ZyxxGvWN/mtRM+CLkbN3AUy/7z89LtwA==
+X-Received: by 2002:a81:60c4:: with SMTP id u187mr9997130ywb.345.1548411244973;
+        Fri, 25 Jan 2019 02:14:04 -0800 (PST)
+Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id x203sm11868695ywd.41.2019.01.25.02.14.00
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 25 Jan 2019 02:14:04 -0800 (PST)
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>
+Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [PATCH v3 0/3] PCIe Host request to reserve IOVA
+Date:   Fri, 25 Jan 2019 15:43:48 +0530
+Message-Id: <1548411231-27549-1-git-send-email-srinath.mannam@broadcom.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+Few SOCs have limitation that their PCIe host can't allow few inbound
+address ranges. Allowed inbound address ranges are listed in dma-ranges
+DT property and this address ranges are required to do IOVA mapping.
+Remaining address ranges have to be reserved in IOVA mapping.
 
-Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote on Wed, 23 Jan 2019
-17:05:09 +0000:
+PCIe Host driver of those SOCs has to list all address ranges which have
+to reserve their IOVA address into PCIe host bridge resource entry list.
+IOMMU framework will reserve these IOVAs while initializing IOMMU domain.
 
-> On Tue, Jan 08, 2019 at 05:24:25PM +0100, Miquel Raynal wrote:
-> > Hello,
-> > 
-> > As part of an effort to bring suspend to RAM support to Armada 3700
-> > SoCs (main target: ESPRESSObin), this series handles the work around
-> > the PCIe IP.
-> > 
-> > First, more configuration is done in the 'setup' helper as inspired
-> > from the U-Boot driver. This is needed to entirely initialize the IP
-> > during future resume operation (patch 1).
-> > 
-> > Then, reset GPIO, PHY and clock support are introduced (patch 2-4). As
-> > current device trees do not provide the corresponding properties, not
-> > finding one of these properties is not an error and just produces a
-> > warning. However, if the property is present, an error during PHY
-> > initialization will fail the probe of the driver.
-> > 
-> > Note: To be sure the clock will be resumed before this driver, a first
-> > series adding links between clocks and consumers has been submitted,
-> > see [1]. Anyway, having the clock series applied first is not needed.  
-> 
-> I do not understand what this means, in particular in relation
-> to the blocking clock calls in the suspend/resume NOIRQ hooks.
+This patch set is based on Linux-5.0-rc2.
 
-I am not sure to understand your question.
+Changes from v2:
+  - Patch set rebased to Linux-5.0-rc2
 
-As there are multiple points in this sentence I will detail each of
-them so please comment on the one which is bothering you:
-* I am working in parallel on a series adding device links to the clock
-  framework. This way when a driver consumes a clock, the clock
-  provider driver will be resumed first.
-* If the clock series I am talking about is applied after this one,
-  there is no build issue. Of course suspending the platform may
-  not work but this is a new feature so nothing will be broken.
-* Device links do not enforce any priority if the suspend/resume phase
-  between two drivers is not the same. The PCIe driver suspends in the
-  NOIRQ phase. If we want the clock driver to suspend *after* PCIe, its
-  suspend/resume callbacks must be promoted to the NOIRQ phase as well
-  (and this is part of another series). As of today there is
-  no alternative.
+Changes from v1:
+  - Addressed Oza review comments.
 
+Srinath Mannam (3):
+  PCI: Add dma-resv window list
+  iommu/dma: Reserve IOVA for PCI host reserve address list
+  PCI: iproc: Add dma reserve resources to host
 
-Thanks,
-Miquèl
+ drivers/iommu/dma-iommu.c           |  8 ++++++
+ drivers/pci/controller/pcie-iproc.c | 51 ++++++++++++++++++++++++++++++++++++-
+ drivers/pci/probe.c                 |  3 +++
+ include/linux/pci.h                 |  1 +
+ 4 files changed, 62 insertions(+), 1 deletion(-)
+
+-- 
+2.7.4
+
