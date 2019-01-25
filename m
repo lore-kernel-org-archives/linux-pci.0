@@ -2,150 +2,102 @@ Return-Path: <SRS0=mKlk=QB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3245C282C0
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 17:38:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5619CC282C0
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 17:46:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A581218A6
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 17:38:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17269218D0
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Jan 2019 17:46:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548438396;
+	bh=WCwAv2UEfg31oYkncDj2THO3h9piWN71BicG+WLTfgA=;
+	h=Subject:From:To:Cc:References:Date:In-Reply-To:List-ID:From;
+	b=cyIm/MYlsnkSntefrLzOjn1KkuFOEZ3X6gqvpLBGj1DtudumBMifHgWIM/t0xlInk
+	 UZOZ6TTkiXpIkW43pniATgwNEp4aPkjZ9q4KQfFOLgjesVyUnwF1gX1KspxJSsuKsi
+	 lfDdUlXOMZ67Le7HUmgHerEIPpV0ufmT4g+4PT7w=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729180AbfAYRi4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Jan 2019 12:38:56 -0500
-Received: from foss.arm.com ([217.140.101.70]:51090 "EHLO foss.arm.com"
+        id S1726311AbfAYRqf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Jan 2019 12:46:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726252AbfAYRiz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Jan 2019 12:38:55 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4252DEBD;
-        Fri, 25 Jan 2019 09:38:55 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 3D8B93F5AF;
-        Fri, 25 Jan 2019 09:38:52 -0800 (PST)
-Date:   Fri, 25 Jan 2019 17:38:42 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Miquel Raynal <miquel.raynal@bootlin.com>
-Cc:     Gregory Clement <gregory.clement@bootlin.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        id S1728653AbfAYRqf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Jan 2019 12:46:35 -0500
+Received: from [192.168.0.109] (cpe-174-109-247-98.nc.res.rr.com [174.109.247.98])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C6E0C218A2;
+        Fri, 25 Jan 2019 17:46:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548438394;
+        bh=WCwAv2UEfg31oYkncDj2THO3h9piWN71BicG+WLTfgA=;
+        h=Subject:From:To:Cc:References:Date:In-Reply-To:From;
+        b=NAn3FNw+AD+v+UYY7ZT2Kh9xkz9WhNdsCZa1J9ZWcWmYYNkKO519fZlgrQkM71YwA
+         NlmXijZcaQuAuvQVn6zW+Z7swmlCXPz7dsLVrRGTQOmT425SEm7GmdN0fZp1IUEkbG
+         BKn3TflbHG1BgxKZvKuzbDfBDQPjR8MKgXv1BAtI=
+Subject: Re: [PATCH] PCI/ERR: Fix run error recovery callbacks for all
+ affected devices
+From:   Sinan Kaya <okaya@kernel.org>
+To:     Keith Busch <keith.busch@intel.com>,
+        Dongdong Liu <liudongdong3@huawei.com>
+Cc:     "helgaas@kernel.org" <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linuxarm@huawei.com" <linuxarm@huawei.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Antoine Tenart <antoine.tenart@bootlin.com>,
-        Maxime Chevallier <maxime.chevallier@bootlin.com>,
-        Nadav Haklai <nadavh@marvell.com>
-Subject: Re: [PATCH v3 00/15] Bring suspend to RAM support to PCIe Aardvark
- driver
-Message-ID: <20190125173834.GA24052@e107981-ln.cambridge.arm.com>
-References: <20190108162441.5278-1-miquel.raynal@bootlin.com>
- <20190123170509.GB1157@e107981-ln.cambridge.arm.com>
- <20190125110530.0ff11a54@xps13>
- <20190125124011.GA16389@e107981-ln.cambridge.arm.com>
- <20190125135757.6518191e@xps13>
+        tanxiaofei <tanxiaofei@huawei.com>
+References: <1548337810-69892-1-git-send-email-liudongdong3@huawei.com>
+ <ea302148-7778-d295-4fca-cec436b64e28@kernel.org>
+ <20190124213701.GA9882@localhost.localdomain>
+ <5d58ea17-115f-139d-93db-fe6e9ce573cb@huawei.com>
+ <20190125171713.GB11210@localhost.localdomain>
+ <bbe67d36-103c-1cda-4186-128a155e8c0e@kernel.org>
+Message-ID: <f1d8845c-68fc-e0bf-67ed-7348b933eda1@kernel.org>
+Date:   Fri, 25 Jan 2019 12:46:32 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190125135757.6518191e@xps13>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <bbe67d36-103c-1cda-4186-128a155e8c0e@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jan 25, 2019 at 01:57:57PM +0100, Miquel Raynal wrote:
-> Hi Lorenzo,
+On 1/25/2019 12:37 PM, Sinan Kaya wrote:
+> On 1/25/2019 12:17 PM, Keith Busch wrote:
+>> On Fri, Jan 25, 2019 at 06:28:03AM -0800, Dongdong Liu wrote:
+>>> I want to fix 2 points by the patch.
+>>>
+>>> 1. For EP devices (such as multi-function EP device) under the same bus,
+>>> when one of the EP devices met non-fatal error, should report non-fatal
+>>> error only to the error endpoint device, no need to broadcast all of them.
+>>> That is the patch (PCI/AER: Report non-fatal errors only to the affected 
+>>> endpoint  #4.15)
+>>> have done, but current code PATCH [1] broken this.
+>>
+>> How do you know a non-fatal affects only the reporting end point? These can
+>> certainly be bus errors, and it's not the first to detect may be affected.
+>>
+>> In any case, what harm does the broadcast cause?
+>>
 > 
-> Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote on Fri, 25 Jan 2019
-> 12:40:11 +0000:
+> What is the PCIe spec rule about AER errors for multi-function devices?
 > 
-> > On Fri, Jan 25, 2019 at 11:05:30AM +0100, Miquel Raynal wrote:
-> > > Hi Lorenzo,
-> > > 
-> > > Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote on Wed, 23 Jan 2019
-> > > 17:05:09 +0000:
-> > >   
-> > > > On Tue, Jan 08, 2019 at 05:24:25PM +0100, Miquel Raynal wrote:  
-> > > > > Hello,
-> > > > > 
-> > > > > As part of an effort to bring suspend to RAM support to Armada 3700
-> > > > > SoCs (main target: ESPRESSObin), this series handles the work around
-> > > > > the PCIe IP.
-> > > > > 
-> > > > > First, more configuration is done in the 'setup' helper as inspired
-> > > > > from the U-Boot driver. This is needed to entirely initialize the IP
-> > > > > during future resume operation (patch 1).
-> > > > > 
-> > > > > Then, reset GPIO, PHY and clock support are introduced (patch 2-4). As
-> > > > > current device trees do not provide the corresponding properties, not
-> > > > > finding one of these properties is not an error and just produces a
-> > > > > warning. However, if the property is present, an error during PHY
-> > > > > initialization will fail the probe of the driver.
-> > > > > 
-> > > > > Note: To be sure the clock will be resumed before this driver, a first
-> > > > > series adding links between clocks and consumers has been submitted,
-> > > > > see [1]. Anyway, having the clock series applied first is not needed.    
-> > > > 
-> > > > I do not understand what this means, in particular in relation
-> > > > to the blocking clock calls in the suspend/resume NOIRQ hooks.  
-> > > 
-> > > I am not sure to understand your question.
-> > > 
-> > > As there are multiple points in this sentence I will detail each of
-> > > them so please comment on the one which is bothering you:
-> > > * I am working in parallel on a series adding device links to the clock
-> > >   framework. This way when a driver consumes a clock, the clock
-> > >   provider driver will be resumed first.
-> > > * If the clock series I am talking about is applied after this one,
-> > >   there is no build issue. Of course suspending the platform may
-> > >   not work but this is a new feature so nothing will be broken.  
-> > 
-> > Suspend to RAM will be broken if the clock is suspended and no
-> > notification will happen in the NOIRQ phase, it is a new-broken-feature.
-> >
-> > 
-> > > * Device links do not enforce any priority if the suspend/resume phase
-> > >   between two drivers is not the same. The PCIe driver suspends in the
-> > >   NOIRQ phase. If we want the clock driver to suspend *after* PCIe, its
-> > >   suspend/resume callbacks must be promoted to the NOIRQ phase as well
-> > >   (and this is part of another series). As of today there is
-> > >   no alternative.  
-> > 
-> > I will merge this series when it works, I have no evidence that it does
-> > given what you are writing above, if the series you mention are
-> > *necessary* for suspend-to-RAM to work they ought to be merged first.
+> Does it say it needs to be propagated to all functions or each function has
+> its own unique AER error handler?
 > 
-> I am working actively to bring A3700 SoC suspend to RAM support almost
-> from scratch. 
-> 
-> As of today I have contributed 65 patches spread in 8 series for the
-> PHY, clk, PCIe, SATA, USB, pinctrl and net subsystems. Some of them
-> have been merged, but the vast majority has not, yet.
-> 
-> I mentioned this run-time dependency because it exists for people who
-> would like to test just the PCIe IP. But S2RAM on A3700 will be a
-> new-broken-feature until all patches are merged. While there is
-> still one missing, the feature is broken. If everybody waits for
-> the other patches to be merged first, it is gonna be a long process :)
-> 
-> However, if you want to wait for the clock core series to be applied
-> first I respect this choice and I will update you when it will be the
-> case.
 
-I do not want to merge new code with known issues, it makes no sense.
+Thinking more...
 
-There are other drivers with a similar problem in the mainline, we
-ought to fix those but certainly adding more won't help in that respect.
+I think there is value in probing all devices for errors like today because
+multiple errors bit can be set. Since root port's AER register only captures the
+first error, the rest of the errors requires OS to poll each device to see what
+is going on.
 
-There is nothing I am saying here that goes against your work, I just
-want to have working code in the mainlike kernel, we will merge this
-series when it is ready, thanks for bearing with me.
+In this case the AER error status of other functions should not report any
+outstanding event. Please verify this. Otherwise, you are looking at a device quirk.
 
-Feel free to ping me/rebase/repost when dependencies are sorted.
-
-Thanks,
-Lorenzo
