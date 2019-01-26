@@ -2,110 +2,103 @@ Return-Path: <SRS0=pA/b=QC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94F9DC282C0
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Jan 2019 00:32:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1648C282C5
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Jan 2019 04:36:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D85C21902
-	for <linux-pci@archiver.kernel.org>; Sat, 26 Jan 2019 00:32:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C72F21902
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Jan 2019 04:36:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gZChaMIx"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="hMr7BdKO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725924AbfAZAcn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Jan 2019 19:32:43 -0500
-Received: from mail-io1-f67.google.com ([209.85.166.67]:33824 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725550AbfAZAcn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2019 19:32:43 -0500
-Received: by mail-io1-f67.google.com with SMTP id b16so9205641ior.1;
-        Fri, 25 Jan 2019 16:32:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=u1SO7X4mwgqbFZQSq726atHOE/SZQX/izHCcb6UexKU=;
-        b=gZChaMIx+qvp5NiDGib9haAgnpUXt8XjvfDjby/cmh6myHqGFV3zJHURkDACr2W/dz
-         WaHPDv31R7dD40hBNq1i6kV2O70DyNbHxw8jotcIYElGCEsczXWXqQAaonJwGtupltvg
-         hAPC4mDpaQgjZ46/pMFglTLqJu+YSWmkf1/zPbydQAi5aS3qTazk54nSsNmMOlzYVF+r
-         bN930EDLrGb/7eTWbhmm0Hyocz5/T8VRo1eaYK/kjr+JfSIcv/iWITgkz01oq+psbqlr
-         ZjA2ATZVuFojyEnjGxinYEuShrIvMWIGenK/IVmM2KEzF8i95SkpCbl/wgz/JOvAa6V5
-         QGog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=u1SO7X4mwgqbFZQSq726atHOE/SZQX/izHCcb6UexKU=;
-        b=pOT3F2jzgB8kg+v1mQco10nt72rfOHSUSlOBalxXWwNlRYMS4HsVRpQWjDwEFj511z
-         DsBpiEssEIINcT31EOzwVBci4o7TGyLUXWJd+ZO9/i6QO50Mmwx1bGqJfYEOiqMCkSsD
-         Dd4wC/runryKE6wJphrZLz/DZ+dNZCQwHHmbDY3IjdfklRVsXotVwiBKkq14mne7sf3w
-         Huwl+Hup9VcMqtGVun6ezNfaWW2u2sdhIeiTmQS5YkLLVeZFMRanniXCBXqormK4SS0l
-         VhqompETKrcL6HGzeAIGIW8I//GuQI9pTevzrSJ4QPY2OypicfWXkSOpbPK7IoBSlEno
-         lFfw==
-X-Gm-Message-State: AJcUukeD1fK4B/QuVYEsTJDDzD5xvRTfMShNhlKzyDWVUV1XrabABLUX
-        xByyl3NQayVxlZoIqh+oBvc=
-X-Google-Smtp-Source: ALg8bN4wH7X6iJ6v2NLYLjUemrrYY2/i7hrJL4W6diNbmqmVjXM/+y7QQ9cO5B+TSVlkzGuQX95/sQ==
-X-Received: by 2002:a5d:81c3:: with SMTP id t3mr8410890iol.93.1548462762363;
-        Fri, 25 Jan 2019 16:32:42 -0800 (PST)
-Received: from m-hyperV (50-47-89-76.evrt.wa.frontiernet.net. [50.47.89.76])
-        by smtp.gmail.com with ESMTPSA id 134sm13679261itl.25.2019.01.25.16.32.41
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 25 Jan 2019 16:32:41 -0800 (PST)
-Date:   Fri, 25 Jan 2019 16:32:40 -0800
-From:   Maya Nakamura <m.maya.nakamura@gmail.com>
-To:     Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc:     linux-kernel@vger.kernel.org,
-        driverdev-devel@linuxdriverproject.org, haiyangz@microsoft.com,
-        marcelo.cerri@canonical.com, lorenzo.pieralisi@arm.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org, kys@microsoft.com,
-        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
-        jasowang@redhat.com, mikelley@microsoft.com,
-        Alexander.Levin@microsoft.com
-Subject: Re: [PATCH 1/2] PCI: hv: Replace hv_vp_set with hv_vpset
-Message-ID: <20190126003239.GB1837@m-hyperV>
-References: <cover.1548232616.git.m.maya.nakamura@gmail.com>
- <87ffdc2eb0642301516378feb1416cf7450bf6c1.1548232616.git.m.maya.nakamura@gmail.com>
- <87sgxi19oy.fsf@vitty.brq.redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <87sgxi19oy.fsf@vitty.brq.redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+        id S1726091AbfAZEgx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Jan 2019 23:36:53 -0500
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36540 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725924AbfAZEgx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Jan 2019 23:36:53 -0500
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id CADE08EE27B;
+        Fri, 25 Jan 2019 20:36:52 -0800 (PST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 3xT74a7aivqd; Fri, 25 Jan 2019 20:36:52 -0800 (PST)
+Received: from [153.66.254.194] (unknown [50.35.68.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 146768EE22B;
+        Fri, 25 Jan 2019 20:36:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=hansenpartnership.com;
+        s=20151216; t=1548477412;
+        bh=4ashVPD3JxNZ9J9kqobt3EhzqZ+zUrpnnUK6Bn82FRY=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=hMr7BdKOz6KvvE7CH/m0hq4758NWIhx8JPyFEqbih2vG7vtVxG7fv+iQmTF7GYt6j
+         5EsGpzPwVhiITEjckxXp84Cj0L6ZFwdcVt8FCcdS561jNWA0+QORzDhW/o0IquiJGL
+         aAdljOuAnURk9eKtJGVg2sUH0rPlpkW5YLZmXB5E=
+Message-ID: <1548477410.3212.45.camel@HansenPartnership.com>
+Subject: Re: [Bug 201609] sysfs duplicate filename on driver loading Adaptec
+ AIC-9410W
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc:     pablo.ruiz@gmail.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Emil Velikov <emil.velikov@collabora.com>
+Date:   Fri, 25 Jan 2019 20:36:50 -0800
+In-Reply-To: <bug-201609-11613-QuH6JgZlE8@https.bugzilla.kernel.org/>
+References: <bug-201609-11613@https.bugzilla.kernel.org/>
+         <bug-201609-11613-QuH6JgZlE8@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.26.6 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 24, 2019 at 02:12:13PM +0100, Vitaly Kuznetsov wrote:
-> Maya Nakamura <m.maya.nakamura@gmail.com> writes:
+On Sat, 2019-01-26 at 03:13 +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=201609
 > 
-> > @@ -460,12 +454,16 @@ struct hv_pcibus_device {
-> >  	struct msi_controller msi_chip;
-> >  	struct irq_domain *irq_domain;
-> >  
-> > -	/* hypercall arg, must not cross page boundary */
-> > -	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-> > -
-> >  	spinlock_t retarget_msi_interrupt_lock;
-> >  
-> >  	struct workqueue_struct *wq;
-> > +
-> > +	/* hypercall arg, must not cross page boundary */
-> > +	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-> > +
-> > +	/*
-> > +	 * Don't put anything here: retarget_msi_interrupt_params must be last
-> > +	 */
+> Pablo Ruiz García (pablo.ruiz@gmail.com) changed:
 > 
-> This change seems to be unrelated and not anyhow described in the commit
-> message - or did I miss something?
+>            What    |Removed                     |Added
+> -------------------------------------------------------------------
+> ---------
+>                  CC|                            |pablo.ruiz@gmail.com
 > 
-Thank you for pointing that out. I will add why it was moved in v2.
+> --- Comment #2 from Pablo Ruiz García (pablo.ruiz@gmail.com) ---
+> Hi,
+> 
+> I've stumbled upon this very same issue, and have created a github
+> repo with a
+> fix for the actual issue (see git commit's description for bug
+> details).
+> 
+> https://github.com/pruiz/aic94xx-hotfix
+> https://github.com/pruiz/aic94xx-hotfix/commit/01898ea7dff8eb52f43773
+> ea3b59ab41ef2482c8
+> 
+> Hope it helps someone.
 
-Maya
-> 
-> -- 
-> Vitaly
+I think the correct fix is to rename the ai94xx revision file (say to
+aic94x_revision). However I've got to say that commit
+
+commit 702ed3be1b1bf4dea05954168321741c0910c645
+Author: Emil Velikov <emil.velikov@collabora.com>
+Date:   Mon Nov 21 16:24:49 2016 -0600
+
+    PCI: Create revision file in sysfs
+  
+Was a blatently silly thing to do without trying to namespace the added
+file (say calling it something less generic like pci_revision).  I
+assume we're lucky and nothing in userspace depends on the 'revision'
+sysfs file of the aic driver, but technically I should request
+reversion of this patch on the grounds that it's broken our ABI (since
+that's what exported sysfs files are).
+
+James
+
