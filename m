@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A60DC282CF
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:26:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BDD3C282CD
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E424F20855
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:26:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 693BA2148E
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:31:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548696419;
-	bh=hIsqLgJIVecRCPkiS/x7U8wfvg+g3uWTtxMvbTqZBms=;
+	s=default; t=1548696660;
+	bh=yyGxmDSkJie6JVtgJ+AD43KelDs+4eJoCgN1wECwlsw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yGp+nOhGDwJdlzwtdlX8wowCT6T3L8FA+XhWtR7nKfGYWm1n+CpYQR3OF5As7o6F4
-	 ZDg+f0d+U6pm/t3TeOYepztCX4mx28QXZy5WGaxhKz322JFGSjnIKeyxo8AW0ZAUZu
-	 xncORep4/67V6S4WzAh5hW191mkJf7e/eTdN3NBE=
+	b=uZmkB2y9+BkV7QN3BpFdMIKmLRsL1344giQJHY1gf9wNgV7DLTdoqZ+iw7fiqNps5
+	 YpY1f491l540xErmMZPdlYFdxZ/Ao5qAkF+gCSnqvR8khl8wBswf6p+fEMUbZXtodl
+	 u7ZmnGuyMhsg7XhWhKtw/pioMgYpj8Gn/X5BE33E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730434AbfA1QA2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Jan 2019 11:00:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:45688 "EHLO mail.kernel.org"
+        id S1730494AbfA1Ra5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Jan 2019 12:30:57 -0500
+Received: from mail.kernel.org ([198.145.29.99]:43900 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730754AbfA1QA0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:00:26 -0500
+        id S1728949AbfA1P63 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Jan 2019 10:58:29 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 856872175B;
-        Mon, 28 Jan 2019 16:00:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 59A9021841;
+        Mon, 28 Jan 2019 15:58:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548691226;
-        bh=hIsqLgJIVecRCPkiS/x7U8wfvg+g3uWTtxMvbTqZBms=;
+        s=default; t=1548691108;
+        bh=yyGxmDSkJie6JVtgJ+AD43KelDs+4eJoCgN1wECwlsw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=P3PJGx6c6K065jiagpFpMA2mEaBHRSnEv/p7XDlXG9cm5aODwykF0C047a66yiFSm
-         pFecePzz0cb9e8vTjhjGYwwitoipeBxxhmnG7SNXgW4RlN/b5pTAufRXOx0w1gH/EG
-         kwXJSxWJO2B0mIUR+ItdTYtsWT0GzsTdnuuUSxRs=
+        b=kMLZWHTZzmRovF1RUTH1kktoXUVIttQNpIj4XZNTV4AQPPYmgW3I5cfTAKmm6hd1z
+         cmcMDFb+dx1r2O5SXcJnHsWeCUR42qIeSxNTANLwveaPkYBIWyGVA3di/F6HM+DdlL
+         GctrnkiGfA/7z5mZVydzPwOFv8/5jqwr45PvHGEA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Colin Ian King <colin.king@canonical.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
+Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 022/258] x86/PCI: Fix Broadcom CNB20LE unintended sign extension (redux)
-Date:   Mon, 28 Jan 2019 10:55:28 -0500
-Message-Id: <20190128155924.51521-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 290/304] PCI: imx: Enable MSI from downstream components
+Date:   Mon, 28 Jan 2019 10:43:27 -0500
+Message-Id: <20190128154341.47195-290-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
-References: <20190128155924.51521-1-sashal@kernel.org>
+In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
+References: <20190128154341.47195-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -57,42 +57,75 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Richard Zhu <hongxing.zhu@nxp.com>
 
-[ Upstream commit 53bb565fc5439f2c8c57a786feea5946804aa3e9 ]
+[ Upstream commit 75cb8d20c112aba70f23d98e3f8d0a38ace16006 ]
 
-In the expression "word1 << 16", word1 starts as u16, but is promoted to a
-signed int, then sign-extended to resource_size_t, which is probably not
-what was intended.  Cast to resource_size_t to avoid the sign extension.
+The MSI Enable bit in the MSI Capability (PCIe r4.0, sec 7.7.1.2) controls
+whether a Function can request service using MSI.
 
-This fixes an identical issue as fixed by commit 0b2d70764bb3 ("x86/PCI:
-Fix Broadcom CNB20LE unintended sign extension") back in 2014.
+i.MX6 Root Ports implement the MSI Capability and may use MSI to request
+service for events like PME, hotplug, AER, etc.  In addition, on i.MX6, the
+MSI Enable bit controls delivery of MSI interrupts from components below
+the Root Port.
 
-Detected by CoverityScan, CID#138749, 138750 ("Unintended sign extension")
+Prior to f3fdfc4ac3a2 ("PCI: Remove host driver Kconfig selection of
+CONFIG_PCIEPORTBUS"), enabling CONFIG_PCI_IMX6 automatically also enabled
+CONFIG_PCIEPORTBUS, and when portdrv claimed the Root Ports, it set the MSI
+Enable bit so it could use PME, hotplug, AER, etc.  As a side effect, that
+also enabled delivery of MSI interrupts from downstream components.
 
-Fixes: 3f6ea84a3035 ("PCI: read memory ranges out of Broadcom CNB20LE host bridge")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+The imx6q-pcie driver itself does not depend on portdrv, so set MSI Enable
+in imx6q-pcie so MSI from downstream components works even if nobody uses
+MSI for the Root Port events.
+
+Fixes: f3fdfc4ac3a2 ("PCI: Remove host driver Kconfig selection of CONFIG_PCIEPORTBUS")
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Sven Van Asbroeck <TheSven73@googlemail.com>
+Tested-by: Trent Piepho <tpiepho@impinj.com>
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- arch/x86/pci/broadcom_bus.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
-index 526536c81ddc..ca1e8e6dccc8 100644
---- a/arch/x86/pci/broadcom_bus.c
-+++ b/arch/x86/pci/broadcom_bus.c
-@@ -50,8 +50,8 @@ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
- 	word1 = read_pci_config_16(bus, slot, func, 0xc0);
- 	word2 = read_pci_config_16(bus, slot, func, 0xc2);
- 	if (word1 != word2) {
--		res.start = (word1 << 16) | 0x0000;
--		res.end   = (word2 << 16) | 0xffff;
-+		res.start = ((resource_size_t) word1 << 16) | 0x0000;
-+		res.end   = ((resource_size_t) word2 << 16) | 0xffff;
- 		res.flags = IORESOURCE_MEM;
- 		update_res(info, res.start, res.end, res.flags, 0);
- 	}
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 88af6bff945f..6b54528b5f0c 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -67,6 +67,7 @@ struct imx6_pcie {
+ #define PHY_PLL_LOCK_WAIT_USLEEP_MAX	200
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
++#define PCIE_RC_IMX6_MSI_CAP			0x50
+ #define PCIE_RC_LCR				0x7c
+ #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1	0x1
+ #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2	0x2
+@@ -840,6 +841,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	struct resource *dbi_base;
+ 	struct device_node *node = dev->of_node;
+ 	int ret;
++	u16 val;
+ 
+ 	imx6_pcie = devm_kzalloc(dev, sizeof(*imx6_pcie), GFP_KERNEL);
+ 	if (!imx6_pcie)
+@@ -981,6 +983,14 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	if (pci_msi_enabled()) {
++		val = dw_pcie_readw_dbi(pci, PCIE_RC_IMX6_MSI_CAP +
++					PCI_MSI_FLAGS);
++		val |= PCI_MSI_FLAGS_ENABLE;
++		dw_pcie_writew_dbi(pci, PCIE_RC_IMX6_MSI_CAP + PCI_MSI_FLAGS,
++				   val);
++	}
++
+ 	return 0;
+ }
+ 
 -- 
 2.19.1
 
