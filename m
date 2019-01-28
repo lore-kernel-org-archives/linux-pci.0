@@ -2,105 +2,90 @@ Return-Path: <SRS0=Vy8e=QE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5C53C282CF
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:40:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9539CC282C8
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:45:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 685562147A
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:40:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5794C2177E
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 17:45:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548697249;
-	bh=TxB9m43FZ8LrvCUf0ywSNbFnMvsOpUJCKQVR5eeEn0o=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=UYVg2el4qwhcSYZcr6oY+nx+AwdaBgdd6t0+MAHg+/jGobb1TjS6sZ5RZPHc1oZYd
-	 oFc3758JVChmuWrGQeUhKBTXlupRcKQ47aiNIGGguNfbXEmpJWG5tgdkh9eXFVZx89
-	 +0Z9Gm5PLxwlrliVenUWfHgBWJr9sGgFSJezohus=
+	s=default; t=1548697519;
+	bh=557nZhSfIECJ6lJcDGQc756ICmn6sZLxzFE3/SObG2A=;
+	h=Subject:To:Cc:References:From:Date:In-Reply-To:List-ID:From;
+	b=b6fo8Xf7AQBnFSMPUV9c5FVDyTUWKthBw2CmzM59OqjNaBzF48m15LRGwlfijBWMu
+	 JNn2kycEt8S0UTCrX92PqpOH0Tdpdym7DAUNiO1vVYuPp9dKIUBgKOtYwygyOBFU4b
+	 c6ISyNTtq6+5IsImrQoxwzXsJnPK63NtUIG9933g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729155AbfA1Pvs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Jan 2019 10:51:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38400 "EHLO mail.kernel.org"
+        id S1726682AbfA1RpR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Jan 2019 12:45:17 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33270 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729175AbfA1Pvs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Jan 2019 10:51:48 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        id S1728405AbfA1Prw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Jan 2019 10:47:52 -0500
+Received: from [10.84.151.15] (unknown [167.220.148.15])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EE2FF2175B;
-        Mon, 28 Jan 2019 15:51:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6EB7B2175B;
+        Mon, 28 Jan 2019 15:47:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548690707;
-        bh=TxB9m43FZ8LrvCUf0ywSNbFnMvsOpUJCKQVR5eeEn0o=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S+OHgXsfjvYnAQo6BaQpLA0VDwJ8oyBJ6KfN86KJ4GSzepwrBMCTpxuKp95uT3RJR
-         /oFmPlhp6KMIgmL9eQ9TzHuzpylwXbyIykUuY/IDmXM8u/xGyLlCK1yqeiheKc+43o
-         2EGhN13L2CnXjQQSGWJAiooo+el5yg8/FVa1NFIQ=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Joey Zhang <joey.zhang@microchip.com>,
-        Wesley Sheng <wesley.sheng@microchip.com>,
+        s=default; t=1548690472;
+        bh=557nZhSfIECJ6lJcDGQc756ICmn6sZLxzFE3/SObG2A=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=uRYUZTMydEYkRH5RLjt8xJQkdnZJORgECmU0urMBA8V37iAuUA1BVLgrJxRvtGNaF
+         E84KjtgZn8iEKyjSqMrO62vDaqRiwRaLeg12QcdDigREvbfvy48zxDtYWBLPrTcPJb
+         cK7O/YO6K9RD8Y2nvqf3/XvijNh8xpCy581ywaOE=
+Subject: Re: [PATCH] PCI/ERR: Fix run error recovery callbacks for all
+ affected devices
+To:     Dongdong Liu <liudongdong3@huawei.com>,
+        Keith Busch <keith.busch@intel.com>
+Cc:     "helgaas@kernel.org" <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linuxarm@huawei.com" <linuxarm@huawei.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 171/304] switchtec: Fix SWITCHTEC_IOCTL_EVENT_IDX_ALL flags overwrite
-Date:   Mon, 28 Jan 2019 10:41:28 -0500
-Message-Id: <20190128154341.47195-171-sashal@kernel.org>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
-References: <20190128154341.47195-1-sashal@kernel.org>
+        tanxiaofei <tanxiaofei@huawei.com>
+References: <1548337810-69892-1-git-send-email-liudongdong3@huawei.com>
+ <ea302148-7778-d295-4fca-cec436b64e28@kernel.org>
+ <20190124213701.GA9882@localhost.localdomain>
+ <5d58ea17-115f-139d-93db-fe6e9ce573cb@huawei.com>
+ <20190125171713.GB11210@localhost.localdomain>
+ <bbe67d36-103c-1cda-4186-128a155e8c0e@kernel.org>
+ <f1d8845c-68fc-e0bf-67ed-7348b933eda1@kernel.org>
+ <2623f4f8-a832-c517-e5a5-7df2af57bc07@huawei.com>
+From:   Sinan Kaya <okaya@kernel.org>
+Message-ID: <7a2ee482-9f77-0295-6540-e41d85b04297@kernel.org>
+Date:   Mon, 28 Jan 2019 10:47:49 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-X-Patchwork-Hint: Ignore
+In-Reply-To: <2623f4f8-a832-c517-e5a5-7df2af57bc07@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Joey Zhang <joey.zhang@microchip.com>
+On 1/28/2019 9:54 AM, Dongdong Liu wrote:
+>> In this case the AER error status of other functions should not report any
+>> outstanding event. Please verify this. Otherwise, you are looking at a device quirk. 
+>>
+> 
+> Agree, multiple errors bit can be set, AER driver or firmware will collect the error 
+> 
+> devices and call pcie_do_recovery() for every error devices.
 
-[ Upstream commit e4a7dca5de625018b29417ecc39dc5037d9a5a36 ]
+pcie_do_recovery() is also being called for non-firmware first scenario where OS
+has no prior knowledge of which devices are in fault.
 
-In the ioctl_event_ctl() SWITCHTEC_IOCTL_EVENT_IDX_ALL case, we call
-event_ctl() several times with the same "ctl" struct.  Each call clobbers
-ctl.flags, which leads to the problem that we may not actually enable or
-disable all events as the user requested.
+> 
+> also have different PFs (device numbers are different) under the same bus.
+> This case do not need to brodcast all the devices under the same bus.
 
-Preserve the event flag value with a temporary variable.
-
-Fixes: 52eabba5bcdb ("switchtec: Add IOCTLs to the Switchtec driver")
-Signed-off-by: Joey Zhang <joey.zhang@microchip.com>
-Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
-[bhelgaas: changelog]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/switch/switchtec.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 54a8b30dda38..37d0c15c9eeb 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -800,6 +800,7 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
- {
- 	int ret;
- 	int nr_idxs;
-+	unsigned int event_flags;
- 	struct switchtec_ioctl_event_ctl ctl;
- 
- 	if (copy_from_user(&ctl, uctl, sizeof(ctl)))
-@@ -821,7 +822,9 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
- 		else
- 			return -EINVAL;
- 
-+		event_flags = ctl.flags;
- 		for (ctl.index = 0; ctl.index < nr_idxs; ctl.index++) {
-+			ctl.flags = event_flags;
- 			ret = event_ctl(stdev, &ctl);
- 			if (ret < 0)
- 				return ret;
--- 
-2.19.1
-
+Even if OS was to call pcie_do_recovery() for other devices, nothing should
+happen because the expectation for other devices' AER status register to report
+no errors. This is the case we want you to validate. If this is not true, you
+are looking at a firmware/HW bug.
