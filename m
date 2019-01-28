@@ -2,106 +2,79 @@ Return-Path: <SRS0=Vy8e=QE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 016DCC282CD
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:16:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C85BBC282CF
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:30:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BAB8421741
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:16:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548692160;
-	bh=e8rBckPa6OfSFiHVUGNxCA0PN8DsslFtgy57zgJAjsA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mR/Fe03jjX3kUC9qC23/DMbjxHbznfuGncuZxfJ0Viteu/dpfuYxv12cF+iDrPhA9
-	 O23teexxApaEV3rVohIo49mhKXLHJjdkX5vzRv/qdGHLNjXzRdMaK7o5DhvdWlcM5l
-	 xCaEatpnNX0Neg/18gDKgK0SocvKHmV4Sreue1nc=
+	by mail.kernel.org (Postfix) with ESMTP id 8D98020663
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:30:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QX+ww8Ih"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733100AbfA1QP7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Jan 2019 11:15:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47160 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732042AbfA1QP6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:15:58 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F2D9E20879;
-        Mon, 28 Jan 2019 16:15:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548692158;
-        bh=e8rBckPa6OfSFiHVUGNxCA0PN8DsslFtgy57zgJAjsA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Cn8cfUon387wZSkLcUz2y/dgpInlc+wP7ELJIVUT6XmIAlgdhi2vb6xhFb6rmYkzh
-         k/qgkjTA/4EOw7OXS1IX2zUxMCAhbExiUdCvK8Uk3P7h59en0KezcCwus5vleyomUW
-         KvXPufHD8JQTPD06socvLWMTFioFgzcALIoUQP5A=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Joey Zhang <joey.zhang@microchip.com>,
-        Wesley Sheng <wesley.sheng@microchip.com>,
+        id S2390422AbfA1Qar (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Jan 2019 11:30:47 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:34040 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389950AbfA1Q1Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2019 11:27:24 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=afkxU8B163R9+1TjnSSrQMJVy78j3isfMsboWHelv9c=; b=QX+ww8IhFhtKeBdohM4Kq9igW
+        cB/F+MuWirXcCakdZmAGmIAYsYsVZCgmN+q1t2DYLvz/fC2inctyZzkIueewtIbVXYAjI5+8VHtV1
+        SSXN2gkocydYgcqFuUoaUXRVbp2gxE5uyQU4Ls+yrxnJuum/5NmHlqfkao0TPZWScVsstDuKdhJA2
+        vlp1p1o035UBEGAa7KNXV/qFsRvEqRGpZXRLgFJ5zZ2cAqd26VXwt4dlb1oYza1lfNRhYJJ7aYuFk
+        p+89DSDOOOwsG+YCghkQX2apFUtQxpiMFQNcry/WLmCqeRL7CzZi6aXifoMklSIisb3l39rKwYcs+
+        8D6E/XNUQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1go9kn-0000nL-Ky; Mon, 28 Jan 2019 16:27:21 +0000
+Date:   Mon, 28 Jan 2019 08:27:21 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Thomas Bogendoerfer <tbogendoerfer@suse.de>
+Cc:     Christoph Hellwig <hch@infradead.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 093/170] switchtec: Fix SWITCHTEC_IOCTL_EVENT_IDX_ALL flags overwrite
-Date:   Mon, 28 Jan 2019 11:10:43 -0500
-Message-Id: <20190128161200.55107-93-sashal@kernel.org>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190128161200.55107-1-sashal@kernel.org>
-References: <20190128161200.55107-1-sashal@kernel.org>
+        James Hogan <jhogan@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Paul Burton <paul.burton@mips.com>,
+        Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 7/7] MIPS: SGI-IP27: abstract chipset irq from bridge
+Message-ID: <20190128162721.GA25378@infradead.org>
+References: <20190124174728.28812-1-tbogendoerfer@suse.de>
+ <20190124174728.28812-8-tbogendoerfer@suse.de>
+ <20190128133317.GD744@infradead.org>
+ <20190128150135.66f85834ab80813e6dc5ddf5@suse.de>
 MIME-Version: 1.0
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190128150135.66f85834ab80813e6dc5ddf5@suse.de>
+User-Agent: Mutt/1.9.2 (2017-12-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Joey Zhang <joey.zhang@microchip.com>
+On Mon, Jan 28, 2019 at 03:01:35PM +0100, Thomas Bogendoerfer wrote:
+> On Mon, 28 Jan 2019 05:33:17 -0800
+> Christoph Hellwig <hch@infradead.org> wrote:
+> 
+> > Shouldnt this just use chained irqchip drivers instead?
+> 
+> you mean using irq_set_chained_handler() ? If yes, this IMHO doesn't look usefull
+> because it's used for adding a secondary interrupt controller. But what I need
+> is telling bridge ASIC to direct the xtalk IRQ packet to a specific HUB/HEART/BEDROCK
+> from the HUB/HEART/BEDROCK specific code. And want to avoid dragging in bridge details
+> to that specific code.
 
-[ Upstream commit e4a7dca5de625018b29417ecc39dc5037d9a5a36 ]
-
-In the ioctl_event_ctl() SWITCHTEC_IOCTL_EVENT_IDX_ALL case, we call
-event_ctl() several times with the same "ctl" struct.  Each call clobbers
-ctl.flags, which leads to the problem that we may not actually enable or
-disable all events as the user requested.
-
-Preserve the event flag value with a temporary variable.
-
-Fixes: 52eabba5bcdb ("switchtec: Add IOCTLs to the Switchtec driver")
-Signed-off-by: Joey Zhang <joey.zhang@microchip.com>
-Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
-[bhelgaas: changelog]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/switch/switchtec.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 620f5b995a12..e3aefdafae89 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1064,6 +1064,7 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
- {
- 	int ret;
- 	int nr_idxs;
-+	unsigned int event_flags;
- 	struct switchtec_ioctl_event_ctl ctl;
- 
- 	if (copy_from_user(&ctl, uctl, sizeof(ctl)))
-@@ -1085,7 +1086,9 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
- 		else
- 			return -EINVAL;
- 
-+		event_flags = ctl.flags;
- 		for (ctl.index = 0; ctl.index < nr_idxs; ctl.index++) {
-+			ctl.flags = event_flags;
- 			ret = event_ctl(stdev, &ctl);
- 			if (ret < 0)
- 				return ret;
--- 
-2.19.1
+Yes, but don't we have nested interrupt controllers here?  Even if they
+don't really do much in the fast path the setup does look chained to me.
+Then again I'm not really an expert in the irq handling code nor in this
+hardware, so maybe Thomas or Marc might have a better idea.
 
