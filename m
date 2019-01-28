@@ -2,104 +2,96 @@ Return-Path: <SRS0=Vy8e=QE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33274C282C8
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 14:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D819EC282C8
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 15:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09BEB2171F
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 14:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C71E214DA
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 15:44:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548690273;
+	bh=hIsqLgJIVecRCPkiS/x7U8wfvg+g3uWTtxMvbTqZBms=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=CQUDCgBMsRtua+ddXTdgjTbyfTN4SA3WhHT97PgW99EEtiOcBalF5epm3h6rmgwjb
+	 oES0r5q6rup1M9QudFabUd2ygO5em/m0AqdaiFWzpXuPewGknCNJzYgl9wwRAZ77G3
+	 3pmzEX16KHLK6NXYT6qGWA8N1+ysjpRR2y3BGD8g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726744AbfA1Oyy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Jan 2019 09:54:54 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2788 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726647AbfA1Oyy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Jan 2019 09:54:54 -0500
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 537FE81AB7E4AC55786D;
-        Mon, 28 Jan 2019 22:54:50 +0800 (CST)
-Received: from [127.0.0.1] (10.63.141.25) by DGGEMS404-HUB.china.huawei.com
- (10.3.19.204) with Microsoft SMTP Server id 14.3.408.0; Mon, 28 Jan 2019
- 22:54:41 +0800
-Subject: Re: [PATCH] PCI/ERR: Fix run error recovery callbacks for all
- affected devices
-To:     Sinan Kaya <okaya@kernel.org>, Keith Busch <keith.busch@intel.com>
-References: <1548337810-69892-1-git-send-email-liudongdong3@huawei.com>
- <ea302148-7778-d295-4fca-cec436b64e28@kernel.org>
- <20190124213701.GA9882@localhost.localdomain>
- <5d58ea17-115f-139d-93db-fe6e9ce573cb@huawei.com>
- <20190125171713.GB11210@localhost.localdomain>
- <bbe67d36-103c-1cda-4186-128a155e8c0e@kernel.org>
- <f1d8845c-68fc-e0bf-67ed-7348b933eda1@kernel.org>
-CC:     "helgaas@kernel.org" <helgaas@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linuxarm@huawei.com" <linuxarm@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        tanxiaofei <tanxiaofei@huawei.com>
-From:   Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <2623f4f8-a832-c517-e5a5-7df2af57bc07@huawei.com>
-Date:   Mon, 28 Jan 2019 22:54:41 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.4.0
+        id S1727382AbfA1Poc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Jan 2019 10:44:32 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57828 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727378AbfA1Poa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Jan 2019 10:44:30 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AA01521741;
+        Mon, 28 Jan 2019 15:44:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548690270;
+        bh=hIsqLgJIVecRCPkiS/x7U8wfvg+g3uWTtxMvbTqZBms=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=f06wnwTfZAMErvqdarOQeAumlvlJnMRyJDAaQmLkQ2463ZU+VMtqBC1dF16SxkFfH
+         5bxTUfH0eRIDxUuBaI2pDDAwONDdZshBr6x51AQzwsvrBJzpbdt9Oz8yaRzYiFWDQX
+         EYeuJQSt28E+aOKLpFiUMNLR1GEPswM/IDGn/PVs=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Colin Ian King <colin.king@canonical.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.20 026/304] x86/PCI: Fix Broadcom CNB20LE unintended sign extension (redux)
+Date:   Mon, 28 Jan 2019 10:39:03 -0500
+Message-Id: <20190128154341.47195-26-sashal@kernel.org>
+X-Mailer: git-send-email 2.19.1
+In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
+References: <20190128154341.47195-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <f1d8845c-68fc-e0bf-67ed-7348b933eda1@kernel.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.63.141.25]
-X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+From: Colin Ian King <colin.king@canonical.com>
 
+[ Upstream commit 53bb565fc5439f2c8c57a786feea5946804aa3e9 ]
 
-在 2019/1/26 1:46, Sinan Kaya 写道:
-> On 1/25/2019 12:37 PM, Sinan Kaya wrote:
->> On 1/25/2019 12:17 PM, Keith Busch wrote:
->>> On Fri, Jan 25, 2019 at 06:28:03AM -0800, Dongdong Liu wrote:
->>>> I want to fix 2 points by the patch.
->>>>
->>>> 1. For EP devices (such as multi-function EP device) under the same bus,
->>>> when one of the EP devices met non-fatal error, should report non-fatal
->>>> error only to the error endpoint device, no need to broadcast all of them.
->>>> That is the patch (PCI/AER: Report non-fatal errors only to the affected endpoint  #4.15)
->>>> have done, but current code PATCH [1] broken this.
->>>
->>> How do you know a non-fatal affects only the reporting end point? These can
->>> certainly be bus errors, and it's not the first to detect may be affected.
->>>
->>> In any case, what harm does the broadcast cause?
->>>
->>
->> What is the PCIe spec rule about AER errors for multi-function devices?
->>
->> Does it say it needs to be propagated to all functions or each function has
->> its own unique AER error handler?
->>
->
-> Thinking more...
->
-> I think there is value in probing all devices for errors like today because
-> multiple errors bit can be set. Since root port's AER register only captures the
-> first error, the rest of the errors requires OS to poll each device to see what
-> is going on.
->
-> In this case the AER error status of other functions should not report any
-> outstanding event. Please verify this. Otherwise, you are looking at a device quirk.
+In the expression "word1 << 16", word1 starts as u16, but is promoted to a
+signed int, then sign-extended to resource_size_t, which is probably not
+what was intended.  Cast to resource_size_t to avoid the sign extension.
 
-Agree, multiple errors bit can be set, AER driver or firmware will collect the error
-devices and call pcie_do_recovery() for every error devices.
+This fixes an identical issue as fixed by commit 0b2d70764bb3 ("x86/PCI:
+Fix Broadcom CNB20LE unintended sign extension") back in 2014.
 
-also have different PFs (device numbers are different) under the same bus.
-This case do not need to brodcast all the devices under the same bus.
+Detected by CoverityScan, CID#138749, 138750 ("Unintended sign extension")
 
-Thanks
-Dongdong
->
->
-> .
->
+Fixes: 3f6ea84a3035 ("PCI: read memory ranges out of Broadcom CNB20LE host bridge")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ arch/x86/pci/broadcom_bus.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/pci/broadcom_bus.c b/arch/x86/pci/broadcom_bus.c
+index 526536c81ddc..ca1e8e6dccc8 100644
+--- a/arch/x86/pci/broadcom_bus.c
++++ b/arch/x86/pci/broadcom_bus.c
+@@ -50,8 +50,8 @@ static void __init cnb20le_res(u8 bus, u8 slot, u8 func)
+ 	word1 = read_pci_config_16(bus, slot, func, 0xc0);
+ 	word2 = read_pci_config_16(bus, slot, func, 0xc2);
+ 	if (word1 != word2) {
+-		res.start = (word1 << 16) | 0x0000;
+-		res.end   = (word2 << 16) | 0xffff;
++		res.start = ((resource_size_t) word1 << 16) | 0x0000;
++		res.end   = ((resource_size_t) word2 << 16) | 0xffff;
+ 		res.flags = IORESOURCE_MEM;
+ 		update_res(info, res.start, res.end, res.flags, 0);
+ 	}
+-- 
+2.19.1
 
