@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC645C282CD
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 13:32:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE01C282CF
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 13:33:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B6C42147A
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 13:32:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 024A02147A
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 13:33:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uybvqRG3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eMH2iz9a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726694AbfA1NcT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Jan 2019 08:32:19 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:57582 "EHLO
+        id S1726689AbfA1NdV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Jan 2019 08:33:21 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:57610 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726647AbfA1NcT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2019 08:32:19 -0500
+        with ESMTP id S1726647AbfA1NdV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Jan 2019 08:33:21 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=4ZjZnOAgjiXuKywopYQDLkYsV0TGR9HGtqPzaU9bP+k=; b=uybvqRG3vAjaT5cw0GX+QrkCx
-        Lj2StEdZXvz/Lx+iCR4YXbHjaO1bI0eVp8MzlczGUuBRaXlQelY1A0l/x6cR7ONePT7g2QypckQEs
-        gVZ1l0driMN2bexY8/1YNf81GoRzrVGZdHuvGQzHHkj78bchix/Lzzji2vW+WRsty6dnstmImyGXP
-        epJrTVxjOUMGN+a/pyxiis8OwcDfBERTpfFXC34xceQJ/dRug4gi+/v3sQzruRZRE6UUuRAhZ4kv0
-        VlG/LMEzJdIrWoxhcUJTZFckYJ/5GPDseGEczBMfYBBd0+z1lpy+R8Vqo94D+eoD+8d5ZggoVopl8
-        TGb0xeMsQ==;
+         bh=UDuf/5rGamUsYQzyqVCnd/3/j79KclFANZkff9RCf8I=; b=eMH2iz9aLZaVe2PsjQixwZX3G
+        v6eIw93/XRnY6ShybRbazneQZY12Tk4ROzMcb2KuyLQfMoKPwFYxj5BXQ6QaOBXglrFUuLAxTRT2Y
+        xEnST3UMFau6D9YaqsXis1Zi46tmX8gipTpJZm8XOvq9EcBHVMbvJDKisWo+NtnOK33ooH/1tgJCj
+        uB1p+59oPzddrLTYGg7HYc5Wy2PHqb5n9NksnTLVktUOkoM1tPZEDYm7uDQ8UCbojZO8DJU8AA9SX
+        p5GrUqkZlsKQIu/fCI4qx1u1XH7bq/C6xehcyPalp3HQn1HugXjkxmvIVls6qp69+ZBvcUk6FVybi
+        sJWdFa+Nw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1go71L-0001Iy-5f; Mon, 28 Jan 2019 13:32:15 +0000
-Date:   Mon, 28 Jan 2019 05:32:15 -0800
+        id 1go72M-0001Kn-2H; Mon, 28 Jan 2019 13:33:18 +0000
+Date:   Mon, 28 Jan 2019 05:33:17 -0800
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Thomas Bogendoerfer <tbogendoerfer@suse.de>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
@@ -43,14 +43,14 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Paul Burton <paul.burton@mips.com>,
         Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH 6/7] MIPS: SGI-IP27: use generic PCI driver
-Message-ID: <20190128133215.GC744@infradead.org>
+Subject: Re: [PATCH 7/7] MIPS: SGI-IP27: abstract chipset irq from bridge
+Message-ID: <20190128133317.GD744@infradead.org>
 References: <20190124174728.28812-1-tbogendoerfer@suse.de>
- <20190124174728.28812-7-tbogendoerfer@suse.de>
+ <20190124174728.28812-8-tbogendoerfer@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190124174728.28812-7-tbogendoerfer@suse.de>
+In-Reply-To: <20190124174728.28812-8-tbogendoerfer@suse.de>
 User-Agent: Mutt/1.9.2 (2017-12-15)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
@@ -58,48 +58,4 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 24, 2019 at 06:47:27PM +0100, Thomas Bogendoerfer wrote:
-> Converted bridge code to a platform driver using the PCI generic driver
-> framework and use adding platform devices during xtalk scan. This allows
-> easier sharing bridge drvier for other SGI platforms like IP30 (Octane) and
-
-Typo: s/drvier/driver/.
-
-In theory this would also have allowed sharing the code with ia64/SN,
-except that instead of porting the old mess to Linux 2.6 and cleaning it
-up SGI moved the support into the firmware hidden behind PAL calls :(
-
-> +#ifdef CONFIG_NUMA
-> +int pcibus_to_node(struct pci_bus *bus)
-> +{
-> +	struct bridge_controller *bc = BRIDGE_CONTROLLER(bus);
-> +
-> +	return bc->nasid;
-> +}
-> +EXPORT_SYMBOL(pcibus_to_node);
-> +#endif /* CONFIG_NUMA */
-
-From an abstraction point of view this doesn't really belong into
-a bridge driver as it is a global exported function.  I guess we can
-keep it here with a fixme comment, but we should probably move this
-into a method call instead.
-
-> +dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct bridge_controller *bc = BRIDGE_CONTROLLER(pdev->bus);
-> +
-> +	return bc->baddr + paddr;
-> +}
-> +
-> +phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t dma_addr)
-> +{
-> +	return dma_addr & ~(0xffUL << 56);
-> +}
-
-Similarly here - these are global platform-wide hooks, so having them
-in a pci bridge driver is not the proper abstraction level.
-
-Note that we could probably fix these by just switching IP27 and
-other users of the bridge chip to use the dma_pfn_offset field
-in struct device and stop overriding these functions.
+Shouldnt this just use chained irqchip drivers instead?
