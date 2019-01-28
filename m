@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3CC2C4151A
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:33:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 244F2C282C8
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CAF220879
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:33:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E001820844
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:40:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548693199;
+	s=default; t=1548693642;
 	bh=hIsqLgJIVecRCPkiS/x7U8wfvg+g3uWTtxMvbTqZBms=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=dLwuvyGaWOPuKU9YHk3mWWBjzcnBUx/WdHcAFcPvVC/NPJ+cXAEva7sVMbJ6Koxnv
-	 bpR/Ot6o994dn4cP/LhFAyzlpUGM/sTxj09+rvtFpTJ1UR4HQM5b7aD6TVTSg1xCLr
-	 Pp0N+m9Egj08w61KuXqL6clP127JIrBynYGpzNqw=
+	b=Mecq3/2CzRBwA4r6+hJRMy7v8bIoQUTaCDqwBFype2cKAH10atJzv/iwjIu3JP0Ra
+	 rxkPUZGjwL0sjq7u/kv5q/n802xNZyrMlCQG74yrR84LaBekMJ34PO9g25EN+BuCnF
+	 Td8Oyq8yvb9JwzG0NceHRFatJKTwbWPjTdr0x3pk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390493AbfA1QdL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Jan 2019 11:33:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35896 "EHLO mail.kernel.org"
+        id S2388703AbfA1Qkf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Jan 2019 11:40:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60878 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390224AbfA1Q0c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:26:32 -0500
+        id S2389662AbfA1QYQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Jan 2019 11:24:16 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6DC132147A;
-        Mon, 28 Jan 2019 16:26:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7E5352147A;
+        Mon, 28 Jan 2019 16:24:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548692792;
+        s=default; t=1548692655;
         bh=hIsqLgJIVecRCPkiS/x7U8wfvg+g3uWTtxMvbTqZBms=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lVM/3l+bEwb3yt8FcZTe1VOp3o14ZcNDeoVStdxnuZlC5q+ikkRogNQTxvSnhBDHB
-         4gpOS5bLPqr/UHf3DMi6eKJm4TgaqE8BYhCTkO/z2ZCFnVHgXFt0h2Xxok1aWK1ZSz
-         YIiWEWxvl3GK6Y2Fz10X+9sFnuHBdQ8JBZozSxeY=
+        b=EqSfh7R7VXV4NT/GIkNl3C3wDDlB3/aH4X1+loL7xdXre+4j4MzcQitcwXA1DjyG4
+         YTOi0posMJnecnYbVCOy7yILgU3JAk9whaRVbAjw7xxyu29iYsBCrzEgPNwAiDosw6
+         OM7ZWyaKLdhWN2Tz8F71QfmTQVZCdrBq5gnlOw0o=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Colin Ian King <colin.king@canonical.com>,
         Bjorn Helgaas <helgaas@kernel.org>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 3.18 06/61] x86/PCI: Fix Broadcom CNB20LE unintended sign extension (redux)
-Date:   Mon, 28 Jan 2019 11:25:28 -0500
-Message-Id: <20190128162623.59854-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 09/80] x86/PCI: Fix Broadcom CNB20LE unintended sign extension (redux)
+Date:   Mon, 28 Jan 2019 11:22:50 -0500
+Message-Id: <20190128162401.58841-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190128162623.59854-1-sashal@kernel.org>
-References: <20190128162623.59854-1-sashal@kernel.org>
+In-Reply-To: <20190128162401.58841-1-sashal@kernel.org>
+References: <20190128162401.58841-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
