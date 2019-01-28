@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0904BC282C8
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:11:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 016DCC282CD
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:16:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDCF22147A
-	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:11:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAB8421741
+	for <linux-pci@archiver.kernel.org>; Mon, 28 Jan 2019 16:16:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548691882;
-	bh=uw0z4E7PVxrvOp0CHfm/JYgC63VqKPLLD3oM5p4QVAs=;
+	s=default; t=1548692160;
+	bh=e8rBckPa6OfSFiHVUGNxCA0PN8DsslFtgy57zgJAjsA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=qAOluiXGpSm1VAGhCYM41mdSBopGkk9PPDWoaUOEF+mvQ+r607ipTk2p0EN7eHFZM
-	 k3N3DqEGsR2zTDru+/4a2lDMrbrferKX7dSXwl087k3zfx7fQVO2GIcksQO8RjEXm/
-	 mjyG4ohaaOXrLm3sPdwjEtU9t8AH1JMuu+QLZ05U=
+	b=mR/Fe03jjX3kUC9qC23/DMbjxHbznfuGncuZxfJ0Viteu/dpfuYxv12cF+iDrPhA9
+	 O23teexxApaEV3rVohIo49mhKXLHJjdkX5vzRv/qdGHLNjXzRdMaK7o5DhvdWlcM5l
+	 xCaEatpnNX0Neg/18gDKgK0SocvKHmV4Sreue1nc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732523AbfA1QLU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 28 Jan 2019 11:11:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:38238 "EHLO mail.kernel.org"
+        id S1733100AbfA1QP7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 28 Jan 2019 11:15:59 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47160 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732946AbfA1QLU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Jan 2019 11:11:20 -0500
+        id S1732042AbfA1QP6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 28 Jan 2019 11:15:58 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E640F21848;
-        Mon, 28 Jan 2019 16:11:17 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F2D9E20879;
+        Mon, 28 Jan 2019 16:15:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548691879;
-        bh=uw0z4E7PVxrvOp0CHfm/JYgC63VqKPLLD3oM5p4QVAs=;
+        s=default; t=1548692158;
+        bh=e8rBckPa6OfSFiHVUGNxCA0PN8DsslFtgy57zgJAjsA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=v8WBKy8JS8lTc1sjadinweOqCX+KQOsOEd3PAQBLkL+2ScaDLxbIZA8NPvkeCbgSG
-         4YlVPwSeOopeZFVnjcoE6La/S/oy0vj1S1xniL/+xAGTfajG37hl5HVZv7C9Q+09Z/
-         imb2bT6qHC/HDmAj4xlgW03m9EeRMdA1CaEkOXD0=
+        b=Cn8cfUon387wZSkLcUz2y/dgpInlc+wP7ELJIVUT6XmIAlgdhi2vb6xhFb6rmYkzh
+         k/qgkjTA/4EOw7OXS1IX2zUxMCAhbExiUdCvK8Uk3P7h59en0KezcCwus5vleyomUW
+         KvXPufHD8JQTPD06socvLWMTFioFgzcALIoUQP5A=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
+Cc:     Joey Zhang <joey.zhang@microchip.com>,
+        Wesley Sheng <wesley.sheng@microchip.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 246/258] PCI: imx: Enable MSI from downstream components
-Date:   Mon, 28 Jan 2019 10:59:12 -0500
-Message-Id: <20190128155924.51521-246-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 093/170] switchtec: Fix SWITCHTEC_IOCTL_EVENT_IDX_ALL flags overwrite
+Date:   Mon, 28 Jan 2019 11:10:43 -0500
+Message-Id: <20190128161200.55107-93-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190128155924.51521-1-sashal@kernel.org>
-References: <20190128155924.51521-1-sashal@kernel.org>
+In-Reply-To: <20190128161200.55107-1-sashal@kernel.org>
+References: <20190128161200.55107-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -57,75 +58,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Richard Zhu <hongxing.zhu@nxp.com>
+From: Joey Zhang <joey.zhang@microchip.com>
 
-[ Upstream commit 75cb8d20c112aba70f23d98e3f8d0a38ace16006 ]
+[ Upstream commit e4a7dca5de625018b29417ecc39dc5037d9a5a36 ]
 
-The MSI Enable bit in the MSI Capability (PCIe r4.0, sec 7.7.1.2) controls
-whether a Function can request service using MSI.
+In the ioctl_event_ctl() SWITCHTEC_IOCTL_EVENT_IDX_ALL case, we call
+event_ctl() several times with the same "ctl" struct.  Each call clobbers
+ctl.flags, which leads to the problem that we may not actually enable or
+disable all events as the user requested.
 
-i.MX6 Root Ports implement the MSI Capability and may use MSI to request
-service for events like PME, hotplug, AER, etc.  In addition, on i.MX6, the
-MSI Enable bit controls delivery of MSI interrupts from components below
-the Root Port.
+Preserve the event flag value with a temporary variable.
 
-Prior to f3fdfc4ac3a2 ("PCI: Remove host driver Kconfig selection of
-CONFIG_PCIEPORTBUS"), enabling CONFIG_PCI_IMX6 automatically also enabled
-CONFIG_PCIEPORTBUS, and when portdrv claimed the Root Ports, it set the MSI
-Enable bit so it could use PME, hotplug, AER, etc.  As a side effect, that
-also enabled delivery of MSI interrupts from downstream components.
-
-The imx6q-pcie driver itself does not depend on portdrv, so set MSI Enable
-in imx6q-pcie so MSI from downstream components works even if nobody uses
-MSI for the Root Port events.
-
-Fixes: f3fdfc4ac3a2 ("PCI: Remove host driver Kconfig selection of CONFIG_PCIEPORTBUS")
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+Fixes: 52eabba5bcdb ("switchtec: Add IOCTLs to the Switchtec driver")
+Signed-off-by: Joey Zhang <joey.zhang@microchip.com>
+Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
+[bhelgaas: changelog]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Sven Van Asbroeck <TheSven73@googlemail.com>
-Tested-by: Trent Piepho <tpiepho@impinj.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/pci/switch/switchtec.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 975050a69494..3826b444298c 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -66,6 +66,7 @@ struct imx6_pcie {
- #define PHY_PLL_LOCK_WAIT_USLEEP_MAX	200
- 
- /* PCIe Root Complex registers (memory-mapped) */
-+#define PCIE_RC_IMX6_MSI_CAP			0x50
- #define PCIE_RC_LCR				0x7c
- #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1	0x1
- #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2	0x2
-@@ -682,6 +683,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 	struct resource *dbi_base;
- 	struct device_node *node = dev->of_node;
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 620f5b995a12..e3aefdafae89 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1064,6 +1064,7 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
+ {
  	int ret;
-+	u16 val;
+ 	int nr_idxs;
++	unsigned int event_flags;
+ 	struct switchtec_ioctl_event_ctl ctl;
  
- 	imx6_pcie = devm_kzalloc(dev, sizeof(*imx6_pcie), GFP_KERNEL);
- 	if (!imx6_pcie)
-@@ -816,6 +818,14 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 	if (ret < 0)
- 		return ret;
+ 	if (copy_from_user(&ctl, uctl, sizeof(ctl)))
+@@ -1085,7 +1086,9 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
+ 		else
+ 			return -EINVAL;
  
-+	if (pci_msi_enabled()) {
-+		val = dw_pcie_readw_dbi(pci, PCIE_RC_IMX6_MSI_CAP +
-+					PCI_MSI_FLAGS);
-+		val |= PCI_MSI_FLAGS_ENABLE;
-+		dw_pcie_writew_dbi(pci, PCIE_RC_IMX6_MSI_CAP + PCI_MSI_FLAGS,
-+				   val);
-+	}
-+
- 	return 0;
- }
- 
++		event_flags = ctl.flags;
+ 		for (ctl.index = 0; ctl.index < nr_idxs; ctl.index++) {
++			ctl.flags = event_flags;
+ 			ret = event_ctl(stdev, &ctl);
+ 			if (ret < 0)
+ 				return ret;
 -- 
 2.19.1
 
