@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BD5FC169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:18:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19FD8C169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:21:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20AB42147A
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:18:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D183F2147A
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:21:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rfG3GZck"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bF/t8AjV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725613AbfA2HSU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 02:18:20 -0500
-Received: from mail-it1-f194.google.com ([209.85.166.194]:40431 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725446AbfA2HSU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2019 02:18:20 -0500
-Received: by mail-it1-f194.google.com with SMTP id h193so2573638ita.5;
-        Mon, 28 Jan 2019 23:18:19 -0800 (PST)
+        id S1725446AbfA2HVA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 02:21:00 -0500
+Received: from mail-io1-f65.google.com ([209.85.166.65]:43778 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbfA2HVA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2019 02:21:00 -0500
+Received: by mail-io1-f65.google.com with SMTP id b23so15740871ios.10;
+        Mon, 28 Jan 2019 23:20:59 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=GyNtLBHh0xeZa5yZWxYrqzD/jwUpFtb/xcRYJ2hiRz0=;
-        b=rfG3GZck2Hu4OouisCpWtNqsn0DtP2/TB45pjQXLboseYtPUTYOhUpJMariGpu7eKW
-         9IQoLwXg2ghZd6m4TC17kwZt1BhyfjWphMbI4XHQScVuNNDv05/Lvc6IcGMqTlvumxZj
-         8cg6xqKon/HjLcTShxlrcNJc06dTq6GZsc8gkyM7MlccsuGCFv2B0yOwgR30lswHN0dx
-         IIvy8lH5CpRanpCX625PD2lxAr0pwsvs/S6NdnsVlVWmFnN2GQjpWfbWmycJw2wJWatb
-         gK0OEVVrWMhzFWuNhBdGrO/eUOZR+pqwy4ywv5nrTBeMxcUTH6nU1dbwFNX0no4woFyk
-         spFg==
+        bh=HyzxbTH26FfhVsAa9oAD4X5nXO58/54A8xeITPEZ/A0=;
+        b=bF/t8AjVNsLVx9T21Q/ty/6+Ta9273qD0uR4iJPQDFvHXnE1YwHsSwgAZ6VNVSgTuN
+         dM+PQxMvJv27GGbbuctEPssL/CDTN17p8s9Ea+0zqsvKoU7fC2r396ii/N288wW5/54H
+         FxGNXFQdeiFsyHrm4o2YX5gmW+XLdPGxv6uFiktcuCO6CCRvAlkbgsxo5p9h8xi4hDdl
+         c3YMHNtW5EaDw8auo6v/D0zagKkOXPPUwJov/9Ttq/vZQh95/X7lP/D4xlYR/n4m+omT
+         p4Je1DI7Ha3Bvx2Yn110Gc4K9ilcCdO01/B/EM40i9vYFvdKmVMLseX2KbyDTyDhAxRL
+         ETMg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=GyNtLBHh0xeZa5yZWxYrqzD/jwUpFtb/xcRYJ2hiRz0=;
-        b=ueYzg4k+pvJjaO23fA0Fo5inbqL00HqFs7k2uSnQKP6838+z1PeW+mBgHi5n72ODN4
-         JIm/pfYrjA1kiE8DRr00JO70NmQTtRZmKj7x0V/1egTM6TSBzjLK3QWE7kFGYSbqfSDN
-         433fb26WVDuGKGY1/WElan/TiGsvgUVfH0AzU5KR5ZcF0JBbJdt+wcf60SWICdx0GziY
-         IwKqe4do3t6GW0kez4Ko7K7T7C1ikgqozoq7mjJhUncQb7h5lpBGQHRjZk/iPqWuscKL
-         NL6xI0JUBCs65deORl+6Wd75aefT0fQFXCXEM/ikxQeb5FphyZ2p7LyyfbNEAaVZsj4e
-         pkJg==
-X-Gm-Message-State: AJcUukfS2UPwkvIVKZic+EZfIVgi2tW1o63w1Vxxj3xF5AhgnRC2qbNM
-        Ki3pIVB9zXEIzMNlC3fmrvs=
-X-Google-Smtp-Source: ALg8bN5Qza+K60uTvFzqGMoAWhm1bWtx+nXYJ8dDx3wO/5hFYkLC5hyuosIN82JkkE5BDovcVoJjiA==
-X-Received: by 2002:a24:1fc7:: with SMTP id d190mr11400794itd.126.1548746299105;
-        Mon, 28 Jan 2019 23:18:19 -0800 (PST)
+        bh=HyzxbTH26FfhVsAa9oAD4X5nXO58/54A8xeITPEZ/A0=;
+        b=EkxiWcxaj2M7lVLK+ZXXqXX/z8Co81uvETy1bUpjJpU0AYqY7ei59kCUgBUIklQFrQ
+         wZe8q/X09KIU6Fw3oByFHkuxq9txAOAiedq06CHV4c8/FQGySRH/HuupR5RFzPBJktvb
+         OIEoI1xk2l9P2NaOpbXAku07uBYIe3JNoZR+I21a1edmWgjyOP4mPTctN2/7TTlYGZU0
+         fTkaDHsiG46fJX7zPkBInFCbkaysYgs3J0XwNoX3E8XnG7De/38zyS/dqGJPHH0ToYkT
+         ey9TXD2/3n0h+WnG16ZkYzcdmWBaa7ojy3ry9AyAQWBNg/wknupZA+ZD9HxGf3e4PNA3
+         zYYA==
+X-Gm-Message-State: AJcUukdK5QZKFA2+1TaY02p2Q0lMDjnTYEZ882mvFhEhAhDjufABgJk2
+        d/dX8rk/6Kx8EMPPIw45TEM=
+X-Google-Smtp-Source: ALg8bN7DpAmH3CYO/dt9xZkod+oEYtUPmblHDemcXBTMIEyS1hKRdTH6YAPQeiAEPzdyTf3Sy8t4wg==
+X-Received: by 2002:a5e:8817:: with SMTP id l23mr13607861ioj.272.1548746458713;
+        Mon, 28 Jan 2019 23:20:58 -0800 (PST)
 Received: from m-hyperV (50-47-88-57.evrt.wa.frontiernet.net. [50.47.88.57])
-        by smtp.gmail.com with ESMTPSA id f13sm14513210iol.82.2019.01.28.23.18.18
+        by smtp.gmail.com with ESMTPSA id q15sm13867509ioj.64.2019.01.28.23.20.57
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 28 Jan 2019 23:18:18 -0800 (PST)
-Date:   Mon, 28 Jan 2019 23:18:17 -0800
+        Mon, 28 Jan 2019 23:20:58 -0800 (PST)
+Date:   Mon, 28 Jan 2019 23:20:56 -0800
 From:   Maya Nakamura <m.maya.nakamura@gmail.com>
 To:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
         linux-pci@vger.kernel.org, kys@microsoft.com,
@@ -64,8 +64,9 @@ To:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
 Cc:     linux-kernel@vger.kernel.org,
         driverdev-devel@linuxdriverproject.org, haiyangz@microsoft.com,
         vkuznets@redhat.com, marcelo.cerri@canonical.com
-Subject: [PATCH v3 1/2] PCI: hv: Replace hv_vp_set with hv_vpset
-Message-ID: <19aea785b78cf14c71f58bf278df17dc3adf8368.1548745212.git.m.maya.nakamura@gmail.com>
+Subject: [PATCH v3 2/2] PCI: hv: Refactor hv_irq_unmask() to use
+ cpumask_to_vpset()
+Message-ID: <00e13af711510001e589c7b1ddd75beb99f58db5.1548745212.git.m.maya.nakamura@gmail.com>
 References: <cover.1548745212.git.m.maya.nakamura@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -77,99 +78,113 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove a duplicate definition of VP set (hv_vp_set) and use the common
-definition (hv_vpset) that is used in other places.
+Remove the duplicate implementation of cpumask_to_vpset() and use the
+shared implementation. Export hv_max_vp_index, which is required by
+cpumask_to_vpset().
 
-Change the order of the members in struct hv_pcibus_device so that the
-declaration of retarget_msi_interrupt_params is the last member. Struct
-hv_vpset, which contains a flexible array, is nested two levels deep in
-struct hv_pcibus_device via retarget_msi_interrupt_params.
-
-Add a comment that retarget_msi_interrupt_params should be the last member
-of struct hv_pcibus_device.
+Apply changes to hv_irq_unmask() based on feedback.
 
 Signed-off-by: Maya Nakamura <m.maya.nakamura@gmail.com>
 ---
-Change in v3:
-- Correct the v2 change log.
+Changes in v3:
+ - Modify to catch all failures from cpumask_to_vpset().
+ - Correct the v2 change log about the commit message.
 
-Change in v2:
-- Update the commit message.
+Changes in v2:
+ - Remove unnecessary nr_bank initialization.
+ - Delete two unnecessary dev_err()'s.
+ - Unlock before returning.
+ - Update the commit message.
 
- drivers/pci/controller/pci-hyperv.c | 25 ++++++++++++-------------
- 1 file changed, 12 insertions(+), 13 deletions(-)
+ arch/x86/hyperv/hv_init.c           |  1 +
+ drivers/pci/controller/pci-hyperv.c | 38 +++++++++++++----------------
+ 2 files changed, 18 insertions(+), 21 deletions(-)
 
+diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
+index 7abb09e2eeb8..7f2eed1fc81b 100644
+--- a/arch/x86/hyperv/hv_init.c
++++ b/arch/x86/hyperv/hv_init.c
+@@ -96,6 +96,7 @@ void  __percpu **hyperv_pcpu_input_arg;
+ EXPORT_SYMBOL_GPL(hyperv_pcpu_input_arg);
+ 
+ u32 hv_max_vp_index;
++EXPORT_SYMBOL_GPL(hv_max_vp_index);
+ 
+ static int hv_cpu_init(unsigned int cpu)
+ {
 diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 9ba4d12c179c..da8b58d8630d 100644
+index da8b58d8630d..a78def332bbc 100644
 --- a/drivers/pci/controller/pci-hyperv.c
 +++ b/drivers/pci/controller/pci-hyperv.c
-@@ -393,12 +393,6 @@ struct hv_interrupt_entry {
+@@ -391,8 +391,6 @@ struct hv_interrupt_entry {
+ 	u32	data;
+ };
  
- #define HV_VP_SET_BANK_COUNT_MAX	5 /* current implementation limit */
- 
--struct hv_vp_set {
--	u64	format;			/* 0 (HvGenericSetSparse4k) */
--	u64	valid_banks;
--	u64	masks[HV_VP_SET_BANK_COUNT_MAX];
--};
+-#define HV_VP_SET_BANK_COUNT_MAX	5 /* current implementation limit */
 -
  /*
   * flags for hv_device_interrupt_target.flags
   */
-@@ -410,7 +404,7 @@ struct hv_device_interrupt_target {
- 	u32	flags;
- 	union {
- 		u64		 vp_mask;
--		struct hv_vp_set vp_set;
-+		struct hv_vpset vp_set;
- 	};
- };
+@@ -908,12 +906,12 @@ static void hv_irq_unmask(struct irq_data *data)
+ 	struct retarget_msi_interrupt *params;
+ 	struct hv_pcibus_device *hbus;
+ 	struct cpumask *dest;
++	cpumask_var_t tmp;
+ 	struct pci_bus *pbus;
+ 	struct pci_dev *pdev;
+ 	unsigned long flags;
+ 	u32 var_size = 0;
+-	int cpu_vmbus;
+-	int cpu;
++	int cpu, nr_bank;
+ 	u64 res;
  
-@@ -460,12 +454,16 @@ struct hv_pcibus_device {
- 	struct msi_controller msi_chip;
- 	struct irq_domain *irq_domain;
- 
--	/* hypercall arg, must not cross page boundary */
--	struct retarget_msi_interrupt retarget_msi_interrupt_params;
--
- 	spinlock_t retarget_msi_interrupt_lock;
- 
- 	struct workqueue_struct *wq;
-+
-+	/* hypercall arg, must not cross page boundary */
-+	struct retarget_msi_interrupt retarget_msi_interrupt_params;
-+
-+	/*
-+	 * Don't put anything here: retarget_msi_interrupt_params must be last
-+	 */
- };
- 
- /*
-@@ -955,12 +953,13 @@ static void hv_irq_unmask(struct irq_data *data)
+ 	dest = irq_data_get_effective_affinity_mask(data);
+@@ -953,29 +951,27 @@ static void hv_irq_unmask(struct irq_data *data)
  		 */
  		params->int_target.flags |=
  			HV_DEVICE_INTERRUPT_TARGET_PROCESSOR_SET;
--		params->int_target.vp_set.valid_banks =
-+		params->int_target.vp_set.valid_bank_mask =
- 			(1ull << HV_VP_SET_BANK_COUNT_MAX) - 1;
+-		params->int_target.vp_set.valid_bank_mask =
+-			(1ull << HV_VP_SET_BANK_COUNT_MAX) - 1;
++
++		if (!alloc_cpumask_var(&tmp, GFP_KERNEL)) {
++			res = 1;
++			goto exit_unlock;
++		}
++
++		cpumask_and(tmp, dest, cpu_online_mask);
++		nr_bank = cpumask_to_vpset(&params->int_target.vp_set, tmp);
++		free_cpumask_var(tmp);
++
++		if (nr_bank <= 0) {
++			res = 1;
++			goto exit_unlock;
++		}
  
  		/*
  		 * var-sized hypercall, var-size starts after vp_mask (thus
--		 * vp_set.format does not count, but vp_set.valid_banks does).
-+		 * vp_set.format does not count, but vp_set.valid_bank_mask
-+		 * does).
+ 		 * vp_set.format does not count, but vp_set.valid_bank_mask
+ 		 * does).
  		 */
- 		var_size = 1 + HV_VP_SET_BANK_COUNT_MAX;
- 
-@@ -974,7 +973,7 @@ static void hv_irq_unmask(struct irq_data *data)
- 				goto exit_unlock;
- 			}
- 
--			params->int_target.vp_set.masks[cpu_vmbus / 64] |=
-+			params->int_target.vp_set.bank_contents[cpu_vmbus / 64]	|=
- 				(1ULL << (cpu_vmbus & 63));
- 		}
+-		var_size = 1 + HV_VP_SET_BANK_COUNT_MAX;
+-
+-		for_each_cpu_and(cpu, dest, cpu_online_mask) {
+-			cpu_vmbus = hv_cpu_number_to_vp_number(cpu);
+-
+-			if (cpu_vmbus >= HV_VP_SET_BANK_COUNT_MAX * 64) {
+-				dev_err(&hbus->hdev->device,
+-					"too high CPU %d", cpu_vmbus);
+-				res = 1;
+-				goto exit_unlock;
+-			}
+-
+-			params->int_target.vp_set.bank_contents[cpu_vmbus / 64]	|=
+-				(1ULL << (cpu_vmbus & 63));
+-		}
++		var_size = 1 + nr_bank;
  	} else {
+ 		for_each_cpu_and(cpu, dest, cpu_online_mask) {
+ 			params->int_target.vp_mask |=
 -- 
 2.17.1
 
