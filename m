@@ -2,258 +2,109 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF77C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 22:47:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03827C169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 22:59:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 182DA2147A
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 22:47:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7C0F2147A
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 22:59:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727893AbfA2Wrh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 17:47:37 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:50792 "EHLO mx1.redhat.com"
+        id S1728061AbfA2W7A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 17:59:00 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:32828 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727525AbfA2Wrh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 17:47:37 -0500
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E371989AC5;
-        Tue, 29 Jan 2019 22:47:35 +0000 (UTC)
-Received: from redhat.com (ovpn-123-79.rdu2.redhat.com [10.10.123.79])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 360E72C8C3;
-        Tue, 29 Jan 2019 22:47:33 +0000 (UTC)
-Date:   Tue, 29 Jan 2019 17:47:32 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, xuyandong <xuyandong2@huawei.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Jesse Barnes <jbarnes@virtuousgeek.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Ofer Hayut <ofer@lightbitslabs.com>,
-        Roy Shterman <roys@lightbitslabs.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Probe bridge window attributes once at
- enumeration-time
-Message-ID: <20190129174504-mutt-send-email-mst@kernel.org>
-References: <154818377425.41851.650909794935936003.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20190129224333.GE91506@google.com>
+        id S1726846AbfA2W7A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 17:59:00 -0500
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtp (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1gocL9-0008ND-Kp; Tue, 29 Jan 2019 15:58:48 -0700
+To:     Jerome Glisse <jglisse@redhat.com>
+Cc:     Jason Gunthorpe <jgg@mellanox.com>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20190129174728.6430-1-jglisse@redhat.com>
+ <20190129174728.6430-4-jglisse@redhat.com>
+ <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
+ <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
+ <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
+ <20190129205749.GN3176@redhat.com>
+ <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
+ <20190129215028.GQ3176@redhat.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
+Date:   Tue, 29 Jan 2019 15:58:45 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190129224333.GE91506@google.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Tue, 29 Jan 2019 22:47:36 +0000 (UTC)
+In-Reply-To: <20190129215028.GQ3176@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: iommu@lists.linux-foundation.org, jroedel@suse.de, robin.murphy@arm.com, m.szyprowski@samsung.com, hch@lst.de, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, Felix.Kuehling@amd.com, christian.koenig@amd.com, bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, jgg@mellanox.com, jglisse@redhat.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 04:43:33PM -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 22, 2019 at 01:02:54PM -0600, Bjorn Helgaas wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > pci_bridge_check_ranges() determines whether a bridge supports the optional
-> > I/O and prefetchable memory windows and sets the flag bits in the bridge
-> > resources.  This *could* be done once during enumeration except that the
-> > resource allocation code completely clears the flag bits, e.g., in the
-> > pci_assign_unassigned_bridge_resources() path.
-> > 
-> > The problem with pci_bridge_check_ranges() in the resource allocation path
-> > is that we may allocate resources after devices have been claimed by
-> > drivers, and pci_bridge_check_ranges() *changes* the window registers to
-> > determine whether they're writable.  This may break concurrent accesses to
-> > devices behind the bridge.
-> > 
-> > Add a new pci_read_bridge_windows() to determine whether a bridge supports
-> > the optional windows, call it once during enumeration, remember the
-> > results, and change pci_bridge_check_ranges() so it doesn't touch the
-> > bridge windows but sets the flag bits based on those remembered results.
-> > 
-> > Link: https://lore.kernel.org/linux-pci/1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com
-> > Link: https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
-> > Reported-by: xuyandong <xuyandong2@huawei.com>
-> > Tested-by: xuyandong <xuyandong2@huawei.com>
-> > Cc: Sagi Grimberg <sagi@grimberg.me>
-> > Cc: Ofer Hayut <ofer@lightbitslabs.com>
-> > Cc: Roy Shterman <roys@lightbitslabs.com>
-> > Cc: Keith Busch <keith.busch@intel.com>
-> > Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> 
-> Applied to pci/enumeration for v5.1.
-> 
-> This is fairly simple in concept, but doesn't meet the letter of the
-> restrictions in Documentation/process/stable-kernel-rules.rst, so I
-> didn't tag it for stable.
-> 
-> Is there a compelling argument to mark it for stable?
-
-Well it's needed downstream.
-It's a bit above 100 lines with context. Is this what you mean?
-If yes how about using my patch for stable as an alternative?
-The rules allow for equivalent patches.
 
 
-> > ---
-> >  drivers/pci/probe.c     |   52 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/setup-bus.c |   45 ++++-------------------------------------
-> >  include/linux/pci.h     |    3 +++
-> >  3 files changed, 59 insertions(+), 41 deletions(-)
-> > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 257b9f6f2ebb..2ef8b954c65a 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -348,6 +348,57 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
-> >  	}
-> >  }
-> >  
-> > +static void pci_read_bridge_windows(struct pci_dev *bridge)
-> > +{
-> > +	u16 io;
-> > +	u32 pmem, tmp;
-> > +
-> > +	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > +	if (!io) {
-> > +		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> > +		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > +		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> > +	}
-> > +	if (io)
-> > +		bridge->io_window = 1;
-> > +
-> > +	/*
-> > +	 * DECchip 21050 pass 2 errata: the bridge may miss an address
-> > +	 * disconnect boundary by one PCI data phase.  Workaround: do not
-> > +	 * use prefetching on this device.
-> > +	 */
-> > +	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
-> > +		return;
-> > +
-> > +	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > +	if (!pmem) {
-> > +		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
-> > +					       0xffe0fff0);
-> > +		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > +		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
-> > +	}
-> > +	if (!pmem)
-> > +		return;
-> > +
-> > +	bridge->pref_window = 1;
-> > +
-> > +	if ((pmem & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
-> > +
-> > +		/*
-> > +		 * Bridge claims to have a 64-bit prefetchable memory
-> > +		 * window; verify that the upper bits are actually
-> > +		 * writable.
-> > +		 */
-> > +		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &pmem);
-> > +		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > +				       0xffffffff);
-> > +		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
-> > +		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, pmem);
-> > +		if (tmp)
-> > +			bridge->pref_64_window = 1;
-> > +	}
-> > +}
-> > +
-> >  static void pci_read_bridge_io(struct pci_bus *child)
-> >  {
-> >  	struct pci_dev *dev = child->self;
-> > @@ -1739,6 +1790,7 @@ int pci_setup_device(struct pci_dev *dev)
-> >  		pci_read_irq(dev);
-> >  		dev->transparent = ((dev->class & 0xff) == 1);
-> >  		pci_read_bases(dev, 2, PCI_ROM_ADDRESS1);
-> > +		pci_read_bridge_windows(dev);
-> >  		set_pcie_hotplug_bridge(dev);
-> >  		pos = pci_find_capability(dev, PCI_CAP_ID_SSVID);
-> >  		if (pos) {
-> > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > index ed960436df5e..1941bb0a6c13 100644
-> > --- a/drivers/pci/setup-bus.c
-> > +++ b/drivers/pci/setup-bus.c
-> > @@ -735,58 +735,21 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
-> >     base/limit registers must be read-only and read as 0. */
-> >  static void pci_bridge_check_ranges(struct pci_bus *bus)
-> >  {
-> > -	u16 io;
-> > -	u32 pmem;
-> >  	struct pci_dev *bridge = bus->self;
-> > -	struct resource *b_res;
-> > +	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-> >  
-> > -	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-> >  	b_res[1].flags |= IORESOURCE_MEM;
-> >  
-> > -	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > -	if (!io) {
-> > -		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> > -		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > -		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> > -	}
-> > -	if (io)
-> > +	if (bridge->io_window)
-> >  		b_res[0].flags |= IORESOURCE_IO;
-> >  
-> > -	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
-> > -	    disconnect boundary by one PCI data phase.
-> > -	    Workaround: do not use prefetching on this device. */
-> > -	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
-> > -		return;
-> > -
-> > -	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > -	if (!pmem) {
-> > -		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
-> > -					       0xffe0fff0);
-> > -		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > -		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
-> > -	}
-> > -	if (pmem) {
-> > +	if (bridge->pref_window) {
-> >  		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-> > -		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
-> > -		    PCI_PREF_RANGE_TYPE_64) {
-> > +		if (bridge->pref_64_window) {
-> >  			b_res[2].flags |= IORESOURCE_MEM_64;
-> >  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
-> >  		}
-> >  	}
-> > -
-> > -	/* double check if bridge does support 64 bit pref */
-> > -	if (b_res[2].flags & IORESOURCE_MEM_64) {
-> > -		u32 mem_base_hi, tmp;
-> > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > -					 &mem_base_hi);
-> > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > -					       0xffffffff);
-> > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
-> > -		if (!tmp)
-> > -			b_res[2].flags &= ~IORESOURCE_MEM_64;
-> > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > -				       mem_base_hi);
-> > -	}
-> >  }
-> >  
-> >  /* Helper function for sizing routines: find first available
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 65f1d8c2f082..40b327b814aa 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -373,6 +373,9 @@ struct pci_dev {
-> >  	bool		match_driver;		/* Skip attaching driver */
-> >  
-> >  	unsigned int	transparent:1;		/* Subtractive decode bridge */
-> > +	unsigned int	io_window:1;		/* Bridge has I/O window */
-> > +	unsigned int	pref_window:1;		/* Bridge has pref mem window */
-> > +	unsigned int	pref_64_window:1;	/* Pref mem window is 64-bit */
-> >  	unsigned int	multifunction:1;	/* Multi-function device */
-> >  
-> >  	unsigned int	is_busmaster:1;		/* Is busmaster */
-> > 
+On 2019-01-29 2:50 p.m., Jerome Glisse wrote:
+> No this is the non HMM case i am talking about here. Fully ignore HMM
+> in this frame. A GPU driver that do not support or use HMM in anyway
+> has all the properties and requirement i do list above. So all the points
+> i was making are without HMM in the picture whatsoever. I should have
+> posted this a separate patches to avoid this confusion.
+> 
+> Regarding your HMM question. You can not map HMM pages, all code path
+> that would try that would trigger a migration back to regular memory
+> and will use the regular memory for CPU access.
+> 
+
+I thought this was the whole point of HMM... And eventually it would
+support being able to map the pages through the BAR in cooperation with
+the driver. If not, what's that whole layer for? Why not just have HMM
+handle this situation?
+
+And what struct pages are actually going to be backing these VMAs if
+it's not using HMM?
+
+
+> Again HMM has nothing to do here, ignore HMM it does not play any role
+> and it is not involve in anyway here. GPU want to control what object
+> they allow other device to access and object they do not allow. GPU driver
+> _constantly_ invalidate the CPU page table and in fact the CPU page table
+> do not have any valid pte for a vma that is an mmap of GPU device file
+> for most of the vma lifetime. Changing that would highly disrupt and
+> break GPU drivers. They need to control that, they need to control what
+> to do if another device tries to peer map some of their memory. Hence
+> why they need to implement the callback and decide on wether or not they
+> allow the peer mapping or use device memory for it (they can decide to
+> fallback to main memory).
+
+But mapping is an operation of the memory/struct pages behind the VMA;
+not of the VMA itself and I think that's evident by the code in that the
+only way the VMA layer is involved is the fact that you're abusing
+vm_ops by adding new ops there and calling it by other layers.
+
+Logan
