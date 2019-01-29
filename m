@@ -2,179 +2,178 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB2A2C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 18:54:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EEEFC169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:06:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAC4920844
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 18:54:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 543D421848
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:06:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548788761;
+	bh=C/ElWr39C7348LPT6M9EQw73AUPUHuuyi4qzDK3KsaE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Zz3zOZAsz7oH1moGvmsyNZMyspMexGjCMnXz9/VceR4flVeLGJWDYcAsKrBniZIxH
+	 mQHlso0gctxDR1ZBii1fid2Q7t4i9DyHM3/8PwklD2QnRORxi83CDodjYfXopsqVgq
+	 W7EQ7UI4aAd9cEaZscAcv6R13nsRdGDdzeMBd/00=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729158AbfA2Syr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 13:54:47 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:35132 "EHLO mx1.redhat.com"
+        id S1727068AbfA2TGA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 14:06:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:34644 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727229AbfA2Syq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 13:54:46 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726984AbfA2TGA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 14:06:00 -0500
+Received: from localhost (156.sub-174-234-151.myvzw.com [174.234.151.156])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E3075C05D41E;
-        Tue, 29 Jan 2019 18:54:45 +0000 (UTC)
-Received: from redhat.com (ovpn-123-79.rdu2.redhat.com [10.10.123.79])
-        by smtp.corp.redhat.com (Postfix) with SMTP id 6977D53;
-        Tue, 29 Jan 2019 18:54:43 +0000 (UTC)
-Date:   Tue, 29 Jan 2019 13:54:42 -0500
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     mark.rutland@arm.com, virtio-dev@lists.oasis-open.org,
-        kevin.tian@intel.com, tnowicki@caviumnetworks.com,
-        devicetree@vger.kernel.org, marc.zyngier@arm.com,
-        linux-pci@vger.kernel.org, will.deacon@arm.com,
-        robin.murphy@arm.com, virtualization@lists.linux-foundation.org,
-        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
-        kvmarm@lists.cs.columbia.edu, bhelgaas@google.com,
-        frowand.list@gmail.com, jasowang@redhat.com,
-        linuxppc-dev@lists.ozlabs.org,
-        Thiago Jung Bauermann <bauerman@linux.ibm.com>
-Subject: Re: [PATCH v7 0/7] Add virtio-iommu driver
-Message-ID: <20190129135345-mutt-send-email-mst@kernel.org>
-References: <20190115121959.23763-1-jean-philippe.brucker@arm.com>
- <20190118103235-mutt-send-email-mst@kernel.org>
- <0ba215f5-e856-bf31-8dd9-a85710714a7a@arm.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id A307920844;
+        Tue, 29 Jan 2019 19:05:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548788759;
+        bh=C/ElWr39C7348LPT6M9EQw73AUPUHuuyi4qzDK3KsaE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=GukueZtyeyVUCdD3XNXwmMmJWPqwXf7xLKyMITqxaEU1I8qWgjsoNgvQELWnYv2Ek
+         UgYIpgB3sZjZfcJvJ6uIrB3wRHMpp764N+VXhzVXQPI2M7R8LXQ9j6HLFQeTZ0NgpH
+         BaZaUi4Rj09eNxdClryXzPSMhP0W15xYwlq9e9CM=
+Date:   Tue, 29 Jan 2019 13:05:56 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jonathan Cameron <jonathan.cameron@huawei.com>
+Cc:     Dave Hansen <dave.hansen@intel.com>, linux-pci@vger.kernel.org,
+        x86@kernel.org, linuxarm@huawei.com,
+        Ingo Molnar <mingo@kernel.org>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Martin =?iso-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH V2] x86: Fix an issue with invalid ACPI NUMA config
+Message-ID: <20190129190556.GB91506@google.com>
+References: <20181211094737.71554-1-Jonathan.Cameron@huawei.com>
+ <a5a938d3-ecc9-028a-3b28-610feda8f3f8@intel.com>
+ <20181212093914.00002aed@huawei.com>
+ <20181220151225.GB183878@google.com>
+ <65f5bb93-b6be-d6dd-6976-e2761f6f2a7b@intel.com>
+ <20181220195714.GE183878@google.com>
+ <20190128112904.0000461a@huawei.com>
+ <20190128231322.GA91506@google.com>
+ <20190129095105.00000374@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0ba215f5-e856-bf31-8dd9-a85710714a7a@arm.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 29 Jan 2019 18:54:46 +0000 (UTC)
+In-Reply-To: <20190129095105.00000374@huawei.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jan 21, 2019 at 11:29:05AM +0000, Jean-Philippe Brucker wrote:
-> Hi,
-> 
-> On 18/01/2019 15:51, Michael S. Tsirkin wrote:
-> > 
-> > On Tue, Jan 15, 2019 at 12:19:52PM +0000, Jean-Philippe Brucker wrote:
-> >> Implement the virtio-iommu driver, following specification v0.9 [1].
-> >>
-> >> This is a simple rebase onto Linux v5.0-rc2. We now use the
-> >> dev_iommu_fwspec_get() helper introduced in v5.0 instead of accessing
-> >> dev->iommu_fwspec, but there aren't any functional change from v6 [2].
-> >>
-> >> Our current goal for virtio-iommu is to get a paravirtual IOMMU working
-> >> on Arm, and enable device assignment to guest userspace. In this
-> >> use-case the mappings are static, and don't require optimal performance,
-> >> so this series tries to keep things simple. However there is plenty more
-> >> to do for features and optimizations, and having this base in v5.1 would
-> >> be good. Given that most of the changes are to drivers/iommu, I believe
-> >> the driver and future changes should go via the IOMMU tree.
-> >>
-> >> You can find Linux driver and kvmtool device on v0.9.2 branches [3],
-> >> module and x86 support on virtio-iommu/devel. Also tested with Eric's
-> >> QEMU device [4]. Please note that the series depends on Robin's
-> >> probe-deferral fix [5], which will hopefully land in v5.0.
-> >>
-> >> [1] Virtio-iommu specification v0.9, sources and pdf
-> >>     git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.9
-> >>     http://jpbrucker.net/virtio-iommu/spec/v0.9/virtio-iommu-v0.9.pdf
-> >>
-> >> [2] [PATCH v6 0/7] Add virtio-iommu driver
-> >>     https://lists.linuxfoundation.org/pipermail/iommu/2018-December/032127.html
-> >>
-> >> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.9.2
-> >>     git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.9.2
-> >>
-> >> [4] [RFC v9 00/17] VIRTIO-IOMMU device
-> >>     https://www.mail-archive.com/qemu-devel@nongnu.org/msg575578.html
-> >>
-> >> [5] [PATCH] iommu/of: Fix probe-deferral
-> >>     https://www.spinics.net/lists/arm-kernel/msg698371.html
-> > 
-> > Thanks for the work!
-> > So really my only issue with this is that there's no
-> > way for the IOMMU to describe the devices that it
-> > covers.
-> > 
-> > As a result that is then done in a platform-specific way.
-> > 
-> > And this means that for example it does not solve the problem that e.g.
-> > some power people have in that their platform simply does not have a way
-> > to specify which devices are covered by the IOMMU.
-> 
-> Isn't power using device tree? I haven't looked much at power because I
-> was told a while ago that they already paravirtualize their IOMMU and
-> don't need virtio-iommu, except perhaps for some legacy platforms. Or
-> something along those lines. But I would certainly be interested in
-> enabling the IOMMU for more architectures.
+On Tue, Jan 29, 2019 at 09:51:05AM +0000, Jonathan Cameron wrote:
+> On Mon, 28 Jan 2019 17:13:22 -0600
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Mon, Jan 28, 2019 at 11:31:08AM +0000, Jonathan Cameron wrote:
+> > > On Thu, 20 Dec 2018 13:57:14 -0600
+> > > Bjorn Helgaas <helgaas@kernel.org> wrote:  
+> > > > On Thu, Dec 20, 2018 at 09:13:12AM -0800, Dave Hansen wrote:  
+> > > > > On 12/20/18 7:12 AM, Bjorn Helgaas wrote:    
 
-I have CC'd the relevant ppc developers, let's see what do they think.
-
-
-> As for the enumeration problem, I still don't think we can get much
-> better than DT and ACPI as solutions (and IMO they are necessary to make
-> this device portable). But I believe that getting DT and ACPI support is
-> just a one-off inconvenience. That is, once the required bindings are
-> accepted, any future extension can then be done at the virtio level with
-> feature bits and probe requests, without having to update ACPI or DT.
+> > The current patch proposes setting "numa_off=1" in the x86 version of
+> > dummy_numa_init(), on the assumption (from the changelog) that:
+> > 
+> >   It is invalid under the ACPI spec to specify new NUMA nodes using
+> >   _PXM if they have no presence in SRAT.
+> > 
+> > Do you have a reference for this?  I looked and couldn't find a clear
+> > statement in the spec to that effect.  The _PXM description (ACPI
+> > v6.2, sec 6.1.14) says that two devices with the same _PXM value are
+> > in the same proximity domain, but it doesn't seem to require an SRAT.
 > 
-> Thanks,
-> Jean
+> No comment (feel free to guess why). *sigh*
+
+Secret interpretations of the spec are out of bounds.  But I think
+it's a waste of time to argue about whether _PXM without SRAT is
+valid.  Systems like that exist, and I think it's possible to do
+something sensible with them.
+
+> > Maybe it results in an issue when we call kmalloc_node() using this
+> > _PXM value that SRAT didn't tell us about?  If so, that's reminiscent
+> > of these earlier discussions about kmalloc_node() returning something
+> > useless if the requested node is not online:
+> > 
+> >   https://lkml.kernel.org/r/1527768879-88161-2-git-send-email-xiexiuqi@huawei.com
+> >   https://lore.kernel.org/linux-arm-kernel/20180801173132.19739-1-punit.agrawal@arm.com/
+> > 
+> > As far as I know, that was never really resolved.  The immediate
+> > problem of using passing an invalid node number to kmalloc_node() was
+> > avoided by using kmalloc() instead.
 > 
-> > Solving that problem would make me much more excited about
-> > this device.
+> Yes, that's definitely still a problem (or was last time I checked)
+> 
+> > > Dave's response was that we needed to fix the underlying issue of
+> > > trying to allocate from non existent NUMA nodes.  
+
+> > Bottom line, I totally agree that it would be better to fix the
+> > underlying issue without trying to avoid it by disabling NUMA.
+> 
+> I don't agree on this point.  I think two layers make sense.
+> 
+> If there is no NUMA description in DT or ACPI, why not just stop anything
+> from using it at all?  The firmware has basically declared there is no
+> point, why not save a bit of complexity (and use an existing tested code
+> path) but setting numa_off?
+
+Firmware with a _PXM does have a NUMA description.
+
+> However, if there is NUMA description, but with bugs then we should
+> protect in depth.  A simple example being that we declare 2 nodes, but
+> then use _PXM for a third. I've done that by accident and blows up
+> in a nasty fashion (not done it for a while, but probably still true).
+> 
+> Given DSDT is only parsed long after SRAT we can just check on _PXM
+> queries.  Or I suppose we could do a verification parse for all _PXM
+> entries and put out some warnings if they don't match SRAT entries?
+
+I'm assuming the crash happens when we call kmalloc_node() with a node
+not mentioned in SRAT.  I think that's just sub-optimal implementation
+in kmalloc_node().
+
+We *could* fail the allocation and return a NULL pointer, but I think
+even that is excessive.  I think we should simply fall back to
+kmalloc().  We could print a one-time warning if that's useful.
+
+If kmalloc_node() for an unknown node fell back to kmalloc(), would
+anything else be required?
+
+> > > Whilst I agree with that in principle (having managed to provide
+> > > tables doing exactly that during development a few times!), I'm not
+> > > sure the path to doing so is clear and so this has been stalled for
+> > > a few months.  There is to my mind still a strong argument, even
+> > > with such protection in place, that we should still be short cutting
+> > > it so that you get the same paths if you deliberately disable numa,
+> > > and if you have no SRAT and hence can't have NUMA.  
 > > 
-> > On the other hand I can see that while there have been some
-> > developments most of the code has been stable for quite a while now.
-> > 
-> > So what I am trying to do right about now, is making a small module that
-> > loads early and pokes at the IOMMU sufficiently to get the data about
-> > which devices use the IOMMU out of it using standard virtio config
-> > space.  IIUC it's claimed to be impossible without messy changes to the
-> > boot sequence.
-> > 
-> > If I succeed at least on some platforms I'll ask that this design is
-> > worked into this device, minimizing info that goes through DT/ACPI.  If
-> > I see I can't make it in time to meet the next merge window, I plan
-> > merging the existing patches using DT (barring surprises).
-> > 
-> > As I only have a very small amount of time to spend on this attempt, If
-> > someone else wants to try doing that in parallel, that would be great!
-> > 
-> > 
-> >> Jean-Philippe Brucker (7):
-> >>   dt-bindings: virtio-mmio: Add IOMMU description
-> >>   dt-bindings: virtio: Add virtio-pci-iommu node
-> >>   of: Allow the iommu-map property to omit untranslated devices
-> >>   PCI: OF: Initialize dev->fwnode appropriately
-> >>   iommu: Add virtio-iommu driver
-> >>   iommu/virtio: Add probe request
-> >>   iommu/virtio: Add event queue
-> >>
-> >>  .../devicetree/bindings/virtio/iommu.txt      |   66 +
-> >>  .../devicetree/bindings/virtio/mmio.txt       |   30 +
-> >>  MAINTAINERS                                   |    7 +
-> >>  drivers/iommu/Kconfig                         |   11 +
-> >>  drivers/iommu/Makefile                        |    1 +
-> >>  drivers/iommu/virtio-iommu.c                  | 1158 +++++++++++++++++
-> >>  drivers/of/base.c                             |   10 +-
-> >>  drivers/pci/of.c                              |    7 +
-> >>  include/uapi/linux/virtio_ids.h               |    1 +
-> >>  include/uapi/linux/virtio_iommu.h             |  161 +++
-> >>  10 files changed, 1449 insertions(+), 3 deletions(-)
-> >>  create mode 100644 Documentation/devicetree/bindings/virtio/iommu.txt
-> >>  create mode 100644 drivers/iommu/virtio-iommu.c
-> >>  create mode 100644 include/uapi/linux/virtio_iommu.h
-> >>
-> >> -- 
-> >> 2.19.1
-> > _______________________________________________
-> > iommu mailing list
-> > iommu@lists.linux-foundation.org
-> > https://lists.linuxfoundation.org/mailman/listinfo/iommu
-> > 
+> > I guess we need to resolve the question of whether NUMA without SRAT
+> > is possible.
+> 
+> It's certainly unclear of whether it has any meaning.  If we allow for
+> the fact that the intent of ACPI was never to allow this (and a bit
+> of history checking verified this as best as anyone can remember),
+> then what do we do with the few platforms that do use _PXM to nodes that
+> haven't been defined?
+
+We *could* ignore any _PXM that mentions a proximity domain not
+mentioned by an SRAT.  That seems a little heavy-handed because it
+means every possible proximity domain must be described up front in
+the SRAT, which limits the flexibility of hot-adding entire nodes
+(CPU/memory/IO).
+
+But I think it's possible to make sense of a _PXM that adds a
+proximity domain not mentioned in an SRAT, e.g., if a new memory
+device and a new I/O device supply the same _PXM value, we can assume
+they're close together.  If a new I/O device has a previously unknown
+_PXM, we may not be able to allocate memory near it, but we should at
+least be able to allocate from a default zone.
+
+Bjorn
