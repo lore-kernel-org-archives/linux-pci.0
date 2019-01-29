@@ -6,112 +6,241 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 490C4C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:14:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD775C169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:17:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B44720882
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:14:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E82921848
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:17:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548803660;
-	bh=YNGiNhI3WgE6AtpimJD8m+HCeCOlDePKj9bQgmF8VJ4=;
+	s=default; t=1548803823;
+	bh=rC05lbY2ugpJqmYqsEOwgR3A9ioV4a/OnjPLKw1b5Mo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=hT7S/iOMkhdVjJDuF/au4yTyvc1HkHfM+yAJSMTLnnUr9m++5ynFeHhu1vSIgaQu1
-	 UA1/86j0raskXYO0Q48pPkSG0YIlvnoSSxSTdNziXrQoPXeVJ1xzUMxaNPh1GeA44m
-	 0w6JwEOJUsIOYmy+ATHaq3GJNHRFdrAJRTEfJRJg=
+	b=wU6QUaHo9bZGFv7SBGCEOISX3IeStilNivMh0bShH1E5qih+VlQa3PVenFLVuzgOF
+	 kdhYz0zi7YiBndSzPe+gWQlfDu0mq0w/nDhGd+h9f9iYjE9HKo82eLSWAVCAEafPJ3
+	 VovgVVFqcBVv7o0LgiGInpnPvsxs3/X1Lq7uayvM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727175AbfA2XOT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 18:14:19 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37844 "EHLO mail.kernel.org"
+        id S1728432AbfA2XRC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 18:17:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39292 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727006AbfA2XOT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 18:14:19 -0500
+        id S1728208AbfA2XRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 18:17:02 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 358732086C;
-        Tue, 29 Jan 2019 23:14:18 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 57B3820882;
+        Tue, 29 Jan 2019 23:17:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548803658;
-        bh=YNGiNhI3WgE6AtpimJD8m+HCeCOlDePKj9bQgmF8VJ4=;
+        s=default; t=1548803821;
+        bh=rC05lbY2ugpJqmYqsEOwgR3A9ioV4a/OnjPLKw1b5Mo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vLIR9ZjwHhbG2FLY9XHFoq/hBhfMEAk7IzjznduVLVOpB3ums4TIHwdiLCT7J7tkR
-         mfwUrDgybYy/H1iUDIhpHOMW+wWTg8bITOUdTk2geDeaIoIg7FAsgSD9PvuslsSlZH
-         IIUmi/CvQWlq2xibfYx1RklHcbvud6uZ4hJE8LPY=
-Date:   Tue, 29 Jan 2019 17:14:16 -0600
+        b=OFp0u/tF2QwBBw+KpzZGhGw65gPdlXbdtKj5ncUHMufC4dPO7mw1HsYRtsQbCCi1f
+         INIHv9NAI3slfXJZWqMizs4/6ogSp4LkUkdKhJp09LgeeKReeJvtp+dgEqo/DB9LHq
+         X52vzONpMtHOMvTj6rIchUJWa66kFCGK9+twRsbA=
+Date:   Tue, 29 Jan 2019 17:16:58 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jon Derrick <jonathan.derrick@intel.com>
-Cc:     linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH] PCI/VMD: Configure MPS settings before adding devices
-Message-ID: <20190129231416.GG91506@google.com>
-References: <1544718222-35404-1-git-send-email-jonathan.derrick@intel.com>
- <1544718222-35404-2-git-send-email-jonathan.derrick@intel.com>
+To:     Arnd Bergmann <arnd@arndb.de>
+Cc:     "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: ibmphp_hpc: turn semaphores into completions or
+ mutexes
+Message-ID: <20190129231658.GH91506@google.com>
+References: <20181210214955.1826522-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1544718222-35404-2-git-send-email-jonathan.derrick@intel.com>
+In-Reply-To: <20181210214955.1826522-1-arnd@arndb.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Dec 13, 2018 at 09:23:42AM -0700, Jon Derrick wrote:
-> In order to provide the most performance and/or compatible settings,
-> ensure VMD root buses observe the pcie bus tuning settings by
-> configuring those settings prior to adding the devices to the pcie tree.
+On Mon, Dec 10, 2018 at 10:49:10PM +0100, Arnd Bergmann wrote:
+> The sem_exit variable is conceptually a completion, so it should
+> be called that.
 > 
-> This patch open-codes pci_rescan_bus() and configures the buses prior to
-> adding devices and attaching drivers.
+> Similarly, the semOperations semaphore is a simple mutex, and
+> can be changed into that, respectively.
 > 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> With both converted, the ibmphp_hpc_initvars() function is no longer
+> used and can be removed.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Sorry, Lorenzo takes care of drivers/pci/controller/*, but I had
-mistakenly delegated this to myself, so it probably wasn't on his
-radar.
-
-My dream is that someday pcie_bus_configure_settings() will somehow be
-done as part of enumeration and host bridge drivers won't need to care
-about it, but that's obviously fanciful, so this looks fine to me.
+Applied to pci/hotplug for v5.1, thanks!
 
 > ---
->  drivers/pci/controller/vmd.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
+>  drivers/pci/hotplug/ibmphp.h      |  1 -
+>  drivers/pci/hotplug/ibmphp_core.c |  2 --
+>  drivers/pci/hotplug/ibmphp_hpc.c  | 47 +++++++++----------------------
+>  3 files changed, 14 insertions(+), 36 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index e50b0b5..818dda8 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -585,6 +585,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
->  	LIST_HEAD(resources);
->  	resource_size_t offset[2] = {0};
->  	resource_size_t membar2_offset = 0x2000, busn_start = 0;
-> +	struct pci_bus *child;
+> diff --git a/drivers/pci/hotplug/ibmphp.h b/drivers/pci/hotplug/ibmphp.h
+> index b89f850c3a4e..e90a4ebf6550 100644
+> --- a/drivers/pci/hotplug/ibmphp.h
+> +++ b/drivers/pci/hotplug/ibmphp.h
+> @@ -378,7 +378,6 @@ int ibmphp_add_pfmem_from_mem(struct resource_node *);
+>  struct bus_node *ibmphp_find_res_bus(u8);
+>  void ibmphp_print_test(void);	/* for debugging purposes */
 >  
->  	/*
->  	 * Shadow registers may exist in certain VMD device ids which allow
-> @@ -712,7 +713,19 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
->  	vmd_attach_resources(vmd);
->  	vmd_setup_dma_ops(vmd);
->  	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
-> -	pci_rescan_bus(vmd->bus);
-> +
-> +	pci_scan_child_bus(vmd->bus);
-> +	pci_assign_unassigned_bus_resources(vmd->bus);
-> +
-> +	/*
-> +	 * VMD root buses are virtual and don't return true on pci_is_pcie()
-> +	 * and will fail pcie_bus_configure_settings() early. It can instead be
-> +	 * run on each of the real root ports.
-> +	 */
-> +	list_for_each_entry(child, &vmd->bus->children, node)
-> +		pcie_bus_configure_settings(child);
-> +
-> +	pci_bus_add_devices(vmd->bus);
+> -void ibmphp_hpc_initvars(void);
+>  int ibmphp_hpc_readslot(struct slot *, u8, u8 *);
+>  int ibmphp_hpc_writeslot(struct slot *, u8);
+>  void ibmphp_lock_operations(void);
+> diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+> index 5752b57198e3..e04b17d81e38 100644
+> --- a/drivers/pci/hotplug/ibmphp_core.c
+> +++ b/drivers/pci/hotplug/ibmphp_core.c
+> @@ -1312,8 +1312,6 @@ static int __init ibmphp_init(void)
 >  
->  	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
->  			       "domain"), "Can't create symlink to domain\n");
+>  	ibmphp_debug = debug;
+>  
+> -	ibmphp_hpc_initvars();
+> -
+>  	for (i = 0; i < 16; i++)
+>  		irqs[i] = 0;
+>  
+> diff --git a/drivers/pci/hotplug/ibmphp_hpc.c b/drivers/pci/hotplug/ibmphp_hpc.c
+> index 752c384cbd4c..508a62a6b5f9 100644
+> --- a/drivers/pci/hotplug/ibmphp_hpc.c
+> +++ b/drivers/pci/hotplug/ibmphp_hpc.c
+> @@ -15,13 +15,13 @@
+>  
+>  #include <linux/wait.h>
+>  #include <linux/time.h>
+> +#include <linux/completion.h>
+>  #include <linux/delay.h>
+>  #include <linux/module.h>
+>  #include <linux/pci.h>
+>  #include <linux/init.h>
+>  #include <linux/mutex.h>
+>  #include <linux/sched.h>
+> -#include <linux/semaphore.h>
+>  #include <linux/kthread.h>
+>  #include "ibmphp.h"
+>  
+> @@ -88,10 +88,10 @@ static int to_debug = 0;
+>  //----------------------------------------------------------------------------
+>  // global variables
+>  //----------------------------------------------------------------------------
+> -static struct mutex sem_hpcaccess;	// lock access to HPC
+> -static struct semaphore semOperations;	// lock all operations and
+> +static DEFINE_MUTEX(sem_hpcaccess);	// lock access to HPC
+> +static DEFINE_MUTEX(operations_mutex);	// lock all operations and
+>  					// access to data structures
+> -static struct semaphore sem_exit;	// make sure polling thread goes away
+> +static DECLARE_COMPLETION(exit_complete); // make sure polling thread goes away
+>  static struct task_struct *ibmphp_poll_thread;
+>  //----------------------------------------------------------------------------
+>  // local function prototypes
+> @@ -109,23 +109,6 @@ static int hpc_wait_ctlr_notworking(int, struct controller *, void __iomem *, u8
+>  //----------------------------------------------------------------------------
+>  
+>  
+> -/*----------------------------------------------------------------------
+> -* Name:    ibmphp_hpc_initvars
+> -*
+> -* Action:  initialize semaphores and variables
+> -*---------------------------------------------------------------------*/
+> -void __init ibmphp_hpc_initvars(void)
+> -{
+> -	debug("%s - Entry\n", __func__);
+> -
+> -	mutex_init(&sem_hpcaccess);
+> -	sema_init(&semOperations, 1);
+> -	sema_init(&sem_exit, 0);
+> -	to_debug = 0;
+> -
+> -	debug("%s - Exit\n", __func__);
+> -}
+> -
+>  /*----------------------------------------------------------------------
+>  * Name:    i2c_ctrl_read
+>  *
+> @@ -780,7 +763,7 @@ void free_hpc_access(void)
+>  *---------------------------------------------------------------------*/
+>  void ibmphp_lock_operations(void)
+>  {
+> -	down(&semOperations);
+> +	mutex_lock(&operations_mutex);
+>  	to_debug = 1;
+>  }
+>  
+> @@ -790,7 +773,7 @@ void ibmphp_lock_operations(void)
+>  void ibmphp_unlock_operations(void)
+>  {
+>  	debug("%s - Entry\n", __func__);
+> -	up(&semOperations);
+> +	mutex_unlock(&operations_mutex);
+>  	to_debug = 0;
+>  	debug("%s - Exit\n", __func__);
+>  }
+> @@ -816,7 +799,7 @@ static int poll_hpc(void *data)
+>  
+>  	while (!kthread_should_stop()) {
+>  		/* try to get the lock to do some kind of hardware access */
+> -		down(&semOperations);
+> +		mutex_lock(&operations_mutex);
+>  
+>  		switch (poll_state) {
+>  		case POLL_LATCH_REGISTER:
+> @@ -871,13 +854,13 @@ static int poll_hpc(void *data)
+>  			break;
+>  		case POLL_SLEEP:
+>  			/* don't sleep with a lock on the hardware */
+> -			up(&semOperations);
+> +			mutex_unlock(&operations_mutex);
+>  			msleep(POLL_INTERVAL_SEC * 1000);
+>  
+>  			if (kthread_should_stop())
+>  				goto out_sleep;
+>  
+> -			down(&semOperations);
+> +			mutex_lock(&operations_mutex);
+>  
+>  			if (poll_count >= POLL_LATCH_CNT) {
+>  				poll_count = 0;
+> @@ -887,12 +870,12 @@ static int poll_hpc(void *data)
+>  			break;
+>  		}
+>  		/* give up the hardware semaphore */
+> -		up(&semOperations);
+> +		mutex_unlock(&operations_mutex);
+>  		/* sleep for a short time just for good measure */
+>  out_sleep:
+>  		msleep(100);
+>  	}
+> -	up(&sem_exit);
+> +	complete(&exit_complete);
+>  	debug("%s - Exit\n", __func__);
+>  	return 0;
+>  }
+> @@ -1060,9 +1043,9 @@ void __exit ibmphp_hpc_stop_poll_thread(void)
+>  	debug("after locking operations\n");
+>  
+>  	// wait for poll thread to exit
+> -	debug("before sem_exit down\n");
+> -	down(&sem_exit);
+> -	debug("after sem_exit down\n");
+> +	debug("before exit_complete down\n");
+> +	wait_for_completion(&exit_complete);
+> +	debug("after exit_completion down\n");
+>  
+>  	// cleanup
+>  	debug("before free_hpc_access\n");
+> @@ -1070,8 +1053,6 @@ void __exit ibmphp_hpc_stop_poll_thread(void)
+>  	debug("after free_hpc_access\n");
+>  	ibmphp_unlock_operations();
+>  	debug("after unlock operations\n");
+> -	up(&sem_exit);
+> -	debug("after sem exit up\n");
+>  
+>  	debug("%s - Exit\n", __func__);
+>  }
 > -- 
-> 1.8.3.1
+> 2.20.0
 > 
