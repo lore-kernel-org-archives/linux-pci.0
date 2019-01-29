@@ -2,178 +2,130 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EEEFC169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:06:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E86EFC169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:11:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 543D421848
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:06:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548788761;
-	bh=C/ElWr39C7348LPT6M9EQw73AUPUHuuyi4qzDK3KsaE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Zz3zOZAsz7oH1moGvmsyNZMyspMexGjCMnXz9/VceR4flVeLGJWDYcAsKrBniZIxH
-	 mQHlso0gctxDR1ZBii1fid2Q7t4i9DyHM3/8PwklD2QnRORxi83CDodjYfXopsqVgq
-	 W7EQ7UI4aAd9cEaZscAcv6R13nsRdGDdzeMBd/00=
+	by mail.kernel.org (Postfix) with ESMTP id C430E20869
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:11:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727068AbfA2TGA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 14:06:00 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34644 "EHLO mail.kernel.org"
+        id S1727402AbfA2TL3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 14:11:29 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:52536 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726984AbfA2TGA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 14:06:00 -0500
-Received: from localhost (156.sub-174-234-151.myvzw.com [174.234.151.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726984AbfA2TL3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 14:11:29 -0500
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A307920844;
-        Tue, 29 Jan 2019 19:05:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548788759;
-        bh=C/ElWr39C7348LPT6M9EQw73AUPUHuuyi4qzDK3KsaE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GukueZtyeyVUCdD3XNXwmMmJWPqwXf7xLKyMITqxaEU1I8qWgjsoNgvQELWnYv2Ek
-         UgYIpgB3sZjZfcJvJ6uIrB3wRHMpp764N+VXhzVXQPI2M7R8LXQ9j6HLFQeTZ0NgpH
-         BaZaUi4Rj09eNxdClryXzPSMhP0W15xYwlq9e9CM=
-Date:   Tue, 29 Jan 2019 13:05:56 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jonathan Cameron <jonathan.cameron@huawei.com>
-Cc:     Dave Hansen <dave.hansen@intel.com>, linux-pci@vger.kernel.org,
-        x86@kernel.org, linuxarm@huawei.com,
-        Ingo Molnar <mingo@kernel.org>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Martin =?iso-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH V2] x86: Fix an issue with invalid ACPI NUMA config
-Message-ID: <20190129190556.GB91506@google.com>
-References: <20181211094737.71554-1-Jonathan.Cameron@huawei.com>
- <a5a938d3-ecc9-028a-3b28-610feda8f3f8@intel.com>
- <20181212093914.00002aed@huawei.com>
- <20181220151225.GB183878@google.com>
- <65f5bb93-b6be-d6dd-6976-e2761f6f2a7b@intel.com>
- <20181220195714.GE183878@google.com>
- <20190128112904.0000461a@huawei.com>
- <20190128231322.GA91506@google.com>
- <20190129095105.00000374@huawei.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id B5255C065F8D;
+        Tue, 29 Jan 2019 19:11:27 +0000 (UTC)
+Received: from redhat.com (ovpn-122-2.rdu2.redhat.com [10.10.122.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 516235C57C;
+        Tue, 29 Jan 2019 19:11:25 +0000 (UTC)
+Date:   Tue, 29 Jan 2019 14:11:23 -0500
+From:   Jerome Glisse <jglisse@redhat.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        Jason Gunthorpe <jgg@mellanox.com>, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        iommu@lists.linux-foundation.org
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Message-ID: <20190129191120.GE3176@redhat.com>
+References: <20190129174728.6430-1-jglisse@redhat.com>
+ <20190129174728.6430-4-jglisse@redhat.com>
+ <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20190129095105.00000374@huawei.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Tue, 29 Jan 2019 19:11:28 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 09:51:05AM +0000, Jonathan Cameron wrote:
-> On Mon, 28 Jan 2019 17:13:22 -0600
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Mon, Jan 28, 2019 at 11:31:08AM +0000, Jonathan Cameron wrote:
-> > > On Thu, 20 Dec 2018 13:57:14 -0600
-> > > Bjorn Helgaas <helgaas@kernel.org> wrote:  
-> > > > On Thu, Dec 20, 2018 at 09:13:12AM -0800, Dave Hansen wrote:  
-> > > > > On 12/20/18 7:12 AM, Bjorn Helgaas wrote:    
-
-> > The current patch proposes setting "numa_off=1" in the x86 version of
-> > dummy_numa_init(), on the assumption (from the changelog) that:
-> > 
-> >   It is invalid under the ACPI spec to specify new NUMA nodes using
-> >   _PXM if they have no presence in SRAT.
-> > 
-> > Do you have a reference for this?  I looked and couldn't find a clear
-> > statement in the spec to that effect.  The _PXM description (ACPI
-> > v6.2, sec 6.1.14) says that two devices with the same _PXM value are
-> > in the same proximity domain, but it doesn't seem to require an SRAT.
+On Tue, Jan 29, 2019 at 11:36:29AM -0700, Logan Gunthorpe wrote:
 > 
-> No comment (feel free to guess why). *sigh*
-
-Secret interpretations of the spec are out of bounds.  But I think
-it's a waste of time to argue about whether _PXM without SRAT is
-valid.  Systems like that exist, and I think it's possible to do
-something sensible with them.
-
-> > Maybe it results in an issue when we call kmalloc_node() using this
-> > _PXM value that SRAT didn't tell us about?  If so, that's reminiscent
-> > of these earlier discussions about kmalloc_node() returning something
-> > useless if the requested node is not online:
-> > 
-> >   https://lkml.kernel.org/r/1527768879-88161-2-git-send-email-xiexiuqi@huawei.com
-> >   https://lore.kernel.org/linux-arm-kernel/20180801173132.19739-1-punit.agrawal@arm.com/
-> > 
-> > As far as I know, that was never really resolved.  The immediate
-> > problem of using passing an invalid node number to kmalloc_node() was
-> > avoided by using kmalloc() instead.
 > 
-> Yes, that's definitely still a problem (or was last time I checked)
+> On 2019-01-29 10:47 a.m., jglisse@redhat.com wrote:
 > 
-> > > Dave's response was that we needed to fix the underlying issue of
-> > > trying to allocate from non existent NUMA nodes.  
-
-> > Bottom line, I totally agree that it would be better to fix the
-> > underlying issue without trying to avoid it by disabling NUMA.
+> > +	/*
+> > +	 * Optional for device driver that want to allow peer to peer (p2p)
+> > +	 * mapping of their vma (which can be back by some device memory) to
+> > +	 * another device.
+> > +	 *
+> > +	 * Note that the exporting device driver might not have map anything
+> > +	 * inside the vma for the CPU but might still want to allow a peer
+> > +	 * device to access the range of memory corresponding to a range in
+> > +	 * that vma.
+> > +	 *
+> > +	 * FOR PREDICTABILITY IF DRIVER SUCCESSFULY MAP A RANGE ONCE FOR A
+> > +	 * DEVICE THEN FURTHER MAPPING OF THE SAME IF THE VMA IS STILL VALID
+> > +	 * SHOULD ALSO BE SUCCESSFUL. Following this rule allow the importing
+> > +	 * device to map once during setup and report any failure at that time
+> > +	 * to the userspace. Further mapping of the same range might happen
+> > +	 * after mmu notifier invalidation over the range. The exporting device
+> > +	 * can use this to move things around (defrag BAR space for instance)
+> > +	 * or do other similar task.
+> > +	 *
+> > +	 * IMPORTER MUST OBEY mmu_notifier NOTIFICATION AND CALL p2p_unmap()
+> > +	 * WHEN A NOTIFIER IS CALL FOR THE RANGE ! THIS CAN HAPPEN AT ANY
+> > +	 * POINT IN TIME WITH NO LOCK HELD.
+> > +	 *
+> > +	 * In below function, the device argument is the importing device,
+> > +	 * the exporting device is the device to which the vma belongs.
+> > +	 */
+> > +	long (*p2p_map)(struct vm_area_struct *vma,
+> > +			struct device *device,
+> > +			unsigned long start,
+> > +			unsigned long end,
+> > +			dma_addr_t *pa,
+> > +			bool write);
+> > +	long (*p2p_unmap)(struct vm_area_struct *vma,
+> > +			  struct device *device,
+> > +			  unsigned long start,
+> > +			  unsigned long end,
+> > +			  dma_addr_t *pa);
 > 
-> I don't agree on this point.  I think two layers make sense.
+> I don't understand why we need new p2p_[un]map function pointers for
+> this. In subsequent patches, they never appear to be set anywhere and
+> are only called by the HMM code. I'd have expected it to be called by
+> some core VMA code and set by HMM as that's what vm_operations_struct is
+> for.
 > 
-> If there is no NUMA description in DT or ACPI, why not just stop anything
-> from using it at all?  The firmware has basically declared there is no
-> point, why not save a bit of complexity (and use an existing tested code
-> path) but setting numa_off?
+> But the code as all very confusing, hard to follow and seems to be
+> missing significant chunks. So I'm not really sure what is going on.
 
-Firmware with a _PXM does have a NUMA description.
+It is set by device driver when userspace do mmap(fd) where fd comes
+from open("/dev/somedevicefile"). So it is set by device driver. HMM
+has nothing to do with this. It must be set by device driver mmap
+call back (mmap callback of struct file_operations). For this patch
+you can completely ignore all the HMM patches. Maybe posting this as
+2 separate patchset would make it clearer.
 
-> However, if there is NUMA description, but with bugs then we should
-> protect in depth.  A simple example being that we declare 2 nodes, but
-> then use _PXM for a third. I've done that by accident and blows up
-> in a nasty fashion (not done it for a while, but probably still true).
-> 
-> Given DSDT is only parsed long after SRAT we can just check on _PXM
-> queries.  Or I suppose we could do a verification parse for all _PXM
-> entries and put out some warnings if they don't match SRAT entries?
+For instance see [1] for how a non HMM driver can export its memory
+by just setting those callback. Note that a proper implementation of
+this should also include some kind of driver policy on what to allow
+to map and what to not allow ... All this is driver specific in any
+way.
 
-I'm assuming the crash happens when we call kmalloc_node() with a node
-not mentioned in SRAT.  I think that's just sub-optimal implementation
-in kmalloc_node().
+Cheers,
+Jérôme
 
-We *could* fail the allocation and return a NULL pointer, but I think
-even that is excessive.  I think we should simply fall back to
-kmalloc().  We could print a one-time warning if that's useful.
-
-If kmalloc_node() for an unknown node fell back to kmalloc(), would
-anything else be required?
-
-> > > Whilst I agree with that in principle (having managed to provide
-> > > tables doing exactly that during development a few times!), I'm not
-> > > sure the path to doing so is clear and so this has been stalled for
-> > > a few months.  There is to my mind still a strong argument, even
-> > > with such protection in place, that we should still be short cutting
-> > > it so that you get the same paths if you deliberately disable numa,
-> > > and if you have no SRAT and hence can't have NUMA.  
-> > 
-> > I guess we need to resolve the question of whether NUMA without SRAT
-> > is possible.
-> 
-> It's certainly unclear of whether it has any meaning.  If we allow for
-> the fact that the intent of ACPI was never to allow this (and a bit
-> of history checking verified this as best as anyone can remember),
-> then what do we do with the few platforms that do use _PXM to nodes that
-> haven't been defined?
-
-We *could* ignore any _PXM that mentions a proximity domain not
-mentioned by an SRAT.  That seems a little heavy-handed because it
-means every possible proximity domain must be described up front in
-the SRAT, which limits the flexibility of hot-adding entire nodes
-(CPU/memory/IO).
-
-But I think it's possible to make sense of a _PXM that adds a
-proximity domain not mentioned in an SRAT, e.g., if a new memory
-device and a new I/O device supply the same _PXM value, we can assume
-they're close together.  If a new I/O device has a previously unknown
-_PXM, we may not be able to allocate memory near it, but we should at
-least be able to allocate from a default zone.
-
-Bjorn
+[1] https://cgit.freedesktop.org/~glisse/linux/commit/?h=wip-p2p-showcase&id=964214dcd4df96f296e2214042e8cfce135ae3d4
