@@ -2,116 +2,97 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1E70C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:05:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D496EC169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:15:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 789F92177E
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:05:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A01AE2147A
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 07:15:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="koojRhdI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725770AbfA2HFP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 02:05:15 -0500
-Received: from mga06.intel.com ([134.134.136.31]:31008 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725446AbfA2HFP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 02:05:15 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 28 Jan 2019 23:05:14 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,536,1539673200"; 
-   d="scan'208";a="111915101"
-Received: from fmsmsx103.amr.corp.intel.com ([10.18.124.201])
-  by orsmga006.jf.intel.com with ESMTP; 28 Jan 2019 23:05:13 -0800
-Received: from lcsmsx154.ger.corp.intel.com (10.186.165.229) by
- FMSMSX103.amr.corp.intel.com (10.18.124.201) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Mon, 28 Jan 2019 23:05:13 -0800
-Received: from hasmsx112.ger.corp.intel.com ([169.254.11.50]) by
- LCSMSX154.ger.corp.intel.com ([169.254.7.125]) with mapi id 14.03.0415.000;
- Tue, 29 Jan 2019 09:05:09 +0200
-From:   "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC:     "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bjorn@helgaas.com" <bjorn@helgaas.com>,
-        "russianneuromancer@ya.ru" <russianneuromancer@ya.ru>,
-        "david.ward@ll.mit.edu" <david.ward@ll.mit.edu>,
-        "Shaish, Dor" <dor.shaish@intel.com>,
-        "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>
-Subject: PCI LTR - ASPM handling upon suspend / resume cycle. Regression
- since 4.18
-Thread-Topic: PCI LTR - ASPM handling upon suspend / resume cycle.
- Regression since 4.18
-Thread-Index: AQHUt6D4tPDQsP0qY0yqvfxnU9YYfQ==
-Date:   Tue, 29 Jan 2019 07:05:09 +0000
-Message-ID: <487786e702b8418b43c7f799c58d1948efd3d85c.camel@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.255.204.136]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <B4A0549358B2AE46BDB056E3377161A2@intel.com>
-Content-Transfer-Encoding: base64
+        id S1725535AbfA2HPk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 02:15:40 -0500
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:34901 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725446AbfA2HPj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2019 02:15:39 -0500
+Received: by mail-pl1-f193.google.com with SMTP id p8so8963440plo.2;
+        Mon, 28 Jan 2019 23:15:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=cfq+fuUKT+LW8txwLRhzPOqmIdM7lEMeYSuFVHlydTU=;
+        b=koojRhdIWZwE1WEZrB7d8r209R5cNDErbZdiDgZVv2s3YX3Utn3zAqL3qHPHXiGp+l
+         0xn4A/R4kd/g4saIAW0qsreWPcEEU6HVpzfDT4sYCoipZesgYFLH5ydFDpMR+fKvqzC1
+         HzARozgRDH7pjtq/GoSa7+CwNV7EWYgN0u2+Ni9G7YXyp/CXFIxvvlwLmynXFaax13Zh
+         B1aI5BCo2PFaaXQPoePbt35GKL7pEJiwCk218ZgNK+p6waZg1Oulzp5NGLueDKXEJnK0
+         UuhtYBbwZRvRI48cYjX52/l/a5z/VlRxoK4Ov0NHGXh29cCf97hnx+uy9fv/N8OtjF0i
+         Rmeg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=cfq+fuUKT+LW8txwLRhzPOqmIdM7lEMeYSuFVHlydTU=;
+        b=UhGTnPfeaWcmN7D+QQPFba03B87zzrE0HrcuvHN+zf0zS1dcN8fAcSWI/ny1ZRbvoL
+         6shPUyWlIBTiXjgLl22hdQJyTw+JN4ecEnWc6JTNJnWYSW6TbhaeALhFlZFRl1J+UAi2
+         yHCQKXCEqvduaxWdCrrzBtw/VPG1KX4vkI8Ox2UHjVQDCNUGylS7iFdk/wD2Uw7gms3V
+         kDkcvhoEoK7QHqeXi2EeqIqqUD/ot4hWTs+TKrBMLsAspKENEBdYSa9yvMJLhQm3W6eK
+         7DCL4X9gkGQCi5n//E5YWuyB/bWr3P/iaMGoptHGe730nZ4STztJiddIF5uAVsOmHkDw
+         7nXA==
+X-Gm-Message-State: AJcUukdFuz+bmZVd2Z5ZZXAtIcL2iXPRW/vBZPYho5gj37K694yuqm6e
+        f2Gh7StVXoXMRnnYQz6/+pY=
+X-Google-Smtp-Source: ALg8bN6gWG09QX8woidrd14LPH5168H4vT+MYGbTGtLErHl+TGAfDUhnypOhaUdjujVvliPdlwrymg==
+X-Received: by 2002:a17:902:f81:: with SMTP id 1mr24110748plz.174.1548746139306;
+        Mon, 28 Jan 2019 23:15:39 -0800 (PST)
+Received: from m-hyperV (50-47-88-57.evrt.wa.frontiernet.net. [50.47.88.57])
+        by smtp.gmail.com with ESMTPSA id v12sm39757527pgg.41.2019.01.28.23.15.38
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 28 Jan 2019 23:15:38 -0800 (PST)
+Date:   Mon, 28 Jan 2019 23:15:37 -0800
+From:   Maya Nakamura <m.maya.nakamura@gmail.com>
+To:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, kys@microsoft.com,
+        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
+        jasowang@redhat.com, mikelley@microsoft.com,
+        Alexander.Levin@microsoft.com
+Cc:     linux-kernel@vger.kernel.org,
+        driverdev-devel@linuxdriverproject.org, haiyangz@microsoft.com,
+        vkuznets@redhat.com, marcelo.cerri@canonical.com
+Subject: [PATCH v3 0/2] PCI: hv: Refactor hv_irq_unmask() to use hv_vpset and
+ cpumask_to_vpset()
+Message-ID: <cover.1548745212.git.m.maya.nakamura@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGksDQoNCkxhdGVseSB3ZSAoSW50ZWwpIGhhdmUgZ290IGEgZmV3IGJ1Z3Mgb24gc3VzcGVuZCAv
-IHJlc3VtZS4gVGhlDQpjb21wbGFpbnQgaXMgdGhhdCBvdXIgZGV2aWNlIGJlY29tZXMgdW5hdmFp
-bGFibGUgYWZ0ZXIgc3VzcGVuZCAvIHJlc3VtZQ0KY3ljbGUuIFRoZSBidWcgb24gd2hpY2ggd2Ug
-aGF2ZSBtb3N0IGRhdGEgaXMgWzFdLg0KDQpUaGUgb3JpZ2luYWwgc3VibWl0dGVyIHJlcG9ydGVk
-IGEgcmVncmVzc2lvbiBzaW5jZSBjb21taXQNCjlhYjEwNWRlYjYwZmE3NmQ2NmNhZTU1NDg4MTli
-NGU4NzAzZDIwNTY6DQoNCiAgIFBDSS9BU1BNOiBEaXNhYmxlIEFTUE0gTDEuMiBTdWJzdGF0ZSBp
-ZiB3ZSBkb24ndCBoYXZlIExUUg0KDQogICBXaGVuIGluIHRoZSBBU1BNIEwxLjAgc3RhdGUgKGJ1
-dCBub3QgdGhlIFBDSS1QTSBMMS4wIHN0YXRlKSwgdGhlDQogICBtb3N0DQogICByZWNlbnQgTFRS
-IHZhbHVlIGFuZCB0aGUgTFRSX0wxLjJfVEhSRVNIT0xEIGRldGVybWluZXMgd2hldGhlciB0aGUN
-CiAgIGxpbmsNCiAgIGVudGVycyB0aGUgTDEuMiBzdWJzdGF0ZS4NCg0KICAgSWYgd2UgZG9uJ3Qg
-aGF2ZSBMVFIgZW5hYmxlZCwgcHJldmVudCB0aGUgdXNlIG9mIEFTUE0gTDEuMi4NCg0KICAgUENJ
-LVBNIEwxLjIgbWF5IHN0aWxsIGJlIHVzZWQgYmVjYXVzZSBpdCBkb2Vzbid0IGRlcGVuZCBvbg0K
-ICAgTFRSX0wxLjJfVEhSRVNIT0xEIChzZWUgUENJZSByNC4wLCBzZWMgNS41LjEpLg0KDQoNCkFm
-dGVyIHRoaXMgY29tbWl0LCBMMS4yIGlzIGRpc2FibGVkIHVwb24gcmVzdW1lOg0KCUwxU3ViQ3Rs
-MTogUENJLVBNX0wxLjIrIFBDSS1QTV9MMS4xKyBBU1BNX0wxLjItIEFTUE1fTDEuMSsNCgkNCgkg
-ICBUX0NvbW1vbk1vZGU9MHVzIExUUjEuMl9UaHJlc2hvbGQ9MTYzODQwbnMNCg0KV2hlcmVhcyBp
-dCB3YXNuJ3QgYmVmb3JlIHRoaXMgY29tbWl0Og0KCUwxU3ViQ3RsMTogUENJLVBNX0wxLjIrIFBD
-SS1QTV9MMS4xKyBBU1BNX0wxLjIrIEFTUE1fTDEuMSsNCgkJICAgVF9Db21tb25Nb2RlPTB1cyBM
-VFIxLjJfVGhyZXNob2xkPTE2Mzg0MG5zDQoNCkkgYW0gY29weWluZyBoZXJlIGFuIGluaXRpYWwg
-YW5hbHlzaXMgYnkgQmpvcm4gKGZyb20gWzJdKToNCg0KMSkgTGludXggaGFzIG5vIHN1cHBvcnQg
-Zm9yIHNhdmluZy9yZXN0b3JpbmcgdGhlIE1heCBMYXRlbmN5IHZhbHVlcyBpbg0KdGhlIExUUiBD
-YXBhYmlsaXR5LiAgVGhpcyByZXN1bHRzIGluIHRoZSBsYXRlbmNpZXMgYmVpbmcgemVybyBhZnRl
-ciB5b3UNCnJlc3VtZSwgYXMgeW91IHNlZSBpbiB0aGUgbHNwY2kgb3V0cHV0LiAgVGhlIGRldmlj
-ZSBzdGlsbCAqd29ya3MqIGFmdGVyDQpyZXN1bWUsIGJ1dCBwb3dlciBjb25zdW1wdGlvbiBzaG91
-bGQgaW5jcmVhc2UgYmVjYXVzZSB0aGUgZGV2aWNlIGlzDQplZmZlY3RpdmVseSByZXF1ZXN0aW5n
-IHRoZSBiZXN0IHBvc3NpYmxlIHNlcnZpY2UsIHNvIHdlIHByb2JhYmx5IGRvbid0DQp1c2UgdGhl
-IEwxLjIgc3RhdGUgYXQgYWxsLg0KDQoyKSBMaW51eCBoYXMgbm8gc3VwcG9ydCBmb3IgcHJvZ3Jh
-bW1pbmcgdGhlIE1heCBMYXRlbmN5IHZhbHVlcyBmb3IgaG90LQ0KYWRkZWQgZGV2aWNlcy4gIFdo
-ZW4gdXNpbmcgQUNQSSBob3RwbHVnLCBmaXJtd2FyZSBtYXkgZG8gdGhpcywgYnV0IGZvcg0KbmF0
-aXZlIFBDSWUgaG90cGx1ZyAocGNpZWhwKSwgdGhlIG5ldyBkZXZpY2Ugc2hvdWxkIGFnYWluIGJl
-IHJlcXVlc3RpbmcNCnRoZSBiZXN0IHBvc3NpYmxlIHNlcnZpY2UsIHJlc3VsdGluZyBpbiBtb3Jl
-IHBvd2VyIGNvbnN1bXB0aW9uIHRoYW4NCm5lY2Vzc2FyeS4gIFRoZSBwbGF0Zm9ybSBpcyBzdXBw
-b3NlZCB0byBzdXBwbHkgYSBfRFNNIG1ldGhvZCB3aXRoDQppbmZvcm1hdGlvbiByZXF1aXJlZCB0
-byBwcm9ncmFtIHRoZXNlIHZhbHVlcw0KDQoNCkFub3RoZXIgdXNlciBmb3VuZCBhbm90aGVyIGNv
-bW1pdCBpbXBhY3RpbmcgaGlzIGRldmljZSBhZnRlciBzdXNwZW5kIC8NCnJlc3VtZToNCmNvbW1p
-dCA2ZjlkYjY5YWQ5M2NkNmFiNzdkNTU3MWNmNzQ4ZmY3Y2RjZmIwMjg1DQoNCiAgICBBQ1BJIC8g
-UE06IERlZmF1bHQgdG8gczJpZGxlIGluIGFsbCBtYWNoaW5lcyBzdXBwb3J0aW5nIExQIFMwDQog
-ICAgDQogICAgVGhlIERlbGwgVmVudWUgUHJvIDcxNDAgc3VwcG9ydHMgdGhlIExvdyBQb3dlciBT
-MCBJZGxlIHN0YXRlLCBidXQNCiAgICBkb2VzIG5vdCBzdXBwb3J0IGFueSBvZiB0aGUgX0RTTSBm
-dW5jdGlvbnMgdGhhdCB0aGUgY3VycmVudA0KaGV1cmlzdGljDQogICAgY2hlY2tzIGZvci4NCiAg
-ICANCiAgICBTaW5jZSBzdXNwZW5kLXRvLW1lbSBjYW4gbm90IGJlIHNhZmVseSBwZXJmb3JtZWQg
-b24gdGhpcyBtYWNoaW5lLA0KICAgIGFuZCBzaW5jZSB0aGUgYml0ZmllbGQgY2hlY2sgY2FuJ3Qg
-Y292ZXIgdGhpcyBjYXNlLCBpdCBpcyBzYWZlcg0KICAgIHRvIGVuYWJsZSBzMmlkbGUgYnkgZGVm
-YXVsdCBieSBjaGVja2luZyBmb3IgdGhlIHByZXNlbmNlIG9mIHRoZQ0KICAgIF9EU00gYWxvbmUg
-YW5kIHJlbW92aW5nIHRoZSBiaXRmaWVsZCBjaGVjay4NCg0KVGhpcyB1c2VyIGNvbmZpcm1lZCB0
-aGF0IHVzaW5nIHN1c3BlbmQtdG8tbWVtIGluc3RlYWQgb2Ygc3VzcGVuZC10by0NCmlkbGUgd29y
-a3MgZm9yIGhpbS4NCg0KQSB1c2VyIGNvbnRhY3RlZCBteSBwcml2YXRlbHkgdG8gbGV0IG1lIGtu
-b3cgdGhhdCBoZSBoYXMgaXNzdWVzIHdpdGgNCmRldmljZXMgZnJvbSBvdGhlciB2ZW5kb3JzIGFs
-dGhvdWdoIEkgY2FuJ3QgdGVsbCBpZiB0aGUgcHJvYmxlbSBpcyB0aGUNCnNhbWUgb3Igbm90Lg0K
-DQpOb3RlIHRoYXQgdGhpcyBwcm9ibGVtIHN0YXJ0ZWQgZnJvbSBrZXJuZWwgNC4xOC4NCg0KVGhh
-bmsgeW91Lg0KDQpbMV0gLSBodHRwczovL2J1Z3ppbGxhLmtlcm5lbC5vcmcvc2hvd19idWcuY2dp
-P2lkPTIwMTQ2OQ0KWzJdIC0gaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3Nob3dfYnVnLmNn
-aT9pZD0yMDE0NjkjYzI2DQo=
+This patchset removes a duplicate definition of VP set (hv_vp_set) and
+uses the common definition (hv_vpset) that is used in other places. It
+changes the order of the members in struct hv_pcibus_device due to
+flexible array in hv_vpset.
+
+It also removes the duplicate implementation of cpumask_to_vpset(), uses
+the shared implementation, and exports hv_max_vp_index, which is
+required by cpumask_to_vpset().
+
+Maya Nakamura (2):
+  PCI: hv: Replace hv_vp_set with hv_vpset
+  PCI: hv: Refactor hv_irq_unmask() to use cpumask_to_vpset()
+
+ arch/x86/hyperv/hv_init.c           |  1 +
+ drivers/pci/controller/pci-hyperv.c | 59 +++++++++++++----------------
+ 2 files changed, 28 insertions(+), 32 deletions(-)
+
+-- 
+2.17.1
+
