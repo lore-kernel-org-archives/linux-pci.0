@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4BEDC169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C43D2C282D0
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:10:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87C2D2177E
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:10:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86CD02177E
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:10:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="ibDx0sv7"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="eWzXcfzt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726163AbfA2IKe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 03:10:34 -0500
-Received: from mail-eopbgr150081.outbound.protection.outlook.com ([40.107.15.81]:23072
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        id S1728081AbfA2IKl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 03:10:41 -0500
+Received: from mail-eopbgr130079.outbound.protection.outlook.com ([40.107.13.79]:51008
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728112AbfA2IKe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 03:10:34 -0500
+        id S1727555AbfA2IKk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 03:10:40 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1mUr8WhHuhuWfWzRAVh6UgjwpT1snWE8Z3FHm0RcrTw=;
- b=ibDx0sv7oLd8T8ACH4dF9mivV7UdmPstpa0mAWHDrUNUYZba1mmXqTBIl75SKso9M4jWknwRT6K6kC3V+h/kE9KZ0WonQCluKd8Q3SanCYV9IQuYXcBM0Ivxr4vPyWobiogd7vN+rdm3gRnZt4UJG+CGLWdGKy+yDV7hOJi3qFw=
+ bh=wa6VnPE/whJ973L4lALZYSCLltLY6qSv8g2wTEOGLlU=;
+ b=eWzXcfztSOu+OsrdkSHkQ8PicKjfSPiO0dw+cu5eJ325rrAxT0p73mza6IfTrnp6AgbYG8/Eo+RXFd4n7hF/pAb13ERUSNRWacoaattqvM4Mj88134XNd1o/pd3sw5zfSn+MM6jbbV+3iAQ3mA6QFQiCN9Ayjgxc69W/yjfLT8s=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.3.19) by
  AM6PR04MB5127.eurprd04.prod.outlook.com (20.177.34.155) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1558.23; Tue, 29 Jan 2019 08:10:30 +0000
+ 15.20.1558.23; Tue, 29 Jan 2019 08:10:36 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::9c0:e3aa:b41f:9504]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::9c0:e3aa:b41f:9504%3]) with mapi id 15.20.1558.023; Tue, 29 Jan 2019
- 08:10:30 +0000
+ 08:10:36 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -53,13 +53,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCHv3 19/27] PCI: mobiveil: disabled IB and OB windows set by
- bootloader
-Thread-Topic: [PATCHv3 19/27] PCI: mobiveil: disabled IB and OB windows set by
- bootloader
-Thread-Index: AQHUt6oZm7GLZpFkmE+7jMuMKnstaw==
-Date:   Tue, 29 Jan 2019 08:10:30 +0000
-Message-ID: <20190129080926.36773-20-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv3 20/27] PCI: mobiveil: add Byte and Half-Word width register
+ accessors
+Thread-Topic: [PATCHv3 20/27] PCI: mobiveil: add Byte and Half-Word width
+ register accessors
+Thread-Index: AQHUt6odOw0MOSvMekmxd5JY38DqwA==
+Date:   Tue, 29 Jan 2019 08:10:36 +0000
+Message-ID: <20190129080926.36773-21-Zhiqiang.Hou@nxp.com>
 References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -75,24 +75,24 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM6PR04MB5127;6:WmPOt7ykKDaE6dbAD6Zbu9F5YqIsOJWdfq0Qkboz0A5hNphURu+OHtY7sR7WD1NxAG8xBx/x74TMm1AxTRCOts4cuHnG/yt7EQ+hznTLpNuG2mrTA/GZNEQaJBOW+ZTFK+qbV/gQciWo/72u7ecU59ZmeOa6xI7IAaqJM8qAxvcrZue/w8H0Qlq7VUyMgRKoLrD9b2o+XyJuM1v7iuD2b9k47MGxkL3+3Y6kZoLzc9JKN2Y7NrPotaVb0penKAJGukkQsoXPdg3L02x0sEiB8Xbka/D9YhXFnpY/BRrtuPctprwW23j/Jwv9ErFqAAEitzQyIBBjYiZMPVU8kTcK3kdu/ac8cTPEsaLCnbgfu+QWPsqvzqId9Lq9EN2gRArD4mAchsI/l1bw3t1utl2pxr7KW3PSabw5ofMjO6VgFnLU5iP2McHHNWOqrDooMseJM3UDRM2tpUycWf16wrkevQ==;5:v4aTay5BvgkooX6pFDYFX4P4Ek2NM06QgOl6Vc6l+5TF736cV6vqtnERVdn8TyxrcA4wcZnAanLL40jG9lMwIifTPgnijJ+fhSZEEKmVz814caZdRWiUe7Kh9pRHJyFnCRDN5zm34lHnCAQCvvjXlUvO49zy5EDtVEoS4hUDb3/hftj2g4quYYuNxJ98PhgmwjDMs3BiaygHkL30TUaQnw==;7:40GpGbZ/YfbAxGA6nvXAEarCyldLjUbpT2INTD0QEs9dtADO6XkYkutYdYzGu64M5Xp2PJDkABXPx3nFjpLMXe8l3SPcbg6aD3SJ5bu/zhtZr6RhsXtHjjhNENb8MUIPeYUF3Jpmhcg5Bihco4yhRQ==
-x-ms-office365-filtering-correlation-id: b744d3c3-26d6-404d-71e0-08d685c13be3
+x-microsoft-exchange-diagnostics: 1;AM6PR04MB5127;6:qCgmmuvegDsaMvmrWZIMZv+9U/NeksgpzzqxPAthPgQILqpntiC164CKtjajZdv14vymZdf0WW2FIPL07E0zDJY7V/IEIylj8B2C52Mn/LL7AbYMTA5oJHLwT+/ZtvLXD2Nkw5z4tDfGUTkC+SV/nbDeWrBuri6DZ2j1aMfDEt5tgJJTq7uxfkvMSm+/ArA1jle1cKMNd2kRZiINk7OsXyDGAIB4//+NJpUbQceWbWV53/4vemmwKJe18Ef1EAPHSX8mCf7ZvCGWYX86kmelgHmEDK7I1yOig765QYCjgSSTZIvZNml+iljV+nxrdUKOiJdEZaBbxJdP6/y5QxRClBqERFJwMTV01pBdF3KL5y4o0OQ0xJYAimLxG7oGG7LjjLel7etlF2AmtnvSTA4ubY+o+4cQfsgFMOfHS5NgrYLEVFRklrZDfhKkrKIY1RjRqVKR149GWB2buES3BcPB1A==;5:e3QVhYwlYXZUwoDJXCHx9SAswxZk7DC9eVgWjXJhROf8MR3WQTRi1h6t1aEi+yKl+Y8GRtxxV2muBWkKTJuA2BU3TObRAqe+2Urj7qp0sgsDOk2iWyTrnEDh9wwsE+KurzFNCVqWD/jY95Ei44LUejk3cgqovCnni1j2EIvFUQIxwx880WstDUJF3uS0EUi8w+lAO2TEB84mOlCNzVP75g==;7:ELn1J61eLECVBPOGHITQCYByYLCXS9h5xnlptKxPTBzHaDvE86pche4TkA0d4kDyZhrQnn9eeFjBsZWdYCNMFTM5z9YdG7bvbD5zVAn7m+cbfaF7+e2+Yz5F8qssZWhtbzqQmL2XLYZRoXHYVBhhIg==
+x-ms-office365-filtering-correlation-id: dbba98e5-8396-455d-e69c-08d685c13fa1
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB5127;
 x-ms-traffictypediagnostic: AM6PR04MB5127:
-x-microsoft-antispam-prvs: <AM6PR04MB5127516AB63F94D0F4BD8BA884970@AM6PR04MB5127.eurprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <AM6PR04MB5127B15FD987D47262DFA91A84970@AM6PR04MB5127.eurprd04.prod.outlook.com>
 x-forefront-prvs: 093290AD39
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(346002)(366004)(39860400002)(189003)(199004)(6512007)(8936002)(26005)(81166006)(99286004)(4326008)(486006)(52116002)(2501003)(186003)(97736004)(76176011)(105586002)(14454004)(478600001)(106356001)(6486002)(305945005)(54906003)(53936002)(50226002)(81156014)(6436002)(110136005)(8676002)(68736007)(476003)(71190400001)(36756003)(71200400001)(316002)(7416002)(256004)(386003)(2906002)(6506007)(446003)(11346002)(102836004)(66066001)(86362001)(14444005)(1076003)(25786009)(7736002)(6116002)(3846002)(2201001)(2616005)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB5127;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(346002)(366004)(39860400002)(189003)(199004)(6512007)(8936002)(26005)(81166006)(99286004)(4326008)(486006)(52116002)(2501003)(186003)(97736004)(76176011)(105586002)(14454004)(478600001)(106356001)(6486002)(305945005)(54906003)(53936002)(50226002)(81156014)(6436002)(110136005)(8676002)(68736007)(476003)(71190400001)(36756003)(71200400001)(316002)(7416002)(256004)(386003)(2906002)(6506007)(446003)(11346002)(102836004)(66066001)(86362001)(1076003)(25786009)(7736002)(6116002)(3846002)(2201001)(2616005)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB5127;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: TBPLj8AW6+2D+Oahr/Nj4Ij/LZLX+w6tIIKtqhG3HeiVjd3W9EgifdCyoARCI9/JJeW7dodi5TZzD+M+HXGXyCLXGpPJHlk+7vRGoXFUAAI0oy3r/S+nqplxjpEh3sXUo+yzo65LCjP2izOoQtHt8h8qSphkgRK1wH81uTIHMOj/pCodg7H3ELYaNlWg14CKNa9I1mkMgyHKHRtyiI4cEz7ZVDTLjYpfjYELRefzYKX/0nsA60HCH+3K0ZZU3uHAZ3XPuJQDrkPxGJWv7rjzyMwc4DACjPXkPznxE+VMi22fsww9MR6ZhMFbDyMfs1pR5wAV0blKtLeCsyXYrnPjXnRGah0Qr+yxQUTKCB9kG2+AX24QpMWcw8W+Q2nc78yNwOVJpaU3Me7BawUvKjLt/hVmUYPPdeY8z0QZ0GpCcAg=
+x-microsoft-antispam-message-info: pzlG77XcQb/IT+LvjX9SmWnvXkaTOFrmsbVPlZhDQis6PQdIVNonZ5hEnooMKZYiM+vWMRIyPplEcqCuL8P9oZZxrsyAL1T0kZxW4DPJdzK6vu8NQFdhKP6Xz8zrm9HB2H7uNbvEMcdgaE5FhZi8J35n+p9liF93CKTEww1PVquxwYOo8adTik5CG8z+NVg5ZJfrOlRGrFSNfuJgGJx/iIf6hxIaXjnGMspBbEdUfNle4Jbq1zjKY3A4JKLArIUEc1Rj25riU0XA7r2fvOWoSnJmK5/Ug4cLfTWMzZOoF4Yzn76MBKdMa99H/VOB+IQbI+pRTmycvaoWJhBoNnKaz6G2sjiFoAWFs9XOxTXUj62I07jYpBMXZ4zim84HUc3gEFEuDZLJgAXwYD+kkMLE9mErQ2VmAtct9bBitUO4pNg=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b744d3c3-26d6-404d-71e0-08d685c13be3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2019 08:10:24.3353
+X-MS-Exchange-CrossTenant-Network-Message-Id: dbba98e5-8396-455d-e69c-08d685c13fa1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2019 08:10:30.6010
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -104,8 +104,9 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Disabled all inbound and outbound windows before set up the windows
-in kernel, in case transactions match the window set by bootloader.
+As there are some Byte and Half-Work width registers in PCIe
+configuration space, add Byte and Half-Word width register
+accessors.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
@@ -113,74 +114,48 @@ Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 V3:
  - No change
 
- .../controller/mobiveil/pcie-mobiveil-host.c   |  7 +++++++
- .../pci/controller/mobiveil/pcie-mobiveil.c    | 18 ++++++++++++++++++
- .../pci/controller/mobiveil/pcie-mobiveil.h    |  2 ++
- 3 files changed, 27 insertions(+)
+ .../pci/controller/mobiveil/pcie-mobiveil.h   | 20 +++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c b/drivers=
-/pci/controller/mobiveil/pcie-mobiveil-host.c
-index d1765d572f44..d028cdf31d0e 100644
---- a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-+++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
-@@ -221,6 +221,13 @@ static int mobiveil_host_init(struct mobiveil_pcie *pc=
-ie)
- {
- 	u32 value, pab_ctrl, type;
- 	struct resource_entry *win;
-+	int i;
-+
-+	/* Disable all inbound/outbound windows */
-+	for (i =3D 0; i < pcie->apio_wins; i++)
-+		mobiveil_pcie_disable_ob_win(pcie, i);
-+	for (i =3D 0; i < pcie->ppio_wins; i++)
-+		mobiveil_pcie_disable_ib_win(pcie, i);
-=20
- 	/* setup bus numbers */
- 	value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
-diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.c b/drivers/pci/=
-controller/mobiveil/pcie-mobiveil.c
-index 370658d6546d..49d471b75925 100644
---- a/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-+++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-@@ -226,3 +226,21 @@ int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
-=20
- 	return -ETIMEDOUT;
- }
-+
-+void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num)
-+{
-+	u32 val;
-+
-+	val =3D csr_readl(pci, PAB_PEX_AMAP_CTRL(win_num));
-+	val &=3D ~(1 << AMAP_CTRL_EN_SHIFT);
-+	csr_writel(pci, val, PAB_PEX_AMAP_CTRL(win_num));
-+}
-+
-+void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num)
-+{
-+	u32 val;
-+
-+	val =3D csr_readl(pci, PAB_AXI_AMAP_CTRL(win_num));
-+	val &=3D ~(1 << WIN_ENABLE_SHIFT);
-+	csr_writel(pci, val, PAB_AXI_AMAP_CTRL(win_num));
-+}
 diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/=
 controller/mobiveil/pcie-mobiveil.h
-index eb4cb61291a8..81685840b378 100644
+index 81685840b378..933c2f34bc52 100644
 --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
 +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-@@ -171,6 +171,8 @@ void program_ob_windows(struct mobiveil_pcie *pcie, int=
- win_num, u64 cpu_addr,
- 			u64 pci_addr, u32 type, u64 size);
- void program_ib_windows(struct mobiveil_pcie *pcie, int win_num, u64 cpu_a=
-ddr,
- 			u64 pci_addr, u32 type, u64 size);
-+void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num);
-+void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num);
- u32 csr_read(struct mobiveil_pcie *pcie, u32 off, size_t size);
- void csr_write(struct mobiveil_pcie *pcie, u32 val, u32 off, size_t size);
+@@ -181,9 +181,29 @@ static inline u32 csr_readl(struct mobiveil_pcie *pcie=
+, u32 off)
+ 	return csr_read(pcie, off, 0x4);
+ }
 =20
++static inline u32 csr_readw(struct mobiveil_pcie *pcie, u32 off)
++{
++	return csr_read(pcie, off, 0x2);
++}
++
++static inline u32 csr_readb(struct mobiveil_pcie *pcie, u32 off)
++{
++	return csr_read(pcie, off, 0x1);
++}
++
+ static inline void csr_writel(struct mobiveil_pcie *pcie, u32 val, u32 off=
+)
+ {
+ 	csr_write(pcie, val, off, 0x4);
+ }
+=20
++static inline void csr_writew(struct mobiveil_pcie *pcie, u32 val, u32 off=
+)
++{
++	csr_write(pcie, val, off, 0x2);
++}
++
++static inline void csr_writeb(struct mobiveil_pcie *pcie, u32 val, u32 off=
+)
++{
++	csr_write(pcie, val, off, 0x1);
++}
++
+ #endif /* _PCIE_MOBIVEIL_H */
 --=20
 2.17.1
 
