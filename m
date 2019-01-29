@@ -2,35 +2,46 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB2CAC169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:44:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20DCEC169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:44:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98D8720989
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:44:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E694520989
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:44:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548791075;
+	bh=viEJwDEtg1GHjzjkuyc+bBKWHo390MegK+/fo4Fble8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=sOXnJASyCZbuQF0jg1LU8S4JhNJ7rlq/Nr6crYN41xCqSgbsHGunzh3FvJtUa8cGQ
+	 PNYtFT6IbIltF/o+5rWBLdaysnAzzfpLiw4ZHyAIUPlf/8d6BQoCTBiHy6QXPbuZAD
+	 mOEVNQai9V0OVDhmkzGlv1j2zGL25T2moKpZ/zC8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726852AbfA2ToZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 14:44:25 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:45330 "EHLO mx1.redhat.com"
+        id S1729333AbfA2To3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 14:44:29 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42652 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726828AbfA2ToZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 14:44:25 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726828AbfA2To3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 14:44:29 -0500
+Received: from localhost (5356596B.cm-6-7b.dynamic.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3F7F0C002966;
-        Tue, 29 Jan 2019 19:44:24 +0000 (UTC)
-Received: from redhat.com (ovpn-122-2.rdu2.redhat.com [10.10.122.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0624880D1;
-        Tue, 29 Jan 2019 19:44:20 +0000 (UTC)
-Date:   Tue, 29 Jan 2019 14:44:19 -0500
-From:   Jerome Glisse <jglisse@redhat.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 1840F20882;
+        Tue, 29 Jan 2019 19:44:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548791068;
+        bh=viEJwDEtg1GHjzjkuyc+bBKWHo390MegK+/fo4Fble8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=KZ49LH+jLUB5srps9pOXePp/VyVK991R5wyjKZybFUFX8MoQbeRfWiIJ2VIgtJ0ON
+         BIFTzisFgCYTDNpFD+PiiDclPm8bLV+kxGugwnruf/jhxkgGGOSQHLA6pLyhwHnCkM
+         j3wL4ZpMUUn9yw+WfZbhWycVuoC0YG+hjkARojvo=
+Date:   Tue, 29 Jan 2019 20:44:26 +0100
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+Cc:     jglisse@redhat.com, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org,
         "Rafael J . Wysocki" <rafael@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Christian Koenig <christian.koenig@amd.com>,
@@ -41,155 +52,60 @@ Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
         Robin Murphy <robin.murphy@arm.com>,
         Joerg Roedel <jroedel@suse.de>,
         iommu@lists.linux-foundation.org
-Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Message-ID: <20190129194418.GG3176@redhat.com>
+Subject: Re: [RFC PATCH 1/5] pci/p2p: add a function to test peer to peer
+ capability
+Message-ID: <20190129194426.GB32069@kroah.com>
 References: <20190129174728.6430-1-jglisse@redhat.com>
- <20190129174728.6430-4-jglisse@redhat.com>
- <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
- <20190129191120.GE3176@redhat.com>
- <c2c02af7-1d6f-e54f-c7fb-99c5b7776014@deltatee.com>
+ <20190129174728.6430-2-jglisse@redhat.com>
+ <f66ba584-9c4a-f6cd-c647-9b32a93be807@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c2c02af7-1d6f-e54f-c7fb-99c5b7776014@deltatee.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Tue, 29 Jan 2019 19:44:24 +0000 (UTC)
+In-Reply-To: <f66ba584-9c4a-f6cd-c647-9b32a93be807@deltatee.com>
+User-Agent: Mutt/1.11.2 (2019-01-07)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 12:24:04PM -0700, Logan Gunthorpe wrote:
+On Tue, Jan 29, 2019 at 11:24:09AM -0700, Logan Gunthorpe wrote:
 > 
 > 
-> On 2019-01-29 12:11 p.m., Jerome Glisse wrote:
-> > On Tue, Jan 29, 2019 at 11:36:29AM -0700, Logan Gunthorpe wrote:
-> >>
-> >>
-> >> On 2019-01-29 10:47 a.m., jglisse@redhat.com wrote:
-> >>
-> >>> +	/*
-> >>> +	 * Optional for device driver that want to allow peer to peer (p2p)
-> >>> +	 * mapping of their vma (which can be back by some device memory) to
-> >>> +	 * another device.
-> >>> +	 *
-> >>> +	 * Note that the exporting device driver might not have map anything
-> >>> +	 * inside the vma for the CPU but might still want to allow a peer
-> >>> +	 * device to access the range of memory corresponding to a range in
-> >>> +	 * that vma.
-> >>> +	 *
-> >>> +	 * FOR PREDICTABILITY IF DRIVER SUCCESSFULY MAP A RANGE ONCE FOR A
-> >>> +	 * DEVICE THEN FURTHER MAPPING OF THE SAME IF THE VMA IS STILL VALID
-> >>> +	 * SHOULD ALSO BE SUCCESSFUL. Following this rule allow the importing
-> >>> +	 * device to map once during setup and report any failure at that time
-> >>> +	 * to the userspace. Further mapping of the same range might happen
-> >>> +	 * after mmu notifier invalidation over the range. The exporting device
-> >>> +	 * can use this to move things around (defrag BAR space for instance)
-> >>> +	 * or do other similar task.
-> >>> +	 *
-> >>> +	 * IMPORTER MUST OBEY mmu_notifier NOTIFICATION AND CALL p2p_unmap()
-> >>> +	 * WHEN A NOTIFIER IS CALL FOR THE RANGE ! THIS CAN HAPPEN AT ANY
-> >>> +	 * POINT IN TIME WITH NO LOCK HELD.
-> >>> +	 *
-> >>> +	 * In below function, the device argument is the importing device,
-> >>> +	 * the exporting device is the device to which the vma belongs.
-> >>> +	 */
-> >>> +	long (*p2p_map)(struct vm_area_struct *vma,
-> >>> +			struct device *device,
-> >>> +			unsigned long start,
-> >>> +			unsigned long end,
-> >>> +			dma_addr_t *pa,
-> >>> +			bool write);
-> >>> +	long (*p2p_unmap)(struct vm_area_struct *vma,
-> >>> +			  struct device *device,
-> >>> +			  unsigned long start,
-> >>> +			  unsigned long end,
-> >>> +			  dma_addr_t *pa);
-> >>
-> >> I don't understand why we need new p2p_[un]map function pointers for
-> >> this. In subsequent patches, they never appear to be set anywhere and
-> >> are only called by the HMM code. I'd have expected it to be called by
-> >> some core VMA code and set by HMM as that's what vm_operations_struct is
-> >> for.
-> >>
-> >> But the code as all very confusing, hard to follow and seems to be
-> >> missing significant chunks. So I'm not really sure what is going on.
-> > 
-> > It is set by device driver when userspace do mmap(fd) where fd comes
-> > from open("/dev/somedevicefile"). So it is set by device driver. HMM
-> > has nothing to do with this. It must be set by device driver mmap
-> > call back (mmap callback of struct file_operations). For this patch
-> > you can completely ignore all the HMM patches. Maybe posting this as
-> > 2 separate patchset would make it clearer.
-> > 
-> > For instance see [1] for how a non HMM driver can export its memory
-> > by just setting those callback. Note that a proper implementation of
-> > this should also include some kind of driver policy on what to allow
-> > to map and what to not allow ... All this is driver specific in any
-> > way.
+> On 2019-01-29 10:47 a.m., jglisse@redhat.com wrote:
+> > +bool pci_test_p2p(struct device *devA, struct device *devB)
+> > +{
+> > +	struct pci_dev *pciA, *pciB;
+> > +	bool ret;
+> > +	int tmp;
+> > +
+> > +	/*
+> > +	 * For now we only support PCIE peer to peer but other inter-connect
+> > +	 * can be added.
+> > +	 */
+> > +	pciA = find_parent_pci_dev(devA);
+> > +	pciB = find_parent_pci_dev(devB);
+> > +	if (pciA == NULL || pciB == NULL) {
+> > +		ret = false;
+> > +		goto out;
+> > +	}
+> > +
+> > +	tmp = upstream_bridge_distance(pciA, pciB, NULL);
+> > +	ret = tmp < 0 ? false : true;
+> > +
+> > +out:
+> > +	pci_dev_put(pciB);
+> > +	pci_dev_put(pciA);
+> > +	return false;
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_test_p2p);
 > 
-> I'd suggest [1] should be a part of the patchset so we can actually see
-> a user of the stuff you're adding.
+> This function only ever returns false....
 
-I did not wanted to clutter patchset with device driver specific usage
-of this. As the API can be reason about in abstract way.
+I guess it was nevr actually tested :(
 
-> 
-> But it still doesn't explain everything as without the HMM code nothing
-> calls the new vm_ops. And there's still no callers for the p2p_test
-> functions you added. And I still don't understand why we need the new
-> vm_ops or who calls them and when. Why can't drivers use the existing
-> 'fault' vm_op and call a new helper function to map p2p when appropriate
-> or a different helper function to map a large range in its mmap
-> operation? Just like regular mmap code...
+I feel really worried about passing random 'struct device' pointers into
+the PCI layer.  Are we _sure_ it can handle this properly?
 
-HMM code is just one user, if you have a driver that use HMM mirror
-then your driver get support for this for free. If you do not want to
-use HMM then you can directly call this in your driver.
+thanks,
 
-The flow is, device driver want to setup some mapping for a range of
-virtual address [va_start, va_end]:
-    1 - Lookup vma for the range
-    2 - If vma is regular vma (not an mmap of a file) then use GUP
-        If vma is a mmap of a file and they are p2p_map call back
-        then call p2p_map()
-    3 - Use either the result of GUP or p2p_map() to program the
-        device
-
-The p2p test function is use by device driver implementing the call
-back for instance see:
-
-https://cgit.freedesktop.org/~glisse/linux/commit/?h=hmm-p2p&id=401a567696eafb1d4faf7054ab0d7c3a16a5ef06
-
-The vm_fault callback is not suited because here we are mapping to
-another device so this will need special handling, someone must have
-both device struct pointer in end and someone must be allow to make
-decission on what to allow and what not to allow.
-
-Moreover exporting driver like GPU driver might have complex policy
-in place for which they will only allow export of some memory to a
-peer device but not other.
-
-In the end it means that it easier and simpler to add new call back
-specificaly for that, so the intention is clear to both the caller
-and the callee. The exporting device can then do the proper check
-using the core helper (ie checking that the device can actually peer
-to each other) and if that works it can then decide wether or not
-it wants to allow this other device to access its memory or if it
-prefer to use main memory for this.
-
-To add this to the fault callback we would need to define a bunch
-of new flags, setup fake page table so that we can populate pte and
-then have the importing device re-interpret everything specialy
-because it comes from another device. It would look ugly and it
-would need to modify bunch of core mm code.
-
-Note that this callback solution also allow an exporting device to
-allow peer access while CPU can not access the memory ie the pte
-entry for the range are pte_none.
-
-Cheers,
-Jérôme
+greg k-h
