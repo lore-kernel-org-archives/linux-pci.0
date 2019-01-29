@@ -2,263 +2,163 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B66C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 09:51:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D3EC282D0
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 10:20:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A44992183F
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 09:51:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBF6321473
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 10:20:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tb6+AX1B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726930AbfA2Jva (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 04:51:30 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3233 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726765AbfA2Jv3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 04:51:29 -0500
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 299AC602A8D68A5BED49;
-        Tue, 29 Jan 2019 17:51:27 +0800 (CST)
-Received: from localhost (10.202.226.61) by DGGEMS412-HUB.china.huawei.com
- (10.3.19.212) with Microsoft SMTP Server id 14.3.408.0; Tue, 29 Jan 2019
- 17:51:17 +0800
-Date:   Tue, 29 Jan 2019 09:51:05 +0000
-From:   Jonathan Cameron <jonathan.cameron@huawei.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     Dave Hansen <dave.hansen@intel.com>, <linux-pci@vger.kernel.org>,
-        <x86@kernel.org>, <linuxarm@huawei.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        "Dave Hansen" <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Martin =?ISO-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH V2] x86: Fix an issue with invalid ACPI NUMA config
-Message-ID: <20190129095105.00000374@huawei.com>
-In-Reply-To: <20190128231322.GA91506@google.com>
-References: <20181211094737.71554-1-Jonathan.Cameron@huawei.com>
-        <a5a938d3-ecc9-028a-3b28-610feda8f3f8@intel.com>
-        <20181212093914.00002aed@huawei.com>
-        <20181220151225.GB183878@google.com>
-        <65f5bb93-b6be-d6dd-6976-e2761f6f2a7b@intel.com>
-        <20181220195714.GE183878@google.com>
-        <20190128112904.0000461a@huawei.com>
-        <20190128231322.GA91506@google.com>
-Organization: Huawei
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; i686-w64-mingw32)
+        id S1726906AbfA2KUw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 05:20:52 -0500
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:45900 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725811AbfA2KUv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Jan 2019 05:20:51 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x0TAKUWE058370;
+        Tue, 29 Jan 2019 04:20:30 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1548757230;
+        bh=Ws8cfEW/GdK3qAnIerup80pZ7QCUAQ/ikhsMVH1JYMg=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=tb6+AX1BmbjyH91s/hiKSJdzczG6BvCc1pWzl0eWbuYfAWdBAEQE8RZhUS5gVotO0
+         aQbNfeOQrAHwfWdK12biUy6+fdpOWpwi3LBE6clpDMm5eM/pn/NrBAoYgSWbCq7Ffu
+         h0mIWNNzMF0VsH4bIpNEfXbuzPRZDhtQCXDx0CLc=
+Received: from DLEE114.ent.ti.com (dlee114.ent.ti.com [157.170.170.25])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x0TAKTto091224
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 29 Jan 2019 04:20:29 -0600
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Tue, 29
+ Jan 2019 04:20:29 -0600
+Received: from dflp32.itg.ti.com (10.64.6.15) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Tue, 29 Jan 2019 04:20:29 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x0TAKNdi014159;
+        Tue, 29 Jan 2019 04:20:24 -0600
+Subject: Re: [PATCH 18/24] PCI: dwc: Fix dw_pcie_ep_find_capability to return
+ correct capability offset
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Jingoo Han <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-arm-kernel@axis.com" <linux-arm-kernel@axis.com>
+References: <20190114132424.6445-1-kishon@ti.com>
+ <20190114132424.6445-19-kishon@ti.com>
+ <13501c15-8f3d-604b-c4fc-bde3fb208745@synopsys.com>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <a3c7458b-f8e8-1f02-116b-3e9f4fbf00f3@ti.com>
+Date:   Tue, 29 Jan 2019 15:49:51 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+In-Reply-To: <13501c15-8f3d-604b-c4fc-bde3fb208745@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.61]
-X-CFilter-Loop: Reflected
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 28 Jan 2019 17:13:22 -0600
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+Hi Gustavo,
 
-> On Mon, Jan 28, 2019 at 11:31:08AM +0000, Jonathan Cameron wrote:
-> > On Thu, 20 Dec 2018 13:57:14 -0600
-> > Bjorn Helgaas <helgaas@kernel.org> wrote:  
-> > > On Thu, Dec 20, 2018 at 09:13:12AM -0800, Dave Hansen wrote:  
-> > > > On 12/20/18 7:12 AM, Bjorn Helgaas wrote:    
-> > > > >> Other than the error we might be able to use acpi_map_pxm_to_online_node
-> > > > >> for this, or call both acpi_map_pxm_to_node and acpi_map_pxm_to_online_node
-> > > > >> and compare the answers to verify we are getting the node we want?    
-> > > > > Where are we at with this?  It'd be nice to resolve it for v4.21, but
-> > > > > it's a little out of my comfort zone, so I don't want to apply it
-> > > > > unless there's clear consensus that this is the right fix.    
-> > > > 
-> > > > I still think the fix in this patch sweeps the problem under the rug too
-> > > > much.  But, it just might be the best single fix for backports, for
-> > > > instance.    
-> > > 
-> > > Sounds like we should first find the best fix, then worry about how to
-> > > backport it.  So I think we have a little more noodling to do, and
-> > > I'll defer this for now.
-> > > 
-> > > Bjorn  
-> > 
-> > Hi All,
-> > 
-> > I'd definitely appreciate some guidance on what the 'right' fix is.
-> > We are starting to get real performance issues reported as a result of not
-> > being able to use this patch on mainline.
-> > 
-> > 5-10% performance drop on some networking benchmarks.  
+On 29/01/19 2:55 PM, Gustavo Pimentel wrote:
+> Hi Kishon,
 > 
-> I guess the performance drop must be from calling kmalloc_node() with
-> the wrong node number because we currently ignore _PXM for the NIC?
-> And to get that performance back, you need both the previous patch to
-> pay attention to _PXM (https://lore.kernel.org/linux-pci/1527768879-88161-2-git-send-email-xiexiuqi@huawei.com)
-> and this patch (to set "numa_off=1" to avoid the regression the _PXM
-> patch by itself would cause)?
+> On 14/01/2019 13:24, Kishon Vijay Abraham I wrote:
+>> commit beb4641a787df79a ("PCI: dwc: Add MSI-X callbacks handler") while
+>> adding MSI-X callback handler, introduced dw_pcie_ep_find_capability and
+>> __dw_pcie_ep_find_next_cap for finding the MSI and MSIX capability.
+>>
+>> However if MSI or MSIX capability is the last capability (i.e there are
+>> no additional items in the capabilities list and the Next Capability
+>> Pointer is set to '0'), __dw_pcie_ep_find_next_cap will return '0'
+>> even though MSI or MSIX capability may be present. This is because of
+>> incorrect ordering of "next_cap_ptr" check. Fix it here.
+>>
+>> Fixes: beb4641a787df79a142 ("PCI: dwc: Add MSI-X callbacks handler")
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/controller/dwc/pcie-designware-ep.c | 10 +++++-----
+>>  1 file changed, 5 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> index d5144781005b..cd51b008858c 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+>> @@ -46,16 +46,19 @@ static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+>>  	u8 cap_id, next_cap_ptr;
+>>  	u16 reg;
+>>  
+>> +	if (!cap_ptr)
+>> +		return 0;
+>> +
+> 
+> Supposedly this was already verified by the function that calls this one.
 
-Exactly.
+Right, with with this fix cap_ptr is checked only once. This being a recursive
+function, it makes sense to have the check only here instead of once in the
+calling function and once here.
+> 
+>>  	reg = dw_pcie_readw_dbi(pci, cap_ptr);
+>> -	next_cap_ptr = (reg & 0xff00) >> 8;
+>>  	cap_id = (reg & 0x00ff);
+>>  
+>> -	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
+>> +	if (cap_id > PCI_CAP_ID_MAX)
+>>  		return 0;
+>>  
+>>  	if (cap_id == cap)
+>>  		return cap_ptr;
+>>  
+>> +	next_cap_ptr = (reg & 0xff00) >> 8;
+> 
+> This fix seems to be a bit overdone, especially when you only need to swap the
+> if blocks order to achieve the desired goal.
 
+No, cap_id > PCI_CAP_ID_MAX is a base error case and it should checked before
+returning the offset IMO.
 > 
-> > As a brief summary (having added linux-mm / linux-acpi) the issue is:
-> > 
-> > 1) ACPI allows _PXM to be applied to pci devices (including root ports for
-> >    example, but any device is fine).
-> > 2) Due to the ordering of when the fw node was set for PCI devices this wasn't
-> >    taking effect. Easy to solve by just adding the numa node if provided in
-> >    pci_acpi_setup (which is late enough)
-> > 3) A patch to fix that was applied to the PCIe tree
-> >   https://patchwork.kernel.org/patch/10597777/
-> >    but we got non booting regressions on some threadripper platforms.
-> >    That turned out to be because they don't have SRAT, but do have PXM entries.
-> >   (i.e. broken firmware).  Naturally Bjorn reverted this very quickly!  
+>>  	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+>>  }
+>>  
+>> @@ -67,9 +70,6 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
+>>  	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
+>>  	next_cap_ptr = (reg & 0x00ff);
+>>  
+>> -	if (!next_cap_ptr)
+>> -		return 0;
+>> -
 > 
-> Here's the beginning of the current thread, for anybody coming in
-> late: https://lore.kernel.org/linux-pci/20181211094737.71554-1-Jonathan.Cameron@huawei.com).
-> 
-> The current patch proposes setting "numa_off=1" in the x86 version of
-> dummy_numa_init(), on the assumption (from the changelog) that:
-> 
->   It is invalid under the ACPI spec to specify new NUMA nodes using
->   _PXM if they have no presence in SRAT.
-> 
-> Do you have a reference for this?  I looked and couldn't find a clear
-> statement in the spec to that effect.  The _PXM description (ACPI
-> v6.2, sec 6.1.14) says that two devices with the same _PXM value are
-> in the same proximity domain, but it doesn't seem to require an SRAT.
+> Why remove it?
+> If pointer is null, why to jump to another function to check is the the same
+> pointer is null?
 
-No comment (feel free to guess why). *sigh*
+so that we check cap_ptr only once.
 
-> 
-> But I guess it doesn't really matter whether it's invalid; that
-> situation exists in the field, so we have to handle it gracefully.
-> 
-> Martin reported the regression from 3) above and attached useful logs,
-> which unfortunately aren't in the archives because the mailing list rejects
-> attachments.  To preserve them, I opened https://bugzilla.kernel.org/show_bug.cgi?id=202443
-> and attached the logs there.
-
-Cool. Thanks for doing that.
-
-> 
-> > I proposed this fix which was to do the same as on Arm and clearly
-> > mark numa as off when SRAT isn't present on an ACPI system.
-> > https://elixir.bootlin.com/linux/latest/source/arch/arm64/mm/numa.c#L460
-> > https://elixir.bootlin.com/linux/latest/source/arch/x86/mm/numa.c#L688  
-> 
-> There are several threads we could pull on while untangling this.
-> 
-> We use dummy_numa_init() when we don't have static NUMA info from ACPI
-> SRAT or DT.  On arm64 (but not x86), it sets numa_off=1 when we don't
-> have that static info.  I think neither should set numa_off=1 because
-> we should allow for future information, e.g., from _PXM.
-> 
-> I think acpi_numa_init() is being a little too aggressive when it
-> returns failure if it finds no SRAT or if it finds an SRAT with no
-> ACPI_SRAT_TYPE_MEMORY_AFFINITY entries.
-> 
-> Also from your changelog:
-> 
->   When the PCI code later comes along and calls acpi_get_node() for
->   any PCI card below the root port, it navigates up the ACPI tree
->   until it finds the _PXM value in the root port. This value is then
->   passed to acpi_map_pxm_to_node().
-> 
->   As numa_off has not been set on x86 it tries to allocate a NUMA
->   node, from the unused set, without setting up all the infrastructure
->   that would normally accompany such a call.  We have not identified
->   exactly which driver is causing the subsequent hang for Martin.
-> 
-> So the problem seems to be that when we get the _PXM value (in the
-> acpi_get_node() path), there's some infrastructure we don't set up?
-> I'm not sure what exactly this is -- I see that when we have an SRAT,
-> acpi_numa_memory_affinity() does a little more, but nothing that
-> would account for a problem if we call acpi_map_pxm_to_node() without
-> an SRAT.
-> 
-> Maybe it results in an issue when we call kmalloc_node() using this
-> _PXM value that SRAT didn't tell us about?  If so, that's reminiscent
-> of these earlier discussions about kmalloc_node() returning something
-> useless if the requested node is not online:
-> 
->   https://lkml.kernel.org/r/1527768879-88161-2-git-send-email-xiexiuqi@huawei.com
->   https://lore.kernel.org/linux-arm-kernel/20180801173132.19739-1-punit.agrawal@arm.com/
-> 
-> As far as I know, that was never really resolved.  The immediate
-> problem of using passing an invalid node number to kmalloc_node() was
-> avoided by using kmalloc() instead.
-
-Yes, that's definitely still a problem (or was last time I checked)
-
-> 
-> > Dave's response was that we needed to fix the underlying issue of
-> > trying to allocate from non existent NUMA nodes.  
-> 
-> Oops, sorry for telling you what you obviously already know!  I guess
-> I didn't internalize this sentence before writing the above.
-
-Not to worry, your description was a lot better than mine! Thanks.
-
-> 
-> Bottom line, I totally agree that it would be better to fix the
-> underlying issue without trying to avoid it by disabling NUMA.
-
-I don't agree on this point.  I think two layers make sense.
-
-If there is no NUMA description in DT or ACPI, why not just stop anything
-from using it at all?  The firmware has basically declared there is no
-point, why not save a bit of complexity (and use an existing tested code
-path) but setting numa_off?
-
-However, if there is NUMA description, but with bugs then we should
-protect in depth.  A simple example being that we declare 2 nodes, but
-then use _PXM for a third. I've done that by accident and blows up
-in a nasty fashion (not done it for a while, but probably still true).
-
-Given DSDT is only parsed long after SRAT we can just check on _PXM
-queries.  Or I suppose we could do a verification parse for all _PXM
-entries and put out some warnings if they don't match SRAT entries?
-
-> 
-> > Whilst I agree with that in principle (having managed to provide
-> > tables doing exactly that during development a few times!), I'm not
-> > sure the path to doing so is clear and so this has been stalled for
-> > a few months.  There is to my mind still a strong argument, even
-> > with such protection in place, that we should still be short cutting
-> > it so that you get the same paths if you deliberately disable numa,
-> > and if you have no SRAT and hence can't have NUMA.  
-> 
-> I guess we need to resolve the question of whether NUMA without SRAT
-> is possible.
-
-It's certainly unclear of whether it has any meaning.  If we allow for
-the fact that the intent of ACPI was never to allow this (and a bit
-of history checking verified this as best as anyone can remember),
-then what do we do with the few platforms that do use _PXM to nodes that
-haven't been defined?
-
-Note we have never actually supported them as we weren't using the
-values provided, so there is no regression if we simply rule them
-as not valid.  It's also unclear that it was ever intentional for
-these platforms, rather than something that got through compliance tests
-because no one was using it.
-
-Thanks for your detailed insight and help!
-
-Jonathan
-
-> 
-> > So given I have some 'mild for now' screaming going on, I'd
-> > definitely appreciate input on how to move forward!
-> > 
-> > There are lots of places this could be worked around, e.g. we could
-> > sanity check in the acpi_get_pxm call.  I'm not sure what side
-> > effects that would have and also what cases it wouldn't cover.
-> > 
-> > Thanks,
-> > 
-> > Jonathan  
-
-
+Thanks
+Kishon
