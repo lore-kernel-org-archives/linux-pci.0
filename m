@@ -2,141 +2,213 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD8DC282C7
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:24:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04C21C169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:33:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B757E20882
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:24:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB93B20856
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 19:33:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="vdnfDQ9J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727269AbfA2TYT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 14:24:19 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:59356 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726852AbfA2TYT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 14:24:19 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1goYzN-0005nT-QG; Tue, 29 Jan 2019 12:24:06 -0700
+        id S1727198AbfA2TdD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 14:33:03 -0500
+Received: from mail-eopbgr140041.outbound.protection.outlook.com ([40.107.14.41]:62590
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726828AbfA2TdD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 14:33:03 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=RCeCvFq5XVhGTYbx17dUhLsiytz0NldGx3wjwa/aDuA=;
+ b=vdnfDQ9JxvIFql16cWL6ZEdYnR4ZIhzj1LaY0F0UodLC3GqrNX8oEUHkKRtGjKqfvrubWcc6c0pwUK/ghh7lyn1hn+r1odKHUxU0AoB5h5aI9PgJOIXgYTAgRM/++TSOLA5MJFLZSR230aX0xP0XDF0Mn0yp94i5Q/kss3aln98=
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
+ DBBPR05MB6521.eurprd05.prod.outlook.com (20.179.43.146) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1558.21; Tue, 29 Jan 2019 19:32:57 +0000
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Tue, 29 Jan 2019
+ 19:32:57 +0000
+From:   Jason Gunthorpe <jgg@mellanox.com>
 To:     Jerome Glisse <jglisse@redhat.com>
-Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
+CC:     Logan Gunthorpe <logang@deltatee.com>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J . Wysocki" <rafael@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Christian Koenig <christian.koenig@amd.com>,
         Felix Kuehling <Felix.Kuehling@amd.com>,
-        Jason Gunthorpe <jgg@mellanox.com>, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Christoph Hellwig <hch@lst.de>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Christoph Hellwig <hch@lst.de>,
         Marek Szyprowski <m.szyprowski@samsung.com>,
         Robin Murphy <robin.murphy@arm.com>,
         Joerg Roedel <jroedel@suse.de>,
-        iommu@lists.linux-foundation.org
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AA==
+Date:   Tue, 29 Jan 2019 19:32:57 +0000
+Message-ID: <20190129193250.GK10108@mellanox.com>
 References: <20190129174728.6430-1-jglisse@redhat.com>
  <20190129174728.6430-4-jglisse@redhat.com>
  <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
  <20190129191120.GE3176@redhat.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c2c02af7-1d6f-e54f-c7fb-99c5b7776014@deltatee.com>
-Date:   Tue, 29 Jan 2019 12:24:04 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
 In-Reply-To: <20190129191120.GE3176@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: iommu@lists.linux-foundation.org, jroedel@suse.de, robin.murphy@arm.com, m.szyprowski@samsung.com, hch@lst.de, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, jgg@mellanox.com, Felix.Kuehling@amd.com, christian.koenig@amd.com, bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, jglisse@redhat.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: MWHPR18CA0035.namprd18.prod.outlook.com
+ (2603:10b6:320:31::21) To DBBPR05MB6426.eurprd05.prod.outlook.com
+ (2603:10a6:10:c9::16)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=jgg@mellanox.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [174.3.196.123]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;DBBPR05MB6521;6:qIbxigtUfkce/aMkXuRgQE4oq5eXlBXrRd/jmJ5Qr/6ngJ/uwqYQOPpxbXYM04QRcyHkN82A/spgU4PUT3jz2YXpu4CA9ee9Pna2FeHYbN+GKOXxxCa3HyczKAqz5k1uU757rUZEex+bPnRFm+6byGQiWIln0D3yqtVLAfjSxrMdfM7+p0MqiFYW3hyQU3kg94AJjdn6XDSttgpi7BNkoUSli8yddtV+vehYJL9F1KevuVw1d692y8E73vDvYfEsGJ3xINPjixg+X9Z8xECxPAsXoxbcnMq8hHa0ODK7UB/rge7PJbOZy3STbizMDR3GFKa/bJSkWOTeRpbiYe52A1VXZ//1RX2pX+nQIOyTOvr7fmQGdfnm5b97BdwkmvCKXpsI6Km4a/OCNPK55A2vVO8Y1Y4zl2yIL1BVpeUsp52BSZ3ddTJFEH50OaLbdWshsyov2FNyGV4AZ5vBf6d8UA==;5:2GZ7euKQlvTfiqVwXrnJCz8M6EvBeyko7iuRIvF7731btWTkgO9KrxSN39D6ohvx182vA7dAvViUe37Zv4xJoykjz60+ycJykbZu536QyEV305fKwwVEPgXQe5pZIcVPY4Jy11z8lGOc4nI/IizIzlnhLb8pYJaACpHaWlJw7rxjW9k+tTnBvun2KrF5W30tGSf3Ic3EhzjwN/3A39ewgw==;7:x9MT+0b2q51C3b51zXY06WZ/TtiA0iPhzx7B0C9WudXXE13v8JoWPAxTyYOMoh+k/VGJaswtdeKFXUPe7G+h7nZhBqK3zx7Xu4CpsyXNy8qNI544EiPGCZguWlzdzkXpvGA0Qj/lg7AreAKNA2Uzew==
+x-ms-office365-filtering-correlation-id: 7be37d8f-8eaa-4788-672c-08d68620923a
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6521;
+x-ms-traffictypediagnostic: DBBPR05MB6521:
+x-microsoft-antispam-prvs: <DBBPR05MB652119A47580243302A3E300CF970@DBBPR05MB6521.eurprd05.prod.outlook.com>
+x-forefront-prvs: 093290AD39
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(346002)(39860400002)(396003)(366004)(376002)(189003)(199004)(6486002)(14454004)(6116002)(2906002)(6512007)(71190400001)(68736007)(6436002)(71200400001)(478600001)(229853002)(446003)(217873002)(53936002)(97736004)(6246003)(3846002)(486006)(476003)(11346002)(2616005)(105586002)(81166006)(93886005)(8676002)(81156014)(1076003)(6916009)(7736002)(305945005)(14444005)(316002)(76176011)(8936002)(4326008)(186003)(256004)(106356001)(386003)(26005)(99286004)(33656002)(36756003)(53546011)(52116002)(86362001)(25786009)(54906003)(7416002)(102836004)(6506007)(66066001);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6521;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: mellanox.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: yVFGJimFHdkRHGZUQ1MMQGCuCVv2izL3ZjyZgutu5AfiQxWQQjrJC9OQuCPfiOfo3/Dpkdya/XtSnSmmGlY1uTlnbhDXIHWHSFUTM2BXO0kRBhfut8ej+bC/k+W0C6193Rz6nr4/aKX+hIjV2dwVE+BlM9OwgM7eGzA1LLD93crfqe4nU8QTsjXnLGAVIcj3lrPcw+h3yeyD2JFYK521/sbr1QmBDyQIk6bUjyQNr7nzwcqWl9YmdyphjR4q9c/k4fqYLrzpNVQXp7lAeY0PuHYV7LB/fNGuzVhtrdZxkCBktbUH+wRAwEAWcHsDlcHTfTYYFhlU25nsGfL4dFByjCOpb/ctAGEEmC4XN2cwJR6H7ZJH56Tnw+p5TyNrPQ2rS40JkAKGty3Dbl9LUlM8mhq/fOrC7Qv2JsX+5Rpq8x8=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <D743145BE1A96C40B172B73A6FC4A399@eurprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: Mellanox.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7be37d8f-8eaa-4788-672c-08d68620923a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2019 19:32:56.9860
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6521
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 2019-01-29 12:11 p.m., Jerome Glisse wrote:
+On Tue, Jan 29, 2019 at 02:11:23PM -0500, Jerome Glisse wrote:
 > On Tue, Jan 29, 2019 at 11:36:29AM -0700, Logan Gunthorpe wrote:
->>
->>
->> On 2019-01-29 10:47 a.m., jglisse@redhat.com wrote:
->>
->>> +	/*
->>> +	 * Optional for device driver that want to allow peer to peer (p2p)
->>> +	 * mapping of their vma (which can be back by some device memory) to
->>> +	 * another device.
->>> +	 *
->>> +	 * Note that the exporting device driver might not have map anything
->>> +	 * inside the vma for the CPU but might still want to allow a peer
->>> +	 * device to access the range of memory corresponding to a range in
->>> +	 * that vma.
->>> +	 *
->>> +	 * FOR PREDICTABILITY IF DRIVER SUCCESSFULY MAP A RANGE ONCE FOR A
->>> +	 * DEVICE THEN FURTHER MAPPING OF THE SAME IF THE VMA IS STILL VALID
->>> +	 * SHOULD ALSO BE SUCCESSFUL. Following this rule allow the importing
->>> +	 * device to map once during setup and report any failure at that time
->>> +	 * to the userspace. Further mapping of the same range might happen
->>> +	 * after mmu notifier invalidation over the range. The exporting device
->>> +	 * can use this to move things around (defrag BAR space for instance)
->>> +	 * or do other similar task.
->>> +	 *
->>> +	 * IMPORTER MUST OBEY mmu_notifier NOTIFICATION AND CALL p2p_unmap()
->>> +	 * WHEN A NOTIFIER IS CALL FOR THE RANGE ! THIS CAN HAPPEN AT ANY
->>> +	 * POINT IN TIME WITH NO LOCK HELD.
->>> +	 *
->>> +	 * In below function, the device argument is the importing device,
->>> +	 * the exporting device is the device to which the vma belongs.
->>> +	 */
->>> +	long (*p2p_map)(struct vm_area_struct *vma,
->>> +			struct device *device,
->>> +			unsigned long start,
->>> +			unsigned long end,
->>> +			dma_addr_t *pa,
->>> +			bool write);
->>> +	long (*p2p_unmap)(struct vm_area_struct *vma,
->>> +			  struct device *device,
->>> +			  unsigned long start,
->>> +			  unsigned long end,
->>> +			  dma_addr_t *pa);
->>
->> I don't understand why we need new p2p_[un]map function pointers for
->> this. In subsequent patches, they never appear to be set anywhere and
->> are only called by the HMM code. I'd have expected it to be called by
->> some core VMA code and set by HMM as that's what vm_operations_struct is
->> for.
->>
->> But the code as all very confusing, hard to follow and seems to be
->> missing significant chunks. So I'm not really sure what is going on.
-> 
+> >=20
+> >=20
+> > On 2019-01-29 10:47 a.m., jglisse@redhat.com wrote:
+> >=20
+> > > +	/*
+> > > +	 * Optional for device driver that want to allow peer to peer (p2p)
+> > > +	 * mapping of their vma (which can be back by some device memory) t=
+o
+> > > +	 * another device.
+> > > +	 *
+> > > +	 * Note that the exporting device driver might not have map anythin=
+g
+> > > +	 * inside the vma for the CPU but might still want to allow a peer
+> > > +	 * device to access the range of memory corresponding to a range in
+> > > +	 * that vma.
+> > > +	 *
+> > > +	 * FOR PREDICTABILITY IF DRIVER SUCCESSFULY MAP A RANGE ONCE FOR A
+> > > +	 * DEVICE THEN FURTHER MAPPING OF THE SAME IF THE VMA IS STILL VALI=
+D
+> > > +	 * SHOULD ALSO BE SUCCESSFUL. Following this rule allow the importi=
+ng
+> > > +	 * device to map once during setup and report any failure at that t=
+ime
+> > > +	 * to the userspace. Further mapping of the same range might happen
+> > > +	 * after mmu notifier invalidation over the range. The exporting de=
+vice
+> > > +	 * can use this to move things around (defrag BAR space for instanc=
+e)
+> > > +	 * or do other similar task.
+> > > +	 *
+> > > +	 * IMPORTER MUST OBEY mmu_notifier NOTIFICATION AND CALL p2p_unmap(=
+)
+> > > +	 * WHEN A NOTIFIER IS CALL FOR THE RANGE ! THIS CAN HAPPEN AT ANY
+> > > +	 * POINT IN TIME WITH NO LOCK HELD.
+> > > +	 *
+> > > +	 * In below function, the device argument is the importing device,
+> > > +	 * the exporting device is the device to which the vma belongs.
+> > > +	 */
+> > > +	long (*p2p_map)(struct vm_area_struct *vma,
+> > > +			struct device *device,
+> > > +			unsigned long start,
+> > > +			unsigned long end,
+> > > +			dma_addr_t *pa,
+> > > +			bool write);
+> > > +	long (*p2p_unmap)(struct vm_area_struct *vma,
+> > > +			  struct device *device,
+> > > +			  unsigned long start,
+> > > +			  unsigned long end,
+> > > +			  dma_addr_t *pa);
+> >=20
+> > I don't understand why we need new p2p_[un]map function pointers for
+> > this. In subsequent patches, they never appear to be set anywhere and
+> > are only called by the HMM code. I'd have expected it to be called by
+> > some core VMA code and set by HMM as that's what vm_operations_struct i=
+s
+> > for.
+> >=20
+> > But the code as all very confusing, hard to follow and seems to be
+> > missing significant chunks. So I'm not really sure what is going on.
+>=20
 > It is set by device driver when userspace do mmap(fd) where fd comes
 > from open("/dev/somedevicefile"). So it is set by device driver. HMM
 > has nothing to do with this. It must be set by device driver mmap
 > call back (mmap callback of struct file_operations). For this patch
 > you can completely ignore all the HMM patches. Maybe posting this as
 > 2 separate patchset would make it clearer.
-> 
+>=20
 > For instance see [1] for how a non HMM driver can export its memory
 > by just setting those callback. Note that a proper implementation of
 > this should also include some kind of driver policy on what to allow
 > to map and what to not allow ... All this is driver specific in any
 > way.
 
-I'd suggest [1] should be a part of the patchset so we can actually see
-a user of the stuff you're adding.
+I'm imagining that the RDMA drivers would use this interface on their
+per-process 'doorbell' BAR pages - we also wish to have P2P DMA to
+this memory. Also the entire VFIO PCI BAR mmap would be good to cover
+with this too.
 
-But it still doesn't explain everything as without the HMM code nothing
-calls the new vm_ops. And there's still no callers for the p2p_test
-functions you added. And I still don't understand why we need the new
-vm_ops or who calls them and when. Why can't drivers use the existing
-'fault' vm_op and call a new helper function to map p2p when appropriate
-or a different helper function to map a large range in its mmap
-operation? Just like regular mmap code...
+Jerome, I think it would be nice to have a helper scheme - I think the
+simple case would be simple remapping of PCI BAR memory, so if we
+could have, say something like:
 
-Logan
+static const struct vm_operations_struct my_ops {
+  .p2p_map =3D p2p_ioremap_map_op,
+  .p2p_unmap =3D p2p_ioremap_unmap_op,
+}
+
+struct ioremap_data {
+  [..]
+}
+
+fops_mmap() {
+   vma->private_data =3D &driver_priv->ioremap_data;
+   return p2p_ioremap_device_memory(vma, exporting_device, [..]);
+}
+
+Which closely matches at least what the RDMA drivers do. Where
+p2p_ioremap_device_memory populates p2p_map and p2p_unmap pointers
+with sensible functions, etc.
+
+It looks like vfio would be able to use this as well (though I am
+unsure why vfio uses remap_pfn_range instead of io_remap_pfn range for
+BAR memory..)
+
+Do any drivers need more control than this?
+
+Jason
