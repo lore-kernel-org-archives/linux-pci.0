@@ -2,30 +2,30 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8C10C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 17:47:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C20B2C282C7
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 17:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A40AE2184D
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 17:47:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C94B214DA
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 17:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728674AbfA2Rrj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 12:47:39 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:39354 "EHLO mx1.redhat.com"
+        id S1729119AbfA2Rrr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 12:47:47 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:23840 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728667AbfA2Rrj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 12:47:39 -0500
+        id S1728914AbfA2Rrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 12:47:46 -0500
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id ADC1D9B308;
-        Tue, 29 Jan 2019 17:47:37 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 92F9FC073D6F;
+        Tue, 29 Jan 2019 17:47:45 +0000 (UTC)
 Received: from localhost.localdomain.com (ovpn-122-2.rdu2.redhat.com [10.10.122.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0B55B5D97E;
-        Tue, 29 Jan 2019 17:47:32 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 93F8318A75;
+        Tue, 29 Jan 2019 17:47:42 +0000 (UTC)
 From:   jglisse@redhat.com
 To:     linux-mm@kvack.org
 Cc:     linux-kernel@vger.kernel.org,
@@ -42,14 +42,16 @@ Cc:     linux-kernel@vger.kernel.org,
         Robin Murphy <robin.murphy@arm.com>,
         Joerg Roedel <jroedel@suse.de>,
         iommu@lists.linux-foundation.org
-Subject: [RFC PATCH 0/5] Device peer to peer (p2p) through vma
-Date:   Tue, 29 Jan 2019 12:47:23 -0500
-Message-Id: <20190129174728.6430-1-jglisse@redhat.com>
+Subject: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device vma
+Date:   Tue, 29 Jan 2019 12:47:26 -0500
+Message-Id: <20190129174728.6430-4-jglisse@redhat.com>
+In-Reply-To: <20190129174728.6430-1-jglisse@redhat.com>
+References: <20190129174728.6430-1-jglisse@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Tue, 29 Jan 2019 17:47:38 +0000 (UTC)
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 29 Jan 2019 17:47:46 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -57,86 +59,34 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Jérôme Glisse <jglisse@redhat.com>
 
-This patchset add support for peer to peer between device in two manner.
-First for device memory use through HMM in process regular address space
-(ie inside a regular vma that is not an mmap of device file or special
-file). Second for special vma ie mmap of a device file, in this case some
-device driver might want to allow other device to directly access memory
-use for those special vma (not that the memory might not even be map to
-CPU in this case).
+Allow mmap of device file to export device memory to peer to peer
+devices. This will allow for instance a network device to access a
+GPU memory or to access a storage device queue directly.
 
-They are many use cases for this they mainly fall into 2 category:
-[A]-Allow device to directly map and control another device command
-    queue.
+The common case will be a vma created by userspace device driver
+that is then share to another userspace device driver which call
+in its kernel device driver to map that vma.
 
-[B]-Allow device to access another device memory without disrupting
-    the other device computation.
+The vma does not need to have any valid CPU mapping so that only
+peer to peer device might access its content. Or it could have
+valid CPU mapping too in that case it should point to same memory
+for consistency.
 
-Corresponding workloads:
+Note that peer to peer mapping is highly platform and device
+dependent and it might not work in all the cases. However we do
+expect supports for this to grow on more hardware platform.
 
-[1]-Network device directly access an control a block device command
-    queue so that it can do storage access without involving the CPU.
-    This fall into [A]
-[2]-Accelerator device doing heavy computation and network device is
-    monitoring progress. Direct accelerator's memory access by the
-    network device avoid the need to use much slower system memory.
-    This fall into [B].
-[3]-Accelerator device doing heavy computation and network device is
-    streaming out the result. This avoid the need to first bounce the
-    result through system memory (it saves both system memory and
-    bandwidth). This fall into [B].
-[4]-Chaining device computation. For instance a camera device take a
-    picture, stream it to a color correction device that stream it
-    to final memory. This fall into [A and B].
+This patch only adds new call backs to vm_operations_struct bulk
+of code light within common bus driver (like pci) and device
+driver (both the exporting and importing device).
 
-People have more ideas on how to use this than i can list here. The
-intention of this patchset is to provide the means to achieve those
-and much more.
+Current design mandate that the importer must obey mmu_notifier
+and invalidate any peer to peer mapping anytime a notification
+of invalidation happens for a range that have been peer to peer
+mapped. This allows exporter device to easily invalidate mapping
+for any importer device.
 
-I have done a testing using nouveau and Mellanox mlx5 where the mlx5
-device can directly access GPU memory [1]. I intend to use this inside
-nouveau and help porting AMD ROCm RDMA to use this [2]. I believe
-other people have express interest in working on using this with
-network device and block device.
-
-From implementation point of view this just add 2 new call back to
-vm_operations struct (for special device vma support) and 2 new call
-back to HMM device memory structure for HMM device memory support.
-
-For now it needs IOMMU off with ACS disabled and for both device to
-be on same PCIE sub-tree (can not cross root complex). However the
-intention here is different from some other peer to peer work in that
-we do want to support IOMMU and are fine with going through the root
-complex in that case. In other words, the bandwidth advantage of
-avoiding the root complex is of less importance than the programming
-model for the feature. We do actualy expect that this will be use
-mostly with IOMMU enabled and thus with having to go through the root
-bridge.
-
-Another difference from other p2p solution is that we do require that
-the importing device abide to mmu notifier invalidation so that the
-exporting device can always invalidate a mapping at any point in time.
-For this reasons we do not need a struct page for the device memory.
-
-Also in all the cases the policy and final decision on wether to map
-or not is solely under the control of the exporting device.
-
-Finaly the device memory might not even be map to the CPU and thus
-we have to go through the exporting device driver to get the physical
-address at which the memory is accessible.
-
-The core change are minimal (adding new call backs to some struct).
-IOMMU support will need little change too. Most of the code is in
-driver to implement export policy and BAR space management. Very gross
-playground with IOMMU support in [3] (top 3 patches).
-
-Cheers,
-Jérôme
-
-[1] https://cgit.freedesktop.org/~glisse/linux/log/?h=hmm-p2p
-[2] https://github.com/RadeonOpenCompute/ROCnRDMA
-[3] https://cgit.freedesktop.org/~glisse/linux/log/?h=wip-hmm-p2p
-
+Signed-off-by: Jérôme Glisse <jglisse@redhat.com>
 Cc: Logan Gunthorpe <logang@deltatee.com>
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Cc: Rafael J. Wysocki <rafael@kernel.org>
@@ -144,6 +94,7 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Christian Koenig <christian.koenig@amd.com>
 Cc: Felix Kuehling <Felix.Kuehling@amd.com>
 Cc: Jason Gunthorpe <jgg@mellanox.com>
+Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Cc: dri-devel@lists.freedesktop.org
 Cc: Christoph Hellwig <hch@lst.de>
@@ -151,23 +102,59 @@ Cc: Marek Szyprowski <m.szyprowski@samsung.com>
 Cc: Robin Murphy <robin.murphy@arm.com>
 Cc: Joerg Roedel <jroedel@suse.de>
 Cc: iommu@lists.linux-foundation.org
+---
+ include/linux/mm.h | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-Jérôme Glisse (5):
-  pci/p2p: add a function to test peer to peer capability
-  drivers/base: add a function to test peer to peer capability
-  mm/vma: add support for peer to peer to device vma
-  mm/hmm: add support for peer to peer to HMM device memory
-  mm/hmm: add support for peer to peer to special device vma
-
- drivers/base/core.c        |  20 ++++
- drivers/pci/p2pdma.c       |  27 +++++
- include/linux/device.h     |   1 +
- include/linux/hmm.h        |  53 +++++++++
- include/linux/mm.h         |  38 +++++++
- include/linux/pci-p2pdma.h |   6 +
- mm/hmm.c                   | 219 ++++++++++++++++++++++++++++++-------
- 7 files changed, 325 insertions(+), 39 deletions(-)
-
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 80bb6408fe73..1bd60a90e575 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -429,6 +429,44 @@ struct vm_operations_struct {
+ 			pgoff_t start_pgoff, pgoff_t end_pgoff);
+ 	unsigned long (*pagesize)(struct vm_area_struct * area);
+ 
++	/*
++	 * Optional for device driver that want to allow peer to peer (p2p)
++	 * mapping of their vma (which can be back by some device memory) to
++	 * another device.
++	 *
++	 * Note that the exporting device driver might not have map anything
++	 * inside the vma for the CPU but might still want to allow a peer
++	 * device to access the range of memory corresponding to a range in
++	 * that vma.
++	 *
++	 * FOR PREDICTABILITY IF DRIVER SUCCESSFULY MAP A RANGE ONCE FOR A
++	 * DEVICE THEN FURTHER MAPPING OF THE SAME IF THE VMA IS STILL VALID
++	 * SHOULD ALSO BE SUCCESSFUL. Following this rule allow the importing
++	 * device to map once during setup and report any failure at that time
++	 * to the userspace. Further mapping of the same range might happen
++	 * after mmu notifier invalidation over the range. The exporting device
++	 * can use this to move things around (defrag BAR space for instance)
++	 * or do other similar task.
++	 *
++	 * IMPORTER MUST OBEY mmu_notifier NOTIFICATION AND CALL p2p_unmap()
++	 * WHEN A NOTIFIER IS CALL FOR THE RANGE ! THIS CAN HAPPEN AT ANY
++	 * POINT IN TIME WITH NO LOCK HELD.
++	 *
++	 * In below function, the device argument is the importing device,
++	 * the exporting device is the device to which the vma belongs.
++	 */
++	long (*p2p_map)(struct vm_area_struct *vma,
++			struct device *device,
++			unsigned long start,
++			unsigned long end,
++			dma_addr_t *pa,
++			bool write);
++	long (*p2p_unmap)(struct vm_area_struct *vma,
++			  struct device *device,
++			  unsigned long start,
++			  unsigned long end,
++			  dma_addr_t *pa);
++
+ 	/* notification that a previously read-only page is about to become
+ 	 * writable, if an error is returned it will cause a SIGBUS */
+ 	vm_fault_t (*page_mkwrite)(struct vm_fault *vmf);
 -- 
 2.17.2
 
