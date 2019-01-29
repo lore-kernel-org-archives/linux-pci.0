@@ -2,286 +2,156 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 338BEC169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:02:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D780DC169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E759921848
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:02:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548802952;
-	bh=Y1Y2Nor0CraNdmmai6dyx3yog3bOMAUEZs+2FAQ7qkg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=K93Z8mRLlBnXSY77xyYWLB0HhK2OdrgY/FLUw0ZKKPEKElEypuzgclrxpR0rT0e4W
-	 Zs5zC+XkbfrcsDg6xcDhTujl83rBss964kca1AAz6UXQvR4yyZvy5aUtFVdvJRInDM
-	 A41doBSL77Vc+dHWm3WhbrMoAzZHEk8LwzLSMgDE=
+	by mail.kernel.org (Postfix) with ESMTP id 985C12147A
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:03:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="Y9s1WZWe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728265AbfA2XCb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 18:02:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60884 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728253AbfA2XCb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 18:02:31 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CCB702175B;
-        Tue, 29 Jan 2019 23:02:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548802949;
-        bh=Y1Y2Nor0CraNdmmai6dyx3yog3bOMAUEZs+2FAQ7qkg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cWhIb6AXjjcHc7CK8oLyXz/zfBZlFYRy+Scu1UuRaZaD97LGA9jG598QP28a1xF4f
-         6ojGYNqpV8ecuf13M6JAQg7prPgLOX8yNSfNQRP93lbkh//xn6/N95sJJI56IbwWW9
-         ZzyiDR64nluqg4qQSrkEXxYrpaINTla4wcH1CqVk=
-Date:   Tue, 29 Jan 2019 17:02:26 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     linux-pci@vger.kernel.org, xuyandong <xuyandong2@huawei.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Jesse Barnes <jbarnes@virtuousgeek.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Ofer Hayut <ofer@lightbitslabs.com>,
-        Roy Shterman <roys@lightbitslabs.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Probe bridge window attributes once at
- enumeration-time
-Message-ID: <20190129230225.GF91506@google.com>
-References: <154818377425.41851.650909794935936003.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20190129224333.GE91506@google.com>
- <20190129174504-mutt-send-email-mst@kernel.org>
+        id S1727687AbfA2XDI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 18:03:08 -0500
+Received: from mail-eopbgr00074.outbound.protection.outlook.com ([40.107.0.74]:35872
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728224AbfA2XDI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 18:03:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FRCEhY1aVU7aCRk7gwI5XUlpl7fXWIkzBIjSfI9zNgc=;
+ b=Y9s1WZWeFidSPQoPs8EySuRkQyoFVSXWCyVpjyUbeb5XlMbk1aZWnfsH8WELw8JmAj7ti8Nascx2OjJNNPGhd5MGxir6F+n4Ln5SJQ2JpTelV5aSet3v2IrS1dzQ2bZ+HqNmgmGQ1WIfYtr9mvuD7cDg+WyCAqbjgaqyKmlL2hk=
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
+ DBBPR05MB6587.eurprd05.prod.outlook.com (20.179.44.86) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1558.21; Tue, 29 Jan 2019 23:02:25 +0000
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Tue, 29 Jan 2019
+ 23:02:25 +0000
+From:   Jason Gunthorpe <jgg@mellanox.com>
+To:     Jerome Glisse <jglisse@redhat.com>
+CC:     Logan Gunthorpe <logang@deltatee.com>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAABQ6AgAAJYICAAAV0AIAAIHwA
+Date:   Tue, 29 Jan 2019 23:02:25 +0000
+Message-ID: <20190129224016.GD4713@mellanox.com>
+References: <20190129174728.6430-1-jglisse@redhat.com>
+ <20190129174728.6430-4-jglisse@redhat.com>
+ <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
+ <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
+ <20190129195055.GH3176@redhat.com> <20190129202429.GL10108@mellanox.com>
+ <20190129204359.GM3176@redhat.com>
+In-Reply-To: <20190129204359.GM3176@redhat.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: MWHPR02CA0028.namprd02.prod.outlook.com
+ (2603:10b6:301:60::17) To DBBPR05MB6426.eurprd05.prod.outlook.com
+ (2603:10a6:10:c9::16)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=jgg@mellanox.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [64.141.16.251]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;DBBPR05MB6587;6:WtWYP2bPjOw7uCYqevyGXvuXPqGrqF+j+zhPWiYSF5nTPElvy+YBHxIOmi1rgYGZb6S8tYOhZd14g1MdGuHhL16eCPE7n15EG676EVmdUXPrxdbL9SA3wUSTUqYFtEweep1x0rC3MXVa6TmbznAgBS4C8AI0CMmHt20nngy9fMKAqCslvqkzJMk0mBc9j+WrgTDX0xPGQBk3/vQSKjK7lZa+J6D5qcBBf2sbPUQu84ErkhfHhBlE4lvVAFyKM3GTE12O62R94j9pYwlm7XtWKauyQwjUUZqnQAphM2fYkzllCtwWb7X2dqZGFI/giAfqaN8HEMBDnH4Mzm0HX8QAbSbEbmafxRCjiwjh1E2y7aa+5DTpu25ifCXx+bEpjI9Pd/sgV6Rqki7SJJCfZnhpzEpRi1eo4fsLkf00mFhfIUiVfnxk7CWv7BEXk4zvvutqW0QnNiHV+r/4NOmSyQ/MuQ==;5:76jjAcaKJ4Hp3sr6+v/a1r3aAdRDS78F/qxqk6J9Y1D+EEFlxlEoi4HxG8R/r6/edwkLXBb9tilQzVJgbdfDcJhKn6W7p3TliaUtQcWsnFv6YwZ3uF123tmnjLHPTonbLYAJZjJ7STwrNiR9nVQsglz/edKO6Bvs6jeovRZ46GV6jWZCGoSLyU8E5vPds8GY64C8IhxWUBaI3eQjeBF8OQ==;7:zqulXEzKuHiKOxER43Qo6Ae/lkRzjrjsqrzA5bnFASp0o4lYGwb/6aaAFejrR9lK3JQq9oFeAy3xYUE5aNctkbkIFOB/LGNnhL+eqljFmJ+fXpWG/mcImjsYFGq6b+VElkiTqAcnr4iv8szU97OgaA==
+x-ms-office365-filtering-correlation-id: ed2da41e-f6b3-4b49-da30-08d6863dd560
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6587;
+x-ms-traffictypediagnostic: DBBPR05MB6587:
+x-microsoft-antispam-prvs: <DBBPR05MB6587E91B6D6812D5D308805ACF970@DBBPR05MB6587.eurprd05.prod.outlook.com>
+x-forefront-prvs: 093290AD39
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(346002)(376002)(39860400002)(366004)(136003)(189003)(199004)(14454004)(54906003)(99286004)(93886005)(6512007)(6486002)(105586002)(106356001)(97736004)(3846002)(66066001)(76176011)(52116002)(7416002)(6436002)(316002)(6116002)(2906002)(256004)(86362001)(36756003)(217873002)(33656002)(6246003)(7736002)(53936002)(4326008)(6916009)(305945005)(8676002)(81156014)(8936002)(81166006)(229853002)(478600001)(2616005)(186003)(486006)(11346002)(386003)(1076003)(476003)(446003)(6506007)(26005)(25786009)(68736007)(71200400001)(71190400001)(102836004);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6587;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: mellanox.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: QnhCELgnzfgkudITzWw8uj1nwD/JAsk4OgZeB8+0Zh1dK8nsbeBJ6IjY5OYb73NGXQkaiZzHbXD92B5vh+5Y59AX6EAczoRyr4oO5gQ/g3+FoWn4ObTm/kN7sp6q474g5XoDW62ExCYqqi9UdhJN5Ryrs9h14f6kEbTrdQZdB0/vpkLOWvzdjueFyJ0VC8Wkm7+vJoz8Ojmu2Fq51OymegoanfCW+VjLIljBap+Gs5MEJkyDaJT4qTzL8OtaYhpjIdTe1BTGo8a+MNNiELuf+znQjHMkGrDpJPelL3iPbPjYM7IvGESuk5EvWnnyosNiBXJVPMnaPpV2/kj+yd4Y/GeXaH2izP24BbeyZlCoxJeYXJ8uKHnjLS++JprB2Yl76fm82HWc7A9E8Wts+JHQRHUuLIgfXfUDuptgVk1mHww=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <80A32BC881EDF545A23BE7BA9D3E7E68@eurprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190129174504-mutt-send-email-mst@kernel.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: Mellanox.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ed2da41e-f6b3-4b49-da30-08d6863dd560
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2019 23:02:25.0505
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6587
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 05:47:32PM -0500, Michael S. Tsirkin wrote:
-> On Tue, Jan 29, 2019 at 04:43:33PM -0600, Bjorn Helgaas wrote:
-> > On Tue, Jan 22, 2019 at 01:02:54PM -0600, Bjorn Helgaas wrote:
-> > > From: Bjorn Helgaas <bhelgaas@google.com>
-> > > 
-> > > pci_bridge_check_ranges() determines whether a bridge supports the optional
-> > > I/O and prefetchable memory windows and sets the flag bits in the bridge
-> > > resources.  This *could* be done once during enumeration except that the
-> > > resource allocation code completely clears the flag bits, e.g., in the
-> > > pci_assign_unassigned_bridge_resources() path.
-> > > 
-> > > The problem with pci_bridge_check_ranges() in the resource allocation path
-> > > is that we may allocate resources after devices have been claimed by
-> > > drivers, and pci_bridge_check_ranges() *changes* the window registers to
-> > > determine whether they're writable.  This may break concurrent accesses to
-> > > devices behind the bridge.
-> > > 
-> > > Add a new pci_read_bridge_windows() to determine whether a bridge supports
-> > > the optional windows, call it once during enumeration, remember the
-> > > results, and change pci_bridge_check_ranges() so it doesn't touch the
-> > > bridge windows but sets the flag bits based on those remembered results.
-> > > 
-> > > Link: https://lore.kernel.org/linux-pci/1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com
-> > > Link: https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
-> > > Reported-by: xuyandong <xuyandong2@huawei.com>
-> > > Tested-by: xuyandong <xuyandong2@huawei.com>
-> > > Cc: Sagi Grimberg <sagi@grimberg.me>
-> > > Cc: Ofer Hayut <ofer@lightbitslabs.com>
-> > > Cc: Roy Shterman <roys@lightbitslabs.com>
-> > > Cc: Keith Busch <keith.busch@intel.com>
-> > > Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> > 
-> > Applied to pci/enumeration for v5.1.
-> > 
-> > This is fairly simple in concept, but doesn't meet the letter of the
-> > restrictions in Documentation/process/stable-kernel-rules.rst, so I
-> > didn't tag it for stable.
-> > 
-> > Is there a compelling argument to mark it for stable?
-> 
-> Well it's needed downstream.
-> It's a bit above 100 lines with context. Is this what you mean?
+On Tue, Jan 29, 2019 at 03:44:00PM -0500, Jerome Glisse wrote:
 
-Yep, I should have been explicit about that.
+> > But this API doesn't seem to offer any control - I thought that
+> > control was all coming from the mm/hmm notifiers triggering p2p_unmaps?
+>=20
+> The control is within the driver implementation of those callbacks.=20
 
-> If yes how about using my patch for stable as an alternative?
-> The rules allow for equivalent patches.
+Seems like what you mean by control is 'the exporter gets to choose
+the physical address at the instant of map' - which seems reasonable
+for GPU.
 
-Well, yes, that would be a possibility.
 
-I would rather develop an argument for marking *this* patch for
-stable.  Even though it is technically too large, I think we could
-make it work if we have compelling reasons.
+> will only allow p2p map to succeed for objects that have been tagged by t=
+he
+> userspace in some way ie the userspace application is in control of what
+> can be map to peer device.
 
-Those would need to be fleshed out a little more than "needed
-downstream" -- something about the scenarios where this happens, what
-the serious problem is, etc.
+I would have thought this means the VMA for the object is created
+without the map/unmap ops? Or are GPU objects and VMAs unrelated?
 
-The *ideal* thing would be to have an actual bugzilla.kernel.org
-report of the problem with a way to reproduce it and dmesg
-illustrating the problem.
+> For moving things around after a successful p2p_map yes the exporting
+> device have to call for instance zap_vma_ptes() or something
+> similar.
 
-> > > ---
-> > >  drivers/pci/probe.c     |   52 +++++++++++++++++++++++++++++++++++++++++++++++
-> > >  drivers/pci/setup-bus.c |   45 ++++-------------------------------------
-> > >  include/linux/pci.h     |    3 +++
-> > >  3 files changed, 59 insertions(+), 41 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index 257b9f6f2ebb..2ef8b954c65a 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -348,6 +348,57 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
-> > >  	}
-> > >  }
-> > >  
-> > > +static void pci_read_bridge_windows(struct pci_dev *bridge)
-> > > +{
-> > > +	u16 io;
-> > > +	u32 pmem, tmp;
-> > > +
-> > > +	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > > +	if (!io) {
-> > > +		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> > > +		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > > +		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> > > +	}
-> > > +	if (io)
-> > > +		bridge->io_window = 1;
-> > > +
-> > > +	/*
-> > > +	 * DECchip 21050 pass 2 errata: the bridge may miss an address
-> > > +	 * disconnect boundary by one PCI data phase.  Workaround: do not
-> > > +	 * use prefetching on this device.
-> > > +	 */
-> > > +	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
-> > > +		return;
-> > > +
-> > > +	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > > +	if (!pmem) {
-> > > +		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
-> > > +					       0xffe0fff0);
-> > > +		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > > +		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
-> > > +	}
-> > > +	if (!pmem)
-> > > +		return;
-> > > +
-> > > +	bridge->pref_window = 1;
-> > > +
-> > > +	if ((pmem & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
-> > > +
-> > > +		/*
-> > > +		 * Bridge claims to have a 64-bit prefetchable memory
-> > > +		 * window; verify that the upper bits are actually
-> > > +		 * writable.
-> > > +		 */
-> > > +		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &pmem);
-> > > +		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > > +				       0xffffffff);
-> > > +		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
-> > > +		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, pmem);
-> > > +		if (tmp)
-> > > +			bridge->pref_64_window = 1;
-> > > +	}
-> > > +}
-> > > +
-> > >  static void pci_read_bridge_io(struct pci_bus *child)
-> > >  {
-> > >  	struct pci_dev *dev = child->self;
-> > > @@ -1739,6 +1790,7 @@ int pci_setup_device(struct pci_dev *dev)
-> > >  		pci_read_irq(dev);
-> > >  		dev->transparent = ((dev->class & 0xff) == 1);
-> > >  		pci_read_bases(dev, 2, PCI_ROM_ADDRESS1);
-> > > +		pci_read_bridge_windows(dev);
-> > >  		set_pcie_hotplug_bridge(dev);
-> > >  		pos = pci_find_capability(dev, PCI_CAP_ID_SSVID);
-> > >  		if (pos) {
-> > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> > > index ed960436df5e..1941bb0a6c13 100644
-> > > --- a/drivers/pci/setup-bus.c
-> > > +++ b/drivers/pci/setup-bus.c
-> > > @@ -735,58 +735,21 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
-> > >     base/limit registers must be read-only and read as 0. */
-> > >  static void pci_bridge_check_ranges(struct pci_bus *bus)
-> > >  {
-> > > -	u16 io;
-> > > -	u32 pmem;
-> > >  	struct pci_dev *bridge = bus->self;
-> > > -	struct resource *b_res;
-> > > +	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-> > >  
-> > > -	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
-> > >  	b_res[1].flags |= IORESOURCE_MEM;
-> > >  
-> > > -	pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > > -	if (!io) {
-> > > -		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
-> > > -		pci_read_config_word(bridge, PCI_IO_BASE, &io);
-> > > -		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
-> > > -	}
-> > > -	if (io)
-> > > +	if (bridge->io_window)
-> > >  		b_res[0].flags |= IORESOURCE_IO;
-> > >  
-> > > -	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
-> > > -	    disconnect boundary by one PCI data phase.
-> > > -	    Workaround: do not use prefetching on this device. */
-> > > -	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
-> > > -		return;
-> > > -
-> > > -	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > > -	if (!pmem) {
-> > > -		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
-> > > -					       0xffe0fff0);
-> > > -		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
-> > > -		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
-> > > -	}
-> > > -	if (pmem) {
-> > > +	if (bridge->pref_window) {
-> > >  		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-> > > -		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
-> > > -		    PCI_PREF_RANGE_TYPE_64) {
-> > > +		if (bridge->pref_64_window) {
-> > >  			b_res[2].flags |= IORESOURCE_MEM_64;
-> > >  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
-> > >  		}
-> > >  	}
-> > > -
-> > > -	/* double check if bridge does support 64 bit pref */
-> > > -	if (b_res[2].flags & IORESOURCE_MEM_64) {
-> > > -		u32 mem_base_hi, tmp;
-> > > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > > -					 &mem_base_hi);
-> > > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > > -					       0xffffffff);
-> > > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
-> > > -		if (!tmp)
-> > > -			b_res[2].flags &= ~IORESOURCE_MEM_64;
-> > > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
-> > > -				       mem_base_hi);
-> > > -	}
-> > >  }
-> > >  
-> > >  /* Helper function for sizing routines: find first available
-> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > index 65f1d8c2f082..40b327b814aa 100644
-> > > --- a/include/linux/pci.h
-> > > +++ b/include/linux/pci.h
-> > > @@ -373,6 +373,9 @@ struct pci_dev {
-> > >  	bool		match_driver;		/* Skip attaching driver */
-> > >  
-> > >  	unsigned int	transparent:1;		/* Subtractive decode bridge */
-> > > +	unsigned int	io_window:1;		/* Bridge has I/O window */
-> > > +	unsigned int	pref_window:1;		/* Bridge has pref mem window */
-> > > +	unsigned int	pref_64_window:1;	/* Pref mem window is 64-bit */
-> > >  	unsigned int	multifunction:1;	/* Multi-function device */
-> > >  
-> > >  	unsigned int	is_busmaster:1;		/* Is busmaster */
-> > > 
+Okay, great, RDMA needs this flow for hotplug - we zap the VMA's when
+unplugging the PCI device and we can delay the PCI unplug completion
+until all the p2p_unmaps are called...
+
+But in this case a future p2p_map will have to fail as the BAR no
+longer exists. How to handle this?
+
+> > I would think that the importing driver can assume the BAR page is
+> > kept alive until it calls unmap (presumably triggered by notifiers)?
+> >=20
+> > ie the exporting driver sees the BAR page as pinned until unmap.
+>=20
+> The intention with this patchset is that it is not pin ie the importer
+> device _must_ abide by all mmu notifier invalidations and they can
+> happen at anytime. The importing device can however re-p2p_map the
+> same range after an invalidation.
+>
+> I would like to restrict this to importer that can invalidate for
+> now because i believe all the first device to use can support the
+> invalidation.
+
+This seems reasonable (and sort of says importers not getting this
+from HMM need careful checking), was this in the comment above the
+ops?
+
+Jason
