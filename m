@@ -2,132 +2,100 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A599C282C7
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 12:08:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 534B9C169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 15:24:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9E5620882
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 12:08:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D885218AC
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 15:24:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729410AbfA2LjT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 06:39:19 -0500
-Received: from foss.arm.com ([217.140.101.70]:34732 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729404AbfA2LjS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 06:39:18 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id DA353EBD;
-        Tue, 29 Jan 2019 03:39:17 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 37ABF3F589;
-        Tue, 29 Jan 2019 03:39:15 -0800 (PST)
-Date:   Tue, 29 Jan 2019 11:39:10 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: Re: [PATCHv3 00/27] PCI: refactor Mobiveil driver and add PCIe Gen4
- driver for NXP Layerscape SoCs
-Message-ID: <20190129113910.GA7467@e107981-ln.cambridge.arm.com>
-References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+        id S1725811AbfA2PYu convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 10:24:50 -0500
+Received: from mx2.suse.de ([195.135.220.15]:55602 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725730AbfA2PYu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 10:24:50 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 4E1A3ADBC;
+        Tue, 29 Jan 2019 15:24:47 +0000 (UTC)
+Date:   Tue, 29 Jan 2019 16:24:45 +0100
+From:   Thomas Bogendoerfer <tbogendoerfer@suse.de>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        James Hogan <jhogan@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Paul Burton <paul.burton@mips.com>,
+        Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 6/7] MIPS: SGI-IP27: use generic PCI driver
+Message-Id: <20190129162445.8584b58862068c0a7693718c@suse.de>
+In-Reply-To: <20190128133215.GC744@infradead.org>
+References: <20190124174728.28812-1-tbogendoerfer@suse.de>
+        <20190124174728.28812-7-tbogendoerfer@suse.de>
+        <20190128133215.GC744@infradead.org>
+X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-suse-linux-gnu)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8BIT
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 08:08:28AM +0000, Z.q. Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> This patch set is aim to refactor the Mobiveil driver and add
-> PCIe support for NXP Layerscape series SoCs integrated Mobiveil's
-> PCIe Gen4 controller.
-> 
-> Hou Zhiqiang (27):
->   PCI: mobiveil: uniform the register accessors
->   PCI: mobiveil: format the code without function change
->   PCI: mobiveil: correct the returned error number
->   PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
->   PCI: mobiveil: correct PCI base address in MEM/IO outbound windows
->   PCI: mobiveil: replace the resource list iteration function
->   PCI: mobiveil: use WIN_NUM_0 explicitly for CFG outbound window
->   PCI: mobiveil: use the 1st inbound window for MEM inbound transactions
->   PCI: mobiveil: correct inbound/outbound window setup routines
->   PCI: mobiveil: fix the INTx process error
->   PCI: mobiveil: only fix up the Class Code field
->   PCI: mobiveil: move out the link up waiting from mobiveil_host_init
->   PCI: mobiveil: move irq chained handler setup out of DT parse
->   PCI: mobiveil: initialize Primary/Secondary/Subordinate bus number
->   dt-bindings: pci: mobiveil: change gpio_slave and apb_csr to optional
->   PCI: mobiveil: refactor Mobiveil PCIe Host Bridge IP driver
->   PCI: mobiveil: fix the checking of valid device
->   PCI: mobiveil: continue to initialize the host upon no PCIe link
->   PCI: mobiveil: disabled IB and OB windows set by bootloader
->   PCI: mobiveil: add Byte and Half-Word width register accessors
->   PCI: mobiveil: make mobiveil_host_init can be used to re-init host
->   dt-bindings: pci: Add NXP Layerscape SoCs PCIe Gen4 controller
->   PCI: mobiveil: add PCIe Gen4 RC driver for NXP Layerscape SoCs
->   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011577
->   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011451
->   arm64: dts: freescale: lx2160a: add pcie DT nodes
->   arm64: defconfig: Enable CONFIG_PCI_LAYERSCAPE_GEN4
+On Mon, 28 Jan 2019 05:32:15 -0800
+Christoph Hellwig <hch@infradead.org> wrote:
 
-Subrahmanya,
-
-Either you review this series or I will have to drop you from
-the MAINTAINERS list for this driver, I am sorry but I asked you
-before to no avail.
-
-Thanks,
-Lorenzo
-
->  .../bindings/pci/layerscape-pci-gen4.txt      |  52 ++
->  .../devicetree/bindings/pci/mobiveil-pcie.txt |   2 +
->  MAINTAINERS                                   |  10 +-
->  .../arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 163 ++++
->  arch/arm64/configs/defconfig                  |   1 +
->  drivers/pci/controller/Kconfig                |  11 +-
->  drivers/pci/controller/Makefile               |   2 +-
->  drivers/pci/controller/mobiveil/Kconfig       |  34 +
->  drivers/pci/controller/mobiveil/Makefile      |   5 +
->  .../controller/mobiveil/pci-layerscape-gen4.c | 306 +++++++
->  .../controller/mobiveil/pcie-mobiveil-host.c  | 640 +++++++++++++
->  .../controller/mobiveil/pcie-mobiveil-plat.c  |  54 ++
->  .../pci/controller/mobiveil/pcie-mobiveil.c   | 246 +++++
->  .../pci/controller/mobiveil/pcie-mobiveil.h   | 229 +++++
->  drivers/pci/controller/pcie-mobiveil.c        | 861 ------------------
->  15 files changed, 1743 insertions(+), 873 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/layerscape-pci-gen4.txt
->  create mode 100644 drivers/pci/controller/mobiveil/Kconfig
->  create mode 100644 drivers/pci/controller/mobiveil/Makefile
->  create mode 100644 drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
->  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
->  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-plat.c
->  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.c
->  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.h
->  delete mode 100644 drivers/pci/controller/pcie-mobiveil.c
+> > +#ifdef CONFIG_NUMA
+> > +int pcibus_to_node(struct pci_bus *bus)
+> > +{
+> > +	struct bridge_controller *bc = BRIDGE_CONTROLLER(bus);
+> > +
+> > +	return bc->nasid;
+> > +}
+> > +EXPORT_SYMBOL(pcibus_to_node);
+> > +#endif /* CONFIG_NUMA */
 > 
-> -- 
-> 2.17.1
+> From an abstraction point of view this doesn't really belong into
+> a bridge driver as it is a global exported function.  I guess we can
+> keep it here with a fixme comment, but we should probably move this
+> into a method call instead.
+
+or put the nodeid into the bus struct ?
+
+> > +dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
+> > +{
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct bridge_controller *bc = BRIDGE_CONTROLLER(pdev->bus);
+> > +
+> > +	return bc->baddr + paddr;
+> > +}
+> > +
+> > +phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t dma_addr)
+> > +{
+> > +	return dma_addr & ~(0xffUL << 56);
+> > +}
 > 
+> Similarly here - these are global platform-wide hooks, so having them
+> in a pci bridge driver is not the proper abstraction level.
+> 
+> Note that we could probably fix these by just switching IP27 and
+> other users of the bridge chip to use the dma_pfn_offset field
+> in struct device and stop overriding these functions.
+
+I'm all for it. I looked at the examples for using dma_pfn_offset and the
+only one coming close to usefull for me is arch/sh/drivers/pci/pcie-sh7786.c
+It overloads pcibios_bus_add_device() to set dma_pfn_offset, which doesn't
+look much nicer. What about having a dma_pfn_offset in struct pci_bus
+which all device inherit from ?
+
+Thomas.
+
+-- 
+SUSE Linux GmbH
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
