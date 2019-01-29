@@ -2,100 +2,172 @@ Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 534B9C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 15:24:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8C10C169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 17:47:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D885218AC
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 15:24:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A40AE2184D
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 17:47:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725811AbfA2PYu convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 10:24:50 -0500
-Received: from mx2.suse.de ([195.135.220.15]:55602 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725730AbfA2PYu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 10:24:50 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 4E1A3ADBC;
-        Tue, 29 Jan 2019 15:24:47 +0000 (UTC)
-Date:   Tue, 29 Jan 2019 16:24:45 +0100
-From:   Thomas Bogendoerfer <tbogendoerfer@suse.de>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        James Hogan <jhogan@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Paul Burton <paul.burton@mips.com>,
-        Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH 6/7] MIPS: SGI-IP27: use generic PCI driver
-Message-Id: <20190129162445.8584b58862068c0a7693718c@suse.de>
-In-Reply-To: <20190128133215.GC744@infradead.org>
-References: <20190124174728.28812-1-tbogendoerfer@suse.de>
-        <20190124174728.28812-7-tbogendoerfer@suse.de>
-        <20190128133215.GC744@infradead.org>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-suse-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+        id S1728674AbfA2Rrj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 12:47:39 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:39354 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728667AbfA2Rrj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 12:47:39 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id ADC1D9B308;
+        Tue, 29 Jan 2019 17:47:37 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-122-2.rdu2.redhat.com [10.10.122.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0B55B5D97E;
+        Tue, 29 Jan 2019 17:47:32 +0000 (UTC)
+From:   jglisse@redhat.com
+To:     linux-mm@kvack.org
+Cc:     linux-kernel@vger.kernel.org,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        Jason Gunthorpe <jgg@mellanox.com>, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        iommu@lists.linux-foundation.org
+Subject: [RFC PATCH 0/5] Device peer to peer (p2p) through vma
+Date:   Tue, 29 Jan 2019 12:47:23 -0500
+Message-Id: <20190129174728.6430-1-jglisse@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Tue, 29 Jan 2019 17:47:38 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 28 Jan 2019 05:32:15 -0800
-Christoph Hellwig <hch@infradead.org> wrote:
+From: Jérôme Glisse <jglisse@redhat.com>
 
-> > +#ifdef CONFIG_NUMA
-> > +int pcibus_to_node(struct pci_bus *bus)
-> > +{
-> > +	struct bridge_controller *bc = BRIDGE_CONTROLLER(bus);
-> > +
-> > +	return bc->nasid;
-> > +}
-> > +EXPORT_SYMBOL(pcibus_to_node);
-> > +#endif /* CONFIG_NUMA */
-> 
-> From an abstraction point of view this doesn't really belong into
-> a bridge driver as it is a global exported function.  I guess we can
-> keep it here with a fixme comment, but we should probably move this
-> into a method call instead.
+This patchset add support for peer to peer between device in two manner.
+First for device memory use through HMM in process regular address space
+(ie inside a regular vma that is not an mmap of device file or special
+file). Second for special vma ie mmap of a device file, in this case some
+device driver might want to allow other device to directly access memory
+use for those special vma (not that the memory might not even be map to
+CPU in this case).
 
-or put the nodeid into the bus struct ?
+They are many use cases for this they mainly fall into 2 category:
+[A]-Allow device to directly map and control another device command
+    queue.
 
-> > +dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
-> > +{
-> > +	struct pci_dev *pdev = to_pci_dev(dev);
-> > +	struct bridge_controller *bc = BRIDGE_CONTROLLER(pdev->bus);
-> > +
-> > +	return bc->baddr + paddr;
-> > +}
-> > +
-> > +phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t dma_addr)
-> > +{
-> > +	return dma_addr & ~(0xffUL << 56);
-> > +}
-> 
-> Similarly here - these are global platform-wide hooks, so having them
-> in a pci bridge driver is not the proper abstraction level.
-> 
-> Note that we could probably fix these by just switching IP27 and
-> other users of the bridge chip to use the dma_pfn_offset field
-> in struct device and stop overriding these functions.
+[B]-Allow device to access another device memory without disrupting
+    the other device computation.
 
-I'm all for it. I looked at the examples for using dma_pfn_offset and the
-only one coming close to usefull for me is arch/sh/drivers/pci/pcie-sh7786.c
-It overloads pcibios_bus_add_device() to set dma_pfn_offset, which doesn't
-look much nicer. What about having a dma_pfn_offset in struct pci_bus
-which all device inherit from ?
+Corresponding workloads:
 
-Thomas.
+[1]-Network device directly access an control a block device command
+    queue so that it can do storage access without involving the CPU.
+    This fall into [A]
+[2]-Accelerator device doing heavy computation and network device is
+    monitoring progress. Direct accelerator's memory access by the
+    network device avoid the need to use much slower system memory.
+    This fall into [B].
+[3]-Accelerator device doing heavy computation and network device is
+    streaming out the result. This avoid the need to first bounce the
+    result through system memory (it saves both system memory and
+    bandwidth). This fall into [B].
+[4]-Chaining device computation. For instance a camera device take a
+    picture, stream it to a color correction device that stream it
+    to final memory. This fall into [A and B].
+
+People have more ideas on how to use this than i can list here. The
+intention of this patchset is to provide the means to achieve those
+and much more.
+
+I have done a testing using nouveau and Mellanox mlx5 where the mlx5
+device can directly access GPU memory [1]. I intend to use this inside
+nouveau and help porting AMD ROCm RDMA to use this [2]. I believe
+other people have express interest in working on using this with
+network device and block device.
+
+From implementation point of view this just add 2 new call back to
+vm_operations struct (for special device vma support) and 2 new call
+back to HMM device memory structure for HMM device memory support.
+
+For now it needs IOMMU off with ACS disabled and for both device to
+be on same PCIE sub-tree (can not cross root complex). However the
+intention here is different from some other peer to peer work in that
+we do want to support IOMMU and are fine with going through the root
+complex in that case. In other words, the bandwidth advantage of
+avoiding the root complex is of less importance than the programming
+model for the feature. We do actualy expect that this will be use
+mostly with IOMMU enabled and thus with having to go through the root
+bridge.
+
+Another difference from other p2p solution is that we do require that
+the importing device abide to mmu notifier invalidation so that the
+exporting device can always invalidate a mapping at any point in time.
+For this reasons we do not need a struct page for the device memory.
+
+Also in all the cases the policy and final decision on wether to map
+or not is solely under the control of the exporting device.
+
+Finaly the device memory might not even be map to the CPU and thus
+we have to go through the exporting device driver to get the physical
+address at which the memory is accessible.
+
+The core change are minimal (adding new call backs to some struct).
+IOMMU support will need little change too. Most of the code is in
+driver to implement export policy and BAR space management. Very gross
+playground with IOMMU support in [3] (top 3 patches).
+
+Cheers,
+Jérôme
+
+[1] https://cgit.freedesktop.org/~glisse/linux/log/?h=hmm-p2p
+[2] https://github.com/RadeonOpenCompute/ROCnRDMA
+[3] https://cgit.freedesktop.org/~glisse/linux/log/?h=wip-hmm-p2p
+
+Cc: Logan Gunthorpe <logang@deltatee.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Rafael J. Wysocki <rafael@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Christian Koenig <christian.koenig@amd.com>
+Cc: Felix Kuehling <Felix.Kuehling@amd.com>
+Cc: Jason Gunthorpe <jgg@mellanox.com>
+Cc: linux-pci@vger.kernel.org
+Cc: dri-devel@lists.freedesktop.org
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <jroedel@suse.de>
+Cc: iommu@lists.linux-foundation.org
+
+Jérôme Glisse (5):
+  pci/p2p: add a function to test peer to peer capability
+  drivers/base: add a function to test peer to peer capability
+  mm/vma: add support for peer to peer to device vma
+  mm/hmm: add support for peer to peer to HMM device memory
+  mm/hmm: add support for peer to peer to special device vma
+
+ drivers/base/core.c        |  20 ++++
+ drivers/pci/p2pdma.c       |  27 +++++
+ include/linux/device.h     |   1 +
+ include/linux/hmm.h        |  53 +++++++++
+ include/linux/mm.h         |  38 +++++++
+ include/linux/pci-p2pdma.h |   6 +
+ mm/hmm.c                   | 219 ++++++++++++++++++++++++++++++-------
+ 7 files changed, 325 insertions(+), 39 deletions(-)
 
 -- 
-SUSE Linux GmbH
-GF: Felix Imend�rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N�rnberg)
+2.17.2
+
