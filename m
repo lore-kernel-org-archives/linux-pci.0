@@ -5,54 +5,53 @@ X-Spam-Level:
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5419EC282C7
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 20:40:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F66AC169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 20:43:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AA892087E
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 20:40:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D222F20989
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 20:43:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727070AbfA2UkA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 15:40:00 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:59960 "EHLO ale.deltatee.com"
+        id S1728555AbfA2UnP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 15:43:15 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:60028 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726945AbfA2UkA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 15:40:00 -0500
+        id S1726945AbfA2UnP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 15:43:15 -0500
 Received: from guinness.priv.deltatee.com ([172.16.1.162])
         by ale.deltatee.com with esmtp (Exim 4.89)
         (envelope-from <logang@deltatee.com>)
-        id 1goaAh-0006hr-4u; Tue, 29 Jan 2019 13:39:51 -0700
-To:     Jason Gunthorpe <jgg@mellanox.com>,
-        Jerome Glisse <jglisse@redhat.com>
-Cc:     "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        id 1goaDn-0006jl-FD; Tue, 29 Jan 2019 13:43:04 -0700
+To:     Jerome Glisse <jglisse@redhat.com>
+Cc:     linux-mm@kvack.org, linux-kernel@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         "Rafael J . Wysocki" <rafael@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Christian Koenig <christian.koenig@amd.com>,
         Felix Kuehling <Felix.Kuehling@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Christoph Hellwig <hch@lst.de>,
+        Jason Gunthorpe <jgg@mellanox.com>, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, Christoph Hellwig <hch@lst.de>,
         Marek Szyprowski <m.szyprowski@samsung.com>,
         Robin Murphy <robin.murphy@arm.com>,
         Joerg Roedel <jroedel@suse.de>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+        iommu@lists.linux-foundation.org
 References: <20190129174728.6430-1-jglisse@redhat.com>
  <20190129174728.6430-4-jglisse@redhat.com>
  <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
- <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
+ <20190129191120.GE3176@redhat.com>
+ <c2c02af7-1d6f-e54f-c7fb-99c5b7776014@deltatee.com>
+ <20190129194418.GG3176@redhat.com>
 From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
-Date:   Tue, 29 Jan 2019 13:39:49 -0700
+Message-ID: <b3264844-2c04-6c34-f1e7-6b3bf9849a75@deltatee.com>
+Date:   Tue, 29 Jan 2019 13:43:02 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <20190129193250.GK10108@mellanox.com>
+In-Reply-To: <20190129194418.GG3176@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
 X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: iommu@lists.linux-foundation.org, jroedel@suse.de, robin.murphy@arm.com, m.szyprowski@samsung.com, hch@lst.de, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, Felix.Kuehling@amd.com, christian.koenig@amd.com, bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, jglisse@redhat.com, jgg@mellanox.com
+X-SA-Exim-Rcpt-To: iommu@lists.linux-foundation.org, jroedel@suse.de, robin.murphy@arm.com, m.szyprowski@samsung.com, hch@lst.de, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, jgg@mellanox.com, Felix.Kuehling@amd.com, christian.koenig@amd.com, bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, jglisse@redhat.com
 X-SA-Exim-Mail-From: logang@deltatee.com
 Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
@@ -65,35 +64,16 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 
 
-On 2019-01-29 12:32 p.m., Jason Gunthorpe wrote:
-> Jerome, I think it would be nice to have a helper scheme - I think the
-> simple case would be simple remapping of PCI BAR memory, so if we
-> could have, say something like:
+On 2019-01-29 12:44 p.m., Jerome Glisse wrote:
+>> I'd suggest [1] should be a part of the patchset so we can actually see
+>> a user of the stuff you're adding.
 > 
-> static const struct vm_operations_struct my_ops {
->   .p2p_map = p2p_ioremap_map_op,
->   .p2p_unmap = p2p_ioremap_unmap_op,
-> }
-> 
-> struct ioremap_data {
->   [..]
-> }
-> 
-> fops_mmap() {
->    vma->private_data = &driver_priv->ioremap_data;
->    return p2p_ioremap_device_memory(vma, exporting_device, [..]);
-> }
+> I did not wanted to clutter patchset with device driver specific usage
+> of this. As the API can be reason about in abstract way.
 
-This is roughly what I was expecting, except I don't see exactly what
-the p2p_map and p2p_unmap callbacks are for. The importing driver should
-see p2pdma/hmm struct pages and use the appropriate function to map
-them. It shouldn't be the responsibility of the exporting driver to
-implement the mapping. And I don't think we should have 'special' vma's
-for this (though we may need something to ensure we don't get mapping
-requests mixed with different types of pages...).
-
-I also figured there'd be a fault version of p2p_ioremap_device_memory()
-for when you are mapping P2P memory and you want to assign the pages
-lazily. Though, this can come later when someone wants to implement that.
+It's hard to reason about an interface when you can't see what all the
+layers want to do with it. Most maintainers (I'd hope) would certainly
+never merge code that has no callers, and for much the same reason, I'd
+rather not review patches that don't have real use case examples.
 
 Logan
