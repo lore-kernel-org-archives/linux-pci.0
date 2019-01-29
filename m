@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A218DC169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C86BAC169C4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:09:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 689A6217F5
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:09:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 826642177E
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 08:09:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="kWo7mVpG"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="c68d5zIs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726994AbfA2IJS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 03:09:18 -0500
-Received: from mail-eopbgr60062.outbound.protection.outlook.com ([40.107.6.62]:22304
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
+        id S1727762AbfA2IJb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 03:09:31 -0500
+Received: from mail-eopbgr30044.outbound.protection.outlook.com ([40.107.3.44]:27072
+        "EHLO EUR03-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726797AbfA2IJR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 03:09:17 -0500
+        id S1725775AbfA2IJa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 03:09:30 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=P5BAdkEhrJMH8+dv8iY2cFT6nVwZnqdMYoU4MGgc9QE=;
- b=kWo7mVpGgjIcKatGv3ulejT2Lggxwno45mPbksRXnJsqVLrnwrRXJgnPl7Gsh/DKXHho9p4Fuhpws85fyUoP1AbQ/M9VoXL/QA9Zhrs4GK+bSwGqCF7cRg9PcRpBbl5Ss3B70cFAMrmfWBWQHj6lHmxw9Alo+k6E6s9Ub0UozrY=
+ bh=8cWrK/UuCkZ80PWgnXNddESJ6NjSh/GrdJ4bMZl8e44=;
+ b=c68d5zIswGyX0nmpfWk25MMDDPGv85IGCjH4aEVqnZTlud0vUoaaqBskpJjFA0KYmkQOEeiIM1ZNmKdT2+N44FO3TnwS4q8JAHRKY2o3kOPfk4pYGa5j9agZnvyphb5dwtAX0P0gxs4SU/gGzoCGVNM5uICaX/KXykhfKPCc9uk=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.3.19) by
- AM6PR04MB5784.eurprd04.prod.outlook.com (20.179.2.83) with Microsoft SMTP
+ AM6PR04MB4774.eurprd04.prod.outlook.com (20.177.32.215) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1558.17; Tue, 29 Jan 2019 08:09:13 +0000
+ 15.20.1558.21; Tue, 29 Jan 2019 08:09:26 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::9c0:e3aa:b41f:9504]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::9c0:e3aa:b41f:9504%3]) with mapi id 15.20.1558.023; Tue, 29 Jan 2019
- 08:09:13 +0000
+ 08:09:26 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -53,13 +53,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCHv3 07/27] PCI: mobiveil: use WIN_NUM_0 explicitly for CFG
- outbound window
-Thread-Topic: [PATCHv3 07/27] PCI: mobiveil: use WIN_NUM_0 explicitly for CFG
- outbound window
-Thread-Index: AQHUt6nrKxupMxkXJUiatcGFBiTdig==
-Date:   Tue, 29 Jan 2019 08:09:12 +0000
-Message-ID: <20190129080926.36773-8-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv3 09/27] PCI: mobiveil: correct inbound/outbound window setup
+ routines
+Thread-Topic: [PATCHv3 09/27] PCI: mobiveil: correct inbound/outbound window
+ setup routines
+Thread-Index: AQHUt6nzj33tdIACb0S6/SobpMFmRg==
+Date:   Tue, 29 Jan 2019 08:09:25 +0000
+Message-ID: <20190129080926.36773-10-Zhiqiang.Hou@nxp.com>
 References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -75,28 +75,28 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;AM6PR04MB5784;6:euk6gOArvVPiaE9GrBUqKpEsw2E85739cEmV23jNgrmKRJ8DErI5dpNF6SQ9HnueTWGUoCthbJPu1c9Y/q7BZ3nn8QFHgOSLLsMm6D54cLq0eWLdIVYdzq7gvqsFefpRdN0Xa9Q0dDuDatlTGbLesOvAIu9FYD7O2aaSguHreNVO/FS6liNP2rluEYOraShT+IuC//TsVFaKR8UyfwtwcperGHAHsFQmDlvhU+uaAtafdwC8DvbOCFfYRSfsgemB0cC5//RPf0EUW4wKnxPiiJX+Kgq6xTeg3/y3c2ZUG+YzIOZIPvCc9bP4ScUubNOQzK/41WMxvnO61L57/y7+AZAMv3eF+G60SKCMxALAtICPF2jJoG3cn38WT16qCSfyYYGDa8U4CXA5PZTSabTxZMx9o5uyJRcOX+OzF1vxXZMbg7ckLeDKpUQ+peUXsiZu4FcV5/q3WaLrilPgBF2xdw==;5:zl0WcdeZ6BmyBsXCBCw2MiZuY/2o/gJFpDDhCp6YBD21fznFTW5JTGuAPc54bs9CPD6TbyHyDGXaShPyBDlaan6Z8H5yLrlVqdb4B9NmTOJKhqtdwRTzl7XvNf6LNYq+0Tbemt3wkaeM1Y939tJ8wuvQgMpSsYtLMX/X34EnQF2NXrg7e716khndisDltDUncAcMy1bzAN5D1Ev/DS9KjA==;7:x8WSSiA+Y7irQUXxE+mO3BeU7sAglk30o8Q16buhQnM/yz5z35hVK4AdTyU25ODax9wC0S7ZQDTYJRaAOiev8Pr4MPsfaIZ3/XLSoFihYDibM/nlQZy9XIWFSx0f/g2OKdCNLTQlzg6ep9AdzUFkqw==
-x-ms-office365-filtering-correlation-id: 3bedcdf9-7bee-491f-a347-08d685c10dbd
+x-microsoft-exchange-diagnostics: 1;AM6PR04MB4774;6:i9hHvpx+0roaQ2C+1hCIYSsAp+v4J9I8J/ZpAnEPIZGHGL3w4oAfSdeGHtJBhOFAbX5DBcSk/iAq8FakMXCHF5zKo/vw6hRFXA19mtFzAzzO/kvoToOFZuLAgjDkxHzfy/pTB05ZD/u7ZiumBaACk5ihvat2Sj/HrKBmIFd0aTAMdnCj2vNRN+wWBwtNADdKRi3Su40VFhYmDV6YSnFK9Twe/g4FJWx6Y4RzcO1UyoNEN0owAWVI4dpYcGYvmuKmPohUyyyVGgHd3af96fs12INzRqkV35dJL4pRE/zLfviVsb+6gT086ezT9mpQHnsurkJN/G4wq2a60riKf6+zIf7tBC9I5VzmwCXToajbjRGJbOQasY3t4JDBEAYNw7qXqN3tcFNhzno8ZwMeJux1DrKmyjkftD5PkUKzdcCQ3ix9TVq3ZpgXw8qiETKyQQzof4kwXGJKF8XiNAt8jxg74g==;5:EjxQDR7WRqT0JJc03i6rYuh/ieYiKIDYBOBo35eF+WXc9R0KAVg1m7aF0UZ0m8M0zUG3gaNIteZ0FYHiKnOSobiLUuuRKoJ/4JiV9h0DKL4wAtzLYPHOSIiPQtC+tHV/wvWxGr0Ls2Yu2KazWYEVuJjw81kHEa5DZLWXwXSYhMaruFGKzTTFgwDlNHS4fYrwo8Zy2agN5ee0qHyLeH591A==;7:VyHzhMwl+irUCRwFxNviUjY8sbeXBGw33oVnHRpYCGCDoE9RrRE/HwaMPR4QKoWpRjqhRICo1Sqb0KZI/jkKZeCTZXbbrWBVNh7emF5KsCFSo0VqeIgTY5+lGZgKWLEbSKuLdjVLGNBB8Ldf+SB2VQ==
+x-ms-office365-filtering-correlation-id: ddee93d1-2fda-4e3e-c40c-08d685c11592
 x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB5784;
-x-ms-traffictypediagnostic: AM6PR04MB5784:
-x-microsoft-antispam-prvs: <AM6PR04MB5784466B51C2C246BC5B546984970@AM6PR04MB5784.eurprd04.prod.outlook.com>
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB4774;
+x-ms-traffictypediagnostic: AM6PR04MB4774:
+x-microsoft-antispam-prvs: <AM6PR04MB47741DA289933E9B97F1602284970@AM6PR04MB4774.eurprd04.prod.outlook.com>
 x-forefront-prvs: 093290AD39
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(346002)(376002)(366004)(396003)(39860400002)(189003)(199004)(3846002)(105586002)(6506007)(386003)(71200400001)(71190400001)(26005)(305945005)(66066001)(7736002)(106356001)(4326008)(102836004)(68736007)(6116002)(2501003)(25786009)(8936002)(8676002)(81166006)(81156014)(50226002)(97736004)(486006)(256004)(476003)(99286004)(6436002)(186003)(6486002)(7416002)(2906002)(14454004)(110136005)(1076003)(2201001)(316002)(478600001)(86362001)(53936002)(446003)(36756003)(6512007)(54906003)(76176011)(2616005)(11346002)(52116002)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB5784;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(366004)(376002)(396003)(136003)(39860400002)(189003)(199004)(86362001)(2201001)(102836004)(4326008)(305945005)(186003)(478600001)(26005)(7736002)(386003)(76176011)(71200400001)(14454004)(25786009)(6506007)(446003)(53936002)(71190400001)(52116002)(1076003)(256004)(11346002)(7416002)(68736007)(81166006)(81156014)(8936002)(316002)(486006)(6436002)(2616005)(8676002)(110136005)(54906003)(3846002)(2501003)(6116002)(99286004)(2906002)(476003)(105586002)(97736004)(36756003)(50226002)(66066001)(6512007)(106356001)(6486002)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4774;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: TudSq1fPlSYq7EKL3IZLoSulGtzf60RtfHdVypPb02ZLW3QFYe5Q4iHcZWBcXkJbCr8kwTnHfA1onT5HLz62ZJUCyFZkihBUS6RLhZrgqwdwxr0w/S1w8XqcXe+C6W54cACS0ZmlKG+1t7eT4WPXwc75l3xEj7b+M3hOVUoKXR5JHw6xg1UeJrtNjC1Civwjm9pEwrcXxSk/gLNRlAwYORXmVIoS7qOg8vOK1i2t+uz8SFsMl7mcQiU57+/DfH5BPYxfv7bej7GJ9RuMK5GY3FQJZwuEeaXUhY5w+k7keV5PAPZU22qO2BWsnFYb2mophGJ8dRuysnd1xb+Hy6v70kzcLWDvYd5nwDc95WhyvLQL5GKIC+ptTZ/txxIxoB/Wr33uIYCPhhdy84CPIBJ82wdcuD0Nt+vYkfw1gY2pYcY=
+x-microsoft-antispam-message-info: zU2qgR6ICuAAKFNazoagRWWxCBh1Qy4XXWHCtagh1USVQMro93iu4c/GeKbDfCWtHDzlrwKixEnLhoO/D7sBzhThieiI2p7rqzs8FnTEKBnBQAkNP2uGEUPu0HdidcANoyNfDbjEXU7f8ZfgPbbkbxShaKvel5WVdPE5+lDIV4bSPXQNmzCb8qRr/gyO85B4CHLnVhyO4FKnFUgCcoMDgyxAZgymqDWwChv+Ugq7teGsbF7sDCN/u54c7UZBTrLkAYJ3iZ5Bmdda6Ube4R67bSx6k4L1HH3S083wjyPwTJVv8bJG9knHQTEP2thOcF/nj7RCbG2kkZkd2uqKMnncQJf8KhN3hggv7kP9Vpz07eFQt3OWmzFxgYq6m216mkdtbd8tVfBJyVqNXj0hCvpFkqyRsfsxsm4LMhZwT9sfdpE=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3bedcdf9-7bee-491f-a347-08d685c10dbd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2019 08:09:06.9123
+X-MS-Exchange-CrossTenant-Network-Message-Id: ddee93d1-2fda-4e3e-c40c-08d685c11592
+X-MS-Exchange-CrossTenant-originalarrivaltime: 29 Jan 2019 08:09:20.0531
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB5784
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB4774
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -104,37 +104,198 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-As the .map_bus() use the WIN_NUM_0 for CFG transactions,
-it's better passing WIN_NUM_0 explicitly when initialize
-the CFG outbound window.
+Outbound window routine:
+ - Removed unused var definition and register read operations.
+ - Added the upper 32-bit cpu address setup of the window.
+ - Instead of blindly write, only change the fields specified.
+ - Masked the lower bits of window size in case override the
+   control bits.
+ - Check if the passing window number is available, instead of
+   the total number of the initialized windows.
 
+Inbound window routine:
+ - Added parameter 'u64 cpu_addr' to specify the cpu address
+   of the window instead of using 'pci_addr'.
+ - Changed 'int pci_addr' to 'u64 pci_addr', and added setup
+   of the upper 32-bit pci address of the window.
+ - Moved the PCIe PIO master enablement to mobiveil_host_init().
+ - Instead of blindly write, only change the fields specified.
+ - Masked the lower bits of window size in case override the
+   control bits.
+ - Check if the passing window number is available, instead of
+   the total number of the initialized windows.
+ - And added the statistic of initialized inbound windows.
+
+Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host
+Bridge IP driver")
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 ---
 V3:
  - No change
 
- drivers/pci/controller/pcie-mobiveil.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/pci/controller/pcie-mobiveil.c | 70 +++++++++++++++-----------
+ 1 file changed, 42 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controlle=
 r/pcie-mobiveil.c
-index b2cc9c097fc9..df71c11b4810 100644
+index e88afc792a5c..4ba458474e42 100644
 --- a/drivers/pci/controller/pcie-mobiveil.c
 +++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -612,9 +612,8 @@ static int mobiveil_host_init(struct mobiveil_pcie *pci=
-e)
- 	 */
+@@ -65,9 +65,13 @@
+ #define PAB_AXI_AMAP_CTRL(win)		PAB_REG_ADDR(0x0ba0, win)
+ #define  WIN_ENABLE_SHIFT		0
+ #define  WIN_TYPE_SHIFT			1
++#define  WIN_TYPE_MASK			0x3
++#define  WIN_SIZE_SHIFT			10
++#define  WIN_SIZE_MASK			0x3fffff
 =20
- 	/* config outbound translation window */
--	program_ob_windows(pcie, pcie->ob_wins_configured,
--			   pcie->ob_io_res->start, 0, CFG_WINDOW_TYPE,
--			   resource_size(pcie->ob_io_res));
-+	program_ob_windows(pcie, WIN_NUM_0, pcie->ob_io_res->start, 0,
-+			   CFG_WINDOW_TYPE, resource_size(pcie->ob_io_res));
+ #define PAB_EXT_AXI_AMAP_SIZE(win)	PAB_EXT_REG_ADDR(0xbaf0, win)
+=20
++#define PAB_EXT_AXI_AMAP_AXI_WIN(win)	PAB_EXT_REG_ADDR(0x80a0, win)
+ #define PAB_AXI_AMAP_AXI_WIN(win)	PAB_REG_ADDR(0x0ba4, win)
+ #define  AXI_WINDOW_ALIGN_MASK		3
+=20
+@@ -82,8 +86,10 @@
+ #define PAB_PEX_AMAP_CTRL(win)		PAB_REG_ADDR(0x4ba0, win)
+ #define  AMAP_CTRL_EN_SHIFT		0
+ #define  AMAP_CTRL_TYPE_SHIFT		1
++#define  AMAP_CTRL_TYPE_MASK		3
+=20
+ #define PAB_EXT_PEX_AMAP_SIZEN(win)	PAB_EXT_REG_ADDR(0xbef0, win)
++#define PAB_EXT_PEX_AMAP_AXI_WIN(win)	PAB_EXT_REG_ADDR(0xb4a0, win)
+ #define PAB_PEX_AMAP_AXI_WIN(win)	PAB_REG_ADDR(0x4ba4, win)
+ #define PAB_PEX_AMAP_PEX_WIN_L(win)	PAB_REG_ADDR(0x4ba8, win)
+ #define PAB_PEX_AMAP_PEX_WIN_H(win)	PAB_REG_ADDR(0x4bac, win)
+@@ -455,49 +461,51 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pci=
+e *pcie)
+ }
+=20
+ static void program_ib_windows(struct mobiveil_pcie *pcie, int win_num,
+-			       int pci_addr, u32 type, u64 size)
++			       u64 cpu_addr, u64 pci_addr, u32 type, u64 size)
+ {
+-	int pio_ctrl_val;
+-	int amap_ctrl_dw;
++	u32 value;
+ 	u64 size64 =3D ~(size - 1);
+=20
+-	if ((pcie->ib_wins_configured + 1) > pcie->ppio_wins) {
++	if (win_num >=3D pcie->ppio_wins) {
+ 		dev_err(&pcie->pdev->dev,
+ 			"ERROR: max inbound windows reached !\n");
+ 		return;
+ 	}
+=20
+-	pio_ctrl_val =3D csr_readl(pcie, PAB_PEX_PIO_CTRL);
+-	pio_ctrl_val |=3D 1 << PIO_ENABLE_SHIFT;
+-	csr_writel(pcie, pio_ctrl_val, PAB_PEX_PIO_CTRL);
+-
+-	amap_ctrl_dw =3D csr_readl(pcie, PAB_PEX_AMAP_CTRL(win_num));
+-	amap_ctrl_dw |=3D (type << AMAP_CTRL_TYPE_SHIFT) |
+-			(1 << AMAP_CTRL_EN_SHIFT) |
+-			lower_32_bits(size64);
+-	csr_writel(pcie, amap_ctrl_dw, PAB_PEX_AMAP_CTRL(win_num));
++	value =3D csr_readl(pcie, PAB_PEX_AMAP_CTRL(win_num));
++	value &=3D ~(AMAP_CTRL_TYPE_MASK << AMAP_CTRL_TYPE_SHIFT |
++		 WIN_SIZE_MASK << WIN_SIZE_SHIFT);
++	value |=3D (type << AMAP_CTRL_TYPE_SHIFT) | (1 << AMAP_CTRL_EN_SHIFT) |
++		 (lower_32_bits(size64) & WIN_SIZE_MASK << WIN_SIZE_SHIFT);
++	csr_writel(pcie, value, PAB_PEX_AMAP_CTRL(win_num));
+=20
+ 	csr_writel(pcie, upper_32_bits(size64),
+ 		   PAB_EXT_PEX_AMAP_SIZEN(win_num));
+=20
+-	csr_writel(pcie, pci_addr, PAB_PEX_AMAP_AXI_WIN(win_num));
++	csr_writel(pcie, lower_32_bits(cpu_addr),
++		   PAB_PEX_AMAP_AXI_WIN(win_num));
++	csr_writel(pcie, upper_32_bits(cpu_addr),
++		   PAB_EXT_PEX_AMAP_AXI_WIN(win_num));
++
++	csr_writel(pcie, lower_32_bits(pci_addr),
++		   PAB_PEX_AMAP_PEX_WIN_L(win_num));
++	csr_writel(pcie, upper_32_bits(pci_addr),
++		   PAB_PEX_AMAP_PEX_WIN_H(win_num));
+=20
+-	csr_writel(pcie, pci_addr, PAB_PEX_AMAP_PEX_WIN_L(win_num));
+-	csr_writel(pcie, 0, PAB_PEX_AMAP_PEX_WIN_H(win_num));
++	pcie->ib_wins_configured++;
+ }
+=20
+ /*
+  * routine to program the outbound windows
+  */
+ static void program_ob_windows(struct mobiveil_pcie *pcie, int win_num,
+-			       u64 cpu_addr, u64 pci_addr,
+-			       u32 config_io_bit, u64 size)
++			       u64 cpu_addr, u64 pci_addr, u32 type, u64 size)
+ {
+=20
+-	u32 value, type;
++	u32 value;
+ 	u64 size64 =3D ~(size - 1);
+=20
+-	if ((pcie->ob_wins_configured + 1) > pcie->apio_wins) {
++	if (win_num >=3D pcie->apio_wins) {
+ 		dev_err(&pcie->pdev->dev,
+ 			"ERROR: max outbound windows reached !\n");
+ 		return;
+@@ -507,10 +515,12 @@ static void program_ob_windows(struct mobiveil_pcie *=
+pcie, int win_num,
+ 	 * program Enable Bit to 1, Type Bit to (00) base 2, AXI Window Size Bit
+ 	 * to 4 KB in PAB_AXI_AMAP_CTRL register
+ 	 */
+-	type =3D config_io_bit;
+ 	value =3D csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
+-	csr_writel(pcie, 1 << WIN_ENABLE_SHIFT | type << WIN_TYPE_SHIFT |
+-		   lower_32_bits(size64), PAB_AXI_AMAP_CTRL(win_num));
++	value &=3D ~(WIN_TYPE_MASK << WIN_TYPE_SHIFT |
++		 WIN_SIZE_MASK << WIN_SIZE_SHIFT);
++	value |=3D 1 << WIN_ENABLE_SHIFT | type << WIN_TYPE_SHIFT |
++		 (lower_32_bits(size64) & WIN_SIZE_MASK << WIN_SIZE_SHIFT);
++	csr_writel(pcie, value, PAB_AXI_AMAP_CTRL(win_num));
+=20
+ 	csr_writel(pcie, upper_32_bits(size64), PAB_EXT_AXI_AMAP_SIZE(win_num));
+=20
+@@ -518,11 +528,10 @@ static void program_ob_windows(struct mobiveil_pcie *=
+pcie, int win_num,
+ 	 * program AXI window base with appropriate value in
+ 	 * PAB_AXI_AMAP_AXI_WIN0 register
+ 	 */
+-	value =3D csr_readl(pcie, PAB_AXI_AMAP_AXI_WIN(win_num));
+-	csr_writel(pcie, cpu_addr & (~AXI_WINDOW_ALIGN_MASK),
++	csr_writel(pcie, lower_32_bits(cpu_addr) & (~AXI_WINDOW_ALIGN_MASK),
+ 		   PAB_AXI_AMAP_AXI_WIN(win_num));
+-
+-	value =3D csr_readl(pcie, PAB_AXI_AMAP_PEX_WIN_H(win_num));
++	csr_writel(pcie, upper_32_bits(cpu_addr),
++		   PAB_EXT_AXI_AMAP_AXI_WIN(win_num));
+=20
+ 	csr_writel(pcie, lower_32_bits(pci_addr),
+ 		   PAB_AXI_AMAP_PEX_WIN_L(win_num));
+@@ -604,6 +613,11 @@ static int mobiveil_host_init(struct mobiveil_pcie *pc=
+ie)
+ 	value |=3D APIO_EN_MASK;
+ 	csr_writel(pcie, value, PAB_AXI_PIO_CTRL);
+=20
++	/* Enable PCIe PIO master */
++	value =3D csr_readl(pcie, PAB_PEX_PIO_CTRL);
++	value |=3D 1 << PIO_ENABLE_SHIFT;
++	csr_writel(pcie, value, PAB_PEX_PIO_CTRL);
++
+ 	/*
+ 	 * we'll program one outbound window for config reads and
+ 	 * another default inbound window for all the upstream traffic
+@@ -616,7 +630,7 @@ static int mobiveil_host_init(struct mobiveil_pcie *pci=
+e)
+ 			   CFG_WINDOW_TYPE, resource_size(pcie->ob_io_res));
 =20
  	/* memory inbound translation window */
- 	program_ib_windows(pcie, WIN_NUM_1, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
+-	program_ib_windows(pcie, WIN_NUM_0, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
++	program_ib_windows(pcie, WIN_NUM_0, 0, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
+=20
+ 	/* Get the I/O and memory ranges from DT */
+ 	resource_list_for_each_entry(win, &pcie->resources) {
 --=20
 2.17.1
 
