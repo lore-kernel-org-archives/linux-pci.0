@@ -2,41 +2,34 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DC1C282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 20:11:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BCBAC282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 20:35:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 980F82184D
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 20:11:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="D7I9jHaI"
+	by mail.kernel.org (Postfix) with ESMTP id B8AA3218AF
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 20:35:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731341AbfA3ULZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 15:11:25 -0500
-Received: from mail-eopbgr70044.outbound.protection.outlook.com ([40.107.7.44]:1276
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728446AbfA3ULZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 15:11:25 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=z/d4iWFDvqxqaPKHJn/2sW6NH6J6175ArJyoM+4mbM0=;
- b=D7I9jHaI3NCw0GEkjda4NjPmlORlalKVDzuoenMAhNXntmX2r9fqvQs/nEjYwmptnvlztTlPxSt8lGr1xAiW2Vj+fKjdDu8N0bqLmaRHA6U5BS1TIVKhzPFevjiz5eKOI/8xYq5QnTmayV17KH6u4+S0Gfmiy7xmEmwyMYIEj7s=
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
- DBBPR05MB6361.eurprd05.prod.outlook.com (20.179.41.87) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1558.18; Wed, 30 Jan 2019 20:11:19 +0000
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
- 20:11:19 +0000
-From:   Jason Gunthorpe <jgg@mellanox.com>
+        id S2387620AbfA3Uf0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 15:35:26 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:40000 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387609AbfA3UfZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 15:35:25 -0500
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 63599461CF;
+        Wed, 30 Jan 2019 20:35:24 +0000 (UTC)
+Received: from redhat.com (ovpn-126-0.rdu2.redhat.com [10.10.126.0])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 712C460462;
+        Wed, 30 Jan 2019 20:35:21 +0000 (UTC)
+Date:   Wed, 30 Jan 2019 15:35:16 -0500
+From:   Jerome Glisse <jglisse@redhat.com>
 To:     Logan Gunthorpe <logang@deltatee.com>
-CC:     Jerome Glisse <jglisse@redhat.com>,
+Cc:     Jason Gunthorpe <jgg@mellanox.com>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -53,89 +46,113 @@ CC:     Jerome Glisse <jglisse@redhat.com>,
         "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
 Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
-Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAAEreAgAAFCQCAAAk3gIAABX0AgAATFYCAAA25AIAAGRqAgAAykICAANmWgIAAG8YAgAAHLwCAAAROgIAABioAgAADIQA=
-Date:   Wed, 30 Jan 2019 20:11:19 +0000
-Message-ID: <20190130201114.GB17915@mellanox.com>
-References: <20190129215028.GQ3176@redhat.com>
+Message-ID: <20190130203516.GE5061@redhat.com>
+References: <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
+ <20190129215028.GQ3176@redhat.com>
  <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
  <20190129234752.GR3176@redhat.com>
  <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
  <20190130041841.GB30598@mellanox.com>
  <bdf03cd5-f5b1-4b78-a40e-b24024ca8c9f@deltatee.com>
- <20190130185652.GB17080@mellanox.com> <20190130192234.GD5061@redhat.com>
- <20190130193759.GE17080@mellanox.com>
- <db873687-ff80-4758-0b9f-973f27db5335@deltatee.com>
-In-Reply-To: <db873687-ff80-4758-0b9f-973f27db5335@deltatee.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: CO2PR04CA0124.namprd04.prod.outlook.com
- (2603:10b6:104:7::26) To DBBPR05MB6426.eurprd05.prod.outlook.com
- (2603:10a6:10:c9::16)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=jgg@mellanox.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [174.3.196.123]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DBBPR05MB6361;6:q3s3M782hLDrroygxK1QdL8JgvtOb2ovBfVLRyNVEdeo8F+j3LBQMtXhrHY9hC5yBKYakn1tJiwEtVA490ni8lsNcM+I2+rrd3myN/yQi/NEu7haP47/fIQ8qiNBg6LGxS4KJFlCezthLVj7mq+tVICXV2SPjlApmdJXdH4kIM5nTi4yaMUzzEL6R+DEZfx94gT3M01E7PeqPJbPqa3T4bK2V0AF+VDXNC+gHI2foLeBjfZ91MSuU2IiCctysHRTy1coI8Pm2BA/FMWQrpVgLjoEjDTm6UlXlW/NL1kjr2PI9rpNdrZMgqLmi/aNHFZ/xgoW+qzBqbMfx5EHRKo8fnMTu58Z1TSEnscXLa+eV9IGUWbHkcSkA3IC5mjXkaaDvzvZJIZ8TmL8eFTJ7kS1IUyp8V69pPgtc0GK7MCrT0t5/wwJMrtVLSYmQaarGl13Bbp9DqHc3muiuAFRgn7dbg==;5:McnnPWHU21mEfNwQhFhiX4yFo4qfJuC313Uu4NkFFZBm4KZmYdIVwHGL0ZS8+7ApfVWp5PkO4VYTbgBKcbdIfGLda7zhw8OEXktmSVBtuvPHL29JWQSqJaQjEBJx2OGfGWb1IM7KHz9n2mTxuIC+lWn8LpO+WKBZZSk2wwpso3Swi4OX/Gjsv7owQubBJ9T1r1yUM907M1jF5TVANns5Uw==;7:5fOJhDjEv9CjOZ8Dmm9/SrNhFa+yDQmrp39zdSfBoQdtAC/vW+FGHLAZ6+yUmnVL1BzwW3e1FcCmnFM6twATPBPHaFQnvNu+N29bQ2CUWlcCVu8ocPoFj/4Qnimp4y+9HURs6o/h6iUTrr2b+R3bhg==
-x-ms-office365-filtering-correlation-id: 2207f1b2-408e-490f-d669-08d686ef18cd
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6361;
-x-ms-traffictypediagnostic: DBBPR05MB6361:
-x-microsoft-antispam-prvs: <DBBPR05MB63618885D8E355AFC9403F41CF900@DBBPR05MB6361.eurprd05.prod.outlook.com>
-x-forefront-prvs: 0933E9FD8D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(136003)(346002)(376002)(39860400002)(366004)(189003)(199004)(105586002)(106356001)(476003)(99286004)(66066001)(25786009)(2616005)(6506007)(486006)(386003)(33656002)(217873002)(7416002)(4326008)(6512007)(93886005)(2906002)(446003)(11346002)(186003)(36756003)(6436002)(256004)(71200400001)(6916009)(6116002)(8936002)(54906003)(102836004)(81156014)(26005)(97736004)(76176011)(52116002)(316002)(7736002)(53936002)(86362001)(3846002)(229853002)(68736007)(305945005)(1076003)(478600001)(6486002)(71190400001)(6246003)(8676002)(81166006)(14454004);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6361;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: mellanox.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 0zN5CTWraRYIsQnw7ZFo6j+WCoIOOBIC6WfvLGY4EVz3idYXhWd+OAp+c5xDeX8wAcpOdKAVIBhrPKQzYv5qkAki5KOJgsQKfHvsdD+yIrnKGhtMEW++qSBtVCt+yv13BhHBYUD50+5c0HNBlFD2+f5kJp1oqtnE1cr9ZavSJAJJyxSZwpSQjpLwQhp5mRKm6Vu99Cv7uwMOBjyFNVE3TjqB81IdDNFBWjXmowN9qurBGAkjV0AxtT7t2R8l0kG+zyWo/weJKdetun3zetsGICe5h8PXiN/WEEyVaQ/Wm+TUDKaTltfLrMkOIJ2I0uxt3JJNDNixcChsEJCfvjiwsphHJv4EPw10SZRT9h5gy7ePsa6HDsqWofqA6Ux0SP7Zi0waJB+OM82jtU/jy3Nq9Lb96mVYEBi0lvTCkEQ1/FA=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <1D7345561BF5804A8CD6EDF49CF98303@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+ <20190130185652.GB17080@mellanox.com>
+ <20190130192234.GD5061@redhat.com>
+ <5a60507e-e781-d0a4-353e-32105ca7ace3@deltatee.com>
 MIME-Version: 1.0
-X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2207f1b2-408e-490f-d669-08d686ef18cd
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 20:11:19.0932
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6361
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <5a60507e-e781-d0a4-353e-32105ca7ace3@deltatee.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Wed, 30 Jan 2019 20:35:25 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 01:00:02PM -0700, Logan Gunthorpe wrote:
+On Wed, Jan 30, 2019 at 12:52:44PM -0700, Logan Gunthorpe wrote:
+> 
+> 
+> On 2019-01-30 12:22 p.m., Jerome Glisse wrote:
+> > On Wed, Jan 30, 2019 at 06:56:59PM +0000, Jason Gunthorpe wrote:
+> >> On Wed, Jan 30, 2019 at 10:17:27AM -0700, Logan Gunthorpe wrote:
+> >>>
+> >>>
+> >>> On 2019-01-29 9:18 p.m., Jason Gunthorpe wrote:
+> >>>> Every attempt to give BAR memory to struct page has run into major
+> >>>> trouble, IMHO, so I like that this approach avoids that.
+> >>>>
+> >>>> And if you don't have struct page then the only kernel object left to
+> >>>> hang meta data off is the VMA itself.
+> >>>>
+> >>>> It seems very similar to the existing P2P work between in-kernel
+> >>>> consumers, just that VMA is now mediating a general user space driven
+> >>>> discovery process instead of being hard wired into a driver.
+> >>>
+> >>> But the kernel now has P2P bars backed by struct pages and it works
+> >>> well. 
+> >>
+> >> I don't think it works that well..
+> >>
+> >> We ended up with a 'sgl' that is not really a sgl, and doesn't work
+> >> with many of the common SGL patterns. sg_copy_buffer doesn't work,
+> >> dma_map, doesn't work, sg_page doesn't work quite right, etc.
+> >>
+> >> Only nvme and rdma got the special hacks to make them understand these
+> >> p2p-sgls, and I'm still not convinced some of the RDMA drivers that
+> >> want access to CPU addresses from the SGL (rxe, usnic, hfi, qib) don't
+> >> break in this scenario.
+> >>
+> >> Since the SGLs become broken, it pretty much means there is no path to
+> >> make GUP work generically, we have to go through and make everything
+> >> safe to use with p2p-sgls before allowing GUP. Which, frankly, sounds
+> >> impossible with all the competing objections.
+> >>
+> >> But GPU seems to have a problem unrelated to this - what Jerome wants
+> >> is to have two faulting domains for VMA's - visible-to-cpu and
+> >> visible-to-dma. The new op is essentially faulting the pages into the
+> >> visible-to-dma category and leaving them invisible-to-cpu.
+> >>
+> >> So that duality would still have to exists, and I think p2p_map/unmap
+> >> is a much simpler implementation than trying to create some kind of
+> >> special PTE in the VMA..
+> >>
+> >> At least for RDMA, struct page or not doesn't really matter. 
+> >>
+> >> We can make struct pages for the BAR the same way NVMe does.  GPU is
+> >> probably the same, just with more mememory at stake?  
+> >>
+> >> And maybe this should be the first implementation. The p2p_map VMA
+> >> operation should return a SGL and the caller should do the existing
+> >> pci_p2pdma_map_sg() flow.. 
+> > 
+> > For GPU it would not work, GPU might want to use main memory (because
+> > it is running out of BAR space) it is a lot easier if the p2p_map
+> > callback calls the right dma map function (for page or io) rather than
+> > having to define some format that would pass down the information.
+> 
+> >>
+> >> Worry about optimizing away the struct page overhead later?
+> > 
+> > Struct page do not fit well for GPU as the BAR address can be reprogram
+> > to point to any page inside the device memory (think 256M BAR versus
+> > 16GB device memory). Forcing struct page on GPU driver would require
+> > major surgery to the GPU driver inner working and there is no benefit
+> > to have from the struct page. So it is hard to justify this.
+> 
+> I think we have to consider the struct pages to track the address space,
+> not what backs it (essentially what HMM is doing). If we need to add
+> operations for the driver to map the address space/struct pages back to
+> physical memory then do that. Creating a whole new idea that's tied to
+> userspace VMAs still seems wrong to me.
 
-> We never changed SGLs. We still use them to pass p2pdma pages, only we
-> need to be a bit careful where we send the entire SGL. I see no reason
-> why we can't continue to be careful once their in userspace if there's
-> something in GUP to deny them.
->=20
-> It would be nice to have heterogeneous SGLs and it is something we
-> should work toward but in practice they aren't really necessary at the
-> moment.
+VMA is the object RDMA works on, GPU driver have been working with
+VMA too, where VMA is tie to only one specific GPU object. So the most
+disrupting approach here is using struct page. It was never use and
+will not be use in many driver. Updating those to struct page is too
+risky and too much changes. The vma call back is something you can
+remove at any time if you have something better that do not need major
+surgery to GPU driver.
 
-RDMA generally cannot cope well with an API that requires homogeneous
-SGLs.. User space can construct complex MRs (particularly with the
-proposed SGL MR flow) and we must marshal that into a single SGL or
-the drivers fall apart.
-
-Jerome explained that GPU is worse, a single VMA may have a random mix
-of CPU or device pages..
-
-This is a pretty big blocker that would have to somehow be fixed.
-
-> That doesn't even necessarily need to be the case. For HMM, I
-> understand, struct pages may not point to any accessible memory and the
-> memory that backs it (or not) may change over the life time of it. So
-> they don't have to be strictly tied to BARs addresses. p2pdma pages are
-> strictly tied to BAR addresses though.
-
-No idea, but at least for this case I don't think we need magic HMM
-pages to make simple VMA ops p2p_map/umap work..
-
-Jason
+Cheers,
+Jérôme
