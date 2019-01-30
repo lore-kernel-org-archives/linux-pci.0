@@ -2,41 +2,34 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE47C282D8
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31587C282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:56:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2F8020863
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:54:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="Qkgm03hH"
+	by mail.kernel.org (Postfix) with ESMTP id DAEA6218AF
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:55:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727216AbfA3Wyn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 17:54:43 -0500
-Received: from mail-eopbgr140048.outbound.protection.outlook.com ([40.107.14.48]:54597
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725890AbfA3Wym (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 17:54:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FJd4xUozB+7alcoxw8jbCUD16duz5AkzXpB6eFOXgcA=;
- b=Qkgm03hHl6K7CLlq4yQKkprpUrxBViHzIgHcb7GRHn3/CFxCLuwf6a3kHlqK3sjLUerdmDPDd4jmv4I+K9uz/zGf/Dg2cmjzohSwoB6PgE7WjbJGpbpwwpGfvycRREInvzJuU5G978+jxJZyMQe4lfUe0Xs4pbP6Q0oqhVmRcyo=
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
- DBBPR05MB6571.eurprd05.prod.outlook.com (20.179.44.82) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1580.17; Wed, 30 Jan 2019 22:51:55 +0000
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
- 22:51:55 +0000
-From:   Jason Gunthorpe <jgg@mellanox.com>
-To:     Jerome Glisse <jglisse@redhat.com>
-CC:     Logan Gunthorpe <logang@deltatee.com>,
+        id S1725798AbfA3Wz7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 17:55:59 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:52478 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726802AbfA3Wz7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 17:55:59 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C7A8EDF87A;
+        Wed, 30 Jan 2019 22:47:09 +0000 (UTC)
+Received: from redhat.com (ovpn-126-0.rdu2.redhat.com [10.10.126.0])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7CE701001F3D;
+        Wed, 30 Jan 2019 22:47:07 +0000 (UTC)
+Date:   Wed, 30 Jan 2019 17:47:05 -0500
+From:   Jerome Glisse <jglisse@redhat.com>
+To:     Jason Gunthorpe <jgg@mellanox.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -53,98 +46,58 @@ CC:     Logan Gunthorpe <logang@deltatee.com>,
         "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
 Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
-Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAAEreAgAAFCQCAAAk3gIAABX0AgAATFYCAAA25AIAAGRqAgAAykICAANmWgIAAG8YAgAAHLwCAAAROgIAABioAgAADIQCAAAkGAIAAAccAgAAPg4CAAAL1AIAACaCAgAAAtACAAAPygIAAAVEA
-Date:   Wed, 30 Jan 2019 22:51:55 +0000
-Message-ID: <20190130225148.GC25486@mellanox.com>
-References: <20190130193759.GE17080@mellanox.com>
+Message-ID: <20190130224705.GI5061@redhat.com>
+References: <20190130192234.GD5061@redhat.com>
+ <20190130193759.GE17080@mellanox.com>
  <db873687-ff80-4758-0b9f-973f27db5335@deltatee.com>
- <20190130201114.GB17915@mellanox.com> <20190130204332.GF5061@redhat.com>
- <20190130204954.GI17080@mellanox.com> <20190130214525.GG5061@redhat.com>
- <20190130215600.GM17080@mellanox.com> <20190130223027.GH5061@redhat.com>
- <20190130223258.GB25486@mellanox.com> <20190130224705.GI5061@redhat.com>
-In-Reply-To: <20190130224705.GI5061@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: CO2PR04CA0064.namprd04.prod.outlook.com
- (2603:10b6:102:1::32) To DBBPR05MB6426.eurprd05.prod.outlook.com
- (2603:10a6:10:c9::16)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=jgg@mellanox.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [174.3.196.123]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DBBPR05MB6571;6:tcUhX8ThEQ1aqoCcrz7tThKNVH24ni6UrZhdSi0v60Pq98v/yXy46EAPtW2KlrtjHXuTNFdfXCgaxTB3wj17J7n9Swd4VmasEMxjEBMR+h1wOfpP0D4cN1GFPWM4niWKCXnC7dVpXz9tGyQ3W34BwM+S9+DA0L8Ev7Z3vQ86Tlm7V4blhaAr3z//0ueKcXI+D3qpXX94XqLs9FjW3Mz5PRxZQpQcyhHNA0JxXe3g0hmcvyGNtK9xQu+qqYV/CSiXfbevbl0j3Lmaq0AzagJSMG/YkDRQvmQL7xjWqbWVc5IWngCalniZnDBQL6CX/p5Ggip6K6pKkM4bVUWQu+Y9nQlxc2y7Y90yMu8+mllCci/9W3QJXr6FRS0aChrq02ftEtSK7rCrhHRkt78CN8wrpWOj/S6vIYJRbMjU4p2K5DM+9u9k+hDg33BD+CMeNexmLLY7hYrSk2Q8pBHGZqTDzA==;5:/YsijxgDm4VbarTBUVZLw2K8snPVd220AJ/HMlLhL3GS5/6iN3k5N8IoW2X51YAa+eNRSDnuIyo92yFNrM+paRr8tsH9uqv5kNgwzZ9LyOtfliBzRTFBDnGlHYLdZuc4Ld+e3GQEnmwG3b/jLZ+J2O6nUR1XA6cz+NvhgxVE0e4ysaulKdZSOKL0wKkSuD/3VtSZIC3Q35+W8Zj1Rozw7A==;7:yg7K6I68IbX3Gy3rz3nuhBl/liRC2PBP+HjTsTdticSf09NwUuPnHW9mX+iTw7ti0lGgTvDvICXAFBX5SvWZi0xBw0rjIz2z4IcQRYOp8VzPZOcw2OCHpTHcwxITRNg5ZqnMcegH3/iR2uppKsM5Eg==
-x-ms-office365-filtering-correlation-id: 078e7a37-f6da-4fe8-93e9-08d687058822
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6571;
-x-ms-traffictypediagnostic: DBBPR05MB6571:
-x-microsoft-antispam-prvs: <DBBPR05MB6571E973DC7AFBD367E865A1CF900@DBBPR05MB6571.eurprd05.prod.outlook.com>
-x-forefront-prvs: 0933E9FD8D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(39860400002)(366004)(346002)(199004)(189003)(36756003)(3846002)(33656002)(186003)(76176011)(6916009)(106356001)(71190400001)(71200400001)(53936002)(26005)(52116002)(105586002)(25786009)(8676002)(54906003)(6116002)(7416002)(8936002)(1076003)(81156014)(81166006)(229853002)(4326008)(6436002)(2906002)(305945005)(6486002)(93886005)(66066001)(11346002)(446003)(217873002)(6506007)(386003)(99286004)(476003)(2616005)(97736004)(478600001)(316002)(6512007)(7736002)(14444005)(256004)(68736007)(86362001)(6246003)(14454004)(102836004)(486006);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6571;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: mellanox.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: Ox6/vquQvZO3t8TlBC23AglV3FJLS2Y2rhSWx6Nhy+V/0jPESVFPDmbyho2z+q2Ky6qaRUuTTyRaEksTtDWDFl1T+V5RRKx047iOpnCEmqcuCkFxbVjnM0oct6DvQrREihZTv5lx2KyeJBUI0SuaMFIy1g6hkrf5awwlJ8m0T6qE04BLqmaKTzBON7HrvPaW35XczB0Eah8BId/U1svGjIAdfIz/Fq7yAUndzbQh4WVNbgBWGxeyWwsO2JceE8mAi1ccdMz4jbw7dT3zSPYeD7AfWor/LdWFd29C438G9DfvkBG0bs1Y+eTGvB4uFCiHjUI7p3YP5+hd0NJOee5XZXS6+DWiU0vzAJVfLDDyfNwFVHSHVLaYJi9C8KyzC1ArDCJamS6ycxY96Z3X3kLFq7U9/BeFwnCBUOyRybacKMk=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <35A69DD96A70BF4186715D7C3E6F4417@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+ <20190130201114.GB17915@mellanox.com>
+ <20190130204332.GF5061@redhat.com>
+ <20190130204954.GI17080@mellanox.com>
+ <20190130214525.GG5061@redhat.com>
+ <20190130215600.GM17080@mellanox.com>
+ <20190130223027.GH5061@redhat.com>
+ <20190130223258.GB25486@mellanox.com>
 MIME-Version: 1.0
-X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 078e7a37-f6da-4fe8-93e9-08d687058822
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 22:51:54.8037
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6571
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190130223258.GB25486@mellanox.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Wed, 30 Jan 2019 22:47:10 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 05:47:05PM -0500, Jerome Glisse wrote:
-> On Wed, Jan 30, 2019 at 10:33:04PM +0000, Jason Gunthorpe wrote:
-> > On Wed, Jan 30, 2019 at 05:30:27PM -0500, Jerome Glisse wrote:
-> >=20
-> > > > What is the problem in the HMM mirror that it needs this restrictio=
-n?
-> > >=20
-> > > No restriction at all here. I think i just wasn't understood.
-> >=20
-> > Are you are talking about from the exporting side - where the thing
-> > creating the VMA can really only put one distinct object into it?
->=20
-> The message i was trying to get accross is that HMM mirror will
-> always succeed for everything* except for special vma ie mmap of
-> device file. For those it can only succeed if a p2p_map() call
-> succeed.
->=20
-> So any user of HMM mirror might to know why the mirroring fail ie
-> was it because something exceptional is happening ? Or is it because
-> i was trying to map a special vma which can be forbiden.
->=20
-> Hence why i assume that you might want to know about such p2p_map
-> failure at the time you create the umem odp object as it might be
-> some failure you might want to report differently and handle
-> differently. If you do not care about differentiating OOM or
-> exceptional failure from p2p_map failure than you have nothing to
-> worry about you will get the same error from HMM for both.
+On Wed, Jan 30, 2019 at 10:33:04PM +0000, Jason Gunthorpe wrote:
+> On Wed, Jan 30, 2019 at 05:30:27PM -0500, Jerome Glisse wrote:
+> 
+> > > What is the problem in the HMM mirror that it needs this restriction?
+> > 
+> > No restriction at all here. I think i just wasn't understood.
+> 
+> Are you are talking about from the exporting side - where the thing
+> creating the VMA can really only put one distinct object into it?
 
-I think my hope here was that we could have some kind of 'trial'
-interface where very eary users can call
-'hmm_mirror_is_maybe_supported(dev, user_ptr, len)' and get a failure
-indication.
+The message i was trying to get accross is that HMM mirror will
+always succeed for everything* except for special vma ie mmap of
+device file. For those it can only succeed if a p2p_map() call
+succeed.
 
-We probably wouldn't call this on the full address space though
+So any user of HMM mirror might to know why the mirroring fail ie
+was it because something exceptional is happening ? Or is it because
+i was trying to map a special vma which can be forbiden.
 
-Beyond that it is just inevitable there can be problems faulting if
-the memory map is messed with after MR is created.
+Hence why i assume that you might want to know about such p2p_map
+failure at the time you create the umem odp object as it might be
+some failure you might want to report differently and handle
+differently. If you do not care about differentiating OOM or
+exceptional failure from p2p_map failure than you have nothing to
+worry about you will get the same error from HMM for both.
 
-And here again, I don't want to worry about any particular VMA
-boundaries..
+Cheers,
+Jérôme
 
-Jason
+* Everything except when they are exceptional condition like OOM or
+  poisonous memory.
