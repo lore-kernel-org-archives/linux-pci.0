@@ -2,41 +2,28 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4917DC282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 20:50:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95971C282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 21:01:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E82EE218AC
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 20:50:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="xjrVTduh"
+	by mail.kernel.org (Postfix) with ESMTP id 55D8720881
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 21:01:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731056AbfA3Uuo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 15:50:44 -0500
-Received: from mail-eopbgr60041.outbound.protection.outlook.com ([40.107.6.41]:21078
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730599AbfA3Uuo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 15:50:44 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ukM+GfOJlhFO402vYkxSp1drM1ADaTz3gryXQC6v/A8=;
- b=xjrVTduhTNVPS37/wUS/I/RDJIt7+GfUOAh2W7gCvCaQaOGw9QrcRL+xr8eQXrjeaNPJNP0xA19qhMi0izTGtIHn/X0DYEV3eGTMLs+hhi5t52OsCsFFgWwAe3qsFx4J/f6rvVM1N8NUctrQdUru60Dab+u4H37PcJbokaAESKA=
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
- DBBPR05MB6364.eurprd05.prod.outlook.com (20.179.41.140) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1580.16; Wed, 30 Jan 2019 20:50:00 +0000
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
- 20:50:00 +0000
-From:   Jason Gunthorpe <jgg@mellanox.com>
-To:     Jerome Glisse <jglisse@redhat.com>
-CC:     Logan Gunthorpe <logang@deltatee.com>,
+        id S1730113AbfA3VBu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 16:01:50 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:41678 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726230AbfA3VBu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 16:01:50 -0500
+Received: from s01061831bf6ec98c.cg.shawcable.net ([68.147.80.180] helo=[192.168.6.205])
+        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1gowzL-0000x8-U9; Wed, 30 Jan 2019 14:01:40 -0700
+To:     Jason Gunthorpe <jgg@mellanox.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jerome Glisse <jglisse@redhat.com>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -46,112 +33,79 @@ CC:     Logan Gunthorpe <logang@deltatee.com>,
         Felix Kuehling <Felix.Kuehling@amd.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Christoph Hellwig <hch@lst.de>,
         Marek Szyprowski <m.szyprowski@samsung.com>,
         Robin Murphy <robin.murphy@arm.com>,
         Joerg Roedel <jroedel@suse.de>,
         "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20190129205749.GN3176@redhat.com>
+ <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
+ <20190129215028.GQ3176@redhat.com>
+ <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
+ <20190129234752.GR3176@redhat.com>
+ <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
+ <20190130041841.GB30598@mellanox.com> <20190130080006.GB29665@lst.de>
+ <20190130190651.GC17080@mellanox.com>
+ <840256f8-0714-5d7d-e5f5-c96aec5c2c05@deltatee.com>
+ <20190130195900.GG17080@mellanox.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <35bad6d5-c06b-f2a3-08e6-2ed0197c8691@deltatee.com>
+Date:   Wed, 30 Jan 2019 14:01:35 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+In-Reply-To: <20190130195900.GG17080@mellanox.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 68.147.80.180
+X-SA-Exim-Rcpt-To: iommu@lists.linux-foundation.org, jroedel@suse.de, robin.murphy@arm.com, m.szyprowski@samsung.com, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, Felix.Kuehling@amd.com, christian.koenig@amd.com, bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, jglisse@redhat.com, hch@lst.de, jgg@mellanox.com
+X-SA-Exim-Mail-From: logang@deltatee.com
 Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
-Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAAEreAgAAFCQCAAAk3gIAABX0AgAATFYCAAA25AIAAGRqAgAAykICAANmWgIAAG8YAgAAHLwCAAAROgIAABioAgAADIQCAAAkGAIAAAccA
-Date:   Wed, 30 Jan 2019 20:50:00 +0000
-Message-ID: <20190130204954.GI17080@mellanox.com>
-References: <20190129234752.GR3176@redhat.com>
- <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
- <20190130041841.GB30598@mellanox.com>
- <bdf03cd5-f5b1-4b78-a40e-b24024ca8c9f@deltatee.com>
- <20190130185652.GB17080@mellanox.com> <20190130192234.GD5061@redhat.com>
- <20190130193759.GE17080@mellanox.com>
- <db873687-ff80-4758-0b9f-973f27db5335@deltatee.com>
- <20190130201114.GB17915@mellanox.com> <20190130204332.GF5061@redhat.com>
-In-Reply-To: <20190130204332.GF5061@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: MWHPR22CA0042.namprd22.prod.outlook.com
- (2603:10b6:300:69::28) To DBBPR05MB6426.eurprd05.prod.outlook.com
- (2603:10a6:10:c9::16)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=jgg@mellanox.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [174.3.196.123]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DBBPR05MB6364;6:45iwF2MyI8HvFCyFYG/4MKjkKDDFxIydf/ewovgftAaPLE5NcP4GAKNzPUtx2Jdz6+XgDBpjsGA1IBB4zpz1mWFqdj1LC/C91WDymUSPKiomnTVGtoh9hDOHaQaAjfaCPDcvuK7oDOliaGpWsZ65W99sgYs9MORmXUdl0UEKDnXdx9Gj4LwsDNhYDNAbT3rgwOZCA0A1b6Z6SwPdLssnacdnGhXzLuDskK0yXqiZybGrpEr7B1aC1XACHhqIJaWGN32+e0sbr36OGnPawr0Q2KziNFHy+6tMzgyQ/LHu4Wil4QYf3pb4uksioxhs/APdae2W9l8fr2Io4r7tLDQo1iylzUA2uorFBlBztX08B3Lv4xXooCf6KA23iuo2DgfARXfSlvFY70HV8P2SywhDwcU28XMKerxZ4doXccBAoUvAaQ6mDkul1M5UFwAOM8Xpvbld1XuFvmKdcCnAkbKEDA==;5:W5+l8CUYjGrBFcNURPWDvm8mz+i7pm1SDg4sO5+/tBA6/9CHuYYwOfzRA83QxAke37yQboSZzwnQFa2eVOS0hTOtTRY6V/b7mfzUzLDfvr4+uO3YxQ4sCheg+zytzFapc83JDwHM65AbgDIG1Yf5Zi9++pqDMRTLAndnibZ7Y4krRroSwURFCpjlfYBmlyeu5sRWJrV/UM1p09iwB2Q0Kg==;7:IZweDm6srMYohxalZ8pdlPaov6P8jZyKWnB2bWeZMOjm5m4qGmH88T17SCyP2u56Gfe395RfqHEwC/gFPTifdWEj9uj2MSRKKi294OU9m2OdzXoT9MIP1i5ykSlPjT7eFBH9Oc5JVKs/+0RgN6wvIw==
-x-ms-office365-filtering-correlation-id: c4c99d73-c147-413b-3088-08d686f4807d
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6364;
-x-ms-traffictypediagnostic: DBBPR05MB6364:
-x-microsoft-antispam-prvs: <DBBPR05MB63643DFF81382BAF3BAA1305CF900@DBBPR05MB6364.eurprd05.prod.outlook.com>
-x-forefront-prvs: 0933E9FD8D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(366004)(136003)(39860400002)(396003)(346002)(199004)(189003)(8936002)(1076003)(305945005)(316002)(68736007)(86362001)(26005)(81156014)(7736002)(53936002)(93886005)(478600001)(6506007)(81166006)(6512007)(7416002)(229853002)(14454004)(386003)(54906003)(8676002)(36756003)(71200400001)(71190400001)(102836004)(6916009)(66066001)(4326008)(97736004)(14444005)(256004)(6486002)(217873002)(99286004)(6436002)(11346002)(486006)(186003)(2906002)(446003)(476003)(105586002)(76176011)(2616005)(106356001)(3846002)(6116002)(6246003)(52116002)(25786009)(33656002);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6364;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: mellanox.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: pTIPAPloGX8Fdepj1af5kHbQyHbt1qki7SR8aUDvaF8I54SvSOymycX3jVDnE+da9fHmp7JTla7P3IBh3QnG8O2CL6G5edLiKeptIFXneFd8hUFp22exMRELY8Ee4s7Tknrlb3LDfT4QZNOHRGl2Xfuv5Ukzgb/6NHuQungXkdtiaeZ/8u62vVGMxGF67VSfZKbExGeBB5adfNU6tnY9J8C09hIuhcdWjyxehhlbut4F68EGRaZMcfo0uwAENL4yCKmECmziJdfMl+H+o3OKfJZ7meQDHg5Kq/yaiEUZt7+DUHQa3peOC5lNWGKbRnwvhpSnLjXonhRKwqhPOl6ODUovs2DCgp1ISMcys1bIsfEUp4RhpWNDMmXgJol5hxbf2S7ZPaQcHp8xMsPP//MBo1604YYwyDD1hPw/q4aqzgQ=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <5026D2D732A5D3409D2B6B23F246B7D1@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c4c99d73-c147-413b-3088-08d686f4807d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 20:50:00.5304
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6364
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 03:43:32PM -0500, Jerome Glisse wrote:
-> On Wed, Jan 30, 2019 at 08:11:19PM +0000, Jason Gunthorpe wrote:
-> > On Wed, Jan 30, 2019 at 01:00:02PM -0700, Logan Gunthorpe wrote:
-> >=20
-> > > We never changed SGLs. We still use them to pass p2pdma pages, only w=
-e
-> > > need to be a bit careful where we send the entire SGL. I see no reaso=
-n
-> > > why we can't continue to be careful once their in userspace if there'=
-s
-> > > something in GUP to deny them.
-> > >=20
-> > > It would be nice to have heterogeneous SGLs and it is something we
-> > > should work toward but in practice they aren't really necessary at th=
-e
-> > > moment.
-> >=20
-> > RDMA generally cannot cope well with an API that requires homogeneous
-> > SGLs.. User space can construct complex MRs (particularly with the
-> > proposed SGL MR flow) and we must marshal that into a single SGL or
-> > the drivers fall apart.
-> >=20
-> > Jerome explained that GPU is worse, a single VMA may have a random mix
-> > of CPU or device pages..
-> >=20
-> > This is a pretty big blocker that would have to somehow be fixed.
->=20
-> Note that HMM takes care of that RDMA ODP with my ODP to HMM patch,
-> so what you get for an ODP umem is just a list of dma address you
-> can program your device to. The aim is to avoid the driver to care
-> about that. The access policy when the UMEM object is created by
-> userspace through verbs API should however ascertain that for mmap
-> of device file it is only creating a UMEM that is fully covered by
-> one and only one vma. GPU device driver will have one vma per logical
-> GPU object. I expect other kind of device do that same so that they
-> can match a vma to a unique object in their driver.
 
-A one VMA rule is not really workable.
 
-With ODP VMA boundaries can move around across the lifetime of the MR
-and we have no obvious way to fail anything if userpace puts a VMA
-boundary in the middle of an existing ODP MR address range.
+On 2019-01-30 12:59 p.m., Jason Gunthorpe wrote:
+> On Wed, Jan 30, 2019 at 12:45:46PM -0700, Logan Gunthorpe wrote:
+>>
+>>
+>> On 2019-01-30 12:06 p.m., Jason Gunthorpe wrote:
+>>>> Way less problems than not having struct page for doing anything
+>>>> non-trivial.  If you map the BAR to userspace with remap_pfn_range
+>>>> and friends the mapping is indeed very simple.  But any operation
+>>>> that expects a page structure, which is at least everything using
+>>>> get_user_pages won't work.
+>>>
+>>> GUP doesn't work anyhow today, and won't work with BAR struct pages in
+>>> the forseeable future (Logan has sent attempts on this before).
+>>
+>> I don't recall ever attempting that... But patching GUP for special
+>> pages or VMAS; or working around by not calling it in some cases seems
+>> like the thing that's going to need to be done one way or another.
+> 
+> Remember, the long discussion we had about how to get the IOMEM
+> annotation into SGL? That is a necessary pre-condition to doing
+> anything with GUP in DMA using drivers as GUP -> SGL -> DMA map is
+> pretty much the standard flow.
 
-I think the HMM mirror API really needs to deal with this for the
-driver somehow.
+Yes, but that was unrelated to GUP even if that might have been the
+eventual direction.
 
-Jason
+And I feel the GUP->SGL->DMA flow should still be what we are aiming
+for. Even if we need a special GUP for special pages, and a special DMA
+map; and the SGL still has to be homogenous....
+
+> So, I see Jerome solving the GUP problem by replacing GUP entirely
+> using an API that is more suited to what these sorts of drivers
+> actually need.
+
+Yes, this is what I'm expecting and what I want. Not bypassing the whole
+thing by doing special things with VMAs.
+
+Logan
