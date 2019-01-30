@@ -2,152 +2,129 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD1EC282D8
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:44:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D466C4151A
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:54:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A32E21473
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:44:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="G3cbAPVS"
+	by mail.kernel.org (Postfix) with ESMTP id 3CF992087F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:54:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732545AbfA3Rof (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 12:44:35 -0500
-Received: from mail-eopbgr140057.outbound.protection.outlook.com ([40.107.14.57]:55174
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732527AbfA3Rof (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 12:44:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=TtabXhoOLem7y9THIY/E6ceuy5QU0QS50cnRDHjn4Tc=;
- b=G3cbAPVSEg/+8VhJdOr0SzAYWsv/0CTGhCMtEhcwbowlgf8IQ9zbWMUltK7333jlSv7sJze4JAHy3yxX5QHDbK6c7BZlQopm9H7t1hVXlgJdJfexYX7PuM5Ng2FM3NZELKLLktu2tk3/7eezZ9KYTAz5Y/81Hde4DNG7QBJJS3I=
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
- DBBPR05MB6506.eurprd05.prod.outlook.com (20.179.43.84) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1558.21; Wed, 30 Jan 2019 17:44:31 +0000
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
- 17:44:31 +0000
-From:   Jason Gunthorpe <jgg@mellanox.com>
-To:     Christoph Hellwig <hch@lst.de>
-CC:     Logan Gunthorpe <logang@deltatee.com>,
-        Jerome Glisse <jglisse@redhat.com>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <jroedel@suse.de>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAAEreAgAAFNYCAALluAIAAoq8A
-Date:   Wed, 30 Jan 2019 17:44:31 +0000
-Message-ID: <20190130174424.GA17080@mellanox.com>
-References: <20190129174728.6430-1-jglisse@redhat.com>
- <20190129174728.6430-4-jglisse@redhat.com>
- <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
- <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
- <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
- <20190129205827.GM10108@mellanox.com> <20190130080208.GC29665@lst.de>
-In-Reply-To: <20190130080208.GC29665@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: MWHPR02CA0053.namprd02.prod.outlook.com
- (2603:10b6:301:60::42) To DBBPR05MB6426.eurprd05.prod.outlook.com
- (2603:10a6:10:c9::16)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=jgg@mellanox.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [174.3.196.123]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DBBPR05MB6506;6:7o1T+xumdAiHJJQEuNs2JyMemFiVCsGVuYgr56NrpF28me4rRo0XdTyOccDulg8NPuSCBbfTy3GCJkafyzpIfG1q076Lm8cZ2RVknjpZqdIBdw2cAacnmxOS0zJU3jFR1EQ7oCdhSBceIHyFkvYGeVM1co83nMqsCiFgnB3apvXJYL2CpoZxpMA/4VOXQO4eTVnnPf2onbzB8vgw0IHJ30xYKsw4yDm+DmUP6Aqy7xSI7P2UWjoMCDXYZLtqBasucNJvoEgz9QE5A8De4PriX6gbrU75yzGJh/dGFIN5L6JLzAhLYr5W1kNs0p0z+rhbmXY2PSj1tbtjinJoJ3/H9CNyXrgZp/uoaPg8QQ0F4t/gt+458iiMpabJEwD7DWZmi9U4XwQvXw9VmG7OpyFcmlo8axjdAdRevUd/HATWJRz6mSBbb6yzPmXrLZNzEMp1pzm6ZiN//rZB1uUj+R2xhA==;5:Rkeek+TIFaY5Ofl+W42rGmLBLhzNbfdZSi3eF3ZolGiEQm4urds8EzCF1ze1qHIagOc15Hxs3YAjMtARHYMEejAkHWdoLvq8iqphqGNVzFbwe/JH+BRTAJSgsI9pRykxc2kKheDBePS4tRYGt89fvlOqZH3BEi5NXWKVd4rsTuKj3lzdwGh9uQ5n15Z22FbfChDK3dQR7tDHIDzRfVzKwg==;7:nFs7d3ifbSKtNL8KHmz7NeJxlcv8FKKX5cK5ucxvbmBHy83P+qlz+MPkPqHXruz1wLE8OwHx7leK7kg1OxvLqaglXwbsIkwLGD/QKXBnkb0tio+3kpcnXAcXHCKFvsOqzf8vjHv744m0/v86iEao7Q==
-x-ms-office365-filtering-correlation-id: 3b15ce92-b7af-4bea-b247-08d686da96c3
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6506;
-x-ms-traffictypediagnostic: DBBPR05MB6506:
-x-microsoft-antispam-prvs: <DBBPR05MB65063224A790229E604086CDCF900@DBBPR05MB6506.eurprd05.prod.outlook.com>
-x-forefront-prvs: 0933E9FD8D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(979002)(366004)(346002)(136003)(39860400002)(396003)(376002)(189003)(199004)(2616005)(25786009)(7416002)(3846002)(316002)(8676002)(6116002)(81166006)(105586002)(81156014)(2906002)(93886005)(446003)(11346002)(102836004)(6916009)(4326008)(33656002)(8936002)(186003)(52116002)(305945005)(476003)(99286004)(76176011)(54906003)(7736002)(486006)(561944003)(26005)(217873002)(53936002)(66066001)(1076003)(6436002)(71200400001)(229853002)(6246003)(86362001)(97736004)(71190400001)(68736007)(6486002)(6512007)(14454004)(6506007)(106356001)(478600001)(386003)(36756003)(256004)(969003)(989001)(999001)(1009001)(1019001);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6506;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: mellanox.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: ya5zZoENxkBXzzxhlK/yFwg3NzSUxoZ5vHX/bGW4YvUssmxqTYdaGXs4myCnD1rbPnkqc/RMEec8lDmVuitOJWeqHFp/0w4m6TVNLQqFpQ6GBN2OAwBkxtbA16m56WqCeKIR9uBF7d4ZvbjoOsx0Gns+lzTKzIdNnXvbvgI4KpQWh9Frh1C60dbtfinYRvM9KTkMHx/UjXek7ZrMg73aNPsa6oS1ThJj+HZ0taHF40eoJqLgL7cNjmnZGwHMFyEIqICugoSvLXW/nshUttpvK3HXPBDzmeUGqr7mc5gFaNUh0qIIwlq0TbzQM4ykj09W5BeadhPD1eaW7tDMwsqIsyyL4RCcOaF9j6tA6ZFyA1MopGdeEnBEugrSvF3cVS/VhO+r17u99+RqdfZ9iQ7lhFRaAtuwC2g7g5+aXsplPTc=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <F849EDC110592049BC19081D2ED8EABB@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S1732619AbfA3RyZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 12:54:25 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:59030 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726464AbfA3RyX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 12:54:23 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9BDA580D;
+        Wed, 30 Jan 2019 09:54:22 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id F28983F557;
+        Wed, 30 Jan 2019 09:54:20 -0800 (PST)
+Date:   Wed, 30 Jan 2019 17:54:15 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Stefan Agner <stefan@agner.ch>
+Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        l.stach@pengutronix.de, tpiepho@impinj.com,
+        leonard.crestez@nxp.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] PCI: dwc: allow to limit registers set length
+Message-ID: <20190130175415.GA7715@e107981-ln.cambridge.arm.com>
+References: <20181204165528.15534-1-stefan@agner.ch>
 MIME-Version: 1.0
-X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3b15ce92-b7af-4bea-b247-08d686da96c3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 17:44:30.9873
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6506
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181204165528.15534-1-stefan@agner.ch>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 09:02:08AM +0100, Christoph Hellwig wrote:
-> On Tue, Jan 29, 2019 at 08:58:35PM +0000, Jason Gunthorpe wrote:
-> > On Tue, Jan 29, 2019 at 01:39:49PM -0700, Logan Gunthorpe wrote:
-> >=20
-> > > implement the mapping. And I don't think we should have 'special' vma=
-'s
-> > > for this (though we may need something to ensure we don't get mapping
-> > > requests mixed with different types of pages...).
-> >=20
-> > I think Jerome explained the point here is to have a 'special vma'
-> > rather than a 'special struct page' as, really, we don't need a
-> > struct page at all to make this work.
-> >=20
-> > If I recall your earlier attempts at adding struct page for BAR
-> > memory, it ran aground on issues related to O_DIRECT/sgls, etc, etc.
->=20
-> Struct page is what makes O_DIRECT work, using sgls or biovecs, etc on
-> it work.  Without struct page none of the above can work at all.  That
-> is why we use struct page for backing BARs in the existing P2P code.
-> Not that I'm a particular fan of creating struct page for this device
-> memory, but without major invasive surgery to large parts of the kernel
-> it is the only way to make it work.
+On Tue, Dec 04, 2018 at 05:55:26PM +0100, Stefan Agner wrote:
+> Add length to the struct dw_pcie and check that the accessors
+> dw_pcie_(rd|wr)_conf() do not read/write beyond that point.
+> 
+> Suggested-by: Trent Piepho <tpiepho@impinj.com>
+> Signed-off-by: Stefan Agner <stefan@agner.ch>
+> ---
+> Changes in v4:
+> - Move length check to dw_pcie_rd_conf
+> 
+>  .../pci/controller/dwc/pcie-designware-host.c    | 16 ++++++++++++++--
+>  drivers/pci/controller/dwc/pcie-designware.h     |  1 +
+>  2 files changed, 15 insertions(+), 2 deletions(-)
 
-I don't think anyone is interested in O_DIRECT/etc for RDMA doorbell
-pages.
+Hi Stefan,
 
-.. and again, I recall Logan already attempted to mix non-CPU memory
-into sgls and it was a disaster. You pointed out that one cannot just
-put iomem addressed into a SGL without auditing basically the entire
-block stack to prove that nothing uses iomem without an iomem
-accessor.
+I wanted to ask you if this series should be considered for v5.1
+inclusion, it is in the PCI backlog. If it is, let me have a look
+and if it is OK to go I will likely ask you to rebase it.
 
-I recall that proposal veered into a direction where the block layer
-would just fail very early if there was iomem in the sgl, so generally
-no O_DIRECT support anyhow.
+Thanks,
+Lorenzo
 
-We already accepted the P2P stuff from Logan as essentially a giant
-special case - it only works with RDMA and only because RDMA MR was
-hacked up with a special p2p callback.
-
-I don't see why a special case with a VMA is really that different.
-
-If someone figures out the struct page path down the road it can
-obviously be harmonized with this VMA approach pretty easily.
-
-Jason
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 692dd1b264fb..9fc0f7bd99f0 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -606,14 +606,20 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>  			   int size, u32 *val)
+>  {
+>  	struct pcie_port *pp = bus->sysdata;
+> +	struct dw_pcie *pci;
+>  
+>  	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn))) {
+>  		*val = 0xffffffff;
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	}
+>  
+> -	if (bus->number == pp->root_bus_nr)
+> +	if (bus->number == pp->root_bus_nr) {
+> +		pci = to_dw_pcie_from_pp(pp);
+> +		if (pci->dbi_length && where + size > pci->dbi_length)
+> +			return PCIBIOS_BAD_REGISTER_NUMBER;
+> +
+>  		return dw_pcie_rd_own_conf(pp, where, size, val);
+> +	}
+>  
+>  	return dw_pcie_rd_other_conf(pp, bus, devfn, where, size, val);
+>  }
+> @@ -622,12 +628,18 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+>  			   int where, int size, u32 val)
+>  {
+>  	struct pcie_port *pp = bus->sysdata;
+> +	struct dw_pcie *pci;
+>  
+>  	if (!dw_pcie_valid_device(pp, bus, PCI_SLOT(devfn)))
+>  		return PCIBIOS_DEVICE_NOT_FOUND;
+>  
+> -	if (bus->number == pp->root_bus_nr)
+> +	if (bus->number == pp->root_bus_nr) {
+> +		pci = to_dw_pcie_from_pp(pp);
+> +		if (pci->dbi_length && where + size > pci->dbi_length)
+> +			return PCIBIOS_BAD_REGISTER_NUMBER;
+> +
+>  		return dw_pcie_wr_own_conf(pp, where, size, val);
+> +	}
+>  
+>  	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
+>  }
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 9943d8c68335..9cd7bdc94200 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -229,6 +229,7 @@ struct dw_pcie {
+>  	void __iomem		*dbi_base2;
+>  	/* Used when iatu_unroll_enabled is true */
+>  	void __iomem		*atu_base;
+> +	int			dbi_length;
+>  	u32			num_viewport;
+>  	u8			iatu_unroll_enabled;
+>  	struct pcie_port	pp;
+> -- 
+> 2.19.1
+> 
