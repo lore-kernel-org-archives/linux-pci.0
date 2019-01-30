@@ -4,111 +4,182 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E640C282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 16:53:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CB94C282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:06:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C916F21473
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 16:53:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DB042184D
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:06:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548867215;
-	bh=EQQWAuT6c9Qs6U/7ZkxPFtmaz+H/NurHWFHLdtCSkgQ=;
+	s=default; t=1548867983;
+	bh=iJCfhl4idjAo8RareOx2BQFx3jKZU6evYVhqWFVbUFc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=QIOJQXZl0Ni2UkiBle+mqyb398EqWVQ84ZAWdF5mfd7liq8psahhOX3TfLyeQ+eRT
-	 NwyYzsMisZjJt+QKvPj6M+sdye6zmDubb7i76m9V1Uu3yyGR11/dU7BdfnQzerikzM
-	 OT5AfgxADjXtu4b7yVLbq0kZXHb/+Nlw/GciclOQ=
+	b=Gcx1h38+KDiuntDZ5KwetGgFE/SN4x/RPQVyTTrCXOa6ACQM3fhebhT5tLIgEW1j/
+	 vp36SynZAqXM/P/H3fdJ1XazEjfQ08fvGmAhqRa2/MjuO6hZVLWCoTSxB6/c+CZ8hn
+	 OA7M20aFLU+PRsLyeOHSo8v1FyaBampZqDtKkyvs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731939AbfA3Qxf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 11:53:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44094 "EHLO mail.kernel.org"
+        id S1732340AbfA3RGW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 12:06:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46734 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732101AbfA3Qxe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 11:53:34 -0500
+        id S1732307AbfA3RGW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 12:06:22 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D5E762086C;
-        Wed, 30 Jan 2019 16:53:33 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 381DD20989;
+        Wed, 30 Jan 2019 17:06:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548867214;
-        bh=EQQWAuT6c9Qs6U/7ZkxPFtmaz+H/NurHWFHLdtCSkgQ=;
+        s=default; t=1548867980;
+        bh=iJCfhl4idjAo8RareOx2BQFx3jKZU6evYVhqWFVbUFc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JGForqrkGWdQ/X5dI8NY8a0ZRA2ALAlY79TD66XPUoZKAmQN6PyQ3wLpUU+eSj2n+
-         mN11LvP2aR8FVO4Q7SCaLWz0s9vMHlA5Ju7PjLviNenZ7DUDcMwjui2MpiTo2Gcsfr
-         rj+VDde9Cr+sWfAZ24Q+oKj3fHRVGkTWk0cMOg0I=
-Date:   Wed, 30 Jan 2019 10:53:32 -0600
+        b=1fie8BrC5rjM3TNwbOPhnuVOvfrum0Ulwq+aPQ8jvn9BMUjupGVgSDVd/70dbbhTx
+         O8Rx/nuRvjRzaR3K2K8oDY6r0Z13Dsf/fWpvz+wVEQYvbQmW+HXezZ+2mUrRwIIdfN
+         lqsgGAkfwtKsJxLjdn9finik1eRF36DLwxUWVPdI=
+Date:   Wed, 30 Jan 2019 11:06:12 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     changbin.du@gmail.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: make pci_size() return real size
-Message-ID: <20190130165332.GG229773@google.com>
-References: <20181013004919.3202-1-changbin.du@gmail.com>
+To:     honghui.zhang@mediatek.com
+Cc:     lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+        ulf.hansson@linaro.org, marc.zyngier@arm.com,
+        jianjun.wang@mediatek.com, yt.shen@mediatek.com,
+        matthias.bgg@gmail.com, yingjoe.chen@mediatek.com,
+        eddie.huang@mediatek.com
+Subject: Re: [PATCH v9 2/9] PCI: Using PCI configuration space header type
+ instead of class type to assign resource
+Message-ID: <20190130170612.GH229773@google.com>
+References: <1539686690-24068-1-git-send-email-honghui.zhang@mediatek.com>
+ <1539686690-24068-3-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20181013004919.3202-1-changbin.du@gmail.com>
+In-Reply-To: <1539686690-24068-3-git-send-email-honghui.zhang@mediatek.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Oct 13, 2018 at 08:49:19AM +0800, changbin.du@gmail.com wrote:
-> From: Du Changbin <changbin.du@gmail.com>
+On Tue, Oct 16, 2018 at 06:44:43PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> Currently, the pci_size() function actually return 'size-1'.
-> Make it return real size to avoid confusing.
+> The PCI configuration space header type defines the layout of the rest
+> of the header (PCI r3.0 sec 6.1, PCIe r4.0 sec 7.5.1.1.9) while the
+> resource assignment is based on the configuration space layout instead
+> of its class type. Using configuration space header type instead of
+> class type for the resource assignment.
 > 
-> Signed-off-by: Du Changbin <changbin.du@gmail.com>
+> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Applied to pci/enumeration for v5.1, thanks!
+I applied the patch below to pci/enumeration for v5.1.
 
-I think it's good to have the "end = start + size - 1" idiom made more
-obvious to help avoid off-by-one errors.
+I dropped the hunk that removed the PCI_CLASS_BRIDGE_HOST check per
+Lorenzo's concern.  Let me know if you have any other concerns.
 
-> ---
->  drivers/pci/probe.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 201f9e5ff55c..8ff2b1413865 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -121,13 +121,13 @@ static u64 pci_size(u64 base, u64 maxbase, u64 mask)
->  	 * Get the lowest of them to find the decode size, and from that
->  	 * the extent.
->  	 */
-> -	size = (size & ~(size-1)) - 1;
-> +	size = size & ~(size-1);
->  
->  	/*
->  	 * base == maxbase can be valid only if the BAR has already been
->  	 * programmed with all 1s.
->  	 */
-> -	if (base == maxbase && ((base | size) & mask) != mask)
-> +	if (base == maxbase && ((base | (size - 1)) & mask) != mask)
->  		return 0;
->  
->  	return size;
-> @@ -278,7 +278,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  			/* Above 32-bit boundary; try to reallocate */
->  			res->flags |= IORESOURCE_UNSET;
->  			res->start = 0;
-> -			res->end = sz64;
-> +			res->end = sz64 - 1;
->  			pci_info(dev, "reg 0x%x: can't handle BAR above 4GB (bus address %#010llx)\n",
->  				 pos, (unsigned long long)l64);
->  			goto out;
-> @@ -286,7 +286,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  	}
->  
->  	region.start = l64;
-> -	region.end = l64 + sz64;
-> +	region.end = l64 + sz64 - 1;
->  
->  	pcibios_bus_to_resource(dev->bus, res, &region);
->  	pcibios_resource_to_bus(dev->bus, &inverted_region, res);
-> -- 
-> 2.17.1
-> 
+
+commit b2fb5cc57469
+Author: Honghui Zhang <honghui.zhang@mediatek.com>
+Date:   Tue Oct 16 18:44:43 2018 +0800
+
+    PCI: Rely on config space header type, not class code
+    
+    The PCI configuration space header type tells us whether the device is a
+    bridge, a CardBus bridge, or a normal device, and defines the layout of the
+    rest of the header (PCI r3.0 sec 6.1, PCIe r4.0 sec 7.5.1.1.9).
+    
+    When we rely on the header format, e.g., when we're dealing with bridge
+    windows, we should check the header type, not the class code.  The class
+    code is loosely related to the header type, but is often incorrect and the
+    spec doesn't actually require it to be related to the header format.
+    
+    Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+    Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+    [bhelgaas: changelog, keep the PCI_CLASS_BRIDGE_HOST check]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index c9d8e3c837de..e9d938e14ba8 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6000,8 +6000,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	 * to enable the kernel to reassign new resource
+ 	 * window later on.
+ 	 */
+-	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
+-	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
++	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+ 		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
+ 			r = &dev->resource[i];
+ 			if (!(r->flags & IORESOURCE_MEM))
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 8e2e4154cdd9..128459a0ffba 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1779,9 +1779,6 @@ int pci_setup_device(struct pci_dev *dev)
+ 		break;
+ 
+ 	case PCI_HEADER_TYPE_BRIDGE:		    /* bridge header */
+-		if (class != PCI_CLASS_BRIDGE_PCI)
+-			goto bad;
+-
+ 		/*
+ 		 * The PCI-to-PCI bridge spec requires that subtractive
+ 		 * decoding (i.e. transparent) bridge must have programming
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1941bb0a6c13..ec44a0f3a7ac 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1186,12 +1186,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		if (!b)
+ 			continue;
+ 
+-		switch (dev->class >> 8) {
+-		case PCI_CLASS_BRIDGE_CARDBUS:
++		switch (dev->hdr_type) {
++		case PCI_HEADER_TYPE_CARDBUS:
+ 			pci_bus_size_cardbus(b, realloc_head);
+ 			break;
+ 
+-		case PCI_CLASS_BRIDGE_PCI:
++		case PCI_HEADER_TYPE_BRIDGE:
+ 		default:
+ 			__pci_bus_size_bridges(b, realloc_head);
+ 			break;
+@@ -1202,12 +1202,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	if (pci_is_root_bus(bus))
+ 		return;
+ 
+-	switch (bus->self->class >> 8) {
+-	case PCI_CLASS_BRIDGE_CARDBUS:
++	switch (bus->self->hdr_type) {
++	case PCI_HEADER_TYPE_CARDBUS:
+ 		/* don't size cardbuses yet. */
+ 		break;
+ 
+-	case PCI_CLASS_BRIDGE_PCI:
++	case PCI_HEADER_TYPE_BRIDGE:
+ 		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+@@ -1356,13 +1356,13 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 
+ 		__pci_bus_assign_resources(b, realloc_head, fail_head);
+ 
+-		switch (dev->class >> 8) {
+-		case PCI_CLASS_BRIDGE_PCI:
++		switch (dev->hdr_type) {
++		case PCI_HEADER_TYPE_BRIDGE:
+ 			if (!pci_is_enabled(dev))
+ 				pci_setup_bridge(b);
+ 			break;
+ 
+-		case PCI_CLASS_BRIDGE_CARDBUS:
++		case PCI_HEADER_TYPE_CARDBUS:
+ 			pci_setup_cardbus(b);
+ 			break;
+ 
