@@ -2,119 +2,118 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E7C5C282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 23:26:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 713DAC282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 23:30:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 52C1D2184D
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 23:26:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548890768;
-	bh=mvAz+amdws5MC1tgph7MS/eBb+N/Mm8eesy/VZGDaiE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=2J3BUU7YJW8U15W/od2qIHQJ2kzh4z/Cr7a2BMoslN/OWq6rXKHPl9yeSk1WfpPMB
-	 vMtQkMiQyoepP+d/vnzNGMAlCMRsg8rA6vBRQZe2p7tMPS6AFRfbGY7T3NnIZivES9
-	 +biLWDpH/Xn/dpw+NZTbdpXkz0fWDmAoBJKDicBo=
+	by mail.kernel.org (Postfix) with ESMTP id 2EB0E218D2
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 23:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727338AbfA3X0H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 18:26:07 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46720 "EHLO mail.kernel.org"
+        id S1727344AbfA3XaF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 18:30:05 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:42800 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725768AbfA3X0H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 18:26:07 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BE7BC20882;
-        Wed, 30 Jan 2019 23:26:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548890767;
-        bh=mvAz+amdws5MC1tgph7MS/eBb+N/Mm8eesy/VZGDaiE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=acIOVvV6wdRY5o2E0nDQgRpYtQam4Y9LeyH8sZYZ36Wjy1Eaw+LC/das6RmDUOQzp
-         Q0p04sFX76Vejq08T6KMCIpYHXhWDnK6GkN9H4q9AdXKNvGdjmju4O+p5dpyGL9KUu
-         Oqdu7HvdH6HLY3X26zOsFPQB5BbjPsrvrvqK980Y=
-Date:   Wed, 30 Jan 2019 17:26:05 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Stefan =?iso-8859-1?Q?M=E4tje?= <stefan.maetje@esd.eu>
-Cc:     linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/1] PCI/ASPM: Add a fix for an erratum of the
- PI7C9X111SLB PCI-to-PCIe bridge
-Message-ID: <20190130232605.GN229773@google.com>
-References: <20181101192229.48352-1-stefan.maetje@esd.eu>
- <20181101192229.48352-2-stefan.maetje@esd.eu>
+        id S1726865AbfA3XaF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 18:30:05 -0500
+Received: from s01061831bf6ec98c.cg.shawcable.net ([68.147.80.180] helo=[192.168.6.205])
+        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1goyiP-0002Sm-FK; Wed, 30 Jan 2019 15:52:18 -0700
+To:     Jason Gunthorpe <jgg@mellanox.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jerome Glisse <jglisse@redhat.com>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <20190129215028.GQ3176@redhat.com>
+ <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
+ <20190129234752.GR3176@redhat.com>
+ <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
+ <20190130041841.GB30598@mellanox.com> <20190130080006.GB29665@lst.de>
+ <20190130190651.GC17080@mellanox.com>
+ <840256f8-0714-5d7d-e5f5-c96aec5c2c05@deltatee.com>
+ <20190130195900.GG17080@mellanox.com>
+ <35bad6d5-c06b-f2a3-08e6-2ed0197c8691@deltatee.com>
+ <20190130215019.GL17080@mellanox.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <07baf401-4d63-b830-57e1-5836a5149a0c@deltatee.com>
+Date:   Wed, 30 Jan 2019 15:52:13 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20181101192229.48352-2-stefan.maetje@esd.eu>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190130215019.GL17080@mellanox.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 68.147.80.180
+X-SA-Exim-Rcpt-To: iommu@lists.linux-foundation.org, jroedel@suse.de, robin.murphy@arm.com, m.szyprowski@samsung.com, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, Felix.Kuehling@amd.com, christian.koenig@amd.com, bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, jglisse@redhat.com, hch@lst.de, jgg@mellanox.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Stefan,
 
-On Thu, Nov 01, 2018 at 08:22:29PM +0100, Stefan Mätje wrote:
-> Due to an erratum in the Pericom PI7C9X111SLB bridge in reverse mode the
-> retrain link bit needs to be cleared again manually to allow the link
-> training to succeed.
+
+On 2019-01-30 2:50 p.m., Jason Gunthorpe wrote:
+> On Wed, Jan 30, 2019 at 02:01:35PM -0700, Logan Gunthorpe wrote:
 > 
-> If it is not cleared manually the link training is continuously restarted
-> and all devices below the PCI-to-PCIe bridge can't be accessed any more.
-> That means drivers for devices below the bridge will be loaded but won't
-> work or even crash because the driver is only reading 0xffff.
+>> And I feel the GUP->SGL->DMA flow should still be what we are aiming
+>> for. Even if we need a special GUP for special pages, and a special DMA
+>> map; and the SGL still has to be homogenous....
 > 
-> See also the Pericom Errata Sheet PI7C9X111SLB_errata_rev1.2_102711.pdf.
+> *shrug* so what if the special GUP called a VMA op instead of
+> traversing the VMA PTEs today? Why does it really matter? It could
+> easily change to a struct page flow tomorrow..
 
-Is there a public URL for this?
+Well it's so that it's composable. We want the SGL->DMA side to work for
+APIs from kernel space and not have to run a completely different flow
+for kernel drivers than from userspace memory.
 
-Are there any bug reports for which you could include URLs?
-
-> Signed-off-by: Stefan Mätje <stefan.maetje@esd.eu>
-> ---
->  drivers/pci/pcie/aspm.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
+For GUP to do a special VMA traversal it would now need to return
+something besides struct pages which means no SGL and it means a
+completely different DMA mapping call.
+> Would you feel better if this also came along with a:
 > 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 5326916715d2..89a245023aa9 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -268,6 +268,15 @@ static void pcie_aspm_configure_common_clock(struct pcie_link_state *link)
->  	/* Retrain link */
->  	reg16 |= PCI_EXP_LNKCTL_RL;
->  	pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
-> +	if (0x12d8 == parent->vendor && 0xe111 == parent->device) {
-> +		/*
-> +		 * Due to an erratum in the Pericom PI7C9X111SLB bridge in
-> +		 * reverse mode the retrain link bit needs to be cleared
-> +		 * again manually to allow the link training to succeed.
-> +		 */
-> +		reg16 &= ~PCI_EXP_LNKCTL_RL;
-> +		pcie_capability_write_word(parent, PCI_EXP_LNKCTL, reg16);
+>   struct dma_sg_table *sgl_dma_map_user(struct device *dma_device, 
+>              void __user *prt, size_t len)
 
-There's no timing constraint, e.g., PCI_EXP_LNKCTL_RL doesn't have to be
-maintained for some minimum time before being cleared?
+That seems like a nice API. But certainly the implementation would need
+to use existing dma_map or pci_p2pdma_map calls, or whatever as part of
+it...
 
-> +	}
-
-Sinan suggested a quirk, which I think is a good idea.  Possible
-implementation:
-
-  - add a pcie_retrain_link() interface (internal to PCI core, maybe even
-    internal to aspm.c)
-  - call pcie_retrain_link() from pcie_aspm_configure_common_clock()
-  - add a pci_dev.clear_retrain_link:1 bit
-  - set the bit in a quirk
-  - test the bit in pcie_retrain_link()
-
->  	/* Wait for link training end. Break out after waiting for timeout */
->  	start_jiffies = jiffies;
-> -- 
-> 2.15.0
+,
+> flow which returns a *DMA MAPPED* sgl that does not have struct page
+> pointers as another interface?
 > 
+> We can certainly call an API like this from RDMA for non-ODP MRs.
+> 
+> Eliminating the page pointers also eliminates the __iomem
+> problem. However this sgl object is not copyable or accessible from
+> the CPU, so the caller must be sure it doesn't need CPU access when
+> using this API. 
+
+We actually stopped caring about the __iomem problem. We are working
+under the assumption that pages returned by devm_memremap_pages() can be
+accessed as normal RAM and does not need the __iomem designation. The
+main problem now is that code paths need to know to use pci_p2pdma_map
+or not. And in theory this could be pushed into regular dma_map
+implementations but we'd have to get it into all of them which is a pain.
+
+Logan
