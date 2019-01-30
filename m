@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11600C282CD
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 04:18:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD63C282D0
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 04:30:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C71B920820
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 04:18:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF91220857
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 04:30:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="p6RgcDkI"
+	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="IiKv+TF4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729091AbfA3ESx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 23:18:53 -0500
-Received: from mail-eopbgr140048.outbound.protection.outlook.com ([40.107.14.48]:64975
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        id S1730037AbfA3Ead (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 23:30:33 -0500
+Received: from mail-eopbgr00050.outbound.protection.outlook.com ([40.107.0.50]:53569
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727672AbfA3ESx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 23:18:53 -0500
+        id S1730022AbfA3Eac (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 23:30:32 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
  s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=odFD/pFRFfFYR8wF/TesPm0cK31nWbm6naTZkKG5Tkw=;
- b=p6RgcDkIdbBvDffPNVCjkEQweUEYjT3fOX36rD1t5vMdJIESNDty+5NRcaw/AewW1d8PF66Yo5Yct1pqGYqKxJiFZQfRydymYxllxIcsMR6o+qxyy04O2CjQu4miQAirtrYJhoiGDES2YLb7TGg3Xs+lr6bNMm/+bH4oSB4Liz0=
+ bh=bZ7dGrVrH4fix/RckSJysHNQQzMdwLNZNKxx2zgBqog=;
+ b=IiKv+TF4ExYJhrimZaR5omiiTbTu56jhpIZXxcdLcUxjtbyQO7jjbMiTcFMz64nrWh8r5U5KRQvLnX6JHx2qeROXK3EBtsfXZlAhuswr/MBeWQeoJMSIanE0GobTD3/djssHDpZU8i/JM8Z3Zab/YhbkjthSoWZfxmHWHFY68AY=
 Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
- DBBPR05MB6345.eurprd05.prod.outlook.com (20.179.41.75) with Microsoft SMTP
+ DBBPR05MB6490.eurprd05.prod.outlook.com (20.179.43.22) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1580.16; Wed, 30 Jan 2019 04:18:48 +0000
+ 15.20.1580.16; Wed, 30 Jan 2019 04:30:28 +0000
 Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
  ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
  ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
- 04:18:48 +0000
+ 04:30:27 +0000
 From:   Jason Gunthorpe <jgg@mellanox.com>
-To:     Logan Gunthorpe <logang@deltatee.com>
-CC:     Jerome Glisse <jglisse@redhat.com>,
+To:     Jerome Glisse <jglisse@redhat.com>
+CC:     Logan Gunthorpe <logang@deltatee.com>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -55,80 +55,122 @@ Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
 Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
-Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAAEreAgAAFCQCAAAk3gIAABX0AgAATFYCAAA25AIAAGRqAgAAykIA=
-Date:   Wed, 30 Jan 2019 04:18:48 +0000
-Message-ID: <20190130041841.GB30598@mellanox.com>
-References: <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
+Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAABQ6AgAAJYICAAAV0AIAAIHwAgAAYiwCAAElEAA==
+Date:   Wed, 30 Jan 2019 04:30:27 +0000
+Message-ID: <20190130043020.GC30598@mellanox.com>
+References: <20190129174728.6430-1-jglisse@redhat.com>
+ <20190129174728.6430-4-jglisse@redhat.com>
+ <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
  <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
- <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
- <20190129205749.GN3176@redhat.com>
- <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
- <20190129215028.GQ3176@redhat.com>
- <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
- <20190129234752.GR3176@redhat.com>
- <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
-In-Reply-To: <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
+ <20190129195055.GH3176@redhat.com> <20190129202429.GL10108@mellanox.com>
+ <20190129204359.GM3176@redhat.com> <20190129224016.GD4713@mellanox.com>
+ <20190130000805.GS3176@redhat.com>
+In-Reply-To: <20190130000805.GS3176@redhat.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-clientproxiedby: MWHPR14CA0010.namprd14.prod.outlook.com
- (2603:10b6:300:ae::20) To DBBPR05MB6426.eurprd05.prod.outlook.com
+x-clientproxiedby: CO1PR15CA0053.namprd15.prod.outlook.com
+ (2603:10b6:101:1f::21) To DBBPR05MB6426.eurprd05.prod.outlook.com
  (2603:10a6:10:c9::16)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=jgg@mellanox.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-originating-ip: [174.3.196.123]
 x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DBBPR05MB6345;6:H4A4wUJn0ItXsLQN1LgE4YdE70nyc4iTGrlE2qbmv590oIG7lqiM4MlLXBseI6Cb5faHzW216O9vJfWGxiunoOqiY/4dZ7JRCIxcusRm2wxGmmui0I+nKAJWdH7whmwT2HGuiHVh/Hk3CJ1al3ehB+Ngj0HfE+vr7Ywbvews+9XphXGFfJU+eYgNW0s+71Oc672OlQbM3+NoPbbIshawVsnjs5m2NYL+c+Ti3jb5cB6hupAOoET6XQk1zaDzdj+HoxQ4RNVPepaNKcYe95HGg2dDU9tTOs9bKU2kE2GHDrqR9KS0veoPiyQ14/JfLzAJR+VVk7PFLSjMaEnm2Wis1S/zgz7yUshobhKkGll8pzxu7RZOqQcj+h3uOpnf4/eK8irgjcm9CnUPPEnq4+Na6eYuqcKWxrMiXt2RvylRmZwy5QpdZbSnZUSOl8F9LxO1Hye4nhnFIHDdOnSTpRfp7g==;5:EJRY6VOIFbo621ZwP8pChZ1luqiGy6EBgNQqNZhsnuyOBoXvy9X5rVxeWO/eVWYJq/OmvOtq0NAJdWu0XPH/OFxxP8yXn/drjvky28ZG+K1lNH56i345p4UVn9CMmsrz8Vq7BBF2m01tu5aynB+U0tJlI/rvrKociAys+iL7rsrjo3vVnyTwGDoZo4PrPmROonv9hy0YPNUkkC1Mqg4XEw==;7:XWp6E+PllBrWgYWUNR2gsmBynyaeFVr1UhbEFtJ/QJdCqfz++qIqK3LaL0gYcwIGC185OcyHKplvmM+Vcg36U/I2L96jr7yLltJO4DnC8eYgQqOsXPYdPiUFp3fBxOogbNnTB/YU0njrG9K1k3r8UA==
-x-ms-office365-filtering-correlation-id: 4b51e9cd-5390-4465-8cca-08d6866a0842
+x-microsoft-exchange-diagnostics: 1;DBBPR05MB6490;6:WNVa5kmtNYhrQecH5NtzMyEqe9Mj7Ofw9RtBgyxD5sVzCYc0J3dxq0OEgL6P0DRivVOwlAA8OT2Pnx4yiKq99O9pjw4CIzKKglcF6g8xYnLaciZfm/JfJ83mQ2xPNbPnh2wKstmfE/WNODNshIZS8hnfZQlQdIj+vo1PBFvIRcZFhNJq8UMO//3gCn7bWFpOdhQaq//ZzI9+JhfYCzxeWSC5a9unoXUhfqSVHBmlY8Jr4aoLJdac7mxiB8YuGLMSy42cuHlrAU90huUlFl9GMztnzyTKp88NiT1XjaqBFcB5YJrWTvyKPBvKZzZXJCTotVKx4HrI5bvOhgrmKO4wOtHcG1KYDXFymmpcyVjsjxvFPApi5Gk4NH72Dt00cKn7eSZ9axckgAvBUMbP220KHdD5AdSrboCNwwbO5vPNlR+v+0sqh0Ti2POHmDMj0Soia5l7wYzjDPJW9+3JmLdGNQ==;5:EajzuQwWBqn2oE2IZNKS12h0FCcYr8hQpMe23XCfOZSNtgSCZnA0IheuKb6Ta6aOobTYV+OiT0lGA0teu0tvyWV7SCm42mLQ69apAFQdedaZPeybVVr4rFl82hDcD739Wln5CzkEUGq/LN8M4VU7ds5FyJLBXCKWOkjGl2OwrOBW5kfFQJS7bVlu95WBVbTURHJFQKRMOaGeLHkQAqeYuA==;7:MS9/5eCcjLlpqAUtk2YC+x3ULHFTZdstvpWiHm1Ztfjjwutaog+a9HdPyxd3ESPylpySemRi6fbV81XWoNbCkAugYi06Allg4VwgSTKWh5Gsi9BU85Xya66ueSZpPvIL6NxiSAv3cR/JSOwDmzqjIQ==
+x-ms-office365-filtering-correlation-id: 69aa6100-69ea-4065-8f44-08d6866ba8f7
 x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6345;
-x-ms-traffictypediagnostic: DBBPR05MB6345:
-x-microsoft-antispam-prvs: <DBBPR05MB63451F9433CA6C03FC51CB77CF900@DBBPR05MB6345.eurprd05.prod.outlook.com>
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6490;
+x-ms-traffictypediagnostic: DBBPR05MB6490:
+x-microsoft-antispam-prvs: <DBBPR05MB6490E6A61E114209483BFF08CF900@DBBPR05MB6490.eurprd05.prod.outlook.com>
 x-forefront-prvs: 0933E9FD8D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(346002)(396003)(376002)(136003)(189003)(199004)(4326008)(76176011)(93886005)(6246003)(25786009)(33656002)(81166006)(8676002)(8936002)(99286004)(81156014)(52116002)(7416002)(6116002)(316002)(14454004)(54906003)(2906002)(36756003)(3846002)(478600001)(6916009)(53936002)(97736004)(66066001)(105586002)(102836004)(6512007)(86362001)(217873002)(386003)(229853002)(11346002)(6506007)(1076003)(256004)(305945005)(6486002)(26005)(476003)(4744005)(446003)(68736007)(71200400001)(71190400001)(106356001)(2616005)(6436002)(486006)(7736002)(186003);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6345;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(376002)(39860400002)(136003)(366004)(396003)(189003)(199004)(4326008)(6916009)(81156014)(36756003)(68736007)(33656002)(106356001)(6486002)(6512007)(229853002)(53936002)(6436002)(105586002)(99286004)(93886005)(2906002)(6246003)(25786009)(71200400001)(71190400001)(97736004)(316002)(54906003)(1076003)(486006)(256004)(217873002)(478600001)(186003)(102836004)(81166006)(14454004)(7416002)(8936002)(26005)(386003)(3846002)(6116002)(476003)(7736002)(6506007)(2616005)(305945005)(446003)(11346002)(52116002)(66066001)(8676002)(76176011)(86362001);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6490;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: mellanox.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: b8GsDOImAOCI4A5iDMbH5ipBxDYzgCyqT37NgpLWL0UmrTUhLFH9cf/LLzWXIWEHtu94jPnEaqiEBaq7yLgrwOWehxWAK7Xnqad9lh1nFrZecn4h0/eeNCFYDPVumqc+81MqxY2aucrdSso0MDgwDcQQuRlYr664uNa9xLGXtXCnJbQPx9oZaRxq2zpGC4bAmET53lerI6CR/E1Wmu2nWfHDeIQhHQ+/rLGtjJ+TkzRMHZeZpoWj8dGrmy2pIOzpviicNDGIuhAP72cJeGgBXZDmR6COmi5ZeGmpp+3d+r7mplCW7G74x5OijDaxg28gBXreLC8EGu0P6PxdVzvCEPEMiTxBQwa3L2I9hBdSWbgMfbPBnFlHgEpbMn94gNai2vCqdSsLQFRF4Gi7qkAri6fhW77QZg7/s5LHQoPbxag=
+x-microsoft-antispam-message-info: q2PIQOHUZ507shIRaCG+bIPhKbAiXcpwhGrgHPLttJJwJ0HcZnzmWZkLOlbXrj+fzKTBhRIOwRIgtLMQ3Oemajr8yAwGWEM8mYvs+d4FHqKVNO+bSRgce9USmr9hZNAAyd7MJZ637D3LRREjASk6L0vjUmZfap3esfAEaQEq9BCHaUuFxN7BEbHxGlarIDQ54En5waxRholjtyc3v5U30J1/JFirDI9zZ2C3Q3W979st8Gc7lsGLZwiD4BQ1FvMNq/VpK6tIqgrzPeJKesIyR+isgYNXAdzgHKcbMbE1G1pIPTjrurqiBkAr1xFkLdXrt1FehSwZu/zHJjm58pwonwJSrg0+h8atEWY1sNnxBcjEeUWtaV32v6alH/FvkdR8YamlBhcqnisX9VIvY+Jri2mcLCICdu/rf5MNoSMXs18=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <82BFF7F760AB5D47935C40953858BB8C@eurprd05.prod.outlook.com>
+Content-ID: <653ABEE3FDEFC347BC03CDDE1CA5AC65@eurprd05.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4b51e9cd-5390-4465-8cca-08d6866a0842
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 04:18:48.2718
+X-MS-Exchange-CrossTenant-Network-Message-Id: 69aa6100-69ea-4065-8f44-08d6866ba8f7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 04:30:27.3902
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
 X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6345
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6490
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 06:17:43PM -0700, Logan Gunthorpe wrote:
+On Tue, Jan 29, 2019 at 07:08:06PM -0500, Jerome Glisse wrote:
+> On Tue, Jan 29, 2019 at 11:02:25PM +0000, Jason Gunthorpe wrote:
+> > On Tue, Jan 29, 2019 at 03:44:00PM -0500, Jerome Glisse wrote:
+> >=20
+> > > > But this API doesn't seem to offer any control - I thought that
+> > > > control was all coming from the mm/hmm notifiers triggering p2p_unm=
+aps?
+> > >=20
+> > > The control is within the driver implementation of those callbacks.=20
+> >=20
+> > Seems like what you mean by control is 'the exporter gets to choose
+> > the physical address at the instant of map' - which seems reasonable
+> > for GPU.
+> >=20
+> >=20
+> > > will only allow p2p map to succeed for objects that have been tagged =
+by the
+> > > userspace in some way ie the userspace application is in control of w=
+hat
+> > > can be map to peer device.
+> >=20
+> > I would have thought this means the VMA for the object is created
+> > without the map/unmap ops? Or are GPU objects and VMAs unrelated?
+>=20
+> GPU object and VMA are unrelated in all open source GPU driver i am
+> somewhat familiar with (AMD, Intel, NVidia). You can create a GPU
+> object and never map it (and thus never have it associated with a
+> vma) and in fact this is very common. For graphic you usualy only
+> have hand full of the hundreds of GPU object your application have
+> mapped.
 
-> This isn't answering my question at all... I specifically asked what is
-> backing the VMA when we are *not* using HMM.
+I mean the other way does every VMA with a p2p_map/unmap point to
+exactly one GPU object?
 
-At least for RDMA what backs the VMA today is non-struct-page BAR
-memory filled in with io_remap_pfn.
+ie I'm surprised you say that p2p_map needs to have policy, I would
+have though the policy is applied when the VMA is created (ie objects
+that are not for p2p do not have p2p_map set), and even for GPU
+p2p_map should really only have to do with window allocation and pure
+'can I even do p2p' type functionality.
 
-And we want to expose this for P2P DMA. None of the HMM stuff applies
-here and the p2p_map/unmap are a nice simple approach that covers all
-the needs RDMA has, at least.
+> Idea is that we can only ask exporter to be predictable and still allow
+> them to fail if things are really going bad.
 
-Every attempt to give BAR memory to struct page has run into major
-trouble, IMHO, so I like that this approach avoids that.
+I think hot unplug / PCI error recovery is one of the 'really going
+bad' cases..
 
-And if you don't have struct page then the only kernel object left to
-hang meta data off is the VMA itself.
+> I think i put it in the comment above the ops but in any cases i should
+> write something in documentation with example and thorough guideline.
+> Note that there won't be any mmu notifier to mmap of a device file
+> unless the device driver calls for it or there is a syscall like munmap
+> or mremap or mprotect well any syscall that work on vma.
 
-It seems very similar to the existing P2P work between in-kernel
-consumers, just that VMA is now mediating a general user space driven
-discovery process instead of being hard wired into a driver.
+This is something we might need to explore, does calling
+zap_vma_ptes() invoke enough notifiers that a MMU notifiers or HMM
+mirror consumer will release any p2p maps on that VMA?
+
+> If we ever want to support full pin then we might have to add a
+> flag so that GPU driver can refuse an importer that wants things
+> pin forever.
+
+This would become interesting for VFIO and RDMA at least - I don't
+think VFIO has anything like SVA so it would want to import a p2p_map
+and indicate that it will not respond to MMU notifiers.
+
+GPU can refuse, but maybe RDMA would allow it...
 
 Jason
