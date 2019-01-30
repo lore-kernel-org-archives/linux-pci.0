@@ -1,4 +1,4 @@
-Return-Path: <SRS0=gAuQ=QF=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C33CC169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:48:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D64DEC169C4
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 00:08:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C96182175B
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Jan 2019 23:47:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D1E62082C
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 00:08:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727426AbfA2Xr7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 18:47:59 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:51522 "EHLO mx1.redhat.com"
+        id S1727564AbfA3AIM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Jan 2019 19:08:12 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:51540 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727342AbfA2Xr7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 18:47:59 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        id S1726951AbfA3AIL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Jan 2019 19:08:11 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 231C889AC5;
-        Tue, 29 Jan 2019 23:47:58 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 98862BDD0;
+        Wed, 30 Jan 2019 00:08:10 +0000 (UTC)
 Received: from redhat.com (ovpn-122-2.rdu2.redhat.com [10.10.122.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A8C965C3FD;
-        Tue, 29 Jan 2019 23:47:54 +0000 (UTC)
-Date:   Tue, 29 Jan 2019 18:47:52 -0500
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3216E53;
+        Wed, 30 Jan 2019 00:08:08 +0000 (UTC)
+Date:   Tue, 29 Jan 2019 19:08:06 -0500
 From:   Jerome Glisse <jglisse@redhat.com>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Jason Gunthorpe <jgg@mellanox.com>,
+To:     Jason Gunthorpe <jgg@mellanox.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -46,205 +46,134 @@ Cc:     Jason Gunthorpe <jgg@mellanox.com>,
         "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
 Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
-Message-ID: <20190129234752.GR3176@redhat.com>
+Message-ID: <20190130000805.GS3176@redhat.com>
 References: <20190129174728.6430-1-jglisse@redhat.com>
  <20190129174728.6430-4-jglisse@redhat.com>
  <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
  <20190129191120.GE3176@redhat.com>
  <20190129193250.GK10108@mellanox.com>
- <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
- <20190129205749.GN3176@redhat.com>
- <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
- <20190129215028.GQ3176@redhat.com>
- <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
+ <20190129195055.GH3176@redhat.com>
+ <20190129202429.GL10108@mellanox.com>
+ <20190129204359.GM3176@redhat.com>
+ <20190129224016.GD4713@mellanox.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
+In-Reply-To: <20190129224016.GD4713@mellanox.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Tue, 29 Jan 2019 23:47:58 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Wed, 30 Jan 2019 00:08:11 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 03:58:45PM -0700, Logan Gunthorpe wrote:
+On Tue, Jan 29, 2019 at 11:02:25PM +0000, Jason Gunthorpe wrote:
+> On Tue, Jan 29, 2019 at 03:44:00PM -0500, Jerome Glisse wrote:
 > 
-> 
-> On 2019-01-29 2:50 p.m., Jerome Glisse wrote:
-> > No this is the non HMM case i am talking about here. Fully ignore HMM
-> > in this frame. A GPU driver that do not support or use HMM in anyway
-> > has all the properties and requirement i do list above. So all the points
-> > i was making are without HMM in the picture whatsoever. I should have
-> > posted this a separate patches to avoid this confusion.
+> > > But this API doesn't seem to offer any control - I thought that
+> > > control was all coming from the mm/hmm notifiers triggering p2p_unmaps?
 > > 
-> > Regarding your HMM question. You can not map HMM pages, all code path
-> > that would try that would trigger a migration back to regular memory
-> > and will use the regular memory for CPU access.
+> > The control is within the driver implementation of those callbacks. 
+> 
+> Seems like what you mean by control is 'the exporter gets to choose
+> the physical address at the instant of map' - which seems reasonable
+> for GPU.
+> 
+> 
+> > will only allow p2p map to succeed for objects that have been tagged by the
+> > userspace in some way ie the userspace application is in control of what
+> > can be map to peer device.
+> 
+> I would have thought this means the VMA for the object is created
+> without the map/unmap ops? Or are GPU objects and VMAs unrelated?
+
+GPU object and VMA are unrelated in all open source GPU driver i am
+somewhat familiar with (AMD, Intel, NVidia). You can create a GPU
+object and never map it (and thus never have it associated with a
+vma) and in fact this is very common. For graphic you usualy only
+have hand full of the hundreds of GPU object your application have
+mapped.
+
+The control for peer to peer can also be a mutable properties of the
+object ie userspace do ioctl on the GPU driver which create an object;
+Some times after the object is created the userspace do others ioctl
+to allow to export the object to another specific device again this
+result in ioctl to the device driver, those ioctl set flags and
+update GPU object kernel structure with all the info.
+
+In the meantime you have no control on when other driver might call
+the vma p2p call backs. So you must have register the vma with
+vm_operations that include the p2p_map and p2p_unmap. Those driver
+function will check the object kernel structure each time they get
+call and act accordingly.
+
+
+
+> > For moving things around after a successful p2p_map yes the exporting
+> > device have to call for instance zap_vma_ptes() or something
+> > similar.
+> 
+> Okay, great, RDMA needs this flow for hotplug - we zap the VMA's when
+> unplugging the PCI device and we can delay the PCI unplug completion
+> until all the p2p_unmaps are called...
+> 
+> But in this case a future p2p_map will have to fail as the BAR no
+> longer exists. How to handle this?
+
+So the comment above the callback (i should write more thorough guideline
+and documentation) state that export should/(must?) be predictable ie
+if an importer device calls p2p_map() once on a vma and it does succeed
+then if the same device calls again p2p_map() on the same vma and if the
+vma is still valid (ie no unmap or does not correspond to a different
+object ...) then the p2p_map() should/(must?) succeed.
+
+The idea is that the importer would do a first call to p2p_map() when it
+setup its own object, report failure to userspace if that fails. If it
+does succeed then we should never have an issue next time we call p2p_map()
+(after mapping being invalidated by mmu notifier for instance). So it will
+succeed just like the first call (again assuming the vma is still valid).
+
+Idea is that we can only ask exporter to be predictable and still allow
+them to fail if things are really going bad.
+
+
+> > > I would think that the importing driver can assume the BAR page is
+> > > kept alive until it calls unmap (presumably triggered by notifiers)?
+> > > 
+> > > ie the exporting driver sees the BAR page as pinned until unmap.
 > > 
+> > The intention with this patchset is that it is not pin ie the importer
+> > device _must_ abide by all mmu notifier invalidations and they can
+> > happen at anytime. The importing device can however re-p2p_map the
+> > same range after an invalidation.
+> >
+> > I would like to restrict this to importer that can invalidate for
+> > now because i believe all the first device to use can support the
+> > invalidation.
 > 
-> I thought this was the whole point of HMM... And eventually it would
-> support being able to map the pages through the BAR in cooperation with
-> the driver. If not, what's that whole layer for? Why not just have HMM
-> handle this situation?
+> This seems reasonable (and sort of says importers not getting this
+> from HMM need careful checking), was this in the comment above the
+> ops?
 
-The whole point is to allow to use device memory for range of virtual
-address of a process when it does make sense to use device memory for
-that range. So they are multiple cases where it does make sense:
-[1] - Only the device is accessing the range and they are no CPU access
-      For instance the program is executing/running a big function on
-      the GPU and they are not concurrent CPU access, this is very
-      common in all the existing GPGPU code. In fact AFAICT It is the
-      most common pattern. So here you can use HMM private or public
-      memory.
-[2] - Both device and CPU access a common range of virtul address
-      concurrently. In that case if you are on a platform with cache
-      coherent inter-connect like OpenCAPI or CCIX then you can use
-      HMM public device memory and have both access the same memory.
-      You can not use HMM private memory.
+I think i put it in the comment above the ops but in any cases i should
+write something in documentation with example and thorough guideline.
+Note that there won't be any mmu notifier to mmap of a device file
+unless the device driver calls for it or there is a syscall like munmap
+or mremap or mprotect well any syscall that work on vma.
 
-So far on x86 we only have PCIE and thus so far on x86 we only have
-private HMM device memory that is not accessible by the CPU in any
-way.
+So assuming the application is no doing something stupid, nor the
+driver. Then the result of p2p_map can stay valid until the importer
+is done and call p2p_unmap of its own free will. This is what i do
+expect for this. But for GPU i would still like to allow GPU driver
+to evict (and thus invalidate importer mapping) to main memory or
+defragment their BAR address space if the GPU driver feels a pressing
+need to do so.
 
-It does not make that memory useless, far from it. Having only the
-device work on the dataset while CPU is either waiting or accessing
-something else is very common.
-
-
-Then HMM is a toolbox, so here are some of the tools:
-    HMM mirror - helper to mirror process address on to a device
-    ie this is SVM(Share Virtual Memory)/SVA(Share Virtual Address)
-    in software
-
-    HMM private memory - allow to register device memory with the linux
-    kernel. The memory is not CPU accessible. The memory is fully manage
-    by the device driver. What and when to migrate is under the control
-    of the device driver.
-
-    HMM public memory - allow to register device memory with the linux
-    kernel. The memory must be CPU accessible and cache coherent and
-    abide by the platform memory model. The memory is fully manage by
-    the device driver because otherwise it would disrupt the device
-    driver operation (for instance GPU can also be use for graphics).
-
-    Migration - helper to perform migration to and from device memory.
-    It does not make any decission on itself it just perform all the
-    steps in the right order and call back into the driver to get the
-    migration going.
-
-It is up to device driver to implement heuristic and provide userspace
-API to control memory migration to and from device memory. For device
-private memory on CPU page fault the kernel will force a migration back
-to system memory so that the CPU can access the memory. What matter here
-is that the memory model of the platform is intact and thus you can
-safely use CPU atomic operation or rely on your platform memory model
-for your program. Note that long term i would like to define common API
-to expose to userspace to manage memory binding to specific device
-memory so that we can mix and match multiple device memory into a single
-process and define policy too.
-
-Also CPU atomic instruction to PCIE BAR gives _undefined_ results and in
-fact on some AMD/Intel platform it leads to weirdness/crash/freeze. So
-obviously we can not map PCIE BAR to CPU without breaking the memory
-model. More over on PCIE you might not be able to resize the BAR to
-expose all the device memory. GPU can have several giga bytes of memory
-and not all of them support PCIE bar resize, and sometimes PCIE bar
-resize does not work either because of bios/firmware issue or simply
-because you are running out of IO space.
-
-So on x86 we are stuck with HMM private memory, i am hopping that some
-day in the future we will have CCIX or something similar. But for now
-we have to work with what we have.
-
-> And what struct pages are actually going to be backing these VMAs if
-> it's not using HMM?
-
-When you have some range of virtual address migrated to HMM private
-memory then the CPU pte are special swap entry and they behave just
-as if the memory was swapped to disk. So CPU access to those will
-fault and trigger a migration back to main memory.
-
-We still want to allow peer to peer to exist when using HMM memory
-for a range of virtual address (of a vma that is not an mmap of a
-device file) because the peer device do not rely on atomic or on the
-platform memory model. In those cases we assume that the importer is
-aware of the limitation and is asking access in good faith and thus
-we want to allow the exporting device to either allow the peer mapping
-(because it has enough BAR address to map) or fall back to main memory.
-
-
-> > Again HMM has nothing to do here, ignore HMM it does not play any role
-> > and it is not involve in anyway here. GPU want to control what object
-> > they allow other device to access and object they do not allow. GPU driver
-> > _constantly_ invalidate the CPU page table and in fact the CPU page table
-> > do not have any valid pte for a vma that is an mmap of GPU device file
-> > for most of the vma lifetime. Changing that would highly disrupt and
-> > break GPU drivers. They need to control that, they need to control what
-> > to do if another device tries to peer map some of their memory. Hence
-> > why they need to implement the callback and decide on wether or not they
-> > allow the peer mapping or use device memory for it (they can decide to
-> > fallback to main memory).
-> 
-> But mapping is an operation of the memory/struct pages behind the VMA;
-> not of the VMA itself and I think that's evident by the code in that the
-> only way the VMA layer is involved is the fact that you're abusing
-> vm_ops by adding new ops there and calling it by other layers.
-
-For GPU driver the vma pte are populated on CPU page fault and they get
-clear quickly after. A very usual pattern is:
-    - CPU write something to the object through the object mapping ie
-      through a vma. This trigger page fault which call the fault()
-      callback from vm_operations struct. This populate the page table
-      for the vma.
-    - Userspace launch commands on the GPU, first thing kernel do is
-      clear all CPU page table entry for objects listed in the commands
-      ie we do not except any further CPU access nor do we want it.
-
-GPU driver have always been geared toward minimizing CPU access to GPU
-memory. For object that need to be access by both concurrently we use the
-main memory and not the device memory.
-
-So in fact you will almost never have valid pte for an mmap of a GPU
-object (done throught the GPU device file). However it does not mean that
-we want to block peer to peer to happen. Today the use cases we know for
-peer to peer are with GPUDirect (NVidia) or ROCmDMA (AMD) roughly the
-same thing. Most common use cases i am aware are:
-    - RDMA is streaming in input directly into GPU memory avoiding the
-      need to have a bounce buffer into memory (this save both main
-      memory and PCIE bandwidth by avoiding RDMA->main then main->GPU).
-    - RDMA is streaming out result (same idea as streaming in but in
-      the other direction :))
-    - RDMA is use to monitor computation progress on the GPU and it
-      tries to do so with minimal disruption to the GPU. So RDMA would
-      like to be able to peek into GPU memory to fetch some values
-      and transmit them over the network.
-
-I believe people would like to have more complex use case, like for
-instance having the GPU be able to directly control some RDMA queue
-to request data to some other host on the networ, or control some
-block device queue to read data from block device directly. I believe
-those can be implemented with the API set forward in those patches.
-
-So for those above use cases it is fine to not have valid CPU pte and
-only have peer to peer mapping. The CPU is not expected to be involve
-and we should not make it a requirement. Hence we should not expect
-to have valid pte.
-
-
-Also another common use case is that GPU driver might leave pte that
-points to main memory while the GPU is using device memory for the
-object corresponding to the vma those pte are in. Expectation is that
-the CPU access are synchronized with the device access through the
-API use by the application. Note here we are talking non HMM, non SVM
-case ie special object that are allocated through API specific functions
-that result in driver ioctl and mmap of device file.
-
-
-Hopes this helps understand the big picture from GPU driver point of
-view :)
+If we ever want to support full pin then we might have to add a
+flag so that GPU driver can refuse an importer that wants things
+pin forever.
 
 Cheers,
 Jérôme
