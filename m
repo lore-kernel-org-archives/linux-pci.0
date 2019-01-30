@@ -2,113 +2,105 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D384EC282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:34:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C876FC282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A225D2087F
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:34:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CEF82087F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:41:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548862491;
-	bh=kE1XxCFEdT4aiygJ3Mqnrvvef9WFtqdWnimE3s8rvQs=;
+	s=default; t=1548862874;
+	bh=nHm7eOy82+tzDzSBzaBfZdPdLctcjTIhgr5gGa+okSI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=te/sY5BVRDvmBfAiF8ApdF2GpR5xn1/AjmYXsMvnfcfoDGiF2zqRKDaVHgW0nArQY
-	 IH85Z3kp+qg6tyOK5z4eNEJM0ug1v8TAPPDoC6sP9/8efLFlhDPz7IQdErYi384OR0
-	 Fu5u5W2iN6Vx55/Se05VtqzvD+qIbHQGYq6EY+64=
+	b=wopqeHZDdZhBLfXLoo4CPa9pZWDxY1FuGDXYhLaqh2FQBp75o/jb1bZgO8tcUsPIE
+	 aUkEFO04qab9TnTUzaZu0VrEeEeH/rqnmtoRC9K0z4xnaWhcFooDKIsfVzT2rJvoDu
+	 reFBaENckAOGM4hw2sKoEY/POxxX6K+QZL1efp/M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727101AbfA3Pev (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 10:34:51 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36968 "EHLO mail.kernel.org"
+        id S1728215AbfA3PlO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 10:41:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40048 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726230AbfA3Peu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 10:34:50 -0500
+        id S1725808AbfA3PlN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 10:41:13 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0E45A2084C;
-        Wed, 30 Jan 2019 15:34:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B43272084C;
+        Wed, 30 Jan 2019 15:41:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548862489;
-        bh=kE1XxCFEdT4aiygJ3Mqnrvvef9WFtqdWnimE3s8rvQs=;
+        s=default; t=1548862873;
+        bh=nHm7eOy82+tzDzSBzaBfZdPdLctcjTIhgr5gGa+okSI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=RuqVEzSleYDIqdx+g7l46FZ31N/2ebfIdThZzTcUokAA3dwRqgEyKXVBFfBS2dYO7
-         /G9ZHwHqHtpbN18cUqrEsiwl67HgvBZSqzaeMckIZhm9Auf+dGadt9VBT/cgzOV5Vg
-         IF8oKJTeAOgOQLTm28OuHxr1QAW1hjara4pu1tzM=
-Date:   Wed, 30 Jan 2019 09:34:47 -0600
+        b=hNGiPyC/2mtbImVGxmhjNjcrdUSOYao/wiyRwzYE92nc4QIXcwxTXuIgp5UOe3TzX
+         xCysz01Eo8IoRLJvpaSdCc0miZmt/jBkZ/+YBhcu7UUGeW7s8m8djQHi1l+hCeQJ2R
+         P9vmAY2hl5VLlycA78fFklejIP31Xhzg80/WcLAs=
+Date:   Wed, 30 Jan 2019 09:41:11 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>
-Subject: Re: [PATCHv3 00/27] PCI: refactor Mobiveil driver and add PCIe Gen4
- driver for NXP Layerscape SoCs
-Message-ID: <20190130153447.GB229773@google.com>
-References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
+To:     honghui.zhang@mediatek.com
+Cc:     lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        youlin.pei@mediatek.com, jianjun.wang@mediatek.com
+Subject: Re: [PATCH] PCI: Mediatek: Use resource_size function on resource
+ object
+Message-ID: <20190130154111.GC229773@google.com>
+References: <1546409033-20412-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1546409033-20412-1-git-send-email-honghui.zhang@mediatek.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 08:08:28AM +0000, Z.q. Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> This patch set is aim to refactor the Mobiveil driver and add
-> PCIe support for NXP Layerscape series SoCs integrated Mobiveil's
-> PCIe Gen4 controller.
-> 
-> Hou Zhiqiang (27):
->   PCI: mobiveil: uniform the register accessors
->   PCI: mobiveil: format the code without function change
->   PCI: mobiveil: correct the returned error number
->   PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
->   PCI: mobiveil: correct PCI base address in MEM/IO outbound windows
->   PCI: mobiveil: replace the resource list iteration function
->   PCI: mobiveil: use WIN_NUM_0 explicitly for CFG outbound window
->   PCI: mobiveil: use the 1st inbound window for MEM inbound transactions
->   PCI: mobiveil: correct inbound/outbound window setup routines
->   PCI: mobiveil: fix the INTx process error
->   PCI: mobiveil: only fix up the Class Code field
->   PCI: mobiveil: move out the link up waiting from mobiveil_host_init
->   PCI: mobiveil: move irq chained handler setup out of DT parse
->   PCI: mobiveil: initialize Primary/Secondary/Subordinate bus number
->   dt-bindings: pci: mobiveil: change gpio_slave and apb_csr to optional
->   PCI: mobiveil: refactor Mobiveil PCIe Host Bridge IP driver
->   PCI: mobiveil: fix the checking of valid device
->   PCI: mobiveil: continue to initialize the host upon no PCIe link
->   PCI: mobiveil: disabled IB and OB windows set by bootloader
->   PCI: mobiveil: add Byte and Half-Word width register accessors
->   PCI: mobiveil: make mobiveil_host_init can be used to re-init host
->   dt-bindings: pci: Add NXP Layerscape SoCs PCIe Gen4 controller
->   PCI: mobiveil: add PCIe Gen4 RC driver for NXP Layerscape SoCs
->   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011577
->   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011451
->   arm64: dts: freescale: lx2160a: add pcie DT nodes
->   arm64: defconfig: Enable CONFIG_PCI_LAYERSCAPE_GEN4
+Please pay attention to the changelog conventions, e.g., next time use
+"PCI: mediatek: ..." so yours matches "git log --oneline
+drivers/pci/controller/pcie-mediatek.c"
 
-If/when you repost this, please pay attention to the changelog
-conventions, e.g., capitalize the first word of the sentence ("Remove
-flag ...", "Correct PCI base address ...", etc), capitalize acronyms
-like "PCI" and "IRQ", use parentheses after function names, etc.  You
-can see the conventions by running "git log --oneline
-drivers/pci/controller".
+On Wed, Jan 02, 2019 at 02:03:53PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
+> 
+> drivers/pci/pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
+> 
+> Generated by: scripts/coccinelle/api/resource_size.cocci
+
+This is not a changelog; it's only a restatement of the warning.  Next
+time please include a description of the change.  It's OK if it
+repeats the subject.
+
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index e307166..0168376 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+>  	struct resource *mem = &pcie->mem;
+>  	const struct mtk_pcie_soc *soc = port->pcie->soc;
+>  	u32 val;
+> -	size_t size;
+>  	int err;
+>  
+>  	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+> @@ -706,8 +705,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+>  		mtk_pcie_enable_msi(port);
+>  
+>  	/* Set AHB to PCIe translation windows */
+> -	size = mem->end - mem->start;
+> -	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
+> +	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(resource_size(mem)));
+>  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+>  
+>  	val = upper_32_bits(mem->start);
+> -- 
+> 2.6.4
+> 
