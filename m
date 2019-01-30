@@ -2,184 +2,92 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CB94C282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22BA0C282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:17:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DB042184D
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:06:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548867983;
-	bh=iJCfhl4idjAo8RareOx2BQFx3jKZU6evYVhqWFVbUFc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Gcx1h38+KDiuntDZ5KwetGgFE/SN4x/RPQVyTTrCXOa6ACQM3fhebhT5tLIgEW1j/
-	 vp36SynZAqXM/P/H3fdJ1XazEjfQ08fvGmAhqRa2/MjuO6hZVLWCoTSxB6/c+CZ8hn
-	 OA7M20aFLU+PRsLyeOHSo8v1FyaBampZqDtKkyvs=
+	by mail.kernel.org (Postfix) with ESMTP id EF4FA2087F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 17:17:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732340AbfA3RGW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 12:06:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46734 "EHLO mail.kernel.org"
+        id S1731481AbfA3RRt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 12:17:49 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:39494 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732307AbfA3RGW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 12:06:22 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 381DD20989;
-        Wed, 30 Jan 2019 17:06:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548867980;
-        bh=iJCfhl4idjAo8RareOx2BQFx3jKZU6evYVhqWFVbUFc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=1fie8BrC5rjM3TNwbOPhnuVOvfrum0Ulwq+aPQ8jvn9BMUjupGVgSDVd/70dbbhTx
-         O8Rx/nuRvjRzaR3K2K8oDY6r0Z13Dsf/fWpvz+wVEQYvbQmW+HXezZ+2mUrRwIIdfN
-         lqsgGAkfwtKsJxLjdn9finik1eRF36DLwxUWVPdI=
-Date:   Wed, 30 Jan 2019 11:06:12 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     honghui.zhang@mediatek.com
-Cc:     lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
-        youlin.pei@mediatek.com, devicetree@vger.kernel.org,
-        ulf.hansson@linaro.org, marc.zyngier@arm.com,
-        jianjun.wang@mediatek.com, yt.shen@mediatek.com,
-        matthias.bgg@gmail.com, yingjoe.chen@mediatek.com,
-        eddie.huang@mediatek.com
-Subject: Re: [PATCH v9 2/9] PCI: Using PCI configuration space header type
- instead of class type to assign resource
-Message-ID: <20190130170612.GH229773@google.com>
-References: <1539686690-24068-1-git-send-email-honghui.zhang@mediatek.com>
- <1539686690-24068-3-git-send-email-honghui.zhang@mediatek.com>
+        id S1726972AbfA3RRt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 12:17:49 -0500
+Received: from s01061831bf6ec98c.cg.shawcable.net ([68.147.80.180] helo=[192.168.6.205])
+        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1gotUV-0006Y7-9V; Wed, 30 Jan 2019 10:17:36 -0700
+To:     Jason Gunthorpe <jgg@mellanox.com>
+Cc:     Jerome Glisse <jglisse@redhat.com>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
+ <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
+ <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
+ <20190129205749.GN3176@redhat.com>
+ <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
+ <20190129215028.GQ3176@redhat.com>
+ <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
+ <20190129234752.GR3176@redhat.com>
+ <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
+ <20190130041841.GB30598@mellanox.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <bdf03cd5-f5b1-4b78-a40e-b24024ca8c9f@deltatee.com>
+Date:   Wed, 30 Jan 2019 10:17:27 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1539686690-24068-3-git-send-email-honghui.zhang@mediatek.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190130041841.GB30598@mellanox.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 68.147.80.180
+X-SA-Exim-Rcpt-To: iommu@lists.linux-foundation.org, jroedel@suse.de, robin.murphy@arm.com, m.szyprowski@samsung.com, hch@lst.de, dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, Felix.Kuehling@amd.com, christian.koenig@amd.com, bhelgaas@google.com, rafael@kernel.org, gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, jglisse@redhat.com, jgg@mellanox.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 16, 2018 at 06:44:43PM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
+
+
+On 2019-01-29 9:18 p.m., Jason Gunthorpe wrote:
+> Every attempt to give BAR memory to struct page has run into major
+> trouble, IMHO, so I like that this approach avoids that.
 > 
-> The PCI configuration space header type defines the layout of the rest
-> of the header (PCI r3.0 sec 6.1, PCIe r4.0 sec 7.5.1.1.9) while the
-> resource assignment is based on the configuration space layout instead
-> of its class type. Using configuration space header type instead of
-> class type for the resource assignment.
+> And if you don't have struct page then the only kernel object left to
+> hang meta data off is the VMA itself.
 > 
-> Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> It seems very similar to the existing P2P work between in-kernel
+> consumers, just that VMA is now mediating a general user space driven
+> discovery process instead of being hard wired into a driver.
 
-I applied the patch below to pci/enumeration for v5.1.
+But the kernel now has P2P bars backed by struct pages and it works
+well. And that's what we are doing in-kernel. We even have a hacky
+out-of-tree module which exposes these pages and it also works (but
+would need Jerome's solution for denying those pages in GUP, etc). So
+why do something completely different in userspace so they can't share
+any of the DMA map infrastructure?
 
-I dropped the hunk that removed the PCI_CLASS_BRIDGE_HOST check per
-Lorenzo's concern.  Let me know if you have any other concerns.
-
-
-commit b2fb5cc57469
-Author: Honghui Zhang <honghui.zhang@mediatek.com>
-Date:   Tue Oct 16 18:44:43 2018 +0800
-
-    PCI: Rely on config space header type, not class code
-    
-    The PCI configuration space header type tells us whether the device is a
-    bridge, a CardBus bridge, or a normal device, and defines the layout of the
-    rest of the header (PCI r3.0 sec 6.1, PCIe r4.0 sec 7.5.1.1.9).
-    
-    When we rely on the header format, e.g., when we're dealing with bridge
-    windows, we should check the header type, not the class code.  The class
-    code is loosely related to the header type, but is often incorrect and the
-    spec doesn't actually require it to be related to the header format.
-    
-    Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-    Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-    [bhelgaas: changelog, keep the PCI_CLASS_BRIDGE_HOST check]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c9d8e3c837de..e9d938e14ba8 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6000,8 +6000,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	 * to enable the kernel to reassign new resource
- 	 * window later on.
- 	 */
--	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE &&
--	    (dev->class >> 8) == PCI_CLASS_BRIDGE_PCI) {
-+	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
- 		for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
- 			r = &dev->resource[i];
- 			if (!(r->flags & IORESOURCE_MEM))
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8e2e4154cdd9..128459a0ffba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1779,9 +1779,6 @@ int pci_setup_device(struct pci_dev *dev)
- 		break;
- 
- 	case PCI_HEADER_TYPE_BRIDGE:		    /* bridge header */
--		if (class != PCI_CLASS_BRIDGE_PCI)
--			goto bad;
--
- 		/*
- 		 * The PCI-to-PCI bridge spec requires that subtractive
- 		 * decoding (i.e. transparent) bridge must have programming
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1941bb0a6c13..ec44a0f3a7ac 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1186,12 +1186,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		if (!b)
- 			continue;
- 
--		switch (dev->class >> 8) {
--		case PCI_CLASS_BRIDGE_CARDBUS:
-+		switch (dev->hdr_type) {
-+		case PCI_HEADER_TYPE_CARDBUS:
- 			pci_bus_size_cardbus(b, realloc_head);
- 			break;
- 
--		case PCI_CLASS_BRIDGE_PCI:
-+		case PCI_HEADER_TYPE_BRIDGE:
- 		default:
- 			__pci_bus_size_bridges(b, realloc_head);
- 			break;
-@@ -1202,12 +1202,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	if (pci_is_root_bus(bus))
- 		return;
- 
--	switch (bus->self->class >> 8) {
--	case PCI_CLASS_BRIDGE_CARDBUS:
-+	switch (bus->self->hdr_type) {
-+	case PCI_HEADER_TYPE_CARDBUS:
- 		/* don't size cardbuses yet. */
- 		break;
- 
--	case PCI_CLASS_BRIDGE_PCI:
-+	case PCI_HEADER_TYPE_BRIDGE:
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
-@@ -1356,13 +1356,13 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
- 
- 		__pci_bus_assign_resources(b, realloc_head, fail_head);
- 
--		switch (dev->class >> 8) {
--		case PCI_CLASS_BRIDGE_PCI:
-+		switch (dev->hdr_type) {
-+		case PCI_HEADER_TYPE_BRIDGE:
- 			if (!pci_is_enabled(dev))
- 				pci_setup_bridge(b);
- 			break;
- 
--		case PCI_CLASS_BRIDGE_CARDBUS:
-+		case PCI_HEADER_TYPE_CARDBUS:
- 			pci_setup_cardbus(b);
- 			break;
- 
+Logan
