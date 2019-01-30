@@ -2,139 +2,100 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43188C282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:22:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3A0EC282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:24:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21E612086C
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:22:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A84732087F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:24:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548876261;
+	bh=sgTHidybVzN2pa2WK0R7PtQJqzx1uIjcOw/HxdS2gxI=;
+	h=Subject:From:Cc:References:To:In-Reply-To:Date:List-ID:From;
+	b=n/EPXLw44OH8RuVI3tPpYW1CZgfR0irHLozBNi4k38cGF18TpBoN9jwOUh3xbsB19
+	 L8W/RFmjTW4k6iYjrQ5WtZifj4RHUJQQTIVsYOhkVkrKNc2OcZxwuDYPzCL0C9T4z6
+	 HlOIvMyyypJifoOufTyqpzr3IHOQvIyzd3IG/IPY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387547AbfA3TWj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 14:22:39 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:50712 "EHLO mx1.redhat.com"
+        id S2387618AbfA3TYQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 14:24:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:47336 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387545AbfA3TWj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 14:22:39 -0500
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S2387606AbfA3TYP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 14:24:15 -0500
+Received: from localhost (unknown [104.132.0.74])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9CA64C04959F;
-        Wed, 30 Jan 2019 19:22:38 +0000 (UTC)
-Received: from redhat.com (ovpn-126-0.rdu2.redhat.com [10.10.126.0])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A81C45D96F;
-        Wed, 30 Jan 2019 19:22:36 +0000 (UTC)
-Date:   Wed, 30 Jan 2019 14:22:34 -0500
-From:   Jerome Glisse <jglisse@redhat.com>
-To:     Jason Gunthorpe <jgg@mellanox.com>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <jroedel@suse.de>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Message-ID: <20190130192234.GD5061@redhat.com>
-References: <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
- <20190129205749.GN3176@redhat.com>
- <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
- <20190129215028.GQ3176@redhat.com>
- <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
- <20190129234752.GR3176@redhat.com>
- <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
- <20190130041841.GB30598@mellanox.com>
- <bdf03cd5-f5b1-4b78-a40e-b24024ca8c9f@deltatee.com>
- <20190130185652.GB17080@mellanox.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id DB4E62086C;
+        Wed, 30 Jan 2019 19:24:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548876254;
+        bh=sgTHidybVzN2pa2WK0R7PtQJqzx1uIjcOw/HxdS2gxI=;
+        h=Subject:From:Cc:References:To:In-Reply-To:Date:From;
+        b=AJCXgUXBC4yGLvne2Xilu1IbFiDIgzmQtypDt2WvBQQawSNUfhb1dtzAYJXTt46Gs
+         A4uDnPxaFSAo9IgDvEGb1ANKVaG+C4q6xravPSpy+LDXPIBB8AnnHYckwVLpuacbwq
+         GUdBx2X32eiQH9q5dJ04Xo6/MC8jJr2YG6Oa4lSQ=
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190130185652.GB17080@mellanox.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Wed, 30 Jan 2019 19:22:39 +0000 (UTC)
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH 7/7] arm64: dts: qcom: qcs404: Add PCIe related nodes
+From:   Stephen Boyd <sboyd@kernel.org>
+Message-ID: <154887625299.169292.6293540451460425008@swboyd.mtv.corp.google.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        David Brown <david.brown@linaro.org>,
+        Khasim Syed Mohammed <khasim.mohammed@linaro.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+References: <20190125234509.26419-1-bjorn.andersson@linaro.org> <20190125234509.26419-8-bjorn.andersson@linaro.org>
+User-Agent: alot/0.8
+To:     Andy Gross <andy.gross@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+In-Reply-To: <20190125234509.26419-8-bjorn.andersson@linaro.org>
+Date:   Wed, 30 Jan 2019 11:24:12 -0800
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 06:56:59PM +0000, Jason Gunthorpe wrote:
-> On Wed, Jan 30, 2019 at 10:17:27AM -0700, Logan Gunthorpe wrote:
-> > 
-> > 
-> > On 2019-01-29 9:18 p.m., Jason Gunthorpe wrote:
-> > > Every attempt to give BAR memory to struct page has run into major
-> > > trouble, IMHO, so I like that this approach avoids that.
-> > > 
-> > > And if you don't have struct page then the only kernel object left to
-> > > hang meta data off is the VMA itself.
-> > > 
-> > > It seems very similar to the existing P2P work between in-kernel
-> > > consumers, just that VMA is now mediating a general user space driven
-> > > discovery process instead of being hard wired into a driver.
-> > 
-> > But the kernel now has P2P bars backed by struct pages and it works
-> > well. 
-> 
-> I don't think it works that well..
-> 
-> We ended up with a 'sgl' that is not really a sgl, and doesn't work
-> with many of the common SGL patterns. sg_copy_buffer doesn't work,
-> dma_map, doesn't work, sg_page doesn't work quite right, etc.
-> 
-> Only nvme and rdma got the special hacks to make them understand these
-> p2p-sgls, and I'm still not convinced some of the RDMA drivers that
-> want access to CPU addresses from the SGL (rxe, usnic, hfi, qib) don't
-> break in this scenario.
-> 
-> Since the SGLs become broken, it pretty much means there is no path to
-> make GUP work generically, we have to go through and make everything
-> safe to use with p2p-sgls before allowing GUP. Which, frankly, sounds
-> impossible with all the competing objections.
-> 
-> But GPU seems to have a problem unrelated to this - what Jerome wants
-> is to have two faulting domains for VMA's - visible-to-cpu and
-> visible-to-dma. The new op is essentially faulting the pages into the
-> visible-to-dma category and leaving them invisible-to-cpu.
-> 
-> So that duality would still have to exists, and I think p2p_map/unmap
-> is a much simpler implementation than trying to create some kind of
-> special PTE in the VMA..
-> 
-> At least for RDMA, struct page or not doesn't really matter. 
-> 
-> We can make struct pages for the BAR the same way NVMe does.  GPU is
-> probably the same, just with more mememory at stake?  
-> 
-> And maybe this should be the first implementation. The p2p_map VMA
-> operation should return a SGL and the caller should do the existing
-> pci_p2pdma_map_sg() flow.. 
+Quoting Bjorn Andersson (2019-01-25 15:45:09)
+> @@ -771,6 +788,56 @@
+>                                 status =3D "disabled";
+>                         };
+>                 };
+> +
+> +               pcie: pci@10000000 {
+> +                       compatible =3D "qcom,pcie-qcs404", "snps,dw-pcie";
+> +                       reg =3D  <0x10000000 0xf1d
 
-For GPU it would not work, GPU might want to use main memory (because
-it is running out of BAR space) it is a lot easier if the p2p_map
-callback calls the right dma map function (for page or io) rather than
-having to define some format that would pass down the information.
+Nitpick: Can you format these like <0x10000000 0xf1d>, <0x10000f20 0xa8>, e=
+tc?
 
-> 
-> Worry about optimizing away the struct page overhead later?
+> +                               0x10000f20 0xa8
+> +                               0x07780000 0x2000
+> +                               0x10001000 0x2000>;
+> +                       reg-names =3D "dbi", "elbi", "parf", "config";
+> +                       device_type =3D "pci";
+> +                       linux,pci-domain =3D <0>;
+> +                       bus-range =3D <0x00 0xff>;
+> +                       num-lanes =3D <1>;
+> +                       #address-cells =3D <3>;
+> +                       #size-cells =3D <2>;
+> +
+> +                       ranges =3D <0x81000000 0 0          0x10003000 0 =
+0x00010000   /* I/O */
 
-Struct page do not fit well for GPU as the BAR address can be reprogram
-to point to any page inside the device memory (think 256M BAR versus
-16GB device memory). Forcing struct page on GPU driver would require
-major surgery to the GPU driver inner working and there is no benefit
-to have from the struct page. So it is hard to justify this.
+Same for this one? It's nice to know what the size of the cells are.
 
-Cheers,
-Jérôme
+> +                                 0x82000000 0 0x10013000 0x10013000 0 0x=
+007ed000>; /* memory */
+> +
