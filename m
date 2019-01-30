@@ -2,97 +2,119 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AC20C282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31ED6C282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:49:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3445B2084A
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:49:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2C32218A4
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 15:49:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1548863397;
+	bh=+INOyHZAeZt27HReDRQNgCdW/5pwXbyqrHJoIGYAwHA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=mpIttZqy8YaVDEcw2VibLITsYuwxZFO/vMdw2rwWLBqOFdvczFmAdL8vTZp2OC8pO
+	 JdCjaZTjku113cGbqrxacfupQoF8fbn5CD7q0TOjz2Oi7/AP15607jkjUtas7ry1zf
+	 cn/mcgiuJblGPj7e13usBYfPKpONvVNSXQSRDEVw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726462AbfA3PtU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 10:49:20 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:58906 "EHLO mx1.redhat.com"
+        id S1730756AbfA3Pt4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 10:49:56 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44034 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726439AbfA3PtU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 10:49:20 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728943AbfA3Pt4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 10:49:56 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9F4787AEA1;
-        Wed, 30 Jan 2019 15:49:19 +0000 (UTC)
-Received: from redhat.com (ovpn-126-0.rdu2.redhat.com [10.10.126.0])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C7FEC5D6A6;
-        Wed, 30 Jan 2019 15:49:17 +0000 (UTC)
-Date:   Wed, 30 Jan 2019 10:49:16 -0500
-From:   Jerome Glisse <jglisse@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jason Gunthorpe <jgg@mellanox.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <jroedel@suse.de>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Message-ID: <20190130154915.GB3177@redhat.com>
-References: <20190129193250.GK10108@mellanox.com>
- <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
- <20190129205749.GN3176@redhat.com>
- <2b704e96-9c7c-3024-b87f-364b9ba22208@deltatee.com>
- <20190129215028.GQ3176@redhat.com>
- <deb7ba21-77f8-0513-2524-ee40a8ee35d5@deltatee.com>
- <20190129234752.GR3176@redhat.com>
- <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com>
- <20190130041841.GB30598@mellanox.com>
- <20190130080006.GB29665@lst.de>
+        by mail.kernel.org (Postfix) with ESMTPSA id 4063121473;
+        Wed, 30 Jan 2019 15:49:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1548863395;
+        bh=+INOyHZAeZt27HReDRQNgCdW/5pwXbyqrHJoIGYAwHA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=f0Gi6IUeLtioxqatr7i0DNPhfTdOzXHsjtPn06LuC5R5Pu9LvHwaiF6cORC215d2O
+         b+pzwQbSR2yn4fc54wZNHqpkt2JyDlmSNYCyv6lGcUF9YjrjthrDD7vcnkDqKIQZ3h
+         SKqtLWr8NnftuEyaPR+kyDo/zw9U2bw9D17VvJJU=
+Date:   Wed, 30 Jan 2019 09:49:50 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     honghui.zhang@mediatek.com
+Cc:     lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        youlin.pei@mediatek.com, jianjun.wang@mediatek.com
+Subject: Re: [PATCH] PCI: Mediatek: Use resource_size function on resource
+ object
+Message-ID: <20190130154950.GD229773@google.com>
+References: <1546409033-20412-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190130080006.GB29665@lst.de>
+In-Reply-To: <1546409033-20412-1-git-send-email-honghui.zhang@mediatek.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Wed, 30 Jan 2019 15:49:20 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 09:00:06AM +0100, Christoph Hellwig wrote:
-> On Wed, Jan 30, 2019 at 04:18:48AM +0000, Jason Gunthorpe wrote:
-> > Every attempt to give BAR memory to struct page has run into major
-> > trouble, IMHO, so I like that this approach avoids that.
+On Wed, Jan 02, 2019 at 02:03:53PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> Way less problems than not having struct page for doing anything
-> non-trivial.  If you map the BAR to userspace with remap_pfn_range
-> and friends the mapping is indeed very simple.  But any operation
-> that expects a page structure, which is at least everything using
-> get_user_pages won't work.
+> drivers/pci/pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
 > 
-> So you can't do direct I/O to your remapped BAR, you can't create MRs
-> on it, etc, etc.
+> Generated by: scripts/coccinelle/api/resource_size.cocci
+> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index e307166..0168376 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+>  	struct resource *mem = &pcie->mem;
+>  	const struct mtk_pcie_soc *soc = port->pcie->soc;
+>  	u32 val;
+> -	size_t size;
+>  	int err;
+>  
+>  	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+> @@ -706,8 +705,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+>  		mtk_pcie_enable_msi(port);
+>  
+>  	/* Set AHB to PCIe translation windows */
+> -	size = mem->end - mem->start;
+> -	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
+> +	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(resource_size(mem)));
 
-We do not want direct I/O, in fact at least for GPU we want to seldomly
-allow access to object vma, so the less thing can access it the happier
-we are :) All the GPU userspace driver API (OpenGL, OpenCL, Vulkan, ...)
-that expose any such mapping with the application are very clear on the
-limitation which is often worded: the only valid thing is direct CPU
-access (no syscall can be use with those pointers).
+This is actually a fairly interesting change because it effectively
+changes this:
 
-So application developer already have low expectation on what is valid
-and allowed to do.
+  fls(mem->end - mem->start)
 
-Cheers,
-Jérôme
+to this:
+
+  fls(mem->end - mem->start + 1)
+
+And mem->end is the last valid address, so it changes something like
+this:
+
+  fls(0xffff)         # == 15
+
+to this:
+
+  fls(0x10000)        # == 16
+
+So while this *looks* like a trivial warning fix, it likely fixes an
+important bug, and it's worth pointing out what that bug is in the
+changelog.
+
+>  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+>  
+>  	val = upper_32_bits(mem->start);
+> -- 
+> 2.6.4
+> 
