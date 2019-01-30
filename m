@@ -2,175 +2,141 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD63C282D0
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 04:30:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7159EC282D5
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 07:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF91220857
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 04:30:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="IiKv+TF4"
+	by mail.kernel.org (Postfix) with ESMTP id 49F6E21848
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 07:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730037AbfA3Ead (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Jan 2019 23:30:33 -0500
-Received: from mail-eopbgr00050.outbound.protection.outlook.com ([40.107.0.50]:53569
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        id S1725842AbfA3HDD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 02:03:03 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:56496 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730022AbfA3Eac (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Jan 2019 23:30:32 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bZ7dGrVrH4fix/RckSJysHNQQzMdwLNZNKxx2zgBqog=;
- b=IiKv+TF4ExYJhrimZaR5omiiTbTu56jhpIZXxcdLcUxjtbyQO7jjbMiTcFMz64nrWh8r5U5KRQvLnX6JHx2qeROXK3EBtsfXZlAhuswr/MBeWQeoJMSIanE0GobTD3/djssHDpZU8i/JM8Z3Zab/YhbkjthSoWZfxmHWHFY68AY=
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
- DBBPR05MB6490.eurprd05.prod.outlook.com (20.179.43.22) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1580.16; Wed, 30 Jan 2019 04:30:28 +0000
-Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
- ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
- 04:30:27 +0000
-From:   Jason Gunthorpe <jgg@mellanox.com>
-To:     Jerome Glisse <jglisse@redhat.com>
-CC:     Logan Gunthorpe <logang@deltatee.com>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
+        id S1725820AbfA3HDC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 02:03:02 -0500
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id EBFF0DCCD7719C783F54;
+        Wed, 30 Jan 2019 15:02:59 +0800 (CST)
+Received: from linux-ibm.site (10.175.102.37) by
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.408.0; Wed, 30 Jan 2019 15:02:52 +0800
+From:   Hanjun Guo <guohanjun@huawei.com>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <jroedel@suse.de>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
- vma
-Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAABQ6AgAAJYICAAAV0AIAAIHwAgAAYiwCAAElEAA==
-Date:   Wed, 30 Jan 2019 04:30:27 +0000
-Message-ID: <20190130043020.GC30598@mellanox.com>
-References: <20190129174728.6430-1-jglisse@redhat.com>
- <20190129174728.6430-4-jglisse@redhat.com>
- <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
- <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
- <20190129195055.GH3176@redhat.com> <20190129202429.GL10108@mellanox.com>
- <20190129204359.GM3176@redhat.com> <20190129224016.GD4713@mellanox.com>
- <20190130000805.GS3176@redhat.com>
-In-Reply-To: <20190130000805.GS3176@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: CO1PR15CA0053.namprd15.prod.outlook.com
- (2603:10b6:101:1f::21) To DBBPR05MB6426.eurprd05.prod.outlook.com
- (2603:10a6:10:c9::16)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=jgg@mellanox.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [174.3.196.123]
-x-ms-publictraffictype: Email
-x-microsoft-exchange-diagnostics: 1;DBBPR05MB6490;6:WNVa5kmtNYhrQecH5NtzMyEqe9Mj7Ofw9RtBgyxD5sVzCYc0J3dxq0OEgL6P0DRivVOwlAA8OT2Pnx4yiKq99O9pjw4CIzKKglcF6g8xYnLaciZfm/JfJ83mQ2xPNbPnh2wKstmfE/WNODNshIZS8hnfZQlQdIj+vo1PBFvIRcZFhNJq8UMO//3gCn7bWFpOdhQaq//ZzI9+JhfYCzxeWSC5a9unoXUhfqSVHBmlY8Jr4aoLJdac7mxiB8YuGLMSy42cuHlrAU90huUlFl9GMztnzyTKp88NiT1XjaqBFcB5YJrWTvyKPBvKZzZXJCTotVKx4HrI5bvOhgrmKO4wOtHcG1KYDXFymmpcyVjsjxvFPApi5Gk4NH72Dt00cKn7eSZ9axckgAvBUMbP220KHdD5AdSrboCNwwbO5vPNlR+v+0sqh0Ti2POHmDMj0Soia5l7wYzjDPJW9+3JmLdGNQ==;5:EajzuQwWBqn2oE2IZNKS12h0FCcYr8hQpMe23XCfOZSNtgSCZnA0IheuKb6Ta6aOobTYV+OiT0lGA0teu0tvyWV7SCm42mLQ69apAFQdedaZPeybVVr4rFl82hDcD739Wln5CzkEUGq/LN8M4VU7ds5FyJLBXCKWOkjGl2OwrOBW5kfFQJS7bVlu95WBVbTURHJFQKRMOaGeLHkQAqeYuA==;7:MS9/5eCcjLlpqAUtk2YC+x3ULHFTZdstvpWiHm1Ztfjjwutaog+a9HdPyxd3ESPylpySemRi6fbV81XWoNbCkAugYi06Allg4VwgSTKWh5Gsi9BU85Xya66ueSZpPvIL6NxiSAv3cR/JSOwDmzqjIQ==
-x-ms-office365-filtering-correlation-id: 69aa6100-69ea-4065-8f44-08d6866ba8f7
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6490;
-x-ms-traffictypediagnostic: DBBPR05MB6490:
-x-microsoft-antispam-prvs: <DBBPR05MB6490E6A61E114209483BFF08CF900@DBBPR05MB6490.eurprd05.prod.outlook.com>
-x-forefront-prvs: 0933E9FD8D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(376002)(39860400002)(136003)(366004)(396003)(189003)(199004)(4326008)(6916009)(81156014)(36756003)(68736007)(33656002)(106356001)(6486002)(6512007)(229853002)(53936002)(6436002)(105586002)(99286004)(93886005)(2906002)(6246003)(25786009)(71200400001)(71190400001)(97736004)(316002)(54906003)(1076003)(486006)(256004)(217873002)(478600001)(186003)(102836004)(81166006)(14454004)(7416002)(8936002)(26005)(386003)(3846002)(6116002)(476003)(7736002)(6506007)(2616005)(305945005)(446003)(11346002)(52116002)(66066001)(8676002)(76176011)(86362001);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6490;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: mellanox.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: q2PIQOHUZ507shIRaCG+bIPhKbAiXcpwhGrgHPLttJJwJ0HcZnzmWZkLOlbXrj+fzKTBhRIOwRIgtLMQ3Oemajr8yAwGWEM8mYvs+d4FHqKVNO+bSRgce9USmr9hZNAAyd7MJZ637D3LRREjASk6L0vjUmZfap3esfAEaQEq9BCHaUuFxN7BEbHxGlarIDQ54En5waxRholjtyc3v5U30J1/JFirDI9zZ2C3Q3W979st8Gc7lsGLZwiD4BQ1FvMNq/VpK6tIqgrzPeJKesIyR+isgYNXAdzgHKcbMbE1G1pIPTjrurqiBkAr1xFkLdXrt1FehSwZu/zHJjm58pwonwJSrg0+h8atEWY1sNnxBcjEeUWtaV32v6alH/FvkdR8YamlBhcqnisX9VIvY+Jri2mcLCICdu/rf5MNoSMXs18=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <653ABEE3FDEFC347BC03CDDE1CA5AC65@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+CC:     <linux-usb@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        <anthony.jebson@huawei.com>, Hanjun Guo <hanjun.guo@linaro.org>
+Subject: [RFC PATCH] USB: PCI: set 32bit DMA mask for PCI based USB controllers
+Date:   Wed, 30 Jan 2019 15:01:54 +0800
+Message-ID: <1548831714-3706-1-git-send-email-guohanjun@huawei.com>
+X-Mailer: git-send-email 1.7.12.4
 MIME-Version: 1.0
-X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 69aa6100-69ea-4065-8f44-08d6866ba8f7
-X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 04:30:27.3902
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6490
+Content-Type: text/plain
+X-Originating-IP: [10.175.102.37]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 07:08:06PM -0500, Jerome Glisse wrote:
-> On Tue, Jan 29, 2019 at 11:02:25PM +0000, Jason Gunthorpe wrote:
-> > On Tue, Jan 29, 2019 at 03:44:00PM -0500, Jerome Glisse wrote:
-> >=20
-> > > > But this API doesn't seem to offer any control - I thought that
-> > > > control was all coming from the mm/hmm notifiers triggering p2p_unm=
-aps?
-> > >=20
-> > > The control is within the driver implementation of those callbacks.=20
-> >=20
-> > Seems like what you mean by control is 'the exporter gets to choose
-> > the physical address at the instant of map' - which seems reasonable
-> > for GPU.
-> >=20
-> >=20
-> > > will only allow p2p map to succeed for objects that have been tagged =
-by the
-> > > userspace in some way ie the userspace application is in control of w=
-hat
-> > > can be map to peer device.
-> >=20
-> > I would have thought this means the VMA for the object is created
-> > without the map/unmap ops? Or are GPU objects and VMAs unrelated?
->=20
-> GPU object and VMA are unrelated in all open source GPU driver i am
-> somewhat familiar with (AMD, Intel, NVidia). You can create a GPU
-> object and never map it (and thus never have it associated with a
-> vma) and in fact this is very common. For graphic you usualy only
-> have hand full of the hundreds of GPU object your application have
-> mapped.
+From: Hanjun Guo <hanjun.guo@linaro.org>
 
-I mean the other way does every VMA with a p2p_map/unmap point to
-exactly one GPU object?
+We met an issue that when we update the IORT table to revision D,
+and the kernel update to 4.19, the USB on D06 (ARM64 based server)
+will probe fail:
 
-ie I'm surprised you say that p2p_map needs to have policy, I would
-have though the policy is applied when the VMA is created (ie objects
-that are not for p2p do not have p2p_map set), and even for GPU
-p2p_map should really only have to do with window allocation and pure
-'can I even do p2p' type functionality.
+[   13.495751] CPU: 0 PID: 15 Comm: kworker/0:1 Not tainted 4.19.0-00115-gb2b5200 #5
+[   13.503219] Hardware name: Huawei D06/D06, BIOS Hisilicon D06 UEFI RC0 - V1.09.02 12/25/2018
+[   13.511645] Workqueue: events work_for_cpu_fn
+[   13.515989] pstate: a0c00009 (NzCv daif +PAN +UAO)
+[   13.520767] pc : dma_pool_alloc+0x218/0x270
+[   13.524937] lr : dma_pool_alloc+0xa0/0x270
+[   13.529019] sp : ffff000009e23b20
+[   13.532320] x29: ffff000009e23b20 x28: ffff8027c58ad098 
+[   13.537619] x27: 0000000000001000 x26: ffff8027d7a790a8 
+[   13.542918] x25: ffff000008fa7000 x24: ffff000009e23bc0 
+[   13.548216] x23: 00000000006000c0 x22: ffff8027c58ad010 
+[   13.553515] x21: ffff0000097e1000 x20: ffff8027c58ad000 
+[   13.558814] x19: ffff8027c58ad080 x18: ffffffffffffffff 
+[   13.564112] x17: 0000000000000000 x16: 0000000000007fff 
+[   13.569411] x15: ffff0000097e16c8 x14: ffff8027c5d39885 
+[   13.574709] x13: ffff8027c5d39884 x12: 0000000000000038 
+[   13.580008] x11: 0101010101010101 x10: 7f7f7f7f7f7f7f7f 
+[   13.585307] x9 : 0000000000000000 x8 : ffff8027c587c400 
+[   13.590605] x7 : 0000000000000000 x6 : 000000000000003f 
+[   13.595904] x5 : ffff8027dc5b8000 x4 : ffff8027e09b91e0 
+[   13.601202] x3 : 00000000008d2280 x2 : ffff8027c58ad100 
+[   13.606501] x1 : 0000000000000028 x0 : 0000000000000000 
+[   13.611800] Call trace:
+[   13.614234]  dma_pool_alloc+0x218/0x270
+[   13.617710] ata1: SATA link down (SStatus 0 SControl 300)
+[   13.618059]  ehci_qh_alloc+0x5c/0xf8
+[   13.627002]  ehci_setup+0x17c/0x4b8
+[   13.630478]  ehci_pci_setup+0x18c/0x5b8
+[   13.634301]  usb_add_hcd+0x290/0x7a0
+[   13.637863]  usb_hcd_pci_probe+0x2cc/0x3e8
+[   13.641946]  ehci_pci_probe+0x34/0x48
+[   13.645596]  local_pci_probe+0x3c/0xb0
+[   13.649331]  work_for_cpu_fn+0x18/0x28
+[   13.653067]  process_one_work+0x1e4/0x458
+[   13.657063]  worker_thread+0x228/0x450
+[   13.660798]  kthread+0x12c/0x130
+[   13.664014]  ret_from_fork+0x10/0x18
+[   13.667577] ---[ end trace 6f8757456e2ec456 ]---
 
-> Idea is that we can only ask exporter to be predictable and still allow
-> them to fail if things are really going bad.
+It turns out the the IORT revision D introduce the DMA address
+limit size for PCI RC and in commit 5ac65e8c8941 ("ACPI/IORT: Support
+address size limit for root complexes"), will set the DMA mask
+for the RC and that will be inherited by device under the RC.
 
-I think hot unplug / PCI error recovery is one of the 'really going
-bad' cases..
+D06 only enables 1 RC but has EPs with different DMA address sizes,
+for USB it use 32bit DMA, and 64bit for HNS and SAS, so this will
+cause probe failure if we use 64bit DMA for USB controllers.
 
-> I think i put it in the comment above the ops but in any cases i should
-> write something in documentation with example and thorough guideline.
-> Note that there won't be any mmu notifier to mmap of a device file
-> unless the device driver calls for it or there is a syscall like munmap
-> or mremap or mprotect well any syscall that work on vma.
+Set the DMA mask to 32bit for PCI based USB controllers,
+EHCI and OHCI USB controllers are using 32bit DMA address,
+XHCI will set the DMA mask in its probe after the pci probe,
+so it's safe just add dma_coerce_mask_and_coherent() in
+usb_hcd_pci_probe().
 
-This is something we might need to explore, does calling
-zap_vma_ptes() invoke enough notifiers that a MMU notifiers or HMM
-mirror consumer will release any p2p maps on that VMA?
+Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+Hi all,
 
-> If we ever want to support full pin then we might have to add a
-> flag so that GPU driver can refuse an importer that wants things
-> pin forever.
+This is the RFC version, I'm not sure this is the best solution,
+comments are warmly welcomed.
 
-This would become interesting for VFIO and RDMA at least - I don't
-think VFIO has anything like SVA so it would want to import a p2p_map
-and indicate that it will not respond to MMU notifiers.
+Thanks
+Hanjun
 
-GPU can refuse, but maybe RDMA would allow it...
+ drivers/usb/core/hcd-pci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Jason
+diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
+index 0343246..a9c33e6 100644
+--- a/drivers/usb/core/hcd-pci.c
++++ b/drivers/usb/core/hcd-pci.c
+@@ -188,6 +188,10 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	if (pci_enable_device(dev) < 0)
+ 		return -ENODEV;
+ 
++	retval = dma_coerce_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32));
++	if (retval)
++		return retval;
++
+ 	/*
+ 	 * The xHCI driver has its own irq management
+ 	 * make sure irq setup is not touched for xhci in generic hcd code
+-- 
+1.7.12.4
+
