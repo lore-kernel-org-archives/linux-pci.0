@@ -2,127 +2,149 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85466C4151A
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:53:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE47C282D8
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:54:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3335220863
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:53:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548888833;
-	bh=NzuS+MG33DEOM10pKtwDtAgfBO5NRSbCeEq9QzMpiqs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=rTT/S1vuZpl9AE4Grgq7JHLFrG3mZfM9nlSYWfrVwo4mCFHdAO9TglHB8Dh3IvPGw
-	 PJvNlt7IEpbdzTvmLNr8XXckEWlU3pBM0+6ZH48oIOI8Jbc72rctyswhhaL3eB00AL
-	 ogiBXEIADUi+KvawsvE5bZm/MS8G/nw5sRvMGs2Y=
+	by mail.kernel.org (Postfix) with ESMTP id B2F8020863
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 22:54:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="Qkgm03hH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730115AbfA3Wxw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 17:53:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41296 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725890AbfA3Wxw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 17:53:52 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CA9B4218AF;
-        Wed, 30 Jan 2019 22:44:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548888258;
-        bh=NzuS+MG33DEOM10pKtwDtAgfBO5NRSbCeEq9QzMpiqs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Zadjk9nreaRVcVtlcrY6ptc/lB9ibHvuqJQio2J6vm8v3aEZJlFDa8rklqmuUTYdm
-         ZvRHOblVWPMYDRDPFpjyD9M3CxoHg+Q3mhfdEKobPNGlhFijXezZ8b1k6R2HBp+wkx
-         RX5elDjHRgkwU8JfH3nHaTbJIEUIHNu32s/724zY=
-Date:   Wed, 30 Jan 2019 16:44:15 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Aaron Sierra <asierra@xes-inc.com>
-Cc:     linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH v2 1/2] PCI/ACPI: Move _OSC test for native services to
- top
-Message-ID: <20190130224415.GK229773@google.com>
-References: <1539642186-12821-1-git-send-email-asierra@xes-inc.com>
- <1540483292-24049-1-git-send-email-asierra@xes-inc.com>
- <1540483292-24049-2-git-send-email-asierra@xes-inc.com>
+        id S1727216AbfA3Wyn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 17:54:43 -0500
+Received: from mail-eopbgr140048.outbound.protection.outlook.com ([40.107.14.48]:54597
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725890AbfA3Wym (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 17:54:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FJd4xUozB+7alcoxw8jbCUD16duz5AkzXpB6eFOXgcA=;
+ b=Qkgm03hHl6K7CLlq4yQKkprpUrxBViHzIgHcb7GRHn3/CFxCLuwf6a3kHlqK3sjLUerdmDPDd4jmv4I+K9uz/zGf/Dg2cmjzohSwoB6PgE7WjbJGpbpwwpGfvycRREInvzJuU5G978+jxJZyMQe4lfUe0Xs4pbP6Q0oqhVmRcyo=
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
+ DBBPR05MB6571.eurprd05.prod.outlook.com (20.179.44.82) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1580.17; Wed, 30 Jan 2019 22:51:55 +0000
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
+ 22:51:55 +0000
+From:   Jason Gunthorpe <jgg@mellanox.com>
+To:     Jerome Glisse <jglisse@redhat.com>
+CC:     Logan Gunthorpe <logang@deltatee.com>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAAEreAgAAFCQCAAAk3gIAABX0AgAATFYCAAA25AIAAGRqAgAAykICAANmWgIAAG8YAgAAHLwCAAAROgIAABioAgAADIQCAAAkGAIAAAccAgAAPg4CAAAL1AIAACaCAgAAAtACAAAPygIAAAVEA
+Date:   Wed, 30 Jan 2019 22:51:55 +0000
+Message-ID: <20190130225148.GC25486@mellanox.com>
+References: <20190130193759.GE17080@mellanox.com>
+ <db873687-ff80-4758-0b9f-973f27db5335@deltatee.com>
+ <20190130201114.GB17915@mellanox.com> <20190130204332.GF5061@redhat.com>
+ <20190130204954.GI17080@mellanox.com> <20190130214525.GG5061@redhat.com>
+ <20190130215600.GM17080@mellanox.com> <20190130223027.GH5061@redhat.com>
+ <20190130223258.GB25486@mellanox.com> <20190130224705.GI5061@redhat.com>
+In-Reply-To: <20190130224705.GI5061@redhat.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: CO2PR04CA0064.namprd04.prod.outlook.com
+ (2603:10b6:102:1::32) To DBBPR05MB6426.eurprd05.prod.outlook.com
+ (2603:10a6:10:c9::16)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=jgg@mellanox.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [174.3.196.123]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;DBBPR05MB6571;6:tcUhX8ThEQ1aqoCcrz7tThKNVH24ni6UrZhdSi0v60Pq98v/yXy46EAPtW2KlrtjHXuTNFdfXCgaxTB3wj17J7n9Swd4VmasEMxjEBMR+h1wOfpP0D4cN1GFPWM4niWKCXnC7dVpXz9tGyQ3W34BwM+S9+DA0L8Ev7Z3vQ86Tlm7V4blhaAr3z//0ueKcXI+D3qpXX94XqLs9FjW3Mz5PRxZQpQcyhHNA0JxXe3g0hmcvyGNtK9xQu+qqYV/CSiXfbevbl0j3Lmaq0AzagJSMG/YkDRQvmQL7xjWqbWVc5IWngCalniZnDBQL6CX/p5Ggip6K6pKkM4bVUWQu+Y9nQlxc2y7Y90yMu8+mllCci/9W3QJXr6FRS0aChrq02ftEtSK7rCrhHRkt78CN8wrpWOj/S6vIYJRbMjU4p2K5DM+9u9k+hDg33BD+CMeNexmLLY7hYrSk2Q8pBHGZqTDzA==;5:/YsijxgDm4VbarTBUVZLw2K8snPVd220AJ/HMlLhL3GS5/6iN3k5N8IoW2X51YAa+eNRSDnuIyo92yFNrM+paRr8tsH9uqv5kNgwzZ9LyOtfliBzRTFBDnGlHYLdZuc4Ld+e3GQEnmwG3b/jLZ+J2O6nUR1XA6cz+NvhgxVE0e4ysaulKdZSOKL0wKkSuD/3VtSZIC3Q35+W8Zj1Rozw7A==;7:yg7K6I68IbX3Gy3rz3nuhBl/liRC2PBP+HjTsTdticSf09NwUuPnHW9mX+iTw7ti0lGgTvDvICXAFBX5SvWZi0xBw0rjIz2z4IcQRYOp8VzPZOcw2OCHpTHcwxITRNg5ZqnMcegH3/iR2uppKsM5Eg==
+x-ms-office365-filtering-correlation-id: 078e7a37-f6da-4fe8-93e9-08d687058822
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6571;
+x-ms-traffictypediagnostic: DBBPR05MB6571:
+x-microsoft-antispam-prvs: <DBBPR05MB6571E973DC7AFBD367E865A1CF900@DBBPR05MB6571.eurprd05.prod.outlook.com>
+x-forefront-prvs: 0933E9FD8D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(376002)(39860400002)(366004)(346002)(199004)(189003)(36756003)(3846002)(33656002)(186003)(76176011)(6916009)(106356001)(71190400001)(71200400001)(53936002)(26005)(52116002)(105586002)(25786009)(8676002)(54906003)(6116002)(7416002)(8936002)(1076003)(81156014)(81166006)(229853002)(4326008)(6436002)(2906002)(305945005)(6486002)(93886005)(66066001)(11346002)(446003)(217873002)(6506007)(386003)(99286004)(476003)(2616005)(97736004)(478600001)(316002)(6512007)(7736002)(14444005)(256004)(68736007)(86362001)(6246003)(14454004)(102836004)(486006);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6571;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: mellanox.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: Ox6/vquQvZO3t8TlBC23AglV3FJLS2Y2rhSWx6Nhy+V/0jPESVFPDmbyho2z+q2Ky6qaRUuTTyRaEksTtDWDFl1T+V5RRKx047iOpnCEmqcuCkFxbVjnM0oct6DvQrREihZTv5lx2KyeJBUI0SuaMFIy1g6hkrf5awwlJ8m0T6qE04BLqmaKTzBON7HrvPaW35XczB0Eah8BId/U1svGjIAdfIz/Fq7yAUndzbQh4WVNbgBWGxeyWwsO2JceE8mAi1ccdMz4jbw7dT3zSPYeD7AfWor/LdWFd29C438G9DfvkBG0bs1Y+eTGvB4uFCiHjUI7p3YP5+hd0NJOee5XZXS6+DWiU0vzAJVfLDDyfNwFVHSHVLaYJi9C8KyzC1ArDCJamS6ycxY96Z3X3kLFq7U9/BeFwnCBUOyRybacKMk=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <35A69DD96A70BF4186715D7C3E6F4417@eurprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1540483292-24049-2-git-send-email-asierra@xes-inc.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: Mellanox.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 078e7a37-f6da-4fe8-93e9-08d687058822
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 22:51:54.8037
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6571
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Aaron,
+On Wed, Jan 30, 2019 at 05:47:05PM -0500, Jerome Glisse wrote:
+> On Wed, Jan 30, 2019 at 10:33:04PM +0000, Jason Gunthorpe wrote:
+> > On Wed, Jan 30, 2019 at 05:30:27PM -0500, Jerome Glisse wrote:
+> >=20
+> > > > What is the problem in the HMM mirror that it needs this restrictio=
+n?
+> > >=20
+> > > No restriction at all here. I think i just wasn't understood.
+> >=20
+> > Are you are talking about from the exporting side - where the thing
+> > creating the VMA can really only put one distinct object into it?
+>=20
+> The message i was trying to get accross is that HMM mirror will
+> always succeed for everything* except for special vma ie mmap of
+> device file. For those it can only succeed if a p2p_map() call
+> succeed.
+>=20
+> So any user of HMM mirror might to know why the mirroring fail ie
+> was it because something exceptional is happening ? Or is it because
+> i was trying to map a special vma which can be forbiden.
+>=20
+> Hence why i assume that you might want to know about such p2p_map
+> failure at the time you create the umem odp object as it might be
+> some failure you might want to report differently and handle
+> differently. If you do not care about differentiating OOM or
+> exceptional failure from p2p_map failure than you have nothing to
+> worry about you will get the same error from HMM for both.
 
-On Thu, Oct 25, 2018 at 11:01:31AM -0500, Aaron Sierra wrote:
-> Move the simple test for when PCIe native services are disabled
-> closer to the top, prior to where things get more complicated.
-> 
-> Signed-off-by: Aaron Sierra <asierra@xes-inc.com>
-> ---
->  drivers/acpi/pci_root.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 707aafc..eb9f14e 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -441,6 +441,12 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
->  		return;
->  	}
->  
-> +	if (pcie_ports_disabled) {
-> +		dev_info(&device->dev,
-> +			 "PCIe port services disabled; not requesting _OSC control\n");
-> +		return;
-> +	}
+I think my hope here was that we could have some kind of 'trial'
+interface where very eary users can call
+'hmm_mirror_is_maybe_supported(dev, user_ptr, len)' and get a failure
+indication.
 
-Today we always set "*no_aspm = 1" if _OSC fails, which means we later
-call pcie_no_aspm().
+We probably wouldn't call this on the full address space though
 
-After this patch, when pcie_ports_disabled is "true", we don't even try to
-evaluate _OSC, and we will never set *no_aspm, so we will never call
-pcie_no_aspm() when pcie_ports_disabled is "true", which happens in these
-cases:
+Beyond that it is just inevitable there can be problems faulting if
+the memory map is messed with after MR is created.
 
-  1) CONFIG_PCIEPORTBUS is unset, or
-  2) CONFIG_PCIEPORTBUS=y and we booted with "pcie_ports=compat"
+And here again, I don't want to worry about any particular VMA
+boundaries..
 
-Case 1) isn't a problem because pcie_no_aspm() is only implemented when
-CONFIG_PCIEASPM=y, and CONFIG_PCIEASPM depends on CONFIG_PCIEPORTBUS, so in
-this case today we only call the empty stub pcie_no_aspm() function.
-
-But case 2) is a behavior change that seems unintended.
-
-Even though CONFIG_PCIEASPM depends on CONFIG_PCIEPORTBUS, ASPM doesn't
-actually *use* anything provided by PCIEPORTBUS, so I think the ASPM code
-is still active and useful even when we boot with "pcie_ports=compat".
-
-Whether CONFIG_PCIEASPM should depend on CONFIG_PCIEPORTBUS is another
-question.  I tend to think maybe it should not, but that's an orthogonal
-question.
-
->  	/*
->  	 * All supported architectures that use ACPI have support for
->  	 * PCI domains, so we indicate this in _OSC support capabilities.
-> @@ -468,11 +474,6 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
->  		return;
->  	}
->  
-> -	if (pcie_ports_disabled) {
-> -		dev_info(&device->dev, "PCIe port services disabled; not requesting _OSC control\n");
-> -		return;
-> -	}
-> -
->  	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
->  		decode_osc_support(root, "not requesting OS control; OS requires",
->  				   ACPI_PCIE_REQ_SUPPORT);
-> -- 
-> 2.7.4
-> 
+Jason
