@@ -2,102 +2,124 @@ Return-Path: <SRS0=6RWV=QG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D7CC282D7
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:17:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 234ADC282D7
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:19:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 971CC2087F
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:17:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548875826;
-	bh=RSqNR6h5oLBNDN1hnnJQbktDRKcM1d5/tzsdeSiYtAA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=S65mwbK7pjkwHKqiHN/K2mMlI2jmCrx1RZKIfK8ZOxK57UsY9uoMOyDeChh+eOb2N
-	 FXWglT/82Gza4DeNnmA90P/W/QcVr6ND3NO1i6iMlGCvXjx8BfzilfUTYz0oHiDp0G
-	 lABsZ0g9b7hhavZH81TLjs8EPqsZutNSRA0tg0T8=
+	by mail.kernel.org (Postfix) with ESMTP id EE7472087F
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Jan 2019 19:19:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="UzX6sHRR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733266AbfA3TRF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 14:17:05 -0500
-Received: from mail.kernel.org ([198.145.29.99]:44924 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728197AbfA3TRF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Jan 2019 14:17:05 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D0D762087F;
-        Wed, 30 Jan 2019 19:17:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548875825;
-        bh=RSqNR6h5oLBNDN1hnnJQbktDRKcM1d5/tzsdeSiYtAA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=0DZyBb6R+ldObc1NEMBnYf78tFDAurOCfpYdePFWZ3FYavFXjGrVhZuwtSW32+WgO
-         t5sCgaCSv4E0N+FEHYC8Ke9CGtX6HRcrmVK4P82VgHWxZz4ZwQLTR555ijXv+U3mPc
-         KdElKCgd38iUeWHG0HhtuDpPsB+hAOt++koB22Pg=
-Date:   Wed, 30 Jan 2019 13:17:03 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: make pci_set_mwi a dummy for PCIe devices
-Message-ID: <20190130191702.GI229773@google.com>
-References: <0599e4ea-55ce-9aba-d5af-1625a3db0701@gmail.com>
+        id S1733282AbfA3TT6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Jan 2019 14:19:58 -0500
+Received: from mail-eopbgr130077.outbound.protection.outlook.com ([40.107.13.77]:52977
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728197AbfA3TT6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 30 Jan 2019 14:19:58 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1Gazb6Jp6B360Dq+MkPlp8a64vElOV9HlssPVSOq7PI=;
+ b=UzX6sHRR56qy4HbKSErrFp0EcAChEVbY8N3BvrW9CePVEyW4vY+fpOg4QDe8VHDBBt5OBBuTZiGjJizPcNLUMnlotIiYO8iGAwlVBazrNyqdX9rYYOBJg4MOXFs06OsiWPWNeMApeoVn7ph52XRTWDS+ZxAgnsGIwSghnx4xzNA=
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com (20.179.42.80) by
+ DBBPR05MB6395.eurprd05.prod.outlook.com (20.179.41.213) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1580.16; Wed, 30 Jan 2019 19:19:52 +0000
+Received: from DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59]) by DBBPR05MB6426.eurprd05.prod.outlook.com
+ ([fe80::24c2:321d:8b27:ae59%5]) with mapi id 15.20.1580.017; Wed, 30 Jan 2019
+ 19:19:52 +0000
+From:   Jason Gunthorpe <jgg@mellanox.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+CC:     Christoph Hellwig <hch@lst.de>, Jerome Glisse <jglisse@redhat.com>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <jroedel@suse.de>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Topic: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
+ vma
+Thread-Index: AQHUt/rA/dLikqWEmEaIytHIBNLPlqXGkyOAgAAJwICAAAX+AIAAEreAgAAFNYCAALluAIAAoq8AgAAIC4CAABKaAA==
+Date:   Wed, 30 Jan 2019 19:19:52 +0000
+Message-ID: <20190130191946.GD17080@mellanox.com>
+References: <20190129174728.6430-1-jglisse@redhat.com>
+ <20190129174728.6430-4-jglisse@redhat.com>
+ <ae928aa5-a659-74d5-9734-15dfefafd3ea@deltatee.com>
+ <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com>
+ <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com>
+ <20190129205827.GM10108@mellanox.com> <20190130080208.GC29665@lst.de>
+ <20190130174424.GA17080@mellanox.com>
+ <bcbdfae6-cfc6-c34f-4ff2-7bb9a08f38af@deltatee.com>
+In-Reply-To: <bcbdfae6-cfc6-c34f-4ff2-7bb9a08f38af@deltatee.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: CO2PR04CA0185.namprd04.prod.outlook.com
+ (2603:10b6:104:5::15) To DBBPR05MB6426.eurprd05.prod.outlook.com
+ (2603:10a6:10:c9::16)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=jgg@mellanox.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [174.3.196.123]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;DBBPR05MB6395;6:/EUG6rN1Pl0LhGz+YLBfOhGglyVXmjKrFuRN+IvaFnbSOe68/O6+nK72Cm6QcD7d0TSvLFJUAKBpA6bJUnI1FuDWcOvtUehF1tj+zhv0iK43AGAf0usyGG5J+PaO1uX3AFNNc3wGApQ3B6Dhy1LY9g+TjT1mH42dYeWEnXWaxyh7sqlLJdwzVQvPULfsZuWaNgXL+g255UwHb4t3feNg+Bd3l3sw2CalhRiDJvancL21/OOAJi+v8u6biUPdERh6gDySgJPOTqZboa5et7QHdyyVkjXPgllhiY9+FsXK0IKNNyHJMUunwa88Th8LAPGRtFrGBbvPrCn3Y5kbMOKgp7kfcmoTy83TPNEiLOxVo/jdmX5h+Bl+9P/kESw0GETfp3mz5S/lZFHykVMvNdHnt/vpZb7Z1y0opqIlP72tJ6T3iqQnpvSFamcI9SmIXjvBdPmSahkEEWIoc5rt3WZRFQ==;5:Crbz8a9BZD54YXFZevGAFLMvdcWZa7qezxOdj19uIrgLDz8xpGwotVj556Qa/XfI3d8rZSpzrPxQDqj25ILs8GOiyMfQumCcDMvwyarlLEpc9fHo7gPGI7XIp+2ErYoOHhWdFfq53cvB8XZ2pUmVi/KLgaGoJAuuCNUhyqtebpfDqFfExMLLrPEWtPRpVJ6z4ZohVdySHhLWERuOr8Xgqg==;7:8j6QfQXfIbjgtF1JWbSGx/TDa/PqeDpiB9Dv9g+Vyh89Ky8eMRYnssf9rBAoRHzsV4JhMUDdd7/ZetNe5SUtPVhetlPATm2m9cptMYVpfRnOsyS22InngAFQklCJLKcRiH8TaV2OBRP9A8aoSxfwVQ==
+x-ms-office365-filtering-correlation-id: 141dbce2-fcb6-438c-3fab-08d686e7e8e6
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600110)(711020)(4605077)(4618075)(2017052603328)(7153060)(7193020);SRVR:DBBPR05MB6395;
+x-ms-traffictypediagnostic: DBBPR05MB6395:
+x-microsoft-antispam-prvs: <DBBPR05MB6395CD70E422712DC53CC647CF900@DBBPR05MB6395.eurprd05.prod.outlook.com>
+x-forefront-prvs: 0933E9FD8D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(366004)(396003)(346002)(376002)(136003)(199004)(189003)(54906003)(316002)(6246003)(68736007)(105586002)(446003)(2906002)(25786009)(53936002)(97736004)(4326008)(36756003)(76176011)(2616005)(476003)(11346002)(106356001)(33656002)(53546011)(6506007)(486006)(256004)(217873002)(52116002)(26005)(99286004)(186003)(386003)(102836004)(6116002)(6916009)(3846002)(66066001)(4744005)(1076003)(6436002)(6512007)(8676002)(81166006)(305945005)(7736002)(71190400001)(6486002)(229853002)(8936002)(478600001)(81156014)(93886005)(7416002)(14454004)(71200400001)(86362001);DIR:OUT;SFP:1101;SCL:1;SRVR:DBBPR05MB6395;H:DBBPR05MB6426.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: mellanox.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: uZltpbhLDx/I/aSUk9bXd8dUSVjJoSxhzqz+W/18RtNysqS/wJ4mPoHP7JdgoAtsnUekdTPo/8qwYi+dogonykLMJ1Pd/2rGSRZoEf8c3xKpQ0QR+JwvdTI3+PcXk+S5aOS8flwScOXfAlrKdYdMiBiUxnhTXM5MWYKW6DCe82M34QwzLox92rry6x7I0XoIdut7dOTe7jm4L7z3TBd2gKD7/aRITwT8AEv9EMjU7t4a4wyQK+/NvqXaucg5XBshGoXZie0Fl3FJvCInwLy8i9H1ojviDjdieAytVAAz83CNLzFb1o75DuV7AaEbQQAw1tTSO//erXE20cygsJmUSWYloEDMen3fsNCzfaTMKON48DYZ/7zf3TWYIuBzBY7e3qsVAlxr/YBl4yWs17Ewht9WRm+WOIOERRsSd1gadK0=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <2608ADBADE66244CAF93015265B4523A@eurprd05.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0599e4ea-55ce-9aba-d5af-1625a3db0701@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: Mellanox.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 141dbce2-fcb6-438c-3fab-08d686e7e8e6
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Jan 2019 19:19:52.2454
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBBPR05MB6395
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Oct 21, 2018 at 05:06:58PM +0200, Heiner Kallweit wrote:
-> Memory-Write-Invalidate isn't applicable for PCIe devices, therefore
-> make the MWI functions a dummy and don't even write to the (dummy)
-> PCI config space registers.
-> 
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
-> ---
->  drivers/pci/pci.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d068f11d0..fb63b3d89 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4137,6 +4137,9 @@ int pci_set_mwi(struct pci_dev *dev)
->  	int rc;
->  	u16 cmd;
->  
-> +	if (pci_is_pcie(dev))
-> +		return 0;
+On Wed, Jan 30, 2019 at 11:13:11AM -0700, Logan Gunthorpe wrote:
+>=20
+>=20
+> On 2019-01-30 10:44 a.m., Jason Gunthorpe wrote:
+> > I don't see why a special case with a VMA is really that different.
+>=20
+> Well one *really* big difference is the VMA changes necessarily expose
+> specialized new functionality to userspace which has to be supported
+> forever and may be difficult to change.=20
 
-I don't think this works quite right for the case of a
-PCIe-to-PCI/PCI-X bridge.  That is a PCIe device (it has a PCIe
-Capability, and pci_is_pcie() should return true), but the MWI bit is
-writable and meaningful (it controls whether the bridge can convert a
-PCIe Memory Write into a PCI Memory Write and Invalidate), so I don't
-think it would be correct to just skip this.
+The only user change here is that more things will succeed when
+creating RDMA MRs (and vice versa to GPU). I don't think this
+restricts the kernel implementation at all, unless we intend to
+remove P2P entirely..
 
-I'm looking at the "PCI EXPRESS TO PCI/PCI-X BRIDGE" spec, r1.0, sec
-5.1.1.1.
-
->  	rc = pci_set_cacheline_size(dev);
->  	if (rc)
->  		return rc;
-> @@ -4203,6 +4206,9 @@ void pci_clear_mwi(struct pci_dev *dev)
->  #ifndef PCI_DISABLE_MWI
->  	u16 cmd;
->  
-> +	if (pci_is_pcie(dev))
-> +		return;
-> +
->  	pci_read_config_word(dev, PCI_COMMAND, &cmd);
->  	if (cmd & PCI_COMMAND_INVALIDATE) {
->  		cmd &= ~PCI_COMMAND_INVALIDATE;
-> -- 
-> 2.19.1
-> 
+Jason
