@@ -2,314 +2,421 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC557C169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 09:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19028C282C7
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 09:51:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6FFF218AC
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 09:44:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D91C7218AC
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 09:51:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725963AbfAaJoy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 04:44:54 -0500
-Received: from foss.arm.com ([217.140.101.70]:40514 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727523AbfAaJox (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Jan 2019 04:44:53 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 10B0EA78;
-        Thu, 31 Jan 2019 01:44:53 -0800 (PST)
-Received: from [10.1.196.62] (usa-sjc-imap-foss1.foss.arm.com [10.72.51.249])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 6476A3F71E;
-        Thu, 31 Jan 2019 01:44:50 -0800 (PST)
-Subject: Re: [v1] PCI: mediatek: Remove MSI inner domain
-To:     Honghui Zhang <honghui.zhang@mediatek.com>,
-        Jianjun Wang <jianjun.wang@mediatek.com>
-Cc:     ryder.lee@mediatek.com, lorenzo.pieralisi@arm.com,
-        bhelgaas@google.com, matthias.bgg@gmail.com,
-        linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        youlin.pei@mediatek.com
-References: <1548149855-3225-1-git-send-email-jianjun.wang@mediatek.com>
- <1548926367.4980.14.camel@mhfsdcap03>
-From:   Marc Zyngier <marc.zyngier@arm.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=marc.zyngier@arm.com; prefer-encrypt=mutual; keydata=
- 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
-Organization: ARM Ltd
-Message-ID: <10e8e731-5749-f6fb-eb33-ab67aa0e2c3f@arm.com>
-Date:   Thu, 31 Jan 2019 09:44:48 +0000
-User-Agent: Mozilla/5.0 (X11; Linux aarch64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-In-Reply-To: <1548926367.4980.14.camel@mhfsdcap03>
-Content-Type: text/plain; charset=utf-8
+        id S1726510AbfAaJvP convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 04:51:15 -0500
+Received: from mail-oln040092254041.outbound.protection.outlook.com ([40.92.254.41]:7861
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726316AbfAaJvO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Jan 2019 04:51:14 -0500
+Received: from PU1APC01FT042.eop-APC01.prod.protection.outlook.com
+ (10.152.252.54) by PU1APC01HT081.eop-APC01.prod.protection.outlook.com
+ (10.152.253.28) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1580.10; Thu, 31 Jan
+ 2019 09:51:06 +0000
+Received: from PS2P216MB0642.KORP216.PROD.OUTLOOK.COM (10.152.252.52) by
+ PU1APC01FT042.mail.protection.outlook.com (10.152.253.96) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.1580.10 via Frontend Transport; Thu, 31 Jan 2019 09:51:06 +0000
+Received: from PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
+ ([fe80::cc10:24a5:4249:7da]) by PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
+ ([fe80::cc10:24a5:4249:7da%2]) with mapi id 15.20.1558.025; Thu, 31 Jan 2019
+ 09:51:06 +0000
+From:   Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+CC:     "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: Consider alignment of hot-added bridges when
+ distributing available resources
+Thread-Topic: [PATCH] PCI: Consider alignment of hot-added bridges when
+ distributing available resources
+Thread-Index: AQHUuUp7km3iyC1DoEii4moU5Ob1EQ==
+Date:   Thu, 31 Jan 2019 09:51:05 +0000
+Message-ID: <PS2P216MB0642AB5973DFD5EBB5B2BBF380910@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
+Accept-Language: en-AU, en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: SG2PR01CA0115.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:40::19) To PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
+ (2603:1096:300:1c::16)
+x-incomingtopheadermarker: OriginalChecksum:63B7B9863E1569EFBE731D87C77AD5ADE014D9CF16761E16D827920372A0FF4E;UpperCasedChecksum:B7861E675E0E936A5AF12FA46D5A0C2CA0953B267E692F3DAD7B8415CB231E70;SizeAsReceived:8832;Count:62
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: git-send-email 2.19.1
+x-tmn:  [ZZAghP36+F3zYeKytP0G3WBPoz7Afjr5hxTnbedkjWxGigTmp2vqkFfImVcG+vwZepZpts8pXqk=]
+x-microsoft-original-message-id: <20190131095045.5301-1-nicholas.johnson-opensource@outlook.com.au>
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;PU1APC01HT081;6:IReWEF+dH8Y3KdDytP3gviisFzMBUTOPm0oOqlVP2w7rqBHDZf79VW73ojftSUS2jgR5y9IYarcF1f31G4U76fUu55EdeFVBxj+wHf4eyHD8r/av6bSAiNFHiMmjRIsQjltHUcklSk8aK/B+B7irshSsm92VHIBEo+M3kPGxG6iyq7JlZGxI3GPLgBXd6nYWZHy5ECVbi9opiNn2FAtyo0wFtAQuPnjdm63cYROnRGyAr6EgZPL3zhGr6Vbg7tc2Gl9YKyrPRRSvJGvlask7LlHTuvtbvJsRNTQ8pjaHdU+V/J+UGbjzujSzqKHEfd2LEMKbCa6admYX8KAUwLZLFZL40O1yYgBLORsmWrbysqPJTGlGD9AmwaZMslstmCe9dk145UYxv2jymHcQsZEQugbfS2076RUtY9iDFffBqgiaqBAVsHcFz5lQ4DIc9kNOcy4lR8Yql8I0KvPp6WKqlw==;5:3Z/kh1hQjZpEcICb++KpOMPcSuNWIckMkUk+A+G4EyaOW6HV9bhISeN9RuWH6gYSy605iw4TfeR/CqFwdKYhmpSlR9B6hUkFzI1qB82tKlDpmlnjG16s2I/RsWN12jEC7KAtD/wUnlSWJpows9yCuOK/wMUrlmshjIU9Qr+BIV2grEMPux1Hov2EoqenOx5mJvWCMuRrUWtl4nQwEzAaSA==;7:6B+nZGSO9ZVRV8xtMj5PfW9sgy90Wbyq9DC0g3/CE02W4Eqr1C0Nm1XhXx8nricTaYpIEO54ifzS+xlrnrB36IkYdWZglHhx33XsOgaF3yqUHkLPZN2zkxqvGgdvZ1k23NZ6Emh5s9Bviz5lBPCt6Q==
+x-incomingheadercount: 62
+x-eopattributedmessage: 0
+x-ms-exchange-slblob-mailprops: jGdi06XMWgCwzER0JO55UxIWi5/etICF53fAe+lCZb/XwtdHXJk1b+JXvCbtxkSjjn4C9tQct8B+dJg5CfqWAe8tpPIGJl6vRGwkrJgNrMjlJkZa9QPMo3ltlr9iLo6fSQ/eewscrl8n0t4EH5FsSxN33NYnWWAyBaOnT8lQHqT+3rUJRKF52dh0MOrk2xcjUhwjBH+EilqHAKwgfoVFm2QnImQSQ/tSG6XOaFteXDBBYGnL9jLOneQsMRRpaaRTKM/AZ2OpXNFeoqLc04ps6uI1/PBfOmx5lBu1X4tqUa5buMUNqFSRlEktC3OGDggKbc+P4Z+vgbDWnr9EssELNnsKX1MxfoRNKQWkRwgjKmth1Qd6aSocKRe31Dmjj2ttJlsU1imxW8tSw079DgEHq04FL1oLDP/N/c9TMxUzI+dtmJjElUqeqocEPKO6lxFu0EzqsnlLQkpyGTCBtSSGXQuy4GMnecbfSH+P8Wt96/UrYzO9jL2tcPH5l3WFfy9o9o/7btWV6dlUmo1dwtiZ5SHPAm8JMP+hoQDW6XvydCYrtQgNG/IPbuyIoxtut6MSSelxoRUEosGNTApssSst242smVbeMQTRwd3aoK+5ev3vh/VrCrctrSn9T0YA1qjrvfnte9Nhr6c4mLXnGqPE9UOZVWqLZoFrnWreTcj/REk/X4bbJKXvW6j91OEML3pbm/p1T3lPqSbKGmwpknKbLyY62FuRU3/LqyzeeStkGrYULPx1dt7Un+FOd024SirbdCUOa/Dca7PsFd61jmMM1IsnjYYtDS4DI2Zf5vftW/aX/FpjevUhps4mspmwBF6LkIoVO5oimYH62qYWldAzThUPLINFozLxDUaMx10BGywlNFLt+jmgQSkfgEl9ZZPKWUW4c24UGEP0gGHTWvwwgb765ZWl6pE3Hafb0a+mA6nwmqvx596vYotDyaFb0bhwRyqkQN
+ +sbOLFkVhEJRYPn6T8l5P5KhXB
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(201702181274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:PU1APC01HT081;
+x-ms-traffictypediagnostic: PU1APC01HT081:
+x-exchange-antispam-report-cfa-test: BCL:0;PCL:0;RULEID:(4566010)(82015058);SRVR:PU1APC01HT081;BCL:0;PCL:0;RULEID:;SRVR:PU1APC01HT081;
+x-microsoft-antispam-message-info: U5p04X+ef2wUQl6y/N8BaJvJ9HCypxTLKFBjogFDqZeBI6tJVoZBc2sbWEzWOzwV
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 7181d4b0-87d6-4f4e-ba33-0d3746212cec
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2ed8acb4-bac4-4fa6-493c-08d687619e48
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 7181d4b0-87d6-4f4e-ba33-0d3746212cec
+X-MS-Exchange-CrossTenant-originalarrivaltime: 31 Jan 2019 09:51:05.3649
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Internet
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PU1APC01HT081
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 31/01/2019 09:19, Honghui Zhang wrote:
-> On Tue, 2019-01-22 at 17:37 +0800, Jianjun Wang wrote:
->> There is no need to create the inner domain as a parent for MSI domian,
->> some feature has been implemented by MSI framework.
->>
->> Remove the inner domain and its irq chip, it will be more closer to
->> hardware implementation.
+New systems with Thunderbolt are starting to use native PCI enumeration.
+Mika Westerberg's patch "PCI: Distribute available resources to hotplug
+capable PCIe downstream ports"
+(https://patchwork.kernel.org/patch/9972155/) adds code to expand
+downstream PCI hotplug bridges to consume all remaining resource space
+in the parent bridge. It is a crucial patch for supporting Thunderbolt
+native enumeration on Linux.
 
-This is not about being closer to any HW implementation. This is about
-having a uniform way to deal with MSI controllers, no matter how they
-are implemented by the HW.
+However, it does not consider bridge alignment in all cases, which rules
+out hot-adding an external graphics processor at the end of a
+Thunderbolt daisy chain. Hot-adding such a device will likely fail to
+work with the existing code. It also might disrupt the operation of
+existing devices or prevent the subsequent hot-plugging of lower aligned
+devices if the kernel frees and reallocates upstream resources to
+attempt assign the resources that failed to assign in the first pass. By
+Intel's ruling, Thunderbolt external graphics processors are generally
+meant to function only as the first and only device in the chain.
+However, there is no technical reason that prevents it from being
+possible if sufficient resources are available, and people are likely to
+attempt such configurations with Thunderbolt devices if they own such
+hardware. Hence, I argue that we should improve the user experience and
+reduce the number of constraints placed on the user by always
+considering resource alignment, which will make such configurations
+possible.
 
-So maybe you could start by explaining what this is trying to achieve.
+The other problem with the patch is that it is incompatible with
+resources allocated by "pci=hpmemsize=nnM" due to a check which does not
+allow for dev_res->add_size to be reduced. This check also makes a big
+assumption that the hpmemsize is small but non-zero, and no action has
+been taken to ensure that. In the current state, any bridge smaller than
+hpmemsize will likely fail to size correctly, which will cause major
+issues if the default were to change, or if the user also wants to
+configure non-Thunderbolt hotplug bridges simultaneously. I argue that
+if assumptions and limitations can be removed with no risks and adverse
+effects, then it should be done.
 
->>
-> Hi, jianjun, I'm not quite familiar with the irq_chip framework, It was
-> under Marc's great help with the first version of irq_chip solution
-> code. I would like you to add him for the review.
-> 
-> Thanks.
-> 
->> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
->> ---
->>  drivers/pci/controller/pcie-mediatek.c | 86 +++++++++++---------------
->>  1 file changed, 37 insertions(+), 49 deletions(-)
->>
->> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
->> index 8d05df56158b..f996a9a6331f 100644
->> --- a/drivers/pci/controller/pcie-mediatek.c
->> +++ b/drivers/pci/controller/pcie-mediatek.c
->> @@ -169,7 +169,6 @@ struct mtk_pcie_soc {
->>   * @slot: port slot
->>   * @irq: GIC irq
->>   * @irq_domain: legacy INTx IRQ domain
->> - * @inner_domain: inner IRQ domain
->>   * @msi_domain: MSI IRQ domain
->>   * @lock: protect the msi_irq_in_use bitmap
->>   * @msi_irq_in_use: bit map for assigned MSI IRQ
->> @@ -190,7 +189,6 @@ struct mtk_pcie_port {
->>  	u32 slot;
->>  	int irq;
->>  	struct irq_domain *irq_domain;
->> -	struct irq_domain *inner_domain;
->>  	struct irq_domain *msi_domain;
->>  	struct mutex lock;
->>  	DECLARE_BITMAP(msi_irq_in_use, MTK_MSI_IRQS_NUM);
->> @@ -418,22 +416,15 @@ static void mtk_msi_ack_irq(struct irq_data *data)
->>  	u32 hwirq = data->hwirq;
->>  
->>  	writel(1 << hwirq, port->base + PCIE_IMSI_STATUS);
->> +	writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
->>  }
->>  
->> -static struct irq_chip mtk_msi_bottom_irq_chip = {
->> -	.name			= "MTK MSI",
->> -	.irq_compose_msi_msg	= mtk_compose_msi_msg,
->> -	.irq_set_affinity	= mtk_msi_set_affinity,
->> -	.irq_ack		= mtk_msi_ack_irq,
->> -};
->> -
->> -static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
->> -				     unsigned int nr_irqs, void *args)
->> +static irq_hw_number_t mtk_pcie_msi_get_hwirq(struct msi_domain_info *info,
->> +					      msi_alloc_info_t *arg)
->>  {
->> -	struct mtk_pcie_port *port = domain->host_data;
->> -	unsigned long bit;
->> +	struct mtk_pcie_port *port = info->chip_data;
->> +	irq_hw_number_t bit;
->>  
->> -	WARN_ON(nr_irqs != 1);
->>  	mutex_lock(&port->lock);
->>  
->>  	bit = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
->> @@ -446,18 +437,14 @@ static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int vir
->>  
->>  	mutex_unlock(&port->lock);
->>  
->> -	irq_domain_set_info(domain, virq, bit, &mtk_msi_bottom_irq_chip,
->> -			    domain->host_data, handle_edge_irq,
->> -			    NULL, NULL);
->> -
->> -	return 0;
->> +	return bit;
+The former problem is solved by rewriting the
+pci_bus_distribute_available_resources() function with more information
+passed in the arguments, eliminating assumptions about the initial
+bridge alignment. My patch makes no assumptions about the alignment of
+hot-added bridges, allowing for any device to be hot-added, given
+sufficient resources are available.
 
-Why do you need to override the get_hwirq method? Using the generic
-PCI/MSI version has the advantage of giving you a universal encoding
-which makes debugging much easier.
+The latter problem is solved by removing the check preventing the
+shrinking of dev_res->add_size, which allows for the distribution of
+resources if hpmemsize is non-zero. It can be made to work with zero
+hpmemsize with two-line patches in pbus_size_mem() and pbus_size_io(),
+or by modifying extend_bridge_window() to add a new entry to the
+additional resource list if one does not exist. In theory, and by my
+testing, the removal of this check does not affect the functionality of
+the resource distribution with firmware-allocated resources. But it does
+enable the same functionality when using pci=hpmemsize=nnM, which was
+not possible prior. This may be one piece of the puzzle needed to
+support Thunderbolt add-in cards that support native PCI enumeration,
+without any platform dependencies.
 
->>  }
->>  
->> -static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
->> -				     unsigned int virq, unsigned int nr_irqs)
->> +static void mtk_pcie_msi_free(struct irq_domain *domain,
->> +			      struct msi_domain_info *info, unsigned int virq)
->>  {
->>  	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
->> -	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(d);
->> +	struct mtk_pcie_port *port = info->chip_data;
->>  
->>  	mutex_lock(&port->lock);
->>  
->> @@ -468,46 +455,50 @@ static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
->>  		__clear_bit(d->hwirq, port->msi_irq_in_use);
->>  
->>  	mutex_unlock(&port->lock);
->> -
->> -	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
->>  }
->>  
->> -static const struct irq_domain_ops msi_domain_ops = {
->> -	.alloc	= mtk_pcie_irq_domain_alloc,
->> -	.free	= mtk_pcie_irq_domain_free,
->> +static struct msi_domain_ops mtk_msi_domain_ops = {
->> +	.get_hwirq	= mtk_pcie_msi_get_hwirq,
->> +	.msi_free	= mtk_pcie_msi_free,
->>  };
->>  
->>  static struct irq_chip mtk_msi_irq_chip = {
->> -	.name		= "MTK PCIe MSI",
->> -	.irq_ack	= irq_chip_ack_parent,
->> -	.irq_mask	= pci_msi_mask_irq,
->> -	.irq_unmask	= pci_msi_unmask_irq,
->> +	.name			= "MTK PCIe",
->> +	.irq_compose_msi_msg	= mtk_compose_msi_msg,
->> +	.irq_write_msi_msg	= pci_msi_domain_write_msg,
->> +	.irq_set_affinity	= mtk_msi_set_affinity,
->> +	.irq_ack		= mtk_msi_ack_irq,
->> +	.irq_mask		= pci_msi_mask_irq,
->> +	.irq_unmask		= pci_msi_unmask_irq,
->>  };
->>  
->>  static struct msi_domain_info mtk_msi_domain_info = {
->> -	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
->> -		   MSI_FLAG_PCI_MSIX),
->> -	.chip	= &mtk_msi_irq_chip,
->> +	.flags		= (MSI_FLAG_USE_DEF_DOM_OPS |
->> +			   MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_PCI_MSIX),
->> +	.ops		= &mtk_msi_domain_ops,
->> +	.chip		= &mtk_msi_irq_chip,
->> +	.handler	= handle_edge_irq,
->> +	.handler_name	= "MSI",
->>  };
->>  
->>  static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
->>  {
->> -	struct fwnode_handle *fwnode = of_node_to_fwnode(port->pcie->dev->of_node);
->> +	struct device *dev = port->pcie->dev;
->> +	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
->> +	struct msi_domain_info *info;
->>  
->>  	mutex_init(&port->lock);
->>  
->> -	port->inner_domain = irq_domain_create_linear(fwnode, MTK_MSI_IRQS_NUM,
->> -						      &msi_domain_ops, port);
->> -	if (!port->inner_domain) {
->> -		dev_err(port->pcie->dev, "failed to create IRQ domain\n");
->> +	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
->> +	if (!info)
->>  		return -ENOMEM;
->> -	}
->>  
->> -	port->msi_domain = pci_msi_create_irq_domain(fwnode, &mtk_msi_domain_info,
->> -						     port->inner_domain);
->> +	memcpy(info, &mtk_msi_domain_info, sizeof(*info));
->> +	info->chip_data = port;
->> +
-> 
-> I'm not really like this memcpy of msi_domain_info, but I do not have a
-> better idea to prevent the mixed of mtk_pcie_port data.
+I have tested this proposed patch extensively. Using Linux-allocated
+resources, it works perfectly. I have two Gigabyte GC-TITAN RIDGE
+Thunderbolt 3 add-in cards in my desktop, and a Dell XPS 9370 with the
+Dell XPS 9380 Thunderbolt NVM40 firmware flashed. My peripherals are
+three HP ZBook Thunderbolt 3 docks, two external graphics enclosures
+with AMD Fiji XT in both, a Promise SANLink3 N1 (AQC107S), and a Dell
+Thunderbolt 3 NVMe SSD. All configurations of these devices worked well,
+and I can no longer make it fail if I try to. My testing with
+firmware-allocated resources is limited due to using computers with
+Alpine Ridge BIOS support. However, I did get manage to test the patch
+with firmware-allocated resources by enabling the Alpine Ridge BIOS
+support and forcing pcie_ports=native, and the results were perfect.
 
-So we're basically trading an indirection for another. What's the gain?
+Mika Westerberg has agreed to test this on an official platform with
+native enumeration firmware support to be sure that it works in this
+situation. It is also appropriate that he reviews these changes as he
+wrote the original code and any changes made to Thunderbolt-critical
+code cannot be allowed to break any of the base requirements for
+Thunderbolt. I would like to thank him for putting up with my emails and
+trying to help where he can, and for the great work he has done on
+Thunderbolt in Linux.
 
-> 
->> +	port->msi_domain = pci_msi_create_irq_domain(fwnode, info, NULL);
->>  	if (!port->msi_domain) {
->> -		dev_err(port->pcie->dev, "failed to create MSI domain\n");
->> -		irq_domain_remove(port->inner_domain);
->> +		dev_err(dev, "failed to create MSI domain\n");
->>  		return -ENOMEM;
->>  	}
->>  
->> @@ -541,8 +532,6 @@ static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
->>  		if (IS_ENABLED(CONFIG_PCI_MSI)) {
->>  			if (port->msi_domain)
->>  				irq_domain_remove(port->msi_domain);
->> -			if (port->inner_domain)
->> -				irq_domain_remove(port->inner_domain);
->>  		}
->>  
->>  		irq_dispose_mapping(port->irq);
->> @@ -619,12 +608,11 @@ static void mtk_pcie_intr_handler(struct irq_desc *desc)
->>  
->>  			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
->>  				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
->> -					virq = irq_find_mapping(port->inner_domain, bit);
->> +					virq = irq_find_mapping(
->> +							port->msi_domain, bit);
->>  					generic_handle_irq(virq);
->>  				}
->>  			}
->> -			/* Clear MSI interrupt status */
->> -			writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
->>  		}
-> 
-> why change this irq status clear flow?
+I have more patches in the pipeline to further improve the Thunderbolt
+experience on Linux on platforms without BIOS support. This is the most
+technical but least user-facing one planned. The most exciting changes
+are yet to come.
 
-I think this is trying move everything to the irq_ack callback. But
-that's a change of semantics, and I'd like it explained. It certainly
-feels wrong.
+Signed-off-by: Nicholas-Johnson-opensource <nicholas.johnson-opensource@outlook.com.au>
+---
+ drivers/pci/setup-bus.c | 172 ++++++++++++++++++++--------------------
+ 1 file changed, 88 insertions(+), 84 deletions(-)
 
-Overall, this patch as it stands (without any real explanation) doesn't
-feel me with confidence. It introduces significant differences in the
-way we build PCI/MSI domains, and I'd like to understand why.
-
-Thanks,
-
-	M.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index ed960436df5e..5c1b6d6b386c 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1866,20 +1866,21 @@ static void extend_bridge_window(struct pci_dev *bridge, struct resource *res,
+ 	if (!dev_res)
+ 		return;
+ 
+-	/* Is there room to extend the window? */
+-	if (available - resource_size(res) <= dev_res->add_size)
+-		return;
+-
++	/*
++	 * The add_size can be allowed to be shrunk, which allows for resources
++	 * to be distributed when allocated by "pci=hpmemsize=nnM", without
++	 * affecting the distribution of firmware-allocated resources.
++	 */
+ 	dev_res->add_size = available - resource_size(res);
+ 	pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
+ 		&dev_res->add_size);
+ }
+ 
+ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+-	struct list_head *add_list, resource_size_t available_io,
+-	resource_size_t available_mmio, resource_size_t available_mmio_pref)
++	struct list_head *add_list, struct resource io,
++	struct resource mmio, struct resource mmio_pref)
+ {
+-	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
++	resource_size_t io_per_hp, mmio_per_hp, mmio_pref_per_hp, align;
+ 	unsigned int normal_bridges = 0, hotplug_bridges = 0;
+ 	struct resource *io_res, *mmio_res, *mmio_pref_res;
+ 	struct pci_dev *dev, *bridge = bus->self;
+@@ -1889,25 +1890,32 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 	mmio_pref_res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
+ 
+ 	/*
+-	 * Update additional resource list (add_list) to fill all the
+-	 * extra resource space available for this port except the space
+-	 * calculated in __pci_bus_size_bridges() which covers all the
+-	 * devices currently connected to the port and below.
++	 * The alignment of this bridge is yet to be considered, hence it must
++	 * be done now before extending its bridge window. A single bridge
++	 * might not be able to occupy the whole parent region if the alignment
++	 * differs - for example, an external GPU at the end of a Thunderbolt
++	 * daisy chain.
+ 	 */
+-	extend_bridge_window(bridge, io_res, add_list, available_io);
+-	extend_bridge_window(bridge, mmio_res, add_list, available_mmio);
+-	extend_bridge_window(bridge, mmio_pref_res, add_list,
+-			     available_mmio_pref);
++	align = pci_resource_alignment(bridge, io_res);
++	if (!io_res->parent && align)
++		io.start = ALIGN(io.start, align);
++
++	align = pci_resource_alignment(bridge, mmio_res);
++	if (!mmio_res->parent && align)
++		mmio.start = ALIGN(mmio.start, align);
++
++	align = pci_resource_alignment(bridge, mmio_pref_res);
++	if (!mmio_pref_res->parent && align)
++		mmio_pref.start = ALIGN(mmio_pref.start, align);
+ 
+ 	/*
+-	 * Calculate the total amount of extra resource space we can
+-	 * pass to bridges below this one. This is basically the
+-	 * extra space reduced by the minimal required space for the
+-	 * non-hotplug bridges.
++	 * Update the resources to fill as much remaining resource space in the
++	 * parent bridge as possible, while considering alignment.
+ 	 */
+-	remaining_io = available_io;
+-	remaining_mmio = available_mmio;
+-	remaining_mmio_pref = available_mmio_pref;
++	extend_bridge_window(bridge, io_res, add_list, resource_size(&io));
++	extend_bridge_window(bridge, mmio_res, add_list, resource_size(&mmio));
++	extend_bridge_window(bridge, mmio_pref_res, add_list,
++		resource_size(&mmio_pref));
+ 
+ 	/*
+ 	 * Calculate how many hotplug bridges and normal bridges there
+@@ -1921,80 +1929,79 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+ 			normal_bridges++;
+ 	}
+ 
++	/*
++	 * There is only one bridge on the bus so it gets all possible
++	 * resources which it can then distribute to the possible
++	 * hotplug bridges below.
++	 */
++	if (hotplug_bridges + normal_bridges == 1) {
++		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
++		if (dev->subordinate)
++			pci_bus_distribute_available_resources(dev->subordinate,
++				add_list, io, mmio, mmio_pref);
++		return;
++	}
++
++	/*
++	 * Reduce the available resource space by what the
++	 * bridge and devices below it occupy.
++	 */
+ 	for_each_pci_bridge(dev, bus) {
+-		const struct resource *res;
++		struct resource *res;
++		resource_size_t used_size;
+ 
+ 		if (dev->is_hotplug_bridge)
+ 			continue;
+ 
+-		/*
+-		 * Reduce the available resource space by what the
+-		 * bridge and devices below it occupy.
+-		 */
+ 		res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
+-		if (!res->parent && available_io > resource_size(res))
+-			remaining_io -= resource_size(res);
++		align = pci_resource_alignment(dev, res);
++		align = align ? ALIGN(io.start, align) - io.start : 0;
++		used_size = align + resource_size(res);
++		if (!res->parent && used_size <= resource_size(&io))
++			io.start += used_size;
+ 
+ 		res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
+-		if (!res->parent && available_mmio > resource_size(res))
+-			remaining_mmio -= resource_size(res);
++		align = pci_resource_alignment(dev, res);
++		align = align ? ALIGN(mmio.start, align) - mmio.start : 0;
++		used_size = align + resource_size(res);
++		if (!res->parent && used_size <= resource_size(&mmio))
++			mmio.start += used_size;
+ 
+ 		res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
+-		if (!res->parent && available_mmio_pref > resource_size(res))
+-			remaining_mmio_pref -= resource_size(res);
++		align = pci_resource_alignment(dev, res);
++		align = align ? ALIGN(mmio_pref.start, align) -
++				mmio_pref.start : 0;
++		used_size = align + resource_size(res);
++		if (!res->parent && used_size <= resource_size(&mmio_pref))
++			mmio_pref.start += used_size;
+ 	}
+ 
+-	/*
+-	 * There is only one bridge on the bus so it gets all available
+-	 * resources which it can then distribute to the possible
+-	 * hotplug bridges below.
+-	 */
+-	if (hotplug_bridges + normal_bridges == 1) {
+-		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
+-		if (dev->subordinate) {
+-			pci_bus_distribute_available_resources(dev->subordinate,
+-				add_list, available_io, available_mmio,
+-				available_mmio_pref);
+-		}
++	if (hotplug_bridges == 0)
+ 		return;
+-	}
+ 
+ 	/*
+-	 * Go over devices on this bus and distribute the remaining
+-	 * resource space between hotplug bridges.
++	 * Distribute any remaining resources equally between
++	 * the hotplug-capable downstream ports.
+ 	 */
+-	for_each_pci_bridge(dev, bus) {
+-		resource_size_t align, io, mmio, mmio_pref;
+-		struct pci_bus *b;
++	io_per_hp = div64_ul(resource_size(&io), hotplug_bridges);
++	mmio_per_hp = div64_ul(resource_size(&mmio), hotplug_bridges);
++	mmio_pref_per_hp = div64_ul(resource_size(&mmio_pref),
++		hotplug_bridges);
+ 
+-		b = dev->subordinate;
+-		if (!b || !dev->is_hotplug_bridge)
++	for_each_pci_bridge(dev, bus) {
++		if (!dev->subordinate || !dev->is_hotplug_bridge)
+ 			continue;
+ 
+-		/*
+-		 * Distribute available extra resources equally between
+-		 * hotplug-capable downstream ports taking alignment into
+-		 * account.
+-		 *
+-		 * Here hotplug_bridges is always != 0.
+-		 */
+-		align = pci_resource_alignment(bridge, io_res);
+-		io = div64_ul(available_io, hotplug_bridges);
+-		io = min(ALIGN(io, align), remaining_io);
+-		remaining_io -= io;
+-
+-		align = pci_resource_alignment(bridge, mmio_res);
+-		mmio = div64_ul(available_mmio, hotplug_bridges);
+-		mmio = min(ALIGN(mmio, align), remaining_mmio);
+-		remaining_mmio -= mmio;
++		       io.end =        io.start +        io_per_hp - 1;
++		     mmio.end =      mmio.start +      mmio_per_hp - 1;
++		mmio_pref.end = mmio_pref.start + mmio_pref_per_hp - 1;
+ 
+-		align = pci_resource_alignment(bridge, mmio_pref_res);
+-		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
+-		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
+-		remaining_mmio_pref -= mmio_pref;
++		pci_bus_distribute_available_resources(dev->subordinate,
++			add_list, io, mmio, mmio_pref);
+ 
+-		pci_bus_distribute_available_resources(b, add_list, io, mmio,
+-						       mmio_pref);
++		       io.start =        io.end + 1;
++		     mmio.start =      mmio.end + 1;
++		mmio_pref.start = mmio_pref.end + 1;
+ 	}
+ }
+ 
+@@ -2002,22 +2009,19 @@ static void
+ pci_bridge_distribute_available_resources(struct pci_dev *bridge,
+ 					  struct list_head *add_list)
+ {
+-	resource_size_t available_io, available_mmio, available_mmio_pref;
+-	const struct resource *res;
++	struct resource io_res, mmio_res, mmio_pref_res;
+ 
+ 	if (!bridge->is_hotplug_bridge)
+ 		return;
+ 
++	io_res = bridge->resource[PCI_BRIDGE_RESOURCES + 0];
++	mmio_res = bridge->resource[PCI_BRIDGE_RESOURCES + 1];
++	mmio_pref_res = bridge->resource[PCI_BRIDGE_RESOURCES + 2];
++
+ 	/* Take the initial extra resources from the hotplug port */
+-	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
+-	available_io = resource_size(res);
+-	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
+-	available_mmio = resource_size(res);
+-	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
+-	available_mmio_pref = resource_size(res);
+ 
+ 	pci_bus_distribute_available_resources(bridge->subordinate,
+-		add_list, available_io, available_mmio, available_mmio_pref);
++		add_list, io_res, mmio_res, mmio_pref_res);
+ }
+ 
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
 -- 
-Jazz is not dead. It just smells funny...
+2.19.1
+
