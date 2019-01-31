@@ -2,33 +2,33 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31178C169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34086C169C4
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:07:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA7232087F
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:07:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C4382087F
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728083AbfAaRHv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1733196AbfAaRHv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 31 Jan 2019 12:07:51 -0500
-Received: from mga05.intel.com ([192.55.52.43]:50770 "EHLO mga05.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:21058 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727788AbfAaRHv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726820AbfAaRHv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 31 Jan 2019 12:07:51 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 31 Jan 2019 09:07:50 -0800
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 31 Jan 2019 09:07:50 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.56,545,1539673200"; 
-   d="scan'208";a="296207379"
+   d="scan'208";a="316557199"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga005.jf.intel.com with ESMTP; 31 Jan 2019 09:07:47 -0800
+  by fmsmga005.fm.intel.com with ESMTP; 31 Jan 2019 09:07:47 -0800
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 09E64108; Thu, 31 Jan 2019 19:07:46 +0200 (EET)
+        id 2313414A; Thu, 31 Jan 2019 19:07:47 +0200 (EET)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>
@@ -39,10 +39,12 @@ Cc:     Lukas Wunner <lukas@wunner.de>,
         Oza Pawandeep <poza@codeaurora.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/2] PCI: Fix runtime PME generation from D3hot
-Date:   Thu, 31 Jan 2019 20:07:44 +0300
-Message-Id: <20190131170746.7604-1-mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 2/2] PCI: pciehp: Disable Data Link Layer State Changed event on suspend
+Date:   Thu, 31 Jan 2019 20:07:46 +0300
+Message-Id: <20190131170746.7604-3-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190131170746.7604-1-mika.westerberg@linux.intel.com>
+References: <20190131170746.7604-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -50,38 +52,82 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+Commit 0e157e528604 ("PCI/PME: Implement runtime PM callbacks") tried to
+solve an issue where the hierarchy immediately wakes up when it is
+transitioned into D3cold. However, it turns out to prevent PME
+propagation on some systems that do not support D3cold.
 
-Heiner reported [1] that runtime PME generation of his network card does
-not work after commit 0e157e528604 ("PCI/PME: Implement runtime PM
-callbacks") that landed in v4.20. Reverting the commit helps but it has
-another drawback, which I originally tried to solve with the commit, that
-the PCIe hierarchy wakes up immediately after being put into D3cold.
+I looked more closely what might cause the immediate wakeup. It happens
+when the ACPI power resource of the root port is turned off. The AML
+code associated with the _OFF() method of the ACPI power resource
+executes PCIe L2/3 ready transition and waits for it to complete. Right
+after the L2/3 ready transition is started the root port receives PME
+from the downstream port.
 
-This series of two patches tries to fix both issues so that PME wakes up
-from D3hot and that the hierarchy does not wake up immediately from D3cold.
+The simplest hierarchy where this happens looks like this:
 
-The previous version of the series can be found here:
+  00:1d.0 PCIe Root port
+    ^
+    |
+    v
+    05:00.0 PCIe switch #1 upstream port
+      06:01.0 PCIe switch #1 downstream hotplug port
+        ^
+        |
+        v
+        08:00.0 Pcie switch #2 upstream port
 
-  https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1892241.html
+It seems that the PCIe link between the two switches, before
+PME_Turn_Off/PME_TO_Ack is complete for the whole hierarchy, goes
+inactive and triggers PME towards the root port bringing it back to D0.
+The L2/3 ready sequence is described in PCIe r4.0 spec sections 5.2 and
+5.3.3 but unfortunately they do not state what happens if DLLSCE is
+enabled during the sequence.
 
-Changes from the previous version:
+Disabling Data Link Layer State Changed event (DLLSCE) seems to prevent
+the issue and still allows the downstream hotplug port to notice when a
+device is plugged/unplugged.
 
-  * Add tags from Heiner and Rafael
-  * Update changelog to mention relevent PCIe spec sections
-  * Add comment to pcie_disable_interrupt() explaining why and what is
-    masked
-
-[1] https://www.spinics.net/lists/linux-pci/msg79051.html
-
-Mika Westerberg (2):
-  Revert "PCI/PME: Implement runtime PM callbacks"
-  PCI: pciehp: Disable Data Link Layer State Changed event on suspend
-
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=202103
+Fixes: 0e157e528604 ("PCI/PME: Implement runtime PM callbacks")
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
  drivers/pci/hotplug/pciehp_hpc.c | 17 +++++++++++++++--
- drivers/pci/pcie/pme.c           | 27 ---------------------------
- 2 files changed, 15 insertions(+), 29 deletions(-)
+ 1 file changed, 15 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index cd9eae650aa5..8bfcb8cd0900 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -736,12 +736,25 @@ void pcie_clear_hotplug_events(struct controller *ctrl)
+ 
+ void pcie_enable_interrupt(struct controller *ctrl)
+ {
+-	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_HPIE, PCI_EXP_SLTCTL_HPIE);
++	u16 mask;
++
++	mask = PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_DLLSCE;
++	pcie_write_cmd(ctrl, mask, mask);
+ }
+ 
+ void pcie_disable_interrupt(struct controller *ctrl)
+ {
+-	pcie_write_cmd(ctrl, 0, PCI_EXP_SLTCTL_HPIE);
++	u16 mask;
++
++	/*
++	 * Mask hot-plug interrupt to prevent it triggering immediately
++	 * when the link goes inactive (we still get PME when any of the
++	 * enabled events is detected). Same goes with Link Layer State
++	 * changed event which generates PME immediately when the link goes
++	 * inactive so mask it as well.
++	 */
++	mask = PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_DLLSCE;
++	pcie_write_cmd(ctrl, 0, mask);
+ }
+ 
+ /*
 -- 
 2.20.1
 
