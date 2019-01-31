@@ -2,483 +2,319 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11325C169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 11:38:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B94EC169C4
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 12:50:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BDF75218DA
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 11:38:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="KOP56K+v"
+	by mail.kernel.org (Postfix) with ESMTP id 022172086C
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 12:50:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732255AbfAaLir (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 06:38:47 -0500
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:39188 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732191AbfAaLiq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 06:38:46 -0500
-Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay.synopsys.com (Postfix) with ESMTPS id 4DF3724E23C3;
-        Thu, 31 Jan 2019 03:38:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1548934725; bh=hGsD/LKRe82zD2oLL4WCl18NJxSWbolQC22L7PfOqKc=;
-        h=From:Subject:To:CC:References:Date:In-Reply-To:From;
-        b=KOP56K+vH8b4st4ZVMAtfYEvc19woRc+lwDCt/Vue+lKeAUslemG83is0C2/xqgtr
-         mjZOhP8WRQnFtutGJ8gVCuKeHSdIQQp45bZX/1WBsPmjvXMxQntQZVmeU1twD1WXOp
-         oNrMXFHQP/X056Yv5/WQFWXJsgciSnEgFPwRHFnl28WbrU/tc4BC/bg+p+S1FOw9xy
-         fuiLlyoN0Pn4yZjl8nBKSdk6EB2HJUHIG8bBOPe9ogO+6f0tOapiyZH9KTUkYniYyQ
-         3l8jV6lOb2GuZL2TuKSyYATmE/AnH40rG29qwxpOPPYzSbPcrVnnNLPKkNxWwNqaSv
-         JJxS5IfyilOoA==
-Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 56B9FA0091;
-        Thu, 31 Jan 2019 11:38:44 +0000 (UTC)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 31 Jan 2019 03:38:16 -0800
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 31 Jan 2019 12:38:14 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 31 Jan 2019 12:38:13 +0100
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Subject: Re: [RFC v3 1/7] dmaengine: Add Synopsys eDMA IP core driver
-To:     Vinod Koul <vkoul@kernel.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        Joao Pinto <joao.pinto@synopsys.com>,
-        Jose Abreu <jose.abreu@synopsys.com>,
-        Luis Oliveira <luis.oliveira@synopsys.com>,
-        Vitor Soares <vitor.soares@synopsys.com>,
-        Nelson Costa <nelson.costa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <d2b6e8bed0c5077425b913e551794ed126d74fb2.1547230339.git.gustavo.pimentel@synopsys.com>
- <20190120114425.GV4635@vkoul-mobl>
- <14acfcee-b367-be9c-714b-de0508ff1a7d@synopsys.com>
- <20190123130829.GQ4635@vkoul-mobl>
-Message-ID: <c98718c3-26ec-8e9b-435b-98be7e9bd211@synopsys.com>
-Date:   Thu, 31 Jan 2019 11:33:20 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-In-Reply-To: <20190123130829.GQ4635@vkoul-mobl>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
+        id S1727108AbfAaMuJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 07:50:09 -0500
+Received: from Mailgw01.mediatek.com ([1.203.163.78]:55903 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1732650AbfAaMuJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 07:50:09 -0500
+X-UUID: de413b86cd6448fb85edc0e2b1001cfa-20190131
+X-UUID: de413b86cd6448fb85edc0e2b1001cfa-20190131
+Received: from mtkcas35.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
+        (envelope-from <jianjun.wang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 1536748433; Thu, 31 Jan 2019 20:49:59 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31DR.mediatek.inc
+ (172.27.6.102) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 31 Jan
+ 2019 20:49:58 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Thu, 31 Jan 2019 20:49:57 +0800
+Message-ID: <1548938997.6292.52.camel@mhfsdcap03>
+Subject: Re: [v1] PCI: mediatek: Remove MSI inner domain
+From:   Jianjun Wang <jianjun.wang@mediatek.com>
+To:     Marc Zyngier <marc.zyngier@arm.com>
+CC:     Honghui Zhang <honghui.zhang@mediatek.com>,
+        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>,
+        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <youlin.pei@mediatek.com>
+Date:   Thu, 31 Jan 2019 20:49:57 +0800
+In-Reply-To: <10e8e731-5749-f6fb-eb33-ab67aa0e2c3f@arm.com>
+References: <1548149855-3225-1-git-send-email-jianjun.wang@mediatek.com>
+         <1548926367.4980.14.camel@mhfsdcap03>
+         <10e8e731-5749-f6fb-eb33-ab67aa0e2c3f@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+MIME-Version: 1.0
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 23/01/2019 13:08, Vinod Koul wrote:
-> On 21-01-19, 15:48, Gustavo Pimentel wrote:
->> On 20/01/2019 11:44, Vinod Koul wrote:
->>> On 11-01-19, 19:33, Gustavo Pimentel wrote:
->>>> Add Synopsys eDMA IP core driver to kernel.
->>>>
->>>> This core driver, initializes and configures the eDMA IP using vma-helpers
->>>> functions and dma-engine subsystem.
->>>
->>> A description of eDMA IP will help review the driver
->>
->> I've the IP description on the cover-letter, but I'll bring it to this patch, if
->> it helps.
+On Thu, 2019-01-31 at 09:44 +0000, Marc Zyngier wrote:
+> On 31/01/2019 09:19, Honghui Zhang wrote:
+> > On Tue, 2019-01-22 at 17:37 +0800, Jianjun Wang wrote:
+> >> There is no need to create the inner domain as a parent for MSI domian,
+> >> some feature has been implemented by MSI framework.
+> >>
+> >> Remove the inner domain and its irq chip, it will be more closer to
+> >> hardware implementation.
 > 
-> yeah cover doesnt get applied, changelog are very important
-> documentation for kernel
-
-Ok. See below.
-
+> This is not about being closer to any HW implementation. This is about
+> having a uniform way to deal with MSI controllers, no matter how they
+> are implemented by the HW.
 > 
->>>> @@ -0,0 +1,1059 @@
->>>> +// SPDX-License-Identifier: GPL-2.0
->>>> +/*
->>>> + * Copyright (c) 2018 Synopsys, Inc. and/or its affiliates.
->>>
->>> 2019 now
->>
->> I've changed to "Copyright (c) 2018-present Synopsys, Inc. and/or its
->> affiliates." this way it's always up to date and I also kept 2018, because it
->> was the date that I started to develop this driver, if you don't mind.
+> So maybe you could start by explaining what this is trying to achieve.
 > 
-> yeah 18 is fine :) it need to end with current year always
-
-Just to be sure, are you saying that must be: "Copyright (c) 2018-2019 Synopsys,
-Inc. and/or its affiliates."?
-
+> >>
+> > Hi, jianjun, I'm not quite familiar with the irq_chip framework, It was
+> > under Marc's great help with the first version of irq_chip solution
+> > code. I would like you to add him for the review.
+> > 
+> > Thanks.
+> > 
+> >> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> >> ---
+> >>  drivers/pci/controller/pcie-mediatek.c | 86 +++++++++++---------------
+> >>  1 file changed, 37 insertions(+), 49 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> >> index 8d05df56158b..f996a9a6331f 100644
+> >> --- a/drivers/pci/controller/pcie-mediatek.c
+> >> +++ b/drivers/pci/controller/pcie-mediatek.c
+> >> @@ -169,7 +169,6 @@ struct mtk_pcie_soc {
+> >>   * @slot: port slot
+> >>   * @irq: GIC irq
+> >>   * @irq_domain: legacy INTx IRQ domain
+> >> - * @inner_domain: inner IRQ domain
+> >>   * @msi_domain: MSI IRQ domain
+> >>   * @lock: protect the msi_irq_in_use bitmap
+> >>   * @msi_irq_in_use: bit map for assigned MSI IRQ
+> >> @@ -190,7 +189,6 @@ struct mtk_pcie_port {
+> >>  	u32 slot;
+> >>  	int irq;
+> >>  	struct irq_domain *irq_domain;
+> >> -	struct irq_domain *inner_domain;
+> >>  	struct irq_domain *msi_domain;
+> >>  	struct mutex lock;
+> >>  	DECLARE_BITMAP(msi_irq_in_use, MTK_MSI_IRQS_NUM);
+> >> @@ -418,22 +416,15 @@ static void mtk_msi_ack_irq(struct irq_data *data)
+> >>  	u32 hwirq = data->hwirq;
+> >>  
+> >>  	writel(1 << hwirq, port->base + PCIE_IMSI_STATUS);
+> >> +	writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
+> >>  }
+> >>  
+> >> -static struct irq_chip mtk_msi_bottom_irq_chip = {
+> >> -	.name			= "MTK MSI",
+> >> -	.irq_compose_msi_msg	= mtk_compose_msi_msg,
+> >> -	.irq_set_affinity	= mtk_msi_set_affinity,
+> >> -	.irq_ack		= mtk_msi_ack_irq,
+> >> -};
+> >> -
+> >> -static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+> >> -				     unsigned int nr_irqs, void *args)
+> >> +static irq_hw_number_t mtk_pcie_msi_get_hwirq(struct msi_domain_info *info,
+> >> +					      msi_alloc_info_t *arg)
+> >>  {
+> >> -	struct mtk_pcie_port *port = domain->host_data;
+> >> -	unsigned long bit;
+> >> +	struct mtk_pcie_port *port = info->chip_data;
+> >> +	irq_hw_number_t bit;
+> >>  
+> >> -	WARN_ON(nr_irqs != 1);
+> >>  	mutex_lock(&port->lock);
+> >>  
+> >>  	bit = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
+> >> @@ -446,18 +437,14 @@ static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int vir
+> >>  
+> >>  	mutex_unlock(&port->lock);
+> >>  
+> >> -	irq_domain_set_info(domain, virq, bit, &mtk_msi_bottom_irq_chip,
+> >> -			    domain->host_data, handle_edge_irq,
+> >> -			    NULL, NULL);
+> >> -
+> >> -	return 0;
+> >> +	return bit;
 > 
->>>> +static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc)
->>>> +{
->>>> +	struct dw_edma_chan *chan = desc->chan;
->>>> +	struct dw_edma *dw = chan->chip->dw;
->>>> +	struct dw_edma_chunk *chunk;
->>>> +
->>>> +	chunk = kvzalloc(sizeof(*chunk), GFP_NOWAIT);
->>>> +	if (unlikely(!chunk))
->>>> +		return NULL;
->>>> +
->>>> +	INIT_LIST_HEAD(&chunk->list);
->>>> +	chunk->chan = chan;
->>>> +	chunk->cb = !(desc->chunks_alloc % 2);
->>>
->>> cb ..?
->>
->> CB = change bit, is a property of this eDMA IP. Basically it is a kind of
->> handshake which serves to validate whether the linked list has been updated or
->> not, especially useful in cases of recycled linked list elements (every linked
->> list recycle is a new chunk, this will allow to differentiate each chunk).
+> Why do you need to override the get_hwirq method? Using the generic
+> PCI/MSI version has the advantage of giving you a universal encoding
+> which makes debugging much easier.
+
+Hi Marc,
+
+In previous patch, we create a inner_domain as a parent for msi_domain,
+when we allocate a irq for MSI, the work flow of each domain will be the
+following:
+
+inner_domain:
+1. Allocated a irq bit from bitmap as this domain's hwirq;
+2. Mapping with system virtual irq number;
+3. Set irq chip and irq handler;
+4. Send MSI message to EP.
+
+msi_domain:
+1. Calculate a hwirq;
+2. Mapping with system virtual irq number;
+3. Set irq chip which from info->chip and irq handler if defined in
+info.
+4. Send MSI message to EP or trigger parent domain to send the message.
+
+The last three steps looks similar, if we override the get_hwirq method
+and set irq chip and handler to info structure, MSI framework will do
+the rest of thing. I think it will be more simple and easy to understand
+the driver's work flow.
+
+Further more, if we try to enhance the interrupt performance, such as
+connect the MSI interrupt line to GIC directly in hardware, we will need
+to set gic domain as the parent, in that case, there will be a lot of
+work to do to replace the inner domain.
+
+Thanks.
 > 
-> okay please add that somewhere. Also it would help me if you explain
-> what is chunk and other terminologies used in this driver
-
-I'm thinking to put the below description on the patch, please check if this is
-sufficient explicit and clear to understand what this IP needs and does.
-
-In order to transfer data from point A to B as fast as possible this IP requires
-a dedicated memory space where will reside a linked list of elements.
-All elements of this linked list are continuous and each one describes a data
-transfer (source and destination addresses, length and a control variable).
-
-For the sake of simplicity, lets assume a memory space for channel write 0 which
-allows about 42 elements.
-
-+---------+
-| Desc #0 |--+
-+---------+  |
-             V
-        +----------+
-        | Chunk #0 |---+
-        |  CB = 1  |   |   +----------+   +-----+   +-----------+   +-----+
-        +----------+   +-->| Burst #0 |-->| ... |-->| Burst #41 |-->| llp |
-              |            +----------+   +-----+   +-----------+   +-----+
-              V
-        +----------+
-        | Chunk #1 |---+
-        |  CB = 0  |   |   +-----------+   +-----+   +-----------+   +-----+
-        +----------+   +-->| Burst #42 |-->| ... |-->| Burst #83 |-->| llp |
-              |            +-----------+   +-----+   +-----------+   +-----+
-              V
-        +----------+
-        | Chunk #2 |---+
-        |  CB = 1  |   |   +-----------+   +-----+   +------------+   +-----+
-        +----------+   +-->| Burst #84 |-->| ... |-->| Burst #125 |-->| llp |
-              |            +-----------+   +-----+   +------------+   +-----+
-              V
-        +----------+
-        | Chunk #3 |---+
-        |  CB = 0  |   |   +------------+   +-----+   +------------+   +-----+
-        +----------+   +-->| Burst #126 |-->| ... |-->| Burst #129 |-->| llp |
-                           +------------+   +-----+   +------------+   +-----+
-
-Legend:
-
-*Linked list*, also know as Chunk
-*Linked list element*, also know as Burst
-*CB*, also know as Change Bit, it's a control bit (and typically is toggled)
-that allows to easily identify and differentiate between the current linked list
-and the previous or the next one.
-*LLP*, is a special element that indicates the end of the linked list element
-stream also informs that the next CB should be toggle.
-
-On scatter-gather transfer mode, the client will submit a scatter-gather list of
-n (on this case 130) elements, that will be divide in multiple Chunks, each
-Chunk will have (on this case 42) a limited number of Bursts and after
-transferring all Bursts, an interrupt will be triggered, which will allow to
-recycle the all linked list dedicated memory again with the new information
-relative to the next Chunk and respective Burst associated and repeat the whole
-cycle again.
-
-On cyclic transfer mode, the client will submit a buffer pointer, length of it
-and number of repetitions, in this case each burst will correspond directly to
-each repetition.
-
-Each Burst can describes a data transfer from point A(source) to point
-B(destination) with a length that can be from 1 byte up to 4 GB. Since dedicated
-the memory space where the linked list will reside is limited, the whole n burst
-elements will be organized in several Chunks, that will be used later to recycle
-the dedicated memory space to initiate a new sequence of data transfers.
-
-The whole transfer is considered has completed when it was transferred all bursts.
-
-Currently this IP has a set well-known register map, which includes support for
-legacy and unroll modes. Legacy mode is version of this register map that has
-multiplexer register that allows to switch registers between all write and read
-channels and the unroll modes repeats all write and read channels registers with
-an offset between them. This register map is called v0.
-
-The IP team is creating a new register map more suitable to the latest PCIe
-features, that very likely will change the map register, which this version will
-be called v1. As soon as this new version is released by the IP team the support
-for this version in be included on this driver.
-
-What do you think? There is any gray area that I could clarify?
-
+> >>  }
+> >>  
+> >> -static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
+> >> -				     unsigned int virq, unsigned int nr_irqs)
+> >> +static void mtk_pcie_msi_free(struct irq_domain *domain,
+> >> +			      struct msi_domain_info *info, unsigned int virq)
+> >>  {
+> >>  	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+> >> -	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(d);
+> >> +	struct mtk_pcie_port *port = info->chip_data;
+> >>  
+> >>  	mutex_lock(&port->lock);
+> >>  
+> >> @@ -468,46 +455,50 @@ static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
+> >>  		__clear_bit(d->hwirq, port->msi_irq_in_use);
+> >>  
+> >>  	mutex_unlock(&port->lock);
+> >> -
+> >> -	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
+> >>  }
+> >>  
+> >> -static const struct irq_domain_ops msi_domain_ops = {
+> >> -	.alloc	= mtk_pcie_irq_domain_alloc,
+> >> -	.free	= mtk_pcie_irq_domain_free,
+> >> +static struct msi_domain_ops mtk_msi_domain_ops = {
+> >> +	.get_hwirq	= mtk_pcie_msi_get_hwirq,
+> >> +	.msi_free	= mtk_pcie_msi_free,
+> >>  };
+> >>  
+> >>  static struct irq_chip mtk_msi_irq_chip = {
+> >> -	.name		= "MTK PCIe MSI",
+> >> -	.irq_ack	= irq_chip_ack_parent,
+> >> -	.irq_mask	= pci_msi_mask_irq,
+> >> -	.irq_unmask	= pci_msi_unmask_irq,
+> >> +	.name			= "MTK PCIe",
+> >> +	.irq_compose_msi_msg	= mtk_compose_msi_msg,
+> >> +	.irq_write_msi_msg	= pci_msi_domain_write_msg,
+> >> +	.irq_set_affinity	= mtk_msi_set_affinity,
+> >> +	.irq_ack		= mtk_msi_ack_irq,
+> >> +	.irq_mask		= pci_msi_mask_irq,
+> >> +	.irq_unmask		= pci_msi_unmask_irq,
+> >>  };
+> >>  
+> >>  static struct msi_domain_info mtk_msi_domain_info = {
+> >> -	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+> >> -		   MSI_FLAG_PCI_MSIX),
+> >> -	.chip	= &mtk_msi_irq_chip,
+> >> +	.flags		= (MSI_FLAG_USE_DEF_DOM_OPS |
+> >> +			   MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_PCI_MSIX),
+> >> +	.ops		= &mtk_msi_domain_ops,
+> >> +	.chip		= &mtk_msi_irq_chip,
+> >> +	.handler	= handle_edge_irq,
+> >> +	.handler_name	= "MSI",
+> >>  };
+> >>  
+> >>  static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
+> >>  {
+> >> -	struct fwnode_handle *fwnode = of_node_to_fwnode(port->pcie->dev->of_node);
+> >> +	struct device *dev = port->pcie->dev;
+> >> +	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
+> >> +	struct msi_domain_info *info;
+> >>  
+> >>  	mutex_init(&port->lock);
+> >>  
+> >> -	port->inner_domain = irq_domain_create_linear(fwnode, MTK_MSI_IRQS_NUM,
+> >> -						      &msi_domain_ops, port);
+> >> -	if (!port->inner_domain) {
+> >> -		dev_err(port->pcie->dev, "failed to create IRQ domain\n");
+> >> +	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
+> >> +	if (!info)
+> >>  		return -ENOMEM;
+> >> -	}
+> >>  
+> >> -	port->msi_domain = pci_msi_create_irq_domain(fwnode, &mtk_msi_domain_info,
+> >> -						     port->inner_domain);
+> >> +	memcpy(info, &mtk_msi_domain_info, sizeof(*info));
+> >> +	info->chip_data = port;
+> >> +
+> > 
+> > I'm not really like this memcpy of msi_domain_info, but I do not have a
+> > better idea to prevent the mixed of mtk_pcie_port data.
 > 
->>>> +static int dw_edma_device_config(struct dma_chan *dchan,
->>>> +				 struct dma_slave_config *config)
->>>> +{
->>>> +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
->>>> +	const struct dw_edma_core_ops *ops = chan2ops(chan);
->>>> +	unsigned long flags;
->>>> +	int err = 0;
->>>> +
->>>> +	spin_lock_irqsave(&chan->vc.lock, flags);
->>>> +
->>>> +	if (!config) {
->>>> +		err = -EINVAL;
->>>> +		goto err_config;
->>>> +	}
->>>> +
->>>> +	if (chan->status != EDMA_ST_IDLE) {
->>>> +		dev_err(chan2dev(chan), "channel is busy or paused\n");
->>>> +		err = -EPERM;
->>>
->>> this is not correct behaviour, device_config can be called anytime and
->>> values can take affect on next transaction submitted..
->>
->> Hum, I thought we could only reconfigure after transfer being finished.
-> 
-> Nope, anytime. They take effect for next prepare when you use it
-> 
->>>> +	dev_dbg(chan2dev(chan), "addr(physical) src=%pa, dst=%pa\n",
->>>> +		&config->src_addr, &config->dst_addr);
->>>> +
->>>> +	chan->src_addr = config->src_addr;
->>>> +	chan->dst_addr = config->dst_addr;
->>>> +
->>>> +	err = ops->device_config(dchan);
->>>
->>> what does this do?
->>
->> This is an initialization procedure to setup interrupts (data and addresses) to
->> each channel on the eDMA IP,  in order to be triggered after transfer being
->> completed or aborted. Due the fact the config() can be called at anytime,
->> doesn't make sense to have this procedure here, I'll moved it to probe().
-> 
-> Yeah I am not still convinced about having another layer! Have you
-> though about using common lib for common parts ..?
+> So we're basically trading an indirection for another. What's the gain?
 
-Maybe I'm explaining myself wrongly. I don't have any clue about the new
-register map for the future versions. I honestly tried to implement the common
-lib for the whole process that interact with dma engine controller to ease in
-the future any new addition of register mapping, by having this common callbacks
-that will only be responsible for interfacing the HW accordingly to register map
-version. Maybe I can simplify something in the future, but I only be able to
-conclude that after having some idea about the new register map.
+There is usually more than one PCIe port in each SoC, we use
+mtk_pcie_port data to describe it, in previous version, we pass the port
+data as inner domain's host_data. When remove the inner domain, we also
+need to pass the port data and should prevent to mix with another port,
+so I thank maybe we can make a copy for each port and set port data as
+it's chip_data.
+> 
+> > 
+> >> +	port->msi_domain = pci_msi_create_irq_domain(fwnode, info, NULL);
+> >>  	if (!port->msi_domain) {
+> >> -		dev_err(port->pcie->dev, "failed to create MSI domain\n");
+> >> -		irq_domain_remove(port->inner_domain);
+> >> +		dev_err(dev, "failed to create MSI domain\n");
+> >>  		return -ENOMEM;
+> >>  	}
+> >>  
+> >> @@ -541,8 +532,6 @@ static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
+> >>  		if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> >>  			if (port->msi_domain)
+> >>  				irq_domain_remove(port->msi_domain);
+> >> -			if (port->inner_domain)
+> >> -				irq_domain_remove(port->inner_domain);
+> >>  		}
+> >>  
+> >>  		irq_dispose_mapping(port->irq);
+> >> @@ -619,12 +608,11 @@ static void mtk_pcie_intr_handler(struct irq_desc *desc)
+> >>  
+> >>  			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
+> >>  				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
+> >> -					virq = irq_find_mapping(port->inner_domain, bit);
+> >> +					virq = irq_find_mapping(
+> >> +							port->msi_domain, bit);
+> >>  					generic_handle_irq(virq);
+> >>  				}
+> >>  			}
+> >> -			/* Clear MSI interrupt status */
+> >> -			writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
+> >>  		}
+> > 
+> > why change this irq status clear flow?
+> 
+> I think this is trying move everything to the irq_ack callback. But
+> that's a change of semantics, and I'd like it explained. It certainly
+> feels wrong.
+Yes, I confused with each irq's ack callback, it doesn't need to be
+changed.
 
-IMHO I think this is the easier and clean way to do it, in terms of code
-maintenance and architecture, but if you have another idea that you can show me
-or pointing out for a driver that implements something similar, I'm no problem
-to check it out.
+Thanks.
+> 
+> Overall, this patch as it stands (without any real explanation) doesn't
+> feel me with confidence. It introduces significant differences in the
+> way we build PCI/MSI domains, and I'd like to understand why.
+> 
+> Thanks,
+> 
+> 	M.
 
-> 
->>> this looks incorrect interpretation to me. The status is to be retrieved
->>> for the given cookie passed and given that you do not even use this
->>> argument tells me that you have understood this as 'channel' status
->>> reporting, which is not correct
->>
->> Yes, you're right, my interpretation assumes this function reports
->> channel/transaction status. What would be the correct implementation?
->> Something like this?
->>
->> {
->> 	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
->> 	const struct dw_edma_core_ops *ops = chan2ops(chan);
->> 	struct dw_edma_desc *desc;
->> 	struct virt_dma_desc *vd;
->> 	unsigned long flags;
->> 	enum dma_status ret;
->> 	u32 residue = 0;
->>
->> 	spin_lock_irqsave(&chan->vc.lock, flags);
->>
->> 	ret = dma_cookie_status(chan, cookie, txstate);
->> 	if (ret == DMA_COMPLETE)
->> 		goto ret_status;
->>
->> 	vd = vchan_next_desc(&chan->vc);
->> 	if (!vd)
->> 		goto ret_status;
->>
->> 	desc = vd2dw_edma_desc(vd);
->> 	if (!desc)
->> 		residue = desc->alloc_sz - desc->xfer_sz;
->> 		
->> 	if (ret == DMA_IN_PROGRESS && chan->status == EDMA_ST_PAUSE)
->> 		ret = DMA_PAUSED;
-> 
-> this looks better, please do keep in mind txstate can be null, so
-> residue caln can be skipped
-
-Ok.
-
-> 
->>>> +static struct dma_async_tx_descriptor *
->>>> +dw_edma_device_prep_slave_sg(struct dma_chan *dchan, struct scatterlist *sgl,
->>>> +			     unsigned int sg_len,
->>>> +			     enum dma_transfer_direction direction,
->>>> +			     unsigned long flags, void *context)
->>>> +{
->>>> +	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
->>>> +	struct dw_edma_desc *desc;
->>>> +	struct dw_edma_chunk *chunk;
->>>> +	struct dw_edma_burst *burst;
->>>> +	struct scatterlist *sg;
->>>> +	unsigned long sflags;
->>>> +	phys_addr_t src_addr;
->>>> +	phys_addr_t dst_addr;
->>>> +	int i;
->>>> +
->>>> +	if (sg_len < 1) {
->>>> +		dev_err(chan2dev(chan), "invalid sg length %u\n", sg_len);
->>>> +		return NULL;
->>>> +	}
->>>> +
->>>> +	if (direction == DMA_DEV_TO_MEM && chan->dir == EDMA_DIR_WRITE) {
->>>
->>> what is the second part of the check, can you explain that, who sets
->>> chan->dir?
->>
->> The chan->dir is set on probe() during the process of configuring each channel.
-> 
-> So you have channels that are unidirectional?
-
-Yes. That's one another reason IMHO to keep the dw-edma-test separate from
-dma-test, since this IP is more picky and have this particularities.
-
-This don't invalidate to add in the future, similar features to dma-test that
-are generic enough to work with other IPs, at least this is my opinion.
-
-> 
->>>> +		dev_dbg(chan2dev(chan),	"prepare operation (WRITE)\n");
->>>> +	} else if (direction == DMA_MEM_TO_DEV && chan->dir == EDMA_DIR_READ) {
->>>> +		dev_dbg(chan2dev(chan),	"prepare operation (READ)\n");
->>>> +	} else {
->>>> +		dev_err(chan2dev(chan), "invalid direction\n");
->>>> +		return NULL;
->>>> +	}
->>>> +
->>>> +	if (!chan->configured) {
->>>> +		dev_err(chan2dev(chan), "(prep_slave_sg) channel not configured\n");
->>>> +		return NULL;
->>>> +	}
->>>> +
->>>> +	if (chan->status != EDMA_ST_IDLE) {
->>>> +		dev_err(chan2dev(chan), "channel is busy or paused\n");
->>>> +		return NULL;
->>>> +	}
->>>
->>> No, wrong again. The txn must be prepared and then on submit added to a
->>> queue. You are writing a driver for dmaengine, surely you dont expect
->>> the channel to be free and then do a txn.. that would be very
->>> inefficient!
->>
->> I did not realize that the flow could be as you mentioned. The documentation I
->> read about the subsystem did not give me this idea. Thank you for clarifying me.
-> 
-> I think we have improved  that part a lot, please do feel free to point
-> out inconsistency
-> See DMA usage in Documentation/driver-api/dmaengine/client.rst
-> 
->>>> +int dw_edma_probe(struct dw_edma_chip *chip)
->>>> +{
->>>> +	struct dw_edma *dw = chip->dw;
->>>> +	struct device *dev = chip->dev;
->>>> +	const struct dw_edma_core_ops *ops;
->>>> +	size_t ll_chunk = dw->ll_region.sz;
->>>> +	size_t dt_chunk = dw->dt_region.sz;
->>>> +	u32 ch_tot;
->>>> +	int i, j, err;
->>>> +
->>>> +	raw_spin_lock_init(&dw->lock);
->>>> +
->>>> +	/* Callback operation selection accordingly to eDMA version */
->>>> +	switch (dw->version) {
->>>> +	default:
->>>> +		dev_err(dev, "unsupported version\n");
->>>> +		return -EPERM;
->>>> +	}
->>>
->>> So we have only one case which returns error, was this code tested?
->>
->> Yes it was, but I understand what your point of view.
->> This was done like this, because I wanna to segment the patch series like this:
->>  1) Adding eDMA driver core, which contains the driver skeleton and the whole
->> logic associated.
->>  2) and 3) Adding the callbacks for the eDMA register mapping version 0 (it will
->> appear in the future a new version, I thought that this new version would came
->> while I was trying to get the feedback about this patch series, therefore would
->> have another 2 patches for the version 1 isolated and independent from the
->> version 0).
->>  4) and 5) Adding the PCIe glue-logic and device ID associated.
->>  6) Adding maintainer for this driver.
->>  7) Adding a test driver.
->>
->> Since this switch will only have the associated case on patch 2, that why on
->> patch 1 doesn't appear any possibility.
->>
->> If you feel logic to squash patch 2 with patch 1, just say something and I'll do
->> it for you :)
-> 
-> well each patch should build and work on its own, otherwise we get
-> problems :) But since this is a new driver it is okay. Anyway this patch
-> is quite _huge_ so lets not add more to it..
-> 
-> I would have moved the callback check to subsequent one..
-
-Sorry. I didn't catch this. Can you explain it?
-
-> 
->>>> +	pm_runtime_get_sync(dev);
->>>> +
->>>> +	/* Find out how many write channels are supported by hardware */
->>>> +	dw->wr_ch_cnt = ops->ch_count(dw, EDMA_DIR_WRITE);
->>>> +	if (!dw->wr_ch_cnt) {
->>>> +		dev_err(dev, "invalid number of write channels(0)\n");
->>>> +		return -EINVAL;
->>>> +	}
->>>> +
->>>> +	/* Find out how many read channels are supported by hardware */
->>>> +	dw->rd_ch_cnt = ops->ch_count(dw, EDMA_DIR_READ);
->>>> +	if (!dw->rd_ch_cnt) {
->>>> +		dev_err(dev, "invalid number of read channels(0)\n");
->>>> +		return -EINVAL;
->>>> +	}
->>>> +
->>>> +	dev_dbg(dev, "Channels:\twrite=%d, read=%d\n",
->>>> +		dw->wr_ch_cnt, dw->rd_ch_cnt);
->>>> +
->>>> +	ch_tot = dw->wr_ch_cnt + dw->rd_ch_cnt;
->>>> +
->>>> +	/* Allocate channels */
->>>> +	dw->chan = devm_kcalloc(dev, ch_tot, sizeof(*dw->chan), GFP_KERNEL);
->>>
->>> you may use struct_size() here
->>
->> Hum, this would be useful if I wanted to allocate the dw struct as well, right?
->> Since dw struct is already allocated, it looks like this can't be used, or am I
->> missing something?
-> 
-> yeah you can allocate dw + chan one shot...
-
-I'm allocating dw struct on the PCIe glue-logic driver in order to set it later
-some data that will be useful here and here I'm only adding the channels. That's
-why I can't allocate all in one shot.
-
-> 
 
