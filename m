@@ -2,133 +2,117 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 827D8C169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 21:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46043C169C4
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 21:49:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A16A21872
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 21:36:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1548970611;
-	bh=yzcBI/0W24G8x1f5Xr7NzrPSRHBlzH6cM6XBb1PH/E0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=mbrTFPns2+Ssf6Uiu9qW0Xb0WxA7WR2EVN10LXvu4DmBDCry5Ipvtwx1y8ZFFib5h
-	 SEYrVf1l+ZGsh3hjTGOkHnQSDqX0aXJI6WWt+iTzZ46a1cU7OrVu8NMA13j7Y8Garf
-	 opFXV41LIQuvr2t54oqQaHWoCTPz9BAkxTl2u1Bw=
+	by mail.kernel.org (Postfix) with ESMTP id 0FC3C20869
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 21:49:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qmLpXeYW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728203AbfAaVgu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 16:36:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:47568 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726278AbfAaVgu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Jan 2019 16:36:50 -0500
-Received: from localhost (unknown [64.22.249.253])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DFD0D20B1F;
-        Thu, 31 Jan 2019 21:36:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1548970609;
-        bh=yzcBI/0W24G8x1f5Xr7NzrPSRHBlzH6cM6XBb1PH/E0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CwYcQWONddNQY/fG6Ssf7+ZHJeTZIt7kJrFIKQljHYXDtt9ecaDAX37L+VfRQn8Ad
-         JQqt7DvgSEHAJLcuitY7wZWbYQOQNbMMqNYso5BKaxX421pFqFqX5Pe2J5AwX/GrAC
-         q0FUJ/3cd+K4JYK8trBbktRwTyEG8+gQiuLG8wn8=
-Date:   Thu, 31 Jan 2019 15:36:48 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     honghui.zhang@mediatek.com
-Cc:     lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
-        youlin.pei@mediatek.com, poza@codeaurora.org, fred@fredlawl.com,
-        rafael.j.wysocki@intel.com, jianjun.wang@mediatek.com
-Subject: Re: [PATCH v2 1/2] PCI: mediatek: Use resource_size function on
- resource object
-Message-ID: <20190131213647.GP229773@google.com>
-References: <1548921713-5355-1-git-send-email-honghui.zhang@mediatek.com>
- <1548921713-5355-2-git-send-email-honghui.zhang@mediatek.com>
+        id S1728802AbfAaVt1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 16:49:27 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:56150 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726719AbfAaVt1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 16:49:27 -0500
+Received: by mail-wm1-f65.google.com with SMTP id y139so4019148wmc.5
+        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2019 13:49:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=/hX5KDMKgR+lXyknno+hpKg6MWnLWVX48Cnsfqsnspc=;
+        b=qmLpXeYWcHEWhyE7P2gE8DF4YSUTwEzDjJtWZ4xjtWa/n+5yaJocE08bYG7MrZjmXx
+         FS57NtnHJKecyUlQ7XiD//SLig7arDbjSmpEHLBDYXd1gcfi+mrT5IvggQDkAH+8w3CC
+         ZTi48CKGW0Eif/QZISdovqKXS3moSa9wKG8wWsfQaD1HSM1qzTlaj4fE2oGuKd6pu51v
+         ONhVNUzGg6v0dGGQa8QMQAsys5okLES0ZF9yvbGHF0UQ3QVP0mR6YQu84rDq/4BlGri6
+         fMqSS4Kmka4P5eE4JNxWIqJVt26gR7kpqrp0YinaGXZgfOrMBT5ryqlv6ZIDDT9jBL6d
+         F/mw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=/hX5KDMKgR+lXyknno+hpKg6MWnLWVX48Cnsfqsnspc=;
+        b=Z6H3YkWLiY9xqO44WV34pNSGcPR5X72k6t1O0Ho3tghiDyvaEQMSAVYNc38sEnInh/
+         FtbzHe0AghSao9/UsbRra9pUQoJSAXLBcUsWNso5fMahCa5JcCGvy6I0/VKvD+UOqmm2
+         lDSI94Hk7VcZ/apJhPDOAJ8qBsNNbLgTGCmTOySUjRldnrZF4cWs/obks/CyVhGdLAOO
+         flLuPqBplr7PMVnB8s7S994ZaX81pOJ35DWlgfWiCPu3d5f/1eaNZUrBH790mRoep19y
+         4tWA/A9/6hKDsIsymeM5hr6MpCLl6UHJXiBG5Ch67p7EeDIxnOx3pBYRCLn96CZYvwH6
+         eQ+w==
+X-Gm-Message-State: AJcUukesqQSBejjyvOrVtble2ByaHCNbWRRwPpQmLnGsjUq5UI4jNIxz
+        FEakiuLOuGWzbomvMPk+jFmmxDqINFELmegEhGAv
+X-Google-Smtp-Source: ALg8bN5Ah3ZT1JZ+SMt+qcVsSqjJU0hrNqayrRYCOfJRbPx513PDcARp3sNYhB3qhFcAt8hqBWDgKCbjMeNJOxSlQKg=
+X-Received: by 2002:a1c:4046:: with SMTP id n67mr29743285wma.123.1548971364896;
+ Thu, 31 Jan 2019 13:49:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1548921713-5355-2-git-send-email-honghui.zhang@mediatek.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <87o97wrbef.fsf@mntmn.com>
+In-Reply-To: <87o97wrbef.fsf@mntmn.com>
+From:   Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu, 31 Jan 2019 15:49:12 -0600
+Message-ID: <CAErSpo4T91kbXXuMSCqrDk=_HD+6GZ64WVZsvhSOtW=L89Pf0g@mail.gmail.com>
+Subject: Re: Linux Kernel Regression: HAPS quirk breaks PCIe on i.MX6QP
+To:     "Lukas F. Hartmann" <lukas@mntmn.com>
+Cc:     thinhn@synopsys.com,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 31, 2019 at 04:01:52PM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
-> 
-> scripts/coccinelle/api/resource_size.cocci complain about the
-> following warning:
-> 
-> pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
-> 
-> Use resource_size(mem) instead of mem->end - mem->start to eliminate the
-> complain. Since the MMIO window size for both MT2712 and MT7622 are all
-> 0x1000_0000, this change also fix the AHB2PCIe window size smaller than
-> HW MMIO window size issue by change the values of fls(size) from
-> fls(0xfff_ffff) to fls(0x1000_0000).
+[+cc linux-pci, linux-kernel]
 
-Good, I'm glad this actually fixes a bug.  The warning was actually
-useful!
+On Thu, Jan 31, 2019 at 11:21 AM Lukas F. Hartmann <lukas@mntmn.com> wrote:
+>
+> Hi Thinh,
+>
+> I'm writing you because you're the author in this commit:
+> https://github.com/torvalds/linux/commit/03e6742584af8866ba014874669d0440bed3a623
+>
+> This quirk workaround breaks the PCIe on i.MX6QP, at least on my test
+> devices. The reason is because the Synposys PCIe IP in i.MX6QP has the
+> same device ID as the HAPS USB3 controller you are targeting in the
+> commit: 0xabcd.
+>
+> Definition:
+>
+> https://github.com/torvalds/linux/blob/master/include/linux/pci_ids.h#L2364
+>
+> Here is a bit of lspci output on my i.MX6QP machine (without the problem):
+>
+> mntmn@reform:~/code/linux$ lspci -v
+> 00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00
+>                                           ^^^^
+> [Normal decode])
+>         Flags: bus master, fast devsel, latency 0, IRQ 307
+>         Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
+>         Bus: primary=00, secondary=01, subordinate=ff, sec-latency=0
+> ...
+>
+> The failure mode is that the PCIe controller shows up as a USB
+> controller and my ath9k wireless PCIe card cannot be assigned the
+> proper resources anymore (-ENOMEM even for very small BARs).
+>
+> Reverting this commit fixes the problem for me. I suggest to make the
+> check more specific to the platform/chipset you are targeting.
 
-Since that's the case, the *bug* is the important thing (not the
-warning), and the subject line should be about the bug fix.  The fact
-that it also happens to remove a warning is really just incidental.
+So Synopsys apparently re-used Device ID 0xabcd?  That's a pretty bad problem.
 
-You say "the AHB2PCIe window size smaller than HW MMIO window size
-issue" as though it should be familiar to us.  But it's not :)
+It looks like we merged 03e6742584af ("PCI: Override Synopsys USB 3.x
+HAPS device class") for v5.0, and v5.0-final hasn't been released yet,
+so if we don't hear from Thinh with a resolution, we can still revert
+it.
 
-So the changelog needs to start by explaining what the AHB2PCIe window
-size issue is, mention what user-visible problem that causes, then
-explain how you're fixing it by using resource_size().
-
-Then you can mention that this also incidentally removes a coccinelle
-warning.
+I set myself a reminder to revert this on Feb 11, but hopefully we'll
+have a better resolution before then.
 
 Bjorn
-
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> ---
->  drivers/pci/controller/pcie-mediatek.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> index 55e471c..01126b8 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-> @@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
->  	struct resource *mem = &pcie->mem;
->  	const struct mtk_pcie_soc *soc = port->pcie->soc;
->  	u32 val;
-> -	size_t size;
->  	int err;
->  
->  	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-> @@ -706,8 +705,8 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
->  		mtk_pcie_enable_msi(port);
->  
->  	/* Set AHB to PCIe translation windows */
-> -	size = mem->end - mem->start;
-> -	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
-> +	val = lower_32_bits(mem->start)
-> +	      | AHB2PCIE_SIZE(fls(resource_size(mem)));
-
-Nit: I think it's more typical to put the "|" on the first line.
-
->  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
->  
->  	val = upper_32_bits(mem->start);
-> -- 
-> 2.6.4
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
