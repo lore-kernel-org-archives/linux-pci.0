@@ -2,319 +2,166 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B94EC169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 12:50:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28832C282DA
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 14:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 022172086C
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 12:50:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F30C7218AF
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 14:16:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="hcEz7N8k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727108AbfAaMuJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 07:50:09 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:55903 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1732650AbfAaMuJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 07:50:09 -0500
-X-UUID: de413b86cd6448fb85edc0e2b1001cfa-20190131
-X-UUID: de413b86cd6448fb85edc0e2b1001cfa-20190131
-Received: from mtkcas35.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
-        (envelope-from <jianjun.wang@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 1536748433; Thu, 31 Jan 2019 20:49:59 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31DR.mediatek.inc
- (172.27.6.102) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 31 Jan
- 2019 20:49:58 +0800
-Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 31 Jan 2019 20:49:57 +0800
-Message-ID: <1548938997.6292.52.camel@mhfsdcap03>
-Subject: Re: [v1] PCI: mediatek: Remove MSI inner domain
-From:   Jianjun Wang <jianjun.wang@mediatek.com>
-To:     Marc Zyngier <marc.zyngier@arm.com>
-CC:     Honghui Zhang <honghui.zhang@mediatek.com>,
-        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>,
-        <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <youlin.pei@mediatek.com>
-Date:   Thu, 31 Jan 2019 20:49:57 +0800
-In-Reply-To: <10e8e731-5749-f6fb-eb33-ab67aa0e2c3f@arm.com>
-References: <1548149855-3225-1-git-send-email-jianjun.wang@mediatek.com>
-         <1548926367.4980.14.camel@mhfsdcap03>
-         <10e8e731-5749-f6fb-eb33-ab67aa0e2c3f@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        id S1726977AbfAaOQF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 09:16:05 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:50425 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726976AbfAaOQF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 09:16:05 -0500
+Received: by mail-wm1-f68.google.com with SMTP id n190so2685915wmd.0
+        for <linux-pci@vger.kernel.org>; Thu, 31 Jan 2019 06:16:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=8QSwmO+7UtDMUl2h5bXPkoUcbj9z4wWNhNk0IkYYWEw=;
+        b=hcEz7N8kKKaaS/V3KJhjoSjIwwPae2DwBzoJj0cdXpgjdjy8SHgN246zqrZN0GeUNS
+         cKpuUL24AflhsXRTVKIq9KjwCO45KxHOHT8fNOkkBBYuxVKRlf0z7hdgF8z5hku7ehcA
+         t4HoeDLXZDBlNG6pblaLZ+w37HtR8drwufDfZH55BQsvJgc2NITYf8Uo69yCF0LtDI+Z
+         QR9ZlAGNLnT+mLM/WLGLaj1prDk1pE9kr+mS8ef0BbnMbjgvLrgCPM5p7Q2wyq1/sY+I
+         BpRrXsFdbnc2eFOzlVR3yPXrL0AlMFJ74AQBNRbJvvF7EIBRh44G54Jt7u+Pwc/LYODe
+         fq7w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=8QSwmO+7UtDMUl2h5bXPkoUcbj9z4wWNhNk0IkYYWEw=;
+        b=sKWHRioGyUNkVHRjkSkC5XuIvnzODiX6lnv3INR0QIb51cRVnajGYtqfbYDPDPNeb8
+         FXsQCQ1Z0iI5Ezve1iegGXFNQEp5N9LcmiDVu0NaCtamiKEiF+rj586r9DCB5dIONTvI
+         vwx0Pt5XHCMLgN8UvsUxRjnn8fDoinLq0JqEduK67RAlmK8b/pFIpQwQOK0rkRqJsX2R
+         cL3xlaAy0w0VeXa1VTrCB/ppBEndigTygfxf3sChQlGyUmf/Ax5tKvwObG6wFfWQrZVX
+         inl0aGIuPR9X6p5uHR0+55Wd0HjgIjrDFmC8C/HZ9oIRxWTI1GC8ozyWaqhm/GMmlscT
+         EYBg==
+X-Gm-Message-State: AJcUukd1xu57BBQ9tiObhynRZrRYPDCk7lb7xOHEDY90e46D7RMEL4M4
+        dFzymGq59JluaM4M+r7jF49QPXCwPbzxFT9a4UKV
+X-Google-Smtp-Source: ALg8bN4YjEs8Nk5/Vz3sNiFpQVtBF6HkgDto10Wadwk2Huzt8gBIzAVS/ogE5Xap7DyHArj3MI9wvVXihXyQnt+MKrA=
+X-Received: by 2002:a1c:3d44:: with SMTP id k65mr29416104wma.76.1548944162606;
+ Thu, 31 Jan 2019 06:16:02 -0800 (PST)
 MIME-Version: 1.0
-X-MTK:  N
+References: <20190131134033.1ed0021d@canb.auug.org.au>
+In-Reply-To: <20190131134033.1ed0021d@canb.auug.org.au>
+From:   Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu, 31 Jan 2019 08:15:50 -0600
+Message-ID: <CAErSpo7y-PunYStmzvWvbfz-_CV0yoL2Pro3oC-+f47S3RPYAA@mail.gmail.com>
+Subject: Re: linux-next: manual merge of the vhost tree with the pci tree
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     "Michael S. Tsirkin" <mst@redhat.com>,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2019-01-31 at 09:44 +0000, Marc Zyngier wrote:
-> On 31/01/2019 09:19, Honghui Zhang wrote:
-> > On Tue, 2019-01-22 at 17:37 +0800, Jianjun Wang wrote:
-> >> There is no need to create the inner domain as a parent for MSI domian,
-> >> some feature has been implemented by MSI framework.
-> >>
-> >> Remove the inner domain and its irq chip, it will be more closer to
-> >> hardware implementation.
-> 
-> This is not about being closer to any HW implementation. This is about
-> having a uniform way to deal with MSI controllers, no matter how they
-> are implemented by the HW.
-> 
-> So maybe you could start by explaining what this is trying to achieve.
-> 
-> >>
-> > Hi, jianjun, I'm not quite familiar with the irq_chip framework, It was
-> > under Marc's great help with the first version of irq_chip solution
-> > code. I would like you to add him for the review.
-> > 
-> > Thanks.
-> > 
-> >> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
-> >> ---
-> >>  drivers/pci/controller/pcie-mediatek.c | 86 +++++++++++---------------
-> >>  1 file changed, 37 insertions(+), 49 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> >> index 8d05df56158b..f996a9a6331f 100644
-> >> --- a/drivers/pci/controller/pcie-mediatek.c
-> >> +++ b/drivers/pci/controller/pcie-mediatek.c
-> >> @@ -169,7 +169,6 @@ struct mtk_pcie_soc {
-> >>   * @slot: port slot
-> >>   * @irq: GIC irq
-> >>   * @irq_domain: legacy INTx IRQ domain
-> >> - * @inner_domain: inner IRQ domain
-> >>   * @msi_domain: MSI IRQ domain
-> >>   * @lock: protect the msi_irq_in_use bitmap
-> >>   * @msi_irq_in_use: bit map for assigned MSI IRQ
-> >> @@ -190,7 +189,6 @@ struct mtk_pcie_port {
-> >>  	u32 slot;
-> >>  	int irq;
-> >>  	struct irq_domain *irq_domain;
-> >> -	struct irq_domain *inner_domain;
-> >>  	struct irq_domain *msi_domain;
-> >>  	struct mutex lock;
-> >>  	DECLARE_BITMAP(msi_irq_in_use, MTK_MSI_IRQS_NUM);
-> >> @@ -418,22 +416,15 @@ static void mtk_msi_ack_irq(struct irq_data *data)
-> >>  	u32 hwirq = data->hwirq;
-> >>  
-> >>  	writel(1 << hwirq, port->base + PCIE_IMSI_STATUS);
-> >> +	writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
-> >>  }
-> >>  
-> >> -static struct irq_chip mtk_msi_bottom_irq_chip = {
-> >> -	.name			= "MTK MSI",
-> >> -	.irq_compose_msi_msg	= mtk_compose_msi_msg,
-> >> -	.irq_set_affinity	= mtk_msi_set_affinity,
-> >> -	.irq_ack		= mtk_msi_ack_irq,
-> >> -};
-> >> -
-> >> -static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> >> -				     unsigned int nr_irqs, void *args)
-> >> +static irq_hw_number_t mtk_pcie_msi_get_hwirq(struct msi_domain_info *info,
-> >> +					      msi_alloc_info_t *arg)
-> >>  {
-> >> -	struct mtk_pcie_port *port = domain->host_data;
-> >> -	unsigned long bit;
-> >> +	struct mtk_pcie_port *port = info->chip_data;
-> >> +	irq_hw_number_t bit;
-> >>  
-> >> -	WARN_ON(nr_irqs != 1);
-> >>  	mutex_lock(&port->lock);
-> >>  
-> >>  	bit = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
-> >> @@ -446,18 +437,14 @@ static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int vir
-> >>  
-> >>  	mutex_unlock(&port->lock);
-> >>  
-> >> -	irq_domain_set_info(domain, virq, bit, &mtk_msi_bottom_irq_chip,
-> >> -			    domain->host_data, handle_edge_irq,
-> >> -			    NULL, NULL);
-> >> -
-> >> -	return 0;
-> >> +	return bit;
-> 
-> Why do you need to override the get_hwirq method? Using the generic
-> PCI/MSI version has the advantage of giving you a universal encoding
-> which makes debugging much easier.
+On Wed, Jan 30, 2019 at 8:40 PM Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+>
+> Hi all,
+>
+> Today's linux-next merge of the vhost tree got a conflict in:
+>
+>   drivers/pci/setup-bus.c
+>
+> between commit:
+>
+>   51c48b310183 ("PCI: Probe bridge window attributes once at enumeration-time")
+>
+> from the pci tree and commit:
+>
+>   955156f34e7d ("PCI: avoid bridge feature re-probing on hotplug")
+>
+> from the vhost tree.
+>
+> I fixed it up (hopefully - see below) and can carry the fix as
+> necessary. This is now fixed as far as linux-next is concerned, but any
+> non trivial conflicts should be mentioned to your upstream maintainer
+> when your tree is submitted for merging.  You may also want to consider
+> cooperating with the maintainer of the conflicting tree to minimise any
+> particularly complex conflicts.
 
-Hi Marc,
+51c48b310183 and 955156f34e7d are both to solve the same problem, so I
+think the best resolution is to drop 955156f34e7d from the vhost tree
+completely.
 
-In previous patch, we create a inner_domain as a parent for msi_domain,
-when we allocate a irq for MSI, the work flow of each domain will be the
-following:
+The remaining wrinkle to work out is that we need a stable backport.
+51c48b310183 is technically a little large for a stable backport, so I
+want to have a solid justification for it.  As soon as I get a
+kernel.org bugzilla with those details (who's affected by the
+breakage, what the failure looks like, how to reproduce it, etc), I'll
+add that URL and the stable tag.
 
-inner_domain:
-1. Allocated a irq bit from bitmap as this domain's hwirq;
-2. Mapping with system virtual irq number;
-3. Set irq chip and irq handler;
-4. Send MSI message to EP.
+Bjorn
 
-msi_domain:
-1. Calculate a hwirq;
-2. Mapping with system virtual irq number;
-3. Set irq chip which from info->chip and irq handler if defined in
-info.
-4. Send MSI message to EP or trigger parent domain to send the message.
-
-The last three steps looks similar, if we override the get_hwirq method
-and set irq chip and handler to info structure, MSI framework will do
-the rest of thing. I think it will be more simple and easy to understand
-the driver's work flow.
-
-Further more, if we try to enhance the interrupt performance, such as
-connect the MSI interrupt line to GIC directly in hardware, we will need
-to set gic domain as the parent, in that case, there will be a lot of
-work to do to replace the inner domain.
-
-Thanks.
-> 
-> >>  }
-> >>  
-> >> -static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
-> >> -				     unsigned int virq, unsigned int nr_irqs)
-> >> +static void mtk_pcie_msi_free(struct irq_domain *domain,
-> >> +			      struct msi_domain_info *info, unsigned int virq)
-> >>  {
-> >>  	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
-> >> -	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(d);
-> >> +	struct mtk_pcie_port *port = info->chip_data;
-> >>  
-> >>  	mutex_lock(&port->lock);
-> >>  
-> >> @@ -468,46 +455,50 @@ static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
-> >>  		__clear_bit(d->hwirq, port->msi_irq_in_use);
-> >>  
-> >>  	mutex_unlock(&port->lock);
-> >> -
-> >> -	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
-> >>  }
-> >>  
-> >> -static const struct irq_domain_ops msi_domain_ops = {
-> >> -	.alloc	= mtk_pcie_irq_domain_alloc,
-> >> -	.free	= mtk_pcie_irq_domain_free,
-> >> +static struct msi_domain_ops mtk_msi_domain_ops = {
-> >> +	.get_hwirq	= mtk_pcie_msi_get_hwirq,
-> >> +	.msi_free	= mtk_pcie_msi_free,
-> >>  };
-> >>  
-> >>  static struct irq_chip mtk_msi_irq_chip = {
-> >> -	.name		= "MTK PCIe MSI",
-> >> -	.irq_ack	= irq_chip_ack_parent,
-> >> -	.irq_mask	= pci_msi_mask_irq,
-> >> -	.irq_unmask	= pci_msi_unmask_irq,
-> >> +	.name			= "MTK PCIe",
-> >> +	.irq_compose_msi_msg	= mtk_compose_msi_msg,
-> >> +	.irq_write_msi_msg	= pci_msi_domain_write_msg,
-> >> +	.irq_set_affinity	= mtk_msi_set_affinity,
-> >> +	.irq_ack		= mtk_msi_ack_irq,
-> >> +	.irq_mask		= pci_msi_mask_irq,
-> >> +	.irq_unmask		= pci_msi_unmask_irq,
-> >>  };
-> >>  
-> >>  static struct msi_domain_info mtk_msi_domain_info = {
-> >> -	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-> >> -		   MSI_FLAG_PCI_MSIX),
-> >> -	.chip	= &mtk_msi_irq_chip,
-> >> +	.flags		= (MSI_FLAG_USE_DEF_DOM_OPS |
-> >> +			   MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_PCI_MSIX),
-> >> +	.ops		= &mtk_msi_domain_ops,
-> >> +	.chip		= &mtk_msi_irq_chip,
-> >> +	.handler	= handle_edge_irq,
-> >> +	.handler_name	= "MSI",
-> >>  };
-> >>  
-> >>  static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
-> >>  {
-> >> -	struct fwnode_handle *fwnode = of_node_to_fwnode(port->pcie->dev->of_node);
-> >> +	struct device *dev = port->pcie->dev;
-> >> +	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
-> >> +	struct msi_domain_info *info;
-> >>  
-> >>  	mutex_init(&port->lock);
-> >>  
-> >> -	port->inner_domain = irq_domain_create_linear(fwnode, MTK_MSI_IRQS_NUM,
-> >> -						      &msi_domain_ops, port);
-> >> -	if (!port->inner_domain) {
-> >> -		dev_err(port->pcie->dev, "failed to create IRQ domain\n");
-> >> +	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
-> >> +	if (!info)
-> >>  		return -ENOMEM;
-> >> -	}
-> >>  
-> >> -	port->msi_domain = pci_msi_create_irq_domain(fwnode, &mtk_msi_domain_info,
-> >> -						     port->inner_domain);
-> >> +	memcpy(info, &mtk_msi_domain_info, sizeof(*info));
-> >> +	info->chip_data = port;
-> >> +
-> > 
-> > I'm not really like this memcpy of msi_domain_info, but I do not have a
-> > better idea to prevent the mixed of mtk_pcie_port data.
-> 
-> So we're basically trading an indirection for another. What's the gain?
-
-There is usually more than one PCIe port in each SoC, we use
-mtk_pcie_port data to describe it, in previous version, we pass the port
-data as inner domain's host_data. When remove the inner domain, we also
-need to pass the port data and should prevent to mix with another port,
-so I thank maybe we can make a copy for each port and set port data as
-it's chip_data.
-> 
-> > 
-> >> +	port->msi_domain = pci_msi_create_irq_domain(fwnode, info, NULL);
-> >>  	if (!port->msi_domain) {
-> >> -		dev_err(port->pcie->dev, "failed to create MSI domain\n");
-> >> -		irq_domain_remove(port->inner_domain);
-> >> +		dev_err(dev, "failed to create MSI domain\n");
-> >>  		return -ENOMEM;
-> >>  	}
-> >>  
-> >> @@ -541,8 +532,6 @@ static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
-> >>  		if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> >>  			if (port->msi_domain)
-> >>  				irq_domain_remove(port->msi_domain);
-> >> -			if (port->inner_domain)
-> >> -				irq_domain_remove(port->inner_domain);
-> >>  		}
-> >>  
-> >>  		irq_dispose_mapping(port->irq);
-> >> @@ -619,12 +608,11 @@ static void mtk_pcie_intr_handler(struct irq_desc *desc)
-> >>  
-> >>  			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
-> >>  				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
-> >> -					virq = irq_find_mapping(port->inner_domain, bit);
-> >> +					virq = irq_find_mapping(
-> >> +							port->msi_domain, bit);
-> >>  					generic_handle_irq(virq);
-> >>  				}
-> >>  			}
-> >> -			/* Clear MSI interrupt status */
-> >> -			writel(MSI_STATUS, port->base + PCIE_INT_STATUS);
-> >>  		}
-> > 
-> > why change this irq status clear flow?
-> 
-> I think this is trying move everything to the irq_ack callback. But
-> that's a change of semantics, and I'd like it explained. It certainly
-> feels wrong.
-Yes, I confused with each irq's ack callback, it doesn't need to be
-changed.
-
-Thanks.
-> 
-> Overall, this patch as it stands (without any real explanation) doesn't
-> feel me with confidence. It introduces significant differences in the
-> way we build PCI/MSI domains, and I'd like to understand why.
-> 
-> Thanks,
-> 
-> 	M.
-
-
+> diff --cc drivers/pci/setup-bus.c
+> index 1941bb0a6c13,d5c25d465d97..000000000000
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@@ -735,17 -735,50 +735,26 @@@ int pci_claim_bridge_resource(struct pc
+>      base/limit registers must be read-only and read as 0. */
+>   static void pci_bridge_check_ranges(struct pci_bus *bus)
+>   {
+>  -      u16 io;
+>  -      u32 pmem;
+>         struct pci_dev *bridge = bus->self;
+>  -      struct resource *b_res;
+>  -
+>  -      b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+>  +      struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+>
+> +       /*
+> +        * Don't re-check after this was called once already:
+> +        * important since bridge might be in use.
+> +        * Note: this is only reliable because as per spec all PCI to PCI
+> +        * bridges support memory unconditionally so IORESOURCE_MEM is set.
+> +        */
+> +       if (b_res[1].flags & IORESOURCE_MEM)
+> +               return;
+> +
+>         b_res[1].flags |= IORESOURCE_MEM;
+>
+>  -      pci_read_config_word(bridge, PCI_IO_BASE, &io);
+>  -      if (!io) {
+>  -              pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+>  -              pci_read_config_word(bridge, PCI_IO_BASE, &io);
+>  -              pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+>  -      }
+>  -      if (io)
+>  +      if (bridge->io_window)
+>                 b_res[0].flags |= IORESOURCE_IO;
+>
+>  -      /*  DECchip 21050 pass 2 errata: the bridge may miss an address
+>  -          disconnect boundary by one PCI data phase.
+>  -          Workaround: do not use prefetching on this device. */
+>  -      if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
+>  -              return;
+>  -
+>  -      pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+>  -      if (!pmem) {
+>  -              pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
+>  -                                             0xffe0fff0);
+>  -              pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+>  -              pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
+>  -      }
+>  -      if (pmem) {
+>  +      if (bridge->pref_window) {
+>                 b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
+>  -              if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
+>  -                  PCI_PREF_RANGE_TYPE_64) {
+>  +              if (bridge->pref_64_window) {
+>                         b_res[2].flags |= IORESOURCE_MEM_64;
+>                         b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
+>                 }
