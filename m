@@ -2,150 +2,102 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3922C169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 07:52:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77049C282D9
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 08:00:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DCF40218AC
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 07:52:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6123B2087F
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 08:00:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726172AbfAaHwp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 02:52:45 -0500
-Received: from mailgw02.mediatek.com ([1.203.163.81]:56555 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725829AbfAaHwo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 02:52:44 -0500
-X-UUID: 4d35d683486d44dabbd4a69edc55f157-20190131
-X-UUID: 4d35d683486d44dabbd4a69edc55f157-20190131
-Received: from mtkcas35.mediatek.inc [(172.27.4.250)] by mailgw02.mediatek.com
-        (envelope-from <honghui.zhang@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 1991872299; Thu, 31 Jan 2019 15:52:38 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N1.mediatek.inc
- (172.27.4.69) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 31 Jan
- 2019 15:52:37 +0800
-Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 31 Jan 2019 15:52:37 +0800
-Message-ID: <1548921156.4980.5.camel@mhfsdcap03>
-Subject: Re: [PATCH] PCI: Mediatek: Use resource_size function on resource
- object
-From:   Honghui Zhang <honghui.zhang@mediatek.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <lorenzo.pieralisi@arm.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
-        <youlin.pei@mediatek.com>, <jianjun.wang@mediatek.com>
-Date:   Thu, 31 Jan 2019 15:52:36 +0800
-In-Reply-To: <1548903833.22019.26.camel@mhfsdcap03>
-References: <1546409033-20412-1-git-send-email-honghui.zhang@mediatek.com>
-         <20190130154950.GD229773@google.com> <1548903833.22019.26.camel@mhfsdcap03>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        id S1726368AbfAaIAs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 03:00:48 -0500
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:42067 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725855AbfAaIAs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 03:00:48 -0500
+Received: by mail-qt1-f196.google.com with SMTP id d19so2488996qtq.9;
+        Thu, 31 Jan 2019 00:00:47 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=wBNBDT1LiiLRanuMOG7grYKDhg9zCn26KY0jpTT73kI=;
+        b=tvy0GTzi+HN1UzewF1OK+I5x5NHkBY6oCjhhiXeDjB36+V1E8LMKm4NuI5eb5oQHRf
+         yVeiO00AnDGVi4q0bmmD0tzt5CEduk88ULIYUnZgk5WCz9iuN8YlNUTkgOce2agSWiX6
+         oLq2dSq5nRukXxl/dL0Omq/fxhHg1lchP7PMj7MAG5I0cgjYOefSb1b2v3e39CyQ5yjl
+         DYklKE5xo4Dc3ZRgAIqOzRVnnvFIMvgwRuWt4grR0Qe8rshD6Bd6fYf9/TyY8zMQuzC8
+         ls1UcIThcF+fEfSlxL/bY0UR5t1EJeHvIKPCy4v+jWWXaNF/Lsj3uQv+RgkT6MmzB4+/
+         IL1g==
+X-Gm-Message-State: AJcUukc8JcR4Xff0n19vWTb7uZ8sbKzylaH0rnb8mZFTxTa27zfZu2Gh
+        a/vBqlgtErhYBKknWo4K+oPaj8dIApQujb5WdYpfsQ==
+X-Google-Smtp-Source: ALg8bN6FefpahWBFSjDrFIrH4tu4OMDtIQmPbNKO7/+Ob/8mVyRl4d6H9o2RN5faLFkN8Pl1dLVtPiGfKkVinrA9smw=
+X-Received: by 2002:ac8:7451:: with SMTP id h17mr32585171qtr.319.1548921647369;
+ Thu, 31 Jan 2019 00:00:47 -0800 (PST)
 MIME-Version: 1.0
-X-MTK:  N
+References: <20190107134510.32494-1-koen.vandeputte@ncentric.com>
+ <20190124115656.GA23362@e107981-ln.cambridge.arm.com> <47437c58-d7b3-f77c-7bc7-973373f1e78e@ncentric.com>
+ <20190124162759.GA28871@e107981-ln.cambridge.arm.com> <CAK8P3a2ftPvdBnVacbGcxDpCW6CvBj3ZGBXuVQE46JocXewvgQ@mail.gmail.com>
+ <20190130230604.GM229773@google.com>
+In-Reply-To: <20190130230604.GM229773@google.com>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Thu, 31 Jan 2019 09:00:30 +0100
+Message-ID: <CAK8P3a3tLtCee6p38iXNp5Amktguucgb23UcQFF-Z8Vn8zTgZg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] arm: cns3xxx: fix writing to wrong PCI registers
+ after alignment
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "# 3.4.x" <stable@vger.kernel.org>,
+        Robin Leblon <robin.leblon@ncentric.com>,
+        Olof Johansson <olof@lixom.net>,
+        Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2019-01-31 at 11:03 +0800, Honghui Zhang wrote:
-> On Wed, 2019-01-30 at 09:49 -0600, Bjorn Helgaas wrote:
-> > On Wed, Jan 02, 2019 at 02:03:53PM +0800, honghui.zhang@mediatek.com wrote:
-> > > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > 
-> > > drivers/pci/pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
-> > > 
-> > > Generated by: scripts/coccinelle/api/resource_size.cocci
-> > > 
-> > > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > ---
-> > >  drivers/pci/controller/pcie-mediatek.c | 4 +---
-> > >  1 file changed, 1 insertion(+), 3 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > > index e307166..0168376 100644
-> > > --- a/drivers/pci/controller/pcie-mediatek.c
-> > > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > > @@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> > >  	struct resource *mem = &pcie->mem;
-> > >  	const struct mtk_pcie_soc *soc = port->pcie->soc;
-> > >  	u32 val;
-> > > -	size_t size;
-> > >  	int err;
-> > >  
-> > >  	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-> > > @@ -706,8 +705,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> > >  		mtk_pcie_enable_msi(port);
-> > >  
-> > >  	/* Set AHB to PCIe translation windows */
-> > > -	size = mem->end - mem->start;
-> > > -	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
-> > > +	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(resource_size(mem)));
-> > 
-> > This is actually a fairly interesting change because it effectively
-> > changes this:
-> > 
-> >   fls(mem->end - mem->start)
-> > 
-> > to this:
-> > 
-> >   fls(mem->end - mem->start + 1)
-> > 
-> > And mem->end is the last valid address, so it changes something like
-> > this:
-> > 
-> >   fls(0xffff)         # == 15
-> > 
-> > to this:
-> > 
-> >   fls(0x10000)        # == 16
-> > 
-> > So while this *looks* like a trivial warning fix, it likely fixes an
-> > important bug, and it's worth pointing out what that bug is in the
-> > changelog.
-> > 
-> > >  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-> > >  
-> > >  	val = upper_32_bits(mem->start);
-> 
-> This size will set the MMIO size, which means that the RC will translate
-> the MMIO access from mem->start to mem->end.
-> The real MMIO size is specified in devicetree, which is 0x1000_0000 for
-> both mt2712 and mt7622.
-> 
-> This change make the size from fls(0x1000_0000) to fls(0x1000_0001), not
-> really change the values.
-> 
-> I will update the commit message and add the information mentioned
-> above.
-> 
-> Thanks for your kindly review.
+On Thu, Jan 31, 2019 at 12:06 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Wed, Jan 30, 2019 at 11:08:04PM +0100, Arnd Bergmann wrote:
+> > On Thu, Jan 24, 2019 at 5:29 PM Lorenzo Pieralisi
+> > <lorenzo.pieralisi@arm.com> wrote:
+> > > On Thu, Jan 24, 2019 at 04:23:05PM +0100, Koen Vandeputte wrote:
+> > > > On 24.01.19 12:56, Lorenzo Pieralisi wrote:
+> > > > >On Mon, Jan 07, 2019 at 02:45:09PM +0100, Koen Vandeputte wrote:
+> > > > Purely for my information:
+> > > >
+> > > > Testing on a lot of devices here shows a huge improvement towards stability.
+> > > > Is it possible to get it merged sooner?
+> > > > Does "queued for 5.1" also mean that backporting to stables only will happen
+> > > > at 5.1_rc1 release?
+> > >
+> > > Yes, I will ask Bjorn if we can send them for one of the upcoming -rc*
+> > > (so effectively you will get them in v5.0 and propagated to stable
+> > > earlier), I do not think it is that urgent either though, let me handle
+> > > that.
+> >
+> > We can take them through the soc tree if that's easier, but
+> > going through Bjorn's tree is also fine.
+>
+> I have the following on my for-linus branch and I'll ask Linus to pull them
+> this week, so they will appear in v5.0:
+>
+>   b8b592a3a8d1 ARM: cns3xxx: use actual size reads for PCIe
+>   b3a32f359397 ARM: cns3xxx: fix writing to wrong PCI registers after alignment
 
-I was wrong, after take a look at the resource parser function, that it
-will initialize the res->end as res->start + res->size - 1.
+Ok, thanks!
 
-But this change is still Ok since it will change the MMIO from
-fls(0xfff_ffff) to fls(0x1000_0000), this just enlarge the MMIO
-translate window size. The HW assigned MMIO is 0x1000_0000, but original
-code set this translate window to fls(0xfff_ffff) = 0x800_0000 is fine
-in most case since all the EP device we connect never asked a MMIO
-window bigger than 0x800_0000. (As a matter of fact, most EP device will
-only ask for 4MB MMIO window size.)
+> Neither is currently marked for stable, but I'll add that if you like.
 
-I will put this in the commit message.
+Yes, I think that would be good, along with
 
-thanks.
-> 
-> >  > -- 
-> > > 2.6.4
-> > > 
-> 
-> 
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-
+     Arnd
