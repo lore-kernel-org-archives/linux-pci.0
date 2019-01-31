@@ -2,89 +2,137 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E48A8C169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 541F7C169C4
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:43:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE4C9218FD
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:31:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1200B218AF
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 17:43:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="UZc52xKk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727404AbfAaRbv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 12:31:51 -0500
-Received: from mga04.intel.com ([192.55.52.120]:41037 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727176AbfAaRbv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Jan 2019 12:31:51 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 31 Jan 2019 09:31:50 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.56,545,1539673200"; 
-   d="scan'208";a="140503477"
-Received: from jprestwo.jf.intel.com ([10.54.74.69])
-  by fmsmga004.fm.intel.com with ESMTP; 31 Jan 2019 09:31:50 -0800
-Message-ID: <75816515f1675f819b993eb96b84becd418ab271.camel@linux.intel.com>
-Subject: BCM43602 + PCI passthrough causing freeze
-From:   James Prestwood <james.prestwood@linux.intel.com>
-To:     linux-pci@vger.kernel.org
-Date:   Thu, 31 Jan 2019 09:36:58 -0800
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
+        id S1725775AbfAaRn1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 12:43:27 -0500
+Received: from smtprelay.synopsys.com ([198.182.47.9]:52706 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725298AbfAaRn1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 12:43:27 -0500
+Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay.synopsys.com (Postfix) with ESMTPS id 896A624E16CD;
+        Thu, 31 Jan 2019 09:43:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1548956605; bh=WeTrYTVGTJ09KT5AL4GJ3yJOBjdMcIMum3ZIJvqc1j0=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=UZc52xKk4V5lw/xE2tYg+8puOx8m0HD8jESafHHsG12NZY4GSNu0tbT478aD0ZFZR
+         cjPZgLrL8KzO7dXv+IufLRY3bP0mQmc2RV3s3GXRIjGYozvRfPdel4AXpCYDfdqjmV
+         8lkmJ6tasn82LWHEqS4xlxehhA12rzjOxLmuMCeE9kxOA8H9IU7Qtvfc6BM2ybGsBW
+         Jbs7fdfu6riC6Y0KH6TURqRDMsld8e+tjd8uM3hKUDgQ/zvTBgzkDiyFrOov1kj9Zh
+         qRXYqM9f5aef0EMFJ4YBK/Y1WI0ERzbJlaBo2nAnNTMZsfqwcm0+Y6edgq91xIAP4h
+         WYiVRroOkj30Q==
+Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
+        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mailhost.synopsys.com (Postfix) with ESMTPS id 7A085A0093;
+        Thu, 31 Jan 2019 17:43:19 +0000 (UTC)
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 31 Jan 2019 09:42:04 -0800
+Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
+ DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 31 Jan 2019 18:42:02 +0100
+Received: from [10.225.2.145] (10.225.2.145) by
+ DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Thu, 31 Jan 2019 18:42:02 +0100
+Subject: Re: [PATCH 9/9] PCI: dwc: Add pcie port pointer validation
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Joao Pinto <joao.pinto@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "marc.zyngier@arm.com" <marc.zyngier@arm.com>
+References: <cover.1547631485.git.gustavo.pimentel@synopsys.com>
+ <0164f622c6d16755d006ae090fba65cff24cfeb2.1547631485.git.gustavo.pimentel@synopsys.com>
+ <20190131165104.GC28941@e107981-ln.cambridge.arm.com>
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Message-ID: <1591cc65-82b2-3910-ab4d-730f7d2fc6a4@synopsys.com>
+Date:   Thu, 31 Jan 2019 17:37:04 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+In-Reply-To: <20190131165104.GC28941@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.225.2.145]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On 31/01/2019 16:51, Lorenzo Pieralisi wrote:
+> [+Marc, for his information]
+> 
+> On Wed, Jan 16, 2019 at 11:14:22AM +0100, Gustavo Pimentel wrote:
+>> Add pcie port pointer validation to avoid a potencial crash accessing a
+>> null pointer reported by coverity scan.
+> 
+> s/potencial/potential
+> s/null/NULL
+> 
+>> Warning generated by coverity: "Dereferencing a pointer that might be
+>> null "data" when calling "irq_data_get_irq_chip_data".
+> 
+> s/null/NULL
+> 
+>> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+>> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Joao Pinto <jpinto@synopsys.com>
+>> Cc: Jingoo Han <jingoohan1@gmail.com>
+>> ---
+>>  drivers/pci/controller/dwc/pcie-designware-host.c | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+>> index 45ff5e4..419a56b 100644
+>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+>> @@ -256,9 +256,14 @@ static void dw_pcie_irq_domain_free(struct irq_domain *domain,
+>>  				    unsigned int virq, unsigned int nr_irqs)
+>>  {
+>>  	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
+>> -	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+>> +	struct pcie_port *pp;
+>>  	unsigned long flags;
+>>  
+>> +	if (!d)
+>> +		return;
+>> +
+>> +	pp = irq_data_get_irq_chip_data(d);
+> 
+> Well, we do not validate pp either and I wonder whether coverity trips
+> over this code path but that's just a false positive.
+> 
+> If we have to actually patch it there are other code paths in the kernel
+> to be updated too.
 
-I posted about a month ago on linux-wireless about an Ath9k card that
-was causing my host machine to freeze/lock up when doing PCI
-passthrough into a VM. This was resolved by adding:
+Ok, I can drop this patch.
 
-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0034,
-quirk_no_bus_reset);
+Gustavo
 
-to drivers/pci/quirks.c and rebuilding the host kernel.
-
-Original thread: 
-https://marc.info/?l=linux-wireless&m=154689580213002&w=2
-
-I am now trying to get this BCM43602 card working under the same
-conditions but again I am seeing the host machine freeze when starting
-the VM. I did try adding a similar line for this card, which actually
-prevented the machine from freezing, but I am seeing this when starting
-the VM:
-
-qemu-system-x86_64: vfio: Cannot reset device 0000:0a:00.0, no
-available reset mechanism.
-
-And once inside the VM the device is UNCLAIMED and not usable:
-
-$ lshw -C network
-
-*-network:2 UNCLAIMED
-       description: Network controller
-       product: BCM43602 802.11ac Wireless LAN SoC
-       vendor: Broadcom Limited
-       physical id: 6
-       bus info: pci@0000:00:06.0
-       version: 01
-       width: 64 bits
-       clock: 33MHz
-       capabilities: pm msi pciexpress cap_list
-       configuration: latency=0
-       resources: memory:fe890000-fe897fff memory:fe400000-fe7fffff
-
-This change was really a shot in the dark as I only have a vague
-understanding of what its actually doing. I see other entries in
-quirks.c for the Broadcom vendor ID but would rather not go poking
-around here without any direction.
-
-Thanks,
-James
+> 
+> Lorenzo
+> 
+>> +
+>>  	raw_spin_lock_irqsave(&pp->lock, flags);
+>>  
+>>  	bitmap_release_region(pp->msi_irq_in_use, d->hwirq,
+>> -- 
+>> 2.7.4
+>>
 
