@@ -6,25 +6,24 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01C8AC4151A
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 08:05:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D517C169C4
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 08:13:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D450B2087F
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 08:05:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04D5120881
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 08:13:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726341AbfAaIFE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 03:05:04 -0500
-Received: from verein.lst.de ([213.95.11.211]:56220 "EHLO newverein.lst.de"
+        id S1726233AbfAaIN5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 03:13:57 -0500
+Received: from verein.lst.de ([213.95.11.211]:56255 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726233AbfAaIFE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Jan 2019 03:05:04 -0500
+        id S1725961AbfAaIN5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Jan 2019 03:13:57 -0500
 Received: by newverein.lst.de (Postfix, from userid 2407)
-        id 9019B68CEB; Thu, 31 Jan 2019 09:05:01 +0100 (CET)
-Date:   Thu, 31 Jan 2019 09:05:01 +0100
+        id 9A19368CEB; Thu, 31 Jan 2019 09:13:55 +0100 (CET)
+Date:   Thu, 31 Jan 2019 09:13:55 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     Jason Gunthorpe <jgg@mellanox.com>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     Jason Gunthorpe <jgg@mellanox.com>, Christoph Hellwig <hch@lst.de>,
         Jerome Glisse <jglisse@redhat.com>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -41,36 +40,50 @@ Cc:     Logan Gunthorpe <logang@deltatee.com>,
         "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
 Subject: Re: [RFC PATCH 3/5] mm/vma: add support for peer to peer to device
  vma
-Message-ID: <20190131080501.GB26495@lst.de>
-References: <20190129191120.GE3176@redhat.com> <20190129193250.GK10108@mellanox.com> <99c228c6-ef96-7594-cb43-78931966c75d@deltatee.com> <20190129205827.GM10108@mellanox.com> <20190130080208.GC29665@lst.de> <20190130174424.GA17080@mellanox.com> <bcbdfae6-cfc6-c34f-4ff2-7bb9a08f38af@deltatee.com> <20190130191946.GD17080@mellanox.com> <3793c115-2451-1479-29a9-04bed2831e4b@deltatee.com> <20190130204414.GH17080@mellanox.com>
+Message-ID: <20190131081355.GC26495@lst.de>
+References: <20190129234752.GR3176@redhat.com> <655a335c-ab91-d1fc-1ed3-b5f0d37c6226@deltatee.com> <20190130041841.GB30598@mellanox.com> <20190130080006.GB29665@lst.de> <20190130190651.GC17080@mellanox.com> <840256f8-0714-5d7d-e5f5-c96aec5c2c05@deltatee.com> <20190130195900.GG17080@mellanox.com> <35bad6d5-c06b-f2a3-08e6-2ed0197c8691@deltatee.com> <20190130215019.GL17080@mellanox.com> <07baf401-4d63-b830-57e1-5836a5149a0c@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190130204414.GH17080@mellanox.com>
+In-Reply-To: <07baf401-4d63-b830-57e1-5836a5149a0c@deltatee.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jan 30, 2019 at 08:44:20PM +0000, Jason Gunthorpe wrote:
-> Not really, for MRs most drivers care about DMA addresses only. The
-> only reason struct page ever gets involved is because it is part of
-> the GUP, SGL and dma_map family of APIs.
+On Wed, Jan 30, 2019 at 03:52:13PM -0700, Logan Gunthorpe wrote:
+> > *shrug* so what if the special GUP called a VMA op instead of
+> > traversing the VMA PTEs today? Why does it really matter? It could
+> > easily change to a struct page flow tomorrow..
+> 
+> Well it's so that it's composable. We want the SGL->DMA side to work for
+> APIs from kernel space and not have to run a completely different flow
+> for kernel drivers than from userspace memory.
 
-And the only way you get the DMA address is through the dma mapping
-APIs.  Which except for the little oddball dma_map_resource expect
-a struct page in some form.  And dma_map_resource isn't really up
-to speed for full blown P2P.
+Yes, I think that is the important point.
 
-Now we could and maybe eventually should change all this.  But that
-is a pre-requisitive for doing anything more fancy, and not something
-to be hacked around.
+All the other struct page discussion is not about anyone of us wanting
+struct page - heck it is a pain to deal with, but then again it is
+there for a reason.
 
-> O_DIRECT seems to be the justification for struct page, but nobody is
-> signing up to make O_DIRECT have the required special GUP/SGL/P2P flow
-> that would be needed to *actually* make that work - so it really isn't
-> a justification today.
+In the typical GUP flows we have three uses of a struct page:
 
-O_DIRECT is just the messenger.  Anything using GUP will need a struct
-page, which is all our interfaces that do I/O directly to user pages.
+ (1) to carry a physical address.  This is mostly through
+     struct scatterlist and struct bio_vec.  We could just store
+     a magic PFN-like value that encodes the physical address
+     and allow looking up a page if it exists, and we had at least
+     two attempts at it.  In some way I think that would actually
+     make the interfaces cleaner, but Linus has NACKed it in the
+     past, so we'll have to convince him first that this is the
+     way forward
+ (2) to keep a reference to the memory so that it doesn't go away
+     under us due to swapping, process exit, unmapping, etc.
+     No idea how we want to solve this, but I guess you have
+     some smart ideas?
+ (3) to make the PTEs dirty after writing to them.  Again no sure
+     what our preferred interface here would be
+
+If we solve all of the above problems I'd be more than happy to
+go with a non-struct page based interface for BAR P2P.  But we'll
+have to solve these issues in a generic way first.
