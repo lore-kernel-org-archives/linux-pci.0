@@ -2,103 +2,127 @@ Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-5.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE805C169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 16:11:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2F42C169C4
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 16:21:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9C2D02085B
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 16:11:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B8CB2085B
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 16:21:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388080AbfAaQLV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 11:11:21 -0500
-Received: from doppler.thel33t.co.uk ([185.153.207.61]:48730 "EHLO
-        doppler.thel33t.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726355AbfAaQLU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 11:11:20 -0500
-X-Greylist: delayed 308 seconds by postgrey-1.27 at vger.kernel.org; Thu, 31 Jan 2019 11:11:20 EST
-Received: from doppler.thel33t.co.uk (localhost [127.0.0.1])
-        by doppler.thel33t.co.uk (Postfix) with ESMTP id D03972099F;
-        Thu, 31 Jan 2019 16:06:10 +0000 (GMT)
+        id S1733294AbfAaQV4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 11:21:56 -0500
+Received: from foss.arm.com ([217.140.101.70]:47304 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388102AbfAaQVz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 31 Jan 2019 11:21:55 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6C45E80D;
+        Thu, 31 Jan 2019 08:21:55 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7FAB43F557;
+        Thu, 31 Jan 2019 08:21:54 -0800 (PST)
+Date:   Thu, 31 Jan 2019 16:21:48 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     linux-pci@vger.kernel.org, Joao Pinto <joao.pinto@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>
+Subject: Re: [PATCH 3/9] PCI: dwc: Replace variable name from data to d on
+ dw_pci_bottom_mask/unmask()
+Message-ID: <20190131162148.GA28941@e107981-ln.cambridge.arm.com>
+References: <cover.1547631485.git.gustavo.pimentel@synopsys.com>
+ <ab9e5de92e2c8c29ec1ee8b1303430c57fb937e5.1547631485.git.gustavo.pimentel@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Thu, 31 Jan 2019 16:06:10 +0000
-From:   Leigh Brown <leigh@solinno.co.uk>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        Russell King - ARM Linux admin <linux@armlinux.org.uk>,
-        =?UTF-8?Q?Lu=C3=ADs_Mendes?= <luis.p.mendes@gmail.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: Out-of-tree mwlwifi driver crashes
-In-Reply-To: <20190131164653.2599d6e7@windsurf>
-References: <01e409217be1c1cb08ac3bab072fccd3@solinno.co.uk>
- <20190129155913.163f1e98@windsurf>
- <a56827554c95a3bcd8435d72167d35f9@solinno.co.uk>
- <20190129163117.0af2ebb3@windsurf>
- <8eb5b2981e6e60e91a3eacbb88a5ee7b@solinno.co.uk>
- <20190131164653.2599d6e7@windsurf>
-Message-ID: <3029c89268680e5abe4f073d8247f74d@solinno.co.uk>
-X-Sender: leigh@solinno.co.uk
-User-Agent: Roundcube Webmail/1.3.8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ab9e5de92e2c8c29ec1ee8b1303430c57fb937e5.1547631485.git.gustavo.pimentel@synopsys.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
+On Wed, Jan 16, 2019 at 11:14:16AM +0100, Gustavo Pimentel wrote:
+> Replace variable from data to d to maintain coherency between similar
 
-On 2019-01-31 15:46, Thomas Petazzoni wrote:
-> Hello Leigh,
-> 
-> On Tue, 29 Jan 2019 15:36:56 +0000
-> Leigh Brown <leigh@solinno.co.uk> wrote:
-> 
->> Apologies, I use webmail.  I have attached two files with the results
->> from running lspci -vvv -xxx
-> 
-> Thanks, that was very useful. I believe the issue comes from the fact
-> that your PCIe device has prefetchable BARs, while none of the 5 PCIe
-> devices I have here has prefetchable BARs. The pci-mvebu driver doesn't
-> support such BARs, but the change to the common PCI bridge emulation
-> logic made the prefetchable memory base / limit register read-write
-> while they were read-only before.
-> 
-> To verify this hypothesis, could you apply the following patch (on top
-> of 4.20), and see if it solves the problem ? Thanks!
-> 
-> This is probably not the right/correct fix, but it will at least allow
-> to verify that the problem is understood correctly.
-> 
-> Thomas
-> 
-> diff --git a/drivers/pci/pci-bridge-emul.c 
-> b/drivers/pci/pci-bridge-emul.c
-> index 129738362d90..f99b80c19809 100644
-> --- a/drivers/pci/pci-bridge-emul.c
-> +++ b/drivers/pci/pci-bridge-emul.c
-> @@ -142,11 +142,7 @@ const static struct pci_bridge_reg_behavior
-> pci_regs_behavior[] = {
->         },
-> 
->         [PCI_PREF_MEMORY_BASE / 4] = {
-> -               /* The high 12-bits of pref mem base/limit are RW */
-> -               .rw = GENMASK(31, 20) | GENMASK(15, 4),
-> -
-> -               /* The low four bits of pref mem base/limit are RO */
-> -               .ro = GENMASK(19, 16) | GENMASK(3, 0),
-> +               .ro = ~0,
->         },
-> 
->         [PCI_PREF_BASE_UPPER32 / 4] = {
+s/Replace/Rename
+s/coherency/consistency
 
-Thanks for responding. I had to manually apply the patch, but it 
-certainly fixes
-the issue.
+s/similar/driver
 
-Regards,
+These comments are valid for other patches in this series too.
 
-Leigh.
+> functions, such as dw_msi_mask_irq() and dw_msi_unmask_irq().
+> 
+> No functional change is intended.
+> 
+> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Joao Pinto <jpinto@synopsys.com>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 721d60a..36e284c 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -149,20 +149,20 @@ static int dw_pci_msi_set_affinity(struct irq_data *irq_data,
+>  	return -EINVAL;
+>  }
+>  
+> -static void dw_pci_bottom_mask(struct irq_data *data)
+> +static void dw_pci_bottom_mask(struct irq_data *d)
+>  {
+> -	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
+> +	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+>  	unsigned int res, bit, ctrl;
+>  	unsigned long flags;
+>  
+>  	raw_spin_lock_irqsave(&pp->lock, flags);
+>  
+>  	if (pp->ops->msi_clear_irq) {
+> -		pp->ops->msi_clear_irq(pp, data->hwirq);
+> +		pp->ops->msi_clear_irq(pp, d->hwirq);
+>  	} else {
+> -		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
+> +		ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+>  		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+> -		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+> +		bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>  
+>  		pp->irq_status[ctrl] &= ~(1 << bit);
+>  		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+> @@ -172,20 +172,20 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+>  	raw_spin_unlock_irqrestore(&pp->lock, flags);
+>  }
+>  
+> -static void dw_pci_bottom_unmask(struct irq_data *data)
+> +static void dw_pci_bottom_unmask(struct irq_data *d)
+>  {
+> -	struct pcie_port *pp = irq_data_get_irq_chip_data(data);
+> +	struct pcie_port *pp = irq_data_get_irq_chip_data(d);
+>  	unsigned int res, bit, ctrl;
+>  	unsigned long flags;
+>  
+>  	raw_spin_lock_irqsave(&pp->lock, flags);
+>  
+>  	if (pp->ops->msi_set_irq) {
+> -		pp->ops->msi_set_irq(pp, data->hwirq);
+> +		pp->ops->msi_set_irq(pp, d->hwirq);
+>  	} else {
+> -		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
+> +		ctrl = d->hwirq / MAX_MSI_IRQS_PER_CTRL;
+>  		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
+> -		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
+> +		bit = d->hwirq % MAX_MSI_IRQS_PER_CTRL;
+>  
+>  		pp->irq_status[ctrl] |= 1 << bit;
+>  		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
+> -- 
+> 2.7.4
+> 
