@@ -3,34 +3,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C3FC282D9
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 03:04:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3922C169C4
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 07:52:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3A1C2184D
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 03:04:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCF40218AC
+	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 07:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726087AbfAaDEE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Jan 2019 22:04:04 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:59877 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725771AbfAaDEE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Jan 2019 22:04:04 -0500
-X-UUID: b7899a23e4d04701b4a4e31183bd13b0-20190131
-X-UUID: b7899a23e4d04701b4a4e31183bd13b0-20190131
-Received: from mtkcas34.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
+        id S1726172AbfAaHwp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 02:52:45 -0500
+Received: from mailgw02.mediatek.com ([1.203.163.81]:56555 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725829AbfAaHwo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 02:52:44 -0500
+X-UUID: 4d35d683486d44dabbd4a69edc55f157-20190131
+X-UUID: 4d35d683486d44dabbd4a69edc55f157-20190131
+Received: from mtkcas35.mediatek.inc [(172.27.4.250)] by mailgw02.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 498669996; Thu, 31 Jan 2019 11:03:55 +0800
-Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS31DR.mediatek.inc
- (172.27.6.102) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 31 Jan
- 2019 11:03:53 +0800
-Received: from [10.17.3.153] (10.17.3.153) by MTKCAS36.mediatek.inc
+        with ESMTP id 1991872299; Thu, 31 Jan 2019 15:52:38 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N1.mediatek.inc
+ (172.27.4.69) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 31 Jan
+ 2019 15:52:37 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
  (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Thu, 31 Jan 2019 11:03:53 +0800
-Message-ID: <1548903833.22019.26.camel@mhfsdcap03>
+ Transport; Thu, 31 Jan 2019 15:52:37 +0800
+Message-ID: <1548921156.4980.5.camel@mhfsdcap03>
 Subject: Re: [PATCH] PCI: Mediatek: Use resource_size function on resource
  object
 From:   Honghui Zhang <honghui.zhang@mediatek.com>
@@ -40,10 +40,10 @@ CC:     <lorenzo.pieralisi@arm.com>,
         <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
         <youlin.pei@mediatek.com>, <jianjun.wang@mediatek.com>
-Date:   Thu, 31 Jan 2019 11:03:53 +0800
-In-Reply-To: <20190130154950.GD229773@google.com>
+Date:   Thu, 31 Jan 2019 15:52:36 +0800
+In-Reply-To: <1548903833.22019.26.camel@mhfsdcap03>
 References: <1546409033-20412-1-git-send-email-honghui.zhang@mediatek.com>
-         <20190130154950.GD229773@google.com>
+         <20190130154950.GD229773@google.com> <1548903833.22019.26.camel@mhfsdcap03>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.2.3-0ubuntu6 
 Content-Transfer-Encoding: 7bit
@@ -54,80 +54,98 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2019-01-30 at 09:49 -0600, Bjorn Helgaas wrote:
-> On Wed, Jan 02, 2019 at 02:03:53PM +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Thu, 2019-01-31 at 11:03 +0800, Honghui Zhang wrote:
+> On Wed, 2019-01-30 at 09:49 -0600, Bjorn Helgaas wrote:
+> > On Wed, Jan 02, 2019 at 02:03:53PM +0800, honghui.zhang@mediatek.com wrote:
+> > > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > > 
+> > > drivers/pci/pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
+> > > 
+> > > Generated by: scripts/coccinelle/api/resource_size.cocci
+> > > 
+> > > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > > ---
+> > >  drivers/pci/controller/pcie-mediatek.c | 4 +---
+> > >  1 file changed, 1 insertion(+), 3 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > > index e307166..0168376 100644
+> > > --- a/drivers/pci/controller/pcie-mediatek.c
+> > > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > > @@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+> > >  	struct resource *mem = &pcie->mem;
+> > >  	const struct mtk_pcie_soc *soc = port->pcie->soc;
+> > >  	u32 val;
+> > > -	size_t size;
+> > >  	int err;
+> > >  
+> > >  	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+> > > @@ -706,8 +705,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+> > >  		mtk_pcie_enable_msi(port);
+> > >  
+> > >  	/* Set AHB to PCIe translation windows */
+> > > -	size = mem->end - mem->start;
+> > > -	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
+> > > +	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(resource_size(mem)));
 > > 
-> > drivers/pci/pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
+> > This is actually a fairly interesting change because it effectively
+> > changes this:
 > > 
-> > Generated by: scripts/coccinelle/api/resource_size.cocci
+> >   fls(mem->end - mem->start)
 > > 
-> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > ---
-> >  drivers/pci/controller/pcie-mediatek.c | 4 +---
-> >  1 file changed, 1 insertion(+), 3 deletions(-)
+> > to this:
 > > 
-> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > index e307166..0168376 100644
-> > --- a/drivers/pci/controller/pcie-mediatek.c
-> > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > @@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> >  	struct resource *mem = &pcie->mem;
-> >  	const struct mtk_pcie_soc *soc = port->pcie->soc;
-> >  	u32 val;
-> > -	size_t size;
-> >  	int err;
-> >  
-> >  	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-> > @@ -706,8 +705,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> >  		mtk_pcie_enable_msi(port);
-> >  
-> >  	/* Set AHB to PCIe translation windows */
-> > -	size = mem->end - mem->start;
-> > -	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
-> > +	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(resource_size(mem)));
-> 
-> This is actually a fairly interesting change because it effectively
-> changes this:
-> 
->   fls(mem->end - mem->start)
-> 
-> to this:
-> 
->   fls(mem->end - mem->start + 1)
-> 
-> And mem->end is the last valid address, so it changes something like
-> this:
-> 
->   fls(0xffff)         # == 15
-> 
-> to this:
-> 
->   fls(0x10000)        # == 16
-> 
-> So while this *looks* like a trivial warning fix, it likely fixes an
-> important bug, and it's worth pointing out what that bug is in the
-> changelog.
-> 
-> >  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-> >  
-> >  	val = upper_32_bits(mem->start);
-
-This size will set the MMIO size, which means that the RC will translate
-the MMIO access from mem->start to mem->end.
-The real MMIO size is specified in devicetree, which is 0x1000_0000 for
-both mt2712 and mt7622.
-
-This change make the size from fls(0x1000_0000) to fls(0x1000_0001), not
-really change the values.
-
-I will update the commit message and add the information mentioned
-above.
-
-Thanks for your kindly review.
-
->  > -- 
-> > 2.6.4
+> >   fls(mem->end - mem->start + 1)
 > > 
+> > And mem->end is the last valid address, so it changes something like
+> > this:
+> > 
+> >   fls(0xffff)         # == 15
+> > 
+> > to this:
+> > 
+> >   fls(0x10000)        # == 16
+> > 
+> > So while this *looks* like a trivial warning fix, it likely fixes an
+> > important bug, and it's worth pointing out what that bug is in the
+> > changelog.
+> > 
+> > >  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+> > >  
+> > >  	val = upper_32_bits(mem->start);
+> 
+> This size will set the MMIO size, which means that the RC will translate
+> the MMIO access from mem->start to mem->end.
+> The real MMIO size is specified in devicetree, which is 0x1000_0000 for
+> both mt2712 and mt7622.
+> 
+> This change make the size from fls(0x1000_0000) to fls(0x1000_0001), not
+> really change the values.
+> 
+> I will update the commit message and add the information mentioned
+> above.
+> 
+> Thanks for your kindly review.
+
+I was wrong, after take a look at the resource parser function, that it
+will initialize the res->end as res->start + res->size - 1.
+
+But this change is still Ok since it will change the MMIO from
+fls(0xfff_ffff) to fls(0x1000_0000), this just enlarge the MMIO
+translate window size. The HW assigned MMIO is 0x1000_0000, but original
+code set this translate window to fls(0xfff_ffff) = 0x800_0000 is fine
+in most case since all the EP device we connect never asked a MMIO
+window bigger than 0x800_0000. (As a matter of fact, most EP device will
+only ask for 4MB MMIO window size.)
+
+I will put this in the commit message.
+
+thanks.
+> 
+> >  > -- 
+> > > 2.6.4
+> > > 
+> 
+> 
 
 
