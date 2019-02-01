@@ -2,403 +2,392 @@ Return-Path: <SRS0=jDI6=QI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB511C282D8
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 11:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9368C282D8
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 12:18:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7428E20844
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 11:28:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="fLQfYbqs"
+	by mail.kernel.org (Postfix) with ESMTP id A0DC121872
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 12:18:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729613AbfBAL2f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Feb 2019 06:28:35 -0500
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:34164 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729555AbfBAL2f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2019 06:28:35 -0500
-Received: from mailhost.synopsys.com (badc-mailhost1.synopsys.com [10.192.0.17])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay.synopsys.com (Postfix) with ESMTPS id 998C924E0999;
-        Fri,  1 Feb 2019 03:28:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1549020514; bh=KRwcWvEKgIqT9CdoiwaiIEfR10C3TR3gHfR5cJL3yTE=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=fLQfYbqsql/+tca3It+cMnYPxmfRS+5kfSeC24EogajMZtWotFxlaiVjEN2FobIdX
-         8anBfAQsgoRSKHHEbBrCzllbNyNyZ+d0SvgwDnA5UCsNuRRvJF6T5GJ7JJFDKiXGtl
-         vi8SgKZGZpMUjBrxTXM+BhyT6PGa5YN9UJJTzoS+8wWn/WXZHzYTTaXhN67DGjP2L6
-         lPZRNZYY2itYTH8WJMWP6aTejEClJL1GPa+ZOwIMXhb8JlGVIknR6eGXKCj7LDONHB
-         Du+HV2ktiK/lzkHSzP2PjlpTxan+vXH1JfdzULuNWbQFjJVDU1TUY1D0JuP7eElf5z
-         A1jh5Ymbwx+Ig==
-Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 6DE53A0071;
-        Fri,  1 Feb 2019 11:28:33 +0000 (UTC)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Fri, 1 Feb 2019 03:28:33 -0800
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Fri, 1 Feb 2019 12:28:30 +0100
-Received: from [10.107.25.131] (10.107.25.131) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Fri, 1 Feb 2019 12:28:30 +0100
-Subject: Re: [RFC v3 1/7] dmaengine: Add Synopsys eDMA IP core driver
-To:     Vinod Koul <vkoul@kernel.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dmaengine@vger.kernel.org" <dmaengine@vger.kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Eugeniy Paltsev <eugeniy.paltsev@synopsys.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        Joao Pinto <joao.pinto@synopsys.com>,
-        Jose Abreu <jose.abreu@synopsys.com>,
-        Luis Oliveira <luis.oliveira@synopsys.com>,
-        Vitor Soares <vitor.soares@synopsys.com>,
-        Nelson Costa <nelson.costa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-References: <cover.1547230339.git.gustavo.pimentel@synopsys.com>
- <d2b6e8bed0c5077425b913e551794ed126d74fb2.1547230339.git.gustavo.pimentel@synopsys.com>
- <20190120114425.GV4635@vkoul-mobl>
- <14acfcee-b367-be9c-714b-de0508ff1a7d@synopsys.com>
- <20190123130829.GQ4635@vkoul-mobl>
- <c98718c3-26ec-8e9b-435b-98be7e9bd211@synopsys.com>
- <20190201041400.GL4635@vkoul-mobl>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <aceb7b5a-54ec-d501-74a1-d1396e221c84@synopsys.com>
-Date:   Fri, 1 Feb 2019 11:23:33 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.0
+        id S1728250AbfBAMST (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Feb 2019 07:18:19 -0500
+Received: from mga17.intel.com ([192.55.52.151]:54417 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726330AbfBAMSS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Feb 2019 07:18:18 -0500
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 Feb 2019 04:18:17 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.56,548,1539673200"; 
+   d="scan'208";a="271733105"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
+  by orsmga004.jf.intel.com with SMTP; 01 Feb 2019 04:18:14 -0800
+Received: by lahna (sSMTP sendmail emulation); Fri, 01 Feb 2019 14:18:14 +0200
+Date:   Fri, 1 Feb 2019 14:18:14 +0200
+From:   "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Consider alignment of hot-added bridges when
+ distributing available resources
+Message-ID: <20190201121814.GN7875@lahna.fi.intel.com>
+References: <PS2P216MB0642AB5973DFD5EBB5B2BBF380910@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-In-Reply-To: <20190201041400.GL4635@vkoul-mobl>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.25.131]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <PS2P216MB0642AB5973DFD5EBB5B2BBF380910@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 01/02/2019 04:14, Vinod Koul wrote:
-> On 31-01-19, 11:33, Gustavo Pimentel wrote:
->> On 23/01/2019 13:08, Vinod Koul wrote:
->>> On 21-01-19, 15:48, Gustavo Pimentel wrote:
->>>> On 20/01/2019 11:44, Vinod Koul wrote:
->>>>> On 11-01-19, 19:33, Gustavo Pimentel wrote:
-> 
->>>>>> @@ -0,0 +1,1059 @@
->>>>>> +// SPDX-License-Identifier: GPL-2.0
->>>>>> +/*
->>>>>> + * Copyright (c) 2018 Synopsys, Inc. and/or its affiliates.
->>>>>
->>>>> 2019 now
->>>>
->>>> I've changed to "Copyright (c) 2018-present Synopsys, Inc. and/or its
->>>> affiliates." this way it's always up to date and I also kept 2018, because it
->>>> was the date that I started to develop this driver, if you don't mind.
->>>
->>> yeah 18 is fine :) it need to end with current year always
->>
->> Just to be sure, are you saying that must be: "Copyright (c) 2018-2019 Synopsys,
->> Inc. and/or its affiliates."?
-> 
-> Yup :)
-> 
->>>>>> +static struct dw_edma_chunk *dw_edma_alloc_chunk(struct dw_edma_desc *desc)
->>>>>> +{
->>>>>> +	struct dw_edma_chan *chan = desc->chan;
->>>>>> +	struct dw_edma *dw = chan->chip->dw;
->>>>>> +	struct dw_edma_chunk *chunk;
->>>>>> +
->>>>>> +	chunk = kvzalloc(sizeof(*chunk), GFP_NOWAIT);
->>>>>> +	if (unlikely(!chunk))
->>>>>> +		return NULL;
->>>>>> +
->>>>>> +	INIT_LIST_HEAD(&chunk->list);
->>>>>> +	chunk->chan = chan;
->>>>>> +	chunk->cb = !(desc->chunks_alloc % 2);
->>>>>
->>>>> cb ..?
->>>>
->>>> CB = change bit, is a property of this eDMA IP. Basically it is a kind of
->>>> handshake which serves to validate whether the linked list has been updated or
->>>> not, especially useful in cases of recycled linked list elements (every linked
->>>> list recycle is a new chunk, this will allow to differentiate each chunk).
->>>
->>> okay please add that somewhere. Also it would help me if you explain
->>> what is chunk and other terminologies used in this driver
->>
->> I'm thinking to put the below description on the patch, please check if this is
->> sufficient explicit and clear to understand what this IP needs and does.
->>
->> In order to transfer data from point A to B as fast as possible this IP requires
->> a dedicated memory space where will reside a linked list of elements.
-> 
-> rephrasing: a dedicated memory space containing linked list of elements
-> 
->> All elements of this linked list are continuous and each one describes a data
->> transfer (source and destination addresses, length and a control variable).
->>
->> For the sake of simplicity, lets assume a memory space for channel write 0 which
->> allows about 42 elements.
->>
->> +---------+
->> | Desc #0 |--+
->> +---------+  |
->>              V
->>         +----------+
->>         | Chunk #0 |---+
->>         |  CB = 1  |   |   +----------+   +-----+   +-----------+   +-----+
->>         +----------+   +-->| Burst #0 |-->| ... |-->| Burst #41 |-->| llp |
->>               |            +----------+   +-----+   +-----------+   +-----+
->>               V
->>         +----------+
->>         | Chunk #1 |---+
->>         |  CB = 0  |   |   +-----------+   +-----+   +-----------+   +-----+
->>         +----------+   +-->| Burst #42 |-->| ... |-->| Burst #83 |-->| llp |
->>               |            +-----------+   +-----+   +-----------+   +-----+
->>               V
->>         +----------+
->>         | Chunk #2 |---+
->>         |  CB = 1  |   |   +-----------+   +-----+   +------------+   +-----+
->>         +----------+   +-->| Burst #84 |-->| ... |-->| Burst #125 |-->| llp |
->>               |            +-----------+   +-----+   +------------+   +-----+
->>               V
->>         +----------+
->>         | Chunk #3 |---+
->>         |  CB = 0  |   |   +------------+   +-----+   +------------+   +-----+
->>         +----------+   +-->| Burst #126 |-->| ... |-->| Burst #129 |-->| llp |
->>                            +------------+   +-----+   +------------+   +-----+
-> 
-> This is great and required to understand the driver.
-> 
-> How does controller move from Burnst #41 of Chunk 0 to Chunk 1 ?
+Hi Nicholas,
 
-I forgot to explain that...
-
-On every last Burst of the Chunk (Burst #41, Burst #83, Burst #125 or even Burst
-#129) is set some flags on their control variable (RIE and LIE bits) that will
-trigger the send of "done" interruption.
-
-On the interruptions callback, is decided whether to recycle the linked list
-memory space by writing a new set of Bursts elements (if still exists Chunks to
-transfer) or is considered completed (if there is no Chunks available to transfer)
-
-> Is Burst 0 to 129 a link list with Burst 0, 42, 84 and 126 having a
-> callback (done bit set)..
-
-I didn't quite understand it your question.
-
-It comes from the prep_slave_sg n elements (130 applying the example), where
-will be divide in several Chunks (#0, #1, #2, #3 and #4 applying the example) (a
-linked list that will contain another linked list for the Bursts, CB, Chunk
-size). The linked list inside of each Chunk will contain a number of Bursts
-(limited to the memory space size), each one will possess Source Address,
-Destination Address and size of that sub-transfer.
-
+On Thu, Jan 31, 2019 at 09:51:05AM +0000, Nicholas Johnson wrote:
+> New systems with Thunderbolt are starting to use native PCI enumeration.
+> Mika Westerberg's patch "PCI: Distribute available resources to hotplug
+> capable PCIe downstream ports"
+> (https://patchwork.kernel.org/patch/9972155/) adds code to expand
+> downstream PCI hotplug bridges to consume all remaining resource space
+> in the parent bridge. It is a crucial patch for supporting Thunderbolt
+> native enumeration on Linux.
 > 
-> This sound **very** similar to dw dma concepts!
+> However, it does not consider bridge alignment in all cases, which rules
+> out hot-adding an external graphics processor at the end of a
+> Thunderbolt daisy chain. Hot-adding such a device will likely fail to
+> work with the existing code.
 
-I believe some parts of dw dma and dw edma behavior are similar and that makes
-perfectly sense since both dma are done by Synopsys and may be exist a shared
-knowledge, however they are different IPs applied to different products.
+I think I tried to solve the exact issue some time ago, see:
 
-> 
->>
->> Legend:
->>
->> *Linked list*, also know as Chunk
->> *Linked list element*, also know as Burst
->> *CB*, also know as Change Bit, it's a control bit (and typically is toggled)
->> that allows to easily identify and differentiate between the current linked list
->> and the previous or the next one.
->> *LLP*, is a special element that indicates the end of the linked list element
->> stream also informs that the next CB should be toggle.
->>
->> On scatter-gather transfer mode, the client will submit a scatter-gather list of
->> n (on this case 130) elements, that will be divide in multiple Chunks, each
->> Chunk will have (on this case 42) a limited number of Bursts and after
->> transferring all Bursts, an interrupt will be triggered, which will allow to
->> recycle the all linked list dedicated memory again with the new information
->> relative to the next Chunk and respective Burst associated and repeat the whole
->> cycle again.
->>
->> On cyclic transfer mode, the client will submit a buffer pointer, length of it
->> and number of repetitions, in this case each burst will correspond directly to
->> each repetition.
->>
->> Each Burst can describes a data transfer from point A(source) to point
->> B(destination) with a length that can be from 1 byte up to 4 GB. Since dedicated
->> the memory space where the linked list will reside is limited, the whole n burst
->> elements will be organized in several Chunks, that will be used later to recycle
->> the dedicated memory space to initiate a new sequence of data transfers.
->>
->> The whole transfer is considered has completed when it was transferred all bursts.
->>
->> Currently this IP has a set well-known register map, which includes support for
->> legacy and unroll modes. Legacy mode is version of this register map that has
-> 
-> whats  unroll..
-> 
->> multiplexer register that allows to switch registers between all write and read
+  https://bugzilla.kernel.org/show_bug.cgi?id=199581
 
-The unroll is explained here, see below
+I verified with the same setup that with your patch applied the above
+problem is gone, so your patch solves that issue :)
 
->> channels and the unroll modes repeats all write and read channels registers with
->> an offset between them. This register map is called v0.
->>
->> The IP team is creating a new register map more suitable to the latest PCIe
->> features, that very likely will change the map register, which this version will
->> be called v1. As soon as this new version is released by the IP team the support
->> for this version in be included on this driver.
->>
->> What do you think? There is any gray area that I could clarify?
+> It also might disrupt the operation of
+> existing devices or prevent the subsequent hot-plugging of lower aligned
+> devices if the kernel frees and reallocates upstream resources to
+> attempt assign the resources that failed to assign in the first pass. By
+> Intel's ruling, Thunderbolt external graphics processors are generally
+> meant to function only as the first and only device in the chain.
+> However, there is no technical reason that prevents it from being
+> possible if sufficient resources are available, and people are likely to
+> attempt such configurations with Thunderbolt devices if they own such
+> hardware. Hence, I argue that we should improve the user experience and
+> reduce the number of constraints placed on the user by always
+> considering resource alignment, which will make such configurations
+> possible.
 > 
-> This sounds good. But we are also catering to a WIP IP which can change
-> right. Doesnt sound very good idea to me :)
+> The other problem with the patch is that it is incompatible with
+> resources allocated by "pci=hpmemsize=nnM" due to a check which does not
+> allow for dev_res->add_size to be reduced. This check also makes a big
+> assumption that the hpmemsize is small but non-zero, and no action has
+> been taken to ensure that. In the current state, any bridge smaller than
+> hpmemsize will likely fail to size correctly, which will cause major
+> issues if the default were to change, or if the user also wants to
+> configure non-Thunderbolt hotplug bridges simultaneously. I argue that
+> if assumptions and limitations can be removed with no risks and adverse
+> effects, then it should be done.
 
-This IP exists for several years like this and it works quite fine, however
-because of new features and requests (SR-IOV, more dma channels, function
-segregation and isolation, performance improvement) that are coming it's natural
-to have exist improvements. The drivers should follow the evolution and be
-sufficient robust enough to adapt to this new circumstance.
+I fully agree.
 
+> The former problem is solved by rewriting the
+> pci_bus_distribute_available_resources() function with more information
+> passed in the arguments, eliminating assumptions about the initial
+> bridge alignment. My patch makes no assumptions about the alignment of
+> hot-added bridges, allowing for any device to be hot-added, given
+> sufficient resources are available.
 > 
->>>>>> +	dev_dbg(chan2dev(chan), "addr(physical) src=%pa, dst=%pa\n",
->>>>>> +		&config->src_addr, &config->dst_addr);
->>>>>> +
->>>>>> +	chan->src_addr = config->src_addr;
->>>>>> +	chan->dst_addr = config->dst_addr;
->>>>>> +
->>>>>> +	err = ops->device_config(dchan);
->>>>>
->>>>> what does this do?
->>>>
->>>> This is an initialization procedure to setup interrupts (data and addresses) to
->>>> each channel on the eDMA IP,  in order to be triggered after transfer being
->>>> completed or aborted. Due the fact the config() can be called at anytime,
->>>> doesn't make sense to have this procedure here, I'll moved it to probe().
->>>
->>> Yeah I am not still convinced about having another layer! Have you
->>> though about using common lib for common parts ..?
->>
->> Maybe I'm explaining myself wrongly. I don't have any clue about the new
->> register map for the future versions. I honestly tried to implement the common
->> lib for the whole process that interact with dma engine controller to ease in
->> the future any new addition of register mapping, by having this common callbacks
->> that will only be responsible for interfacing the HW accordingly to register map
->> version. Maybe I can simplify something in the future, but I only be able to
->> conclude that after having some idea about the new register map.
->>
->> IMHO I think this is the easier and clean way to do it, in terms of code
->> maintenance and architecture, but if you have another idea that you can show me
->> or pointing out for a driver that implements something similar, I'm no problem
->> to check it out.
+> The latter problem is solved by removing the check preventing the
+> shrinking of dev_res->add_size, which allows for the distribution of
+> resources if hpmemsize is non-zero. It can be made to work with zero
+> hpmemsize with two-line patches in pbus_size_mem() and pbus_size_io(),
+> or by modifying extend_bridge_window() to add a new entry to the
+> additional resource list if one does not exist. In theory, and by my
+> testing, the removal of this check does not affect the functionality of
+> the resource distribution with firmware-allocated resources. But it does
+> enable the same functionality when using pci=hpmemsize=nnM, which was
+> not possible prior. This may be one piece of the puzzle needed to
+> support Thunderbolt add-in cards that support native PCI enumeration,
+> without any platform dependencies.
 > 
-> That is what my fear was :)
+> I have tested this proposed patch extensively. Using Linux-allocated
+> resources, it works perfectly. I have two Gigabyte GC-TITAN RIDGE
+> Thunderbolt 3 add-in cards in my desktop, and a Dell XPS 9370 with the
+> Dell XPS 9380 Thunderbolt NVM40 firmware flashed. My peripherals are
+> three HP ZBook Thunderbolt 3 docks, two external graphics enclosures
+> with AMD Fiji XT in both, a Promise SANLink3 N1 (AQC107S), and a Dell
+> Thunderbolt 3 NVMe SSD. All configurations of these devices worked well,
+> and I can no longer make it fail if I try to. My testing with
+> firmware-allocated resources is limited due to using computers with
+> Alpine Ridge BIOS support. However, I did get manage to test the patch
+> with firmware-allocated resources by enabling the Alpine Ridge BIOS
+> support and forcing pcie_ports=native, and the results were perfect.
 > 
-> Lets step back and solve one problem at a time. Right now that is v0 of
-> IP. Please write a simple driver which solve v0 without any layers
-> involved.
-> 
-> Once v1 is in good shape, you would know what it required and then we
-> can split v0 driver into common lib and v0 driver and then add v1
-> driver.
+> Mika Westerberg has agreed to test this on an official platform with
+> native enumeration firmware support to be sure that it works in this
+> situation. It is also appropriate that he reviews these changes as he
+> wrote the original code and any changes made to Thunderbolt-critical
+> code cannot be allowed to break any of the base requirements for
+> Thunderbolt. I would like to thank him for putting up with my emails and
+> trying to help where he can, and for the great work he has done on
+> Thunderbolt in Linux.
 
-Can I keep the code segregation as it is now? With the dw-edma-v0-core.c/h,
-dw-edma-v0-debugfs.c/h and dw-edma-v0-regs.h
+I tested this patch with pretty much all the native enumeration systems
+I have here and I don't see any issues with it.
 
-That way I would only replace the callbacks calls to direct function calls and
-remove the switch case callback selection base on the version.
+So feel free to add my
 
-> 
-> 
->>>>> what is the second part of the check, can you explain that, who sets
->>>>> chan->dir?
->>>>
->>>> The chan->dir is set on probe() during the process of configuring each channel.
->>>
->>> So you have channels that are unidirectional?
->>
->> Yes. That's one another reason IMHO to keep the dw-edma-test separate from
->> dma-test, since this IP is more picky and have this particularities.
-> 
-> That is okay, that should be handled by prep calls, if you get a prep
-> call for direction you dont support return error and move to next
-> available one.
-> 
-> That can be done generically in dmatest driver and to answer your
-> question, yes I would test that :)
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Like you said, let do this in small steps. For now I would like to suggest to
-leave out the dw-dma-test driver and just focus on the current driver, if you
-don't mind. I never thought that his test driver would raise this kind of discuss.
+I have couple of minor comments, see below.
 
-> 
->>>>>> +int dw_edma_probe(struct dw_edma_chip *chip)
->>>>>> +{
->>>>>> +	struct dw_edma *dw = chip->dw;
->>>>>> +	struct device *dev = chip->dev;
->>>>>> +	const struct dw_edma_core_ops *ops;
->>>>>> +	size_t ll_chunk = dw->ll_region.sz;
->>>>>> +	size_t dt_chunk = dw->dt_region.sz;
->>>>>> +	u32 ch_tot;
->>>>>> +	int i, j, err;
->>>>>> +
->>>>>> +	raw_spin_lock_init(&dw->lock);
->>>>>> +
->>>>>> +	/* Callback operation selection accordingly to eDMA version */
->>>>>> +	switch (dw->version) {
->>>>>> +	default:
->>>>>> +		dev_err(dev, "unsupported version\n");
->>>>>> +		return -EPERM;
->>>>>> +	}
->>>>>
->>>>> So we have only one case which returns error, was this code tested?
->>>>
->>>> Yes it was, but I understand what your point of view.
->>>> This was done like this, because I wanna to segment the patch series like this:
->>>>  1) Adding eDMA driver core, which contains the driver skeleton and the whole
->>>> logic associated.
->>>>  2) and 3) Adding the callbacks for the eDMA register mapping version 0 (it will
->>>> appear in the future a new version, I thought that this new version would came
->>>> while I was trying to get the feedback about this patch series, therefore would
->>>> have another 2 patches for the version 1 isolated and independent from the
->>>> version 0).
->>>>  4) and 5) Adding the PCIe glue-logic and device ID associated.
->>>>  6) Adding maintainer for this driver.
->>>>  7) Adding a test driver.
->>>>
->>>> Since this switch will only have the associated case on patch 2, that why on
->>>> patch 1 doesn't appear any possibility.
->>>>
->>>> If you feel logic to squash patch 2 with patch 1, just say something and I'll do
->>>> it for you :)
->>>
->>> well each patch should build and work on its own, otherwise we get
->>> problems :) But since this is a new driver it is okay. Anyway this patch
->>> is quite _huge_ so lets not add more to it..
->>>
->>> I would have moved the callback check to subsequent one..
->>
->> Sorry. I didn't catch this. Can you explain it?
-> 
-> I would have moved these lines to next patch to give them right meaning,
-> here it feels wrong:
-> 
->         switch (dw->version) {
->         case foo:
->                 ...
->         default:
->                 ...
->         }
-> 
+> I have more patches in the pipeline to further improve the Thunderbolt
+> experience on Linux on platforms without BIOS support. This is the most
+> technical but least user-facing one planned. The most exciting changes
+> are yet to come.
 
+You may add here following line as it solves that issue:
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=199581
+
+> Signed-off-by: Nicholas-Johnson-opensource <nicholas.johnson-opensource@outlook.com.au>
+> ---
+>  drivers/pci/setup-bus.c | 172 ++++++++++++++++++++--------------------
+>  1 file changed, 88 insertions(+), 84 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index ed960436df5e..5c1b6d6b386c 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1866,20 +1866,21 @@ static void extend_bridge_window(struct pci_dev *bridge, struct resource *res,
+>  	if (!dev_res)
+>  		return;
+>  
+> -	/* Is there room to extend the window? */
+> -	if (available - resource_size(res) <= dev_res->add_size)
+> -		return;
+> -
+> +	/*
+> +	 * The add_size can be allowed to be shrunk, which allows for resources
+> +	 * to be distributed when allocated by "pci=hpmemsize=nnM", without
+> +	 * affecting the distribution of firmware-allocated resources.
+> +	 */
+>  	dev_res->add_size = available - resource_size(res);
+>  	pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
+>  		&dev_res->add_size);
+>  }
+>  
+>  static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+> -	struct list_head *add_list, resource_size_t available_io,
+> -	resource_size_t available_mmio, resource_size_t available_mmio_pref)
+> +	struct list_head *add_list, struct resource io,
+> +	struct resource mmio, struct resource mmio_pref)
+>  {
+> -	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
+> +	resource_size_t io_per_hp, mmio_per_hp, mmio_pref_per_hp, align;
+>  	unsigned int normal_bridges = 0, hotplug_bridges = 0;
+>  	struct resource *io_res, *mmio_res, *mmio_pref_res;
+>  	struct pci_dev *dev, *bridge = bus->self;
+> @@ -1889,25 +1890,32 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  	mmio_pref_res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
+>  
+>  	/*
+> -	 * Update additional resource list (add_list) to fill all the
+> -	 * extra resource space available for this port except the space
+> -	 * calculated in __pci_bus_size_bridges() which covers all the
+> -	 * devices currently connected to the port and below.
+> +	 * The alignment of this bridge is yet to be considered, hence it must
+> +	 * be done now before extending its bridge window. A single bridge
+> +	 * might not be able to occupy the whole parent region if the alignment
+> +	 * differs - for example, an external GPU at the end of a Thunderbolt
+> +	 * daisy chain.
+>  	 */
+> -	extend_bridge_window(bridge, io_res, add_list, available_io);
+> -	extend_bridge_window(bridge, mmio_res, add_list, available_mmio);
+> -	extend_bridge_window(bridge, mmio_pref_res, add_list,
+> -			     available_mmio_pref);
+> +	align = pci_resource_alignment(bridge, io_res);
+> +	if (!io_res->parent && align)
+> +		io.start = ALIGN(io.start, align);
+> +
+> +	align = pci_resource_alignment(bridge, mmio_res);
+> +	if (!mmio_res->parent && align)
+> +		mmio.start = ALIGN(mmio.start, align);
+> +
+> +	align = pci_resource_alignment(bridge, mmio_pref_res);
+> +	if (!mmio_pref_res->parent && align)
+> +		mmio_pref.start = ALIGN(mmio_pref.start, align);
+>  
+>  	/*
+> -	 * Calculate the total amount of extra resource space we can
+> -	 * pass to bridges below this one. This is basically the
+> -	 * extra space reduced by the minimal required space for the
+> -	 * non-hotplug bridges.
+> +	 * Update the resources to fill as much remaining resource space in the
+> +	 * parent bridge as possible, while considering alignment.
+>  	 */
+> -	remaining_io = available_io;
+> -	remaining_mmio = available_mmio;
+> -	remaining_mmio_pref = available_mmio_pref;
+> +	extend_bridge_window(bridge, io_res, add_list, resource_size(&io));
+> +	extend_bridge_window(bridge, mmio_res, add_list, resource_size(&mmio));
+> +	extend_bridge_window(bridge, mmio_pref_res, add_list,
+> +		resource_size(&mmio_pref));
+>  
+>  	/*
+>  	 * Calculate how many hotplug bridges and normal bridges there
+> @@ -1921,80 +1929,79 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  			normal_bridges++;
+>  	}
+>  
+> +	/*
+> +	 * There is only one bridge on the bus so it gets all possible
+> +	 * resources which it can then distribute to the possible
+> +	 * hotplug bridges below.
+> +	 */
+> +	if (hotplug_bridges + normal_bridges == 1) {
+> +		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
+> +		if (dev->subordinate)
+> +			pci_bus_distribute_available_resources(dev->subordinate,
+> +				add_list, io, mmio, mmio_pref);
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * Reduce the available resource space by what the
+> +	 * bridge and devices below it occupy.
+> +	 */
+>  	for_each_pci_bridge(dev, bus) {
+> -		const struct resource *res;
+> +		struct resource *res;
+> +		resource_size_t used_size;
+>  
+>  		if (dev->is_hotplug_bridge)
+>  			continue;
+>  
+> -		/*
+> -		 * Reduce the available resource space by what the
+> -		 * bridge and devices below it occupy.
+> -		 */
+>  		res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
+> -		if (!res->parent && available_io > resource_size(res))
+> -			remaining_io -= resource_size(res);
+> +		align = pci_resource_alignment(dev, res);
+> +		align = align ? ALIGN(io.start, align) - io.start : 0;
+> +		used_size = align + resource_size(res);
+> +		if (!res->parent && used_size <= resource_size(&io))
+> +			io.start += used_size;
+>  
+>  		res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
+> -		if (!res->parent && available_mmio > resource_size(res))
+> -			remaining_mmio -= resource_size(res);
+> +		align = pci_resource_alignment(dev, res);
+> +		align = align ? ALIGN(mmio.start, align) - mmio.start : 0;
+> +		used_size = align + resource_size(res);
+> +		if (!res->parent && used_size <= resource_size(&mmio))
+> +			mmio.start += used_size;
+>  
+>  		res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
+> -		if (!res->parent && available_mmio_pref > resource_size(res))
+> -			remaining_mmio_pref -= resource_size(res);
+> +		align = pci_resource_alignment(dev, res);
+> +		align = align ? ALIGN(mmio_pref.start, align) -
+> +				mmio_pref.start : 0;
+> +		used_size = align + resource_size(res);
+> +		if (!res->parent && used_size <= resource_size(&mmio_pref))
+> +			mmio_pref.start += used_size;
+>  	}
+>  
+> -	/*
+> -	 * There is only one bridge on the bus so it gets all available
+> -	 * resources which it can then distribute to the possible
+> -	 * hotplug bridges below.
+> -	 */
+> -	if (hotplug_bridges + normal_bridges == 1) {
+> -		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
+> -		if (dev->subordinate) {
+> -			pci_bus_distribute_available_resources(dev->subordinate,
+> -				add_list, available_io, available_mmio,
+> -				available_mmio_pref);
+> -		}
+> +	if (hotplug_bridges == 0)
+
+I think here you can write
+
+	if (!hotplug_bridges)
+
+instead.
+
+>  		return;
+> -	}
+>  
+>  	/*
+> -	 * Go over devices on this bus and distribute the remaining
+> -	 * resource space between hotplug bridges.
+> +	 * Distribute any remaining resources equally between
+> +	 * the hotplug-capable downstream ports.
+>  	 */
+> -	for_each_pci_bridge(dev, bus) {
+> -		resource_size_t align, io, mmio, mmio_pref;
+> -		struct pci_bus *b;
+> +	io_per_hp = div64_ul(resource_size(&io), hotplug_bridges);
+> +	mmio_per_hp = div64_ul(resource_size(&mmio), hotplug_bridges);
+> +	mmio_pref_per_hp = div64_ul(resource_size(&mmio_pref),
+> +		hotplug_bridges);
+>  
+> -		b = dev->subordinate;
+> -		if (!b || !dev->is_hotplug_bridge)
+> +	for_each_pci_bridge(dev, bus) {
+> +		if (!dev->subordinate || !dev->is_hotplug_bridge)
+>  			continue;
+>  
+> -		/*
+> -		 * Distribute available extra resources equally between
+> -		 * hotplug-capable downstream ports taking alignment into
+> -		 * account.
+> -		 *
+> -		 * Here hotplug_bridges is always != 0.
+> -		 */
+> -		align = pci_resource_alignment(bridge, io_res);
+> -		io = div64_ul(available_io, hotplug_bridges);
+> -		io = min(ALIGN(io, align), remaining_io);
+> -		remaining_io -= io;
+> -
+> -		align = pci_resource_alignment(bridge, mmio_res);
+> -		mmio = div64_ul(available_mmio, hotplug_bridges);
+> -		mmio = min(ALIGN(mmio, align), remaining_mmio);
+> -		remaining_mmio -= mmio;
+> +		       io.end =        io.start +        io_per_hp - 1;
+> +		     mmio.end =      mmio.start +      mmio_per_hp - 1;
+> +		mmio_pref.end = mmio_pref.start + mmio_pref_per_hp - 1;
+
+My preference would be to write them like this:
+
+		io.end = io.start + io_per_hp - 1;
+		mmio.end = mmio.start + mmio_per_hp - 1;
+		mmio_pref.end = mmio_pref.start + mmio_pref_per_hp - 1;
+
+> -		align = pci_resource_alignment(bridge, mmio_pref_res);
+> -		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
+> -		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
+> -		remaining_mmio_pref -= mmio_pref;
+> +		pci_bus_distribute_available_resources(dev->subordinate,
+> +			add_list, io, mmio, mmio_pref);
+>  
+> -		pci_bus_distribute_available_resources(b, add_list, io, mmio,
+> -						       mmio_pref);
+> +		       io.start =        io.end + 1;
+> +		     mmio.start =      mmio.end + 1;
+> +		mmio_pref.start = mmio_pref.end + 1;
+
+Ditto.
