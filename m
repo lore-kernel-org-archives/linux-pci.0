@@ -2,34 +2,35 @@ Return-Path: <SRS0=jDI6=QI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB1E5C282D8
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 05:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAA30C282D8
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 05:36:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A0BB20863
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 05:36:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E39A20863
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 05:36:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726460AbfBAFgT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Feb 2019 00:36:19 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:54535 "EHLO
+        id S1726591AbfBAFgZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Feb 2019 00:36:25 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:5434 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726364AbfBAFgT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2019 00:36:19 -0500
-X-UUID: bcd6862de16d4191bbe410022a95e6d9-20190201
-X-UUID: bcd6862de16d4191bbe410022a95e6d9-20190201
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw02.mediatek.com
+        with ESMTP id S1726570AbfBAFgX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2019 00:36:23 -0500
+X-UUID: 131bf5fa71ef4237a3d8e23bedf72e10-20190201
+X-UUID: 131bf5fa71ef4237a3d8e23bedf72e10-20190201
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
         (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 130163740; Fri, 01 Feb 2019 13:36:11 +0800
+        with ESMTP id 1387363885; Fri, 01 Feb 2019 13:36:19 +0800
 Received: from MTKCAS06.mediatek.inc (172.21.101.30) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
  15.0.1395.4; Fri, 1 Feb 2019 13:36:10 +0800
 Received: from localhost.localdomain (10.17.3.153) by MTKCAS06.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 1 Feb 2019 13:36:09 +0800
+ Transport; Fri, 1 Feb 2019 13:36:10 +0800
 From:   <honghui.zhang@mediatek.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <linux-arm-kernel@lists.infradead.org>,
@@ -39,12 +40,15 @@ CC:     <rafael.j.wysocki@intel.com>, <fred@fredlawl.com>,
         <poza@codeaurora.org>, <youlin.pei@mediatek.com>,
         <jianjun.wang@mediatek.com>,
         Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: [PATCH v3 0/2] PCI: mediatek: enable whole MMIO range and enlarge the PCIe2AHB window size
-Date:   Fri, 1 Feb 2019 13:36:05 +0800
-Message-ID: <1548999367-11733-1-git-send-email-honghui.zhang@mediatek.com>
+Subject: [PATCH v3 1/2] PCI: mediatek: Enable the whole memory mapped IO range
+Date:   Fri, 1 Feb 2019 13:36:06 +0800
+Message-ID: <1548999367-11733-2-git-send-email-honghui.zhang@mediatek.com>
 X-Mailer: git-send-email 2.6.4
+In-Reply-To: <1548999367-11733-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1548999367-11733-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+X-TM-SNTS-SMTP: 18A9FA841BB559D2EFB2D7B455CE214262B6A26F60324E17095F577292C51CA82000:8
 X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -53,26 +57,71 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Two patches:
-patch 1 enable whole MMIO range which also fix the complain of scripts/coccinelle/api/resource_size.cocci
-patch 2 enlarge the PCIe2AHB window size to support fully access of 4GB DRAM from EP DMA.
+Mediatek's HW assigned a bus address range(typically start from
+0x2000_0000 to 0x2fff_ffff for both mt2712 and mt7622) for PCIe usage.
+This bus address range is called memory mapped IO range, when CPU or
+other HW access those address, PCIe RC HW should response to this
+access. Normally the RC will translate those access request to TLPs
+and send to corresponding EP side. It's like the total memory address
+resource which could be allocated by EP and RC's BARs.
 
-v3:
- - update the changlog title for patch1 and update commit message following Bjorn's suggestion
- - move the "|" into the previous line.
+Although those address range is available for allocated, but it should
+be enabled by the PCIE_AHB_TRANS_BASE register, what size will be
+enabled is determined by AHB2PCIE_SIZE bits in this register.
 
-v2:
- - Fix the checkpatch complains for patch 1.
- - update the commit message and change title of patch 1 for changelog conventions.
- - Add patch 2.
+In previous code we did not enable the full size of HW assigned address
+range, if the EP's BAR requested size is bigger than the size we enabled
+and smaller than the HW available size. The access request which target
+at these un-enabled address will be blocked by RC, and EP side will
+never get those TLPs.
 
-Honghui Zhang (2):
-  PCI: mediatek: Enable the whole memory mapped IO range
-  PCI: mediatek: Enlarge PCIe2AHB window size to support 4GB DRAM
+Previous code never run into a system error in production because even
+half of those range(128MB) is bigger enough for typical EP device's BAR
+request(4MB).
 
- drivers/pci/controller/pcie-mediatek.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+But all those HW assigned bus range should be enabled. And it's Okay to
+do that. RC will never forward a request to EP when this request is not
+suitable for EP's BAR range.
 
+Using resource_size(mem) instead of mem->end - mem->start to fix this,
+since the MMIO window size for both MT2712 and MT7622 are all
+0x1000_0000, this change will change the values of fls(size) from
+fls(0xfff_ffff) to fls(0x1000_0000) and calcalate the whole memory
+mapped IO range size.
+
+This change also eliminate the following complain generated by
+scripts/coccinelle/api/resource_size.cocci:
+
+pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
+
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/controller/pcie-mediatek.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 55e471c..c42fe5c 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+ 	struct resource *mem = &pcie->mem;
+ 	const struct mtk_pcie_soc *soc = port->pcie->soc;
+ 	u32 val;
+-	size_t size;
+ 	int err;
+ 
+ 	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+@@ -706,8 +705,8 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+ 		mtk_pcie_enable_msi(port);
+ 
+ 	/* Set AHB to PCIe translation windows */
+-	size = mem->end - mem->start;
+-	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
++	val = lower_32_bits(mem->start) |
++	      AHB2PCIE_SIZE(fls(resource_size(mem)));
+ 	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+ 
+ 	val = upper_32_bits(mem->start);
 -- 
 2.6.4
 
