@@ -2,134 +2,128 @@ Return-Path: <SRS0=jDI6=QI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7C5C282D8
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 16:59:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2492EC282DA
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 17:01:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C50E22086C
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 16:59:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 001162086C
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 17:01:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728213AbfBAQ76 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Feb 2019 11:59:58 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35440 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726761AbfBAQ76 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Feb 2019 11:59:58 -0500
+        id S1730662AbfBARBI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Feb 2019 12:01:08 -0500
+Received: from foss.arm.com ([217.140.101.70]:35550 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728770AbfBARBH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Feb 2019 12:01:07 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3331B15BE;
-        Fri,  1 Feb 2019 08:59:58 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 173C215BE;
+        Fri,  1 Feb 2019 09:01:07 -0800 (PST)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id EFCEF3F71E;
-        Fri,  1 Feb 2019 08:59:55 -0800 (PST)
-Date:   Fri, 1 Feb 2019 16:59:50 +0000
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A2BCE3F71E;
+        Fri,  1 Feb 2019 09:01:04 -0800 (PST)
+Date:   Fri, 1 Feb 2019 17:01:01 +0000
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To:     Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc:     Trent Piepho <tpiepho@impinj.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Fabio Estevam <fabio.estevam@nxp.com>,
         Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
         Leonard Crestez <leonard.crestez@nxp.com>,
         "A.s. Dong" <aisheng.dong@nxp.com>,
         Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 2/4] PCI: imx6: Mark PHY functions as i.MX6 specific
-Message-ID: <20190201165950.GA22887@e107981-ln.cambridge.arm.com>
+Subject: Re: [PATCH v6 0/4] PCIE support for i.MX8MQ
+Message-ID: <20190201170101.GB22887@e107981-ln.cambridge.arm.com>
 References: <20190124201522.8973-1-andrew.smirnov@gmail.com>
- <20190124201522.8973-3-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190124201522.8973-3-andrew.smirnov@gmail.com>
+In-Reply-To: <20190124201522.8973-1-andrew.smirnov@gmail.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jan 24, 2019 at 12:15:20PM -0800, Andrey Smirnov wrote:
-> PCIE PHY IP block on i.MX7D differs from the one used on i.MX6 family,
-> so none of the code in current implementation of imx6_setup_phy_mpll()
-> is applicable.
+On Thu, Jan 24, 2019 at 12:15:18PM -0800, Andrey Smirnov wrote:
+> Everyone:
+> 
+> This series contains changes I made in order to enable support of PCIE
+> IP block on i.MX8MQ SoCs.
+> 
+> Changes since [v5]:
+> 
+>  - Reformatted commit messages to adhere to
+>    https://lore.kernel.org/linux-pci/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com/
+> 
+> Changes since [v4]:
+> 
+>  - Collected Reviewed-by from Lucas
+> 
+>  - Replaced ((ARM || ARM64) && COMPILE_TEST) with COMPILE_TEST as per
+>    suggestion from Rob
+> 
+> Changes since [v3]:
+> 
+>  - Based on feedback from NXP, DIRECT_SPEED_CHANGE quirk was expanded
+>    to cover both i.MX7 and i.MX8MQ
+> 
+>  - Code setting device type in GPR12 moved to a standalone function
+> 
+>  - Explicit "fsl,controller-id" binding was dropped, replaced by using
+>    controller physical address to determine logical ID
+> 
+>  - Dropped Reviewed-by from Lucas for patch 4/4 due to the change
+>    above (haven't heard explicit "yea" for it from him)
+> 
+> Changes since [v2], [fixes]:
+> 
+>  - Incorporated [patch] introducing drvdata
+> 
+>  - i.MX6 PHY operation gating converted to a single patch and to use a
+>    dedicated flag instead of doing explicit variant check
+> 
+>  - Kconfig entry changed to use ARM64 && ARCH_MXC
+> 
+>  - Dropped FALLTHROUGH annotations
+> 
+> Changes since [v1]:
+> 
+>  - Driver changed to use single "fsl,controller-id" property to
+>    distinguish between two intances of PCIE IP block
+> 
+>  - All code pertaining to L1SS was dropped to simplify the patch
+> 
+>  - Documented additions to DT bindings
+> 
+> Feedback is welcome!
+> 
+> Thanks,
+> Andrey Smirnov
+> 
+> [v4] https://lore.kernel.org/linux-arm-kernel/20190104165335.13205-1-andrew.smirnov@gmail.com
+> [v3] https://lore.kernel.org/linux-arm-kernel/20181218040702.29231-1-andrew.smirnov@gmail.com
+> [patch] https://patchwork.kernel.org/patch/10712261/
+> [fixes] https://lore.kernel.org/linux-arm-kernel/20181216230916.22982-1-andrew.smirnov@gmail.com
+> [v2] https://lore.kernel.org/linux-arm-kernel/20181206073545.10967-1-andrew.smirnov@gmail.com
+> [v1] https://lore.kernel.org/linux-arm-kernel/20181117181225.10737-1-andrew.smirnov@gmail.com/
+> 
+> Andrey Smirnov (4):
+>   PCI: imx6: Introduce drvdata
+>   PCI: imx6: Mark PHY functions as i.MX6 specific
+>   PCI: imx6: Convert DIRECT_SPEED_CHANGE quirk code to use a flag
+>   PCI: imx6: Add support for i.MX8MQ
+> 
+>  .../bindings/pci/fsl,imx6q-pcie.txt           |   3 +-
+>  drivers/pci/controller/dwc/Kconfig            |   4 +-
+>  drivers/pci/controller/dwc/pci-imx6.c         | 150 +++++++++++++++---
+>  3 files changed, 133 insertions(+), 24 deletions(-)
 
-So :) ? Add a conclusive statement to the commit log.
+Can you rebase it on top of my pci/dwc branch please and repost it ?
 
+Thanks,
 Lorenzo
-
-> Tested-by: Trent Piepho <tpiepho@impinj.com>
-> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Fabio Estevam <fabio.estevam@nxp.com>
-> Cc: Chris Healy <cphealy@gmail.com>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Leonard Crestez <leonard.crestez@nxp.com>
-> Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-> Cc: Richard Zhu <hongxing.zhu@nxp.com>
-> Cc: linux-imx@nxp.com
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index efff3d5e9162..c55d93c1187d 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -41,8 +41,11 @@ enum imx6_pcie_variants {
->  	IMX7D,
->  };
->  
-> +#define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
-> +
->  struct imx6_pcie_drvdata {
->  	enum imx6_pcie_variants variant;
-> +	u32 flags;
->  };
->  
->  struct imx6_pcie {
-> @@ -256,6 +259,9 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
->  {
->  	u32 tmp;
->  
-> +	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_IMX6_PHY))
-> +		return;
-> +
->  	pcie_phy_read(imx6_pcie, PHY_RX_OVRD_IN_LO, &tmp);
->  	tmp |= (PHY_RX_OVRD_IN_LO_RX_DATA_EN |
->  		PHY_RX_OVRD_IN_LO_RX_PLL_EN);
-> @@ -573,6 +579,9 @@ static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
->  	int mult, div;
->  	u32 val;
->  
-> +	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_IMX6_PHY))
-> +		return 0;
-> +
->  	switch (phy_rate) {
->  	case 125000000:
->  		/*
-> @@ -1088,12 +1097,15 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
->  static const struct imx6_pcie_drvdata drvdata[] = {
->  	[IMX6Q] = {
->  		.variant = IMX6Q,
-> +		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
->  	},
->  	[IMX6SX] = {
->  		.variant = IMX6SX,
-> +		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
->  	},
->  	[IMX6QP] = {
->  		.variant = IMX6QP,
-> +		.flags = IMX6_PCIE_FLAG_IMX6_PHY,
->  	},
->  	[IMX7D] = {
->  		.variant = IMX7D,
-> -- 
-> 2.20.1
-> 
