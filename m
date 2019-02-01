@@ -2,90 +2,73 @@ Return-Path: <SRS0=jDI6=QI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E10CC282D8
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 05:55:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31798C282D8
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 07:25:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D70FE20857
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 05:55:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F357720B1F
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 07:25:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1549005905;
+	bh=IgHiGttKxYvvdC+g6uGXuvQ/rI4C6JUS+6XKsTY8ra0=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=pUvKZSFgwrOH5g186fztAfiRozuRA/9P4urGyvJjdNxnC1uU2HlzsrPf/HEToOW13
+	 o0MxDGgbrlx3MIL1AqwTEB7rP6//LHSH+TzwnXUXcaPglWGM5rxYkDpX3NhtnG1Wmm
+	 WRdcCGuYIaWseOo2nprrO3SijPxciQ+cpgMqIF6k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725837AbfBAFzh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Feb 2019 00:55:37 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:56924 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725826AbfBAFzg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Feb 2019 00:55:36 -0500
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 144DD46D312C8A39A8EA;
-        Fri,  1 Feb 2019 13:55:34 +0800 (CST)
-Received: from [127.0.0.1] (10.177.223.23) by DGGEMS405-HUB.china.huawei.com
- (10.3.19.205) with Microsoft SMTP Server id 14.3.408.0; Fri, 1 Feb 2019
- 13:55:27 +0800
-Subject: Re: [RFC PATCH] USB: PCI: set 32bit DMA mask for PCI based USB
- controllers
-To:     John Garry <john.garry@huawei.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-CC:     <linux-usb@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        <anthony.jebson@huawei.com>, Hanjun Guo <hanjun.guo@linaro.org>
-References: <1548831714-3706-1-git-send-email-guohanjun@huawei.com>
- <f9a8ab1f-d560-0fb6-dfc9-61be3c1a2d82@huawei.com>
-From:   Hanjun Guo <guohanjun@huawei.com>
-Message-ID: <ce031291-3050-3817-0ed9-9d83dad0cc55@huawei.com>
-Date:   Fri, 1 Feb 2019 13:55:00 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
- Thunderbird/52.5.0
-MIME-Version: 1.0
-In-Reply-To: <f9a8ab1f-d560-0fb6-dfc9-61be3c1a2d82@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.177.223.23]
-X-CFilter-Loop: Reflected
+        id S1726557AbfBAHZE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Feb 2019 02:25:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53404 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725957AbfBAHZE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Feb 2019 02:25:04 -0500
+Subject: Re: [GIT PULL] PCI fixes for v5.0
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1549005903;
+        bh=IgHiGttKxYvvdC+g6uGXuvQ/rI4C6JUS+6XKsTY8ra0=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=UOLroitmYXcTOZv+TViWcDCRofCcAmNiLhJfMFhJ6k/DJb4oAxSX4oVBnT6m0gxvO
+         bSmRvKV4Td/QbVG6otdm08NTbebEP6kPP9QMWYP/K+LdoQNj6lKPr144xLPfS/+314
+         bjO7wOJOSf98NXDfodLHwBW+tTB3Maw0ZuQEDAho=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20190131220332.GQ229773@google.com>
+References: <20190131220332.GQ229773@google.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20190131220332.GQ229773@google.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+ tags/pci-v5.0-fixes-3
+X-PR-Tracked-Commit-Id: f14bcc0add3abecceca1a3fe538c4ec9566893f3
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 44e56f325b7d63e8a53008956ce7b28e4272a599
+Message-Id: <154900590354.3378.10205924401343881674.pr-tracker-bot@kernel.org>
+Date:   Fri, 01 Feb 2019 07:25:03 +0000
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Baruch Siach <baruch@tkos.co.il>,
+        Koen Vandeputte <koen.vandeputte@ncentric.com>,
+        Krzysztof Halasa <khalasa@piap.pl>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Leonard Crestez <leonard.crestez@nxp.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi John,
+The pull request you sent on Thu, 31 Jan 2019 16:03:32 -0600:
 
-On 2019/1/31 17:54, John Garry wrote:
-> On 30/01/2019 07:01, Hanjun Guo wrote:
->> From: Hanjun Guo <hanjun.guo@linaro.org>
-[...]
->>
->>  drivers/usb/core/hcd-pci.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
->> index 0343246..a9c33e6 100644
->> --- a/drivers/usb/core/hcd-pci.c
->> +++ b/drivers/usb/core/hcd-pci.c
->> @@ -188,6 +188,10 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
->>      if (pci_enable_device(dev) < 0)
->>          return -ENODEV;
->>
->> +    retval = dma_coerce_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32));
->> +    if (retval)
->> +        return retval;
-> 
-> Hi Hanjun,
-> 
-> You're missing tidy-up upon failure.
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.0-fixes-3
 
-Good catch, needs to disable pci for failure, I will send
-a updated version to address the comments from you and Christoph.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/44e56f325b7d63e8a53008956ce7b28e4272a599
 
-Thanks
-Hanjun
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
