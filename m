@@ -1,90 +1,172 @@
-Return-Path: <SRS0=gmVn=QH=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=jDI6=QI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C2BC169C4
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 23:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6909C169C4
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 02:47:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F82020B1F
-	for <linux-pci@archiver.kernel.org>; Thu, 31 Jan 2019 23:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8246620863
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 02:47:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728330AbfAaXwQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 31 Jan 2019 18:52:16 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:52340 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726132AbfAaXwQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Jan 2019 18:52:16 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1gpM7v-0005lf-5k; Thu, 31 Jan 2019 16:52:12 -0700
-To:     Dave Jiang <dave.jiang@intel.com>, linux-kernel@vger.kernel.org,
-        linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kselftest@vger.kernel.org,
-        Jon Mason <jdmason@kudzu.us>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Joerg Roedel <joro@8bytes.org>
-Cc:     Allen Hubbe <allenbh@gmail.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Eric Pilmore <epilmore@gigaio.com>
-References: <20190131185656.17972-1-logang@deltatee.com>
- <345197a6-89e6-c0de-5f7b-a646b5f396c9@intel.com>
- <bafe9db4-6d5b-0453-d7e7-e49e9293dd01@deltatee.com>
- <ea7b7c3c-8ed5-51ec-022a-7d28a5afce82@intel.com>
- <29f7e3fe-5354-6156-1243-7248ffb2249f@deltatee.com>
- <7e3eed52-8e3a-c472-392a-5dc5689290ae@intel.com>
- <5f8b1616-a005-7658-978f-16466fcc3886@deltatee.com>
- <d46ce09c-d493-3d63-a854-b68a09345a75@intel.com>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <59a4f188-0d37-bf40-baf6-80b4fa46df52@deltatee.com>
-Date:   Thu, 31 Jan 2019 16:52:10 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
-MIME-Version: 1.0
-In-Reply-To: <d46ce09c-d493-3d63-a854-b68a09345a75@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
+        id S1728201AbfBACr5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 31 Jan 2019 21:47:57 -0500
+Received: from Mailgw01.mediatek.com ([1.203.163.78]:48273 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728043AbfBACr4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Jan 2019 21:47:56 -0500
+X-UUID: 7a2024893b634559a250203f2d96e0e2-20190201
+X-UUID: 7a2024893b634559a250203f2d96e0e2-20190201
+Received: from mtkcas36.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
+        (envelope-from <honghui.zhang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 1645939208; Fri, 01 Feb 2019 10:47:48 +0800
+Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS31DR.mediatek.inc
+ (172.27.6.102) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 1 Feb
+ 2019 10:47:46 +0800
+Received: from [10.17.3.153] (10.17.3.153) by MTKCAS36.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Fri, 1 Feb 2019 10:47:46 +0800
+Message-ID: <1548989266.4980.39.camel@mhfsdcap03>
+Subject: Re: [PATCH v2 1/2] PCI: mediatek: Use resource_size function on
+ resource object
+From:   Honghui Zhang <honghui.zhang@mediatek.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <lorenzo.pieralisi@arm.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
+        <youlin.pei@mediatek.com>, <poza@codeaurora.org>,
+        <fred@fredlawl.com>, <rafael.j.wysocki@intel.com>,
+        <jianjun.wang@mediatek.com>
+Date:   Fri, 1 Feb 2019 10:47:46 +0800
+In-Reply-To: <20190131213647.GP229773@google.com>
+References: <1548921713-5355-1-git-send-email-honghui.zhang@mediatek.com>
+         <1548921713-5355-2-git-send-email-honghui.zhang@mediatek.com>
+         <20190131213647.GP229773@google.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: epilmore@gigaio.com, fancer.lancer@gmail.com, allenbh@gmail.com, joro@8bytes.org, bhelgaas@google.com, jdmason@kudzu.us, linux-kselftest@vger.kernel.org, iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org, linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org, dave.jiang@intel.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH 0/9] Support using MSI interrupts in ntb_transport
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+MIME-Version: 1.0
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 2019-01-31 4:48 p.m., Dave Jiang wrote:
+On Thu, 2019-01-31 at 15:36 -0600, Bjorn Helgaas wrote:
+> On Thu, Jan 31, 2019 at 04:01:52PM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > scripts/coccinelle/api/resource_size.cocci complain about the
+> > following warning:
+> > 
+> > pcie-mediatek.c:720:13-16: WARNING: Suspicious code. resource_size is maybe missing with mem
+> > 
+> > Use resource_size(mem) instead of mem->end - mem->start to eliminate the
+> > complain. Since the MMIO window size for both MT2712 and MT7622 are all
+> > 0x1000_0000, this change also fix the AHB2PCIe window size smaller than
+> > HW MMIO window size issue by change the values of fls(size) from
+> > fls(0xfff_ffff) to fls(0x1000_0000).
 > 
-> On 1/31/2019 4:41 PM, Logan Gunthorpe wrote:
->>
->> On 2019-01-31 3:46 p.m., Dave Jiang wrote:
->>> I believe irqbalance writes to the file /proc/irq/N/smp_affinity. So
->>> maybe take a look at the code that starts from there and see if it would
->>> have any impact on your stuff.
->> Ok, well on my system I can write to the smp_affinity all day and the
->> MSI interrupts still work fine.
+> Good, I'm glad this actually fixes a bug.  The warning was actually
+> useful!
 > 
-> Maybe your code is ok then. If the stats show up in /proc/interrupts 
-> then you can see it moving to different cores.
+> Since that's the case, the *bug* is the important thing (not the
+> warning), and the subject line should be about the bug fix.  The fact
+> that it also happens to remove a warning is really just incidental.
+> 
+> You say "the AHB2PCIe window size smaller than HW MMIO window size
+> issue" as though it should be familiar to us.  But it's not :)
+> 
 
-Yes, I did check that the stats change CPU in proc interrupts.
+Oh, My bad.
 
-> Yeah I'm not sure what to do about it either as I'm not super familiar 
-> with that area either. Just making note of what I encountered. And you 
-> are right, the updated info has to go over NTB for the other side to 
-> write to the updated place. So there's a lot of latency involved.
+The HW design assigned a bus address range(typically start from
+0x2000_0000 to 0x2fff_ffff for both mt2712 and mt7622) for PCIe usage.
+This means, when CPU or other HW access address in this range, PCIe RC
+HW should response to this access. Normally it will translate those
+access request to TLPs and send to EP side. Tt's like the total memory
+resource which could be allocated by EP's BAR and RC's itself BAR.
 
-Ok, well I'll implement the callback anyway for v2. Better safe than
-sorry. We can operate on the assumption that someone thought of the race
-condition and if we ever see reports of lost interrupts we'll know where
-to look.
+Although those address range is available for allocated, but it should
+be enabled by this PCIE_AHB_TRANS_BASE register, what size should be
+enabled is determined by AHB2PCIE_SIZE bits in this register.
 
-Logan
+In previous code we did not enable the full size of HW assigned address
+range, if the EP's BAR requested size is bigger than the size we enabled
+and smaller than the HW available size. The access request from CPU
+which address is bigger than the address we enabled but smaller that HW
+available address, then RC will block those request and those request
+will never get to EP side by TLPs.
+
+Previous code never run into a system error in production because even
+half of those range(128MB) is bigger enough for typical EP device's BAR
+request(4MB).
+
+But all those HW assigned bus range should be enabled. And it's Okay to
+do that. RC will never forward a request to EP when this request is not
+suitable for EP's BAR range.
+
+
+> So the changelog needs to start by explaining what the AHB2PCIe window
+> size issue is, mention what user-visible problem that causes, then
+> explain how you're fixing it by using resource_size().
+> 
+> Then you can mention that this also incidentally removes a coccinelle
+> warning.
+> 
+
+Okay, thanks for your advise.
+
+> Bjorn
+> 
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > ---
+> >  drivers/pci/controller/pcie-mediatek.c | 5 ++---
+> >  1 file changed, 2 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index 55e471c..01126b8 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -654,7 +654,6 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+> >  	struct resource *mem = &pcie->mem;
+> >  	const struct mtk_pcie_soc *soc = port->pcie->soc;
+> >  	u32 val;
+> > -	size_t size;
+> >  	int err;
+> >  
+> >  	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+> > @@ -706,8 +705,8 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+> >  		mtk_pcie_enable_msi(port);
+> >  
+> >  	/* Set AHB to PCIe translation windows */
+> > -	size = mem->end - mem->start;
+> > -	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
+> > +	val = lower_32_bits(mem->start)
+> > +	      | AHB2PCIE_SIZE(fls(resource_size(mem)));
+> 
+> Nit: I think it's more typical to put the "|" on the first line.
+
+Okay, will update this in next version.
+
+Thanks for your comments.
+
+> 
+> >  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+> >  
+> >  	val = upper_32_bits(mem->start);
+> > -- 
+> > 2.6.4
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+
