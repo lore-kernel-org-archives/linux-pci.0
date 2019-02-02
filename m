@@ -1,227 +1,164 @@
-Return-Path: <SRS0=jDI6=QI=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=cvZd=QJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7598FC282D8
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 23:32:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAA24C282D8
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:15:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3036121872
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Feb 2019 23:32:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549063922;
-	bh=eZeAGi2kBx3NA56dbb2fOKTlZZI44FGHzrEj9jIgcC4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ztyVvHHoiQmvNzNytdOakY9vFPduSclo39ffXl4x/1gWK7cJnoUAFum5p7uZA0eM5
-	 1sQ7t70/3zzJn1L1rDLZEt/kZSK/izR000NrU8lFgAnsyr6PYqfGho5vkyHQasjb/0
-	 57soPWLHufUAsBPFZvYlAPVdXcENB3O5wfWumhp8=
+	by mail.kernel.org (Postfix) with ESMTP id 7840E20863
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:15:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RkCpzawB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726121AbfBAXcB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Feb 2019 18:32:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58130 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725803AbfBAXcB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Feb 2019 18:32:01 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A23D021872;
-        Fri,  1 Feb 2019 23:31:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549063919;
-        bh=eZeAGi2kBx3NA56dbb2fOKTlZZI44FGHzrEj9jIgcC4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BcpDBfpFLkrkmxTu7k50xvSSdbbcOZjHmb/Ur9JB4VkdIySXn8C7HIn74Wf+QXiKY
-         p9RsdVvG89ViK9g7R1WRxprIAjsBdZad+iP2jQasMVhy61Be2Q9BIJUEt/EjhM356u
-         f8U+9cKteMK2lGDnZB3VU/8FZSGJrEiOUZtM0BXE=
-Date:   Fri, 1 Feb 2019 17:31:56 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Vinod Koul <vkoul@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Mark Brown <broonie@kernel.org>,
-        Felipe Balbi <balbi@kernel.org>, linux-kernel@vger.kernel.org,
+        id S1726256AbfBBAPg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Feb 2019 19:15:36 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:44076 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725915AbfBBAPg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2019 19:15:36 -0500
+Received: by mail-pg1-f194.google.com with SMTP id t13so3672215pgr.11;
+        Fri, 01 Feb 2019 16:15:35 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jEfHVg5adgM29Wvz/BKP6/4kELk5ivTcvMeeOgWs9Bo=;
+        b=RkCpzawBmG/DUG20vkHE8nM+/HZVsIgcbpJyA134UvLrxUKAeotdXxP/iHwhWMRqf4
+         AYkRiZkuGV/+zU2tcznCbc59WslEiNG6EiZmbGibznA8UipVmyJ3xpQFQ6E/wtfTh2wQ
+         ywyxQ9t2CNl2X7nQMG+Hf+Msb70CD0mgzN3QnC7eCxktCYk0S8yRvYLAdAiv/yPfgj7T
+         IlLKgFQZx5Typ45zO+71rCWwLA89wNy1MsycW/+dWac3Bf1iq3nqoZAz/72MdCC0Ycia
+         k9pAXJ1cUgfjQWaVUlMlzi9nQX/3mpJ3mvnRYWGOnKGL9rx4WkDl6pTDXFflgefs1l0W
+         LAQA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jEfHVg5adgM29Wvz/BKP6/4kELk5ivTcvMeeOgWs9Bo=;
+        b=Bd7dhwoUUNhZElt1hsI/7VrpVNpLkRu2u1vytz5Gf3bcqktIcp1ZsmRTHW6N1xZfL+
+         ibD/B/3uAZgpEwuX8amYli9aBndFRxcKdSFVUTv1KSqKEuo9O9MdcPD1c73JxxgEfQDc
+         JVkozHoD7iUefNI8ZPC+ZyWPc9f8lRTbOq6cvqrPnGLEDNu/ZlhWK39WPODzjL36gOiK
+         ISMaLvYB51lVUFT6kz96/PijNCQUhTQjx0NpMXR+hvIm5vIAWHvIDkvgq8TsloW7PSfA
+         ZPZcwjrqv0O8P0TueG3Kcdh8KjMYU3cH//UczWJu1CIsM262dTYYp/bf/b35FY2DhukF
+         PkSg==
+X-Gm-Message-State: AJcUukcHC1bvBVn0yGAE6Z/Apiy6mWiP+9LM+vk5ZXD/OhgzS1Dwwd9f
+        tGf1aVVK+v5zM+osTmBJgTo=
+X-Google-Smtp-Source: ALg8bN7CwYfzPenhtI9KfgSMrD9gYvxUtOH9Knxhz3A5up69TRXJk2mfCuNzwvmmXgNtOi20Cj16jQ==
+X-Received: by 2002:a62:32c4:: with SMTP id y187mr43076304pfy.195.1549066534634;
+        Fri, 01 Feb 2019 16:15:34 -0800 (PST)
+Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
+        by smtp.gmail.com with ESMTPSA id w6sm28374545pga.72.2019.02.01.16.15.32
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 01 Feb 2019 16:15:33 -0800 (PST)
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1] PCI: Move Rohm vendor ID to generic list
-Message-ID: <20190201233156.GW229773@google.com>
-References: <20181107195856.43223-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v7 0/4] PCIE support for i.MX8MQ
+Date:   Fri,  1 Feb 2019 16:15:19 -0800
+Message-Id: <20190202001523.12517-1-andrew.smirnov@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20181107195856.43223-1-andriy.shevchenko@linux.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 07, 2018 at 09:58:56PM +0200, Andy Shevchenko wrote:
-> Move the Rohm vendor ID to pci_ids.h from dozen of drivers.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Everyone:
 
-I applied this to pci/misc for v5.1 with acks from Mark and Linus W.
-I did change "dozen" to "several" just for truth-in-advertising :)
+This series contains changes I made in order to enable support of PCIE
+IP block on i.MX8MQ SoCs.
 
-> ---
-> 
-> I believe the best chance to get it merged and be less intrusive to ongoing
-> work is through PCI subsystem as a _fix_ for v4.20.
-> 
->  drivers/dma/pch_dma.c                                | 1 -
->  drivers/gpio/gpio-ml-ioh.c                           | 2 --
->  drivers/gpio/gpio-pch.c                              | 1 -
->  drivers/i2c/busses/i2c-eg20t.c                       | 1 -
->  drivers/misc/pch_phub.c                              | 1 -
->  drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c | 7 ++-----
->  drivers/spi/spi-topcliff-pch.c                       | 1 -
->  drivers/tty/serial/pch_uart.c                        | 2 --
->  drivers/usb/gadget/udc/pch_udc.c                     | 1 -
->  include/linux/pci_ids.h                              | 2 ++
->  10 files changed, 4 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/dma/pch_dma.c b/drivers/dma/pch_dma.c
-> index afd8f27bda96..538b6e0e17bb 100644
-> --- a/drivers/dma/pch_dma.c
-> +++ b/drivers/dma/pch_dma.c
-> @@ -972,7 +972,6 @@ static void pch_dma_remove(struct pci_dev *pdev)
->  }
->  
->  /* PCI Device ID of DMA device */
-> -#define PCI_VENDOR_ID_ROHM             0x10DB
->  #define PCI_DEVICE_ID_EG20T_PCH_DMA_8CH        0x8810
->  #define PCI_DEVICE_ID_EG20T_PCH_DMA_4CH        0x8815
->  #define PCI_DEVICE_ID_ML7213_DMA1_8CH	0x8026
-> diff --git a/drivers/gpio/gpio-ml-ioh.c b/drivers/gpio/gpio-ml-ioh.c
-> index 51c7d1b84c2e..0c076dce9e17 100644
-> --- a/drivers/gpio/gpio-ml-ioh.c
-> +++ b/drivers/gpio/gpio-ml-ioh.c
-> @@ -31,8 +31,6 @@
->  
->  #define IOH_IRQ_BASE		0
->  
-> -#define PCI_VENDOR_ID_ROHM             0x10DB
-> -
->  struct ioh_reg_comn {
->  	u32	ien;
->  	u32	istatus;
-> diff --git a/drivers/gpio/gpio-pch.c b/drivers/gpio/gpio-pch.c
-> index ffce0ab912ed..8c7f3d20e30e 100644
-> --- a/drivers/gpio/gpio-pch.c
-> +++ b/drivers/gpio/gpio-pch.c
-> @@ -524,7 +524,6 @@ static int pch_gpio_resume(struct pci_dev *pdev)
->  #define pch_gpio_resume NULL
->  #endif
->  
-> -#define PCI_VENDOR_ID_ROHM             0x10DB
->  static const struct pci_device_id pch_gpio_pcidev_id[] = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, 0x8803) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ROHM, 0x8014) },
-> diff --git a/drivers/i2c/busses/i2c-eg20t.c b/drivers/i2c/busses/i2c-eg20t.c
-> index 835d54ac2971..231675b10376 100644
-> --- a/drivers/i2c/busses/i2c-eg20t.c
-> +++ b/drivers/i2c/busses/i2c-eg20t.c
-> @@ -177,7 +177,6 @@ static wait_queue_head_t pch_event;
->  static DEFINE_MUTEX(pch_mutex);
->  
->  /* Definition for ML7213 by LAPIS Semiconductor */
-> -#define PCI_VENDOR_ID_ROHM		0x10DB
->  #define PCI_DEVICE_ID_ML7213_I2C	0x802D
->  #define PCI_DEVICE_ID_ML7223_I2C	0x8010
->  #define PCI_DEVICE_ID_ML7831_I2C	0x8817
-> diff --git a/drivers/misc/pch_phub.c b/drivers/misc/pch_phub.c
-> index 540845651b8c..309703e9c42e 100644
-> --- a/drivers/misc/pch_phub.c
-> +++ b/drivers/misc/pch_phub.c
-> @@ -64,7 +64,6 @@
->  #define CLKCFG_UARTCLKSEL			(1 << 18)
->  
->  /* Macros for ML7213 */
-> -#define PCI_VENDOR_ID_ROHM			0x10db
->  #define PCI_DEVICE_ID_ROHM_ML7213_PHUB		0x801A
->  
->  /* Macros for ML7223 */
-> diff --git a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-> index 43c0c10dfeb7..3a4225837049 100644
-> --- a/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-> +++ b/drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c
-> @@ -27,7 +27,6 @@
->  #define DRV_VERSION     "1.01"
->  const char pch_driver_version[] = DRV_VERSION;
->  
-> -#define PCI_DEVICE_ID_INTEL_IOH1_GBE	0x8802		/* Pci device ID */
->  #define PCH_GBE_MAR_ENTRIES		16
->  #define PCH_GBE_SHORT_PKT		64
->  #define DSC_INIT16			0xC000
-> @@ -37,11 +36,9 @@ const char pch_driver_version[] = DRV_VERSION;
->  #define PCH_GBE_PCI_BAR			1
->  #define PCH_GBE_RESERVE_MEMORY		0x200000	/* 2MB */
->  
-> -/* Macros for ML7223 */
-> -#define PCI_VENDOR_ID_ROHM			0x10db
-> -#define PCI_DEVICE_ID_ROHM_ML7223_GBE		0x8013
-> +#define PCI_DEVICE_ID_INTEL_IOH1_GBE		0x8802
->  
-> -/* Macros for ML7831 */
-> +#define PCI_DEVICE_ID_ROHM_ML7223_GBE		0x8013
->  #define PCI_DEVICE_ID_ROHM_ML7831_GBE		0x8802
->  
->  #define PCH_GBE_TX_WEIGHT         64
-> diff --git a/drivers/spi/spi-topcliff-pch.c b/drivers/spi/spi-topcliff-pch.c
-> index 97d137591b18..d794180e83dc 100644
-> --- a/drivers/spi/spi-topcliff-pch.c
-> +++ b/drivers/spi/spi-topcliff-pch.c
-> @@ -92,7 +92,6 @@
->  #define PCH_MAX_SPBR		1023
->  
->  /* Definition for ML7213/ML7223/ML7831 by LAPIS Semiconductor */
-> -#define PCI_VENDOR_ID_ROHM		0x10DB
->  #define PCI_DEVICE_ID_ML7213_SPI	0x802c
->  #define PCI_DEVICE_ID_ML7223_SPI	0x800F
->  #define PCI_DEVICE_ID_ML7831_SPI	0x8816
-> diff --git a/drivers/tty/serial/pch_uart.c b/drivers/tty/serial/pch_uart.c
-> index cb85002a10d8..d04108e7503a 100644
-> --- a/drivers/tty/serial/pch_uart.c
-> +++ b/drivers/tty/serial/pch_uart.c
-> @@ -192,8 +192,6 @@ enum {
->  #define PCH_UART_HAL_LOOP		(PCH_UART_MCR_LOOP)
->  #define PCH_UART_HAL_AFE		(PCH_UART_MCR_AFE)
->  
-> -#define PCI_VENDOR_ID_ROHM		0x10DB
-> -
->  #define BOTH_EMPTY (UART_LSR_TEMT | UART_LSR_THRE)
->  
->  #define DEFAULT_UARTCLK   1843200 /*   1.8432 MHz */
-> diff --git a/drivers/usb/gadget/udc/pch_udc.c b/drivers/usb/gadget/udc/pch_udc.c
-> index afaea11ec771..5b6f2b9eaa5f 100644
-> --- a/drivers/usb/gadget/udc/pch_udc.c
-> +++ b/drivers/usb/gadget/udc/pch_udc.c
-> @@ -368,7 +368,6 @@ struct pch_udc_dev {
->  #define PCI_DEVICE_ID_INTEL_QUARK_X1000_UDC	0x0939
->  #define PCI_DEVICE_ID_INTEL_EG20T_UDC		0x8808
->  
-> -#define PCI_VENDOR_ID_ROHM		0x10DB
->  #define PCI_DEVICE_ID_ML7213_IOH_UDC	0x801D
->  #define PCI_DEVICE_ID_ML7831_IOH_UDC	0x8808
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 69f0abe1ba1a..7fc8d79260e6 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -1137,6 +1137,8 @@
->  #define PCI_VENDOR_ID_TCONRAD		0x10da
->  #define PCI_DEVICE_ID_TCONRAD_TOKENRING	0x0508
->  
-> +#define PCI_VENDOR_ID_ROHM		0x10db
-> +
->  #define PCI_VENDOR_ID_NVIDIA			0x10de
->  #define PCI_DEVICE_ID_NVIDIA_TNT		0x0020
->  #define PCI_DEVICE_ID_NVIDIA_TNT2		0x0028
-> -- 
-> 2.19.1
-> 
+Changes since [v6]:
+
+ - Patches rebased on Lorenzo's pci/dwc branch
+
+ - Reworded commit message of "PCI: imx6: Mark PHY functions as i.MX6
+   specific"
+
+Changes since [v5]:
+
+ - Reformatted commit messages to adhere to
+   https://lore.kernel.org/linux-pci/20171026223701.GA25649@bhelgaas-glaptop.roam.corp.google.com/
+
+Changes since [v4]:
+
+ - Collected Reviewed-by from Lucas
+
+ - Replaced ((ARM || ARM64) && COMPILE_TEST) with COMPILE_TEST as per
+   suggestion from Rob
+
+Changes since [v3]:
+
+ - Based on feedback from NXP, DIRECT_SPEED_CHANGE quirk was expanded
+   to cover both i.MX7 and i.MX8MQ
+
+ - Code setting device type in GPR12 moved to a standalone function
+
+ - Explicit "fsl,controller-id" binding was dropped, replaced by using
+   controller physical address to determine logical ID
+
+ - Dropped Reviewed-by from Lucas for patch 4/4 due to the change
+   above (haven't heard explicit "yea" for it from him)
+
+Changes since [v2], [fixes]:
+
+ - Incorporated [patch] introducing drvdata
+
+ - i.MX6 PHY operation gating converted to a single patch and to use a
+   dedicated flag instead of doing explicit variant check
+
+ - Kconfig entry changed to use ARM64 && ARCH_MXC
+
+ - Dropped FALLTHROUGH annotations
+
+Changes since [v1]:
+
+ - Driver changed to use single "fsl,controller-id" property to
+   distinguish between two intances of PCIE IP block
+
+ - All code pertaining to L1SS was dropped to simplify the patch
+
+ - Documented additions to DT bindings
+
+Feedback is welcome!
+
+Thanks,
+Andrey Smirnov
+
+[v6] https://lore.kernel.org/linux-arm-kernel/https://lore.kernel.org/linux-arm-kernel/20190124201522.8973-1-andrew.smirnov@gmail.com
+[v5] https://lore.kernel.org/linux-arm-kernel/20190112215601.9535-1-andrew.smirnov@gmail.com
+[v4] https://lore.kernel.org/linux-arm-kernel/20190104165335.13205-1-andrew.smirnov@gmail.com
+[v3] https://lore.kernel.org/linux-arm-kernel/20181218040702.29231-1-andrew.smirnov@gmail.com
+[patch] https://patchwork.kernel.org/patch/10712261/
+[fixes] https://lore.kernel.org/linux-arm-kernel/20181216230916.22982-1-andrew.smirnov@gmail.com
+[v2] https://lore.kernel.org/linux-arm-kernel/20181206073545.10967-1-andrew.smirnov@gmail.com
+[v1] https://lore.kernel.org/linux-arm-kernel/20181117181225.10737-1-andrew.smirnov@gmail.com/
+
+Andrey Smirnov (4):
+  PCI: imx6: Introduce drvdata
+  PCI: imx6: Mark PHY functions as i.MX6 specific
+  PCI: imx6: Convert DIRECT_SPEED_CHANGE quirk code to use a flag
+  PCI: imx6: Add support for i.MX8MQ
+
+ .../bindings/pci/fsl,imx6q-pcie.txt           |   3 +-
+ drivers/pci/controller/dwc/Kconfig            |   4 +-
+ drivers/pci/controller/dwc/pci-imx6.c         | 150 +++++++++++++++---
+ 3 files changed, 133 insertions(+), 24 deletions(-)
+
+-- 
+2.20.1
+
