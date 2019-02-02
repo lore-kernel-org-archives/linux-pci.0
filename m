@@ -2,280 +2,158 @@ Return-Path: <SRS0=cvZd=QJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EDF2C282DA
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:16:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B68C282D8
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:42:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 32CF321872
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:16:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U23DCKQ0"
+	by mail.kernel.org (Postfix) with ESMTP id 98A84218A6
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:42:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1549068123;
+	bh=IEGmkpfOHwCAHpgd7oEatYsV85QKz4VuQ+LXrU2UsvA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=kyuzag8wRnUztDDZTtqM1QM52sHoWB7B0Wa0aldn2wAvjQz1FpAR+7v2aFTztmLp5
+	 NQI6OPok2fwtTrsr81Fe7jr2QHldY2m+Pr8QtoElnD0tN8UhrZyH/eGwPp2k3fxQIF
+	 KW05b3xnJDBcTBAtwFRSbc237hSl10rDOzRGSSjs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727161AbfBBAPi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Feb 2019 19:15:38 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44078 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727034AbfBBAPh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Feb 2019 19:15:37 -0500
-Received: by mail-pg1-f193.google.com with SMTP id t13so3672244pgr.11;
-        Fri, 01 Feb 2019 16:15:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=nSRUQnVI9WIETg7K/wATyf0nSEPKuobaySZ5tG4KrzQ=;
-        b=U23DCKQ0ly4TuQ9pT7CE74m/k1GlfzX/bW2MG9LipuZzG2TzI4aOle8JtYbo52EwSc
-         zN6A+S2+RnDK2eY85VrRDLrAc+4lbhnYQOZUy888dV+XPNj3WKZktcMKR0UQdSd61TI+
-         L96uhArX//LsnSlj19wl9+p5g6lQN+c10R9MuBqVpF9GdwToLdDumSk9xxd/RO57tdke
-         RsyXWbQSKGdRcL09jba3MMcql5vrm4TR0ThunAPdzDQs8n6+1mhILxNdqExc3b+mNiKd
-         A/aRbqHJqLxfHmP3AvsvLcYspIzWNFoGY/6dMsOM7o98SoNMQdMJpAgLN8whAwY8+8wU
-         XJjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=nSRUQnVI9WIETg7K/wATyf0nSEPKuobaySZ5tG4KrzQ=;
-        b=kpx6J2xxmwKIkeRCgoNpiQkhoTOxJQPYWPd4zJKZSQsld/ujeiQ+jMIT++kta7ia+/
-         jkW3JAwF2gp28WSvJnStg/QnWYc4IYipBnGoIZeqURmU44zHZJn66ls4Z7g8lQv+Eglp
-         FigD0884FwxxBgo5W5BNiphQs8+jjBIX9rqcMtWp/G7EDb/MIE6fuMnKVpVF1rhltTOG
-         9AdA6Uzu2GdHTE7I/OD846Eo92TIdIZNYWMg4AV/nkfUUbiIJk3UbwuSqmRS5KnbLHLI
-         SxyaM81im6zdSCFq1UQMZqANalEPry5937yRDcfsPohGSOTU8Aazdad0RMqpsIf7F/g4
-         L/Qw==
-X-Gm-Message-State: AHQUAuYT8DHQ+btniARt1GOjzIbbKYxoJEfUUptF+sPfOtzKDubJb7iR
-        K1zVAGLpOjo20Lkc6/9AaUM=
-X-Google-Smtp-Source: AHgI3IayhMP0Hp5oBha9Xf8gbjLnQ0tWuPWUL7D9LWxbpKSLeGUD7rjJxNMyzkDW7v+Ba6NRm4vWIA==
-X-Received: by 2002:a63:ee4c:: with SMTP id n12mr4282607pgk.21.1549066536384;
-        Fri, 01 Feb 2019 16:15:36 -0800 (PST)
-Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id w6sm28374545pga.72.2019.02.01.16.15.34
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 01 Feb 2019 16:15:35 -0800 (PST)
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Stefan Agner <stefan@agner.ch>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v7 1/4] PCI: imx6: Introduce drvdata
-Date:   Fri,  1 Feb 2019 16:15:20 -0800
-Message-Id: <20190202001523.12517-2-andrew.smirnov@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190202001523.12517-1-andrew.smirnov@gmail.com>
-References: <20190202001523.12517-1-andrew.smirnov@gmail.com>
+        id S1726740AbfBBAmC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Feb 2019 19:42:02 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60506 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726190AbfBBAmC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Feb 2019 19:42:02 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4B8E02148D;
+        Sat,  2 Feb 2019 00:42:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1549068121;
+        bh=IEGmkpfOHwCAHpgd7oEatYsV85QKz4VuQ+LXrU2UsvA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=P5syl6UVrESXt4aQM3EOxg7vyPVeOmrKsk3WssYIq9O8cbZqkGlyDYBT1ML/54uTZ
+         lAuFe7flTUhrj7my34VDDoHM/pwkvUYc3nFtRsBkNQAQf+agIv2TfrOKm5zoIUgOJ9
+         g8Tu/Q3/vDYrhhbP15XBf++bW4vVOvwp6htc8b1I=
+Date:   Fri, 1 Feb 2019 18:41:59 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>,
+        Jon Masters <jcm@redhat.com>,
+        Yijing Wang <wangyijing@huawei.com>,
+        Christopher Covington <cov@codeaurora.org>,
+        Taku Izumi <izumi.taku@jp.fujitsu.com>,
+        Oza Pawandeep <poza@codeaurora.org>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH] PCI: Enable SERR# forwarding for Type-1 PCI devices
+Message-ID: <20190202004159.GX229773@google.com>
+References: <1542206821-24503-1-git-send-email-bharat.kumar.gogada@xilinx.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1542206821-24503-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Introduce driver data struct. This will simplify handling of device
-specific differences.
+[+cc others who have commented or been copied on this ancient issue]
 
-Signed-off-by: Stefan Agner <stefan@agner.ch>
-[andrew.smirnov@gmail.com reformatted drvdata, to simplify future diffs]
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Chris Healy <cphealy@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-imx@nxp.com
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/controller/dwc/pci-imx6.c | 56 ++++++++++++++++++---------
- 1 file changed, 37 insertions(+), 19 deletions(-)
+On Wed, Nov 14, 2018 at 08:17:01PM +0530, Bharat Kumar Gogada wrote:
+> As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages
+> will be forwarded from the secondary interface to the primary interface,
+> if the SERR# Enable bit in the Bridge Control register is set.
+> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
+> ACPI flow.
+> This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 52e47dac028f..1e940ba7e4c4 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -41,6 +41,10 @@ enum imx6_pcie_variants {
- 	IMX7D,
- };
- 
-+struct imx6_pcie_drvdata {
-+	enum imx6_pcie_variants variant;
-+};
-+
- struct imx6_pcie {
- 	struct dw_pcie		*pci;
- 	int			reset_gpio;
-@@ -53,7 +57,6 @@ struct imx6_pcie {
- 	struct reset_control	*pciephy_reset;
- 	struct reset_control	*apps_reset;
- 	struct reset_control	*turnoff_reset;
--	enum imx6_pcie_variants variant;
- 	u32			tx_deemph_gen1;
- 	u32			tx_deemph_gen2_3p5db;
- 	u32			tx_deemph_gen2_6db;
-@@ -66,6 +69,7 @@ struct imx6_pcie {
- 	struct device		*pd_pcie;
- 	/* power domain for pcie phy */
- 	struct device		*pd_pcie_phy;
-+	const struct imx6_pcie_drvdata *drvdata;
- };
- 
- /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
-@@ -339,7 +343,7 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- {
- 	struct device *dev = imx6_pcie->pci->dev;
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX7D:
- 		reset_control_assert(imx6_pcie->pciephy_reset);
- 		reset_control_assert(imx6_pcie->apps_reset);
-@@ -381,7 +385,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 	struct device *dev = pci->dev;
- 	int ret = 0;
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
- 		if (ret) {
-@@ -484,7 +488,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 					!imx6_pcie->gpio_active_high);
- 	}
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX7D:
- 		reset_control_deassert(imx6_pcie->pciephy_reset);
- 		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
-@@ -522,7 +526,7 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 
- static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
- {
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX7D:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
-@@ -644,7 +648,7 @@ static void imx6_pcie_ltssm_enable(struct device *dev)
- {
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6Q:
- 	case IMX6SX:
- 	case IMX6QP:
-@@ -697,7 +701,7 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 		tmp |= PORT_LOGIC_SPEED_CHANGE;
- 		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
- 
--		if (imx6_pcie->variant != IMX7D) {
-+		if (imx6_pcie->drvdata->variant != IMX7D) {
- 			/*
- 			 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
- 			 * from i.MX6 family when no link speed transition
-@@ -794,7 +798,7 @@ static void imx6_pcie_ltssm_disable(struct device *dev)
- {
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 	case IMX6QP:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-@@ -820,7 +824,7 @@ static void imx6_pcie_pm_turnoff(struct imx6_pcie *imx6_pcie)
- 	}
- 
- 	/* Others poke directly at IOMUXC registers */
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
-@@ -850,7 +854,7 @@ static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
- 	clk_disable_unprepare(imx6_pcie->pcie_phy);
- 	clk_disable_unprepare(imx6_pcie->pcie_bus);
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		clk_disable_unprepare(imx6_pcie->pcie_inbound_axi);
- 		break;
-@@ -866,8 +870,8 @@ static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
- 
- static inline bool imx6_pcie_supports_suspend(struct imx6_pcie *imx6_pcie)
- {
--	return (imx6_pcie->variant == IMX7D ||
--		imx6_pcie->variant == IMX6SX);
-+	return (imx6_pcie->drvdata->variant == IMX7D ||
-+		imx6_pcie->drvdata->variant == IMX6SX);
- }
- 
- static int imx6_pcie_suspend_noirq(struct device *dev)
-@@ -933,8 +937,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 	pci->ops = &dw_pcie_ops;
- 
- 	imx6_pcie->pci = pci;
--	imx6_pcie->variant =
--		(enum imx6_pcie_variants)of_device_get_match_data(dev);
-+	imx6_pcie->drvdata = of_device_get_match_data(dev);
- 
- 	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-@@ -978,7 +981,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
--	switch (imx6_pcie->variant) {
-+	switch (imx6_pcie->drvdata->variant) {
- 	case IMX6SX:
- 		imx6_pcie->pcie_inbound_axi = devm_clk_get(dev,
- 							   "pcie_inbound_axi");
-@@ -1084,11 +1087,26 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
- 	imx6_pcie_assert_core_reset(imx6_pcie);
- }
- 
-+static const struct imx6_pcie_drvdata drvdata[] = {
-+	[IMX6Q] = {
-+		.variant = IMX6Q,
-+	},
-+	[IMX6SX] = {
-+		.variant = IMX6SX,
-+	},
-+	[IMX6QP] = {
-+		.variant = IMX6QP,
-+	},
-+	[IMX7D] = {
-+		.variant = IMX7D,
-+	},
-+};
-+
- static const struct of_device_id imx6_pcie_of_match[] = {
--	{ .compatible = "fsl,imx6q-pcie",  .data = (void *)IMX6Q,  },
--	{ .compatible = "fsl,imx6sx-pcie", .data = (void *)IMX6SX, },
--	{ .compatible = "fsl,imx6qp-pcie", .data = (void *)IMX6QP, },
--	{ .compatible = "fsl,imx7d-pcie",  .data = (void *)IMX7D,  },
-+	{ .compatible = "fsl,imx6q-pcie",  .data = &drvdata[IMX6Q],  },
-+	{ .compatible = "fsl,imx6sx-pcie", .data = &drvdata[IMX6SX], },
-+	{ .compatible = "fsl,imx6qp-pcie", .data = &drvdata[IMX6QP], },
-+	{ .compatible = "fsl,imx7d-pcie",  .data = &drvdata[IMX7D],  },
- 	{},
- };
- 
--- 
-2.20.1
+I apologize for being so slow to respond to this.
 
+I applied it to pci/aer for v5.1 with the following changelog:
+
+    PCI: Enable SERR# forwarding for all bridges
+    
+    As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages will be forwarded
+    from the secondary interface to the primary interface, if the SERR# Enable
+    bit in the Bridge Control register is set.
+    
+    It seems clear that an ACPI hotplug parameter method (_HPP or _HPX) that
+    tells us to "enable SERR in the command register" (ACPI v6.2, sec 6.2.8,
+    6.2.9.1) refers to PCI_COMMAND_SERR, which enables reporting of errors by
+    the function itself.
+    
+    For bridges, we also interpreted that to mean we should enable
+    PCI_BRIDGE_CTL_SERR, which enables *forwarding* of errors by the bridge.
+    But we didn't enable PCI_BRIDGE_CTL_SERR anywhere else, which means we
+    never enabled it for non-ACPI systems or ACPI systems that didn't supply
+    hotplug parameters.
+    
+    That means errors reported below bridges were often never forwarded up to a
+    Root Port where they could be signaled via AER.
+    
+    Enable PCI_BRIDGE_CTL_SERR for all bridges so we can get better error
+    reporting for downstream devices.
+    
+    Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+    [bhelgaas: changelog]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+>  drivers/pci/probe.c | 20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index b1c05b5..ed71e8e 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1841,8 +1841,6 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
+>  		pci_write_config_byte(dev, PCI_SEC_LATENCY_TIMER,
+>  				      hpp->latency_timer);
+>  		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &pci_bctl);
+> -		if (hpp->enable_serr)
+> -			pci_bctl |= PCI_BRIDGE_CTL_SERR;
+>  		if (hpp->enable_perr)
+>  			pci_bctl |= PCI_BRIDGE_CTL_PARITY;
+>  		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, pci_bctl);
+> @@ -2114,6 +2112,23 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
+>  #endif
+>  }
+>  
+> +static void pci_configure_serr(struct pci_dev *dev)
+> +{
+> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
+> +		u16 control;
+> +
+> +		/*
+> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
+> +		 * from an endpoint if SERR# forwarding is not enabled.
+> +		 */
+> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
+> +		if (!(control & PCI_BRIDGE_CTL_SERR)) {
+> +			control |= PCI_BRIDGE_CTL_SERR;
+> +			pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
+> +		}
+> +	}
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)
+>  {
+>  	struct hotplug_params hpp;
+> @@ -2124,6 +2139,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>  	pci_configure_relaxed_ordering(dev);
+>  	pci_configure_ltr(dev);
+>  	pci_configure_eetlp_prefix(dev);
+> +	pci_configure_serr(dev);
+>  
+>  	memset(&hpp, 0, sizeof(hpp));
+>  	ret = pci_get_hp_params(dev, &hpp);
+> -- 
+> 2.7.4
+> 
