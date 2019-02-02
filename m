@@ -2,158 +2,103 @@ Return-Path: <SRS0=cvZd=QJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B68C282D8
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:42:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9FB1C282DB
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 08:10:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98A84218A6
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 00:42:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549068123;
-	bh=IEGmkpfOHwCAHpgd7oEatYsV85QKz4VuQ+LXrU2UsvA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=kyuzag8wRnUztDDZTtqM1QM52sHoWB7B0Wa0aldn2wAvjQz1FpAR+7v2aFTztmLp5
-	 NQI6OPok2fwtTrsr81Fe7jr2QHldY2m+Pr8QtoElnD0tN8UhrZyH/eGwPp2k3fxQIF
-	 KW05b3xnJDBcTBAtwFRSbc237hSl10rDOzRGSSjs=
+	by mail.kernel.org (Postfix) with ESMTP id AB74121479
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Feb 2019 08:10:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726740AbfBBAmC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Feb 2019 19:42:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60506 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726190AbfBBAmC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Feb 2019 19:42:02 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4B8E02148D;
-        Sat,  2 Feb 2019 00:42:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549068121;
-        bh=IEGmkpfOHwCAHpgd7oEatYsV85QKz4VuQ+LXrU2UsvA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=P5syl6UVrESXt4aQM3EOxg7vyPVeOmrKsk3WssYIq9O8cbZqkGlyDYBT1ML/54uTZ
-         lAuFe7flTUhrj7my34VDDoHM/pwkvUYc3nFtRsBkNQAQf+agIv2TfrOKm5zoIUgOJ9
-         g8Tu/Q3/vDYrhhbP15XBf++bW4vVOvwp6htc8b1I=
-Date:   Fri, 1 Feb 2019 18:41:59 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Timur Tabi <timur@codeaurora.org>,
-        Jon Masters <jcm@redhat.com>,
-        Yijing Wang <wangyijing@huawei.com>,
-        Christopher Covington <cov@codeaurora.org>,
-        Taku Izumi <izumi.taku@jp.fujitsu.com>,
-        Oza Pawandeep <poza@codeaurora.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH] PCI: Enable SERR# forwarding for Type-1 PCI devices
-Message-ID: <20190202004159.GX229773@google.com>
-References: <1542206821-24503-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+        id S1726653AbfBBIKs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 2 Feb 2019 03:10:48 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:55646 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726592AbfBBIKs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 2 Feb 2019 03:10:48 -0500
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 5C8DC6D05A56D1C10114;
+        Sat,  2 Feb 2019 16:10:44 +0800 (CST)
+Received: from [127.0.0.1] (10.177.223.23) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.408.0; Sat, 2 Feb 2019
+ 16:10:34 +0800
+Subject: Re: [RFC PATCH] USB: PCI: set 32bit DMA mask for PCI based USB
+ controllers
+From:   Hanjun Guo <guohanjun@huawei.com>
+To:     John Garry <john.garry@huawei.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+CC:     <linux-usb@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        <anthony.jebson@huawei.com>, Hanjun Guo <hanjun.guo@linaro.org>
+References: <1548831714-3706-1-git-send-email-guohanjun@huawei.com>
+ <f9a8ab1f-d560-0fb6-dfc9-61be3c1a2d82@huawei.com>
+ <ce031291-3050-3817-0ed9-9d83dad0cc55@huawei.com>
+ <e47d89e3-9bb0-95b0-db63-717594b1692b@huawei.com>
+Message-ID: <5caa86b6-3ad4-62d2-26b4-c2b16f1a5f85@huawei.com>
+Date:   Sat, 2 Feb 2019 16:10:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1542206821-24503-1-git-send-email-bharat.kumar.gogada@xilinx.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <e47d89e3-9bb0-95b0-db63-717594b1692b@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.177.223.23]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc others who have commented or been copied on this ancient issue]
-
-On Wed, Nov 14, 2018 at 08:17:01PM +0530, Bharat Kumar Gogada wrote:
-> As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages
-> will be forwarded from the secondary interface to the primary interface,
-> if the SERR# Enable bit in the Bridge Control register is set.
-> Currently PCI_BRIDGE_CTL_SERR is being enabled only in
-> ACPI flow.
-> This patch enables PCI_BRIDGE_CTL_SERR for Type-1 PCI device.
-
-I apologize for being so slow to respond to this.
-
-I applied it to pci/aer for v5.1 with the following changelog:
-
-    PCI: Enable SERR# forwarding for all bridges
-    
-    As per Figure 6-3 in PCIe r4.0, sec 6.2.6, ERR_ messages will be forwarded
-    from the secondary interface to the primary interface, if the SERR# Enable
-    bit in the Bridge Control register is set.
-    
-    It seems clear that an ACPI hotplug parameter method (_HPP or _HPX) that
-    tells us to "enable SERR in the command register" (ACPI v6.2, sec 6.2.8,
-    6.2.9.1) refers to PCI_COMMAND_SERR, which enables reporting of errors by
-    the function itself.
-    
-    For bridges, we also interpreted that to mean we should enable
-    PCI_BRIDGE_CTL_SERR, which enables *forwarding* of errors by the bridge.
-    But we didn't enable PCI_BRIDGE_CTL_SERR anywhere else, which means we
-    never enabled it for non-ACPI systems or ACPI systems that didn't supply
-    hotplug parameters.
-    
-    That means errors reported below bridges were often never forwarded up to a
-    Root Port where they could be signaled via AER.
-    
-    Enable PCI_BRIDGE_CTL_SERR for all bridges so we can get better error
-    reporting for downstream devices.
-    
-    Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-    [bhelgaas: changelog]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-> ---
->  drivers/pci/probe.c | 20 ++++++++++++++++++--
->  1 file changed, 18 insertions(+), 2 deletions(-)
+On 2019/2/1 17:13, Hanjun Guo wrote:
+> On 2019/2/1 13:55, Hanjun Guo wrote:
+>> Hi John,
+>>
+>> On 2019/1/31 17:54, John Garry wrote:
+>>> On 30/01/2019 07:01, Hanjun Guo wrote:
+>>>> From: Hanjun Guo <hanjun.guo@linaro.org>
+>> [...]
+>>>>
+>>>>  drivers/usb/core/hcd-pci.c | 4 ++++
+>>>>  1 file changed, 4 insertions(+)
+>>>>
+>>>> diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
+>>>> index 0343246..a9c33e6 100644
+>>>> --- a/drivers/usb/core/hcd-pci.c
+>>>> +++ b/drivers/usb/core/hcd-pci.c
+>>>> @@ -188,6 +188,10 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+>>>>      if (pci_enable_device(dev) < 0)
+>>>>          return -ENODEV;
+>>>>
+>>>> +    retval = dma_coerce_mask_and_coherent(&dev->dev, DMA_BIT_MASK(32));
+>>>> +    if (retval)
+>>>> +        return retval;
+>>>
+>>> Hi Hanjun,
+>>>
+>>> You're missing tidy-up upon failure.
+>>
+>> Good catch, needs to disable pci for failure, I will send
+>> a updated version to address the comments from you and Christoph.
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index b1c05b5..ed71e8e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1841,8 +1841,6 @@ static void program_hpp_type0(struct pci_dev *dev, struct hpp_type0 *hpp)
->  		pci_write_config_byte(dev, PCI_SEC_LATENCY_TIMER,
->  				      hpp->latency_timer);
->  		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &pci_bctl);
-> -		if (hpp->enable_serr)
-> -			pci_bctl |= PCI_BRIDGE_CTL_SERR;
->  		if (hpp->enable_perr)
->  			pci_bctl |= PCI_BRIDGE_CTL_PARITY;
->  		pci_write_config_word(dev, PCI_BRIDGE_CONTROL, pci_bctl);
-> @@ -2114,6 +2112,23 @@ static void pci_configure_eetlp_prefix(struct pci_dev *dev)
->  #endif
->  }
->  
-> +static void pci_configure_serr(struct pci_dev *dev)
-> +{
-> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE) {
-> +		u16 control;
-> +
-> +		/*
-> +		 * A Type-1 PCI bridge will not forward ERR_ messages coming
-> +		 * from an endpoint if SERR# forwarding is not enabled.
-> +		 */
-> +		pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &control);
-> +		if (!(control & PCI_BRIDGE_CTL_SERR)) {
-> +			control |= PCI_BRIDGE_CTL_SERR;
-> +			pci_write_config_word(dev, PCI_BRIDGE_CONTROL, control);
-> +		}
-> +	}
-> +}
-> +
->  static void pci_configure_device(struct pci_dev *dev)
->  {
->  	struct hotplug_params hpp;
-> @@ -2124,6 +2139,7 @@ static void pci_configure_device(struct pci_dev *dev)
->  	pci_configure_relaxed_ordering(dev);
->  	pci_configure_ltr(dev);
->  	pci_configure_eetlp_prefix(dev);
-> +	pci_configure_serr(dev);
->  
->  	memset(&hpp, 0, sizeof(hpp));
->  	ret = pci_get_hp_params(dev, &hpp);
-> -- 
-> 2.7.4
-> 
+> There is a _DMA method which was introduced in ACPI 6.2 to cover
+> this, I will try that solution then report back.
+
+We add a _DMA method under the hostbridge which the EHCI/OHCI being
+connected to, the calltrace is gone and EHCI works as expected.
+
+No need for kernel change, so this patch is dropped.
+
+Thanks
+Hanjun
+
+
