@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D432C282CB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D445CC282C4
 	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E9102082F
+	by mail.kernel.org (Postfix) with ESMTP id 9872320823
 	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Tx35XaCP"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="eOTjI4Hs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730595AbfBDPgQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1730763AbfBDPgQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 4 Feb 2019 10:36:16 -0500
-Received: from mta-01.yadro.com ([89.207.88.251]:49256 "EHLO mta-01.yadro.com"
+Received: from mta-01.yadro.com ([89.207.88.251]:49270 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726565AbfBDPgQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1730135AbfBDPgQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 4 Feb 2019 10:36:16 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id AE3A941965;
-        Mon,  4 Feb 2019 15:36:14 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 89642411D9;
+        Mon,  4 Feb 2019 15:36:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1549294573; x=1551108974; bh=OR7+kHmdLXiuucrl8doe382h27BVql/saF5
-        X7nTlQ/w=; b=Tx35XaCPqZrYvfTN/N64bIHJTg5LSEexAhnqb/GT/vXCv0HJT0k
-        aX0TPiy7N99DJmvccb9k3/LUFmLdppgbC2wcPHgfALrQrWBDOlla3lqtu85YHCaw
-        /2syD3LdzdqlgsqDTyqvjgLVg/RSx8VmK9ccycVsCWPMcjcYwQvQSKxM=
+        1549294574; x=1551108975; bh=WN6RYdU7ay5bXObl2dwS5zrLgkTPSgA1efE
+        zWil4ZO8=; b=eOTjI4HsYjpHsdKi/l27myEAuJaiE/2v9E8MW34No654bTUAGB2
+        zL0DrR/+b08VlvVHs1B79n8IVjjaRuH4Mynu9d6rz0badc3+aGC/P8abbalgBz5+
+        wdHcgaRiuDxG8M30bYRCwzM7FWQCukm+5SOnEojtrzDovNwEvL9g21Jw=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id x8JMTZgsNevE; Mon,  4 Feb 2019 18:36:13 +0300 (MSK)
+        with ESMTP id Dw2xFiNMzHTb; Mon,  4 Feb 2019 18:36:14 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 7AA8A41908;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 9540541911;
         Mon,  4 Feb 2019 18:36:10 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
@@ -49,13 +49,10 @@ From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
-        <linuxppc-dev@lists.ozlabs.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Oliver <oohall@gmail.com>, Sam Bobroff <sbobroff@linux.ibm.com>
-Subject: [PATCH RFC v3 02/21] PCI: Fix race condition in pci_enable/disable_device()
-Date:   Mon, 4 Feb 2019 18:35:42 +0300
-Message-ID: <20190204153601.7576-3-s.miroshnichenko@yadro.com>
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC v3 03/21] PCI: Enable bridge's I/O and MEM access for hotplugged devices
+Date:   Mon, 4 Feb 2019 18:35:43 +0300
+Message-ID: <20190204153601.7576-4-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
 References: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
@@ -70,140 +67,33 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
- CPU0                                      CPU1
-
- pci_enable_device_mem()                   pci_enable_device_mem()
-   pci_enable_bridge()                       pci_enable_bridge()
-     pci_is_enabled()
-       return false;
-     atomic_inc_return(enable_cnt)
-     Start actual enabling the bridge
-     ...                                       pci_is_enabled()
-     ...                                         return true;
-     ...                                   Start memory requests <-- FAIL
-     ...
-     Set the PCI_COMMAND_MEMORY bit <-- Must wait for this
-
-This patch protects the pci_enable/disable_device() and pci_enable_bridge()
-with mutexes.
+After updating the bridge window resources, the PCI_COMMAND_IO and
+PCI_COMMAND_MEMORY bits of the bridge must be addressed as well.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/pci.c   | 26 ++++++++++++++++++++++----
- drivers/pci/probe.c |  1 +
- include/linux/pci.h |  1 +
- 3 files changed, 24 insertions(+), 4 deletions(-)
+ drivers/pci/pci.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e1fc93c9eea1..3a83e05f8363 100644
+index 3a83e05f8363..55cf18389c15 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -1571,6 +1571,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 	struct pci_dev *bridge;
- 	int retval;
- 
-+	mutex_lock(&dev->enable_mutex);
-+
- 	bridge = pci_upstream_bridge(dev);
- 	if (bridge)
+@@ -1578,6 +1578,14 @@ static void pci_enable_bridge(struct pci_dev *dev)
  		pci_enable_bridge(bridge);
-@@ -1578,6 +1580,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 
  	if (pci_is_enabled(dev)) {
++		int i, bars = 0;
++
++		for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++) {
++			if (dev->resource[i].flags & (IORESOURCE_MEM | IORESOURCE_IO))
++				bars |= (1 << i);
++		}
++		do_pci_enable_device(dev, bars);
++
  		if (!dev->is_busmaster)
  			pci_set_master(dev);
-+		mutex_unlock(&dev->enable_mutex);
- 		return;
- 	}
- 
-@@ -1586,11 +1589,14 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 		pci_err(dev, "Error enabling bridge (%d), continuing\n",
- 			retval);
- 	pci_set_master(dev);
-+	mutex_unlock(&dev->enable_mutex);
- }
- 
- static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- {
- 	struct pci_dev *bridge;
-+	/* Enable-locking of bridges is performed within the pci_enable_bridge() */
-+	bool need_lock = !dev->subordinate;
- 	int err;
- 	int i, bars = 0;
- 
-@@ -1606,8 +1612,13 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
- 	}
- 
--	if (atomic_inc_return(&dev->enable_cnt) > 1)
-+	if (need_lock)
-+		mutex_lock(&dev->enable_mutex);
-+	if (pci_is_enabled(dev)) {
-+		if (need_lock)
-+			mutex_unlock(&dev->enable_mutex);
- 		return 0;		/* already enabled */
-+	}
- 
- 	bridge = pci_upstream_bridge(dev);
- 	if (bridge)
-@@ -1622,8 +1633,10 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 			bars |= (1 << i);
- 
- 	err = do_pci_enable_device(dev, bars);
--	if (err < 0)
--		atomic_dec(&dev->enable_cnt);
-+	if (err >= 0)
-+		atomic_inc(&dev->enable_cnt);
-+	if (need_lock)
-+		mutex_unlock(&dev->enable_mutex);
- 	return err;
- }
- 
-@@ -1866,15 +1879,20 @@ void pci_disable_device(struct pci_dev *dev)
- 	if (dr)
- 		dr->enabled = 0;
- 
-+	mutex_lock(&dev->enable_mutex);
- 	dev_WARN_ONCE(&dev->dev, atomic_read(&dev->enable_cnt) <= 0,
- 		      "disabling already-disabled device");
- 
--	if (atomic_dec_return(&dev->enable_cnt) != 0)
-+	if (atomic_dec_return(&dev->enable_cnt) != 0) {
-+		mutex_unlock(&dev->enable_mutex);
- 		return;
-+	}
- 
- 	do_pci_disable_device(dev);
- 
- 	dev->is_busmaster = 0;
-+
-+	mutex_unlock(&dev->enable_mutex);
- }
- EXPORT_SYMBOL(pci_disable_device);
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 257b9f6f2ebb..bbc12934f041 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2191,6 +2191,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- 	INIT_LIST_HEAD(&dev->bus_list);
- 	dev->dev.type = &pci_dev_type;
- 	dev->bus = pci_bus_get(bus);
-+	mutex_init(&dev->enable_mutex);
- 
- 	return dev;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 65f1d8c2f082..28fecfdd598d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -416,6 +416,7 @@ struct pci_dev {
- 	unsigned int	no_vf_scan:1;		/* Don't scan for VFs after IOV enablement */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
-+	struct mutex	enable_mutex;
- 
- 	u32		saved_config_space[16]; /* Config space saved at suspend time */
- 	struct hlist_head saved_cap_space;
+ 		mutex_unlock(&dev->enable_mutex);
 -- 
 2.20.1
 
