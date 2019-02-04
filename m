@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B500C282C4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF344C282CC
 	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D7F520823
+	by mail.kernel.org (Postfix) with ESMTP id 9E940217F9
 	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="YJy5Vp6B"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="oJz9sOq/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729298AbfBDPgS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1731098AbfBDPgS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 4 Feb 2019 10:36:18 -0500
-Received: from mta-01.yadro.com ([89.207.88.251]:49282 "EHLO mta-01.yadro.com"
+Received: from mta-01.yadro.com ([89.207.88.251]:49298 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726565AbfBDPgS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1729298AbfBDPgS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 4 Feb 2019 10:36:18 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 3310441911;
+        by mta-01.yadro.com (Postfix) with ESMTP id 9F19941925;
         Mon,  4 Feb 2019 15:36:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1549294575; x=1551108976; bh=ZFSpeWXC0G6p3BEjk1YvsGQE5boQjBUMxO0
-        HRmXCPoU=; b=YJy5Vp6BGkXWZ6z7H4JsavNrPhnh130b9PCKUY+zQj/UaoD5q2p
-        923xIkIbPPdAemGZ/5pb6nZMWCWZUpiXotk0J0+9Foa/kid+dpncCbKz2O7bb8pp
-        2pN16+72D0+wLkMWNWr5pY0UwghFeYL+8zURBDhti34RriCHmd/rmmx4=
+        1549294575; x=1551108976; bh=fBZVvrDKnTqEuLszPLOAjv6NzdQSIKXVafV
+        onFmNfH8=; b=oJz9sOq/wMFvnQcZp/+Yp/+tA6G8pd6wYD8uXlVeb+VqORzFzl6
+        fROcT2rXhaxXA/5cpOfbLVGvrtUjp0wCVGhmALdPL9i8yl50wZ+kRLKkRqbzcXVu
+        uo0o3f7rSekM98B1xlWDBIePOevxc0JCzcbRtienO2g242fzzdkjYIzg=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id T-SJkHKIRIRw; Mon,  4 Feb 2019 18:36:15 +0300 (MSK)
+        with ESMTP id ZSN9cGbhrC5R; Mon,  4 Feb 2019 18:36:15 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 9935241925;
+        by mta-01.yadro.com (Postfix) with ESMTPS id C3A4C41927;
         Mon,  4 Feb 2019 18:36:10 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
@@ -49,10 +49,14 @@ From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC v3 04/21] PCI: Define PCI-specific version of the release_child_resources()
-Date:   Mon, 4 Feb 2019 18:35:44 +0300
-Message-ID: <20190204153601.7576-5-s.miroshnichenko@yadro.com>
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
+        <linuxppc-dev@lists.ozlabs.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Oliver <oohall@gmail.com>, Sam Bobroff <sbobroff@linux.ibm.com>,
+        Lukas Wunner <lukas@wunner.de>
+Subject: [PATCH RFC v3 05/21] PCI: hotplug: Add a flag for the movable BARs feature
+Date:   Mon, 4 Feb 2019 18:35:45 +0300
+Message-ID: <20190204153601.7576-6-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
 References: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
@@ -67,81 +71,116 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Make the released resources of a bridge valid for later re-assignment:
-clear the STARTALIGN flag.
+If a new PCIe device has been hot-plugged between the two active ones
+without big enough gap between their BARs, these BARs should be moved
+if their drivers support this feature. The drivers should be notified
+and paused during the procedure:
 
-Resources marked with PCI_FIXED must preserve their offset and size.
+1)                 dev 8 (new)
+                       |
+                       v
+.. |  dev 3  |  dev 3  |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+
+2)                             dev 8
+                                 |
+                                 v
+.. |  dev 3  |  dev 3  | -->           --> |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  | -->           --> |  BAR 0  |  BAR 0  |
+
+ 3)
+
+.. |  dev 3  |  dev 3  |  dev 8  |  dev 8  |  dev 5  |  dev 7  |
+.. |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 1  |  BAR 0  |  BAR 0  |
+
+Thus, prior reservation of memory regions by BIOS/bootloader/firmware
+is not required anymore for the PCIe hotplug.
+
+The PCI_MOVABLE_BARS flag is set by the platform is this feature is
+supported and tested, but can be overridden by the following command
+line option:
+    pcie_movable_bars={ off | force }
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/setup-bus.c | 47 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 46 insertions(+), 1 deletion(-)
+ .../admin-guide/kernel-parameters.txt         |  7 ++++++
+ drivers/pci/pci.c                             | 24 +++++++++++++++++++
+ include/linux/pci.h                           |  2 ++
+ 3 files changed, 33 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ed960436df5e..cca23c393e29 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1520,6 +1520,51 @@ static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
- 	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
- 	 IORESOURCE_MEM_64)
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index b799bcf67d7b..2165c4b5aea6 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -3387,6 +3387,13 @@
+ 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
+ 			all PCIe root ports use INTx for all services).
  
-+/*
-+ * Similar to release_child_resources(), but aware of PCI_FIXED and STARTALIGN flags
-+ */
-+static void pci_release_child_resources(struct resource *r)
++	pcie_movable_bars=[PCIE]
++			Override the movable BARs support detection:
++		off
++			Disable even if supported by the platform
++		force
++			Enable even if not explicitly declared as supported
++
+ 	pcmv=		[HW,PCMCIA] BadgePAD 4
+ 
+ 	pd_ignore_unused
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 55cf18389c15..096413f9ee67 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -139,6 +139,30 @@ static int __init pcie_port_pm_setup(char *str)
+ }
+ __setup("pcie_port_pm=", pcie_port_pm_setup);
+ 
++static bool pcie_movable_bars_off;
++static bool pcie_movable_bars_force;
++static int __init pcie_movable_bars_setup(char *str)
 +{
-+	struct resource *tmp, *p;
-+
-+	if (!r)
-+		return;
-+
-+	if (r->flags & IORESOURCE_PCI_FIXED)
-+		return;
-+
-+	p = r->child;
-+	r->child = NULL;
-+	while (p) {
-+		resource_size_t size = resource_size(p);
-+
-+		tmp = p;
-+		p = p->sibling;
-+
-+		tmp->parent = NULL;
-+		tmp->sibling = NULL;
-+		pci_release_child_resources(tmp);
-+
-+		if (!tmp->flags)
-+			continue;
-+
-+		if (tmp->flags & IORESOURCE_PCI_FIXED) {
-+			pr_debug("PCI: release fixed %pR (%s), keep its flags, base and size\n",
-+				 tmp, tmp->name);
-+			continue;
-+		}
-+
-+		pr_debug("PCI: release %pR (%s)\n", tmp, tmp->name);
-+
-+		/* need to restore size, and keep all the flags but STARTALIGN */
-+		tmp->start = 0;
-+		tmp->end = size - 1;
-+
-+		tmp->flags &= ~IORESOURCE_STARTALIGN;
-+		tmp->flags |= IORESOURCE_SIZEALIGN;
-+	}
++	if (!strcmp(str, "off"))
++		pcie_movable_bars_off = true;
++	else if (!strcmp(str, "force"))
++		pcie_movable_bars_force = true;
++	return 1;
 +}
++__setup("pcie_movable_bars=", pcie_movable_bars_setup);
 +
- static void pci_bridge_release_resources(struct pci_bus *bus,
- 					  unsigned long type)
- {
-@@ -1565,7 +1610,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 * if there are children under that, we should release them
- 	 *  all
- 	 */
--	release_child_resources(r);
-+	pci_release_child_resources(r);
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
- 		pci_printk(KERN_DEBUG, dev, "resource %d %pR released\n",
++bool pci_movable_bars_enabled(void)
++{
++	if (pcie_movable_bars_off)
++		return false;
++
++	if (pcie_movable_bars_force)
++		return true;
++
++	return pci_has_flag(PCI_MOVABLE_BARS);
++}
++EXPORT_SYMBOL(pci_movable_bars_enabled);
++
+ /* Time to wait after a reset for device to become responsive */
+ #define PCIE_RESET_READY_POLL_MS 60000
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 28fecfdd598d..ba0b1d0ea2d2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -863,6 +863,7 @@ enum {
+ 	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* Enable domains in /proc */
+ 	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
+ 	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* Scan all, not just dev 0 */
++	PCI_MOVABLE_BARS	= 0x00000080,	/* Runtime BAR reassign after hotplug */
+ };
+ 
+ /* These external functions are only available when PCI support is enabled */
+@@ -1342,6 +1343,7 @@ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ void pci_setup_bridge(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 					 unsigned long type);
++bool pci_movable_bars_enabled(void);
+ 
+ #define PCI_VGA_STATE_CHANGE_BRIDGE (1 << 0)
+ #define PCI_VGA_STATE_CHANGE_DECODES (1 << 1)
 -- 
 2.20.1
 
