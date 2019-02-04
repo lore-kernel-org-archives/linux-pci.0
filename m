@@ -2,95 +2,164 @@ Return-Path: <SRS0=vmzI=QL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7B3CC282CC
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8B2CC282C4
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 16:13:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFFF52082F
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="GuqoSq+x"
+	by mail.kernel.org (Postfix) with ESMTP id 7F90B205C9
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 16:13:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730241AbfBDPge (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Feb 2019 10:36:34 -0500
-Received: from mta-01.yadro.com ([89.207.88.251]:49428 "EHLO mta-01.yadro.com"
+        id S1728104AbfBDQNI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Feb 2019 11:13:08 -0500
+Received: from foss.arm.com ([217.140.101.70]:57698 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731343AbfBDPgd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 4 Feb 2019 10:36:33 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 9CCC241961;
-        Mon,  4 Feb 2019 15:36:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received; s=mta-01; t=
-        1549294587; x=1551108988; bh=z8sl9oc5HN9be07G2Rla1odORYqrXxkuLW/
-        tx5e5wbY=; b=GuqoSq+x4TchnIw3mmZHWzK1waXlNdtujnf05YeoLlKXtN5dfH2
-        WokKSnnEAg4vnN2gnexzTOl4/S8BV7HwFyQ4NTLb6bC6zPV5jOkEfDXPFSebxvGI
-        c80esED1+8dEJnS8PAwtWgIEdrNEpH/MFlXLVtMaMZKuwNFkLyV3yGGw=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 2mK_Pc1wXbU6; Mon,  4 Feb 2019 18:36:27 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 7F05341963;
-        Mon,  4 Feb 2019 18:36:14 +0300 (MSK)
-Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 4 Feb
- 2019 18:36:14 +0300
-From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-To:     <linux-pci@vger.kernel.org>
-CC:     Bjorn Helgaas <helgaas@kernel.org>,
-        Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
-        <linuxppc-dev@lists.ozlabs.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Oliver <oohall@gmail.com>, Sam Bobroff <sbobroff@linux.ibm.com>
-Subject: [PATCH RFC v3 21/21] powerpc/pci: Fix crash with enabled movable BARs
-Date:   Mon, 4 Feb 2019 18:36:01 +0300
-Message-ID: <20190204153601.7576-22-s.miroshnichenko@yadro.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
-References: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
+        id S1726979AbfBDQNI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Feb 2019 11:13:08 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C08C080D;
+        Mon,  4 Feb 2019 08:13:07 -0800 (PST)
+Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1E1C43F589;
+        Mon,  4 Feb 2019 08:13:04 -0800 (PST)
+Date:   Mon, 4 Feb 2019 16:13:03 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Cc:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: Re: [PATCHv3 00/27] PCI: refactor Mobiveil driver and add PCIe Gen4
+ driver for NXP Layerscape SoCs
+Message-ID: <20190204161303.GA18220@red-moon>
+References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com>
+ <20190129113910.GA7467@e107981-ln.cambridge.arm.com>
+ <CAFZiPx002HED+YH2GysS7a7uoEDQuHGjxa_CQtwb9nSDH-XNuA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [172.17.15.60]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAFZiPx002HED+YH2GysS7a7uoEDQuHGjxa_CQtwb9nSDH-XNuA@mail.gmail.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Check a resource for the UNSET flags.
+On Mon, Feb 04, 2019 at 07:44:25PM +0530, Subrahmanya Lingappa wrote:
+>    Bjorn,
+>    My apologies, I was away for a while from this work.
+>    I am starting to review now.
 
-Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Hi,
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 7db3119f8a5b..5354dfdf1028 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3038,7 +3038,8 @@ static void pnv_ioda_setup_pe_res(struct pnv_ioda_pe *pe,
- 	int index;
- 	int64_t rc;
- 
--	if (!res || !res->flags || res->start > res->end)
-+	if (!res || !res->flags || res->start > res->end ||
-+	    (res->flags & IORESOURCE_UNSET))
- 		return;
- 
- 	if (res->flags & IORESOURCE_IO) {
--- 
-2.20.1
+I am not Bjorn and as I told you before you should not reply
+with html context (ie use plain text, the public lists will
+reject your emails otherwise) and top-post.
 
+You are supposed to maintain this code, if you can't it is fine but I
+should know because there are developers who are waiting for your
+review, please understand.
+
+Thanks,
+Lorenzo
+
+>    Thanks,
+>    ~subbu
+>    On Tue, Jan 29, 2019 at 5:09 PM Lorenzo Pieralisi
+>    <lorenzo.pieralisi@arm.com> wrote:
+> 
+>      On Tue, Jan 29, 2019 at 08:08:28AM +0000, Z.q. Hou wrote:
+>      > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>      >
+>      > This patch set is aim to refactor the Mobiveil driver and add
+>      > PCIe support for NXP Layerscape series SoCs integrated Mobiveil's
+>      > PCIe Gen4 controller.
+>      >
+>      > Hou Zhiqiang (27):
+>      >   PCI: mobiveil: uniform the register accessors
+>      >   PCI: mobiveil: format the code without function change
+>      >   PCI: mobiveil: correct the returned error number
+>      >   PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
+>      >   PCI: mobiveil: correct PCI base address in MEM/IO outbound windows
+>      >   PCI: mobiveil: replace the resource list iteration function
+>      >   PCI: mobiveil: use WIN_NUM_0 explicitly for CFG outbound window
+>      >   PCI: mobiveil: use the 1st inbound window for MEM inbound
+>      transactions
+>      >   PCI: mobiveil: correct inbound/outbound window setup routines
+>      >   PCI: mobiveil: fix the INTx process error
+>      >   PCI: mobiveil: only fix up the Class Code field
+>      >   PCI: mobiveil: move out the link up waiting from mobiveil_host_init
+>      >   PCI: mobiveil: move irq chained handler setup out of DT parse
+>      >   PCI: mobiveil: initialize Primary/Secondary/Subordinate bus number
+>      >   dt-bindings: pci: mobiveil: change gpio_slave and apb_csr to
+>      optional
+>      >   PCI: mobiveil: refactor Mobiveil PCIe Host Bridge IP driver
+>      >   PCI: mobiveil: fix the checking of valid device
+>      >   PCI: mobiveil: continue to initialize the host upon no PCIe link
+>      >   PCI: mobiveil: disabled IB and OB windows set by bootloader
+>      >   PCI: mobiveil: add Byte and Half-Word width register accessors
+>      >   PCI: mobiveil: make mobiveil_host_init can be used to re-init host
+>      >   dt-bindings: pci: Add NXP Layerscape SoCs PCIe Gen4 controller
+>      >   PCI: mobiveil: add PCIe Gen4 RC driver for NXP Layerscape SoCs
+>      >   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011577
+>      >   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011451
+>      >   arm64: dts: freescale: lx2160a: add pcie DT nodes
+>      >   arm64: defconfig: Enable CONFIG_PCI_LAYERSCAPE_GEN4
+> 
+>      Subrahmanya,
+> 
+>      Either you review this series or I will have to drop you from
+>      the MAINTAINERS list for this driver, I am sorry but I asked you
+>      before to no avail.
+> 
+>      Thanks,
+>      Lorenzo
+> 
+>      >  .../bindings/pci/layerscape-pci-gen4.txt      |  52 ++
+>      >  .../devicetree/bindings/pci/mobiveil-pcie.txt |   2 +
+>      >  MAINTAINERS                                   |  10 +-
+>      >  .../arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 163 ++++
+>      >  arch/arm64/configs/defconfig                  |   1 +
+>      >  drivers/pci/controller/Kconfig                |  11 +-
+>      >  drivers/pci/controller/Makefile               |   2 +-
+>      >  drivers/pci/controller/mobiveil/Kconfig       |  34 +
+>      >  drivers/pci/controller/mobiveil/Makefile      |   5 +
+>      >  .../controller/mobiveil/pci-layerscape-gen4.c | 306 +++++++
+>      >  .../controller/mobiveil/pcie-mobiveil-host.c  | 640 +++++++++++++
+>      >  .../controller/mobiveil/pcie-mobiveil-plat.c  |  54 ++
+>      >  .../pci/controller/mobiveil/pcie-mobiveil.c   | 246 +++++
+>      >  .../pci/controller/mobiveil/pcie-mobiveil.h   | 229 +++++
+>      >  drivers/pci/controller/pcie-mobiveil.c        | 861
+>      ------------------
+>      >  15 files changed, 1743 insertions(+), 873 deletions(-)
+>      >  create mode 100644
+>      Documentation/devicetree/bindings/pci/layerscape-pci-gen4.txt
+>      >  create mode 100644 drivers/pci/controller/mobiveil/Kconfig
+>      >  create mode 100644 drivers/pci/controller/mobiveil/Makefile
+>      >  create mode 100644
+>      drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+>      >  create mode 100644
+>      drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
+>      >  create mode 100644
+>      drivers/pci/controller/mobiveil/pcie-mobiveil-plat.c
+>      >  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.c
+>      >  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil.h
+>      >  delete mode 100644 drivers/pci/controller/pcie-mobiveil.c
+>      >
+>      > --
+>      > 2.17.1
+>      >
