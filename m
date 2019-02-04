@@ -7,52 +7,52 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E049C282CB
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5865BC282C4
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24D8E2082F
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 283F220823
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Feb 2019 15:36:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="bu/jyjH3"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="rn0w5X+c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731301AbfBDPgT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Feb 2019 10:36:19 -0500
-Received: from mta-01.yadro.com ([89.207.88.251]:49270 "EHLO mta-01.yadro.com"
+        id S1731267AbfBDPgU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Feb 2019 10:36:20 -0500
+Received: from mta-01.yadro.com ([89.207.88.251]:49298 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730135AbfBDPgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 4 Feb 2019 10:36:19 -0500
+        id S1726565AbfBDPgU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 4 Feb 2019 10:36:20 -0500
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 853C241967;
-        Mon,  4 Feb 2019 15:36:17 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 84B584193A;
+        Mon,  4 Feb 2019 15:36:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1549294576; x=1551108977; bh=HpciNbmk+sNxY45aMdCPoyx/0SeyWnSlTYO
-        UPzVN1nY=; b=bu/jyjH37JfvKhlXaV0m3Y9xR98SL6ARKTfUJLhzaqXQp0dvQMW
-        NrZJrqjlMRGygDyOnXnSnY45b2QyBEenV9P4tYoBEa/aBighNYpH8tZ4ivsV0BGw
-        qXg2bWpXpgfgV5MJeQIhyZp6d57hOgFLjRpxzz2708mFHcCx07e7Inug=
+        1549294577; x=1551108978; bh=hDnKF7LYovCYjlPjeBctcYJ37UhnG2dTJdt
+        hA73Me48=; b=rn0w5X+cez+7mJNFSBcVi4p45yHjN++AcJf+nBbeQ5wcHsNjzuQ
+        pTegcR4V0X/IdhCdG4+7HnDe7tmrz6Af5+n4STp0t/tp5OzVc40QETgF2Ab8LXLX
+        HzkhI+n1F3yYZ1lPTyKlOyYENaGcY9OTjtj6/Vqb6CEF1QDblFtxachI=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Ts_wZlMgiMPT; Mon,  4 Feb 2019 18:36:16 +0300 (MSK)
+        with ESMTP id hE88EV9a7pQk; Mon,  4 Feb 2019 18:36:17 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 467D94193A;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 79F6F4193E;
         Mon,  4 Feb 2019 18:36:11 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 4 Feb
- 2019 18:36:10 +0300
+ 2019 18:36:11 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>,
         Rajat Jain <rajatja@google.com>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC v3 07/21] PCI: Wake up bridges during rescan when movable BARs enabled
-Date:   Mon, 4 Feb 2019 18:35:47 +0300
-Message-ID: <20190204153601.7576-8-s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC v3 08/21] nvme-pci: Handle movable BARs
+Date:   Mon, 4 Feb 2019 18:35:48 +0300
+Message-ID: <20190204153601.7576-9-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
 References: <20190204153601.7576-1-s.miroshnichenko@yadro.com>
@@ -67,36 +67,88 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use the PM runtime methods to wake up the bridges before accessing
-their config space.
+Hotplugged devices can affect the existing ones by moving their BARs.
+PCI subsystem will inform the NVME driver about this by invoking
+reset_prepare()+reset_done(), then iounmap()+ioremap() must be called.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/probe.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/nvme/host/pci.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index e18d07996cf3..7fe68b4f04bf 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -3176,6 +3176,8 @@ static void pci_bus_rescan_prepare(struct pci_bus *bus)
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 9bc585415d9b..60d5e97fc878 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -114,6 +114,7 @@ struct nvme_dev {
+ 	unsigned int num_vecs;
+ 	int q_depth;
+ 	u32 db_stride;
++	resource_size_t current_phys_bar;
+ 	void __iomem *bar;
+ 	unsigned long bar_mapped_size;
+ 	struct work_struct remove_work;
+@@ -1678,13 +1679,16 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
  {
- 	struct pci_dev *dev;
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
  
-+	pm_runtime_get_sync(&bus->dev);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *child = dev->subordinate;
+-	if (size <= dev->bar_mapped_size)
++	if (dev->bar &&
++	    dev->current_phys_bar == pci_resource_start(pdev, 0) &&
++	    size <= dev->bar_mapped_size)
+ 		return 0;
+ 	if (size > pci_resource_len(pdev, 0))
+ 		return -ENOMEM;
+ 	if (dev->bar)
+ 		iounmap(dev->bar);
+-	dev->bar = ioremap(pci_resource_start(pdev, 0), size);
++	dev->current_phys_bar = pci_resource_start(pdev, 0);
++	dev->bar = ioremap(dev->current_phys_bar, size);
+ 	if (!dev->bar) {
+ 		dev->bar_mapped_size = 0;
+ 		return -ENOMEM;
+@@ -2550,6 +2554,8 @@ static void nvme_reset_work(struct work_struct *work)
+ 	if (WARN_ON(dev->ctrl.state != NVME_CTRL_RESETTING))
+ 		goto out;
  
-@@ -3202,6 +3204,8 @@ static void pci_bus_rescan_done(struct pci_bus *bus)
- 			dev->driver->rescan_done(dev);
- 		}
- 	}
++	nvme_remap_bar(dev, db_bar_size(dev, 0));
 +
-+	pm_runtime_put(&bus->dev);
+ 	/*
+ 	 * If we're called to reset a live controller first shut it down before
+ 	 * moving on.
+@@ -2952,6 +2958,23 @@ static void nvme_error_resume(struct pci_dev *pdev)
+ 	flush_work(&dev->ctrl.reset_work);
  }
  
- /**
++void nvme_rescan_prepare(struct pci_dev *pdev)
++{
++	struct nvme_dev *dev = pci_get_drvdata(pdev);
++
++	nvme_dev_disable(dev, false);
++	nvme_dev_unmap(dev);
++	dev->bar = NULL;
++}
++
++void nvme_rescan_done(struct pci_dev *pdev)
++{
++	struct nvme_dev *dev = pci_get_drvdata(pdev);
++
++	nvme_dev_map(dev);
++	nvme_reset_ctrl_sync(&dev->ctrl);
++}
++
+ static const struct pci_error_handlers nvme_err_handler = {
+ 	.error_detected	= nvme_error_detected,
+ 	.slot_reset	= nvme_slot_reset,
+@@ -3016,6 +3039,8 @@ static struct pci_driver nvme_driver = {
+ 	},
+ 	.sriov_configure = pci_sriov_configure_simple,
+ 	.err_handler	= &nvme_err_handler,
++	.rescan_prepare	= nvme_rescan_prepare,
++	.rescan_done	= nvme_rescan_done,
+ };
+ 
+ static int __init nvme_init(void)
 -- 
 2.20.1
 
