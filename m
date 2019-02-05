@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 210CEC282CB
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:04:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 557D0C282CB
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:04:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD1DE2083B
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:04:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 253372083B
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:04:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="a0lt9vja"
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="PuZH3LDR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725934AbfBEGEY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Feb 2019 01:04:24 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38284 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726456AbfBEGEY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2019 01:04:24 -0500
-Received: by mail-wr1-f65.google.com with SMTP id v13so2282944wrw.5
-        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2019 22:04:23 -0800 (PST)
+        id S1727141AbfBEGEx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Feb 2019 01:04:53 -0500
+Received: from mail-wm1-f45.google.com ([209.85.128.45]:55251 "EHLO
+        mail-wm1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725982AbfBEGEx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2019 01:04:53 -0500
+Received: by mail-wm1-f45.google.com with SMTP id a62so2228249wmh.4
+        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2019 22:04:51 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=mobiveil.co.in; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=E8Nz/JOD+e1xoqAI4YK+0goMEU7txF8Kn0+PiGymNa8=;
-        b=a0lt9vjaYGvo5ZjCMKI4qBCmuxJB3MEqbdXjeKZbh+T2f2nZ72O8/RHqWxV7l6HJYZ
-         UCE2tm6/FROvTqIC+Nj4Xtk13boNIRpa4eHoE2/95EH9a+MyYFmfR2YIAwrsfxbWN3ol
-         k0v2t9jjDyZw3M4IrxpaQEeGGibrzRh/SKAfI=
+        bh=3aQtR76X4VtJOe5HikigbKlmMNbkcyXJpnJePsqpATQ=;
+        b=PuZH3LDRHXppM67bMX3nu+bUj3v5Xdm4kGzc3NjlmHaE5N4KR78ROx2/Ki4QA1i84K
+         NDeWLjYlBuLu2VrSQXSQkYUMnO/DZFqh/Q/E+4CZCtSRTdasmo7B2tM8DrLl6qzcJRjM
+         LIfV49RB3P5yCq5775EuUYxz6sh3EUkT1rbSE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=E8Nz/JOD+e1xoqAI4YK+0goMEU7txF8Kn0+PiGymNa8=;
-        b=e9GxRjEgiTMm2+MThnxjpwyXxMGhLVxyTEgwKZYlFcqSzWVZPAHs3p0ho0vTbtC13v
-         0Iaip1enUxVkKjhasY+vYQJRVioWTLbvIKjCJbBbUKDlpPfdqnanhlXSjveu6nPjr2OW
-         1PGtG5HeGfBtnE24CDMrVXqf5w4h8BpMNgB0VAeBjROKDIHYH7jTkblM9WcHTeNsTAf4
-         i8x89C7+GKia93GnnmUsTztQOaPVPr7HOT+xPjOvw44OpeMKOWNVhElCb+T8VPlYLYj6
-         syq6+oXn48I6FSY2X8IhbtM8d7BId4Fu0zUHntMVSZmN5yJ6h44Ei2EGg5V1dQxOwKfc
-         83LA==
-X-Gm-Message-State: AHQUAubvDCVt9ez8Jm9F+Hcp7hhX5p/ocWqSDWY/ZjqMEXKvvc/57L4k
-        ZGyDrqkDwdRFrBaPYfVRuhrw9zrs54azkcLzNm/a0A==
-X-Google-Smtp-Source: AHgI3IZABnEpCunPrjrSCncSfkYCrTT1Vrxws6KuAXMByp9HYmZCCEG2EFEppAWPTIq00CvmKwpJrXSlEI29F2o99Mw=
-X-Received: by 2002:adf:fd81:: with SMTP id d1mr2123021wrr.105.1549346662212;
- Mon, 04 Feb 2019 22:04:22 -0800 (PST)
+        bh=3aQtR76X4VtJOe5HikigbKlmMNbkcyXJpnJePsqpATQ=;
+        b=Lg/5m8Bjgf4V7AECouEJVilQYsH4KUhwMnH0an6soUuUore7PE3+mJyU1VROvKD4vu
+         e3OYto/DAbyGl2NnOm/ACzHV/L2JwYYc7nbQTIzyHj8LWxaSmKJOFYm5Wp0lgQZ8T19P
+         8QTz/+0IuFbueNZDmEpviMaNTB8XO1vMuvltMPFx/NeUzz5ZjxfBoy8ikxNxLig1GMZh
+         x5RXA0vETFxX6NMsrkunDa8ftj0OOOx6j67gN30EvOA9xG59nU/N32QKwEWbm6XKaS2n
+         072sdeA8IVi6DuVz0gNs99zWn/zYhDNINZhr1qFXjayk6Jto+U29TJfPmbHcoWvBjRcq
+         506Q==
+X-Gm-Message-State: AHQUAub1h8F1eyGk8vDWi2kp6GRirW3ecXtmALnmzeAZUO8l5EseIBcc
+        /Of4GLGxoUxYDaLajcUA000l9aBOW4v/j38x8IXc4A==
+X-Google-Smtp-Source: AHgI3IaUIENwON4vGBErykNufFGyL0jwh+Mj0IuiqAvWyNwrw1Szt8ore/d9WT1qSCmzWYRd0/UO91ZvfY245DOe5Rc=
+X-Received: by 2002:a7b:c5d1:: with SMTP id n17mr2145787wmk.152.1549346690855;
+ Mon, 04 Feb 2019 22:04:50 -0800 (PST)
 MIME-Version: 1.0
-References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-6-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20190129080926.36773-6-Zhiqiang.Hou@nxp.com>
+References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-7-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20190129080926.36773-7-Zhiqiang.Hou@nxp.com>
 From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date:   Tue, 5 Feb 2019 11:36:56 +0530
-Message-ID: <CAFZiPx1eiMYgpaT4q219hcfOGqBB1XkZvX5xjAM5mApiMSVMxw@mail.gmail.com>
-Subject: Re: [PATCHv3 05/27] PCI: mobiveil: correct PCI base address in MEM/IO
- outbound windows
+Date:   Tue, 5 Feb 2019 11:37:24 +0530
+Message-ID: <CAFZiPx3yW89pXsB+Qo5nSQX-C998CYPVr7HWDrJotrV+6q9DBQ@mail.gmail.com>
+Subject: Re: [PATCHv3 06/27] PCI: mobiveil: replace the resource list
+ iteration function
 To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -84,36 +84,41 @@ On Tue, Jan 29, 2019 at 1:39 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
 >
 > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 >
-> It should get PCI base address from the DT node property 'ranges'
-> to setup MEM/IO outbound windows instead of always zero.
+> As it won't delete any node in this iteration, replaced
+> the function resource_list_for_each_entry_safe() with
+> the resource_list_for_each_entry().
 >
-> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge
-> IP driver")
 > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 > ---
 > V3:
 >  - No change
 >
->  drivers/pci/controller/pcie-mobiveil.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  drivers/pci/controller/pcie-mobiveil.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-> index a0dd337c6214..8ff873023b5f 100644
+> index 8ff873023b5f..b2cc9c097fc9 100644
 > --- a/drivers/pci/controller/pcie-mobiveil.c
 > +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -630,8 +630,9 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+> @@ -569,7 +569,7 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+>  {
+>         u32 value, pab_ctrl, type;
+>         int err;
+> -       struct resource_entry *win, *tmp;
+> +       struct resource_entry *win;
 >
->                 /* configure outbound translation window */
->                 program_ob_windows(pcie, pcie->ob_wins_configured,
-> -                                  win->res->start, 0, type,
-> -                                  resource_size(win->res));
-> +                                  win->res->start,
-> +                                  win->res->start - win->offset,
-> +                                  type, resource_size(win->res));
->         }
+>         err = mobiveil_bringup_link(pcie);
+>         if (err) {
+> @@ -620,7 +620,7 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+>         program_ib_windows(pcie, WIN_NUM_1, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
 >
->         /* setup MSI hardware registers */
+>         /* Get the I/O and memory ranges from DT */
+> -       resource_list_for_each_entry_safe(win, tmp, &pcie->resources) {
+> +       resource_list_for_each_entry(win, &pcie->resources) {
+>                 if (resource_type(win->res) == IORESOURCE_MEM)
+>                         type = MEM_WINDOW_TYPE;
+>                 else if (resource_type(win->res) == IORESOURCE_IO)
 > --
 > 2.17.1
 >
