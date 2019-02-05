@@ -2,158 +2,340 @@ Return-Path: <SRS0=ZQO4=QM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CEA4C282CB
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 04:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D493C282CB
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 05:36:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F23862145D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 04:58:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1077720821
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 05:36:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="SsMXJFnJ"
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="NXhmC3Es"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727450AbfBEE5u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Feb 2019 23:57:50 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:43034 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727432AbfBEE5u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Feb 2019 23:57:50 -0500
-Received: by mail-pg1-f193.google.com with SMTP id v28so897792pgk.10
-        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2019 20:57:49 -0800 (PST)
+        id S1725934AbfBEFgs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Feb 2019 00:36:48 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:39542 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725886AbfBEFgs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2019 00:36:48 -0500
+Received: by mail-wr1-f68.google.com with SMTP id t27so2231435wra.6
+        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2019 21:36:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=mGL7QcC1bDOgscis3sOXPMveHiHvdLDsFx5c3yvyr38=;
-        b=SsMXJFnJkICPYuOw7nMuSdlZolJ4JyVOFLtAw3igIzPfTG/qcjJ1DE6A67180NANzu
-         H8SHtoR/L5VHWTjL4NjUaOHWBteOM9OeP2c4DgdZ4bkPg+HZo7/CGaPk1vfjpVf8K+Jz
-         X57LvawCWMTQgoGw1NfpmmSemkSr609sy8dBw=
+        d=mobiveil.co.in; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=7HSMuYKY3HO0FTlrONFulrp9mKtDf2RQdf5tGI4dsfA=;
+        b=NXhmC3Es/Ns3XYhEytV8lbB1OFUfVVx2dbMKXi24djPZTpbAsd7RtbFv7IT3Cc4BdJ
+         X/cNSAPU8o6ioV3BFGLJRyzRpnX5QqrmHMSamyWlq0+z3HzxneyX6B6lWk4U+p2SUsGI
+         2Z42D/Rd5x93knovDa8KI/Kp65q/6nNpCtznc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=mGL7QcC1bDOgscis3sOXPMveHiHvdLDsFx5c3yvyr38=;
-        b=fJ9Td6ftMkFQFneq4lmpTqhmOdy0VGc/z7055e+4XNznyaXS0yfcoakCTBeUewOaSr
-         tHPxnrE1jUol7jDdrFTsqhv8Xg7r8CTb9XONR+FKFcpiSn3KOLpuCC1sX6PoTSplCuw8
-         hl7a4EkXFXJ/nUrHUD0SMupwAjEl9p+pNNdFTrWnW2wS4RUEoD3mm911YgpfcCyLssQt
-         PzauJqDzogNibsjwniO3lSFkAO95X2NI/BLYWDJiSOm6siWG+rxfUXWrKWj4/ewLkcir
-         20yoxz4QXiCpD7Jf9F2ZjNfSv3ZAzD0News8lgyYdLeIvGii+3dP8Ah3JSuOw6oj/4AQ
-         UI1A==
-X-Gm-Message-State: AHQUAuaV6OaXVrQLcxP5FF7wKx4fQAclv6fmHZ/UFZsHEmqI+bU3Zxy9
-        s+B5Bvu6xNP8gkAtBwOdhxWghg==
-X-Google-Smtp-Source: AHgI3IYn/pJ7dHAJ8JID2C384pGVyCW4tbF841XkF6Q3bbpD3vbTbmBpUEEGTeG4MklRgLpuXHTjSA==
-X-Received: by 2002:a63:2a44:: with SMTP id q65mr2628356pgq.231.1549342669385;
-        Mon, 04 Feb 2019 20:57:49 -0800 (PST)
-Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id r76sm2895164pfb.69.2019.02.04.20.57.46
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Mon, 04 Feb 2019 20:57:48 -0800 (PST)
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: [PATCH v2 1/2] PCI: iproc: Add CRS check in config read
-Date:   Tue,  5 Feb 2019 10:27:00 +0530
-Message-Id: <1549342622-9929-2-git-send-email-srinath.mannam@broadcom.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1549342622-9929-1-git-send-email-srinath.mannam@broadcom.com>
-References: <1549342622-9929-1-git-send-email-srinath.mannam@broadcom.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=7HSMuYKY3HO0FTlrONFulrp9mKtDf2RQdf5tGI4dsfA=;
+        b=gU1qm0hBvP4TIjGPd14pVAyfcnzH+fTcLgEmEEdfic880W6rveV+TK7vb0KhsyIkda
+         0kOz0CTZh5wdrrWEZsX4SMWd1PACqg9Wz3rXYiS2I7KgPXF9s4DjIUDAvbs1LVYpTff+
+         E9DMy/ZfzsIMPjv6ds3KkbNtFhMdgw5n4CNuXblJVbDFbSCCih91NUB5kSt6Q2gAYsVb
+         A6HbUyVAI01aoxJg6LCiB5IHDL9RtirwAEyxDO19yTqwoZOJwdDOCndx3PmsS5Wx7e+f
+         LG4TVJOOYnOv4jyYJz+8eTI6/TTAq6M3t+jzHldzFX/G1FjqZTJMOEZlXA5CUpTJJDBj
+         olgw==
+X-Gm-Message-State: AHQUAuaQ0bOFUMVx9rwHoTyQ3U2EJlzMuETwHmVn8Jho4SWGo8UW/LPQ
+        iy1iKI4T0fdZyFz9KqcADdZJ0zkg3oDoirGhq4PQtA==
+X-Google-Smtp-Source: AHgI3IalbvQcWbUCehJrsCBTuh7nt9NYiTBIO2IMdXNAeygrG1KNP07TA4GPkQkXnastF513jpqzARfzLAtovn6/vb0=
+X-Received: by 2002:adf:b201:: with SMTP id u1mr1978755wra.165.1549345005132;
+ Mon, 04 Feb 2019 21:36:45 -0800 (PST)
+MIME-Version: 1.0
+References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-2-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20190129080926.36773-2-Zhiqiang.Hou@nxp.com>
+From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date:   Tue, 5 Feb 2019 11:09:19 +0530
+Message-ID: <CAFZiPx0wA5=juO0PnuMKY_mJSPD12W09Vy+buW_EyQAKzZkjKw@mail.gmail.com>
+Subject: Re: [PATCHv3 01/27] PCI: mobiveil: uniform the register accessors
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the current implementation, config read output data 0xffff0001 is
-assumed as CRS completion. But sometimes 0xffff0001 can be a valid data.
+Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 
-IPROC PCIe host controller has a register to show config read request
-status flags like SC, UR, CRS and CA. So that extra check is added to
-confirm the CRS using status flags before reissue config read.
 
-Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
----
- drivers/pci/controller/pcie-iproc.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-index c20fd6b..b882255 100644
---- a/drivers/pci/controller/pcie-iproc.c
-+++ b/drivers/pci/controller/pcie-iproc.c
-@@ -60,6 +60,10 @@
- #define APB_ERR_EN_SHIFT		0
- #define APB_ERR_EN			BIT(APB_ERR_EN_SHIFT)
- 
-+#define CFG_RD_SUCCESS			0
-+#define CFG_RD_UR			1
-+#define CFG_RD_CRS			2
-+#define CFG_RD_CA			3
- #define CFG_RETRY_STATUS		0xffff0001
- #define CFG_RETRY_STATUS_TIMEOUT_US	500000 /* 500 milliseconds */
- 
-@@ -289,6 +293,9 @@ enum iproc_pcie_reg {
- 	IPROC_PCIE_IARR4,
- 	IPROC_PCIE_IMAP4,
- 
-+	/* config read status */
-+	IPROC_PCIE_CFG_RD_STATUS,
-+
- 	/* link status */
- 	IPROC_PCIE_LINK_STATUS,
- 
-@@ -350,6 +357,7 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
- 	[IPROC_PCIE_IMAP3]		= 0xe08,
- 	[IPROC_PCIE_IARR4]		= 0xe68,
- 	[IPROC_PCIE_IMAP4]		= 0xe70,
-+	[IPROC_PCIE_CFG_RD_STATUS]	= 0xee0,
- 	[IPROC_PCIE_LINK_STATUS]	= 0xf0c,
- 	[IPROC_PCIE_APB_ERR_EN]		= 0xf40,
- };
-@@ -474,10 +482,12 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
- 	return (pcie->base + offset);
- }
- 
--static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-+static unsigned int iproc_pcie_cfg_retry(struct iproc_pcie *pcie,
-+					 void __iomem *cfg_data_p)
- {
- 	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
- 	unsigned int data;
-+	u32 status;
- 
- 	/*
- 	 * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
-@@ -498,6 +508,15 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
- 	 */
- 	data = readl(cfg_data_p);
- 	while (data == CFG_RETRY_STATUS && timeout--) {
-+		/*
-+		 * CRS state is set in CFG_RD status register
-+		 * This will handle the case where CFG_RETRY_STATUS is
-+		 * valid config data.
-+		 */
-+		status = iproc_pcie_read_reg(pcie, IPROC_PCIE_CFG_RD_STATUS);
-+		if (status != CFG_RD_CRS)
-+			return data;
-+
- 		udelay(1);
- 		data = readl(cfg_data_p);
- 	}
-@@ -576,7 +595,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
- 	if (!cfg_data_p)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	data = iproc_pcie_cfg_retry(cfg_data_p);
-+	data = iproc_pcie_cfg_retry(pcie, cfg_data_p);
- 
- 	*val = data;
- 	if (size <= 2)
--- 
-2.7.4
-
+On Tue, Jan 29, 2019 at 1:38 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
+>
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>
+> It's confused that R/W some registers by csr_readl()/csr_writel(),
+> while others by read_paged_register()/write_paged_register().
+> Actually the low 3KB of 4KB PCIe configure space can be accessed
+> directly and high 1KB is paging area. So this patch uniformed the
+> register accessors to csr_readl() and csr_writel() by comparing
+> the register offset with page access boundary 3KB in the accessor
+> internal.
+>
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+> ---
+> V3:
+>  - No change
+>
+>  drivers/pci/controller/pcie-mobiveil.c | 179 +++++++++++++++++--------
+>  1 file changed, 124 insertions(+), 55 deletions(-)
+>
+> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+> index 77052a0712d0..d55c7e780c6e 100644
+> --- a/drivers/pci/controller/pcie-mobiveil.c
+> +++ b/drivers/pci/controller/pcie-mobiveil.c
+> @@ -47,7 +47,6 @@
+>  #define  PAGE_SEL_SHIFT        13
+>  #define  PAGE_SEL_MASK         0x3f
+>  #define  PAGE_LO_MASK          0x3ff
+> -#define  PAGE_SEL_EN           0xc00
+>  #define  PAGE_SEL_OFFSET_SHIFT 10
+>
+>  #define PAB_AXI_PIO_CTRL       0x0840
+> @@ -117,6 +116,12 @@
+>  #define LINK_WAIT_MIN  90000
+>  #define LINK_WAIT_MAX  100000
+>
+> +#define PAGED_ADDR_BNDRY                       0xc00
+> +#define OFFSET_TO_PAGE_ADDR(off)               \
+> +       ((off & PAGE_LO_MASK) | PAGED_ADDR_BNDRY)
+> +#define OFFSET_TO_PAGE_IDX(off)                        \
+> +       ((off >> PAGE_SEL_OFFSET_SHIFT) & PAGE_SEL_MASK)
+> +
+>  struct mobiveil_msi {                  /* MSI information */
+>         struct mutex lock;              /* protect bitmap variable */
+>         struct irq_domain *msi_domain;
+> @@ -145,15 +150,119 @@ struct mobiveil_pcie {
+>         struct mobiveil_msi msi;
+>  };
+>
+> -static inline void csr_writel(struct mobiveil_pcie *pcie, const u32 value,
+> -               const u32 reg)
+> +/*
+> + * mobiveil_pcie_sel_page - routine to access paged register
+> + *
+> + * Registers whose address greater than PAGED_ADDR_BNDRY (0xc00) are paged,
+> + * for this scheme to work extracted higher 6 bits of the offset will be
+> + * written to pg_sel field of PAB_CTRL register and rest of the lower 10
+> + * bits enabled with PAGED_ADDR_BNDRY are used as offset of the register.
+> + */
+> +static void mobiveil_pcie_sel_page(struct mobiveil_pcie *pcie, u8 pg_idx)
+>  {
+> -       writel_relaxed(value, pcie->csr_axi_slave_base + reg);
+> +       u32 val;
+> +
+> +       val = readl(pcie->csr_axi_slave_base + PAB_CTRL);
+> +       val &= ~(PAGE_SEL_MASK << PAGE_SEL_SHIFT);
+> +       val |= (pg_idx & PAGE_SEL_MASK) << PAGE_SEL_SHIFT;
+> +
+> +       writel(val, pcie->csr_axi_slave_base + PAB_CTRL);
+>  }
+>
+> -static inline u32 csr_readl(struct mobiveil_pcie *pcie, const u32 reg)
+> +static void *mobiveil_pcie_comp_addr(struct mobiveil_pcie *pcie, u32 off)
+>  {
+> -       return readl_relaxed(pcie->csr_axi_slave_base + reg);
+> +       if (off < PAGED_ADDR_BNDRY) {
+> +               /* For directly accessed registers, clear the pg_sel field */
+> +               mobiveil_pcie_sel_page(pcie, 0);
+> +               return pcie->csr_axi_slave_base + off;
+> +       }
+> +
+> +       mobiveil_pcie_sel_page(pcie, OFFSET_TO_PAGE_IDX(off));
+> +       return pcie->csr_axi_slave_base + OFFSET_TO_PAGE_ADDR(off);
+> +}
+> +
+> +static int mobiveil_pcie_read(void __iomem *addr, int size, u32 *val)
+> +{
+> +       if ((uintptr_t)addr & (size - 1)) {
+> +               *val = 0;
+> +               return PCIBIOS_BAD_REGISTER_NUMBER;
+> +       }
+> +
+> +       switch (size) {
+> +       case 4:
+> +               *val = readl(addr);
+> +               break;
+> +       case 2:
+> +               *val = readw(addr);
+> +               break;
+> +       case 1:
+> +               *val = readb(addr);
+> +               break;
+> +       default:
+> +               *val = 0;
+> +               return PCIBIOS_BAD_REGISTER_NUMBER;
+> +       }
+> +
+> +       return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static int mobiveil_pcie_write(void __iomem *addr, int size, u32 val)
+> +{
+> +       if ((uintptr_t)addr & (size - 1))
+> +               return PCIBIOS_BAD_REGISTER_NUMBER;
+> +
+> +       switch (size) {
+> +       case 4:
+> +               writel(val, addr);
+> +               break;
+> +       case 2:
+> +               writew(val, addr);
+> +               break;
+> +       case 1:
+> +               writeb(val, addr);
+> +               break;
+> +       default:
+> +               return PCIBIOS_BAD_REGISTER_NUMBER;
+> +       }
+> +
+> +       return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static u32 csr_read(struct mobiveil_pcie *pcie, u32 off, size_t size)
+> +{
+> +       void *addr;
+> +       u32 val;
+> +       int ret;
+> +
+> +       addr = mobiveil_pcie_comp_addr(pcie, off);
+> +
+> +       ret = mobiveil_pcie_read(addr, size, &val);
+> +       if (ret)
+> +               dev_err(&pcie->pdev->dev, "read CSR address failed\n");
+> +
+> +       return val;
+> +}
+> +
+> +static void csr_write(struct mobiveil_pcie *pcie, u32 val, u32 off, size_t size)
+> +{
+> +       void *addr;
+> +       int ret;
+> +
+> +       addr = mobiveil_pcie_comp_addr(pcie, off);
+> +
+> +       ret = mobiveil_pcie_write(addr, size, val);
+> +       if (ret)
+> +               dev_err(&pcie->pdev->dev, "write CSR address failed\n");
+> +}
+> +
+> +static u32 csr_readl(struct mobiveil_pcie *pcie, u32 off)
+> +{
+> +       return csr_read(pcie, off, 0x4);
+> +}
+> +
+> +static void csr_writel(struct mobiveil_pcie *pcie, u32 val, u32 off)
+> +{
+> +       csr_write(pcie, val, off, 0x4);
+>  }
+>
+>  static bool mobiveil_pcie_link_up(struct mobiveil_pcie *pcie)
+> @@ -342,45 +451,6 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
+>         return 0;
+>  }
+>
+> -/*
+> - * select_paged_register - routine to access paged register of root complex
+> - *
+> - * registers of RC are paged, for this scheme to work
+> - * extracted higher 6 bits of the offset will be written to pg_sel
+> - * field of PAB_CTRL register and rest of the lower 10 bits enabled with
+> - * PAGE_SEL_EN are used as offset of the register.
+> - */
+> -static void select_paged_register(struct mobiveil_pcie *pcie, u32 offset)
+> -{
+> -       int pab_ctrl_dw, pg_sel;
+> -
+> -       /* clear pg_sel field */
+> -       pab_ctrl_dw = csr_readl(pcie, PAB_CTRL);
+> -       pab_ctrl_dw = (pab_ctrl_dw & ~(PAGE_SEL_MASK << PAGE_SEL_SHIFT));
+> -
+> -       /* set pg_sel field */
+> -       pg_sel = (offset >> PAGE_SEL_OFFSET_SHIFT) & PAGE_SEL_MASK;
+> -       pab_ctrl_dw |= ((pg_sel << PAGE_SEL_SHIFT));
+> -       csr_writel(pcie, pab_ctrl_dw, PAB_CTRL);
+> -}
+> -
+> -static void write_paged_register(struct mobiveil_pcie *pcie,
+> -               u32 val, u32 offset)
+> -{
+> -       u32 off = (offset & PAGE_LO_MASK) | PAGE_SEL_EN;
+> -
+> -       select_paged_register(pcie, offset);
+> -       csr_writel(pcie, val, off);
+> -}
+> -
+> -static u32 read_paged_register(struct mobiveil_pcie *pcie, u32 offset)
+> -{
+> -       u32 off = (offset & PAGE_LO_MASK) | PAGE_SEL_EN;
+> -
+> -       select_paged_register(pcie, offset);
+> -       return csr_readl(pcie, off);
+> -}
+> -
+>  static void program_ib_windows(struct mobiveil_pcie *pcie, int win_num,
+>                 int pci_addr, u32 type, u64 size)
+>  {
+> @@ -397,19 +467,19 @@ static void program_ib_windows(struct mobiveil_pcie *pcie, int win_num,
+>         pio_ctrl_val = csr_readl(pcie, PAB_PEX_PIO_CTRL);
+>         csr_writel(pcie,
+>                 pio_ctrl_val | (1 << PIO_ENABLE_SHIFT), PAB_PEX_PIO_CTRL);
+> -       amap_ctrl_dw = read_paged_register(pcie, PAB_PEX_AMAP_CTRL(win_num));
+> +       amap_ctrl_dw = csr_readl(pcie, PAB_PEX_AMAP_CTRL(win_num));
+>         amap_ctrl_dw = (amap_ctrl_dw | (type << AMAP_CTRL_TYPE_SHIFT));
+>         amap_ctrl_dw = (amap_ctrl_dw | (1 << AMAP_CTRL_EN_SHIFT));
+>
+> -       write_paged_register(pcie, amap_ctrl_dw | lower_32_bits(size64),
+> -                               PAB_PEX_AMAP_CTRL(win_num));
+> +       csr_writel(pcie, amap_ctrl_dw | lower_32_bits(size64),
+> +                  PAB_PEX_AMAP_CTRL(win_num));
+>
+> -       write_paged_register(pcie, upper_32_bits(size64),
+> -                               PAB_EXT_PEX_AMAP_SIZEN(win_num));
+> +       csr_writel(pcie, upper_32_bits(size64),
+> +                  PAB_EXT_PEX_AMAP_SIZEN(win_num));
+>
+> -       write_paged_register(pcie, pci_addr, PAB_PEX_AMAP_AXI_WIN(win_num));
+> -       write_paged_register(pcie, pci_addr, PAB_PEX_AMAP_PEX_WIN_L(win_num));
+> -       write_paged_register(pcie, 0, PAB_PEX_AMAP_PEX_WIN_H(win_num));
+> +       csr_writel(pcie, pci_addr, PAB_PEX_AMAP_AXI_WIN(win_num));
+> +       csr_writel(pcie, pci_addr, PAB_PEX_AMAP_PEX_WIN_L(win_num));
+> +       csr_writel(pcie, 0, PAB_PEX_AMAP_PEX_WIN_H(win_num));
+>  }
+>
+>  /*
+> @@ -437,8 +507,7 @@ static void program_ob_windows(struct mobiveil_pcie *pcie, int win_num,
+>         csr_writel(pcie, 1 << WIN_ENABLE_SHIFT | type << WIN_TYPE_SHIFT |
+>                         lower_32_bits(size64), PAB_AXI_AMAP_CTRL(win_num));
+>
+> -       write_paged_register(pcie, upper_32_bits(size64),
+> -                               PAB_EXT_AXI_AMAP_SIZE(win_num));
+> +       csr_writel(pcie, upper_32_bits(size64), PAB_EXT_AXI_AMAP_SIZE(win_num));
+>
+>         /*
+>          * program AXI window base with appropriate value in
+> --
+> 2.17.1
+>
