@@ -2,232 +2,117 @@ Return-Path: <SRS0=ZQO4=QM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B62C282CB
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:02:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B936C282CB
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:02:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FFFF2083B
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:02:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549346537;
-	bh=RVnQd+LbEOs+pQHWfLVBLe70RdxQZsy8uMbWTgER0TQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=PcBiLU7sNKFeCsJY7ve7pJt1HWrV5ym5OeIjeHMAJobirg8NvPr56X6KukJHBBIHR
-	 O0s017uprdpfBLSdIgvoBENrWUeyHjxCNoKzKwvmPAGXTbqZEEYcD9CuIy3BDVggTQ
-	 TD23GsWmn38PDa3OF7Lpt08JVaDjaBO39FEhyy8I=
+	by mail.kernel.org (Postfix) with ESMTP id 089D52083B
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:02:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="u0hfqtB6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726809AbfBEGCJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Feb 2019 01:02:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39404 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725893AbfBEGCJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Feb 2019 01:02:09 -0500
-Received: from localhost (unknown [171.61.84.175])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6CF292083B;
-        Tue,  5 Feb 2019 06:02:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549346527;
-        bh=RVnQd+LbEOs+pQHWfLVBLe70RdxQZsy8uMbWTgER0TQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=O0x3LAqR4xGO5ld7UWqScuZmcuJ/VGEPOGOHTMuI2xNGzBaXbdf/P7u7I+ZqpK17E
-         4cRW5OsOuw0yDwxK6D2OSx+tdDftpQ5C5nBTNkSUR9Ns9GcsvtaioWRWc0G0tM0Zgb
-         8ItZwFCstaVzt4l6Q7yY7OKDc7TNgVc3ce4u1IsY=
-Date:   Tue, 5 Feb 2019 11:31:58 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Andy Gross <andy.gross@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        David Brown <david.brown@linaro.org>,
-        Khasim Syed Mohammed <khasim.mohammed@linaro.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Stephen Boyd <sboyd@kernel.org>, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 7/7] arm64: dts: qcom: qcs404: Add PCIe related nodes
-Message-ID: <20190205060158.GY4296@vkoul-mobl>
-References: <20190125234509.26419-1-bjorn.andersson@linaro.org>
- <20190125234509.26419-8-bjorn.andersson@linaro.org>
+        id S1727080AbfBEGCr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Feb 2019 01:02:47 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:45532 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725893AbfBEGCr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2019 01:02:47 -0500
+Received: by mail-wr1-f68.google.com with SMTP id q15so2226665wro.12
+        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2019 22:02:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mobiveil.co.in; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=+iXYvqbL04CrMC9Msn9+P2yhEIYzuGJ1s0Z7Tbi9M9Q=;
+        b=u0hfqtB6n/9xUdBNpa+lUEjHPSk0axN4rIGHPdjhsjG/v2VvNzoR9t/3kaCEzLeaas
+         OHCgZhiEc5h7gQrWYefmkhDJo24KkLKA+fH16gY+JW6aJI5oZjjv8JXBSWCyMDPMMVht
+         6qBwfjmveYOlfNjzJOw51ZZsJX5tnM+ZL6oB8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=+iXYvqbL04CrMC9Msn9+P2yhEIYzuGJ1s0Z7Tbi9M9Q=;
+        b=Jr7d2SVfJuQnIk9UKqgSj3shAlXALUyawZ7V15t46TtUsjD1lvRq9m7eznF3g1//wW
+         PwmYmHEPOrrAKZmKzBWUZTKlHf1flUshWQ3MXVIMZasMe0r7BKzEwpiQ17/aFC2gABtL
+         E3Rfbl1QNmfk3gI/9Oz4ti+kE5Gc1dcjprMpp1alXYQA0d39d+AoF/FyEeTpKbtOjZTI
+         x1jPp5uRo8E0ZrQ3E8r/NeOyV/OTc20Z7vgcrXtMNFQwqaEGIQB4heSMxdvpmYGLsr9K
+         nNANG1ZFA/uFphAuus66++E7qh2rHJ/K/ycb4/Z7oBfILzmA/LL6xlAgrh2tKjNK3Sxf
+         07hw==
+X-Gm-Message-State: AHQUAuaeJ75/elM6NDZnOBsYJXt20bVTyxj05VCHUt9bUUZfszElJ54M
+        RqSthEcIPIvASZJdvnSvBWsFDK06klN2aMu7ML0ZAA==
+X-Google-Smtp-Source: AHgI3IabIa+8GnpOhA0TxuLJJFYCpplG1t9plmrYCiZAkge7q1SBCrmcqhBkCINFhgjx2A+iGoBr42hYp8YZYZD3u/Q=
+X-Received: by 2002:a5d:4ec7:: with SMTP id s7mr2188770wrv.14.1549346564989;
+ Mon, 04 Feb 2019 22:02:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190125234509.26419-8-bjorn.andersson@linaro.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-5-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20190129080926.36773-5-Zhiqiang.Hou@nxp.com>
+From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date:   Tue, 5 Feb 2019 11:35:19 +0530
+Message-ID: <CAFZiPx0aiLkVrqVxmyLRcVZJ0G=+60vED4cJOfAo=18DDnOtcA@mail.gmail.com>
+Subject: Re: [PATCHv3 04/27] PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 25-01-19, 15:45, Bjorn Andersson wrote:
-> The QCS404 has a PCIe2 PHY and a Qualcomm PCIe controller, add these to
-> the platform dtsi and enable them for the EVB with the perst gpio
-> and analog supplies defined.
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Zhiqiang,
+why are we removing multi-MSI support ?
+what functionality this driver is not providing to support it ?
+
+Thanks.
+
+On Tue, Jan 29, 2019 at 1:38 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
+>
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>
+> The current code does not support multiple MSIs, so remove
+> the corresponding flag from the msi_domain_info structure.
+>
+> Fixes: 1e913e58335f ("PCI: mobiveil: Add MSI support")
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 > ---
->  arch/arm64/boot/dts/qcom/qcs404-evb.dtsi | 25 +++++++++
->  arch/arm64/boot/dts/qcom/qcs404.dtsi     | 67 ++++++++++++++++++++++++
->  2 files changed, 92 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi b/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi
-> index 50b3589c7f15..579ddaf4f5fa 100644
-> --- a/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/qcs404-evb.dtsi
-> @@ -21,6 +21,22 @@
->  	};
+> V3:
+>  - No change
+>
+>  drivers/pci/controller/pcie-mobiveil.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+> index 563210e731d3..a0dd337c6214 100644
+> --- a/drivers/pci/controller/pcie-mobiveil.c
+> +++ b/drivers/pci/controller/pcie-mobiveil.c
+> @@ -703,7 +703,7 @@ static struct irq_chip mobiveil_msi_irq_chip = {
+>
+>  static struct msi_domain_info mobiveil_msi_domain_info = {
+>         .flags  = (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+> -                  MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX),
+> +                  MSI_FLAG_PCI_MSIX),
+>         .chip   = &mobiveil_msi_irq_chip,
 >  };
->  
-> +&pcie {
-> +	status = "ok";
-> +
-> +	perst-gpio = <&tlmm 43 GPIO_ACTIVE_LOW>;
-> +
-> +	pinctrl-names = "default";
-> +	pinctrl-0 = <&perst_state>;
-> +};
-> +
-> +&pcie_phy {
-> +	status = "ok";
-> +
-> +	vdda-vp-supply = <&vreg_l3_1p05>;
-> +	vdda-vph-supply = <&vreg_l5_1p8>;
-> +};
-
-I would prefer the patches be split to qcs404 adding PCIe nodes and then
-add the board node for EVB... 
-
-> +
->  &remoteproc_adsp {
->  	status = "ok";
->  };
-> @@ -137,6 +153,15 @@
->  };
->  
->  &tlmm {
-> +	perst_state: perst {
-> +		pins = "gpio43";
-> +		function = "gpio";
-> +
-> +		drive-strength = <2>;
-> +		bias-disable;
-> +		output-low;
-> +	};
-> +
->  	sdc1_on: sdc1-on {
->  		clk {
->  			pins = "sdc1_clk";
-> diff --git a/arch/arm64/boot/dts/qcom/qcs404.dtsi b/arch/arm64/boot/dts/qcom/qcs404.dtsi
-> index 76699435c8bd..7b219865ba7e 100644
-> --- a/arch/arm64/boot/dts/qcom/qcs404.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/qcs404.dtsi
-> @@ -3,6 +3,7 @@
->  
->  #include <dt-bindings/interrupt-controller/arm-gic.h>
->  #include <dt-bindings/clock/qcom,gcc-qcs404.h>
-> +#include <dt-bindings/gpio/gpio.h>
->  
->  / {
->  	interrupt-parent = <&intc>;
-> @@ -377,6 +378,7 @@
->  			compatible = "qcom,gcc-qcs404";
->  			reg = <0x01800000 0x80000>;
->  			#clock-cells = <1>;
-> +			#reset-cells = <1>;
->  
->  			assigned-clocks = <&gcc GCC_APSS_AHB_CLK_SRC>;
->  			assigned-clock-rates = <19200000>;
-> @@ -405,6 +407,21 @@
->  			#interrupt-cells = <4>;
->  		};
->  
-> +		pcie_phy: phy@7786000 {
-> +			compatible = "qcom,qcs404-pcie2-phy", "qcom,pcie2-phy";
-> +			reg = <0x07786000 0xb8>;
-> +
-> +			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
-> +			resets = <&gcc GCC_PCIEPHY_0_PHY_BCR>,
-> +				 <&gcc GCC_PCIE_0_PIPE_ARES>;
-> +			reset-names = "phy", "pipe";
-> +
-> +			clock-output-names = "pcie_0_pipe_clk";
-> +			#phy-cells = <0>;
-> +
-> +			status = "disabled";
-> +		};
-> +
->  		sdcc1: sdcc@7804000 {
->  			compatible = "qcom,sdhci-msm-v5";
->  			reg = <0x07804000 0x1000>, <0x7805000 0x1000>;
-> @@ -771,6 +788,56 @@
->  				status = "disabled";
->  			};
->  		};
-> +
-> +		pcie: pci@10000000 {
-> +			compatible = "qcom,pcie-qcs404", "snps,dw-pcie";
-> +			reg =  <0x10000000 0xf1d
-> +				0x10000f20 0xa8
-> +				0x07780000 0x2000
-> +				0x10001000 0x2000>;
-> +			reg-names = "dbi", "elbi", "parf", "config";
-> +			device_type = "pci";
-> +			linux,pci-domain = <0>;
-> +			bus-range = <0x00 0xff>;
-> +			num-lanes = <1>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +
-> +			ranges = <0x81000000 0 0          0x10003000 0 0x00010000   /* I/O */
-> +				  0x82000000 0 0x10013000 0x10013000 0 0x007ed000>; /* memory */
-> +
-> +			interrupts = <GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>;
-> +			interrupt-names = "msi";
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0 0 0 0x7>;
-> +			interrupt-map = <0 0 0 1 &intc GIC_SPI 68 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-> +					<0 0 0 2 &intc GIC_SPI 224 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-> +					<0 0 0 3 &intc GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-> +					<0 0 0 4 &intc GIC_SPI 268 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-> +			clocks = <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-> +				 <&gcc GCC_PCIE_0_AUX_CLK>,
-> +				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-> +				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>;
-> +			clock-names = "iface", "aux", "master_bus", "slave_bus";
-> +
-> +			resets = <&gcc GCC_PCIE_0_AXI_MASTER_ARES>,
-> +				 <&gcc GCC_PCIE_0_AXI_SLAVE_ARES>,
-> +				 <&gcc GCC_PCIE_0_AXI_MASTER_STICKY_ARES>,
-> +				 <&gcc GCC_PCIE_0_CORE_STICKY_ARES>,
-> +				 <&gcc GCC_PCIE_0_BCR>,
-> +				 <&gcc GCC_PCIE_0_AHB_ARES>;
-> +			reset-names = "axi_m",
-> +				      "axi_s",
-> +				      "axi_m_sticky",
-> +				      "pipe_sticky",
-> +				      "pwr",
-> +				      "ahb";
-> +
-> +			phys = <&pcie_phy>;
-> +			phy-names = "pciephy";
-> +
-> +			status = "disabled";
-> +		};
->  	};
->  
->  	timer {
-> -- 
-> 2.18.0
-
--- 
-~Vinod
+>
+> --
+> 2.17.1
+>
