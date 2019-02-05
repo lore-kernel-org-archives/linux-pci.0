@@ -2,101 +2,284 @@ Return-Path: <SRS0=ZQO4=QM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B57C282CB
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 18:02:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1AAC282CB
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 18:24:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 638A820818
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 18:02:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48D0C2175B
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 18:24:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726533AbfBESC4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Feb 2019 13:02:56 -0500
-Received: from foss.arm.com ([217.140.101.70]:44580 "EHLO foss.arm.com"
+        id S1729902AbfBESYz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Feb 2019 13:24:55 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:44186 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726288AbfBESC4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Feb 2019 13:02:56 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id ACB40EBD;
-        Tue,  5 Feb 2019 10:02:55 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 5015C3F557;
-        Tue,  5 Feb 2019 10:02:52 -0800 (PST)
-Date:   Tue, 5 Feb 2019 18:02:47 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
-        arnd@arndb.de, gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
-        mingkai.hu@nxp.com, roy.zang@nxp.com, kstewart@linuxfoundation.org,
-        cyrille.pitchen@free-electrons.com, pombredanne@nexb.com,
-        shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCHv6 1/4] dt-bindings: add DT binding for the layerscape
- PCIe controller with EP mode
-Message-ID: <20190205180247.GA13891@e107981-ln.cambridge.arm.com>
-References: <20190122063328.25228-1-xiaowei.bao@nxp.com>
+        id S1729858AbfBESYz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Feb 2019 13:24:55 -0500
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 77C7B87633;
+        Tue,  5 Feb 2019 18:24:54 +0000 (UTC)
+Received: from redhat.com (ovpn-116-138.sin2.redhat.com [10.67.116.138])
+        by smtp.corp.redhat.com (Postfix) with SMTP id EB17C183EA;
+        Tue,  5 Feb 2019 18:24:47 +0000 (UTC)
+Date:   Tue, 5 Feb 2019 13:24:45 -0500
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, xuyandong <xuyandong2@huawei.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Jesse Barnes <jbarnes@virtuousgeek.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Ofer Hayut <ofer@lightbitslabs.com>,
+        Roy Shterman <roys@lightbitslabs.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Probe bridge window attributes once at
+ enumeration-time
+Message-ID: <20190205132323-mutt-send-email-mst@kernel.org>
+References: <154818377425.41851.650909794935936003.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20190129224333.GE91506@google.com>
+ <20190129174504-mutt-send-email-mst@kernel.org>
+ <20190129230225.GF91506@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190122063328.25228-1-xiaowei.bao@nxp.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20190129230225.GF91506@google.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Tue, 05 Feb 2019 18:24:54 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 22, 2019 at 02:33:25PM +0800, Xiaowei Bao wrote:
-> Add the documentation for the Device Tree binding for the layerscape PCIe
-> controller with EP mode.
+On Tue, Jan 29, 2019 at 05:02:26PM -0600, Bjorn Helgaas wrote:
+> On Tue, Jan 29, 2019 at 05:47:32PM -0500, Michael S. Tsirkin wrote:
+> > On Tue, Jan 29, 2019 at 04:43:33PM -0600, Bjorn Helgaas wrote:
+> > > On Tue, Jan 22, 2019 at 01:02:54PM -0600, Bjorn Helgaas wrote:
+> > > > From: Bjorn Helgaas <bhelgaas@google.com>
+> > > > 
+> > > > pci_bridge_check_ranges() determines whether a bridge supports the optional
+> > > > I/O and prefetchable memory windows and sets the flag bits in the bridge
+> > > > resources.  This *could* be done once during enumeration except that the
+> > > > resource allocation code completely clears the flag bits, e.g., in the
+> > > > pci_assign_unassigned_bridge_resources() path.
+> > > > 
+> > > > The problem with pci_bridge_check_ranges() in the resource allocation path
+> > > > is that we may allocate resources after devices have been claimed by
+> > > > drivers, and pci_bridge_check_ranges() *changes* the window registers to
+> > > > determine whether they're writable.  This may break concurrent accesses to
+> > > > devices behind the bridge.
+> > > > 
+> > > > Add a new pci_read_bridge_windows() to determine whether a bridge supports
+> > > > the optional windows, call it once during enumeration, remember the
+> > > > results, and change pci_bridge_check_ranges() so it doesn't touch the
+> > > > bridge windows but sets the flag bits based on those remembered results.
+> > > > 
+> > > > Link: https://lore.kernel.org/linux-pci/1506151482-113560-1-git-send-email-wangzhou1@hisilicon.com
+> > > > Link: https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.html
+> > > > Reported-by: xuyandong <xuyandong2@huawei.com>
+> > > > Tested-by: xuyandong <xuyandong2@huawei.com>
+> > > > Cc: Sagi Grimberg <sagi@grimberg.me>
+> > > > Cc: Ofer Hayut <ofer@lightbitslabs.com>
+> > > > Cc: Roy Shterman <roys@lightbitslabs.com>
+> > > > Cc: Keith Busch <keith.busch@intel.com>
+> > > > Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> > > 
+> > > Applied to pci/enumeration for v5.1.
+> > > 
+> > > This is fairly simple in concept, but doesn't meet the letter of the
+> > > restrictions in Documentation/process/stable-kernel-rules.rst, so I
+> > > didn't tag it for stable.
+> > > 
+> > > Is there a compelling argument to mark it for stable?
+> > 
+> > Well it's needed downstream.
+> > It's a bit above 100 lines with context. Is this what you mean?
 > 
-> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-> Reviewed-by: Minghuan Lian <minghuan.lian@nxp.com>
-> Reviewed-by: Zhiqiang Hou <zhiqiang.hou@nxp.com>
-> Reviewed-by: Rob Herring <robh+dt@kernel.org>
-> ---
-> v2:
->  - Add the SoC specific compatibles.
-> v3:
->  - modify the commit message.
-> v4:
->  - no change.
-> v5:
->  - no change.
-> v6:
->  - no change.
+> Yep, I should have been explicit about that.
 > 
->  .../devicetree/bindings/pci/layerscape-pci.txt     |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-
-Applied the series to pci/layerscape for v5.1, thanks.
-
-Lorenzo
-
-> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> index 9b2b8d6..e20ceaa 100644
-> --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-> @@ -13,6 +13,7 @@ information.
->  
->  Required properties:
->  - compatible: should contain the platform identifier such as:
-> +  RC mode:
->          "fsl,ls1021a-pcie"
->          "fsl,ls2080a-pcie", "fsl,ls2085a-pcie"
->          "fsl,ls2088a-pcie"
-> @@ -20,6 +21,8 @@ Required properties:
->          "fsl,ls1046a-pcie"
->          "fsl,ls1043a-pcie"
->          "fsl,ls1012a-pcie"
-> +  EP mode:
-> +	"fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep"
->  - reg: base addresses and lengths of the PCIe controller register blocks.
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
-> -- 
-> 1.7.1
+> > If yes how about using my patch for stable as an alternative?
+> > The rules allow for equivalent patches.
 > 
+> Well, yes, that would be a possibility.
+> 
+> I would rather develop an argument for marking *this* patch for
+> stable.  Even though it is technically too large, I think we could
+> make it work if we have compelling reasons.
+> 
+> Those would need to be fleshed out a little more than "needed
+> downstream" -- something about the scenarios where this happens, what
+> the serious problem is, etc.
+> 
+> The *ideal* thing would be to have an actual bugzilla.kernel.org
+> report of the problem with a way to reproduce it and dmesg
+> illustrating the problem.
+
+xuyandong would you like to take a stub at creating the bugzilla
+entry?
+If not let me know and I'll do it.
+Thanks!
+
+
+> > > > ---
+> > > >  drivers/pci/probe.c     |   52 +++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  drivers/pci/setup-bus.c |   45 ++++-------------------------------------
+> > > >  include/linux/pci.h     |    3 +++
+> > > >  3 files changed, 59 insertions(+), 41 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > > index 257b9f6f2ebb..2ef8b954c65a 100644
+> > > > --- a/drivers/pci/probe.c
+> > > > +++ b/drivers/pci/probe.c
+> > > > @@ -348,6 +348,57 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int howmany, int rom)
+> > > >  	}
+> > > >  }
+> > > >  
+> > > > +static void pci_read_bridge_windows(struct pci_dev *bridge)
+> > > > +{
+> > > > +	u16 io;
+> > > > +	u32 pmem, tmp;
+> > > > +
+> > > > +	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > +	if (!io) {
+> > > > +		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+> > > > +		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > +		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+> > > > +	}
+> > > > +	if (io)
+> > > > +		bridge->io_window = 1;
+> > > > +
+> > > > +	/*
+> > > > +	 * DECchip 21050 pass 2 errata: the bridge may miss an address
+> > > > +	 * disconnect boundary by one PCI data phase.  Workaround: do not
+> > > > +	 * use prefetching on this device.
+> > > > +	 */
+> > > > +	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
+> > > > +		return;
+> > > > +
+> > > > +	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+> > > > +	if (!pmem) {
+> > > > +		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
+> > > > +					       0xffe0fff0);
+> > > > +		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+> > > > +		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
+> > > > +	}
+> > > > +	if (!pmem)
+> > > > +		return;
+> > > > +
+> > > > +	bridge->pref_window = 1;
+> > > > +
+> > > > +	if ((pmem & PCI_PREF_RANGE_TYPE_MASK) == PCI_PREF_RANGE_TYPE_64) {
+> > > > +
+> > > > +		/*
+> > > > +		 * Bridge claims to have a 64-bit prefetchable memory
+> > > > +		 * window; verify that the upper bits are actually
+> > > > +		 * writable.
+> > > > +		 */
+> > > > +		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &pmem);
+> > > > +		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> > > > +				       0xffffffff);
+> > > > +		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
+> > > > +		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32, pmem);
+> > > > +		if (tmp)
+> > > > +			bridge->pref_64_window = 1;
+> > > > +	}
+> > > > +}
+> > > > +
+> > > >  static void pci_read_bridge_io(struct pci_bus *child)
+> > > >  {
+> > > >  	struct pci_dev *dev = child->self;
+> > > > @@ -1739,6 +1790,7 @@ int pci_setup_device(struct pci_dev *dev)
+> > > >  		pci_read_irq(dev);
+> > > >  		dev->transparent = ((dev->class & 0xff) == 1);
+> > > >  		pci_read_bases(dev, 2, PCI_ROM_ADDRESS1);
+> > > > +		pci_read_bridge_windows(dev);
+> > > >  		set_pcie_hotplug_bridge(dev);
+> > > >  		pos = pci_find_capability(dev, PCI_CAP_ID_SSVID);
+> > > >  		if (pos) {
+> > > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > > > index ed960436df5e..1941bb0a6c13 100644
+> > > > --- a/drivers/pci/setup-bus.c
+> > > > +++ b/drivers/pci/setup-bus.c
+> > > > @@ -735,58 +735,21 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+> > > >     base/limit registers must be read-only and read as 0. */
+> > > >  static void pci_bridge_check_ranges(struct pci_bus *bus)
+> > > >  {
+> > > > -	u16 io;
+> > > > -	u32 pmem;
+> > > >  	struct pci_dev *bridge = bus->self;
+> > > > -	struct resource *b_res;
+> > > > +	struct resource *b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+> > > >  
+> > > > -	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+> > > >  	b_res[1].flags |= IORESOURCE_MEM;
+> > > >  
+> > > > -	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > -	if (!io) {
+> > > > -		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+> > > > -		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > -		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+> > > > -	}
+> > > > -	if (io)
+> > > > +	if (bridge->io_window)
+> > > >  		b_res[0].flags |= IORESOURCE_IO;
+> > > >  
+> > > > -	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
+> > > > -	    disconnect boundary by one PCI data phase.
+> > > > -	    Workaround: do not use prefetching on this device. */
+> > > > -	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device == 0x0001)
+> > > > -		return;
+> > > > -
+> > > > -	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+> > > > -	if (!pmem) {
+> > > > -		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE,
+> > > > -					       0xffe0fff0);
+> > > > -		pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE, &pmem);
+> > > > -		pci_write_config_dword(bridge, PCI_PREF_MEMORY_BASE, 0x0);
+> > > > -	}
+> > > > -	if (pmem) {
+> > > > +	if (bridge->pref_window) {
+> > > >  		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
+> > > > -		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
+> > > > -		    PCI_PREF_RANGE_TYPE_64) {
+> > > > +		if (bridge->pref_64_window) {
+> > > >  			b_res[2].flags |= IORESOURCE_MEM_64;
+> > > >  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
+> > > >  		}
+> > > >  	}
+> > > > -
+> > > > -	/* double check if bridge does support 64 bit pref */
+> > > > -	if (b_res[2].flags & IORESOURCE_MEM_64) {
+> > > > -		u32 mem_base_hi, tmp;
+> > > > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> > > > -					 &mem_base_hi);
+> > > > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> > > > -					       0xffffffff);
+> > > > -		pci_read_config_dword(bridge, PCI_PREF_BASE_UPPER32, &tmp);
+> > > > -		if (!tmp)
+> > > > -			b_res[2].flags &= ~IORESOURCE_MEM_64;
+> > > > -		pci_write_config_dword(bridge, PCI_PREF_BASE_UPPER32,
+> > > > -				       mem_base_hi);
+> > > > -	}
+> > > >  }
+> > > >  
+> > > >  /* Helper function for sizing routines: find first available
+> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > > index 65f1d8c2f082..40b327b814aa 100644
+> > > > --- a/include/linux/pci.h
+> > > > +++ b/include/linux/pci.h
+> > > > @@ -373,6 +373,9 @@ struct pci_dev {
+> > > >  	bool		match_driver;		/* Skip attaching driver */
+> > > >  
+> > > >  	unsigned int	transparent:1;		/* Subtractive decode bridge */
+> > > > +	unsigned int	io_window:1;		/* Bridge has I/O window */
+> > > > +	unsigned int	pref_window:1;		/* Bridge has pref mem window */
+> > > > +	unsigned int	pref_64_window:1;	/* Pref mem window is 64-bit */
+> > > >  	unsigned int	multifunction:1;	/* Multi-function device */
+> > > >  
+> > > >  	unsigned int	is_busmaster:1;		/* Is busmaster */
+> > > > 
