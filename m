@@ -6,53 +6,53 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B22F1C282CB
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C6F8C282CB
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:09:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F0E92080D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:08:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC8B5217D9
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 06:09:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="p9GLObg0"
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="aHKYf56s"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726902AbfBEGIy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Feb 2019 01:08:54 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:37159 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726860AbfBEGIx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2019 01:08:53 -0500
-Received: by mail-wm1-f68.google.com with SMTP id g67so2303960wmd.2
-        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2019 22:08:52 -0800 (PST)
+        id S1727628AbfBEGJP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Feb 2019 01:09:15 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:54121 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727615AbfBEGJO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2019 01:09:14 -0500
+Received: by mail-wm1-f65.google.com with SMTP id d15so2239745wmb.3
+        for <linux-pci@vger.kernel.org>; Mon, 04 Feb 2019 22:09:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=mobiveil.co.in; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=ELibCrneAOqwWPIu61khxaNFyTEmcNLtmVqUCXdZgZI=;
-        b=p9GLObg0JIzLvnYv92UNo3hutvaKV76mneDoQ2L9/iTDSMkv3BmHlcM2r2diWaexun
-         +bwDe1L79unhjKqIc7PdW6AxCpdjScxefjOqXn1Bp2WyEuEvsc8rTypwqcYBZfdaGNcp
-         1avY7a1g6ehg1Q1DcR74Aj1fpp0U0Op9aInUY=
+        bh=lcuTAIKDk5Jru1SXfKsJlExjF4BZoU+yuw8KbMKy3Xg=;
+        b=aHKYf56soptJIGbTxy7Ay36ZHzUZt9ByQKrEbQ7YWyTZVa+yiJZOJHfEKe98OTeMoS
+         Ljq2AWY7gjINK4jUO3Z9Z7PD/iKhdYAFp/MgKTrbZdzECgYkGrc91tdIBO29k8lt0mRX
+         FBKJTN6RWQS6W35+KhHDJ1ni4pNvaHl/6QKSo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
+        d=1e100.net; s=20130820;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=ELibCrneAOqwWPIu61khxaNFyTEmcNLtmVqUCXdZgZI=;
-        b=kcSHEiVXSKCSBtVEjudlj8V9stsoU6/r9nGlDXnpPFXDsUgzeVV5EonlRiJxghGM5d
-         tS40+JuROZOnnqpKvE6dklCyUByLYldH+uy6IgjiLxN0YsN2OlkHWZQJyL9l8qkOoLxc
-         EYKm+i6GNnLDmDpRNjj2gkJXwL7PHr4HYeOvasXH+8pQ4yA+vo9p13PF5haQdS/pr72c
-         MofuJq4TfMIqAsGgOSmqzYDGzjxaCmnW/utysdNfvP0/uP0x4e1i3jqXuNa7PvRchaJs
-         cHh4dPwyvPQLpXFRsSB7nBMrZVscVzRMsy1gT6HuLCV6JgjWXZgDmhe+sMdQLJBw/rWE
-         tYpg==
-X-Gm-Message-State: AHQUAuYO0Pn4x54iEBdHxNCTRnGpzHFbzhUJ0G4Pfh/4xcUPPS1d9xVu
-        l5Jh/d0v0wUI4cob4EA25RKG09Hqiai5xBlO3pYTng==
-X-Google-Smtp-Source: AHgI3IZ7vYwWoGmUAjYcSLDuLlos9cVh2whMlbvpfSVJ8Ytix0mKWBdHfrN2urnd6jPoX1ucPPMGeuzPxTUEa4j1BaQ=
-X-Received: by 2002:a1c:2e43:: with SMTP id u64mr2221588wmu.52.1549346931639;
- Mon, 04 Feb 2019 22:08:51 -0800 (PST)
+        bh=lcuTAIKDk5Jru1SXfKsJlExjF4BZoU+yuw8KbMKy3Xg=;
+        b=VJF3Kgbi1E2rlC4yX3fKccO8HLwhkuCJJNVFULOBATp2gzIqV6efi/r5OYdy4wd5iM
+         6ynZsWQWuNKglr1iNcAEZ31uG4kS6f8nH/LupLl/hTlw0/UmwgmIZ+OHWud/Hzkrxbqj
+         lpEzbQ9XUEx7eCqN698aT4Xhxsp53ATszn6lc9DEHVceEYO5pRSEoeUnNwdHbowtzC+a
+         4D9+RtZIPTSJHI/aUMkl4LMieJdknXFdqWjPxTGNYe908DqayHuC6W0qsEaZpZlzith+
+         nB9rGBwtXUKHPx6jcuujrREL62s5p1Ev4DX8CqnX5nRVPp4juIz1HIFLghsXeVd292UY
+         Iicw==
+X-Gm-Message-State: AHQUAuZprzn/WBYSSb1CTPebv0KiczwL3IlVztfYtj0Y9j/UzF9BSuUP
+        AEfqNqPzoSx7c63s7HCB315BL+rZ38X9Tgny91qLXA==
+X-Google-Smtp-Source: AHgI3IZumWg/zzG2QOKGcQXa9PNHDYnUquuVdKoMcZ7AX7vf59yven64VfaW8r82JD0Gxa7ySeRxSWJBzW1SPVxlXTc=
+X-Received: by 2002:a1c:2d44:: with SMTP id t65mr1986937wmt.0.1549346952749;
+ Mon, 04 Feb 2019 22:09:12 -0800 (PST)
 MIME-Version: 1.0
-References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-11-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20190129080926.36773-11-Zhiqiang.Hou@nxp.com>
+References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-12-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20190129080926.36773-12-Zhiqiang.Hou@nxp.com>
 From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date:   Tue, 5 Feb 2019 11:41:25 +0530
-Message-ID: <CAFZiPx3niFC67o-p_NRi-ReuWYDcSJqUWmVfqKj+R2LnzAMPFA@mail.gmail.com>
-Subject: Re: [PATCHv3 10/27] PCI: mobiveil: fix the INTx process error
+Date:   Tue, 5 Feb 2019 11:41:46 +0530
+Message-ID: <CAFZiPx0ea9Dnef_H+R0WcS-7V1WDCQTCU1dzta5+LsJjo+M_BQ@mail.gmail.com>
+Subject: Re: [PATCHv3 11/27] PCI: mobiveil: only fix up the Class Code field
 To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -82,58 +82,47 @@ On Tue, Jan 29, 2019 at 1:39 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
 >
 > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 >
-> In the loop block, there is not code change the loop key,
-> this patch updated the loop key by re-read the INTx status
-> register.
+> Fix up the Class Code to PCI bridge, do not change the Revision ID.
+> And move the fixup to mobiveil_host_init function.
 >
-> This patch also change to clear the handled INTx status.
->
-> Note: Need MV to test this fix.
->
-> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host
-> Bridge IP driver")
+> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge
+> IP driver")
 > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 > ---
 > V3:
 >  - No change
 >
->  drivers/pci/controller/pcie-mobiveil.c | 13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
+>  drivers/pci/controller/pcie-mobiveil.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 >
 > diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-> index 4ba458474e42..78e575e71f4d 100644
+> index 78e575e71f4d..8eee1ab7ee24 100644
 > --- a/drivers/pci/controller/pcie-mobiveil.c
 > +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -361,6 +361,7 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
->         /* Handle INTx */
->         if (intr_status & PAB_INTP_INTX_MASK) {
->                 shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
-> +               shifted_status &= PAB_INTP_INTX_MASK;
->                 shifted_status >>= PAB_INTX_START;
->                 do {
->                         for_each_set_bit(bit, &shifted_status, PCI_NUM_INTX) {
-> @@ -372,12 +373,16 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
->                                         dev_err_ratelimited(dev, "unexpected IRQ, INT%d\n",
->                                                             bit);
->
-> -                               /* clear interrupt */
-> -                               csr_writel(pcie,
-> -                                          shifted_status << PAB_INTX_START,
-> +                               /* clear interrupt handled */
-> +                               csr_writel(pcie, 1 << (PAB_INTX_START + bit),
->                                            PAB_INTP_AMBA_MISC_STAT);
->                         }
-> -               } while ((shifted_status >> PAB_INTX_START) != 0);
-> +
-> +                       shifted_status = csr_readl(pcie,
-> +                                                  PAB_INTP_AMBA_MISC_STAT);
-> +                       shifted_status &= PAB_INTP_INTX_MASK;
-> +                       shifted_status >>= PAB_INTX_START;
-> +               } while (shifted_status != 0);
+> @@ -653,6 +653,12 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+>                                    type, resource_size(win->res));
 >         }
 >
->         /* read extra MSI status register */
+> +       /* fixup for PCIe class register */
+> +       value = csr_readl(pcie, PAB_INTP_AXI_PIO_CLASS);
+> +       value &= 0xff;
+> +       value |= (PCI_CLASS_BRIDGE_PCI << 16);
+> +       csr_writel(pcie, value, PAB_INTP_AXI_PIO_CLASS);
+> +
+>         /* setup MSI hardware registers */
+>         mobiveil_pcie_enable_msi(pcie);
+>
+> @@ -896,9 +902,6 @@ static int mobiveil_pcie_probe(struct platform_device *pdev)
+>                 goto error;
+>         }
+>
+> -       /* fixup for PCIe class register */
+> -       csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
+> -
+>         /* initialize the IRQ domains */
+>         ret = mobiveil_pcie_init_irq_domain(pcie);
+>         if (ret) {
 > --
 > 2.17.1
 >
