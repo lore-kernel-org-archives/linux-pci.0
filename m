@@ -1,95 +1,109 @@
-Return-Path: <SRS0=ZQO4=QM=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=okY7=QN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1880DC282CB
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 23:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA345C282CB
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Feb 2019 01:01:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA1672073D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Feb 2019 23:57:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76FD52175B
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Feb 2019 01:01:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="BnlCa8lv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbfBEX5A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Feb 2019 18:57:00 -0500
-Received: from mga17.intel.com ([192.55.52.151]:2258 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727524AbfBEX5A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Feb 2019 18:57:00 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 05 Feb 2019 15:56:59 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,337,1544515200"; 
-   d="scan'208";a="131860291"
-Received: from jacob-builder.jf.intel.com (HELO jacob-builder) ([10.7.199.155])
-  by orsmga002.jf.intel.com with ESMTP; 05 Feb 2019 15:56:59 -0800
-Date:   Tue, 5 Feb 2019 15:58:59 -0800
-From:   Jacob Pan <jacob.jun.pan@linux.intel.com>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Joerg Roedel <joro@8bytes.org>, Allen Hubbe <allenbh@gmail.com>,
-        Dave Jiang <dave.jiang@intel.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Eric Pilmore <epilmore@gigaio.com>,
-        iommu@lists.linux-foundation.org, linux-kselftest@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-ntb@googlegroups.com, David Woodhouse <dwmw2@infradead.org>,
-        jacob.jun.pan@linux.intel.com
-Subject: Re: [PATCH 1/9] iommu/vt-d: Allow interrupts from the entire bus
- for aliased devices
-Message-ID: <20190205155859.0e96dd4f@jacob-builder>
-In-Reply-To: <d097d98b-0b8b-5b29-c411-a5dc3949a3e7@deltatee.com>
-References: <20190131185656.17972-1-logang@deltatee.com>
-        <20190131185656.17972-2-logang@deltatee.com>
-        <20190201164401.GT32526@8bytes.org>
-        <398e6a0a-9cbd-c218-e20e-ed91f74a653d@deltatee.com>
-        <20190205111939.6f91739e@jacob-builder>
-        <d097d98b-0b8b-5b29-c411-a5dc3949a3e7@deltatee.com>
-Organization: OTC
-X-Mailer: Claws Mail 3.13.2 (GTK+ 2.24.30; x86_64-pc-linux-gnu)
+        id S1727392AbfBFBBw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Feb 2019 20:01:52 -0500
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:36578 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726062AbfBFBBv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Feb 2019 20:01:51 -0500
+Received: from mailhost.synopsys.com (badc-mailhost1.synopsys.com [10.192.0.17])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay.synopsys.com (Postfix) with ESMTPS id 690EF24E2855;
+        Tue,  5 Feb 2019 17:01:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1549414911; bh=WRm+NlFKL/HMLQZK/vcyhJnFrWM9FuCLqplQGDjlpMg=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
+        b=BnlCa8lvJ6Mtb/jNCEuU9FoKDi3NBIAxS5Kxj1BqF8cRw3to5nhcVKgzN08RlaNjD
+         YxPZr1i9yMdZjBveTsRcbuwBHyc/9ChX/WbsEF8u1VV1/p58GUu9AYZeFj0TiURpes
+         iya2JpNnHlwaErb+zqk74a5wiR/g6XblB6LbysaktCeVZsVB/+VvrFqh3CrY/CjmG7
+         aqv3CFMLctZDwmHjC7aQeiOaJhdsOC5gSPbwfCqf+8HG6t+BcUY85hBAhnYbhBk8XC
+         WTN360dclUNVkZH+nrZ5Y6N41XXziHtsVM7YW6tbIIljcNci960shPNSKGi0xavk8k
+         AtxxnKwpZNsag==
+Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mailhost.synopsys.com (Postfix) with ESMTPS id 09EF7A0079;
+        Wed,  6 Feb 2019 01:01:50 +0000 (UTC)
+Received: from US01WEHTC1.internal.synopsys.com (10.12.239.236) by
+ US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Tue, 5 Feb 2019 17:01:40 -0800
+Received: from [10.0.2.15] (10.12.81.173) by us01wehtc1.internal.synopsys.com
+ (10.12.239.231) with Microsoft SMTP Server (TLS) id 14.3.408.0; Tue, 5 Feb
+ 2019 17:01:40 -0800
+Subject: Re: [PATCH RESEND] PCI: Check for USB xHCI class for HAPS platform
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Thinh Nguyen <thinh.nguyen@synopsys.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Lukas F. Hartmann" <lukas@mntmn.com>,
+        Trent Piepho <tpiepho@impinj.com>,
+        John Youn <john.youn@synopsys.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>
+References: <a28cfcee61f0842efe114c97b566bb3d967ba3d3.1549326366.git.thinhn@synopsys.com>
+ <20190205233159.GC7268@google.com>
+From:   John Youn <john.youn@synopsys.com>
+Message-ID: <5d78ac08-0809-d219-ff7c-5cea5f7aba8b@synopsys.com>
+Date:   Tue, 5 Feb 2019 17:01:18 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20190205233159.GC7268@google.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.12.81.173]
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 5 Feb 2019 13:40:36 -0700
-Logan Gunthorpe <logang@deltatee.com> wrote:
+On 02/05/2019 03:32 PM, Bjorn Helgaas wrote:
+> [+cc Richard, Lucas]
+> 
+> On Tue, Feb 05, 2019 at 01:04:28PM -0800, Thinh Nguyen wrote:
+>> The Synopsys HAPS USB controller has a VID PID (16c3,abcd) that matches
+>> to an existing PCIe controller. This quirk is intended for USB HAPS
+>> devices only. To fix this, check for the PCI class USB xHCI to prevent
+>> matching the PCIe controllers.
+> 
+> So there are at least three different parts with the same Vendor &
+> Device ID ([16c3:abcd]):
+> 
+>    1) Synopsys HAPS USB3 controller
+>    2) Synopsys PCIe IP in the NXP i.MX6QP (reported by Lukas)
+>    3) Synopsys PCIe IP in the NXP i.MX7D (reported by Trent)
+> 
+> I don't know if Synopsys is to blame for 2 & 3, or if NXP was expected
+> to change the Vendor ID when incorporating the Synopsys IP into the
+> i.MX designs.  But even leaving the default Device ID of the PCIe IP
+> the same as another Synopsys device was probably a bad idea.
 
-> On 2019-02-05 12:19 p.m., Jacob Pan wrote:
-> > On Fri, 1 Feb 2019 10:27:29 -0700
-> > Logan Gunthorpe <logang@deltatee.com> wrote:
-> >   
-> >> On 2019-02-01 9:44 a.m., Joerg Roedel wrote:  
-> >>> On Thu, Jan 31, 2019 at 11:56:48AM -0700, Logan Gunthorpe
-> >>> wrote:    
-> >>>> @@ -394,6 +402,10 @@ static int set_msi_sid(struct irte *irte,
-> >>>> struct pci_dev *dev) set_irte_sid(irte, SVT_VERIFY_BUS,
-> >>>> SQ_ALL_16, PCI_DEVID(PCI_BUS_NUM(data.alias),
-> >>>>  				       dev->bus->number));  
-> > I guess devfn can be removed also. but that is separate cleanup.  
-> 
-> Actually, no, I've dug into this and we *do* need the devfn here but
-> it's needlessly confusing. We should not be using PCI_DEVID() as we
-> aren't actually representing a DEVID in this case...
-> 
-> According to the Intel VT-D spec, when using SVT_VERIFY_BUS, the MSB
-> of the SID field represents the starting bus number and the LSB
-> represents the end bus number. The requester id's bus number must
-> then be within that range. The PCI_DEVID macro matches these
-> semantics if you assume the devfn is the end bus, but doesn't really
-> make sense here and just confuses the issue.
-> 
-> So the code was correct, I'll just try to clean it up to make it less
-> confusing.
-> 
-you are right, thanks for explaining.
-> Thanks,
-> 
-> Logan
+
+Hi Bjorn,
+
+ From talking with our PCIe folks, our best guess is a vendor
+misconfiguration. The PCIe IP ships with a different PID by default
+and does not collide with USB.
+
+> dwc3-haps claims by Vendor & Device ID; it doesn't look at the Class
+> Code.  What happens when it tries to claim the PCIe IP in i.MX?
+
+We can add the class code to dwc3-haps to account for this.
+
+John
