@@ -2,187 +2,103 @@ Return-Path: <SRS0=HpDZ=QO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A1CC282C2
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 12:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FB63C282CC
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 13:30:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF79221721
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 12:31:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D26DC21908
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 13:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726844AbfBGMbk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 07:31:40 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36246 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726769AbfBGMbj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Feb 2019 07:31:39 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 33E0AA78;
-        Thu,  7 Feb 2019 04:31:39 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 008E83F675;
-        Thu,  7 Feb 2019 04:31:37 -0800 (PST)
-Date:   Thu, 7 Feb 2019 12:31:32 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Trent Piepho <tpiepho@impinj.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 3/3] PCI: imx: Add workaround for e10728, IMX7d PCIe
- PLL failure
-Message-ID: <20190207123132.GA21111@e107981-ln.cambridge.arm.com>
-References: <20190205001721.18639-1-tpiepho@impinj.com>
- <20190205001721.18639-4-tpiepho@impinj.com>
+        id S1726786AbfBGNaW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 08:30:22 -0500
+Received: from mga12.intel.com ([192.55.52.136]:45017 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726740AbfBGNaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Feb 2019 08:30:21 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Feb 2019 05:30:21 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.58,344,1544515200"; 
+   d="scan'208";a="297960142"
+Received: from black.fi.intel.com (HELO black.fi.intel.com.) ([10.237.72.28])
+  by orsmga005.jf.intel.com with ESMTP; 07 Feb 2019 05:30:18 -0800
+From:   Alexander Shishkin <alexander.shishkin@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     x86@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        stable@vger.kernel.org
+Subject: [PATCH v2] PCI: Fixup the RTIT_BAR of Intel TH on Denverton
+Date:   Thu,  7 Feb 2019 15:30:05 +0200
+Message-Id: <20190207133005.67328-1-alexander.shishkin@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190205001721.18639-4-tpiepho@impinj.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Feb 05, 2019 at 12:17:41AM +0000, Trent Piepho wrote:
-> This implements the workound described in the NXP IMX7d erratum e10728.
-> 
-> Initial VCO oscillation may fail under corner conditions such as cold
-> temperature.  It causes PCIe PLL to fail to lock in the initialization
-> phase, which results in the PCIe link failing to come up.
-> 
-> The workaround is to disable Duty-cycle Corrector (DCC) calibration
-> after G_RST.
-> 
-> To do this it is necessary to gain access to the undocumented and
-> currently unused PCIe PHY register bank.  A new device tree node of type
-> "fsl,imx7d-pcie-phy" is created for the PHY block and the existing PCIe
-> device uses a phandle named "fsl,imx7d-pcie-phy" to point to it.
-> 
-> Signed-off-by: Trent Piepho <tpiepho@impinj.com>
-> ---
->  drivers/pci/controller/dwc/pci-imx6.c | 57 +++++++++++++++++++++++++++++++++++
->  1 file changed, 57 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 80f843030e36..06dd6aa927d4 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -18,6 +18,7 @@
->  #include <linux/module.h>
->  #include <linux/of_gpio.h>
->  #include <linux/of_device.h>
-> +#include <linux/of_address.h>
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/regmap.h>
-> @@ -61,6 +62,7 @@ struct imx6_pcie {
->  	u32			tx_swing_low;
->  	int			link_gen;
->  	struct regulator	*vpcie;
-> +	void __iomem		*phy_base;
->  
->  	/* power domain for pcie */
->  	struct device		*pd_pcie;
-> @@ -117,6 +119,23 @@ struct imx6_pcie {
->  #define PCIE_PHY_RX_ASIC_OUT 0x100D
->  #define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
->  
-> +/* iMX7 PCIe PHY registers */
-> +#define PCIE_PHY_CMN_REG4		0x14
-> +/* These are probably the bits that *aren't* DCC_FB_EN */
-> +#define PCIE_PHY_CMN_REG4_DCC_FB_EN	0x29
-> +
-> +#define PCIE_PHY_CMN_REG15	        0x54
-> +#define PCIE_PHY_CMN_REG15_DLY_4	BIT(2)
-> +#define PCIE_PHY_CMN_REG15_PLL_PD	BIT(5)
-> +#define PCIE_PHY_CMN_REG15_OVRD_PLL_PD	BIT(7)
-> +
-> +#define PCIE_PHY_CMN_REG24		0x90
-> +#define PCIE_PHY_CMN_REG24_RX_EQ	BIT(6)
-> +#define PCIE_PHY_CMN_REG24_RX_EQ_SEL	BIT(3)
-> +
-> +#define PCIE_PHY_CMN_REG26		0x98
-> +#define PCIE_PHY_CMN_REG26_ATT_MODE	0xBC
-> +
->  #define PHY_RX_OVRD_IN_LO 0x1005
->  #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
->  #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
-> @@ -490,6 +509,26 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
->  	switch (imx6_pcie->variant) {
->  	case IMX7D:
->  		reset_control_deassert(imx6_pcie->pciephy_reset);
-> +
-> +		/* Workaround for ERR010728, failure of PCI-e PLL VCO to
-> +		 * oscillate, especially when cold.  This turns off "Duty-cycle
-> +		 * Corrector" and other mysterious undocumented things.
-> +		 */
-> +		if (likely(imx6_pcie->phy_base)) {
+On Denverton's integration of the Intel(R) Trace Hub (for a reference
+and overview see Documentation/trace/intel_th.txt) the reported size of
+one of its resources (RTIT_BAR) doesn't match its actual size, which
+leads to overlaps with other devices' resources.
 
-Nit: this is not a fast-path, so this branch performance is hardly
-relevant.
+In practice, it overlaps with XHCI MMIO space, which results in the xhci
+driver bailing out after seeing its registers as 0xffffffff, and perceived
+disappearance of all USB devices:
 
-> +			/* De-assert DCC_FB_EN */
-> +			writel(PCIE_PHY_CMN_REG4_DCC_FB_EN,
-> +			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG4);
-> +			/* Assert RX_EQS and RX_EQS_SEL */
-> +			writel(PCIE_PHY_CMN_REG24_RX_EQ_SEL
-> +				| PCIE_PHY_CMN_REG24_RX_EQ,
-> +			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG24);
-> +			/* Assert ATT_MODE */
-> +			writel(PCIE_PHY_CMN_REG26_ATT_MODE,
-> +			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG26);
-> +		} else {
-> +			dev_warn(dev, "DT lacks imx7d-pcie-phy, unable to apply ERR010728 workaround\n");
+> intel_th_pci 0000:00:1f.7: enabling device (0004 -> 0006)
+> xhci_hcd 0000:00:15.0: xHCI host controller not responding, assume dead
+> xhci_hcd 0000:00:15.0: xHC not responding in xhci_irq, assume controller is dead
+> xhci_hcd 0000:00:15.0: HC died; cleaning up
+> usb 1-1: USB disconnect, device number 2
+...
 
-It is a nit but the warning log is not necessarily true ie you may not
-have a mapped address for other reasons as well. It is up to you but I
-would change the log message.
+For this reason, we need to resize the RTIT_BAR on Denverton to its
+actual size, which in this case is 4MB. The corresponding erratum is
+DNV36 at the link below.
 
-Thanks,
-Lorenzo
+Link: https://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/atom-c3000-family-spec-update.pdf
+Fixes: 5118ccd34780 ("intel_th: pci: Add Denverton SOC support")
+Signed-off-by: Alexander Shishkin <alexander.shishkin@linux.intel.com>
+Cc: stable@vger.kernel.org
+---
+ arch/x86/pci/fixup.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-> +		}
-> +
->  		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
->  		break;
->  	case IMX6SX:
-> @@ -919,6 +958,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct dw_pcie *pci;
->  	struct imx6_pcie *imx6_pcie;
-> +	struct device_node *np;
->  	struct resource *dbi_base;
->  	struct device_node *node = dev->of_node;
->  	int ret;
-> @@ -939,6 +979,23 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  	imx6_pcie->variant =
->  		(enum imx6_pcie_variants)of_device_get_match_data(dev);
->  
-> +	/* Find the PHY if one is defined, only imx7d uses it */
-> +	np = of_parse_phandle(node, "fsl,imx7d-pcie-phy", 0);
-> +	if (np) {
-> +		struct resource res;
-> +
-> +		ret = of_address_to_resource(np, 0, &res);
-> +		if (ret) {
-> +			dev_err(dev, "Unable to map PCIe PHY\n");
-> +			return ret;
-> +		}
-> +		imx6_pcie->phy_base = devm_ioremap_resource(dev, &res);
-> +		if (IS_ERR(imx6_pcie->phy_base)) {
-> +			dev_err(dev, "Unable to map PCIe PHY\n");
-> +			return PTR_ERR(imx6_pcie->phy_base);
-> +		}
-> +	}
-> +
->  	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->  	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
->  	if (IS_ERR(pci->dbi_base))
-> -- 
-> 2.14.4
-> 
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 30a5111ae5fd..527e69b12002 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -635,6 +635,22 @@ static void quirk_no_aersid(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
+ 			      PCI_CLASS_BRIDGE_PCI, 8, quirk_no_aersid);
+ 
++static void quirk_intel_th_dnv(struct pci_dev *dev)
++{
++	struct resource *r = &dev->resource[4];
++
++	/*
++	 * Denverton reports 2k of RTIT_BAR (intel_th resource 4), which
++	 * appears to be 4 MB in reality.
++	 */
++	if (r->end == r->start + 0x7ff) {
++		r->start = 0;
++		r->end   = 0x3fffff;
++		r->flags |= IORESOURCE_UNSET;
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x19e1, quirk_intel_th_dnv);
++
+ #ifdef CONFIG_PHYS_ADDR_T_64BIT
+ 
+ #define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
+-- 
+2.20.1
+
