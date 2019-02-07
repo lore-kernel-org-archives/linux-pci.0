@@ -2,106 +2,187 @@ Return-Path: <SRS0=HpDZ=QO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC0A9C282C4
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 11:33:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24A1CC282C2
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 12:31:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4AC121907
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 11:33:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="VC+HYtii"
+	by mail.kernel.org (Postfix) with ESMTP id EF79221721
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 12:31:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727013AbfBGLcV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 06:32:21 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:46010 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726448AbfBGLcU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2019 06:32:20 -0500
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x17BW43c030905;
-        Thu, 7 Feb 2019 05:32:04 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1549539124;
-        bh=J3eursYVC35uM+oKmDvFUP8+fXKDMRSGBwh0fHlRrJE=;
-        h=From:To:CC:Subject:Date;
-        b=VC+HYtiiu4X00rgthUl+QMlnGBT7SoIhsueAI+soZBAmyX7qCXrDtbs+opmRyM37t
-         6szNSkeqXBaSnpULTM0xofMqL+PbyiPLVDkuOVOyyyeJEaDmC+rq9RTnvQf/3eK0RB
-         0+o7bO23yhD72hEka7wOEj0HcbEgrQzM5x4EwyrA=
-Received: from DFLE111.ent.ti.com (dfle111.ent.ti.com [10.64.6.32])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x17BW3Se072560
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 7 Feb 2019 05:32:04 -0600
-Received: from DFLE108.ent.ti.com (10.64.6.29) by DFLE111.ent.ti.com
- (10.64.6.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Thu, 7
- Feb 2019 05:32:03 -0600
-Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE108.ent.ti.com
- (10.64.6.29) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
- Thu, 7 Feb 2019 05:32:03 -0600
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x17BVxak026282;
-        Thu, 7 Feb 2019 05:32:00 -0600
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Murali Karicheri <m-karicheri2@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <linux-pci@vger.kernel.org>,
+        id S1726844AbfBGMbk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 07:31:40 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36246 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726769AbfBGMbj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Feb 2019 07:31:39 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 33E0AA78;
+        Thu,  7 Feb 2019 04:31:39 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 008E83F675;
+        Thu,  7 Feb 2019 04:31:37 -0800 (PST)
+Date:   Thu, 7 Feb 2019 12:31:32 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Trent Piepho <tpiepho@impinj.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
         <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 0/9] PCI: DWC/Keystone: MSI configuration cleanup
-Date:   Thu, 7 Feb 2019 16:39:15 +0530
-Message-ID: <20190207110924.30716-1-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
+        Shawn Guo <shawnguo@kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v2 3/3] PCI: imx: Add workaround for e10728, IMX7d PCIe
+ PLL failure
+Message-ID: <20190207123132.GA21111@e107981-ln.cambridge.arm.com>
+References: <20190205001721.18639-1-tpiepho@impinj.com>
+ <20190205001721.18639-4-tpiepho@impinj.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190205001721.18639-4-tpiepho@impinj.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series tries to address the comments discussed in [1] w.r.t
-removing Keystone specific callbacks defined in dw_pcie_host_ops.
+On Tue, Feb 05, 2019 at 12:17:41AM +0000, Trent Piepho wrote:
+> This implements the workound described in the NXP IMX7d erratum e10728.
+> 
+> Initial VCO oscillation may fail under corner conditions such as cold
+> temperature.  It causes PCIe PLL to fail to lock in the initialization
+> phase, which results in the PCIe link failing to come up.
+> 
+> The workaround is to disable Duty-cycle Corrector (DCC) calibration
+> after G_RST.
+> 
+> To do this it is necessary to gain access to the undocumented and
+> currently unused PCIe PHY register bank.  A new device tree node of type
+> "fsl,imx7d-pcie-phy" is created for the PHY block and the existing PCIe
+> device uses a phandle named "fsl,imx7d-pcie-phy" to point to it.
+> 
+> Signed-off-by: Trent Piepho <tpiepho@impinj.com>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 57 +++++++++++++++++++++++++++++++++++
+>  1 file changed, 57 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 80f843030e36..06dd6aa927d4 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/module.h>
+>  #include <linux/of_gpio.h>
+>  #include <linux/of_device.h>
+> +#include <linux/of_address.h>
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/regmap.h>
+> @@ -61,6 +62,7 @@ struct imx6_pcie {
+>  	u32			tx_swing_low;
+>  	int			link_gen;
+>  	struct regulator	*vpcie;
+> +	void __iomem		*phy_base;
+>  
+>  	/* power domain for pcie */
+>  	struct device		*pd_pcie;
+> @@ -117,6 +119,23 @@ struct imx6_pcie {
+>  #define PCIE_PHY_RX_ASIC_OUT 0x100D
+>  #define PCIE_PHY_RX_ASIC_OUT_VALID	(1 << 0)
+>  
+> +/* iMX7 PCIe PHY registers */
+> +#define PCIE_PHY_CMN_REG4		0x14
+> +/* These are probably the bits that *aren't* DCC_FB_EN */
+> +#define PCIE_PHY_CMN_REG4_DCC_FB_EN	0x29
+> +
+> +#define PCIE_PHY_CMN_REG15	        0x54
+> +#define PCIE_PHY_CMN_REG15_DLY_4	BIT(2)
+> +#define PCIE_PHY_CMN_REG15_PLL_PD	BIT(5)
+> +#define PCIE_PHY_CMN_REG15_OVRD_PLL_PD	BIT(7)
+> +
+> +#define PCIE_PHY_CMN_REG24		0x90
+> +#define PCIE_PHY_CMN_REG24_RX_EQ	BIT(6)
+> +#define PCIE_PHY_CMN_REG24_RX_EQ_SEL	BIT(3)
+> +
+> +#define PCIE_PHY_CMN_REG26		0x98
+> +#define PCIE_PHY_CMN_REG26_ATT_MODE	0xBC
+> +
+>  #define PHY_RX_OVRD_IN_LO 0x1005
+>  #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+>  #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+> @@ -490,6 +509,26 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+>  	switch (imx6_pcie->variant) {
+>  	case IMX7D:
+>  		reset_control_deassert(imx6_pcie->pciephy_reset);
+> +
+> +		/* Workaround for ERR010728, failure of PCI-e PLL VCO to
+> +		 * oscillate, especially when cold.  This turns off "Duty-cycle
+> +		 * Corrector" and other mysterious undocumented things.
+> +		 */
+> +		if (likely(imx6_pcie->phy_base)) {
 
-This series also tries to cleanup the Keystone interrupt handling
-part.
+Nit: this is not a fast-path, so this branch performance is hardly
+relevant.
 
-Changes from v1:
-*) Removed "PCI: keystone: Use "dummy_irq_chip" instead of new irqchip
-for legacy interrupt handling" from the patch series. It should be
-handled differently.
+> +			/* De-assert DCC_FB_EN */
+> +			writel(PCIE_PHY_CMN_REG4_DCC_FB_EN,
+> +			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG4);
+> +			/* Assert RX_EQS and RX_EQS_SEL */
+> +			writel(PCIE_PHY_CMN_REG24_RX_EQ_SEL
+> +				| PCIE_PHY_CMN_REG24_RX_EQ,
+> +			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG24);
+> +			/* Assert ATT_MODE */
+> +			writel(PCIE_PHY_CMN_REG26_ATT_MODE,
+> +			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG26);
+> +		} else {
+> +			dev_warn(dev, "DT lacks imx7d-pcie-phy, unable to apply ERR010728 workaround\n");
 
-*) Added Gustavo's ACKed by and fixed a commit message.
+It is a nit but the warning log is not necessarily true ie you may not
+have a mapped address for other reasons as well. It is up to you but I
+would change the log message.
 
-[1] -> https://patchwork.kernel.org/patch/10681587/
+Thanks,
+Lorenzo
 
-Kishon Vijay Abraham I (9):
-  PCI: keystone: Cleanup interrupt related macros
-  PCI: keystone: Modify legacy_irq_handler to check the IRQ_STATUS of
-    INTA/B/C/D
-  PCI: keystone: Add separate functions for configuring MSI and legacy
-    interrupt
-  PCI: keystone: Use hwirq to get the IRQ number offset
-  PCI: keystone: Cleanup ks_pcie_msi_irq_handler and
-    ks_pcie_legacy_irq_handler
-  PCI: dwc: Add support to use non default msi_irq_chip
-  PCI: keystone: Use Keystone specific msi_irq_chip
-  PCI: dwc: Remove Keystone specific dw_pcie_host_ops
-  PCI: dwc: Do not write to MSI control registers if the platform
-    doesn't use it
-
- drivers/pci/controller/dwc/pci-keystone.c     | 406 ++++++++++--------
- .../pci/controller/dwc/pcie-designware-host.c |  74 ++--
- drivers/pci/controller/dwc/pcie-designware.h  |   6 +-
- 3 files changed, 256 insertions(+), 230 deletions(-)
-
--- 
-2.17.1
-
+> +		}
+> +
+>  		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
+>  		break;
+>  	case IMX6SX:
+> @@ -919,6 +958,7 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  	struct device *dev = &pdev->dev;
+>  	struct dw_pcie *pci;
+>  	struct imx6_pcie *imx6_pcie;
+> +	struct device_node *np;
+>  	struct resource *dbi_base;
+>  	struct device_node *node = dev->of_node;
+>  	int ret;
+> @@ -939,6 +979,23 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  	imx6_pcie->variant =
+>  		(enum imx6_pcie_variants)of_device_get_match_data(dev);
+>  
+> +	/* Find the PHY if one is defined, only imx7d uses it */
+> +	np = of_parse_phandle(node, "fsl,imx7d-pcie-phy", 0);
+> +	if (np) {
+> +		struct resource res;
+> +
+> +		ret = of_address_to_resource(np, 0, &res);
+> +		if (ret) {
+> +			dev_err(dev, "Unable to map PCIe PHY\n");
+> +			return ret;
+> +		}
+> +		imx6_pcie->phy_base = devm_ioremap_resource(dev, &res);
+> +		if (IS_ERR(imx6_pcie->phy_base)) {
+> +			dev_err(dev, "Unable to map PCIe PHY\n");
+> +			return PTR_ERR(imx6_pcie->phy_base);
+> +		}
+> +	}
+> +
+>  	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>  	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
+>  	if (IS_ERR(pci->dbi_base))
+> -- 
+> 2.14.4
+> 
