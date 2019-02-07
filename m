@@ -2,212 +2,166 @@ Return-Path: <SRS0=HpDZ=QO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99A37C282C4
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 10:13:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8EF7C282C2
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 11:32:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E76F21905
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 10:13:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96C3E21872
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 11:32:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="hqc7pMwJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726755AbfBGKN0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 05:13:26 -0500
-Received: from szxga06-in.huawei.com ([45.249.212.32]:45700 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726742AbfBGKN0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Feb 2019 05:13:26 -0500
-Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id F026AB9E59C0BB8AFECE;
-        Thu,  7 Feb 2019 18:13:15 +0800 (CST)
-Received: from localhost (10.202.226.61) by DGGEMS404-HUB.china.huawei.com
- (10.3.19.204) with Microsoft SMTP Server id 14.3.408.0; Thu, 7 Feb 2019
- 18:13:08 +0800
-Date:   Thu, 7 Feb 2019 10:12:57 +0000
-From:   Jonathan Cameron <jonathan.cameron@huawei.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     Dave Hansen <dave.hansen@intel.com>, <linux-pci@vger.kernel.org>,
-        <x86@kernel.org>, <linuxarm@huawei.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        "Dave Hansen" <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Martin =?ISO-8859-1?Q?Hundeb=F8ll?= <martin@geanix.com>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH V2] x86: Fix an issue with invalid ACPI NUMA config
-Message-ID: <20190207101257.00000a98@huawei.com>
-In-Reply-To: <20190129190556.GB91506@google.com>
-References: <20181211094737.71554-1-Jonathan.Cameron@huawei.com>
-        <a5a938d3-ecc9-028a-3b28-610feda8f3f8@intel.com>
-        <20181212093914.00002aed@huawei.com>
-        <20181220151225.GB183878@google.com>
-        <65f5bb93-b6be-d6dd-6976-e2761f6f2a7b@intel.com>
-        <20181220195714.GE183878@google.com>
-        <20190128112904.0000461a@huawei.com>
-        <20190128231322.GA91506@google.com>
-        <20190129095105.00000374@huawei.com>
-        <20190129190556.GB91506@google.com>
-Organization: Huawei
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; i686-w64-mingw32)
+        id S1726691AbfBGLcU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 06:32:20 -0500
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:59692 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726561AbfBGLcU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2019 06:32:20 -0500
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x17BW6c8103799;
+        Thu, 7 Feb 2019 05:32:06 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1549539126;
+        bh=GmaChAagvvR3BKGTtUPZxsSHjPP8U/j4RxXcXLkz7sg=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=hqc7pMwJ4b6XG+qT73G5qm+xHApuPwCL+g5nay9WReFMPyxY64Q5IOdLOu3d+vx75
+         bpvDhpSF2Rq2qf0V+w7Gxtq9fMnSxNgKYEg9xQXwvmAmW1aT5QaI+DS+Jtn8DHO4et
+         O78Tu9UNM8fJ7+f7s0L6uQs48HhV8vWv516BosJU=
+Received: from DFLE114.ent.ti.com (dfle114.ent.ti.com [10.64.6.35])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x17BW6Rl072695
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 7 Feb 2019 05:32:06 -0600
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Thu, 7
+ Feb 2019 05:32:06 -0600
+Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Thu, 7 Feb 2019 05:32:06 -0600
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x17BVxal026282;
+        Thu, 7 Feb 2019 05:32:03 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Murali Karicheri <m-karicheri2@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 1/9] PCI: keystone: Cleanup interrupt related macros
+Date:   Thu, 7 Feb 2019 16:39:16 +0530
+Message-ID: <20190207110924.30716-2-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190207110924.30716-1-kishon@ti.com>
+References: <20190207110924.30716-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.226.61]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 29 Jan 2019 13:05:56 -0600
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+No functional change. Change both MSI interrupt and legacy interrupt
+related macros to take an additional argument in order to return the
+correct register offset.
 
-> On Tue, Jan 29, 2019 at 09:51:05AM +0000, Jonathan Cameron wrote:
-> > On Mon, 28 Jan 2019 17:13:22 -0600
-> > Bjorn Helgaas <helgaas@kernel.org> wrote:  
-> > > On Mon, Jan 28, 2019 at 11:31:08AM +0000, Jonathan Cameron wrote:  
-> > > > On Thu, 20 Dec 2018 13:57:14 -0600
-> > > > Bjorn Helgaas <helgaas@kernel.org> wrote:    
-> > > > > On Thu, Dec 20, 2018 at 09:13:12AM -0800, Dave Hansen wrote:    
-> > > > > > On 12/20/18 7:12 AM, Bjorn Helgaas wrote:      
-> 
-> > > The current patch proposes setting "numa_off=1" in the x86 version of
-> > > dummy_numa_init(), on the assumption (from the changelog) that:
-> > > 
-> > >   It is invalid under the ACPI spec to specify new NUMA nodes using
-> > >   _PXM if they have no presence in SRAT.
-> > > 
-> > > Do you have a reference for this?  I looked and couldn't find a clear
-> > > statement in the spec to that effect.  The _PXM description (ACPI
-> > > v6.2, sec 6.1.14) says that two devices with the same _PXM value are
-> > > in the same proximity domain, but it doesn't seem to require an SRAT.  
-> > 
-> > No comment (feel free to guess why). *sigh*  
-> 
-> Secret interpretations of the spec are out of bounds.  But I think
-> it's a waste of time to argue about whether _PXM without SRAT is
-> valid.  Systems like that exist, and I think it's possible to do
-> something sensible with them.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/controller/dwc/pci-keystone.c | 26 +++++++++++------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-Now less secret :)
-
-https://uefi.org/sites/default/files/resources/ACPI_6_3_final_Jan30.pdf
-
-Specifically 
-6.2B Errata 1951 _PXM Clarifications
-
-Adds lots of statements including:
-
-(5.2.16)
-Note: SRAT is the place where proximity domains are defined, and _PXM provides
-a mechanism to associate a device object (and its children) to an SRAT-defined
-proximity domain. 
-
-6.2.14 _PXM (Proximity)
-This optional object is used to describe proximity domain associations within a
-machine. _PXM evaluates to an integer that identifies a device as belonging
-to a Proximity Domain defined in the System Resource Affinity Table (SRAT).
-
-Obviously this doesn't necessarily change the fact there 'might' be
-a platform out there with tables written against earlier ACPI specs that
-does 'deliberately' provide _PXM entries that don't match entries in SRAT.
-What is does mean is that going forwards we "shouldn't" see any new ones.
-
-Note that the usecase that was conjectured below is now accounted for with
-the new Generic Initiator Domains (5.2.16.6).  There is some juggling done via
-an OSC bit to ensure that firmware can 'adjust' it's _PXM entries to account
-for whether or not these Generic Initiator domains are supported by the OS.
-I'll clean up my patches for that and post soon (if no one beats me to it!)
-
-One thing I will note though, is I'm not going to propose we drop the
-numa_off = true line in the arm code, given there aren't any arm platforms
-known to have _PXMs not matching entries in SRAT and now we have a spec
-that says it isn't right to do it anyway.
-
-Jonathan
-
-> 
-> > > Maybe it results in an issue when we call kmalloc_node() using this
-> > > _PXM value that SRAT didn't tell us about?  If so, that's reminiscent
-> > > of these earlier discussions about kmalloc_node() returning something
-> > > useless if the requested node is not online:
-> > > 
-> > >   https://lkml.kernel.org/r/1527768879-88161-2-git-send-email-xiexiuqi@huawei.com
-> > >   https://lore.kernel.org/linux-arm-kernel/20180801173132.19739-1-punit.agrawal@arm.com/
-> > > 
-> > > As far as I know, that was never really resolved.  The immediate
-> > > problem of using passing an invalid node number to kmalloc_node() was
-> > > avoided by using kmalloc() instead.  
-> > 
-> > Yes, that's definitely still a problem (or was last time I checked)
-> >   
-> > > > Dave's response was that we needed to fix the underlying issue of
-> > > > trying to allocate from non existent NUMA nodes.    
-> 
-> > > Bottom line, I totally agree that it would be better to fix the
-> > > underlying issue without trying to avoid it by disabling NUMA.  
-> > 
-> > I don't agree on this point.  I think two layers make sense.
-> > 
-> > If there is no NUMA description in DT or ACPI, why not just stop anything
-> > from using it at all?  The firmware has basically declared there is no
-> > point, why not save a bit of complexity (and use an existing tested code
-> > path) but setting numa_off?  
-> 
-> Firmware with a _PXM does have a NUMA description.
-> 
-> > However, if there is NUMA description, but with bugs then we should
-> > protect in depth.  A simple example being that we declare 2 nodes, but
-> > then use _PXM for a third. I've done that by accident and blows up
-> > in a nasty fashion (not done it for a while, but probably still true).
-> > 
-> > Given DSDT is only parsed long after SRAT we can just check on _PXM
-> > queries.  Or I suppose we could do a verification parse for all _PXM
-> > entries and put out some warnings if they don't match SRAT entries?  
-> 
-> I'm assuming the crash happens when we call kmalloc_node() with a node
-> not mentioned in SRAT.  I think that's just sub-optimal implementation
-> in kmalloc_node().
-> 
-> We *could* fail the allocation and return a NULL pointer, but I think
-> even that is excessive.  I think we should simply fall back to
-> kmalloc().  We could print a one-time warning if that's useful.
-> 
-> If kmalloc_node() for an unknown node fell back to kmalloc(), would
-> anything else be required?
-> 
-> > > > Whilst I agree with that in principle (having managed to provide
-> > > > tables doing exactly that during development a few times!), I'm not
-> > > > sure the path to doing so is clear and so this has been stalled for
-> > > > a few months.  There is to my mind still a strong argument, even
-> > > > with such protection in place, that we should still be short cutting
-> > > > it so that you get the same paths if you deliberately disable numa,
-> > > > and if you have no SRAT and hence can't have NUMA.    
-> > > 
-> > > I guess we need to resolve the question of whether NUMA without SRAT
-> > > is possible.  
-> > 
-> > It's certainly unclear of whether it has any meaning.  If we allow for
-> > the fact that the intent of ACPI was never to allow this (and a bit
-> > of history checking verified this as best as anyone can remember),
-> > then what do we do with the few platforms that do use _PXM to nodes that
-> > haven't been defined?  
-> 
-> We *could* ignore any _PXM that mentions a proximity domain not
-> mentioned by an SRAT.  That seems a little heavy-handed because it
-> means every possible proximity domain must be described up front in
-> the SRAT, which limits the flexibility of hot-adding entire nodes
-> (CPU/memory/IO).
-> 
-> But I think it's possible to make sense of a _PXM that adds a
-> proximity domain not mentioned in an SRAT, e.g., if a new memory
-> device and a new I/O device supply the same _PXM value, we can assume
-> they're close together.  If a new I/O device has a previously unknown
-> _PXM, we may not be able to allocate memory near it, but we should at
-> least be able to allocate from a default zone.
-> 
-> Bjorn
-
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 14f2b0b4ed5e..5286a480f76b 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -52,17 +52,17 @@
+ 
+ /* IRQ register defines */
+ #define IRQ_EOI				0x050
+-#define IRQ_STATUS			0x184
+-#define IRQ_ENABLE_SET			0x188
+-#define IRQ_ENABLE_CLR			0x18c
+ 
+ #define MSI_IRQ				0x054
+-#define MSI0_IRQ_STATUS			0x104
+-#define MSI0_IRQ_ENABLE_SET		0x108
+-#define MSI0_IRQ_ENABLE_CLR		0x10c
+-#define IRQ_STATUS			0x184
++#define MSI_IRQ_STATUS(n)		(0x104 + ((n) << 4))
++#define MSI_IRQ_ENABLE_SET(n)		(0x108 + ((n) << 4))
++#define MSI_IRQ_ENABLE_CLR(n)		(0x10c + ((n) << 4))
+ #define MSI_IRQ_OFFSET			4
+ 
++#define IRQ_STATUS(n)			(0x184 + ((n) << 4))
++#define IRQ_ENABLE_SET(n)		(0x188 + ((n) << 4))
++#define INTx_EN				BIT(0)
++
+ #define ERR_IRQ_STATUS			0x1c4
+ #define ERR_IRQ_ENABLE_SET		0x1c8
+ #define ERR_AER				BIT(5)	/* ECRC error */
+@@ -142,7 +142,7 @@ static void ks_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset)
+ 	u32 pending, vector;
+ 	int src, virq;
+ 
+-	pending = ks_pcie_app_readl(ks_pcie, MSI0_IRQ_STATUS + (offset << 4));
++	pending = ks_pcie_app_readl(ks_pcie, MSI_IRQ_STATUS(offset));
+ 
+ 	/*
+ 	 * MSI0 status bit 0-3 shows vectors 0, 8, 16, 24, MSI1 status bit
+@@ -169,7 +169,7 @@ static void ks_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
+ 	ks_pcie = to_keystone_pcie(pci);
+ 	update_reg_offset_bit_pos(irq, &reg_offset, &bit_pos);
+ 
+-	ks_pcie_app_writel(ks_pcie, MSI0_IRQ_STATUS + (reg_offset << 4),
++	ks_pcie_app_writel(ks_pcie, MSI_IRQ_STATUS(reg_offset),
+ 			   BIT(bit_pos));
+ 	ks_pcie_app_writel(ks_pcie, IRQ_EOI, reg_offset + MSI_IRQ_OFFSET);
+ }
+@@ -181,7 +181,7 @@ static void ks_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
+ 
+ 	update_reg_offset_bit_pos(irq, &reg_offset, &bit_pos);
+-	ks_pcie_app_writel(ks_pcie, MSI0_IRQ_ENABLE_SET + (reg_offset << 4),
++	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_SET(reg_offset),
+ 			   BIT(bit_pos));
+ }
+ 
+@@ -192,7 +192,7 @@ static void ks_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+ 	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
+ 
+ 	update_reg_offset_bit_pos(irq, &reg_offset, &bit_pos);
+-	ks_pcie_app_writel(ks_pcie, MSI0_IRQ_ENABLE_CLR + (reg_offset << 4),
++	ks_pcie_app_writel(ks_pcie, MSI_IRQ_ENABLE_CLR(reg_offset),
+ 			   BIT(bit_pos));
+ }
+ 
+@@ -206,7 +206,7 @@ static void ks_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
+ 	int i;
+ 
+ 	for (i = 0; i < PCI_NUM_INTX; i++)
+-		ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET + (i << 4), 0x1);
++		ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET(i), 0x1);
+ }
+ 
+ static void ks_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie,
+@@ -217,7 +217,7 @@ static void ks_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie,
+ 	u32 pending;
+ 	int virq;
+ 
+-	pending = ks_pcie_app_readl(ks_pcie, IRQ_STATUS + (offset << 4));
++	pending = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(offset));
+ 
+ 	if (BIT(0) & pending) {
+ 		virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, offset);
+-- 
+2.17.1
 
