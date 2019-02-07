@@ -4,187 +4,172 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ABD8C282C2
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 21:26:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F9FDC282C4
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 22:02:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9D1021907
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 21:26:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F40B21721
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 22:02:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549574786;
-	bh=U/2YnB/WK1IGdD93d7XtsgRlaRFoLinSnoRbkTaKUxA=;
+	s=default; t=1549576936;
+	bh=SrGQtSRwp7rdI7Pn1+ONFD6lQT2q2uoDnk5SazLE9kY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=UWyNq3M+RzIfgl93fqb8oiYEN8DovTCBx4bc9jEEuaJIcrovNlpvJmy1FiS84alfS
-	 EHYLVvuqux7qNYHXCx1OTZ4/Fh1V/NQJsqaJ+jOpnUw0JZkKDlsalguyP91xq/VPBt
-	 IChhoZpOVuldFOZ7Nm6d0oeBaGDM5Bupk72dQftQ=
+	b=iX3X+zSgAY/hqo620U6DeRuooQQyIEQeo53eweeFZJWeVHBYVVE7dbeD5WSdQqPLq
+	 /yBM5673wCj7e9Kt3Mx4WJ8aWQjJ4M0YSuXgO3c3+7F2T6/aEPf3P9YfDsH6Ly1ljD
+	 BD+VrxBUeXdCFSD2khnjncBa6AI9AJecBqZGIW58=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726576AbfBGV00 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 16:26:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42950 "EHLO mail.kernel.org"
+        id S1726758AbfBGWCJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 17:02:09 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56984 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726512AbfBGV00 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Feb 2019 16:26:26 -0500
+        id S1726576AbfBGWCJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Feb 2019 17:02:09 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4CAEB21721;
-        Thu,  7 Feb 2019 21:26:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8667221721;
+        Thu,  7 Feb 2019 22:02:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549574784;
-        bh=U/2YnB/WK1IGdD93d7XtsgRlaRFoLinSnoRbkTaKUxA=;
+        s=default; t=1549576928;
+        bh=SrGQtSRwp7rdI7Pn1+ONFD6lQT2q2uoDnk5SazLE9kY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GHkGrjqKtSA40ScLOGuB8aZBK++BRUVe28Fd5//1saVqHsdDTcR/gSPxOaNZYqOmp
-         bJ6101B6yOD1YOmCBPqLv4NR4xJibaApxEppLEMXnGsSNvj2DfEGeIZRUMIZjugmQc
-         Xc4YvswIATVC3TrQQZIwM8NvdxS1thDMbieTVH3M=
-Date:   Thu, 7 Feb 2019 15:26:22 -0600
+        b=EDnugmESFHVNnH8NkIoeNXzfZtWsQBX2ejQynqs1ryVAi0wdoailGUxVlHc3SdW7f
+         fpENkzt8A1aTc8RWpt0gHxocOcJs+d675QZh/3nXqAt6M/u2CGYS2qbTRaW9S0jYmY
+         QfkiPS1MTPWgxZ1vfDJcnVT61i54w/6ooZqKlQeo=
+Date:   Thu, 7 Feb 2019 16:02:05 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Murali Karicheri <m-karicheri2@ti.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 8/9] PCI: dwc: Remove Keystone specific
- dw_pcie_host_ops
-Message-ID: <20190207212622.GO7268@google.com>
-References: <20190207110924.30716-1-kishon@ti.com>
- <20190207110924.30716-9-kishon@ti.com>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/5] genirq/affinity: move allocation of
+ 'node_to_cpumask' to irq_build_affinity_masks
+Message-ID: <20190207220204.GP7268@google.com>
+References: <20190125095347.17950-1-ming.lei@redhat.com>
+ <20190125095347.17950-2-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190207110924.30716-9-kishon@ti.com>
+In-Reply-To: <20190125095347.17950-2-ming.lei@redhat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 07, 2019 at 04:39:23PM +0530, Kishon Vijay Abraham I wrote:
-> Now that Keystone started using it's own msi_irq_chip, remove
-> Keystone specific callback function defined in dw_pcie_host_ops.
-
-s/it's/its/
-s/callback function/callback functions/
-
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> ---
->  .../pci/controller/dwc/pcie-designware-host.c | 45 ++++++-------------
->  drivers/pci/controller/dwc/pcie-designware.h  |  5 ---
->  2 files changed, 14 insertions(+), 36 deletions(-)
+On Fri, Jan 25, 2019 at 05:53:43PM +0800, Ming Lei wrote:
+> 'node_to_cpumask' is just one temparay variable for irq_build_affinity_masks(),
+> so move it into irq_build_affinity_masks().
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 042de09b0451..9492b05e8ff0 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -126,18 +126,12 @@ static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	u64 msi_target;
+> No functioanl change.
+
+s/temparay/temporary/
+s/functioanl/functional/
+
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+
+Nice patch, this is much cleaner.
+
+Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  kernel/irq/affinity.c | 27 +++++++++++++--------------
+>  1 file changed, 13 insertions(+), 14 deletions(-)
+> 
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index 45b68b4ea48b..118b66d64a53 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -175,18 +175,22 @@ static int __irq_build_affinity_masks(const struct irq_affinity *affd,
+>   */
+>  static int irq_build_affinity_masks(const struct irq_affinity *affd,
+>  				    int startvec, int numvecs, int firstvec,
+> -				    cpumask_var_t *node_to_cpumask,
+>  				    struct irq_affinity_desc *masks)
+>  {
+>  	int curvec = startvec, nr_present, nr_others;
+>  	int ret = -ENOMEM;
+>  	cpumask_var_t nmsk, npresmsk;
+> +	cpumask_var_t *node_to_cpumask;
 >  
-> -	if (pp->ops->get_msi_addr)
-> -		msi_target = pp->ops->get_msi_addr(pp);
-> -	else
-> -		msi_target = (u64)pp->msi_data;
-> +	msi_target = (u64)pp->msi_data;
+>  	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
+>  		return ret;
 >  
->  	msg->address_lo = lower_32_bits(msi_target);
->  	msg->address_hi = upper_32_bits(msi_target);
+>  	if (!zalloc_cpumask_var(&npresmsk, GFP_KERNEL))
+> -		goto fail;
+> +		goto fail_nmsk;
+> +
+> +	node_to_cpumask = alloc_node_to_cpumask();
+> +	if (!node_to_cpumask)
+> +		goto fail_npresmsk;
 >  
-> -	if (pp->ops->get_msi_data)
-> -		msg->data = pp->ops->get_msi_data(pp, data->hwirq);
-> -	else
-> -		msg->data = data->hwirq;
-> +	msg->data = data->hwirq;
+>  	ret = 0;
+>  	/* Stabilize the cpumasks */
+> @@ -217,9 +221,12 @@ static int irq_build_affinity_masks(const struct irq_affinity *affd,
+>  	if (nr_present < numvecs)
+>  		WARN_ON(nr_present + nr_others < numvecs);
 >  
->  	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
->  		(int)data->hwirq, msg->address_hi, msg->address_lo);
-> @@ -157,17 +151,13 @@ static void dw_pci_bottom_mask(struct irq_data *data)
+> +	free_node_to_cpumask(node_to_cpumask);
+> +
+> + fail_npresmsk:
+>  	free_cpumask_var(npresmsk);
 >  
->  	raw_spin_lock_irqsave(&pp->lock, flags);
->  
-> -	if (pp->ops->msi_clear_irq) {
-> -		pp->ops->msi_clear_irq(pp, data->hwirq);
-> -	} else {
-> -		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-> -		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-> -		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
-> +	ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-> +	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-> +	bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
->  
-> -		pp->irq_status[ctrl] &= ~(1 << bit);
-> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
-> -				    ~pp->irq_status[ctrl]);
-> -	}
-> +	pp->irq_status[ctrl] &= ~(1 << bit);
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
-> +			    ~pp->irq_status[ctrl]);
->  
->  	raw_spin_unlock_irqrestore(&pp->lock, flags);
+> - fail:
+> + fail_nmsk:
+>  	free_cpumask_var(nmsk);
+>  	return ret;
 >  }
-> @@ -180,17 +170,13 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+> @@ -236,7 +243,6 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  {
+>  	int affvecs = nvecs - affd->pre_vectors - affd->post_vectors;
+>  	int curvec, usedvecs;
+> -	cpumask_var_t *node_to_cpumask;
+>  	struct irq_affinity_desc *masks = NULL;
+>  	int i, nr_sets;
 >  
->  	raw_spin_lock_irqsave(&pp->lock, flags);
+> @@ -247,13 +253,9 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  	if (nvecs == affd->pre_vectors + affd->post_vectors)
+>  		return NULL;
 >  
-> -	if (pp->ops->msi_set_irq) {
-> -		pp->ops->msi_set_irq(pp, data->hwirq);
-> -	} else {
-> -		ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-> -		res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-> -		bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
-> +	ctrl = data->hwirq / MAX_MSI_IRQS_PER_CTRL;
-> +	res = ctrl * MSI_REG_CTRL_BLOCK_SIZE;
-> +	bit = data->hwirq % MAX_MSI_IRQS_PER_CTRL;
->  
-> -		pp->irq_status[ctrl] |= 1 << bit;
-> -		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
-> -				    ~pp->irq_status[ctrl]);
-> -	}
-> +	pp->irq_status[ctrl] |= 1 << bit;
-> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_MASK + res, 4,
-> +			    ~pp->irq_status[ctrl]);
->  
->  	raw_spin_unlock_irqrestore(&pp->lock, flags);
->  }
-> @@ -209,9 +195,6 @@ static void dw_pci_bottom_ack(struct irq_data *d)
->  
->  	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + res, 4, 1 << bit);
->  
-> -	if (pp->ops->msi_irq_ack)
-> -		pp->ops->msi_irq_ack(d->hwirq, pp);
+> -	node_to_cpumask = alloc_node_to_cpumask();
+> -	if (!node_to_cpumask)
+> -		return NULL;
 > -
->  	raw_spin_unlock_irqrestore(&pp->lock, flags);
+>  	masks = kcalloc(nvecs, sizeof(*masks), GFP_KERNEL);
+>  	if (!masks)
+> -		goto outnodemsk;
+> +		return NULL;
+>  
+>  	/* Fill out vectors at the beginning that don't need affinity */
+>  	for (curvec = 0; curvec < affd->pre_vectors; curvec++)
+> @@ -271,11 +273,10 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  		int ret;
+>  
+>  		ret = irq_build_affinity_masks(affd, curvec, this_vecs,
+> -						curvec, node_to_cpumask, masks);
+> +						curvec, masks);
+>  		if (ret) {
+>  			kfree(masks);
+> -			masks = NULL;
+> -			goto outnodemsk;
+> +			return NULL;
+>  		}
+>  		curvec += this_vecs;
+>  		usedvecs += this_vecs;
+> @@ -293,8 +294,6 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  	for (i = affd->pre_vectors; i < nvecs - affd->post_vectors; i++)
+>  		masks[i].is_managed = 1;
+>  
+> -outnodemsk:
+> -	free_node_to_cpumask(node_to_cpumask);
+>  	return masks;
 >  }
 >  
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 95e0c3c93f48..ea4b215b605d 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -142,14 +142,9 @@ struct dw_pcie_host_ops {
->  	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
->  			     unsigned int devfn, int where, int size, u32 val);
->  	int (*host_init)(struct pcie_port *pp);
-> -	void (*msi_set_irq)(struct pcie_port *pp, int irq);
-> -	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
-> -	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
-> -	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
-
-I don't see the whole series on linux-pci (I only see patches 2, 6, 8, 9),
-but I expected to somewhere see the removal of assignments to these
-pointers.  It would be easier to review if the removal of assignments and
-the removal of the function pointers from the structure were in the same
-patch, but maybe that's not really feasible.
-
->  	void (*scan_bus)(struct pcie_port *pp);
->  	void (*set_num_vectors)(struct pcie_port *pp);
->  	int (*msi_host_init)(struct pcie_port *pp);
-> -	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
->  };
->  
->  struct pcie_port {
 > -- 
-> 2.17.1
+> 2.9.5
 > 
