@@ -4,84 +4,88 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 830AEC282C2
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:07:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E7DC282C2
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:35:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 443F421908
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:07:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40E6721872
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:35:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549570071;
-	bh=LSp4OspEgS5OgVfEAoyNMnjUNBZinFZW4fLMk1h/FpA=;
+	s=default; t=1549571751;
+	bh=2MzJld4j6HNnmPdZQtxAwolfBTJ/b9uQc0fC7nuFfGA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=uOXSmZ2LZIXOlrrCvpD6c8+jST4vE4LLJ/nuZC3myx0T4f2fX4bu/HRk0NAPWIn2F
-	 kwV6VDSavgj4sdXFTG5LpAqp52toRNunz5T5yH32XNQKNRHc95IAhDi+ceHTmYrDp/
-	 By7Uj7GhT+MbnzJRMCFeCl/YVEjLQaZAEyCdC/bs=
+	b=Nzwyk0vAzE0p9I5Jwp+HZI6VT/Ll31YT/uA3P9DGujYEMsbJ30l1bG1H0zdF9QqOP
+	 v9/vBM0xkIPrrvyqJOHBLd0ppme+581WaIp+pRDIaxDJX7zHvkjf/Y+nQub6BIgsyH
+	 Z/8Ja5ONIh3Jpt1jRiiOcVPEJO7k99mXF978RLzk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726989AbfBGUHu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 15:07:50 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36604 "EHLO mail.kernel.org"
+        id S1726758AbfBGUfu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 15:35:50 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52380 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726650AbfBGUHu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Feb 2019 15:07:50 -0500
+        id S1726614AbfBGUfu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Feb 2019 15:35:50 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 861AF21872;
-        Thu,  7 Feb 2019 20:07:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DCBE620663;
+        Thu,  7 Feb 2019 20:35:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549570068;
-        bh=LSp4OspEgS5OgVfEAoyNMnjUNBZinFZW4fLMk1h/FpA=;
+        s=default; t=1549571748;
+        bh=2MzJld4j6HNnmPdZQtxAwolfBTJ/b9uQc0fC7nuFfGA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TavzpOHbW+FKQxjU+bXGZ5oSzrLwngCVCsfDqjA9CzhZ15+VyESpDc0UlnLZVnloq
-         4aOxvniQmCeiv/+IhnBiCtBIEKq8YaXbuc5yZuc+C6lCfJCPQ2mmGU2AwV1DVc8Edx
-         gNhaTW7XmvXAVxleqGrZDigX9cG9pD87GtyrLCHE=
-Date:   Thu, 7 Feb 2019 14:07:47 -0600
+        b=hFvH+ljmWPslk9Bh2QpC5Hc08JhhYZ4ZpaiL2dDWGLBT1Ncgs5KDPIrI6xjt7DL28
+         G9ZhJMeWNoJ4n7c0AtlYQ/RPxQ+v0jqHLuJq9wrJA44PWy1HHY7TP0Nkqt6tLlr03O
+         Ri4SLyMmIw86q2Vv8z1+n+mhDz5t6r+5j3uCx5SY=
+Date:   Thu, 7 Feb 2019 14:35:46 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     sathyanarayanan.kuppuswamy@linux.intel.com
 Cc:     joro@8bytes.org, dwmw2@infradead.org, linux-pci@vger.kernel.org,
         iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        Ashok Raj <ashok.raj@intel.com>,
-        Jacob Pan <jacob.jun.pan@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH v1 1/2] PCI: ATS: Add function to check ATS page aligned
- request status.
-Message-ID: <20190207200747.GK7268@google.com>
-References: <cover.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <91bfae8b1d4b424219e3ce3c1fc03559c73f1ae7.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        ashok.raj@intel.com, jacob.jun.pan@intel.com,
+        keith.busch@intel.com, Jacob Pan <jacob.jun.pan@linux.intel.com>
+Subject: Re: [PATCH v1 1/2] PCI: ATS: Add function to check PRG response
+ PASID bit status.
+Message-ID: <20190207203546.GL7268@google.com>
+References: <cover.1549479043.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <2be716037209f722304e94da6df39aec5a37f236.1549479043.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <91bfae8b1d4b424219e3ce3c1fc03559c73f1ae7.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <2be716037209f722304e94da6df39aec5a37f236.1549479043.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Kuppuswamy,
 
-Previous changes to ats.c used subject lines starting with just
-"PCI:".
+"PCI/ATS: Add pci_pggrp_rsp_need_pasid() interface"
 
-I think it does make sense to include "ATS", but please do it in
-the way we do it for other PCI features, e.g.,
-
-  PCI/ATS: Add pci_ats_page_aligned() interface
-
-On Thu, Feb 07, 2019 at 10:41:13AM -0800, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
+On Thu, Feb 07, 2019 at 10:37:58AM -0800, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
 > From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 > 
-> Add a new function to return the status of ATS page aligned request
-> bit in ATS capability register. This function will be used by
-> drivers like IOMMU, if it is required to enforce page-aligned
-> requests in ATS.
+> Add a new function to return the status of PRG response PASID
+> required bit in PRI status register. This function will be used by
 
-"return the Page Aligned Request bit in the ATS Capability Register"
+"return the PRG Response PASID Required bit in the Page Request Status
+Register".
 
-This is just to make the terminology match the PCIe spec exactly so
-it's easier to look up.
+That's just to make it clear exactly what the name of the bit is.
+Without the capitalization, you can't tell where the name itself
+begins.
+
+> drivers like IOMMU, if it is required to enforce the PASID required for
+> page-group responses.
+
+If I'm reading the spec (PCIe r4.0, sec 10.5.2.3) correctly, when this bit
+is set, it means the Function expects a PASID on responses it receives
+from the host.  It's not so much that the IOMMU "enforces" anything;
+it's just that when this bit is set, the IOMMU must supply the PASID
+in its responses to that Function.
+
+s/page-group responses/PRG (Page Request Group) Response Messages/
 
 > Cc: Ashok Raj <ashok.raj@intel.com>
 > Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>
@@ -89,102 +93,94 @@ it's easier to look up.
 > Suggested-by: Ashok Raj <ashok.raj@intel.com>
 > Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 > ---
->  drivers/pci/ats.c             | 22 ++++++++++++++++++++++
->  include/linux/pci.h           |  2 ++
+>  drivers/pci/ats.c             | 27 +++++++++++++++++++++++++++
+>  include/linux/pci-ats.h       |  5 +++++
 >  include/uapi/linux/pci_regs.h |  1 +
->  3 files changed, 25 insertions(+)
+>  3 files changed, 33 insertions(+)
 > 
 > diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index 5b78f3b1b918..7d14b9a1981e 100644
+> index 5b78f3b1b918..666d03332944 100644
 > --- a/drivers/pci/ats.c
 > +++ b/drivers/pci/ats.c
-> @@ -142,6 +142,28 @@ int pci_ats_queue_depth(struct pci_dev *dev)
+> @@ -368,6 +368,33 @@ int pci_pasid_features(struct pci_dev *pdev)
 >  }
->  EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
+>  EXPORT_SYMBOL_GPL(pci_pasid_features);
 >  
 > +/**
-> + * pci_ats_page_aligned - Return ATS page aligned request bit status.
+> + * pci_pggrp_rsp_need_pasid - Return PRG response PASID required bit status.
 
-Capitalize name of bit as above.
+pci_prg_resp_pasid_required()?
 
-> + * @pdev: the PCI device
+"PRG" seems to be the standard spec terminology, so I think using
+"pggrp" muddies the water a little bit.
+
+> + * @pdev: PCI device structure
 > + *
-> + * Returns  value > 0 if address is aligned or 0 otherwise.
+> + * Returns positive if PASID is required, 0 otherwise.
+> + *
+> + * Eventhough the PRG response PASID status is read from PRI status
+> + * register, Since this API will mainly be used by PASID users, this
+> + * function is defined within #ifdef CONFIG_PCI_PASID instead of
+> + * CONFIG_PCI_PRI.
 
-s/  / /
-
-"if Untranslated Addresses generated by the device are always
-aligned or ..."
+s/Eventhough/Even though/
+s/Since/since/
 
 > + *
-> + * As per PCI spec, If page aligned request bit is set, it indicates
-> + * the untranslated address is always aligned to a 4096 byte boundary.
-
-"Per PCIe r4.0, sec 10.5.1.2, if the Page Aligned Request bit,
-Untranslated Addresses generated by the device are always aligned to a
-4096 byte boundary."
-
 > + */
-> +int pci_ats_page_aligned(struct pci_dev *pdev)
+> +int pci_pggrp_rsp_need_pasid(struct pci_dev *pdev)
 > +{
-> +	u16 cap;
+> +	u16 status;
+> +	int pos;
 > +
-> +	if (!pdev->ats_cap)
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+> +	if (!pos)
 > +		return 0;
 > +
-> +	pci_read_config_word(pdev, pdev->ats_cap + PCI_ATS_CAP, &cap);
+> +	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
 > +
-> +	return PCI_ATS_CAP_PAGE_ALIGNED(cap);
+> +	return status & PCI_PRI_STATUS_PASID;
 > +}
-> +EXPORT_SYMBOL_GPL(pci_ats_page_aligned);
+> +EXPORT_SYMBOL_GPL(pci_pggrp_rsp_need_pasid);
 > +
->  #ifdef CONFIG_PCI_PRI
+>  #define PASID_NUMBER_SHIFT	8
+>  #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
 >  /**
->   * pci_enable_pri - Enable PRI capability
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 65f1d8c2f082..9724a8c0496b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1524,11 +1524,13 @@ void pci_ats_init(struct pci_dev *dev);
->  int pci_enable_ats(struct pci_dev *dev, int ps);
->  void pci_disable_ats(struct pci_dev *dev);
->  int pci_ats_queue_depth(struct pci_dev *dev);
-> +int pci_ats_page_aligned(struct pci_dev *dev);
->  #else
->  static inline void pci_ats_init(struct pci_dev *d) { }
->  static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
->  static inline void pci_disable_ats(struct pci_dev *d) { }
->  static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
-> +static inline int pci_ats_page_aligned(struct pci_dev *dev) { return 0; }
->  #endif
+> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+> index 7c4b8e27268c..ea29c7c64482 100644
+> --- a/include/linux/pci-ats.h
+> +++ b/include/linux/pci-ats.h
+> @@ -40,6 +40,7 @@ void pci_disable_pasid(struct pci_dev *pdev);
+>  void pci_restore_pasid_state(struct pci_dev *pdev);
+>  int pci_pasid_features(struct pci_dev *pdev);
+>  int pci_max_pasids(struct pci_dev *pdev);
+> +int pci_pggrp_rsp_need_pasid(struct pci_dev *pdev);
 >  
->  #ifdef CONFIG_PCIE_PTM
+>  #else  /* CONFIG_PCI_PASID */
+>  
+> @@ -66,6 +67,10 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
+>  	return -EINVAL;
+>  }
+>  
+> +static int pci_pggrp_rsp_need_pasid(struct pci_dev *pdev)
+> +{
+> +	return 0;
+> +}
+>  #endif /* CONFIG_PCI_PASID */
+>  
+>  
 > diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index e1e9888c85e6..d42a759867b8 100644
+> index e1e9888c85e6..898be572b010 100644
 > --- a/include/uapi/linux/pci_regs.h
 > +++ b/include/uapi/linux/pci_regs.h
-> @@ -866,6 +866,7 @@
->  #define PCI_ATS_CAP		0x04	/* ATS Capability Register */
->  #define  PCI_ATS_CAP_QDEP(x)	((x) & 0x1f)	/* Invalidate Queue Depth */
->  #define  PCI_ATS_MAX_QDEP	32	/* Max Invalidate Queue Depth */
-> +#define  PCI_ATS_CAP_PAGE_ALIGNED(x)	0x0020 /* Page Aligned Request */
-
-This is wrong because it *always* returns "true", regardless of the
-value of the ATS Capability register.
-
-I would prefer this:
-
-  #define  PCI_ATS_CAP_PAGE_ALIGNED   0x0020
-
-and then test it like this:
-
-  if (cap & PCI_ATS_CAP_PAGE_ALIGNED)
-    return 1;
-  return 0;
-
->  #define PCI_ATS_CTRL		0x06	/* ATS Control Register */
->  #define  PCI_ATS_CTRL_ENABLE	0x8000	/* ATS Enable */
->  #define  PCI_ATS_CTRL_STU(x)	((x) & 0x1f)	/* Smallest Translation Unit */
+> @@ -880,6 +880,7 @@
+>  #define  PCI_PRI_STATUS_RF	0x001	/* Response Failure */
+>  #define  PCI_PRI_STATUS_UPRGI	0x002	/* Unexpected PRG index */
+>  #define  PCI_PRI_STATUS_STOPPED	0x100	/* PRI Stopped */
+> +#define  PCI_PRI_STATUS_PASID	0x8000	/* PRG Response PASID Required */
+>  #define PCI_PRI_MAX_REQ		0x08	/* PRI max reqs supported */
+>  #define PCI_PRI_ALLOC_REQ	0x0c	/* PRI max reqs allowed */
+>  #define PCI_EXT_CAP_PRI_SIZEOF	16
 > -- 
 > 2.20.1
 > 
