@@ -2,194 +2,170 @@ Return-Path: <SRS0=HpDZ=QO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE600C282C4
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C3ACC282C2
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:53:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 82A9120663
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:40:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12A612175B
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 20:53:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1549572782;
+	bh=akTfZxeIHbgXqtmrpQWMvU2724HDWRVadTdBm5rkfQg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=OnbZF3Uew4cU4o6q+KeDTZZpfRQRojJjVQh1Ii208N1wocxRLP0hAEcZqIP4ghYTy
+	 YznzuaM5VsNXGTeUvk6iONooEpdSxX/AARwE/1ZiYauHNdlPNcCHMt/uLKm6565kYO
+	 sFdfPBUHKPHGe3hsz8KHPwRlxUOkw9GyQcAOAZPU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727482AbfBGUkV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 15:40:21 -0500
-Received: from mga02.intel.com ([134.134.136.20]:23150 "EHLO mga02.intel.com"
+        id S1726876AbfBGUxB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 15:53:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59230 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727479AbfBGUkU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Feb 2019 15:40:20 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Feb 2019 12:40:19 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,345,1544515200"; 
-   d="scan'208";a="114506896"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga006.jf.intel.com with ESMTP; 07 Feb 2019 12:40:19 -0800
-Received: from [10.54.74.33] (skuppusw-desk.jf.intel.com [10.54.74.33])
-        by linux.intel.com (Postfix) with ESMTP id 5BF0858048A;
-        Thu,  7 Feb 2019 12:40:19 -0800 (PST)
-Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: Re: [PATCH v1 1/2] PCI: ATS: Add function to check ATS page aligned
- request status.
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     joro@8bytes.org, dwmw2@infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        Ashok Raj <ashok.raj@intel.com>,
-        Jacob Pan <jacob.jun.pan@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-References: <cover.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <91bfae8b1d4b424219e3ce3c1fc03559c73f1ae7.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <20190207200747.GK7268@google.com>
-From:   sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Organization: Intel
-Message-ID: <f6f85182-da40-f404-ebc0-fef650d753cb@linux.intel.com>
-Date:   Thu, 7 Feb 2019 12:39:00 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S1727035AbfBGUxB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Feb 2019 15:53:01 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 15EC22146E;
+        Thu,  7 Feb 2019 20:52:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1549572779;
+        bh=akTfZxeIHbgXqtmrpQWMvU2724HDWRVadTdBm5rkfQg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=WuspQwkrj74vyGFZgYB1LxuoQhS7he5/ZtKo5qtO2kNedYWJKZmQfJbj/s063mNre
+         igWwzh/QVnM5oeLSdqyTpLTtsno+Bi7Mc8CiYDWXMxhAzXHVVoaH9L5RqIg6QVr/Fs
+         R+5/mlP5zEfobsghJ5VQbaOSMO9Y4/HpWcEvtcgM=
+Date:   Thu, 7 Feb 2019 14:52:57 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Murali Karicheri <m-karicheri2@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/9] PCI: keystone: Modify legacy_irq_handler to check
+ the IRQ_STATUS of INTA/B/C/D
+Message-ID: <20190207205257.GM7268@google.com>
+References: <20190207110924.30716-1-kishon@ti.com>
+ <20190207110924.30716-3-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20190207200747.GK7268@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190207110924.30716-3-kishon@ti.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+In the subject, "legacy_irq_handler" looks like it's supposed to be a
+function name, but it's not.  Maybe something like:
 
-On 2/7/19 12:07 PM, Bjorn Helgaas wrote:
-> Hi Kuppuswamy,
->
-> Previous changes to ats.c used subject lines starting with just
-> "PCI:".
->
-> I think it does make sense to include "ATS", but please do it in
-> the way we do it for other PCI features, e.g.,
->
->    PCI/ATS: Add pci_ats_page_aligned() interface
-Got it. I will follow PCI/ATS format.
->
-> On Thu, Feb 07, 2019 at 10:41:13AM -0800, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
->> From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
->>
->> Add a new function to return the status of ATS page aligned request
->> bit in ATS capability register. This function will be used by
->> drivers like IOMMU, if it is required to enforce page-aligned
->> requests in ATS.
-> "return the Page Aligned Request bit in the ATS Capability Register"
->
-> This is just to make the terminology match the PCIe spec exactly so
-> it's easier to look up.
-Will fix it in next version.
->
->> Cc: Ashok Raj <ashok.raj@intel.com>
->> Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>
->> Cc: Keith Busch <keith.busch@intel.com>
->> Suggested-by: Ashok Raj <ashok.raj@intel.com>
->> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
->> ---
->>   drivers/pci/ats.c             | 22 ++++++++++++++++++++++
->>   include/linux/pci.h           |  2 ++
->>   include/uapi/linux/pci_regs.h |  1 +
->>   3 files changed, 25 insertions(+)
->>
->> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
->> index 5b78f3b1b918..7d14b9a1981e 100644
->> --- a/drivers/pci/ats.c
->> +++ b/drivers/pci/ats.c
->> @@ -142,6 +142,28 @@ int pci_ats_queue_depth(struct pci_dev *dev)
->>   }
->>   EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
->>   
->> +/**
->> + * pci_ats_page_aligned - Return ATS page aligned request bit status.
-> Capitalize name of bit as above.
-Agreed.
->
->> + * @pdev: the PCI device
->> + *
->> + * Returns  value > 0 if address is aligned or 0 otherwise.
-> s/  / /
->
-> "if Untranslated Addresses generated by the device are always
-> aligned or ..."
->
->> + *
->> + * As per PCI spec, If page aligned request bit is set, it indicates
->> + * the untranslated address is always aligned to a 4096 byte boundary.
-> "Per PCIe r4.0, sec 10.5.1.2, if the Page Aligned Request bit,
-> Untranslated Addresses generated by the device are always aligned to a
-> 4096 byte boundary."
->
->> + */
->> +int pci_ats_page_aligned(struct pci_dev *pdev)
->> +{
->> +	u16 cap;
->> +
->> +	if (!pdev->ats_cap)
->> +		return 0;
->> +
->> +	pci_read_config_word(pdev, pdev->ats_cap + PCI_ATS_CAP, &cap);
->> +
->> +	return PCI_ATS_CAP_PAGE_ALIGNED(cap);
->> +}
->> +EXPORT_SYMBOL_GPL(pci_ats_page_aligned);
->> +
->>   #ifdef CONFIG_PCI_PRI
->>   /**
->>    * pci_enable_pri - Enable PRI capability
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 65f1d8c2f082..9724a8c0496b 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1524,11 +1524,13 @@ void pci_ats_init(struct pci_dev *dev);
->>   int pci_enable_ats(struct pci_dev *dev, int ps);
->>   void pci_disable_ats(struct pci_dev *dev);
->>   int pci_ats_queue_depth(struct pci_dev *dev);
->> +int pci_ats_page_aligned(struct pci_dev *dev);
->>   #else
->>   static inline void pci_ats_init(struct pci_dev *d) { }
->>   static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
->>   static inline void pci_disable_ats(struct pci_dev *d) { }
->>   static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
->> +static inline int pci_ats_page_aligned(struct pci_dev *dev) { return 0; }
->>   #endif
->>   
->>   #ifdef CONFIG_PCIE_PTM
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index e1e9888c85e6..d42a759867b8 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -866,6 +866,7 @@
->>   #define PCI_ATS_CAP		0x04	/* ATS Capability Register */
->>   #define  PCI_ATS_CAP_QDEP(x)	((x) & 0x1f)	/* Invalidate Queue Depth */
->>   #define  PCI_ATS_MAX_QDEP	32	/* Max Invalidate Queue Depth */
->> +#define  PCI_ATS_CAP_PAGE_ALIGNED(x)	0x0020 /* Page Aligned Request */
-> This is wrong because it *always* returns "true", regardless of the
-> value of the ATS Capability register.
->
-> I would prefer this:
->
->    #define  PCI_ATS_CAP_PAGE_ALIGNED   0x0020
-Good catch. it looks like I messed it when I did some cleanup. Sorry 
-about it. Initially it was (x & 0x0020).
->
-> and then test it like this:
->
->    if (cap & PCI_ATS_CAP_PAGE_ALIGNED)
->      return 1;
->    return 0;
-Ok.
->>   #define PCI_ATS_CTRL		0x06	/* ATS Control Register */
->>   #define  PCI_ATS_CTRL_ENABLE	0x8000	/* ATS Enable */
->>   #define  PCI_ATS_CTRL_STU(x)	((x) & 0x1f)	/* Smallest Translation Unit */
->> -- 
->> 2.20.1
->>
--- 
-Sathyanarayanan Kuppuswamy
-Linux kernel developer
+  PCI: keystone: Check INTA/B/C/D IRQ_STATUS in ks_pcie_legacy_irq_handler()
 
+On Thu, Feb 07, 2019 at 04:39:17PM +0530, Kishon Vijay Abraham I wrote:
+> The legacy interrupt handler directly checks the IRQ_STATUS register
+> corresponding to a interrupt line inorder to invoke generic_handle_irq.
+
+s/The legacy interrupt handler/ks_pcie_handle_legacy_irq()/ ?
+s/to a/to an/
+s/inorder/in order/
+s/generic_handle_irq/generic_handle_irq()/
+
+> While this is okay for K2G platform which has separate interrupt line for
+> each of the 4 legacy interrupts, AM654 which uses the same PCIe wrapper
+> has a single interrupt line for all the legacy interrupts. So for AM654
+> the interrupt handler won't be able to directly check the IRQ_STATUS
+> register corresponding to the interrupt line.
+
+s/platform which/platform, which/
+s/separate interrupt line/separate interrupt lines/
+s/AM654 which/AM654, which/
+s/PCIe wrapper/PCIe wrapper,/
+s/interrupt line for all/interrupt line shared by all/
+
+
+> Also the legacy interrupt handler uses 'virq' obtained from
+> irq_of_parse_and_map to find the correct interrupt line which raised the
+> interrupt. There is no guarantee that virq assigned for contiguous hardware
+> irq will be contiguous and the interrupt handler might end up checking
+> the wrong IRQ_STATUS register.
+
+s/irq_of_parse_and_map/irq_of_parse_and_map()
+s/irq will/IRQ will/
+
+> In order to overcome the above issues, read the IRQ_STATUS register of
+> all the 4 legacy interrupts to determine which interrupt was raised.
+> 
+> Link: https://lkml.kernel.org/r/bb081d21-7c03-0357-4294-7e92d95d838c@arm.com
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/controller/dwc/pci-keystone.c | 22 ++++++++++++----------
+>  1 file changed, 12 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+> index 5286a480f76b..4cf9849d5a1d 100644
+> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+> @@ -214,16 +214,11 @@ static void ks_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie,
+>  {
+>  	struct dw_pcie *pci = ks_pcie->pci;
+>  	struct device *dev = pci->dev;
+> -	u32 pending;
+>  	int virq;
+>  
+> -	pending = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(offset));
+> -
+> -	if (BIT(0) & pending) {
+> -		virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, offset);
+> -		dev_dbg(dev, ": irq: irq_offset %d, virq %d\n", offset, virq);
+> -		generic_handle_irq(virq);
+> -	}
+> +	virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, offset);
+> +	dev_dbg(dev, ": irq: irq_offset %d, virq %d\n", offset, virq);
+> +	generic_handle_irq(virq);
+>  
+>  	/* EOI the INTx interrupt */
+>  	ks_pcie_app_writel(ks_pcie, IRQ_EOI, offset);
+> @@ -607,8 +602,9 @@ static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
+>  	struct keystone_pcie *ks_pcie = irq_desc_get_handler_data(desc);
+>  	struct dw_pcie *pci = ks_pcie->pci;
+>  	struct device *dev = pci->dev;
+> -	u32 irq_offset = irq - ks_pcie->legacy_host_irqs[0];
+>  	struct irq_chip *chip = irq_desc_get_chip(desc);
+> +	unsigned int irq_no;
+> +	u32 reg;
+>  
+>  	dev_dbg(dev, ": Handling legacy irq %d\n", irq);
+>  
+> @@ -618,7 +614,13 @@ static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
+>  	 * ack operation.
+>  	 */
+>  	chained_irq_enter(chip, desc);
+> -	ks_pcie_handle_legacy_irq(ks_pcie, irq_offset);
+> +	for (irq_no = 0; irq_no < PCI_NUM_INTX; irq_no++) {
+> +		reg = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(irq_no));
+> +		if (!(reg & INTx_EN))
+> +			continue;
+> +		ks_pcie_handle_legacy_irq(ks_pcie, irq_no);
+
+It's too bad that reading IRQ_STATUS and writing IRQ_EOI are now in
+separate functions.  It's nice to have them together for code auditing
+purposes.
+
+Could maybe accumulate a mask of which INTx bits are set and call
+ks_pcie_handle_legacy_irq() only once with that mask?  Of course, then
+you'd need another loop in ks_pcie_handle_legacy_irq().
+
+> +	}
+> +
+>  	chained_irq_exit(chip, desc);
+>  }
+>  
+> -- 
+> 2.17.1
+> 
