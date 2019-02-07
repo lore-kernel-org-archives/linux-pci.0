@@ -2,86 +2,190 @@ Return-Path: <SRS0=HpDZ=QO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34067C282C2
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 22:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A99EC282C2
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 22:21:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00DCE2147C
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 22:17:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0955321916
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Feb 2019 22:21:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1549578095;
+	bh=SriIerW9Gq0RzWOeJdouSrhpvOFqRZnQYWmkydk8a0I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=uVfUTHPQvVi54YjlhSOY77bv3rmJnzgIt+s2LNd4i4dLv+Rmj33EvPugvbZ2+Jg7m
+	 YX36Mqa/rRQbsnSaqAxTeO2uBBbz5Isb8iIW9ugO1zzWMy53skpPPDv87Tiw9pCuXj
+	 ZfZNaqi73j3f9A5PeMUre/P3FRWssRptKcIBfQnY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726676AbfBGWRd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 17:17:33 -0500
-Received: from mga07.intel.com ([134.134.136.100]:57815 "EHLO mga07.intel.com"
+        id S1726799AbfBGWVe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 17:21:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33580 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726622AbfBGWRd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Feb 2019 17:17:33 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 07 Feb 2019 14:17:32 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,345,1544515200"; 
-   d="scan'208";a="114531980"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga006.jf.intel.com with ESMTP; 07 Feb 2019 14:17:32 -0800
-Received: from [10.54.74.33] (skuppusw-desk.jf.intel.com [10.54.74.33])
-        by linux.intel.com (Postfix) with ESMTP id 93F8C5802E1;
-        Thu,  7 Feb 2019 14:17:32 -0800 (PST)
-Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: Re: [PATCH v1 1/2] PCI: ATS: Add function to check ATS page aligned
- request status.
-To:     Sinan Kaya <okaya@kernel.org>, bhelgaas@google.com,
-        joro@8bytes.org, dwmw2@infradead.org
-Cc:     linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@intel.com>,
-        Jacob Pan <jacob.jun.pan@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-References: <cover.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <91bfae8b1d4b424219e3ce3c1fc03559c73f1ae7.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <5d55e369-355f-b710-0594-03465aa985da@kernel.org>
-From:   sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Organization: Intel
-Message-ID: <a5a29eee-2e33-ba0c-67a6-69983fd0796d@linux.intel.com>
-Date:   Thu, 7 Feb 2019 14:16:13 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S1726731AbfBGWVe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Feb 2019 17:21:34 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1D4E82147C;
+        Thu,  7 Feb 2019 22:21:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1549578092;
+        bh=SriIerW9Gq0RzWOeJdouSrhpvOFqRZnQYWmkydk8a0I=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=iHqdxvD0bQCRQXMWGDsspjtPtJp0FztOq3BoSbbiQm7qMKzsoCpKhh0KKM3nJgdlk
+         bax02RdSG9ry2EPA3UVQv8hewo5TzQ6DEK2hlAHLMVFvCm0dWjmfgi3ENzqxoZxYTk
+         hSa8mjAtGwpfeoOyLUe2a+bMNmIKbBFXa3pYl7sc=
+Date:   Thu, 7 Feb 2019 16:21:30 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] genirq/affinity: allow driver to setup managed IRQ's
+ affinity
+Message-ID: <20190207222130.GQ7268@google.com>
+References: <20190125095347.17950-1-ming.lei@redhat.com>
+ <20190125095347.17950-3-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <5d55e369-355f-b710-0594-03465aa985da@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190125095347.17950-3-ming.lei@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Fri, Jan 25, 2019 at 05:53:44PM +0800, Ming Lei wrote:
+> This patch introduces callback of .setup_affinity into 'struct
+> irq_affinity', so that:
+> 
+> 1) allow drivers to customize the affinity for managed IRQ, for
+> example, now NVMe has special requirement for read queues & poll
+> queues
+> 
+> 2) 6da4b3ab9a6e9 ("genirq/affinity: Add support for allocating interrupt sets")
+> makes pci_alloc_irq_vectors_affinity() a bit difficult to use for
+> allocating interrupt sets: 'max_vecs' is required to same with 'min_vecs'.
 
-On 2/7/19 12:38 PM, Sinan Kaya wrote:
->
-> On 2/7/2019 1:41 PM, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
->> + * As per PCI spec, If page aligned request bit is set, it indicates
->> + * the untranslated address is always aligned to a 4096 byte boundary.
->> + */
->> +int pci_ats_page_aligned(struct pci_dev *pdev)
->> +{
->> +    u16 cap;
->> +
->> +    if (!pdev->ats_cap)
->> +        return 0;
->> +
->> +    pci_read_config_word(pdev, pdev->ats_cap + PCI_ATS_CAP, &cap);
->
-> If I remember this right, aligned request is only supported on ATS v1.1
-> but not supported on v1.0.
-Its added in v1.1.
->
-> Can you please check the spec?
->
--- 
-Sathyanarayanan Kuppuswamy
-Linux kernel developer
+s/is required to same with/is required to be equal to/
 
+> With this patch, driver can implement their own .setup_affinity to
+> customize the affinity, then the above thing can be solved easily.
+
+s/driver/drivers/
+
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  include/linux/interrupt.h | 26 +++++++++++++++++---------
+>  kernel/irq/affinity.c     |  6 ++++++
+>  2 files changed, 23 insertions(+), 9 deletions(-)
+> 
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index c672f34235e7..f6cea778cf50 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -242,30 +242,38 @@ struct irq_affinity_notify {
+>  };
+>  
+>  /**
+> + * struct irq_affinity_desc - Interrupt affinity descriptor
+> + * @mask:	cpumask to hold the affinity assignment
+> + */
+> +struct irq_affinity_desc {
+> +	struct cpumask	mask;
+> +	unsigned int	is_managed : 1;
+> +};
+
+I was going to comment that "managed" already has a common usage
+related to the devm_*() functions, but I don't think that's what you
+mean here.  But then I noticed that you're only *moving* this code,
+so you couldn't change it anyway.
+
+But I still wonder what "managed" means here.
+
+> +
+> +/**
+>   * struct irq_affinity - Description for automatic irq affinity assignements
+>   * @pre_vectors:	Don't apply affinity to @pre_vectors at beginning of
+>   *			the MSI(-X) vector space
+>   * @post_vectors:	Don't apply affinity to @post_vectors at end of
+>   *			the MSI(-X) vector space
+> + * @setup_affinity:	Use driver's method to setup irq vectors affinity,
+> + * 			and driver has to handle pre_vectors & post_vectors
+> + * 			correctly, set 'is_managed' flag correct too
+
+s/irq vectors/irq vector/
+s/correct/correctly/
+
+In general I don't think "correctly" is very useful in changelogs
+and comments.  Usually it just means "how *I* think it should be
+done", but it doesn't tell anybody else exactly *how* it should be
+done.
+
+What does it mean for a driver to handle pre_vectors & post_vectors
+"correctly"?  The driver's .setup_affinity() method receives an array
+of struct irq_affinity; maybe it means that method should set the
+cpumask for each element as it desires.  For @pre_vectors and
+@post_vectors, I suppose that means their cpumask would be
+irq_default_affinity?
+
+But I guess the .setup_affinity() method means the driver would have
+complete flexibility for each vector, and it could use
+irq_default_affinity for arbitrary vectors, not just the first few
+(@pre_vectors) and the last few (@post_vectors)?
+
+What's the rule for how a driver sets "is_managed"?
+
+> + * @priv:		Private data of @setup_affinity
+>   * @nr_sets:		Length of passed in *sets array
+>   * @sets:		Number of affinitized sets
+>   */
+>  struct irq_affinity {
+>  	int	pre_vectors;
+>  	int	post_vectors;
+> +	int	(*setup_affinity)(const struct irq_affinity *,
+> +				  struct irq_affinity_desc *,
+> +				  unsigned int);
+> +	void    *priv;
+>  	int	nr_sets;
+>  	int	*sets;
+>  };
+>  
+> -/**
+> - * struct irq_affinity_desc - Interrupt affinity descriptor
+> - * @mask:	cpumask to hold the affinity assignment
+> - */
+> -struct irq_affinity_desc {
+> -	struct cpumask	mask;
+> -	unsigned int	is_managed : 1;
+> -};
+> -
+>  #if defined(CONFIG_SMP)
+>  
+>  extern cpumask_var_t irq_default_affinity;
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index 118b66d64a53..7b77cbdf739c 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -257,6 +257,12 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  	if (!masks)
+>  		return NULL;
+>  
+> +	if (affd->setup_affinity) {
+> +		if (affd->setup_affinity(affd, masks, nvecs))
+> +			return NULL;
+> +		return masks;
+> +	}
+
+>  	/* Fill out vectors at the beginning that don't need affinity */
+>  	for (curvec = 0; curvec < affd->pre_vectors; curvec++)
+>  		cpumask_copy(&masks[curvec].mask, irq_default_affinity);
+> -- 
+> 2.9.5
+> 
