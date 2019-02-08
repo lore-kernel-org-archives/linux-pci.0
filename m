@@ -4,57 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 094DCC169C4
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:47:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9535EC282CC
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:49:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A502920857
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:47:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62CEA20857
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:49:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="zfII5c1M"
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="eh/Bg0jU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727169AbfBHMrD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Feb 2019 07:47:03 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:32879 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727166AbfBHMq6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2019 07:46:58 -0500
-Received: by mail-wr1-f67.google.com with SMTP id a16so3486189wrv.0
-        for <linux-pci@vger.kernel.org>; Fri, 08 Feb 2019 04:46:56 -0800 (PST)
+        id S1726585AbfBHMtt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Feb 2019 07:49:49 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:51380 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726600AbfBHMts (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2019 07:49:48 -0500
+Received: by mail-wm1-f68.google.com with SMTP id b11so3317017wmj.1
+        for <linux-pci@vger.kernel.org>; Fri, 08 Feb 2019 04:49:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=mobiveil.co.in; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=yKdoLsadNyncrt4ydGPvR3J7GAwbHiAemxkUQeLhi3Q=;
-        b=zfII5c1MlamrOX0e0N6DyP0S09jUQ9M6UwE4uXM+DowtsYUUiF9VJKrS8BDfT57ACR
-         dlllMY4DW+kjT7mDjzdxLxw+qbRImGaM/DWpgn9efNxO+k5Dmxfkl7L0PoCKul3l4CRU
-         /VkBzGmQ0y8erI1kldUeoALQ5GgZy4iRFTyVo=
+         :cc;
+        bh=xPcDhdgRfeCUFb0NzA1yOiOvgeXq4mBndVeTfOEslgQ=;
+        b=eh/Bg0jU9RaDR1LBeR3Gh1Q56m8LdqeMCjFymtwr+4RLIQKymhUKmPy7h8cE2dnt6I
+         MY2BcxyhOc37PCKHC09QEvo6SDg9KssZE/fXVFmu9gRRmyMIwtzLjj6dvRIoXbuJj/lf
+         F8RLPay1V2SCqepLMtout4X3rx5JR/99Q+y4A=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=yKdoLsadNyncrt4ydGPvR3J7GAwbHiAemxkUQeLhi3Q=;
-        b=YKm06SSJwsVL3TpwM88V9t/LINUt5LZreP03h4OHcYCYZkEXPsjhhaZBrRK+dFRHcc
-         odmVPgB4POcFqAxRqlQo7ZOyT7lR1FdR6B6pDddicMS2O9Ruhu4LG9UCkuLlAai0CbbY
-         QQh7pmTdbluAuXsJDtYXp06iehseJH5kemdLGxbuKOnZhiW19i3vvutLyzxzBoiO/qFy
-         9eqqQ/DiiunziIPnTsO1vZTRX1KU6549X6AVKqrnkfhyXiiOkhLnbETu+juqgscdk4OI
-         U6YOUPArE+pjglqaCjckrEKdG0rdt2/k71H1OWkTiHQ78mTdUBdFgi3X/fGBf42SnyiM
-         eDDA==
-X-Gm-Message-State: AHQUAubyHbb1GAk2ODQtsSN0I9GQZDJyJKYuLUfuj+lvrkT2QTTmZLz4
-        jFSVVsaY384t4HvNy47qqn9CbHDWOSJX5QaIiALljQ==
-X-Google-Smtp-Source: AHgI3IaK4CA8iIT7GiVXgPhVQ8BAZpjCEol8mOQ0yjtqAFsdeLV7+5vOlUcwbePic1nM7wQXaFrfE99bD46ilNa9e/Y=
-X-Received: by 2002:adf:b201:: with SMTP id u1mr3506182wra.165.1549630015167;
- Fri, 08 Feb 2019 04:46:55 -0800 (PST)
+         :message-id:subject:to:cc;
+        bh=xPcDhdgRfeCUFb0NzA1yOiOvgeXq4mBndVeTfOEslgQ=;
+        b=OrDYe4hCLSzcjRKAsr0an66LmqEPK6G0rikl/gXwiacCZuvkDtVcYOsg/J3IpbuWQz
+         g63LyRnUE4nVnaeRB0VxJvVT8aq4GWT7b1iW12Hz3VFKfCbj99aLjg3Zz63QSuPsjsqd
+         Vj2rO3QSon/Lxigygire+7r+LLCgJnCsCmaX7UZLR0gSaigL5E5yxgLODNI06TGo8BOq
+         X68F6OZi6w3M0vQu56PKkkGGtwL/zTuMO77JiM2d7aNATk7pHCm0HgKAk3RZUZSunWRF
+         HhCdi0IhTjSqQwzXZmPe5/8M5ydmDDs+jVVCI3wnbsrX1vWeFQKI/4gR22iH+6brXp+N
+         fviQ==
+X-Gm-Message-State: AHQUAubUkSqYSziSh15qmsbeQq0mGjYxTlhw0LDfvraeqbNqx7/rVgAJ
+        M5cMkx88avRs+0+g4fdCXG4at5vOJWSzVprbnZdP9g==
+X-Google-Smtp-Source: AHgI3IY+i3iPNRf0lkCuV77xZsU23QrAtPoJon2X4xtGpT07Tf9p//8oHrYpsx85i6UZ8C+QSMmSG3ErzybDAESBhrE=
+X-Received: by 2002:a1c:9e4a:: with SMTP id h71mr11858445wme.82.1549630185604;
+ Fri, 08 Feb 2019 04:49:45 -0800 (PST)
 MIME-Version: 1.0
-References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-24-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20190129080926.36773-24-Zhiqiang.Hou@nxp.com>
+References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-25-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20190129080926.36773-25-Zhiqiang.Hou@nxp.com>
 From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date:   Fri, 8 Feb 2019 18:19:34 +0530
-Message-ID: <CAFZiPx0aGTy6yQ=fCojjP1awLEHevPSHRCUDEFL7KJtA4t=CGw@mail.gmail.com>
-Subject: Re: [PATCHv3 23/27] PCI: mobiveil: add PCIe Gen4 RC driver for NXP
- Layerscape SoCs
+Date:   Fri, 8 Feb 2019 18:22:24 +0530
+Message-ID: <CAFZiPx0Qv6LN6mi4Z9fta2X=Rh85uk7bYGPHmncy=XYgBQOnAw@mail.gmail.com>
+Subject: Re: [PATCHv3 24/27] PCI: mobiveil: ls_pcie_g4: add Workaround for A-011577
 To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -73,7 +72,6 @@ Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -81,366 +79,167 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 ZQ,
 
-
-On Tue, Jan 29, 2019 at 1:40 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
+On Tue, Jan 29, 2019 at 1:41 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
 >
 > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 >
-> This PCIe controller is based on the Mobiveil GPEX IP, which is
-> compatible with the PCI Express=E2=84=A2 Base Specification, Revision 4.0=
-.
+> PCIe configuration access to non-existent function triggered
+> SERROR interrupt exception.
+>
+> Workaround:
+> Disable error reporting on AXI bus during the Vendor ID read
+> transactions in enumeration.
+>
+> This ERRATA is only for LX2160A Rev1.0, and it will be fixed
+> in Rev2.0.
 >
 > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 > ---
 > V3:
->  - No change
+>  - Integrated without change from http://patchwork.ozlabs.org/patch/1006790/
 >
->  drivers/pci/controller/mobiveil/Kconfig       |  10 +
->  drivers/pci/controller/mobiveil/Makefile      |   1 +
->  .../controller/mobiveil/pci-layerscape-gen4.c | 254 ++++++++++++++++++
->  .../pci/controller/mobiveil/pcie-mobiveil.h   |  16 +-
->  4 files changed, 279 insertions(+), 2 deletions(-)
->  create mode 100644 drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+>  .../controller/mobiveil/pci-layerscape-gen4.c | 37 +++++++++++++++++++
+>  .../controller/mobiveil/pcie-mobiveil-host.c  | 17 ++++++++-
+>  .../pci/controller/mobiveil/pcie-mobiveil.h   |  3 ++
+>  3 files changed, 56 insertions(+), 1 deletion(-)
 >
-> diff --git a/drivers/pci/controller/mobiveil/Kconfig b/drivers/pci/contro=
-ller/mobiveil/Kconfig
-> index 64343c07bfed..3ddb7d6163a9 100644
-> --- a/drivers/pci/controller/mobiveil/Kconfig
-> +++ b/drivers/pci/controller/mobiveil/Kconfig
-> @@ -21,4 +21,14 @@ config PCIE_MOBIVEIL_PLAT
->           Soft IP. It has up to 8 outbound and inbound windows
->           for address translation and it is a PCIe Gen4 IP.
->
-> +config PCI_LAYERSCAPE_GEN4
-> +       bool "Freescale Layerscpe PCIe Gen4 controller"
-> +       depends on PCI
-> +       depends on OF && (ARM64 || ARCH_LAYERSCAPE)
-> +       depends on PCI_MSI_IRQ_DOMAIN
-> +       select PCIE_MOBIVEIL_HOST
-> +       help
-> +         Say Y here if you want PCIe Gen4 controller support on
-> +         Layerscape SoCs. The PCIe controller can work in RC or
-> +         EP mode according to RCW[HOST_AGT_PEX] setting.
->  endmenu
-> diff --git a/drivers/pci/controller/mobiveil/Makefile b/drivers/pci/contr=
-oller/mobiveil/Makefile
-> index 9fb6d1c6504d..ff66774ccac4 100644
-> --- a/drivers/pci/controller/mobiveil/Makefile
-> +++ b/drivers/pci/controller/mobiveil/Makefile
-> @@ -2,3 +2,4 @@
->  obj-$(CONFIG_PCIE_MOBIVEIL) +=3D pcie-mobiveil.o
->  obj-$(CONFIG_PCIE_MOBIVEIL_HOST) +=3D pcie-mobiveil-host.o
->  obj-$(CONFIG_PCIE_MOBIVEIL_PLAT) +=3D pcie-mobiveil-plat.o
-> +obj-$(CONFIG_PCI_LAYERSCAPE_GEN4) +=3D pci-layerscape-gen4.o
-> diff --git a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c b/driv=
-ers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> new file mode 100644
-> index 000000000000..174cbcac4059
-> --- /dev/null
+> diff --git a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+> index 174cbcac4059..d2c5dbbd5e3c 100644
+> --- a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
 > +++ b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> @@ -0,0 +1,254 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * PCIe host controller driver for NXP Layerscape SoCs
-> + *
-> + * Copyright 2018 NXP
-> + *
-> + * Author: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-> + */
+> @@ -22,8 +22,13 @@
+>
+>  #include "pcie-mobiveil.h"
+>
+> +#define REV_1_0                                (0x10)
 > +
-> +#include <linux/kernel.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/init.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/of_platform.h>
-> +#include <linux/of_irq.h>
-> +#include <linux/of_address.h>
-> +#include <linux/pci.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/resource.h>
-> +#include <linux/mfd/syscon.h>
-> +#include <linux/regmap.h>
+>  /* LUT and PF control registers */
+>  #define PCIE_LUT_OFF                   (0x80000)
+> +#define PCIE_LUT_GCR                   (0x28)
+> +#define PCIE_LUT_GCR_RRE               (0)
 > +
-> +#include "pcie-mobiveil.h"
-> +
-> +/* LUT and PF control registers */
-> +#define PCIE_LUT_OFF                   (0x80000)
-> +#define PCIE_PF_OFF                    (0xc0000)
-> +#define PCIE_PF_INT_STAT               (0x18)
-> +#define PF_INT_STAT_PABRST             (31)
-> +
-> +#define PCIE_PF_DBG                    (0x7fc)
-> +#define PF_DBG_LTSSM_MASK              (0x3f)
-> +#define PF_DBG_WE                      (31)
-> +#define PF_DBG_PABR                    (27)
-> +
-> +#define LS_PCIE_G4_LTSSM_L0            0x2d /* L0 state */
-> +
-> +#define to_ls_pcie_g4(x)               platform_get_drvdata((x)->pdev)
-> +
-> +struct ls_pcie_g4 {
-> +       struct mobiveil_pcie *pci;
-> +       struct delayed_work dwork;
-> +       int irq;
-> +};
-> +
-> +static inline u32 ls_pcie_g4_lut_readl(struct ls_pcie_g4 *pcie, u32 off)
+>  #define PCIE_PF_OFF                    (0xc0000)
+>  #define PCIE_PF_INT_STAT               (0x18)
+>  #define PF_INT_STAT_PABRST             (31)
+> @@ -41,6 +46,7 @@ struct ls_pcie_g4 {
+>         struct mobiveil_pcie *pci;
+>         struct delayed_work dwork;
+>         int irq;
+> +       u8 rev;
+>  };
+>
+>  static inline u32 ls_pcie_g4_lut_readl(struct ls_pcie_g4 *pcie, u32 off)
+> @@ -76,6 +82,15 @@ static bool ls_pcie_g4_is_bridge(struct ls_pcie_g4 *pcie)
+>         return header_type == PCI_HEADER_TYPE_BRIDGE;
+>  }
+>
+> +static int ls_pcie_g4_host_init(struct mobiveil_pcie *pci)
 > +{
-> +       return ioread32(pcie->pci->csr_axi_slave_base + PCIE_LUT_OFF + of=
-f);
-> +}
+> +       struct ls_pcie_g4 *pcie = to_ls_pcie_g4(pci);
 > +
-> +static inline void ls_pcie_g4_lut_writel(struct ls_pcie_g4 *pcie,
-> +                                        u32 off, u32 val)
-> +{
-> +       iowrite32(val, pcie->pci->csr_axi_slave_base + PCIE_LUT_OFF + off=
-);
-> +}
-> +
-> +static inline u32 ls_pcie_g4_pf_readl(struct ls_pcie_g4 *pcie, u32 off)
-> +{
-> +       return ioread32(pcie->pci->csr_axi_slave_base + PCIE_PF_OFF + off=
-);
-> +}
-> +
-> +static inline void ls_pcie_g4_pf_writel(struct ls_pcie_g4 *pcie,
-> +                                       u32 off, u32 val)
-> +{
-> +       iowrite32(val, pcie->pci->csr_axi_slave_base + PCIE_PF_OFF + off)=
-;
-> +}
-> +
-> +static bool ls_pcie_g4_is_bridge(struct ls_pcie_g4 *pcie)
-> +{
-> +       struct mobiveil_pcie *mv_pci =3D pcie->pci;
-> +       u32 header_type;
-> +
-> +       header_type =3D csr_readb(mv_pci, PCI_HEADER_TYPE);
-> +       header_type &=3D 0x7f;
-> +
-> +       return header_type =3D=3D PCI_HEADER_TYPE_BRIDGE;
-> +}
-> +
-> +static int ls_pcie_g4_link_up(struct mobiveil_pcie *pci)
-> +{
-> +       struct ls_pcie_g4 *pcie =3D to_ls_pcie_g4(pci);
-> +       u32 state;
-> +
-> +       state =3D ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
-> +       state =3D state & PF_DBG_LTSSM_MASK;
-> +
-> +       if (state =3D=3D LS_PCIE_G4_LTSSM_L0)
-> +               return 1;
+> +       pcie->rev = csr_readb(pci, PCI_REVISION_ID);
 > +
 > +       return 0;
 > +}
 > +
-> +static void ls_pcie_g4_reinit_hw(struct ls_pcie_g4 *pcie)
+>  static int ls_pcie_g4_link_up(struct mobiveil_pcie *pci)
+>  {
+>         struct ls_pcie_g4 *pcie = to_ls_pcie_g4(pci);
+> @@ -188,12 +203,34 @@ static void ls_pcie_g4_reset(struct work_struct *work)
+>         ls_pcie_g4_reinit_hw(pcie);
+>  }
+>
+> +static int ls_pcie_g4_read_other_conf(struct pci_bus *bus, unsigned int devfn,
+> +                                  int where, int size, u32 *val)
 > +{
-> +       struct mobiveil_pcie *mv_pci =3D pcie->pci;
-> +       u32 val, act_stat;
-> +       int to =3D 100;
-> +
-> +       /* Poll for pab_csb_reset to set and PAB activity to clear */
-> +       do {
-> +               usleep_range(10, 15);
-> +               val =3D ls_pcie_g4_pf_readl(pcie, PCIE_PF_INT_STAT);
-> +               act_stat =3D csr_readl(mv_pci, PAB_ACTIVITY_STAT);
-> +       } while (((val & 1 << PF_INT_STAT_PABRST) =3D=3D 0 || act_stat) &=
-& to--);
-> +       if (to < 0) {
-> +               dev_err(&mv_pci->pdev->dev, "poll PABRST&PABACT timeout\n=
-");
-> +               return;
-> +       }
-> +
-> +       /* clear PEX_RESET bit in PEX_PF0_DBG register */
-> +       val =3D ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
-> +       val |=3D 1 << PF_DBG_WE;
-> +       ls_pcie_g4_pf_writel(pcie, PCIE_PF_DBG, val);
-> +
-> +       val =3D ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
-> +       val |=3D 1 << PF_DBG_PABR;
-> +       ls_pcie_g4_pf_writel(pcie, PCIE_PF_DBG, val);
-> +
-> +       val =3D ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
-> +       val &=3D ~(1 << PF_DBG_WE);
-> +       ls_pcie_g4_pf_writel(pcie, PCIE_PF_DBG, val);
-> +
-> +       mobiveil_host_init(mv_pci, true);
-> +
-> +       to =3D 100;
-> +       while (!ls_pcie_g4_link_up(mv_pci) && to--)
-> +               usleep_range(200, 250);
-> +       if (to < 0)
-> +               dev_err(&mv_pci->pdev->dev, "PCIe link trainning timeout\=
-n");
-> +}
-> +
-> +static irqreturn_t ls_pcie_g4_handler(int irq, void *dev_id)
-> +{
-> +       struct ls_pcie_g4 *pcie =3D (struct ls_pcie_g4 *)dev_id;
-> +       struct mobiveil_pcie *mv_pci =3D pcie->pci;
-> +       u32 val;
-> +
-> +       val =3D csr_readl(mv_pci, PAB_INTP_AMBA_MISC_STAT);
-> +       if (!val)
-> +               return IRQ_NONE;
-> +
-> +       if (val & PAB_INTP_RESET)
-> +               schedule_delayed_work(&pcie->dwork, msecs_to_jiffies(1));
-> +
-> +       csr_writel(mv_pci, val, PAB_INTP_AMBA_MISC_STAT);
-> +
-> +       return IRQ_HANDLED;
-> +}
-> +
-> +static int ls_pcie_g4_interrupt_init(struct mobiveil_pcie *mv_pci)
-> +{
-> +       struct ls_pcie_g4 *pcie =3D to_ls_pcie_g4(mv_pci);
-> +       u32 val;
+> +       struct mobiveil_pcie *pci = bus->sysdata;
+> +       struct ls_pcie_g4 *pcie = to_ls_pcie_g4(pci);
 > +       int ret;
 > +
-> +       pcie->irq =3D platform_get_irq_byname(mv_pci->pdev, "intr");
-> +       if (pcie->irq < 0) {
-> +               dev_err(&mv_pci->pdev->dev, "Can't get 'intr' irq.\n");
-> +               return pcie->irq;
-> +       }
-> +       ret =3D devm_request_irq(&mv_pci->pdev->dev, pcie->irq,
-> +                              ls_pcie_g4_handler, IRQF_SHARED,
-> +                              mv_pci->pdev->name, pcie);
-> +       if (ret) {
-> +               dev_err(&mv_pci->pdev->dev, "Can't register PCIe IRQ.\n")=
-;
-> +               return  ret;
-> +       }
+> +       if (pcie->rev == REV_1_0 && where == PCI_VENDOR_ID)
+> +               ls_pcie_g4_lut_writel(pcie, PCIE_LUT_GCR,
+> +                                     0 << PCIE_LUT_GCR_RRE);
 > +
-> +       /* Enable interrupts */
-> +       val =3D PAB_INTP_INTX_MASK | PAB_INTP_MSI | PAB_INTP_RESET |
-> +             PAB_INTP_PCIE_UE | PAB_INTP_IE_PMREDI | PAB_INTP_IE_EC;
-> +       csr_writel(mv_pci, val, PAB_INTP_AMBA_MISC_ENB);
+> +       ret = pci_generic_config_read(bus, devfn, where, size, val);
 > +
-> +       return 0;
+> +       if (pcie->rev == REV_1_0 && where == PCI_VENDOR_ID)
+> +               ls_pcie_g4_lut_writel(pcie, PCIE_LUT_GCR,
+> +                                     1 << PCIE_LUT_GCR_RRE);
+> +
+> +       return ret;
 > +}
 > +
-> +static void ls_pcie_g4_reset(struct work_struct *work)
+>  static struct mobiveil_rp_ops ls_pcie_g4_rp_ops = {
+>         .interrupt_init = ls_pcie_g4_interrupt_init,
+> +       .read_other_conf = ls_pcie_g4_read_other_conf,
+>  };
+>
+>  static const struct mobiveil_pab_ops ls_pcie_g4_pab_ops = {
+>         .link_up = ls_pcie_g4_link_up,
+> +       .host_init = ls_pcie_g4_host_init,
+>  };
+>
+>  static int __init ls_pcie_g4_probe(struct platform_device *pdev)
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
+> index e8d0c4989013..5f51bc2dd6d7 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
+> @@ -79,9 +79,20 @@ static void __iomem *mobiveil_pcie_map_bus(struct pci_bus *bus,
+>         return pcie->rp.config_axi_slave_base + where;
+>  }
+>
+> +static int mobiveil_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> +                                    int where, int size, u32 *val)
 > +{
-> +       struct delayed_work *dwork =3D container_of(work, struct delayed_=
-work,
-> +                                                 work);
-> +       struct ls_pcie_g4 *pcie =3D container_of(dwork, struct ls_pcie_g4=
-, dwork);
-> +       struct mobiveil_pcie *mv_pci =3D pcie->pci;
-> +       u16 ctrl;
+> +       struct mobiveil_pcie *pcie = bus->sysdata;
+> +       struct root_port *rp = &pcie->rp;
 > +
-> +       ctrl =3D csr_readw(mv_pci, PCI_BRIDGE_CONTROL);
-> +       ctrl &=3D ~PCI_BRIDGE_CTL_BUS_RESET;
-> +       csr_writew(mv_pci, ctrl, PCI_BRIDGE_CONTROL);
-> +       ls_pcie_g4_reinit_hw(pcie);
+> +       if (bus->number > rp->root_bus_nr && rp->ops->read_other_conf)
+> +               return rp->ops->read_other_conf(bus, devfn, where, size, val);
+> +
+> +       return pci_generic_config_read(bus, devfn, where, size, val);
 > +}
+>  static struct pci_ops mobiveil_pcie_ops = {
+>         .map_bus = mobiveil_pcie_map_bus,
+> -       .read = pci_generic_config_read,
+> +       .read = mobiveil_pcie_config_read,
+>         .write = pci_generic_config_write,
+>  };
+>
+> @@ -309,6 +320,10 @@ int mobiveil_host_init(struct mobiveil_pcie *pcie, bool reinit)
+>         value |= (PCI_CLASS_BRIDGE_PCI << 16);
+>         csr_writel(pcie, value, PAB_INTP_AXI_PIO_CLASS);
+>
+> +       /* Platform specific host init */
+> +       if (pcie->ops->host_init)
+> +               return pcie->ops->host_init(pcie);
 > +
-> +static struct mobiveil_rp_ops ls_pcie_g4_rp_ops =3D {
-> +       .interrupt_init =3D ls_pcie_g4_interrupt_init,
-> +};
-> +
-> +static const struct mobiveil_pab_ops ls_pcie_g4_pab_ops =3D {
-> +       .link_up =3D ls_pcie_g4_link_up,
-> +};
-> +
-> +static int __init ls_pcie_g4_probe(struct platform_device *pdev)
-> +{
-> +       struct device *dev =3D &pdev->dev;
-> +       struct mobiveil_pcie *mv_pci;
-> +       struct ls_pcie_g4 *pcie;
-> +       struct device_node *np =3D dev->of_node;
-> +       int ret;
-> +
-> +       if (!of_parse_phandle(np, "msi-parent", 0)) {
-> +               dev_err(dev, "failed to find msi-parent\n");
-> +               return -EINVAL;
-> +       }
-> +
-> +       pcie =3D devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-> +       if (!pcie)
-> +               return -ENOMEM;
-> +
-> +       mv_pci =3D devm_kzalloc(dev, sizeof(*mv_pci), GFP_KERNEL);
-> +       if (!mv_pci)
-> +               return -ENOMEM;
-> +
-> +       mv_pci->pdev =3D pdev;
-> +       mv_pci->ops =3D &ls_pcie_g4_pab_ops;
-> +       mv_pci->rp.ops =3D &ls_pcie_g4_rp_ops;
-> +       pcie->pci =3D mv_pci;
-> +
-> +       platform_set_drvdata(pdev, pcie);
-> +
-> +       INIT_DELAYED_WORK(&pcie->dwork, ls_pcie_g4_reset);
-> +
-> +       ret =3D mobiveil_pcie_host_probe(mv_pci);
-> +       if (ret) {
-> +               dev_err(dev, "fail to probe!\n");
-> +               return  ret;
-> +       }
-> +
-> +       if (!ls_pcie_g4_is_bridge(pcie))
-> +               return -ENODEV;
-> +
-> +       return 0;
-> +}
-> +
-> +static const struct of_device_id ls_pcie_g4_of_match[] =3D {
-> +       { .compatible =3D "fsl,lx2160a-pcie", },
-> +       { },
-> +};
-> +
-> +static struct platform_driver ls_pcie_g4_driver =3D {
-> +       .driver =3D {
-> +               .name =3D "layerscape-pcie-gen4",
-> +               .of_match_table =3D ls_pcie_g4_of_match,
-> +               .suppress_bind_attrs =3D true,
-> +       },
-> +};
-> +
-> +builtin_platform_driver_probe(ls_pcie_g4_driver, ls_pcie_g4_probe);
-> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pc=
-i/controller/mobiveil/pcie-mobiveil.h
-> index 0f5303962e88..0ccd6cee5f8f 100644
+>         return 0;
+>  }
+>
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> index 0ccd6cee5f8f..ab43de5e4b2b 100644
 > --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
 > +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> @@ -41,6 +41,8 @@
->  #define  PAGE_LO_MASK                  0x3ff
->  #define  PAGE_SEL_OFFSET_SHIFT         10
+> @@ -145,6 +145,8 @@ struct mobiveil_msi {                       /* MSI information */
 >
-> +#define PAB_ACTIVITY_STAT              0x81c
-> +
->  #define PAB_AXI_PIO_CTRL               0x0840
->  #define  APIO_EN_MASK                  0xf
+>  struct mobiveil_rp_ops {
+>         int (*interrupt_init)(struct mobiveil_pcie *pcie);
+> +       int (*read_other_conf)(struct pci_bus *bus, unsigned int devfn,
+> +                              int where, int size, u32 *val);
+>  };
 >
-> @@ -49,8 +51,18 @@
+>  struct root_port {
+> @@ -160,6 +162,7 @@ struct root_port {
 >
->  #define PAB_INTP_AMBA_MISC_ENB         0x0b0c
->  #define PAB_INTP_AMBA_MISC_STAT                0x0b1c
-> -#define  PAB_INTP_INTX_MASK            0x01e0
-> -#define  PAB_INTP_MSI_MASK             0x8
-> +#define  PAB_INTP_RESET                        (0x1 << 1)
-> +#define  PAB_INTP_MSI                  (0x1 << 3)
-> +#define  PAB_INTP_INTA                 (0x1 << 5)
-> +#define  PAB_INTP_INTB                 (0x1 << 6)
-> +#define  PAB_INTP_INTC                 (0x1 << 7)
-> +#define  PAB_INTP_INTD                 (0x1 << 8)
-you could use BIT(x) macros instead of these shift operations
-> +#define  PAB_INTP_PCIE_UE              (0x1 << 9)
-> +#define  PAB_INTP_IE_PMREDI            (0x1 << 29)
-> +#define  PAB_INTP_IE_EC                        (0x1 << 30)
-please fix and the the indentations
-> +#define  PAB_INTP_MSI_MASK             PAB_INTP_MSI
-> +#define  PAB_INTP_INTX_MASK            (PAB_INTP_INTA | PAB_INTP_INTB |\
-> +                                       PAB_INTP_INTC | PAB_INTP_INTD)
+>  struct mobiveil_pab_ops {
+>         int (*link_up)(struct mobiveil_pcie *pcie);
+> +       int (*host_init)(struct mobiveil_pcie *pcie);
+>  };
 >
->  #define PAB_AXI_AMAP_CTRL(win)         PAB_REG_ADDR(0x0ba0, win)
->  #define  WIN_ENABLE_SHIFT              0
+>  struct mobiveil_pcie {
 > --
 > 2.17.1
 >
+can we have an english brief than having a internal cryptic
+number:A-011577, on the patch title?
