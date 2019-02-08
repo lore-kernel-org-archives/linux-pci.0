@@ -4,57 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD013C169C4
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:28:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BDFAC282CB
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:29:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABEDF20857
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:28:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A38A2073D
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 12:29:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="L/fyudzr"
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="eK5Pp9Ru"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727673AbfBHM2U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Feb 2019 07:28:20 -0500
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:39530 "EHLO
+        id S1727253AbfBHM3M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Feb 2019 07:29:12 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33001 "EHLO
         mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727572AbfBHM2U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2019 07:28:20 -0500
-Received: by mail-wr1-f67.google.com with SMTP id t27so3362599wra.6
-        for <linux-pci@vger.kernel.org>; Fri, 08 Feb 2019 04:28:18 -0800 (PST)
+        with ESMTP id S1727571AbfBHM3L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2019 07:29:11 -0500
+Received: by mail-wr1-f67.google.com with SMTP id a16so3426409wrv.0
+        for <linux-pci@vger.kernel.org>; Fri, 08 Feb 2019 04:29:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=mobiveil.co.in; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=U4llWnWHk/iioaBg109tqNu+HuUT0xmojGp7I0EC54Q=;
-        b=L/fyudzrkzoYTq4L/ntv6UXvIiIYQqA7Ub6OxQPODZcgS/4JVHGT856I6pqUC7Zb0G
-         tFb21UBAOnBWD35EphMs15SF7tcLOw0jAiGEHEe6OmRmpSUTj8c9+Qwc+Uru7p+SYopy
-         yhQ2gqJozThixs3FipH3W96aeQ/uAzyRp6uHo=
+        bh=g9nFuyNIknlIPIGeHUyXP6qUPfqzFzQLiNuJwZvm5cU=;
+        b=eK5Pp9RuVMmtIWtg7h7fgU66oyZMjz3hwMnNA+eP++5q7EFsskUTciNTLlXSPxZ3ja
+         b413Rwfl8CdiPQedqr0B+riZ3+ruwnAFU1hHFHgWVzk8X5aAU/g/bP6B3hmcGnCobjN1
+         xvjy2sUSCVGYEXtrv8VepBlC51tsCRacZ1Dig=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=U4llWnWHk/iioaBg109tqNu+HuUT0xmojGp7I0EC54Q=;
-        b=JhQS1HBK2Iuxr2G2/zHYJq2iM6V5jnjE93jAlKKXkzg9+uGLb21S8M+dc57aTE/qlo
-         5SOWyw4AZxKOGqW1a68xgnvTqdFU8zEGLmZ1DFsvsx08j8fZMPn7YI04vRP6VIS8n+UV
-         GsY9gNrwCUcXRYfh1Ygvc+meAzwNyi7DT1V17yA75qlKRGMfWhnkaiL+f8JXW9D62iaG
-         fkg6erpSiGAR+RyAe+T8kkg+IMvrK+yCA6BMQ8lxFp6+QJYvKbp25Oqkr6pecCtH371m
-         NmA0KgVzFnutofv/wzKCNIH06lCMmnw7xZpDfyv/YxIo3x78PRQWOhGxYKMtrhG/2V4q
-         fTgQ==
-X-Gm-Message-State: AHQUAuafKTCTKmR5CQIlf15VQiqTetqo0E3NxEV3pl8aE4QQYsfburJt
-        sGETX0a/f3pFQ8vAUa/6DpMriFRlSNc8ZNbb8ls4yg==
-X-Google-Smtp-Source: AHgI3IbX0QUvVY2C3pm3ZumTALuuw3Fd6Hjq/SfVvqMKAzNqiHmSISFhlnJFt3zuK1w52e5QmA/4xzfTVQs0EHUfML4=
-X-Received: by 2002:a5d:468e:: with SMTP id u14mr14259352wrq.253.1549628898050;
- Fri, 08 Feb 2019 04:28:18 -0800 (PST)
+        bh=g9nFuyNIknlIPIGeHUyXP6qUPfqzFzQLiNuJwZvm5cU=;
+        b=a4ZKloeKEeAPSlTo+WwG2gQ2DrJi/mnw9Coz9fdHzrYQb0y7tGdiydGfSpeqWzysyb
+         t1ew659GKR741eHqyUVwjCoA9Inr7l19W6fAdEVsdWtLpjTczb8xk6cQAECW7LEWBbBy
+         piq/ksTjA03exWkmp0QHHp+b8lyv7aldSQYrLIfJiqWqyJIlJfj2vunUnWSvDPKpoNhw
+         /jBzVKwmtcnFTl0xMIeJvkYf9P13rQtcq5yTBbyYe/ibkeJBteoRjkXAqI5p4kpaVv7c
+         3Xx+WVhB3gdnWOKjM5/BGK+ASO4mFT5adQZMPoiZIzUsjqGX7wq8MXUAFYho2hsPVVe2
+         jHiQ==
+X-Gm-Message-State: AHQUAuauY06u/3nT+FZo+9HcRMbZr0dq8T61T+Gv/Mm4jhCNNcLeRBxh
+        lQhKnKSdi3rIJ0+tqvHq7y9cCGFjQFdiLZl6eSU4DA==
+X-Google-Smtp-Source: AHgI3IY1p3Yuz0ID0EDGHal6AKMUbD4D2TsUhOweezQ/5aEp+LsUms5K76ATBXPhfhNeKqUgYORS/92rCevTgNKKe88=
+X-Received: by 2002:adf:b201:: with SMTP id u1mr3445624wra.165.1549628949513;
+ Fri, 08 Feb 2019 04:29:09 -0800 (PST)
 MIME-Version: 1.0
-References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-14-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20190129080926.36773-14-Zhiqiang.Hou@nxp.com>
+References: <20190129080926.36773-1-Zhiqiang.Hou@nxp.com> <20190129080926.36773-15-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20190129080926.36773-15-Zhiqiang.Hou@nxp.com>
 From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date:   Fri, 8 Feb 2019 18:00:57 +0530
-Message-ID: <CAFZiPx165X4AQqxFW4r_zZDNjB29-OQD46xce2Lhh4=n-qYHxw@mail.gmail.com>
-Subject: Re: [PATCHv3 13/27] PCI: mobiveil: move irq chained handler setup out
- of DT parse
+Date:   Fri, 8 Feb 2019 18:01:48 +0530
+Message-ID: <CAFZiPx3qPHWfyz8R1xhsvZyS40WdyWGCZzSd8xgcQ3q+H9WCYQ@mail.gmail.com>
+Subject: Re: [PATCHv3 14/27] PCI: mobiveil: initialize Primary/Secondary/Subordinate
+ bus number
 To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -78,11 +77,12 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jan 29, 2019 at 1:39 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
+On Tue, Jan 29, 2019 at 1:40 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
 >
 > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 >
-> Move irq_set_chained_handler_and_data() out of DT parse function.
+> The reset value is all zero, so set a workable value for Primary,
+> Secondary and Subordinate bus numbers.
 >
 > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
@@ -90,31 +90,26 @@ On Tue, Jan 29, 2019 at 1:39 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
 > V3:
 >  - No change
 >
->  drivers/pci/controller/pcie-mobiveil.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/pci/controller/pcie-mobiveil.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 >
 > diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-> index c2848c22b466..db7ecb021c63 100644
+> index db7ecb021c63..9210165fe8c0 100644
 > --- a/drivers/pci/controller/pcie-mobiveil.c
 > +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -460,8 +460,6 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
->                 return -ENODEV;
->         }
+> @@ -582,6 +582,12 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+>         u32 value, pab_ctrl, type;
+>         struct resource_entry *win;
 >
-> -       irq_set_chained_handler_and_data(pcie->irq, mobiveil_pcie_isr, pcie);
-> -
->         return 0;
->  }
->
-> @@ -902,6 +900,8 @@ static int mobiveil_pcie_probe(struct platform_device *pdev)
->                 goto error;
->         }
->
-> +       irq_set_chained_handler_and_data(pcie->irq, mobiveil_pcie_isr, pcie);
+> +       /* setup bus numbers */
+> +       value = csr_readl(pcie, PCI_PRIMARY_BUS);
+> +       value &= 0xff000000;
+> +       value |= 0x00ff0100;
+> +       csr_writel(pcie, value, PCI_PRIMARY_BUS);
 > +
->         ret = devm_request_pci_bus_resources(dev, &pcie->resources);
->         if (ret)
->                 goto error;
+>         /*
+>          * program Bus Master Enable Bit in Command Register in PAB Config
+>          * Space
 > --
 > 2.17.1
 >
