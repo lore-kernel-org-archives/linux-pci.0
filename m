@@ -2,85 +2,151 @@ Return-Path: <SRS0=vzDi=QP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A15EC169C4
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 14:05:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BEE1C169C4
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 14:11:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC45A2177B
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 14:05:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549634722;
-	bh=DsU+0hlCk7sbsBOJm1lgVHUBCpUoH/G+M2w3qlCNprM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=01qtaKriwJzJZRVYe3G7fGTcY1rPb1YsuDEDJI60F2Rgj2KjlK2Ppe64hkbsyvO/U
-	 XDWk5CgcvogBXENJ+awMAx9O7Bvkwlk3AIIiyDbklWSS8ryP0HWN66KgEy86KovrNn
-	 KKaeciN82fxweq4gXKC9opAMmzB59kg4QYEwipYs=
+	by mail.kernel.org (Postfix) with ESMTP id 242DC2177B
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 14:11:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="IDauax/d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726641AbfBHOFV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Feb 2019 09:05:21 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726465AbfBHOFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Feb 2019 09:05:21 -0500
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2D32020857;
-        Fri,  8 Feb 2019 14:05:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549634720;
-        bh=DsU+0hlCk7sbsBOJm1lgVHUBCpUoH/G+M2w3qlCNprM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Yc86h83Xw4f4Ghd3Af2SfEhnV2zh5oxPFkiL8SccQf4tG/rEmrrlqc0cvITOxMTgF
-         IouXvYzSbA50AR5lSlYkLYGljrnWlcs5rDNeIuHervafjrwpGtOPv7KeHztuli93Qe
-         z1x2XMo6/rRdiHSJZXEsAuZVgbfCyw+DkJYG5JMQ=
-Date:   Fri, 8 Feb 2019 08:05:18 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Murali Karicheri <m-karicheri2@ti.com>,
+        id S1727760AbfBHOLz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Feb 2019 09:11:55 -0500
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:33397 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726641AbfBHOLz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2019 09:11:55 -0500
+Received: by mail-lj1-f196.google.com with SMTP id f24-v6so3149712ljk.0
+        for <linux-pci@vger.kernel.org>; Fri, 08 Feb 2019 06:11:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=n53tPLzEI0RmifJ+cFWa8NK1/+5mVBbBZjdDbpnzm5w=;
+        b=IDauax/dQeE6GOhP7olo8NL8/kg6h6C4h2vsn0Gesa/nLTH2YqFblBw+3jbv82elCN
+         7mpe3gGRDtS/UV54gjYPlQqsNJEHHrE7/FdQnErB5smTob3XFBt2KwlNojdzhkmMk7p9
+         uqzEhfV1wgsViltuQUfRFMUlgewKlYDpZ7KlGUrj7tJZZ6zuv53Ycl85HtZkk0CoeGKB
+         O3HEX0CyYJGg6jrsMnUaN1YnDubo8rx7x5y5hajzzpPjKTjlNzpYpQHfa30hrvS5k2G2
+         YyvNpPP8IS/7ZynewgOFyy+LlUcbqLb6kBBTWRhbp7Mz9zxpIG2HFCxMmWvHHy/Yl2aS
+         vsig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=n53tPLzEI0RmifJ+cFWa8NK1/+5mVBbBZjdDbpnzm5w=;
+        b=umrQtCoTlt1N4V/Ysq+RJzcne82LfuMGuhaDn9XqIirudV1ozfM1ndqyzkmFtaWU//
+         g2Vd42kBnAIWqAV3HbhWoaUX+jhwGFL9sO3CYCPBlyxnyGs6qNb4aamjZ9mzAzRManLV
+         rg4633XIRNB43TypuL0BMW7ncfHnfEqp1yMnGxeAnTzQDanfvFexCNb953i617A97Rxm
+         mV848gOm3ctP6li0GdZDnKp/eUfElcGoUYtda76rr3jYdPbuQdjfoNPrgngv9PwdGDw2
+         n6O80kBpKKF6FRb114+vg7xXTa6opYy4IlPiF07iUfWS/PMF7uzdj0F0Oc+0ImGbF+6F
+         TVwQ==
+X-Gm-Message-State: AHQUAuZzY3TnUCW/iRHDrn/3xYiYv5jyFsE/90Wk5WXMLFqc8pZQMiQ/
+        prj5zVmYVD+tlkTSKiEzed7dKQ==
+X-Google-Smtp-Source: AHgI3IatIcyDuLTmgcEJM59o/AYr7tQtPhC/FSSi9EiwcJdrxNgkcOE+1bvmeKyeamgflPah0XxS8w==
+X-Received: by 2002:a2e:449b:: with SMTP id b27-v6mr13559531ljf.47.1549635113146;
+        Fri, 08 Feb 2019 06:11:53 -0800 (PST)
+Received: from centauri.lan (h-229-118.A785.priv.bahnhof.se. [5.150.229.118])
+        by smtp.gmail.com with ESMTPSA id m27-v6sm394001ljc.7.2019.02.08.06.11.51
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Fri, 08 Feb 2019 06:11:52 -0800 (PST)
+Date:   Fri, 8 Feb 2019 15:11:50 +0100
+From:   Niklas Cassel <niklas.cassel@linaro.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Andy Gross <andy.gross@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        David Brown <david.brown@linaro.org>,
+        Khasim Syed Mohammed <khasim.mohammed@linaro.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 8/9] PCI: dwc: Remove Keystone specific
- dw_pcie_host_ops
-Message-ID: <20190208140517.GT7268@google.com>
-References: <20190207110924.30716-1-kishon@ti.com>
- <20190207110924.30716-9-kishon@ti.com>
- <20190207212622.GO7268@google.com>
- <2b839b2f-d792-069b-b45f-4a455335f016@ti.com>
+        Mark Rutland <mark.rutland@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/7] clk: gcc-qcs404: Add PCIe resets
+Message-ID: <20190208141150.GA773@centauri.lan>
+References: <20190125234509.26419-1-bjorn.andersson@linaro.org>
+ <20190125234509.26419-2-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2b839b2f-d792-069b-b45f-4a455335f016@ti.com>
+In-Reply-To: <20190125234509.26419-2-bjorn.andersson@linaro.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 08, 2019 at 10:43:40AM +0530, Kishon Vijay Abraham I wrote:
-> > I don't see the whole series on linux-pci (I only see patches 2, 6, 8, 9),
+On Fri, Jan 25, 2019 at 03:45:03PM -0800, Bjorn Andersson wrote:
+> Enabling PCIe requires several of the PCIe related resets from GCC, so
+> add them all.
 > 
-> I do see all the patches here
-> https://patchwork.kernel.org/project/linux-pci/list/. Maybe it arrived little late?
-
-For some reason Gmail decided many of your recent messages were spam.
-Sorry for the noise.
-
-> > but I expected to somewhere see the removal of assignments to these
-> > pointers.  It would be easier to review if the removal of assignments and
-> > the removal of the function pointers from the structure were in the same
-> > patch, but maybe that's not really feasible.
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
 > 
-> The removal of the assignments are in 7th patch of the series (PCI: keystone:
-> Use Keystone specific msi_irq_chip). It's feasible but just wanted to keep the
-> keystone changes and DesignWare changes in separate patches.
+> Stephen, I suggest that we merge this patch through Andy's devicetree branch,
+> together with the DT patch in the end of this series.
+> 
+>  drivers/clk/qcom/gcc-qcs404.c               | 7 +++++++
+>  include/dt-bindings/clock/qcom,gcc-qcs404.h | 7 +++++++
+>  2 files changed, 14 insertions(+)
+> 
+> diff --git a/drivers/clk/qcom/gcc-qcs404.c b/drivers/clk/qcom/gcc-qcs404.c
+> index 64da032bb9ed..cfb8789ff706 100644
+> --- a/drivers/clk/qcom/gcc-qcs404.c
+> +++ b/drivers/clk/qcom/gcc-qcs404.c
+> @@ -2675,6 +2675,13 @@ static const struct qcom_reset_map gcc_qcs404_resets[] = {
+>  	[GCC_PCIE_0_PHY_BCR] = { 0x3e004 },
+>  	[GCC_PCIE_0_LINK_DOWN_BCR] = { 0x3e038 },
+>  	[GCC_PCIEPHY_0_PHY_BCR] = { 0x3e03c },
+> +	[GCC_PCIE_0_AXI_MASTER_STICKY_ARES] = {0x3e040, 6},
+> +	[GCC_PCIE_0_AHB_ARES] = {0x3e040, 5},
+> +	[GCC_PCIE_0_AXI_SLAVE_ARES] = {0x3e040, 4},
+> +	[GCC_PCIE_0_AXI_MASTER_ARES] = {0x3e040, 3},
+> +	[GCC_PCIE_0_CORE_STICKY_ARES] = {0x3e040, 2},
+> +	[GCC_PCIE_0_SLEEP_ARES] = {0x3e040, 1},
+> +	[GCC_PCIE_0_PIPE_ARES] = {0x3e040, 0},
 
-OK, makes sense.
+Hello Bjorn,
 
-Bjorn
+please add spaces before and after the braces, to match the
+syntax of the existing lines.
+
+With that,
+Reviewed-by: Niklas Cassel <niklas.cassel@linaro.org>
+
+
+Kind regards,
+Niklas
+
+>  	[GCC_EMAC_BCR] = { 0x4e000 },
+>  };
+>  
+> diff --git a/include/dt-bindings/clock/qcom,gcc-qcs404.h b/include/dt-bindings/clock/qcom,gcc-qcs404.h
+> index 6ceb55ed72c6..00ab0d77b38a 100644
+> --- a/include/dt-bindings/clock/qcom,gcc-qcs404.h
+> +++ b/include/dt-bindings/clock/qcom,gcc-qcs404.h
+> @@ -161,5 +161,12 @@
+>  #define GCC_PCIE_0_LINK_DOWN_BCR			11
+>  #define GCC_PCIEPHY_0_PHY_BCR				12
+>  #define GCC_EMAC_BCR					13
+> +#define GCC_PCIE_0_AXI_MASTER_STICKY_ARES		14
+> +#define GCC_PCIE_0_AHB_ARES				15
+> +#define GCC_PCIE_0_AXI_SLAVE_ARES			16
+> +#define GCC_PCIE_0_AXI_MASTER_ARES			17
+> +#define GCC_PCIE_0_CORE_STICKY_ARES			18
+> +#define GCC_PCIE_0_SLEEP_ARES				19
+> +#define GCC_PCIE_0_PIPE_ARES				20
+>  
+>  #endif
+> -- 
+> 2.18.0
+> 
