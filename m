@@ -2,57 +2,73 @@ Return-Path: <SRS0=vzDi=QP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,LOTS_OF_MONEY,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10570C282C2
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 01:16:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC5E5C282C2
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 01:58:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA2C62146E
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 01:16:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6DAD21917
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 01:58:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1549591124;
+	bh=b+S0EFJwpzXXcIXWxFeOomz6lpqOHYC0b0kUYWYGRA8=;
+	h=Subject:To:Cc:References:From:Date:In-Reply-To:List-ID:From;
+	b=AqrP6fvb9l4cjdod+1TZ0tWJnogjzNnAb1I6lbE7y6LxfZGZvw3GaE4hrfrezXSG/
+	 Xf/yQam6VES4fDnSD8F5rNlcHItSMFI2Q78E4/apyE6mOnounLXKN3+/2qJfViRI2z
+	 FhaIEUesX3YkqSMBIF8JP9PCejtJzeo16s8Smzcw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726799AbfBHBQm convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Feb 2019 20:16:42 -0500
-Received: from static-ady237.rev.nazwa.pl ([77.55.102.237]:58220 "EHLO
-        static-ady237.rev.nazwa.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726775AbfBHBQm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Feb 2019 20:16:42 -0500
-X-Greylist: delayed 670 seconds by postgrey-1.27 at vger.kernel.org; Thu, 07 Feb 2019 20:16:41 EST
-X-Virus-Scanned: by amavisd-new using ClamAV (9)
-Received: from [212.83.175.149] (212-83-175-149.rev.poneytelecom.eu [212.83.175.149])
-        by darekwojciec.nazwa.pl (Postfix) with ESMTP id 544EC1C6C48
-        for <linux-pci@vger.kernel.org>; Fri,  8 Feb 2019 02:05:30 +0100 (CET)
-Content-Type: text/plain; charset="utf-8"
+        id S1726836AbfBHB6o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Feb 2019 20:58:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33358 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726775AbfBHB6n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 7 Feb 2019 20:58:43 -0500
+Received: from [192.168.0.111] (cpe-174-109-247-98.nc.res.rr.com [174.109.247.98])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 34D392146E;
+        Fri,  8 Feb 2019 01:58:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1549591123;
+        bh=b+S0EFJwpzXXcIXWxFeOomz6lpqOHYC0b0kUYWYGRA8=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=usPhDr1O+l4a3klZTbUJ0A9BEKhuoIZFHh9uiWLwFA3P3AIcYFF5MwksHmTYiDNm6
+         TfeXStxaysaSU7ijbogjWVVNBbRKmXoWmp72i5vgJ6RyFELSrkBmhYaQpglf7EuubZ
+         8WIuYi2xt5ZamT2+izszlEl9ZPp/BVWlYiQ9PiNw=
+Subject: Re: [PATCH v1 1/2] PCI: ATS: Add function to check ATS page aligned
+ request status.
+To:     sathyanarayanan.kuppuswamy@linux.intel.com, bhelgaas@google.com,
+        joro@8bytes.org, dwmw2@infradead.org
+Cc:     linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@intel.com>,
+        Jacob Pan <jacob.jun.pan@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+References: <cover.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <91bfae8b1d4b424219e3ce3c1fc03559c73f1ae7.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <5d55e369-355f-b710-0594-03465aa985da@kernel.org>
+ <a5a29eee-2e33-ba0c-67a6-69983fd0796d@linux.intel.com>
+From:   Sinan Kaya <okaya@kernel.org>
+Message-ID: <32ec3293-28ea-8f0f-f801-0370b4cf0453@kernel.org>
+Date:   Thu, 7 Feb 2019 20:58:39 -0500
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Description: Mail message body
-Subject: DONATION
-To:     linux-pci@vger.kernel.org
-From:   " Susanne Klatten" <muzeum@okislubomierz.pl>
-Date:   Thu, 07 Feb 2019 17:05:28 -0800
-Reply-To: susanneklatten502@gmail.com
-Message-Id: <20190208010530.544EC1C6C48@darekwojciec.nazwa.pl>
+In-Reply-To: <a5a29eee-2e33-ba0c-67a6-69983fd0796d@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Dear Beloved,
 
- 
+On 2/7/2019 5:16 PM, sathyanarayanan kuppuswamy wrote:
+>> If I remember this right, aligned request is only supported on ATS v1.1
+>> but not supported on v1.0.
+> Its added in v1.1.
 
-Kindly Confirm ownership of your e-mail [linux-pci@vger.kernel.org]. It was randomly selected after an Electronic Computer SPIN BALL draw, to receive a donation of €1,000.000.00 (One Million Euros) as part of Susanne Klatten charity project.
-
-  
-
-Confirm your email now by sending confirmation response to me now and I shall explain in detail all you need to know.
-
- 
-
-Best Regards,
-Susanne Klatten.
-===============
-
-DISCLAIMER: THIS EMAIL IS PROPOSED TO (linux-pci@vger.kernel.org); KINDLY DISREGARD IF YOU ARE NOT THE RIGHTFUL OWNER.
+This means that you should probably have some kind of version check
+here.
