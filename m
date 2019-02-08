@@ -2,104 +2,99 @@ Return-Path: <SRS0=vzDi=QP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1820C169C4
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 15:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B93AC169C4
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 16:24:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 86C2D20863
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 15:02:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD1AF2084D
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 16:24:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=mm-sol.com header.i=@mm-sol.com header.b="W46trkMD"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XIVFiS8I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726887AbfBHPCl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Feb 2019 10:02:41 -0500
-Received: from ns.mm-sol.com ([37.157.136.199]:50130 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726813AbfBHPCl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Feb 2019 10:02:41 -0500
-X-Greylist: delayed 472 seconds by postgrey-1.27 at vger.kernel.org; Fri, 08 Feb 2019 10:02:39 EST
-Received: from [192.168.27.209] (unknown [37.157.136.206])
-        by extserv.mm-sol.com (Postfix) with ESMTPSA id 8216ECE08;
-        Fri,  8 Feb 2019 16:54:46 +0200 (EET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
-        t=1549637686; bh=dcPQbvq/7hiwMZM4pUapZaSIoVhm0pG5ACXN9uM1WFc=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=W46trkMD4q7fSURU38goShYmZnB7vFFbku3GDWzpNvgZE2kiOCeRofKA+GpuKHLSM
-         CG4ItJflYegZgDB0skCvmGBwBEJEnKUj+Ud6A32qVM9v/gHIegoyZy8k8SmxSnT3cv
-         +nlV5RA0a8okqmTmjqoE7Uo+PlYhcKmbM9fM3hO75S9i3VLcldfmT83mSSgIjIFiSI
-         igA9EzDw37OovCgcCwHbgqx8iVda4+3Om7FttIeRSbgxvKnQjuFC5xSfOeZuyPCaCn
-         fS0cPLFt5bYojErEcLTmSiNl9CZeHW4G6gwDdnATVCXVf/yUbIr4xOpEKou1iVItZs
-         IOoki3ZKcAwOA==
-Subject: Re: [PATCH] PCI: qcom: Don't deassert reset GPIO during probe
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Khasim Syed Mohammed <khasim.mohammed@linaro.org>,
-        Niklas Cassel <niklas.cassel@linaro.org>,
-        stable@vger.kernel.org
-References: <20190125232616.25714-1-bjorn.andersson@linaro.org>
-From:   Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <d972ef33-5069-e012-abd5-31f2f985af6d@mm-sol.com>
-Date:   Fri, 8 Feb 2019 16:54:44 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        id S1727139AbfBHQY2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Feb 2019 11:24:28 -0500
+Received: from mail-it1-f196.google.com ([209.85.166.196]:35493 "EHLO
+        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726522AbfBHQY1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Feb 2019 11:24:27 -0500
+Received: by mail-it1-f196.google.com with SMTP id r6so10283340itk.0;
+        Fri, 08 Feb 2019 08:24:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=CKsceA5iPCGK4z0HB5rNefLzAM6T95Spw0/oJusSaSU=;
+        b=XIVFiS8I4nJAXERJxlHwRKu+FWWioUL/8LT/F12RysZsDHtfFSKygeAGCotNArJgIc
+         JOyQsmpSXW4hl/AO/FURSEXLzP2Je5sDw0ybVClnLeLMCJ1ZWPrNSDz+etuvu8yKhMAU
+         03p5Ym+KPuaZY6ewxuSAfIyXxrt+QC4KKfAqLXs4Aw8zXx4scG4XiNE60x5OrFfXm8Kg
+         6b0xWySMpJ0JtBkQuIb2ot0y7jKh36sSRbEvX6dvf7yxAf8IoQyNj1nMK9nPhW5j0AC5
+         GFmwjX5qBN97NwMTtGcNSRx7LrBKptzBl2Sl3V6td6BgYI1EoxtWHo9YYyIFqTYoK0zY
+         immw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=CKsceA5iPCGK4z0HB5rNefLzAM6T95Spw0/oJusSaSU=;
+        b=W9GmxBx58Y1DsQxTV3IHb9JdEUMhwtRj4t2Kg/wNxCOTF7xvmFmKx3cxSw5J6H6nFF
+         4yAOmq65oILtqCX6QUqQN1xIGVatRjoRl1rJkU/RSzq8/0xg48oOPw3E270IvbPOdryg
+         qYDAuOMag9hTHEEupxcHj7D4OYU3gQtE+TCuD3TGKCa5o3I0C85RBV4bpPGXdpCGj9e2
+         FXBlWtRKLdv1Cx+9z0HgS51a7W5ElKsoQLw5EUIVWWUrERFGkML50ncFh9CvaP+LO817
+         emI/SN3p68KYXBLz+wgUS41pt+6B2919j1Wn4Z8O50FtEmJ6m3MYYBCNxGKUI2mU+mmO
+         JTBw==
+X-Gm-Message-State: AHQUAubMpJNS/Q9KAq/3HdmkqbIaHOU7UkYhAz0lIYLT53W9w4O3OsAZ
+        SLcPG6YTc6ZPZoVUkzI5fJE=
+X-Google-Smtp-Source: AHgI3IbCEmbmZhps6lcAWfO4MUFsdN5MsBxu0eKEShq5fd24i88X3vDUBIdvZ0orKS8Z0TuhqkRtkQ==
+X-Received: by 2002:a24:5c45:: with SMTP id q66mr5504510itb.159.1549643066833;
+        Fri, 08 Feb 2019 08:24:26 -0800 (PST)
+Received: from nuclearis2-1.lan (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
+        by smtp.gmail.com with ESMTPSA id j142sm1403722itj.40.2019.02.08.08.24.25
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 08 Feb 2019 08:24:26 -0800 (PST)
+From:   Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To:     bhelgaas@google.com
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v1 1/3] PCI / ACPI: Do not export pci_get_hp_params()
+Date:   Fri,  8 Feb 2019 10:24:11 -0600
+Message-Id: <20190208162414.3996-2-mr.nuke.me@gmail.com>
+X-Mailer: git-send-email 2.19.2
+In-Reply-To: <20190208162414.3996-1-mr.nuke.me@gmail.com>
+References: <20190208162414.3996-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190125232616.25714-1-bjorn.andersson@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+This is only used within drivers/pci, and there is no reason to make
+it available outside of the PCI core.
 
-Thanks for the patch!
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+---
+ drivers/pci/pci-acpi.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-On 1/26/19 1:26 AM, Bjorn Andersson wrote:
-> Acquiring the reset GPIO low means that reset is being deasserted, this
-> is followed almost immediately with qcom_pcie_host_init() asserting it,
-> initializing it and then finally deasserting it again, for the link to
-> come up.
-> 
-> Some PCIe devices requires a minimum time between the initial deassert
-> and subsequent reset cycles. In a platform that boots with the reset
-> GPIO asserted this requirement is being violated by this deassert/assert
-> pulse.
-> 
-> Acquiring the reset GPIO high will prevent this by matching the state to
-> the subsequent asserted state.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index d185ea5fe996..a7f703556790 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1228,7 +1228,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
->  
->  	pcie->ops = of_device_get_match_data(dev);
->  
-> -	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
-> +	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
->  	if (IS_ERR(pcie->reset)) {
->  		ret = PTR_ERR(pcie->reset);
->  		goto err_pm_runtime_put;
-> 
-
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index e1949f7efd9c..b25e5fa9d1c9 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -366,7 +366,6 @@ int pci_get_hp_params(struct pci_dev *dev, struct hotplug_params *hpp)
+ 	}
+ 	return -ENODEV;
+ }
+-EXPORT_SYMBOL_GPL(pci_get_hp_params);
+ 
+ /**
+  * pciehp_is_native - Check whether a hotplug port is handled by the OS
 -- 
-regards,
-Stan
+2.19.2
+
