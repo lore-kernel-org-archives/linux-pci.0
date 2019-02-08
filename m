@@ -6,40 +6,42 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04542C169C4
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 17:00:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95930C169C4
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 17:00:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD6A320855
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 17:00:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DCD020855
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Feb 2019 17:00:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726703AbfBHRAR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Feb 2019 12:00:17 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:33666 "EHLO ale.deltatee.com"
+        id S1727605AbfBHRAa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Feb 2019 12:00:30 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:33674 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726522AbfBHRAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Feb 2019 12:00:17 -0500
+        id S1727069AbfBHRAa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Feb 2019 12:00:30 -0500
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1gs9Vf-0005UN-05; Fri, 08 Feb 2019 10:00:15 -0700
+        id 1gs9Vt-0005Ua-8G; Fri, 08 Feb 2019 10:00:30 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1gs9Ve-0005QK-Dq; Fri, 08 Feb 2019 10:00:14 -0700
+        id 1gs9Vt-0005QN-3p; Fri, 08 Feb 2019 10:00:29 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Bjorn Helgaas <helgaas@kernel.org>
-Date:   Fri,  8 Feb 2019 09:54:38 -0700
-Message-Id: <20190208165439.19503-1-logang@deltatee.com>
+Date:   Fri,  8 Feb 2019 09:54:39 -0700
+Message-Id: <20190208165439.19503-2-logang@deltatee.com>
 X-Mailer: git-send-email 2.19.0
+In-Reply-To: <20190208165439.19503-1-logang@deltatee.com>
+References: <20190208165439.19503-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, logang@deltatee.com, helgaas@kernel.org
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 1/2] genirq/msi: Clean up usage of __u8/__u16 types
+Subject: [PATCH 2/2] PCI: Clean up usage of __u32 type
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -58,32 +60,31 @@ justification.
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Cc: Bjorn Helgaas <helgaas@kernel.org>
 ---
- include/linux/msi.h | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/pci-driver.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 784fb52b9900..7e9b81c3b50d 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -83,12 +83,12 @@ struct msi_desc {
- 		struct {
- 			u32 masked;
- 			struct {
--				__u8	is_msix		: 1;
--				__u8	multiple	: 3;
--				__u8	multi_cap	: 3;
--				__u8	maskbit		: 1;
--				__u8	is_64		: 1;
--				__u16	entry_nr;
-+				u8	is_msix		: 1;
-+				u8	multiple	: 3;
-+				u8	multi_cap	: 3;
-+				u8	maskbit		: 1;
-+				u8	is_64		: 1;
-+				u16	entry_nr;
- 				unsigned default_irq;
- 			} msi_attrib;
- 			union {
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 79b1610a8beb..71853befd435 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -100,7 +100,7 @@ static ssize_t new_id_store(struct device_driver *driver, const char *buf,
+ {
+ 	struct pci_driver *pdrv = to_pci_driver(driver);
+ 	const struct pci_device_id *ids = pdrv->id_table;
+-	__u32 vendor, device, subvendor = PCI_ANY_ID,
++	u32 vendor, device, subvendor = PCI_ANY_ID,
+ 		subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+ 	unsigned long driver_data = 0;
+ 	int fields = 0;
+@@ -168,7 +168,7 @@ static ssize_t remove_id_store(struct device_driver *driver, const char *buf,
+ {
+ 	struct pci_dynid *dynid, *n;
+ 	struct pci_driver *pdrv = to_pci_driver(driver);
+-	__u32 vendor, device, subvendor = PCI_ANY_ID,
++	u32 vendor, device, subvendor = PCI_ANY_ID,
+ 		subdevice = PCI_ANY_ID, class = 0, class_mask = 0;
+ 	int fields = 0;
+ 	size_t retval = -ENODEV;
 -- 
 2.19.0
 
