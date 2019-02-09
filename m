@@ -2,72 +2,80 @@ Return-Path: <SRS0=+kTV=QQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43F14C169C4
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Feb 2019 00:40:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C3BC169C4
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Feb 2019 01:03:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13DE220844
-	for <linux-pci@archiver.kernel.org>; Sat,  9 Feb 2019 00:40:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549672847;
-	bh=iU/WEY2Y/Kx/W2pVXjZX6VWbNDdfqAKdCamjPfxO1RY=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=MS1mMEw6HUWLJK61aDSbOPnTp6i6Et6tjcbFWBBX892PQxTKcRO7kI+3nTHPLzdyj
-	 YVwv4svcWv++G5ke4s1vYzbFk3lR864yXRliH3XMArDbcA8U3ywz8zTgvhgXMnVjat
-	 JqJUmcqx3zPWQROQGA88VKfoDm9b2PnZimTfLshg=
+	by mail.kernel.org (Postfix) with ESMTP id 2D97D217D8
+	for <linux-pci@archiver.kernel.org>; Sat,  9 Feb 2019 01:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727037AbfBIAkc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Feb 2019 19:40:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55760 "EHLO mail.kernel.org"
+        id S1726565AbfBIBDy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Feb 2019 20:03:54 -0500
+Received: from mga05.intel.com ([192.55.52.43]:18529 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726244AbfBIAkE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 8 Feb 2019 19:40:04 -0500
-Subject: Re: [GIT PULL] PCI fixes for v5.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549672804;
-        bh=iU/WEY2Y/Kx/W2pVXjZX6VWbNDdfqAKdCamjPfxO1RY=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=0jB5+Qwt1EGGVztszEjePPD6ypB1iwvJgRj87RumyDfsrCpHTDRYRJlLYwbpp0/iC
-         mxbvdQOwASvrNtjpBJuLjJdf6ozHmU1vsQTWrcO7b9q6MmVXZffkCfU0mbDRA7ZYEO
-         fgA3KdZGjXZn7up2cSTIY468xB+BVcfdxMGHpsU0=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20190208142353.GV7268@google.com>
-References: <20190208142353.GV7268@google.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20190208142353.GV7268@google.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
- tags/pci-v5.0-fixes-4
-X-PR-Tracked-Commit-Id: f57a98e1b71357713e44c57268a53d9c803f0626
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 70be9ac2b64c0d0db4f0e3004b764df33b1098e2
-Message-Id: <154967280419.26526.9991256886487805721.pr-tracker-bot@kernel.org>
-Date:   Sat, 09 Feb 2019 00:40:04 +0000
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thinh Nguyen <thinh.nguyen@synopsys.com>,
-        "Lukas F. Hartmann" <lukas@mntmn.com>,
-        Trent Piepho <tpiepho@impinj.com>,
-        Lucas Stach <l.stach@pengutronix.de>
+        id S1726244AbfBIBDy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Feb 2019 20:03:54 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 08 Feb 2019 17:03:54 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.58,349,1544515200"; 
+   d="scan'208";a="132709095"
+Received: from linux.intel.com ([10.54.29.200])
+  by orsmga002.jf.intel.com with ESMTP; 08 Feb 2019 17:03:53 -0800
+Received: from [10.54.74.33] (skuppusw-desk.jf.intel.com [10.54.74.33])
+        by linux.intel.com (Postfix) with ESMTP id B9DF05802BB;
+        Fri,  8 Feb 2019 17:03:53 -0800 (PST)
+Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
+Subject: Re: [PATCH v1 1/2] PCI: ATS: Add function to check ATS page aligned
+ request status.
+To:     Sinan Kaya <okaya@kernel.org>, bhelgaas@google.com,
+        joro@8bytes.org, dwmw2@infradead.org
+Cc:     linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-kernel@vger.kernel.org, Ashok Raj <ashok.raj@intel.com>,
+        Jacob Pan <jacob.jun.pan@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>
+References: <cover.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <91bfae8b1d4b424219e3ce3c1fc03559c73f1ae7.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <5d55e369-355f-b710-0594-03465aa985da@kernel.org>
+ <a5a29eee-2e33-ba0c-67a6-69983fd0796d@linux.intel.com>
+ <32ec3293-28ea-8f0f-f801-0370b4cf0453@kernel.org>
+From:   sathyanarayanan kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Organization: Intel
+Message-ID: <351a1a1d-2517-5021-e7cd-99d700e17f4c@linux.intel.com>
+Date:   Fri, 8 Feb 2019 17:02:33 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
+MIME-Version: 1.0
+In-Reply-To: <32ec3293-28ea-8f0f-f801-0370b4cf0453@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pull request you sent on Fri, 8 Feb 2019 08:23:53 -0600:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.0-fixes-4
+On 2/7/19 5:58 PM, Sinan Kaya wrote:
+>
+> On 2/7/2019 5:16 PM, sathyanarayanan kuppuswamy wrote:
+>>> If I remember this right, aligned request is only supported on ATS v1.1
+>>> but not supported on v1.0.
+>> Its added in v1.1.
+>
+> This means that you should probably have some kind of version check
+> here.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/70be9ac2b64c0d0db4f0e3004b764df33b1098e2
-
-Thank you!
+There is no version field in ATS v1.0 spec. Also, If I follow the 
+history log in PCI spec, I think ATS if first added at v1.2. Please 
+correct me if I am wrong.
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+Sathyanarayanan Kuppuswamy
+Linux kernel developer
+
