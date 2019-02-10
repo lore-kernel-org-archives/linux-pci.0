@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE838C4151A
-	for <linux-pci@archiver.kernel.org>; Sun, 10 Feb 2019 16:30:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C832C282D7
+	for <linux-pci@archiver.kernel.org>; Sun, 10 Feb 2019 16:39:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ACEEB21773
-	for <linux-pci@archiver.kernel.org>; Sun, 10 Feb 2019 16:30:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E93B821934
+	for <linux-pci@archiver.kernel.org>; Sun, 10 Feb 2019 16:39:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726274AbfBJQa4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 10 Feb 2019 11:30:56 -0500
-Received: from Galois.linutronix.de ([146.0.238.70]:37162 "EHLO
+        id S1726274AbfBJQjb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 10 Feb 2019 11:39:31 -0500
+Received: from Galois.linutronix.de ([146.0.238.70]:37170 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726207AbfBJQa4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 10 Feb 2019 11:30:56 -0500
+        with ESMTP id S1726134AbfBJQja (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 10 Feb 2019 11:39:30 -0500
 Received: from p5492e0d8.dip0.t-ipconnect.de ([84.146.224.216] helo=nanos)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1gss0A-0006h6-E5; Sun, 10 Feb 2019 17:30:42 +0100
-Date:   Sun, 10 Feb 2019 17:30:41 +0100 (CET)
+        id 1gss8Y-0006jE-Ej; Sun, 10 Feb 2019 17:39:22 +0100
+Date:   Sun, 10 Feb 2019 17:39:20 +0100 (CET)
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     Ming Lei <ming.lei@redhat.com>
 cc:     Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <helgaas@kernel.org>,
@@ -31,11 +31,11 @@ cc:     Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <helgaas@kernel.org>,
         Sagi Grimberg <sagi@grimberg.me>,
         linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] genirq/affinity: allow driver to setup managed IRQ's
- affinity
-In-Reply-To: <20190125095347.17950-3-ming.lei@redhat.com>
-Message-ID: <alpine.DEB.2.21.1902101723400.8784@nanos.tec.linutronix.de>
-References: <20190125095347.17950-1-ming.lei@redhat.com> <20190125095347.17950-3-ming.lei@redhat.com>
+Subject: Re: [PATCH 4/5] nvme-pci: simplify nvme_setup_irqs() via .setup_affinity
+ callback
+In-Reply-To: <20190125095347.17950-5-ming.lei@redhat.com>
+Message-ID: <alpine.DEB.2.21.1902101731370.8784@nanos.tec.linutronix.de>
+References: <20190125095347.17950-1-ming.lei@redhat.com> <20190125095347.17950-5-ming.lei@redhat.com>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -47,44 +47,34 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Ming,
-
 On Fri, 25 Jan 2019, Ming Lei wrote:
 
-> This patch introduces callback of .setup_affinity into 'struct
-> irq_affinity', so that:
-
-Please see Documentation/process/submitting-patches.rst. Search for 'This
-patch' ....
-
+> Use the callback of .setup_affinity() to re-caculate number
+> of queues, and build irqs affinity with help of irq_build_affinity().
 > 
-> 1) allow drivers to customize the affinity for managed IRQ, for
-> example, now NVMe has special requirement for read queues & poll
-> queues
+> Then nvme_setup_irqs() gets simplified a lot.
 
-That's nothing new and already handled today.
+I'm pretty sure you can achieve the same by reworking the core code without
+that callback.
+ 
+> +	/* Fill out vectors at the beginning that don't need affinity */
+> +	for (curvec = 0; curvec < affd->pre_vectors; curvec++)
+> +		cpumask_copy(&masks[curvec].mask, cpu_possible_mask);
 
-> 2) 6da4b3ab9a6e9 ("genirq/affinity: Add support for allocating interrupt sets")
-> makes pci_alloc_irq_vectors_affinity() a bit difficult to use for
-> allocating interrupt sets: 'max_vecs' is required to same with 'min_vecs'.
+cpu_possible_mask is wrong.  Why are you deliberately trying to make this
+special? There is absolutely no reason to do so.
 
-So it's a bit difficult, but you fail to explain why it's not sufficient.
+These interrupts are not managed and therefore the initial affinity has to
+be irq_default_affinity. Setting them to cpu_possible_mask can and probably
+will evade a well thought out default affinity mask, which was set to
+isolate a set of cores from general purpose interrupts.
 
-> With this patch, driver can implement their own .setup_affinity to
-> customize the affinity, then the above thing can be solved easily.
-
-Well, I don't really understand what is solved easily and you are merily
-describing the fact that the new callback allows drivers to customize
-something. What's the rationale? If it's just the 'bit difficult' part,
-then what is the reason for not making the core functionality easier to use
-instead of moving stuff into driver space again?
-
-NVME is not special and all this achieves is that all drivers writers will
-claim that their device is special and needs its own affinity setter
-routine. The whole point of having the generic code is to exactly avoid
-that. If it has shortcomings, then they need to be addressed, but not
-worked around with random driver callbacks.
+This is exactly the thing which happens with driver special stuff and which
+needs to be avoided. There is nothing special about this NVME setup and
+yes, I can see why the current core code is a bit tedious to work with, but
+that does not justify that extra driver magic by any means.
 
 Thanks,
 
 	tglx
+
