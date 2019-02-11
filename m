@@ -2,87 +2,95 @@ Return-Path: <SRS0=XN0A=QS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 658A6C282DA
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 15:49:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B9FC169C4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:20:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E508218A4
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 15:49:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549900165;
-	bh=wpXnhNuLSjedjv9fFo7VGMn842b7zsXpNQAWI/HTkdo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=kbLGUnea/mTxJjURrtNAUy5a9Q4BLu/HZT5z6KikHVFZryg8MGAivArR7HgFdnrDF
-	 BI1RSPd78tmkiVRnga6gnurGlAJwcbMeuc4fVT1F9FPf6tHT3OVqhrbmb3uQ0VouBF
-	 5Y/TFofLt2vH8ChiKhDNE9cFwXNKOpm1vQG32JGw=
+	by mail.kernel.org (Postfix) with ESMTP id D54DF21B24
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:20:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731959AbfBKOjz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Feb 2019 09:39:55 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50438 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731224AbfBKOjx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Feb 2019 09:39:53 -0500
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A55A42082F;
-        Mon, 11 Feb 2019 14:39:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549895992;
-        bh=wpXnhNuLSjedjv9fFo7VGMn842b7zsXpNQAWI/HTkdo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PLaQrSIpftMG9hN334OOm1DOY5I+Mx/tcgq1A8vFdb93FVfy2Vdbs/dU98h4NVe+t
-         sEpt9l7IEEAMhUrX8AVizPonBiIwxdpb3Fqlt2GW/uJYPSzxewOMGwxpCsE+j1fLkb
-         oKR7hfry4UrfK3ZXFEAMwtRi+UF07JvUdCBVkdDo=
-Date:   Mon, 11 Feb 2019 08:39:50 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] genirq/affinity: allow driver to setup managed IRQ's
- affinity
-Message-ID: <20190211143950.GA151039@google.com>
-References: <20190125095347.17950-1-ming.lei@redhat.com>
- <20190125095347.17950-3-ming.lei@redhat.com>
- <alpine.DEB.2.21.1902101723400.8784@nanos.tec.linutronix.de>
- <20190211035358.GA8638@ming.t460p>
+        id S1728126AbfBKQUG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Feb 2019 11:20:06 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53554 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727224AbfBKQUF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Feb 2019 11:20:05 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 237D380D;
+        Mon, 11 Feb 2019 08:20:05 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1064D3F675;
+        Mon, 11 Feb 2019 08:20:02 -0800 (PST)
+Date:   Mon, 11 Feb 2019 16:19:57 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Wen Yang <wen.yang99@zte.com.cn>
+Cc:     kishon@ti.com, bhelgaas@google.com, gustavo.pimentel@synopsys.com,
+        niklas.cassel@axis.com, baijiaju1990@gmail.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        xue.zhihong@zte.com.cn, wang.yi59@zte.com.cn,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Subject: Re: [PATCH] PCI: endpoint: functions: use
+ memcpy_fromio()/memcpy_toio()
+Message-ID: <20190211161957.GA27797@e107981-ln.cambridge.arm.com>
+References: <1549875840-10582-1-git-send-email-wen.yang99@zte.com.cn>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190211035358.GA8638@ming.t460p>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1549875840-10582-1-git-send-email-wen.yang99@zte.com.cn>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 11:54:00AM +0800, Ming Lei wrote:
-> On Sun, Feb 10, 2019 at 05:30:41PM +0100, Thomas Gleixner wrote:
-> > On Fri, 25 Jan 2019, Ming Lei wrote:
-> > 
-> > > This patch introduces callback of .setup_affinity into 'struct
-> > > irq_affinity', so that:
-> > 
-> > Please see Documentation/process/submitting-patches.rst. Search for 'This
-> > patch' ....
+On Mon, Feb 11, 2019 at 05:04:00PM +0800, Wen Yang wrote:
+> Use the IO memcpy() functions when copying from/to IO memory.
+> These locations were found via sparse.
 > 
-> Sorry for that, because I am not a native English speaker and it looks a bit
-> difficult for me to understand the subtle difference.
+> Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+> Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
+> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> CC: Niklas Cassel <niklas.cassel@axis.com>
+> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> CC: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+> CC: linux-pci@vger.kernel.org
+> CC: linux-kernel@vger.kernel.org
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-I think Thomas is saying that instead of "This patch introduces
-callback ...", you could say "Introduce callback of ...".
+Applied, with updated tags to pci/endpoint for v5.1, thanks.
 
-The changelog is *part* of the patch, so the context is obvious and
-there's no need to include the words "This patch".
+Lorenzo
 
-I make the same changes to patches I receive.  In fact, I would go
-even further and say "Add callback .setup_affinity() ..." because "add"
-means the same as "introduce" but is shorter and simpler.
-
-Bjorn
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 3e86fa3..4bbd26e 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -175,7 +175,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
+>  		goto err_map_addr;
+>  	}
+>  
+> -	memcpy(buf, src_addr, reg->size);
+> +	memcpy_fromio(buf, src_addr, reg->size);
+>  
+>  	crc32 = crc32_le(~0, buf, reg->size);
+>  	if (crc32 != reg->checksum)
+> @@ -230,7 +230,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
+>  	get_random_bytes(buf, reg->size);
+>  	reg->checksum = crc32_le(~0, buf, reg->size);
+>  
+> -	memcpy(dst_addr, buf, reg->size);
+> +	memcpy_toio(dst_addr, buf, reg->size);
+>  
+>  	/*
+>  	 * wait 1ms inorder for the write to complete. Without this delay L3
+> -- 
+> 2.9.5
+> 
