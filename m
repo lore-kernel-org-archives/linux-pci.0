@@ -6,67 +6,83 @@ X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C11C169C4
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 15:46:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 658A6C282DA
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 15:49:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 621F121855
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 15:46:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E508218A4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 15:49:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549900010;
-	bh=oP7XB0aSfjpaHlv/zTX+apPKrmsKRZu0WcKYfuIBffI=;
+	s=default; t=1549900165;
+	bh=wpXnhNuLSjedjv9fFo7VGMn842b7zsXpNQAWI/HTkdo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Sg96dMH4yxD/zLnKifsxWiRYpAQJegH9P4xhBrzeeqAxz2b8m6myoXdQq3WM9qqnn
-	 4pjcY783bzgBFzqNlVqIPwpAgOJG/k2z4SA8I/sCbBO8gTqP/hXIPAI4hANwMoq1e6
-	 t8RVhBnUoKl6AwFTqxsfBGUOsgUwW01HAzwAGxa0=
+	b=kbLGUnea/mTxJjURrtNAUy5a9Q4BLu/HZT5z6KikHVFZryg8MGAivArR7HgFdnrDF
+	 BI1RSPd78tmkiVRnga6gnurGlAJwcbMeuc4fVT1F9FPf6tHT3OVqhrbmb3uQ0VouBF
+	 5Y/TFofLt2vH8ChiKhDNE9cFwXNKOpm1vQG32JGw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731993AbfBKOmM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Feb 2019 09:42:12 -0500
-Received: from mail.kernel.org ([198.145.29.99]:53828 "EHLO mail.kernel.org"
+        id S1731959AbfBKOjz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Feb 2019 09:39:55 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50438 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732363AbfBKOmI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Feb 2019 09:42:08 -0500
+        id S1731224AbfBKOjx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Feb 2019 09:39:53 -0500
 Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 23A922081B;
-        Mon, 11 Feb 2019 14:42:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A55A42082F;
+        Mon, 11 Feb 2019 14:39:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1549896127;
-        bh=oP7XB0aSfjpaHlv/zTX+apPKrmsKRZu0WcKYfuIBffI=;
+        s=default; t=1549895992;
+        bh=wpXnhNuLSjedjv9fFo7VGMn842b7zsXpNQAWI/HTkdo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ax+h3qR37wfOYYoRX+lxeYVg6Fp4Cov5AiClWFSZ2gmcShtv+hX/zcjyhfdhJDu46
-         vtnd6EJby+abYJftmxdtv4gg6J4a/5PAXGxI89QPGSbg5AmLKAkFvv31QGJ7dhphEr
-         A++NnzQyAUNjM6CFkCXzHnRLEiVw2/fc4IAbuxqw=
-Date:   Mon, 11 Feb 2019 08:42:05 -0600
+        b=PLaQrSIpftMG9hN334OOm1DOY5I+Mx/tcgq1A8vFdb93FVfy2Vdbs/dU98h4NVe+t
+         sEpt9l7IEEAMhUrX8AVizPonBiIwxdpb3Fqlt2GW/uJYPSzxewOMGwxpCsE+j1fLkb
+         oKR7hfry4UrfK3ZXFEAMwtRi+UF07JvUdCBVkdDo=
+Date:   Mon, 11 Feb 2019 08:39:50 -0600
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Ingo Molnar <mingo@kernel.org>
-Cc:     Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Fixup the RTIT_BAR of Intel TH on Denverton
-Message-ID: <20190211144205.GB151039@google.com>
-References: <20190207133005.67328-1-alexander.shishkin@linux.intel.com>
- <20190211074141.GA49295@gmail.com>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Thomas Gleixner <tglx@linutronix.de>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] genirq/affinity: allow driver to setup managed IRQ's
+ affinity
+Message-ID: <20190211143950.GA151039@google.com>
+References: <20190125095347.17950-1-ming.lei@redhat.com>
+ <20190125095347.17950-3-ming.lei@redhat.com>
+ <alpine.DEB.2.21.1902101723400.8784@nanos.tec.linutronix.de>
+ <20190211035358.GA8638@ming.t460p>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190211074141.GA49295@gmail.com>
+In-Reply-To: <20190211035358.GA8638@ming.t460p>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 08:41:41AM +0100, Ingo Molnar wrote:
+On Mon, Feb 11, 2019 at 11:54:00AM +0800, Ming Lei wrote:
+> On Sun, Feb 10, 2019 at 05:30:41PM +0100, Thomas Gleixner wrote:
+> > On Fri, 25 Jan 2019, Ming Lei wrote:
+> > 
+> > > This patch introduces callback of .setup_affinity into 'struct
+> > > irq_affinity', so that:
+> > 
+> > Please see Documentation/process/submitting-patches.rst. Search for 'This
+> > patch' ....
 > 
-> * Alexander Shishkin <alexander.shishkin@linux.intel.com> wrote:
-> 
-> > On Denverton's integration of the Intel(R) Trace Hub (for a reference
-> > and overview see Documentation/trace/intel_th.txt) the reported size of
-> > one of its resources (RTIT_BAR) doesn't match its actual size, which
-> > leads to overlaps with other devices' resources.
-> 
-> Note that in the latest kernels it's Documentation/trace/intel_th.rst, 
-> not .txt.
+> Sorry for that, because I am not a native English speaker and it looks a bit
+> difficult for me to understand the subtle difference.
 
-I fixed this, thanks, Ingo!
+I think Thomas is saying that instead of "This patch introduces
+callback ...", you could say "Introduce callback of ...".
+
+The changelog is *part* of the patch, so the context is obvious and
+there's no need to include the words "This patch".
+
+I make the same changes to patches I receive.  In fact, I would go
+even further and say "Add callback .setup_affinity() ..." because "add"
+means the same as "introduce" but is shorter and simpler.
+
+Bjorn
