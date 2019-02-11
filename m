@@ -2,161 +2,130 @@ Return-Path: <SRS0=XN0A=QS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C698DC169C4
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:58:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5C28C169C4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 17:04:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E2F52229F
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:58:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6AE7218A4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 17:04:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="FV9GuucP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728188AbfBKQ6A (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Feb 2019 11:58:00 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:56319 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726366AbfBKQ6A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2019 11:58:00 -0500
-Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1gtEu1-0001Y3-N8; Mon, 11 Feb 2019 17:57:53 +0100
-Message-ID: <1549904273.2546.16.camel@pengutronix.de>
-Subject: Re: [PATCH v2 2/2] pci: imx6: support kernels built in Thumb-2 mode
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Stefan Agner <stefan@agner.ch>, hongxing.zhu@nxp.com
-Cc:     robin.murphy@arm.com, tpiepho@impinj.com, linux@armlinux.org.uk,
-        leonard.crestez@nxp.com, andrew.smirnov@gmail.com,
-        festevam@gmail.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Date:   Mon, 11 Feb 2019 17:57:53 +0100
-In-Reply-To: <20181204132733.14422-2-stefan@agner.ch>
-References: <20181204132733.14422-1-stefan@agner.ch>
-         <20181204132733.14422-2-stefan@agner.ch>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.22.6-1+deb9u1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+        id S1727466AbfBKREE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Feb 2019 12:04:04 -0500
+Received: from smtprelay.synopsys.com ([198.182.47.9]:35176 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727622AbfBKREE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2019 12:04:04 -0500
+Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay.synopsys.com (Postfix) with ESMTPS id B8DA424E0DA5;
+        Mon, 11 Feb 2019 09:04:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1549904643; bh=9CrqMWG6tC7OfnhMoc4iY6cvnZwFkuM2vN5nq3dPC2k=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+         References:From;
+        b=FV9GuucP+Tm1GtDkxyBgnTOPsArnQYQh4jiugv5xTDDg5wdKdrrE++bc+RvS6pf89
+         WblXRIc73zNluGO1+sCf8O04tu82T1vAVG0qWkk2YImR/sm3Gd6dtbzdUsN+rfzjdx
+         fvFA49TUuTVkp9TDEqpgJo0BNcFfdJJomgwwlBvIxcCTzF81J1fKQdu4GTpfIfnHb0
+         dlt0AALgJbL6wnbuzK4saebyOcNcJ9vHHGRsBV0yfkTV+cRI9t/mjxCXS+cnvT8Ruh
+         GkHtYdCcS6GfrmbU/bkxZY3Pcd1CE9pW4uGjN6Jee+/Yk4q5pt4jmzAQnLNJVEtum0
+         xIV4EJD8Vk9ww==
+Received: from de02.synopsys.com (de02.internal.synopsys.com [10.225.17.21])
+        by mailhost.synopsys.com (Postfix) with ESMTP id 6EB2AA00C7;
+        Mon, 11 Feb 2019 17:04:03 +0000 (UTC)
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by de02.synopsys.com (Postfix) with ESMTP id 942957D72;
+        Mon, 11 Feb 2019 18:04:02 +0100 (CET)
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To:     linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
+Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        Joao Pinto <joao.pinto@synopsys.com>,
+        Jose Abreu <jose.abreu@synopsys.com>,
+        Luis Oliveira <luis.oliveira@synopsys.com>,
+        Vitor Soares <vitor.soares@synopsys.com>,
+        Nelson Costa <nelson.costa@synopsys.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>
+Subject: [RFC v4 4/6] PCI: Add Synopsys endpoint EDDA Device ID
+Date:   Mon, 11 Feb 2019 18:03:55 +0100
+Message-Id: <65b86e1a5d4ae82a3e9baa97974446f60b789123.1549904495.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1549904495.git.gustavo.pimentel@synopsys.com>
+References: <cover.1549904495.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1549904495.git.gustavo.pimentel@synopsys.com>
+References: <cover.1549904495.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Dienstag, den 04.12.2018, 14:27 +0100 schrieb Stefan Agner:
-> Add a fault handler which handles immediate reads in Thumb-2
-> mode. Install the appropriate handler depending on which mode
-> the kernel has been built. This avoids an "Unhandled fault:
-> external abort on non-linefetch (0x1008) at 0xf0a80000"
-> during boot on a device with a PCIe switch connected.
-> 
-> Link: https://lore.kernel.org/linux-pci/20181126161645.8177-1-stefan@agner.ch/
-> Signed-off-by: Stefan Agner <stefan@agner.ch>
+Create and add Synopsys Endpoint EDDA Device ID to PCI ID list, since
+this ID is now being use on two different drivers (pci_endpoint_test.ko
+and dw-edma-pcie.ko).
 
-Acked-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Niklas Cassel <niklas.cassel@linaro.org>
+Cc: Joao Pinto <jpinto@synopsys.com>
+Cc: Jose Abreu <jose.abreu@synopsys.com>
+Cc: Luis Oliveira <lolivei@synopsys.com>
+Cc: Vitor Soares <vitor.soares@synopsys.com>
+Cc: Nelson Costa <nelson.costa@synopsys.com>
+Cc: Pedro Sousa <pedrom.sousa@synopsys.com>
 
-> ---
-> Changes since v1:
-> - Added Thumb-2 32-bit instruction support (tested by inserting .w
->   instructions in arch/arm/include/asm/io.h)
-> - Avoid dereferencing if fault happened in user mode
-> 
->  drivers/pci/controller/dwc/pci-imx6.c | 59 ++++++++++++++++++++++++++-
->  1 file changed, 58 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 54a29e441303..a9bbbf176c4a 100644
-> --- a/drivers/pci/controller/dwc/pci-imx6.c
-> +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -29,6 +29,7 @@
->  #include <linux/reset.h>
->  #include <linux/pm_domain.h>
->  #include <linux/pm_runtime.h>
-> +#include <asm/opcodes.h>
->  
->  #include "pcie-designware.h"
->  
-> @@ -305,6 +306,59 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
->  	return 1;
->  }
->  
-> +static int imx6q_pcie_abort_handler_thumb2(unsigned long addr,
-> +		unsigned int fsr, struct pt_regs *regs)
-> +{
-> +	unsigned long pc = instruction_pointer(regs);
-> +	unsigned long instr;
-> +
-> +	if (user_mode(regs))
-> +		return 1;
-> +
-> +	instr = __mem_to_opcode_thumb32(*(unsigned long *)pc);
-> +
-> +	if (__opcode_is_thumb32(instr)) {
-> +		/* Load word/byte and halfword immediate offset */
-> +		if ((instr & 0xff100000UL) == 0xf8100000UL) {
-> +			int reg = (instr >> 12) & 0xf;
-> +			unsigned long val;
-> +
-> +			if ((instr & 0x00700000UL) == 0x00100000UL)
-> +				val = 0xff;
-> +			else if ((instr & 0x00700000UL) == 0x00300000UL)
-> +				val = 0xffff;
-> +			else
-> +				val = 0xffffffffUL;
-> +
-> +			regs->uregs[reg] = val;
-> +			regs->ARM_pc += 4;
-> +			return 0;
-> +		}
-> +	} else {
-> +		instr = __mem_to_opcode_thumb16(*(unsigned long *)pc);
-> +
-> +		/* Load word/byte and halfword immediate offset */
-> +		if (((instr & 0xe800) == 0x6800) ||
-> +		    ((instr & 0xf800) == 0x8800)) {
-> +			int reg = instr & 0x7;
-> +			unsigned long val;
-> +
-> +			if (instr & 0x1000)
-> +				val = 0xff;
-> +			else if (instr & 0x8000)
-> +				val = 0xffff;
-> +			else
-> +				val = 0xffffffffUL;
-> +
-> +			regs->uregs[reg] = val;
-> +			regs->ARM_pc += 2;
-> +			return 0;
-> +		}
-> +	}
-> +
-> +	return 1;
-> +}
-> +
->  static int imx6_pcie_attach_pd(struct device *dev)
->  {
->  	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
-> @@ -1075,6 +1129,8 @@ static struct platform_driver imx6_pcie_driver = {
->  
->  static int __init imx6_pcie_init(void)
->  {
-> +	bool thumb2 = IS_ENABLED(CONFIG_THUMB2_KERNEL);
-> +
->  	/*
->  	 * Since probe() can be deferred we need to make sure that
->  	 * hook_fault_code is not called after __init memory is freed
-> @@ -1082,7 +1138,8 @@ static int __init imx6_pcie_init(void)
->  	 * we can install the handler here without risking it
->  	 * accessing some uninitialized driver state.
->  	 */
-> -	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
-> +	hook_fault_code(8, thumb2 ? imx6q_pcie_abort_handler_thumb2 :
-> +			imx6q_pcie_abort_handler, SIGBUS, 0,
->  			"external abort on non-linefetch");
->  
->  	return platform_driver_register(&imx6_pcie_driver);
+___
+Changes:
+RFC v1->RFC v2:
+ - Reword subject line patch
+ - Reorder patch order on the series
+RFC v2->RFC v3:
+ - Rebase to v5.0-rc1
+RFC v3->RFC v4:
+ - Replace id by ID on title and description
+
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+ drivers/misc/pci_endpoint_test.c | 2 +-
+ include/linux/pci_ids.h          | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 896e2df..d27efe838 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -788,7 +788,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
++	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 69f0abe..57f17dd 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2358,6 +2358,7 @@
+ #define PCI_DEVICE_ID_CENATEK_IDE	0x0001
+ 
+ #define PCI_VENDOR_ID_SYNOPSYS		0x16c3
++#define PCI_DEVICE_ID_SYNOPSYS_EDDA	0xedda
+ 
+ #define PCI_VENDOR_ID_VITESSE		0x1725
+ #define PCI_DEVICE_ID_VITESSE_VSC7174	0x7174
+-- 
+2.7.4
+
