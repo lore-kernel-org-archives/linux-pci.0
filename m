@@ -6,31 +6,45 @@ X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFEF6C282C2
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 01:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37C45C169C4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 03:48:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D6442084D
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 01:57:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E562120855
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 03:48:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726127AbfBKB5f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 10 Feb 2019 20:57:35 -0500
-Received: from szxga02-in.huawei.com ([45.249.212.188]:2498 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726101AbfBKB5f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 10 Feb 2019 20:57:35 -0500
-Received: from DGGEMM402-HUB.china.huawei.com (unknown [172.30.72.56])
-        by Forcepoint Email with ESMTP id A0A1FE8FBC7826189425;
-        Mon, 11 Feb 2019 09:57:30 +0800 (CST)
-Received: from DGGEMM422-HUB.china.huawei.com (10.1.198.39) by
- DGGEMM402-HUB.china.huawei.com (10.3.20.210) with Microsoft SMTP Server (TLS)
- id 14.3.408.0; Mon, 11 Feb 2019 09:57:30 +0800
-Received: from DGGEMM501-MBX.china.huawei.com ([169.254.1.100]) by
- dggemm422-hub.china.huawei.com ([10.1.198.39]) with mapi id 14.03.0415.000;
- Mon, 11 Feb 2019 09:57:21 +0800
-From:   "Xuyandong (Yandong Xu, Euler5)" <xuyandong2@huawei.com>
-To:     "'Michael S. Tsirkin'" <mst@redhat.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        id S1726191AbfBKDs5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 10 Feb 2019 22:48:57 -0500
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:45935 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726157AbfBKDs4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 10 Feb 2019 22:48:56 -0500
+Received: by mail-qt1-f195.google.com with SMTP id e5so10630925qtr.12
+        for <linux-pci@vger.kernel.org>; Sun, 10 Feb 2019 19:48:55 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=9SH+FNtWUzl3EBdhIt2v1zJml0cnCuPGJNiTzdrPpuc=;
+        b=j6gRYWgN7408dpKP028iPdgmDuFrsH/q0LSpcJ20NTm4HQsonD66fZTM/7O0vEFwrB
+         SDKrnSejHEo1GMTOPS7Ny4U6SpphRwnDprQres6eM/8+SupSycBOGdmtC1uTgj8IAjJc
+         iWb8BVMixgqBvoI8EVM9tDioWBuRSPbYfre0PFZkLVNJ3KCgm2g03lBW7ByIRofqyrkJ
+         APH/S2Lep90PPZZrHoInUSCwjrAlY0W/M7n7a0lNe+kLQeXEjRixE9+BRuftx/AN3zGY
+         Uki1nRw22OP8925R7b5E28RXIi2HP93WjptXY3CHGzQfaGWQB11hYewdvtScj5SmdcXn
+         z7ug==
+X-Gm-Message-State: AHQUAuZDR6nScmsxwNhGJ6IgsWCAHpDSNMDQe5fTVhzXYjIYQqJUN01y
+        fF9HbPPtojxL88gWrt9PhrYEZ0Mmfzo=
+X-Google-Smtp-Source: AHgI3IZziF0OjG6J/MqqTyyJoNIggKzNCSjdKIJWLpERg2Hs7UOsr6Pxs5D8AuHVl79u1CfcCH7Iew==
+X-Received: by 2002:ac8:7218:: with SMTP id a24mr18794953qtp.94.1549856935231;
+        Sun, 10 Feb 2019 19:48:55 -0800 (PST)
+Received: from redhat.com (pool-173-76-246-42.bstnma.fios.verizon.net. [173.76.246.42])
+        by smtp.gmail.com with ESMTPSA id w123sm29639498qkw.80.2019.02.10.19.48.51
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sun, 10 Feb 2019 19:48:53 -0800 (PST)
+Date:   Sun, 10 Feb 2019 22:48:49 -0500
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     "Xuyandong (Yandong Xu, Euler5)" <xuyandong2@huawei.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         Yinghai Lu <yinghai@kernel.org>,
         Jesse Barnes <jbarnes@virtuousgeek.org>,
         Sagi Grimberg <sagi@grimberg.me>,
@@ -39,217 +53,293 @@ CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         Keith Busch <keith.busch@intel.com>,
         "Wangzhou (B)" <wangzhou1@hisilicon.com>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] PCI: Probe bridge window attributes once at
+Subject: Re: [PATCH] PCI: Probe bridge window attributes once at
  enumeration-time
-Thread-Topic: [PATCH] PCI: Probe bridge window attributes once at
- enumeration-time
-Thread-Index: AQHUsoUaLol3BRzWlE+Y4kfuTw5LLqXGXPmAgAABHQCAAAQqAIAKsryAgAjSc9A=
-Date:   Mon, 11 Feb 2019 01:57:20 +0000
-Message-ID: <7CECC2DFC21538489F72729DF5EFB4D909EF3236@DGGEMM501-MBX.china.huawei.com>
+Message-ID: <20190210224716-mutt-send-email-mst@kernel.org>
 References: <154818377425.41851.650909794935936003.stgit@bhelgaas-glaptop.roam.corp.google.com>
  <20190129224333.GE91506@google.com>
  <20190129174504-mutt-send-email-mst@kernel.org>
  <20190129230225.GF91506@google.com>
  <20190205132323-mutt-send-email-mst@kernel.org>
-In-Reply-To: <20190205132323-mutt-send-email-mst@kernel.org>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.177.33.58]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+ <7CECC2DFC21538489F72729DF5EFB4D909EF3236@DGGEMM501-MBX.china.huawei.com>
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7CECC2DFC21538489F72729DF5EFB4D909EF3236@DGGEMM501-MBX.china.huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PiBPbiBUdWUsIEphbiAyOSwgMjAxOSBhdCAwNTowMjoyNlBNIC0wNjAwLCBCam9ybiBIZWxnYWFz
-IHdyb3RlOg0KPiA+IE9uIFR1ZSwgSmFuIDI5LCAyMDE5IGF0IDA1OjQ3OjMyUE0gLTA1MDAsIE1p
-Y2hhZWwgUy4gVHNpcmtpbiB3cm90ZToNCj4gPiA+IE9uIFR1ZSwgSmFuIDI5LCAyMDE5IGF0IDA0
-OjQzOjMzUE0gLTA2MDAsIEJqb3JuIEhlbGdhYXMgd3JvdGU6DQo+ID4gPiA+IE9uIFR1ZSwgSmFu
-IDIyLCAyMDE5IGF0IDAxOjAyOjU0UE0gLTA2MDAsIEJqb3JuIEhlbGdhYXMgd3JvdGU6DQo+ID4g
-PiA+ID4gRnJvbTogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gPiA+ID4g
-Pg0KPiA+ID4gPiA+IHBjaV9icmlkZ2VfY2hlY2tfcmFuZ2VzKCkgZGV0ZXJtaW5lcyB3aGV0aGVy
-IGEgYnJpZGdlIHN1cHBvcnRzDQo+ID4gPiA+ID4gdGhlIG9wdGlvbmFsIEkvTyBhbmQgcHJlZmV0
-Y2hhYmxlIG1lbW9yeSB3aW5kb3dzIGFuZCBzZXRzIHRoZQ0KPiA+ID4gPiA+IGZsYWcgYml0cyBp
-biB0aGUgYnJpZGdlIHJlc291cmNlcy4gIFRoaXMgKmNvdWxkKiBiZSBkb25lIG9uY2UNCj4gPiA+
-ID4gPiBkdXJpbmcgZW51bWVyYXRpb24gZXhjZXB0IHRoYXQgdGhlIHJlc291cmNlIGFsbG9jYXRp
-b24gY29kZQ0KPiA+ID4gPiA+IGNvbXBsZXRlbHkgY2xlYXJzIHRoZSBmbGFnIGJpdHMsIGUuZy4s
-IGluIHRoZQ0KPiA+ID4gPiA+IHBjaV9hc3NpZ25fdW5hc3NpZ25lZF9icmlkZ2VfcmVzb3VyY2Vz
-KCkgcGF0aC4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IFRoZSBwcm9ibGVtIHdpdGggcGNpX2JyaWRn
-ZV9jaGVja19yYW5nZXMoKSBpbiB0aGUgcmVzb3VyY2UNCj4gPiA+ID4gPiBhbGxvY2F0aW9uIHBh
-dGggaXMgdGhhdCB3ZSBtYXkgYWxsb2NhdGUgcmVzb3VyY2VzIGFmdGVyIGRldmljZXMNCj4gPiA+
-ID4gPiBoYXZlIGJlZW4gY2xhaW1lZCBieSBkcml2ZXJzLCBhbmQgcGNpX2JyaWRnZV9jaGVja19y
-YW5nZXMoKQ0KPiA+ID4gPiA+ICpjaGFuZ2VzKiB0aGUgd2luZG93IHJlZ2lzdGVycyB0byBkZXRl
-cm1pbmUgd2hldGhlciB0aGV5J3JlDQo+ID4gPiA+ID4gd3JpdGFibGUuICBUaGlzIG1heSBicmVh
-ayBjb25jdXJyZW50IGFjY2Vzc2VzIHRvIGRldmljZXMgYmVoaW5kIHRoZQ0KPiBicmlkZ2UuDQo+
-ID4gPiA+ID4NCj4gPiA+ID4gPiBBZGQgYSBuZXcgcGNpX3JlYWRfYnJpZGdlX3dpbmRvd3MoKSB0
-byBkZXRlcm1pbmUgd2hldGhlciBhDQo+ID4gPiA+ID4gYnJpZGdlIHN1cHBvcnRzIHRoZSBvcHRp
-b25hbCB3aW5kb3dzLCBjYWxsIGl0IG9uY2UgZHVyaW5nDQo+ID4gPiA+ID4gZW51bWVyYXRpb24s
-IHJlbWVtYmVyIHRoZSByZXN1bHRzLCBhbmQgY2hhbmdlDQo+ID4gPiA+ID4gcGNpX2JyaWRnZV9j
-aGVja19yYW5nZXMoKSBzbyBpdCBkb2Vzbid0IHRvdWNoIHRoZSBicmlkZ2Ugd2luZG93cyBidXQN
-Cj4gc2V0cyB0aGUgZmxhZyBiaXRzIGJhc2VkIG9uIHRob3NlIHJlbWVtYmVyZWQgcmVzdWx0cy4N
-Cj4gPiA+ID4gPg0KPiA+ID4gPiA+IExpbms6DQo+ID4gPiA+ID4gaHR0cHM6Ly9sb3JlLmtlcm5l
-bC5vcmcvbGludXgtcGNpLzE1MDYxNTE0ODItMTEzNTYwLTEtZ2l0LXNlbmQtZQ0KPiA+ID4gPiA+
-IG1haWwtd2FuZ3pob3UxQGhpc2lsaWNvbi5jb20NCj4gPiA+ID4gPiBMaW5rOg0KPiA+ID4gPiA+
-IGh0dHBzOi8vbGlzdHMuZ251Lm9yZy9hcmNoaXZlL2h0bWwvcWVtdS1kZXZlbC8yMDE4LTEyL21z
-ZzAyMDgyLmgNCj4gPiA+ID4gPiB0bWwNCj4gPiA+ID4gPiBSZXBvcnRlZC1ieTogeHV5YW5kb25n
-IDx4dXlhbmRvbmcyQGh1YXdlaS5jb20+DQo+ID4gPiA+ID4gVGVzdGVkLWJ5OiB4dXlhbmRvbmcg
-PHh1eWFuZG9uZzJAaHVhd2VpLmNvbT4NCj4gPiA+ID4gPiBDYzogU2FnaSBHcmltYmVyZyA8c2Fn
-aUBncmltYmVyZy5tZT4NCj4gPiA+ID4gPiBDYzogT2ZlciBIYXl1dCA8b2ZlckBsaWdodGJpdHNs
-YWJzLmNvbT4NCj4gPiA+ID4gPiBDYzogUm95IFNodGVybWFuIDxyb3lzQGxpZ2h0Yml0c2xhYnMu
-Y29tPg0KPiA+ID4gPiA+IENjOiBLZWl0aCBCdXNjaCA8a2VpdGguYnVzY2hAaW50ZWwuY29tPg0K
-PiA+ID4gPiA+IENjOiBaaG91IFdhbmcgPHdhbmd6aG91MUBoaXNpbGljb24uY29tPg0KPiA+ID4g
-Pg0KPiA+ID4gPiBBcHBsaWVkIHRvIHBjaS9lbnVtZXJhdGlvbiBmb3IgdjUuMS4NCj4gPiA+ID4N
-Cj4gPiA+ID4gVGhpcyBpcyBmYWlybHkgc2ltcGxlIGluIGNvbmNlcHQsIGJ1dCBkb2Vzbid0IG1l
-ZXQgdGhlIGxldHRlciBvZg0KPiA+ID4gPiB0aGUgcmVzdHJpY3Rpb25zIGluIERvY3VtZW50YXRp
-b24vcHJvY2Vzcy9zdGFibGUta2VybmVsLXJ1bGVzLnJzdCwNCj4gPiA+ID4gc28gSSBkaWRuJ3Qg
-dGFnIGl0IGZvciBzdGFibGUuDQo+ID4gPiA+DQo+ID4gPiA+IElzIHRoZXJlIGEgY29tcGVsbGlu
-ZyBhcmd1bWVudCB0byBtYXJrIGl0IGZvciBzdGFibGU/DQo+ID4gPg0KPiA+ID4gV2VsbCBpdCdz
-IG5lZWRlZCBkb3duc3RyZWFtLg0KPiA+ID4gSXQncyBhIGJpdCBhYm92ZSAxMDAgbGluZXMgd2l0
-aCBjb250ZXh0LiBJcyB0aGlzIHdoYXQgeW91IG1lYW4/DQo+ID4NCj4gPiBZZXAsIEkgc2hvdWxk
-IGhhdmUgYmVlbiBleHBsaWNpdCBhYm91dCB0aGF0Lg0KPiA+DQo+ID4gPiBJZiB5ZXMgaG93IGFi
-b3V0IHVzaW5nIG15IHBhdGNoIGZvciBzdGFibGUgYXMgYW4gYWx0ZXJuYXRpdmU/DQo+ID4gPiBU
-aGUgcnVsZXMgYWxsb3cgZm9yIGVxdWl2YWxlbnQgcGF0Y2hlcy4NCj4gPg0KPiA+IFdlbGwsIHll
-cywgdGhhdCB3b3VsZCBiZSBhIHBvc3NpYmlsaXR5Lg0KPiA+DQo+ID4gSSB3b3VsZCByYXRoZXIg
-ZGV2ZWxvcCBhbiBhcmd1bWVudCBmb3IgbWFya2luZyAqdGhpcyogcGF0Y2ggZm9yDQo+ID4gc3Rh
-YmxlLiAgRXZlbiB0aG91Z2ggaXQgaXMgdGVjaG5pY2FsbHkgdG9vIGxhcmdlLCBJIHRoaW5rIHdl
-IGNvdWxkDQo+ID4gbWFrZSBpdCB3b3JrIGlmIHdlIGhhdmUgY29tcGVsbGluZyByZWFzb25zLg0K
-PiA+DQo+ID4gVGhvc2Ugd291bGQgbmVlZCB0byBiZSBmbGVzaGVkIG91dCBhIGxpdHRsZSBtb3Jl
-IHRoYW4gIm5lZWRlZA0KPiA+IGRvd25zdHJlYW0iIC0tIHNvbWV0aGluZyBhYm91dCB0aGUgc2Nl
-bmFyaW9zIHdoZXJlIHRoaXMgaGFwcGVucywgd2hhdA0KPiA+IHRoZSBzZXJpb3VzIHByb2JsZW0g
-aXMsIGV0Yy4NCj4gPg0KPiA+IFRoZSAqaWRlYWwqIHRoaW5nIHdvdWxkIGJlIHRvIGhhdmUgYW4g
-YWN0dWFsIGJ1Z3ppbGxhLmtlcm5lbC5vcmcNCj4gPiByZXBvcnQgb2YgdGhlIHByb2JsZW0gd2l0
-aCBhIHdheSB0byByZXByb2R1Y2UgaXQgYW5kIGRtZXNnDQo+ID4gaWxsdXN0cmF0aW5nIHRoZSBw
-cm9ibGVtLg0KPiANCj4geHV5YW5kb25nIHdvdWxkIHlvdSBsaWtlIHRvIHRha2UgYSBzdHViIGF0
-IGNyZWF0aW5nIHRoZSBidWd6aWxsYSBlbnRyeT8NCj4gSWYgbm90IGxldCBtZSBrbm93IGFuZCBJ
-J2xsIGRvIGl0Lg0KPiBUaGFua3MhDQo+IA0KVGhhbmtzLCBidXQgSSAgZG8gbm90IHdhbnQgdG8g
-Y3JlYXRlIHRoZSBidWd6aWxsYSBlbnRyeS4NCg0KDQo+IA0KPiA+ID4gPiA+IC0tLQ0KPiA+ID4g
-PiA+ICBkcml2ZXJzL3BjaS9wcm9iZS5jICAgICB8ICAgNTINCj4gKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiA+ID4gPiAgZHJpdmVycy9wY2kvc2V0
-dXAtYnVzLmMgfCAgIDQ1ICsrKystLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-DQo+ID4gPiA+ID4gIGluY2x1ZGUvbGludXgvcGNpLmggICAgIHwgICAgMyArKysNCj4gPiA+ID4g
-PiAgMyBmaWxlcyBjaGFuZ2VkLCA1OSBpbnNlcnRpb25zKCspLCA0MSBkZWxldGlvbnMoLSkNCj4g
-PiA+ID4gPg0KPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wcm9iZS5jIGIvZHJp
-dmVycy9wY2kvcHJvYmUuYyBpbmRleA0KPiA+ID4gPiA+IDI1N2I5ZjZmMmViYi4uMmVmOGI5NTRj
-NjVhIDEwMDY0NA0KPiA+ID4gPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3Byb2JlLmMNCj4gPiA+ID4g
-PiArKysgYi9kcml2ZXJzL3BjaS9wcm9iZS5jDQo+ID4gPiA+ID4gQEAgLTM0OCw2ICszNDgsNTcg
-QEAgc3RhdGljIHZvaWQgcGNpX3JlYWRfYmFzZXMoc3RydWN0IHBjaV9kZXYgKmRldiwNCj4gdW5z
-aWduZWQgaW50IGhvd21hbnksIGludCByb20pDQo+ID4gPiA+ID4gIAl9DQo+ID4gPiA+ID4gIH0N
-Cj4gPiA+ID4gPg0KPiA+ID4gPiA+ICtzdGF0aWMgdm9pZCBwY2lfcmVhZF9icmlkZ2Vfd2luZG93
-cyhzdHJ1Y3QgcGNpX2RldiAqYnJpZGdlKSB7DQo+ID4gPiA+ID4gKwl1MTYgaW87DQo+ID4gPiA+
-ID4gKwl1MzIgcG1lbSwgdG1wOw0KPiA+ID4gPiA+ICsNCj4gPiA+ID4gPiArCXBjaV9yZWFkX2Nv
-bmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JBU0UsICZpbyk7DQo+ID4gPiA+ID4gKwlpZiAoIWlv
-KSB7DQo+ID4gPiA+ID4gKwkJcGNpX3dyaXRlX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JB
-U0UsIDB4ZTBmMCk7DQo+ID4gPiA+ID4gKwkJcGNpX3JlYWRfY29uZmlnX3dvcmQoYnJpZGdlLCBQ
-Q0lfSU9fQkFTRSwgJmlvKTsNCj4gPiA+ID4gPiArCQlwY2lfd3JpdGVfY29uZmlnX3dvcmQoYnJp
-ZGdlLCBQQ0lfSU9fQkFTRSwgMHgwKTsNCj4gPiA+ID4gPiArCX0NCj4gPiA+ID4gPiArCWlmIChp
-bykNCj4gPiA+ID4gPiArCQlicmlkZ2UtPmlvX3dpbmRvdyA9IDE7DQo+ID4gPiA+ID4gKw0KPiA+
-ID4gPiA+ICsJLyoNCj4gPiA+ID4gPiArCSAqIERFQ2NoaXAgMjEwNTAgcGFzcyAyIGVycmF0YTog
-dGhlIGJyaWRnZSBtYXkgbWlzcyBhbg0KPiBhZGRyZXNzDQo+ID4gPiA+ID4gKwkgKiBkaXNjb25u
-ZWN0IGJvdW5kYXJ5IGJ5IG9uZSBQQ0kgZGF0YSBwaGFzZS4gIFdvcmthcm91bmQ6DQo+IGRvIG5v
-dA0KPiA+ID4gPiA+ICsJICogdXNlIHByZWZldGNoaW5nIG9uIHRoaXMgZGV2aWNlLg0KPiA+ID4g
-PiA+ICsJICovDQo+ID4gPiA+ID4gKwlpZiAoYnJpZGdlLT52ZW5kb3IgPT0gUENJX1ZFTkRPUl9J
-RF9ERUMgJiYgYnJpZGdlLT5kZXZpY2UNCj4gPT0gMHgwMDAxKQ0KPiA+ID4gPiA+ICsJCXJldHVy
-bjsNCj4gPiA+ID4gPiArDQo+ID4gPiA+ID4gKwlwY2lfcmVhZF9jb25maWdfZHdvcmQoYnJpZGdl
-LCBQQ0lfUFJFRl9NRU1PUllfQkFTRSwNCj4gJnBtZW0pOw0KPiA+ID4gPiA+ICsJaWYgKCFwbWVt
-KSB7DQo+ID4gPiA+ID4gKwkJcGNpX3dyaXRlX2NvbmZpZ19kd29yZChicmlkZ2UsDQo+IFBDSV9Q
-UkVGX01FTU9SWV9CQVNFLA0KPiA+ID4gPiA+ICsJCQkJCSAgICAgICAweGZmZTBmZmYwKTsNCj4g
-PiA+ID4gPiArCQlwY2lfcmVhZF9jb25maWdfZHdvcmQoYnJpZGdlLA0KPiBQQ0lfUFJFRl9NRU1P
-UllfQkFTRSwgJnBtZW0pOw0KPiA+ID4gPiA+ICsJCXBjaV93cml0ZV9jb25maWdfZHdvcmQoYnJp
-ZGdlLA0KPiBQQ0lfUFJFRl9NRU1PUllfQkFTRSwgMHgwKTsNCj4gPiA+ID4gPiArCX0NCj4gPiA+
-ID4gPiArCWlmICghcG1lbSkNCj4gPiA+ID4gPiArCQlyZXR1cm47DQo+ID4gPiA+ID4gKw0KPiA+
-ID4gPiA+ICsJYnJpZGdlLT5wcmVmX3dpbmRvdyA9IDE7DQo+ID4gPiA+ID4gKw0KPiA+ID4gPiA+
-ICsJaWYgKChwbWVtICYgUENJX1BSRUZfUkFOR0VfVFlQRV9NQVNLKSA9PQ0KPiA+ID4gPiA+ICtQ
-Q0lfUFJFRl9SQU5HRV9UWVBFXzY0KSB7DQo+ID4gPiA+ID4gKw0KPiA+ID4gPiA+ICsJCS8qDQo+
-ID4gPiA+ID4gKwkJICogQnJpZGdlIGNsYWltcyB0byBoYXZlIGEgNjQtYml0IHByZWZldGNoYWJs
-ZSBtZW1vcnkNCj4gPiA+ID4gPiArCQkgKiB3aW5kb3c7IHZlcmlmeSB0aGF0IHRoZSB1cHBlciBi
-aXRzIGFyZSBhY3R1YWxseQ0KPiA+ID4gPiA+ICsJCSAqIHdyaXRhYmxlLg0KPiA+ID4gPiA+ICsJ
-CSAqLw0KPiA+ID4gPiA+ICsJCXBjaV9yZWFkX2NvbmZpZ19kd29yZChicmlkZ2UsDQo+IFBDSV9Q
-UkVGX0JBU0VfVVBQRVIzMiwgJnBtZW0pOw0KPiA+ID4gPiA+ICsJCXBjaV93cml0ZV9jb25maWdf
-ZHdvcmQoYnJpZGdlLA0KPiBQQ0lfUFJFRl9CQVNFX1VQUEVSMzIsDQo+ID4gPiA+ID4gKwkJCQkg
-ICAgICAgMHhmZmZmZmZmZik7DQo+ID4gPiA+ID4gKwkJcGNpX3JlYWRfY29uZmlnX2R3b3JkKGJy
-aWRnZSwNCj4gUENJX1BSRUZfQkFTRV9VUFBFUjMyLCAmdG1wKTsNCj4gPiA+ID4gPiArCQlwY2lf
-d3JpdGVfY29uZmlnX2R3b3JkKGJyaWRnZSwNCj4gUENJX1BSRUZfQkFTRV9VUFBFUjMyLCBwbWVt
-KTsNCj4gPiA+ID4gPiArCQlpZiAodG1wKQ0KPiA+ID4gPiA+ICsJCQlicmlkZ2UtPnByZWZfNjRf
-d2luZG93ID0gMTsNCj4gPiA+ID4gPiArCX0NCj4gPiA+ID4gPiArfQ0KPiA+ID4gPiA+ICsNCj4g
-PiA+ID4gPiAgc3RhdGljIHZvaWQgcGNpX3JlYWRfYnJpZGdlX2lvKHN0cnVjdCBwY2lfYnVzICpj
-aGlsZCkgIHsNCj4gPiA+ID4gPiAgCXN0cnVjdCBwY2lfZGV2ICpkZXYgPSBjaGlsZC0+c2VsZjsg
-QEAgLTE3MzksNiArMTc5MCw3IEBAIGludA0KPiA+ID4gPiA+IHBjaV9zZXR1cF9kZXZpY2Uoc3Ry
-dWN0IHBjaV9kZXYgKmRldikNCj4gPiA+ID4gPiAgCQlwY2lfcmVhZF9pcnEoZGV2KTsNCj4gPiA+
-ID4gPiAgCQlkZXYtPnRyYW5zcGFyZW50ID0gKChkZXYtPmNsYXNzICYgMHhmZikgPT0gMSk7DQo+
-ID4gPiA+ID4gIAkJcGNpX3JlYWRfYmFzZXMoZGV2LCAyLCBQQ0lfUk9NX0FERFJFU1MxKTsNCj4g
-PiA+ID4gPiArCQlwY2lfcmVhZF9icmlkZ2Vfd2luZG93cyhkZXYpOw0KPiA+ID4gPiA+ICAJCXNl
-dF9wY2llX2hvdHBsdWdfYnJpZGdlKGRldik7DQo+ID4gPiA+ID4gIAkJcG9zID0gcGNpX2ZpbmRf
-Y2FwYWJpbGl0eShkZXYsIFBDSV9DQVBfSURfU1NWSUQpOw0KPiA+ID4gPiA+ICAJCWlmIChwb3Mp
-IHsNCj4gPiA+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMgYi9kcml2
-ZXJzL3BjaS9zZXR1cC1idXMuYw0KPiA+ID4gPiA+IGluZGV4IGVkOTYwNDM2ZGY1ZS4uMTk0MWJi
-MGE2YzEzIDEwMDY0NA0KPiA+ID4gPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3NldHVwLWJ1cy5jDQo+
-ID4gPiA+ID4gKysrIGIvZHJpdmVycy9wY2kvc2V0dXAtYnVzLmMNCj4gPiA+ID4gPiBAQCAtNzM1
-LDU4ICs3MzUsMjEgQEAgaW50IHBjaV9jbGFpbV9icmlkZ2VfcmVzb3VyY2Uoc3RydWN0IHBjaV9k
-ZXYNCj4gKmJyaWRnZSwgaW50IGkpDQo+ID4gPiA+ID4gICAgIGJhc2UvbGltaXQgcmVnaXN0ZXJz
-IG11c3QgYmUgcmVhZC1vbmx5IGFuZCByZWFkIGFzIDAuICovDQo+ID4gPiA+ID4gc3RhdGljIHZv
-aWQgcGNpX2JyaWRnZV9jaGVja19yYW5nZXMoc3RydWN0IHBjaV9idXMgKmJ1cykgIHsNCj4gPiA+
-ID4gPiAtCXUxNiBpbzsNCj4gPiA+ID4gPiAtCXUzMiBwbWVtOw0KPiA+ID4gPiA+ICAJc3RydWN0
-IHBjaV9kZXYgKmJyaWRnZSA9IGJ1cy0+c2VsZjsNCj4gPiA+ID4gPiAtCXN0cnVjdCByZXNvdXJj
-ZSAqYl9yZXM7DQo+ID4gPiA+ID4gKwlzdHJ1Y3QgcmVzb3VyY2UgKmJfcmVzID0NCj4gPiA+ID4g
-PiArJmJyaWRnZS0+cmVzb3VyY2VbUENJX0JSSURHRV9SRVNPVVJDRVNdOw0KPiA+ID4gPiA+DQo+
-ID4gPiA+ID4gLQliX3JlcyA9ICZicmlkZ2UtPnJlc291cmNlW1BDSV9CUklER0VfUkVTT1VSQ0VT
-XTsNCj4gPiA+ID4gPiAgCWJfcmVzWzFdLmZsYWdzIHw9IElPUkVTT1VSQ0VfTUVNOw0KPiA+ID4g
-PiA+DQo+ID4gPiA+ID4gLQlwY2lfcmVhZF9jb25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNF
-LCAmaW8pOw0KPiA+ID4gPiA+IC0JaWYgKCFpbykgew0KPiA+ID4gPiA+IC0JCXBjaV93cml0ZV9j
-b25maWdfd29yZChicmlkZ2UsIFBDSV9JT19CQVNFLCAweGUwZjApOw0KPiA+ID4gPiA+IC0JCXBj
-aV9yZWFkX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JBU0UsICZpbyk7DQo+ID4gPiA+ID4g
-LQkJcGNpX3dyaXRlX2NvbmZpZ193b3JkKGJyaWRnZSwgUENJX0lPX0JBU0UsIDB4MCk7DQo+ID4g
-PiA+ID4gLQl9DQo+ID4gPiA+ID4gLQlpZiAoaW8pDQo+ID4gPiA+ID4gKwlpZiAoYnJpZGdlLT5p
-b193aW5kb3cpDQo+ID4gPiA+ID4gIAkJYl9yZXNbMF0uZmxhZ3MgfD0gSU9SRVNPVVJDRV9JTzsN
-Cj4gPiA+ID4gPg0KPiA+ID4gPiA+IC0JLyogIERFQ2NoaXAgMjEwNTAgcGFzcyAyIGVycmF0YTog
-dGhlIGJyaWRnZSBtYXkgbWlzcyBhbg0KPiBhZGRyZXNzDQo+ID4gPiA+ID4gLQkgICAgZGlzY29u
-bmVjdCBib3VuZGFyeSBieSBvbmUgUENJIGRhdGEgcGhhc2UuDQo+ID4gPiA+ID4gLQkgICAgV29y
-a2Fyb3VuZDogZG8gbm90IHVzZSBwcmVmZXRjaGluZyBvbiB0aGlzIGRldmljZS4gKi8NCj4gPiA+
-ID4gPiAtCWlmIChicmlkZ2UtPnZlbmRvciA9PSBQQ0lfVkVORE9SX0lEX0RFQyAmJiBicmlkZ2Ut
-PmRldmljZQ0KPiA9PSAweDAwMDEpDQo+ID4gPiA+ID4gLQkJcmV0dXJuOw0KPiA+ID4gPiA+IC0N
-Cj4gPiA+ID4gPiAtCXBjaV9yZWFkX2NvbmZpZ19kd29yZChicmlkZ2UsIFBDSV9QUkVGX01FTU9S
-WV9CQVNFLA0KPiAmcG1lbSk7DQo+ID4gPiA+ID4gLQlpZiAoIXBtZW0pIHsNCj4gPiA+ID4gPiAt
-CQlwY2lfd3JpdGVfY29uZmlnX2R3b3JkKGJyaWRnZSwNCj4gUENJX1BSRUZfTUVNT1JZX0JBU0Us
-DQo+ID4gPiA+ID4gLQkJCQkJICAgICAgIDB4ZmZlMGZmZjApOw0KPiA+ID4gPiA+IC0JCXBjaV9y
-ZWFkX2NvbmZpZ19kd29yZChicmlkZ2UsDQo+IFBDSV9QUkVGX01FTU9SWV9CQVNFLCAmcG1lbSk7
-DQo+ID4gPiA+ID4gLQkJcGNpX3dyaXRlX2NvbmZpZ19kd29yZChicmlkZ2UsDQo+IFBDSV9QUkVG
-X01FTU9SWV9CQVNFLCAweDApOw0KPiA+ID4gPiA+IC0JfQ0KPiA+ID4gPiA+IC0JaWYgKHBtZW0p
-IHsNCj4gPiA+ID4gPiArCWlmIChicmlkZ2UtPnByZWZfd2luZG93KSB7DQo+ID4gPiA+ID4gIAkJ
-Yl9yZXNbMl0uZmxhZ3MgfD0gSU9SRVNPVVJDRV9NRU0gfA0KPiBJT1JFU09VUkNFX1BSRUZFVENI
-Ow0KPiA+ID4gPiA+IC0JCWlmICgocG1lbSAmIFBDSV9QUkVGX1JBTkdFX1RZUEVfTUFTSykgPT0N
-Cj4gPiA+ID4gPiAtCQkgICAgUENJX1BSRUZfUkFOR0VfVFlQRV82NCkgew0KPiA+ID4gPiA+ICsJ
-CWlmIChicmlkZ2UtPnByZWZfNjRfd2luZG93KSB7DQo+ID4gPiA+ID4gIAkJCWJfcmVzWzJdLmZs
-YWdzIHw9IElPUkVTT1VSQ0VfTUVNXzY0Ow0KPiA+ID4gPiA+ICAJCQliX3Jlc1syXS5mbGFncyB8
-PSBQQ0lfUFJFRl9SQU5HRV9UWVBFXzY0Ow0KPiA+ID4gPiA+ICAJCX0NCj4gPiA+ID4gPiAgCX0N
-Cj4gPiA+ID4gPiAtDQo+ID4gPiA+ID4gLQkvKiBkb3VibGUgY2hlY2sgaWYgYnJpZGdlIGRvZXMg
-c3VwcG9ydCA2NCBiaXQgcHJlZiAqLw0KPiA+ID4gPiA+IC0JaWYgKGJfcmVzWzJdLmZsYWdzICYg
-SU9SRVNPVVJDRV9NRU1fNjQpIHsNCj4gPiA+ID4gPiAtCQl1MzIgbWVtX2Jhc2VfaGksIHRtcDsN
-Cj4gPiA+ID4gPiAtCQlwY2lfcmVhZF9jb25maWdfZHdvcmQoYnJpZGdlLA0KPiBQQ0lfUFJFRl9C
-QVNFX1VQUEVSMzIsDQo+ID4gPiA+ID4gLQkJCQkJICZtZW1fYmFzZV9oaSk7DQo+ID4gPiA+ID4g
-LQkJcGNpX3dyaXRlX2NvbmZpZ19kd29yZChicmlkZ2UsDQo+IFBDSV9QUkVGX0JBU0VfVVBQRVIz
-MiwNCj4gPiA+ID4gPiAtCQkJCQkgICAgICAgMHhmZmZmZmZmZik7DQo+ID4gPiA+ID4gLQkJcGNp
-X3JlYWRfY29uZmlnX2R3b3JkKGJyaWRnZSwNCj4gUENJX1BSRUZfQkFTRV9VUFBFUjMyLCAmdG1w
-KTsNCj4gPiA+ID4gPiAtCQlpZiAoIXRtcCkNCj4gPiA+ID4gPiAtCQkJYl9yZXNbMl0uZmxhZ3Mg
-Jj0gfklPUkVTT1VSQ0VfTUVNXzY0Ow0KPiA+ID4gPiA+IC0JCXBjaV93cml0ZV9jb25maWdfZHdv
-cmQoYnJpZGdlLA0KPiBQQ0lfUFJFRl9CQVNFX1VQUEVSMzIsDQo+ID4gPiA+ID4gLQkJCQkgICAg
-ICAgbWVtX2Jhc2VfaGkpOw0KPiA+ID4gPiA+IC0JfQ0KPiA+ID4gPiA+ICB9DQo+ID4gPiA+ID4N
-Cj4gPiA+ID4gPiAgLyogSGVscGVyIGZ1bmN0aW9uIGZvciBzaXppbmcgcm91dGluZXM6IGZpbmQg
-Zmlyc3QgYXZhaWxhYmxlDQo+ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvcGNp
-LmggYi9pbmNsdWRlL2xpbnV4L3BjaS5oIGluZGV4DQo+ID4gPiA+ID4gNjVmMWQ4YzJmMDgyLi40
-MGIzMjdiODE0YWEgMTAwNjQ0DQo+ID4gPiA+ID4gLS0tIGEvaW5jbHVkZS9saW51eC9wY2kuaA0K
-PiA+ID4gPiA+ICsrKyBiL2luY2x1ZGUvbGludXgvcGNpLmgNCj4gPiA+ID4gPiBAQCAtMzczLDYg
-KzM3Myw5IEBAIHN0cnVjdCBwY2lfZGV2IHsNCj4gPiA+ID4gPiAgCWJvb2wJCW1hdGNoX2RyaXZl
-cjsJCS8qIFNraXAgYXR0YWNoaW5nDQo+IGRyaXZlciAqLw0KPiA+ID4gPiA+DQo+ID4gPiA+ID4g
-IAl1bnNpZ25lZCBpbnQJdHJhbnNwYXJlbnQ6MTsJCS8qIFN1YnRyYWN0aXZlIGRlY29kZQ0KPiBi
-cmlkZ2UgKi8NCj4gPiA+ID4gPiArCXVuc2lnbmVkIGludAlpb193aW5kb3c6MTsJCS8qIEJyaWRn
-ZSBoYXMgSS9PDQo+IHdpbmRvdyAqLw0KPiA+ID4gPiA+ICsJdW5zaWduZWQgaW50CXByZWZfd2lu
-ZG93OjE7CQkvKiBCcmlkZ2UgaGFzIHByZWYNCj4gbWVtIHdpbmRvdyAqLw0KPiA+ID4gPiA+ICsJ
-dW5zaWduZWQgaW50CXByZWZfNjRfd2luZG93OjE7CS8qIFByZWYgbWVtIHdpbmRvdw0KPiBpcyA2
-NC1iaXQgKi8NCj4gPiA+ID4gPiAgCXVuc2lnbmVkIGludAltdWx0aWZ1bmN0aW9uOjE7CS8qIE11
-bHRpLWZ1bmN0aW9uIGRldmljZSAqLw0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gIAl1bnNpZ25lZCBp
-bnQJaXNfYnVzbWFzdGVyOjE7CQkvKiBJcyBidXNtYXN0ZXIgKi8NCj4gPiA+ID4gPg0K
+On Mon, Feb 11, 2019 at 01:57:20AM +0000, Xuyandong (Yandong Xu, Euler5) wrote:
+> > On Tue, Jan 29, 2019 at 05:02:26PM -0600, Bjorn Helgaas wrote:
+> > > On Tue, Jan 29, 2019 at 05:47:32PM -0500, Michael S. Tsirkin wrote:
+> > > > On Tue, Jan 29, 2019 at 04:43:33PM -0600, Bjorn Helgaas wrote:
+> > > > > On Tue, Jan 22, 2019 at 01:02:54PM -0600, Bjorn Helgaas wrote:
+> > > > > > From: Bjorn Helgaas <bhelgaas@google.com>
+> > > > > >
+> > > > > > pci_bridge_check_ranges() determines whether a bridge supports
+> > > > > > the optional I/O and prefetchable memory windows and sets the
+> > > > > > flag bits in the bridge resources.  This *could* be done once
+> > > > > > during enumeration except that the resource allocation code
+> > > > > > completely clears the flag bits, e.g., in the
+> > > > > > pci_assign_unassigned_bridge_resources() path.
+> > > > > >
+> > > > > > The problem with pci_bridge_check_ranges() in the resource
+> > > > > > allocation path is that we may allocate resources after devices
+> > > > > > have been claimed by drivers, and pci_bridge_check_ranges()
+> > > > > > *changes* the window registers to determine whether they're
+> > > > > > writable.  This may break concurrent accesses to devices behind the
+> > bridge.
+> > > > > >
+> > > > > > Add a new pci_read_bridge_windows() to determine whether a
+> > > > > > bridge supports the optional windows, call it once during
+> > > > > > enumeration, remember the results, and change
+> > > > > > pci_bridge_check_ranges() so it doesn't touch the bridge windows but
+> > sets the flag bits based on those remembered results.
+> > > > > >
+> > > > > > Link:
+> > > > > > https://lore.kernel.org/linux-pci/1506151482-113560-1-git-send-e
+> > > > > > mail-wangzhou1@hisilicon.com
+> > > > > > Link:
+> > > > > > https://lists.gnu.org/archive/html/qemu-devel/2018-12/msg02082.h
+> > > > > > tml
+> > > > > > Reported-by: xuyandong <xuyandong2@huawei.com>
+> > > > > > Tested-by: xuyandong <xuyandong2@huawei.com>
+> > > > > > Cc: Sagi Grimberg <sagi@grimberg.me>
+> > > > > > Cc: Ofer Hayut <ofer@lightbitslabs.com>
+> > > > > > Cc: Roy Shterman <roys@lightbitslabs.com>
+> > > > > > Cc: Keith Busch <keith.busch@intel.com>
+> > > > > > Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> > > > >
+> > > > > Applied to pci/enumeration for v5.1.
+> > > > >
+> > > > > This is fairly simple in concept, but doesn't meet the letter of
+> > > > > the restrictions in Documentation/process/stable-kernel-rules.rst,
+> > > > > so I didn't tag it for stable.
+> > > > >
+> > > > > Is there a compelling argument to mark it for stable?
+> > > >
+> > > > Well it's needed downstream.
+> > > > It's a bit above 100 lines with context. Is this what you mean?
+> > >
+> > > Yep, I should have been explicit about that.
+> > >
+> > > > If yes how about using my patch for stable as an alternative?
+> > > > The rules allow for equivalent patches.
+> > >
+> > > Well, yes, that would be a possibility.
+> > >
+> > > I would rather develop an argument for marking *this* patch for
+> > > stable.  Even though it is technically too large, I think we could
+> > > make it work if we have compelling reasons.
+> > >
+> > > Those would need to be fleshed out a little more than "needed
+> > > downstream" -- something about the scenarios where this happens, what
+> > > the serious problem is, etc.
+> > >
+> > > The *ideal* thing would be to have an actual bugzilla.kernel.org
+> > > report of the problem with a way to reproduce it and dmesg
+> > > illustrating the problem.
+> > 
+> > xuyandong would you like to take a stub at creating the bugzilla entry?
+> > If not let me know and I'll do it.
+> > Thanks!
+> > 
+> Thanks, but I  do not want to create the bugzilla entry.
+
+OK that's fair, you did quite a lot already.
+
+Xuyandong thanks a lot for your contribution in reporting the problem,
+proposing fixes and then testing patches, it is very much appreciated!
+
+
+> 
+> > 
+> > > > > > ---
+> > > > > >  drivers/pci/probe.c     |   52
+> > +++++++++++++++++++++++++++++++++++++++++++++++
+> > > > > >  drivers/pci/setup-bus.c |   45 ++++-------------------------------------
+> > > > > >  include/linux/pci.h     |    3 +++
+> > > > > >  3 files changed, 59 insertions(+), 41 deletions(-)
+> > > > > >
+> > > > > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c index
+> > > > > > 257b9f6f2ebb..2ef8b954c65a 100644
+> > > > > > --- a/drivers/pci/probe.c
+> > > > > > +++ b/drivers/pci/probe.c
+> > > > > > @@ -348,6 +348,57 @@ static void pci_read_bases(struct pci_dev *dev,
+> > unsigned int howmany, int rom)
+> > > > > >  	}
+> > > > > >  }
+> > > > > >
+> > > > > > +static void pci_read_bridge_windows(struct pci_dev *bridge) {
+> > > > > > +	u16 io;
+> > > > > > +	u32 pmem, tmp;
+> > > > > > +
+> > > > > > +	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > > > +	if (!io) {
+> > > > > > +		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+> > > > > > +		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > > > +		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+> > > > > > +	}
+> > > > > > +	if (io)
+> > > > > > +		bridge->io_window = 1;
+> > > > > > +
+> > > > > > +	/*
+> > > > > > +	 * DECchip 21050 pass 2 errata: the bridge may miss an
+> > address
+> > > > > > +	 * disconnect boundary by one PCI data phase.  Workaround:
+> > do not
+> > > > > > +	 * use prefetching on this device.
+> > > > > > +	 */
+> > > > > > +	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device
+> > == 0x0001)
+> > > > > > +		return;
+> > > > > > +
+> > > > > > +	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE,
+> > &pmem);
+> > > > > > +	if (!pmem) {
+> > > > > > +		pci_write_config_dword(bridge,
+> > PCI_PREF_MEMORY_BASE,
+> > > > > > +					       0xffe0fff0);
+> > > > > > +		pci_read_config_dword(bridge,
+> > PCI_PREF_MEMORY_BASE, &pmem);
+> > > > > > +		pci_write_config_dword(bridge,
+> > PCI_PREF_MEMORY_BASE, 0x0);
+> > > > > > +	}
+> > > > > > +	if (!pmem)
+> > > > > > +		return;
+> > > > > > +
+> > > > > > +	bridge->pref_window = 1;
+> > > > > > +
+> > > > > > +	if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
+> > > > > > +PCI_PREF_RANGE_TYPE_64) {
+> > > > > > +
+> > > > > > +		/*
+> > > > > > +		 * Bridge claims to have a 64-bit prefetchable memory
+> > > > > > +		 * window; verify that the upper bits are actually
+> > > > > > +		 * writable.
+> > > > > > +		 */
+> > > > > > +		pci_read_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32, &pmem);
+> > > > > > +		pci_write_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32,
+> > > > > > +				       0xffffffff);
+> > > > > > +		pci_read_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32, &tmp);
+> > > > > > +		pci_write_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32, pmem);
+> > > > > > +		if (tmp)
+> > > > > > +			bridge->pref_64_window = 1;
+> > > > > > +	}
+> > > > > > +}
+> > > > > > +
+> > > > > >  static void pci_read_bridge_io(struct pci_bus *child)  {
+> > > > > >  	struct pci_dev *dev = child->self; @@ -1739,6 +1790,7 @@ int
+> > > > > > pci_setup_device(struct pci_dev *dev)
+> > > > > >  		pci_read_irq(dev);
+> > > > > >  		dev->transparent = ((dev->class & 0xff) == 1);
+> > > > > >  		pci_read_bases(dev, 2, PCI_ROM_ADDRESS1);
+> > > > > > +		pci_read_bridge_windows(dev);
+> > > > > >  		set_pcie_hotplug_bridge(dev);
+> > > > > >  		pos = pci_find_capability(dev, PCI_CAP_ID_SSVID);
+> > > > > >  		if (pos) {
+> > > > > > diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> > > > > > index ed960436df5e..1941bb0a6c13 100644
+> > > > > > --- a/drivers/pci/setup-bus.c
+> > > > > > +++ b/drivers/pci/setup-bus.c
+> > > > > > @@ -735,58 +735,21 @@ int pci_claim_bridge_resource(struct pci_dev
+> > *bridge, int i)
+> > > > > >     base/limit registers must be read-only and read as 0. */
+> > > > > > static void pci_bridge_check_ranges(struct pci_bus *bus)  {
+> > > > > > -	u16 io;
+> > > > > > -	u32 pmem;
+> > > > > >  	struct pci_dev *bridge = bus->self;
+> > > > > > -	struct resource *b_res;
+> > > > > > +	struct resource *b_res =
+> > > > > > +&bridge->resource[PCI_BRIDGE_RESOURCES];
+> > > > > >
+> > > > > > -	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
+> > > > > >  	b_res[1].flags |= IORESOURCE_MEM;
+> > > > > >
+> > > > > > -	pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > > > -	if (!io) {
+> > > > > > -		pci_write_config_word(bridge, PCI_IO_BASE, 0xe0f0);
+> > > > > > -		pci_read_config_word(bridge, PCI_IO_BASE, &io);
+> > > > > > -		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
+> > > > > > -	}
+> > > > > > -	if (io)
+> > > > > > +	if (bridge->io_window)
+> > > > > >  		b_res[0].flags |= IORESOURCE_IO;
+> > > > > >
+> > > > > > -	/*  DECchip 21050 pass 2 errata: the bridge may miss an
+> > address
+> > > > > > -	    disconnect boundary by one PCI data phase.
+> > > > > > -	    Workaround: do not use prefetching on this device. */
+> > > > > > -	if (bridge->vendor == PCI_VENDOR_ID_DEC && bridge->device
+> > == 0x0001)
+> > > > > > -		return;
+> > > > > > -
+> > > > > > -	pci_read_config_dword(bridge, PCI_PREF_MEMORY_BASE,
+> > &pmem);
+> > > > > > -	if (!pmem) {
+> > > > > > -		pci_write_config_dword(bridge,
+> > PCI_PREF_MEMORY_BASE,
+> > > > > > -					       0xffe0fff0);
+> > > > > > -		pci_read_config_dword(bridge,
+> > PCI_PREF_MEMORY_BASE, &pmem);
+> > > > > > -		pci_write_config_dword(bridge,
+> > PCI_PREF_MEMORY_BASE, 0x0);
+> > > > > > -	}
+> > > > > > -	if (pmem) {
+> > > > > > +	if (bridge->pref_window) {
+> > > > > >  		b_res[2].flags |= IORESOURCE_MEM |
+> > IORESOURCE_PREFETCH;
+> > > > > > -		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
+> > > > > > -		    PCI_PREF_RANGE_TYPE_64) {
+> > > > > > +		if (bridge->pref_64_window) {
+> > > > > >  			b_res[2].flags |= IORESOURCE_MEM_64;
+> > > > > >  			b_res[2].flags |= PCI_PREF_RANGE_TYPE_64;
+> > > > > >  		}
+> > > > > >  	}
+> > > > > > -
+> > > > > > -	/* double check if bridge does support 64 bit pref */
+> > > > > > -	if (b_res[2].flags & IORESOURCE_MEM_64) {
+> > > > > > -		u32 mem_base_hi, tmp;
+> > > > > > -		pci_read_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32,
+> > > > > > -					 &mem_base_hi);
+> > > > > > -		pci_write_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32,
+> > > > > > -					       0xffffffff);
+> > > > > > -		pci_read_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32, &tmp);
+> > > > > > -		if (!tmp)
+> > > > > > -			b_res[2].flags &= ~IORESOURCE_MEM_64;
+> > > > > > -		pci_write_config_dword(bridge,
+> > PCI_PREF_BASE_UPPER32,
+> > > > > > -				       mem_base_hi);
+> > > > > > -	}
+> > > > > >  }
+> > > > > >
+> > > > > >  /* Helper function for sizing routines: find first available
+> > > > > > diff --git a/include/linux/pci.h b/include/linux/pci.h index
+> > > > > > 65f1d8c2f082..40b327b814aa 100644
+> > > > > > --- a/include/linux/pci.h
+> > > > > > +++ b/include/linux/pci.h
+> > > > > > @@ -373,6 +373,9 @@ struct pci_dev {
+> > > > > >  	bool		match_driver;		/* Skip attaching
+> > driver */
+> > > > > >
+> > > > > >  	unsigned int	transparent:1;		/* Subtractive decode
+> > bridge */
+> > > > > > +	unsigned int	io_window:1;		/* Bridge has I/O
+> > window */
+> > > > > > +	unsigned int	pref_window:1;		/* Bridge has pref
+> > mem window */
+> > > > > > +	unsigned int	pref_64_window:1;	/* Pref mem window
+> > is 64-bit */
+> > > > > >  	unsigned int	multifunction:1;	/* Multi-function device */
+> > > > > >
+> > > > > >  	unsigned int	is_busmaster:1;		/* Is busmaster */
+> > > > > >
