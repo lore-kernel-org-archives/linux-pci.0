@@ -2,95 +2,82 @@ Return-Path: <SRS0=XN0A=QS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B9FC169C4
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:20:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50397C169C4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:56:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D54DF21B24
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:20:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1653721B69
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 16:56:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728126AbfBKQUG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Feb 2019 11:20:06 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:53554 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727224AbfBKQUF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Feb 2019 11:20:05 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 237D380D;
-        Mon, 11 Feb 2019 08:20:05 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1064D3F675;
-        Mon, 11 Feb 2019 08:20:02 -0800 (PST)
-Date:   Mon, 11 Feb 2019 16:19:57 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Wen Yang <wen.yang99@zte.com.cn>
-Cc:     kishon@ti.com, bhelgaas@google.com, gustavo.pimentel@synopsys.com,
-        niklas.cassel@axis.com, baijiaju1990@gmail.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xue.zhihong@zte.com.cn, wang.yi59@zte.com.cn,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-Subject: Re: [PATCH] PCI: endpoint: functions: use
- memcpy_fromio()/memcpy_toio()
-Message-ID: <20190211161957.GA27797@e107981-ln.cambridge.arm.com>
-References: <1549875840-10582-1-git-send-email-wen.yang99@zte.com.cn>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1549875840-10582-1-git-send-email-wen.yang99@zte.com.cn>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+        id S1727707AbfBKQ4Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Feb 2019 11:56:16 -0500
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:34825 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726366AbfBKQ4Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2019 11:56:16 -0500
+Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1gtEsI-0001OV-SV; Mon, 11 Feb 2019 17:56:06 +0100
+Message-ID: <1549904165.2546.14.camel@pengutronix.de>
+Subject: Re: [PATCH v2 1/2] pci: imx6: avoid dereferencing program counter
+ from user mode
+From:   Lucas Stach <l.stach@pengutronix.de>
+To:     Stefan Agner <stefan@agner.ch>, hongxing.zhu@nxp.com
+Cc:     robin.murphy@arm.com, tpiepho@impinj.com, linux@armlinux.org.uk,
+        leonard.crestez@nxp.com, andrew.smirnov@gmail.com,
+        festevam@gmail.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Date:   Mon, 11 Feb 2019 17:56:05 +0100
+In-Reply-To: <20181204132733.14422-1-stefan@agner.ch>
+References: <20181204132733.14422-1-stefan@agner.ch>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.22.6-1+deb9u1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 05:04:00PM +0800, Wen Yang wrote:
-> Use the IO memcpy() functions when copying from/to IO memory.
-> These locations were found via sparse.
+Am Dienstag, den 04.12.2018, 14:27 +0100 schrieb Stefan Agner:
+> The custom fault handler is currently only meant to handle kernel
+> mode bus faults. Exit in case the abort happened in user mode.
 > 
-> Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-> Suggested-by: Kishon Vijay Abraham I <kishon@ti.com>
-> CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> CC: Niklas Cassel <niklas.cassel@axis.com>
-> CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> CC: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-> CC: linux-pci@vger.kernel.org
-> CC: linux-kernel@vger.kernel.org
+> Signed-off-by: Stefan Agner <stefan@agner.ch>
+
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+
 > ---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-
-Applied, with updated tags to pci/endpoint for v5.1, thanks.
-
-Lorenzo
-
-> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> index 3e86fa3..4bbd26e 100644
-> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> @@ -175,7 +175,7 @@ static int pci_epf_test_read(struct pci_epf_test *epf_test)
->  		goto err_map_addr;
->  	}
->  
-> -	memcpy(buf, src_addr, reg->size);
-> +	memcpy_fromio(buf, src_addr, reg->size);
->  
->  	crc32 = crc32_le(~0, buf, reg->size);
->  	if (crc32 != reg->checksum)
-> @@ -230,7 +230,7 @@ static int pci_epf_test_write(struct pci_epf_test *epf_test)
->  	get_random_bytes(buf, reg->size);
->  	reg->checksum = crc32_le(~0, buf, reg->size);
->  
-> -	memcpy(dst_addr, buf, reg->size);
-> +	memcpy_toio(dst_addr, buf, reg->size);
->  
->  	/*
->  	 * wait 1ms inorder for the write to complete. Without this delay L3
-> -- 
-> 2.9.5
+>  drivers/pci/controller/dwc/pci-imx6.c | 10 ++++++++--
+>  1 file changed, 8 insertions(+), 2 deletions(-)
 > 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 69f86234f7c0..54a29e441303 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -270,8 +270,14 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
+>  		unsigned int fsr, struct pt_regs *regs)
+>  {
+>  	unsigned long pc = instruction_pointer(regs);
+> -	unsigned long instr = *(unsigned long *)pc;
+> -	int reg = (instr >> 12) & 15;
+> +	unsigned long instr;
+> +	int reg;
+> +
+> +	if (user_mode(regs))
+> +		return 1;
+> +
+> +	instr = *(unsigned long *)pc;
+> +	reg = (instr >> 12) & 15;
+>  
+>  	/*
+>  	 * If the instruction being executed was a read,
