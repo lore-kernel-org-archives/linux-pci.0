@@ -2,109 +2,128 @@ Return-Path: <SRS0=XN0A=QS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02933C169C4
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 20:35:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECEE8C169C4
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 21:39:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C7B0A218D8
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 20:35:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2764218A1
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Feb 2019 21:39:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1549917316;
-	bh=3jDQwnRz/p/blpP5NJhVM/v/GNO91OWCupemhUCpwaE=;
-	h=From:Subject:To:Cc:References:Date:In-Reply-To:List-ID:From;
-	b=cYdIFXGN1DWbgBLAHpo8ppV7xmla7kxGpOL8y+7lhbeNr6wOU99HLulT2vvQxcvGT
-	 Xd51+/7aQR8P8YzqQiDVY2rMkT+T6Yfu6g7L75CHFjDg53IsCpPS5+/DqC8Mnkq8la
-	 cb6R3+Yj1Boyc1/0mwdPsKSJId5wm9jHj6QtNoqI=
+	s=default; t=1549921143;
+	bh=t07PDIPAIXwBNn2qAlVYcGhMOJCqHlnakdrVi8oEDtQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=RvXByRJYWad+Woy2rcBkeBeglV2AMiQ2oievFzYjoCrJseH4TyOs7WsH3br0nCOSc
+	 iilm7R22vkQFwE8KbvvmRLylbkcJSgjE5pfKRhz7af4zQfmylvT0mLTXxI4FFN20q2
+	 4DcW1V6wsrnvs8pTY4fMvTI4kWtPhb50FWR1t6IU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727138AbfBKUfQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Feb 2019 15:35:16 -0500
-Received: from mail-qk1-f194.google.com ([209.85.222.194]:41281 "EHLO
-        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726207AbfBKUfP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2019 15:35:15 -0500
-Received: by mail-qk1-f194.google.com with SMTP id u188so7305022qkh.8;
-        Mon, 11 Feb 2019 12:35:15 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:subject:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=NzkMLHlmh/2mUIvkidKlXjIkFy1c+76A+Xd7Q1175rQ=;
-        b=GZ5IliSVxhFVU0qk3/hSzopZlizwQa2O5Q2KY80oIgUVAoaEz2G8tR9gdJZPsTkfZ/
-         nLRXZv4kGrI6vgzzz1+0w9RJg+6c4RHWjrA+hlzX++WVII3sDEsaBkZLjkcYvXoSbdKa
-         PkcwakhJZvkCQXejUOSih5f7ZCLlOX70QXqNaSfD/SlahamxT7WUM8Us9GbBdVQVujH+
-         6+ZDWn4jEfHTHtWkI5xH/vnCngsl923sNn+yB0StJYNs0+6pfdYTcvM9JiEvNmeg/YZc
-         1b9ydd0DPJqvG98xbPDbgxMCw+7nnyylYufPbWvguM4PRq5k2Or56wZYBvzd4hpZY0sB
-         rBFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:subject:to:cc:references:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=NzkMLHlmh/2mUIvkidKlXjIkFy1c+76A+Xd7Q1175rQ=;
-        b=aHSZw+xk8P1H0AY6VG5Io2CFgozdRHF8vt0ypcERWQf/APeQxqnnLwOeKVZB0QS1N+
-         b5F2MLO4xXZIKRdOEZ1Mq+L2QuWyBM/sflDxOcNQiHBOMcDCiZ+WAyIqZzc3nPaFv49n
-         ZFmP3Wqj1USJ4Bzh+izC6E1LfdSYzlxNZnjKazHsnp7nbc7B8XTdqIGTlEfLFs79Ecst
-         5lHHsZksSiJpWOMOHm86Dv6+KwWAr+h1FCovLV6XixLkEytbu/jSJYHRGGluinwmfgxD
-         YgSg2+WpGiDA08amz9fWtv2kb8ZERktVUN0XMLJOPOF6PUiecDCBhSWQKPfnjY+xDCgD
-         Z38A==
-X-Gm-Message-State: AHQUAuY5sDbGvZuyK9/EA6F1QxRr+Cq8zewjhcHPH1pu8z7uLDc0LyFg
-        /l1KElRjT1Vy5ReRcm60hEA=
-X-Google-Smtp-Source: AHgI3IYcSQ64HD+iqxa0zU9DfKmDSQRTaZBHwxxwh/f4es0sNeCrO5e9bbXXAxWHY+fz43/e/BxANA==
-X-Received: by 2002:a37:c30d:: with SMTP id a13mr90085qkj.18.1549917314552;
-        Mon, 11 Feb 2019 12:35:14 -0800 (PST)
-Received: from ?IPv6:2001:4898:4070:71:3025:7b73:eee8:a16e? ([2001:4898:8010:1:f0f4:7b73:eee8:a16e])
-        by smtp.gmail.com with ESMTPSA id f3sm10861727qkj.24.2019.02.11.12.35.13
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 11 Feb 2019 12:35:13 -0800 (PST)
-From:   Sinan Kaya <Okaya@kernel.org>
-X-Google-Original-From: Sinan Kaya <okaya@kernel.org>
-Subject: Re: [PATCH v1 1/2] PCI: ATS: Add function to check ATS page aligned
- request status.
-To:     "Raj, Ashok" <ashok.raj@intel.com>
-Cc:     sathyanarayanan.kuppuswamy@linux.intel.com, bhelgaas@google.com,
-        joro@8bytes.org, dwmw2@infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        Jacob Pan <jacob.jun.pan@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>
-References: <cover.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <91bfae8b1d4b424219e3ce3c1fc03559c73f1ae7.1549478584.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <5d55e369-355f-b710-0594-03465aa985da@kernel.org>
- <a5a29eee-2e33-ba0c-67a6-69983fd0796d@linux.intel.com>
- <32ec3293-28ea-8f0f-f801-0370b4cf0453@kernel.org>
- <351a1a1d-2517-5021-e7cd-99d700e17f4c@linux.intel.com>
- <815f2621-fc28-bff4-c300-cce7514cfe71@kernel.org>
- <20190211191549.GA12090@otc-nc-03>
-Message-ID: <a2fcfb40-cc07-87fa-dc52-72c979d9900b@kernel.org>
-Date:   Mon, 11 Feb 2019 15:35:13 -0500
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.0
+        id S1727059AbfBKVjD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Feb 2019 16:39:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46688 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726228AbfBKVjC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Feb 2019 16:39:02 -0500
+Received: from localhost (unknown [64.22.249.253])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AC0662081B;
+        Mon, 11 Feb 2019 21:39:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1549921141;
+        bh=t07PDIPAIXwBNn2qAlVYcGhMOJCqHlnakdrVi8oEDtQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=n6hk4t+MTEDJiSs+9/9yxCGnVZ6yuEE0xeY8WOD2eNhYzvdPoNYCAdnbA319cUfwn
+         8L9zeBydJ7CbN3yQX2vuUVN3vTPhK75V+StVZ15/c0vDhgRJeB/q2N++Fj+4MOy+nL
+         V+zwoB6Rdr0myKru/6Jpcz0fQ9mwhkm5zqWmuWoQ=
+Date:   Mon, 11 Feb 2019 15:39:00 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Stefan Agner <stefan@agner.ch>
+Cc:     lorenzo.pieralisi@arm.com, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, l.stach@pengutronix.de,
+        tpiepho@impinj.com, leonard.crestez@nxp.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: imx6: limit DBI register length
+Message-ID: <20190211213900.GA247873@google.com>
+References: <14fafdf52d19feb9c926c312f4e3ba7ff8a4bad9.1549446867.git.stefan@agner.ch>
+ <119211b4f2e9ada55b86041d009656e49c2b5281.1549446867.git.stefan@agner.ch>
 MIME-Version: 1.0
-In-Reply-To: <20190211191549.GA12090@otc-nc-03>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <119211b4f2e9ada55b86041d009656e49c2b5281.1549446867.git.stefan@agner.ch>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2/11/2019 2:15 PM, Raj, Ashok wrote:
-> It seems rather odd we have to check for ATS version.
-> 
-> I always assumed unspecified bits (Reserved) must be 0. We only check
-> this if ATS is enabled, and this particular bit wasn't given away for another
-> feature.
-> 
-> Is it really required to check for ATS version before consuming this?
+On Wed, Feb 06, 2019 at 10:57:32AM +0100, Stefan Agner wrote:
+> Define the length of the DBI registers. This makes sure that
+> the kernel does not access registers beyond that point, avoiding
+> the following abort on a i.MX 6Quad:
+>   # cat /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
+>   [  100.021433] Unhandled fault: imprecise external abort (0x1406) at 0xb6ea7000
+>   ...
+>   [  100.056423] PC is at dw_pcie_read+0x50/0x84
+>   [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
+>   ...
 
-Reading again, it looks like version check is not necessary since it
-is implied by the presence of this bit per this paragraph.
+I assume this problem happens when using the pci_read_config() path or
+something similar?
 
-Page Aligned Request – If Set, indicates the Untranslated Address is 
-always aligned to a 4096 byte boundary.  Setting this bit is 
-recommended.  This bit permits software to distinguish between 
-implementations compatible with earlier version of this specification 
-that permitted a requester to supply anything in bits [11:2].
+Could this be solved using pci_dev.cfg_size instead of building a new
+dwc-specific mechanism?  There are some quirks that set dev->cfg_size
+to keep from reading past certain points in config space, e.g.,
+quirk_citrine(), quirk_nfp6000().
+
+I'm not necessarily opposed to doing it in dwc, but maybe there's some
+advantage in reducing the number of ways of doing the same thing.
+
+> Signed-off-by: Stefan Agner <stefan@agner.ch>
+> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+> Changes in v3:
+> - Rebase on pci/dwc
+> Changes in v4:
+> - Rebase on pci/dwc
+> Changes in v5:
+> - Rebased ontop of pci/dwc
+> - Use DBI length of 0x200
+> 
+>  drivers/pci/controller/dwc/pci-imx6.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index c1d434ba3642..1ef7be1232f3 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -55,6 +55,7 @@ enum imx6_pcie_variants {
+>  struct imx6_pcie_drvdata {
+>  	enum imx6_pcie_variants variant;
+>  	u32 flags;
+> +	int dbi_length;
+>  };
+>  
+>  struct imx6_pcie {
+> @@ -1087,6 +1088,8 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  		break;
+>  	}
+>  
+> +	pci->dbi_length = imx6_pcie->drvdata->dbi_length;
+> +
+>  	/* Grab turnoff reset */
+>  	imx6_pcie->turnoff_reset = devm_reset_control_get_optional_exclusive(dev, "turnoff");
+>  	if (IS_ERR(imx6_pcie->turnoff_reset)) {
+> @@ -1170,6 +1173,7 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+>  		.variant = IMX6Q,
+>  		.flags = IMX6_PCIE_FLAG_IMX6_PHY |
+>  			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE,
+> +		.dbi_length = 0x200,
+>  	},
+>  	[IMX6SX] = {
+>  		.variant = IMX6SX,
+> -- 
+> 2.20.1
+> 
