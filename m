@@ -2,103 +2,128 @@ Return-Path: <SRS0=P0ok=QT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4253BC282C4
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 08:30:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AC86C282C4
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 08:55:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A4CE218AD
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 08:30:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F0632080A
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 08:55:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728274AbfBLIae (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Feb 2019 03:30:34 -0500
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:47383 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728218AbfBLIae (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2019 03:30:34 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id AB90C30000CD5;
-        Tue, 12 Feb 2019 09:30:31 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 621403187A; Tue, 12 Feb 2019 09:30:31 +0100 (CET)
-Date:   Tue, 12 Feb 2019 09:30:31 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Alex_Gagniuc@Dellteam.com
-Cc:     mr.nuke.me@gmail.com, bhelgaas@google.com, Austin.Bolen@dell.com,
-        keith.busch@intel.com, Shyam.Iyer@dell.com, gustavo@embeddedor.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: pciehp: Do not turn off slot if presence comes up
- after link
-Message-ID: <20190212083031.2no7mzn5xug7nba3@wunner.de>
-References: <20190205210701.25387-1-mr.nuke.me@gmail.com>
- <20190209115849.244u67h7wmn3eb7o@wunner.de>
- <52afa1c45f684dbda6a8771b65583a22@ausx13mps321.AMER.DELL.COM>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <52afa1c45f684dbda6a8771b65583a22@ausx13mps321.AMER.DELL.COM>
-User-Agent: NeoMutt/20170113 (1.7.2)
+        id S1728461AbfBLIzG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Feb 2019 03:55:06 -0500
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:38379 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728086AbfBLIzG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2019 03:55:06 -0500
+Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1gtTqC-0004fM-KI; Tue, 12 Feb 2019 09:54:56 +0100
+Message-ID: <1549961694.2546.18.camel@pengutronix.de>
+Subject: Re: [PATCH 2/2] PCI: imx6: limit DBI register length
+From:   Lucas Stach <l.stach@pengutronix.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>, Stefan Agner <stefan@agner.ch>
+Cc:     lorenzo.pieralisi@arm.com, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, tpiepho@impinj.com,
+        leonard.crestez@nxp.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date:   Tue, 12 Feb 2019 09:54:54 +0100
+In-Reply-To: <20190211213900.GA247873@google.com>
+References: <14fafdf52d19feb9c926c312f4e3ba7ff8a4bad9.1549446867.git.stefan@agner.ch>
+         <119211b4f2e9ada55b86041d009656e49c2b5281.1549446867.git.stefan@agner.ch>
+         <20190211213900.GA247873@google.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.22.6-1+deb9u1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 11, 2019 at 11:48:12PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> On 2/9/19 5:58 AM, Lukas Wunner wrote:
-> ECN [1] was approved last November, so it's normative spec text. Sorry 
-> if the Ukranians didn't get ahold of it yet. I'll try to explain the delta.
-> There's an in-band PD supported/disable set of bits. If 'supported' is 
-> set, then you can set 'disable', which removes the 'logical OR" and now 
-> PD is only out-of-band presence.
+Hi Bjorn,
 
-I see, thanks a lot for relaying this information.  The PCI SIG
-should probably consider granting access to specs to open source
-developers to ease adoption of new features in Linux et al.
-
-
-> > Table 4-14 in sec 4.2.6 is also important because it shows the difference
-> > between Link Up and in-band presence.
+Am Montag, den 11.02.2019, 15:39 -0600 schrieb Bjorn Helgaas:
+> On Wed, Feb 06, 2019 at 10:57:32AM +0100, Stefan Agner wrote:
+> > Define the length of the DBI registers. This makes sure that
+> > the kernel does not access registers beyond that point, avoiding
+> > the following abort on a i.MX 6Quad:
+> >   # cat /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
+> >   [  100.021433] Unhandled fault: imprecise external abort (0x1406) at 0xb6ea7000
+> >   ...
+> >   [  100.056423] PC is at dw_pcie_read+0x50/0x84
+> >   [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
+> >   ...
 > 
-> So, we'd expect PD to come up at the same time or before DLL?
+> I assume this problem happens when using the pci_read_config() path or
+> something similar?
+> 
+> Could this be solved using pci_dev.cfg_size instead of building a new
+> dwc-specific mechanism?  There are some quirks that set dev->cfg_size
+> to keep from reading past certain points in config space, e.g.,
+> quirk_citrine(), quirk_nfp6000().
+> 
+> I'm not necessarily opposed to doing it in dwc, but maybe there's some
+> advantage in reducing the number of ways of doing the same thing.
 
-Per table 4-14 and figure 4-23 (immediately below the table) in r4.0,
-PDC ought to be signaled before DLLSC.  As said, Linux can handle PDC
-after DLLSC if they're not too far apart (100 ms, see pcie_wait_for_link()).
+This actually started out as a quirk changing the cfg size. But the
+valid config space size seems to be different between root ports that
+share the same (broken) device ID (Synopsys abcd), so I doubt that this
+would be easier and/or any cleaner to implement as a quirk.
 
+Regards,
+Lucas
 
-> I'd like a generic solution. I suspect supporting 'in-band PD disabled' 
-> and quirking for that would be a saner way to do things. If we support 
-> it, then we need to handle PDSC after DLLSC scenarios anyway.
-
-I agree, having support for this new ECN would be great.
-
-If you look at struct controller in drivers/pci/hotplug/pciehp.h,
-there's a section labelled /* capabilities and quirks */.  An idea
-would be to add an unsigned int there to indicate whether in-band
-presence is disabled.  An alternative would be to add a flag to
-struct pci_dev.
-
-Instead of modifying the logic in pciehp_handle_presence_or_link_change(),
-you could amend pcie_wait_for_link() to poll PDS until it's set, in
-addition to DLLLA.  The rationale would be that although the link is up,
-the hot-added device cannot really be considered accessible until PDS
-is also set.  Unfortunately we cannot do this for all devices because
-(as I've said before), some broken devices hardwire PDS to zero.  But
-it should be safe to constrain it to those which can disable in-band
-presence.
-
-Be mindful however that pcie_wait_for_link() is also called from the
-DPC driver.  Keith should be able to judge whether a change to that
-function breaks DPC.
-
-You'll probably also need to add code to disable in-band presence if
-that is supported, either in pcie_init() in pciehp_hpc.c or in generic
-PCI code.
-
-Thanks,
-
-Lukas
+> > Signed-off-by: Stefan Agner <stefan@agner.ch>
+> > > > Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+> > ---
+> > Changes in v3:
+> > - Rebase on pci/dwc
+> > Changes in v4:
+> > - Rebase on pci/dwc
+> > Changes in v5:
+> > - Rebased ontop of pci/dwc
+> > - Use DBI length of 0x200
+> > 
+> >  drivers/pci/controller/dwc/pci-imx6.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> > index c1d434ba3642..1ef7be1232f3 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -55,6 +55,7 @@ enum imx6_pcie_variants {
+> >  struct imx6_pcie_drvdata {
+> > > >  	enum imx6_pcie_variants variant;
+> > > >  	u32 flags;
+> > > > +	int dbi_length;
+> >  };
+> >  
+> >  struct imx6_pcie {
+> > @@ -1087,6 +1088,8 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+> > > >  		break;
+> > > >  	}
+> >  
+> > > > +	pci->dbi_length = imx6_pcie->drvdata->dbi_length;
+> > +
+> > > >  	/* Grab turnoff reset */
+> > > >  	imx6_pcie->turnoff_reset = devm_reset_control_get_optional_exclusive(dev, "turnoff");
+> > > >  	if (IS_ERR(imx6_pcie->turnoff_reset)) {
+> > @@ -1170,6 +1173,7 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+> > > >  		.variant = IMX6Q,
+> > > >  		.flags = IMX6_PCIE_FLAG_IMX6_PHY |
+> > > >  			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE,
+> > > > +		.dbi_length = 0x200,
+> > > >  	},
+> > > >  	[IMX6SX] = {
+> > > >  		.variant = IMX6SX,
+> > -- 
+> > 2.20.1
+> > 
