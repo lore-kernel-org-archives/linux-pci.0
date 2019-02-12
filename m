@@ -2,120 +2,119 @@ Return-Path: <SRS0=P0ok=QT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D909BC282D7
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 01:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBC08C4151A
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 02:46:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A28592186A
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 01:51:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e1JnCf7w"
+	by mail.kernel.org (Postfix) with ESMTP id A0C72218A3
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 02:46:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727341AbfBLBv1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Feb 2019 20:51:27 -0500
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:42701 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726852AbfBLBvZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2019 20:51:25 -0500
-Received: by mail-pg1-f194.google.com with SMTP id d72so444549pga.9;
-        Mon, 11 Feb 2019 17:51:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=XhYeWLJELbBbIY+70J27USkrt28o/PdkHlXxy2828Aw=;
-        b=e1JnCf7wRHTPnhwqCvYmVDpF+ygXKWJ2X9sU1PuTUICG57IYl/wersw6LE1ZZfRoSP
-         z0vNsZmaF0uvzQlUM2wVJrDWPDDYEAiw1hsgZqeA2Jz48FjbGU06Mf5XA3BLgaJYfwyU
-         O4qKgpjJY21YjRjaIDHYPgE5rnbltPt3d1eUj8DFG22XmG1JDUkpfU1+rw3UrZLDyVub
-         FFc5dKMDXIYwWazjMLiipCd4n/ZqGlUGo1GZAg0F9mdlhAdkVPL0iHa5AJ8FENM70Yuq
-         Cg7yl6zbTGWWU7EFD9lvhVC2wAfMAfG5rp62ik/Q9AIkqWMG3jdp4mDthl589sdp9N8O
-         a37g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=XhYeWLJELbBbIY+70J27USkrt28o/PdkHlXxy2828Aw=;
-        b=d88LZT8MggwxXidY7VJ+rVbJ3h9befDwtkP1zthZIZwPqFho8wmxzUP8wy1a5RYwB5
-         agcJLPcAcvEp7dfHcoIbK7gYBE2QzqH+U+IbH0XFvjXKWNd7C+XadbWqqk1/0kOuHNEl
-         ccAWCYC0KhA4LCAy48S0pnwSGXYJhEV5zYy2e19zadKoX21iJ7v8S2rBP1HlUEAS8HFa
-         hWfYtMQEw4HkbBHmtQnbhs2PlGZjEan1kenOwfUSxU6+ptxxAbvl8paQ2PDAfvTo2X5S
-         qXohO7rC4LItmUmuJN4UpD3zhwx0xfVSUPCx5h/gPQ9AHGzaVMIBvQHuKuVNbfG3TgN4
-         Dhzw==
-X-Gm-Message-State: AHQUAuYutpVJ1hobhz0a2f5k0kMH1TK7TUC+P4bs+X2DzhRLDyHUEb/Q
-        DHQxoitCkPuoeV+b8Tnd5Pg=
-X-Google-Smtp-Source: AHgI3IbTde5HeivFm3ljicLP4d2ZWPVCAiISH6/qQT+zjCtH9wnU2D75DjAI9R26IehpTVqfat5T6Q==
-X-Received: by 2002:a63:2bc4:: with SMTP id r187mr1282560pgr.306.1549936284040;
-        Mon, 11 Feb 2019 17:51:24 -0800 (PST)
-Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id h64sm17146941pfc.142.2019.02.11.17.51.22
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 11 Feb 2019 17:51:23 -0800 (PST)
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
-        devicetree@vger.kernel.org
-Subject: [PATCH 1/2] dt-bindings: imx6q-pcie: Add "pcie_aux" clock for imx8mq
-Date:   Mon, 11 Feb 2019 17:51:07 -0800
-Message-Id: <20190212015108.16952-2-andrew.smirnov@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190212015108.16952-1-andrew.smirnov@gmail.com>
-References: <20190212015108.16952-1-andrew.smirnov@gmail.com>
+        id S1726365AbfBLCqK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Feb 2019 21:46:10 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:51110 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726207AbfBLCqK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Feb 2019 21:46:10 -0500
+Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 7083C9CA701F09DE79C5;
+        Tue, 12 Feb 2019 10:46:07 +0800 (CST)
+Received: from [127.0.0.1] (10.63.141.25) by DGGEMS412-HUB.china.huawei.com
+ (10.3.19.212) with Microsoft SMTP Server id 14.3.408.0; Tue, 12 Feb 2019
+ 10:46:00 +0800
+Subject: Re: [PATCH RESEND] PCI/DPC: Fix print AER status in DPC event
+ handling
+To:     Keith Busch <keith.busch@intel.com>
+References: <1549868579-125090-1-git-send-email-liudongdong3@huawei.com>
+ <20190211154615.GB4525@localhost.localdomain>
+CC:     <helgaas@kernel.org>, <okaya@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>,
+        <stable@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+From:   Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <93ab1e2f-4813-70d0-0601-39876d845c69@huawei.com>
+Date:   Tue, 12 Feb 2019 10:46:00 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.4.0
 MIME-Version: 1.0
+In-Reply-To: <20190211154615.GB4525@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.63.141.25]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a binding for an extra clock required on i.MX8MQ.
+Hi Keith
 
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Chris Healy <cphealy@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-imx@nxp.com
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: Rob Herring <robh@kernel.org>
-Cc: devicetree@vger.kernel.org
----
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt | 4 ++++
- 1 file changed, 4 insertions(+)
+Many thanks for your review.
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 920ca93870a8..933d98328e07 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -55,6 +55,10 @@ Additional required properties for imx7d-pcie and imx8mq-pcie:
- 	       - "apps"
- 	       - "turnoff"
- 
-+Additional required properties for imx8mq-pcie:
-+- clock-names: Must include the following additional entries:
-+	- "pcie_aux"
-+
- Example:
- 
- 	pcie@01000000 {
--- 
-2.20.1
+在 2019/2/11 23:46, Keith Busch 写道:
+> On Mon, Feb 11, 2019 at 03:02:59PM +0800, Dongdong Liu wrote:
+>> +static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+>> +					  struct aer_err_info *info)
+>> +{
+>> +	int pos = dev->aer_cap;
+>> +	u32 status, mask, sev;
+>> +
+>> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
+>> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, &mask);
+>> +	status &= ~mask;
+>> +	if (!status)
+>> +		return 0;
+>> +
+>> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
+>> +	status &= sev;
+>> +	if (status)
+>> +		info->severity = AER_FATAL;
+>> +	else
+>> +		info->severity = AER_NONFATAL;
+>> +
+>> +	return 1;
+>> +}
+>> +
+>
+> You can set info->severity to AER_FATAL since that's the only type we
+> enable DPC triggering.
+
+DPC Trigger Enable
+01b-DPC is enabled and is triggered when the Downstream Port detects
+an unmasked uncorrectable error or when the Downstream Port receives an
+ERR_FATAL Message.
+
+DPC Trigger Reason
+00b-DPC was triggered due to an unmasked uncorrectable error
+reason == 0, due to detect an unmasked uncorrectable error, include non-fatal
+and fatal error, so need to get the severity.
+
+>
+>>  static irqreturn_t dpc_handler(int irq, void *context)
+>>  {
+>>  	struct aer_err_info info;
+>> @@ -229,9 +251,12 @@ static irqreturn_t dpc_handler(int irq, void *context)
+>>  	/* show RP PIO error detail information */
+>>  	if (dpc->rp_extensions && reason == 3 && ext_reason == 0)
+>>  		dpc_process_rp_pio_error(dpc);
+>> -	else if (reason == 0 && aer_get_device_error_info(pdev, &info)) {
+>> +	else if (reason == 0 &&
+>> +		 dpc_get_aer_uncorrect_severity(pdev, &info) &&
+>> +		 aer_get_device_error_info(pdev, &info)) {
+>>  		aer_print_error(pdev, &info);
+>>  		pci_cleanup_aer_uncorrect_error_status(pdev);
+>> +		pci_aer_clear_fatal_status(pdev);
+>
+> Good catch here, but let's clear the pending bits with a single call
+> to pci_cleanup_aer_error_status_regs() rather than NONFATAL and
+> FATAL separately.
+
+pci_cleanup_aer_error_status_regs() also clear correctable error status.
+seems not good enough as reason == 0 means detect an unmasked uncorrectable error.
+
+Thanks,
+Dongdong
+>
+> .
+>
 
