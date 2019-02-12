@@ -3,128 +3,94 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 158D1C282C4
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 11:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70CAFC282C4
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 11:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA52B2084E
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 11:17:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E48C2080F
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 11:33:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728832AbfBLLR6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Feb 2019 06:17:58 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:37432 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728566AbfBLLR5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Feb 2019 06:17:57 -0500
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 040F95858E;
-        Tue, 12 Feb 2019 11:17:57 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-25.pek2.redhat.com [10.72.8.25])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A171716929;
-        Tue, 12 Feb 2019 11:17:46 +0000 (UTC)
-Date:   Tue, 12 Feb 2019 19:17:40 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] genirq/affinity: allow driver to setup managed IRQ's
- affinity
-Message-ID: <20190212111738.GE24251@ming.t460p>
-References: <20190125095347.17950-1-ming.lei@redhat.com>
- <20190125095347.17950-3-ming.lei@redhat.com>
- <alpine.DEB.2.21.1902101723400.8784@nanos.tec.linutronix.de>
- <20190211035358.GA8638@ming.t460p>
- <20190211143950.GA151039@google.com>
- <alpine.DEB.2.21.1902112322470.1654@nanos.tec.linutronix.de>
+        id S1726044AbfBLLdK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Feb 2019 06:33:10 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:36160 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725916AbfBLLdK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Feb 2019 06:33:10 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 21FE280D;
+        Tue, 12 Feb 2019 03:33:10 -0800 (PST)
+Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7966D3F589;
+        Tue, 12 Feb 2019 03:33:08 -0800 (PST)
+Date:   Tue, 12 Feb 2019 11:33:06 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Lucas Stach <l.stach@pengutronix.de>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Stefan Agner <stefan@agner.ch>,
+        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        tpiepho@impinj.com, leonard.crestez@nxp.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: imx6: limit DBI register length
+Message-ID: <20190212113257.GA23658@red-moon>
+References: <14fafdf52d19feb9c926c312f4e3ba7ff8a4bad9.1549446867.git.stefan@agner.ch>
+ <119211b4f2e9ada55b86041d009656e49c2b5281.1549446867.git.stefan@agner.ch>
+ <20190211213900.GA247873@google.com>
+ <1549961694.2546.18.camel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.1902112322470.1654@nanos.tec.linutronix.de>
-User-Agent: Mutt/1.9.1 (2017-09-22)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Tue, 12 Feb 2019 11:17:57 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1549961694.2546.18.camel@pengutronix.de>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
-
-On Mon, Feb 11, 2019 at 11:38:07PM +0100, Thomas Gleixner wrote:
-> Ming,
+On Tue, Feb 12, 2019 at 09:54:54AM +0100, Lucas Stach wrote:
+> Hi Bjorn,
 > 
-> On Mon, 11 Feb 2019, Bjorn Helgaas wrote:
-> 
-> > On Mon, Feb 11, 2019 at 11:54:00AM +0800, Ming Lei wrote:
-> > > On Sun, Feb 10, 2019 at 05:30:41PM +0100, Thomas Gleixner wrote:
-> > > > On Fri, 25 Jan 2019, Ming Lei wrote:
-> > > > 
-> > > > > This patch introduces callback of .setup_affinity into 'struct
-> > > > > irq_affinity', so that:
-> > > > 
-> > > > Please see Documentation/process/submitting-patches.rst. Search for 'This
-> > > > patch' ....
-> > > 
-> > > Sorry for that, because I am not a native English speaker and it looks a bit
-> > > difficult for me to understand the subtle difference.
-> 
-> Sorry I was a bit terse.
-> 
-> > I think Thomas is saying that instead of "This patch introduces
-> > callback ...", you could say "Introduce callback of ...".
+> Am Montag, den 11.02.2019, 15:39 -0600 schrieb Bjorn Helgaas:
+> > On Wed, Feb 06, 2019 at 10:57:32AM +0100, Stefan Agner wrote:
+> > > Define the length of the DBI registers. This makes sure that
+> > > the kernel does not access registers beyond that point, avoiding
+> > > the following abort on a i.MX 6Quad:
+> > >   # cat /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
+> > >   [  100.021433] Unhandled fault: imprecise external abort (0x1406) at 0xb6ea7000
+> > >   ...
+> > >   [  100.056423] PC is at dw_pcie_read+0x50/0x84
+> > >   [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
+> > >   ...
 > > 
-> > The changelog is *part* of the patch, so the context is obvious and
-> > there's no need to include the words "This patch".
+> > I assume this problem happens when using the pci_read_config() path or
+> > something similar?
 > > 
-> > I make the same changes to patches I receive.  In fact, I would go
-> > even further and say "Add callback .setup_affinity() ..." because "add"
-> > means the same as "introduce" but is shorter and simpler.
+> > Could this be solved using pci_dev.cfg_size instead of building a new
+> > dwc-specific mechanism?  There are some quirks that set dev->cfg_size
+> > to keep from reading past certain points in config space, e.g.,
+> > quirk_citrine(), quirk_nfp6000().
+> > 
+> > I'm not necessarily opposed to doing it in dwc, but maybe there's some
+> > advantage in reducing the number of ways of doing the same thing.
 > 
-> Thanks for the explanation, Bjorn!
-> 
-> There is another point here. It's not only the 'This patch introduces ...'
-> part. It's also good practice to structure the changelog so it provides
-> context and reasoning first and then tells what the change is, e.g.:
-> 
->    The current handling of multiple interrupt sets in the core interrupt
->    affinity logic, requires the driver to do .......  This is necessary
->    because ....
-> 
->    This handling should be in the core code, but the core implementation
->    has no way to recompute the interrupt sets for a given number of
->    vectors.
-> 
->    Add an optional callback to struct affd, which lets the driver recompute
->    the interrupt set before the interrupt affinity spreading takes place.
-> 
-> The first paragraph provides context, i.e. the status quo, The second
-> paragraph provides reasoning what is missing and the last one tells what's
-> done to solve it.
-> 
-> That's pretty much the same for all changelogs, even if you fix a bug. Just
-> in the bug case, the second paragraph describes the details of the bug and
-> the possible consequences.
-> 
-> You really need to look at the changelog as a stand alone information
-> source. That's important when you look at a commit as an outsider or even
-> if you look at your own patch 6 month down the road when you already paged
-> out all the details.
-> 
-> Hope that clarifies it.
+> This actually started out as a quirk changing the cfg size. But the
+> valid config space size seems to be different between root ports that
+> share the same (broken) device ID (Synopsys abcd), so I doubt that this
+> would be easier and/or any cleaner to implement as a quirk.
 
-Your description about how to write changelog is really helpful and useful
-for me, thanks!
+There are two things here: matching the root port and setting
+the cfg size limit.
 
-Maybe you can add it into Documentation/SubmittingPatches, so that lots
-of people can benefit from the guide.
+I agree with Bjorn that the cfg size limit, given that it is
+implemented in core code should be leveraged instead of reinventing
+the wheel to solve the same problem in driver specific code.
 
+In the quirk code I do not think it is that complicated to retrieve
+the IMX variant to apply the quirk accordingly on the pci_dev.
+
+Please let me know if that's feasible so that I can drop the
+patches from the branch and update it with a new version.
 
 Thanks,
-Ming
+Lorenzo
