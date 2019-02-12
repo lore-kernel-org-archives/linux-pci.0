@@ -2,98 +2,103 @@ Return-Path: <SRS0=P0ok=QT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB714C169C4
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 03:12:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4253BC282C4
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 08:30:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A4673217FA
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 03:12:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A4CE218AD
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 08:30:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726699AbfBLDM4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Feb 2019 22:12:56 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:28853 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726756AbfBLDMz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Feb 2019 22:12:55 -0500
-X-UUID: aada839746f04a37a5fa680b2d52b2c8-20190212
-X-UUID: aada839746f04a37a5fa680b2d52b2c8-20190212
-Received: from mtkcas36.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
-        (envelope-from <honghui.zhang@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 1132903972; Tue, 12 Feb 2019 11:12:46 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N2.mediatek.inc
- (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Tue, 12 Feb
- 2019 11:12:44 +0800
-Received: from [10.17.3.153] (10.17.3.153) by MTKCAS32.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Tue, 12 Feb 2019 11:12:44 +0800
-Message-ID: <1549941164.4980.64.camel@mhfsdcap03>
-Subject: Re: [RFC PATCH] PCI/portdrv: Support for subtractive decode bridge
-From:   Honghui Zhang <honghui.zhang@mediatek.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <youlin.pei@mediatek.com>, <lorenzo.pieralisi@arm.com>,
-        <poza@codeaurora.org>, <fred@fredlawl.com>,
-        <linux-pci@vger.kernel.org>, <rafael.j.wysocki@intel.com>,
-        <linux-kernel@vger.kernel.org>, <jianjun.wang@mediatek.com>,
-        <ryder.lee@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>
-Date:   Tue, 12 Feb 2019 11:12:44 +0800
-In-Reply-To: <20190207195230.GJ7268@google.com>
-References: <1544758829-10327-1-git-send-email-honghui.zhang@mediatek.com>
-         <20190207151816.GI7268@google.com> <20190207195230.GJ7268@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        id S1728274AbfBLIae (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Feb 2019 03:30:34 -0500
+Received: from bmailout1.hostsharing.net ([83.223.95.100]:47383 "EHLO
+        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728218AbfBLIae (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2019 03:30:34 -0500
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout1.hostsharing.net (Postfix) with ESMTPS id AB90C30000CD5;
+        Tue, 12 Feb 2019 09:30:31 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 621403187A; Tue, 12 Feb 2019 09:30:31 +0100 (CET)
+Date:   Tue, 12 Feb 2019 09:30:31 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Alex_Gagniuc@Dellteam.com
+Cc:     mr.nuke.me@gmail.com, bhelgaas@google.com, Austin.Bolen@dell.com,
+        keith.busch@intel.com, Shyam.Iyer@dell.com, gustavo@embeddedor.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: pciehp: Do not turn off slot if presence comes up
+ after link
+Message-ID: <20190212083031.2no7mzn5xug7nba3@wunner.de>
+References: <20190205210701.25387-1-mr.nuke.me@gmail.com>
+ <20190209115849.244u67h7wmn3eb7o@wunner.de>
+ <52afa1c45f684dbda6a8771b65583a22@ausx13mps321.AMER.DELL.COM>
 MIME-Version: 1.0
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <52afa1c45f684dbda6a8771b65583a22@ausx13mps321.AMER.DELL.COM>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2019-02-07 at 13:52 -0600, Bjorn Helgaas wrote:
-> On Thu, Feb 07, 2019 at 09:18:16AM -0600, Bjorn Helgaas wrote:
-> > On Fri, Dec 14, 2018 at 11:40:29AM +0800, honghui.zhang@mediatek.com wrote:
-> > > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > > 
-> > > The Class Code for subtractive decode PCI-to-PCI bridge is 060401h,
-> > > change the class_mask values to make portdrv support this type bridge.
-> > 
-> > I assume you have a Root Port or Switch Port that supports subtractive
-> > decode?  I'm trying to understand how such a device would work.
-> > 
-> > Out of curiosity, can you show the "lspci -vv" output for the device
-> > and the downstream devices of interest?
+On Mon, Feb 11, 2019 at 11:48:12PM +0000, Alex_Gagniuc@Dellteam.com wrote:
+> On 2/9/19 5:58 AM, Lukas Wunner wrote:
+> ECN [1] was approved last November, so it's normative spec text. Sorry 
+> if the Ukranians didn't get ahold of it yet. I'll try to explain the delta.
+> There's an in-band PD supported/disable set of bits. If 'supported' is 
+> set, then you can set 'disable', which removes the 'logical OR" and now 
+> PD is only out-of-band presence.
+
+I see, thanks a lot for relaying this information.  The PCI SIG
+should probably consider granting access to specs to open source
+developers to ease adoption of new features in Linux et al.
+
+
+> > Table 4-14 in sec 4.2.6 is also important because it shows the difference
+> > between Link Up and in-band presence.
 > 
-> Actually, since subtractive decode has to do with how the bridge
-> interacts with its *peers*, what would be interesting is the host
-> bridge window information from ACPI _CRS or DT and the lspci info for
-> everything under that host bridge.
-> 
-> Assuming we're talking about a Root Port, I guess that would mean
-> anything inside the host bridge windows but outside the positive
-> decode windows (the normal PCI-PCI bridge apertures in the Root Ports)
-> would be claimed by the subtractive decode Root Port?
+> So, we'd expect PD to come up at the same time or before DLL?
 
-Per my understanding, mediatek's Root Port does not claim anything, or
-it's fine to assign no resource which is dedicated to this bridge. Those
-information could be got through lspci output which is attached in the
-last mail. All the resource it claimed is from the subordinate device,
-bridge itself does not need any special resource.
-> 
-> I guess you would want this because this path ultimately leads to an
-> ISA or similar bus where you don't know what resources the device
-> actually consumes?
-> 
-I was not get to that far, I just want to start a discussion about this,
-since spec does not forbidden subtractive bridge to support port
-service.
-
-Thanks.
-
-> Bjorn
+Per table 4-14 and figure 4-23 (immediately below the table) in r4.0,
+PDC ought to be signaled before DLLSC.  As said, Linux can handle PDC
+after DLLSC if they're not too far apart (100 ms, see pcie_wait_for_link()).
 
 
+> I'd like a generic solution. I suspect supporting 'in-band PD disabled' 
+> and quirking for that would be a saner way to do things. If we support 
+> it, then we need to handle PDSC after DLLSC scenarios anyway.
+
+I agree, having support for this new ECN would be great.
+
+If you look at struct controller in drivers/pci/hotplug/pciehp.h,
+there's a section labelled /* capabilities and quirks */.  An idea
+would be to add an unsigned int there to indicate whether in-band
+presence is disabled.  An alternative would be to add a flag to
+struct pci_dev.
+
+Instead of modifying the logic in pciehp_handle_presence_or_link_change(),
+you could amend pcie_wait_for_link() to poll PDS until it's set, in
+addition to DLLLA.  The rationale would be that although the link is up,
+the hot-added device cannot really be considered accessible until PDS
+is also set.  Unfortunately we cannot do this for all devices because
+(as I've said before), some broken devices hardwire PDS to zero.  But
+it should be safe to constrain it to those which can disable in-band
+presence.
+
+Be mindful however that pcie_wait_for_link() is also called from the
+DPC driver.  Keith should be able to judge whether a change to that
+function breaks DPC.
+
+You'll probably also need to add code to disable in-band presence if
+that is supported, either in pcie_init() in pciehp_hpc.c or in generic
+PCI code.
+
+Thanks,
+
+Lukas
