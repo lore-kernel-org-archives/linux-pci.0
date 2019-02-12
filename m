@@ -2,67 +2,129 @@ Return-Path: <SRS0=P0ok=QT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45A53C282C4
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 10:37:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 158D1C282C4
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 11:17:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1671D21901
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 10:37:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA52B2084E
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 11:17:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727976AbfBLKhC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Feb 2019 05:37:02 -0500
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:48015 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726756AbfBLKhC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2019 05:37:02 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 5013A300002BC;
-        Tue, 12 Feb 2019 11:37:00 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 2C0C757528; Tue, 12 Feb 2019 11:37:00 +0100 (CET)
-Date:   Tue, 12 Feb 2019 11:37:00 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Alex_Gagniuc@Dellteam.com
-Cc:     mr.nuke.me@gmail.com, bhelgaas@google.com, Austin.Bolen@dell.com,
-        keith.busch@intel.com, Shyam.Iyer@dell.com, gustavo@embeddedor.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: pciehp: Do not turn off slot if presence comes up
- after link
-Message-ID: <20190212103700.iqhprfelukalbhdl@wunner.de>
-References: <20190205210701.25387-1-mr.nuke.me@gmail.com>
- <20190209115849.244u67h7wmn3eb7o@wunner.de>
- <52afa1c45f684dbda6a8771b65583a22@ausx13mps321.AMER.DELL.COM>
- <20190212083031.2no7mzn5xug7nba3@wunner.de>
+        id S1728832AbfBLLR6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Feb 2019 06:17:58 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:37432 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728566AbfBLLR5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Feb 2019 06:17:57 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 040F95858E;
+        Tue, 12 Feb 2019 11:17:57 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-25.pek2.redhat.com [10.72.8.25])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A171716929;
+        Tue, 12 Feb 2019 11:17:46 +0000 (UTC)
+Date:   Tue, 12 Feb 2019 19:17:40 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/5] genirq/affinity: allow driver to setup managed IRQ's
+ affinity
+Message-ID: <20190212111738.GE24251@ming.t460p>
+References: <20190125095347.17950-1-ming.lei@redhat.com>
+ <20190125095347.17950-3-ming.lei@redhat.com>
+ <alpine.DEB.2.21.1902101723400.8784@nanos.tec.linutronix.de>
+ <20190211035358.GA8638@ming.t460p>
+ <20190211143950.GA151039@google.com>
+ <alpine.DEB.2.21.1902112322470.1654@nanos.tec.linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190212083031.2no7mzn5xug7nba3@wunner.de>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <alpine.DEB.2.21.1902112322470.1654@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.9.1 (2017-09-22)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Tue, 12 Feb 2019 11:17:57 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Feb 12, 2019 at 09:30:31AM +0100, Lukas Wunner wrote:
-> Instead of modifying the logic in pciehp_handle_presence_or_link_change(),
-> you could amend pcie_wait_for_link() to poll PDS until it's set, in
-> addition to DLLLA.  The rationale would be that although the link is up,
-> the hot-added device cannot really be considered accessible until PDS
-> is also set.  Unfortunately we cannot do this for all devices because
-> (as I've said before), some broken devices hardwire PDS to zero.  But
-> it should be safe to constrain it to those which can disable in-band
-> presence.
+Hi Thomas,
 
-An alternative approach would of course be to only enable one of PDC or
-DLLSC events if in-band presence is disabled.  In the case of DLLSC,
-you'd also need to modify pciehp_reset_slot() in addition to
-pcie_enable_notification().
+On Mon, Feb 11, 2019 at 11:38:07PM +0100, Thomas Gleixner wrote:
+> Ming,
+> 
+> On Mon, 11 Feb 2019, Bjorn Helgaas wrote:
+> 
+> > On Mon, Feb 11, 2019 at 11:54:00AM +0800, Ming Lei wrote:
+> > > On Sun, Feb 10, 2019 at 05:30:41PM +0100, Thomas Gleixner wrote:
+> > > > On Fri, 25 Jan 2019, Ming Lei wrote:
+> > > > 
+> > > > > This patch introduces callback of .setup_affinity into 'struct
+> > > > > irq_affinity', so that:
+> > > > 
+> > > > Please see Documentation/process/submitting-patches.rst. Search for 'This
+> > > > patch' ....
+> > > 
+> > > Sorry for that, because I am not a native English speaker and it looks a bit
+> > > difficult for me to understand the subtle difference.
+> 
+> Sorry I was a bit terse.
+> 
+> > I think Thomas is saying that instead of "This patch introduces
+> > callback ...", you could say "Introduce callback of ...".
+> > 
+> > The changelog is *part* of the patch, so the context is obvious and
+> > there's no need to include the words "This patch".
+> > 
+> > I make the same changes to patches I receive.  In fact, I would go
+> > even further and say "Add callback .setup_affinity() ..." because "add"
+> > means the same as "introduce" but is shorter and simpler.
+> 
+> Thanks for the explanation, Bjorn!
+> 
+> There is another point here. It's not only the 'This patch introduces ...'
+> part. It's also good practice to structure the changelog so it provides
+> context and reasoning first and then tells what the change is, e.g.:
+> 
+>    The current handling of multiple interrupt sets in the core interrupt
+>    affinity logic, requires the driver to do .......  This is necessary
+>    because ....
+> 
+>    This handling should be in the core code, but the core implementation
+>    has no way to recompute the interrupt sets for a given number of
+>    vectors.
+> 
+>    Add an optional callback to struct affd, which lets the driver recompute
+>    the interrupt set before the interrupt affinity spreading takes place.
+> 
+> The first paragraph provides context, i.e. the status quo, The second
+> paragraph provides reasoning what is missing and the last one tells what's
+> done to solve it.
+> 
+> That's pretty much the same for all changelogs, even if you fix a bug. Just
+> in the bug case, the second paragraph describes the details of the bug and
+> the possible consequences.
+> 
+> You really need to look at the changelog as a stand alone information
+> source. That's important when you look at a commit as an outsider or even
+> if you look at your own patch 6 month down the road when you already paged
+> out all the details.
+> 
+> Hope that clarifies it.
+
+Your description about how to write changelog is really helpful and useful
+for me, thanks!
+
+Maybe you can add it into Documentation/SubmittingPatches, so that lots
+of people can benefit from the guide.
+
 
 Thanks,
-
-Lukas
+Ming
