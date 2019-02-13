@@ -2,30 +2,30 @@ Return-Path: <SRS0=kgfr=QU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C3A9C282CA
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 17:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D71FFC282C2
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 17:55:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42DEE2086C
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 17:55:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B57BB222B1
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 17:55:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393492AbfBMRzu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Feb 2019 12:55:50 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:54580 "EHLO ale.deltatee.com"
+        id S2389316AbfBMRz6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Feb 2019 12:55:58 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:54576 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2393477AbfBMRzF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2391418AbfBMRzF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 13 Feb 2019 12:55:05 -0500
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1gtykN-0001z6-5M; Wed, 13 Feb 2019 10:55:02 -0700
+        id 1gtykN-0001zC-5M; Wed, 13 Feb 2019 10:55:03 -0700
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1gtykK-0001xy-RP; Wed, 13 Feb 2019 10:54:56 -0700
+        id 1gtykL-0001yF-H7; Wed, 13 Feb 2019 10:54:57 -0700
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
         linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
@@ -36,15 +36,17 @@ Cc:     Allen Hubbe <allenbh@gmail.com>, Dave Jiang <dave.jiang@intel.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Eric Pilmore <epilmore@gigaio.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Wed, 13 Feb 2019 10:54:42 -0700
-Message-Id: <20190213175454.7506-1-logang@deltatee.com>
+Date:   Wed, 13 Feb 2019 10:54:48 -0700
+Message-Id: <20190213175454.7506-7-logang@deltatee.com>
 X-Mailer: git-send-email 2.19.0
+In-Reply-To: <20190213175454.7506-1-logang@deltatee.com>
+References: <20190213175454.7506-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-ntb@googlegroups.com, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, jdmason@kudzu.us, bhelgaas@google.com, joro@8bytes.org, dave.jiang@intel.com, allenbh@gmail.com, fancer.lancer@gmail.com, epilmore@gigaio.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 00/12] Support using MSI interrupts in ntb_transport
+Subject: [PATCH v2 06/12] PCI/switchtec: Add module parameter to request more interrupts
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -52,111 +54,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Note: this version will likely trivially conflict with some cleanup
-patches I sent to Bjorn. So this is meant for review purposes only.
-If there are no objections, I'd like to look at getting it merged in
-the next cycle through the NTB tree.
+Seeing the we want to use more interrupts in the NTB MSI code
+we need to be able allocate more (sometimes virtual) interrupts
+in the switchtec driver. Therefore add a module parameter to
+request to allocate additional interrupts.
 
---
+This puts virtually no limit on the number of MSI interrupts available
+to NTB clients.
 
-Changes in v2:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/switch/switchtec.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-* Cleaned up the changes in intel_irq_remapping.c to make them
-  less confusing and add a comment. (Per discussion with Jacob and
-  Joerg)
-
-* Fixed a nit from Bjorn and collected his Ack
-
-* Added a Kconfig dependancy on CONFIG_PCI_MSI for CONFIG_NTB_MSI
-  as the Kbuild robot hit a random config that didn't build
-  without it.
-
-* Worked in a callback for when the MSI descriptor changes so that
-  the clients can resend the new address and data values to the peer.
-  On my test system this was never necessary, but there may be
-  other platforms where this can occur. I tested this by hacking
-  in a path to rewrite the MSI descriptor when I change the cpu
-  affinity of an IRQ. There's a bit of uncertainty over the latency
-  of the change, but without hardware this can acctually occur on
-  we can't test this. This was the result of a discussion with Dave.
-
---
-
-This patch series adds optional support for using MSI interrupts instead
-of NTB doorbells in ntb_transport. This is desirable seeing doorbells on
-current hardware are quite slow and therefore switching to MSI interrupts
-provides a significant performance gain. On switchtec hardware, a simple
-apples-to-apples comparison shows ntb_netdev/iperf numbers going from
-3.88Gb/s to 14.1Gb/s when switching to MSI interrupts.
-
-To do this, a couple changes are required outside of the NTB tree:
-
-1) The IOMMU must know to accept MSI requests from aliased bused numbers
-seeing NTB hardware typically sends proxied request IDs through
-additional requester IDs. The first patch in this series adds support
-for the Intel IOMMU. A quirk to add these aliases for switchtec hardware
-was already accepted. See commit ad281ecf1c7d ("PCI: Add DMA alias quirk
-for Microsemi Switchtec NTB") for a description of NTB proxy IDs and why
-this is necessary.
-
-2) NTB transport (and other clients) may often need more MSI interrupts
-than the NTB hardware actually advertises support for. However, seeing
-these interrupts will not be triggered by the hardware but through an
-NTB memory window, the hardware does not actually need support or need
-to know about them. Therefore we add the concept of Virtual MSI
-interrupts which are allocated just like any other MSI interrupt but
-are not programmed into the hardware's MSI table. This is done in
-Patch 2 and then made use of in Patch 3.
-
-The remaining patches in this series add a library for dealing with MSI
-interrupts, a test client and finally support in ntb_transport.
-
-The series is based off of v5.0-rc4 and I've tested it on top of a
-of the patches I've already sent to the NTB tree (though they are
-independent changes). A git repo is available here:
-
-https://github.com/sbates130272/linux-p2pmem/ ntb_transport_msi_v2
-
-Thanks,
-
-Logan
-
---
-
-Logan Gunthorpe (12):
-  iommu/vt-d: Implement dma_[un]map_resource()
-  NTB: ntb_transport: Ensure the destination buffer is mapped for TX DMA
-  iommu/vt-d: Add helper to set an IRTE to verify only the bus number
-  iommu/vt-d: Allow interrupts from the entire bus for aliased devices
-  PCI/MSI: Support allocating virtual MSI interrupts
-  PCI/switchtec: Add module parameter to request more interrupts
-  NTB: Introduce functions to calculate multi-port resource index
-  NTB: Rename ntb.c to support multiple source files in the module
-  NTB: Introduce MSI library
-  NTB: Introduce NTB MSI Test Client
-  NTB: Add ntb_msi_test support to ntb_test
-  NTB: Add MSI interrupt support to ntb_transport
-
- drivers/iommu/intel-iommu.c             |  23 +-
- drivers/iommu/intel_irq_remapping.c     |  32 +-
- drivers/ntb/Kconfig                     |  11 +
- drivers/ntb/Makefile                    |   3 +
- drivers/ntb/{ntb.c => core.c}           |   0
- drivers/ntb/msi.c                       | 415 +++++++++++++++++++++++
- drivers/ntb/ntb_transport.c             | 197 ++++++++++-
- drivers/ntb/test/Kconfig                |   9 +
- drivers/ntb/test/Makefile               |   1 +
- drivers/ntb/test/ntb_msi_test.c         | 433 ++++++++++++++++++++++++
- drivers/pci/msi.c                       |  55 ++-
- drivers/pci/switch/switchtec.c          |  12 +-
- include/linux/msi.h                     |   8 +
- include/linux/ntb.h                     | 143 ++++++++
- include/linux/pci.h                     |   9 +
- tools/testing/selftests/ntb/ntb_test.sh |  54 ++-
- 16 files changed, 1379 insertions(+), 26 deletions(-)
- rename drivers/ntb/{ntb.c => core.c} (100%)
- create mode 100644 drivers/ntb/msi.c
- create mode 100644 drivers/ntb/test/ntb_msi_test.c
-
---
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index e22766c79fe9..8b1db78197d9 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -30,6 +30,10 @@ module_param(use_dma_mrpc, bool, 0644);
+ MODULE_PARM_DESC(use_dma_mrpc,
+ 		 "Enable the use of the DMA MRPC feature");
+ 
++static int nirqs = 32;
++module_param(nirqs, int, 0644);
++MODULE_PARM_DESC(nirqs, "number of interrupts to allocate (more may be useful for NTB applications)");
++
+ static dev_t switchtec_devt;
+ static DEFINE_IDA(switchtec_minor_ida);
+ 
+@@ -1247,8 +1251,12 @@ static int switchtec_init_isr(struct switchtec_dev *stdev)
+ 	int dma_mrpc_irq;
+ 	int rc;
+ 
+-	nvecs = pci_alloc_irq_vectors(stdev->pdev, 1, 4,
+-				      PCI_IRQ_MSIX | PCI_IRQ_MSI);
++	if (nirqs < 4)
++		nirqs = 4;
++
++	nvecs = pci_alloc_irq_vectors(stdev->pdev, 1, nirqs,
++				      PCI_IRQ_MSIX | PCI_IRQ_MSI |
++				      PCI_IRQ_VIRTUAL);
+ 	if (nvecs < 0)
+ 		return nvecs;
+ 
+-- 
 2.19.0
+
