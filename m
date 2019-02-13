@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6ED8C282C4
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 02:51:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E499C282C4
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 02:59:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 876FB21934
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 02:51:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D27802190A
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 02:59:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550026300;
-	bh=maKmdX1RRYrfiRTEpEPGl+XrlyWmoxc5oidzyeFqGGA=;
+	s=default; t=1550026794;
+	bh=4wLASf/YFhhfPtgQYoq+p/U5OaWByTLgUrqyTzB1Aj4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Re+BDgrI8IJcgxAh8EsvKGnXrMmgyDbaoX2OgBMiBR1AdpO/SUGurMP9eBdjUL2R0
-	 7l52ehoKFDh324cd4jynQgIqyVgmWdKq747L7CyfVBNBTKHEdKKvqL7UzPMhBFtUUm
-	 Mx4ks8HB/cc8D0URiqSOA2NwI8+pvvHUfyVlODIk=
+	b=Ap4+/3Zf2ehC1GCzcEk1sWaihbKbGKWD1O4DKTJMQeJ5VUKUGM85Kxptlahj6vGbw
+	 Ok9hP852XokY5JEFFK6R1T1deXALN9rsLUrQVybTo5q87vp5tgBb/wxXZGa+I7YyqX
+	 wBZvk2pJYhd0mTqvRK7BgfpbJYAatTTewpS7lIkw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728853AbfBMCjW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Feb 2019 21:39:22 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42886 "EHLO mail.kernel.org"
+        id S1731219AbfBMCgP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Feb 2019 21:36:15 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39844 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388661AbfBMCjV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Feb 2019 21:39:21 -0500
+        id S1729631AbfBMCgO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Feb 2019 21:36:14 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D3BA6222C9;
-        Wed, 13 Feb 2019 02:39:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3917F222C2;
+        Wed, 13 Feb 2019 02:36:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550025560;
-        bh=maKmdX1RRYrfiRTEpEPGl+XrlyWmoxc5oidzyeFqGGA=;
+        s=default; t=1550025373;
+        bh=4wLASf/YFhhfPtgQYoq+p/U5OaWByTLgUrqyTzB1Aj4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O+SPzG52FMpzeoM42MSRuDp/tbi7gekiCRi6n6k83prLmwaAaMSuSSqOV4I3Rpt+0
-         0HkcTtKeJwmPE7twC3Oxq06t+cAvhkH1tukJ7WRk7dQW4bN83H3Ra5mRRnL9PZcWca
-         c9bQKUfGYkqYQqvX5LyzvSB/X4Biv50hF+VSL3rA=
+        b=l9+e9BvRvwZ1egbT2mI55FBzvGKL3+rs+CS+sXGVVcLJ514hkteOQ/okGfukeB2L6
+         Q3+PrcmXw6RUcWRXfCESEVs9RDtZ3x+Isjv1CVjmnU1+m429K+//5KNwt2IG2q2UH+
+         XIEVMCjkEEQ/xip//5+a0pX5rpjid1B4YI14VzKo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 67/83] PCI: Fix __initdata issue with "pci=disable_acs_redir" parameter
-Date:   Tue, 12 Feb 2019 21:36:45 -0500
-Message-Id: <20190213023701.20286-67-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.20 084/105] PCI: Fix __initdata issue with "pci=disable_acs_redir" parameter
+Date:   Tue, 12 Feb 2019 21:33:15 -0500
+Message-Id: <20190213023336.19019-84-sashal@kernel.org>
 X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190213023701.20286-1-sashal@kernel.org>
-References: <20190213023701.20286-1-sashal@kernel.org>
+In-Reply-To: <20190213023336.19019-1-sashal@kernel.org>
+References: <20190213023336.19019-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -111,10 +111,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index afc4680c584f..7eb1549cea81 100644
+index c9d8e3c837de..c25acace7d91 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -6113,7 +6113,8 @@ static int __init pci_setup(char *str)
+@@ -6195,7 +6195,8 @@ static int __init pci_setup(char *str)
  			} else if (!strncmp(str, "pcie_scan_all", 13)) {
  				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
  			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
