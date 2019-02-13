@@ -1,164 +1,143 @@
-Return-Path: <SRS0=P0ok=QT=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=kgfr=QU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47D2AC282C4
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 23:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA49AC282C4
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 00:17:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC356222A8
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Feb 2019 23:58:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 976632175B
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 00:17:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="wP2hTuEr"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="g5bSxWzt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728093AbfBLX6B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Feb 2019 18:58:01 -0500
-Received: from esa8.dell-outbound.iphmx.com ([68.232.149.218]:65376 "EHLO
-        esa8.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727018AbfBLX6A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2019 18:58:00 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
-  t=1550015880; x=1581551880;
-  h=cc:from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=4i6tT/j0epsZwWvUMo0P86JYbjHMAjxumLjbiTLVauQ=;
-  b=wP2hTuEr/ueE56uMBDAYqYTW7Jeeb9yPu8B77qqczTWgws8l1ULoW7BX
-   qF4dNDbqBVBU4CNUhRZfhWMu4QmSg0TxSxPqMtw7idOm8IVbblLIICQIh
-   VNRwo3QCHFaQKyErT5kjVcPH1T7T+ijb4roZHs7EI6AJxdKIdMU4oB5Xi
-   g=;
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2EbAADUXGNchiWd50NjGwEBAQEDAQE?=
- =?us-ascii?q?BBwMBAQGBVAMBAQELAYJZgRQxjHOLEoINgX2YEQsBASyEQINIIjcGDQEDAQE?=
- =?us-ascii?q?CAQECAQECEAEBAQoJCwgpL4I6IoJvAQEBAwESKD8FCwIBCBgeEFcCBBsTB4M?=
- =?us-ascii?q?CgXoInls9Am2BAYkHAQEBgh6KLIxDghaBEYJkLoUBTYUTAol7ggaXHgkFkkM?=
- =?us-ascii?q?hkmCcFQIEAgQFAhSBXIF5cIM9gicOCY4eQYFZjV4BgR4BAQ?=
-X-IPAS-Result: =?us-ascii?q?A2EbAADUXGNchiWd50NjGwEBAQEDAQEBBwMBAQGBVAMBA?=
- =?us-ascii?q?QELAYJZgRQxjHOLEoINgX2YEQsBASyEQINIIjcGDQEDAQECAQECAQECEAEBA?=
- =?us-ascii?q?QoJCwgpL4I6IoJvAQEBAwESKD8FCwIBCBgeEFcCBBsTB4MCgXoInls9Am2BA?=
- =?us-ascii?q?YkHAQEBgh6KLIxDghaBEYJkLoUBTYUTAol7ggaXHgkFkkMhkmCcFQIEAgQFA?=
- =?us-ascii?q?hSBXIF5cIM9gicOCY4eQYFZjV4BgR4BAQ?=
-Received: from mx0b-00154901.pphosted.com ([67.231.157.37])
-  by esa8.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 12 Feb 2019 17:57:59 -0600
-Received: from pps.filterd (m0144103.ppops.net [127.0.0.1])
-        by mx0b-00154901.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x1CNllV4113570;
-        Tue, 12 Feb 2019 18:57:58 -0500
-Received: from esa2.dell-outbound2.iphmx.com (esa2.dell-outbound2.iphmx.com [68.232.153.202])
-        by mx0b-00154901.pphosted.com with ESMTP id 2qm310sm2s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 12 Feb 2019 18:57:58 -0500
-Cc:     <mr.nuke.me@gmail.com>, <bhelgaas@google.com>,
-        <Austin.Bolen@dell.com>, <keith.busch@intel.com>,
-        <Shyam.Iyer@dell.com>, <gustavo@embeddedor.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Received: from ausxippc106.us.dell.com ([143.166.85.156])
-  by esa2.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 13 Feb 2019 05:56:42 +0600
-X-LoopCount0: from 10.166.134.84
-X-IronPort-AV: E=Sophos;i="5.58,364,1544508000"; 
-   d="scan'208";a="352948300"
-From:   <Alex_Gagniuc@Dellteam.com>
-To:     <lukas@wunner.de>
-Subject: Re: [PATCH] PCI: pciehp: Do not turn off slot if presence comes up
- after link
-Thread-Topic: [PATCH] PCI: pciehp: Do not turn off slot if presence comes up
- after link
-Thread-Index: AQHUvZbN4kEiyNA8xUGy+Uw4G87SXw==
-Date:   Tue, 12 Feb 2019 23:57:55 +0000
-Message-ID: <b2fffa5beb7941ebaceb8b8ce6e5b133@ausx13mps321.AMER.DELL.COM>
-References: <20190205210701.25387-1-mr.nuke.me@gmail.com>
- <20190209115849.244u67h7wmn3eb7o@wunner.de>
- <52afa1c45f684dbda6a8771b65583a22@ausx13mps321.AMER.DELL.COM>
- <20190212083031.2no7mzn5xug7nba3@wunner.de>
+        id S1728487AbfBMARo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Feb 2019 19:17:44 -0500
+Received: from mail-eopbgr1320130.outbound.protection.outlook.com ([40.107.132.130]:18704
+        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728101AbfBMARn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Feb 2019 19:17:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=89SPNahk8FQodxookyuytnMPdUnKfK3i148hHZdTINo=;
+ b=g5bSxWztGWqOizpxcVwd4bgFW4St2F0uwOlqd15gZ0tpFtuOEX0N8mtpYlym+Hass9vUJgJcguAe1ozWmQf9KPv/EAMeQq1QP4hCDSf2bl4lqmMD0S8IEArDtuq18cCe6NMuORz0GcGsxj6epowEfK9knXAJemwrHmaTU5vGcVU=
+Received: from PU1P153MB0169.APCP153.PROD.OUTLOOK.COM (10.170.189.13) by
+ PU1P153MB0187.APCP153.PROD.OUTLOOK.COM (10.170.188.151) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1643.0; Wed, 13 Feb 2019 00:17:36 +0000
+Received: from PU1P153MB0169.APCP153.PROD.OUTLOOK.COM
+ ([fe80::7822:a20:e63c:de2f]) by PU1P153MB0169.APCP153.PROD.OUTLOOK.COM
+ ([fe80::7822:a20:e63c:de2f%9]) with mapi id 15.20.1643.004; Wed, 13 Feb 2019
+ 00:17:36 +0000
+From:   Dexuan Cui <decui@microsoft.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org" 
+        <driverdev-devel@linuxdriverproject.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Sasha Levin <Alexander.Levin@microsoft.com>,
+        Michael Kelley <mikelley@microsoft.com>
+Subject: RE: [PATCH] PCI: hv: Add hv_pci_remove_slots() when we unload the
+ driver
+Thread-Topic: [PATCH] PCI: hv: Add hv_pci_remove_slots() when we unload the
+ driver
+Thread-Index: AdS/JKy4gHBOTZqYQrqpJy5ySOaIggDp5REAABiteEA=
+Date:   Wed, 13 Feb 2019 00:17:35 +0000
+Message-ID: <PU1P153MB01694FE34AEE56373DC9B86BBF660@PU1P153MB0169.APCP153.PROD.OUTLOOK.COM>
+References: <PU1P153MB0169F06340FC519C2802C5CFBF680@PU1P153MB0169.APCP153.PROD.OUTLOOK.COM>
+ <20190212121235.GA23166@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20190212121235.GA23166@e107981-ln.cambridge.arm.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [143.166.11.234]
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=decui@microsoft.com;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-02-13T00:17:33.9312352Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
+ Information Protection;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=3ea485df-64c1-4a3c-bedf-457fdbb9595d;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
+x-originating-ip: [2601:600:a280:1760:5896:cf8a:cefe:fd7]
+x-ms-publictraffictype: Email
+x-microsoft-exchange-diagnostics: 1;PU1P153MB0187;6:575S9UH5ZYnDMn3W15qT55ya6cCusVvQDsmbcar2VjiZyiWGBFbgtSqMupDqLuQoC4nC4qbYMQ8kDGZlO+tQSx0cFz5LiCqjaeM8Swmcc3/T208diyf/WYsZIcoEuL+abBNp1mqbv0oLeSUIt5MPecbeBJekuqaIYcSmazzZ9sKaAhnZecYi5a8NveLPWpKF4PjUTKQC290jz558hZAdPRZrHtDM6DaDQ+LyAhxfdInwigA6xH+1TEwnm7ZpMFpmHZFjaT61uvAs/siEU9LKlBbSNKIWYQx02/QgYbJ9rNi4cjGdqCVfen0J/trLpZVbpXF1OGsDPk6BmjhtCvX9AbcW/mfZngErGWkftE5hu+36FoDaxkn+d5ioiDKigNtK42+4SeQ36g+WAncHL6/P1ZltMYHHAb2+7QojOlC5tfg99TYoD1dlofQb9vIoo6C1hRszpOVCBn9cumpUAdoXUA==;5:53vs4NqqLPXLfQRhwrAU1C+PhRuRoso88o+AXkjXdGt+Vyx0529v3cj+kjNbYo6LRRgz+7L+c0mFTrMRaNEjef+rGLJKrxPGIipKDuyvpTgOcOh1Dft/HqdMJin/1qkRv6xg1xDdHUg2+Hb/UngQw9Jzdg037ULJNIJ3AWtcsN0ZkuohFws3WUG8QjhOjjKSz8LZ72UA04oIqh2yCS61Vw==;7:FgSAcTttm5p+cAMSw3WHoFeGCHCJEhCCfuYPjzRD+X2K9sfWtFdL7wn26QlB8O6tdpm8y0YUcBDrkzbWqdgHSrwGaTJNo5ZS35xLnRMzo1QLpN1X18dxoP4QSb/Y0Ud4V5N22JBn6KYW3G87L/o90A==
+x-ms-office365-filtering-correlation-id: 208057d1-5462-4b93-0bdd-08d69148a806
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600126)(711020)(4605077)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:PU1P153MB0187;
+x-ms-traffictypediagnostic: PU1P153MB0187:
+x-microsoft-antispam-prvs: <PU1P153MB0187422957208D8A1B9FA29FBF660@PU1P153MB0187.APCP153.PROD.OUTLOOK.COM>
+x-forefront-prvs: 094700CA91
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(376002)(136003)(346002)(396003)(366004)(39860400002)(199004)(189003)(2906002)(10290500003)(478600001)(10090500001)(53936002)(107886003)(6246003)(14454004)(22452003)(9686003)(55016002)(6436002)(105586002)(106356001)(229853002)(6116002)(97736004)(81156014)(81166006)(4326008)(25786009)(8936002)(68736007)(7736002)(6916009)(71190400001)(71200400001)(74316002)(86612001)(6506007)(476003)(46003)(305945005)(186003)(6346003)(8990500004)(99286004)(8676002)(11346002)(486006)(33656002)(446003)(14444005)(76176011)(256004)(102836004)(316002)(86362001)(7696005)(54906003);DIR:OUT;SFP:1102;SCL:1;SRVR:PU1P153MB0187;H:PU1P153MB0169.APCP153.PROD.OUTLOOK.COM;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=decui@microsoft.com; 
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: af0+LXEHJ+kV3W3+CR+rNQBfzug2T9Pj3/wcU/AQlFFH5QOI6WSE2HtABzVZzfnwhxWaXRH4mb9VVPT2DdLxoaSy9VV3JiZLKT1vXWVVD0fbh4RpIF6sl4d+nuJxvQF2YZ2sDZYldDYWSjzLF4yU22U1RkDen9QkpvrbjgEqEUzstY8oehzaxsRHXPrK8Q9LcOihkl6pztlMEyuvsFe/aU91vUxptL9PjjtIZs2cKswFt4TZiMo1fGIYsY2kN4hLrVJQ/DINPuFHNzTy0D/hUM7SLdowrWuaEkRfEJkLEVqatrXEVkvsyq99P2XTSVWoCG7iZia/XDVmj5JCtPaVoolLqyOHzHA0aj9ePejFEgukjGHONerM2tWhRYOpZfGUZKKaAIv66PauuEyki2/ElKrT2vrmZL965Wiwb+gL7IY=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-02-12_13:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1902120161
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 208057d1-5462-4b93-0bdd-08d69148a806
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Feb 2019 00:17:35.7328
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PU1P153MB0187
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2/12/19 2:30 AM, Lukas Wunner wrote:=0A=
-> The PCI SIG=0A=
-> should probably consider granting access to specs to open source=0A=
-> developers to ease adoption of new features in Linux et al.=0A=
-=0A=
-Don't get me started on just how ridiculous I think PCI-SIG's policy is =0A=
-with respect to public availability of standards.=0A=
-=0A=
->>> Table 4-14 in sec 4.2.6 is also important because it shows the differen=
-ce=0A=
->>> between Link Up and in-band presence.=0A=
->>=0A=
->> So, we'd expect PD to come up at the same time or before DLL?=0A=
-> =0A=
-> Per table 4-14 and figure 4-23 (immediately below the table) in r4.0,=0A=
-> PDC ought to be signaled before DLLSC.  As said, Linux can handle PDC=0A=
-> after DLLSC if they're not too far apart (100 ms, see pcie_wait_for_link(=
-)).=0A=
-> =0A=
-> =0A=
->> I'd like a generic solution. I suspect supporting 'in-band PD disabled'=
-=0A=
->> and quirking for that would be a saner way to do things. If we support=
-=0A=
->> it, then we need to handle PDSC after DLLSC scenarios anyway.=0A=
-> =0A=
-> I agree, having support for this new ECN would be great.=0A=
-> =0A=
-> If you look at struct controller in drivers/pci/hotplug/pciehp.h,=0A=
-> there's a section labelled /* capabilities and quirks */.  An idea=0A=
-> would be to add an unsigned int there to indicate whether in-band=0A=
-> presence is disabled.  An alternative would be to add a flag to=0A=
-> struct pci_dev.=0A=
-=0A=
-> Instead of modifying the logic in pciehp_handle_presence_or_link_change()=
-,=0A=
-> you could amend pcie_wait_for_link() to poll PDS until it's set, in=0A=
-> addition to DLLLA.  The rationale would be that although the link is up,=
-=0A=
-> the hot-added device cannot really be considered accessible until PDS=0A=
-> is also set.  Unfortunately we cannot do this for all devices because=0A=
-> (as I've said before), some broken devices hardwire PDS to zero.  But=0A=
-> it should be safe to constrain it to those which can disable in-band=0A=
-> presence.=0A=
-=0A=
-=0A=
-The recommendation is to set the "in-band PD disable" bit, and it's =0A=
-possible that platform firmware may have set it at boot time (*). I'm =0A=
-not sure that there is a spec-justifiable reason to not access a device =0A=
-whose DLL is up, but PD isn't.=0A=
-=0A=
-(*) A bit hypothetical: There is no hardware yet implementing the ECN.=0A=
-=0A=
-> Be mindful however that pcie_wait_for_link() is also called from the=0A=
-> DPC driver.  Keith should be able to judge whether a change to that=0A=
-> function breaks DPC.=0A=
-=0A=
-That's why I went for ammending pciehp_handle_presence_or_link_change(). =
-=0A=
-Smaller bug surface ;). What I'm thinking at this point is, keep the =0A=
-patch as is, but, also check for in-band PD disable before aborting the =0A=
-shutdown. Old behavior stays the same.=0A=
-=0A=
-I'll rework this a little bit for in-band PD disable (what's a good =0A=
-acronym for that, BTW?), and then quirk those machines that are known to =
-=0A=
-'disable' this in hardware.=0A=
-=0A=
-Alex=0A=
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Sent: Tuesday, February 12, 2019 4:13 AM
+>  ...
+> This patch fixes three bugs:
+>=20
+> 1) set hpdev->pci_slot to NULL
+> 2) move code destroying the slot inside a locked region in
+>    hv_eject_device_work()
+> 3) Add missing slots removal code in hv_pci_remove()
+>=20
+> We need three patches, not one.
+>=20
+> (1) and (2), I am not entirely sure we want them in stable kernels,
+> since they are potential bugs, waiting for your input.
+>=20
+> Lorenzo
+
+(1) is actually unnecessary, as I suppose hpdev should be freed at a later
+place in the same function hv_eject_device_work -> put_pcichild() -> kfree(=
+hpdev).
+But today I think I found a refcount bug in the hot-remove case and the "kf=
+ree(hpdev)"
+is never called in the hot-remove case. I'll further dig into this and make=
+ some extra
+patches.
+
+About (2), it's a race condition that can happen when the device is being h=
+ot-removed
+and we're unloading the pci-hyperv driver at the same time. This is not a n=
+ormal usage,
+so I agree it doesn't really need to go into the stables.
+
+(3) should go into the stables.
+
+I'll make 3 separate patches, and extra patches for the refcount issue, and=
+ possible other
+minor issues.
+
+Thanks,
+-- Dexuan
