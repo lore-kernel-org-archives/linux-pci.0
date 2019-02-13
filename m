@@ -4,157 +4,199 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39BA0C282C2
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 04:52:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 958FEC282C2
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 05:23:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0644C222BB
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 04:52:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E92B222C2
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 05:23:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OxJmUX5z"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="JVpHw7KG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730743AbfBMEwJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Feb 2019 23:52:09 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:36960 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730558AbfBMEwI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2019 23:52:08 -0500
-Received: by mail-wr1-f66.google.com with SMTP id c8so933622wrs.4
-        for <linux-pci@vger.kernel.org>; Tue, 12 Feb 2019 20:52:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=DXA/qvdpSx6JXTBhI/uFT9HoAq1/F1TFzcciALG1AYs=;
-        b=OxJmUX5zQu5U6nrWnmxyDZyIuzCHbmDqxo+0G/z+Nh7rAVwTVumF8bRmnw87IP2bcW
-         BQhkBgm0rrKU5HynC+ee43mZmGnYUX43ZJBtZqCGEJVMFhShcNudiFz8SDcEG74xNi3L
-         LDUF92CzYPCWvmHvrkntBmg1uRdUNRpUNOly0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=DXA/qvdpSx6JXTBhI/uFT9HoAq1/F1TFzcciALG1AYs=;
-        b=s5j9Nmqh6jFsWGIdYXYO9swquBcJE3tmFLsdMrxJaDDU2GjJmW4p0mTLKY+iis6Tm2
-         S8t05wTQxooaxJDukJtimz77n1LXouIBVbffyJAApj/jmDUOkdzH5SLnrmY4bU0xXBgl
-         jBYIs1A55WMpqRtvjdgog2jngQDDh2jAkFKjFJKShfgUYNzziLBFyFcpUDh2HeZ1kPmZ
-         fy4DnA0wezZ+BY65HKaFhKV7RuDdEc5SQ4CyJChEHNEQmFUwNh1XQ1DY6KsnsCTHmnE4
-         Fo66KNbxZCEoy0zfMKMQPinqdCk9fqJVHmJoHrcmOo68wLMyU1PDlMyHnO7bgZAq76Cl
-         Xfaw==
-X-Gm-Message-State: AHQUAuYa4VnVzGaNknFUHoM8LVMgZacVpQPMygsu+n8OTgIowWPfhUlQ
-        VB7s+BugoLgw5VFzFnHpy5WJ65V0l//7k9rnWlHl0A==
-X-Google-Smtp-Source: AHgI3Ia9QVrR7br4MRK/M7rJ+G5f/NiBxxfA6Jw199UR3vcvgzFs81rCJPzaWmpkA6Nd6HDqBEBF0m54vJdp+E4EINQ=
-X-Received: by 2002:adf:f70c:: with SMTP id r12mr5684356wrp.54.1550033526805;
- Tue, 12 Feb 2019 20:52:06 -0800 (PST)
+        id S1726370AbfBMFXa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Feb 2019 00:23:30 -0500
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:14731 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726362AbfBMFXa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Feb 2019 00:23:30 -0500
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c63a9d10000>; Tue, 12 Feb 2019 21:23:29 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Tue, 12 Feb 2019 21:23:28 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Tue, 12 Feb 2019 21:23:28 -0800
+Received: from [10.25.73.1] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Wed, 13 Feb
+ 2019 05:23:24 +0000
+Subject: Re: [PATCH v1 2/2] PCI/ASPM: Save LTR Capability for suspend/resume
+To:     Bjorn Helgaas <helgaas@kernel.org>, <linux-pci@vger.kernel.org>
+CC:     RussianNeuroMancer <russianneuromancer@ya.ru>,
+        David Ward <david.ward@ll.mit.edu>,
+        Frederick Lawler <fred@fredlawl.com>,
+        Patrick Talbert <ptalbert@redhat.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        <linux-kernel@vger.kernel.org>
+References: <154992561743.7864.14353823538864422094.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <154992574559.7864.8459750458248568194.stgit@bhelgaas-glaptop.roam.corp.google.com>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <5096dec8-e735-1c7e-c7cd-760d13e124f2@nvidia.com>
+Date:   Wed, 13 Feb 2019 10:53:01 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-References: <1549342622-9929-1-git-send-email-srinath.mannam@broadcom.com>
- <1549342622-9929-3-git-send-email-srinath.mannam@broadcom.com> <20190212183739.GB918@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20190212183739.GB918@e107981-ln.cambridge.arm.com>
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Wed, 13 Feb 2019 10:21:55 +0530
-Message-ID: <CABe79T6L5mCc5zoyRUD-bPk7UdxOv_Yz3vyUNYg=Edw-u2mGzQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] PCI: iproc: Add PCIe 32bit outbound memory configuration
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <154992574559.7864.8459750458248568194.stgit@bhelgaas-glaptop.roam.corp.google.com>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1550035409; bh=EZtfXVoD8VPj6iaVuj3MlIpiYeC5TniqPYNtthXluR8=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=JVpHw7KGyUpU/joEG4n7LI0MXe1N42Z0uYXBHIg1Bu97ovyCbFZv/11w+VL8Lwbck
+         YkuJ91ljo6CKTnY7taaZXLelgbhuF0MIXf58OhL1ylHe+hJEbsUPfc/5UL2tJ/gQJP
+         qNZtClvA44j0mpIlcAx2ng4mvoNkcroJMrI55rKBKxM2tescqWw9lu8cwF231Sa9jM
+         nfmDABCDmBdYq4snebi+Z9XKmNbBkolNzM9j/Bf42HioyGoEcRT5xxwnQTwS2HGbIC
+         +7WAXlJ4kBhOj0XXSenWneB4qUws9v6jepkTfh5ERYpOvfye5qeym2hfldem2Mt4G+
+         0t92kouypAh6g==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
 
-Thanks for review, please see my comments below inline.
-
-On Wed, Feb 13, 2019 at 12:07 AM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
+On 2/12/2019 4:25 AM, Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 >
-> On Tue, Feb 05, 2019 at 10:27:01AM +0530, Srinath Mannam wrote:
-> > Add configuration to support IPROC PCIe host controller outbound memory
-> > window mapping with SOC address range inside 4GB boundary, which is 32 bit
-> > AXI address.
+> Latency Tolerance Reporting (LTR) allows Endpoints and Switch Upstream
+> Ports to report their latency requirements to upstream components.  If ASPM
+> L1 PM substates are enabled, the LTR information helps determine when a
+> Link enters L1.2 [1].
 >
-> I do not understand what this means, explain it to me and rewrite the
-> commit log accordingly.
+> Software must set the maximum latency values in the LTR Capability based on
+> characteristics of the platform, then set LTR Mechanism Enable in the
+> Device Control 2 register in the PCIe Capability.  The device can then use
+> LTR to report its latency tolerance.
 >
-This is about "I/O regions" addressing given through ranges DT property.
-In the current driver "I/O regions" address mapping to corresponding
-PCI memory address in controller outbound registers
-is supports above 32-bit address.
-> What does this solve ? Why do we need this patch or rephrased, what
-> is missing in the current driver ?
-With this patch, If ranges DT property has below 32-bit I/O regions
-address then it will be added in the outbound mapping.
-This will help to access I/O region from CPU in 32-bit.
-I will update commit log and send next patch set.
-Ex:
-1. ranges DT property for current driver is,
-    ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
-    I/O region address is 0x400000000
-2. ranges DT property with this patch,
-    ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
-    I/O region address is 0x42000000
-
-Regards,
-Srinath.
+> If the device reports a maximum latency value of zero, that means the
+> device requires the highest possible performance and the ASPM L1.2 substate
+> is effectively disabled.
 >
-> > Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> > Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
-> > Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> > Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> > Reviewed-by: Vikram Prakash <vikram.prakash@broadcom.com>
+> We put devices in D3 for suspend, and we assume their internal state is
+> lost.  On resume, previously we did not restore the LTR Capability, but we
+> did restore the LTR Mechanism Enable bit, so devices would request the
+> highest possible performance and ASPM L1.2 wouldn't be used.
 >
-> Review tags should be given on public mailing lists, these ones seem
-> to come from non-public review cycles in which case you must drop
-> them.
+> [1] PCIe r4.0, sec 5.5.1
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=201469
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>   drivers/pci/pci.c |   53 +++++++++++++++++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 51 insertions(+), 2 deletions(-)
 >
-> >  drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
-> >  1 file changed, 19 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> > index b882255..080f142 100644
-> > --- a/drivers/pci/controller/pcie-iproc.c
-> > +++ b/drivers/pci/controller/pcie-iproc.c
-> > @@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
-> >                       resource_size_t window_size =
-> >                               ob_map->window_sizes[size_idx] * SZ_1M;
-> >
-> > -                     if (size < window_size)
-> > -                             continue;
-> > +                     /*
-> > +                      * Keep iterating until we reach the last window and
-> > +                      * with the minimal window size at index zero. In this
-> > +                      * case, we take a compromise by mapping it using the
-> > +                      * minimum window size that can be supported
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index c9d8e3c837de..13d65991c77b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1233,7 +1233,6 @@ static void pci_restore_pcie_state(struct pci_dev *dev)
+>   	pcie_capability_write_word(dev, PCI_EXP_SLTCTL2, cap[i++]);
+>   }
+>   
+> -
+>   static int pci_save_pcix_state(struct pci_dev *dev)
+>   {
+>   	int pos;
+> @@ -1270,6 +1269,45 @@ static void pci_restore_pcix_state(struct pci_dev *dev)
+>   	pci_write_config_word(dev, pos + PCI_X_CMD, cap[i++]);
+>   }
+>   
+> +static void pci_save_ltr_state(struct pci_dev *dev)
+> +{
+> +	int ltr;
+> +	struct pci_cap_saved_state *save_state;
+> +	u16 *cap;
+> +
+> +	if (!pci_is_pcie(dev))
+> +		return;
+> +
+> +	ltr = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
+> +	if (!ltr)
+> +		return;
+> +
+> +	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_LTR);
+> +	if (!save_state) {
+> +		pci_err(dev, "no suspend buffer for LTR; ASPM issues possible after resume\n");
+> +		return;
+> +	}
+> +
+> +	cap = (u16 *)&save_state->cap.data[0];
+> +	pci_read_config_word(dev, ltr + PCI_LTR_MAX_SNOOP_LAT, cap++);
+> +	pci_read_config_word(dev, ltr + PCI_LTR_MAX_NOSNOOP_LAT, cap++);
+> +}
+> +
+> +static void pci_restore_ltr_state(struct pci_dev *dev)
+> +{
+> +	struct pci_cap_saved_state *save_state;
+> +	int ltr;
+> +	u16 *cap;
+> +
+> +	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_LTR);
+> +	ltr = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_LTR);
+> +	if (!save_state || !ltr)
+> +		return;
+> +
+> +	cap = (u16 *)&save_state->cap.data[0];
+> +	pci_write_config_word(dev, ltr + PCI_LTR_MAX_SNOOP_LAT, *cap++);
+> +	pci_write_config_word(dev, ltr + PCI_LTR_MAX_NOSNOOP_LAT, *cap++);
+> +}
+>   
+>   /**
+>    * pci_save_state - save the PCI configuration space of a device before suspending
+> @@ -1291,6 +1329,7 @@ int pci_save_state(struct pci_dev *dev)
+>   	if (i != 0)
+>   		return i;
+>   
+> +	pci_save_ltr_state(dev);
+>   	pci_save_dpc_state(dev);
+>   	return pci_save_vc_state(dev);
+>   }
+> @@ -1390,7 +1429,12 @@ void pci_restore_state(struct pci_dev *dev)
+>   	if (!dev->state_saved)
+>   		return;
+>   
+> -	/* PCI Express register must be restored first */
+> +	/*
+> +	 * Restore max latencies (in the LTR capability) before enabling
+> +	 * LTR itself (in the PCIe capability).
+> +	 */
+> +	pci_restore_ltr_state(dev);
+> +
+>   	pci_restore_pcie_state(dev);
+>   	pci_restore_pasid_state(dev);
+>   	pci_restore_pri_state(dev);
+> @@ -2998,6 +3042,11 @@ void pci_allocate_cap_save_buffers(struct pci_dev *dev)
+>   	if (error)
+>   		pci_err(dev, "unable to preallocate PCI-X save buffer\n");
+>   
+> +	error = pci_add_ext_cap_save_buffer(dev, PCI_EXT_CAP_ID_LTR,
+> +					    2 * sizeof(u16));
+> +	if (error)
+> +		pci_err(dev, "unable to allocate suspend buffer for LTR\n");
+> +
+>   	pci_allocate_vc_save_buffers(dev);
+>   }
+Don't we have to save and restore L1SS control registers (PCI_L1SS_CTL1 
+& PCI_L1SS_CTL2) as well?
+>   
 >
-> See above, I do not understand clearly what this means.
->
-> Lorenzo
->
-> > +                      */
-> > +                     if (size < window_size) {
-> > +                             if (size_idx > 0 || window_idx > 0)
-> > +                                     continue;
-> > +
-> > +                             /*
-> > +                              * For the corner case of reaching the minimal
-> > +                              * window size that can be supported on the
-> > +                              * last window
-> > +                              */
-> > +                             axi_addr = ALIGN_DOWN(axi_addr, window_size);
-> > +                             pci_addr = ALIGN_DOWN(pci_addr, window_size);
-> > +                             size = window_size;
-> > +                     }
-> >
-> >                       if (!IS_ALIGNED(axi_addr, window_size) ||
-> >                           !IS_ALIGNED(pci_addr, window_size)) {
-> > --
-> > 2.7.4
-> >
