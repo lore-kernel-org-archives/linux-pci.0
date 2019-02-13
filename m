@@ -2,128 +2,176 @@ Return-Path: <SRS0=kgfr=QU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E499C282C4
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 02:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 707E0C282CA
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 03:57:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D27802190A
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 02:59:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550026794;
-	bh=4wLASf/YFhhfPtgQYoq+p/U5OaWByTLgUrqyTzB1Aj4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Ap4+/3Zf2ehC1GCzcEk1sWaihbKbGKWD1O4DKTJMQeJ5VUKUGM85Kxptlahj6vGbw
-	 Ok9hP852XokY5JEFFK6R1T1deXALN9rsLUrQVybTo5q87vp5tgBb/wxXZGa+I7YyqX
-	 wBZvk2pJYhd0mTqvRK7BgfpbJYAatTTewpS7lIkw=
+	by mail.kernel.org (Postfix) with ESMTP id 25440222BA
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Feb 2019 03:57:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="DmyEk0sG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731219AbfBMCgP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Feb 2019 21:36:15 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39844 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729631AbfBMCgO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Feb 2019 21:36:14 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3917F222C2;
-        Wed, 13 Feb 2019 02:36:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550025373;
-        bh=4wLASf/YFhhfPtgQYoq+p/U5OaWByTLgUrqyTzB1Aj4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=l9+e9BvRvwZ1egbT2mI55FBzvGKL3+rs+CS+sXGVVcLJ514hkteOQ/okGfukeB2L6
-         Q3+PrcmXw6RUcWRXfCESEVs9RDtZ3x+Isjv1CVjmnU1+m429K+//5KNwt2IG2q2UH+
-         XIEVMCjkEEQ/xip//5+a0pX5rpjid1B4YI14VzKo=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.20 084/105] PCI: Fix __initdata issue with "pci=disable_acs_redir" parameter
-Date:   Tue, 12 Feb 2019 21:33:15 -0500
-Message-Id: <20190213023336.19019-84-sashal@kernel.org>
-X-Mailer: git-send-email 2.19.1
-In-Reply-To: <20190213023336.19019-1-sashal@kernel.org>
-References: <20190213023336.19019-1-sashal@kernel.org>
+        id S1726573AbfBMD5e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Feb 2019 22:57:34 -0500
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:33820 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731028AbfBMD5e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Feb 2019 22:57:34 -0500
+Received: by mail-wm1-f68.google.com with SMTP id y185so866244wmd.1
+        for <linux-pci@vger.kernel.org>; Tue, 12 Feb 2019 19:57:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=jfUvnKqx0/LCU+eBTQY2ytjcTCXtaG67jN7oy6DeBZA=;
+        b=DmyEk0sGurpgvmp4zIbLlSavXJkeT8OZWWI0bFMWGU1Iy8YxY1BbMtrTb7GDOEID99
+         60/WqKQYCvwBGERow7H8/Tk8/doa+iZLN76e+5S4DULYQqFWsFFp3wfaBnrWnmqfGhqJ
+         1NdsTi5MoIcYn9dGdfh1mNULZBORZiWeJRADw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=jfUvnKqx0/LCU+eBTQY2ytjcTCXtaG67jN7oy6DeBZA=;
+        b=OGCbdyuRQXwafn0WSJvtkDeDk2hK1YauYg+5I3eVJnD4sFg1PuyXhKT5NMiqdl+RIX
+         e1xdI5/25IKzGZrD8332gg+u2JEA+R8ZWgitjQCuaLd+KYjAduof6WPmFLWTBws3gi4S
+         11rtuP738L/JoTGPpCOIp+W54MoXDwIc1fS759XCiZ5BZAvcRQP25IMxiS24P47Ljsjm
+         Pk4wb4U+N+MPzUqrnivcUYoLP58URD9alt82Lrw8RZ8UP5sUJTAkm7YFSSN3S4GaN+Xh
+         lED18wNvxrg687oUYglrqMDJIdGkw2UFSIWSxtB2fKFGeIeh1U+R+cqiYLrVt/SetVO0
+         2s6A==
+X-Gm-Message-State: AHQUAuYHv0B/CMhx9JKJj+XjYnrVSV3OgZb51/Nd9ISCvyJ6fGJLmwFI
+        nTb0W1BoOCJpIrI/X+5ssSIMcJYBFXQUoTWGLc1YRA==
+X-Google-Smtp-Source: AHgI3Ia+Ybgq1NcDCke4TcYxmJzsqF0zyJuDauqjrhCCq+tYDyGb+ztr4H22Bc/QI/RYhgnZsh63YTkQ2pkmLP8AF4I=
+X-Received: by 2002:a1c:c44c:: with SMTP id u73mr1504168wmf.45.1550030251533;
+ Tue, 12 Feb 2019 19:57:31 -0800 (PST)
 MIME-Version: 1.0
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <1549342622-9929-1-git-send-email-srinath.mannam@broadcom.com>
+ <1549342622-9929-2-git-send-email-srinath.mannam@broadcom.com> <20190212181208.GA918@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20190212181208.GA918@e107981-ln.cambridge.arm.com>
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+Date:   Wed, 13 Feb 2019 09:27:20 +0530
+Message-ID: <CABe79T7prLa-hPWOfESPYabA_HNvdcc52ztkNJfyLoLv+w7i0A@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] PCI: iproc: Add CRS check in config read
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+Hi Lorenzo,
 
-[ Upstream commit d2fd6e81912a665993b24dcdc1c1384a42a54f7e ]
+Thanks for review, please see my comments below inline.
 
-The disable_acs_redir parameter stores a pointer to the string passed to
-pci_setup().  However, the string passed to PCI setup is actually a
-temporary copy allocated in static __initdata memory.  After init, once the
-memory is freed, it is no longer valid to reference this pointer.
+On Tue, Feb 12, 2019 at 11:42 PM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Tue, Feb 05, 2019 at 10:27:00AM +0530, Srinath Mannam wrote:
+> > In the current implementation, config read output data 0xffff0001 is
+> > assumed as CRS completion. But sometimes 0xffff0001 can be a valid data.
+> >
+> > IPROC PCIe host controller has a register to show config read request
+> > status flags like SC, UR, CRS and CA. So that extra check is added to
+> > confirm the CRS using status flags before reissue config read.
+> >
+> > Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+> > Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> > ---
+> >  drivers/pci/controller/pcie-iproc.c | 23 +++++++++++++++++++++--
+> >  1 file changed, 21 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+> > index c20fd6b..b882255 100644
+> > --- a/drivers/pci/controller/pcie-iproc.c
+> > +++ b/drivers/pci/controller/pcie-iproc.c
+> > @@ -60,6 +60,10 @@
+> >  #define APB_ERR_EN_SHIFT             0
+> >  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+> >
+> > +#define CFG_RD_SUCCESS                       0
+> > +#define CFG_RD_UR                    1
+> > +#define CFG_RD_CRS                   2
+> > +#define CFG_RD_CA                    3
+> >  #define CFG_RETRY_STATUS             0xffff0001
+> >  #define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milliseconds */
+> >
+> > @@ -289,6 +293,9 @@ enum iproc_pcie_reg {
+> >       IPROC_PCIE_IARR4,
+> >       IPROC_PCIE_IMAP4,
+> >
+> > +     /* config read status */
+> > +     IPROC_PCIE_CFG_RD_STATUS,
+> > +
+> >       /* link status */
+> >       IPROC_PCIE_LINK_STATUS,
+> >
+> > @@ -350,6 +357,7 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
+> >       [IPROC_PCIE_IMAP3]              = 0xe08,
+> >       [IPROC_PCIE_IARR4]              = 0xe68,
+> >       [IPROC_PCIE_IMAP4]              = 0xe70,
+> > +     [IPROC_PCIE_CFG_RD_STATUS]      = 0xee0,
+>
+> So, with the *current* code, on controllers that does not support this
+> register you won't be able to get any HW whose config space register
+> value reads 0xffff0001 to work, is that correct ?
+>
+Yes, this feature(register) is available only in "iProc PCIe PAXB v2"
+controller for other controllers it will not applicable.
 
-This bug was noticed in v5.0-rc1 after a change in commit c5eb1190074c
-("PCI / PM: Allow runtime PM without callback functions") caused
-pci_disable_acs_redir() to be called during shutdown which manifested
-as an unable to handle kernel paging request at:
-
-  RIP: 0010:pci_enable_acs+0x3f/0x1e0
-  Call Trace:
-     pci_restore_state.part.44+0x159/0x3c0
-     pci_restore_standard_config+0x33/0x40
-     pci_pm_runtime_resume+0x2b/0xd0
-     ? pci_restore_standard_config+0x40/0x40
-     __rpm_callback+0xbc/0x1b0
-     rpm_callback+0x1f/0x70
-     ? pci_restore_standard_config+0x40/0x40
-      rpm_resume+0x4f9/0x710
-     ? pci_conf1_read+0xb6/0xf0
-     ? pci_conf1_write+0xb2/0xe0
-     __pm_runtime_resume+0x47/0x70
-     pci_device_shutdown+0x1e/0x60
-     device_shutdown+0x14a/0x1f0
-     kernel_restart+0xe/0x50
-     __do_sys_reboot+0x1ee/0x210
-     ? __fput+0x144/0x1d0
-     do_writev+0x5e/0xf0
-     ? do_writev+0x5e/0xf0
-     do_syscall_64+0x48/0xf0
-     entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-It was also likely possible to trigger this bug when hotplugging PCI
-devices.
-
-To fix this, instead of storing a pointer, we use kstrdup() to copy the
-disable_acs_redir_param to its own buffer which will never be freed.
-
-Fixes: aaca43fda742 ("PCI: Add "pci=disable_acs_redir=" parameter for peer-to-peer support")
-Tested-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c9d8e3c837de..c25acace7d91 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6195,7 +6195,8 @@ static int __init pci_setup(char *str)
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
- 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
--				disable_acs_redir_param = str + 18;
-+				disable_acs_redir_param =
-+					kstrdup(str + 18, GFP_KERNEL);
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
--- 
-2.19.1
-
+Regards,
+Srinath.
+> Lorenzo
+>
+> >       [IPROC_PCIE_LINK_STATUS]        = 0xf0c,
+> >       [IPROC_PCIE_APB_ERR_EN]         = 0xf40,
+> >  };
+> > @@ -474,10 +482,12 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
+> >       return (pcie->base + offset);
+> >  }
+> >
+> > -static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+> > +static unsigned int iproc_pcie_cfg_retry(struct iproc_pcie *pcie,
+> > +                                      void __iomem *cfg_data_p)
+> >  {
+> >       int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
+> >       unsigned int data;
+> > +     u32 status;
+> >
+> >       /*
+> >        * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
+> > @@ -498,6 +508,15 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+> >        */
+> >       data = readl(cfg_data_p);
+> >       while (data == CFG_RETRY_STATUS && timeout--) {
+> > +             /*
+> > +              * CRS state is set in CFG_RD status register
+> > +              * This will handle the case where CFG_RETRY_STATUS is
+> > +              * valid config data.
+> > +              */
+> > +             status = iproc_pcie_read_reg(pcie, IPROC_PCIE_CFG_RD_STATUS);
+> > +             if (status != CFG_RD_CRS)
+> > +                     return data;
+> > +
+> >               udelay(1);
+> >               data = readl(cfg_data_p);
+> >       }
+> > @@ -576,7 +595,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> >       if (!cfg_data_p)
+> >               return PCIBIOS_DEVICE_NOT_FOUND;
+> >
+> > -     data = iproc_pcie_cfg_retry(cfg_data_p);
+> > +     data = iproc_pcie_cfg_retry(pcie, cfg_data_p);
+> >
+> >       *val = data;
+> >       if (size <= 2)
+> > --
+> > 2.7.4
+> >
