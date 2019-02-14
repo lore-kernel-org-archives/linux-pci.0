@@ -3,114 +3,125 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C26E1C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 12:24:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D746EC43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 12:46:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BA5D21900
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 12:24:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADFCA218FF
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 12:46:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436643AbfBNMYW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Feb 2019 07:24:22 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:45480 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2436634AbfBNMYW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Feb 2019 07:24:22 -0500
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C51A581DE5;
-        Thu, 14 Feb 2019 12:24:21 +0000 (UTC)
-Received: from localhost (ovpn-8-24.pek2.redhat.com [10.72.8.24])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0E56F5C582;
-        Thu, 14 Feb 2019 12:24:16 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <helgaas@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V4 4/4] PCI: Document .calc_sets as required in case of multiple interrupt sets
-Date:   Thu, 14 Feb 2019 20:23:47 +0800
-Message-Id: <20190214122347.17372-5-ming.lei@redhat.com>
-In-Reply-To: <20190214122347.17372-1-ming.lei@redhat.com>
-References: <20190214122347.17372-1-ming.lei@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Thu, 14 Feb 2019 12:24:21 +0000 (UTC)
+        id S2394680AbfBNMqz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Feb 2019 07:46:55 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43076 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727958AbfBNMqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Feb 2019 07:46:55 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8401D80D;
+        Thu, 14 Feb 2019 04:46:54 -0800 (PST)
+Received: from big-swifty.misterjones.org (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id F1DCD3F675;
+        Thu, 14 Feb 2019 04:46:51 -0800 (PST)
+Date:   Thu, 14 Feb 2019 12:46:49 +0000
+Message-ID: <86ftsqsfk6.wl-marc.zyngier@arm.com>
+From:   Marc Zyngier <marc.zyngier@arm.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 3/9] PCI: keystone: Use hwirq to get the legacy IRQ number offset
+In-Reply-To: <20190214103138.GA24593@e107981-ln.cambridge.arm.com>
+References: <20190213132629.24790-1-kishon@ti.com>
+        <20190213132629.24790-4-kishon@ti.com>
+        <20190213165739.GE2280@e107981-ln.cambridge.arm.com>
+        <8028b0e2-ac32-4e36-c87d-6f4818f34301@ti.com>
+        <20190214103138.GA24593@e107981-ln.cambridge.arm.com>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/25.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+Organization: ARM Ltd
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now NVMe has implemented the .calc_sets callback for calculating size of
-interrupt set.
+Hi Lirenzo,
 
-For other cases of multiple IRQ sets, pre-calculating each set's size
-before allocating IRQ vectors can't work too because the available
-interrupt number for this device is unknown at that time.
+On Thu, 14 Feb 2019 10:31:38 +0000,
+Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> 
+> [CC'ed MarcZ]
+> 
+> On Thu, Feb 14, 2019 at 10:27:19AM +0530, Kishon Vijay Abraham I wrote:
+> > Hi Lorenzo,
+> > 
+> > On 13/02/19 10:27 PM, Lorenzo Pieralisi wrote:
+> > > On Wed, Feb 13, 2019 at 06:56:23PM +0530, Kishon Vijay Abraham I wrote:
+> > >> ks_pcie_legacy_irq_handler() uses 'virq' to get the IRQ number offset.
+> > >> This offset is used to get the correct IRQ_STATUS register
+> > >> corresponding to the IRQ line that raised the interrupt.
+> > >> There is no guarantee that 'virq' assigned for consecutive hardware
+> > >> IRQ will be contiguous. And this might get us an incorrect IRQ number
+> > >> offset.
+> > >>
+> > >> Fix it here by using 'hwirq' to get the IRQ number offset.
+> > >>
+> > >> Link: https://lkml.kernel.org/r/bb081d21-7c03-0357-4294-7e92d95d838c@arm.com
+> > >> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> > >> ---
+> > >>  drivers/pci/controller/dwc/pci-keystone.c | 17 +++++++++++++----
+> > >>  1 file changed, 13 insertions(+), 4 deletions(-)
+> > >>
+> > >> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+> > >> index e8b1d8eca78e..d35ac712a9f8 100644
+> > >> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> > >> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+> > >> @@ -87,7 +87,7 @@ struct keystone_pcie {
+> > >>  	struct dw_pcie		*pci;
+> > >>  	/* PCI Device ID */
+> > >>  	u32			device_id;
+> > >> -	int			legacy_host_irqs[PCI_NUM_INTX];
+> > >> +	int			legacy_host_irq;
+> > >>  	struct			device_node *legacy_intc_np;
+> > >>  
+> > >>  	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
+> > >> @@ -582,11 +582,11 @@ static void ks_pcie_msi_irq_handler(struct irq_desc *desc)
+> > >>   */
+> > >>  static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
+> > >>  {
+> > >> -	unsigned int irq = irq_desc_get_irq(desc);
+> > >> +	unsigned int irq = desc->irq_data.hwirq;
+> > >>  	struct keystone_pcie *ks_pcie = irq_desc_get_handler_data(desc);
+> > >>  	struct dw_pcie *pci = ks_pcie->pci;
+> > >>  	struct device *dev = pci->dev;
+> > >> -	u32 irq_offset = irq - ks_pcie->legacy_host_irqs[0];
+> > >> +	u32 irq_offset = irq - ks_pcie->legacy_host_irq;
+> > > 
+> > > I think you should use the plain hwirq number (that if I understand
+> > > correctly range in [0,3]) and drop legacy_host_irq.
+> > 
+> > The hwirq is [80, 83] for Keystone. We store legacy_host_irq (for Keystone it
+> > is 80) to get the correct offset in the range [0, 3].
+> 
+> IIUC the _parent_ hw_irq number should be what you need here, Marc (if
+> he has time) can correct me if I am wrong (or what I am suggesting is
+> a violation of IRQ domain bstraction usage).
 
-So document .calc_sets as required explicitly for multiple interrupt sets.
+It isn't pretty, but it is something we already do in some cases (see
+irq-gic-v3-mbi.c::mbi_compose_msi_msg as an infamous example).
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/pci/msi.c         | 14 ++++++++------
- include/linux/interrupt.h |  3 ++-
- 2 files changed, 10 insertions(+), 7 deletions(-)
+Thanks,
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 96978459e2a0..64383ab5f53f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1036,10 +1036,11 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 		return -ERANGE;
- 
- 	/*
--	 * If the caller is passing in sets, we can't support a range of
--	 * vectors. The caller needs to handle that.
-+	 * If the caller requests multiple sets of IRQs where each set
-+	 * requires different affinity, it must also supply a ->calc_sets()
-+	 * callback to compute size of each interrupt set
- 	 */
--	if (affd && affd->nr_sets && minvec != maxvec)
-+	if (affd && affd->nr_sets > 1 && !affd->calc_sets)
- 		return -EINVAL;
- 
- 	if (WARN_ON_ONCE(dev->msi_enabled))
-@@ -1094,10 +1095,11 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 		return -ERANGE;
- 
- 	/*
--	 * If the caller is passing in sets, we can't support a range of
--	 * supported vectors. The caller needs to handle that.
-+	 * If the caller requests multiple sets of IRQs where each set
-+	 * requires different affinity, it must also supply a ->calc_sets()
-+	 * callback to compute size of each interrupt set
- 	 */
--	if (affd && affd->nr_sets && minvec != maxvec)
-+	if (affd && affd->nr_sets > 1 && !affd->calc_sets)
- 		return -EINVAL;
- 
- 	if (WARN_ON_ONCE(dev->msix_enabled))
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index acb9c5ad6bc1..0da2a5cea8f3 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -269,7 +269,8 @@ struct irq_affinity_notify {
-  *			the MSI(-X) vector space
-  * @nr_sets:		Length of passed in *sets array
-  * @set_size:		Number of affinitized sets
-- * @calc_sets:		Callback for caculating interrupt sets size
-+ * @calc_sets:		Callback for caculating set size, required for
-+ * 			multiple interrupt sets.
-  * @priv:		Private data of @calc_sets
-  */
- struct irq_affinity {
+	M.
+
 -- 
-2.9.5
-
+Jazz is not dead, it just smell funny.
