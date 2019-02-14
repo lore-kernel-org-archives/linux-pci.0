@@ -2,185 +2,96 @@ Return-Path: <SRS0=m7pK=QV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A3E3C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 22:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F6BFC43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 23:41:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23A0421928
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 22:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C491221B68
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 23:41:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1550187705;
+	bh=HeY7w7Sqzynqib3CLLk9zdx89T71gOTkRPAr72jLGkQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=oCYxDofoFmWJW8RNZBZUx4sTM4tbmeg2s+zP+wGtni/B65YjKidiO33CTnDBOpHNW
+	 kceu9UM7lFb2NnaRKPG5Z/ZGaVsiQ7FBu4inCqb+HwBws6jcqfRDGvH0DoMkGCc16T
+	 Osipob9PjFvZ6Fc5JXPmp6nt14EzdYBRyDSOYub0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408127AbfBNWlx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Feb 2019 17:41:53 -0500
-Received: from mx1.redhat.com ([209.132.183.28]:47542 "EHLO mx1.redhat.com"
+        id S1729123AbfBNXlp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Feb 2019 18:41:45 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55788 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388757AbfBNWlx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Feb 2019 17:41:53 -0500
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726178AbfBNXlo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Feb 2019 18:41:44 -0500
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 599ECA1E43;
-        Thu, 14 Feb 2019 22:41:52 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1FDD85D704;
-        Thu, 14 Feb 2019 22:41:42 +0000 (UTC)
-Date:   Fri, 15 Feb 2019 06:41:37 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Shivasharan Srikanteshwara 
-        <shivasharan.srikanteshwara@broadcom.com>
-Subject: Re: [patch V5 4/8] nvme-pci: Simplify interrupt allocation
-Message-ID: <20190214224136.GA18764@ming.t460p>
-References: <20190214204755.819014197@linutronix.de>
- <20190214211759.699390983@linutronix.de>
+        by mail.kernel.org (Postfix) with ESMTPSA id A171A20835;
+        Thu, 14 Feb 2019 23:41:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1550187703;
+        bh=HeY7w7Sqzynqib3CLLk9zdx89T71gOTkRPAr72jLGkQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=E4HV/MpMNhMbmAlHKrujpIf3MgEMq2KfYfa8yxNGrnEesDJkvPuMU6ofdBXdKZ4db
+         EPylqvGbJbTQ2y1auiBfxi0oFwUTKonUSrYRvsZB2I/MZvhqNWf/AA3CCfhJjRgEQL
+         grbS9DzQppz8nvTy3YWjBPCPgcbHqrW1EkQ5UMZ4=
+Date:   Thu, 14 Feb 2019 17:41:42 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     honghui.zhang@mediatek.com
+Cc:     lorenzo.pieralisi@arm.com, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ryder.lee@mediatek.com,
+        matthias.bgg@gmail.com, youlin.pei@mediatek.com,
+        poza@codeaurora.org, fred@fredlawl.com, rafael.j.wysocki@intel.com,
+        jianjun.wang@mediatek.com
+Subject: Re: [RFC PATCH v2] PCI/portdrv: Support for subtractive decode bridge
+Message-ID: <20190214234142.GP96272@google.com>
+References: <1550121677-10474-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190214211759.699390983@linutronix.de>
-User-Agent: Mutt/1.9.1 (2017-09-22)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Thu, 14 Feb 2019 22:41:52 +0000 (UTC)
+In-Reply-To: <1550121677-10474-1-git-send-email-honghui.zhang@mediatek.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 14, 2019 at 09:47:59PM +0100, Thomas Gleixner wrote:
-> From: Ming Lei <ming.lei@redhat.com>
+On Thu, Feb 14, 2019 at 01:21:17PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> The NVME PCI driver contains a tedious mechanism for interrupt
-> allocation, which is necessary to adjust the number and size of interrupt
-> sets to the maximum available number of interrupts which depends on the
-> underlying PCI capabilities and the available CPU resources.
+> The Class Code for subtractive decode PCI-to-PCI bridge is 060401h,
+> add one entry to make portdrv support this type bridge.
 > 
-> It works around the former short comings of the PCI and core interrupt
-> allocation mechanims in combination with interrupt sets.
-> 
-> The PCI interrupt allocation function allows to provide a maximum and a
-> minimum number of interrupts to be allocated and tries to allocate as
-> many as possible. This worked without driver interaction as long as there
-> was only a single set of interrupts to handle.
-> 
-> With the addition of support for multiple interrupt sets in the generic
-> affinity spreading logic, which is invoked from the PCI interrupt
-> allocation, the adaptive loop in the PCI interrupt allocation did not
-> work for multiple interrupt sets. The reason is that depending on the
-> total number of interrupts which the PCI allocation adaptive loop tries
-> to allocate in each step, the number and the size of the interrupt sets
-> need to be adapted as well. Due to the way the interrupt sets support was
-> implemented there was no way for the PCI interrupt allocation code or the
-> core affinity spreading mechanism to invoke a driver specific function
-> for adapting the interrupt sets configuration.
-> 
-> As a consequence the driver had to implement another adaptive loop around
-> the PCI interrupt allocation function and calling that with maximum and
-> minimum interrupts set to the same value. This ensured that the
-> allocation either succeeded or immediately failed without any attempt to
-> adjust the number of interrupts in the PCI code.
-> 
-> The core code now allows drivers to provide a callback to recalculate the
-> number and the size of interrupt sets during PCI interrupt allocation,
-> which in turn allows the PCI interrupt allocation function to be called
-> in the same way as with a single set of interrupts. The PCI code handles
-> the adaptive loop and the interrupt affinity spreading mechanism invokes
-> the driver callback to adapt the interrupt set configuration to the
-> current loop value. This replaces the adaptive loop in the driver
-> completely.
-> 
-> Implement the NVME specific callback which adjusts the interrupt sets
-> configuration and remove the adaptive allocation loop.
-> 
-> [ tglx: Simplify the callback further and restore the dropped adjustment of
->   	number of sets ]
-> 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> 
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+
+Applied to pci/portdrv for v5.1, thanks!
+
 > ---
->  drivers/nvme/host/pci.c |  108 ++++++++++++------------------------------------
->  1 file changed, 28 insertions(+), 80 deletions(-)
+>  drivers/pci/pcie/portdrv_pci.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> --- a/drivers/nvme/host/pci.c
-> +++ b/drivers/nvme/host/pci.c
-> @@ -2041,41 +2041,32 @@ static int nvme_setup_host_mem(struct nv
->  	return ret;
->  }
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 0acca35..c129f2f 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -185,6 +185,8 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+>  static const struct pci_device_id port_pci_ids[] = { {
+>  	/* handle any PCI-Express port */
+>  	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
+> +	/* subtractive decode PCI-to-PCI bridge, class type is 060401h */
+> +	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x01), ~0),
+>  	}, { /* end: all zeroes */ }
+>  };
 >  
-> -/* irq_queues covers admin queue */
-> -static void nvme_calc_io_queues(struct nvme_dev *dev, unsigned int irq_queues)
-> +/*
-> + * nirqs is the number of interrupts available for write and read
-> + * queues. The core already reserved an interrupt for the admin queue.
-> + */
-> +static void nvme_calc_irq_sets(struct irq_affinity *affd, unsigned int nrirqs)
->  {
-> -	unsigned int this_w_queues = write_queues;
-> -
-> -	WARN_ON(!irq_queues);
-> -
-> -	/*
-> -	 * Setup read/write queue split, assign admin queue one independent
-> -	 * irq vector if irq_queues is > 1.
-> -	 */
-> -	if (irq_queues <= 2) {
-> -		dev->io_queues[HCTX_TYPE_DEFAULT] = 1;
-> -		dev->io_queues[HCTX_TYPE_READ] = 0;
-> -		return;
-> -	}
-> +	struct nvme_dev *dev = affd->priv;
-> +	unsigned int nr_read_queues;
->  
->  	/*
-> -	 * If 'write_queues' is set, ensure it leaves room for at least
-> -	 * one read queue and one admin queue
-> -	 */
-> -	if (this_w_queues >= irq_queues)
-> -		this_w_queues = irq_queues - 2;
-> -
-> -	/*
-> -	 * If 'write_queues' is set to zero, reads and writes will share
-> -	 * a queue set.
-> -	 */
-> -	if (!this_w_queues) {
-> -		dev->io_queues[HCTX_TYPE_DEFAULT] = irq_queues - 1;
-> -		dev->io_queues[HCTX_TYPE_READ] = 0;
-> -	} else {
-> -		dev->io_queues[HCTX_TYPE_DEFAULT] = this_w_queues;
-> -		dev->io_queues[HCTX_TYPE_READ] = irq_queues - this_w_queues - 1;
-> -	}
-> +	 * If only one interrupt is available, combine write and read
-> +	 * queues. If 'write_queues' is set, ensure it leaves room for at
-> +	 * least one read queue.
-> +	 */
-> +	if (nrirqs == 1)
-> +		nr_read_queues = 0;
-> +	else if (write_queues >= nrirqs)
-> +		nr_read_queues = nrirqs - 1;
-> +	else
-> +		nr_read_queues = nrirqs - write_queues;
-> +
-> +	dev->io_queues[HCTX_TYPE_DEFAULT] = nrirqs - nr_read_queues;
-> +	affd->set_size[HCTX_TYPE_DEFAULT] = nrirqs - nr_read_queues;
-> +	dev->io_queues[HCTX_TYPE_READ] = nr_read_queues;
-> +	affd->set_size[HCTX_TYPE_READ] = nr_read_queues;
-> +	affd->nr_sets = nr_read_queues ? 2 : 1;
->  }
-
-.calc_sets is called only if more than .pre_vectors is available,
-then dev->io_queues[HCTX_TYPE_DEFAULT] may not be set in case of
-(nvecs == affd->pre_vectors + affd->post_vectors).
-
-Thanks,
-Ming
+> -- 
+> 2.6.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
