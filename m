@@ -2,87 +2,129 @@ Return-Path: <SRS0=m7pK=QV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C9FCC43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 18:51:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66B6BC43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 19:26:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E7E31218AC
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 18:51:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550170293;
-	bh=JyWWa/TYeUKwUnwnoOG1g79lawmlfFpG1e39tdIjxgM=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=AWpYUCnB93YCVawqxmR54iZ1zIOh56Oy1cip9EVfqoyu5/GkyVl+W5F7/215I0jYS
-	 ABkbl3tuERSmzzZWt+hGMa3Csg5G/5ALyzSDDhfQz0oYO/mwq/gwFYue5O5mESljdp
-	 op56vzIt7D+b2kKEIQV8A7jCqr/M4gmg1NpZd0/U=
+	by mail.kernel.org (Postfix) with ESMTP id 23BD1222D9
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 19:26:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="ePhMKfA6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727559AbfBNSvc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Feb 2019 13:51:32 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37330 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727377AbfBNSvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Feb 2019 13:51:32 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 62749218AC;
-        Thu, 14 Feb 2019 18:51:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550170291;
-        bh=JyWWa/TYeUKwUnwnoOG1g79lawmlfFpG1e39tdIjxgM=;
-        h=Date:From:To:Cc:Subject:From;
-        b=q99qNveebRefkW6dm+U1jKUvkkzdq2sDwJ/S7sZnfhKT97cssRoitTQrMajq2pWEZ
-         WUA+aq0ShJAu+CTXUgAsAOwCAS479ivUoJkJIX9j1OLmyDJKInKzQvoTk6812OxKyU
-         WYtAEpuhi9R5rSG4829PDi4Zi3E4CNy4BM1DchvE=
-Date:   Thu, 14 Feb 2019 12:51:28 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        "Michael A. Leonetti" <mikealeonetti@gmail.com>,
-        Alex Deucher <alexdeucher@gmail.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
-Subject: Bug 202511 - amdgpu fails to load saying "Could not allocate 8192
- bytes percpu data"
-Message-ID: <20190214185128.GL96272@google.com>
+        id S2439742AbfBNT0h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Feb 2019 14:26:37 -0500
+Received: from esa2.dell-outbound.iphmx.com ([68.232.149.220]:53808 "EHLO
+        esa2.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2439736AbfBNT0c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2019 14:26:32 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
+  t=1550172392; x=1581708392;
+  h=cc:from:to:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=KF5/ZKLPvD3zphF/+bULMEtrWBscpl6jofrPxgRma4k=;
+  b=ePhMKfA6K1IGtaY8SQtieeOi+DhyjuSQeD/ToY+EgZm6gYaV9oDLIBQh
+   l6mXO3w1xQ6YO5vVwTzpgn1sESV5G0smhtahSjMSAeYWLD/3qbPbHzEfD
+   6DyMvCxE2CElg9bfua13eswpMPnyTmsjOUli+0/2CH5vcEc3f+vuXW/GE
+   k=;
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2FyAAAjwGVchyeV50NkGwEBAQEDAQE?=
+ =?us-ascii?q?BBwMBAQGBZYJZgRQnCox1ixKCDZoOCwEBLIRAg2YiOBIBAwEBAgEBAgEBAhA?=
+ =?us-ascii?q?BAQEKCwkIKS+COiKCbwEBAQMBEig/BQsCAQgYHhBXAgQTCBqCfoFrCJ5mPQJ?=
+ =?us-ascii?q?tgQGJBwEBAYIeijiMRIIWg3UuhQFNhRMCjAeLMot1CQWSRyGBbpEFi0mQYgI?=
+ =?us-ascii?q?EAgQFAhSBXYF4cIM8gjaOJ0ExgSiOFQGBHgEB?=
+X-IPAS-Result: =?us-ascii?q?A2FyAAAjwGVchyeV50NkGwEBAQEDAQEBBwMBAQGBZYJZg?=
+ =?us-ascii?q?RQnCox1ixKCDZoOCwEBLIRAg2YiOBIBAwEBAgEBAgEBAhABAQEKCwkIKS+CO?=
+ =?us-ascii?q?iKCbwEBAQMBEig/BQsCAQgYHhBXAgQTCBqCfoFrCJ5mPQJtgQGJBwEBAYIei?=
+ =?us-ascii?q?jiMRIIWg3UuhQFNhRMCjAeLMot1CQWSRyGBbpEFi0mQYgIEAgQFAhSBXYF4c?=
+ =?us-ascii?q?IM8gjaOJ0ExgSiOFQGBHgEB?=
+Received: from mx0a-00154901.pphosted.com ([67.231.149.39])
+  by esa2.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Feb 2019 13:26:30 -0600
+Received: from pps.filterd (m0142699.ppops.net [127.0.0.1])
+        by mx0a-00154901.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x1EJE6jw034764;
+        Thu, 14 Feb 2019 14:26:30 -0500
+Received: from esa5.dell-outbound2.iphmx.com (esa5.dell-outbound2.iphmx.com [68.232.153.203])
+        by mx0a-00154901.pphosted.com with ESMTP id 2qnc78rr5p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 14 Feb 2019 14:26:29 -0500
+Cc:     <mr.nuke.me@gmail.com>, <bhelgaas@google.com>,
+        <Austin.Bolen@dell.com>, <keith.busch@intel.com>,
+        <Shyam.Iyer@dell.com>, <gustavo@embeddedor.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Received: from ausxippc106.us.dell.com ([143.166.85.156])
+  by esa5.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 15 Feb 2019 01:26:02 +0600
+X-LoopCount0: from 10.166.134.85
+X-IronPort-AV: E=Sophos;i="5.58,369,1544508000"; 
+   d="scan'208";a="354071790"
+From:   <Alex_Gagniuc@Dellteam.com>
+To:     <lukas@wunner.de>
+Subject: Re: [PATCH] PCI: pciehp: Do not turn off slot if presence comes up
+ after link
+Thread-Topic: [PATCH] PCI: pciehp: Do not turn off slot if presence comes up
+ after link
+Thread-Index: AQHUvZbN4kEiyNA8xUGy+Uw4G87SXw==
+Date:   Thu, 14 Feb 2019 19:26:28 +0000
+Message-ID: <59479c08d4624ffdb00883813ce80729@ausx13mps321.AMER.DELL.COM>
+References: <20190205210701.25387-1-mr.nuke.me@gmail.com>
+ <20190209115849.244u67h7wmn3eb7o@wunner.de>
+ <52afa1c45f684dbda6a8771b65583a22@ausx13mps321.AMER.DELL.COM>
+ <20190212083031.2no7mzn5xug7nba3@wunner.de>
+ <b2fffa5beb7941ebaceb8b8ce6e5b133@ausx13mps321.AMER.DELL.COM>
+ <20190213083632.GA3387@wunner.de>
+ <205e0fd9995a4f2b80ab370a974b6628@ausx13mps321.AMER.DELL.COM>
+ <20190214070100.kvikmkkcrp2d32sm@wunner.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [143.166.11.234]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-02-14_10:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=715 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1902140128
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=202511
-
-From reporter (Michael):
-
-> Working on 4.17.19 (which is what I use) but any kernel 4.19* 4.20* I try has this issue. Built amdgpu as a module, when it tries to load it (or I try to modprobe it) I get
-> 
->   amdgpu: Could not allocate 8192 bytes percpu data
->   ath10k_pci 0000:02:00.0: board_file api 2 bmi_id N/A crc32 8aedfa4a
->   percpu: allocation failed, size=8192 align=4096 atomic=0, alloc from reserved chunk failed
->   CPU: 1 PID: 2620 Comm: systemd-udevd Not tainted 4.20.6-gentoo #1
->   Hardware name: Acer Aspire A315-41/Metapod_RR, BIOS V1.11 10/30/2018
->   Call Trace:
->    dump_stack+0x46/0x5b
->    pcpu_alloc+0x56e/0x590
->    ? find_module_all+0x4c/0x80
->    load_module+0xb51/0x1e80
->    ? wait_woken+0x80/0x80
->    __se_sys_finit_module+0xe0/0xf0
->    do_syscall_64+0x4a/0x100
->    entry_SYSCALL_64_after_hwframe+0x44/0xa9
->   RIP: 0033:0x7fb64cd77fb9
->   Code: 00 00 00 75 05 48 83 c4 18 c3 e8 42 a5 01 00 66 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 9f 4e 2c 00 f7 d8 64 89 01 48
->   RSP: 002b:00007ffe5fe76eb8 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
->   RAX: ffffffffffffffda RBX: 00005615a81b2c10 RCX: 00007fb64cd77fb9
->   RDX: 0000000000000000 RSI: 00007fb64dd3c1c5 RDI: 000000000000000f
->   RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
->   R10: 000000000000000f R11: 0000000000000246 R12: 00005615a81d0290
->   R13: 00007fb64dd3c1c5 R14: 0000000000020000 R15: 0000000003938700
-
-Full dmesg and bisection info in the bugzilla.  Any help is welcome.
+On 2/14/19 1:01 AM, Lukas Wunner wrote:=0A=
+> On Wed, Feb 13, 2019 at 06:55:46PM +0000, Alex_Gagniuc@Dellteam.com wrote=
+:=0A=
+>> On 2/13/19 2:36 AM, Lukas Wunner wrote:=0A=
+>>>> (*) A bit hypothetical: There is no hardware yet implementing the ECN.=
+=0A=
+>>>=0A=
+>>> Hm, this contradicts Austin Bolen's e-mail of Jan 25 that "Yes, this=0A=
+>>> platform disables in-band presence" (when asked whether your host=0A=
+>>> controller already adheres to the ECN).=0A=
+>>=0A=
+>> Both statements are true. The hardware does indeed disable in-band=0A=
+>> presence, in a rudimentary way that is not compliant with the ECN -- it=
+=0A=
+>> doesn't implement the bits required by the ECN.=0A=
+> =0A=
+> Ugh, can a BIOS update make those machines compliant to the ECN=0A=
+=0A=
+No, that is not possible, I'm told.=0A=
+=0A=
+> or do we need a quirk specifically for them?=0A=
+=0A=
+We might have to.=0A=
+=0A=
+> It should match the spec, which I have no access to.=0A=
+=0A=
+I am as irritated as you that the spec is not readily available for =0A=
+public viewing.=0A=
+=0A=
+Cheers,=0A=
+Alex=0A=
