@@ -6,25 +6,25 @@ X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9EF0C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 21:37:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB046C10F04
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 21:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A1FD52147C
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 21:37:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9224F21B68
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 21:37:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2440282AbfBNVgt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Feb 2019 16:36:49 -0500
-Received: from Galois.linutronix.de ([146.0.238.70]:51353 "EHLO
+        id S2388981AbfBNVhV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Feb 2019 16:37:21 -0500
+Received: from Galois.linutronix.de ([146.0.238.70]:51355 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2436452AbfBNVgq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2019 16:36:46 -0500
+        with ESMTP id S2440278AbfBNVgt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2019 16:36:49 -0500
 Received: from localhost ([127.0.0.1] helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtp (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1guOgF-0002CU-3N; Thu, 14 Feb 2019 22:36:27 +0100
-Message-Id: <20190214211759.803557905@linutronix.de>
+        id 1guOgG-0002Ce-Q7; Thu, 14 Feb 2019 22:36:29 +0100
+Message-Id: <20190214211759.981965829@linutronix.de>
 User-Agent: quilt/0.65
-Date:   Thu, 14 Feb 2019 21:48:00 +0100
+Date:   Thu, 14 Feb 2019 21:48:02 +0100
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     LKML <linux-kernel@vger.kernel.org>
 Cc:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
@@ -38,8 +38,8 @@ Cc:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         Shivasharan Srikanteshwara 
         <shivasharan.srikanteshwara@broadcom.com>
-Subject: [patch V5 5/8] genirq/affinity: Remove the leftovers of the original
- set support
+Subject: [patch V5 7/8] genirq/affinity: Set is_managed in the spreading
+ function
 References: <20190214204755.819014197@linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -48,53 +48,88 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that the NVME driver is converted over to the calc_set() callback, the
-workarounds of the original set support can be removed.
+Some drivers need an extra set of interrupts which are not marked managed,
+but should get initial interrupt spreading.
+
+To achieve this it is simpler to set the is_managed bit of the affinity
+descriptor in the spreading function instead of having yet another loop and
+tons of conditionals.
+
+No functional change.
 
 Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 ---
- kernel/irq/affinity.c |   17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+ kernel/irq/affinity.c |   18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
 --- a/kernel/irq/affinity.c
 +++ b/kernel/irq/affinity.c
-@@ -258,21 +258,17 @@ irq_create_affinity_masks(unsigned int n
+@@ -98,6 +98,7 @@ static int __irq_build_affinity_masks(co
+ 				      unsigned int startvec,
+ 				      unsigned int numvecs,
+ 				      unsigned int firstvec,
++				      bool managed,
+ 				      cpumask_var_t *node_to_cpumask,
+ 				      const struct cpumask *cpu_mask,
+ 				      struct cpumask *nmsk,
+@@ -154,6 +155,7 @@ static int __irq_build_affinity_masks(co
+ 			}
+ 			irq_spread_init_one(&masks[curvec].mask, nmsk,
+ 						cpus_per_vec);
++			masks[curvec].is_managed = managed;
+ 		}
+ 
+ 		done += v;
+@@ -173,7 +175,7 @@ static int __irq_build_affinity_masks(co
+  */
+ static int irq_build_affinity_masks(const struct irq_affinity *affd,
+ 				    unsigned int startvec, unsigned int numvecs,
+-				    unsigned int firstvec,
++				    unsigned int firstvec, bool managed,
+ 				    struct irq_affinity_desc *masks)
+ {
+ 	unsigned int curvec = startvec, nr_present, nr_others;
+@@ -197,8 +199,8 @@ static int irq_build_affinity_masks(cons
+ 	build_node_to_cpumask(node_to_cpumask);
+ 
+ 	/* Spread on present CPUs starting from affd->pre_vectors */
+-	nr_present = __irq_build_affinity_masks(affd, curvec, numvecs,
+-						firstvec, node_to_cpumask,
++	nr_present = __irq_build_affinity_masks(affd, curvec, numvecs, firstvec,
++						managed, node_to_cpumask,
+ 						cpu_present_mask, nmsk, masks);
  
  	/*
- 	 * Simple invocations do not provide a calc_sets()
--	 * callback. Install the generic one. The check for affd->nr_sets
--	 * is a temporary workaround and will be removed after the NVME
--	 * driver is converted over.
-+	 * callback. Install the generic one.
- 	 */
--	if (!affd->nr_sets && !affd->calc_sets)
-+	if (!affd->calc_sets)
- 		affd->calc_sets = default_calc_sets;
+@@ -212,8 +214,8 @@ static int irq_build_affinity_masks(cons
+ 	else
+ 		curvec = firstvec + nr_present;
+ 	cpumask_andnot(npresmsk, cpu_possible_mask, cpu_present_mask);
+-	nr_others = __irq_build_affinity_masks(affd, curvec, numvecs,
+-					       firstvec, node_to_cpumask,
++	nr_others = __irq_build_affinity_masks(affd, curvec, numvecs, firstvec,
++					       managed, node_to_cpumask,
+ 					       npresmsk, nmsk, masks);
+ 	put_online_cpus();
  
- 	/*
- 	 * If the device driver provided a calc_sets() callback let it
--	 * recalculate the number of sets and their size. The check will go
--	 * away once the NVME driver is converted over.
-+	 * recalculate the number of sets and their size.
- 	 */
- 	affvecs = nvecs - affd->pre_vectors - affd->post_vectors;
--	if (affd->calc_sets)
--		affd->calc_sets(affd, affvecs);
-+	affd->calc_sets(affd, affvecs);
+@@ -290,7 +292,7 @@ irq_create_affinity_masks(unsigned int n
+ 		int ret;
  
- 	if (WARN_ON_ONCE(affd->nr_sets > IRQ_AFFINITY_MAX_SETS))
- 		return NULL;
-@@ -335,11 +331,6 @@ unsigned int irq_calc_affinity_vectors(u
+ 		ret = irq_build_affinity_masks(affd, curvec, this_vecs,
+-					       curvec, masks);
++					       true, curvec, masks);
+ 		if (ret) {
+ 			kfree(masks);
+ 			return NULL;
+@@ -307,10 +309,6 @@ irq_create_affinity_masks(unsigned int n
+ 	for (; curvec < nvecs; curvec++)
+ 		cpumask_copy(&masks[curvec].mask, irq_default_affinity);
  
- 	if (affd->calc_sets) {
- 		set_vecs = maxvec - resv;
--	} else if (affd->nr_sets) {
--		unsigned int i;
+-	/* Mark the managed interrupts */
+-	for (i = affd->pre_vectors; i < nvecs - affd->post_vectors; i++)
+-		masks[i].is_managed = 1;
 -
--		for (i = 0, set_vecs = 0;  i < affd->nr_sets; i++)
--			set_vecs += affd->set_size[i];
- 	} else {
- 		get_online_cpus();
- 		set_vecs = cpumask_weight(cpu_possible_mask);
+ 	return masks;
+ }
+ 
 
 
