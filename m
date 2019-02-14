@@ -6,24 +6,24 @@ X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB509C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 14:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87FD5C10F04
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 14:51:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A2AF921927
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 14:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63D66222D9
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 14:51:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732780AbfBNOEf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Feb 2019 09:04:35 -0500
-Received: from Galois.linutronix.de ([146.0.238.70]:49888 "EHLO
+        id S1732289AbfBNOuz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Feb 2019 09:50:55 -0500
+Received: from Galois.linutronix.de ([146.0.238.70]:49977 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727745AbfBNOEf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2019 09:04:35 -0500
+        with ESMTP id S2407338AbfBNOuw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2019 09:50:52 -0500
 Received: from [5.158.153.52] (helo=nanos.tec.linutronix.de)
         by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
         (Exim 4.80)
         (envelope-from <tglx@linutronix.de>)
-        id 1guHcm-00085d-Sn; Thu, 14 Feb 2019 15:04:25 +0100
-Date:   Thu, 14 Feb 2019 15:04:24 +0100 (CET)
+        id 1guILU-00012y-Ia; Thu, 14 Feb 2019 15:50:36 +0100
+Date:   Thu, 14 Feb 2019 15:50:35 +0100 (CET)
 From:   Thomas Gleixner <tglx@linutronix.de>
 To:     Ming Lei <ming.lei@redhat.com>
 cc:     Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <helgaas@kernel.org>,
@@ -31,11 +31,11 @@ cc:     Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <helgaas@kernel.org>,
         Sagi Grimberg <sagi@grimberg.me>,
         linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH V4 1/4] genirq/affinity: store interrupt sets size in
- 'struct irq_affinity'
-In-Reply-To: <20190214122347.17372-2-ming.lei@redhat.com>
-Message-ID: <alpine.DEB.2.21.1902141502320.1561@nanos.tec.linutronix.de>
-References: <20190214122347.17372-1-ming.lei@redhat.com> <20190214122347.17372-2-ming.lei@redhat.com>
+Subject: Re: [PATCH V4 2/4] genirq/affinity: add new callback for caculating
+ interrupt sets size
+In-Reply-To: <20190214122347.17372-3-ming.lei@redhat.com>
+Message-ID: <alpine.DEB.2.21.1902141547320.1561@nanos.tec.linutronix.de>
+References: <20190214122347.17372-1-ming.lei@redhat.com> <20190214122347.17372-3-ming.lei@redhat.com>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -45,32 +45,19 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 On Thu, 14 Feb 2019, Ming Lei wrote:
->  /**
->   * struct irq_affinity - Description for automatic irq affinity assignements
->   * @pre_vectors:	Don't apply affinity to @pre_vectors at beginning of
-> @@ -266,13 +268,13 @@ struct irq_affinity_notify {
->   * @post_vectors:	Don't apply affinity to @post_vectors at end of
->   *			the MSI(-X) vector space
->   * @nr_sets:		Length of passed in *sets array
-> - * @sets:		Number of affinitized sets
-> + * @set_size:		Number of affinitized sets
+> +	if (affd->calc_sets) {
+> +		affd->calc_sets(affd, nvecs);
+> +	} else if (!affd->nr_sets) {
+> +		affd->nr_sets = 1;
+> +		affd->set_size[0] = affvecs;
 
-Both nr_sets and set_size comments are wrong ...
+Hrmpf. I suggested that to you to get rid of the nr_sets local variable,
+but that's actually broken. The reason is that on the first invocation from
+the pci code, which is with maxvecs usually, the size is stored and if that
+allocation failed, the subsequent invocation with maxvecs - 1 will not
+update set_size[0] because affd->nr_sets == 1.
 
->  	nr_sets = affd->nr_sets;
-> -	if (!nr_sets)
-> +	if (!nr_sets) {
->  		nr_sets = 1;
-> +		set_size[0] = affvecs;
-> +	} else {
-> +		memcpy(set_size, affd->set_size,
-> +				IRQ_AFFINITY_MAX_SETS * sizeof(int));
-
-Uuurgh. No. This needs to be nr_sets * sizeof(int) otherwise you copy
-beyond the size of the source. nr_sets is already verified to be less than
-IRQ_AFFINITY_MAX_SETS.
-
-Fixed it up.
+/me scratches head and stares at the code some more...
 
 Thanks,
 
