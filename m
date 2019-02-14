@@ -2,69 +2,110 @@ Return-Path: <SRS0=m7pK=QV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23900C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 07:21:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E708C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 08:50:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2F01222B6
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 07:21:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 167CD222B6
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Feb 2019 08:50:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394192AbfBNHUx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Feb 2019 02:20:53 -0500
-Received: from mga14.intel.com ([192.55.52.115]:65512 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388265AbfBNHUx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Feb 2019 02:20:53 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Feb 2019 23:20:52 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,367,1544515200"; 
-   d="scan'208";a="320278448"
-Received: from lftan-mobl.gar.corp.intel.com (HELO ubuntu) ([10.226.248.114])
-  by fmsmga005.fm.intel.com with SMTP; 13 Feb 2019 23:20:48 -0800
-Received: by ubuntu (sSMTP sendmail emulation); Thu, 14 Feb 2019 23:20:47 +0800
-From:   Ley Foon Tan <ley.foon.tan@intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, lftan.linux@gmail.com,
-        Ley Foon Tan <ley.foon.tan@intel.com>
-Subject: [PATCH v4 2/3] PCI: altera: Enable driver on ARM64
-Date:   Thu, 14 Feb 2019 23:20:37 +0800
-Message-Id: <1550157638-25112-3-git-send-email-ley.foon.tan@intel.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1550157638-25112-1-git-send-email-ley.foon.tan@intel.com>
-References: <1550157638-25112-1-git-send-email-ley.foon.tan@intel.com>
+        id S2437628AbfBNIue (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Feb 2019 03:50:34 -0500
+Received: from Galois.linutronix.de ([146.0.238.70]:48930 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388475AbfBNIue (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Feb 2019 03:50:34 -0500
+Received: from p5492e0d8.dip0.t-ipconnect.de ([84.146.224.216] helo=nanos)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1guCik-00008u-BE; Thu, 14 Feb 2019 09:50:14 +0100
+Date:   Thu, 14 Feb 2019 09:50:13 +0100 (CET)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     Keith Busch <keith.busch@intel.com>
+cc:     Bjorn Helgaas <helgaas@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Sagi Grimberg <sagi@grimberg.me>, linux-pci@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, Ming Lei <ming.lei@redhat.com>,
+        linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Huacai Chen <chenhc@lemote.com>
+Subject: Re: [PATCH V3 1/5] genirq/affinity: don't mark 'affd' as const
+In-Reply-To: <20190213223711.GC8027@localhost.localdomain>
+Message-ID: <alpine.DEB.2.21.1902140949280.1659@nanos.tec.linutronix.de>
+References: <20190213105041.13537-1-ming.lei@redhat.com> <20190213105041.13537-2-ming.lei@redhat.com> <20190213150407.GB96272@google.com> <alpine.DEB.2.21.1902132112590.1659@nanos.tec.linutronix.de> <20190213213149.GB8027@localhost.localdomain>
+ <alpine.DEB.2.21.1902132232560.1659@nanos.tec.linutronix.de> <20190213223711.GC8027@localhost.localdomain>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable PCIE_ALTERA on ARM64 platform.
+On Wed, 13 Feb 2019, Keith Busch wrote:
 
-Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
----
- drivers/pci/controller/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Cc+ Huacai Chen
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 6671946..6012f30 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -175,7 +175,7 @@ config PCIE_IPROC_MSI
- 
- config PCIE_ALTERA
- 	bool "Altera PCIe controller"
--	depends on ARM || NIOS2 || COMPILE_TEST
-+	depends on ARM || NIOS2 || ARM64 || COMPILE_TEST
- 	help
- 	  Say Y here if you want to enable PCIe controller support on Altera
- 	  FPGA.
--- 
-1.7.1
+> On Wed, Feb 13, 2019 at 10:41:55PM +0100, Thomas Gleixner wrote:
+> > Btw, while I have your attention. There popped up an issue recently related
+> > to that affinity logic.
+> > 
+> > The current implementation fails when:
+> > 
+> >         /*
+> >          * If there aren't any vectors left after applying the pre/post
+> >          * vectors don't bother with assigning affinity.
+> > 	 */
+> > 	if (nvecs == affd->pre_vectors + affd->post_vectors)
+> >     		return NULL;
+> > 
+> > Now the discussion arised, that in that case the affinity sets are not
+> > allocated and filled in for the pre/post vectors, but somehow the
+> > underlying device still works and later on triggers the warning in the
+> > blk-mq code because the MSI entries do not have affinity information
+> > attached.
+> >
+> > Sure, we could make that work, but there are several issues:
+> > 
+> >     1) irq_create_affinity_masks() has another reason to return NULL:
+> >        memory allocation fails.
+> > 
+> >     2) Does it make sense at all.
+> > 
+> > Right now the PCI allocator ignores the NULL return and proceeds without
+> > setting any affinities. As a consequence nothing is managed and everything
+> > happens to work.
+> > 
+> > But that happens to work is more by chance than by design and the warning
+> > is bogus if this is an expected mode of operation.
+> > 
+> > We should address these points in some way.
+> 
+> Ah, yes, that's a mistake in the nvme driver. It is assuming IO queues are
+> always on managed interrupts, but that's not true if when only 1 vector
+> could be allocated. This should be an appropriate fix to the warning:
 
+Looks correct. Chen, can you please test that?
+
+> ---
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 022ea1ee63f8..f2ccebe1c926 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -506,7 +506,7 @@ static int nvme_pci_map_queues(struct blk_mq_tag_set *set)
+>  		 * affinity), so use the regular blk-mq cpu mapping
+>  		 */
+>  		map->queue_offset = qoff;
+> -		if (i != HCTX_TYPE_POLL)
+> +		if (i != HCTX_TYPE_POLL && dev->num_vecs > 1)
+>  			blk_mq_pci_map_queues(map, to_pci_dev(dev->dev), offset);
+>  		else
+>  			blk_mq_map_queues(map);
+> --
+> 
