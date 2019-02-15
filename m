@@ -2,104 +2,187 @@ Return-Path: <SRS0=N/Da=QW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69D5FC43381
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Feb 2019 08:19:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACD88C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Feb 2019 09:25:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3945F2192C
-	for <linux-pci@archiver.kernel.org>; Fri, 15 Feb 2019 08:18:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80702206B7
+	for <linux-pci@archiver.kernel.org>; Fri, 15 Feb 2019 09:25:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390737AbfBOIS6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 15 Feb 2019 03:18:58 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:21816 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2389141AbfBOIS6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 15 Feb 2019 03:18:58 -0500
-X-UUID: 7631d8c42916419a88e9f47ebf2b6dc6-20190215
-X-UUID: 7631d8c42916419a88e9f47ebf2b6dc6-20190215
-Received: from mtkcas36.mediatek.inc [(172.27.4.250)] by mailgw01.mediatek.com
-        (envelope-from <honghui.zhang@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 1268244609; Fri, 15 Feb 2019 16:18:45 +0800
-Received: from MTKCAS36.mediatek.inc (172.27.4.186) by MTKMBS32N1.mediatek.inc
- (172.27.4.71) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 15 Feb
- 2019 16:18:44 +0800
-Received: from [10.17.3.153] (10.17.3.153) by MTKCAS36.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 15 Feb 2019 16:18:43 +0800
-Message-ID: <1550218723.4980.69.camel@mhfsdcap03>
-Subject: Re: [pci:pci/portdrv 1/1] drivers/pci/pcie/portdrv_pci.c:187:9:
- sparse: warning: Initializer entry defined twice
-From:   Honghui Zhang <honghui.zhang@mediatek.com>
-To:     kbuild test robot <lkp@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     <kbuild-all@01.org>, <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Date:   Fri, 15 Feb 2019 16:18:43 +0800
-In-Reply-To: <201902151544.kWECyQ24%fengguang.wu@intel.com>
-References: <201902151544.kWECyQ24%fengguang.wu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
-MIME-Version: 1.0
-X-MTK:  N
+        id S2390871AbfBOJYy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 15 Feb 2019 04:24:54 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56804 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726473AbfBOJYy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 15 Feb 2019 04:24:54 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 62187A78;
+        Fri, 15 Feb 2019 01:24:53 -0800 (PST)
+Received: from big-swifty.misterjones.org (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 5EB043F557;
+        Fri, 15 Feb 2019 01:24:46 -0800 (PST)
+Date:   Fri, 15 Feb 2019 09:24:36 +0000
+Message-ID: <868syhs8tn.wl-marc.zyngier@arm.com>
+From:   Marc Zyngier <marc.zyngier@arm.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, <linux-block@vger.kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        <linux-nvme@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>
+Subject: Re: [patch V5 4/8] nvme-pci: Simplify interrupt allocation
+In-Reply-To: <20190214211759.699390983@linutronix.de>
+References: <20190214204755.819014197@linutronix.de>
+        <20190214211759.699390983@linutronix.de>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL/10.8 EasyPG/1.0.0 Emacs/25.1
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+Organization: ARM Ltd
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 2019-02-15 at 15:34 +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/portdrv
-> head:   b4f663e35a545fbdc71b3bbf2df88ef9f124a3fa
-> commit: b4f663e35a545fbdc71b3bbf2df88ef9f124a3fa [1/1] PCI/portdrv: Support PCIe services on subtractive decode bridges
-> reproduce:
->         # apt-get install sparse
->         git checkout b4f663e35a545fbdc71b3bbf2df88ef9f124a3fa
->         make ARCH=x86_64 allmodconfig
->         make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+On Thu, 14 Feb 2019 20:47:59 +0000,
+Thomas Gleixner <tglx@linutronix.de> wrote:
 > 
-> All warnings (new ones prefixed by >>):
+> From: Ming Lei <ming.lei@redhat.com>
 > 
-> >> drivers/pci/pcie/portdrv_pci.c:187:9: sparse: warning: Initializer entry defined twice
->    drivers/pci/pcie/portdrv_pci.c:189:9: sparse:   also defined here
+> The NVME PCI driver contains a tedious mechanism for interrupt
+> allocation, which is necessary to adjust the number and size of interrupt
+> sets to the maximum available number of interrupts which depends on the
+> underlying PCI capabilities and the available CPU resources.
 > 
-> sparse warnings: (new ones prefixed by >>)
+> It works around the former short comings of the PCI and core interrupt
+> allocation mechanims in combination with interrupt sets.
 > 
->    drivers/pci/pcie/portdrv_pci.c:187:9: sparse: warning: Initializer entry defined twice
-> >> drivers/pci/pcie/portdrv_pci.c:189:9: sparse:   also defined here
+> The PCI interrupt allocation function allows to provide a maximum and a
+> minimum number of interrupts to be allocated and tries to allocate as
+> many as possible. This worked without driver interaction as long as there
+> was only a single set of interrupts to handle.
 > 
-> vim +187 drivers/pci/pcie/portdrv_pci.c
+> With the addition of support for multiple interrupt sets in the generic
+> affinity spreading logic, which is invoked from the PCI interrupt
+> allocation, the adaptive loop in the PCI interrupt allocation did not
+> work for multiple interrupt sets. The reason is that depending on the
+> total number of interrupts which the PCI allocation adaptive loop tries
+> to allocate in each step, the number and the size of the interrupt sets
+> need to be adapted as well. Due to the way the interrupt sets support was
+> implemented there was no way for the PCI interrupt allocation code or the
+> core affinity spreading mechanism to invoke a driver specific function
+> for adapting the interrupt sets configuration.
 > 
-> ^1da177e Linus Torvalds 2005-04-16  181  
-> ^1da177e Linus Torvalds 2005-04-16  182  /*
-> ^1da177e Linus Torvalds 2005-04-16  183   * LINUX Device Driver Model
-> ^1da177e Linus Torvalds 2005-04-16  184   */
-> ^1da177e Linus Torvalds 2005-04-16  185  static const struct pci_device_id port_pci_ids[] = { {
-> ^1da177e Linus Torvalds 2005-04-16  186  	/* handle any PCI-Express port */
-> ^1da177e Linus Torvalds 2005-04-16 @187  	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
-> b4f663e3 Honghui Zhang  2019-02-14  188  	/* subtractive decode PCI-to-PCI bridge, class type is 060401h */
-> b4f663e3 Honghui Zhang  2019-02-14 @189  	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x01), ~0),
-> ^1da177e Linus Torvalds 2005-04-16  190  	}, { /* end: all zeroes */ }
-> ^1da177e Linus Torvalds 2005-04-16  191  };
-> ^1da177e Linus Torvalds 2005-04-16  192  
+> As a consequence the driver had to implement another adaptive loop around
+> the PCI interrupt allocation function and calling that with maximum and
+> minimum interrupts set to the same value. This ensured that the
+> allocation either succeeded or immediately failed without any attempt to
+> adjust the number of interrupts in the PCI code.
 > 
-Hi, Bjorn,
-Do you think drop this one, and I send a new version is a good idea? Or
-will you re-consider the first version patch?
-
-Thanks.
-
-> :::::: The code at line 187 was first introduced by commit
-> :::::: 1da177e4c3f41524e886b7f1b8a0c1fc7321cac2 Linux-2.6.12-rc2
+> The core code now allows drivers to provide a callback to recalculate the
+> number and the size of interrupt sets during PCI interrupt allocation,
+> which in turn allows the PCI interrupt allocation function to be called
+> in the same way as with a single set of interrupts. The PCI code handles
+> the adaptive loop and the interrupt affinity spreading mechanism invokes
+> the driver callback to adapt the interrupt set configuration to the
+> current loop value. This replaces the adaptive loop in the driver
+> completely.
 > 
-> :::::: TO: Linus Torvalds <torvalds@ppc970.osdl.org>
-> :::::: CC: Linus Torvalds <torvalds@ppc970.osdl.org>
+> Implement the NVME specific callback which adjusts the interrupt sets
+> configuration and remove the adaptive allocation loop.
+> 
+> [ tglx: Simplify the callback further and restore the dropped adjustment of
+>   	number of sets ]
+> 
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 > 
 > ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+>  drivers/nvme/host/pci.c |  108 ++++++++++++------------------------------------
+>  1 file changed, 28 insertions(+), 80 deletions(-)
+> 
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -2041,41 +2041,32 @@ static int nvme_setup_host_mem(struct nv
+>  	return ret;
+>  }
+>  
+> -/* irq_queues covers admin queue */
+> -static void nvme_calc_io_queues(struct nvme_dev *dev, unsigned int irq_queues)
+> +/*
+> + * nirqs is the number of interrupts available for write and read
+> + * queues. The core already reserved an interrupt for the admin queue.
+> + */
+> +static void nvme_calc_irq_sets(struct irq_affinity *affd, unsigned int nrirqs)
+>  {
+> -	unsigned int this_w_queues = write_queues;
+> -
+> -	WARN_ON(!irq_queues);
+> -
+> -	/*
+> -	 * Setup read/write queue split, assign admin queue one independent
+> -	 * irq vector if irq_queues is > 1.
+> -	 */
+> -	if (irq_queues <= 2) {
+> -		dev->io_queues[HCTX_TYPE_DEFAULT] = 1;
+> -		dev->io_queues[HCTX_TYPE_READ] = 0;
+> -		return;
+> -	}
+> +	struct nvme_dev *dev = affd->priv;
+> +	unsigned int nr_read_queues;
+>  
+>  	/*
+> -	 * If 'write_queues' is set, ensure it leaves room for at least
+> -	 * one read queue and one admin queue
+> -	 */
+> -	if (this_w_queues >= irq_queues)
+> -		this_w_queues = irq_queues - 2;
+> -
+> -	/*
+> -	 * If 'write_queues' is set to zero, reads and writes will share
+> -	 * a queue set.
+> -	 */
+> -	if (!this_w_queues) {
+> -		dev->io_queues[HCTX_TYPE_DEFAULT] = irq_queues - 1;
+> -		dev->io_queues[HCTX_TYPE_READ] = 0;
+> -	} else {
+> -		dev->io_queues[HCTX_TYPE_DEFAULT] = this_w_queues;
+> -		dev->io_queues[HCTX_TYPE_READ] = irq_queues - this_w_queues - 1;
+> -	}
+> +	 * If only one interrupt is available, combine write and read
+> +	 * queues. If 'write_queues' is set, ensure it leaves room for at
+> +	 * least one read queue.
 
+[Full disclaimer: I only have had two coffees this morning, and it is
+only at the fourth that my brain is able to kick in...]
 
+I don't know much about NVME, but I feel like there is a small
+disconnect between the code and the above comment, which says "leave
+room for at least one read queue"...
+
+> +	 */
+> +	if (nrirqs == 1)
+> +		nr_read_queues = 0;
+> +	else if (write_queues >= nrirqs)
+> +		nr_read_queues = nrirqs - 1;
+
+... while this seem to ensure that we carve out one write queue out of
+the irq set. It looks like a departure from the original code, which
+would set nr_read_queues to 1 in that particular case.
+
+Thanks,
+
+	M.
+
+-- 
+Jazz is not dead, it just smell funny.
