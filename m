@@ -2,154 +2,273 @@ Return-Path: <SRS0=+Fc1=QY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FA93C4360F
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Feb 2019 13:24:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBFE5C43381
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Feb 2019 13:36:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D89821A4A
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Feb 2019 13:24:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L7KxdwYJ"
+	by mail.kernel.org (Postfix) with ESMTP id 8E60221B69
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Feb 2019 13:36:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727761AbfBQNYt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 17 Feb 2019 08:24:49 -0500
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:39334 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726370AbfBQNYt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 17 Feb 2019 08:24:49 -0500
-Received: by mail-wm1-f66.google.com with SMTP id z84so7112374wmg.4;
-        Sun, 17 Feb 2019 05:24:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=MSptzy+12iGHE4TbMpXPmq/FfqzSMP67DCj+W3LRFG4=;
-        b=L7KxdwYJH+nX8ovhwVXEnn2w9kFP0bkMXIfnt7HVBn3zGOSc7rxGgpsNF4wUl9R+69
-         TJD0nFZmXrEhAnaEMDaJ4F/6rjnP1p56rUdIFjH6Em4vYXCNJmnMgFeSIxjoMTNk0HTJ
-         C3CmwcnuKwE0nE9oKFvSB6XygQ80Igp1FgnvqAk6iMyM9h1UC/WAmZYaGrWW5BQJS62/
-         nqIo9v29nIvUkroJ5OwkLy/QnaSH6c6ywp1pghizdTmfb+ptsFH7at/ywYa/0WQ2HKsT
-         6b3nNvgIakOiqztuOXX+a0l4VBxhx49HH+4ZdZ+9czPDfJkdjR/Qt1WyfH4bXswrBzG6
-         lH0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=MSptzy+12iGHE4TbMpXPmq/FfqzSMP67DCj+W3LRFG4=;
-        b=br0eIBsrlwdcQPsNbEHUVJYStZVMI5qa4WtjaGW04t2BsDJ3XarLyIzrptECnNV7WB
-         KiVqELOD6HUBKnBE9I4mHaO9KZZdMbo1szzV9iQfB8VUoDQSJzaEmLfHc+C0SX44r2Wp
-         oILySenPvloBF0p7myCWPg3x8b2WdpfjewJvNASNEOayxLwOfTOTRj9XmZ/MXPdDe27q
-         LN9ZYLtWqbD5zXOejz1QHU8rkIE61a+3kuDqn1VH+N/E/KFPecz6PuBgE5ykaO6wUk/D
-         5Ao54r8XpYMoYyvo9bPHL3u0gDh359dIHa8FTMMl5fp1J6AF8k5RkCsxCbxbvwGdqBFX
-         7JfQ==
-X-Gm-Message-State: AHQUAuZoKzbBl7Shwm7cPOGSJlb2v4qPUZL4RiwTbHv4t89/kwsyd/jo
-        /oOgo3Bm6Yl4FmzIbiZNPYa1f1UC
-X-Google-Smtp-Source: AHgI3IZzsjsRg6fFs5AMOntua06fFCqXH05xKpaOmXFuDHCrJFtxahfj03ktcLj7+73GqBV5Jt1cOg==
-X-Received: by 2002:a1c:cc0d:: with SMTP id h13mr2892518wmb.85.1550409886939;
-        Sun, 17 Feb 2019 05:24:46 -0800 (PST)
-Received: from kurokawa.lan (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id x3sm12443074wrd.19.2019.02.17.05.24.45
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 17 Feb 2019 05:24:45 -0800 (PST)
-From:   marek.vasut@gmail.com
-To:     linux-pci@vger.kernel.org
-Cc:     Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V2] PCI: rcar: Add the initialization of PCIe link in resume_noirq
-Date:   Sun, 17 Feb 2019 14:24:41 +0100
-Message-Id: <20190217132441.15139-1-marek.vasut@gmail.com>
-X-Mailer: git-send-email 2.19.2
+        id S1727802AbfBQNgP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 17 Feb 2019 08:36:15 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:35684 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727442AbfBQNgP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 17 Feb 2019 08:36:15 -0500
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 81ED48110D;
+        Sun, 17 Feb 2019 13:36:14 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-16.pek2.redhat.com [10.72.8.16])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3812660BF7;
+        Sun, 17 Feb 2019 13:36:04 +0000 (UTC)
+Date:   Sun, 17 Feb 2019 21:36:00 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        Keith Busch <keith.busch@intel.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>
+Subject: Re: [patch v6 1/7] genirq/affinity: Code consolidation
+Message-ID: <20190217133559.GE7296@ming.t460p>
+References: <20190216171306.403545970@linutronix.de>
+ <20190216172228.336424556@linutronix.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190216172228.336424556@linutronix.de>
+User-Agent: Mutt/1.9.1 (2017-09-22)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Sun, 17 Feb 2019 13:36:14 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
+On Sat, Feb 16, 2019 at 06:13:07PM +0100, Thomas Gleixner wrote:
+> All information and calculations in the interrupt affinity spreading code
+> is strictly unsigned int. Though the code uses int all over the place.
+> 
+> Convert it over to unsigned int.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
+>  include/linux/interrupt.h |   20 +++++++++-------
+>  kernel/irq/affinity.c     |   56 ++++++++++++++++++++++------------------------
+>  2 files changed, 38 insertions(+), 38 deletions(-)
+> 
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -251,10 +251,10 @@ struct irq_affinity_notify {
+>   * @sets:		Number of affinitized sets
+>   */
+>  struct irq_affinity {
+> -	int	pre_vectors;
+> -	int	post_vectors;
+> -	int	nr_sets;
+> -	int	*sets;
+> +	unsigned int	pre_vectors;
+> +	unsigned int	post_vectors;
+> +	unsigned int	nr_sets;
+> +	unsigned int	*sets;
+>  };
+>  
+>  /**
+> @@ -314,9 +314,10 @@ extern int
+>  irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+>  
+>  struct irq_affinity_desc *
+> -irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
+> +irq_create_affinity_masks(unsigned int nvec, const struct irq_affinity *affd);
+>  
+> -int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd);
+> +unsigned int irq_calc_affinity_vectors(unsigned int minvec, unsigned int maxvec,
+> +				       const struct irq_affinity *affd);
+>  
+>  #else /* CONFIG_SMP */
+>  
+> @@ -350,13 +351,14 @@ irq_set_affinity_notifier(unsigned int i
+>  }
+>  
+>  static inline struct irq_affinity_desc *
+> -irq_create_affinity_masks(int nvec, const struct irq_affinity *affd)
+> +irq_create_affinity_masks(unsigned int nvec, const struct irq_affinity *affd)
+>  {
+>  	return NULL;
+>  }
+>  
+> -static inline int
+> -irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd)
+> +static inline unsigned int
+> +irq_calc_affinity_vectors(unsigned int minvec, unsigned int maxvec,
+> +			  const struct irq_affinity *affd)
+>  {
+>  	return maxvec;
+>  }
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -9,7 +9,7 @@
+>  #include <linux/cpu.h>
+>  
+>  static void irq_spread_init_one(struct cpumask *irqmsk, struct cpumask *nmsk,
+> -				int cpus_per_vec)
+> +				unsigned int cpus_per_vec)
+>  {
+>  	const struct cpumask *siblmsk;
+>  	int cpu, sibl;
+> @@ -95,15 +95,17 @@ static int get_nodes_in_cpumask(cpumask_
+>  }
+>  
+>  static int __irq_build_affinity_masks(const struct irq_affinity *affd,
+> -				      int startvec, int numvecs, int firstvec,
+> +				      unsigned int startvec,
+> +				      unsigned int numvecs,
+> +				      unsigned int firstvec,
+>  				      cpumask_var_t *node_to_cpumask,
+>  				      const struct cpumask *cpu_mask,
+>  				      struct cpumask *nmsk,
+>  				      struct irq_affinity_desc *masks)
+>  {
+> -	int n, nodes, cpus_per_vec, extra_vecs, done = 0;
+> -	int last_affv = firstvec + numvecs;
+> -	int curvec = startvec;
+> +	unsigned int n, nodes, cpus_per_vec, extra_vecs, done = 0;
+> +	unsigned int last_affv = firstvec + numvecs;
+> +	unsigned int curvec = startvec;
+>  	nodemask_t nodemsk = NODE_MASK_NONE;
+>  
+>  	if (!cpumask_weight(cpu_mask))
+> @@ -117,18 +119,16 @@ static int __irq_build_affinity_masks(co
+>  	 */
+>  	if (numvecs <= nodes) {
+>  		for_each_node_mask(n, nodemsk) {
+> -			cpumask_or(&masks[curvec].mask,
+> -					&masks[curvec].mask,
+> -					node_to_cpumask[n]);
+> +			cpumask_or(&masks[curvec].mask, &masks[curvec].mask,
+> +				   node_to_cpumask[n]);
+>  			if (++curvec == last_affv)
+>  				curvec = firstvec;
+>  		}
+> -		done = numvecs;
+> -		goto out;
+> +		return numvecs;
+>  	}
+>  
+>  	for_each_node_mask(n, nodemsk) {
+> -		int ncpus, v, vecs_to_assign, vecs_per_node;
+> +		unsigned int ncpus, v, vecs_to_assign, vecs_per_node;
+>  
+>  		/* Spread the vectors per node */
+>  		vecs_per_node = (numvecs - (curvec - firstvec)) / nodes;
+> @@ -163,8 +163,6 @@ static int __irq_build_affinity_masks(co
+>  			curvec = firstvec;
+>  		--nodes;
+>  	}
+> -
+> -out:
+>  	return done;
+>  }
+>  
+> @@ -174,13 +172,14 @@ static int __irq_build_affinity_masks(co
+>   *	2) spread other possible CPUs on these vectors
+>   */
+>  static int irq_build_affinity_masks(const struct irq_affinity *affd,
+> -				    int startvec, int numvecs, int firstvec,
+> +				    unsigned int startvec, unsigned int numvecs,
+> +				    unsigned int firstvec,
+>  				    struct irq_affinity_desc *masks)
+>  {
+> -	int curvec = startvec, nr_present, nr_others;
+> -	int ret = -ENOMEM;
+> -	cpumask_var_t nmsk, npresmsk;
+> +	unsigned int curvec = startvec, nr_present, nr_others;
+>  	cpumask_var_t *node_to_cpumask;
+> +	cpumask_var_t nmsk, npresmsk;
+> +	int ret = -ENOMEM;
+>  
+>  	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
+>  		return ret;
+> @@ -239,12 +238,10 @@ static int irq_build_affinity_masks(cons
+>   * Returns the irq_affinity_desc pointer or NULL if allocation failed.
+>   */
+>  struct irq_affinity_desc *
+> -irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+> +irq_create_affinity_masks(unsigned int nvecs, const struct irq_affinity *affd)
+>  {
+> -	int affvecs = nvecs - affd->pre_vectors - affd->post_vectors;
+> -	int curvec, usedvecs;
+> +	unsigned int affvecs, curvec, usedvecs, nr_sets, i;
+>  	struct irq_affinity_desc *masks = NULL;
+> -	int i, nr_sets;
+>  
+>  	/*
+>  	 * If there aren't any vectors left after applying the pre/post
+> @@ -264,16 +261,17 @@ irq_create_affinity_masks(int nvecs, con
+>  	 * Spread on present CPUs starting from affd->pre_vectors. If we
+>  	 * have multiple sets, build each sets affinity mask separately.
+>  	 */
+> +	affvecs = nvecs - affd->pre_vectors - affd->post_vectors;
+>  	nr_sets = affd->nr_sets;
+>  	if (!nr_sets)
+>  		nr_sets = 1;
+>  
+>  	for (i = 0, usedvecs = 0; i < nr_sets; i++) {
+> -		int this_vecs = affd->sets ? affd->sets[i] : affvecs;
+> +		unsigned int this_vecs = affd->sets ? affd->sets[i] : affvecs;
+>  		int ret;
+>  
+>  		ret = irq_build_affinity_masks(affd, curvec, this_vecs,
+> -						curvec, masks);
+> +					       curvec, masks);
+>  		if (ret) {
+>  			kfree(masks);
+>  			return NULL;
+> @@ -303,17 +301,17 @@ irq_create_affinity_masks(int nvecs, con
+>   * @maxvec:	The maximum number of vectors available
+>   * @affd:	Description of the affinity requirements
+>   */
+> -int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd)
+> +unsigned int irq_calc_affinity_vectors(unsigned int minvec, unsigned int maxvec,
+> +				       const struct irq_affinity *affd)
+>  {
+> -	int resv = affd->pre_vectors + affd->post_vectors;
+> -	int vecs = maxvec - resv;
+> -	int set_vecs;
+> +	unsigned int resv = affd->pre_vectors + affd->post_vectors;
+> +	unsigned int set_vecs;
+>  
+>  	if (resv > minvec)
+>  		return 0;
+>  
+>  	if (affd->nr_sets) {
+> -		int i;
+> +		unsigned int i;
+>  
+>  		for (i = 0, set_vecs = 0;  i < affd->nr_sets; i++)
+>  			set_vecs += affd->sets[i];
+> @@ -323,5 +321,5 @@ int irq_calc_affinity_vectors(int minvec
+>  		put_online_cpus();
+>  	}
+>  
+> -	return resv + min(set_vecs, vecs);
+> +	return resv + min(set_vecs, maxvec - resv);
+>  }
 
-Reestablish the PCIe link very early in the resume process in case it
-went down to prevent PCI accesses from hanging the bus. Such accesses
-can happen early in the PCI resume process, in the resume_noirq, thus
-the link must be reestablished in the resume_noirq callback of the
-driver.
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-renesas-soc@vger.kernel.org
----
-V2: - Use BIT() macro for (1 << n)
-    - Since polling in rcar_pcie_wait_for_dl() uses udelay(), do not
-      add extra changes to this function anymore
-    - Make resume_noirq return early and clean up parenthesis therein
----
- drivers/pci/controller/pcie-rcar.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-index c8febb009454..b8f8fb3bc640 100644
---- a/drivers/pci/controller/pcie-rcar.c
-+++ b/drivers/pci/controller/pcie-rcar.c
-@@ -46,6 +46,7 @@
- 
- /* Transfer control */
- #define PCIETCTLR		0x02000
-+#define  DL_DOWN		BIT(3)
- #define  CFINIT			1
- #define PCIETSTR		0x02004
- #define  DATA_LINK_ACTIVE	1
-@@ -1130,6 +1131,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	pcie = pci_host_bridge_priv(bridge);
- 
- 	pcie->dev = dev;
-+	platform_set_drvdata(pdev, pcie);
- 
- 	err = pci_parse_request_of_pci_ranges(dev, &pcie->resources, NULL);
- 	if (err)
-@@ -1221,10 +1223,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static int rcar_pcie_resume_noirq(struct device *dev)
-+{
-+	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-+
-+	if (rcar_pci_read_reg(pcie, PMSR) &&
-+	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
-+		return 0;
-+
-+	/* Re-establish the PCIe link */
-+	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-+	return rcar_pcie_wait_for_dl(pcie);
-+}
-+
-+static const struct dev_pm_ops rcar_pcie_pm_ops = {
-+	.resume_noirq = rcar_pcie_resume_noirq,
-+};
-+
- static struct platform_driver rcar_pcie_driver = {
- 	.driver = {
- 		.name = "rcar-pcie",
- 		.of_match_table = rcar_pcie_of_match,
-+		.pm = &rcar_pcie_pm_ops,
- 		.suppress_bind_attrs = true,
- 	},
- 	.probe = rcar_pcie_probe,
--- 
-2.19.2
-
+Thanks,
+Ming
