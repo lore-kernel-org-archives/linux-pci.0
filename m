@@ -6,27 +6,27 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72B50C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Feb 2019 09:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C10E2C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Feb 2019 09:53:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B1A0218B0
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Feb 2019 09:53:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9ABAB217F9
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Feb 2019 09:53:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730098AbfBRJxB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Feb 2019 04:53:01 -0500
-Received: from inva021.nxp.com ([92.121.34.21]:44412 "EHLO inva021.nxp.com"
+        id S1728118AbfBRJxP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Feb 2019 04:53:15 -0500
+Received: from inva021.nxp.com ([92.121.34.21]:44466 "EHLO inva021.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728118AbfBRJxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1730087AbfBRJxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 18 Feb 2019 04:53:00 -0500
 Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id AF6F6200008;
-        Mon, 18 Feb 2019 10:52:57 +0100 (CET)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 096AF200400;
+        Mon, 18 Feb 2019 10:52:59 +0100 (CET)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 185BA20008A;
-        Mon, 18 Feb 2019 10:52:50 +0100 (CET)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id A118B2000EA;
+        Mon, 18 Feb 2019 10:52:51 +0100 (CET)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id D9455402F8;
-        Mon, 18 Feb 2019 17:52:40 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 669B740307;
+        Mon, 18 Feb 2019 17:52:42 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     bhelgaas@google.com, Zhiqiang.Hou@nxp.com, robh+dt@kernel.org,
         mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com,
@@ -36,9 +36,9 @@ To:     bhelgaas@google.com, Zhiqiang.Hou@nxp.com, robh+dt@kernel.org,
         linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH 5/6] arm64: dts: freescale: lx2160a: add pcie EP mode DT nodes
-Date:   Mon, 18 Feb 2019 17:46:42 +0800
-Message-Id: <20190218094643.2692-5-xiaowei.bao@nxp.com>
+Subject: [PATCH 6/6] misc: pci_endpoint_test: Add the layerscape PCIe GEN4 EP device support
+Date:   Mon, 18 Feb 2019 17:46:43 +0800
+Message-Id: <20190218094643.2692-6-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.14.1
 In-Reply-To: <20190218094643.2692-1-xiaowei.bao@nxp.com>
 References: <20190218094643.2692-1-xiaowei.bao@nxp.com>
@@ -48,116 +48,25 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The LX2160A PCIe EP mode node.
+Add the layerscape PCIE GEN4 EP device support in pci_endpoint_test driver.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 ---
-depends on: http://patchwork.ozlabs.org/project/linux-pci/list/?series=88754
+ drivers/misc/pci_endpoint_test.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
- arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi |   56 ++++++++++++++++++++++++
- 1 files changed, 56 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-index 3a64f6e..5fee592 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-@@ -923,6 +923,15 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3400000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03400000 0x0 0x00100000
-+			       0x80 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ob-windows = <256>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3500000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
-@@ -950,6 +959,15 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3500000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03500000 0x0 0x00100000
-+			       0x88 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ob-windows = <256>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3600000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
-@@ -977,6 +995,16 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3600000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03600000 0x0 0x00100000
-+			       0x90 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ob-windows = <256>;
-+			max-functions = <2>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3700000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
-@@ -1004,6 +1032,15 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3700000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03700000 0x0 0x00100000
-+			       0x98 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ob-windows = <256>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3800000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03800000 0x0 0x00100000   /* controller registers */
-@@ -1031,6 +1068,16 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3800000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03800000 0x0 0x00100000
-+			       0xa0 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ob-windows = <256>;
-+			max-functions = <2>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3900000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03900000 0x0 0x00100000   /* controller registers */
-@@ -1058,5 +1105,14 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3900000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03900000 0x0 0x00100000
-+			       0xa8 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			num-ob-windows = <256>;
-+			status = "disabled";
-+		};
-+
- 	};
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 896e2df..8c3435b 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -789,6 +789,7 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x8d80) },
+ 	{ }
  };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
 -- 
 1.7.1
 
