@@ -2,94 +2,147 @@ Return-Path: <SRS0=sVnv=Q2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19CC2C10F00
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 12:46:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96542C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 15:04:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E70A22146E
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 12:46:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 662422081B
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 15:04:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728280AbfBSMqk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Feb 2019 07:46:40 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:55535 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726539AbfBSMqj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2019 07:46:39 -0500
-Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=localhost)
-        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1gw4n8-0006Zo-7B; Tue, 19 Feb 2019 13:46:30 +0100
-Message-ID: <bea67ed9d36e79d87e37056d175318ec5a6e667a.camel@pengutronix.de>
-Subject: Re: [PATCH 0/2] "pcie_aux" clock for i.MX8MQ
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
-        devicetree@vger.kernel.org
-Date:   Tue, 19 Feb 2019 13:46:28 +0100
-In-Reply-To: <20190219124214.GB15442@e107981-ln.cambridge.arm.com>
-References: <20190212015108.16952-1-andrew.smirnov@gmail.com>
-         <20190219124214.GB15442@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        id S1728035AbfBSPEE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Feb 2019 10:04:04 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46232 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726565AbfBSPEE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Feb 2019 10:04:04 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id DB2AFA78;
+        Tue, 19 Feb 2019 07:04:03 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 225AA3F690;
+        Tue, 19 Feb 2019 07:04:00 -0800 (PST)
+Date:   Tue, 19 Feb 2019 15:03:53 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Jianjun Wang <jianjun.wang@mediatek.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, ryder.lee@mediatek.com,
+        robh+dt@kernel.org, matthias.bgg@gmail.com,
+        linux-pci@vger.kernel.org, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, youlin.pei@mediatek.com,
+        linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        honghui.zhang@mediatek.com, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 2/2] PCI: mediatek: Add controller support for MT7629
+Message-ID: <20190219150352.GA21833@e107981-ln.cambridge.arm.com>
+References: <1544058553-10936-3-git-send-email-jianjun.wang@mediatek.com>
+ <20181213145517.GB4701@google.com>
+ <1545034779.8528.8.camel@mhfsdcap03>
+ <20181217143247.GK20725@google.com>
+ <20181217154645.GA24864@e107981-ln.cambridge.arm.com>
+ <1545124764.25199.3.camel@mhfsdcap03>
+ <20181220182043.GC183878@google.com>
+ <1545651628.5634.57.camel@mhfsdcap03>
+ <20190123154023.GA1157@e107981-ln.cambridge.arm.com>
+ <1550559699.29794.2.camel@mhfsdcap03>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1550559699.29794.2.camel@mhfsdcap03>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
-
-Am Dienstag, den 19.02.2019, 12:42 +0000 schrieb Lorenzo Pieralisi:
-> On Mon, Feb 11, 2019 at 05:51:06PM -0800, Andrey Smirnov wrote:
-> > Lorenzo:
+On Tue, Feb 19, 2019 at 03:01:39PM +0800, Jianjun Wang wrote:
+> On Wed, 2019-01-23 at 15:40 +0000, Lorenzo Pieralisi wrote:
+> > On Mon, Dec 24, 2018 at 07:40:28PM +0800, Jianjun Wang wrote:
+> > > On Thu, 2018-12-20 at 12:20 -0600, Bjorn Helgaas wrote:
+> > > > On Tue, Dec 18, 2018 at 05:19:24PM +0800, Jianjun Wang wrote:
+> > > > > On Mon, 2018-12-17 at 15:46 +0000, Lorenzo Pieralisi wrote:
+> > > > > > On Mon, Dec 17, 2018 at 08:32:47AM -0600, Bjorn Helgaas wrote:
+> > > > > > > On Mon, Dec 17, 2018 at 04:19:39PM +0800, Jianjun Wang wrote:
+> > > > > > > > On Thu, 2018-12-13 at 08:55 -0600, Bjorn Helgaas wrote:
+> > > > > > > > > On Thu, Dec 06, 2018 at 09:09:13AM +0800, Jianjun Wang wrote:
+> > > > > > > > > > The read value of BAR0 is 0xffff_ffff, it's size will be
+> > > > > > > > > > calculated as 4GB in arm64 but bogus alignment values at
+> > > > > > > > > > arm32, the pcie device and devices behind this bridge will
+> > > > > > > > > > not be enabled. Fix it's BAR0 resource size to guarantee
+> > > > > > > > > > the pcie devices will be enabled correctly.
+> > > > > > > > > 
+> > > > > > > > > So this is a hardware erratum?  Per spec, a memory BAR has
+> > > > > > > > > bit 0 hardwired to 0, and an IO BAR has bit 1 hardwired to
+> > > > > > > > > 0.
+> > > > > > > > 
+> > > > > > > > Yes, it only works properly on 64bit platform.
+> > > > > > > 
+> > > > > > > I don't understand.  BARs are supposed to work the same
+> > > > > > > regardless of whether it's a 32- or 64-bit platform.  If this is
+> > > > > > > a workaround for a hardware defect, please just say that
+> > > > > > > explicitly.
+> > > > > > 
+> > > > > > I do not understand this either. First thing to do is to describe
+> > > > > > the problem properly so that we can actually find a solution to
+> > > > > > it.
+> > > > > 
+> > > > > This BAR0 is a 64-bit memory BAR, the HW default values for this BAR
+> > > > > is 0xffff_ffff_0000_0000 and it could not be changed except by
+> > > > > config write operation.
+> > > > 
+> > > > If you literally get 0xffff_ffff_0000_0000 when reading the BAR, that
+> > > > is out of spec because the low-order 4 bits of a 64-bit memory BAR
+> > > > cannot all be zero.
+> > > > 
+> > > > A 64-bit BAR consumes two DWORDS in config space.  For a 64-bit BAR0,
+> > > > the DWORD at 0x10 contains the low-order bits, and the DWORD at 0x14
+> > > > contains the upper 32 bits.  Bits 0-3 of the low-order DWORD (the
+> > > > one at 0x10) are read-only, and in this case should contain the value
+> > > > 0b1100 (0xc).  That means the range is prefetchable (bit 3 == 1) and
+> > > > the BAR is 64 bits (bits 2:1 == 10).
+> > > 
+> > > Sorry, I have confused the HW default value and the read value of BAR
+> > > size. The hardware default value is 0xffff_ffff_0000_000c, it's a 64-bit
+> > > BAR with prefetchable range.
+> > > 
+> > > When we start to decoding the BAR, the read value of BAR0 at 0x10 is
+> > > 0x0c, and the value at 0x14 is 0xffff_ffff, so the read value of BAR
+> > > size is 0xffff_ffff_0000_0000, which will be decoded to 0xffff_ffff, and
+> > > it will be set to the end value of BAR0 resource in the pci_dev.
+> > > > 
+> > > > > The calculated BAR size will be 0 in 32-bit platform since the
+> > > > > phys_addr_t is a 32bit value in 32-bit platform.
+> > > > 
+> > > > Either (1) this is a hardware defect that feeds incorrect data to the
+> > > > BAR size calculation, or (2) there's a problem in the BAR size
+> > > > calculation code.  We need to figure out which one and work around or
+> > > > fix it correctly.
+> > > 
+> > > The BAR size is calculated by the code (res->end - res->start + 1) is
+> > > fine, I think it's a hardware defect because that we can not change the
+> > > hardware default value or just disable it since we don't using it.
 > > 
-> > This small series adds code to control "pcie_aux" clock. This is an
-> > oversight from original submission [pcie-imx8mq-v7], which was only
-> > discovered once I submitted an RFC for corresponding DT changes going
-> > via i.MX tree [imx-dt-rfc].
+> > Apologies for the delay in getting back to this.
 > > 
-> > Thanks,
-> > Andrey Smirnov
+> > This looks like a kernel defect, not a HW defect.
 > > 
-> > [imx-dt-rfc] https://lore.kernel.org/lkml/20190131204333.31846-1-andrew.smirnov@gmail.com
-> > [pcie-imx8mq-v7] https://lore.kernel.org/lkml/20190202001523.12517-1-andrew.smirnov@gmail.com
+> > I need some time to make up my mind on what the right fix for this
+> > but it is most certainly not this patch.
 > > 
-> > Andrey Smirnov (2):
-> >   dt-bindings: imx6q-pcie: Add "pcie_aux" clock for imx8mq
-> >   PCI: imx6: Add code to request/control "pcie_aux" clock for i.MX8MQ
-> > 
-> >  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt   |  4 ++++
-> >  drivers/pci/controller/dwc/pci-imx6.c            | 16 ++++++++++++++++
-> >  2 files changed, 20 insertions(+)
+> > Lorenzo
 > 
-> Hi Andrey,
+> Hi Lorenzo,
 > 
-> I have applied it to pci/dwc for v5.1, however it looks like it would
-> break the driver with an old dts - I assume that's expected but let
-> me know if there is a better way to handle this.
+> Is there any better idea about this patch?
 
-There is no upstream DT using the imx8mq binding, yet. We've actually
-noticed the issue due to the DT patches adding the PCIe nodes and those
-2 patches fix the driver _before_ we introduce any DT using it. So I
-think it's okay not to worry about backwards compatibility here.
+Hi,
 
-Regards,
-Lucas
+I did not have time to investigate the issue in core code that triggers
+this defect but this patch is not the solution to the problem it is a
+plaster that papers over it, I won't merge it.
 
+I would appreciate some help. If you could have a look at core code that
+triggers the failure we can analyze what should be done to make it work,
+I do not think it is a defect in your IP.
+
+Lorenzo
