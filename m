@@ -2,522 +2,363 @@ Return-Path: <SRS0=sVnv=Q2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3121C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 16:23:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F5AFC43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 16:55:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98C2E2147A
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 16:23:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6BF2217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 16:55:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729049AbfBSQXS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Feb 2019 11:23:18 -0500
-Received: from foss.arm.com ([217.140.101.70]:47112 "EHLO foss.arm.com"
+        id S1726388AbfBSQzE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Feb 2019 11:55:04 -0500
+Received: from smtp3-g21.free.fr ([212.27.42.3]:8791 "EHLO smtp3-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728216AbfBSQXR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Feb 2019 11:23:17 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4F47CEBD;
-        Tue, 19 Feb 2019 08:23:17 -0800 (PST)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1BEA53F690;
-        Tue, 19 Feb 2019 08:23:15 -0800 (PST)
-Date:   Tue, 19 Feb 2019 16:23:13 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Ley Foon Tan <ley.foon.tan@intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        lftan.linux@gmail.com
-Subject: Re: [PATCH v4 1/3] PCI: altera: Add Stratix 10 PCIe support
-Message-ID: <20190219162313.GB21833@e107981-ln.cambridge.arm.com>
-References: <1550157638-25112-1-git-send-email-ley.foon.tan@intel.com>
- <1550157638-25112-2-git-send-email-ley.foon.tan@intel.com>
+        id S1726244AbfBSQzD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Feb 2019 11:55:03 -0500
+Received: from [192.168.108.68] (unknown [213.36.7.13])
+        (Authenticated sender: marc.w.gonzalez)
+        by smtp3-g21.free.fr (Postfix) with ESMTPSA id D0AAC13F8DE;
+        Tue, 19 Feb 2019 17:54:43 +0100 (CET)
+To:     MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>
+Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: WIP: PCIe on MSM8998
+Message-ID: <c97b6f4e-4b4c-027f-5a0b-80b3f7054177@free.fr>
+Date:   Tue, 19 Feb 2019 17:54:43 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1550157638-25112-2-git-send-email-ley.foon.tan@intel.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 14, 2019 at 11:20:36PM +0800, Ley Foon Tan wrote:
-> Add PCIe Root Port support for Stratix 10 device.
-> 
-> Main differences:
+Hello,
 
-Main differences with what ? We need to rewrite this commit log.
+Next up: PCIe
 
-> - HIP interface to access Root Port configuration register.
-> - TLP programming flow:
->   - One REG0 register
->   - Don't need to check alignment
-> 
-> Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
-> ---
->  drivers/pci/controller/pcie-altera.c |  246 ++++++++++++++++++++++++++++++----
->  1 files changed, 222 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
-> index 7d05e51..76bb6a6 100644
-> --- a/drivers/pci/controller/pcie-altera.c
-> +++ b/drivers/pci/controller/pcie-altera.c
-> @@ -11,6 +11,7 @@
->  #include <linux/irqchip/chained_irq.h>
->  #include <linux/init.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_device.h>
->  #include <linux/of_irq.h>
->  #include <linux/of_pci.h>
->  #include <linux/pci.h>
-> @@ -37,7 +38,12 @@
->  #define RP_LTSSM_MASK			0x1f
->  #define LTSSM_L0			0xf
->  
-> -#define PCIE_CAP_OFFSET			0x80
-> +#define S10_RP_TX_CNTRL			0x2004
-> +#define S10_RP_RXCPL_REG		0x2008
-> +#define S10_RP_RXCPL_STATUS		0x200C
-> +#define S10_RP_CFG_ADDR(pcie, reg)	\
-> +	(((pcie)->hip_base) + (reg) + (1 << 20))
-> +
->  /* TLP configuration type 0 and 1 */
->  #define TLP_FMTTYPE_CFGRD0		0x04	/* Configuration Read Type 0 */
->  #define TLP_FMTTYPE_CFGWR0		0x44	/* Configuration Write Type 0 */
-> @@ -49,18 +55,19 @@
->  #define RP_DEVFN			0
->  #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
->  #define TLP_CFGRD_DW0(pcie, bus)					\
-> -    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGRD0			\
-> -				    : TLP_FMTTYPE_CFGRD1) << 24) |	\
-> -     TLP_PAYLOAD_SIZE)
-> +	((((bus == pcie->root_bus_nr) ? pcie->pcie_data->cfgrd0		\
-> +				: pcie->pcie_data->cfgrd1) << 24) |	\
-> +				TLP_PAYLOAD_SIZE)
->  #define TLP_CFGWR_DW0(pcie, bus)					\
-> -    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGWR0			\
-> -				    : TLP_FMTTYPE_CFGWR1) << 24) |	\
-> -     TLP_PAYLOAD_SIZE)
-> +	((((bus == pcie->root_bus_nr) ? pcie->pcie_data->cfgwr0		\
-> +				: pcie->pcie_data->cfgwr1) << 24) |	\
-> +				TLP_PAYLOAD_SIZE)
->  #define TLP_CFG_DW1(pcie, tag, be)	\
-> -    (((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag << 8) | (be))
-> +	(((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag << 8) | (be))
->  #define TLP_CFG_DW2(bus, devfn, offset)	\
->  				(((bus) << 24) | ((devfn) << 16) | (offset))
->  #define TLP_COMP_STATUS(s)		(((s) >> 13) & 7)
-> +#define TLP_BYTE_COUNT(s)		(((s) >> 0) & 0xfff)
->  #define TLP_HDR_SIZE			3
->  #define TLP_LOOP			500
->  
-> @@ -69,14 +76,43 @@
->  
->  #define DWORD_MASK			3
->  
-> +#define S10_TLP_FMTTYPE_CFGRD0		0x05
-> +#define S10_TLP_FMTTYPE_CFGRD1		0x04
-> +#define S10_TLP_FMTTYPE_CFGWR0		0x45
-> +#define S10_TLP_FMTTYPE_CFGWR1		0x44
-> +
-> +enum altera_pcie_version {
-> +	ALTERA_PCIE_V1 = 0,
-> +	ALTERA_PCIE_V2,
-> +};
-> +
->  struct altera_pcie {
->  	struct platform_device	*pdev;
-> -	void __iomem		*cra_base;	/* DT Cra */
-> +	void __iomem		*cra_base;
-> +	void __iomem		*hip_base;
->  	int			irq;
->  	u8			root_bus_nr;
->  	struct irq_domain	*irq_domain;
->  	struct resource		bus_range;
->  	struct list_head	resources;
-> +	const struct altera_pcie_data	*pcie_data;
-> +};
-> +
-> +struct altera_pcie_data {
-> +	int (*tlp_read_pkt)(struct altera_pcie *pcie, u32 *value);
-> +	void (*tlp_write_pkt)(struct altera_pcie *pcie, u32 *headers,
-> +			      u32 data, bool align);
-> +	bool (*get_link_status)(struct altera_pcie *pcie);
-> +	int (*rp_read_cfg)(struct altera_pcie *pcie, int where,
-> +			   int size, u32 *value);
-> +	int (*rp_write_cfg)(struct altera_pcie *pcie, u8 bus, int where,
-> +			    int size, u32 value);
-> +	enum altera_pcie_version version;
-> +	u32 cap_offset;		/* PCIe capability structure register offset */
+WIP changes on top of next-20190213:
 
-This is a duplication of struct pci_dev.pcie_cap right ?
+diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+index f9a922fdae75..1152d11f081e 100644
+--- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
++++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+@@ -970,6 +970,80 @@
+ 			};
+ 		};
+ 
++		phy@1c06000 {
++			compatible = "qcom,msm8996-qmp-pcie-phy";
++			reg = <0x1c06000 0x1000>;
++			#clock-cells = <1>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++			ranges;
++
++			clocks = <&gcc GCC_PCIE_PHY_AUX_CLK>,
++				<&gcc GCC_PCIE_0_CFG_AHB_CLK>,
++				<&gcc GCC_PCIE_CLKREF_CLK>;
++			clock-names = "aux", "cfg_ahb", "ref";
++
++			vdda-phy-supply = <&vreg_l1a_0p875>;
++			vdda-pll-supply = <&vreg_l2a_1p2>;
++
++			resets = <&gcc GCC_PCIE_PHY_BCR>,
++				<&gcc GCC_PCIE_PHY_COM_BCR>,
++				<&gcc GCC_PCIE_PHY_NOCSR_COM_PHY_BCR>;
++			reset-names = "phy", "common", "cfg";
++
++			pciephy: lane@35000 {
++				reg = <0x1c07000 0x200>, <0x1c07200 0x200>, <0x1c07400 0x200>;
++				#phy-cells = <0>;
++
++				clock-output-names = "pcie_0_pipe_clk_src";
++				clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
++				clock-names = "pipe0";
++				resets = <&gcc GCC_PCIE_0_PHY_BCR>;
++				reset-names = "lane0";
++			};
++		};
++
++		pcie0: pci@1b000000 {
++			compatible = "qcom,pcie-msm8996";
++			reg =	<0x1b000000 0xf1d>,
++				<0x1b000f20 0xa8>,
++				<0x1c00000 0x2000>,
++				<0x1b100000 0x100000>;
++			reg-names = "dbi", "elbi", "parf", "config";
++			device_type = "pci";
++			linux,pci-domain = <0>;
++			bus-range = <0x00 0xff>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			power-domains = <&gcc PCIE_0_GDSC>;
++
++			phys = <&pciephy>;
++			phy-names = "pciephy";
++
++			ranges =
++			/*** downstream I/O ***/
++			<0x01000000 0x0 0x1b200000 0x1b200000 0x0 0x100000>,
++			/*** non-prefetchable memory ***/
++			<0x02000000 0x0 0x1b300000 0x1b300000 0x0 0xd00000>;
++
++			interrupts = <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "msi";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &intc 0 135 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++					<0 0 0 2 &intc 0 136 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++					<0 0 0 3 &intc 0 138 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++					<0 0 0 4 &intc 0 139 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++
++			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>,
++				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
++				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
++				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
++				 <&gcc GCC_PCIE_0_AUX_CLK>;
++			clock-names = "pipe", "bus_master", "bus_slave", "cfg", "aux";
++		};
++
+ 		intc: interrupt-controller@17a00000 {
+ 			compatible = "arm,gic-v3";
+ 			reg = <0x17a00000 0x10000>,       /* GICD */
+diff --git a/drivers/clk/qcom/gcc-msm8998.c b/drivers/clk/qcom/gcc-msm8998.c
+index 3cbabbb8bd9a..cdd97c840b07 100644
+--- a/drivers/clk/qcom/gcc-msm8998.c
++++ b/drivers/clk/qcom/gcc-msm8998.c
+@@ -2161,7 +2161,7 @@ static struct clk_branch gcc_pcie_0_mstr_axi_clk = {
+ 
+ static struct clk_branch gcc_pcie_0_pipe_clk = {
+ 	.halt_reg = 0x6b018,
+-	.halt_check = BRANCH_HALT,
++	.halt_check = BRANCH_HALT_SKIP,
+ 	.clkr = {
+ 		.enable_reg = 0x6b018,
+ 		.enable_mask = BIT(0),
 
-> +	u32 cfgrd0;
-> +	u32 cfgrd1;
-> +	u32 cfgwr0;
-> +	u32 cfgwr1;
->  };
->  
->  struct tlp_rp_regpair_t {
-> @@ -101,6 +137,15 @@ static bool altera_pcie_link_up(struct altera_pcie *pcie)
->  	return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) == LTSSM_L0);
->  }
->  
-> +static bool s10_altera_pcie_link_up(struct altera_pcie *pcie)
-> +{
-> +	void __iomem *addr = S10_RP_CFG_ADDR(pcie,
-> +				   pcie->pcie_data->cap_offset +
-> +				   PCI_EXP_LNKSTA);
-> +
-> +	return !!(readw(addr) & PCI_EXP_LNKSTA_DLLLA);
-> +}
-> +
->  /*
->   * Altera PCIe port uses BAR0 of RC's configuration space as the translation
->   * from PCI bus to native BUS.  Entire DDR region is mapped into PCIe space
-> @@ -128,12 +173,18 @@ static void tlp_write_tx(struct altera_pcie *pcie,
->  	cra_writel(pcie, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
->  }
->  
-> +static void s10_tlp_write_tx(struct altera_pcie *pcie, u32 reg0, u32 ctrl)
-> +{
-> +	cra_writel(pcie, reg0, RP_TX_REG0);
-> +	cra_writel(pcie, ctrl, S10_RP_TX_CNTRL);
-> +}
-> +
->  static bool altera_pcie_valid_device(struct altera_pcie *pcie,
->  				     struct pci_bus *bus, int dev)
->  {
->  	/* If there is no link, then there is no device */
->  	if (bus->number != pcie->root_bus_nr) {
-> -		if (!altera_pcie_link_up(pcie))
-> +		if (!pcie->pcie_data->get_link_status(pcie))
->  			return false;
->  	}
->  
-> @@ -183,6 +234,46 @@ static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
->  	return PCIBIOS_DEVICE_NOT_FOUND;
->  }
->  
-> +static int s10_tlp_read_packet(struct altera_pcie *pcie, u32 *value)
-> +{
-> +	int i;
-> +	u32 ctrl;
-> +	u32 comp_status;
-> +	u32 dw[4];
-> +	u32 count = 0;
-> +
-> +	for (i = 0; i < TLP_LOOP; i++) {
-> +		ctrl = cra_readl(pcie, S10_RP_RXCPL_STATUS);
-> +		if (!(ctrl & RP_RXCPL_SOP))
-> +			continue;
-> +
-> +		/* Read first DW */
-> +		dw[count++] = cra_readl(pcie, S10_RP_RXCPL_REG);
-> +
-> +		/* Poll for EOP */
-> +		for (i = 0; i < TLP_LOOP; i++) {
-> +			ctrl = cra_readl(pcie, S10_RP_RXCPL_STATUS);
-> +			dw[count++] = cra_readl(pcie, S10_RP_RXCPL_REG);
 
-I think you'd better add a check on count lest it can overflow dw[].
 
-> +			if (ctrl & RP_RXCPL_EOP) {
-> +				comp_status = TLP_COMP_STATUS(dw[1]);
-> +				if (comp_status)
-> +					return PCIBIOS_DEVICE_NOT_FOUND;
-> +
-> +				if (value &&
-> +				    TLP_BYTE_COUNT(dw[1]) == sizeof(u32) &&
-> +				    count >= 3)
-> +					*value = dw[3];
-> +
-> +				return PCIBIOS_SUCCESSFUL;
-> +			}
-> +		}
-> +
-> +		udelay(5);
-> +	}
-> +
-> +	return PCIBIOS_DEVICE_NOT_FOUND;
-> +}
-> +
->  static void tlp_write_packet(struct altera_pcie *pcie, u32 *headers,
->  			     u32 data, bool align)
->  {
-> @@ -210,6 +301,15 @@ static void tlp_write_packet(struct altera_pcie *pcie, u32 *headers,
->  	tlp_write_tx(pcie, &tlp_rp_regdata);
->  }
->  
-> +static void s10_tlp_write_packet(struct altera_pcie *pcie, u32 *headers,
-> +				 u32 data, bool dummy)
-> +{
-> +	s10_tlp_write_tx(pcie, headers[0], RP_TX_SOP);
-> +	s10_tlp_write_tx(pcie, headers[1], 0);
-> +	s10_tlp_write_tx(pcie, headers[2], 0);
-> +	s10_tlp_write_tx(pcie, data, RP_TX_EOP);
-> +}
-> +
->  static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
->  			      int where, u8 byte_en, u32 *value)
->  {
-> @@ -219,9 +319,9 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
->  	headers[1] = TLP_CFG_DW1(pcie, TLP_READ_TAG, byte_en);
->  	headers[2] = TLP_CFG_DW2(bus, devfn, where);
->  
-> -	tlp_write_packet(pcie, headers, 0, false);
-> +	pcie->pcie_data->tlp_write_pkt(pcie, headers, 0, false);
->  
-> -	return tlp_read_packet(pcie, value);
-> +	return pcie->pcie_data->tlp_read_pkt(pcie, value);
->  }
->  
->  static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
-> @@ -236,11 +336,11 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
->  
->  	/* check alignment to Qword */
->  	if ((where & 0x7) == 0)
-> -		tlp_write_packet(pcie, headers, value, true);
-> +		pcie->pcie_data->tlp_write_pkt(pcie, headers, value, true);
->  	else
-> -		tlp_write_packet(pcie, headers, value, false);
-> +		pcie->pcie_data->tlp_write_pkt(pcie, headers, value, false);
->  
-> -	ret = tlp_read_packet(pcie, NULL);
-> +	ret = pcie->pcie_data->tlp_read_pkt(pcie, NULL);
->  	if (ret != PCIBIOS_SUCCESSFUL)
->  		return ret;
->  
-> @@ -254,6 +354,53 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
->  	return PCIBIOS_SUCCESSFUL;
->  }
->  
-> +static int s10_rp_read_cfg(struct altera_pcie *pcie, int where,
-> +			   int size, u32 *value)
-> +{
-> +	void *addr = S10_RP_CFG_ADDR(pcie, where);
-> +
-> +	switch (size) {
-> +	case 1:
-> +		*value = readb(addr);
-> +		break;
-> +	case 2:
-> +		*value = readw(addr);
-> +		break;
-> +	default:
-> +		*value = readl(addr);
-> +		break;
-> +	}
 
-This boilerplace could be avoided if you used generic config
-accessors (ie pci_generic_config_read()/write()).
 
-> +
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int s10_rp_write_cfg(struct altera_pcie *pcie, u8 bus, int where,
-> +			    int size, u32 value)
-> +{
-> +	void *addr = S10_RP_CFG_ADDR(pcie, where);
-> +
-> +	switch (size) {
-> +	case 1:
-> +		writeb(value, addr);
-> +		break;
-> +	case 2:
-> +		writew(value, addr);
-> +		break;
-> +	default:
-> +		writel(value, addr);
-> +		break;
-> +	}
+Current situation: HANG + REBOOT :-)
+Probably some silly typo in an address in my DT. Investigating...
 
-Ditto.
-
-> +
-> +	/*
-> +	 * Monitor changes to PCI_PRIMARY_BUS register on root port
-> +	 * and update local copy of root bus number accordingly.
-> +	 */
-> +	if (bus == pcie->root_bus_nr && where == PCI_PRIMARY_BUS)
-> +		pcie->root_bus_nr = value & 0xff;
-> +
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
-> +
->  static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8 busno,
->  				 unsigned int devfn, int where, int size,
->  				 u32 *value)
-> @@ -262,6 +409,9 @@ static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8 busno,
->  	u32 data;
->  	u8 byte_en;
->  
-> +	if (busno == pcie->root_bus_nr && pcie->pcie_data->rp_read_cfg)
-> +		return pcie->pcie_data->rp_read_cfg(pcie, where, size, value);
-> +
->  	switch (size) {
->  	case 1:
->  		byte_en = 1 << (where & 3);
-> @@ -302,6 +452,10 @@ static int _altera_pcie_cfg_write(struct altera_pcie *pcie, u8 busno,
->  	u32 shift = 8 * (where & 3);
->  	u8 byte_en;
->  
-> +	if (busno == pcie->root_bus_nr && pcie->pcie_data->rp_write_cfg)
-> +		return pcie->pcie_data->rp_write_cfg(pcie, busno, where,
-> +							size, value);
-> +
->  	switch (size) {
->  	case 1:
->  		data32 = (value & 0xff) << shift;
-> @@ -365,7 +519,8 @@ static int altera_read_cap_word(struct altera_pcie *pcie, u8 busno,
->  	int ret;
->  
->  	ret = _altera_pcie_cfg_read(pcie, busno, devfn,
-> -				    PCIE_CAP_OFFSET + offset, sizeof(*value),
-> +				    pcie->pcie_data->cap_offset + offset,
-> +				    sizeof(*value),
->  				    &data);
->  	*value = data;
->  	return ret;
-> @@ -375,7 +530,8 @@ static int altera_write_cap_word(struct altera_pcie *pcie, u8 busno,
->  				 unsigned int devfn, int offset, u16 value)
->  {
->  	return _altera_pcie_cfg_write(pcie, busno, devfn,
-> -				      PCIE_CAP_OFFSET + offset, sizeof(value),
-> +				      pcie->pcie_data->cap_offset + offset,
-> +				      sizeof(value),
->  				      value);
->  }
->  
-> @@ -403,7 +559,7 @@ static void altera_wait_link_retrain(struct altera_pcie *pcie)
->  	/* Wait for link is up */
->  	start_jiffies = jiffies;
->  	for (;;) {
-> -		if (altera_pcie_link_up(pcie))
-> +		if (pcie->pcie_data->get_link_status(pcie))
->  			break;
->  
->  		if (time_after(jiffies, start_jiffies + LINK_UP_TIMEOUT)) {
-> @@ -418,7 +574,7 @@ static void altera_pcie_retrain(struct altera_pcie *pcie)
->  {
->  	u16 linkcap, linkstat, linkctl;
->  
-> -	if (!altera_pcie_link_up(pcie))
-> +	if (!pcie->pcie_data->get_link_status(pcie))
->  		return;
->  
->  	/*
-> @@ -540,12 +696,20 @@ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
->  	struct device *dev = &pcie->pdev->dev;
->  	struct platform_device *pdev = pcie->pdev;
->  	struct resource *cra;
-> +	struct resource *hip;
->  
->  	cra = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Cra");
->  	pcie->cra_base = devm_ioremap_resource(dev, cra);
->  	if (IS_ERR(pcie->cra_base))
->  		return PTR_ERR(pcie->cra_base);
->  
-> +	if (pcie->pcie_data->version == ALTERA_PCIE_V2) {
-> +		hip = platform_get_resource_byname(pdev, IORESOURCE_MEM, "Hip");
-> +		pcie->hip_base = devm_ioremap_resource(&pdev->dev, hip);
-> +		if (IS_ERR(pcie->hip_base))
-> +			return PTR_ERR(pcie->hip_base);
-> +	}
-> +
->  	/* setup IRQ */
->  	pcie->irq = platform_get_irq(pdev, 0);
->  	if (pcie->irq < 0) {
-> @@ -562,6 +726,38 @@ static void altera_pcie_host_init(struct altera_pcie *pcie)
->  	altera_pcie_retrain(pcie);
->  }
->  
-> +static struct altera_pcie_data pci_1_0_data = {
-> +	.tlp_read_pkt = tlp_read_packet,
-> +	.tlp_write_pkt = tlp_write_packet,
-> +	.get_link_status = altera_pcie_link_up,
-> +	.cap_offset = 0x80,
-> +	.version = ALTERA_PCIE_V1,
-> +	.cfgrd0 = TLP_FMTTYPE_CFGRD0,
-> +	.cfgrd1 = TLP_FMTTYPE_CFGRD1,
-> +	.cfgwr0 = TLP_FMTTYPE_CFGWR0,
-> +	.cfgwr1 = TLP_FMTTYPE_CFGWR1,
-> +};
-> +
-> +static struct altera_pcie_data pci_2_0_data = {
-> +	.tlp_read_pkt = s10_tlp_read_packet,
-> +	.tlp_write_pkt = s10_tlp_write_packet,
-> +	.get_link_status = s10_altera_pcie_link_up,
-> +	.rp_read_cfg = s10_rp_read_cfg,
-> +	.rp_write_cfg = s10_rp_write_cfg,
-> +	.version = ALTERA_PCIE_V2,
-> +	.cap_offset = 0x70,
-> +	.cfgrd0 = S10_TLP_FMTTYPE_CFGRD0,
-> +	.cfgrd1 = S10_TLP_FMTTYPE_CFGRD1,
-> +	.cfgwr0 = S10_TLP_FMTTYPE_CFGWR0,
-> +	.cfgwr1 = S10_TLP_FMTTYPE_CFGWR1,
-> +};
-
-I wonder if it is not better to have two different struct pci_ops (and
-have a pointer to them in struct altera_pcie_data) instead of all these
-parameters (most of which are there to differentiate struct pci_ops
-methods).
-
-See also my comments above.
-
-In the end I guess it depends on how many host bridges will be based on
-this IP as design, what you did is OK but it is worth thinking about it.
-
-Lorenzo
-
-> +
-> +static const struct of_device_id altera_pcie_of_match[] = {
-> +	{ .compatible = "altr,pcie-root-port-1.0", .data = &pci_1_0_data },
-> +	{ .compatible = "altr,pcie-root-port-2.0", .data = &pci_2_0_data },
-> +	{},
-> +};
-> +
->  static int altera_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> @@ -570,6 +766,7 @@ static int altera_pcie_probe(struct platform_device *pdev)
->  	struct pci_bus *child;
->  	struct pci_host_bridge *bridge;
->  	int ret;
-> +	const struct of_device_id *match;
->  
->  	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
->  	if (!bridge)
-> @@ -578,6 +775,12 @@ static int altera_pcie_probe(struct platform_device *pdev)
->  	pcie = pci_host_bridge_priv(bridge);
->  	pcie->pdev = pdev;
->  
-> +	match = of_match_device(altera_pcie_of_match, &pdev->dev);
-> +	if (!match)
-> +		return -ENODEV;
-> +
-> +	pcie->pcie_data = match->data;
-> +
->  	ret = altera_pcie_parse_dt(pcie);
->  	if (ret) {
->  		dev_err(dev, "Parsing DT failed\n");
-> @@ -628,11 +831,6 @@ static int altera_pcie_probe(struct platform_device *pdev)
->  	return ret;
->  }
->  
-> -static const struct of_device_id altera_pcie_of_match[] = {
-> -	{ .compatible = "altr,pcie-root-port-1.0", },
-> -	{},
-> -};
-> -
->  static struct platform_driver altera_pcie_driver = {
->  	.probe		= altera_pcie_probe,
->  	.driver = {
-> -- 
-> 1.7.1
-> 
+# modprobe phy-qcom-qmp
+REMAP: PA=0c010000 VA=ffffff8010005000 SIZE=18c
+REMAP: PA=0c010200 VA=ffffff801000d200 SIZE=128
+REMAP: PA=0c010400 VA=ffffff801002d400 SIZE=200
+REMAP: PA=0c010c00 VA=ffffff8010035c00 SIZE=20c
+REMAP: PA=0c010600 VA=ffffff8010051600 SIZE=128
+REMAP: PA=0c010800 VA=ffffff8010053800 SIZE=200
+qcom-qmp-phy c010000.phy: PHY pcs_misc-reg not used
+qcom-qmp-phy c010000.phy: Registered Qcom-QMP phy
+[    CLK_BASE + 6b004] = 00282000
+REMAP: PA=01c00000 VA=ffffff8010b72000 SIZE=2000
+REMAP: PA=01c06000 VA=ffffff8010055000 SIZE=1000
+REMAP: PA=1b000000 VA=ffffff801005d000 SIZE=f1d
+REMAP: PA=01c07000 VA=ffffff8010065000 SIZE=200
+REMAP: PA=1b000f20 VA=ffffff801006df20 SIZE=a8
+REMAP: PA=01c07200 VA=ffffff8010075200 SIZE=200
+[    CLK_BASE + 6b004] = a0282001
+REMAP: PA=01c07400 VA=ffffff801007d400 SIZE=200
+qcom-qmp-phy 1c06000.phy: PHY pcs_misc-reg not used
+qcom-qmp-phy 1c06000.phy: Registered Qcom-QMP phy
+[    CLK_BASE + 6b004] = 00282000
+REMAP: PA=01c00000 VA=ffffff8010d02000 SIZE=2000
+REMAP: PA=1b000000 VA=ffffff801005d000 SIZE=f1d
+REMAP: PA=1b000f20 VA=ffffff801006df20 SIZE=a8
+qcom-pcie 1b000000.pci: 1b000000.pci supply vdda not found, using dummy regulator
+qcom-pcie 1b000000.pci: 1b000000.pci supply vddpe-3v3 not found, using dummy regulator
+qcom-qmp-phy 1c06000.phy: Initializing QMP phy
+[    CLK_BASE + 6f000] = 00000001
+[    CLK_BASE + 6f014] = 00000001
+[    CLK_BASE + 6f00c] = 00000001
+[    CLK_BASE + 6f00c] = 00000000
+[    CLK_BASE + 6f014] = 00000000
+[    CLK_BASE + 6f000] = 00000000
+[    CLK_BASE + 6f004] = 80000001
+[    CLK_BASE + 6b010] = 80008001
+[    CLK_BASE + 8800c] = 80000001
+[    PCIE_DBI + 00404] = 0000000b
+[    PCIE_DBI + 00034] = 0000001c
+[    PCIE_DBI + 00038] = 00000010
+[    PCIE_DBI + 00174] = 00000033
+[    PCIE_DBI + 00194] = 00000006
+[    PCIE_DBI + 000c8] = 00000042
+[    PCIE_DBI + 00128] = 00000000
+[    PCIE_DBI + 00144] = 000000ff
+[    PCIE_DBI + 00148] = 0000001f
+[    PCIE_DBI + 00178] = 00000001
+[    PCIE_DBI + 0019c] = 00000001
+[    PCIE_DBI + 0018c] = 00000000
+[    PCIE_DBI + 00184] = 0000000a
+[    PCIE_DBI + 0000c] = 00000009
+[    PCIE_DBI + 000d0] = 00000082
+[    PCIE_DBI + 000e4] = 00000003
+[    PCIE_DBI + 000e0] = 00000055
+[    PCIE_DBI + 000dc] = 00000055
+[    PCIE_DBI + 00054] = 00000000
+[    PCIE_DBI + 00050] = 0000001a
+[    PCIE_DBI + 0004c] = 0000000a
+[    PCIE_DBI + 00174] = 00000033
+[    PCIE_DBI + 0003c] = 00000002
+[    PCIE_DBI + 00040] = 0000001f
+[    PCIE_DBI + 000ac] = 00000004
+[    PCIE_DBI + 00078] = 0000000b
+[    PCIE_DBI + 00084] = 00000016
+[    PCIE_DBI + 00090] = 00000028
+[    PCIE_DBI + 0010c] = 00000000
+[    PCIE_DBI + 00108] = 00000080
+[    PCIE_DBI + 00010] = 00000001
+[    PCIE_DBI + 0001c] = 00000031
+[    PCIE_DBI + 00020] = 00000001
+[    PCIE_DBI + 00014] = 00000002
+[    PCIE_DBI + 00018] = 00000000
+[    PCIE_DBI + 00024] = 0000002f
+[    PCIE_DBI + 00028] = 00000019
+[    PCIE_DBI + 000c4] = 00000015
+[    PCIE_DBI + 00070] = 0000000f
+[    PCIE_DBI + 00048] = 0000000f
+[    PCIE_DBI + 00074] = 00000019
+[    PCIE_DBI + 00038] = 00000010
+[    PCIE_DBI + 00178] = 00000000
+[    PCIE_DBI + 000c4] = 00000040
+[    PCIE_DBI + 00400] = 0000000a
+[    PCIE_DBI + 00408] = 0000000b
+[    CLK_BASE + 6b018] = 80004001
+[    PCIE_DBI + 00068] = 00000045
+[    PCIE_DBI + 00094] = 00000006
+[    01c07200 + 00110] = 0000001c
+[    01c07200 + 000d8] = 00000001
+[    01c07200 + 000dc] = 00000000
+[    01c07200 + 000e0] = 000000db
+[    01c07200 + 00120] = 00000018
+[    01c07200 + 0001c] = 00000004
+[    01c07200 + 00010] = 00000004
+[    01c07200 + 00048] = 0000004b
+[    01c07200 + 0011c] = 00000014
+[    01c07200 + 00118] = 00000019
+[    01c07400 + 00058] = 0000004c
+[    01c07400 + 000a0] = 00000000
+[    01c07400 + 000a4] = 00000001
+[    01c07400 + 000a8] = 00000005
+[    01c07400 + 00054] = 00000005
+[    01c07400 + 00004] = 00000002
+[    01c07400 + 0006c] = 00000000
+[    01c07400 + 00060] = 000000a3
+[    01c07400 + 00028] = 0000000e
+[    01c07400 + 00004] = 00000003
+[    01c07400 + 00000] = 00000000
+[    01c07400 + 00008] = 0000000a
+qcom-pcie 1b000000.pci: host bridge /soc/pci@1b000000 ranges:
+qcom-pcie 1b000000.pci: Parsing ranges property...
+qcom-pcie 1b000000.pci:    IO 0x1b200000..0x1b2fffff -> 0x1b200000
+qcom-pcie 1b000000.pci:   MEM 0x1b300000..0x1bffffff -> 0x1b300000
+REMAP: PA=1b100000 VA=ffffff8011400000 SIZE=80000
+REMAP: PA=1b180000 VA=ffffff8011500000 SIZE=80000
+[    CLK_BASE + 6b014] = 80000001
+[    CLK_BASE + 6b00c] = 80004221
+[    CLK_BASE + 6b008] = 8000c221
+[   PCIE_PARF + 00040] = 00000000
+[   PCIE_PARF + 00168] = 00000000
+[   PCIE_PARF + 00000] = 00000000
+[   PCIE_PARF + 00174] = 00000010
+[   PCIE_PARF + 001a8] = 80000000
+dw_pcie_read: addr=ffffff801005d710 size=4
+Internal error: synchronous external abort: 96000210 [#1] PREEMPT SMP
+Modules linked in: phy_qcom_qmp
+CPU: 2 PID: 101 Comm: kworker/2:1 Tainted: G S                5.0.0-rc6-next-20190213 #13
+Hardware name: Qualcomm Technologies, Inc. MSM8998 v1 MTP (DT)
+Workqueue: events deferred_probe_work_func
+pstate: 60000005 (nZCv daif -PAN -UAO)
+pc : dw_pcie_read+0x90/0x110
+lr : dw_pcie_read+0x38/0x110
+sp : ffffff801120ba10
+x29: ffffff801120ba10 x28: 0000000000000000 
+x27: ffffffc098ab9d80 x26: ffffffc0a5cd46b8 
+x25: ffffffc0a5cd46b8 x24: ffffff8010a18000 
+x23: ffffffc0a5cd4400 x22: 0000000000000000 
+x21: ffffff801120ba64 x20: 0000000000000004 
+x19: ffffff801005d710 x18: ffffffffffffffff 
+x17: 0000000000000000 x16: 0000000000000000 
+x15: ffffff8010a18508 x14: 0720072007200720 
+x13: 0720072007200720 x12: 0720072007200720 
+x11: 0720072007200720 x10: 0720072007200720 
+x9 : 0720072007200720 x8 : 000000000000017b 
+x7 : 0720072007200720 x6 : ffffffc0f843bf00 
+x5 : 0000000000000000 x4 : 0000000000000000 
+x3 : 0000000000000001 x2 : d73a0bc4b3dd9300 
+x1 : 0000000000000000 x0 : 0000000000000003 
+Process kworker/2:1 (pid: 101, stack limit = 0x(____ptrval____))
+Call trace:
+ dw_pcie_read+0x90/0x110
+ __dw_pcie_read_dbi+0x70/0xa0
+ dw_pcie_setup+0x60/0x160
+ dw_pcie_setup_rc+0x38/0x360
+ qcom_pcie_host_init+0xbc/0x160
+ dw_pcie_host_init+0x248/0x510
+ qcom_pcie_probe+0x20c/0x250
+ platform_drv_probe+0x50/0xa0
+ really_probe+0x20c/0x2c0
+ driver_probe_device+0x58/0x100
+ __device_attach_driver+0x90/0xd0
+ bus_for_each_drv+0x64/0xd0
+ __device_attach+0xd8/0x140
+ device_initial_probe+0x10/0x20
+ bus_probe_device+0x90/0xa0
+ deferred_probe_work_func+0x74/0xb0
+ process_one_work+0x1e0/0x320
+ worker_thread+0x40/0x450
+ kthread+0x118/0x120
+ ret_from_fork+0x10/0x20
+Code: a94153f3 f94013f5 a8c37bfd d65f03c0 (b9400273) 
+---[ end trace f9304c55055774a4 ]---
+rcu: INFO: rcu_preempt detected stalls on CPUs/tasks:
+rcu:    (detected by 3, t=5252 jiffies, g=-567, q=4)
+rcu: All QSes seen, last rcu_preempt kthread activity 5236 (4294903741-4294898505), jiffies_till_next_fqs=1, root ->qsmask 0x0
+swapper/3       R  running task        0     0      1 0x00000008
+Call trace:
+ dump_backtrace+0x0/0x150
+ show_stack+0x14/0x20
+ sched_show_task+0x104/0x140
+ rcu_sched_clock_irq+0x8c0/0x930
+ update_process_times+0x2c/0x60
+ tick_sched_handle.isra.5+0x30/0x50
+ tick_sched_timer+0x54/0xb0
+ __hrtimer_run_queues+0x120/0x1c0
+ hrtimer_interrupt+0xdc/0x250
+ arch_timer_handler_virt+0x28/0x40
+ handle_percpu_devid_irq+0x94/0x150
+ generic_handle_irq+0x24/0x40
+ __handle_domain_irq+0x84/0xf0
+ gic_handle_irq+0x90/0x1ac
+ el1_irq+0xb8/0x180
+ arch_cpu_idle+0x1c/0x30
+ default_idle_call+0x1c/0x38
+ do_idle+0xc4/0x160
+ cpu_startup_entry+0x20/0x30
+ secondary_start_kernel+0x178/0x1c0
+rcu: rcu_preempt kthread starved for 5236 jiffies! g-567 f0x2 RCU_GP_WAIT_FQS(5) ->state=0x200 ->cpu=1
+rcu: RCU grace-period kthread stack dump:
+rcu_preempt     R    0    10      2 0x00000008
+Call trace:
+ __switch_to+0x174/0x1e0
+ __schedule+0x1cc/0x4c0
+ schedule+0x2c/0x80
+ schedule_timeout+0x8c/0x3a0
+ rcu_gp_kthread+0x4b4/0x840
+ kthread+0x118/0x120
+ ret_from_fork+0x10/0x20
