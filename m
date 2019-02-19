@@ -2,101 +2,104 @@ Return-Path: <SRS0=sVnv=Q2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04D62C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 00:51:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EB27C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 05:16:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5416217F5
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 00:51:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46DD321848
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 05:16:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="aeb4beq1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727409AbfBSAvI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Feb 2019 19:51:08 -0500
-Received: from SMTPBG357.QQ.COM ([183.61.51.175]:33538 "EHLO SMTPBG357.QQ.COM"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727269AbfBSAvI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 18 Feb 2019 19:51:08 -0500
-X-Greylist: delayed 499 seconds by postgrey-1.27 at vger.kernel.org; Mon, 18 Feb 2019 19:51:05 EST
-X-QQ-GoodBg: 0
-X-QQ-SSF: 00100000000000F0
-X-QQ-FEAT: eiOkkG+bjm7BokoWLlqPvV5lxlNky3E8WjTKOKrHuFCZDtBGh6QoyTjoBOp0W
-        r1PuRqXXNRxQG4WXZ4Gs7O+mpxeSO78ZovfJ7eFLsvLnp4hcgjZ3i1LWGZCKvUwEMoROqAe
-        BXRGbJ4swBJarW4HPsJ7GsfQkbEUX4g8ShjFYHE0ulJ+i5jMEd4tMI/LTcSiVgD0kQv53Ef
-        23lQtKQmjak8dsulcAtYxHa8GptWibW21AMMNYysJfNwD/TwIRNQiiSD8i9wu1+kH/SmhXy
-        ZhFW0y1TwbB9L5gaWUtqLehGs=
-X-QQ-BUSINESS-ORIGIN: 2
-X-Originating-IP: 222.92.124.153
-X-QQ-STYLE: 
-X-QQ-mid: bizmailfree7t1550536947t37589
-From:   "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-To:     "=?utf-8?B?VGhvbWFzIEdsZWl4bmVy?=" <tglx@linutronix.de>,
-        "=?utf-8?B?SHVhY2FpIENoZW4=?=" <chenhuacai@gmail.com>
-Cc:     "=?utf-8?B?S2VpdGggQnVzY2g=?=" <keith.busch@intel.com>,
-        "=?utf-8?B?Qmpvcm4gSGVsZ2Fhcw==?=" <helgaas@kernel.org>,
-        "=?utf-8?B?SmVucyBBeGJvZQ==?=" <axboe@kernel.dk>,
-        "=?utf-8?B?U2FnaSBHcmltYmVyZw==?=" <sagi@grimberg.me>,
-        "=?utf-8?B?bGludXgtcGNp?=" <linux-pci@vger.kernel.org>,
-        "=?utf-8?B?TEtNTA==?=" <linux-kernel@vger.kernel.org>,
-        "=?utf-8?B?bGludXgtbnZtZQ==?=" <linux-nvme@lists.infradead.org>,
-        "=?utf-8?B?TWluZyBMZWk=?=" <ming.lei@redhat.com>,
-        "=?utf-8?B?bGludXgtYmxvY2s=?=" <linux-block@vger.kernel.org>,
-        "=?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?=" <hch@lst.de>
-Subject: Re: [PATCH V3 1/5] genirq/affinity: don't mark 'affd' as const
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Date:   Tue, 19 Feb 2019 08:42:27 +0800
-X-Priority: 3
-Message-ID: <tencent_6C5D1EC74B826B1E2F22293C@qq.com>
-X-QQ-MIME: TCMime 1.0 by Tencent
-X-Mailer: QQMail 2.x
-X-QQ-Mailer: QQMail 2.x
-References: <20190213105041.13537-1-ming.lei@redhat.com>
-        <20190213105041.13537-2-ming.lei@redhat.com>
-        <20190213150407.GB96272@google.com>
-        <alpine.DEB.2.21.1902132112590.1659@nanos.tec.linutronix.de>
-        <20190213213149.GB8027@localhost.localdomain>
-        <alpine.DEB.2.21.1902132232560.1659@nanos.tec.linutronix.de>
-        <20190213223711.GC8027@localhost.localdomain>
-        <alpine.DEB.2.21.1902140949280.1659@nanos.tec.linutronix.de>
-        <tencent_6460D33741AF25B57E7BE493@qq.com>
-        <alpine.DEB.2.21.1902141430190.1561@nanos.tec.linutronix.de>
-In-Reply-To: <alpine.DEB.2.21.1902141430190.1561@nanos.tec.linutronix.de>
-X-QQ-ReplyHash: 839700712
-X-QQ-SENDSIZE: 520
-Received: from qq.com (unknown [127.0.0.1])
-        by smtp.qq.com (ESMTP) with SMTP
-        id ; Tue, 19 Feb 2019 08:42:30 +0800 (CST)
-Feedback-ID: bizmailfree:lemote.com:qybgweb:qybgweb22
+        id S1725802AbfBSFQH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Feb 2019 00:16:07 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:38573 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725763AbfBSFQH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2019 00:16:07 -0500
+Received: by mail-pg1-f196.google.com with SMTP id m2so7257113pgl.5
+        for <linux-pci@vger.kernel.org>; Mon, 18 Feb 2019 21:16:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=GHaiFJohMk/q3KHj6Y6LVP0NZOY6zkpU7SEBNWmbwK0=;
+        b=aeb4beq1JnNJVu8udZqV9C+B5pJw7DBN24bv3ie1CrTX084LkPZRrsNfsfw7Ik8jSq
+         XvnsqTHhRL6a2c+oEakYX+3ArjXpGiJW/6NXqUUMMHvXEqwtnsbijis3uAekqKzDZ0P3
+         iDev2S/sHgwhk16JPOLIqbFGxFTQsDzAPjryb1gnLZVNaNlmIeO0L1BlWcRL47R9DTUD
+         1wQxU3WFQF1DQmQZOzsGawrTmknoQo9Zt7nVnzEaiXXmW19/SIPkUwgrvM3x5bixJ991
+         ZYr9sXikBWLLN+BtmOvBdJr1M0IDE4PDeXl4+8b+icjR1Q6wF7FHjCuxZvYZ1j5KeI7x
+         Qn0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=GHaiFJohMk/q3KHj6Y6LVP0NZOY6zkpU7SEBNWmbwK0=;
+        b=Fn4BCfG9VSz4PJL5l6atpX6ATruSRBc50cYvHoei8f7y03nDK7FQ+sUGRHmjxfVTYy
+         7aitL2aWvClbiaulSfnVIYSu++F8CxNmfhsbCy21ZxsUFqZUmzkpa2ILceiMfWwE1PmE
+         7qJnBNooMXEUWZNEfJABpHBo9Mrf7anoScR4alXJtXl5gql40JYCofER/ItXW2yXFdDJ
+         9FzTZzMJ64R9asIWXaW36ns/WDQi9wvOA89vrJNZ2YeaQbgZFa78ZscinDun7NbvKcv6
+         4mcjrQoVQvsRdmOGxnXdnqrQoT3qdavIdy2K7LJZGMQeDAoNmnhT8HESsKmOQemHm1oU
+         edFw==
+X-Gm-Message-State: AHQUAubGF7XGH/Qnczsk03v2SGRICP/sQhe3x3YWFmvGb6otB+DArMr4
+        egDCz0sxNXEZ/rR4maDqMaUfgw==
+X-Google-Smtp-Source: AHgI3IbAcdxv/aecIuiSM9oKQdp2ioc72RpAdcjYuYAdRxJVumxI809S3uT7BMIugM45nW2OCnz5pg==
+X-Received: by 2002:a63:2a96:: with SMTP id q144mr21902063pgq.338.1550553366276;
+        Mon, 18 Feb 2019 21:16:06 -0800 (PST)
+Received: from tuxbook-pro (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id p29sm20403435pgm.78.2019.02.18.21.16.04
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 18 Feb 2019 21:16:05 -0800 (PST)
+Date:   Mon, 18 Feb 2019 21:16:03 -0800
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Khasim Syed Mohammed <khasim.mohammed@linaro.org>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Don't deassert reset GPIO during probe
+Message-ID: <20190219051602.GB13018@tuxbook-pro>
+References: <20190125232616.25714-1-bjorn.andersson@linaro.org>
+ <20190213152352.GB417@e107981-ln.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190213152352.GB417@e107981-ln.cambridge.arm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-TXkgbGVtb3RlLmNvbSBlbWFpbCBpcyB0b28gd2VhaywgSSdsbCBzdG9wIHRvcCBwb3N0IGJl
-Y2F1c2UgdGhpcyB0aW1lIEkndmUNCmNjLWVkIG15IGdtYWlsLg0KDQpJJ3ZlIHRlc3RlZCwg
-dGhpcyBwYXRjaCBjYW4gZml4IHRoZSBudm1lIHByb2JsZW0sIGJ1dCBpdCBjYW4ndCBiZSBh
-cHBsaWVkDQp0byA0LjE5IGJlY2F1c2Ugb2YgZGlmZmVyZW50IGNvbnRleHQuIEFuZCwgSSBz
-dGlsbCB0aGluayBteSBvcmlnaW5hbCBzb2x1dGlvbg0KKGdlbmlycS9hZmZpbml0eTogQXNz
-aWduIGRlZmF1bHQgYWZmaW5pdHkgdG8gcHJlL3Bvc3QgdmVjdG9ycykgaXMgY29ycmVjdC4N
-ClRoZXJlIG1heSBiZSBzaW1pbGFyIHByb2JsZW1zIGV4Y2VwdCBudm1lLg0KIA0KSHVhY2Fp
-DQoNCi0tLS0tLS0tLS0tLS0tLS0tLSBPcmlnaW5hbCAtLS0tLS0tLS0tLS0tLS0tLS0NCkZy
-b206ICAiVGhvbWFzIEdsZWl4bmVyIjx0Z2x4QGxpbnV0cm9uaXguZGU+Ow0KRGF0ZTogIFRo
-dSwgRmViIDE0LCAyMDE5IDA5OjMxIFBNDQpUbzogICLpmYjljY7miY0iPGNoZW5oY0BsZW1v
-dGUuY29tPjsNCkNjOiAgIktlaXRoIEJ1c2NoIjxrZWl0aC5idXNjaEBpbnRlbC5jb20+OyAi
-Qmpvcm4gSGVsZ2FhcyI8aGVsZ2Fhc0BrZXJuZWwub3JnPjsgIkplbnMgQXhib2UiPGF4Ym9l
-QGtlcm5lbC5kaz47ICJTYWdpIEdyaW1iZXJnIjxzYWdpQGdyaW1iZXJnLm1lPjsgImxpbnV4
-LXBjaSI8bGludXgtcGNpQHZnZXIua2VybmVsLm9yZz47ICJMS01MIjxsaW51eC1rZXJuZWxA
-dmdlci5rZXJuZWwub3JnPjsgImxpbnV4LW52bWUiPGxpbnV4LW52bWVAbGlzdHMuaW5mcmFk
-ZWFkLm9yZz47ICJNaW5nIExlaSI8bWluZy5sZWlAcmVkaGF0LmNvbT47ICJsaW51eC1ibG9j
-ayI8bGludXgtYmxvY2tAdmdlci5rZXJuZWwub3JnPjsgIkNocmlzdG9waCBIZWxsd2lnIjxo
-Y2hAbHN0LmRlPjsNClN1YmplY3Q6ICBSZTogW1BBVENIIFYzIDEvNV0gZ2VuaXJxL2FmZmlu
-aXR5OiBkb24ndCBtYXJrICdhZmZkJyBhcyBjb25zdA0KIA0KT24gVGh1LCAxNCBGZWIgMjAx
-OSwg6ZmI5Y2O5omNIHdyb3RlOg0KDQpQbGVhc2UgZG8gbm90IHRvcCBwb3N0Li4uLg0KDQo+
-IEknbGwgdGVzdCBuZXh0IHdlZWssIGJ1dCA0LjE5IGhhcyB0aGUgc2FtZSBwcm9ibGVtLCBo
-b3cgdG8gZml4IHRoYXQgZm9yIDQuMTk/DQoNCkJ5IGFwcGx5aW5nIHRoZSB2ZXJ5IHNhbWUg
-cGF0Y2ggcGVyaGFwcz8NCg0KVGhhbmtzLA0KDQp0Z2x4
+On Wed 13 Feb 07:23 PST 2019, Lorenzo Pieralisi wrote:
 
+> On Fri, Jan 25, 2019 at 03:26:16PM -0800, Bjorn Andersson wrote:
+> > Acquiring the reset GPIO low means that reset is being deasserted, this
+> > is followed almost immediately with qcom_pcie_host_init() asserting it,
+> > initializing it and then finally deasserting it again, for the link to
+> > come up.
+> > 
+> > Some PCIe devices requires a minimum time between the initial deassert
+> > and subsequent reset cycles. In a platform that boots with the reset
+> > GPIO asserted this requirement is being violated by this deassert/assert
+> > pulse.
+> > 
+> > Acquiring the reset GPIO high will prevent this by matching the state to
+> > the subsequent asserted state.
+> > 
+> > Cc: stable@vger.kernel.org
+> 
+> Missing Fixes: tag, please provide me one so that I can proceed.
+> 
+
+This applies to the original commit introducing this driver, so:
+
+Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
+
+Regards,
+Bjorn
