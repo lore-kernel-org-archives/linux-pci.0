@@ -4,29 +4,29 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE472C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:06:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60109C10F00
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:06:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 953D62147A
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:06:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D7312147A
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:06:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729240AbfBSTGl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Feb 2019 14:06:41 -0500
+        id S1725875AbfBSTGq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Feb 2019 14:06:46 -0500
 Received: from mga06.intel.com ([134.134.136.31]:2183 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725963AbfBSTGl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Feb 2019 14:06:41 -0500
+        id S1728675AbfBSTGm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Feb 2019 14:06:42 -0500
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
   by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Feb 2019 11:06:41 -0800
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.58,388,1544515200"; 
-   d="scan'208";a="276264345"
+   d="scan'208";a="276264354"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by orsmga004.jf.intel.com with ESMTP; 19 Feb 2019 11:06:40 -0800
+  by orsmga004.jf.intel.com with ESMTP; 19 Feb 2019 11:06:41 -0800
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com, joro@8bytes.org, dwmw2@infradead.org
 Cc:     linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
@@ -35,9 +35,9 @@ Cc:     linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
         Jacob Pan <jacob.jun.pan@linux.intel.com>,
         Kuppuswamy Sathyanarayanan 
         <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v3 1/2] PCI/ATS: Add pci_prg_resp_pasid_required() interface.
-Date:   Tue, 19 Feb 2019 11:04:51 -0800
-Message-Id: <633c9f77321894bddce54727098092822d483f16.1550602470.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v3 2/2] iommu/vt-d: Fix PRI/PASID dependency issue.
+Date:   Tue, 19 Feb 2019 11:04:52 -0800
+Message-Id: <e08a4c3d02c4135ed53946d3a70a277dc2eb42bd.1550602470.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <cover.1550602470.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1550602470.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -50,110 +50,40 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Return the PRG Response PASID Required bit in the Page Request
-Status Register.
-
-As per PCIe spec r4.0, sec 10.5.2.3, if this bit is Set, the device
-expects a PASID TLP Prefix on PRG Response Messages when the
-corresponding Page Requests had a PASID TLP Prefix. If Clear, the device
-does not expect PASID TLP Prefixes on any PRG Response Message, and the
-device behavior is undefined if the device receives a PRG Response Message
-with a PASID TLP Prefix. Also the device behavior is undefined if this
-bit is Set and the device receives a PRG Response Message with no PASID TLP
-Prefix when the corresponding Page Requests had a PASID TLP Prefix.
-
-This function will be used by drivers like IOMMU, if it is required to
-check the status of the PRG Response PASID Required bit before enabling
-the PASID support of the device.
+In Intel IOMMU, if the Page Request Queue (PRQ) is full, it will
+automatically respond to the device with a success message as a keep
+alive. And when sending the success message, IOMMU will include PASID in
+the Response Message when the Page Request has a PASID in Request
+Message and it does not check against the PRG Response PASID requirement
+of the device before sending the response. Also, if the device receives
+the PRG response with PASID when its not expecting it the device behavior
+is undefined. So if PASID is enabled in the device, enable PRI only if
+device expects PASID in PRG Response Message.
 
 Cc: Ashok Raj <ashok.raj@intel.com>
 Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>
 Cc: Keith Busch <keith.busch@intel.com>
 Suggested-by: Ashok Raj <ashok.raj@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/ats.c             | 30 ++++++++++++++++++++++++++++++
- include/linux/pci-ats.h       |  5 +++++
- include/uapi/linux/pci_regs.h |  1 +
- 3 files changed, 36 insertions(+)
+ drivers/iommu/intel-iommu.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 5b78f3b1b918..420cd0a578d0 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -368,6 +368,36 @@ int pci_pasid_features(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_pasid_features);
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 78188bf7e90d..5b174c09b80d 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -1402,7 +1402,9 @@ static void iommu_enable_dev_iotlb(struct device_domain_info *info)
+ 	if (info->pasid_supported && !pci_enable_pasid(pdev, info->pasid_supported & ~1))
+ 		info->pasid_enabled = 1;
  
-+/**
-+ * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
-+ *				 status.
-+ * @pdev: PCI device structure
-+ *
-+ * Returns 1 if PASID is required in PRG Response Message, 0 otherwise.
-+ *
-+ * Even though the PRG response PASID status is read from PRI Status
-+ * Register, since this API will mainly be used by PASID users, this
-+ * function is defined within #ifdef CONFIG_PCI_PASID instead of
-+ * CONFIG_PCI_PRI.
-+ */
-+int pci_prg_resp_pasid_required(struct pci_dev *pdev)
-+{
-+	u16 status;
-+	int pos;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-+	if (!pos)
-+		return 0;
-+
-+	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-+
-+	if (status & PCI_PRI_STATUS_PASID)
-+		return 1;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
-+
- #define PASID_NUMBER_SHIFT	8
- #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
- /**
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 7c4b8e27268c..facfd6a18fe1 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -40,6 +40,7 @@ void pci_disable_pasid(struct pci_dev *pdev);
- void pci_restore_pasid_state(struct pci_dev *pdev);
- int pci_pasid_features(struct pci_dev *pdev);
- int pci_max_pasids(struct pci_dev *pdev);
-+int pci_prg_resp_pasid_required(struct pci_dev *pdev);
- 
- #else  /* CONFIG_PCI_PASID */
- 
-@@ -66,6 +67,10 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
- 	return -EINVAL;
- }
- 
-+static int pci_prg_resp_pasid_required(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
- #endif /* CONFIG_PCI_PASID */
- 
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e1e9888c85e6..898be572b010 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -880,6 +880,7 @@
- #define  PCI_PRI_STATUS_RF	0x001	/* Response Failure */
- #define  PCI_PRI_STATUS_UPRGI	0x002	/* Unexpected PRG index */
- #define  PCI_PRI_STATUS_STOPPED	0x100	/* PRI Stopped */
-+#define  PCI_PRI_STATUS_PASID	0x8000	/* PRG Response PASID Required */
- #define PCI_PRI_MAX_REQ		0x08	/* PRI max reqs supported */
- #define PCI_PRI_ALLOC_REQ	0x0c	/* PRI max reqs allowed */
- #define PCI_EXT_CAP_PRI_SIZEOF	16
+-	if (info->pri_supported && !pci_reset_pri(pdev) && !pci_enable_pri(pdev, 32))
++	if (info->pri_supported &&
++	    (info->pasid_enabled ? pci_prg_resp_pasid_required(pdev) : 1)  &&
++	    !pci_reset_pri(pdev) && !pci_enable_pri(pdev, 32))
+ 		info->pri_enabled = 1;
+ #endif
+ 	if (!pdev->untrusted && info->ats_supported &&
 -- 
 2.20.1
 
