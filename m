@@ -2,226 +2,78 @@ Return-Path: <SRS0=sVnv=Q2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B01D7C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 07:24:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC877C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 11:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F24820851
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 07:24:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B982721903
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 11:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725801AbfBSHYQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Feb 2019 02:24:16 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:37638 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725763AbfBSHYQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2019 02:24:16 -0500
-X-UUID: f36f122fcbc24c36bfaf674bf5e173e4-20190219
-X-UUID: f36f122fcbc24c36bfaf674bf5e173e4-20190219
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw02.mediatek.com
-        (envelope-from <jianjun.wang@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 1907254790; Tue, 19 Feb 2019 15:24:04 +0800
-Received: from mtkcas09.mediatek.inc (172.21.101.178) by
- mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
- 15.0.1395.4; Tue, 19 Feb 2019 15:24:02 +0800
-Received: from localhost.localdomain (10.17.3.153) by mtkcas09.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Tue, 19 Feb 2019 15:24:02 +0800
-From:   Jianjun Wang <jianjun.wang@mediatek.com>
-To:     <marc.zyngier@arm.com>, <ryder.lee@mediatek.com>,
-        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <matthias.bgg@gmail.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <youlin.pei@mediatek.com>,
-        <honghui.zhang@mediatek.com>, <jianjun.wang@mediatek.com>
-Subject: [v2] PCI: mediatek: Remove MSI inner domain
-Date:   Tue, 19 Feb 2019 15:24:00 +0800
-Message-ID: <1550561040-30892-1-git-send-email-jianjun.wang@mediatek.com>
-X-Mailer: git-send-email 1.7.9.5
+        id S1726565AbfBSLKh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Feb 2019 06:10:37 -0500
+Received: from foss.arm.com ([217.140.101.70]:43750 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726322AbfBSLKh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Feb 2019 06:10:37 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7F23EA78;
+        Tue, 19 Feb 2019 03:10:36 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D4B313F720;
+        Tue, 19 Feb 2019 03:10:29 -0800 (PST)
+Date:   Tue, 19 Feb 2019 11:10:27 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Khasim Syed Mohammed <khasim.mohammed@linaro.org>,
+        Niklas Cassel <niklas.cassel@linaro.org>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Don't deassert reset GPIO during probe
+Message-ID: <20190219111027.GB14696@e107981-ln.cambridge.arm.com>
+References: <20190125232616.25714-1-bjorn.andersson@linaro.org>
+ <20190213152352.GB417@e107981-ln.cambridge.arm.com>
+ <20190219051602.GB13018@tuxbook-pro>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190219051602.GB13018@tuxbook-pro>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is no need to create the inner domain as a parent for MSI domian,
-some feature has been implemented by MSI framework.
+On Mon, Feb 18, 2019 at 09:16:03PM -0800, Bjorn Andersson wrote:
+> On Wed 13 Feb 07:23 PST 2019, Lorenzo Pieralisi wrote:
+> 
+> > On Fri, Jan 25, 2019 at 03:26:16PM -0800, Bjorn Andersson wrote:
+> > > Acquiring the reset GPIO low means that reset is being deasserted, this
+> > > is followed almost immediately with qcom_pcie_host_init() asserting it,
+> > > initializing it and then finally deasserting it again, for the link to
+> > > come up.
+> > > 
+> > > Some PCIe devices requires a minimum time between the initial deassert
+> > > and subsequent reset cycles. In a platform that boots with the reset
+> > > GPIO asserted this requirement is being violated by this deassert/assert
+> > > pulse.
+> > > 
+> > > Acquiring the reset GPIO high will prevent this by matching the state to
+> > > the subsequent asserted state.
+> > > 
+> > > Cc: stable@vger.kernel.org
+> > 
+> > Missing Fixes: tag, please provide me one so that I can proceed.
+> > 
+> 
+> This applies to the original commit introducing this driver, so:
+> 
+> Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
 
-Remove the inner domain and its irq chip, it will be more closer to the
-hardware implementation.
+Applied to pci/dwc for v5.1, thanks.
 
-Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
----
- drivers/pci/controller/pcie-mediatek.c | 83 +++++++++++---------------
- 1 file changed, 36 insertions(+), 47 deletions(-)
-
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 8d05df56158b..cd55c8ae392e 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -169,7 +169,6 @@ struct mtk_pcie_soc {
-  * @slot: port slot
-  * @irq: GIC irq
-  * @irq_domain: legacy INTx IRQ domain
-- * @inner_domain: inner IRQ domain
-  * @msi_domain: MSI IRQ domain
-  * @lock: protect the msi_irq_in_use bitmap
-  * @msi_irq_in_use: bit map for assigned MSI IRQ
-@@ -190,7 +189,6 @@ struct mtk_pcie_port {
- 	u32 slot;
- 	int irq;
- 	struct irq_domain *irq_domain;
--	struct irq_domain *inner_domain;
- 	struct irq_domain *msi_domain;
- 	struct mutex lock;
- 	DECLARE_BITMAP(msi_irq_in_use, MTK_MSI_IRQS_NUM);
-@@ -420,20 +418,12 @@ static void mtk_msi_ack_irq(struct irq_data *data)
- 	writel(1 << hwirq, port->base + PCIE_IMSI_STATUS);
- }
- 
--static struct irq_chip mtk_msi_bottom_irq_chip = {
--	.name			= "MTK MSI",
--	.irq_compose_msi_msg	= mtk_compose_msi_msg,
--	.irq_set_affinity	= mtk_msi_set_affinity,
--	.irq_ack		= mtk_msi_ack_irq,
--};
--
--static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
--				     unsigned int nr_irqs, void *args)
-+static irq_hw_number_t mtk_pcie_msi_get_hwirq(struct msi_domain_info *info,
-+					      msi_alloc_info_t *arg)
- {
--	struct mtk_pcie_port *port = domain->host_data;
--	unsigned long bit;
-+	struct mtk_pcie_port *port = info->chip_data;
-+	irq_hw_number_t bit;
- 
--	WARN_ON(nr_irqs != 1);
- 	mutex_lock(&port->lock);
- 
- 	bit = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
-@@ -446,18 +436,14 @@ static int mtk_pcie_irq_domain_alloc(struct irq_domain *domain, unsigned int vir
- 
- 	mutex_unlock(&port->lock);
- 
--	irq_domain_set_info(domain, virq, bit, &mtk_msi_bottom_irq_chip,
--			    domain->host_data, handle_edge_irq,
--			    NULL, NULL);
--
--	return 0;
-+	return bit;
- }
- 
--static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
--				     unsigned int virq, unsigned int nr_irqs)
-+static void mtk_pcie_msi_free(struct irq_domain *domain,
-+			      struct msi_domain_info *info, unsigned int virq)
- {
- 	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
--	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(d);
-+	struct mtk_pcie_port *port = info->chip_data;
- 
- 	mutex_lock(&port->lock);
- 
-@@ -468,46 +454,50 @@ static void mtk_pcie_irq_domain_free(struct irq_domain *domain,
- 		__clear_bit(d->hwirq, port->msi_irq_in_use);
- 
- 	mutex_unlock(&port->lock);
--
--	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
- }
- 
--static const struct irq_domain_ops msi_domain_ops = {
--	.alloc	= mtk_pcie_irq_domain_alloc,
--	.free	= mtk_pcie_irq_domain_free,
-+static struct msi_domain_ops mtk_msi_domain_ops = {
-+	.get_hwirq	= mtk_pcie_msi_get_hwirq,
-+	.msi_free	= mtk_pcie_msi_free,
- };
- 
- static struct irq_chip mtk_msi_irq_chip = {
--	.name		= "MTK PCIe MSI",
--	.irq_ack	= irq_chip_ack_parent,
--	.irq_mask	= pci_msi_mask_irq,
--	.irq_unmask	= pci_msi_unmask_irq,
-+	.name			= "MTK PCIe",
-+	.irq_compose_msi_msg	= mtk_compose_msi_msg,
-+	.irq_write_msi_msg	= pci_msi_domain_write_msg,
-+	.irq_set_affinity	= mtk_msi_set_affinity,
-+	.irq_ack		= mtk_msi_ack_irq,
-+	.irq_mask		= pci_msi_mask_irq,
-+	.irq_unmask		= pci_msi_unmask_irq,
- };
- 
- static struct msi_domain_info mtk_msi_domain_info = {
--	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--		   MSI_FLAG_PCI_MSIX),
--	.chip	= &mtk_msi_irq_chip,
-+	.flags		= (MSI_FLAG_USE_DEF_DOM_OPS |
-+			   MSI_FLAG_USE_DEF_CHIP_OPS | MSI_FLAG_PCI_MSIX),
-+	.ops		= &mtk_msi_domain_ops,
-+	.chip		= &mtk_msi_irq_chip,
-+	.handler	= handle_edge_irq,
-+	.handler_name	= "MSI",
- };
- 
- static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
- {
--	struct fwnode_handle *fwnode = of_node_to_fwnode(port->pcie->dev->of_node);
-+	struct device *dev = port->pcie->dev;
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
-+	struct msi_domain_info *info;
- 
- 	mutex_init(&port->lock);
- 
--	port->inner_domain = irq_domain_create_linear(fwnode, MTK_MSI_IRQS_NUM,
--						      &msi_domain_ops, port);
--	if (!port->inner_domain) {
--		dev_err(port->pcie->dev, "failed to create IRQ domain\n");
-+	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
-+	if (!info)
- 		return -ENOMEM;
--	}
- 
--	port->msi_domain = pci_msi_create_irq_domain(fwnode, &mtk_msi_domain_info,
--						     port->inner_domain);
-+	memcpy(info, &mtk_msi_domain_info, sizeof(*info));
-+	info->chip_data = port;
-+
-+	port->msi_domain = pci_msi_create_irq_domain(fwnode, info, NULL);
- 	if (!port->msi_domain) {
--		dev_err(port->pcie->dev, "failed to create MSI domain\n");
--		irq_domain_remove(port->inner_domain);
-+		dev_err(dev, "failed to create MSI domain\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -541,8 +531,6 @@ static void mtk_pcie_irq_teardown(struct mtk_pcie *pcie)
- 		if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 			if (port->msi_domain)
- 				irq_domain_remove(port->msi_domain);
--			if (port->inner_domain)
--				irq_domain_remove(port->inner_domain);
- 		}
- 
- 		irq_dispose_mapping(port->irq);
-@@ -619,7 +607,8 @@ static void mtk_pcie_intr_handler(struct irq_desc *desc)
- 
- 			while ((imsi_status = readl(port->base + PCIE_IMSI_STATUS))) {
- 				for_each_set_bit(bit, &imsi_status, MTK_MSI_IRQS_NUM) {
--					virq = irq_find_mapping(port->inner_domain, bit);
-+					virq = irq_find_mapping(
-+							port->msi_domain, bit);
- 					generic_handle_irq(virq);
- 				}
- 			}
--- 
-2.20.1
-
+Lorenzo
