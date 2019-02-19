@@ -2,145 +2,99 @@ Return-Path: <SRS0=sVnv=Q2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15784C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48EA0C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:48:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DACFF2147C
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:07:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AD302146F
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Feb 2019 19:48:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eFWSloVy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728608AbfBSTHt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Feb 2019 14:07:49 -0500
-Received: from mga01.intel.com ([192.55.52.88]:6001 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726323AbfBSTHs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Feb 2019 14:07:48 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Feb 2019 11:07:47 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,388,1544515200"; 
-   d="scan'208";a="125645928"
-Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga008.fm.intel.com with ESMTP; 19 Feb 2019 11:07:47 -0800
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com, joro@8bytes.org, dwmw2@infradead.org
-Cc:     linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
-        jacob.jun.pan@intel.com, keith.busch@intel.com,
-        Jacob Pan <jacob.jun.pan@linux.intel.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: [PATCH v3 1/2] PCI/ATS: Add pci_ats_page_aligned() interface
-Date:   Tue, 19 Feb 2019 11:06:09 -0800
-Message-Id: <c145b806114346dafa1b31084329c7d288fe1a19.1550602392.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1550602392.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1550602392.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1725875AbfBSTsM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Feb 2019 14:48:12 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:34995 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725807AbfBSTsM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Feb 2019 14:48:12 -0500
+Received: by mail-wr1-f68.google.com with SMTP id t18so23389431wrx.2;
+        Tue, 19 Feb 2019 11:48:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dl7Pg/vEUTpn3GkKhp+pyC/6uR7V/3Y08Va22umnMaY=;
+        b=eFWSloVyuvY7uTVOeNKDCG/u6tcCm/QwnJ7tPMOZQB3AUchwWrAo8twkq0jYfeGGuC
+         4jm+cLkUnOVGt7yTmOSDXn4YAriRd4HbGTnqE8ZXGzIlXzZ2sUt049ya7VYtk6T5F6Gt
+         mlxLPGCn+wf4F/RHvjxbzmusVkRJITakbffNVtvjOwoA0GMxqhgPy9ErwlhLL/fd0yWW
+         YfZ2q7VXtusouAVd1dMV8++9pMg5LEDF1reSV1ZjHlZow4ey+qIu+PW4qC9G96Ajkfvm
+         CDZjmX9tM2BDmwWOVSfP0wnZuxrfFtye34Av84gKucHCAc3urx5JdQ3hUCm4zx8XK4Y9
+         XFBg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=dl7Pg/vEUTpn3GkKhp+pyC/6uR7V/3Y08Va22umnMaY=;
+        b=exqmcb/6IXawdGQ6JS7ImMn5nXnjB82Y/qv6h1Ax4DO94QUq06lFJZHuDl1dUmiYOP
+         FgJl7jBIui6ZXNKHB5sAArUJI9Hi2RtGxvKoZ118iaNDIIY1PDWoNONIQziNVCaZN+52
+         Trl+chmVq+WKv/VCpjoxKLG//tYNtpJVrJLML6q2ddkVnPxt9XJMKarj4ulNADsLLma3
+         iEGdgeudiKwMqKoCTecl4xWssnigenuEhk1twpJ/dyzzB1BI1kP79Mkf9Qz1ElaaB0/8
+         t6hOquMsol41HuDdDj7jcOL+Crp4QCzA8nDSlRFS0gjne9BsW7gX4O90hwuu4EapD74q
+         PndA==
+X-Gm-Message-State: AHQUAub7NR42LB2BB+kpCcv23LFdvz1ishaARJitTKOVIw2l8xVW+XzA
+        KIoEPzjz9JGOEpOe1BTB+PyzciJMxc6p3wZjV+E=
+X-Google-Smtp-Source: AHgI3IYM9XxpoJwJ9OyNDyl6B9FWSL1gT4BZhoUpTSD/TWZakm6WO9SRRhKnI/1oOqjd+vbG0ZHDrhcfZDfyeJv5EBY=
+X-Received: by 2002:adf:e548:: with SMTP id z8mr22686673wrm.52.1550605689886;
+ Tue, 19 Feb 2019 11:48:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190104174925.17153-1-andrew.smirnov@gmail.com>
+ <20190201162729.GA22030@e107981-ln.cambridge.arm.com> <CAHQ1cqENSb0ORrcN0Qh93DGx1C7AVxSqAKhcfJH2qZ8+WuVH+g@mail.gmail.com>
+ <20190219122210.GA17142@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20190219122210.GA17142@e107981-ln.cambridge.arm.com>
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+Date:   Tue, 19 Feb 2019 11:47:58 -0800
+Message-ID: <CAHQ1cqE-9fTiOaJNGye3yEx6oF+Gox6-FCPZRO=iZmfDcBFiOQ@mail.gmail.com>
+Subject: Re: [PATCH v2 00/20] i.MX6, DesignWare PCI improvements
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Lucas Stach <l.stach@pengutronix.de>, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+On Tue, Feb 19, 2019 at 4:22 AM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Thu, Feb 14, 2019 at 04:59:04PM -0800, Andrey Smirnov wrote:
+>
+> [...]
+>
+> > Lorenzo, can you apply the dwc specific patches that are already
+> > reviewed by Gustavo Pimentel from this series, to keep things moving
+> > while we are waiting on Lucas? I can also spin them out into a
+> > separate series if that's perferable.
+>
+> Hi Andrey,
+>
+> do you have time to respin the series with *only* dwc patches ACK'ed
+> by Gustavo ? Or it is not doable owing to patches interdependency ?
+>
 
-Return the Page Aligned Request bit in the ATS Capability Register.
+Sorry for the delay, it's doable and I'll send out a separate series shortly.
 
-As per PCIe spec r4.0, sec 10.5.1.2, if the Page Aligned Request bit is
-set, it indicates the Untranslated Addresses generated by the device are
-always aligned to a 4096 byte boundary.
-
-An IOMMU that can only translate page-aligned addresses can only be used
-with devices that always produce aligned Untranslated Addresses. This
-interface will be used by drivers for such IOMMUs to determine whether
-devices can use the ATS service.
-
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Suggested-by: Ashok Raj <ashok.raj@intel.com>
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/ats.c             | 27 +++++++++++++++++++++++++++
- include/linux/pci.h           |  2 ++
- include/uapi/linux/pci_regs.h |  1 +
- 3 files changed, 30 insertions(+)
-
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 5b78f3b1b918..bae74eb90f42 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -142,6 +142,33 @@ int pci_ats_queue_depth(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pci_ats_queue_depth);
- 
-+/**
-+ * pci_ats_page_aligned - Return Page Aligned Request bit status.
-+ * @pdev: the PCI device
-+ *
-+ * Returns 1, if the Untranslated Addresses generated by the device
-+ * are always aligned or 0 otherwise.
-+ *
-+ * Per PCIe spec r4.0, sec 10.5.1.2, if the Page Aligned Request bit
-+ * is set, it indicates the Untranslated Addresses generated by the
-+ * device are always aligned to a 4096 byte boundary.
-+ */
-+int pci_ats_page_aligned(struct pci_dev *pdev)
-+{
-+	u16 cap;
-+
-+	if (!pdev->ats_cap)
-+		return 0;
-+
-+	pci_read_config_word(pdev, pdev->ats_cap + PCI_ATS_CAP, &cap);
-+
-+	if (cap & PCI_ATS_CAP_PAGE_ALIGNED)
-+		return 1;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_ats_page_aligned);
-+
- #ifdef CONFIG_PCI_PRI
- /**
-  * pci_enable_pri - Enable PRI capability
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 65f1d8c2f082..9724a8c0496b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1524,11 +1524,13 @@ void pci_ats_init(struct pci_dev *dev);
- int pci_enable_ats(struct pci_dev *dev, int ps);
- void pci_disable_ats(struct pci_dev *dev);
- int pci_ats_queue_depth(struct pci_dev *dev);
-+int pci_ats_page_aligned(struct pci_dev *dev);
- #else
- static inline void pci_ats_init(struct pci_dev *d) { }
- static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
- static inline void pci_disable_ats(struct pci_dev *d) { }
- static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
-+static inline int pci_ats_page_aligned(struct pci_dev *dev) { return 0; }
- #endif
- 
- #ifdef CONFIG_PCIE_PTM
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e1e9888c85e6..7973bb02ed4b 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -866,6 +866,7 @@
- #define PCI_ATS_CAP		0x04	/* ATS Capability Register */
- #define  PCI_ATS_CAP_QDEP(x)	((x) & 0x1f)	/* Invalidate Queue Depth */
- #define  PCI_ATS_MAX_QDEP	32	/* Max Invalidate Queue Depth */
-+#define  PCI_ATS_CAP_PAGE_ALIGNED	0x0020 /* Page Aligned Request */
- #define PCI_ATS_CTRL		0x06	/* ATS Control Register */
- #define  PCI_ATS_CTRL_ENABLE	0x8000	/* ATS Enable */
- #define  PCI_ATS_CTRL_STU(x)	((x) & 0x1f)	/* Smallest Translation Unit */
--- 
-2.20.1
-
+Thanks,
+Andrey Smirnov
