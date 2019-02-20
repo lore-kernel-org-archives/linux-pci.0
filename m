@@ -5,51 +5,51 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E91C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 16:34:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB72AC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 16:34:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1950A21773
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 16:34:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BA472147C
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 16:34:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RmlccQeC"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="X3XX+67r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726377AbfBTQeM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Feb 2019 11:34:12 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:41970 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725822AbfBTQeL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2019 11:34:11 -0500
-Received: by mail-pl1-f193.google.com with SMTP id y5so6906259plk.8
-        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2019 08:34:11 -0800 (PST)
+        id S1726904AbfBTQeQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Feb 2019 11:34:16 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:44361 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726352AbfBTQeP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2019 11:34:15 -0500
+Received: by mail-pg1-f193.google.com with SMTP id y1so12104772pgk.11
+        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2019 08:34:15 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5JMpbtJFok6NmyP09wHWoeTClnCNAZoek3gSUOSs3x0=;
-        b=RmlccQeCYowaxbJ7ccWoPEOLRf/t0oWGtdbuaYzv+WOyd9XtLfEjlHPhzZT9uyTbsy
-         ZMB4mcyyQn/rwdJnS5z3g6L6BxV/EdbgUBowBsNpsUH5zS3JouwtPVvIi8QXrp5+BIQq
-         hNf1+ASiQ2Z1/AYpTJBwW2GP83LFjCRPr39s8=
+        bh=bJTqQVyPqTRoZmzEJxDokZKH2fjNCLF3wrzuRLWaY7o=;
+        b=X3XX+67reBKkrMvXlNfWVFEU+fnIh7nMlqCJx3q+OCq+BwKowbHjaL3mPaFV5NP3bg
+         DMu9VViwbDfzjm0K9RyV8zhs2vzVHgPodYEG4L+14ss9ZE1bm+Hj5h3pZxBeLx4GwuKN
+         xaqTKHoXLOaCrUjYAeeENs32xVXdYhLRhubt4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=5JMpbtJFok6NmyP09wHWoeTClnCNAZoek3gSUOSs3x0=;
-        b=iVosczbuqEjj55ITEXBiYe/p2OScGFNirrEWtRDypGOS7RY/hTa+J+TCmXUXSK+Gnt
-         CI4e7rrC9RAnrmS3MYvMKEQstMCH8UKK1vEKGYFXrtNLPrcm+1zGsBFxXub3Un4AIObD
-         3f7iZujbcXNrkkov+dU2cDGNqscpQS9KNJzOdjWv1xTSP7Vzv0hYgHn+z3FVlfDOjdCD
-         PTmdVacow4thDymH17sFaoKHglAy4nfuaLo06qGYzGvpO8eaOIsWlcGgEC7VAyOBmnZs
-         Bw7WZg9zBRCMAF8hCyGV8qO6rGvCAF4S89rbslu2Pm9nSIge2Vla9uSCddg8Rf6NdBxf
-         9B0Q==
-X-Gm-Message-State: AHQUAuYe1pWfYnRh42BK/1xqHZo8CjqS23AuaBbVRhspim44MjpoTHiQ
-        W6DOLeR69dgG2dQS+ctwmaM/XA==
-X-Google-Smtp-Source: AHgI3IY8WjyHVjXGBqE+g1rHOxfoj6OPgU0zvCl8moah1jJaqkXrjklULWWDfZcULwCmIUPaJhEeVg==
-X-Received: by 2002:a17:902:6b4b:: with SMTP id g11mr36696005plt.92.1550680451148;
-        Wed, 20 Feb 2019 08:34:11 -0800 (PST)
+        bh=bJTqQVyPqTRoZmzEJxDokZKH2fjNCLF3wrzuRLWaY7o=;
+        b=MLT+AgKyYu+NEBzhclMqHUwHN3VtkajPWM16pqfSIGgDq05EeC1BtjiLetYl/IJTr3
+         q8fQzNpqB2vxMUgiqKQ2H04PovqBgvVco6HPHORklzUX7WNY/yYsVh/vH+YXWF8Mp+W2
+         uSYnHdErKLzJY19J4abyv3AdZYWme0K0rXaiUexHH1wCC4mgZbz+qom48q2Q1RMp7Yhn
+         9nIMiuzPFMIkCOQ0FRQ5UMy8bwqI0yNapAKqrXWA8caeCVXem56KfHzj4aWDqm9Vwqoj
+         kgEsoEpFGWqq/rLc6zK8yFIYEUvRbW/b7pJUFxxyOStltnq9wjW+AI/h0lZkHQ2WMErz
+         ijBA==
+X-Gm-Message-State: AHQUAubJ3UnKV3xcEFCpuNeoqODoakRYHGWiCPOJ6lJGnf/eVblR8Q09
+        aCOhJvQlNkhBZhNl3EXywx8R3g==
+X-Google-Smtp-Source: AHgI3IbWdOKn2kPVyPQZugoB9bJ8zsTbbKF6MSd1O++9KKKnaBS5MqwvPTgfHSG4QW1d4pK61uQzPQ==
+X-Received: by 2002:a62:76d4:: with SMTP id r203mr36036679pfc.15.1550680454764;
+        Wed, 20 Feb 2019 08:34:14 -0800 (PST)
 Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id t10sm26556717pfa.151.2019.02.20.08.34.07
+        by smtp.gmail.com with ESMTPSA id t10sm26556717pfa.151.2019.02.20.08.34.11
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 20 Feb 2019 08:34:10 -0800 (PST)
+        Wed, 20 Feb 2019 08:34:14 -0800 (PST)
 From:   Srinath Mannam <srinath.mannam@broadcom.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -57,10 +57,12 @@ To:     Bjorn Helgaas <bhelgaas@google.com>,
         Scott Branden <sbranden@broadcom.com>
 Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: [PATCH v3 1/2] PCI: iproc: Add CRS check in config read
-Date:   Wed, 20 Feb 2019 22:03:54 +0530
-Message-Id: <1550680435-9706-2-git-send-email-srinath.mannam@broadcom.com>
+        Srinath Mannam <srinath.mannam@broadcom.com>,
+        Abhishek Shah <abhishek.shah@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>
+Subject: [PATCH v3 2/2] PCI: iproc: Add outbound configuration for 32-bit I/O region
+Date:   Wed, 20 Feb 2019 22:03:55 +0530
+Message-Id: <1550680435-9706-3-git-send-email-srinath.mannam@broadcom.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1550680435-9706-1-git-send-email-srinath.mannam@broadcom.com>
 References: <1550680435-9706-1-git-send-email-srinath.mannam@broadcom.com>
@@ -69,91 +71,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the current implementation, config read output data 0xffff0001 is
-assumed as CRS completion. But sometimes 0xffff0001 can be a valid data.
+In the present driver outbound window configuration is done to map above
+32-bit address I/O regions with corresponding PCI memory range given in
+ranges DT property.
 
-IPROC PCIe host controller PAXB v2 has a register to show config read
-status flags like SC, UR, CRS and CA. So that extra check is added to
-confirm the CRS using status flags before reissue config read.
+This patch add outbound window configuration to map below 32-bit I/O range
+with corresponding PCI memory, which helps to access I/O region in IA32
+and one to one mapping of I/O region to PCI memory.
+
+Ex:
+1. ranges DT property given for current driver is,
+    ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
+    I/O region address is 0x400000000
+2. ranges DT property can be given after this patch,
+    ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
+    I/O region address is 0x42000000
 
 Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
+Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Reviewed-by: Vikram Prakash <vikram.prakash@broadcom.com>
 ---
- drivers/pci/controller/pcie-iproc.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
+ 1 file changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-index c20fd6b..b882255 100644
+index b882255..080f142 100644
 --- a/drivers/pci/controller/pcie-iproc.c
 +++ b/drivers/pci/controller/pcie-iproc.c
-@@ -60,6 +60,10 @@
- #define APB_ERR_EN_SHIFT		0
- #define APB_ERR_EN			BIT(APB_ERR_EN_SHIFT)
+@@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+ 			resource_size_t window_size =
+ 				ob_map->window_sizes[size_idx] * SZ_1M;
  
-+#define CFG_RD_SUCCESS			0
-+#define CFG_RD_UR			1
-+#define CFG_RD_CRS			2
-+#define CFG_RD_CA			3
- #define CFG_RETRY_STATUS		0xffff0001
- #define CFG_RETRY_STATUS_TIMEOUT_US	500000 /* 500 milliseconds */
- 
-@@ -289,6 +293,9 @@ enum iproc_pcie_reg {
- 	IPROC_PCIE_IARR4,
- 	IPROC_PCIE_IMAP4,
- 
-+	/* config read status */
-+	IPROC_PCIE_CFG_RD_STATUS,
+-			if (size < window_size)
+-				continue;
++			/*
++			 * Keep iterating until we reach the last window and
++			 * with the minimal window size at index zero. In this
++			 * case, we take a compromise by mapping it using the
++			 * minimum window size that can be supported
++			 */
++			if (size < window_size) {
++				if (size_idx > 0 || window_idx > 0)
++					continue;
 +
- 	/* link status */
- 	IPROC_PCIE_LINK_STATUS,
++				/*
++				 * For the corner case of reaching the minimal
++				 * window size that can be supported on the
++				 * last window
++				 */
++				axi_addr = ALIGN_DOWN(axi_addr, window_size);
++				pci_addr = ALIGN_DOWN(pci_addr, window_size);
++				size = window_size;
++			}
  
-@@ -350,6 +357,7 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
- 	[IPROC_PCIE_IMAP3]		= 0xe08,
- 	[IPROC_PCIE_IARR4]		= 0xe68,
- 	[IPROC_PCIE_IMAP4]		= 0xe70,
-+	[IPROC_PCIE_CFG_RD_STATUS]	= 0xee0,
- 	[IPROC_PCIE_LINK_STATUS]	= 0xf0c,
- 	[IPROC_PCIE_APB_ERR_EN]		= 0xf40,
- };
-@@ -474,10 +482,12 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
- 	return (pcie->base + offset);
- }
- 
--static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-+static unsigned int iproc_pcie_cfg_retry(struct iproc_pcie *pcie,
-+					 void __iomem *cfg_data_p)
- {
- 	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
- 	unsigned int data;
-+	u32 status;
- 
- 	/*
- 	 * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
-@@ -498,6 +508,15 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
- 	 */
- 	data = readl(cfg_data_p);
- 	while (data == CFG_RETRY_STATUS && timeout--) {
-+		/*
-+		 * CRS state is set in CFG_RD status register
-+		 * This will handle the case where CFG_RETRY_STATUS is
-+		 * valid config data.
-+		 */
-+		status = iproc_pcie_read_reg(pcie, IPROC_PCIE_CFG_RD_STATUS);
-+		if (status != CFG_RD_CRS)
-+			return data;
-+
- 		udelay(1);
- 		data = readl(cfg_data_p);
- 	}
-@@ -576,7 +595,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
- 	if (!cfg_data_p)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
--	data = iproc_pcie_cfg_retry(cfg_data_p);
-+	data = iproc_pcie_cfg_retry(pcie, cfg_data_p);
- 
- 	*val = data;
- 	if (size <= 2)
+ 			if (!IS_ALIGNED(axi_addr, window_size) ||
+ 			    !IS_ALIGNED(pci_addr, window_size)) {
 -- 
 2.7.4
 
