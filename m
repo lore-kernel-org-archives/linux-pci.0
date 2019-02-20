@@ -2,83 +2,68 @@ Return-Path: <SRS0=6A7A=Q3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 817BCC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 10:26:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66AACC4360F
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 15:11:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50CF62147C
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 10:26:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D2F92147A
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 15:11:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ekObypZW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726573AbfBTK0l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Feb 2019 05:26:41 -0500
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55284 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726283AbfBTK0l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Feb 2019 05:26:41 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id EF140A78;
-        Wed, 20 Feb 2019 02:26:40 -0800 (PST)
-Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 06C393F575;
-        Wed, 20 Feb 2019 02:26:38 -0800 (PST)
-Date:   Wed, 20 Feb 2019 10:26:49 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/5] DesignWare PCI improvements
-Message-ID: <20190220102648.GA27079@red-moon>
-References: <20190219200242.17243-1-andrew.smirnov@gmail.com>
+        id S1726060AbfBTPLC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Feb 2019 10:11:02 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:58562 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbfBTPLC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2019 10:11:02 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=QZINleA5fkfgNNqDZd8ggreydPxvq2wWVqc7AgffeKU=; b=ekObypZWDn3nTmFLxMWKGQ2Mm
+        SdVRs7xAkFNT8ZUM6PD3v33gH3TNfWk+OC3s5pGNN2ZpXX50/TIeMXrcGqBHIkZpyJ7cDwNgkBBWL
+        yXFXV8hDkeJu/BFQzVm/lS1MCOMNJOG2YzXGsGmRcbF350YCE1SdyCtpiLBRTAS1LkS3H3EMtzAwx
+        uptz2theWDBT0K5TyKWSeuZQ6lux0rnoto0ON+m6uaplYSQAOm9DyEpNpYKr3H+0GJfKXfkQKOHa3
+        ca99E5mz5r9cuIsqwoYZAj00toKAGoixpXYruTc/XtDD47Mt9sV8WD19z3ibU8JTISqWnt9l54s9R
+        YvTqosd6w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1gwTWS-0000n2-Rm; Wed, 20 Feb 2019 15:10:56 +0000
+Date:   Wed, 20 Feb 2019 07:10:56 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Thomas Bogendoerfer <tbogendoerfer@suse.de>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        James Hogan <jhogan@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Paul Burton <paul.burton@mips.com>,
+        Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 6/7] MIPS: SGI-IP27: use generic PCI driver
+Message-ID: <20190220151056.GA29614@infradead.org>
+References: <20190124174728.28812-1-tbogendoerfer@suse.de>
+ <20190124174728.28812-7-tbogendoerfer@suse.de>
+ <20190128133215.GC744@infradead.org>
+ <20190218115807.1a683d2c6824acd4ea78eb11@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190219200242.17243-1-andrew.smirnov@gmail.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <20190218115807.1a683d2c6824acd4ea78eb11@suse.de>
+User-Agent: Mutt/1.9.2 (2017-12-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Feb 19, 2019 at 12:02:37PM -0800, Andrey Smirnov wrote:
-> Everyone:
-> 
-> This is the series is a spin-off from [imx6-dwc] containing only small
-> improvements that I made while reading the code and researching commit
-> history of pcie-designware*.c. All changes are optional, so
-> commits that don't seem like an improvement can be easily
-> dropped. Hopefully each patch is self-explanatory.
-> 
-> I tested this series on i.MX6Q, i.MX7D and i.MX8MQ.
-> 
-> Feedback is welcome!
-> 
-> Thanks,
-> Andrey Smirnov
-> 
-> [imx6-dwc] https://lore.kernel.org/lkml/20190104174925.17153-1-andrew.smirnov@gmail.com
-> 
-> Andrey Smirnov (5):
->   PCI: dwc: Make use of IS_ALIGNED()
->   PCI: dwc: Share code for dw_pcie_rd/wr_other_conf()
->   PCI: dwc: Make use of BIT() in constant definitions
->   PCI: dwc: Make use of GENMASK/FIELD_PREP
->   PCI: dwc: Remove superfluous shifting in definitions
-> 
->  .../pci/controller/dwc/pcie-designware-host.c | 61 +++++++------------
->  drivers/pci/controller/dwc/pcie-designware.c  |  6 +-
->  drivers/pci/controller/dwc/pcie-designware.h  | 57 +++++++++--------
->  3 files changed, 56 insertions(+), 68 deletions(-)
- 
+On Mon, Feb 18, 2019 at 11:58:07AM +0100, Thomas Bogendoerfer wrote:
+> This of course will break SH7786. To fix both cases how about making dma_pfn_offset
+>
+> a signed long ?
 
-Applied to pci/dwc for v5.1, thanks.
-
-Lorenzo
+Yes, making it signed sounds like a good idea.
