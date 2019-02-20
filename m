@@ -2,102 +2,158 @@ Return-Path: <SRS0=6A7A=Q3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD5EDC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 15:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47E91C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 16:34:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9FD2B2086A
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 15:21:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1950A21773
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 16:34:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RmlccQeC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727489AbfBTPU6 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Feb 2019 10:20:58 -0500
-Received: from mx2.suse.de ([195.135.220.15]:57006 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725804AbfBTPU5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Feb 2019 10:20:57 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 4BA7BAF8F;
-        Wed, 20 Feb 2019 15:20:56 +0000 (UTC)
-Date:   Wed, 20 Feb 2019 16:20:53 +0100
-From:   Thomas Bogendoerfer <tbogendoerfer@suse.de>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        James Hogan <jhogan@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-pci@vger.kernel.org,
+        id S1726377AbfBTQeM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Feb 2019 11:34:12 -0500
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:41970 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725822AbfBTQeL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2019 11:34:11 -0500
+Received: by mail-pl1-f193.google.com with SMTP id y5so6906259plk.8
+        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2019 08:34:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=5JMpbtJFok6NmyP09wHWoeTClnCNAZoek3gSUOSs3x0=;
+        b=RmlccQeCYowaxbJ7ccWoPEOLRf/t0oWGtdbuaYzv+WOyd9XtLfEjlHPhzZT9uyTbsy
+         ZMB4mcyyQn/rwdJnS5z3g6L6BxV/EdbgUBowBsNpsUH5zS3JouwtPVvIi8QXrp5+BIQq
+         hNf1+ASiQ2Z1/AYpTJBwW2GP83LFjCRPr39s8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=5JMpbtJFok6NmyP09wHWoeTClnCNAZoek3gSUOSs3x0=;
+        b=iVosczbuqEjj55ITEXBiYe/p2OScGFNirrEWtRDypGOS7RY/hTa+J+TCmXUXSK+Gnt
+         CI4e7rrC9RAnrmS3MYvMKEQstMCH8UKK1vEKGYFXrtNLPrcm+1zGsBFxXub3Un4AIObD
+         3f7iZujbcXNrkkov+dU2cDGNqscpQS9KNJzOdjWv1xTSP7Vzv0hYgHn+z3FVlfDOjdCD
+         PTmdVacow4thDymH17sFaoKHglAy4nfuaLo06qGYzGvpO8eaOIsWlcGgEC7VAyOBmnZs
+         Bw7WZg9zBRCMAF8hCyGV8qO6rGvCAF4S89rbslu2Pm9nSIge2Vla9uSCddg8Rf6NdBxf
+         9B0Q==
+X-Gm-Message-State: AHQUAuYe1pWfYnRh42BK/1xqHZo8CjqS23AuaBbVRhspim44MjpoTHiQ
+        W6DOLeR69dgG2dQS+ctwmaM/XA==
+X-Google-Smtp-Source: AHgI3IY8WjyHVjXGBqE+g1rHOxfoj6OPgU0zvCl8moah1jJaqkXrjklULWWDfZcULwCmIUPaJhEeVg==
+X-Received: by 2002:a17:902:6b4b:: with SMTP id g11mr36696005plt.92.1550680451148;
+        Wed, 20 Feb 2019 08:34:11 -0800 (PST)
+Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id t10sm26556717pfa.151.2019.02.20.08.34.07
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 20 Feb 2019 08:34:10 -0800 (PST)
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Paul Burton <paul.burton@mips.com>,
-        Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH 6/7] MIPS: SGI-IP27: use generic PCI driver
-Message-Id: <20190220162053.abe9ffde0f6d347a281bbe49@suse.de>
-In-Reply-To: <20190220151056.GA29614@infradead.org>
-References: <20190124174728.28812-1-tbogendoerfer@suse.de>
-        <20190124174728.28812-7-tbogendoerfer@suse.de>
-        <20190128133215.GC744@infradead.org>
-        <20190218115807.1a683d2c6824acd4ea78eb11@suse.de>
-        <20190220151056.GA29614@infradead.org>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-suse-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>
+Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [PATCH v3 1/2] PCI: iproc: Add CRS check in config read
+Date:   Wed, 20 Feb 2019 22:03:54 +0530
+Message-Id: <1550680435-9706-2-git-send-email-srinath.mannam@broadcom.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1550680435-9706-1-git-send-email-srinath.mannam@broadcom.com>
+References: <1550680435-9706-1-git-send-email-srinath.mannam@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 20 Feb 2019 07:10:56 -0800
-Christoph Hellwig <hch@infradead.org> wrote:
+In the current implementation, config read output data 0xffff0001 is
+assumed as CRS completion. But sometimes 0xffff0001 can be a valid data.
 
-> On Mon, Feb 18, 2019 at 11:58:07AM +0100, Thomas Bogendoerfer wrote:
-> > This of course will break SH7786. To fix both cases how about making dma_pfn_offset
-> >
-> > a signed long ?
-> 
-> Yes, making it signed sounds like a good idea.
+IPROC PCIe host controller PAXB v2 has a register to show config read
+status flags like SC, UR, CRS and CA. So that extra check is added to
+confirm the CRS using status flags before reissue config read.
 
-but at least my implementation looks a little bit ugly:
+Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+---
+ drivers/pci/controller/pcie-iproc.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/dma-direct.h b/include/linux/dma-direct.h
-index b7338702592a..b72b1cba8911 100644
---- a/include/linux/dma-direct.h
-+++ b/include/linux/dma-direct.h
-@@ -12,14 +12,20 @@ static inline dma_addr_t __phys_to_dma(struct device *dev, phys_addr_t paddr)
- {
-        dma_addr_t dev_addr = (dma_addr_t)paddr;
+diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+index c20fd6b..b882255 100644
+--- a/drivers/pci/controller/pcie-iproc.c
++++ b/drivers/pci/controller/pcie-iproc.c
+@@ -60,6 +60,10 @@
+ #define APB_ERR_EN_SHIFT		0
+ #define APB_ERR_EN			BIT(APB_ERR_EN_SHIFT)
  
--       return dev_addr - ((dma_addr_t)dev->dma_pfn_offset << PAGE_SHIFT);
-+       if (dev->dma_pfn_offset > 0)
-+               return dev_addr + ((dma_addr_t)dev->dma_pfn_offset << PAGE_SHIFT);
++#define CFG_RD_SUCCESS			0
++#define CFG_RD_UR			1
++#define CFG_RD_CRS			2
++#define CFG_RD_CA			3
+ #define CFG_RETRY_STATUS		0xffff0001
+ #define CFG_RETRY_STATUS_TIMEOUT_US	500000 /* 500 milliseconds */
+ 
+@@ -289,6 +293,9 @@ enum iproc_pcie_reg {
+ 	IPROC_PCIE_IARR4,
+ 	IPROC_PCIE_IMAP4,
+ 
++	/* config read status */
++	IPROC_PCIE_CFG_RD_STATUS,
 +
-+       return dev_addr - ((dma_addr_t)-dev->dma_pfn_offset << PAGE_SHIFT);
+ 	/* link status */
+ 	IPROC_PCIE_LINK_STATUS,
+ 
+@@ -350,6 +357,7 @@ static const u16 iproc_pcie_reg_paxb_v2[] = {
+ 	[IPROC_PCIE_IMAP3]		= 0xe08,
+ 	[IPROC_PCIE_IARR4]		= 0xe68,
+ 	[IPROC_PCIE_IMAP4]		= 0xe70,
++	[IPROC_PCIE_CFG_RD_STATUS]	= 0xee0,
+ 	[IPROC_PCIE_LINK_STATUS]	= 0xf0c,
+ 	[IPROC_PCIE_APB_ERR_EN]		= 0xf40,
+ };
+@@ -474,10 +482,12 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
+ 	return (pcie->base + offset);
  }
  
- static inline phys_addr_t __dma_to_phys(struct device *dev, dma_addr_t dev_addr)
+-static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
++static unsigned int iproc_pcie_cfg_retry(struct iproc_pcie *pcie,
++					 void __iomem *cfg_data_p)
  {
-        phys_addr_t paddr = (phys_addr_t)dev_addr;
+ 	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
+ 	unsigned int data;
++	u32 status;
  
--       return paddr + ((phys_addr_t)dev->dma_pfn_offset << PAGE_SHIFT);
-+       if (dev->dma_pfn_offset > 0)
-+               return paddr - ((phys_addr_t)dev->dma_pfn_offset << PAGE_SHIFT);
+ 	/*
+ 	 * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
+@@ -498,6 +508,15 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+ 	 */
+ 	data = readl(cfg_data_p);
+ 	while (data == CFG_RETRY_STATUS && timeout--) {
++		/*
++		 * CRS state is set in CFG_RD status register
++		 * This will handle the case where CFG_RETRY_STATUS is
++		 * valid config data.
++		 */
++		status = iproc_pcie_read_reg(pcie, IPROC_PCIE_CFG_RD_STATUS);
++		if (status != CFG_RD_CRS)
++			return data;
 +
-+       return paddr + ((phys_addr_t)-dev->dma_pfn_offset << PAGE_SHIFT);
- }
+ 		udelay(1);
+ 		data = readl(cfg_data_p);
+ 	}
+@@ -576,7 +595,7 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+ 	if (!cfg_data_p)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
  
- static inline bool dma_capable(struct device *dev, dma_addr_t addr, size_t size)
-
-
-
-For the v2 version of the IP27 rework I've used the mach-XXX include structure
-of the MIPS tree to implement __phy_to_dma/__dma_to_phys for IP27. I'd prefer
-it that way.
-
-Thomas.
-
+-	data = iproc_pcie_cfg_retry(cfg_data_p);
++	data = iproc_pcie_cfg_retry(pcie, cfg_data_p);
+ 
+ 	*val = data;
+ 	if (size <= 2)
 -- 
-SUSE Linux GmbH
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
+2.7.4
+
