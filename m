@@ -2,193 +2,219 @@ Return-Path: <SRS0=6A7A=Q3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25F17C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 09:25:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 200C8C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 09:48:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E86852183F
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 09:25:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E16E82147C
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 09:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726317AbfBTJZA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Feb 2019 04:25:00 -0500
-Received: from smtp3-g21.free.fr ([212.27.42.3]:1263 "EHLO smtp3-g21.free.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725816AbfBTJZA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Feb 2019 04:25:00 -0500
-Received: from [192.168.108.68] (unknown [213.36.7.13])
-        (Authenticated sender: marc.w.gonzalez)
-        by smtp3-g21.free.fr (Postfix) with ESMTPSA id 2818713F8F0;
-        Wed, 20 Feb 2019 10:24:41 +0100 (CET)
-Subject: Re: WIP: PCIe on MSM8998
-From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
-To:     MSM <linux-arm-msm@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>
-Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Evan Green <evgreen@chromium.org>,
-        Douglas Anderson <dianders@chromium.org>
-References: <c97b6f4e-4b4c-027f-5a0b-80b3f7054177@free.fr>
-Message-ID: <50873e4c-72c0-88ac-cf55-b11c2e0ce644@free.fr>
-Date:   Wed, 20 Feb 2019 10:24:41 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        id S1726317AbfBTJsz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Feb 2019 04:48:55 -0500
+Received: from relay10.mail.gandi.net ([217.70.178.230]:37275 "EHLO
+        relay10.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725816AbfBTJsz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2019 04:48:55 -0500
+Received: from localhost (aaubervilliers-681-1-81-190.w90-88.abo.wanadoo.fr [90.88.23.190])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay10.mail.gandi.net (Postfix) with ESMTPSA id 7EB3724001A;
+        Wed, 20 Feb 2019 09:48:49 +0000 (UTC)
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org
+Cc:     Russell King <linux@arm.linux.org.uk>,
+        linux-arm-kernel@lists.infradead.org,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?q?Lu=C3=ADs=20Mendes?= <luis.p.mendes@gmail.com>,
+        Leigh Brown <leigh@solinno.co.uk>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: [PATCH 1/2] PCI: pci-bridge-emul: Create per-bridge copy of register behavior
+Date:   Wed, 20 Feb 2019 10:48:40 +0100
+Message-Id: <20190220094841.11129-2-thomas.petazzoni@bootlin.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
+References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
-In-Reply-To: <c97b6f4e-4b4c-027f-5a0b-80b3f7054177@free.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 19/02/2019 17:54, Marc Gonzalez wrote:
+The behavior of the different registers of the PCI-to-PCI bridge is
+currently encoded in two global arrays, shared by all instances of
+PCI-to-PCI bridge emulation.
 
-> Current situation: HANG + REBOOT :-)
-> Probably some silly typo in an address in my DT. Investigating...
-> 
-> # modprobe phy-qcom-qmp
-> REMAP: PA=0c010000 VA=ffffff8010005000 SIZE=18c
-> REMAP: PA=0c010200 VA=ffffff801000d200 SIZE=128
-> REMAP: PA=0c010400 VA=ffffff801002d400 SIZE=200
-> REMAP: PA=0c010c00 VA=ffffff8010035c00 SIZE=20c
-> REMAP: PA=0c010600 VA=ffffff8010051600 SIZE=128
-> REMAP: PA=0c010800 VA=ffffff8010053800 SIZE=200
-> qcom-qmp-phy c010000.phy: PHY pcs_misc-reg not used
-> qcom-qmp-phy c010000.phy: Registered Qcom-QMP phy
-> [    CLK_BASE + 6b004] = 00282000
-> REMAP: PA=01c00000 VA=ffffff8010b72000 SIZE=2000
-> REMAP: PA=01c06000 VA=ffffff8010055000 SIZE=1000
-> REMAP: PA=1b000000 VA=ffffff801005d000 SIZE=f1d
-> REMAP: PA=01c07000 VA=ffffff8010065000 SIZE=200
-> REMAP: PA=1b000f20 VA=ffffff801006df20 SIZE=a8
-> REMAP: PA=01c07200 VA=ffffff8010075200 SIZE=200
-> [    CLK_BASE + 6b004] = a0282001
-> REMAP: PA=01c07400 VA=ffffff801007d400 SIZE=200
-> qcom-qmp-phy 1c06000.phy: PHY pcs_misc-reg not used
-> qcom-qmp-phy 1c06000.phy: Registered Qcom-QMP phy
-> [    CLK_BASE + 6b004] = 00282000
-> REMAP: PA=01c00000 VA=ffffff8010d02000 SIZE=2000
-> REMAP: PA=1b000000 VA=ffffff801005d000 SIZE=f1d
-> REMAP: PA=1b000f20 VA=ffffff801006df20 SIZE=a8
-> qcom-pcie 1b000000.pci: 1b000000.pci supply vdda not found, using dummy regulator
-> qcom-pcie 1b000000.pci: 1b000000.pci supply vddpe-3v3 not found, using dummy regulator
-> qcom-qmp-phy 1c06000.phy: Initializing QMP phy
-> [    CLK_BASE + 6f000] = 00000001
-> [    CLK_BASE + 6f014] = 00000001
-> [    CLK_BASE + 6f00c] = 00000001
-> [    CLK_BASE + 6f00c] = 00000000
-> [    CLK_BASE + 6f014] = 00000000
-> [    CLK_BASE + 6f000] = 00000000
-> [    CLK_BASE + 6f004] = 80000001
-> [    CLK_BASE + 6b010] = 80008001
-> [    CLK_BASE + 8800c] = 80000001
-> [    PCIE_DBI + 00404] = 0000000b
-> [    PCIE_DBI + 00034] = 0000001c
-> [    PCIE_DBI + 00038] = 00000010
-> [    PCIE_DBI + 00174] = 00000033
-> [    PCIE_DBI + 00194] = 00000006
-> [    PCIE_DBI + 000c8] = 00000042
-> [    PCIE_DBI + 00128] = 00000000
-> [    PCIE_DBI + 00144] = 000000ff
-> [    PCIE_DBI + 00148] = 0000001f
-> [    PCIE_DBI + 00178] = 00000001
-> [    PCIE_DBI + 0019c] = 00000001
-> [    PCIE_DBI + 0018c] = 00000000
-> [    PCIE_DBI + 00184] = 0000000a
-> [    PCIE_DBI + 0000c] = 00000009
-> [    PCIE_DBI + 000d0] = 00000082
-> [    PCIE_DBI + 000e4] = 00000003
-> [    PCIE_DBI + 000e0] = 00000055
-> [    PCIE_DBI + 000dc] = 00000055
-> [    PCIE_DBI + 00054] = 00000000
-> [    PCIE_DBI + 00050] = 0000001a
-> [    PCIE_DBI + 0004c] = 0000000a
-> [    PCIE_DBI + 00174] = 00000033
-> [    PCIE_DBI + 0003c] = 00000002
-> [    PCIE_DBI + 00040] = 0000001f
-> [    PCIE_DBI + 000ac] = 00000004
-> [    PCIE_DBI + 00078] = 0000000b
-> [    PCIE_DBI + 00084] = 00000016
-> [    PCIE_DBI + 00090] = 00000028
-> [    PCIE_DBI + 0010c] = 00000000
-> [    PCIE_DBI + 00108] = 00000080
-> [    PCIE_DBI + 00010] = 00000001
-> [    PCIE_DBI + 0001c] = 00000031
-> [    PCIE_DBI + 00020] = 00000001
-> [    PCIE_DBI + 00014] = 00000002
-> [    PCIE_DBI + 00018] = 00000000
-> [    PCIE_DBI + 00024] = 0000002f
-> [    PCIE_DBI + 00028] = 00000019
-> [    PCIE_DBI + 000c4] = 00000015
-> [    PCIE_DBI + 00070] = 0000000f
-> [    PCIE_DBI + 00048] = 0000000f
-> [    PCIE_DBI + 00074] = 00000019
-> [    PCIE_DBI + 00038] = 00000010
-> [    PCIE_DBI + 00178] = 00000000
-> [    PCIE_DBI + 000c4] = 00000040
-> [    PCIE_DBI + 00400] = 0000000a
-> [    PCIE_DBI + 00408] = 0000000b
-> [    CLK_BASE + 6b018] = 80004001
-> [    PCIE_DBI + 00068] = 00000045
-> [    PCIE_DBI + 00094] = 00000006
-> [    01c07200 + 00110] = 0000001c
-> [    01c07200 + 000d8] = 00000001
-> [    01c07200 + 000dc] = 00000000
-> [    01c07200 + 000e0] = 000000db
-> [    01c07200 + 00120] = 00000018
-> [    01c07200 + 0001c] = 00000004
-> [    01c07200 + 00010] = 00000004
-> [    01c07200 + 00048] = 0000004b
-> [    01c07200 + 0011c] = 00000014
-> [    01c07200 + 00118] = 00000019
-> [    01c07400 + 00058] = 0000004c
-> [    01c07400 + 000a0] = 00000000
-> [    01c07400 + 000a4] = 00000001
-> [    01c07400 + 000a8] = 00000005
-> [    01c07400 + 00054] = 00000005
-> [    01c07400 + 00004] = 00000002
-> [    01c07400 + 0006c] = 00000000
-> [    01c07400 + 00060] = 000000a3
-> [    01c07400 + 00028] = 0000000e
-> [    01c07400 + 00004] = 00000003
-> [    01c07400 + 00000] = 00000000
-> [    01c07400 + 00008] = 0000000a
-> qcom-pcie 1b000000.pci: host bridge /soc/pci@1b000000 ranges:
-> qcom-pcie 1b000000.pci: Parsing ranges property...
-> qcom-pcie 1b000000.pci:    IO 0x1b200000..0x1b2fffff -> 0x1b200000
-> qcom-pcie 1b000000.pci:   MEM 0x1b300000..0x1bffffff -> 0x1b300000
-> REMAP: PA=1b100000 VA=ffffff8011400000 SIZE=80000
-> REMAP: PA=1b180000 VA=ffffff8011500000 SIZE=80000
-> [    CLK_BASE + 6b014] = 80000001
-> [    CLK_BASE + 6b00c] = 80004221
-> [    CLK_BASE + 6b008] = 8000c221
-> [   PCIE_PARF + 00040] = 00000000
-> [   PCIE_PARF + 00168] = 00000000
-> [   PCIE_PARF + 00000] = 00000000
-> [   PCIE_PARF + 00174] = 00000010
-> [   PCIE_PARF + 001a8] = 80000000
-> dw_pcie_read: addr=ffffff801005d710 size=4
-> Internal error: synchronous external abort: 96000210 [#1] PREEMPT SMP
-> Modules linked in: phy_qcom_qmp
-> ...
-> Call trace:
->  dw_pcie_read+0x90/0x110
->  __dw_pcie_read_dbi+0x70/0xa0
->  dw_pcie_setup+0x60/0x160
->  dw_pcie_setup_rc+0x38/0x360
->  qcom_pcie_host_init+0xbc/0x160
->  dw_pcie_host_init+0x248/0x510
->  qcom_pcie_probe+0x20c/0x250
+However, we will need to tweak the behavior on a per-bridge basis, to
+accommodate for different capabilities of the platforms where this
+code is used. In preparation for this, this commit creates a
+per-bridge copy of the register behavior arrays, so that they can
+later be tweaked on a per-bridge basis.
 
-The splat occurs when dw_pcie_setup() executes
+Reported-by: Luís Mendes <luis.p.mendes@gmail.com>
+Reported-by: Leigh Brown <leigh@solinno.co.uk>
+Cc: Luís Mendes <luis.p.mendes@gmail.com>
+Cc: Leigh Brown <leigh@solinno.co.uk>
+Fixes: 1f08673eef123 ("PCI: mvebu: Convert to PCI emulated bridge config space")
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+---
+ drivers/pci/pci-bridge-emul.c | 80 +++++++++++++++++++++++------------
+ drivers/pci/pci-bridge-emul.h |  8 +++-
+ 2 files changed, 60 insertions(+), 28 deletions(-)
 
-	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
+diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
+index 129738362d90..dd8d8060317e 100644
+--- a/drivers/pci/pci-bridge-emul.c
++++ b/drivers/pci/pci-bridge-emul.c
+@@ -24,29 +24,6 @@
+ #define PCI_CAP_PCIE_START	PCI_BRIDGE_CONF_END
+ #define PCI_CAP_PCIE_END	(PCI_CAP_PCIE_START + PCI_EXP_SLTSTA2 + 2)
+ 
+-/*
+- * Initialize a pci_bridge_emul structure to represent a fake PCI
+- * bridge configuration space. The caller needs to have initialized
+- * the PCI configuration space with whatever values make sense
+- * (typically at least vendor, device, revision), the ->ops pointer,
+- * and optionally ->data and ->has_pcie.
+- */
+-void pci_bridge_emul_init(struct pci_bridge_emul *bridge)
+-{
+-	bridge->conf.class_revision |= PCI_CLASS_BRIDGE_PCI << 16;
+-	bridge->conf.header_type = PCI_HEADER_TYPE_BRIDGE;
+-	bridge->conf.cache_line_size = 0x10;
+-	bridge->conf.status = PCI_STATUS_CAP_LIST;
+-
+-	if (bridge->has_pcie) {
+-		bridge->conf.capabilities_pointer = PCI_CAP_PCIE_START;
+-		bridge->pcie_conf.cap_id = PCI_CAP_ID_EXP;
+-		/* Set PCIe v2, root port, slot support */
+-		bridge->pcie_conf.cap = PCI_EXP_TYPE_ROOT_PORT << 4 | 2 |
+-			PCI_EXP_FLAGS_SLOT;
+-	}
+-}
+-
+ struct pci_bridge_reg_behavior {
+ 	/* Read-only bits */
+ 	u32 ro;
+@@ -283,6 +260,55 @@ const static struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
+ 	},
+ };
+ 
++/*
++ * Initialize a pci_bridge_emul structure to represent a fake PCI
++ * bridge configuration space. The caller needs to have initialized
++ * the PCI configuration space with whatever values make sense
++ * (typically at least vendor, device, revision), the ->ops pointer,
++ * and optionally ->data and ->has_pcie.
++ */
++int pci_bridge_emul_init(struct pci_bridge_emul *bridge)
++{
++	bridge->conf.class_revision |= PCI_CLASS_BRIDGE_PCI << 16;
++	bridge->conf.header_type = PCI_HEADER_TYPE_BRIDGE;
++	bridge->conf.cache_line_size = 0x10;
++	bridge->conf.status = PCI_STATUS_CAP_LIST;
++	bridge->pci_regs_behavior = kmemdup(pci_regs_behavior,
++					    sizeof(pci_regs_behavior),
++					    GFP_KERNEL);
++	if (!bridge->pci_regs_behavior)
++		return -ENOMEM;
++
++	if (bridge->has_pcie) {
++		bridge->conf.capabilities_pointer = PCI_CAP_PCIE_START;
++		bridge->pcie_conf.cap_id = PCI_CAP_ID_EXP;
++		/* Set PCIe v2, root port, slot support */
++		bridge->pcie_conf.cap = PCI_EXP_TYPE_ROOT_PORT << 4 | 2 |
++			PCI_EXP_FLAGS_SLOT;
++		bridge->pcie_cap_regs_behavior =
++			kmemdup(pcie_cap_regs_behavior,
++				sizeof(pcie_cap_regs_behavior),
++				GFP_KERNEL);
++		if (!bridge->pcie_cap_regs_behavior) {
++			kfree(bridge->pci_regs_behavior);
++			return -ENOMEM;
++		}
++	}
++
++	return 0;
++}
++
++/*
++ * Cleanup a pci_bridge_emul structure that was previously initilized
++ * using pci_bridge_emul_init().
++ */
++void pci_bridge_emul_cleanup(struct pci_bridge_emul *bridge)
++{
++	if (bridge->has_pcie)
++		kfree(bridge->pcie_cap_regs_behavior);
++	kfree(bridge->pci_regs_behavior);
++}
++
+ /*
+  * Should be called by the PCI controller driver when reading the PCI
+  * configuration space of the fake bridge. It will call back the
+@@ -312,11 +338,11 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
+ 		reg -= PCI_CAP_PCIE_START;
+ 		read_op = bridge->ops->read_pcie;
+ 		cfgspace = (u32 *) &bridge->pcie_conf;
+-		behavior = pcie_cap_regs_behavior;
++		behavior = bridge->pcie_cap_regs_behavior;
+ 	} else {
+ 		read_op = bridge->ops->read_base;
+ 		cfgspace = (u32 *) &bridge->conf;
+-		behavior = pci_regs_behavior;
++		behavior = bridge->pci_regs_behavior;
+ 	}
+ 
+ 	if (read_op)
+@@ -383,11 +409,11 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+ 		reg -= PCI_CAP_PCIE_START;
+ 		write_op = bridge->ops->write_pcie;
+ 		cfgspace = (u32 *) &bridge->pcie_conf;
+-		behavior = pcie_cap_regs_behavior;
++		behavior = bridge->pcie_cap_regs_behavior;
+ 	} else {
+ 		write_op = bridge->ops->write_base;
+ 		cfgspace = (u32 *) &bridge->conf;
+-		behavior = pci_regs_behavior;
++		behavior = bridge->pci_regs_behavior;
+ 	}
+ 
+ 	/* Keep all bits, except the RW bits */
+diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
+index 9d510ccf738b..f04637bb3222 100644
+--- a/drivers/pci/pci-bridge-emul.h
++++ b/drivers/pci/pci-bridge-emul.h
+@@ -107,15 +107,21 @@ struct pci_bridge_emul_ops {
+ 			   u32 old, u32 new, u32 mask);
+ };
+ 
++struct pci_bridge_reg_behavior;
++
+ struct pci_bridge_emul {
+ 	struct pci_bridge_emul_conf conf;
+ 	struct pci_bridge_emul_pcie_conf pcie_conf;
+ 	struct pci_bridge_emul_ops *ops;
++	struct pci_bridge_reg_behavior *pci_regs_behavior;
++	struct pci_bridge_reg_behavior *pcie_cap_regs_behavior;
+ 	void *data;
+ 	bool has_pcie;
+ };
+ 
+-void pci_bridge_emul_init(struct pci_bridge_emul *bridge);
++int pci_bridge_emul_init(struct pci_bridge_emul *bridge);
++void pci_bridge_emul_cleanup(struct pci_bridge_emul *bridge);
++
+ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
+ 			      int size, u32 *value);
+ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+-- 
+2.20.1
 
-#define PCIE_PORT_LINK_CONTROL 0x710
-
-I'll try comparing with the downstream kernel...
