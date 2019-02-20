@@ -2,26 +2,29 @@ Return-Path: <SRS0=6A7A=Q3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 200C8C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 09:48:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88EDDC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 10:00:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E16E82147C
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 09:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B88F2146E
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Feb 2019 10:00:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726317AbfBTJsz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Feb 2019 04:48:55 -0500
-Received: from relay10.mail.gandi.net ([217.70.178.230]:37275 "EHLO
-        relay10.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725816AbfBTJsz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2019 04:48:55 -0500
+        id S1727188AbfBTKAs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Feb 2019 05:00:48 -0500
+Received: from mslow2.mail.gandi.net ([217.70.178.242]:36152 "EHLO
+        mslow2.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727139AbfBTKAs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Feb 2019 05:00:48 -0500
+Received: from relay12.mail.gandi.net (unknown [217.70.178.232])
+        by mslow2.mail.gandi.net (Postfix) with ESMTP id 55FC53A7134
+        for <linux-pci@vger.kernel.org>; Wed, 20 Feb 2019 09:48:50 +0000 (UTC)
 Received: from localhost (aaubervilliers-681-1-81-190.w90-88.abo.wanadoo.fr [90.88.23.190])
         (Authenticated sender: thomas.petazzoni@bootlin.com)
-        by relay10.mail.gandi.net (Postfix) with ESMTPSA id 7EB3724001A;
-        Wed, 20 Feb 2019 09:48:49 +0000 (UTC)
+        by relay12.mail.gandi.net (Postfix) with ESMTPSA id 534AB200015;
+        Wed, 20 Feb 2019 09:48:46 +0000 (UTC)
 From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -35,12 +38,10 @@ Cc:     Russell King <linux@arm.linux.org.uk>,
         =?UTF-8?q?Lu=C3=ADs=20Mendes?= <luis.p.mendes@gmail.com>,
         Leigh Brown <leigh@solinno.co.uk>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH 1/2] PCI: pci-bridge-emul: Create per-bridge copy of register behavior
-Date:   Wed, 20 Feb 2019 10:48:40 +0100
-Message-Id: <20190220094841.11129-2-thomas.petazzoni@bootlin.com>
+Subject: [PATCH 0/2] PCI: fix pci-mvebu after conversion to common bridge emul code
+Date:   Wed, 20 Feb 2019 10:48:39 +0100
+Message-Id: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
-References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -49,172 +50,49 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The behavior of the different registers of the PCI-to-PCI bridge is
-currently encoded in two global arrays, shared by all instances of
-PCI-to-PCI bridge emulation.
+Hello,
 
-However, we will need to tweak the behavior on a per-bridge basis, to
-accommodate for different capabilities of the platforms where this
-code is used. In preparation for this, this commit creates a
-per-bridge copy of the register behavior arrays, so that they can
-later be tweaked on a per-bridge basis.
+This set of two patches aim at fixing some regression reported by two
+users (Luis and Leigh), that were introduced by the conversion of the
+pci-mvebu driver to the common PCI bridge emulation code shared
+between pci-aardvark and pci-mvebu.
 
-Reported-by: Luís Mendes <luis.p.mendes@gmail.com>
-Reported-by: Leigh Brown <leigh@solinno.co.uk>
-Cc: Luís Mendes <luis.p.mendes@gmail.com>
-Cc: Leigh Brown <leigh@solinno.co.uk>
-Fixes: 1f08673eef123 ("PCI: mvebu: Convert to PCI emulated bridge config space")
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
----
- drivers/pci/pci-bridge-emul.c | 80 +++++++++++++++++++++++------------
- drivers/pci/pci-bridge-emul.h |  8 +++-
- 2 files changed, 60 insertions(+), 28 deletions(-)
+Due to this conversion, some registers of the PCI configuration that
+used to be read-only are now read-write, making the Linux PCI core
+believe that some features are implemented by the PCI bridge. Namely
+in the case of pci-mvebu, the prefetchable memory base/limit registers
+were read-only, while they are now read-write. Due to this, the Linux
+PCI core now believes it can configure a prefetchable memory area, but
+this is not supported by pci-mvebu, which does not have the logic to
+create the appropriate MBUs windows.
 
-diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index 129738362d90..dd8d8060317e 100644
---- a/drivers/pci/pci-bridge-emul.c
-+++ b/drivers/pci/pci-bridge-emul.c
-@@ -24,29 +24,6 @@
- #define PCI_CAP_PCIE_START	PCI_BRIDGE_CONF_END
- #define PCI_CAP_PCIE_END	(PCI_CAP_PCIE_START + PCI_EXP_SLTSTA2 + 2)
- 
--/*
-- * Initialize a pci_bridge_emul structure to represent a fake PCI
-- * bridge configuration space. The caller needs to have initialized
-- * the PCI configuration space with whatever values make sense
-- * (typically at least vendor, device, revision), the ->ops pointer,
-- * and optionally ->data and ->has_pcie.
-- */
--void pci_bridge_emul_init(struct pci_bridge_emul *bridge)
--{
--	bridge->conf.class_revision |= PCI_CLASS_BRIDGE_PCI << 16;
--	bridge->conf.header_type = PCI_HEADER_TYPE_BRIDGE;
--	bridge->conf.cache_line_size = 0x10;
--	bridge->conf.status = PCI_STATUS_CAP_LIST;
--
--	if (bridge->has_pcie) {
--		bridge->conf.capabilities_pointer = PCI_CAP_PCIE_START;
--		bridge->pcie_conf.cap_id = PCI_CAP_ID_EXP;
--		/* Set PCIe v2, root port, slot support */
--		bridge->pcie_conf.cap = PCI_EXP_TYPE_ROOT_PORT << 4 | 2 |
--			PCI_EXP_FLAGS_SLOT;
--	}
--}
--
- struct pci_bridge_reg_behavior {
- 	/* Read-only bits */
- 	u32 ro;
-@@ -283,6 +260,55 @@ const static struct pci_bridge_reg_behavior pcie_cap_regs_behavior[] = {
- 	},
- };
- 
-+/*
-+ * Initialize a pci_bridge_emul structure to represent a fake PCI
-+ * bridge configuration space. The caller needs to have initialized
-+ * the PCI configuration space with whatever values make sense
-+ * (typically at least vendor, device, revision), the ->ops pointer,
-+ * and optionally ->data and ->has_pcie.
-+ */
-+int pci_bridge_emul_init(struct pci_bridge_emul *bridge)
-+{
-+	bridge->conf.class_revision |= PCI_CLASS_BRIDGE_PCI << 16;
-+	bridge->conf.header_type = PCI_HEADER_TYPE_BRIDGE;
-+	bridge->conf.cache_line_size = 0x10;
-+	bridge->conf.status = PCI_STATUS_CAP_LIST;
-+	bridge->pci_regs_behavior = kmemdup(pci_regs_behavior,
-+					    sizeof(pci_regs_behavior),
-+					    GFP_KERNEL);
-+	if (!bridge->pci_regs_behavior)
-+		return -ENOMEM;
-+
-+	if (bridge->has_pcie) {
-+		bridge->conf.capabilities_pointer = PCI_CAP_PCIE_START;
-+		bridge->pcie_conf.cap_id = PCI_CAP_ID_EXP;
-+		/* Set PCIe v2, root port, slot support */
-+		bridge->pcie_conf.cap = PCI_EXP_TYPE_ROOT_PORT << 4 | 2 |
-+			PCI_EXP_FLAGS_SLOT;
-+		bridge->pcie_cap_regs_behavior =
-+			kmemdup(pcie_cap_regs_behavior,
-+				sizeof(pcie_cap_regs_behavior),
-+				GFP_KERNEL);
-+		if (!bridge->pcie_cap_regs_behavior) {
-+			kfree(bridge->pci_regs_behavior);
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * Cleanup a pci_bridge_emul structure that was previously initilized
-+ * using pci_bridge_emul_init().
-+ */
-+void pci_bridge_emul_cleanup(struct pci_bridge_emul *bridge)
-+{
-+	if (bridge->has_pcie)
-+		kfree(bridge->pcie_cap_regs_behavior);
-+	kfree(bridge->pci_regs_behavior);
-+}
-+
- /*
-  * Should be called by the PCI controller driver when reading the PCI
-  * configuration space of the fake bridge. It will call back the
-@@ -312,11 +338,11 @@ int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 		reg -= PCI_CAP_PCIE_START;
- 		read_op = bridge->ops->read_pcie;
- 		cfgspace = (u32 *) &bridge->pcie_conf;
--		behavior = pcie_cap_regs_behavior;
-+		behavior = bridge->pcie_cap_regs_behavior;
- 	} else {
- 		read_op = bridge->ops->read_base;
- 		cfgspace = (u32 *) &bridge->conf;
--		behavior = pci_regs_behavior;
-+		behavior = bridge->pci_regs_behavior;
- 	}
- 
- 	if (read_op)
-@@ -383,11 +409,11 @@ int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
- 		reg -= PCI_CAP_PCIE_START;
- 		write_op = bridge->ops->write_pcie;
- 		cfgspace = (u32 *) &bridge->pcie_conf;
--		behavior = pcie_cap_regs_behavior;
-+		behavior = bridge->pcie_cap_regs_behavior;
- 	} else {
- 		write_op = bridge->ops->write_base;
- 		cfgspace = (u32 *) &bridge->conf;
--		behavior = pci_regs_behavior;
-+		behavior = bridge->pci_regs_behavior;
- 	}
- 
- 	/* Keep all bits, except the RW bits */
-diff --git a/drivers/pci/pci-bridge-emul.h b/drivers/pci/pci-bridge-emul.h
-index 9d510ccf738b..f04637bb3222 100644
---- a/drivers/pci/pci-bridge-emul.h
-+++ b/drivers/pci/pci-bridge-emul.h
-@@ -107,15 +107,21 @@ struct pci_bridge_emul_ops {
- 			   u32 old, u32 new, u32 mask);
- };
- 
-+struct pci_bridge_reg_behavior;
-+
- struct pci_bridge_emul {
- 	struct pci_bridge_emul_conf conf;
- 	struct pci_bridge_emul_pcie_conf pcie_conf;
- 	struct pci_bridge_emul_ops *ops;
-+	struct pci_bridge_reg_behavior *pci_regs_behavior;
-+	struct pci_bridge_reg_behavior *pcie_cap_regs_behavior;
- 	void *data;
- 	bool has_pcie;
- };
- 
--void pci_bridge_emul_init(struct pci_bridge_emul *bridge);
-+int pci_bridge_emul_init(struct pci_bridge_emul *bridge);
-+void pci_bridge_emul_cleanup(struct pci_bridge_emul *bridge);
-+
- int pci_bridge_emul_conf_read(struct pci_bridge_emul *bridge, int where,
- 			      int size, u32 *value);
- int pci_bridge_emul_conf_write(struct pci_bridge_emul *bridge, int where,
+This set of two commits allow PCI controller code to tell the PCI
+bridge emulation logic about their capabilities. Because we envision
+that other capabilities than prefetchable memory support might need to
+be communicated from the PCI controller code to the PCI bridge
+emulation code in the future, we introduce a "flags" argument, even if
+for now only one flag is supported.
+
+Lorenzo, let me know what you think about this approach. I am open to
+suggestions if the proposed approach is not satisfying.
+
+Both patches have been confirmed by Luis and Leigh to fix the
+regression, but I'll let them give a formal Tested-by.
+
+Best regards,
+
+Thomas Petazzoni
+
+Thomas Petazzoni (2):
+  PCI: pci-bridge-emul: Create per-bridge copy of register behavior
+  PCI: pci-bridge-emul: Extend pci_bridge_emul_init() with flags
+
+ drivers/pci/controller/pci-aardvark.c |  2 +-
+ drivers/pci/controller/pci-mvebu.c    |  2 +-
+ drivers/pci/pci-bridge-emul.c         | 86 ++++++++++++++++++---------
+ drivers/pci/pci-bridge-emul.h         | 13 +++-
+ 4 files changed, 73 insertions(+), 30 deletions(-)
+
 -- 
 2.20.1
 
