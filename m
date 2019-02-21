@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FROM_EXCESS_BASE64,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D6EC43381
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 23:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81733C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 23:03:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B43CD20838
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 23:02:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E6ED20838
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 23:03:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m9v8zyRf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iWZI2+83"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726169AbfBUXCH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Feb 2019 18:02:07 -0500
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:46484 "EHLO
+        id S1726035AbfBUXDf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Feb 2019 18:03:35 -0500
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:34017 "EHLO
         mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725961AbfBUXCG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2019 18:02:06 -0500
-Received: by mail-ed1-f68.google.com with SMTP id f2so206696edy.13
-        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 15:02:06 -0800 (PST)
+        with ESMTP id S1725961AbfBUXDf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2019 18:03:35 -0500
+Received: by mail-ed1-f68.google.com with SMTP id a16so271075edn.1
+        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 15:03:34 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc:content-transfer-encoding;
-        bh=NprLxaSLXIjf/D4KgK5zBo9zDu/x6coN+Jsn61LfvRU=;
-        b=m9v8zyRf+NLUExNfRS0ILQJFoX8qlMkwNJHHMTGkCvlhlQeRzU9X/VxkNDXziFfmuz
-         dLd3vyqL+BVJA1qQ+G3mXqfXvNxU7VHQUjhZy+lgcY0Uf/hlTAF8e7D5djD4XKrYBjLN
-         //PnjUR4tREMtE1jdHGwANjCSPNibd8efnD9WHz1BJeEitu2NJbvoSOqdoTJJ+EZFPSb
-         bSMslnZEim0GUPZaiugN2mNhZyGK7ezqh8UwIBp6d3Dv4wUrkmoSRv3fv0b3aZQJxjGT
-         6QIAzP+SY46lss7wk7WKxlEwmKUhApqS0KHd+wEWUIvSdiUK2d5s43EfhwjhH4zNmZLG
-         WWfg==
+        bh=FXlxvF4xhFiRMVY9dsmk97DoXxTAN7l0XRbieA4sju4=;
+        b=iWZI2+832YMkH7XL4pcR60BH69F+1P6eq3Sx+4B6f1/nuMqvpG1jZpsD3vxuyNYv8K
+         ptmt8OphBlOX90c2+sz7HKYLx8/wulSEKzOGEhYZN0kW3vbNQUGchi8XSXgl33t6iZAT
+         u8myPqU/bgcQpEexg6o5s84Kc7oI2QxcPBkMiDcFaLg3kYCtLkwRWuPyhBEQX0EYCkfa
+         V7/c6qnUb5m+rcKxAq52l5s6EeiMZccPF2ht+4E1hguLO4kA/Wxf9UfN6nMQUwToFOrC
+         W6L7u5vVo9747/TRYwuUwNlXHhzbsPLnbBmqeChhK0z4y+abne0yq4Z4I2ipgeu255HI
+         oE1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc:content-transfer-encoding;
-        bh=NprLxaSLXIjf/D4KgK5zBo9zDu/x6coN+Jsn61LfvRU=;
-        b=O29M7WQo+NCpAsF4Sb6Kvh6k1zrZ00xZfwNg1rueE9+EWqppYvx0W7OPyJkLwu07DQ
-         tLZ/KA5v1h3N+CmjBZ8Msr5E+QG3Jw5RSyE8EykeMNXRuxLdBXqA9YL9G+TcZ0Dhtwm7
-         sGnGzLfKWuKVTIBNAqsaXqgtbNJ+kLXI7az6+uqCppaVbhPjZdnn3wUG1qw0/GTkLd/4
-         xsIWcsoQAi0yqclhG1naqybp5R9pO+7gLBmqw9DO1+ZZdW+mK9Ni2HutaIbWWR/anBa1
-         r+Ptn0GYLFWsYQcNWpzV1dedb5v7ifuT59F25PQN+10oC3p5ywC3yZHVsdufNhXFMi4u
-         sWyQ==
-X-Gm-Message-State: AHQUAuZiNW0fYN5dZYZ6bUG0r3eAlsvQlfWCoU3IyPeGEKJGa7x+iWG6
-        no8NrFOoqBp+mZ8pwM9iEkPGKawV4KoIlaF+B14=
-X-Google-Smtp-Source: AHgI3IZKjeppeJuq/RuCDi0K+UxvV5qAwzLOLz9bGthT4Fqmf9ds2Hm99L0CyI0PM8fUXrvNVgShWMK11CEitRk4VXk=
-X-Received: by 2002:a17:906:f1d8:: with SMTP id gx24mr622251ejb.227.1550790125458;
- Thu, 21 Feb 2019 15:02:05 -0800 (PST)
+        bh=FXlxvF4xhFiRMVY9dsmk97DoXxTAN7l0XRbieA4sju4=;
+        b=FszKgc/NSW6lMGKd8bTpArkvC/7y0K9RHbQeowx+EGA3bOjp/xP7mzB71Pewzjd0lY
+         JVOfyMREmQjpynvPPHSQtue4HnIp+/sn0jUv60jCXY99yMTne2fKuK/pTbXwz6eYKQyI
+         3tudBapHfsWPxZbqpl5mL+7FnaqJ8qYU3zl62p/xyA6YLY3dbjXy20vkPm/E/u5OvaZy
+         ouZAlcwJUnECs14vSmd4xqrONxxNoU8VODX5ME4oujfRXIpaqqngeu9OJ3sh2YLocDLM
+         Fu0PrnqIKvpDRUOyyGi4LkwGb/5k0Jv4cbaDS4k71/h7mEXIqt2qMKjq6LIY1FKzTPkR
+         bUew==
+X-Gm-Message-State: AHQUAuYG7Q0ClrFW7yf5ti3ppk2NFRYQi886fPsocmAhU4BfRjobomMP
+        gv6CwUmFE9NGKzCyxx2nnEDFCahJ1q3n1CLEgYckg9iQA/E=
+X-Google-Smtp-Source: AHgI3IY6cWP1liHfymzWlnw5OQhm45XWPQ0FJx5U9jmWG9cYHeH/1sbmyKOzWnXjm+xeHUTemrW3pXX8onWq9TKSye0=
+X-Received: by 2002:aa7:c50b:: with SMTP id o11mr751453edq.14.1550790213842;
+ Thu, 21 Feb 2019 15:03:33 -0800 (PST)
 MIME-Version: 1.0
-References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com> <20190220094841.11129-2-thomas.petazzoni@bootlin.com>
-In-Reply-To: <20190220094841.11129-2-thomas.petazzoni@bootlin.com>
+References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com> <20190220094841.11129-3-thomas.petazzoni@bootlin.com>
+In-Reply-To: <20190220094841.11129-3-thomas.petazzoni@bootlin.com>
 From:   =?UTF-8?B?THXDrXMgTWVuZGVz?= <luis.p.mendes@gmail.com>
-Date:   Thu, 21 Feb 2019 23:01:54 +0000
-Message-ID: <CAEzXK1qhFrjtM=BdA2tXt_YR4DhD095vGVJPWa_4-=kOeG-FGw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: pci-bridge-emul: Create per-bridge copy of
- register behavior
+Date:   Thu, 21 Feb 2019 23:03:22 +0000
+Message-ID: <CAEzXK1qiHaV_Ehfq_CAsDMVn=A65opeffpjyVAX-Mj73W7NGYw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] PCI: pci-bridge-emul: Extend pci_bridge_emul_init()
+ with flags
 To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -84,15 +84,18 @@ Tested-by: Luis Mendes <luis.p.mendes@gmail.com>
 On Wed, Feb 20, 2019 at 9:48 AM Thomas Petazzoni
 <thomas.petazzoni@bootlin.com> wrote:
 >
-> The behavior of the different registers of the PCI-to-PCI bridge is
-> currently encoded in two global arrays, shared by all instances of
-> PCI-to-PCI bridge emulation.
+> Depending on the capabilities of the PCI controller/platform, the
+> PCI-to-PCI bridge emulation behavior might need to be different. For
+> example, on platforms that use the pci-mvebu code, we currently don't
+> support prefetchable memory BARs, so the corresponding fields in the
+> PCI-to-PCI bridge configuration space should be read-only.
 >
-> However, we will need to tweak the behavior on a per-bridge basis, to
-> accommodate for different capabilities of the platforms where this
-> code is used. In preparation for this, this commit creates a
-> per-bridge copy of the register behavior arrays, so that they can
-> later be tweaked on a per-bridge basis.
+> To implement this, this commit extends pci_bridge_emul_init() to take
+> a "flags" argument, with currently one flag supported:
+> PCI_BRIDGE_EMUL_NO_PREFETCHABLE_BAR, that will make the prefetchable
+> memory base and limit registers read-only.
+>
+> The pci-mvebu and pci-aardvark drivers are updated accordingly.
 >
 > Reported-by: Lu=C3=ADs Mendes <luis.p.mendes@gmail.com>
 > Reported-by: Leigh Brown <leigh@solinno.co.uk>
@@ -101,3 +104,10 @@ On Wed, Feb 20, 2019 at 9:48 AM Thomas Petazzoni
 > Fixes: 1f08673eef123 ("PCI: mvebu: Convert to PCI emulated bridge config =
 space")
 > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 2 +-
+>  drivers/pci/controller/pci-mvebu.c    | 2 +-
+>  drivers/pci/pci-bridge-emul.c         | 8 +++++++-
+>  drivers/pci/pci-bridge-emul.h         | 7 ++++++-
+>  4 files changed, 15 insertions(+), 4 deletions(-)
+>
