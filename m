@@ -2,171 +2,109 @@ Return-Path: <SRS0=2g0o=Q4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6BC5C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 08:58:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9C4AC43381
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 08:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94EA9214AF
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 08:58:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9828B2086C
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 08:59:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="kWUvvvjf"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hBULB71O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726184AbfBUI6x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Feb 2019 03:58:53 -0500
-Received: from smtprelay.synopsys.com ([198.182.47.9]:52036 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726151AbfBUI6w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2019 03:58:52 -0500
-Received: from mailhost.synopsys.com (unknown [10.12.135.161])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay.synopsys.com (Postfix) with ESMTPS id 67CBB24E21F8
-        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 00:58:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1550739532; bh=HALRCzXKRovpkeOSU6bKT21iQN+O7dKUB1jshhuLX1A=;
-        h=From:To:Subject:Date:From;
-        b=kWUvvvjforTH6l4n9pgydtgfrKaa1BxonZ1o07oKMb8e+WwF7uhufpS7Bzu7yyEtq
-         jw2U/KWBvZs/TAOh379UJDHgkyXmRkwTIG/dwgWVhhd9K2K4s4WyXH/YgTxIcTiyiD
-         iAhvwE8sXE2lY1qKtOvb5NufSMGIXBAd+mimh+8XKOW+fZ0++R6J7T6hK2OaTfNMLJ
-         8cIbbbiT1B22hCYi4TUd5JXF5V8FsjDOBspiNaxNV4jtIyRc3rgUdiap3jZUM8t4FV
-         YAKotECS9kdzZU9ceqKu01zHLgBKNOS8J9VuFm6TPjs8LHDxN06+K70Gu9WnHmi6Ct
-         5ufVPZPuMNF9w==
-Received: from us01wehtc1.internal.synopsys.com (us01wehtc1-vip.internal.synopsys.com [10.12.239.236])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 557BBA0098
-        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 08:58:52 +0000 (UTC)
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- us01wehtc1.internal.synopsys.com (10.12.239.231) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Thu, 21 Feb 2019 00:58:52 -0800
-Received: from DE02WEMBXA.internal.synopsys.com ([fe80::a014:7216:77d:d55c])
- by DE02WEHTCA.internal.synopsys.com ([::1]) with mapi id 14.03.0415.000; Thu,
- 21 Feb 2019 09:58:49 +0100
-From:   Alan Douglas <alan.douglas@synopsys.com>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] MAINTAINERS: Update PCI Cadence maintainer entry
-Thread-Topic: [PATCH v2] MAINTAINERS: Update PCI Cadence maintainer entry
-Thread-Index: AdTJwORXAgb7OKZUSpm7FWFO0JPUtw==
-Date:   Thu, 21 Feb 2019 08:58:49 +0000
-Message-ID: <709E1F9406A28F419C168679200F72E7B92804@de02wembxa.internal.synopsys.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcYWxhbmpoZFxh?=
- =?us-ascii?Q?cHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJh?=
- =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLWU1YmY3OWMwLTM1YjYtMTFlOS04NzBhLWE0NGNj?=
- =?us-ascii?Q?OGRlMDAwY1xhbWUtdGVzdFxlNWJmNzljMS0zNWI2LTExZTktODcwYS1hNDRj?=
- =?us-ascii?Q?YzhkZTAwMGNib2R5LnR4dCIgc3o9Ijk2MyIgdD0iMTMxOTUyMTMxMjc4NzA1?=
- =?us-ascii?Q?NTM4IiBoPSJ3VWIwRlRjNjltR0thKzZCajZnSk04R0doY009IiBpZD0iIiBi?=
- =?us-ascii?Q?bD0iMCIgYm89IjEiIGNpPSJjQUFBQUVSSFUxUlNSVUZOQ2dVQUFCUUpBQUND?=
- =?us-ascii?Q?RXptb3c4blVBWEVnanNqU2QzclJjU0NPeU5KM2V0RU9BQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBSEFBQUFDa0NBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?RUFBUUFCQUFBQUZCY2lUQUFBQUFBQUFBQUFBQUFBQUo0QUFBQm1BR2tBYmdC?=
- =?us-ascii?Q?aEFHNEFZd0JsQUY4QWNBQnNBR0VBYmdCdUFHa0FiZ0JuQUY4QWR3QmhBSFFB?=
- =?us-ascii?Q?WlFCeUFHMEFZUUJ5QUdzQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFF?=
- =?us-ascii?Q?QUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUdZQWJ3QjFBRzRBWkFCeUFIa0FYd0J3?=
- =?us-ascii?Q?QUdFQWNnQjBBRzRBWlFCeUFITUFYd0JuQUdZQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFBQUNBQUFB?=
- =?us-ascii?Q?QUFDZUFBQUFaZ0J2QUhVQWJnQmtBSElBZVFCZkFIQUFZUUJ5QUhRQWJnQmxB?=
- =?us-ascii?Q?SElBY3dCZkFITUFZUUJ0QUhNQWRRQnVBR2NBWHdCakFHOEFiZ0JtQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCbUFHOEFk?=
- =?us-ascii?Q?UUJ1QUdRQWNnQjVBRjhBY0FCaEFISUFkQUJ1QUdVQWNnQnpBRjhBY3dCaEFH?=
- =?us-ascii?Q?MEFjd0IxQUc0QVp3QmZBSElBWlFCekFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1lBYndCMUFHNEFaQUJ5QUhrQVh3?=
- =?us-ascii?Q?QndBR0VBY2dCMEFHNEFaUUJ5QUhNQVh3QnpBRzBBYVFCakFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFBQ0FB?=
- =?us-ascii?Q?QUFBQUNlQUFBQVpnQnZBSFVBYmdCa0FISUFlUUJmQUhBQVlRQnlBSFFBYmdC?=
- =?us-ascii?Q?bEFISUFjd0JmQUhNQWRBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJtQUc4?=
- =?us-ascii?Q?QWRRQnVBR1FBY2dCNUFGOEFjQUJoQUhJQWRBQnVBR1VBY2dCekFGOEFkQUJ6?=
- =?us-ascii?Q?QUcwQVl3QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFHWUFid0IxQUc0QVpBQnlBSGtB?=
- =?us-ascii?Q?WHdCd0FHRUFjZ0IwQUc0QVpRQnlBSE1BWHdCMUFHMEFZd0FBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFD?=
- =?us-ascii?Q?QUFBQUFBQ2VBQUFBWndCMEFITUFYd0J3QUhJQWJ3QmtBSFVBWXdCMEFGOEFk?=
- =?us-ascii?Q?QUJ5QUdFQWFRQnVBR2tBYmdCbkFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFBQnpB?=
- =?us-ascii?Q?R0VBYkFCbEFITUFYd0JoQUdNQVl3QnZBSFVBYmdCMEFGOEFjQUJzQUdFQWJn?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUhNQVlRQnNBR1VBY3dCZkFI?=
- =?us-ascii?Q?RUFkUUJ2QUhRQVpRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFB?=
- =?us-ascii?Q?QUNBQUFBQUFDZUFBQUFjd0J1QUhBQWN3QmZBR3dBYVFCakFHVUFiZ0J6QUdV?=
- =?us-ascii?Q?QVh3QjBBR1VBY2dCdEFGOEFNUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFC?=
- =?us-ascii?Q?ekFHNEFjQUJ6QUY4QWJBQnBBR01BWlFCdUFITUFaUUJmQUhRQVpRQnlBRzBB?=
- =?us-ascii?Q?WHdCekFIUUFkUUJrQUdVQWJnQjBBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBSFlBWndCZkFHc0FaUUI1?=
- =?us-ascii?Q?QUhjQWJ3QnlBR1FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFB?=
- =?us-ascii?Q?QUFBQ0FBQUFBQUE9Ii8+PC9tZXRhPg=3D=3D?=
-x-dg-rorf: 
-x-originating-ip: [10.104.91.75]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726151AbfBUI7x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Feb 2019 03:59:53 -0500
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:45924 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726285AbfBUI7w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2019 03:59:52 -0500
+Received: by mail-wr1-f68.google.com with SMTP id w17so28970061wrn.12
+        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 00:59:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=wnSbCQyycLq8oDMSUhgJQnPqOcaOQETywggOOu0R6lI=;
+        b=hBULB71OefHi5mYgZdKD1NE3EtIoi6jjLVuJ5bgwUamg8KMCN/oJs++IvkvVIlDPNp
+         ABMbt8JMoBMPK00QmqScGwRUU41MaM7o2M/pqgB/4tQaZZrlj2XBA9LMuh4wMmLaGRjW
+         nuVR6S83wrg7GjFGcidYXG+OKmyA9jt27mTFs=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=wnSbCQyycLq8oDMSUhgJQnPqOcaOQETywggOOu0R6lI=;
+        b=Bxk50mDp2Jn/+JS8LMakcl0xtzYQQU+++LwfT8D9RcWJbKzUZgBTbfI3y1jzNhlx95
+         3D1f5KEBNLhaznC+oIUDzIIaf69fcJ2LC1N6MW+f3Ihda/SFyPCUfG7T9q3cYf3V3p8U
+         5mIlN+l+UD/4PT0FnnnOt1dlcYOlr/OWBDjEWxyYHKePaqYEsehD+kxGqhBXIjbVONDx
+         jCxwxgbze8MjBEmQz7m0cXUxfHPXTevKSg/381V4pNAJ6I2GWuJ7VLtDPGcxasuezlvk
+         1UGEVvhjlnXG9MjOgLMmoq0aHPe0aiuEDoYIBruB6kFT8wYDBCVyOS41TYuzsrtCkkSu
+         nQJA==
+X-Gm-Message-State: AHQUAuaZl2wcGoeEZHgaDwWrZD6TBgEDBBrS91NpoO1MAnKU3MpgD4Ae
+        xNfQYLf+kIWMAQTmLN8MYvFY3vIzkuzdoWWCzlxLQw==
+X-Google-Smtp-Source: AHgI3IY19j2QMO10R327qYh6SDi2/lTaEV0OB3iQj9x+9KaDa+CkBDmGVzE+VdaBZnVhahb2hzzhu0py76Een5yp8lc=
+X-Received: by 2002:adf:9ecc:: with SMTP id b12mr27875564wrf.83.1550739590847;
+ Thu, 21 Feb 2019 00:59:50 -0800 (PST)
 MIME-Version: 1.0
+References: <1548411231-27549-1-git-send-email-srinath.mannam@broadcom.com>
+In-Reply-To: <1548411231-27549-1-git-send-email-srinath.mannam@broadcom.com>
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+Date:   Thu, 21 Feb 2019 14:29:39 +0530
+Message-ID: <CABe79T66daJOditCZ-6ENKW2ugbpDUUfjn1CMHCcDtb3=HiiOQ@mail.gmail.com>
+Subject: Re: [PATCH v3 0/3] PCIe Host request to reserve IOVA
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>
+Cc:     BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
->Replace Alan Douglas with Tom Joseph as the current PCI Cadence=20
->host/endpoint controller maintainer.
+Hi Bjorn,
+
+Please help to review this patch series.
+Thank you.
+
+Regards,
+Srinath.
+On Fri, Jan 25, 2019 at 3:44 PM Srinath Mannam
+<srinath.mannam@broadcom.com> wrote:
 >
->Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->Cc: Bjorn Helgaas <bhelgaas@google.com>
->Cc: Tom Joseph <tjoseph@cadence.com>
->---
-> MAINTAINERS | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
+> Few SOCs have limitation that their PCIe host can't allow few inbound
+> address ranges. Allowed inbound address ranges are listed in dma-ranges
+> DT property and this address ranges are required to do IOVA mapping.
+> Remaining address ranges have to be reserved in IOVA mapping.
 >
->diff --git a/MAINTAINERS b/MAINTAINERS
->index 32d444476a90..0403a2869a42 100644
->--- a/MAINTAINERS
->+++ b/MAINTAINERS
->@@ -11581,7 +11581,7 @@ F:	Documentation/devicetree/bindings/pci/pci-armad=
-a8k.txt
-> F:	drivers/pci/controller/dwc/pcie-armada8k.c
->=20
-> PCI DRIVER FOR CADENCE PCIE IP
->-M:	Alan Douglas <adouglas@cadence.com>
->+M:	Tom Joseph <tjoseph@cadence.com>
-> L:	linux-pci@vger.kernel.org
-> S:	Maintained
-> F:	Documentation/devicetree/bindings/pci/cdns,*.txt
->--
->2.19.2
-Acked-by: Alan Douglas <alanjhd@gmail.com>
+> PCIe Host driver of those SOCs has to list all address ranges which have
+> to reserve their IOVA address into PCIe host bridge resource entry list.
+> IOMMU framework will reserve these IOVAs while initializing IOMMU domain.
+>
+> This patch set is based on Linux-5.0-rc2.
+>
+> Changes from v2:
+>   - Patch set rebased to Linux-5.0-rc2
+>
+> Changes from v1:
+>   - Addressed Oza review comments.
+>
+> Srinath Mannam (3):
+>   PCI: Add dma-resv window list
+>   iommu/dma: Reserve IOVA for PCI host reserve address list
+>   PCI: iproc: Add dma reserve resources to host
+>
+>  drivers/iommu/dma-iommu.c           |  8 ++++++
+>  drivers/pci/controller/pcie-iproc.c | 51 ++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/probe.c                 |  3 +++
+>  include/linux/pci.h                 |  1 +
+>  4 files changed, 62 insertions(+), 1 deletion(-)
+>
+> --
+> 2.7.4
+>
