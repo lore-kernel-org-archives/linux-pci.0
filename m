@@ -2,171 +2,168 @@ Return-Path: <SRS0=2g0o=Q4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A431C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 18:37:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A689C00319
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 20:50:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD88B2081B
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 18:37:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A30D20836
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 20:50:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=dellteam.com header.i=@dellteam.com header.b="oOuxhN/f"
+	dkim=pass (1024-bit key) header.d=wavesemi.onmicrosoft.com header.i=@wavesemi.onmicrosoft.com header.b="mLtOVILN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726075AbfBUSh4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Feb 2019 13:37:56 -0500
-Received: from esa5.dell-outbound.iphmx.com ([68.232.153.95]:46303 "EHLO
-        esa5.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725932AbfBUSh4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2019 13:37:56 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=dellteam.com; i=@dellteam.com; q=dns/txt; s=smtpout;
-  t=1550774271; x=1582310271;
-  h=cc:from:to:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=3nQ6CgGn3CFs3OO6t+hDDJiKgwtM9DreeC8pU7Qp2zY=;
-  b=oOuxhN/fzYlyrvQ423awBXoXqUyahpmD9w4mYJ5R/qGghFjO6ltGmLYa
-   azVg2IFNDm6ZVmgaeAD+f4j51um/ZudekTEwwLQ9sZ9/2orapun00h+Jt
-   goPHlGltRdBtaZwKKWyrHJVsAT+6TA/0SuIre0pk2MLnmCTjyU952TFGT
-   A=;
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2H/AADU7m5chieV50NkHAEBAQQBAQc?=
- =?us-ascii?q?EAQGBZYJaEYEDJwqHR4UvizGBUpgygSs8CwEBJQcCgQKDPIN9IjgSAQMBAQI?=
- =?us-ascii?q?BAQIBAQIQAQEBCgkLCCkjDII6IhgETTgDLwEBAQEBAQEBAQEBAQEBAQEBAQE?=
- =?us-ascii?q?BARUCDSYjAQEYAQEBAQEBARIVEz8FCwIBCBgeEFcCBAEaGoJ+AYFqCA+gJD0?=
- =?us-ascii?q?CbYEBiQcBAQGBazODc4Y8jEiBDoEIg3UugnkMGQIBgS0BEgELFIVgAowOhEC?=
- =?us-ascii?q?TBQkFhzmLGCGBcViFAotAikmFToh6AYM+AgQCBAUCFIFegQdxcIM8CYIfDgm?=
- =?us-ascii?q?DS4VChRFBMQGBJ4wXDheBCAGBHgEB?=
-X-IPAS-Result: =?us-ascii?q?A2H/AADU7m5chieV50NkHAEBAQQBAQcEAQGBZYJaEYEDJ?=
- =?us-ascii?q?wqHR4UvizGBUpgygSs8CwEBJQcCgQKDPIN9IjgSAQMBAQIBAQIBAQIQAQEBC?=
- =?us-ascii?q?gkLCCkjDII6IhgETTgDLwEBAQEBAQEBAQEBAQEBAQEBAQEBARUCDSYjAQEYA?=
- =?us-ascii?q?QEBAQEBARIVEz8FCwIBCBgeEFcCBAEaGoJ+AYFqCA+gJD0CbYEBiQcBAQGBa?=
- =?us-ascii?q?zODc4Y8jEiBDoEIg3UugnkMGQIBgS0BEgELFIVgAowOhECTBQkFhzmLGCGBc?=
- =?us-ascii?q?ViFAotAikmFToh6AYM+AgQCBAUCFIFegQdxcIM8CYIfDgmDS4VChRFBMQGBJ?=
- =?us-ascii?q?4wXDheBCAGBHgEB?=
-Received: from mx0a-00154901.pphosted.com ([67.231.149.39])
-  by esa5.dell-outbound.iphmx.com with ESMTP/TLS/AES256-SHA256; 21 Feb 2019 12:34:52 -0600
-Received: from pps.filterd (m0134746.ppops.net [127.0.0.1])
-        by mx0a-00154901.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x1LIXZAB086755;
-        Thu, 21 Feb 2019 13:35:15 -0500
-Received: from esa5.dell-outbound2.iphmx.com (esa5.dell-outbound2.iphmx.com [68.232.153.203])
-        by mx0a-00154901.pphosted.com with ESMTP id 2qsyugrhyt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 21 Feb 2019 13:35:15 -0500
-Cc:     <bhelgaas@google.com>, <Austin.Bolen@dell.com>,
-        <keith.busch@intel.com>, <Shyam.Iyer@dell.com>, <okaya@kernel.org>,
-        <linux-pci@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
-        <okaya@codeaurora.org>, <poza@codeaurora.org>,
-        <linux-kernel@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206])
-  by esa5.dell-outbound2.iphmx.com with ESMTP/TLS/DHE-RSA-AES256-SHA256; 22 Feb 2019 00:35:07 +0600
-X-LoopCount0: from 10.166.134.89
-X-IronPort-AV: E=Sophos;i="5.58,396,1544508000"; 
-   d="scan'208";a="1260447609"
-From:   <Alex_Gagniuc@Dellteam.com>
-To:     <lukas@wunner.de>, <mr.nuke.me@gmail.com>
-Subject: Re: [PATCH RFC v2 4/4] PCI: hotplug: Add quirk For Dell nvme pcie
- switches
-Thread-Topic: [PATCH RFC v2 4/4] PCI: hotplug: Add quirk For Dell nvme pcie
- switches
-Thread-Index: AQHUyLqRKxehBZutlk6MputMunrGNg==
-Date:   Thu, 21 Feb 2019 18:35:12 +0000
-Message-ID: <027101b4652c4e0c98b86649aa3e4732@ausx13mps321.AMER.DELL.COM>
-References: <20190220012031.10741-1-mr.nuke.me@gmail.com>
- <20190220012031.10741-5-mr.nuke.me@gmail.com>
- <20190221075634.uih5ysqwkna7cku4@wunner.de>
+        id S1726050AbfBUUun (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Feb 2019 15:50:43 -0500
+Received: from mail-eopbgr810109.outbound.protection.outlook.com ([40.107.81.109]:7479
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725891AbfBUUun (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Feb 2019 15:50:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=wavesemi.onmicrosoft.com; s=selector1-wavecomp-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=jBlSUn5Cy6NyDaA15yKluhsGEKX9LuMgFz8MtU/pdIg=;
+ b=mLtOVILNdK3C4dbTs+jz/imSoUWvsPtyvSkPFObDDM0mTNHxtUrF3KEyqDtt1367rPbScOgS6PMjbTubZfDh3HHJz6iai+HQanZZt/XKxdwtKCZ2/kEw5KRGWjPAvH3lIhiIj1LXKXvArXjokcabkup9byKBWxDwW58koXHU9pA=
+Received: from MWHPR2201MB1277.namprd22.prod.outlook.com (10.174.162.17) by
+ MWHPR2201MB1358.namprd22.prod.outlook.com (10.174.162.148) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1643.14; Thu, 21 Feb 2019 20:50:39 +0000
+Received: from MWHPR2201MB1277.namprd22.prod.outlook.com
+ ([fe80::7d5e:f3b0:4a5:4636]) by MWHPR2201MB1277.namprd22.prod.outlook.com
+ ([fe80::7d5e:f3b0:4a5:4636%9]) with mapi id 15.20.1622.020; Thu, 21 Feb 2019
+ 20:50:39 +0000
+From:   Paul Burton <paul.burton@mips.com>
+To:     Thomas Bogendoerfer <tbogendoerfer@suse.de>
+CC:     Ralf Baechle <ralf@linux-mips.org>,
+        James Hogan <jhogan@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 00/10] MIPS: SGI-IP27 rework
+Thread-Topic: [PATCH v2 00/10] MIPS: SGI-IP27 rework
+Thread-Index: AQHUyicabaobcsLrVkGM419PhbaunQ==
+Date:   Thu, 21 Feb 2019 20:50:39 +0000
+Message-ID: <20190221205038.hcov3n574a3zqip7@pburton-laptop>
+References: <20190219155728.19163-1-tbogendoerfer@suse.de>
+In-Reply-To: <20190219155728.19163-1-tbogendoerfer@suse.de>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [143.166.11.234]
+x-clientproxiedby: BYAPR11CA0073.namprd11.prod.outlook.com
+ (2603:10b6:a03:f4::14) To MWHPR2201MB1277.namprd22.prod.outlook.com
+ (2603:10b6:301:24::17)
+user-agent: NeoMutt/20180716
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=pburton@wavecomp.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [67.207.99.198]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 47179be5-b4c3-40bb-5689-08d6983e3ca3
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600110)(711020)(4605104)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR2201MB1358;
+x-ms-traffictypediagnostic: MWHPR2201MB1358:
+x-microsoft-exchange-diagnostics: =?us-ascii?Q?1;MWHPR2201MB1358;23:NzFDP9h1wdKVfdI/MwVFHmT3c4vAa6lkQCbKAtq?=
+ =?us-ascii?Q?BPay7ho+LpZ8wQrjxevYU2q4TiXk5io/a5b1nPmVmLy4zds9/8OcCplk4MgA?=
+ =?us-ascii?Q?XfnoPOfSe7NFnjQdXBohJYAPxWKCz8+1txqfCQqlsI2sCNSDzvTfdITAc2hB?=
+ =?us-ascii?Q?hezmYYOAHAprZpJTTWomBjfUFf+iTLW71PPI6wM1KSlpzpR7L0E7ZbZZ/pho?=
+ =?us-ascii?Q?gHm4yKe7s7aUbudQ/zx77c95/d1zmk7Ks/BWk8DN3XnAKCgf2Yge5JgIpaM6?=
+ =?us-ascii?Q?D3N2eGqCSu0qKqKd4+Zt7gfAaj4xRxHbfR5JE2A/XJjinzjVFhGmD9+KCAOr?=
+ =?us-ascii?Q?yMA+F0da6yKIm9frZec28aByzzp5ef33sB28pUPC0QOzWfSNig2b1rVkA0kb?=
+ =?us-ascii?Q?yR0Tw7Vjwnpi0buxS9Ya7r7y3mKQT3aP45PtJmYBvnqZfvSvfFvZIJ13UJvp?=
+ =?us-ascii?Q?3xcM+DlWptUG+GcF/yrT7wAGdjDW858yngMrsFTr7/V0VZp8D1yGydb3sgzX?=
+ =?us-ascii?Q?iMD6zSKB3gY/MWlc7VY3iz/ScpY8RgL1ElvQD1EEBWPLli6wezrWVBbZYDE+?=
+ =?us-ascii?Q?fhGnMzqIPEnFHeumIhl47Gv+mhoQ9QYOS+TJVsnBWeS1CK3l8XzfNWFh29Pz?=
+ =?us-ascii?Q?s7xebwkm3jVJSTbd0ZjB9EQpzRArKfBD4MPyiZZk4aKG/KvUqRZs9XYsgKyK?=
+ =?us-ascii?Q?t4mzXcCDjbOo3HwO1ZeVU+zk12JXJgLtXroUKXqpozHEU12F5WEza6+Xou07?=
+ =?us-ascii?Q?ALgXrRUtfP4EM1/uPe1M6Zs8jxkaQCHf1hfFGpfNG82+XE22jzNrR7wPm1dL?=
+ =?us-ascii?Q?LyxBw5PG0RZQIvsepRPsWs5xOYv5N19PkVd804CX5rs+x9wHpJ+6lsxxtMNA?=
+ =?us-ascii?Q?XjXa56sftkpihdjGu4FvUUk6dnwaZ+imTaNTXHs3lv8m6z5zmjm4SIZApH27?=
+ =?us-ascii?Q?J+D+CPoIAUL3XErIdwOrYYyft5S5bDuEKLXVXTYY/Wn4wM7/+i5dpaUv55qt?=
+ =?us-ascii?Q?evuEknCDXWM32Dw2g7EusSedZWQtZpoLW8L+zI3b1AlOIUHzIRl2unRFbC4x?=
+ =?us-ascii?Q?V5VuFQmgmu1NPLoFNq+gRHknzcH+p7Qp8p/481rKd/0usCbwtGWbwwy8p9Gi?=
+ =?us-ascii?Q?of8pMPed+ijgC9KQSaPm9GwQ67cnrfxj3xgiqOjxL6Zpm9usqQNopsenyQc9?=
+ =?us-ascii?Q?8FAt66YnClXfkkL/YQh2aExLVhcF7WcZYvWu5Ux9p4zzHtBqnfWn/xTgD8JG?=
+ =?us-ascii?Q?Wg3fxJQusLtRt+Ny3N4SJbaVuhIDFLSmsVnWvlA0Rk6FpJ5guldHAgIGEqXo?=
+ =?us-ascii?Q?19qHaxITYmOwOsi89ehbuH5gRh3sBIR8N5NamfdIcyxbu?=
+x-microsoft-antispam-prvs: <MWHPR2201MB13582F51F031E17CF300EB13C17E0@MWHPR2201MB1358.namprd22.prod.outlook.com>
+x-forefront-prvs: 09555FB1AD
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(7916004)(396003)(366004)(39850400004)(346002)(376002)(136003)(199004)(189003)(33896004)(76176011)(305945005)(316002)(71190400001)(102836004)(7736002)(6506007)(386003)(446003)(97736004)(6486002)(11346002)(5660300002)(476003)(54906003)(52116002)(58126008)(7416002)(71200400001)(44832011)(105586002)(106356001)(6436002)(6512007)(53936002)(9686003)(81156014)(186003)(81166006)(8676002)(229853002)(14444005)(26005)(256004)(33716001)(4326008)(8936002)(6246003)(66066001)(478600001)(1076003)(42882007)(3846002)(14454004)(6116002)(99286004)(68736007)(486006)(25786009)(6916009)(2906002);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR2201MB1358;H:MWHPR2201MB1277.namprd22.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: wavecomp.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: hBWJgI4yKYw2CDNyKPLUYxUN4QaQjVkC2Y11TeWcfF6zt6ZCQ8Dj50Rp0kUUPEDCzkL/dwz++RI1ctPNzqyfWqC/45y0NjEW/873CAlSfeTdYYKa+ZlJKvIN+cvVwIopLDYo6eFMOcrjnHcP3a2vZRzuw+11qO3bNSp4KUelggu+I4hlnHU3mFtRLs4BQpapTFwj724av10CkgqJrneN7Uyiy6Kt8NeY80+IsU/jskIWAmbm1yCdMnfftn1GCTobEPnMCYT7djCDpFPnQvynwIB9i/RSO2cGE5a9UxSwd9X9/983xn7IkJ8A3644ljg7LxVKYyeyG+JAmtNlYDjn/8eCc/4vEVVmtsVKlb7Anbyrmav5mPNtPD4NcFrcC98vAG02oDc10cWCXjTa3AEoiHk5iua1RZF//taOuI9H9h0=
 Content-Type: text/plain; charset="us-ascii"
+Content-ID: <21DF7EAEFB82A945B9A9D82A73D0DDFD@namprd22.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-02-21_11:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1902210130
+X-OriginatorOrg: mips.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 47179be5-b4c3-40bb-5689-08d6983e3ca3
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Feb 2019 20:50:39.1655
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-id: 463607d3-1db3-40a0-8a29-970c56230104
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR2201MB1358
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2/21/19 1:57 AM, Lukas Wunner wrote:=0A=
-> =0A=
-> [EXTERNAL EMAIL]=0A=
-> =0A=
-> On Tue, Feb 19, 2019 at 07:20:30PM -0600, Alexandru Gagniuc wrote:=0A=
->> --- a/drivers/pci/hotplug/pciehp_hpc.c=0A=
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c=0A=
->> @@ -952,3 +952,23 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0=
-x0400,=0A=
->>   			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);=0A=
->>   DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0401,=0A=
->>   			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);=0A=
->> +=0A=
->> +=0A=
-> =0A=
-> Duplicate newline.=0A=
-> =0A=
-> =0A=
->> +static void fixup_dell_nvme_backplane_switches(struct pci_dev *pdev)=0A=
-> =0A=
-> Can we have a little code comment above the function such as:=0A=
-> =0A=
-> +/*=0A=
-> + * Dell <product name> NVMe storage backplanes disable in-band presence=
-=0A=
-> + * (PCIe r5.0 sec X.Y.Z) but neglect to set the corresponding flag in th=
-e=0A=
-> + * Slot Capabilities 2 register.=0A=
-> + */=0A=
-> =0A=
-> =0A=
->> +	if (pdev->subsystem_vendor !=3D PCI_VENDOR_ID_DELL=0A=
->> +		|| pdev->subsystem_device !=3D 0x1fc7)=0A=
-> =0A=
-> This looks a little unpolished, how about:=0A=
-> =0A=
-> +	if (pdev->subsystem_vendor !=3D PCI_VENDOR_ID_DELL ||=0A=
-> +	    pdev->subsystem_device !=3D 0x1fc7)=0A=
-> =0A=
-> =0A=
->> +		return;=0A=
->> +=0A=
->> +	pdev->no_in_band_presence =3D 1;=0A=
->> +}=0A=
->> +=0A=
->> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_PLX, 0x9733,=0A=
-> =0A=
-> By convention there's no blank line between the closing curly brace=0A=
-> and the DECLARE_PCI_FIXUP_CLASS_FINAL().=0A=
-=0A=
-I'm sorry for all the style issues. I realize it's noise and should just =
-=0A=
-be done right from the beginning. Is there a way to make checkpatch.pl =0A=
-catch these before they go out?=0A=
-=0A=
-=0A=
-> If the quirk is x86-specific, please enclose it in "#ifdef CONFIG_X86"=0A=
-> to reduce kernel footprint on other arches.=0A=
-=0A=
-That's a tricky one. If you look at p. 185 of [1], items 9, 11, and 12 =0A=
-are standard x16 cards that would fit in any x16 slot. Those cards have =0A=
-the offending switches.=0A=
-=0A=
-On the one hand, you could take the cards and backplane and put them in =0A=
-a non-hax86 system. On the other hand, I don't see why someone would =0A=
-want to do this.=0A=
-=0A=
-Alex=0A=
-=0A=
-[1] https://topics-cdn.dell.com/pdf/poweredge-r740xd_owners-manual_en-us.pd=
-f=0A=
-=0A=
-=0A=
+Hi Thomas,
+
+On Tue, Feb 19, 2019 at 04:57:14PM +0100, Thomas Bogendoerfer wrote:
+> SGI IP27 (Origin/Onyx2) and SGI IP30 (Octane) have a similair
+> architecture and share some hardware (ioc3/bridge). To share
+> the software parts this patchset reworks SGI IP27 interrupt
+> and pci bridge code. By using features Linux gained during the
+> many years since SGI IP27 code was integrated this even results
+> in code reduction and IMHO cleaner code.
+>=20
+> Tests have been done on a two module O200 (4 CPUs) and an
+> Origin 2000 (8 CPUs).
+>=20
+> My next step in integrating SGI IP30 support is splitting ioc3eth
+> into a MFD and subdevice drivers. Prototype is working, but needs
+> still more clean ups.
+>=20
+> Changes in v2:
+>=20
+> - replaced HUB_L/HUB_S by __raw_readq/__raw_writeq
+> - removed union bridge_ate
+> - replaced remaing fields in slice_data by per_cpu data
+> - use generic_handle_irq instead of do_IRQ
+> - use hierarchy irq domain for stacking bridge and hub interrupt
+> - moved __dma_to_phys/__phy_to_dma to mach-ip27/dma-direct.h
+> - use dev_to_node() for pcibus_to_node() implementation
+>=20
+> Thomas Bogendoerfer (10):
+>   MIPS: SGI-IP27: get rid of volatile and hubreg_t
+>   MIPS: SGI-IP27: clean up bridge access and header files
+>   MIPS: SGI-IP27: use pr_info/pr_emerg and pr_cont to fix output
+>   MIPS: SGI-IP27: do xtalk scanning later
+>   MIPS: SGI-IP27: do boot CPU init later
+>   MIPS: SGI-IP27: rework HUB interrupts
+>   PCI: call add_bus method also for root bus
+>   MIPS: SGI-IP27: use generic PCI driver
+>   genirq/irqdomain: fall back to default domain when creating hierarchy
+>     domain
+>   MIPS: SGI-IP27: abstract chipset irq from bridge
+
+I have patches 1-6 applied locally - would you be happy for those to be
+pushed to mips-next without 7-10? I know ip27_defconfig still builds but
+have no idea whether it still works :)
+
+I don't appear to have received patches 7 or 9 but I see from archives
+there'll be a v3 of patch 9 at least.
+
+So I can either apply 1-6 for v5.1 or defer the whole series. Let me
+know - I'm happy either way.
+
+Thanks,
+    Paul
