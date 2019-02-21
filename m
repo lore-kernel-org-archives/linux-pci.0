@@ -2,168 +2,196 @@ Return-Path: <SRS0=2g0o=Q4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A689C00319
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 20:50:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EDB8C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 21:57:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A30D20836
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 20:50:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=wavesemi.onmicrosoft.com header.i=@wavesemi.onmicrosoft.com header.b="mLtOVILN"
+	by mail.kernel.org (Postfix) with ESMTP id 4D4322083E
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 21:57:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726050AbfBUUun (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Feb 2019 15:50:43 -0500
-Received: from mail-eopbgr810109.outbound.protection.outlook.com ([40.107.81.109]:7479
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725891AbfBUUun (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Feb 2019 15:50:43 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=wavesemi.onmicrosoft.com; s=selector1-wavecomp-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jBlSUn5Cy6NyDaA15yKluhsGEKX9LuMgFz8MtU/pdIg=;
- b=mLtOVILNdK3C4dbTs+jz/imSoUWvsPtyvSkPFObDDM0mTNHxtUrF3KEyqDtt1367rPbScOgS6PMjbTubZfDh3HHJz6iai+HQanZZt/XKxdwtKCZ2/kEw5KRGWjPAvH3lIhiIj1LXKXvArXjokcabkup9byKBWxDwW58koXHU9pA=
-Received: from MWHPR2201MB1277.namprd22.prod.outlook.com (10.174.162.17) by
- MWHPR2201MB1358.namprd22.prod.outlook.com (10.174.162.148) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1643.14; Thu, 21 Feb 2019 20:50:39 +0000
-Received: from MWHPR2201MB1277.namprd22.prod.outlook.com
- ([fe80::7d5e:f3b0:4a5:4636]) by MWHPR2201MB1277.namprd22.prod.outlook.com
- ([fe80::7d5e:f3b0:4a5:4636%9]) with mapi id 15.20.1622.020; Thu, 21 Feb 2019
- 20:50:39 +0000
-From:   Paul Burton <paul.burton@mips.com>
-To:     Thomas Bogendoerfer <tbogendoerfer@suse.de>
-CC:     Ralf Baechle <ralf@linux-mips.org>,
-        James Hogan <jhogan@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 00/10] MIPS: SGI-IP27 rework
-Thread-Topic: [PATCH v2 00/10] MIPS: SGI-IP27 rework
-Thread-Index: AQHUyicabaobcsLrVkGM419PhbaunQ==
-Date:   Thu, 21 Feb 2019 20:50:39 +0000
-Message-ID: <20190221205038.hcov3n574a3zqip7@pburton-laptop>
-References: <20190219155728.19163-1-tbogendoerfer@suse.de>
-In-Reply-To: <20190219155728.19163-1-tbogendoerfer@suse.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: BYAPR11CA0073.namprd11.prod.outlook.com
- (2603:10b6:a03:f4::14) To MWHPR2201MB1277.namprd22.prod.outlook.com
- (2603:10b6:301:24::17)
-user-agent: NeoMutt/20180716
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=pburton@wavecomp.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [67.207.99.198]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 47179be5-b4c3-40bb-5689-08d6983e3ca3
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600110)(711020)(4605104)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:MWHPR2201MB1358;
-x-ms-traffictypediagnostic: MWHPR2201MB1358:
-x-microsoft-exchange-diagnostics: =?us-ascii?Q?1;MWHPR2201MB1358;23:NzFDP9h1wdKVfdI/MwVFHmT3c4vAa6lkQCbKAtq?=
- =?us-ascii?Q?BPay7ho+LpZ8wQrjxevYU2q4TiXk5io/a5b1nPmVmLy4zds9/8OcCplk4MgA?=
- =?us-ascii?Q?XfnoPOfSe7NFnjQdXBohJYAPxWKCz8+1txqfCQqlsI2sCNSDzvTfdITAc2hB?=
- =?us-ascii?Q?hezmYYOAHAprZpJTTWomBjfUFf+iTLW71PPI6wM1KSlpzpR7L0E7ZbZZ/pho?=
- =?us-ascii?Q?gHm4yKe7s7aUbudQ/zx77c95/d1zmk7Ks/BWk8DN3XnAKCgf2Yge5JgIpaM6?=
- =?us-ascii?Q?D3N2eGqCSu0qKqKd4+Zt7gfAaj4xRxHbfR5JE2A/XJjinzjVFhGmD9+KCAOr?=
- =?us-ascii?Q?yMA+F0da6yKIm9frZec28aByzzp5ef33sB28pUPC0QOzWfSNig2b1rVkA0kb?=
- =?us-ascii?Q?yR0Tw7Vjwnpi0buxS9Ya7r7y3mKQT3aP45PtJmYBvnqZfvSvfFvZIJ13UJvp?=
- =?us-ascii?Q?3xcM+DlWptUG+GcF/yrT7wAGdjDW858yngMrsFTr7/V0VZp8D1yGydb3sgzX?=
- =?us-ascii?Q?iMD6zSKB3gY/MWlc7VY3iz/ScpY8RgL1ElvQD1EEBWPLli6wezrWVBbZYDE+?=
- =?us-ascii?Q?fhGnMzqIPEnFHeumIhl47Gv+mhoQ9QYOS+TJVsnBWeS1CK3l8XzfNWFh29Pz?=
- =?us-ascii?Q?s7xebwkm3jVJSTbd0ZjB9EQpzRArKfBD4MPyiZZk4aKG/KvUqRZs9XYsgKyK?=
- =?us-ascii?Q?t4mzXcCDjbOo3HwO1ZeVU+zk12JXJgLtXroUKXqpozHEU12F5WEza6+Xou07?=
- =?us-ascii?Q?ALgXrRUtfP4EM1/uPe1M6Zs8jxkaQCHf1hfFGpfNG82+XE22jzNrR7wPm1dL?=
- =?us-ascii?Q?LyxBw5PG0RZQIvsepRPsWs5xOYv5N19PkVd804CX5rs+x9wHpJ+6lsxxtMNA?=
- =?us-ascii?Q?XjXa56sftkpihdjGu4FvUUk6dnwaZ+imTaNTXHs3lv8m6z5zmjm4SIZApH27?=
- =?us-ascii?Q?J+D+CPoIAUL3XErIdwOrYYyft5S5bDuEKLXVXTYY/Wn4wM7/+i5dpaUv55qt?=
- =?us-ascii?Q?evuEknCDXWM32Dw2g7EusSedZWQtZpoLW8L+zI3b1AlOIUHzIRl2unRFbC4x?=
- =?us-ascii?Q?V5VuFQmgmu1NPLoFNq+gRHknzcH+p7Qp8p/481rKd/0usCbwtGWbwwy8p9Gi?=
- =?us-ascii?Q?of8pMPed+ijgC9KQSaPm9GwQ67cnrfxj3xgiqOjxL6Zpm9usqQNopsenyQc9?=
- =?us-ascii?Q?8FAt66YnClXfkkL/YQh2aExLVhcF7WcZYvWu5Ux9p4zzHtBqnfWn/xTgD8JG?=
- =?us-ascii?Q?Wg3fxJQusLtRt+Ny3N4SJbaVuhIDFLSmsVnWvlA0Rk6FpJ5guldHAgIGEqXo?=
- =?us-ascii?Q?19qHaxITYmOwOsi89ehbuH5gRh3sBIR8N5NamfdIcyxbu?=
-x-microsoft-antispam-prvs: <MWHPR2201MB13582F51F031E17CF300EB13C17E0@MWHPR2201MB1358.namprd22.prod.outlook.com>
-x-forefront-prvs: 09555FB1AD
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(7916004)(396003)(366004)(39850400004)(346002)(376002)(136003)(199004)(189003)(33896004)(76176011)(305945005)(316002)(71190400001)(102836004)(7736002)(6506007)(386003)(446003)(97736004)(6486002)(11346002)(5660300002)(476003)(54906003)(52116002)(58126008)(7416002)(71200400001)(44832011)(105586002)(106356001)(6436002)(6512007)(53936002)(9686003)(81156014)(186003)(81166006)(8676002)(229853002)(14444005)(26005)(256004)(33716001)(4326008)(8936002)(6246003)(66066001)(478600001)(1076003)(42882007)(3846002)(14454004)(6116002)(99286004)(68736007)(486006)(25786009)(6916009)(2906002);DIR:OUT;SFP:1102;SCL:1;SRVR:MWHPR2201MB1358;H:MWHPR2201MB1277.namprd22.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: wavecomp.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: hBWJgI4yKYw2CDNyKPLUYxUN4QaQjVkC2Y11TeWcfF6zt6ZCQ8Dj50Rp0kUUPEDCzkL/dwz++RI1ctPNzqyfWqC/45y0NjEW/873CAlSfeTdYYKa+ZlJKvIN+cvVwIopLDYo6eFMOcrjnHcP3a2vZRzuw+11qO3bNSp4KUelggu+I4hlnHU3mFtRLs4BQpapTFwj724av10CkgqJrneN7Uyiy6Kt8NeY80+IsU/jskIWAmbm1yCdMnfftn1GCTobEPnMCYT7djCDpFPnQvynwIB9i/RSO2cGE5a9UxSwd9X9/983xn7IkJ8A3644ljg7LxVKYyeyG+JAmtNlYDjn/8eCc/4vEVVmtsVKlb7Anbyrmav5mPNtPD4NcFrcC98vAG02oDc10cWCXjTa3AEoiHk5iua1RZF//taOuI9H9h0=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <21DF7EAEFB82A945B9A9D82A73D0DDFD@namprd22.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S1726213AbfBUV5c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Feb 2019 16:57:32 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:45538 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726178AbfBUV5c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2019 16:57:32 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x1LLpGba133863
+        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 16:57:31 -0500
+Received: from e14.ny.us.ibm.com (e14.ny.us.ibm.com [129.33.205.204])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2qt1nb6rc4-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 16:57:31 -0500
+Received: from localhost
+        by e14.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bauerman@linux.ibm.com>;
+        Thu, 21 Feb 2019 21:57:30 -0000
+Received: from b01cxnp22033.gho.pok.ibm.com (9.57.198.23)
+        by e14.ny.us.ibm.com (146.89.104.201) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Thu, 21 Feb 2019 21:57:24 -0000
+Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
+        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x1LLvNcR11927674
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Feb 2019 21:57:23 GMT
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B1A5E112062;
+        Thu, 21 Feb 2019 21:57:23 +0000 (GMT)
+Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BDFCF112061;
+        Thu, 21 Feb 2019 21:57:19 +0000 (GMT)
+Received: from morokweng.localdomain (unknown [9.85.181.131])
+        by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTPS;
+        Thu, 21 Feb 2019 21:57:19 +0000 (GMT)
+References: <20190115121959.23763-1-jean-philippe.brucker@arm.com> <20190118103235-mutt-send-email-mst@kernel.org> <0ba215f5-e856-bf31-8dd9-a85710714a7a@arm.com> <20190129135345-mutt-send-email-mst@kernel.org>
+User-agent: mu4e 1.0; emacs 26.1
+From:   Thiago Jung Bauermann <bauerman@linux.ibm.com>
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        mark.rutland@arm.com, virtio-dev@lists.oasis-open.org,
+        kevin.tian@intel.com, tnowicki@caviumnetworks.com,
+        devicetree@vger.kernel.org, marc.zyngier@arm.com,
+        linux-pci@vger.kernel.org, will.deacon@arm.com,
+        robin.murphy@arm.com, virtualization@lists.linux-foundation.org,
+        iommu@lists.linux-foundation.org, robh+dt@kernel.org,
+        kvmarm@lists.cs.columbia.edu, bhelgaas@google.com,
+        frowand.list@gmail.com, jasowang@redhat.com,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH v7 0/7] Add virtio-iommu driver
+In-reply-to: <20190129135345-mutt-send-email-mst@kernel.org>
+Date:   Thu, 21 Feb 2019 18:57:17 -0300
 MIME-Version: 1.0
-X-OriginatorOrg: mips.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 47179be5-b4c3-40bb-5689-08d6983e3ca3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Feb 2019 20:50:39.1655
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-id: 463607d3-1db3-40a0-8a29-970c56230104
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR2201MB1358
+Content-Type: text/plain
+X-TM-AS-GCONF: 00
+x-cbid: 19022121-0052-0000-0000-0000038E1FAB
+X-IBM-SpamModules-Scores: 
+X-IBM-SpamModules-Versions: BY=3.00010640; HX=3.00000242; KW=3.00000007;
+ PH=3.00000004; SC=3.00000281; SDB=6.01164435; UDB=6.00608078; IPR=6.00945021;
+ MB=3.00025687; MTD=3.00000008; XFM=3.00000015; UTC=2019-02-21 21:57:29
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 19022121-0053-0000-0000-00005FECFE1A
+Message-Id: <87a7ioby9u.fsf@morokweng.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-02-21_14:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1902210148
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
 
-On Tue, Feb 19, 2019 at 04:57:14PM +0100, Thomas Bogendoerfer wrote:
-> SGI IP27 (Origin/Onyx2) and SGI IP30 (Octane) have a similair
-> architecture and share some hardware (ioc3/bridge). To share
-> the software parts this patchset reworks SGI IP27 interrupt
-> and pci bridge code. By using features Linux gained during the
-> many years since SGI IP27 code was integrated this even results
-> in code reduction and IMHO cleaner code.
->=20
-> Tests have been done on a two module O200 (4 CPUs) and an
-> Origin 2000 (8 CPUs).
->=20
-> My next step in integrating SGI IP30 support is splitting ioc3eth
-> into a MFD and subdevice drivers. Prototype is working, but needs
-> still more clean ups.
->=20
-> Changes in v2:
->=20
-> - replaced HUB_L/HUB_S by __raw_readq/__raw_writeq
-> - removed union bridge_ate
-> - replaced remaing fields in slice_data by per_cpu data
-> - use generic_handle_irq instead of do_IRQ
-> - use hierarchy irq domain for stacking bridge and hub interrupt
-> - moved __dma_to_phys/__phy_to_dma to mach-ip27/dma-direct.h
-> - use dev_to_node() for pcibus_to_node() implementation
->=20
-> Thomas Bogendoerfer (10):
->   MIPS: SGI-IP27: get rid of volatile and hubreg_t
->   MIPS: SGI-IP27: clean up bridge access and header files
->   MIPS: SGI-IP27: use pr_info/pr_emerg and pr_cont to fix output
->   MIPS: SGI-IP27: do xtalk scanning later
->   MIPS: SGI-IP27: do boot CPU init later
->   MIPS: SGI-IP27: rework HUB interrupts
->   PCI: call add_bus method also for root bus
->   MIPS: SGI-IP27: use generic PCI driver
->   genirq/irqdomain: fall back to default domain when creating hierarchy
->     domain
->   MIPS: SGI-IP27: abstract chipset irq from bridge
+Michael S. Tsirkin <mst@redhat.com> writes:
 
-I have patches 1-6 applied locally - would you be happy for those to be
-pushed to mips-next without 7-10? I know ip27_defconfig still builds but
-have no idea whether it still works :)
+> On Mon, Jan 21, 2019 at 11:29:05AM +0000, Jean-Philippe Brucker wrote:
+>> Hi,
+>>
+>> On 18/01/2019 15:51, Michael S. Tsirkin wrote:
+>> >
+>> > On Tue, Jan 15, 2019 at 12:19:52PM +0000, Jean-Philippe Brucker wrote:
+>> >> Implement the virtio-iommu driver, following specification v0.9 [1].
+>> >>
+>> >> This is a simple rebase onto Linux v5.0-rc2. We now use the
+>> >> dev_iommu_fwspec_get() helper introduced in v5.0 instead of accessing
+>> >> dev->iommu_fwspec, but there aren't any functional change from v6 [2].
+>> >>
+>> >> Our current goal for virtio-iommu is to get a paravirtual IOMMU working
+>> >> on Arm, and enable device assignment to guest userspace. In this
+>> >> use-case the mappings are static, and don't require optimal performance,
+>> >> so this series tries to keep things simple. However there is plenty more
+>> >> to do for features and optimizations, and having this base in v5.1 would
+>> >> be good. Given that most of the changes are to drivers/iommu, I believe
+>> >> the driver and future changes should go via the IOMMU tree.
+>> >>
+>> >> You can find Linux driver and kvmtool device on v0.9.2 branches [3],
+>> >> module and x86 support on virtio-iommu/devel. Also tested with Eric's
+>> >> QEMU device [4]. Please note that the series depends on Robin's
+>> >> probe-deferral fix [5], which will hopefully land in v5.0.
+>> >>
+>> >> [1] Virtio-iommu specification v0.9, sources and pdf
+>> >>     git://linux-arm.org/virtio-iommu.git virtio-iommu/v0.9
+>> >>     http://jpbrucker.net/virtio-iommu/spec/v0.9/virtio-iommu-v0.9.pdf
+>> >>
+>> >> [2] [PATCH v6 0/7] Add virtio-iommu driver
+>> >>     https://lists.linuxfoundation.org/pipermail/iommu/2018-December/032127.html
+>> >>
+>> >> [3] git://linux-arm.org/linux-jpb.git virtio-iommu/v0.9.2
+>> >>     git://linux-arm.org/kvmtool-jpb.git virtio-iommu/v0.9.2
+>> >>
+>> >> [4] [RFC v9 00/17] VIRTIO-IOMMU device
+>> >>     https://www.mail-archive.com/qemu-devel@nongnu.org/msg575578.html
+>> >>
+>> >> [5] [PATCH] iommu/of: Fix probe-deferral
+>> >>     https://www.spinics.net/lists/arm-kernel/msg698371.html
+>> >
+>> > Thanks for the work!
+>> > So really my only issue with this is that there's no
+>> > way for the IOMMU to describe the devices that it
+>> > covers.
+>> >
+>> > As a result that is then done in a platform-specific way.
+>> >
+>> > And this means that for example it does not solve the problem that e.g.
+>> > some power people have in that their platform simply does not have a way
+>> > to specify which devices are covered by the IOMMU.
+>>
+>> Isn't power using device tree? I haven't looked much at power because I
+>> was told a while ago that they already paravirtualize their IOMMU and
+>> don't need virtio-iommu, except perhaps for some legacy platforms. Or
+>> something along those lines. But I would certainly be interested in
+>> enabling the IOMMU for more architectures.
+>
+> I have CC'd the relevant ppc developers, let's see what do they think.
 
-I don't appear to have received patches 7 or 9 but I see from archives
-there'll be a v3 of patch 9 at least.
+I'm far from being an expert, but what could be very useful for us is to
+have a way for the guest to request IOMMU bypass for a device.
 
-So I can either apply 1-6 for v5.1 or defer the whole series. Let me
-know - I'm happy either way.
+From what I understand, the pSeries platform used by POWER guests always
+puts devices behind an IOMMU, so at least for current systems a
+description of which devices are covered by the IOMMU would always say
+"all of them".
 
-Thanks,
-    Paul
+>> As for the enumeration problem, I still don't think we can get much
+>> better than DT and ACPI as solutions (and IMO they are necessary to make
+>> this device portable). But I believe that getting DT and ACPI support is
+>> just a one-off inconvenience. That is, once the required bindings are
+>> accepted, any future extension can then be done at the virtio level with
+>> feature bits and probe requests, without having to update ACPI or DT.
+
+There is a device tree binding that can specify devices connected to a
+given IOMMU in Documentation/devicetree/bindings/iommu/iommu.txt.
+I don't believe POWER machines use it though.
+
+>> Thanks,
+>> Jean
+>>
+>> > Solving that problem would make me much more excited about
+>> > this device.
+>> >
+>> > On the other hand I can see that while there have been some
+>> > developments most of the code has been stable for quite a while now.
+>> >
+>> > So what I am trying to do right about now, is making a small module that
+>> > loads early and pokes at the IOMMU sufficiently to get the data about
+>> > which devices use the IOMMU out of it using standard virtio config
+>> > space.  IIUC it's claimed to be impossible without messy changes to the
+>> > boot sequence.
+>> >
+>> > If I succeed at least on some platforms I'll ask that this design is
+>> > worked into this device, minimizing info that goes through DT/ACPI.  If
+>> > I see I can't make it in time to meet the next merge window, I plan
+>> > merging the existing patches using DT (barring surprises).
+>> >
+>> > As I only have a very small amount of time to spend on this attempt, If
+>> > someone else wants to try doing that in parallel, that would be great!
+
+--
+Thiago Jung Bauermann
+IBM Linux Technology Center
+
