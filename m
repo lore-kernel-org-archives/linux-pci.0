@@ -2,81 +2,86 @@ Return-Path: <SRS0=XWMu=Q5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B73C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 09:39:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76BB1C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 11:05:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5490420823
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 09:39:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48135206B6
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 11:05:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725894AbfBVJjF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Feb 2019 04:39:05 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:61755 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725860AbfBVJjF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Feb 2019 04:39:05 -0500
-Received: from 79.184.254.15.ipv4.supernova.orange.pl (79.184.254.15) (HELO aspire.rjw.lan)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.213)
- id b35d8d77039a2d19; Fri, 22 Feb 2019 10:39:03 +0100
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        RussianNeuroMancer <russianneuromancer@ya.ru>,
-        David Ward <david.ward@ll.mit.edu>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Patrick Talbert <ptalbert@redhat.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1 0/2] PCI/ASPM: Fix LTR issues
-Date:   Fri, 22 Feb 2019 10:37:34 +0100
-Message-ID: <4865264.tNTiON9z6m@aspire.rjw.lan>
-In-Reply-To: <20190222045824.GD219879@google.com>
-References: <154992561743.7864.14353823538864422094.stgit@bhelgaas-glaptop.roam.corp.google.com> <20190222045824.GD219879@google.com>
+        id S1726254AbfBVLFU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Feb 2019 06:05:20 -0500
+Received: from foss.arm.com ([217.140.101.70]:57786 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726131AbfBVLFU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Feb 2019 06:05:20 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 21FFDA78;
+        Fri, 22 Feb 2019 03:05:20 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 30A573F5C1;
+        Fri, 22 Feb 2019 03:05:18 -0800 (PST)
+Date:   Fri, 22 Feb 2019 11:05:12 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        Andrew Lunn <andrew@lunn.ch>,
+        Russell King <linux@arm.linux.org.uk>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Leigh Brown <leigh@solinno.co.uk>,
+        Lu??s Mendes <luis.p.mendes@gmail.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 0/2] PCI: fix pci-mvebu after conversion to common bridge
+ emul code
+Message-ID: <20190222110450.GA32670@e107981-ln.cambridge.arm.com>
+References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
+ <20190221232317.GB219879@google.com>
+ <20190222093554.367e3c91@windsurf>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190222093554.367e3c91@windsurf>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Friday, February 22, 2019 5:58:24 AM CET Bjorn Helgaas wrote:
-> On Mon, Feb 11, 2019 at 04:55:33PM -0600, Bjorn Helgaas wrote:
-> > These are to fix a couple LTR-related issues found while investigating
-> > https://bugzilla.kernel.org/show_bug.cgi?id=201469
-> > 
-> > I don't claim that these fix the whole problem of that bugzilla, but I
-> > think it's pretty clear that these are problems we need to fix, so I want
-> > to give these a little more exposure.
-> > 
-> > Feedback welcome!
-> > 
-> > ---
-> > 
-> > Bjorn Helgaas (2):
-> >       PCI/ASPM: Use LTR if already enabled by platform
-> >       PCI/ASPM: Save LTR Capability for suspend/resume
-> > 
-> > 
-> >  drivers/pci/pci.c   |   53 +++++++++++++++++++++++++++++++++++++++++++++++++--
-> >  drivers/pci/probe.c |   36 ++++++++++++++++++++++-------------
-> >  2 files changed, 74 insertions(+), 15 deletions(-)
+On Fri, Feb 22, 2019 at 09:35:54AM +0100, Thomas Petazzoni wrote:
+> Hello Bjorn,
 > 
-> I applied these to pci/aspm for v5.1.
+> On Thu, 21 Feb 2019 17:23:17 -0600
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
 > 
-> I think Vidya is absolutely right that we also need to save/restore
-> the ASPM L1 Substates capability.  But I haven't had a chance to
-> write that up yet, and I think these two patches by themselves
-> are an improvement even without ASPM L1 SS.
+> > Lorenzo, I assume you'll take both of these, so for both patches,
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Thanks!
+> 
+> > Maybe we should add a stable tag (v4.20+)?
+> 
+> Both patches have a Fixes: tag, so they should be automatically be
+> backported to the applicable stable kernels. From
+> Documentation/process/submitting-patches.rst.
+> 
+>   A Fixes: tag indicates that the patch fixes an issue in a previous
+>   commit. It is used to make it easy to determine where a bug
+>   originated, which can help review a bug fix. This tag also assists
+>   the stable kernel team in determining which stable kernel versions
+>   should receive your fix. This is the preferred method for indicating
+>   a bug fixed by the patch. See :ref:`describe_changes` for more
+>   details.
+> 
+> Isn't that sufficient ?
 
-Agreed.
+Adding a CC: stable won't hurt so that it is certain it will get
+stable kernels attention, that's what I will do.
 
-Cheers,
-Rafael
-
+Thanks,
+Lorenzo
