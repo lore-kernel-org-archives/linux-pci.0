@@ -3,70 +3,83 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E468C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 08:14:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE46C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 08:36:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3619D20823
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 08:14:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F72D20700
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 08:36:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726273AbfBVIOU convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Feb 2019 03:14:20 -0500
-Received: from mx2.suse.de ([195.135.220.15]:45980 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725821AbfBVIOU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Feb 2019 03:14:20 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id EB49EABC3;
-        Fri, 22 Feb 2019 08:14:18 +0000 (UTC)
-Date:   Fri, 22 Feb 2019 09:14:18 +0100
-From:   Thomas Bogendoerfer <tbogendoerfer@suse.de>
-To:     Paul Burton <paul.burton@mips.com>
-Cc:     Ralf Baechle <ralf@linux-mips.org>,
-        James Hogan <jhogan@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "linux-mips@vger.kernel.org" <linux-mips@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 00/10] MIPS: SGI-IP27 rework
-Message-Id: <20190222091418.7c0eeb0d5c11b68874d8fdc9@suse.de>
-In-Reply-To: <20190221205038.hcov3n574a3zqip7@pburton-laptop>
-References: <20190219155728.19163-1-tbogendoerfer@suse.de>
-        <20190221205038.hcov3n574a3zqip7@pburton-laptop>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-suse-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+        id S1726117AbfBVIgB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Feb 2019 03:36:01 -0500
+Received: from relay11.mail.gandi.net ([217.70.178.231]:45577 "EHLO
+        relay11.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726144AbfBVIgB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Feb 2019 03:36:01 -0500
+Received: from windsurf (aaubervilliers-681-1-81-190.w90-88.abo.wanadoo.fr [90.88.23.190])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay11.mail.gandi.net (Postfix) with ESMTPSA id 41DAF10000C;
+        Fri, 22 Feb 2019 08:35:55 +0000 (UTC)
+Date:   Fri, 22 Feb 2019 09:35:54 +0100
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
+        Russell King <linux@arm.linux.org.uk>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Leigh Brown <leigh@solinno.co.uk>,
+        =?UTF-8?B?THXDrXM=?= Mendes <luis.p.mendes@gmail.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 0/2] PCI: fix pci-mvebu after conversion to common
+ bridge emul code
+Message-ID: <20190222093554.367e3c91@windsurf>
+In-Reply-To: <20190221232317.GB219879@google.com>
+References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
+        <20190221232317.GB219879@google.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 21 Feb 2019 20:50:39 +0000
-Paul Burton <paul.burton@mips.com> wrote:
+Hello Bjorn,
 
-> I don't appear to have received patches 7 or 9 but I see from archives
-> there'll be a v3 of patch 9 at least.
+On Thu, 21 Feb 2019 17:23:17 -0600
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-I'm still fighting with git send-email to do proper collecting of addresses...
-And the mails to your @mips.com address bounced yesterday.
+> Lorenzo, I assume you'll take both of these, so for both patches,
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> So I can either apply 1-6 for v5.1 or defer the whole series. Let me
-> know - I'm happy either way.
+Thanks!
 
-All changes will happen in patches 7-10, so appreciate, if you could apply 1-6 :-)
+> Maybe we should add a stable tag (v4.20+)?
 
-Thank you,
-Thomas.
+Both patches have a Fixes: tag, so they should be automatically be
+backported to the applicable stable kernels. From
+Documentation/process/submitting-patches.rst.
 
+  A Fixes: tag indicates that the patch fixes an issue in a previous
+  commit. It is used to make it easy to determine where a bug
+  originated, which can help review a bug fix. This tag also assists
+  the stable kernel team in determining which stable kernel versions
+  should receive your fix. This is the preferred method for indicating
+  a bug fixed by the patch. See :ref:`describe_changes` for more
+  details.
+
+Isn't that sufficient ?
+
+Thanks,
+
+Thomas
 -- 
-SUSE Linux GmbH
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
+Thomas Petazzoni, CTO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
