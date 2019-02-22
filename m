@@ -6,82 +6,94 @@ X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76BB1C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 11:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C93EAC43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 11:22:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 48135206B6
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 11:05:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EC6D206B6
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 11:22:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726254AbfBVLFU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Feb 2019 06:05:20 -0500
-Received: from foss.arm.com ([217.140.101.70]:57786 "EHLO foss.arm.com"
+        id S1726324AbfBVLWq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Feb 2019 06:22:46 -0500
+Received: from foss.arm.com ([217.140.101.70]:57968 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726131AbfBVLFU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Feb 2019 06:05:20 -0500
+        id S1726154AbfBVLWp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Feb 2019 06:22:45 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 21FFDA78;
-        Fri, 22 Feb 2019 03:05:20 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id DFFCCA78;
+        Fri, 22 Feb 2019 03:22:44 -0800 (PST)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 30A573F5C1;
-        Fri, 22 Feb 2019 03:05:18 -0800 (PST)
-Date:   Fri, 22 Feb 2019 11:05:12 +0000
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id F05EB3F5C1;
+        Fri, 22 Feb 2019 03:22:42 -0800 (PST)
+Date:   Fri, 22 Feb 2019 11:22:37 +0000
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Andrew Lunn <andrew@lunn.ch>,
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
         Russell King <linux@arm.linux.org.uk>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Leigh Brown <leigh@solinno.co.uk>,
-        Lu??s Mendes <luis.p.mendes@gmail.com>,
         linux-arm-kernel@lists.infradead.org,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Lu??s Mendes <luis.p.mendes@gmail.com>,
+        Leigh Brown <leigh@solinno.co.uk>
 Subject: Re: [PATCH 0/2] PCI: fix pci-mvebu after conversion to common bridge
  emul code
-Message-ID: <20190222110450.GA32670@e107981-ln.cambridge.arm.com>
+Message-ID: <20190222112237.GA630@e107981-ln.cambridge.arm.com>
 References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
- <20190221232317.GB219879@google.com>
- <20190222093554.367e3c91@windsurf>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190222093554.367e3c91@windsurf>
+In-Reply-To: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 22, 2019 at 09:35:54AM +0100, Thomas Petazzoni wrote:
-> Hello Bjorn,
+On Wed, Feb 20, 2019 at 10:48:39AM +0100, Thomas Petazzoni wrote:
+> Hello,
 > 
-> On Thu, 21 Feb 2019 17:23:17 -0600
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
+> This set of two patches aim at fixing some regression reported by two
+> users (Luis and Leigh), that were introduced by the conversion of the
+> pci-mvebu driver to the common PCI bridge emulation code shared
+> between pci-aardvark and pci-mvebu.
 > 
-> > Lorenzo, I assume you'll take both of these, so for both patches,
-> > 
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Due to this conversion, some registers of the PCI configuration that
+> used to be read-only are now read-write, making the Linux PCI core
+> believe that some features are implemented by the PCI bridge. Namely
+> in the case of pci-mvebu, the prefetchable memory base/limit registers
+> were read-only, while they are now read-write. Due to this, the Linux
+> PCI core now believes it can configure a prefetchable memory area, but
+> this is not supported by pci-mvebu, which does not have the logic to
+> create the appropriate MBUs windows.
 > 
-> Thanks!
+> This set of two commits allow PCI controller code to tell the PCI
+> bridge emulation logic about their capabilities. Because we envision
+> that other capabilities than prefetchable memory support might need to
+> be communicated from the PCI controller code to the PCI bridge
+> emulation code in the future, we introduce a "flags" argument, even if
+> for now only one flag is supported.
 > 
-> > Maybe we should add a stable tag (v4.20+)?
+> Lorenzo, let me know what you think about this approach. I am open to
+> suggestions if the proposed approach is not satisfying.
 > 
-> Both patches have a Fixes: tag, so they should be automatically be
-> backported to the applicable stable kernels. From
-> Documentation/process/submitting-patches.rst.
+> Both patches have been confirmed by Luis and Leigh to fix the
+> regression, but I'll let them give a formal Tested-by.
 > 
->   A Fixes: tag indicates that the patch fixes an issue in a previous
->   commit. It is used to make it easy to determine where a bug
->   originated, which can help review a bug fix. This tag also assists
->   the stable kernel team in determining which stable kernel versions
->   should receive your fix. This is the preferred method for indicating
->   a bug fixed by the patch. See :ref:`describe_changes` for more
->   details.
+> Best regards,
 > 
-> Isn't that sufficient ?
+> Thomas Petazzoni
+> 
+> Thomas Petazzoni (2):
+>   PCI: pci-bridge-emul: Create per-bridge copy of register behavior
+>   PCI: pci-bridge-emul: Extend pci_bridge_emul_init() with flags
+> 
+>  drivers/pci/controller/pci-aardvark.c |  2 +-
+>  drivers/pci/controller/pci-mvebu.c    |  2 +-
+>  drivers/pci/pci-bridge-emul.c         | 86 ++++++++++++++++++---------
+>  drivers/pci/pci-bridge-emul.h         | 13 +++-
+>  4 files changed, 73 insertions(+), 30 deletions(-)
 
-Adding a CC: stable won't hurt so that it is certain it will get
-stable kernels attention, that's what I will do.
+I have applied the series to pci/misc for v5.1, thanks.
 
-Thanks,
 Lorenzo
