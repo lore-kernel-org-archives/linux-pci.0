@@ -2,81 +2,100 @@ Return-Path: <SRS0=XWMu=Q5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0EE3C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 06:16:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70911C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 08:07:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8377D207E0
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 06:16:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uADts5J0"
+	by mail.kernel.org (Postfix) with ESMTP id 32F472086C
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 08:07:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbfBVGQN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Feb 2019 01:16:13 -0500
-Received: from mail-wr1-f46.google.com ([209.85.221.46]:46566 "EHLO
-        mail-wr1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725848AbfBVGQM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Feb 2019 01:16:12 -0500
-Received: by mail-wr1-f46.google.com with SMTP id i16so1016603wrs.13
-        for <linux-pci@vger.kernel.org>; Thu, 21 Feb 2019 22:16:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=WKPp4S+S6Qcx9kPhdJ9UW18YHyGmRi5jXvCTjjFUJWQ=;
-        b=uADts5J0m3r7CwZe5vbjppPk1Yw+ra/eNOICcc8sTp/sBPmDKxhc2MyvDvXFPiy9wT
-         8T/UcHbPSGXyHKd5CFQwGNldV20UJ5VABuFx/dtkm7wZtjgeM6Ir8YrnKfHzE7jFrqJh
-         4IaBkA/Aa1bQr+aftx3x+zPAESkIBdzCefNosPh8luFXPhPgPNz2V3kOMXmOr7eZqqE5
-         3+nA136iHbrIcLAsWJx6H8yMI9aFGvYDFMJ5V0UZcyd6k1czrWTZGyB5mIAsx9pDx2OC
-         6ptjIvBzMDYOULH24OpqWClGwjmDEfuT9pyAjplrGiU5QjsFdzKGOUtxtDujL0vy2kAO
-         9kMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=WKPp4S+S6Qcx9kPhdJ9UW18YHyGmRi5jXvCTjjFUJWQ=;
-        b=cfB26g+j2enBfDC1Z10IQ4dnvkahvYXbQOcL2c66K2jCdatNImhXxR9osGxNNoacdb
-         2bZD4Vzf1WLTjHHF+/JZQZItSPlsInAX4CZZMTyEZKi+LB8iiKgCKaFYI8DByh5jfiMl
-         ZLF/KJ8yGy23ZhMMvCvBiwfLa4mL279KcvXr+V7pX7ocDl+MUtMBjzsasA5VrUhh50qD
-         dhC2C+orb2eF174aWMJMzLHS+vMwnSnSRXIPxMckhgdX9AL3gmG/VVn70BtjMFDOQ1L1
-         TjzYkWyu85+jlc6N4aLSOaH6hZzLJYT6/hMx+rJNk7aY2zhqSJNYMtNKY4dJmEv75Ov2
-         57KA==
-X-Gm-Message-State: AHQUAuap2Kfe7t4sjjXCdFr1JGsJShr+lsdD1ozaN16MeXOuIZYE2sXn
-        86qprSrYvw5YCX9d1GMLzz5FHO8U
-X-Google-Smtp-Source: AHgI3IbjwiJaPrMMyZckylnKDOdahq9W1R2/S8ZFL2ML2913CUsR+EzuMF68/IBiJefzbDXJcKsYsQ==
-X-Received: by 2002:a5d:528e:: with SMTP id c14mr1622088wrv.304.1550816170674;
-        Thu, 21 Feb 2019 22:16:10 -0800 (PST)
-Received: from ?IPv6:2003:ea:8bf1:e200:3cba:a200:8fc:79e4? (p200300EA8BF1E2003CBAA20008FC79E4.dip0.t-ipconnect.de. [2003:ea:8bf1:e200:3cba:a200:8fc:79e4])
-        by smtp.googlemail.com with ESMTPSA id x11sm2797094wrt.27.2019.02.21.22.16.09
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 21 Feb 2019 22:16:09 -0800 (PST)
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: Disabling ASPM L1 sub-states selectively from drivers?
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Message-ID: <4d8bf501-e367-917d-c808-d1938edaf007@gmail.com>
-Date:   Fri, 22 Feb 2019 07:16:01 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        id S1725821AbfBVIHC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Feb 2019 03:07:02 -0500
+Received: from doppler.thel33t.co.uk ([185.153.207.61]:49398 "EHLO
+        doppler.thel33t.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726214AbfBVIHC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Feb 2019 03:07:02 -0500
+Received: from doppler.thel33t.co.uk (localhost [127.0.0.1])
+        by doppler.thel33t.co.uk (Postfix) with ESMTP id 1D09220B94;
+        Fri, 22 Feb 2019 08:06:59 +0000 (GMT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
+Date:   Fri, 22 Feb 2019 08:06:59 +0000
+From:   Leigh Brown <leigh@solinno.co.uk>
+To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, Russell King <linux@arm.linux.org.uk>,
+        linux-arm-kernel@lists.infradead.org,
+        Jason Cooper <jason@lakedaemon.net>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        =?UTF-8?Q?Lu=C3=ADs_Mendes?= <luis.p.mendes@gmail.com>
+Subject: Re: [PATCH 0/2] PCI: fix pci-mvebu after conversion to common bridge
+ emul code
+In-Reply-To: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
+References: <20190220094841.11129-1-thomas.petazzoni@bootlin.com>
+Message-ID: <a587b776092a791b43aaf6f980816924@solinno.co.uk>
+X-Sender: leigh@solinno.co.uk
+User-Agent: Roundcube Webmail/1.3.8
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-I face the issue that a PCIe network chip misses RX packets if ASPM L1
-sub-states are enabled. It seems that the RX FIFO is too small to buffer
-all incoming packets during ASPM exit latency.
+On 2019-02-20 09:48, Thomas Petazzoni wrote:
+> Hello,
+> 
+> This set of two patches aim at fixing some regression reported by two
+> users (Luis and Leigh), that were introduced by the conversion of the
+> pci-mvebu driver to the common PCI bridge emulation code shared
+> between pci-aardvark and pci-mvebu.
+> 
+> Due to this conversion, some registers of the PCI configuration that
+> used to be read-only are now read-write, making the Linux PCI core
+> believe that some features are implemented by the PCI bridge. Namely
+> in the case of pci-mvebu, the prefetchable memory base/limit registers
+> were read-only, while they are now read-write. Due to this, the Linux
+> PCI core now believes it can configure a prefetchable memory area, but
+> this is not supported by pci-mvebu, which does not have the logic to
+> create the appropriate MBUs windows.
+> 
+> This set of two commits allow PCI controller code to tell the PCI
+> bridge emulation logic about their capabilities. Because we envision
+> that other capabilities than prefetchable memory support might need to
+> be communicated from the PCI controller code to the PCI bridge
+> emulation code in the future, we introduce a "flags" argument, even if
+> for now only one flag is supported.
+> 
+> Lorenzo, let me know what you think about this approach. I am open to
+> suggestions if the proposed approach is not satisfying.
+> 
+> Both patches have been confirmed by Luis and Leigh to fix the
+> regression, but I'll let them give a formal Tested-by.
+> 
+> Best regards,
+> 
+> Thomas Petazzoni
+> 
+> Thomas Petazzoni (2):
+>   PCI: pci-bridge-emul: Create per-bridge copy of register behavior
+>   PCI: pci-bridge-emul: Extend pci_bridge_emul_init() with flags
+> 
+>  drivers/pci/controller/pci-aardvark.c |  2 +-
+>  drivers/pci/controller/pci-mvebu.c    |  2 +-
+>  drivers/pci/pci-bridge-emul.c         | 86 ++++++++++++++++++---------
+>  drivers/pci/pci-bridge-emul.h         | 13 +++-
+>  4 files changed, 73 insertions(+), 30 deletions(-)
 
-So far pci_disable_link_state() only allows to disable L1 completely.
-Would it make sense to extend this function to allow disabling
-L1 sub-states selectively? Looking at pcie_config_aspm_link() this
-seems to be possible.
+Tested on WRT1900ACS router against 4.20.7 and 5.0.0-rc.
 
+Tested-by: Leigh Brown <leigh@solinno.co.uk>
+
+Regards,
+
+Leigh.
