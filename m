@@ -1,96 +1,84 @@
-Return-Path: <SRS0=2g0o=Q4=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=XWMu=Q5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E461C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 23:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA835C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 01:27:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0334C20838
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Feb 2019 23:37:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1550792231;
-	bh=pEihKUO/K2gMKtPW1/2JoH/l70OghPbp4AK1Fp6t8RU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=YT/X7dG1xg5ZLEtq2iNAFYwfk8/E+qOTYlUpkbUn2j3JeVwEd1HdeqwXy0OVqx9e+
-	 wjFb7vVa3hZFWfqH1MU5BsPjAP5INPaH6y269Y9/XvW+vSkp9p397dhtwB1YaIhrGK
-	 kiDvM3OnsV1xUjXxSZWlwjgugs+Bh3Cp5p6uxV60=
+	by mail.kernel.org (Postfix) with ESMTP id C214C2080F
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Feb 2019 01:27:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726050AbfBUXhK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Feb 2019 18:37:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54938 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725961AbfBUXhJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Feb 2019 18:37:09 -0500
-Received: from localhost (unknown [104.133.8.90])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2948220818;
-        Thu, 21 Feb 2019 23:37:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1550792229;
-        bh=pEihKUO/K2gMKtPW1/2JoH/l70OghPbp4AK1Fp6t8RU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=B5Gw36R/H7jTBcj3qWLQ13v7YjX2u1Te135TTdsQy9/6aGOb7bvEneQoFnvetFIYZ
-         kNDjRuK2UGqjFsVCSKSScAwNVz50tE0+VJ4B29xGuHwReOsyFk4EOQFBMFC/gYCymk
-         woX5Hodjf+iMcJvLU5G9Z7BKu++OtDgjtO/RmLR8=
-Date:   Thu, 21 Feb 2019 17:37:08 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Thomas Bogendoerfer <tbogendoerfer@suse.de>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 07/10] PCI: call add_bus method also for root bus
-Message-ID: <20190221233708.GC219879@google.com>
-References: <20190219155728.19163-1-tbogendoerfer@suse.de>
- <20190219155728.19163-8-tbogendoerfer@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190219155728.19163-8-tbogendoerfer@suse.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1725961AbfBVB1k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Feb 2019 20:27:40 -0500
+Received: from smtprelay0035.hostedemail.com ([216.40.44.35]:49464 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725869AbfBVB1j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Feb 2019 20:27:39 -0500
+X-Greylist: delayed 436 seconds by postgrey-1.27 at vger.kernel.org; Thu, 21 Feb 2019 20:27:39 EST
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave01.hostedemail.com (Postfix) with ESMTP id 961351801BB6E
+        for <linux-pci@vger.kernel.org>; Fri, 22 Feb 2019 01:20:24 +0000 (UTC)
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay05.hostedemail.com (Postfix) with ESMTP id BF46F180CA851;
+        Fri, 22 Feb 2019 01:20:22 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: wind83_3d36879661133
+X-Filterd-Recvd-Size: 2046
+Received: from XPS-9350.home (unknown [47.151.153.53])
+        (Authenticated sender: joe@perches.com)
+        by omf14.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 22 Feb 2019 01:20:20 +0000 (UTC)
+Message-ID: <c238a08cfaae0bd09e434edc889b0ecab50aee24.camel@perches.com>
+Subject: Re: [PATCH RFC v2 4/4] PCI: hotplug: Add quirk For Dell nvme pcie
+ switches
+From:   Joe Perches <joe@perches.com>
+To:     Alex_Gagniuc@Dellteam.com, lukas@wunner.de, mr.nuke.me@gmail.com
+Cc:     bhelgaas@google.com, Austin.Bolen@dell.com, keith.busch@intel.com,
+        Shyam.Iyer@dell.com, okaya@kernel.org, linux-pci@vger.kernel.org,
+        mika.westerberg@linux.intel.com, okaya@codeaurora.org,
+        poza@codeaurora.org, linux-kernel@vger.kernel.org
+Date:   Thu, 21 Feb 2019 17:20:19 -0800
+In-Reply-To: <027101b4652c4e0c98b86649aa3e4732@ausx13mps321.AMER.DELL.COM>
+References: <20190220012031.10741-1-mr.nuke.me@gmail.com>
+         <20190220012031.10741-5-mr.nuke.me@gmail.com>
+         <20190221075634.uih5ysqwkna7cku4@wunner.de>
+         <027101b4652c4e0c98b86649aa3e4732@ausx13mps321.AMER.DELL.COM>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.30.1-1build1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Thomas,
+On Thu, 2019-02-21 at 18:35 +0000, Alex_Gagniuc@Dellteam.com wrote:
+> On 2/21/19 1:57 AM, Lukas Wunner wrote:
+> > On Tue, Feb 19, 2019 at 07:20:30PM -0600, Alexandru Gagniuc wrote:
+> > > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > > 
+> > > +}
+> > > +
+> > > +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_PLX, 0x9733,
+> > 
+> > By convention there's no blank line between the closing curly brace
+> > and the DECLARE_PCI_FIXUP_CLASS_FINAL().
 
-On Tue, Feb 19, 2019 at 04:57:21PM +0100, Thomas Bogendoerfer wrote:
-> pci-xtalk controller code uses the add_bus method to set node of
-> the bus device, which then is used for pcibus_to_node() implementation.
-> 
-> Signed-off-by: Thomas Bogendoerfer <tbogendoerfer@suse.de>
-> ---
->  drivers/pci/probe.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 257b9f6f2ebb..456448d5f46d 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -837,6 +837,12 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
->  
->  	pcibios_add_bus(bus);
->  
-> +	if (bus->ops->add_bus) {
-> +		err = bus->ops->add_bus(bus);
-> +		if (WARN_ON(err < 0))
-> +			dev_err(&bus->dev, "failed to add bus: %d\n", err);
-> +	}
+Not completely true.
+See: arch/mips/pci/fixup-loongson3.c
 
-Is there something special about pci-xtalk that prevents it from
-setting the node the way other platforms do, without using the
-add_bus() method?
+> I'm sorry for all the style issues. I realize it's noise and should just 
+> be done right from the beginning. Is there a way to make checkpatch.pl 
+> catch these before they go out?
 
-I haven't researched the details of how other platforms do it, but if
-it would be possible for pci-xtalk to do it the same way, that would
-be ideal.
+You could write a new rule, but it's non trivial as
+there are multiple consecutive uses and multi-line
+uses too.
 
->  	/* Create legacy_io and legacy_mem files for this bus */
->  	pci_create_legacy_files(bus);
->  
-> -- 
-> 2.13.7
-> 
+I think it's a rule not worth writing.
+
+
