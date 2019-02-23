@@ -2,86 +2,98 @@ Return-Path: <SRS0=oPQn=Q6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6EC1C43381
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Feb 2019 06:49:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E61C43381
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Feb 2019 11:45:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E4FC2084F
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Feb 2019 06:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 246B220850
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Feb 2019 11:44:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725952AbfBWGt3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 23 Feb 2019 01:49:29 -0500
-Received: from bmailout3.hostsharing.net ([176.9.242.62]:59047 "EHLO
-        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725773AbfBWGt3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Feb 2019 01:49:29 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout3.hostsharing.net (Postfix) with ESMTPS id 9A38B100D942B;
-        Sat, 23 Feb 2019 07:49:26 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 268591D8E5; Sat, 23 Feb 2019 07:49:26 +0100 (CET)
-Date:   Sat, 23 Feb 2019 07:49:26 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Alex_Gagniuc@Dellteam.com
-Cc:     mr.nuke.me@gmail.com, bhelgaas@google.com, Austin.Bolen@dell.com,
-        keith.busch@intel.com, Shyam.Iyer@dell.com, okaya@kernel.org,
-        linux-pci@vger.kernel.org, gustavo@embeddedor.com,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC v2 2/4] PCI: pciehp: Do not turn off slot if presence
- comes up after link
-Message-ID: <20190223064926.mh24zzlj4xykwcjf@wunner.de>
-References: <20190220012031.10741-1-mr.nuke.me@gmail.com>
- <20190220012031.10741-3-mr.nuke.me@gmail.com>
- <20190221073634.snvazxlzgvjhilaz@wunner.de>
- <dfeadc6798984cce965e2202e90fe0b0@ausx13mps321.AMER.DELL.COM>
+        id S1726592AbfBWLo7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 23 Feb 2019 06:44:59 -0500
+Received: from elvis.franken.de ([193.175.24.41]:48184 "EHLO elvis.franken.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726271AbfBWLo7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 23 Feb 2019 06:44:59 -0500
+X-Greylist: delayed 2413 seconds by postgrey-1.27 at vger.kernel.org; Sat, 23 Feb 2019 06:44:58 EST
+Received: from uucp (helo=alpha)
+        by elvis.franken.de with local-bsmtp (Exim 3.36 #1)
+        id 1gxV6v-00021Q-00; Sat, 23 Feb 2019 12:04:49 +0100
+Received: by alpha.franken.de (Postfix, from userid 1000)
+        id CCA96C004D; Sat, 23 Feb 2019 12:04:32 +0100 (CET)
+Date:   Sat, 23 Feb 2019 12:04:32 +0100
+From:   Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 07/10] PCI: call add_bus method also for root bus
+Message-ID: <20190223110432.GA8782@alpha.franken.de>
+References: <20190219155728.19163-1-tbogendoerfer@suse.de>
+ <20190219155728.19163-8-tbogendoerfer@suse.de>
+ <20190221233708.GC219879@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <dfeadc6798984cce965e2202e90fe0b0@ausx13mps321.AMER.DELL.COM>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <20190221233708.GC219879@google.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Feb 22, 2019 at 07:56:28PM +0000, Alex_Gagniuc@Dellteam.com wrote:
-> On 2/21/19 1:36 AM, Lukas Wunner wrote:
-> > On Tue, Feb 19, 2019 at 07:20:28PM -0600, Alexandru Gagniuc wrote:
-> >>   	mutex_lock(&ctrl->state_lock);
-> >> +	present = pciehp_card_present(ctrl);
-> >> +	link_active = pciehp_check_link_active(ctrl);
-> >>   	switch (ctrl->state) {
+On Thu, Feb 21, 2019 at 05:37:08PM -0600, Bjorn Helgaas wrote:
+> On Tue, Feb 19, 2019 at 04:57:21PM +0100, Thomas Bogendoerfer wrote:
+> > pci-xtalk controller code uses the add_bus method to set node of
+> > the bus device, which then is used for pcibus_to_node() implementation.
 > > 
-> > These two assignments appear to be superfluous as you're also performing
-> > them in pciehp_check_link_active().
+> > Signed-off-by: Thomas Bogendoerfer <tbogendoerfer@suse.de>
+> > ---
+> >  drivers/pci/probe.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> > 
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 257b9f6f2ebb..456448d5f46d 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -837,6 +837,12 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+> >  
+> >  	pcibios_add_bus(bus);
+> >  
+> > +	if (bus->ops->add_bus) {
+> > +		err = bus->ops->add_bus(bus);
+> > +		if (WARN_ON(err < 0))
+> > +			dev_err(&bus->dev, "failed to add bus: %d\n", err);
+> > +	}
 > 
-> Not sure. Between the first check, and this check, you can have several 
-> seconds elapse depending on whether the driver's .probe()/remove() is 
-> invoked. Whatever you got at the beginning would be stale. If you had a 
-> picture dictionary and looked up 'bad idea', it would have a picture of 
-> the above code with the second check removed.
+> Is there something special about pci-xtalk that prevents it from
+> setting the node the way other platforms do, without using the
+> add_bus() method?
 
-I don't quite follow.  You're no longer using the "present" and
-"link_active" variables in pciehp_handle_presence_or_link_change(),
-the variables are set again further down in the function and you're
-*also* reading PDS and DLLLA in is_delayed_presence_up_event().
-So the above-quoted assignments are superfluous.  Am I missing something?
+x86: uses node in common struct pci_sysdata
+ia64: uses node in common struct pci_controller
+powerpc: uses node in common struct pci_controller
+sparc: uses numa_node in common struct pci_pbm_info
+arm64: uses dev_to_node(&bus->dev) and node is set via pcibios_add_bus()
 
-(Sorry, I had copy-pasted the wrong function name, I meant
-is_delayed_presence_up_event() above, not pciehp_check_link_active().
+MIPS right now has no common struct, which is reachable via bus->sysdata,
+if CONFIG_PCI_DRIVERS_LEGACY is not selected (and I want to get away
+with that option). So I liked the arm64 way, but I didn't want to implement
+pcibios_add_bus just for SGI-IP27 and noticed, that pcibios_add_bus
+is called for child and root bus, while add_bus method only for
+child buses. So my patch gives add_bus the same power as pcibios_add_bus
+already have. Is this good enough as argument ?
 
+> I haven't researched the details of how other platforms do it, but if
+> it would be possible for pci-xtalk to do it the same way, that would
+> be ideal.
 
-> I've got all the other review comments addressed in my local branch. I'm 
-> waiting on Lord Helgass' decision on which solution is better.
-             ^^^^^^^^^^^^
+there is always a different way of course. If you don't like my patch
+I'll find one ;-)
 
-Can we keep this discussion in a neutral tone please?
+Thomas.
 
-Thanks,
-
-Lukas
+-- 
+Crap can work. Given enough thrust pigs will fly, but it's not necessarily a
+good idea.                                                [ RFC1925, 2.3 ]
