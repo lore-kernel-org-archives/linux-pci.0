@@ -2,128 +2,145 @@ Return-Path: <SRS0=2sVk=RA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D22CEC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 14:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A51BDC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 14:47:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9899B213A2
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 14:25:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EB7020643
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 14:47:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="gttYnhIG"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="nARC/xyR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726675AbfBYOZy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Feb 2019 09:25:54 -0500
-Received: from mail.kmu-office.ch ([178.209.48.109]:40826 "EHLO
-        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726764AbfBYOZy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Feb 2019 09:25:54 -0500
-Received: from trochilidae.toradex.int (unknown [46.140.72.82])
-        by mail.kmu-office.ch (Postfix) with ESMTPSA id 6738F5C2A43;
-        Mon, 25 Feb 2019 15:25:52 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
-        t=1551104752;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:
-         content-transfer-encoding:content-transfer-encoding:in-reply-to:
-         references; bh=E+RAVdzZV/s/TriImsHp9wOFDItOLfb3UHp/+T6MW6w=;
-        b=gttYnhIGr3ZZZGmFQjn9qklrm0G8kdLpkdmuR1lKDOBJ92WHZm8bivzsyskMUyGVyMFScf
-        p++e3/x2PRbuQJYW0+qG9zMI+ENE2JJ4h5i8XJkzmKIuDev6mzVnodQ6ogvO2D3+ITOJ6N
-        6hLVrdajwfESnG2JanWGVCFZPLkyT+s=
-From:   Stefan Agner <stefan@agner.ch>
-To:     lorenzo.pieralisi@arm.com, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, l.stach@pengutronix.de,
-        tpiepho@impinj.com
-Cc:     leonard.crestez@nxp.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Stefan Agner <stefan@agner.ch>
-Subject: [PATCH v6] PCI: imx6: limit DBI register length
-Date:   Mon, 25 Feb 2019 15:25:37 +0100
-Message-Id: <20190225142537.29042-1-stefan@agner.ch>
-X-Mailer: git-send-email 2.20.1
+        id S1727409AbfBYOrr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Feb 2019 09:47:47 -0500
+Received: from mail-eopbgr80047.outbound.protection.outlook.com ([40.107.8.47]:44544
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727443AbfBYOrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Feb 2019 09:47:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HRGO2QOIC3iWLWceNFj3hoYYCzaqjk6QZ7pkeqybV3o=;
+ b=nARC/xyRE86oGUdz6LVQOYKKGjYlEkyhzTXV60NJkpQNF1B0Gwk2Sa0RwLpfsiu824cEu7T6b4sUk6oyGlTFipZe2wzhwbxPlaWuYDTGm34KniNMvSzl8REF9r/2qGdFXoPSTQhdddNMF3okTeamSj4H6n0bRymZp5mf/DnrYDg=
+Received: from VI1PR04MB5533.eurprd04.prod.outlook.com (20.178.122.159) by
+ VI1PR04MB2957.eurprd04.prod.outlook.com (10.170.228.23) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1643.15; Mon, 25 Feb 2019 14:47:30 +0000
+Received: from VI1PR04MB5533.eurprd04.prod.outlook.com
+ ([fe80::fc57:e5ed:7fb2:2c67]) by VI1PR04MB5533.eurprd04.prod.outlook.com
+ ([fe80::fc57:e5ed:7fb2:2c67%5]) with mapi id 15.20.1643.019; Mon, 25 Feb 2019
+ 14:47:30 +0000
+From:   Leonard Crestez <leonard.crestez@nxp.com>
+To:     "stefan@agner.ch" <stefan@agner.ch>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "tpiepho@impinj.com" <tpiepho@impinj.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Subject: Re: [PATCH v6] PCI: imx6: limit DBI register length
+Thread-Topic: [PATCH v6] PCI: imx6: limit DBI register length
+Thread-Index: AQHUzRYFfG3BBpei4EOgQcykm2G7xaXwl9WA
+Date:   Mon, 25 Feb 2019 14:47:30 +0000
+Message-ID: <cc1df497422f38649b8d62cba794ed4ad7aa6619.camel@nxp.com>
+References: <20190225142537.29042-1-stefan@agner.ch>
+In-Reply-To: <20190225142537.29042-1-stefan@agner.ch>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=leonard.crestez@nxp.com; 
+x-originating-ip: [95.76.156.53]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: e8d195ce-c9fa-45a6-edd7-08d69b302b0c
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7153060)(7193020);SRVR:VI1PR04MB2957;
+x-ms-traffictypediagnostic: VI1PR04MB2957:
+x-microsoft-exchange-diagnostics: =?utf-8?B?MTtWSTFQUjA0TUIyOTU3OzIzOkxxUEYrc0RZYzBrdFAyajJsU0VTMDViZzQx?=
+ =?utf-8?B?WnlwS0RZT1RKVGFqaU9YcGlMcEhhYXdrV3dKeWRyZVEwV0liR3k2TytDVEor?=
+ =?utf-8?B?WDVQWkl3WFFEM0FwQzRQV3VJR1VINEd2SGw0NFo3bzFQZEFMeXpRaHR3eWFX?=
+ =?utf-8?B?aFRGSFF6MVRETGlUNEh3SVZqbFVpeStvSDI3ZFVpT1o2a1c4TUxLTGtiL0cy?=
+ =?utf-8?B?VHRaRnlTN21OOEcxU3FDbUlMeUdIV3JFNFFPZy9VVFQxZDFQS3lIdmdrVThC?=
+ =?utf-8?B?TFFZT0JtM0dlVndkcGU4YzBmb09aTzdmT1RsUG9tYnVub2FocGNNMjNaT0Nn?=
+ =?utf-8?B?QmhnUWtSSm12QkdyVG1ZZVl1eFQwOXdqNnZodzdrdzJMUUF0cXhsWFBYWmQv?=
+ =?utf-8?B?bVU4NjNIbHBlUkUwSVUxNGcrUGw5VGVoY3c1NEJzajNYeFVHNFJYUWtyVWNX?=
+ =?utf-8?B?WGQ0UXcyMFRjM1lydHJrNE1PQXBxaHBRbElOaDFUS2grQ1YvQ3BScE5wT1M4?=
+ =?utf-8?B?Q2lRLytGME1LYm1TMXV3bE11SGFCeWVkV0RkWGpHSnA2MjlhSTZLVWd2bFBN?=
+ =?utf-8?B?T21yTFJqSjYvWGgybU1ubkxKSndDbDByZjQyS2JyeE81dkUwQzYwWkx1UHNP?=
+ =?utf-8?B?M3hzaFIwVTBpOUJXbHZCcFA3NG5Wc2RkL0lGU0tiaXczMytUVnBJNDU2K1Fx?=
+ =?utf-8?B?NzdlVGtRQmtseTJRakhnZEZhbzRBN1A3MlpkVWhDb1dBQkZRLzJDWDBxaXVY?=
+ =?utf-8?B?bmtXdFVQYVkySmtXZUlMUWZwd3BxSlJsWWhpUTdqU2xURGJOdWdDR3MyRVV4?=
+ =?utf-8?B?Qk11T05reGVpVUNTRjBLRlAxSkE3Q3V3TUkxbTUrZVhPNkIzeE4vZ3Yxekhj?=
+ =?utf-8?B?MUhiN1hqQ0lSajl2YjVnOU5XNkhQeWtxQXFkK0R1d3hSSytPaVNOU2FTNW0r?=
+ =?utf-8?B?NHBQcnNnNVFuZDZlT2ZyZmVyU3J0bElNdkprMmZNWjQvRzYzN3o1U0xVdU9W?=
+ =?utf-8?B?L1JmMkphQ1VnMm5KL2ZjNlR2ZTJhRjNOU2FuVnpVb09TaFlXeGNVNlMzMlZK?=
+ =?utf-8?B?TjV3RU1aNlQ4VFRkRDREZFdBVElWUHUzRDhNQjlSQ1pMMU1PVUk1K0ZUcDRo?=
+ =?utf-8?B?OVNSSmFJc0VEVEtXYWczNXo0RW5UaWovZ3hnVXRlQzFPcXFMWkYrd1JhL2h0?=
+ =?utf-8?B?N3h3WkJaSElROEFSWUFGcG52eWlEQWtoTldTWHlIdkxVdmtxOS9oMHgxeGdx?=
+ =?utf-8?B?M01tYWRyQW1rNmZEWE0rUHBYMkJGOW9pL1lnL1l1cHRucGo0N0ozSVhvaDdE?=
+ =?utf-8?B?Mis1bzJ6K2JqWFUrc25HK2pEVXYvWEZ6eGJ1T2x3a1FRUENsd21QWDBGbGVE?=
+ =?utf-8?B?aVh4SWVxcFg2d1VYVEo0NVNvUlVKTHdmU2krRnN4WmVaeGxqcWZ0empkS2lX?=
+ =?utf-8?B?ZThyY21HNzhYMDFIQWFGbCtaQmNMeEdMb3Q5L3dXTHJnS1VMYkZEL2xzNmd4?=
+ =?utf-8?B?Qm1Ra0k0QXE0TE5ZQW9HK0hiTjVIQ2wyY1Z6TU1JYWQzS0doemFLWFhaWmRu?=
+ =?utf-8?B?RHZtN1BLS0lYTTNhNVJFdWY2SEgrVGRoVGFuQnRsRVVvUzEvaVZXUUw1MVh2?=
+ =?utf-8?B?VHFjWUF4K0tGVjk4N1ZpSUZKK0lKcWswQW9ib01JdExobE5hcmpoNmxKRTJh?=
+ =?utf-8?B?Q0tsYzBZUXYrSUVCaWx2R05UVDFVc0w2bHpJZHVHZ2phdElnMmcxTVJqUm9i?=
+ =?utf-8?B?cnBZRHY2QVA5d0psL2MzWlpzaVQ3elNTUGo4ZmMzTzdLWEEvL3NXTmJoMXUz?=
+ =?utf-8?B?Q01oZmw2MWFhVk8zd0h5N1RqdWwxOFdialNQaHI0a2JSNEE9PQ==?=
+x-microsoft-antispam-prvs: <VI1PR04MB2957D896F7B105006AC75A7BEE7A0@VI1PR04MB2957.eurprd04.prod.outlook.com>
+x-forefront-prvs: 095972DF2F
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(396003)(346002)(376002)(366004)(136003)(189003)(199004)(6506007)(26005)(476003)(3846002)(118296001)(486006)(186003)(6116002)(316002)(4326008)(54906003)(11346002)(25786009)(102836004)(229853002)(2351001)(2906002)(86362001)(68736007)(5640700003)(6486002)(2616005)(6246003)(446003)(6436002)(76176011)(99286004)(5660300002)(66066001)(6916009)(6512007)(2501003)(71190400001)(71200400001)(105586002)(53936002)(106356001)(44832011)(8936002)(50226002)(1730700003)(81156014)(81166006)(8676002)(97736004)(7736002)(305945005)(478600001)(256004)(14444005)(14454004)(36756003)(99106002);DIR:OUT;SFP:1101;SCL:1;SRVR:VI1PR04MB2957;H:VI1PR04MB5533.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: dbIr7OLRchi/OXVPbG/Ri88fRWC5x1fNVDFHKPaXg9l9JT/e7jdExNAAf0UPi1++rjgzglLWwmbbQkxGgkE6UPk1irCosi/N3AgHME1pRNgoP5SHN2tTD+OIcUeVPaIONeWxBgUnE2JjkzQnZX3w98OVKVCzP8peQjvJU0dR+rHVIoKI3axP3I3W4f9Ev9CrZ0Ua6AKUnbuG9lf5LRhsf28dXm9etWf93ugZ1zhVLoEBhiZ+3RW5Bd4zjhP36XQNQ8nE05z4iOSygp8FNClTUwWnAUbGSQQUJZ7htXcS00EOD7LF50Jw4kqt5+K5dF7ER7l6UhjK7n6KxEQR0+aZCX4JbvgTE092yeyDazpBjYlfNsET0Iv8Mba2i+Yl4huGaN8auL7n2K5bLpy2171SzV84fmOzwFvqYlC7FHXV9rQ=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <8DE4D9B46A52AA478E629E29FACD6DF2@eurprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e8d195ce-c9fa-45a6-edd7-08d69b302b0c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Feb 2019 14:47:30.1426
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR04MB2957
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Define the length of the DBI registers and limit config space to its
-length. This makes sure that the kernel does not access registers
-beyond that point, avoiding the following abort on a i.MX 6Quad:
-  # cat /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
-  [  100.021433] Unhandled fault: imprecise external abort (0x1406) at 0xb6ea7000
-  ...
-  [  100.056423] PC is at dw_pcie_read+0x50/0x84
-  [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
-  ...
-
-Signed-off-by: Stefan Agner <stefan@agner.ch>
----
-Changes in v3:
-- Rebase on pci/dwc
-Changes in v4:
-- Rebase on pci/dwc
-Changes in v5:
-- Rebased ontop of pci/dwc
-- Use DBI length of 0x200
-Changes in v6:
-- Use pci_dev.cfg_size mechanism to limit config space (this made patch 1
-  of previous versions of this patchset obsolete).
-
-(Lucas, I dropped your Reviewed-by since changes are substantial...)
-
- drivers/pci/controller/dwc/pci-imx6.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index aaa9489e2140..8bd335c52414 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -56,6 +56,7 @@ enum imx6_pcie_variants {
- struct imx6_pcie_drvdata {
- 	enum imx6_pcie_variants variant;
- 	u32 flags;
-+	int dbi_length;
- };
- 
- struct imx6_pcie {
-@@ -912,6 +913,24 @@ static const struct dw_pcie_ops dw_pcie_ops = {
- 	/* No special ops needed, but pcie-designware still expects this struct */
- };
- 
-+static void imx6_pcie_quirk(struct pci_dev *dev)
-+{
-+	struct pci_bus *bus = dev->bus;
-+	struct pcie_port *pp = bus->sysdata;
-+
-+	if (bus->number == pp->root_bus_nr) {
-+		struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+		struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
-+
-+		/*
-+		 * Limit config length to avoid the kernel reading beyond
-+		 * the register set and causing an abort on i.MX 6Quad
-+		 */
-+		dev->cfg_size = imx6_pcie->drvdata->dbi_length;
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, imx6_pcie_quirk);
-+
- #ifdef CONFIG_PM_SLEEP
- static void imx6_pcie_ltssm_disable(struct device *dev)
- {
-@@ -1242,6 +1261,7 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 		.variant = IMX6Q,
- 		.flags = IMX6_PCIE_FLAG_IMX6_PHY |
- 			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE,
-+		.dbi_length = 0x200,
- 	},
- 	[IMX6SX] = {
- 		.variant = IMX6SX,
--- 
-2.20.1
-
+T24gTW9uLCAyMDE5LTAyLTI1IGF0IDE1OjI1ICswMTAwLCBTdGVmYW4gQWduZXIgd3JvdGU6DQo+
+IERlZmluZSB0aGUgbGVuZ3RoIG9mIHRoZSBEQkkgcmVnaXN0ZXJzIGFuZCBsaW1pdCBjb25maWcg
+c3BhY2UgdG8gaXRzDQo+IGxlbmd0aC4gVGhpcyBtYWtlcyBzdXJlIHRoYXQgdGhlIGtlcm5lbCBk
+b2VzIG5vdCBhY2Nlc3MgcmVnaXN0ZXJzDQo+IGJleW9uZCB0aGF0IHBvaW50LCBhdm9pZGluZyB0
+aGUgZm9sbG93aW5nIGFib3J0IG9uIGEgaS5NWCA2UXVhZDoNCj4gICAjIGNhdCAvc3lzL2Rldmlj
+ZXMvc29jMC9zb2MvMWZmYzAwMC5wY2llL3BjaTAwMDBcOjAwLzAwMDBcOjAwXDowMC4wL2NvbmZp
+Zw0KPiAgIFsgIDEwMC4wMjE0MzNdIFVuaGFuZGxlZCBmYXVsdDogaW1wcmVjaXNlIGV4dGVybmFs
+IGFib3J0ICgweDE0MDYpIGF0IDB4YjZlYTcwMDANCj4gICAuLi4NCj4gICBbICAxMDAuMDU2NDIz
+XSBQQyBpcyBhdCBkd19wY2llX3JlYWQrMHg1MC8weDg0DQo+ICAgWyAgMTAwLjA2MDc5MF0gTFIg
+aXMgYXQgZHdfcGNpZV9yZF9vd25fY29uZisweDQ0LzB4NDgNCj4gIA0KPiArc3RhdGljIHZvaWQg
+aW14Nl9wY2llX3F1aXJrKHN0cnVjdCBwY2lfZGV2ICpkZXYpDQo+ICt7DQo+ICsJc3RydWN0IHBj
+aV9idXMgKmJ1cyA9IGRldi0+YnVzOw0KPiArCXN0cnVjdCBwY2llX3BvcnQgKnBwID0gYnVzLT5z
+eXNkYXRhOw0KPiArDQo+ICsJaWYgKGJ1cy0+bnVtYmVyID09IHBwLT5yb290X2J1c19ucikgew0K
+PiArCQlzdHJ1Y3QgZHdfcGNpZSAqcGNpID0gdG9fZHdfcGNpZV9mcm9tX3BwKHBwKTsNCj4gKwkJ
+c3RydWN0IGlteDZfcGNpZSAqaW14Nl9wY2llID0gdG9faW14Nl9wY2llKHBjaSk7DQo+ICsNCj4g
+KwkJLyoNCj4gKwkJICogTGltaXQgY29uZmlnIGxlbmd0aCB0byBhdm9pZCB0aGUga2VybmVsIHJl
+YWRpbmcgYmV5b25kDQo+ICsJCSAqIHRoZSByZWdpc3RlciBzZXQgYW5kIGNhdXNpbmcgYW4gYWJv
+cnQgb24gaS5NWCA2UXVhZA0KPiArCQkgKi8NCj4gKwkJZGV2LT5jZmdfc2l6ZSA9IGlteDZfcGNp
+ZS0+ZHJ2ZGF0YS0+ZGJpX2xlbmd0aDsNCj4gKwl9DQo+ICt9DQo+ICtERUNMQVJFX1BDSV9GSVhV
+UF9IRUFERVIoUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgaW14Nl9wY2llX3F1aXJrKTsNCg0KQXJl
+IHlvdSBzdXJlIHRoYXQgdGhpcyBxdWlyayBpcyBvbmx5IGFwcGxpZWQgdG8gaW14Ni1wY2llPw0K
+U3VwZXJmaWNpYWxseSBpdCBsb29rcyBsaWtlIGl0IHdvdWxkIGFwcGx5IHRvIGFsbCBQQ0kgcm9v
+dHMgYW5kIHRoaXMNCmNvdWxkIGJlIGEgcHJvYmxlbSBvbiBjb25maWdzIHdoaWNoIGVuYWJsZSBh
+bGwgZHJpdmVycywgbGlrZSBhcm02NC4NCg0KTWF5YmUgdGhlIGxpbmtlciBtYWdpYyBpbnNpZGUg
+REVDTEFSRV9QQ0lfRklYVVAgZGVhbHMgd2l0aCB0aGF0LCBpbg0KdGhhdCBjYXNlIEkgYXBvbG9n
+aXplLg0KDQotLQ0KUmVnYXJkcywNCkxlb25hcmQNCg==
