@@ -2,62 +2,113 @@ Return-Path: <SRS0=2sVk=RA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E90C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 14:58:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B98EEC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 15:35:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6674A2146F
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 14:58:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8634A20C01
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Feb 2019 15:35:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=agner.ch header.i=@agner.ch header.b="vSoLrEJX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727444AbfBYO6C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Feb 2019 09:58:02 -0500
-Received: from mga01.intel.com ([192.55.52.88]:5682 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727443AbfBYO6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Feb 2019 09:58:02 -0500
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Feb 2019 06:58:02 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,411,1544515200"; 
-   d="scan'208";a="137028673"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by orsmga002.jf.intel.com with SMTP; 25 Feb 2019 06:57:58 -0800
-Received: by lahna (sSMTP sendmail emulation); Mon, 25 Feb 2019 16:57:58 +0200
-Date:   Mon, 25 Feb 2019 16:57:58 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Sven Van Asbroeck <thesven73@gmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Sinan Kaya <okaya@kernel.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH] PCIE/PME: fix possible use-after-free on remove
-Message-ID: <20190225145758.GA2696@lahna.fi.intel.com>
-References: <20190218195730.4975-1-TheSven73@gmail.com>
+        id S1727515AbfBYPfl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Feb 2019 10:35:41 -0500
+Received: from mail.kmu-office.ch ([178.209.48.109]:42046 "EHLO
+        mail.kmu-office.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727505AbfBYPfl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Feb 2019 10:35:41 -0500
+Received: from webmail.kmu-office.ch (unknown [IPv6:2a02:418:6a02::a3])
+        by mail.kmu-office.ch (Postfix) with ESMTPSA id 8898B5C2A43;
+        Mon, 25 Feb 2019 16:35:39 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=agner.ch; s=dkim;
+        t=1551108939;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vlSDAgO/nXXh4PmhdCrl3yP03f1NY0PRUY8ztoL1UmA=;
+        b=vSoLrEJXgDCH8bCR9v2cwn2YHmNWhx+sgkXjuA2AKW55kdGR66voa0/2mtd/NYOeA2CyQJ
+        GOwIHQ31YQ3/yA+AxekeU4G3wXX0VMzxOrhV7NQ27tJkuRXdtexjl3Qp4lfEF+cbT2UXR3
+        sXmijYzh24r2x5iLn3cQDdnpIVDRTFs=
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190218195730.4975-1-TheSven73@gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Date:   Mon, 25 Feb 2019 16:35:39 +0100
+From:   Stefan Agner <stefan@agner.ch>
+To:     Leonard Crestez <leonard.crestez@nxp.com>
+Cc:     linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
+        lorenzo.pieralisi@arm.com, gustavo.pimentel@synopsys.com,
+        tpiepho@impinj.com, linux-pci@vger.kernel.org, bhelgaas@google.com,
+        l.stach@pengutronix.de
+Subject: Re: [PATCH v6] PCI: imx6: limit DBI register length
+In-Reply-To: <cc1df497422f38649b8d62cba794ed4ad7aa6619.camel@nxp.com>
+References: <20190225142537.29042-1-stefan@agner.ch>
+ <cc1df497422f38649b8d62cba794ed4ad7aa6619.camel@nxp.com>
+Message-ID: <eb40c43946c46570da67d8a710b87062@agner.ch>
+X-Sender: stefan@agner.ch
+User-Agent: Roundcube Webmail/1.3.7
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Feb 18, 2019 at 02:57:30PM -0500, Sven Van Asbroeck wrote:
-> In remove(), ensure that the pme work cannot run after kfree()
-> is called. Otherwise, this could result in a use-after-free.
+On 25.02.2019 15:47, Leonard Crestez wrote:
+> On Mon, 2019-02-25 at 15:25 +0100, Stefan Agner wrote:
+>> Define the length of the DBI registers and limit config space to its
+>> length. This makes sure that the kernel does not access registers
+>> beyond that point, avoiding the following abort on a i.MX 6Quad:
+>>   # cat /sys/devices/soc0/soc/1ffc000.pcie/pci0000\:00/0000\:00\:00.0/config
+>>   [  100.021433] Unhandled fault: imprecise external abort (0x1406) at 0xb6ea7000
+>>   ...
+>>   [  100.056423] PC is at dw_pcie_read+0x50/0x84
+>>   [  100.060790] LR is at dw_pcie_rd_own_conf+0x44/0x48
+>>
+>> +static void imx6_pcie_quirk(struct pci_dev *dev)
+>> +{
+>> +	struct pci_bus *bus = dev->bus;
+>> +	struct pcie_port *pp = bus->sysdata;
+>> +
+>> +	if (bus->number == pp->root_bus_nr) {
+>> +		struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>> +		struct imx6_pcie *imx6_pcie = to_imx6_pcie(pci);
+>> +
+>> +		/*
+>> +		 * Limit config length to avoid the kernel reading beyond
+>> +		 * the register set and causing an abort on i.MX 6Quad
+>> +		 */
+>> +		dev->cfg_size = imx6_pcie->drvdata->dbi_length;
+>> +	}
+>> +}
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, imx6_pcie_quirk);
 > 
-> This issue was detected with the help of Coccinelle.
-> 
-> Cc: Sinan Kaya <okaya@kernel.org>
-> Cc: Frederick Lawler <fred@fredlawl.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Are you sure that this quirk is only applied to imx6-pcie?
+> Superficially it looks like it would apply to all PCI roots and this
+> could be a problem on configs which enable all drivers, like arm64.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+That was inspired by the FIXUP in keystone, which uses
+PCI_ANY_ID/PCI_ANY_ID too.
+
+However, keystone also does not have arm64 variants it seems.
+Furthermore, the keystone fixup checks PCI ids in code.
+
+> 
+> Maybe the linker magic inside DECLARE_PCI_FIXUP deals with that, in
+> that case I apologize.
+
+I don't think there is special linker magic, if CONFIG_PCI_IMX6 is
+enabled this will get called.
+
+I agree, I should use PCI_VENDOR_ID_SYNOPSYS, 0xabcd here.
+
+
+Btw, while looking at the patch again I realized that I need to check
+imx6_pcie->drvdata->dbi_length for 0 and not apply in this case to avoid
+breaking other i.MX designs.
+
+I will send a v7.
+
+--
+Stefan
