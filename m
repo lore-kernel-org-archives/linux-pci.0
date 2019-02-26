@@ -1,99 +1,144 @@
 Return-Path: <SRS0=hk3Y=RB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Level: *
+X-Spam-Status: No, score=1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9947BC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 22:42:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BC65C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 23:44:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 55A3B218D9
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 22:42:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED5AE218DE
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 23:44:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IdH4smVv"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="UZvFI2Gj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729210AbfBZWmF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Feb 2019 17:42:05 -0500
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:34957 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728766AbfBZWmF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2019 17:42:05 -0500
-Received: by mail-wr1-f68.google.com with SMTP id t18so15781814wrx.2
-        for <linux-pci@vger.kernel.org>; Tue, 26 Feb 2019 14:42:04 -0800 (PST)
+        id S1729086AbfBZXo2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Feb 2019 18:44:28 -0500
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:35826 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729030AbfBZXo2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2019 18:44:28 -0500
+Received: by mail-pg1-f196.google.com with SMTP id e17so4925896pgd.2
+        for <linux-pci@vger.kernel.org>; Tue, 26 Feb 2019 15:44:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dpITyZB4wxpijtZ/zOHmsaypXxucYisbMh699JUoAKc=;
-        b=IdH4smVvAMJ9QChWcagr6I8XWdA8kh1PY2XC7SrCQOqgarR8Wz7IKfkbpYnNWtXPYB
-         v6Qv8UpJXkH7uDuZqvOHvjmOyvQUv+3aA69tw/zc5UrCQA7IJTUp+tG1AFub11EZmFAG
-         ntHuqkL1liKPV8eKoulTjvpEi9rXq0wpP0HhTbyoR0LThC6x0kTRrHiL9LzbCw06Cpob
-         QRjfyGwOJrJy+YXSlisKhi19c0Edd1v7SWrLI7XJrxbXoz89wZmO8UQTV8soDrx1EVaN
-         QY1mAIrADEG88bGt2AaiuX++TceMSWh19KzC7xzOxB52k77WojYMlsoJtlx3R2SrPaSN
-         1U9w==
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=OFnLT5XdPjqDxL6/K91hoXuMuyo4KTpfIXDgQ+N2d3Y=;
+        b=UZvFI2GjkVuuFoyBvh4bJSdn7ATJZRWjS30gFEmLU37mK1BBfLrV/tvmc9PnixBT8M
+         So+FliEBPa/oBXiYdELL9iDYVDLDZxCO9RFLp2EA+64bpeYbFQDVdw4oHDBQkGSYTdkG
+         cVFtuhjbYqBrxuCAhUOUjCSKls1M7GaSlU5S0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dpITyZB4wxpijtZ/zOHmsaypXxucYisbMh699JUoAKc=;
-        b=ogTQ9hb/QHj+ku+T/nCtwsor4W6VplHGdyd8AmQBadbrU7zh3uma2/DfzxOkteTFEa
-         hqVDvCYYk4yxff49qi2S7bvgGzZ1edQS3YQN2eCBnfMiXmAKGz1CblOt1GinnPto6DUY
-         zWduBM89HvXn6Bz5epWjaUz9oBgmi35nxJVpD4LA5LRWty7GCMjXGCJadCsLD1z+c6uf
-         dqyCDhZORTJ79gJUMxKDaAs4ySXUew7ndmwqqpqOEoV7TGYXsuMufSb6xuW+NgrZltyz
-         2cYtc4hzbg/EJjtagzav9oM1A8cCwZu9UKJHEaonEo+qzMCg+Spo9HH8ww6I7TZii8KK
-         Plmg==
-X-Gm-Message-State: APjAAAVxP1Be+5CO5c96Fc1Rv2HEZrdDUMBG4UULmyOit5U3NxQquTqK
-        YaBkJIfDdn7hZXxgKEbxNNQ47EcgQkycwjgXYXar
-X-Google-Smtp-Source: APXvYqxoCGHEJKPtwGehvCHgLNcy1pD12eV+X822eNqA3rLqcc7jZcxoo1LS7lsmg+jbmUmsQD6liFv5O6exOEDEfMs=
-X-Received: by 2002:adf:9b11:: with SMTP id b17mr37652wrc.168.1551220923963;
- Tue, 26 Feb 2019 14:42:03 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=OFnLT5XdPjqDxL6/K91hoXuMuyo4KTpfIXDgQ+N2d3Y=;
+        b=e4EvBUD7BAly/ivfc6Vk2noc6tX2lEgtDYBdimv2YywpX6xhIGkfc65qc5krss19i0
+         2ltY6J4aGvNzi2QMiW6CiKw/YHGZEg33rX/0SiDjsoqI2+ao+NwkuMkiXKK6o8r7JUAN
+         zvafKvEUXTQvEQXmJnp0hSoSlqv93RgqkkgEp4Tfl89ks7ocsVoi/1OG6v2KYGF6h+E9
+         aeVoi+NaBNzFJ4FS2BPvFack8UvyymHUt5qZfJR0d6GZFH4UbSgBAtoaZkttvpeI9OsI
+         93azarZzA4ROPF9j5LfbE4T50nlumo4hC+fm5mT1GVGyEHCPfZOD7RYWd4qoPPC/xhuD
+         1EkQ==
+X-Gm-Message-State: AHQUAubUEPzX4i7jbB4pXgHBGNPrZIa0klfyOMSs/azoXccODfEiuf9E
+        YstkJabqwtkhhYtVysvcLWNl+Q==
+X-Google-Smtp-Source: AHgI3IZ3b25RdTEFdcJ4w+m0hBHnIhGkp5dN+7k66Ly/vLQ284p0Gvn7FT9oPhFP4BcM72QTK1hXgA==
+X-Received: by 2002:a65:4147:: with SMTP id x7mr22593pgp.54.1551224666997;
+        Tue, 26 Feb 2019 15:44:26 -0800 (PST)
+Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
+        by smtp.gmail.com with ESMTPSA id q62sm24471018pfi.183.2019.02.26.15.44.25
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 26 Feb 2019 15:44:25 -0800 (PST)
+Date:   Tue, 26 Feb 2019 15:44:23 -0800
+From:   Brian Norris <briannorris@chromium.org>
+To:     Marc Zyngier <marc.zyngier@arm.com>
+Cc:     Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Amitkumar Karwar <amitkarwar@gmail.com>,
+        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+        Ganapathi Bhat <gbhat@marvell.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Xinming Hu <huxinming820@gmail.com>,
+        Devicetree List <devicetree@vger.kernel.org>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-rockchip@lists.infradead.org,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH 0/4] mwifiex PCI/wake-up interrupt fixes
+Message-ID: <20190226234422.GD174696@google.com>
+References: <20190224140426.3267-1-marc.zyngier@arm.com>
+ <CAKv+Gu9OOzOxx0rTAZqM8r4q_hRmOp3b=KP7fwgNeiu67FCApA@mail.gmail.com>
+ <5310b73b-4821-6dff-b9c0-34c59fb7fd72@arm.com>
+ <CAKv+Gu_=bQyVZqgUnJm9moCcaCcpDrag6NWGEpaR65=pMiTFJQ@mail.gmail.com>
+ <0c433a70-27f6-76ad-c46c-6015de1ffaa4@arm.com>
 MIME-Version: 1.0
-References: <4d8bf501-e367-917d-c808-d1938edaf007@gmail.com>
-In-Reply-To: <4d8bf501-e367-917d-c808-d1938edaf007@gmail.com>
-From:   Bjorn Helgaas <bhelgaas@google.com>
-Date:   Tue, 26 Feb 2019 16:41:52 -0600
-Message-ID: <CAErSpo6h27cSn3aQuH_WPUZ_tGMc4UsLhSo3oRyZ23U5rGb59Q@mail.gmail.com>
-Subject: Re: Disabling ASPM L1 sub-states selectively from drivers?
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0c433a70-27f6-76ad-c46c-6015de1ffaa4@arm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Heiner,
+Hi,
 
-On Fri, Feb 22, 2019 at 12:16 AM Heiner Kallweit <hkallweit1@gmail.com> wrote:
->
-> I face the issue that a PCIe network chip misses RX packets if ASPM L1
-> sub-states are enabled. It seems that the RX FIFO is too small to buffer
-> all incoming packets during ASPM exit latency.
->
-> So far pci_disable_link_state() only allows to disable L1 completely.
-> Would it make sense to extend this function to allow disabling
-> L1 sub-states selectively? Looking at pcie_config_aspm_link() this
-> seems to be possible.
+On Tue, Feb 26, 2019 at 05:14:00PM +0000, Marc Zyngier wrote:
+> On 26/02/2019 16:21, Ard Biesheuvel wrote:
+> > On Mon, 25 Feb 2019 at 15:53, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> >> It outlines one thing: If you have to interpret per-device PCI
+> >> properties from DT, you're in for serious trouble. I should get some
+> >> better HW.
+> >>
+> > 
+> > Yeah, it obviously makes no sense at all for the interrupt parent of a
+> > PCI device to deviate from the host bridge's interrupt parent, and
+> > it's quite unfortunate that we can't simply ban it now that the cat is
+> > out of the bag already.
+> > 
+> > Arguably, the wake up widget is not part of the PCI device, but I have
+> > no opinion as to whether it is better modeling it as a sub device as
+> > you are proposing or as an entirely separate device referenced via a
+> > phandle.
+> 
+> It is not that clear. The widget seems to be an integral part of the
+> device, as it is the same basic IP that is used for SDIO and USB.
 
-We could certainly explore the option of selectively disabling L1 substates.
+It's not really a widget specific to this IP. It's just a GPIO. It so
+happens that both SDIO and PCIe designs have wanted to use a GPIO for
+wakeup, as many other devices do. (Note: it's not just cheap ARM
+devices; pulling up some Intel Chromebook designs, I see the exact same
+WAKE# GPIO on their PCIe WiFi as well.)
 
-But before we do that, let's look at a couple things, because there
-are some Linux issues in that area, and it's possible we could make a
-generic fix that wouldn't require disabling the substates completely.
+> It looks like the good old pre-PCI-2.2 days, where you had to have a
+> separate cable between your network card and the base-board for the
+> wake-up interrupt to be delivered. Starting with PCI-2.2, the bus can
+> carry the signal just fine. With PCIe, it should just be an interrupt
+> TLP sent to the RC, but that's obviously not within the capabilities of
+> the HW.
 
-One problem is the ASPM L1.2 state depends on LTR information, and we
-don't support LTR correctly.  There are a couple patches in -next to
-fix some problems, but we still don't handle cases where the BIOS
-doesn't program the LTR latencies and the LTR_L1.2_Threshold.
+You should search the PCI Express specification for WAKE#. There is a
+clearly-documented "side-band wake" feature that is part of the
+standard, as an alternative to in-band TLP wakeup. While you claim this
+is an ancient thing, it in fact still in use on many systems -- it's
+just usually abstracted better by ACPI firmware, whereas the dirty
+laundry is aired a bit more on a Device Tree system. And we got it
+wrong.
 
-Can you open a report at bugzilla.kernel.org and attach the complete
-dmesg log (booted with "pci=earlydump") and the "sudo lspci -vvvxx"
-output?
+> Anyway, it'd be good if the Marvell people could chime in and let us
+> know how they'd prefer to handle this.
 
-Have you figured out which L1 substate specifically causes problems?
-If not, maybe we can use setpci to fiddle with things manually and
-narrow it down.
+I'm not sure this is really a Marvell-specific problem. (Well, except
+for the marvell,wakeup-pin silliness, which is somewhat orthogonal.) In
+fact, if we cared a little more about Wake-on-WiFi, we'd be trying to
+support the same (out-of-band WAKE#) with other WiFi drivers.
 
-Bjorn
+Brian
