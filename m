@@ -2,325 +2,406 @@ Return-Path: <SRS0=hk3Y=RB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6CECC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 07:01:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D422AC43381
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 07:07:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A31ED2173C
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 07:01:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D87D2173C
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 07:07:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rG+mpHw8"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QM627r7x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726624AbfBZHAz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Feb 2019 02:00:55 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:38077 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726590AbfBZHAz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2019 02:00:55 -0500
-Received: by mail-pg1-f193.google.com with SMTP id m2so5757105pgl.5
-        for <linux-pci@vger.kernel.org>; Mon, 25 Feb 2019 23:00:54 -0800 (PST)
+        id S1726547AbfBZHHm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Feb 2019 02:07:42 -0500
+Received: from mail-io1-f65.google.com ([209.85.166.65]:46430 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725940AbfBZHHl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2019 02:07:41 -0500
+Received: by mail-io1-f65.google.com with SMTP id k21so9656934ior.13;
+        Mon, 25 Feb 2019 23:07:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=fx6OO5xoSrFOoloNsMCvFZvz3wzpFqdeDNJe3ZiTRtY=;
-        b=rG+mpHw82l4jKk9Lyhe1R6E6UUgGXSlhL8OqBZAdZz4BJRpl+DhYjNXiTfuRmWuuii
-         Mfo4StPJ/dRELqgBdjIEd7Z7j/eZ4AkDHatYMT/VR1BFFGjrwcNJdXGiF30/NIlxJXq5
-         P520vYWT8p4I3TwuErmDsR5UpdbXlyAOCnt04dUJP6usQXTWdVQ/qQRScqGrtn3ZlT1i
-         YujnBD82JRkYg8ddy/VDIMSYU7otGQOJXj4KEd6J7cv0jahJZDL2stufvyUzR76x6OSn
-         1gLWGaIWe1LO3fLGlsajB4lQdfNGBWjH5QqNeExDtTzAJSiM+Suk9qSRfaBVV+9AU0M8
-         eigQ==
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=vgutUn3USCpiM7ZE91/qs/JSiFYUWNv+dmlPn+k9J/M=;
+        b=QM627r7xJJlouh6zrgruLQIwds4eKcmriAar6ie0idWkJnB0RiJXQf0LtxZng+0Vm9
+         eSl22cUyonKT0oPbov/vi8FLx80sW7S9xXgBB/7GLr3IIxRUKxui2hFG0/Y2tZGpXkIT
+         tLNJK7gNrlMU4EJRZD8sGRLUlAbA5p+dyWyGPEmdE4Poqm4PeJbHyJ+nhV/IJhghJroI
+         8nEGf3GXKP5pFMEWlOBjRRmrxYywi7zTqOzp2q3pFDoDh+ysxK0wYyVzrm33zHTBJYBL
+         sat7q3p5QIzrLYVwmINeoGwa2VL5W5oWnbRETHhhkE3agyD9TN+xdQhOqM69Mpgd6oSX
+         fgpg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=fx6OO5xoSrFOoloNsMCvFZvz3wzpFqdeDNJe3ZiTRtY=;
-        b=kH6TLezPjBFjg2sYS9F6QHxVXW3GuO4JPVchqfM3ZTQ19hS84fN/oEd0R037EsrBc+
-         eTFe9oV+CYLFa3BfhL/DsLh2B0QBxX7p97EE01zSZsMt8hW3qkJCa8mxFBrX5LXHA9T4
-         P6v18+AGY1sIafTcfVM9UTLSWvJ7dNNUUfzlU+3444LRKIwmiJ5RqPpv3x2MF4UOPbX3
-         3yrEdvPL1fNYFBLbTpSzklHP2d4RLe+3GpazOSYTbVlr4EXjobUyVnT9sUBbRGXSE33h
-         WNn4Nq5to2/SImo06SUv+EiAVF5qiT3MCIxjqPfPh4O3ifdbdVcRsMhXj3GnSLMV24Bk
-         KJQw==
-X-Gm-Message-State: AHQUAuY2u50bzOqFmFTfIE1pF/cBc9GTBY8ua3Rv+wd4j/uYNmto2Oux
-        bsZ3KGNzLLjqGsyf0IkXQLbkQA==
-X-Google-Smtp-Source: AHgI3IaPGL1uNNwSLIUFsIkOzZmamOJ9SkhsT0ckRxGbLkZaq60BtNEGnfm4euYPG9XzyOzYV6nJSw==
-X-Received: by 2002:a65:5003:: with SMTP id f3mr23117124pgo.39.1551164454136;
-        Mon, 25 Feb 2019 23:00:54 -0800 (PST)
-Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id b26sm15047362pfo.33.2019.02.25.23.00.52
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 25 Feb 2019 23:00:53 -0800 (PST)
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pcie: qcom: Add support for sdm845 PCIe controller
-Date:   Mon, 25 Feb 2019 23:01:25 -0800
-Message-Id: <20190226070125.22318-1-bjorn.andersson@linaro.org>
-X-Mailer: git-send-email 2.18.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=vgutUn3USCpiM7ZE91/qs/JSiFYUWNv+dmlPn+k9J/M=;
+        b=rYPuJ3+o0/pVzn004XOrS5X0WYalMzyPKtx1gw8FXK/hK7MamHOzVPc9htyjdBdieT
+         LwPyPDg2vbBOgQKF1GPazck0SmQcg+6WIzXpTb3G8X1qiDg91mh1MO6PzJutUwpt7Bmw
+         lQGZ7fA+o+K2/fdO8RWDtFM2toMcFKRZUBhZ7m6R2kXScpSNg9VOnYPZxF+RMMVdHGt2
+         ehdvd6sp3qrPzK4gu4W9X6a9AKgHFBvqqt3TTHZRU428yXrze2lZZLwpAGhwQF56VmqX
+         FkDS+WWG05VFeMQLEfMTHOEH3CF3dZtLkx7qCyqPmcRkxAHcM1EaRTY1uWxGeGV+7WmB
+         bV9Q==
+X-Gm-Message-State: AHQUAuZ0Dc72nil1Xpnos/LNdCSmsD54rK3zG623OokSg7ITiPUhdtXY
+        3J/Np7wcOpi/JBNvG05q2lWmPg32i72zZQpfp3PGRG5O
+X-Google-Smtp-Source: AHgI3IZTs2HHx6PXmWZBSS9uv6deRWYcUIe0HOT4aKDdiDVWgyOaQwlxWIXj6QakjEHwDKErvys+OibIJ7Vly9WuoeM=
+X-Received: by 2002:a6b:b214:: with SMTP id b20mr11593885iof.130.1551164860190;
+ Mon, 25 Feb 2019 23:07:40 -0800 (PST)
+MIME-Version: 1.0
+References: <1550157638-25112-1-git-send-email-ley.foon.tan@intel.com>
+ <1550157638-25112-2-git-send-email-ley.foon.tan@intel.com>
+ <20190219162313.GB21833@e107981-ln.cambridge.arm.com> <1551087307.2534.16.camel@intel.com>
+In-Reply-To: <1551087307.2534.16.camel@intel.com>
+From:   Ley Foon Tan <lftan.linux@gmail.com>
+Date:   Tue, 26 Feb 2019 15:07:29 +0800
+Message-ID: <CAFiDJ59U2eJPhbh9AK_N6v8rtV1XdRZek1e9sdt6BqdOBtR=LA@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] PCI: altera: Add Stratix 10 PCIe support
+To:     Ley Foon Tan <ley.foon.tan@intel.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org,
+        linux-pci <linux-pci@vger.kernel.org>, devicetree@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The SDM845 has one Gen2 and one Gen3 controller, add support for these.
+On Mon, Feb 25, 2019 at 5:35 PM Ley Foon Tan <ley.foon.tan@intel.com> wrote:
+>
+> On Tue, 2019-02-19 at 16:23 +0000, Lorenzo Pieralisi wrote:
+> > On Thu, Feb 14, 2019 at 11:20:36PM +0800, Ley Foon Tan wrote:
+> > >
+> > > Add PCIe Root Port support for Stratix 10 device.
+> > >
+> > > Main differences:
+> > Main differences with what ? We need to rewrite this commit log.
+> Differences compare with Cyclone V and Arria 10 devices.
+> I will rewrite this.
+> >
+> > >
+> > > - HIP interface to access Root Port configuration register.
+> > > - TLP programming flow:
+> > >   - One REG0 register
+> > >   - Don't need to check alignment
+> > >
+> > > Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
+> > > ---
+> > >  drivers/pci/controller/pcie-altera.c |  246
+> > > ++++++++++++++++++++++++++++++----
+> > >  1 files changed, 222 insertions(+), 24 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/controller/pcie-altera.c
+> > > b/drivers/pci/controller/pcie-altera.c
+> > > index 7d05e51..76bb6a6 100644
+> > > --- a/drivers/pci/controller/pcie-altera.c
+> > > +++ b/drivers/pci/controller/pcie-altera.c
+> > > @@ -11,6 +11,7 @@
+> > >  #include <linux/irqchip/chained_irq.h>
+> > >  #include <linux/init.h>
+> > >  #include <linux/of_address.h>
+> > > +#include <linux/of_device.h>
+> > >  #include <linux/of_irq.h>
+> > >  #include <linux/of_pci.h>
+> > >  #include <linux/pci.h>
+> > > @@ -37,7 +38,12 @@
+> > >  #define RP_LTSSM_MASK                      0x1f
+> > >  #define LTSSM_L0                   0xf
+> > >
+> > > -#define PCIE_CAP_OFFSET                    0x80
+> > > +#define S10_RP_TX_CNTRL                    0x2004
+> > > +#define S10_RP_RXCPL_REG           0x2008
+> > > +#define S10_RP_RXCPL_STATUS                0x200C
+> > > +#define S10_RP_CFG_ADDR(pcie, reg) \
+> > > +   (((pcie)->hip_base) + (reg) + (1 << 20))
+> > > +
+> > >  /* TLP configuration type 0 and 1 */
+> > >  #define TLP_FMTTYPE_CFGRD0         0x04    /*
+> > > Configuration Read Type 0 */
+> > >  #define TLP_FMTTYPE_CFGWR0         0x44    /*
+> > > Configuration Write Type 0 */
+> > > @@ -49,18 +55,19 @@
+> > >  #define RP_DEVFN                   0
+> > >  #define TLP_REQ_ID(bus, devfn)             (((bus) << 8) |
+> > > (devfn))
+> > >  #define TLP_CFGRD_DW0(pcie, bus)
+> > > \
+> > > -    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGRD0
+> > >     \
+> > > -                               : TLP_FMTTYPE_CFGRD1) << 24) |
+> > >     \
+> > > -     TLP_PAYLOAD_SIZE)
+> > > +   ((((bus == pcie->root_bus_nr) ? pcie->pcie_data->cfgrd0
+> > >     \
+> > > +                           : pcie->pcie_data->cfgrd1) << 24)
+> > > |   \
+> > > +                           TLP_PAYLOAD_SIZE)
+> > >  #define TLP_CFGWR_DW0(pcie, bus)
+> > > \
+> > > -    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGWR0
+> > >     \
+> > > -                               : TLP_FMTTYPE_CFGWR1) << 24) |
+> > >     \
+> > > -     TLP_PAYLOAD_SIZE)
+> > > +   ((((bus == pcie->root_bus_nr) ? pcie->pcie_data->cfgwr0
+> > >     \
+> > > +                           : pcie->pcie_data->cfgwr1) << 24)
+> > > |   \
+> > > +                           TLP_PAYLOAD_SIZE)
+> > >  #define TLP_CFG_DW1(pcie, tag, be) \
+> > > -    (((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag <<
+> > > 8) | (be))
+> > > +   (((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag
+> > > << 8) | (be))
+> > >  #define TLP_CFG_DW2(bus, devfn, offset)    \
+> > >                             (((bus) << 24) | ((devfn) << 16) |
+> > > (offset))
+> > >  #define TLP_COMP_STATUS(s)         (((s) >> 13) & 7)
+> > > +#define TLP_BYTE_COUNT(s)          (((s) >> 0) & 0xfff)
+> > >  #define TLP_HDR_SIZE                       3
+> > >  #define TLP_LOOP                   500
+> > >
+> > > @@ -69,14 +76,43 @@
+> > >
+> > >  #define DWORD_MASK                 3
+> > >
+> > > +#define S10_TLP_FMTTYPE_CFGRD0             0x05
+> > > +#define S10_TLP_FMTTYPE_CFGRD1             0x04
+> > > +#define S10_TLP_FMTTYPE_CFGWR0             0x45
+> > > +#define S10_TLP_FMTTYPE_CFGWR1             0x44
+> > > +
+> > > +enum altera_pcie_version {
+> > > +   ALTERA_PCIE_V1 = 0,
+> > > +   ALTERA_PCIE_V2,
+> > > +};
+> > > +
+> > >  struct altera_pcie {
+> > >     struct platform_device  *pdev;
+> > > -   void __iomem            *cra_base;      /* DT Cra */
+> > > +   void __iomem            *cra_base;
+> > > +   void __iomem            *hip_base;
+> > >     int                     irq;
+> > >     u8                      root_bus_nr;
+> > >     struct irq_domain       *irq_domain;
+> > >     struct resource         bus_range;
+> > >     struct list_head        resources;
+> > > +   const struct altera_pcie_data   *pcie_data;
+> > > +};
+> > > +
+> > > +struct altera_pcie_data {
+> > > +   int (*tlp_read_pkt)(struct altera_pcie *pcie, u32 *value);
+> > > +   void (*tlp_write_pkt)(struct altera_pcie *pcie, u32
+> > > *headers,
+> > > +                         u32 data, bool align);
+> > > +   bool (*get_link_status)(struct altera_pcie *pcie);
+> > > +   int (*rp_read_cfg)(struct altera_pcie *pcie, int where,
+> > > +                      int size, u32 *value);
+> > > +   int (*rp_write_cfg)(struct altera_pcie *pcie, u8 bus, int
+> > > where,
+> > > +                       int size, u32 value);
+> > > +   enum altera_pcie_version version;
+> > > +   u32 cap_offset;         /* PCIe capability
+> > > structure register offset */
+> > This is a duplication of struct pci_dev.pcie_cap right ?
+>
+> This is register offset in PCIe Rootport IP to access PCIe Cap
+> structure register of directly RP. This allow us to access PCIe cap
+> struct register without pci_dev.
+>
+> >
+> > >
+> > > +   u32 cfgrd0;
+> > > +   u32 cfgrd1;
+> > > +   u32 cfgwr0;
+> > > +   u32 cfgwr1;
+> > >  };
+> > >
+> > >  struct tlp_rp_regpair_t {
+> > > @@ -101,6 +137,15 @@ static bool altera_pcie_link_up(struct
+> > > altera_pcie *pcie)
+> > >     return !!((cra_readl(pcie, RP_LTSSM) & RP_LTSSM_MASK) ==
+> > > LTSSM_L0);
+> > >  }
+> > >
+> > > +static bool s10_altera_pcie_link_up(struct altera_pcie *pcie)
+> > > +{
+> > > +   void __iomem *addr = S10_RP_CFG_ADDR(pcie,
+> > > +                              pcie->pcie_data->cap_offset +
+> > > +                              PCI_EXP_LNKSTA);
+> > > +
+> > > +   return !!(readw(addr) & PCI_EXP_LNKSTA_DLLLA);
+> > > +}
+> > > +
+> > >  /*
+> > >   * Altera PCIe port uses BAR0 of RC's configuration space as the
+> > > translation
+> > >   * from PCI bus to native BUS.  Entire DDR region is mapped into
+> > > PCIe space
+> > > @@ -128,12 +173,18 @@ static void tlp_write_tx(struct altera_pcie
+> > > *pcie,
+> > >     cra_writel(pcie, tlp_rp_regdata->ctrl, RP_TX_CNTRL);
+> > >  }
+> > >
+> > > +static void s10_tlp_write_tx(struct altera_pcie *pcie, u32 reg0,
+> > > u32 ctrl)
+> > > +{
+> > > +   cra_writel(pcie, reg0, RP_TX_REG0);
+> > > +   cra_writel(pcie, ctrl, S10_RP_TX_CNTRL);
+> > > +}
+> > > +
+> > >  static bool altera_pcie_valid_device(struct altera_pcie *pcie,
+> > >                                  struct pci_bus *bus, int dev)
+> > >  {
+> > >     /* If there is no link, then there is no device */
+> > >     if (bus->number != pcie->root_bus_nr) {
+> > > -           if (!altera_pcie_link_up(pcie))
+> > > +           if (!pcie->pcie_data->get_link_status(pcie))
+> > >                     return false;
+> > >     }
+> > >
+> > > @@ -183,6 +234,46 @@ static int tlp_read_packet(struct altera_pcie
+> > > *pcie, u32 *value)
+> > >     return PCIBIOS_DEVICE_NOT_FOUND;
+> > >  }
+> > >
+> > > +static int s10_tlp_read_packet(struct altera_pcie *pcie, u32
+> > > *value)
+> > > +{
+> > > +   int i;
+> > > +   u32 ctrl;
+> > > +   u32 comp_status;
+> > > +   u32 dw[4];
+> > > +   u32 count = 0;
+> > > +
+> > > +   for (i = 0; i < TLP_LOOP; i++) {
+> > > +           ctrl = cra_readl(pcie, S10_RP_RXCPL_STATUS);
+> > > +           if (!(ctrl & RP_RXCPL_SOP))
+> > > +                   continue;
+> > > +
+> > > +           /* Read first DW */
+> > > +           dw[count++] = cra_readl(pcie, S10_RP_RXCPL_REG);
+> > > +
+> > > +           /* Poll for EOP */
+> > > +           for (i = 0; i < TLP_LOOP; i++) {
+> > > +                   ctrl = cra_readl(pcie,
+> > > S10_RP_RXCPL_STATUS);
+> > > +                   dw[count++] = cra_readl(pcie,
+> > > S10_RP_RXCPL_REG);
+> > I think you'd better add a check on count lest it can overflow dw[].
+> Okay, will check that.
+> >
+> > >
+> > > +                   if (ctrl & RP_RXCPL_EOP) {
+> > > +                           comp_status =
+> > > TLP_COMP_STATUS(dw[1]);
+> > > +                           if (comp_status)
+> > > +                                   return
+> > > PCIBIOS_DEVICE_NOT_FOUND;
+> > > +
+> > > +                           if (value &&
+> > > +                               TLP_BYTE_COUNT(dw[1]) ==
+> > > sizeof(u32) &&
+> > > +                               count >= 3)
+> > > +                                   *value = dw[3];
+> > > +
+> > > +                           return PCIBIOS_SUCCESSFUL;
+> > > +                   }
+> > > +           }
+> > > +
+> > > +           udelay(5);
+> > > +   }
+> > > +
+> > > +   return PCIBIOS_DEVICE_NOT_FOUND;
+> > > +}
+> > > +
+> > >  static void tlp_write_packet(struct altera_pcie *pcie, u32
+> > > *headers,
+> > >                          u32 data, bool align)
+> > >  {
+> > > @@ -210,6 +301,15 @@ static void tlp_write_packet(struct
+> > > altera_pcie *pcie, u32 *headers,
+> > >     tlp_write_tx(pcie, &tlp_rp_regdata);
+> > >  }
+> > >
+> > > +static void s10_tlp_write_packet(struct altera_pcie *pcie, u32
+> > > *headers,
+> > > +                            u32 data, bool dummy)
+> > > +{
+> > > +   s10_tlp_write_tx(pcie, headers[0], RP_TX_SOP);
+> > > +   s10_tlp_write_tx(pcie, headers[1], 0);
+> > > +   s10_tlp_write_tx(pcie, headers[2], 0);
+> > > +   s10_tlp_write_tx(pcie, data, RP_TX_EOP);
+> > > +}
+> > > +
+> > >  static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus,
+> > > u32 devfn,
+> > >                           int where, u8 byte_en, u32 *value)
+> > >  {
+> > > @@ -219,9 +319,9 @@ static int tlp_cfg_dword_read(struct
+> > > altera_pcie *pcie, u8 bus, u32 devfn,
+> > >     headers[1] = TLP_CFG_DW1(pcie, TLP_READ_TAG, byte_en);
+> > >     headers[2] = TLP_CFG_DW2(bus, devfn, where);
+> > >
+> > > -   tlp_write_packet(pcie, headers, 0, false);
+> > > +   pcie->pcie_data->tlp_write_pkt(pcie, headers, 0, false);
+> > >
+> > > -   return tlp_read_packet(pcie, value);
+> > > +   return pcie->pcie_data->tlp_read_pkt(pcie, value);
+> > >  }
+> > >
+> > >  static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus,
+> > > u32 devfn,
+> > > @@ -236,11 +336,11 @@ static int tlp_cfg_dword_write(struct
+> > > altera_pcie *pcie, u8 bus, u32 devfn,
+> > >
+> > >     /* check alignment to Qword */
+> > >     if ((where & 0x7) == 0)
+> > > -           tlp_write_packet(pcie, headers, value, true);
+> > > +           pcie->pcie_data->tlp_write_pkt(pcie, headers,
+> > > value, true);
+> > >     else
+> > > -           tlp_write_packet(pcie, headers, value, false);
+> > > +           pcie->pcie_data->tlp_write_pkt(pcie, headers,
+> > > value, false);
+> > >
+> > > -   ret = tlp_read_packet(pcie, NULL);
+> > > +   ret = pcie->pcie_data->tlp_read_pkt(pcie, NULL);
+> > >     if (ret != PCIBIOS_SUCCESSFUL)
+> > >             return ret;
+> > >
+> > > @@ -254,6 +354,53 @@ static int tlp_cfg_dword_write(struct
+> > > altera_pcie *pcie, u8 bus, u32 devfn,
+> > >     return PCIBIOS_SUCCESSFUL;
+> > >  }
+> > >
+> > > +static int s10_rp_read_cfg(struct altera_pcie *pcie, int where,
+> > > +                      int size, u32 *value)
+> > > +{
+> > > +   void *addr = S10_RP_CFG_ADDR(pcie, where);
+> > > +
+> > > +   switch (size) {
+> > > +   case 1:
+> > > +           *value = readb(addr);
+> > > +           break;
+> > > +   case 2:
+> > > +           *value = readw(addr);
+> > > +           break;
+> > > +   default:
+> > > +           *value = readl(addr);
+> > > +           break;
+> > > +   }
+> > This boilerplace could be avoided if you used generic config
+> > accessors (ie pci_generic_config_read()/write()).
+> Okay. I will change this.
+I just remembered that, we can't use pci_generic_config_read/write()
+here because we need access to
+Root port PCIe capabilities struct register to retrain PCIe link
+before struct pci_bus *bus is available.
+pci_generic_config_read/write() function needs struct pci_bus *bus.
 
-Due to lack of hardware only the Gen2 controller has been verified.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- .../devicetree/bindings/pci/qcom,pcie.txt     |  19 +++
- drivers/pci/controller/dwc/pcie-qcom.c        | 146 ++++++++++++++++++
- 2 files changed, 165 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 1fd703bd73e0..2cf92ed39499 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -10,6 +10,7 @@
- 			- "qcom,pcie-msm8996" for msm8996 or apq8096
- 			- "qcom,pcie-ipq4019" for ipq4019
- 			- "qcom,pcie-ipq8074" for ipq8074
-+			- "qcom,pcie-sdm845" for sdm845
- 
- - reg:
- 	Usage: required
-@@ -116,6 +117,18 @@
- 			- "ahb"		AHB clock
- 			- "aux"		Auxiliary clock
- 
-+- clock-names:
-+	Usage: required for sdm845
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "aux"		Auxiliary clock
-+			- "cfg"		Configuration clock
-+			- "bus_master"	Master AXI clock
-+			- "bus_slave"	Slave AXI clock
-+			- "slave_q2a"	Slave Q2A clock
-+			- "tbu"		PCIe TBU clock
-+			- "pipe"	PIPE clock
-+
- - resets:
- 	Usage: required
- 	Value type: <prop-encoded-array>
-@@ -167,6 +180,12 @@
- 			- "ahb"			AHB Reset
- 			- "axi_m_sticky"	AXI Master Sticky reset
- 
-+- reset-names:
-+	Usage: required for sdm845
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "pci"			PCIe core reset
-+
- - power-domains:
- 	Usage: required for apq8084 and msm8996/apq8096
- 	Value type: <prop-encoded-array>
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index d185ea5fe996..5147454a6ae5 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -54,6 +54,7 @@
- #define PCIE20_PARF_LTSSM			0x1B0
- #define PCIE20_PARF_SID_OFFSET			0x234
- #define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
-+#define PCIE20_PARF_DEVICE_TYPE			0x1000
- 
- #define PCIE20_ELBI_SYS_CTRL			0x04
- #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
-@@ -80,6 +81,8 @@
- #define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
- #define SLV_ADDR_SPACE_SZ			0x10000000
- 
-+#define DEVICE_TYPE_RC				0x4
-+
- #define QCOM_PCIE_2_1_0_MAX_SUPPLY	3
- struct qcom_pcie_resources_2_1_0 {
- 	struct clk *iface_clk;
-@@ -139,12 +142,21 @@ struct qcom_pcie_resources_2_3_3 {
- 	struct reset_control *rst[7];
- };
- 
-+struct qcom_pcie_resources_2_7_0 {
-+	struct clk_bulk_data clks[6];
-+	struct regulator_bulk_data supplies[2];
-+
-+	struct reset_control *pci_reset;
-+	struct clk *pipe_clk;
-+};
-+
- union qcom_pcie_resources {
- 	struct qcom_pcie_resources_1_0_0 v1_0_0;
- 	struct qcom_pcie_resources_2_1_0 v2_1_0;
- 	struct qcom_pcie_resources_2_3_2 v2_3_2;
- 	struct qcom_pcie_resources_2_3_3 v2_3_3;
- 	struct qcom_pcie_resources_2_4_0 v2_4_0;
-+	struct qcom_pcie_resources_2_7_0 v2_7_0;
- };
- 
- struct qcom_pcie;
-@@ -1076,6 +1088,129 @@ static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
- 	return ret;
- }
- 
-+static int qcom_pcie_get_resources_2_7_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	int ret;
-+
-+	res->pci_reset = devm_reset_control_get_exclusive(dev, "pci");
-+	if (IS_ERR(res->pci_reset))
-+		return PTR_ERR(res->pci_reset);
-+
-+	res->supplies[0].supply = "vdda";
-+	res->supplies[1].supply = "vddpe-3v3";
-+	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(res->supplies),
-+				      res->supplies);
-+	if (ret)
-+		return ret;
-+
-+	res->clks[0].id = "aux";
-+	res->clks[1].id = "cfg";
-+	res->clks[2].id = "bus_master";
-+	res->clks[3].id = "bus_slave";
-+	res->clks[4].id = "slave_q2a";
-+	res->clks[5].id = "tbu";
-+
-+	ret = devm_clk_bulk_get(dev, ARRAY_SIZE(res->clks), res->clks);
-+	if (ret < 0)
-+		return ret;
-+
-+	res->pipe_clk = devm_clk_get(dev, "pipe");
-+	return PTR_ERR_OR_ZERO(res->pipe_clk);
-+}
-+
-+static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	u32 val;
-+	int ret;
-+
-+	ret = regulator_bulk_enable(ARRAY_SIZE(res->supplies), res->supplies);
-+	if (ret < 0) {
-+		dev_err(dev, "cannot enable regulators\n");
-+		return ret;
-+	}
-+
-+	ret = clk_bulk_prepare_enable(ARRAY_SIZE(res->clks), res->clks);
-+	if (ret < 0)
-+		goto err_disable_regulators;
-+
-+	ret = reset_control_assert(res->pci_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert pci reset\n");
-+		return ret;
-+	}
-+
-+	msleep(10);
-+
-+	ret = reset_control_deassert(res->pci_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert pci reset\n");
-+		return ret;
-+	}
-+
-+	clk_prepare_enable(res->pipe_clk);
-+
-+	/* configure PCIe to RC mode */
-+	writel(DEVICE_TYPE_RC, pcie->parf + PCIE20_PARF_DEVICE_TYPE);
-+
-+	/* enable PCIe clocks and resets */
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= ~BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	/* change DBI base address */
-+	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-+
-+	/* MAC PHY_POWERDOWN MUX DISABLE  */
-+	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	val &= ~BIT(29);
-+	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-+
-+	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+	val |= BIT(4);
-+	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-+		val |= BIT(31);
-+		writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT);
-+	}
-+
-+	return 0;
-+
-+err_disable_regulators:
-+	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-+
-+	return ret;
-+}
-+
-+static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-+
-+	clk_bulk_disable_unprepare(ARRAY_SIZE(res->clks), res->clks);
-+	regulator_bulk_disable(ARRAY_SIZE(res->supplies), res->supplies);
-+}
-+
-+static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-+
-+	return clk_prepare_enable(res->pipe_clk);
-+}
-+
-+static void qcom_pcie_post_deinit_2_7_0(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-+
-+	clk_disable_unprepare(res->pipe_clk);
-+}
-+
- static int qcom_pcie_link_up(struct dw_pcie *pci)
- {
- 	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
-@@ -1192,6 +1327,16 @@ static const struct qcom_pcie_ops ops_2_3_3 = {
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- };
- 
-+/* Qcom IP rev.: 2.7.0	Synopsys IP rev.: 4.30a */
-+static const struct qcom_pcie_ops ops_2_7_0 = {
-+	.get_resources = qcom_pcie_get_resources_2_7_0,
-+	.init = qcom_pcie_init_2_7_0,
-+	.deinit = qcom_pcie_deinit_2_7_0,
-+	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
-+	.post_init = qcom_pcie_post_init_2_7_0,
-+	.post_deinit = qcom_pcie_post_deinit_2_7_0,
-+};
-+
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.link_up = qcom_pcie_link_up,
- };
-@@ -1306,6 +1451,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
- 	{ .compatible = "qcom,pcie-ipq8074", .data = &ops_2_3_3 },
- 	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
-+	{ .compatible = "qcom,pcie-sdm845", .data = &ops_2_7_0 },
- 	{ }
- };
- 
--- 
-2.18.0
-
+Regards
+Ley Foon
