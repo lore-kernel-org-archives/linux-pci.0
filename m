@@ -1,144 +1,170 @@
-Return-Path: <SRS0=hk3Y=RB=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=6dzI=RC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=no autolearn_force=no
+X-Spam-Level: 
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BC65C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 23:44:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20871C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 04:25:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED5AE218DE
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Feb 2019 23:44:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D789221852
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 04:25:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="UZvFI2Gj"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cnICtRaJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729086AbfBZXo2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Feb 2019 18:44:28 -0500
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:35826 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729030AbfBZXo2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2019 18:44:28 -0500
-Received: by mail-pg1-f196.google.com with SMTP id e17so4925896pgd.2
-        for <linux-pci@vger.kernel.org>; Tue, 26 Feb 2019 15:44:27 -0800 (PST)
+        id S1729786AbfB0EZu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Feb 2019 23:25:50 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:44575 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729781AbfB0EZt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2019 23:25:49 -0500
+Received: by mail-pf1-f195.google.com with SMTP id a3so7331903pff.11
+        for <linux-pci@vger.kernel.org>; Tue, 26 Feb 2019 20:25:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
+        d=linaro.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=OFnLT5XdPjqDxL6/K91hoXuMuyo4KTpfIXDgQ+N2d3Y=;
-        b=UZvFI2GjkVuuFoyBvh4bJSdn7ATJZRWjS30gFEmLU37mK1BBfLrV/tvmc9PnixBT8M
-         So+FliEBPa/oBXiYdELL9iDYVDLDZxCO9RFLp2EA+64bpeYbFQDVdw4oHDBQkGSYTdkG
-         cVFtuhjbYqBrxuCAhUOUjCSKls1M7GaSlU5S0=
+        bh=I5kl3wf/z6YZV6cSlDS8l+q/iQTIwsK6MWTD2KZJNxI=;
+        b=cnICtRaJcqkLnppggM1CuQlFonvAGbPuOsaTpry9MdLZJhf0aJPaXQJB4ftGbuYBy5
+         hYBZ+FKMetizUFfJF5s97nsjB1HnTCw2Mt87ByJiWK6HDvnQUYn11JZF9aNSdqco8WUH
+         6vjZBTi94DrQO8HfNRzEBY8tWIY6dmarhi794WBUMf0hh0fb47uEVte0Y9m4sK2dmLC3
+         x8zgOH5bvO3NQ8/8cQBr+uxIHoZPeMXwq/BvZ9YzH20Zj40wAwAI45BEPY5v4OVVQM4W
+         4H5En0lheFCPQ7z0Gd8UCZv+2lmWgmVLdI4RQ8S26jXJHaTnEWZozeaMs4M7QNn8XxOW
+         923A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=OFnLT5XdPjqDxL6/K91hoXuMuyo4KTpfIXDgQ+N2d3Y=;
-        b=e4EvBUD7BAly/ivfc6Vk2noc6tX2lEgtDYBdimv2YywpX6xhIGkfc65qc5krss19i0
-         2ltY6J4aGvNzi2QMiW6CiKw/YHGZEg33rX/0SiDjsoqI2+ao+NwkuMkiXKK6o8r7JUAN
-         zvafKvEUXTQvEQXmJnp0hSoSlqv93RgqkkgEp4Tfl89ks7ocsVoi/1OG6v2KYGF6h+E9
-         aeVoi+NaBNzFJ4FS2BPvFack8UvyymHUt5qZfJR0d6GZFH4UbSgBAtoaZkttvpeI9OsI
-         93azarZzA4ROPF9j5LfbE4T50nlumo4hC+fm5mT1GVGyEHCPfZOD7RYWd4qoPPC/xhuD
-         1EkQ==
-X-Gm-Message-State: AHQUAubUEPzX4i7jbB4pXgHBGNPrZIa0klfyOMSs/azoXccODfEiuf9E
-        YstkJabqwtkhhYtVysvcLWNl+Q==
-X-Google-Smtp-Source: AHgI3IZ3b25RdTEFdcJ4w+m0hBHnIhGkp5dN+7k66Ly/vLQ284p0Gvn7FT9oPhFP4BcM72QTK1hXgA==
-X-Received: by 2002:a65:4147:: with SMTP id x7mr22593pgp.54.1551224666997;
-        Tue, 26 Feb 2019 15:44:26 -0800 (PST)
-Received: from google.com ([2620:15c:202:1:534:b7c0:a63c:460c])
-        by smtp.gmail.com with ESMTPSA id q62sm24471018pfi.183.2019.02.26.15.44.25
+        bh=I5kl3wf/z6YZV6cSlDS8l+q/iQTIwsK6MWTD2KZJNxI=;
+        b=rdLdhBgNu8WvCo2R5BQSsVa/KDYaviBjx5wiKCeVEpRu4LbH9LDVpL4o+VEpOlkf/t
+         62N7q/+975WxPATzbexfkOXzte2bc4gzyx8a6IyVkTfLFIkdwOpMP1VqbckX4FjKoN5n
+         hEesiQsOlLZ4GR6B6FgZplKC4PAOqXRYgwwvtr5EO5lvrvOgDV+1j5IWoe997YeH/63D
+         1gIrx+CHD9AJtl2LTNRSknscAZe4Q+zwz66DOG1wkmd+pigHWafwbrbWXcjCRqtFTWIy
+         1hUcUqy02mlifk+Cai/+6GTX2fVwJaXTHAygFJPpUP08qUEvKnbBZLIXWo+9lTNVEGtO
+         lGBw==
+X-Gm-Message-State: AHQUAubD97Yju+Z66iGFQMCjEzR8+aussMuGxQzziuyPfVm9Oqcm0lQi
+        RCZktNLEPKI5Wqar0GyMwb0Elg==
+X-Google-Smtp-Source: AHgI3IZ1RkujPNmWLPJLBk7DjTtPlbLB2lF3E0qqdsH7+rjhJRbaFd7rFJqZKaw1UVM3AJzKjk3r7g==
+X-Received: by 2002:a65:5b4f:: with SMTP id y15mr1038577pgr.445.1551241548643;
+        Tue, 26 Feb 2019 20:25:48 -0800 (PST)
+Received: from minitux (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id n75sm28131460pfb.39.2019.02.26.20.25.47
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 26 Feb 2019 15:44:25 -0800 (PST)
-Date:   Tue, 26 Feb 2019 15:44:23 -0800
-From:   Brian Norris <briannorris@chromium.org>
-To:     Marc Zyngier <marc.zyngier@arm.com>
-Cc:     Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Amitkumar Karwar <amitkarwar@gmail.com>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Xinming Hu <huxinming820@gmail.com>,
-        Devicetree List <devicetree@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-rockchip@lists.infradead.org,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH 0/4] mwifiex PCI/wake-up interrupt fixes
-Message-ID: <20190226234422.GD174696@google.com>
-References: <20190224140426.3267-1-marc.zyngier@arm.com>
- <CAKv+Gu9OOzOxx0rTAZqM8r4q_hRmOp3b=KP7fwgNeiu67FCApA@mail.gmail.com>
- <5310b73b-4821-6dff-b9c0-34c59fb7fd72@arm.com>
- <CAKv+Gu_=bQyVZqgUnJm9moCcaCcpDrag6NWGEpaR65=pMiTFJQ@mail.gmail.com>
- <0c433a70-27f6-76ad-c46c-6015de1ffaa4@arm.com>
+        Tue, 26 Feb 2019 20:25:47 -0800 (PST)
+Date:   Tue, 26 Feb 2019 20:25:45 -0800
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Rob Herring <robh@kernel.org>
+Cc:     Mark Rutland <mark.rutland@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-clk@vger.kernel.org
+Subject: Re: [PATCH v2 2/7] dt-bindings: phy: Add binding for Qualcomm PCIe2
+ PHY
+Message-ID: <20190227042545.GE5511@minitux>
+References: <20190219060407.15263-1-bjorn.andersson@linaro.org>
+ <20190219060407.15263-3-bjorn.andersson@linaro.org>
+ <20190222195758.GA26984@bogus>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0c433a70-27f6-76ad-c46c-6015de1ffaa4@arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190222195758.GA26984@bogus>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+On Fri 22 Feb 11:57 PST 2019, Rob Herring wrote:
 
-On Tue, Feb 26, 2019 at 05:14:00PM +0000, Marc Zyngier wrote:
-> On 26/02/2019 16:21, Ard Biesheuvel wrote:
-> > On Mon, 25 Feb 2019 at 15:53, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> >> It outlines one thing: If you have to interpret per-device PCI
-> >> properties from DT, you're in for serious trouble. I should get some
-> >> better HW.
-> >>
+> On Mon, Feb 18, 2019 at 10:04:02PM -0800, Bjorn Andersson wrote:
+> > The Qualcomm PCIe2 PHY is a Synopsys based PCIe PHY found in a number of
+> > Qualcomm platforms, add a binding to describe this.
 > > 
-> > Yeah, it obviously makes no sense at all for the interrupt parent of a
-> > PCI device to deviate from the host bridge's interrupt parent, and
-> > it's quite unfortunate that we can't simply ban it now that the cat is
-> > out of the bag already.
+> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > ---
+> >  .../bindings/phy/qcom-pcie2-phy.txt           | 40 +++++++++++++++++++
+> >  1 file changed, 40 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt
 > > 
-> > Arguably, the wake up widget is not part of the PCI device, but I have
-> > no opinion as to whether it is better modeling it as a sub device as
-> > you are proposing or as an entirely separate device referenced via a
-> > phandle.
+> > diff --git a/Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt b/Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt
+> > new file mode 100644
+> > index 000000000000..7da02f9d78c7
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt
+> > @@ -0,0 +1,40 @@
+> > +Qualcomm PCIe2 PHY controller
+> > +=============================
+> > +
+> > +The Qualcomm PCIe2 PHY is a Synopsys based phy found in a number of Qualcomm
+> > +platforms.
+> > +
+> > +Required properties:
+> > + - compatible: compatible list, should be:
+> > +	       "qcom,qcs404-pcie2-phy", "qcom,pcie2-phy"
+> > +
+> > + - reg: offset and length of the PHY register set.
+> > + - #phy-cells: must be 0.
+> > +
+> > + - clocks: a clock-specifier pair for the "pipe" clock
+> > +
+> > + - vdda-vp-supply: phandle to low voltage regulator
+> > + - vdda-vph-supply: phandle to high voltage regulator
+> > +
+> > + - resets: reset-specifier pairs for the "phy" and "pipe" resets
+> > + - reset-names: list of resets, should contain:
+> > +		"phy" and "pipe"
+> > +
+> > + - clock-output-names: name of the outgoing clock signal from the PHY PLL
 > 
-> It is not that clear. The widget seems to be an integral part of the
-> device, as it is the same basic IP that is used for SDIO and USB.
+> Not valid to have this without '#clock-cells'.
+> 
 
-It's not really a widget specific to this IP. It's just a GPIO. It so
-happens that both SDIO and PCIe designs have wanted to use a GPIO for
-wakeup, as many other devices do. (Note: it's not just cheap ARM
-devices; pulling up some Intel Chromebook designs, I see the exact same
-WAKE# GPIO on their PCIe WiFi as well.)
+This happens to work today as we don't describe &gcc's dependency on
+this, but just rely on the global clock namespace. But it should be
+there, so I'll respin this.
 
-> It looks like the good old pre-PCI-2.2 days, where you had to have a
-> separate cable between your network card and the base-board for the
-> wake-up interrupt to be delivered. Starting with PCI-2.2, the bus can
-> carry the signal just fine. With PCIe, it should just be an interrupt
-> TLP sent to the RC, but that's obviously not within the capabilities of
-> the HW.
+> Though I'm confused how this and the input clock name seem to match.
+> 
 
-You should search the PCI Express specification for WAKE#. There is a
-clearly-documented "side-band wake" feature that is part of the
-standard, as an alternative to in-band TLP wakeup. While you claim this
-is an ancient thing, it in fact still in use on many systems -- it's
-just usually abstracted better by ACPI firmware, whereas the dirty
-laundry is aired a bit more on a Device Tree system. And we got it
-wrong.
+The PHY generates the clock we call "pcie_0_pipe_clk" which is fed into
+the global clock controller (gcc), where it can be gated (and divided)
+and then fed back to both the PHY and the controller as
+"gcc_pcie_0_pipe_clk".
 
-> Anyway, it'd be good if the Marvell people could chime in and let us
-> know how they'd prefer to handle this.
 
-I'm not sure this is really a Marvell-specific problem. (Well, except
-for the marvell,wakeup-pin silliness, which is somewhat orthogonal.) In
-fact, if we cared a little more about Wake-on-WiFi, we'd be trying to
-support the same (out-of-band WAKE#) with other WiFi drivers.
+Thanks for the review Rob.
 
-Brian
+Regards,
+Bjorn
+
+> > +
+> > +Example:
+> > + phy@7786000 {
+> > +	compatible = "qcom,qcs404-pcie2-phy", "qcom,pcie2-phy";
+> > +	reg = <0x07786000 0xb8>;
+> > +
+> > +	clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
+> > +	resets = <&gcc GCC_PCIEPHY_0_PHY_BCR>,
+> > +	         <&gcc GCC_PCIE_0_PIPE_ARES>;
+> > +	reset-names = "phy", "pipe";
+> > +
+> > +	vdda-vp-supply = <&vreg_l3_1p05>;
+> > +	vdda-vph-supply = <&vreg_l5_1p8>;
+> > +
+> > +	clock-output-names = "pcie_0_pipe_clk";
+> > +	#phy-cells = <0>;
+> > + };
+> > -- 
+> > 2.18.0
+> > 
