@@ -2,169 +2,96 @@ Return-Path: <SRS0=6dzI=RC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20871C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 04:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E04C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 04:40:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D789221852
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 04:25:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cnICtRaJ"
+	by mail.kernel.org (Postfix) with ESMTP id 66404218D0
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 04:40:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729786AbfB0EZu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Feb 2019 23:25:50 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:44575 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729781AbfB0EZt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Feb 2019 23:25:49 -0500
-Received: by mail-pf1-f195.google.com with SMTP id a3so7331903pff.11
-        for <linux-pci@vger.kernel.org>; Tue, 26 Feb 2019 20:25:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=I5kl3wf/z6YZV6cSlDS8l+q/iQTIwsK6MWTD2KZJNxI=;
-        b=cnICtRaJcqkLnppggM1CuQlFonvAGbPuOsaTpry9MdLZJhf0aJPaXQJB4ftGbuYBy5
-         hYBZ+FKMetizUFfJF5s97nsjB1HnTCw2Mt87ByJiWK6HDvnQUYn11JZF9aNSdqco8WUH
-         6vjZBTi94DrQO8HfNRzEBY8tWIY6dmarhi794WBUMf0hh0fb47uEVte0Y9m4sK2dmLC3
-         x8zgOH5bvO3NQ8/8cQBr+uxIHoZPeMXwq/BvZ9YzH20Zj40wAwAI45BEPY5v4OVVQM4W
-         4H5En0lheFCPQ7z0Gd8UCZv+2lmWgmVLdI4RQ8S26jXJHaTnEWZozeaMs4M7QNn8XxOW
-         923A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=I5kl3wf/z6YZV6cSlDS8l+q/iQTIwsK6MWTD2KZJNxI=;
-        b=rdLdhBgNu8WvCo2R5BQSsVa/KDYaviBjx5wiKCeVEpRu4LbH9LDVpL4o+VEpOlkf/t
-         62N7q/+975WxPATzbexfkOXzte2bc4gzyx8a6IyVkTfLFIkdwOpMP1VqbckX4FjKoN5n
-         hEesiQsOlLZ4GR6B6FgZplKC4PAOqXRYgwwvtr5EO5lvrvOgDV+1j5IWoe997YeH/63D
-         1gIrx+CHD9AJtl2LTNRSknscAZe4Q+zwz66DOG1wkmd+pigHWafwbrbWXcjCRqtFTWIy
-         1hUcUqy02mlifk+Cai/+6GTX2fVwJaXTHAygFJPpUP08qUEvKnbBZLIXWo+9lTNVEGtO
-         lGBw==
-X-Gm-Message-State: AHQUAubD97Yju+Z66iGFQMCjEzR8+aussMuGxQzziuyPfVm9Oqcm0lQi
-        RCZktNLEPKI5Wqar0GyMwb0Elg==
-X-Google-Smtp-Source: AHgI3IZ1RkujPNmWLPJLBk7DjTtPlbLB2lF3E0qqdsH7+rjhJRbaFd7rFJqZKaw1UVM3AJzKjk3r7g==
-X-Received: by 2002:a65:5b4f:: with SMTP id y15mr1038577pgr.445.1551241548643;
-        Tue, 26 Feb 2019 20:25:48 -0800 (PST)
-Received: from minitux (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id n75sm28131460pfb.39.2019.02.26.20.25.47
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 26 Feb 2019 20:25:47 -0800 (PST)
-Date:   Tue, 26 Feb 2019 20:25:45 -0800
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Mark Rutland <mark.rutland@arm.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-clk@vger.kernel.org
-Subject: Re: [PATCH v2 2/7] dt-bindings: phy: Add binding for Qualcomm PCIe2
- PHY
-Message-ID: <20190227042545.GE5511@minitux>
-References: <20190219060407.15263-1-bjorn.andersson@linaro.org>
- <20190219060407.15263-3-bjorn.andersson@linaro.org>
- <20190222195758.GA26984@bogus>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190222195758.GA26984@bogus>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+        id S1729356AbfB0Ekm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Feb 2019 23:40:42 -0500
+Received: from mxhk.zte.com.cn ([63.217.80.70]:44054 "EHLO mxhk.zte.com.cn"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729265AbfB0Ekm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Feb 2019 23:40:42 -0500
+Received: from mse01.zte.com.cn (unknown [10.30.3.20])
+        by Forcepoint Email with ESMTPS id CEF291E758D9ADE3065E;
+        Wed, 27 Feb 2019 12:40:38 +0800 (CST)
+Received: from notes_smtp.zte.com.cn ([10.30.1.239])
+        by mse01.zte.com.cn with ESMTP id x1R4eWI3003595;
+        Wed, 27 Feb 2019 12:40:32 +0800 (GMT-8)
+        (envelope-from wen.yang99@zte.com.cn)
+Received: from fox-host8.localdomain ([10.74.120.8])
+          by szsmtp06.zte.com.cn (Lotus Domino Release 8.5.3FP6)
+          with ESMTP id 2019022712405358-2029105 ;
+          Wed, 27 Feb 2019 12:40:53 +0800 
+From:   Wen Yang <wen.yang99@zte.com.cn>
+To:     benh@kernel.crashing.org
+Cc:     paulus@samba.org, mpe@ellerman.id.au, tyreld@linux.vnet.ibm.com,
+        bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ryder.lee@mediatek.com, lorenzo.pieralisi@arm.com,
+        matthias.bgg@gmail.com, linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, rjui@broadcom.com,
+        sbranden@broadcom.com, bcm-kernel-feedback-list@broadcom.com,
+        thomas.petazzoni@bootlin.com, shawn.lin@rock-chips.com,
+        heiko@sntech.de, linux-rockchip@lists.infradead.org,
+        minghuan.Lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
+        hayashi.kunihiko@socionext.com, yamada.masahiro@socionext.com,
+        kishon@ti.com, linux-omap@vger.kernel.org, wang.yi59@zte.com.cn,
+        Wen Yang <wen.yang99@zte.com.cn>
+Subject: [PATCH 1/8] PCI: dwc: pci-dra7xx: fix a leaked reference by adding missing of_node_put
+Date:   Wed, 27 Feb 2019 12:40:36 +0800
+Message-Id: <1551242443-27300-1-git-send-email-wen.yang99@zte.com.cn>
+X-Mailer: git-send-email 1.8.3.1
+X-MIMETrack: Itemize by SMTP Server on SZSMTP06/server/zte_ltd(Release 8.5.3FP6|November
+ 21, 2013) at 2019-02-27 12:40:53,
+        Serialize by Router on notes_smtp/zte_ltd(Release 9.0.1FP7|August  17, 2016) at
+ 2019-02-27 12:40:25,
+        Serialize complete at 2019-02-27 12:40:25
+X-MAIL: mse01.zte.com.cn x1R4eWI3003595
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri 22 Feb 11:57 PST 2019, Rob Herring wrote:
+The call to of_get_next_child returns a node pointer with refcount
+incremented thus it must be explicitly decremented after the last
+usage.
+irq_domain_add_linear also calls of_node_get to increase refcount,
+so irq_domain will not be affected when it is released.
 
-> On Mon, Feb 18, 2019 at 10:04:02PM -0800, Bjorn Andersson wrote:
-> > The Qualcomm PCIe2 PHY is a Synopsys based PCIe PHY found in a number of
-> > Qualcomm platforms, add a binding to describe this.
-> > 
-> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> > ---
-> >  .../bindings/phy/qcom-pcie2-phy.txt           | 40 +++++++++++++++++++
-> >  1 file changed, 40 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt b/Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt
-> > new file mode 100644
-> > index 000000000000..7da02f9d78c7
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/phy/qcom-pcie2-phy.txt
-> > @@ -0,0 +1,40 @@
-> > +Qualcomm PCIe2 PHY controller
-> > +=============================
-> > +
-> > +The Qualcomm PCIe2 PHY is a Synopsys based phy found in a number of Qualcomm
-> > +platforms.
-> > +
-> > +Required properties:
-> > + - compatible: compatible list, should be:
-> > +	       "qcom,qcs404-pcie2-phy", "qcom,pcie2-phy"
-> > +
-> > + - reg: offset and length of the PHY register set.
-> > + - #phy-cells: must be 0.
-> > +
-> > + - clocks: a clock-specifier pair for the "pipe" clock
-> > +
-> > + - vdda-vp-supply: phandle to low voltage regulator
-> > + - vdda-vph-supply: phandle to high voltage regulator
-> > +
-> > + - resets: reset-specifier pairs for the "phy" and "pipe" resets
-> > + - reset-names: list of resets, should contain:
-> > +		"phy" and "pipe"
-> > +
-> > + - clock-output-names: name of the outgoing clock signal from the PHY PLL
-> 
-> Not valid to have this without '#clock-cells'.
-> 
+Detected by coccinelle with the following warnings:
+./drivers/pci/controller/dwc/pci-dra7xx.c:252:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 241, but without a corresponding object release within this function.
+./drivers/pci/controller/dwc/pci-dra7xx.c:255:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 241, but without a corresponding object release within this function.
 
-This happens to work today as we don't describe &gcc's dependency on
-this, but just rely on the global clock namespace. But it should be
-there, so I'll respin this.
+Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-omap@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Though I'm confused how this and the input clock name seem to match.
-> 
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index ae84a69..627c91d 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -247,6 +247,7 @@ static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
+ 
+ 	dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+ 						   &intx_domain_ops, pp);
++	of_node_put(pcie_intc_node);
+ 	if (!dra7xx->irq_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+ 		return -ENODEV;
+-- 
+2.9.5
 
-The PHY generates the clock we call "pcie_0_pipe_clk" which is fed into
-the global clock controller (gcc), where it can be gated (and divided)
-and then fed back to both the PHY and the controller as
-"gcc_pcie_0_pipe_clk".
-
-
-Thanks for the review Rob.
-
-Regards,
-Bjorn
-
-> > +
-> > +Example:
-> > + phy@7786000 {
-> > +	compatible = "qcom,qcs404-pcie2-phy", "qcom,pcie2-phy";
-> > +	reg = <0x07786000 0xb8>;
-> > +
-> > +	clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
-> > +	resets = <&gcc GCC_PCIEPHY_0_PHY_BCR>,
-> > +	         <&gcc GCC_PCIE_0_PIPE_ARES>;
-> > +	reset-names = "phy", "pipe";
-> > +
-> > +	vdda-vp-supply = <&vreg_l3_1p05>;
-> > +	vdda-vph-supply = <&vreg_l5_1p8>;
-> > +
-> > +	clock-output-names = "pcie_0_pipe_clk";
-> > +	#phy-cells = <0>;
-> > + };
-> > -- 
-> > 2.18.0
-> > 
