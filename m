@@ -2,150 +2,174 @@ Return-Path: <SRS0=6dzI=RC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D26C2C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 16:40:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B6CCC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 16:42:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA5D721852
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 16:40:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36C5F217F5
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 16:42:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726356AbfB0QkE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Feb 2019 11:40:04 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:44233 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726299AbfB0QkE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2019 11:40:04 -0500
-Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1gz2FV-0000XJ-Ni; Wed, 27 Feb 2019 17:40:01 +0100
-Message-ID: <1551285598.2305.14.camel@pengutronix.de>
-Subject: Re: IMX6 dwc PCI regression through switch - unable to request
- (legacy) interrupt (pci=nomsi)
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Tim Harvey <tharvey@gateworks.com>
-Cc:     linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Niklas Cassel <niklas.cassel@axis.com>
-Date:   Wed, 27 Feb 2019 17:39:58 +0100
-In-Reply-To: <CAJ+vNU0b3ZwkYJBLJitCr=_m1wpK0R9KF-Tk2QZ6UwEPMwueqA@mail.gmail.com>
-References: <CAJ+vNU2XcJ+btfM64p4W7VrBvB6W89MZ=+8G5NYWP16MRrY56A@mail.gmail.com>
-         <1551261667.2305.6.camel@pengutronix.de>
-         <CAJ+vNU0b3ZwkYJBLJitCr=_m1wpK0R9KF-Tk2QZ6UwEPMwueqA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.22.6-1+deb9u1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+        id S1726478AbfB0Qm3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Feb 2019 11:42:29 -0500
+Received: from foss.arm.com ([217.140.101.70]:35540 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725854AbfB0Qm3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Feb 2019 11:42:29 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A3967A78;
+        Wed, 27 Feb 2019 08:42:28 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 23DDA3F738;
+        Wed, 27 Feb 2019 08:42:26 -0800 (PST)
+Date:   Wed, 27 Feb 2019 16:42:20 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Maya Nakamura <m.maya.nakamura@gmail.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org, kys@microsoft.com,
+        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
+        jasowang@redhat.com, mikelley@microsoft.com,
+        Alexander.Levin@microsoft.com, linux-kernel@vger.kernel.org,
+        driverdev-devel@linuxdriverproject.org, haiyangz@microsoft.com,
+        marcelo.cerri@canonical.com
+Subject: Re: [PATCH v3 1/2] PCI: hv: Replace hv_vp_set with hv_vpset
+Message-ID: <20190227164220.GA20672@e107981-ln.cambridge.arm.com>
+References: <cover.1548745212.git.m.maya.nakamura@gmail.com>
+ <19aea785b78cf14c71f58bf278df17dc3adf8368.1548745212.git.m.maya.nakamura@gmail.com>
+ <87k1hlqlby.fsf@vitty.brq.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <87k1hlqlby.fsf@vitty.brq.redhat.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Mittwoch, den 27.02.2019, 08:29 -0800 schrieb Tim Harvey:
-> > On Wed, Feb 27, 2019 at 2:01 AM Lucas Stach <l.stach@pengutronix.de> wrote:
-> > 
-> > Hi Tim,
-> > 
-> > Am Dienstag, den 26.02.2019, 13:13 -0800 schrieb Tim Harvey:
-> > > Greetings,
-> > > 
-> > > I've got a miniPCIe card with a TW6869 8x frame grabber that stopped
-> > > working on an IMX6 based board with a PLX switch with Linux 4.17 as
-> > > the driver errors out with 'tw686x 0000:07:00.0: unable to request
-> > > interrupt' (request_irq() fails). I've found this only happens on
-> > > boards that have a switch. Note I'm booting with pci=nomsi as well as
-> > > the IMX6 has a limitation where legacy IRQ's wont fire if MSI irq's
-> > > are enabled. Strangely I don't see this issue with other cards such
-> > > as
-> > > the ath9k with msi disabled.
-> > > 
-> > > I bisected the issue to 7c5925afbc58c6d6b384e1dc051bb992969bf787
-> > > 'PCI:
-> > > dwc: Move MSI IRQs allocation to IRQ domains hierarchical API' which
-> > > due to continued changes in drivers/pci/dwc can no longer be
-> > > reverted.
-> > > 
-> > > Any ideas what happened here? IMX6 PCIe through a bridge always seems
-> > > not so well tested and very fragile over the past couple of years.
-> > 
-> > Thanks for the report. Both the DWC PCIe core in general and the i.MX6
-> > integration have some rough edges, which makes things fall from time to
-> > time. Having a PCIe bridge in the mix does extend the test space quite
-> > a bit.
-> > 
-> > Does the following patch help? I didn't test it yet, but it's based on
-> > my assumption of what is going wrong with the referenced commit.
-> > 
-> > Regards,
-> > Lucas
-> > 
-> > ----------------------------->8--------------------------------------
-> > 
-> > From 40b4fc03878a935fa81af226a8e759d4c72a3603 Mon Sep 17 00:00:00 2001
-> > From: Lucas Stach <l.stach@pengutronix.de>
-> > Date: Wed, 27 Feb 2019 10:50:20 +0100
-> > Subject: [PATCH] PCI: dwc: skip MSI init if MSIs have been explicitly disabled
-> > 
-> > Since 7c5925afbc58 (PCI: dwc: Move MSI IRQs allocation to IRQ domains
-> > hierarchical API) the MSi init claims one of the controller IRQs as a
-> > chained IRQ line for the MSI controller. On some designs, like the i.MX6,
-> > this line is shared with a PCIe legacy IRQ. When the line is claimed for
-> > the MSI domain, any device trying to use this legacy IRQs will fail to
-> > request this IRQ line.
-> > 
-> > As MSI and legacy IRQs are already mutually exclusive on the DWC core,
-> > as the core won't forward any legacy IRQs once any MSI has been enabled,
-> > users wishing to use legacy IRQs already need to explictly disable MSI
-> > support (usually via the pci=nomsi kernel commandline option). To avoid
-> > any issues with MSI conflicting with legacy IRQs, just skip all of the
-> > DWC MSI initalization, inclusing the IRQ line claim, when MSI is disabled.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+On Wed, Feb 27, 2019 at 04:53:37PM +0100, Vitaly Kuznetsov wrote:
+> Maya Nakamura <m.maya.nakamura@gmail.com> writes:
+> 
+> > Remove a duplicate definition of VP set (hv_vp_set) and use the common
+> > definition (hv_vpset) that is used in other places.
+> >
+> > Change the order of the members in struct hv_pcibus_device so that the
+> > declaration of retarget_msi_interrupt_params is the last member. Struct
+> > hv_vpset, which contains a flexible array, is nested two levels deep in
+> > struct hv_pcibus_device via retarget_msi_interrupt_params.
+> >
+> > Add a comment that retarget_msi_interrupt_params should be the last member
+> > of struct hv_pcibus_device.
+> >
+> > Signed-off-by: Maya Nakamura <m.maya.nakamura@gmail.com>
 > > ---
-> >  drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > index 29a05759a294..f4a8494f616b 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > @@ -433,7 +433,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >         if (ret)
-> >                 pci->num_viewport = 2;
-> > 
-> > -       if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > +       if (IS_ENABLED(CONFIG_PCI_MSI) && pci_msi_enabled()) {
-> >                 /*
-> >                  * If a specific SoC driver needs to change the
-> >                  * default number of vectors, it needs to implement
-> > --
-> > 2.20.1
+> > Change in v3:
+> > - Correct the v2 change log.
+> >
+> > Change in v2:
+> > - Update the commit message.
+> >
+> >  drivers/pci/controller/pci-hyperv.c | 25 ++++++++++++-------------
+> >  1 file changed, 12 insertions(+), 13 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> > index 9ba4d12c179c..da8b58d8630d 100644
+> > --- a/drivers/pci/controller/pci-hyperv.c
+> > +++ b/drivers/pci/controller/pci-hyperv.c
+> > @@ -393,12 +393,6 @@ struct hv_interrupt_entry {
+> >  
+> >  #define HV_VP_SET_BANK_COUNT_MAX	5 /* current implementation limit */
+> >  
+> > -struct hv_vp_set {
+> > -	u64	format;			/* 0 (HvGenericSetSparse4k) */
+> > -	u64	valid_banks;
+> > -	u64	masks[HV_VP_SET_BANK_COUNT_MAX];
+> > -};
+> > -
+> >  /*
+> >   * flags for hv_device_interrupt_target.flags
+> >   */
+> > @@ -410,7 +404,7 @@ struct hv_device_interrupt_target {
+> >  	u32	flags;
+> >  	union {
+> >  		u64		 vp_mask;
+> > -		struct hv_vp_set vp_set;
+> > +		struct hv_vpset vp_set;
+> >  	};
+> >  };
+> >  
+> > @@ -460,12 +454,16 @@ struct hv_pcibus_device {
+> >  	struct msi_controller msi_chip;
+> >  	struct irq_domain *irq_domain;
+> >  
+> > -	/* hypercall arg, must not cross page boundary */
+> > -	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+> > -
+> >  	spinlock_t retarget_msi_interrupt_lock;
+> >  
+> >  	struct workqueue_struct *wq;
+> > +
+> > +	/* hypercall arg, must not cross page boundary */
+> > +	struct retarget_msi_interrupt retarget_msi_interrupt_params;
+> > +
 > 
-> Lucas,
+> One more thing here (and again sorry for being late): this structure is
+> being used as Hyper-V hypercall argument and these have special
+> requirements on alignment (8 bytes). struct retarget_msi_interrupt is
+> packed and depending on your environment/compiler you may or may not see
+> the issue but I has able to get HVCALL_RETARGET_INTERRUPT failing with
+> the return value of 4 (HV_STATUS_INVALID_ALIGNMENT).
 > 
-> Yes, this patch resolves the issue. Where did this come from? It looks
-> like it came from back in September but never made it upstream?
+> I suggest we add __aligned(8) to 'struct retarget_msi_interrupt'
+> definition (I haven't tested this but should work). This is not a new
+> issue, it existed before your patch, but the code movement you do may
+> change the exposure.
 
-Nope, I wrote it just after your report, as seen in the "Date" line.
+I am happy to apply this small fix _before_ this patch but if you want
+me to merge them for v5.1 this must be put together and tested quite
+quickly.
 
-> I'm a bit baffled why I see this issue pre-patch with 'and' without
-> pci=nomsi based on this patch? I do see other checks in
-> imx6_pcie_host_init() and imx6_add_pcie_port() for
-> IS_ENABLED(CONFIG_PCI_MSI) that do not have an accompanying check of
-> pci_msi_enabled() to see if its enabled at runtime... are these
-> problematic as well?
+For the time being I am not dropping this patch from the PCI queue,
+waiting for an update from you guys.
 
-I'll look over them, but I think with this added all the relevant
-places are covered.
+Thanks,
+Lorenzo
 
-Regards,
-Lucas
+> 
+> 
+> > +	/*
+> > +	 * Don't put anything here: retarget_msi_interrupt_params must be last
+> > +	 */
+> >  };
+> >  
+> >  /*
+> > @@ -955,12 +953,13 @@ static void hv_irq_unmask(struct irq_data *data)
+> >  		 */
+> >  		params->int_target.flags |=
+> >  			HV_DEVICE_INTERRUPT_TARGET_PROCESSOR_SET;
+> > -		params->int_target.vp_set.valid_banks =
+> > +		params->int_target.vp_set.valid_bank_mask =
+> >  			(1ull << HV_VP_SET_BANK_COUNT_MAX) - 1;
+> >  
+> >  		/*
+> >  		 * var-sized hypercall, var-size starts after vp_mask (thus
+> > -		 * vp_set.format does not count, but vp_set.valid_banks does).
+> > +		 * vp_set.format does not count, but vp_set.valid_bank_mask
+> > +		 * does).
+> >  		 */
+> >  		var_size = 1 + HV_VP_SET_BANK_COUNT_MAX;
+> >  
+> > @@ -974,7 +973,7 @@ static void hv_irq_unmask(struct irq_data *data)
+> >  				goto exit_unlock;
+> >  			}
+> >  
+> > -			params->int_target.vp_set.masks[cpu_vmbus / 64] |=
+> > +			params->int_target.vp_set.bank_contents[cpu_vmbus / 64]	|=
+> >  				(1ULL << (cpu_vmbus & 63));
+> >  		}
+> >  	} else {
+> 
+> -- 
+> Vitaly
