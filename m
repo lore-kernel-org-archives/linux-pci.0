@@ -2,153 +2,186 @@ Return-Path: <SRS0=6dzI=RC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31118C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 12:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0A4DC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 12:34:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0383E2133D
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 12:32:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88ED8213A2
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Feb 2019 12:34:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729364AbfB0McD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Feb 2019 07:32:03 -0500
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:51493 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726229AbfB0McD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2019 07:32:03 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id DF23030001EDC;
-        Wed, 27 Feb 2019 13:31:59 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id B62A6D1E10; Wed, 27 Feb 2019 13:31:59 +0100 (CET)
-Date:   Wed, 27 Feb 2019 13:31:59 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Dongdong Liu <liudongdong3@huawei.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        mika.westerberg@linux.intel.com,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: Question about Hotplug and PME deadlock issue
-Message-ID: <20190227123159.r5qts23qupqxiwcx@wunner.de>
-References: <c7697e7c-e1af-13e4-8491-0a3996e6ab5d@huawei.com>
+        id S1730145AbfB0Met (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Feb 2019 07:34:49 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:42033 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729963AbfB0Mes (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Feb 2019 07:34:48 -0500
+Received: by mail-wr1-f66.google.com with SMTP id r5so17740343wrg.9
+        for <linux-pci@vger.kernel.org>; Wed, 27 Feb 2019 04:34:47 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
+         :message-id:mime-version;
+        bh=aH1nxPjlEJ1ommeN6Q0Hi5p8PHdcZMF1mJPDmbqf5No=;
+        b=QPLSWTf2ME47BYqUhEJWAqaj5QZFRKmCwLmTBuuGXRnDgLJrR/lfanzuPCDguKEEEW
+         pTq4I/he8opKTs1gK5XYzSjIsp5tHoGkgeeTBtZCPpH28ctP/ABFLS5F90CTrVPrQFOP
+         tw5bsBKfb83F9C+Gw+eB0wjdnUiKkxyQPv+yQjUx9KgtMM02USdpabR/f0zpyxubFXJ0
+         qCMQIq308eQyH+tfzsizr5KjOg8viI7RrrC3NdKAkQ5c5pxsfktcTzAUauyfgzd0DxsD
+         imzYi2Flbe4Bu3pEMnf2Bah2cCB08zxYRfHUM7AYPwtkIbXvG91eWVf9gqcn01UOSlhI
+         UU8A==
+X-Gm-Message-State: APjAAAU2CsrKdbG6nOl88yDL56rIJEu1vfQntBotCOnRDGbAlhu5uBSF
+        7mjNxeH8+Feu/FKYaurPuBbABg==
+X-Google-Smtp-Source: APXvYqzMbGElj2ebTa4Efnt1pu8q7aIdNUxqsYmLGqTXJM1RANOs6/cW2VPMzSudrxKIAk4uz0v5pQ==
+X-Received: by 2002:adf:c752:: with SMTP id b18mr2267142wrh.105.1551270886889;
+        Wed, 27 Feb 2019 04:34:46 -0800 (PST)
+Received: from vitty.brq.redhat.com (ip-213-220-248-130.net.upcbroadband.cz. [213.220.248.130])
+        by smtp.gmail.com with ESMTPSA id f68sm2830557wmg.5.2019.02.27.04.34.45
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 27 Feb 2019 04:34:46 -0800 (PST)
+From:   Vitaly Kuznetsov <vkuznets@redhat.com>
+To:     Maya Nakamura <m.maya.nakamura@gmail.com>
+Cc:     linux-kernel@vger.kernel.org,
+        driverdev-devel@linuxdriverproject.org, haiyangz@microsoft.com,
+        marcelo.cerri@canonical.com, lorenzo.pieralisi@arm.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org, kys@microsoft.com,
+        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
+        jasowang@redhat.com, mikelley@microsoft.com,
+        Alexander.Levin@microsoft.com
+Subject: Re: [PATCH v3 2/2] PCI: hv: Refactor hv_irq_unmask() to use cpumask_to_vpset()
+In-Reply-To: <00e13af711510001e589c7b1ddd75beb99f58db5.1548745212.git.m.maya.nakamura@gmail.com>
+References: <cover.1548745212.git.m.maya.nakamura@gmail.com> <00e13af711510001e589c7b1ddd75beb99f58db5.1548745212.git.m.maya.nakamura@gmail.com>
+Date:   Wed, 27 Feb 2019 13:34:44 +0100
+Message-ID: <87sgw9qujf.fsf@vitty.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c7697e7c-e1af-13e4-8491-0a3996e6ab5d@huawei.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Feb 27, 2019 at 07:52:16PM +0800, Dongdong Liu wrote:
-> We do some test to trigger hotplug while do sysfs "remove" operation,
-> then met a deadlock issue.
-> 
-> pciehp 0000:00:0c.0:pcie004: Slot(0-1): Link Up
-> echo 1 > 0000\:00\:0c.0/remove
-> 
-> PME and hotplug share an MSI/MSI-X vector.
-> The sysfs "remove" operation will call the below function.
-> remove_store()
->   pci_stop_and_remove_bus_device_locked()
->     pci_lock_rescan_remove()
->     pci_stop_and_remove_bus_device()
->       ...
->       pcie_pme_remove()
->         synchronize_irq()   // Here will wait for hotplug IRQ handler
->     pci_unlock_rescan_remove();
+Maya Nakamura <m.maya.nakamura@gmail.com> writes:
 
-This is (at least) a bug in the PME driver.  I'm not familiar with
-that driver, so adding Keith Busch to cc.
+> Remove the duplicate implementation of cpumask_to_vpset() and use the
+> shared implementation. Export hv_max_vp_index, which is required by
+> cpumask_to_vpset().
+>
+> Apply changes to hv_irq_unmask() based on feedback.
+>
 
-The bug is that pcie_pme_remove() invokes pcie_pme_suspend(), which
-calls synchronize_irq(), which waits for the hardirq handlers and
-IRQ threads of all drivers sharing the IRQ to finish.
+I just noticed an issue with this patch, sorry I've missed it before. I
+don't see the commit in Linus' tree, not sure if we should amend this
+one or a follow-up patch is needed.
 
-pcie_pme_remove() then calls free_irq() which *again* waits for a
-running hardirq handler and thread to finish, however it does not
-wait for those of drivers sharing the IRQ to finish since 4.19,
-see commit 519cc8652b3a ("genirq: Synchronize only with single thread
-on free_irq()").
+> Signed-off-by: Maya Nakamura <m.maya.nakamura@gmail.com>
+> ---
+> Changes in v3:
+>  - Modify to catch all failures from cpumask_to_vpset().
+>  - Correct the v2 change log about the commit message.
+>
+> Changes in v2:
+>  - Remove unnecessary nr_bank initialization.
+>  - Delete two unnecessary dev_err()'s.
+>  - Unlock before returning.
+>  - Update the commit message.
+>
+>  arch/x86/hyperv/hv_init.c           |  1 +
+>  drivers/pci/controller/pci-hyperv.c | 38 +++++++++++++----------------
+>  2 files changed, 18 insertions(+), 21 deletions(-)
+>
+> diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
+> index 7abb09e2eeb8..7f2eed1fc81b 100644
+> --- a/arch/x86/hyperv/hv_init.c
+> +++ b/arch/x86/hyperv/hv_init.c
+> @@ -96,6 +96,7 @@ void  __percpu **hyperv_pcpu_input_arg;
+>  EXPORT_SYMBOL_GPL(hyperv_pcpu_input_arg);
+>  
+>  u32 hv_max_vp_index;
+> +EXPORT_SYMBOL_GPL(hv_max_vp_index);
+>  
+>  static int hv_cpu_init(unsigned int cpu)
+>  {
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index da8b58d8630d..a78def332bbc 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -391,8 +391,6 @@ struct hv_interrupt_entry {
+>  	u32	data;
+>  };
+>  
+> -#define HV_VP_SET_BANK_COUNT_MAX	5 /* current implementation limit */
+> -
+>  /*
+>   * flags for hv_device_interrupt_target.flags
+>   */
+> @@ -908,12 +906,12 @@ static void hv_irq_unmask(struct irq_data *data)
+>  	struct retarget_msi_interrupt *params;
+>  	struct hv_pcibus_device *hbus;
+>  	struct cpumask *dest;
+> +	cpumask_var_t tmp;
+>  	struct pci_bus *pbus;
+>  	struct pci_dev *pdev;
+>  	unsigned long flags;
+>  	u32 var_size = 0;
+> -	int cpu_vmbus;
+> -	int cpu;
+> +	int cpu, nr_bank;
+>  	u64 res;
+>  
+>  	dest = irq_data_get_effective_affinity_mask(data);
+> @@ -953,29 +951,27 @@ static void hv_irq_unmask(struct irq_data *data)
+>  		 */
+>  		params->int_target.flags |=
+>  			HV_DEVICE_INTERRUPT_TARGET_PROCESSOR_SET;
+> -		params->int_target.vp_set.valid_bank_mask =
+> -			(1ull << HV_VP_SET_BANK_COUNT_MAX) - 1;
+> +
+> +		if (!alloc_cpumask_var(&tmp, GFP_KERNEL)) {
 
-I think the invocation of synchronize_irq() in pcie_pme_suspend() is
-unnecessary when called from pcie_pme_remove(), it's been there since
-the driver was added by Rafael with commit c7f486567c1d ("PCI PM: PCIe
-PME root port service driver"), adding him to cc as well.
+We can't use GFP_KERNEL here: this is happening under
+hbus->retarget_msi_interrupt_lock spinlock, we should use GFP_ATOMIC
+instead. It may, however, make sense to add the cpumask to a
+pre-allocated structure (e.g. struct hv_pcibus_device) to make sure the
+allocation never fails.
 
-Thanks,
-Lukas
+> +			res = 1;
+> +			goto exit_unlock;
+> +		}
+> +
+> +		cpumask_and(tmp, dest, cpu_online_mask);
+> +		nr_bank = cpumask_to_vpset(&params->int_target.vp_set, tmp);
+> +		free_cpumask_var(tmp);
+> +
+> +		if (nr_bank <= 0) {
+> +			res = 1;
+> +			goto exit_unlock;
+> +		}
+>  
+>  		/*
+>  		 * var-sized hypercall, var-size starts after vp_mask (thus
+>  		 * vp_set.format does not count, but vp_set.valid_bank_mask
+>  		 * does).
+>  		 */
+> -		var_size = 1 + HV_VP_SET_BANK_COUNT_MAX;
+> -
+> -		for_each_cpu_and(cpu, dest, cpu_online_mask) {
+> -			cpu_vmbus = hv_cpu_number_to_vp_number(cpu);
+> -
+> -			if (cpu_vmbus >= HV_VP_SET_BANK_COUNT_MAX * 64) {
+> -				dev_err(&hbus->hdev->device,
+> -					"too high CPU %d", cpu_vmbus);
+> -				res = 1;
+> -				goto exit_unlock;
+> -			}
+> -
+> -			params->int_target.vp_set.bank_contents[cpu_vmbus / 64]	|=
+> -				(1ULL << (cpu_vmbus & 63));
+> -		}
+> +		var_size = 1 + nr_bank;
+>  	} else {
+>  		for_each_cpu_and(cpu, dest, cpu_online_mask) {
+>  			params->int_target.vp_mask |=
 
-> 
-> Hotplug
-> pciehp_ist()
->   pciehp_handle_presence_or_link_change()
->     pciehp_configure_device()
->       pci_lock_rescan_remove() // Here will wait the pci_unlock_rescan_remove()
-> 
-> So met the deadlock issue. Any idea to solve such issue ?
-> 
-> 2180.490703] INFO: task bash:10913 blocked for more than 120 seconds.
-> [ 2180.503428]       Tainted: P           OE     4.19.5-1.1.29.aarch64 #1
-> [ 2180.516496] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [ 2180.532176] bash            D    0 10913   6565 0x00000200
-> 
->  # ps -ax |grep D
->   PID TTY      STAT   TIME COMMAND
-> 10913 ttyAMA0  Ds+    0:00 -bash
-> 12945 ?        Ss     0:00 /usr/sbin/sshd -D
-> 14022 ?        D      0:00 [irq/745-pciehp]
-> 15972 pts/1    S+     0:00 grep --color=auto D
-> # cat /proc/14022/stack
-> [<0>] __switch_to+0x94/0xd8
-> [<0>] pci_lock_rescan_remove+0x20/0x28
-> [<0>] pciehp_configure_device+0x30/0x140
-> [<0>] pciehp_handle_presence_or_link_change+0x324/0x458
-> [<0>] pciehp_ist+0x1dc/0x1e0
-> [<0>] irq_thread_fn+0x30/0x90
-> [<0>] irq_thread+0x140/0x210
-> [<0>] kthread+0x134/0x138
-> [<0>] ret_from_fork+0x10/0x1c
-> [<0>] 0xffffffffffffffff
->  # cat /proc/10913/stack
-> [<0>] __switch_to+0x94/0xd8
-> [<0>] synchronize_irq+0x8c/0xc0
-> [<0>] pcie_pme_suspend+0xa4/0x118
-> [<0>] pcie_pme_remove+0x20/0x40
-> [<0>] pcie_port_remove_service+0x3c/0x58
-> [<0>] device_release_driver_internal+0x1b4/0x250
-> [<0>] device_release_driver+0x28/0x38
-> [<0>] bus_remove_device+0xd4/0x160
-> [<0>] device_del+0x128/0x348
-> [<0>] device_unregister+0x24/0x78
-> [<0>] remove_iter+0x48/0x58
-> [<0>] device_for_each_child+0x6c/0xb8
-> [<0>] pcie_port_device_remove+0x2c/0x48
-> [<0>] pcie_portdrv_remove+0x68/0x78
-> [<0>] pci_device_remove+0x48/0x120
-> [<0>] device_release_driver_internal+0x1b4/0x250
-> [<0>] device_release_driver+0x28/0x38
-> [<0>] pci_stop_bus_device+0x84/0xc0
-> [<0>] pci_stop_and_remove_bus_device_locked+0x24/0x40
-> [<0>] remove_store+0xa4/0xb8
-> [<0>] dev_attr_store+0x44/0x60
-> [<0>] sysfs_kf_write+0x58/0x80
-> [<0>] kernfs_fop_write+0xd8/0x1e0
-> [<0>] __vfs_write+0x60/0x190
-> [<0>] vfs_write+0xac/0x1c0
-> [<0>] ksys_write+0x6c/0xd8
-> [<0>] __arm64_sys_write+0x24/0x30
-> [<0>] el0_svc_common+0x78/0x100
-> [<0>] el0_svc_handler+0x38/0x88
-> [<0>] el0_svc+0x8/0xc
-> [<0>] 0xffffffffffffffff
-> 
-> Thanks,
-> Dongdong
+-- 
+Vitaly
