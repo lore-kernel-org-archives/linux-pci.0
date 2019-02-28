@@ -2,137 +2,120 @@ Return-Path: <SRS0=y4Wk=RD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 590EDC43381
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 15:00:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34DF7C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 16:13:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 225222184A
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 15:00:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="SoR2uEOs"
+	by mail.kernel.org (Postfix) with ESMTP id E94C3218D8
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 16:13:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733296AbfB1PAQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Feb 2019 10:00:16 -0500
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:12686 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731020AbfB1PAP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 10:00:15 -0500
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5c77f7880000>; Thu, 28 Feb 2019 07:00:24 -0800
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Thu, 28 Feb 2019 07:00:15 -0800
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Thu, 28 Feb 2019 07:00:15 -0800
-Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL108.nvidia.com
- (172.18.146.13) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 28 Feb
- 2019 15:00:14 +0000
-Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Thu, 28 Feb 2019 15:00:14 +0000
-Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5c77f77b000e>; Thu, 28 Feb 2019 07:00:14 -0800
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <treding@nvidia.com>, <swarren@nvidia.com>,
-        <mperttunen@nvidia.com>, <jonathanh@nvidia.com>
-CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
-Subject: [PATCH] PCI: tegra: Do not allocate MSI target memory
-Date:   Thu, 28 Feb 2019 20:30:04 +0530
-Message-ID: <1551366004-32547-1-git-send-email-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.7.4
-X-NVConfidentiality: public
+        id S1727914AbfB1QNL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Feb 2019 11:13:11 -0500
+Received: from foss.arm.com ([217.140.101.70]:51118 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726403AbfB1QNK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 28 Feb 2019 11:13:10 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2FF41A78;
+        Thu, 28 Feb 2019 08:13:10 -0800 (PST)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 62F143F720;
+        Thu, 28 Feb 2019 08:13:08 -0800 (PST)
+Date:   Thu, 28 Feb 2019 16:13:03 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Srinath Mannam <srinath.mannam@broadcom.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Abhishek Shah <abhishek.shah@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>
+Subject: Re: [PATCH v3 2/2] PCI: iproc: Add outbound configuration for 32-bit
+ I/O region
+Message-ID: <20190228161303.GA23441@e107981-ln.cambridge.arm.com>
+References: <1550680435-9706-1-git-send-email-srinath.mannam@broadcom.com>
+ <1550680435-9706-3-git-send-email-srinath.mannam@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1551366024; bh=nh8FOpw/sDroE+nyf1n7xvWkRJGLxIBBTeikoCbhhZA=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         X-NVConfidentiality:MIME-Version:Content-Type;
-        b=SoR2uEOsL2G6qvvGqDRbCtDxgU768+6vDuaGzpdp88Oo8Aym8/VZPSOzw3w69z+wf
-         8rJdK2lK7MF1QFLS2c5SndyZMpnDxy7jyXau8mu+ZmEbJmbnrUdxf+UM6CQCeVGC9v
-         A46KxahLN1dvusp2aJBG/CWsy6q6pq4idVDfPUhpxTAkNqEejdKs23ug7pVzDw7I3z
-         s9ObPiPX7mrWmY0cdGMsVVhM5/W37dkE3E546pxXl2VeCCEbuu2S+kVMzPMphzxx1k
-         LVknieF2oVOH7kecDnvUJX8p/sd8feURCdyTA35gk8KTXsCbCHifgqYs64KYt6Zj1S
-         mYuXuwaf4nbrw==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1550680435-9706-3-git-send-email-srinath.mannam@broadcom.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI host bridge found on Tegra SoCs doesn't require the MSI target
-address to be backed by physical system memory. Writes are intercepted
-within the controller and never make it to the memory pointed to.
+On Wed, Feb 20, 2019 at 10:03:55PM +0530, Srinath Mannam wrote:
+> In the present driver outbound window configuration is done to map above
+> 32-bit address I/O regions with corresponding PCI memory range given in
+> ranges DT property.
+> 
+> This patch add outbound window configuration to map below 32-bit I/O range
+> with corresponding PCI memory, which helps to access I/O region in IA32
 
-Since no actual system memory is required, remove the allocation of a
-single page and hardcode the MSI target address with a special address
-on a per-SoC basis. Ideally this would be an address to an MMIO memory
-region (such as where the controller's register are located). However,
-those addresses don't work reliably across all Tegra generations. The
-only set of addresses that work consistently are those that point to
-external memory.
+I think you mean ARM 32-bit here, not IA32.
 
-This is not ideal, since those addresses could technically be used for
-DMA and hence be confusing. However, the first page of external memory
-is unlikely to be used and special enough to avoid confusion.
+> and one to one mapping of I/O region to PCI memory.
+> 
+> Ex:
+> 1. ranges DT property given for current driver is,
+>     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
+>     I/O region address is 0x400000000
+> 2. ranges DT property can be given after this patch,
+>     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
+>     I/O region address is 0x42000000
+> 
+> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+> Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> Reviewed-by: Vikram Prakash <vikram.prakash@broadcom.com>
 
-Original base patch was posted by Thierry Reding <treding@nvidia.com>
-( http://patchwork.ozlabs.org/patch/848569/ )
-Current patch removes hardcoding of external RAM starting address instead
-gets it using memblock_start_of_DRAM() API
+I asked you before, please point me at mailing list discussions where
+these review tags were given, v1 was already carrying them but that's
+not how the process works, they have to be given on mailing lists.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
----
- drivers/pci/controller/pci-tegra.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+Lorenzo
 
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index f4f53d092e00..b33de7c78425 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -23,6 +23,7 @@
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/memblock.h>
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of_address.h>
-@@ -231,9 +232,8 @@ struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
- 	struct irq_domain *domain;
--	unsigned long pages;
- 	struct mutex lock;
--	u64 phys;
-+	phys_addr_t phys;
- 	int irq;
- };
- 
-@@ -1548,9 +1548,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
- 		goto err;
- 	}
- 
--	/* setup AFI/FPCI range */
--	msi->pages = __get_free_pages(GFP_KERNEL, 0);
--	msi->phys = virt_to_phys((void *)msi->pages);
-+	msi->phys = memblock_start_of_DRAM();
- 	host->msi = &msi->chip;
- 
- 	return 0;
-@@ -1592,8 +1590,6 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
- 	struct tegra_msi *msi = &pcie->msi;
- 	unsigned int i, irq;
- 
--	free_pages(msi->pages, 0);
--
- 	if (msi->irq > 0)
- 		free_irq(msi->irq, pcie);
- 
--- 
-2.7.4
-
+> ---
+>  drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
+>  1 file changed, 19 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+> index b882255..080f142 100644
+> --- a/drivers/pci/controller/pcie-iproc.c
+> +++ b/drivers/pci/controller/pcie-iproc.c
+> @@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+>  			resource_size_t window_size =
+>  				ob_map->window_sizes[size_idx] * SZ_1M;
+>  
+> -			if (size < window_size)
+> -				continue;
+> +			/*
+> +			 * Keep iterating until we reach the last window and
+> +			 * with the minimal window size at index zero. In this
+> +			 * case, we take a compromise by mapping it using the
+> +			 * minimum window size that can be supported
+> +			 */
+> +			if (size < window_size) {
+> +				if (size_idx > 0 || window_idx > 0)
+> +					continue;
+> +
+> +				/*
+> +				 * For the corner case of reaching the minimal
+> +				 * window size that can be supported on the
+> +				 * last window
+> +				 */
+> +				axi_addr = ALIGN_DOWN(axi_addr, window_size);
+> +				pci_addr = ALIGN_DOWN(pci_addr, window_size);
+> +				size = window_size;
+> +			}
+>  
+>  			if (!IS_ALIGNED(axi_addr, window_size) ||
+>  			    !IS_ALIGNED(pci_addr, window_size)) {
+> -- 
+> 2.7.4
+> 
