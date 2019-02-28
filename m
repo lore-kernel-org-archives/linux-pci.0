@@ -2,86 +2,92 @@ Return-Path: <SRS0=y4Wk=RD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBBF9C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 19:45:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB6D8C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 20:39:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80F8A218D9
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 19:45:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1551383130;
-	bh=/RwR7Vd4MgBS7yyYqr5ziP9x6V9Gr5SxjCW4IGuOd48=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=avLt68qbFho15bqOtUjNNPRRH7pUotfclxpmKAcXOBJ0cTEaM6OXpJWY47uj9JRIr
-	 WtNdybH1ViXLN+G36NARRLPG/CnFy3ZovsdjoXDV39egQCMc0SN0rtFyZoUlpG82co
-	 TjKEGSSFXwQv1Pdnm4phYEY47hAfHmcH47L57aoQ=
+	by mail.kernel.org (Postfix) with ESMTP id 8A90F218CD
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Feb 2019 20:39:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="eZyJ92Vk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727858AbfB1Tp3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Feb 2019 14:45:29 -0500
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:41099 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726087AbfB1Tp3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 14:45:29 -0500
-Received: by mail-oi1-f194.google.com with SMTP id e7so17502345oia.8;
-        Thu, 28 Feb 2019 11:45:29 -0800 (PST)
+        id S1727771AbfB1Uj1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Feb 2019 15:39:27 -0500
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:39907 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730791AbfB1Uj1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 15:39:27 -0500
+Received: by mail-wm1-f65.google.com with SMTP id z84so10234099wmg.4
+        for <linux-pci@vger.kernel.org>; Thu, 28 Feb 2019 12:39:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XLSydkoLhSobkjMs5N5wtJQOn7A2n7uZ5qgPj6fDVkk=;
+        b=eZyJ92VkMeH6O0lNo/WUwM80GatEJuwap13rNnver6kZf5m+6AtueLoyX9QP17MOzp
+         3PoUuRE5CBNui2zmDndIPEWlXHUuY7rq4+KQv5jcZ9ZzfIFDQQ+4UZALJW8fE1E4jpos
+         mEthJJ+XVJWlObMGMhfcl0TliyNqxp1b7WonIPnwVcN55Egi7+YWmnPUb3lgb4VbC5IV
+         u8UllufSo7ZzhctY5ahKwS/ye8o8R3/U/RKUZZDWcf9XVV8M0Lut4u/b0Nu6K+qNSgW9
+         n/npO5QrHsg8KvSQWGAz7cYm3V1FnH2QxpDu9ek3gwYaaz4346G12RW21VPh8qsWnlCt
+         uTdA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=xklEfVfv14D88Ra+s2gfpz8Nij58iGoBhwr3RtVa6Bs=;
-        b=eeGhnPykV6yjB348xg+5VzX6xEhOOk1mFaJmJvcr0bJVaEOSoN/PaX1ausLa4FVXiR
-         ATfZ0kuaN8rvlB/CfV4QnVmXQ0Tg+gVBjIepLmI7Tped7IS2Wteuir7vZOy8oRb9Ur65
-         XoZsEWveE1Mx3wyoTJT+4CPCmoRFQ6IP7g0SWacKAwwOO/NemtmXTjOJt6ns+x2KraFF
-         QdxoA8D/WfwbaAlX8u96CGWvn+dten7drkimwa7tT64ESKNdRM+PJC+4DnV8laFhkLkz
-         LL0Zqoxz/h5P2PIDBFzq/ss3/PT2bZex8r1m/UFHusO/BYIUB81hngUUboU8yMLWGGJs
-         RqQg==
-X-Gm-Message-State: AHQUAuY4D34tNxH0gD+GVv/nqPft1RDMBaFY6Jhq9qLCiiOLq74JFvm2
-        NQokh92xHgEmMFuHvpagsA==
-X-Google-Smtp-Source: AHgI3Ib16t80D3+xgzGpVh7EGedxveO+EHIanYy8E/l3ymY7WU3Qkz2YdrODmspvsvslP9VY4H3rzQ==
-X-Received: by 2002:aca:ed0f:: with SMTP id l15mr939343oih.76.1551383129069;
-        Thu, 28 Feb 2019 11:45:29 -0800 (PST)
-Received: from localhost ([2607:fb90:20de:307f:59ce:35b2:628:2365])
-        by smtp.gmail.com with ESMTPSA id t66sm8192991oig.39.2019.02.28.11.45.27
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 28 Feb 2019 11:45:27 -0800 (PST)
-Date:   Thu, 28 Feb 2019 13:45:26 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Cc:     bhelgaas@google.com, Zhiqiang.Hou@nxp.com, robh+dt@kernel.org,
-        mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com,
-        kishon@ti.com, lorenzo.pieralisi@arm.com,
-        gregkh@linuxfoundation.org, l.subrahmanya@mobiveil.co.in,
-        arnd@arndb.de, Minghuan.Lian@nxp.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: Re: [PATCH 2/6] dt-bindings: add DT binding for the layerscape PCIe
- GEN4 controller with EP mode
-Message-ID: <20190228194526.GA2716@bogus>
-References: <20190218094643.2692-1-xiaowei.bao@nxp.com>
- <20190218094643.2692-2-xiaowei.bao@nxp.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XLSydkoLhSobkjMs5N5wtJQOn7A2n7uZ5qgPj6fDVkk=;
+        b=WkL5uEfh++F6E0GgacCp52tTNRPZmnNGp9e7UB4hJI7q8gXlpqwLSN3e50JQDghRF8
+         AiARy/a+yGm/xhGJxeCNiM2Kjk8UKMsOf+cTc2hu/wEXw9ZjeAgLhlVI8ofxQ9AFGZZG
+         +qi7I7iM42NdomrL8NkY548U8w/OmFW/Wd8qUq9AQnvOKeom/X9HGp5c5zpX/JkkwCDk
+         yLQ/4tynJFmJZNyUvFTYhB4qxmeXDY3omCXdFuyad/uLJJ3NH8ORf7wdbtepvG19NIq4
+         62W5s1q2krdkcwIhXJFIHoCcT9xP+AlCypwNOdhcSDAaE+zL/VtdCCgGT6QghKrZlpAZ
+         8wjg==
+X-Gm-Message-State: APjAAAUvC2nCy1EvS5TX99/8b7UPOYn/+7JnC+GQMs7Ih49eyQ6sy//m
+        URITaHnQ/R1mDPWEJR09SqJpjZtj6+OuvVrwK0+m
+X-Google-Smtp-Source: AHgI3IaJ1/aPPgLrIUJxN4ViSnquoCRECJNKDzPqM4iATJvytLXTbqrz4T9wzcA2v1WqvRucDx705OKMkcEEnoMbVRE=
+X-Received: by 2002:a7b:c214:: with SMTP id x20mr943539wmi.62.1551386364766;
+ Thu, 28 Feb 2019 12:39:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190218094643.2692-2-xiaowei.bao@nxp.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20190226070125.22318-1-bjorn.andersson@linaro.org>
+In-Reply-To: <20190226070125.22318-1-bjorn.andersson@linaro.org>
+From:   Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu, 28 Feb 2019 14:39:13 -0600
+Message-ID: <CAErSpo6Tp2_bwjM5bmDG8g8KBiK_vMq0=qg86KNk+5q-ziGfSQ@mail.gmail.com>
+Subject: Re: [PATCH] pcie: qcom: Add support for sdm845 PCIe controller
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 18 Feb 2019 17:46:39 +0800, Xiaowei Bao wrote:
-> Add the documentation for the Device Tree binding for the layerscape
-> PCIe GEN4 controller with EP mode.
-> 
-> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-> ---
-> depends on: http://patchwork.ozlabs.org/project/linux-pci/list/?series=88754
-> 
->  .../bindings/pci/layerscape-pci-gen4.txt           |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
+On Tue, Feb 26, 2019 at 1:00 AM Bjorn Andersson
+<bjorn.andersson@linaro.org> wrote:
+>
+> The SDM845 has one Gen2 and one Gen3 controller, add support for these.
+>
+> Due to lack of hardware only the Gen2 controller has been verified.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+Hi Bjorn,
+
+I like your name :)
+
+If you post a v2 for any reason, please update the subject like to:
+
+  PCI: qcom: Add support for sdm845 PCIe controller
+
+That way it matches the existing conventions and "git log --oneline
+drivers/pci/controller/dwc/pcie-qcom.c" looks nice.  If there's no
+need for a v2, Lorenzo will likely fix that up for you.
+
+Bjorn
