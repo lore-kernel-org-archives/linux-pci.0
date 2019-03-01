@@ -2,127 +2,150 @@ Return-Path: <SRS0=yUVM=RE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E7EBC43381
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:16:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B9CDC43381
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:58:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE67D218AE
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:16:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qrQZzQQf"
+	by mail.kernel.org (Postfix) with ESMTP id 38C1820842
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:58:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730160AbfCABQg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Feb 2019 20:16:36 -0500
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:53177 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729954AbfCABQf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 20:16:35 -0500
-Received: by mail-wm1-f68.google.com with SMTP id m1so11051938wml.2;
-        Thu, 28 Feb 2019 17:16:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=i4ygx22LOUdRqlYNAEC5fBDNS9ew8UErJ+sc47ljCzk=;
-        b=qrQZzQQfod1pzn+QvcKzNCVyRV8cQ/0eHZipvWWvznPEp6hZakMcfyiq9cT644tC6C
-         Pza/Sx1CTeP0wiHLZK97Gyue6Lsnq2UlBpmDPCQLkOGknE4rW7XtGdbes793rx9wpsJx
-         ijqnuGikUDqeLxxsfnhtJdh85wasadGh/yHOfBLpg/0dzz/45CtiIqSojMy255GzXbCV
-         Fl6Ss/xVuKT34yM3bknZmGLj51CYq5g54dNWhdDm00jHICearBI91n2WC7WGbdYfBGHH
-         4DJU4lwYQibc5q/GBUpf1dIosQ4pHmMzqiI8H6cwS5Cp1Y+Q5IgbFV/JzMx5xw7+Xnra
-         iRvQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=i4ygx22LOUdRqlYNAEC5fBDNS9ew8UErJ+sc47ljCzk=;
-        b=edAIQR7ddZ30jOS9+G4WBBxKQ4MqKWOb7qykRI7OyDp1NmFTvlxnnUCqJ7u3U/TAxo
-         ftcICsjXG4mVwCE0HQfXDvCmirWD9WE3WRCx3u5XleRwDpElBVv6tZB0kk7kDiiBPwxL
-         uW3fl2H72DpewTmDszAekAu0FezNi8wm9ShvQSxSp7pIsl5f2h0pHArBXtNxXyx9ujty
-         z6JaiNIZ9gQh1J4CunA8HR+4Q20unWx1A1gS7Xzm54d/iGf/jNkJxFpBPKfSekV0ZqjB
-         KHQElvDG8z2+pNL/l9kbgKe+9h5CEDC3cIGnmFo/HRQYTtdyrJ0ZDqIVH2sIdn8eh4Cl
-         WaxA==
-X-Gm-Message-State: AHQUAuZR0YXa/NsaeLflVMtf154xjBqVFivz8pC3evUTto5YwOJPjC11
-        Atce+l8N0j/N+edbWWmBRMI18Xrn9PjO7u/nWCA=
-X-Google-Smtp-Source: APXvYqzMRqxZNnv8gdAZk8UO9eAVdBhnWbWJwhsYufyeZXqLrDnA06Cf49zdyH59MrtbQ4KNwiYahEXbR2kfr6zvrmM=
-X-Received: by 2002:a7b:cf3a:: with SMTP id m26mr1478052wmg.144.1551402993002;
- Thu, 28 Feb 2019 17:16:33 -0800 (PST)
-MIME-Version: 1.0
-References: <20190212015108.16952-1-andrew.smirnov@gmail.com>
- <20190212015108.16952-3-andrew.smirnov@gmail.com> <1549964166.2546.21.camel@pengutronix.de>
- <1551389037.6059.3.camel@impinj.com>
-In-Reply-To: <1551389037.6059.3.camel@impinj.com>
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-Date:   Thu, 28 Feb 2019 17:16:21 -0800
-Message-ID: <CAHQ1cqHfFivDSwt2Xo7n8qnrnZxSuzmx0he3irYg6Oxp_g=--w@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: Add code to request/control "pcie_aux"
- clock for i.MX8MQ
-To:     Trent Piepho <tpiepho@impinj.com>
-Cc:     "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-imx@nxp.com" <linux-imx@nxp.com>,
-        "hongxing.zhu@nxp.com" <hongxing.zhu@nxp.com>,
-        "cphealy@gmail.com" <cphealy@gmail.com>,
-        "aisheng.dong@nxp.com" <aisheng.dong@nxp.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "fabio.estevam@nxp.com" <fabio.estevam@nxp.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "leonard.crestez@nxp.com" <leonard.crestez@nxp.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+        id S1727445AbfCAB6e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Feb 2019 20:58:34 -0500
+Received: from Mailgw01.mediatek.com ([1.203.163.78]:60690 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726210AbfCAB6e (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 20:58:34 -0500
+X-UUID: 3afb1b9fcb8a4f02b2e55e961c9a6586-20190301
+X-UUID: 3afb1b9fcb8a4f02b2e55e961c9a6586-20190301
+Received: from mtkcas35.mediatek.inc [(172.27.4.253)] by mailgw01.mediatek.com
+        (envelope-from <honghui.zhang@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 1758431329; Fri, 01 Mar 2019 09:58:29 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N2.mediatek.inc
+ (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 1 Mar
+ 2019 09:58:27 +0800
+Received: from [10.17.3.153] (172.27.4.253) by MTKCAS32.mediatek.inc
+ (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Fri, 1 Mar 2019 09:58:27 +0800
+Message-ID: <1551405506.32061.18.camel@mhfsdcap03>
+Subject: Re: [PATCH v3 2/2] PCI: mediatek: Enlarge PCIe2AHB window size to
+ support 4GB DRAM
+From:   Honghui Zhang <honghui.zhang@mediatek.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
+        <rafael.j.wysocki@intel.com>, <fred@fredlawl.com>,
+        <poza@codeaurora.org>, <youlin.pei@mediatek.com>,
+        <jianjun.wang@mediatek.com>
+Date:   Fri, 1 Mar 2019 09:58:26 +0800
+In-Reply-To: <20190228174257.GA26501@e107981-ln.cambridge.arm.com>
+References: <1548999367-11733-1-git-send-email-honghui.zhang@mediatek.com>
+         <1548999367-11733-3-git-send-email-honghui.zhang@mediatek.com>
+         <20190228174257.GA26501@e107981-ln.cambridge.arm.com>
 Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Feb 28, 2019 at 1:24 PM Trent Piepho <tpiepho@impinj.com> wrote:
->
-> On Tue, 2019-02-12 at 10:36 +0100, Lucas Stach wrote:
-> > Am Montag, den 11.02.2019, 17:51 -0800 schrieb Andrey Smirnov:
-> > > PCIe IP block has additional clock, "pcie_aux", that needs to be
-> > > controlled by the driver. Add code to support that.
->
-> This breaks iMX7d.
->
+On Thu, 2019-02-28 at 17:42 +0000, Lorenzo Pieralisi wrote:
+> On Fri, Feb 01, 2019 at 01:36:07PM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > The PCIE_AXI_WINDOW0 defines the translate window size for the request
+> > from EP side. Request outside of this window will be treated as
+> > unsupported request.
+> > 
+> > Enlarge this window size from fls(0xffffffff) to 2^33 to support 8GB
+> > translate address range then EP DMA is capable of fully access 4GB
+> > DRAM range(physical DRAM is start from 0x40000000).
+> 
+> I have rewritten both patches logs with the aim of merging them even if
+> it is quite late in the cycle, first you have to explain something to
+> me.
+> 
 
-Ugh, my bad, sorry about that.
+Thanks very much for this.
 
-> > >
-> > > @@ -1049,6 +1059,12 @@ static int imx6_pcie_probe(struct platform_device *pdev)
-> > >                     dev_err(dev, "Failed to get PCIE APPS reset control\n");
-> > >                     return PTR_ERR(imx6_pcie->apps_reset);
-> > >             }
-> > > +
-> > > +           imx6_pcie->pcie_aux = devm_clk_get(dev, "pcie_aux");
-> > > +           if (IS_ERR(imx6_pcie->pcie_aux)) {
-> > > +                   dev_err(dev, "pcie_aux clock source missing or invalid\n");
-> > > +                   return PTR_ERR(imx6_pcie->pcie_aux);
-> > > +           }
-> > >             break;
-> > >     default:
-> > >             break;
->
-> One can't see enough context in the patch above, but in linux-next this
-> section is under
->
->          case IMX7D:
->          case IMX8MQ:
->
-> It's being applied to imx7d and not just imx8mq and so breaks because
-> imx7d dts files don't have this clock.  Not sure if this is a bug in
-> this commit or some kind of merge/rebase mistake.
->
+> fls(0xffffffff) = 0x1f, which by your logic -> 2^31
+> 
+> What does it mean given what you say above ? That PCI devices can't
+> do _any_ DMA in the current setting (given the DRAM start address) ?
+> 
 
-This is just a regular bug, I spaced out and missed the fact that this
-path is shared between the two. I'll submit a patch moving "pci_aux"
-clock request into a i.MX8MQ specific patch shortly.
+I'm afraid so.
+From the HW datasheet I got from our HW designer, the description for
+this pcie2axi_win_size filed is
+" Possible values are 12 to 36 which means 2^12 to 2^36 bytes, leaving
+this filed to 0 causes window to be disabled."
 
-Thanks,
-Andrey Smirnov
+Current setting set the window size as 2^31, which means the request
+from EP side could only access the address range from 0 to 0x8000_0000.
+Considering the DRAM start from 0x4000_0000, that means only the first
+1GB(0x4000_0000 ~ 0x8000_0000) could be accessed by EP side DMA.
+
+This has not run into an error for our current usage, I guess because
+MT2712 and MT7622 have several type boards, most of are only have 2GB
+physical memory, and our test sample is not bigger enough to cover the
+case that EP DMA will access fully DRAM. Or most EP device does not have
+an built-in DMA engine, they may relay on the host side's MMIO(memory
+mapped IO) operations.
+ 
+Take MT2712 as example, in arch/arm64/boot/dts/mediatek/mt2712-evb.dts,
+the physical memory size is defined as 0x80000000 and is described by
+below node:
+
+memory@400000000 {
+	device_type = "memory";
+	reg = <0 0x400000000 0 0x800000000>
+}
+
+Thanks.
+
+> Lorenzo
+> 
+> > Reported-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > ---
+> >  drivers/pci/controller/pcie-mediatek.c | 8 +++++++-
+> >  1 file changed, 7 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> > index c42fe5c..0b6c728 100644
+> > --- a/drivers/pci/controller/pcie-mediatek.c
+> > +++ b/drivers/pci/controller/pcie-mediatek.c
+> > @@ -90,6 +90,12 @@
+> >  #define AHB2PCIE_SIZE(x)	((x) & GENMASK(4, 0))
+> >  #define PCIE_AXI_WINDOW0	0x448
+> >  #define WIN_ENABLE		BIT(7)
+> > +/*
+> > + * Define PCIe to AHB window size as 2^33 to support max 8GB address space
+> > + * translate, support least 4GB DRAM size access from EP DMA(physical DRAM
+> > + * start from 0x40000000).
+> > + */
+> > +#define PCIE2AHB_SIZE	0x21
+> >  
+> >  /* PCIe V2 configuration transaction header */
+> >  #define PCIE_CFG_HEADER0	0x460
+> > @@ -713,7 +719,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+> >  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
+> >  
+> >  	/* Set PCIe to AXI translation memory space.*/
+> > -	val = fls(0xffffffff) | WIN_ENABLE;
+> > +	val = PCIE2AHB_SIZE | WIN_ENABLE;
+> >  	writel(val, port->base + PCIE_AXI_WINDOW0);
+> >  
+> >  	return 0;
+> > -- 
+> > 2.6.4
+> > 
+
+
