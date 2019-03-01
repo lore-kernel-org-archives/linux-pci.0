@@ -2,75 +2,90 @@ Return-Path: <SRS0=yUVM=RE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4850C10F03
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 11:55:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E5A8C43381
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 12:29:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 837A92085A
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 11:55:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E781E218AE
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 12:29:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731170AbfCALzs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Mar 2019 06:55:48 -0500
-Received: from foss.arm.com ([217.140.101.70]:33732 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727199AbfCALzs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Mar 2019 06:55:48 -0500
+        id S1728098AbfCAM3K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Mar 2019 07:29:10 -0500
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34074 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725978AbfCAM3K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Mar 2019 07:29:10 -0500
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 688E9EBD;
-        Fri,  1 Mar 2019 03:55:48 -0800 (PST)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8645F80D;
+        Fri,  1 Mar 2019 04:29:09 -0800 (PST)
 Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DF8FA3F5C1;
-        Fri,  1 Mar 2019 03:55:45 -0800 (PST)
-Date:   Fri, 1 Mar 2019 11:55:43 +0000
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 029A43F5C1;
+        Fri,  1 Mar 2019 04:29:07 -0800 (PST)
+Date:   Fri, 1 Mar 2019 12:29:02 +0000
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Maya Nakamura <m.maya.nakamura@gmail.com>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org, kys@microsoft.com,
-        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
-        jasowang@redhat.com, mikelley@microsoft.com,
-        Alexander.Levin@microsoft.com, linux-kernel@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, haiyangz@microsoft.com,
-        vkuznets@redhat.com, marcelo.cerri@canonical.com
-Subject: Re: [PATCH v5 0/3] PCI: hv: Refactor hv_irq_unmask() to use hv_vpset
- and cpumask_to_vpset()
-Message-ID: <20190301115542.GC17669@e107981-ln.cambridge.arm.com>
-References: <cover.1551421809.git.m.maya.nakamura@gmail.com>
+To:     Lucas Stach <l.stach@pengutronix.de>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Tim Harvey <tharvey@gateworks.com>, kernel@pengutronix.de,
+        patchwork-lst@pengutronix.de
+Subject: Re: [PATCH] PCI: dwc: skip MSI init if MSIs have been explicitly
+ disabled
+Message-ID: <20190301121119.GA21064@e107981-ln.cambridge.arm.com>
+References: <20190227165219.31911-1-l.stach@pengutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1551421809.git.m.maya.nakamura@gmail.com>
+In-Reply-To: <20190227165219.31911-1-l.stach@pengutronix.de>
 User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 01, 2019 at 06:54:45AM +0000, Maya Nakamura wrote:
-> This patchset removes a duplicate definition of VP set (hv_vp_set) and
-> uses the common definition (hv_vpset) that is used in other places. It
-> changes the order of the members in struct hv_pcibus_device due to
-> flexible array in hv_vpset.
+On Wed, Feb 27, 2019 at 05:52:19PM +0100, Lucas Stach wrote:
+> Since 7c5925afbc58 (PCI: dwc: Move MSI IRQs allocation to IRQ domains
+> hierarchical API) the MSI init claims one of the controller IRQs as a
+> chained IRQ line for the MSI controller. On some designs, like the i.MX6,
+> this line is shared with a PCIe legacy IRQ. When the line is claimed for
+> the MSI domain, any device trying to use this legacy IRQs will fail to
+> request this IRQ line.
 > 
-> It also removes the duplicate implementation of cpumask_to_vpset(), uses
-> the shared implementation, and exports hv_max_vp_index, which is
-> required by cpumask_to_vpset().
+> As MSI and legacy IRQs are already mutually exclusive on the DWC core,
+> as the core won't forward any legacy IRQs once any MSI has been enabled,
+> users wishing to use legacy IRQs already need to explictly disable MSI
+> support (usually via the pci=nomsi kernel commandline option). To avoid
+> any issues with MSI conflicting with legacy IRQs, just skip all of the
+> DWC MSI initalization, including the IRQ line claim, when MSI is disabled.
 > 
-> It adds __aligned(8) to struct retarget_msi_interrupt because Hyper-V
-> requires that hypercall arguments be aligned on an 8 byte boundary. This
-> is now a new patch, separate from one of the previous patches.
-> 
-> Maya Nakamura (3):
->   PCI: hv: Add __aligned(8) to struct retarget_msi_interrupt
->   PCI: hv: Replace hv_vp_set with hv_vpset
->   PCI: hv: Refactor hv_irq_unmask() to use cpumask_to_vpset()
-> 
->  arch/x86/hyperv/hv_init.c           |  1 +
->  drivers/pci/controller/pci-hyperv.c | 61 +++++++++++++----------------
->  2 files changed, 29 insertions(+), 33 deletions(-)
+> Fixes: c5925afbc58
+>        (PCI: dwc: Move MSI IRQs allocation to IRQ domains hierarchical API)
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> Tested-by: Tim Harvey <tharvey@gateworks.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-It looks all good, applied to pci/hv for v5.1, pending kbot checks.
+Applied to pci/dwc for v5.1, added CC: stable too as requested.
 
-Thanks,
 Lorenzo
+
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index 29a05759a294..f4a8494f616b 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -433,7 +433,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	if (ret)
+>  		pci->num_viewport = 2;
+>  
+> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +	if (IS_ENABLED(CONFIG_PCI_MSI) && pci_msi_enabled()) {
+>  		/*
+>  		 * If a specific SoC driver needs to change the
+>  		 * default number of vectors, it needs to implement
+> -- 
+> 2.20.1
+> 
