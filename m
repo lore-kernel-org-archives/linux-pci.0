@@ -2,130 +2,131 @@ Return-Path: <SRS0=yUVM=RE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 208CFC4360F
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 04:52:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B840CC43381
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 05:02:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E439B2186A
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 04:52:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DD2920842
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 05:02:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="G6PD7dlE"
+	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="dcxWi/9f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728753AbfCAEwp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Feb 2019 23:52:45 -0500
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:46327 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725978AbfCAEwo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 23:52:44 -0500
-Received: by mail-ed1-f68.google.com with SMTP id f2so18890093edy.13
-        for <linux-pci@vger.kernel.org>; Thu, 28 Feb 2019 20:52:43 -0800 (PST)
+        id S1725931AbfCAFCU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Mar 2019 00:02:20 -0500
+Received: from mail-eopbgr800043.outbound.protection.outlook.com ([40.107.80.43]:35776
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725287AbfCAFCU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Mar 2019 00:02:20 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=7tYFx901gn1waLlfB6tmaVr0S+UtiRa0DyleMsc717E=;
-        b=G6PD7dlEdElqWbrqJz/5H9lMbqshBNZm7gCrNMqUSikMN+GDUg8A91EUvhY0gT83VA
-         dSo903xiFP3qd3HieStQrWGOxfgU1JdbJ9vV/rTV2d1wVLrb4kLFoa4yuIFJLWR9+EtL
-         3Gq6csGGh00TKEc2PxxB6yREt9UuJaBaNh2yc=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=7tYFx901gn1waLlfB6tmaVr0S+UtiRa0DyleMsc717E=;
-        b=oqXcnT6UupzbZevqjDqxieESEGQaBz76z2yJ9kfLRMTsvLrxf3a2hl59MM1iQ0RD/Z
-         UWUPpBvkn1JlNtbt1fr0qPmmNq6OH2GGS6PzuTRpKVvmybNzw8MM4aZBVXK7akgfCYPP
-         +25OzJLDPjqm8rccBP2Kn1fxeZAD82XqjUtkp8thQrYyZZ7Tp8GDiv0jlJFeStn/wJsa
-         aOMpWRGQYY7wOrVGvXM+XT+LM54vaQAgOKeEiPB63RgOn6bnYe/etGMfWcxj4GLv+5GB
-         2OhlaQS1q1mZC0cWqIuQD/XqwVU2XF668B6qB5knFop2JHNTPywq9f8JzVPW60e6h8Xr
-         waKg==
-X-Gm-Message-State: APjAAAXyisDgVRcyrcuhQwR8mT4eG/yS2ZiWyOnAUtesrT9nHXZVesh/
-        zI4yalvwM9gtgCmlhQ0wHGNMrw==
-X-Google-Smtp-Source: APXvYqxatr8K6ES0jlSld7/LuUdqsZHiAJMtTFnWtVVFu9E9OM+WS5m9Ym//dtAPJ2e5SCrVnuDvrA==
-X-Received: by 2002:a17:906:1182:: with SMTP id n2mr1606542eja.35.1551415962656;
-        Thu, 28 Feb 2019 20:52:42 -0800 (PST)
-Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id s24sm4300931edd.23.2019.02.28.20.52.37
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 28 Feb 2019 20:52:42 -0800 (PST)
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
+ d=Synaptics.onmicrosoft.com; s=selector1-synaptics-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=pjk8U/3sBYrKhekX4hroCjYXMnz/EbUE3OGOtIQqDiA=;
+ b=dcxWi/9fXD7bHVJkdzYteLl5Dsh2cHQ2TqV54T3cOI4WQZlvoXfDvFf2tbOp7s59dD7FuaCRmvgqL9+qgDJ4Wl3IojiBfnTteOQHTeKhDuwnF/BJsJOMcppU17gB+nA2dd2/7HvrveDNutX2zP6hZYnKdeI4gfI7jHg8ukHvUnc=
+Received: from BYAPR03MB4773.namprd03.prod.outlook.com (20.179.92.152) by
+ BYAPR03MB4533.namprd03.prod.outlook.com (20.178.50.86) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1665.15; Fri, 1 Mar 2019 05:02:17 +0000
+Received: from BYAPR03MB4773.namprd03.prod.outlook.com
+ ([fe80::1cca:e5f5:d31d:1e5c]) by BYAPR03MB4773.namprd03.prod.outlook.com
+ ([fe80::1cca:e5f5:d31d:1e5c%5]) with mapi id 15.20.1665.015; Fri, 1 Mar 2019
+ 05:02:17 +0000
+From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
-Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Srinath Mannam <srinath.mannam@broadcom.com>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>
-Subject: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit I/O region
-Date:   Fri,  1 Mar 2019 10:22:16 +0530
-Message-Id: <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 0/5] PCI: dwc: Support remove
+Thread-Topic: [PATCH v2 0/5] PCI: dwc: Support remove
+Thread-Index: AQHUz+vxPcDv5Ll8t0yCbZJv4RtGhA==
+Date:   Fri, 1 Mar 2019 05:02:17 +0000
+Message-ID: <20190301125510.4e2ee985@xhacker.debian>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [199.33.119.15]
+x-clientproxiedby: TY2PR02CA0044.apcprd02.prod.outlook.com
+ (2603:1096:404:a6::32) To BYAPR03MB4773.namprd03.prod.outlook.com
+ (2603:10b6:a03:134::24)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Jisheng.Zhang@synaptics.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 143c423c-967c-4455-5049-08d69e0313c9
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:BYAPR03MB4533;
+x-ms-traffictypediagnostic: BYAPR03MB4533:
+x-microsoft-exchange-diagnostics: =?us-ascii?Q?1;BYAPR03MB4533;23:M1q4HDMd311iszqj2nFnpzHO7HiyUedWnyaG4X9XM?=
+ =?us-ascii?Q?RUGogK3iYIIHP/BhFz6rbAlB+wHYVr6gakk6VyhXQxFijpd1pghVXXZn87n/?=
+ =?us-ascii?Q?p9/50Rb6oPRHrrcorlxDzZ+YrHmStuoOXdvIZhUThoYpRdWBWHkaYOBl78oy?=
+ =?us-ascii?Q?1DfHoNFb86OdNhbTU6PL/XzkXOWmHCDp9v1Shy4sLb2fU+EmTE+22Vg5mCLa?=
+ =?us-ascii?Q?QHquAS8xrYMxRL8OzvhiZdhSdkoHvI2A6iiIr+wCrUwvf1WX7GV2z32LtHgc?=
+ =?us-ascii?Q?zQu0Qh2Fvn9PfN6n4k/NPKRk+fxJqGopZhcQN6eXHU1ZHbmqw6AI4Y2m0/kB?=
+ =?us-ascii?Q?v9/IECOl/nJsoy8rfPYuRm27iKfhufrytY9Sy6GgSMJ+LVe7CnadvKReRNyt?=
+ =?us-ascii?Q?MH0+lHCAZreeKqDZ/NFw6XBhNA2GUlSqrj1ErXO9UpZTSokWkhE9KOqFGnpS?=
+ =?us-ascii?Q?A5AqA03N3+eeOT1YKi3H7LGYJsui25FBGp6YJIBTg2/Z5SsDMcnbMY+p4hp7?=
+ =?us-ascii?Q?3JNYs9qhB+Sub8swtu50ELVX1zIz1rZ3TDwWFxQgC3ZOdtGSS8sZT9pLN0VS?=
+ =?us-ascii?Q?Z+zjCEPli4tVoQGZU//qV7wnERKwRBM1tXus7XuwiWweZtk6bY8cHrnXVB/I?=
+ =?us-ascii?Q?5lNa9ePRwhAt5wHSnkkgdGOu2OEEGWRJco5mqR1SOgSll3/jxNTWXTVqV7tP?=
+ =?us-ascii?Q?FDMx289YPPlukx4zfLycNep9PQ/lEPygjMZAAWKJ/anr1tl5V7Bm65ddZ9zm?=
+ =?us-ascii?Q?MHS8QtV3NghUpTgyU/kvy56VH/9tnhFrTY8oU/SjIOJtZwK1KBr+hmWtkicb?=
+ =?us-ascii?Q?RCLKv5xfbgW7sykLywpFZxwRtAh29Fx4Uv6D/AfnawrMhQhIbOi6YcXK70o/?=
+ =?us-ascii?Q?L9oq2JwH+qhIxbKmAwUN7He2Bh2A7oW1W8CxrvxxPoJhiUqWYi0qG6DSQcK0?=
+ =?us-ascii?Q?RLH1xbncEkUc+Tpfku4KnlCFjKkPkCIKK/FpH64bA/6aIZ4ROvyHapTUDib5?=
+ =?us-ascii?Q?dztJrehpYrM0fiQd0M7O3hbcz5ZLiN0Q+TPnMbUHbndw5M6gYj/XnWxDS0+j?=
+ =?us-ascii?Q?WuCAk1UabPDi3ol+9emUQEOGI/xkX0BA1J7QwouC2nuTNptRY//u8Albc1qf?=
+ =?us-ascii?Q?9veuPseevlbuJVQjOMF0gUe6vksM36ZXs7JjOvfxJRuO6KdFgqd+4PKsfjWY?=
+ =?us-ascii?Q?2tbMRn1pTtPg9ciO+VlX5byU6lZLHszLkz7?=
+x-microsoft-antispam-prvs: <BYAPR03MB4533BE7FC8CE5F879B4BE714ED760@BYAPR03MB4533.namprd03.prod.outlook.com>
+x-forefront-prvs: 09634B1196
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(346002)(39860400002)(396003)(136003)(376002)(199004)(189003)(86362001)(316002)(97736004)(6486002)(66066001)(25786009)(4326008)(68736007)(102836004)(50226002)(4744005)(5660300002)(476003)(6436002)(2906002)(54906003)(1076003)(9686003)(106356001)(7736002)(386003)(8936002)(3846002)(14454004)(71200400001)(478600001)(71190400001)(186003)(81166006)(81156014)(6116002)(72206003)(256004)(305945005)(52116002)(53936002)(110136005)(26005)(8676002)(99286004)(486006)(6506007)(6512007)(105586002)(39210200001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR03MB4533;H:BYAPR03MB4773.namprd03.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:0;MX:1;
+received-spf: None (protection.outlook.com: synaptics.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: I6WpZPKdSm4GsRvHon9KnR59EHCA275j0sDBbSUbE+jaiMMxMTNZKZMuXRvet8RDNg2jVoXDi3FRzuDgXoY0HzWd2GUD3fPCunjAKa9FrBrITDNRMHQG4TNzjLc7VPMe6e0Kvsz0lmrAeItQPxsj/gpW5PsoGjzPurrh2TiL7Kz5ozcW2Xhsm7DlZprORRTPnEtXjb2RU4FSfFXrr4rx3pbk4psG/MJK2QypHmuEDW6H40zuxHmpFdZbwYdN657Kteu/vp+Nb19e3iNZxo3gxP5wnyNekiAhdr+spmzktIB2lu+a8C9NZRn0/Fa+HKig1sTx8evYVBFUtdB4zYUHZe/ogmfrqvSdRWxE2CDxaCh5QzUUvl8RDzBu4MxTN4DFiNFUe4QsgtiQY7IFKPTtV34x2sW1oF5LPxN1g+rf3bI=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <6AD9ADDA9579594AB28C290C7E143702@namprd03.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: synaptics.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 143c423c-967c-4455-5049-08d69e0313c9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Mar 2019 05:02:17.7527
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 335d1fbc-2124-4173-9863-17e7051a2a0e
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR03MB4533
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In the present driver outbound window configuration is done to map above
-32-bit address I/O regions with corresponding PCI memory range given in
-ranges DT property.
+Currently, the PCI dwc host users don't support the remove, but nothing
+prevent us from supporting it. To achieve this goal, we need to ensure
+we can do necessary clean up work.
 
-This patch add outbound window configuration to map below 32-bit I/O range
-with corresponding PCI memory, which helps to access I/O region in ARM
-32-bit and one to one mapping of I/O region to PCI memory.
+Changes since v1:
+  - address Bjorn's comments, I.E Capitalize, s/irq/IRQ/, s/msi/MSI/
 
-Ex:
-1. ranges DT property given for current driver is,
-    ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
-    I/O region address is 0x400000000
-2. ranges DT property can be given after this patch,
-    ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
-    I/O region address is 0x42000000
+Jisheng Zhang (5):
+  PCI: dwc: Fix dw_pcie_free_msi() if msi_irq is invalid
+  PCI: dwc: Free the page for MSI IRQ in dw_pcie_free_msi()
+  PCI: dwc: Free MSI in the error code path of dw_pcie_host_init()
+  PCI: dwc: Use devm_pci_alloc_host_bridge() to simplify the code
+  PCI: dwc: Save root bus for driver remove
 
-Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
-Signed-off-by: Ray Jui <ray.jui@broadcom.com>
----
- drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+ .../pci/controller/dwc/pcie-designware-host.c | 38 ++++++++++---------
+ drivers/pci/controller/dwc/pcie-designware.h  |  2 +
+ 2 files changed, 23 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-index b882255..080f142 100644
---- a/drivers/pci/controller/pcie-iproc.c
-+++ b/drivers/pci/controller/pcie-iproc.c
-@@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
- 			resource_size_t window_size =
- 				ob_map->window_sizes[size_idx] * SZ_1M;
- 
--			if (size < window_size)
--				continue;
-+			/*
-+			 * Keep iterating until we reach the last window and
-+			 * with the minimal window size at index zero. In this
-+			 * case, we take a compromise by mapping it using the
-+			 * minimum window size that can be supported
-+			 */
-+			if (size < window_size) {
-+				if (size_idx > 0 || window_idx > 0)
-+					continue;
-+
-+				/*
-+				 * For the corner case of reaching the minimal
-+				 * window size that can be supported on the
-+				 * last window
-+				 */
-+				axi_addr = ALIGN_DOWN(axi_addr, window_size);
-+				pci_addr = ALIGN_DOWN(pci_addr, window_size);
-+				size = window_size;
-+			}
- 
- 			if (!IS_ALIGNED(axi_addr, window_size) ||
- 			    !IS_ALIGNED(pci_addr, window_size)) {
--- 
-2.7.4
+--=20
+2.20.1
 
