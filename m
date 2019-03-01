@@ -2,74 +2,102 @@ Return-Path: <SRS0=yUVM=RE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D60ECC43381
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 06:45:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19826C43381
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 06:54:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7388218AE
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 06:45:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAA69218B0
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 06:54:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DOw3HGUv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726739AbfCAGpH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Mar 2019 01:45:07 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4191 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725931AbfCAGpG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Mar 2019 01:45:06 -0500
-Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 1659F5698E310B78EB27;
-        Fri,  1 Mar 2019 14:45:04 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 1 Mar 2019 14:44:56 +0800
-From:   Wei Yongjun <weiyongjun1@huawei.com>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Zachary Zhang" <zhangzg@marvell.com>
-CC:     Wei Yongjun <weiyongjun1@huawei.com>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <kernel-janitors@vger.kernel.org>
-Subject: [PATCH -next] PCI: aardvark: Make symbol 'advk_pci_bridge_emul_ops' static
-Date:   Fri, 1 Mar 2019 06:58:09 +0000
-Message-ID: <20190301065809.66046-1-weiyongjun1@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        id S1727904AbfCAGys (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Mar 2019 01:54:48 -0500
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:43208 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725290AbfCAGyr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2019 01:54:47 -0500
+Received: by mail-pf1-f196.google.com with SMTP id q17so10961500pfh.10;
+        Thu, 28 Feb 2019 22:54:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=oXEfPEGL+Zj75A5a3F8V80z9LeMcoj/Klqsodz0w0Eo=;
+        b=DOw3HGUvyL8LkrkxcIwaECvG5vd+yUTfNIJM5C6+dybHFL0DMuu5191QjD3KhLjETT
+         ENcwZb1K4hqigvIsGR7MyGcIWVZlKYtDNpwJB+ad+qNPD6TngKT69XEnYF9tvNclyi0s
+         WEVNBmc3fjbXt1ndqpdUmjXgXszS6MnKAvXN7u1yjjwk5mHb8W4INCaCqswfea1aI3Bk
+         zaWy0kA4Vdj3al27bFK8Z+3UmYOvwJt4hDZ9rY9CHb02DZWYMZXgIPCsDb92Z7eN6wOq
+         eKw2lvFgx7XLENb3Iu/09sixuheUiqXBzcl0xjD/Z8BRX0dvTs5lFFxNe9J/Av63QmbH
+         JvcQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=oXEfPEGL+Zj75A5a3F8V80z9LeMcoj/Klqsodz0w0Eo=;
+        b=Ie46g3f6yTgH3ImS2B/ICwYOyym/LoXapD83Hro1kjMmgnnhCOb9gl2yBtC1WQ69Vh
+         FIFYy41dwG9sah4Ld+7Bik6pDL75svApQhFe7LT217ygHvjAqov4qzLR18IzmcfDgyj2
+         yiRmHVVqSjmgSDXuSGgR23qoUdCjEXc0N1Kb5JLAT1tFMpdI45HyLxbuY/eCIMTYX4yS
+         T391QhYsK89tx/Mrt2oUtTAQRVoytHB9WxhweA4SDbgPAStdz6j/d6dCn+etyQG3+UJL
+         6dC/ckTcuiGDAfDL8hjKi5WxMGLbvYCWLbCLX3LGV3eHKVaEY0nWiyL73btEPD2DUxrt
+         n/3A==
+X-Gm-Message-State: AHQUAuZLIobiEVYWBQIJJYvhDFe6iNRBjgh1c1Aig1hRWKceq2IJYFu9
+        rZ+LCZupwWO5v37AQfyWTCk=
+X-Google-Smtp-Source: AHgI3IYqJ2/1pxz/XxLtGjRL5eqzEUSI95cTJPkqnQJzFH9WXViShXguZHcx30uhm3begF46omTckQ==
+X-Received: by 2002:aa7:8597:: with SMTP id w23mr3925636pfn.87.1551423286942;
+        Thu, 28 Feb 2019 22:54:46 -0800 (PST)
+Received: from maya190131 ([52.247.206.249])
+        by smtp.gmail.com with ESMTPSA id s4sm19649505pfe.16.2019.02.28.22.54.46
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 28 Feb 2019 22:54:46 -0800 (PST)
+Date:   Fri, 1 Mar 2019 06:54:45 +0000
+From:   Maya Nakamura <m.maya.nakamura@gmail.com>
+To:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, kys@microsoft.com,
+        sthemmin@microsoft.com, olaf@aepfle.de, apw@canonical.com,
+        jasowang@redhat.com, mikelley@microsoft.com,
+        Alexander.Levin@microsoft.com
+Cc:     linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        haiyangz@microsoft.com, vkuznets@redhat.com,
+        marcelo.cerri@canonical.com
+Subject: [PATCH v5 0/3] PCI: hv: Refactor hv_irq_unmask() to use hv_vpset and
+ cpumask_to_vpset()
+Message-ID: <cover.1551421809.git.m.maya.nakamura@gmail.com>
 MIME-Version: 1.0
-Content-Type:   text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Fixes the following sparse warning:
+This patchset removes a duplicate definition of VP set (hv_vp_set) and
+uses the common definition (hv_vpset) that is used in other places. It
+changes the order of the members in struct hv_pcibus_device due to
+flexible array in hv_vpset.
 
-drivers/pci/controller/pci-aardvark.c:469:28: warning:
- symbol 'advk_pci_bridge_emul_ops' was not declared. Should it be static?
+It also removes the duplicate implementation of cpumask_to_vpset(), uses
+the shared implementation, and exports hv_max_vp_index, which is
+required by cpumask_to_vpset().
 
-Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/pci/controller/pci-aardvark.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It adds __aligned(8) to struct retarget_msi_interrupt because Hyper-V
+requires that hypercall arguments be aligned on an 8 byte boundary. This
+is now a new patch, separate from one of the previous patches.
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 6eecae447af3..eb58dfdaba1b 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -466,7 +466,7 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 	}
- }
- 
--struct pci_bridge_emul_ops advk_pci_bridge_emul_ops = {
-+static struct pci_bridge_emul_ops advk_pci_bridge_emul_ops = {
- 	.read_pcie = advk_pci_bridge_emul_pcie_conf_read,
- 	.write_pcie = advk_pci_bridge_emul_pcie_conf_write,
- };
+Maya Nakamura (3):
+  PCI: hv: Add __aligned(8) to struct retarget_msi_interrupt
+  PCI: hv: Replace hv_vp_set with hv_vpset
+  PCI: hv: Refactor hv_irq_unmask() to use cpumask_to_vpset()
 
+ arch/x86/hyperv/hv_init.c           |  1 +
+ drivers/pci/controller/pci-hyperv.c | 61 +++++++++++++----------------
+ 2 files changed, 29 insertions(+), 33 deletions(-)
 
+-- 
+2.17.1
 
