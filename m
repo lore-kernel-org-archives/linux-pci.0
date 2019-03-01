@@ -2,106 +2,171 @@ Return-Path: <SRS0=yUVM=RE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F273C43381
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:59:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81CD9C43381
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 03:15:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6331D218AE
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:59:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39723218B0
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 03:15:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="cKjhPGt7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730965AbfCAB7X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Feb 2019 20:59:23 -0500
-Received: from mailgw01.mediatek.com ([210.61.82.183]:53803 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725967AbfCAB7X (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 20:59:23 -0500
-X-UUID: 21cdcab5909a4bec87ce57119ebaf975-20190301
-X-UUID: 21cdcab5909a4bec87ce57119ebaf975-20190301
-Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
-        (envelope-from <honghui.zhang@mediatek.com>)
-        (mhqrelay.mediatek.com ESMTP with TLS)
-        with ESMTP id 699210403; Fri, 01 Mar 2019 09:59:17 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by mtkmbs08n1.mediatek.inc
- (172.21.101.55) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 1 Mar
- 2019 09:59:15 +0800
-Received: from [10.17.3.153] (172.27.4.253) by MTKCAS32.mediatek.inc
- (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 1 Mar 2019 09:59:14 +0800
-Message-ID: <1551405554.32061.19.camel@mhfsdcap03>
-Subject: Re: [PATCH 7/8] PCI: mediatek: fix a leaked reference by adding
- missing of_node_put
-From:   Honghui Zhang <honghui.zhang@mediatek.com>
-To:     Wen Yang <wen.yang99@zte.com.cn>
-CC:     <benh@kernel.crashing.org>, <paulus@samba.org>,
-        <mpe@ellerman.id.au>, <tyreld@linux.vnet.ibm.com>,
-        <bhelgaas@google.com>, <linuxppc-dev@lists.ozlabs.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>,
-        <matthias.bgg@gmail.com>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>, <rjui@broadcom.com>,
-        <sbranden@broadcom.com>, <bcm-kernel-feedback-list@broadcom.com>,
-        <thomas.petazzoni@bootlin.com>, <shawn.lin@rock-chips.com>,
-        <heiko@sntech.de>, <linux-rockchip@lists.infradead.org>,
-        <minghuan.Lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <hayashi.kunihiko@socionext.com>, <yamada.masahiro@socionext.com>,
-        <kishon@ti.com>, <linux-omap@vger.kernel.org>,
-        <wang.yi59@zte.com.cn>
-Date:   Fri, 1 Mar 2019 09:59:14 +0800
-In-Reply-To: <1551242443-27300-7-git-send-email-wen.yang99@zte.com.cn>
-References: <1551242443-27300-1-git-send-email-wen.yang99@zte.com.cn>
-         <1551242443-27300-7-git-send-email-wen.yang99@zte.com.cn>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
-Content-Transfer-Encoding: 7bit
+        id S1727923AbfCADP3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Feb 2019 22:15:29 -0500
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17478 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726088AbfCADP3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 22:15:29 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c78a3c90000>; Thu, 28 Feb 2019 19:15:22 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Thu, 28 Feb 2019 19:15:27 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Thu, 28 Feb 2019 19:15:27 -0800
+Received: from [10.25.72.36] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 1 Mar
+ 2019 03:15:23 +0000
+Subject: Re: [PATCH] PCI: tegra: Do not allocate MSI target memory
+To:     Lucas Stach <dev@lynxeye.de>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <treding@nvidia.com>,
+        <swarren@nvidia.com>, <mperttunen@nvidia.com>,
+        <jonathanh@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
+References: <1551366004-32547-1-git-send-email-vidyas@nvidia.com>
+ <247102e57e067d1477f3260bdeaa3ea011d0f3ed.camel@lynxeye.de>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <8b6f53c4-ac39-40d6-0979-86137236f890@nvidia.com>
+Date:   Fri, 1 Mar 2019 08:45:19 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.0
 MIME-Version: 1.0
-X-MTK:  N
+In-Reply-To: <247102e57e067d1477f3260bdeaa3ea011d0f3ed.camel@lynxeye.de>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1551410122; bh=TW41oyemMg48UUwOxFuJ6u874h0+Nf0tN7eG03qPnIY=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=cKjhPGt77XWVQZEPG4R8oHDTcZUsLlmvA0FOEkcyhHG434DCHDp1FsUFeMY+qjmrT
+         bcokLfD0+k3WEHUVauKTzK6l65fyeMT81SxqYGbRmkT1zJwc7YoGKbJecE/I34mSiZ
+         DCJA2+OnzYMHayzR9IT3+tdiw7/nIsJ++Rq841wMncvfO+s4cKBeVpH/xzuobR/62q
+         eu07G1bsZRS9i1W+BNnnN/iXhg1KhZbQ6Ga6BOEPlGp93qIwfLpPWSqoT5FbEqvY4C
+         0zkxs9lJ9/K/K4x1BqKEjxYjxGDpM9ZX9gXUSAWteeqH+ldj90frD79zx4OTzqh12O
+         cdtkte57djJIA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2019-02-27 at 12:40 +0800, Wen Yang wrote:
-> The call to of_get_next_child returns a node pointer with refcount
-> incremented thus it must be explicitly decremented after the last
-> usage.
-> irq_domain_add_linear also calls of_node_get to increase refcount,
-> so irq_domain will not be affected when it is released.
-> 
-> Detected by coccinelle with the following warnings:
-> ./drivers/pci/controller/pcie-mediatek.c:577:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 567, but without a corresponding object release within this function.
-> ./drivers/pci/controller/pcie-mediatek.c:583:3-9: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 567, but without a corresponding object release within this function.
-> ./drivers/pci/controller/pcie-mediatek.c:586:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 567, but without a corresponding object release within this function.
-> 
-> Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
-> Cc: Ryder Lee <ryder.lee@mediatek.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Matthias Brugger <matthias.bgg@gmail.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-mediatek@lists.infradead.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> ---
->  drivers/pci/controller/pcie-mediatek.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> index 55e471c..e91716a 100644
-> --- a/drivers/pci/controller/pcie-mediatek.c
-> +++ b/drivers/pci/controller/pcie-mediatek.c
-> @@ -572,6 +572,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
->  
->  	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
->  						 &intx_domain_ops, port);
-> +	of_node_put(pcie_intc_node);
->  	if (!port->irq_domain) {
->  		dev_err(dev, "failed to get INTx IRQ domain\n");
->  		return -ENODEV;
 
-Thanks for fix this.
+On 3/1/2019 12:32 AM, Lucas Stach wrote:
+> Am Donnerstag, den 28.02.2019, 20:30 +0530 schrieb Vidya Sagar:
+>> The PCI host bridge found on Tegra SoCs doesn't require the MSI target
+>> address to be backed by physical system memory. Writes are intercepted
+>> within the controller and never make it to the memory pointed to.
+>>
+>> Since no actual system memory is required, remove the allocation of a
+>> single page and hardcode the MSI target address with a special address
+>> on a per-SoC basis. Ideally this would be an address to an MMIO memory
+>> region (such as where the controller's register are located). However,
+>> those addresses don't work reliably across all Tegra generations. The
+>> only set of addresses that work consistently are those that point to
+>> external memory.
+>>
+>> This is not ideal, since those addresses could technically be used for
+>> DMA and hence be confusing. However, the first page of external memory
+>> is unlikely to be used and special enough to avoid confusion.
+> So you are trading a slight memory waste of a single page against a
+> sporadic (and probably hard to debug) DMA failure if any device happens
+> to initiate DMA to the first page of physical memory? That does not
+> sound like a good deal...
+>
+> Also why would the first page of external memory be unlikely to be
+> used?
+>
+> Regards,
+> Lucas
 
-Acked-by: Honghui Zhang <honghui.zhang@mediatek.com>
+We are not wasting single page of memory here and if any device's DMA is 
+trying to
 
+access it, it will still go through. Its just that we are using that 
+same address for MSI (note that
+
+MSI writes don't go beyond PCIe IP as they get decoded at PCIe IP level 
+itself and only an interrupt
+
+goes to CPU) and that might be a bit confusing as same address is used 
+as normal memory as well
+
+as MSI target address. Since there can never be any issue with this, 
+would you suggest to
+
+remove the last paragraph from commit description?
+
+>> Original base patch was posted by Thierry Reding <treding@nvidia.com>
+>> ( http://patchwork.ozlabs.org/patch/848569/ )
+>> Current patch removes hardcoding of external RAM starting address instead
+>> gets it using memblock_start_of_DRAM() API
+>>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> ---
+>>   drivers/pci/controller/pci-tegra.c | 10 +++-------
+>>   1 file changed, 3 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+>> index f4f53d092e00..b33de7c78425 100644
+>> --- a/drivers/pci/controller/pci-tegra.c
+>> +++ b/drivers/pci/controller/pci-tegra.c
+>> @@ -23,6 +23,7 @@
+>>   #include <linux/irqdomain.h>
+>>   #include <linux/kernel.h>
+>>   #include <linux/init.h>
+>> +#include <linux/memblock.h>
+>>   #include <linux/module.h>
+>>   #include <linux/msi.h>
+>>   #include <linux/of_address.h>
+>> @@ -231,9 +232,8 @@ struct tegra_msi {
+>>   	struct msi_controller chip;
+>>   	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>>   	struct irq_domain *domain;
+>> -	unsigned long pages;
+>>   	struct mutex lock;
+>> -	u64 phys;
+>> +	phys_addr_t phys;
+>>   	int irq;
+>>   };
+>>   
+>> @@ -1548,9 +1548,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>>   		goto err;
+>>   	}
+>>   
+>> -	/* setup AFI/FPCI range */
+>> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+>> -	msi->phys = virt_to_phys((void *)msi->pages);
+>> +	msi->phys = memblock_start_of_DRAM();
+>>   	host->msi = &msi->chip;
+>>   
+>>   	return 0;
+>> @@ -1592,8 +1590,6 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
+>>   	struct tegra_msi *msi = &pcie->msi;
+>>   	unsigned int i, irq;
+>>   
+>> -	free_pages(msi->pages, 0);
+>> -
+>>   	if (msi->irq > 0)
+>>   		free_irq(msi->irq, pcie);
+>>   
