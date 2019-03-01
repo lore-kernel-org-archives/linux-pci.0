@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF504C43381
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 05:05:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB43DC43381
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 05:06:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B589420842
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 05:05:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A6D520842
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 05:06:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="do+JHVPx"
+	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="WjaFSOTT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726792AbfCAFFY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Mar 2019 00:05:24 -0500
-Received: from mail-eopbgr790041.outbound.protection.outlook.com ([40.107.79.41]:37686
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        id S1725974AbfCAFGG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Mar 2019 00:06:06 -0500
+Received: from mail-eopbgr800040.outbound.protection.outlook.com ([40.107.80.40]:51183
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726053AbfCAFFX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Mar 2019 00:05:23 -0500
+        id S1725290AbfCAFGG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Mar 2019 00:06:06 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=Synaptics.onmicrosoft.com; s=selector1-synaptics-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CJrOO+e+wRNyb6fWknZF9YnjlA9kz18HJH8vJFqfQVI=;
- b=do+JHVPxgugmat615Pj/NsozsHZGCIGBjUq7GpG3OvscFA1FZM33cpV9MscEseRnT9oiqaDVVtMChvDD5hPQr/NzLMY2iQwRkuTvj3tNOnLB/GyI53gEIlzPOQ3i+64WHwUrfffW18fmhA9omkQgJlCyMEWgkbZy7ijbMNc6cNs=
+ bh=kCIAgyc0dyZXGWnEL+YP+rbIulW9e2ZVM0504mRNcjk=;
+ b=WjaFSOTTXdm61wKhPwECiT37dHnQ8eMDOQyIFNIcniUmUvTkZw6mazklxSZOabaCQ6xv9XCXOBZdtyzQMEIEEJBncndqAquEvxAHCY4lzdxKzVj5LDugIp0RXe8oYbZTEJY3eufGfJT45dSM+SUl/RXJc0kaUNIYSES7OUHLN5k=
 Received: from BYAPR03MB4773.namprd03.prod.outlook.com (20.179.92.152) by
- BYAPR03MB3510.namprd03.prod.outlook.com (52.135.213.11) with Microsoft SMTP
+ BYAPR03MB4533.namprd03.prod.outlook.com (20.178.50.86) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1665.16; Fri, 1 Mar 2019 05:05:21 +0000
+ 15.20.1665.15; Fri, 1 Mar 2019 05:06:04 +0000
 Received: from BYAPR03MB4773.namprd03.prod.outlook.com
  ([fe80::1cca:e5f5:d31d:1e5c]) by BYAPR03MB4773.namprd03.prod.outlook.com
  ([fe80::1cca:e5f5:d31d:1e5c%5]) with mapi id 15.20.1665.015; Fri, 1 Mar 2019
- 05:05:21 +0000
+ 05:06:04 +0000
 From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
 To:     Jingoo Han <jingoohan1@gmail.com>,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -44,13 +44,13 @@ CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
         <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 3/5] PCI: dwc: Free MSI in the error code path of
- dw_pcie_host_init()
-Thread-Topic: [PATCH v2 3/5] PCI: dwc: Free MSI in the error code path of
- dw_pcie_host_init()
-Thread-Index: AQHUz+xey3xJKe30LkiEAqIClgwSXQ==
-Date:   Fri, 1 Mar 2019 05:05:20 +0000
-Message-ID: <20190301125818.1b0d7e08@xhacker.debian>
+Subject: [PATCH v2 4/5] PCI: dwc: Use devm_pci_alloc_host_bridge() to simplify
+ the code
+Thread-Topic: [PATCH v2 4/5] PCI: dwc: Use devm_pci_alloc_host_bridge() to
+ simplify the code
+Thread-Index: AQHUz+x4rd+EJMsrS0mSjARO970vsA==
+Date:   Fri, 1 Mar 2019 05:06:04 +0000
+Message-ID: <20190301125901.5ee7730c@xhacker.debian>
 References: <20190301125510.4e2ee985@xhacker.debian>
 In-Reply-To: <20190301125510.4e2ee985@xhacker.debian>
 Accept-Language: en-US
@@ -58,104 +58,158 @@ Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-originating-ip: [199.33.119.15]
-x-clientproxiedby: TY2PR02CA0014.apcprd02.prod.outlook.com
- (2603:1096:404:56::26) To BYAPR03MB4773.namprd03.prod.outlook.com
+x-clientproxiedby: TY2PR01CA0067.jpnprd01.prod.outlook.com
+ (2603:1096:404:10a::31) To BYAPR03MB4773.namprd03.prod.outlook.com
  (2603:10b6:a03:134::24)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=Jisheng.Zhang@synaptics.com; 
 x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 74d5ada2-0f29-40f7-fe43-08d69e0380f9
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:BYAPR03MB3510;
-x-ms-traffictypediagnostic: BYAPR03MB3510:
-x-microsoft-exchange-diagnostics: =?us-ascii?Q?1;BYAPR03MB3510;23:9Dyg8rNs6gHVJNy9htt6unZPe8lqJZRxu5+iL0X16?=
- =?us-ascii?Q?k41rmDo8iVwerxf/HV4jhZtEENdLxrNVSbdNEzRmI1NmaKjEimNuPV8NaPVs?=
- =?us-ascii?Q?GX/fa9L1FODxE/2Qgz9Yt4EmW8+EWKDg8y5Uxnhy2gVZNXHG9xJAkI8ugSMh?=
- =?us-ascii?Q?QjqgWdfBt0FWubanZa/SoDIxJf5+qL1Dp19UGCyNHQFAt7lB0zsBjVYA2XxF?=
- =?us-ascii?Q?ImscuT5tJs13M3Qk2h+QTOTPgkW8sVhXRX8VVcqGo9SAUZBn+XPkkWEvbAog?=
- =?us-ascii?Q?zxC1480fk+8U7QRjeqVoi2Gy8MM1GBhBsLWJULXmXejf5AJC7RC+jqrg67Kb?=
- =?us-ascii?Q?eN5Bi6N84eCFIhyjX8UE68kH0GhESNRzVLsXHNl8b8SeIRRSZnv/CR+AoAd5?=
- =?us-ascii?Q?OHz6uMSQZUJu+MmQYtfuUqv5XgGmJ+/HiNb0gTRHjphoLkMaqqy/SFa5OhUU?=
- =?us-ascii?Q?TsdEFwbioaBDVl9+6IcMpImJwyqklvf1MC0vjg8Tj73QKPj0H8wEPvXFyGAn?=
- =?us-ascii?Q?twkPvs1wj59lWqygQDoUhqqAq9lbkcYMPkISMC+N9gMQFtn848BBldjtz8mW?=
- =?us-ascii?Q?cTy21WqTgtQeu9DF09NBDU9COV7V1RARglrjeHWdusuv3y6N1iScEW/7c5Cu?=
- =?us-ascii?Q?mhFFXD3ysKgCPAesCZrAzA6HpfmcCIn+ZvAjxRh6qXpmUDsqCYmKPjrvsAEr?=
- =?us-ascii?Q?VkeBl79Ns0HWd32z4tTF7FwwlPyt9hKj1SkUyVi+Xstuf9LK2BFuy9+oP/WO?=
- =?us-ascii?Q?XjR8G7evlxwzjPgUDn8tf5WiGJFUm4/trKN0hSZOiYYDQTyhBFaeAY/FMozI?=
- =?us-ascii?Q?EzLljDIgdxHzse2iOj1+/9qX/JkXrUmF+iWEbG1T/vvU2wmCf7N9POd94NBZ?=
- =?us-ascii?Q?yXIlk6UKo9g8Yu9W01G1BkqIHAJyO7Vqi+1uAsbEjNvIWCuJ8Ny0JFLe65Pt?=
- =?us-ascii?Q?dYRnD4X8e6srOJVpyK071rziCGB52h+ciMJf0EcULegw6GVSaz5MLzq9sZDj?=
- =?us-ascii?Q?GaYdvU8o/F16T1d7cv+adWQqCE9MWVhnRaizxe4uiEDDaxfoQGD2B7soCicd?=
- =?us-ascii?Q?CXyZx7Z/QC2Ub61EqVVsONJeIOHa90GCsQ9pDXd418b6E5cV+ESTmnop85Kj?=
- =?us-ascii?Q?/WK9Q/5mzyrIOHJnLNMIekhbgJLYjXSPGJt8/vrtcVg2rsUMgEbqI93oZKX4?=
- =?us-ascii?Q?GTBwmcgu8RcW9icRNaGTV882JFj7f99att/BQv/6M0EnLQvlHtjKjK9Ew=3D?=
- =?us-ascii?Q?=3D?=
-x-microsoft-antispam-prvs: <BYAPR03MB3510463A71A3DD99C04843E1ED760@BYAPR03MB3510.namprd03.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: f9c2177d-ec54-49c0-fc5c-08d69e039ad1
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(2017052603328)(7153060)(7193020);SRVR:BYAPR03MB4533;
+x-ms-traffictypediagnostic: BYAPR03MB4533:
+x-microsoft-exchange-diagnostics: =?us-ascii?Q?1;BYAPR03MB4533;23:McDMIRp70j32p0k+s3Z6YZb8KgIQJPMgY+DypZ8LJ?=
+ =?us-ascii?Q?1ZMjVdxDsJiregkQz1vWntJEgI2ifMZdp95Gz+G47OWcT/77L1Ty1H06Z0yX?=
+ =?us-ascii?Q?Bx/Lc9dgLytE7msM3lGj7qIgpbiPyauldxjlIDChNxRdhjfX9kDKaFkp2XWV?=
+ =?us-ascii?Q?964YksfwV2f1D4mJWVZbVSeeB7U1EvvhNb8zd3YtX7/kXsAyvNP9Uodzgfsf?=
+ =?us-ascii?Q?DU8PJ2uisH8J1hdlD5Vwci4QbvmohTAJb1jpNWD5fshcOWpKNdS9O0ZCPPpp?=
+ =?us-ascii?Q?xZ/QGw3vxypgN3klIteXRMJCFcF1gC9cNzBPRXrdPDUAmfh1KO4HXVQ/8mCP?=
+ =?us-ascii?Q?RWu4GFNvf8ft/bPjWugXXsIcPqknv3cx/Yx0Uscdz0DcJbKDqoRyCOcmmali?=
+ =?us-ascii?Q?7sN54UccEii/Ym01muckRvBRN0mARXonwyS76Dcl5gpAbJhWlNuTb6d5ntBK?=
+ =?us-ascii?Q?dzuKPN79qzgm1CzKa7qM60EqBhnUdQk/9OBBbw/+3Qx0dvdNXiehs+TBiZnr?=
+ =?us-ascii?Q?tQiHP6hsnWkaD/tlPdtkNDIs1B2CZRMk93RSWA+r/T/K1M24aN14YL2WItDv?=
+ =?us-ascii?Q?Elo6f+G5eOeafqPu4iXcfHhrcE3O5MD1OC8flehCP9hYZn6a7taG+sysgPP+?=
+ =?us-ascii?Q?T1+oQ5Ulws9w0hNDVxGsAW19SbLXwT2kYVYOXtYLcxNulYi/JBhDZTc2GWOX?=
+ =?us-ascii?Q?rjT46ryT077tqEG1NcpSTalyJpdM6UzRx4g6oIOxYhDNT/L1l3z2/i1rOdwi?=
+ =?us-ascii?Q?SN1VSOPi7J9EClZ5HRZ9Unyw3ihpweIi1Qg58aVewhx5+XSPg3cd2rApFWlU?=
+ =?us-ascii?Q?EWx4kcQUeQD2vrElUAeU8JJL9M4jMZS1pbLt5kVHaIlvHHVncv9107BDIycL?=
+ =?us-ascii?Q?2bPPRkXO+JzGJZ+5T9nEVVmVs4gEnNQgxbZuEISMp16W5fYXwEBgxcllGCLT?=
+ =?us-ascii?Q?MVuce4Zgq1Jo022NjvKWr+Ok1qL8jSphc4QF28FrPvzjiGC1qSeAKyx4Nx+c?=
+ =?us-ascii?Q?aZ4qX9LncrE4Xo34ryC8cMAb5hQoRdeVMlwxG6ITKT7itC3P+rADJHKaW5Fl?=
+ =?us-ascii?Q?sGsBHjOgPY/cJ7N+embdpvPOYEcpsxwsba8sPxC3OmGHCtRFR7Cdk3vFIDAf?=
+ =?us-ascii?Q?bFhcAbXlh5xk6R3AwtTY46S8CKGCLE0Rhl1V0/OxFSibXxYQq54hN0ynNFOi?=
+ =?us-ascii?Q?ef4DkT1yHi+JJGwuN4PcqADxpBjVdDZJTB3R5d5Pr8+WAGTdagOL8fUxpzUa?=
+ =?us-ascii?Q?ZfuOqIBDl9+nIyJXTk=3D?=
+x-microsoft-antispam-prvs: <BYAPR03MB45332558A22AF87A393C457FED760@BYAPR03MB4533.namprd03.prod.outlook.com>
 x-forefront-prvs: 09634B1196
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(396003)(346002)(39860400002)(136003)(366004)(189003)(199004)(446003)(11346002)(316002)(476003)(106356001)(110136005)(8936002)(486006)(186003)(50226002)(105586002)(68736007)(1076003)(54906003)(5660300002)(97736004)(52116002)(72206003)(2906002)(9686003)(478600001)(71200400001)(53936002)(99286004)(6436002)(66066001)(71190400001)(6486002)(6512007)(305945005)(256004)(81156014)(102836004)(25786009)(4326008)(6506007)(386003)(26005)(8676002)(76176011)(81166006)(6116002)(7736002)(86362001)(14454004)(3846002)(39210200001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR03MB3510;H:BYAPR03MB4773.namprd03.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:0;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(346002)(39860400002)(396003)(136003)(376002)(199004)(189003)(86362001)(316002)(11346002)(97736004)(6486002)(76176011)(66066001)(25786009)(4326008)(68736007)(102836004)(50226002)(5660300002)(476003)(6436002)(2906002)(54906003)(1076003)(9686003)(106356001)(7736002)(386003)(8936002)(3846002)(14454004)(71200400001)(478600001)(71190400001)(186003)(81166006)(81156014)(6116002)(72206003)(256004)(446003)(305945005)(52116002)(53936002)(110136005)(26005)(14444005)(8676002)(99286004)(486006)(6506007)(6512007)(105586002)(39210200001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR03MB4533;H:BYAPR03MB4773.namprd03.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:0;MX:1;
 received-spf: None (protection.outlook.com: synaptics.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: RflPe6R4yhXnjvwARQlybs+4aP0nHDzyDksmCp7yFBMD/J/fqvP8VGoeMu2Bgh+9V8rH4UVtSilaLUYNsNaZ/DfE14J7a/mfbwbWI4HWK0GK81YwtbPr14+JRwKbubw8Xfb4WIVM9Bh7vtQAhPZoG1Uxpw4hm7c6OBTUZbLQLr68cjr1TxfeijJxUJtkREdVKBx9Gb1qyN5LUaICYhlcTUXBENjoiwzl49V7PmL17EkNXWwfRQFQHjRwUAh67+QtfouUtNo6Iqq9TMxAKcYjwxsMIL4f3aaZwd0/E5KKRL7IsHGDS2SF0XNGGQorAdzZDZkf0unLwA2+4P2EsSyTZEU9LztYukas1vV0bpSmLNv2EgoXJg2CB8yBe3CHLKJmf0OmsSxsS3RBij0AR+Xyct5kgXRPB51zR69tXSol+sE=
+x-microsoft-antispam-message-info: 4GRaJSnkEqVifUyv51EcpeU9WcRoz4xph7BBlVcu9lOl/ySbN/4llfjBg2LthhjEV8cqRwtS57YYe5EatNfBvWUaZbh99qMvZtMVhC4lQilsYNj8/WLFax09SeL+MkhrixMujiyPJ+TlejWhVil9f+xahYeR3KOg2P6aLk7RVOlIhUhjRQo/sAvjBPPMkJDtVtSd3vpLCCP9JHmva55ugKX790D+uFG1RNfgtOgO0bA3s6Zt+QboC+JppaMvjT7nefXiF8cQL9OfXUcJ7e2Dzm31H5indbL31ScMQcWPL4tA77wxJHk29ipJjhomRA0FWtoI3wFrZyCNVQppvL28RyisIeMhZDUsmbY+cIoerUpI1AZoeg0yYe1MCq9OfJyuRsAf/ZWVg/TS02TLKqw/phrNDnV8LvSvhLhC62gSs9U=
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <34CAC799F8F9A74BB70EC454E2DAFB71@namprd03.prod.outlook.com>
+Content-ID: <6EF85607DCB3D841953513D440F871F8@namprd03.prod.outlook.com>
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: synaptics.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 74d5ada2-0f29-40f7-fe43-08d69e0380f9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Mar 2019 05:05:20.8893
+X-MS-Exchange-CrossTenant-Network-Message-Id: f9c2177d-ec54-49c0-fc5c-08d69e039ad1
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Mar 2019 05:06:04.1308
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 335d1fbc-2124-4173-9863-17e7051a2a0e
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR03MB3510
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR03MB4533
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If we ever did some msi related initializations, we need to call
-dw_pcie_free_msi() in the error code path.
+Use devm_pci_alloc_host_bridge() to simplify the error code path.
 
 Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ .../pci/controller/dwc/pcie-designware-host.c | 21 +++++++------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pc=
 i/controller/dwc/pcie-designware-host.c
-index abe3ff5f0867..66569d0f3ab9 100644
+index 66569d0f3ab9..4831c12fee93 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -482,7 +482,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init) {
- 		ret =3D pp->ops->host_init(pp);
- 		if (ret)
--			goto error;
-+			goto err_free_msi;
+@@ -357,7 +357,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		dev_err(dev, "Missing *config* reg space\n");
  	}
 =20
- 	pp->root_bus_nr =3D pp->busn->start;
-@@ -496,7 +496,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+-	bridge =3D pci_alloc_host_bridge(0);
++	bridge =3D devm_pci_alloc_host_bridge(dev, 0);
+ 	if (!bridge)
+ 		return -ENOMEM;
 =20
- 	ret =3D pci_scan_root_bus_bridge(bridge);
+@@ -368,7 +368,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+=20
+ 	ret =3D devm_request_pci_bus_resources(dev, &bridge->windows);
  	if (ret)
 -		goto error;
-+		goto err_free_msi;
++		return ret;
 =20
- 	bus =3D bridge->bus;
+ 	/* Get the I/O and memory ranges from DT */
+ 	resource_list_for_each_entry_safe(win, tmp, &bridge->windows) {
+@@ -412,8 +412,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 						resource_size(pp->cfg));
+ 		if (!pci->dbi_base) {
+ 			dev_err(dev, "Error with ioremap\n");
+-			ret =3D -ENOMEM;
+-			goto error;
++			return -ENOMEM;
+ 		}
+ 	}
 =20
-@@ -512,6 +512,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pci_bus_add_devices(bus);
- 	return 0;
+@@ -424,8 +423,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 					pp->cfg0_base, pp->cfg0_size);
+ 		if (!pp->va_cfg0_base) {
+ 			dev_err(dev, "Error with ioremap in function\n");
+-			ret =3D -ENOMEM;
+-			goto error;
++			return -ENOMEM;
+ 		}
+ 	}
 =20
-+err_free_msi:
-+	if (IS_ENABLED(CONFIG_PCI_MSI) && !pp->ops->msi_host_init)
-+		dw_pcie_free_msi(pp);
- error:
- 	pci_free_host_bridge(bridge);
+@@ -435,8 +433,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 						pp->cfg1_size);
+ 		if (!pp->va_cfg1_base) {
+ 			dev_err(dev, "Error with ioremap\n");
+-			ret =3D -ENOMEM;
+-			goto error;
++			return -ENOMEM;
+ 		}
+ 	}
+=20
+@@ -459,14 +456,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			    pp->num_vectors =3D=3D 0) {
+ 				dev_err(dev,
+ 					"Invalid number of vectors\n");
+-				goto error;
++				return -EINVAL;
+ 			}
+ 		}
+=20
+ 		if (!pp->ops->msi_host_init) {
+ 			ret =3D dw_pcie_allocate_domains(pp);
+ 			if (ret)
+-				goto error;
++				return ret;
+=20
+ 			if (pp->msi_irq)
+ 				irq_set_chained_handler_and_data(pp->msi_irq,
+@@ -475,7 +472,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		} else {
+ 			ret =3D pp->ops->msi_host_init(pp);
+ 			if (ret < 0)
+-				goto error;
++				return ret;
+ 		}
+ 	}
+=20
+@@ -515,8 +512,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ err_free_msi:
+ 	if (IS_ENABLED(CONFIG_PCI_MSI) && !pp->ops->msi_host_init)
+ 		dw_pcie_free_msi(pp);
+-error:
+-	pci_free_host_bridge(bridge);
  	return ret;
+ }
+=20
 --=20
 2.20.1
 
