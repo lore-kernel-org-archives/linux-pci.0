@@ -3,49 +3,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B9CDC43381
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:58:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F273C43381
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:59:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38C1820842
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:58:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6331D218AE
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Mar 2019 01:59:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727445AbfCAB6e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Feb 2019 20:58:34 -0500
-Received: from Mailgw01.mediatek.com ([1.203.163.78]:60690 "EHLO
+        id S1730965AbfCAB7X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Feb 2019 20:59:23 -0500
+Received: from mailgw01.mediatek.com ([210.61.82.183]:53803 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726210AbfCAB6e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 20:58:34 -0500
-X-UUID: 3afb1b9fcb8a4f02b2e55e961c9a6586-20190301
-X-UUID: 3afb1b9fcb8a4f02b2e55e961c9a6586-20190301
-Received: from mtkcas35.mediatek.inc [(172.27.4.253)] by mailgw01.mediatek.com
+        with ESMTP id S1725967AbfCAB7X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Feb 2019 20:59:23 -0500
+X-UUID: 21cdcab5909a4bec87ce57119ebaf975-20190301
+X-UUID: 21cdcab5909a4bec87ce57119ebaf975-20190301
+Received: from mtkcas08.mediatek.inc [(172.21.101.126)] by mailgw01.mediatek.com
         (envelope-from <honghui.zhang@mediatek.com>)
-        (mailgw01.mediatek.com ESMTP with TLS)
-        with ESMTP id 1758431329; Fri, 01 Mar 2019 09:58:29 +0800
-Received: from MTKCAS32.mediatek.inc (172.27.4.184) by MTKMBS31N2.mediatek.inc
- (172.27.4.87) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 1 Mar
- 2019 09:58:27 +0800
+        (mhqrelay.mediatek.com ESMTP with TLS)
+        with ESMTP id 699210403; Fri, 01 Mar 2019 09:59:17 +0800
+Received: from MTKCAS32.mediatek.inc (172.27.4.184) by mtkmbs08n1.mediatek.inc
+ (172.21.101.55) with Microsoft SMTP Server (TLS) id 15.0.1395.4; Fri, 1 Mar
+ 2019 09:59:15 +0800
 Received: from [10.17.3.153] (172.27.4.253) by MTKCAS32.mediatek.inc
  (172.27.4.170) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
- Transport; Fri, 1 Mar 2019 09:58:27 +0800
-Message-ID: <1551405506.32061.18.camel@mhfsdcap03>
-Subject: Re: [PATCH v3 2/2] PCI: mediatek: Enlarge PCIe2AHB window size to
- support 4GB DRAM
+ Transport; Fri, 1 Mar 2019 09:59:14 +0800
+Message-ID: <1551405554.32061.19.camel@mhfsdcap03>
+Subject: Re: [PATCH 7/8] PCI: mediatek: fix a leaked reference by adding
+ missing of_node_put
 From:   Honghui Zhang <honghui.zhang@mediatek.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     <bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <ryder.lee@mediatek.com>,
-        <rafael.j.wysocki@intel.com>, <fred@fredlawl.com>,
-        <poza@codeaurora.org>, <youlin.pei@mediatek.com>,
-        <jianjun.wang@mediatek.com>
-Date:   Fri, 1 Mar 2019 09:58:26 +0800
-In-Reply-To: <20190228174257.GA26501@e107981-ln.cambridge.arm.com>
-References: <1548999367-11733-1-git-send-email-honghui.zhang@mediatek.com>
-         <1548999367-11733-3-git-send-email-honghui.zhang@mediatek.com>
-         <20190228174257.GA26501@e107981-ln.cambridge.arm.com>
+To:     Wen Yang <wen.yang99@zte.com.cn>
+CC:     <benh@kernel.crashing.org>, <paulus@samba.org>,
+        <mpe@ellerman.id.au>, <tyreld@linux.vnet.ibm.com>,
+        <bhelgaas@google.com>, <linuxppc-dev@lists.ozlabs.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <ryder.lee@mediatek.com>, <lorenzo.pieralisi@arm.com>,
+        <matthias.bgg@gmail.com>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>, <rjui@broadcom.com>,
+        <sbranden@broadcom.com>, <bcm-kernel-feedback-list@broadcom.com>,
+        <thomas.petazzoni@bootlin.com>, <shawn.lin@rock-chips.com>,
+        <heiko@sntech.de>, <linux-rockchip@lists.infradead.org>,
+        <minghuan.Lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <hayashi.kunihiko@socionext.com>, <yamada.masahiro@socionext.com>,
+        <kishon@ti.com>, <linux-omap@vger.kernel.org>,
+        <wang.yi59@zte.com.cn>
+Date:   Fri, 1 Mar 2019 09:59:14 +0800
+In-Reply-To: <1551242443-27300-7-git-send-email-wen.yang99@zte.com.cn>
+References: <1551242443-27300-1-git-send-email-wen.yang99@zte.com.cn>
+         <1551242443-27300-7-git-send-email-wen.yang99@zte.com.cn>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.2.3-0ubuntu6 
 Content-Transfer-Encoding: 7bit
@@ -56,96 +63,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2019-02-28 at 17:42 +0000, Lorenzo Pieralisi wrote:
-> On Fri, Feb 01, 2019 at 01:36:07PM +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > 
-> > The PCIE_AXI_WINDOW0 defines the translate window size for the request
-> > from EP side. Request outside of this window will be treated as
-> > unsupported request.
-> > 
-> > Enlarge this window size from fls(0xffffffff) to 2^33 to support 8GB
-> > translate address range then EP DMA is capable of fully access 4GB
-> > DRAM range(physical DRAM is start from 0x40000000).
+On Wed, 2019-02-27 at 12:40 +0800, Wen Yang wrote:
+> The call to of_get_next_child returns a node pointer with refcount
+> incremented thus it must be explicitly decremented after the last
+> usage.
+> irq_domain_add_linear also calls of_node_get to increase refcount,
+> so irq_domain will not be affected when it is released.
 > 
-> I have rewritten both patches logs with the aim of merging them even if
-> it is quite late in the cycle, first you have to explain something to
-> me.
+> Detected by coccinelle with the following warnings:
+> ./drivers/pci/controller/pcie-mediatek.c:577:2-8: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 567, but without a corresponding object release within this function.
+> ./drivers/pci/controller/pcie-mediatek.c:583:3-9: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 567, but without a corresponding object release within this function.
+> ./drivers/pci/controller/pcie-mediatek.c:586:1-7: ERROR: missing of_node_put; acquired a node pointer with refcount incremented on line 567, but without a corresponding object release within this function.
 > 
-
-Thanks very much for this.
-
-> fls(0xffffffff) = 0x1f, which by your logic -> 2^31
+> Signed-off-by: Wen Yang <wen.yang99@zte.com.cn>
+> Cc: Ryder Lee <ryder.lee@mediatek.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Matthias Brugger <matthias.bgg@gmail.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-mediatek@lists.infradead.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> What does it mean given what you say above ? That PCI devices can't
-> do _any_ DMA in the current setting (given the DRAM start address) ?
-> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 55e471c..e91716a 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -572,6 +572,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+>  
+>  	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+>  						 &intx_domain_ops, port);
+> +	of_node_put(pcie_intc_node);
+>  	if (!port->irq_domain) {
+>  		dev_err(dev, "failed to get INTx IRQ domain\n");
+>  		return -ENODEV;
 
-I'm afraid so.
-From the HW datasheet I got from our HW designer, the description for
-this pcie2axi_win_size filed is
-" Possible values are 12 to 36 which means 2^12 to 2^36 bytes, leaving
-this filed to 0 causes window to be disabled."
+Thanks for fix this.
 
-Current setting set the window size as 2^31, which means the request
-from EP side could only access the address range from 0 to 0x8000_0000.
-Considering the DRAM start from 0x4000_0000, that means only the first
-1GB(0x4000_0000 ~ 0x8000_0000) could be accessed by EP side DMA.
-
-This has not run into an error for our current usage, I guess because
-MT2712 and MT7622 have several type boards, most of are only have 2GB
-physical memory, and our test sample is not bigger enough to cover the
-case that EP DMA will access fully DRAM. Or most EP device does not have
-an built-in DMA engine, they may relay on the host side's MMIO(memory
-mapped IO) operations.
- 
-Take MT2712 as example, in arch/arm64/boot/dts/mediatek/mt2712-evb.dts,
-the physical memory size is defined as 0x80000000 and is described by
-below node:
-
-memory@400000000 {
-	device_type = "memory";
-	reg = <0 0x400000000 0 0x800000000>
-}
-
-Thanks.
-
-> Lorenzo
-> 
-> > Reported-by: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> > ---
-> >  drivers/pci/controller/pcie-mediatek.c | 8 +++++++-
-> >  1 file changed, 7 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-> > index c42fe5c..0b6c728 100644
-> > --- a/drivers/pci/controller/pcie-mediatek.c
-> > +++ b/drivers/pci/controller/pcie-mediatek.c
-> > @@ -90,6 +90,12 @@
-> >  #define AHB2PCIE_SIZE(x)	((x) & GENMASK(4, 0))
-> >  #define PCIE_AXI_WINDOW0	0x448
-> >  #define WIN_ENABLE		BIT(7)
-> > +/*
-> > + * Define PCIe to AHB window size as 2^33 to support max 8GB address space
-> > + * translate, support least 4GB DRAM size access from EP DMA(physical DRAM
-> > + * start from 0x40000000).
-> > + */
-> > +#define PCIE2AHB_SIZE	0x21
-> >  
-> >  /* PCIe V2 configuration transaction header */
-> >  #define PCIE_CFG_HEADER0	0x460
-> > @@ -713,7 +719,7 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-> >  	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
-> >  
-> >  	/* Set PCIe to AXI translation memory space.*/
-> > -	val = fls(0xffffffff) | WIN_ENABLE;
-> > +	val = PCIE2AHB_SIZE | WIN_ENABLE;
-> >  	writel(val, port->base + PCIE_AXI_WINDOW0);
-> >  
-> >  	return 0;
-> > -- 
-> > 2.6.4
-> > 
-
+Acked-by: Honghui Zhang <honghui.zhang@mediatek.com>
 
