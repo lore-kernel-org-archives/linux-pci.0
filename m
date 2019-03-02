@@ -2,111 +2,134 @@ Return-Path: <SRS0=jK/a=RF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76FFBC43381
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Mar 2019 00:11:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8985C10F03
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Mar 2019 02:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40B6820823
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Mar 2019 00:11:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A76F820840
+	for <linux-pci@archiver.kernel.org>; Sat,  2 Mar 2019 02:50:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="d4oW+3gu"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="kKPl3TTx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726696AbfCBAL0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Mar 2019 19:11:26 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:46424 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725958AbfCBAL0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2019 19:11:26 -0500
-Received: by mail-wr1-f65.google.com with SMTP id i16so27602598wrs.13
-        for <linux-pci@vger.kernel.org>; Fri, 01 Mar 2019 16:11:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=yf2Qd0yvBbTqTKQt7/iLAZWttPAmpnMIz9ngCRDkoq4=;
-        b=d4oW+3gudsCiWfZmbRXbm4Z5boALNT2PhvAh9vt1i77yTtHtI5yWA3olQrntRi0R0B
-         iYlPwF3LhfCNIm4OGrqu8U2iWNaEV8VPmOPaeZnu45oCUJfpyu6+S+2wkC7yzR7zQbKN
-         jMWA1ZmB1CO8V3C7NB9nk8c9e6wi++HprTL7vs5FEPQ9KP5m36LaH4GhySu+TfMOLPNk
-         btlhbPTt9NlrwXmd0soaUT8Ivhms+36qoLsi3AUGFzen4HHGLQK+vEKKDk5JAnYU+9JO
-         lw0CwvhEs0Swg4Hg/+TANplJv9NXEidCvmCfp0KiovOTvHM7otWB/R6fF/18Cb49o78D
-         EdVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=yf2Qd0yvBbTqTKQt7/iLAZWttPAmpnMIz9ngCRDkoq4=;
-        b=Nqn0dFsvybAmlWrIlfmjcC572if8m5XP5v8MFPCRzbGgyABen/xR0Xe5BSg3bgb9DI
-         SNbi976yxQS53RChNnKV/RHVGgoQyR0GsqzZhD8OA8bz/WplVxBN86aKwSQDEPgHxO52
-         a+0rAxJ+x64xOeWoQfDhFUWOsO0da27UTvAyYD5qjA0uZjCTbJ4XGjCvk8KuYYSH/88P
-         LYxEXbgqyz54MpO3ILTYDOLnSK9o+QHK5hewv3NHp/0PkJjDSy0DXa4kg8LAiQ4sWoGs
-         yWXmm1Xukzjwdw31F+eXf9s3ugLSvDGPDa5YmFLS00u8dM+kSTn5f2mOVlAuZ1z12f5J
-         sN6A==
-X-Gm-Message-State: APjAAAXPG8Ebm2R8bURL5prO9yvx08EbOcmfqTxSN2PNrgoG2FTwUUyA
-        uI7xAalFM6xDsVGBwh0o3MMQDaEaJZuiasQxX4S3
-X-Google-Smtp-Source: APXvYqx3KyLPxlyYFqtD4jajNGJGSwNsisDPl3MHnp5DUqLNP6BClv7RxLrkXIFLcPwxOkPRpazG2h+2acyzYAGDe0M=
-X-Received: by 2002:a5d:4ac2:: with SMTP id y2mr4769718wrs.98.1551485484042;
- Fri, 01 Mar 2019 16:11:24 -0800 (PST)
+        id S1726968AbfCBCug (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Mar 2019 21:50:36 -0500
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:5374 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726412AbfCBCug (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Mar 2019 21:50:36 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c79ef830000>; Fri, 01 Mar 2019 18:50:43 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Fri, 01 Mar 2019 18:50:34 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Fri, 01 Mar 2019 18:50:34 -0800
+Received: from [10.25.72.51] (172.20.13.39) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 2 Mar
+ 2019 02:50:30 +0000
+Subject: Re: [PATCH] PCI: tegra: Do not allocate MSI target memory
+To:     Lucas Stach <dev@lynxeye.de>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <treding@nvidia.com>,
+        <swarren@nvidia.com>, <mperttunen@nvidia.com>,
+        <jonathanh@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
+References: <1551366004-32547-1-git-send-email-vidyas@nvidia.com>
+ <247102e57e067d1477f3260bdeaa3ea011d0f3ed.camel@lynxeye.de>
+ <8b6f53c4-ac39-40d6-0979-86137236f890@nvidia.com>
+ <d0e83ca1648a3ec80c01bc5e6708286f9d891580.camel@lynxeye.de>
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <6ee0919a-504f-ae76-5995-a9eae505ef90@nvidia.com>
+Date:   Sat, 2 Mar 2019 08:20:27 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.0
 MIME-Version: 1.0
-References: <20190301165419.16493-1-TheSven73@gmail.com>
-In-Reply-To: <20190301165419.16493-1-TheSven73@gmail.com>
-From:   Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri, 1 Mar 2019 18:11:12 -0600
-Message-ID: <CAErSpo74LHWaHtjPGthyNvAgrq7wb0G0dbh9krzMQH0cK-DE9g@mail.gmail.com>
-Subject: Re: [PATCH v2] PCIE/PME: fix possible use-after-free on remove
-To:     Sven Van Asbroeck <thesven73@gmail.com>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        Frederick Lawler <fred@fredlawl.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <d0e83ca1648a3ec80c01bc5e6708286f9d891580.camel@lynxeye.de>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1551495043; bh=RGKdLpwk5MmOcVrrZBG1QBpyweFaZ5wvvfCFDuts+zw=;
+        h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
+         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
+         X-ClientProxiedBy:Content-Type:Content-Transfer-Encoding:
+         Content-Language;
+        b=kKPl3TTxa4xZhUyoCTOMNANf6965J0MG+eTwc5FVTv7KLGLrISi8qBlC5iycRDW3h
+         KovxjqOeVt1b5z5YnVskgpCsfjMzH12GpxNBUp5I6nT3F5qPcxWsR1ftxv91u/FzFe
+         8n6wiK9H2uhX9pkAQ1S2kP6dZ8O4v2vVA7rU3D+TX850HWt4Z/s/BF2Guyo6Sc669p
+         ywYPSzR5FCYC/A/48/AdZn8+HRCBPTq/vd4+4JEnU4cy4Kc6BpfSVAAgSB7rHjpx9W
+         f/fJVXyGorxd0PbgHI102nFTUkAp7BGHJpWd2UnSNtRQQyZ3YCfIgk3UJhx87vtVBk
+         g20w6BlrZ48tA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 1, 2019 at 10:54 AM Sven Van Asbroeck <thesven73@gmail.com> wrote:
->
-> In remove(), ensure that the pme work cannot run after kfree()
-> is called. Otherwise, this could result in a use-after-free.
->
-> This issue was detected with the help of Coccinelle.
->
-> Cc: Sinan Kaya <okaya@kernel.org>
-> Cc: Frederick Lawler <fred@fredlawl.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Signed-off-by: Sven Van Asbroeck <TheSven73@gmail.com>
 
-Applied to pci/pm for v5.1, thanks!
+On 3/1/2019 8:26 PM, Lucas Stach wrote:
+> Am Freitag, den 01.03.2019, 08:45 +0530 schrieb Vidya Sagar:
+>> On 3/1/2019 12:32 AM, Lucas Stach wrote:
+>>> Am Donnerstag, den 28.02.2019, 20:30 +0530 schrieb Vidya Sagar:
+>>>> The PCI host bridge found on Tegra SoCs doesn't require the MSI target
+>>>> address to be backed by physical system memory. Writes are intercepted
+>>>> within the controller and never make it to the memory pointed to.
+>>>>
+>>>> Since no actual system memory is required, remove the allocation of a
+>>>> single page and hardcode the MSI target address with a special address
+>>>> on a per-SoC basis. Ideally this would be an address to an MMIO memory
+>>>> region (such as where the controller's register are located). However,
+>>>> those addresses don't work reliably across all Tegra generations. The
+>>>> only set of addresses that work consistently are those that point to
+>>>> external memory.
+>>>>
+>>>> This is not ideal, since those addresses could technically be used for
+>>>> DMA and hence be confusing. However, the first page of external memory
+>>>> is unlikely to be used and special enough to avoid confusion.
+>>> So you are trading a slight memory waste of a single page against a
+>>> sporadic (and probably hard to debug) DMA failure if any device happens
+>>> to initiate DMA to the first page of physical memory? That does not
+>>> sound like a good deal...
+>>>
+>>> Also why would the first page of external memory be unlikely to be
+>>> used?
+>>>
+>>> Regards,
+>>> Lucas
+>> We are not wasting single page of memory here and if any device's DMA is
+>> trying to access it, it will still go through. Its just that we are using that
+>> same address for MSI (note that MSI writes don't go beyond PCIe IP as they get
+>> decoded at PCIe IP level itself and only an interrupt
+>> goes to CPU) and that might be a bit confusing as same address is used
+>> as normal memory as well as MSI target address. Since there can never be any
+>> issue with this would you suggest to remove the last paragraph from commit
+>> description?
+> How does the core distinguish between a normal DMA memory write and a
+> MSI? If I remember the PCIe spec correctly, there aren't any
+> differences between the two besides the target address.
+>
+> So if you now set a non-reserved region of memory to decode as a MSI at
+> the PCIe host controller level, wouldn't this lead to normal DMA
+> transactions to this address being wrongfully turned into an MSI and
+> the write not reaching the targeted location?
+>
+> Regards,
+> Lucas
 
-> ---
->  drivers/pci/pcie/pme.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> v2:
->         rebased against Bjorn Helgaas's pcm/pm branch at
->         git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
->
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index efa5b552914b..54d593d10396 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -437,6 +437,7 @@ static void pcie_pme_remove(struct pcie_device *srv)
->
->         pcie_pme_disable_interrupt(srv->port, data);
->         free_irq(srv->irq, srv);
-> +       cancel_work_sync(&data->work);
->         kfree(data);
->  }
->
-> --
-> 2.17.1
->
+You are correct that core cannot distinguish between a normal DMA memory and
+MSI. In that case, the only way I see is to alloc memory using 
+dma_alloc_coherent()
+and use the IOVA as the MSI target address. That way, a page gets 
+reserved (in a way wasted
+also as the MSI writes don't really make it to RAM) and there won't be 
+any address
+overlaps with normal DMA writes. I'll push a patch for it.
+
+Thanks,
+Vidya Sagar
+
