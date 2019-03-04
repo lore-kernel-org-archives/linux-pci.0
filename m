@@ -2,534 +2,277 @@ Return-Path: <SRS0=xyCL=RH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D18C43381
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Mar 2019 06:56:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91516C43381
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Mar 2019 08:37:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0133B2082F
-	for <linux-pci@archiver.kernel.org>; Mon,  4 Mar 2019 06:56:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E302208E4
+	for <linux-pci@archiver.kernel.org>; Mon,  4 Mar 2019 08:37:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="kikSKC54"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726037AbfCDG4a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 4 Mar 2019 01:56:30 -0500
-Received: from mga06.intel.com ([134.134.136.31]:15299 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725981AbfCDG4a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 4 Mar 2019 01:56:30 -0500
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Mar 2019 22:55:58 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,439,1544515200"; 
-   d="scan'208,223";a="325156338"
-Received: from lftan-mobl.gar.corp.intel.com (HELO ubuntu) ([10.226.248.102])
-  by fmsmga005.fm.intel.com with SMTP; 03 Mar 2019 22:55:55 -0800
-Received: by ubuntu (sSMTP sendmail emulation); Mon, 04 Mar 2019 14:55:49 +0800
-Message-ID: <1551682549.24631.24.camel@intel.com>
-Subject: Re: [PATCH v6 1/3] PCI: altera: Add Stratix 10 PCIe support
-From:   Ley Foon Tan <ley.foon.tan@intel.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        lftan.linux@gmail.com
-Date:   Mon, 04 Mar 2019 14:55:49 +0800
-In-Reply-To: <20190301141516.GA4783@e107981-ln.cambridge.arm.com>
-References: <1551351172-25424-1-git-send-email-ley.foon.tan@intel.com>
-         <1551351172-25424-2-git-send-email-ley.foon.tan@intel.com>
-         <20190228105612.GA31404@red-moon> <1551401448.24631.15.camel@intel.com>
-         <20190301141516.GA4783@e107981-ln.cambridge.arm.com>
-Content-Type: multipart/mixed; boundary="=-9hhI7CMo5Fjw/E4pBMop"
-X-Mailer: Evolution 3.18.5.2-0ubuntu3.1 
-Mime-Version: 1.0
+        id S1726683AbfCDIhI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 4 Mar 2019 03:37:08 -0500
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:10330 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726522AbfCDIhG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 4 Mar 2019 03:37:06 -0500
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c7ce3b10002>; Mon, 04 Mar 2019 00:37:05 -0800
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 04 Mar 2019 00:37:04 -0800
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 04 Mar 2019 00:37:04 -0800
+Received: from localhost (10.124.1.5) by HQMAIL101.nvidia.com (172.20.187.10)
+ with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 4 Mar 2019 08:37:04
+ +0000
+Date:   Mon, 4 Mar 2019 09:37:00 +0100
+From:   Thierry Reding <treding@nvidia.com>
+To:     Vidya Sagar <vidyas@nvidia.com>
+CC:     Lucas Stach <dev@lynxeye.de>, <bhelgaas@google.com>,
+        <lorenzo.pieralisi@arm.com>, <swarren@nvidia.com>,
+        <mperttunen@nvidia.com>, <jonathanh@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
+Subject: Re: [PATCH] PCI: tegra: Do not allocate MSI target memory
+Message-ID: <20190304083700.GA31309@ulmo>
+References: <1551366004-32547-1-git-send-email-vidyas@nvidia.com>
+ <247102e57e067d1477f3260bdeaa3ea011d0f3ed.camel@lynxeye.de>
+ <8b6f53c4-ac39-40d6-0979-86137236f890@nvidia.com>
+ <d0e83ca1648a3ec80c01bc5e6708286f9d891580.camel@lynxeye.de>
+ <6ee0919a-504f-ae76-5995-a9eae505ef90@nvidia.com>
+ <91fbda5d299b29d8516cfdd7c1f72a4b34797e82.camel@lynxeye.de>
+ <6ae28571-0110-5122-ed2a-392bbb3edfda@nvidia.com>
+MIME-Version: 1.0
+In-Reply-To: <6ae28571-0110-5122-ed2a-392bbb3edfda@nvidia.com>
+X-NVConfidentiality: public
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL108.nvidia.com (172.18.146.13) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="AqsLC8rIMeq19msA"
+Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1551688625; bh=8qbfOdtGP8jdj+iSc+gvYOOrkS2mXw7/gWtSzjqOjrY=;
+        h=X-PGP-Universal:Date:From:To:CC:Subject:Message-ID:References:
+         MIME-Version:In-Reply-To:X-NVConfidentiality:User-Agent:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Disposition;
+        b=kikSKC54Z9247x7tuxYTWYd6SdZDIv1cTIwvEwlkeqHV9yG8Uewvov/GBxvGrPXhK
+         jE/OFXSxDAawmvOlj6ZTwwFUHpFuLdDRdcVDimts86LqDw+d96m8dyeGfrIDEUeixU
+         d5m0FTnqjzhe981sVKZYvUYSkhuzAb74y+gko1FiCfwCTlajRZweiK2CcUp0vgXjvN
+         bWwdbmg+O4wzjwhSQQnudIT4dqMzys+hQEhDDyRicbkxjceTHjylXGsTFNEElQNU1f
+         mKZ2lSuftAbpX08MJEwW2HrqBrmeQCZEnI/JS4zSncDreqRl6yPEiWiX2AsS2o/ZwK
+         diRM1aaYp4Tug==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
---=-9hhI7CMo5Fjw/E4pBMop
-Content-Type: text/plain; charset="UTF-8"
+--AqsLC8rIMeq19msA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, 2019-03-01 at 14:15 +0000, Lorenzo Pieralisi wrote:
-> On Fri, Mar 01, 2019 at 08:50:48AM +0800, Ley Foon Tan wrote:
-> >=20
-> > On Thu, 2019-02-28 at 10:56 +0000, Lorenzo Pieralisi wrote:
-> > >=20
-> > > On Thu, Feb 28, 2019 at 06:52:50PM +0800, Ley Foon Tan wrote:
-> > >=20
-> > > [...]
-> > >=20
-> > > >=20
-> > > >=20
-> > > > +static int s10_tlp_read_packet(struct altera_pcie *pcie, u32
-> > > > *value)
-> > > > +{
-> > > > +	int i;
-> > > > +	u32 ctrl;
-> > > > +	u32 comp_status;
-> > > > +	u32 dw[4];
-> > > > +	u32 count;
-> > > > +
-> > > > +	for (i =3D 0; i < TLP_LOOP; i++) {
-> > > > +		ctrl =3D cra_readl(pcie, S10_RP_RXCPL_STATUS);
-> > > > +		if (!(ctrl & RP_RXCPL_SOP)) {
-> > > > +			udelay(5);
-> > > > +			continue;
-> > > > +		}
-> > > > +
-> > > > +		/* Read first DW */
-> > > > +		dw[0] =3D cra_readl(pcie, S10_RP_RXCPL_REG);
-> > > > +		count =3D 1;
-> > > > +
-> > > > +		/* Poll for EOP */
-> > > > +		for (i =3D 0; i < TLP_LOOP && count <
-> > > > ARRAY_SIZE(dw); i++) {
-> > > > +			ctrl =3D cra_readl(pcie,
-> > > > S10_RP_RXCPL_STATUS);
-> > > > +			dw[count++] =3D cra_reeadl(pcie,
-> > > > S10_RP_RXCPL_REG);
-> > > > +			if (ctrl & RP_RXCPL_EOP) {
-> > > > +				comp_status =3D
-> > > > TLP_COMP_STATUS(dw[1]);
-> > > > +				if (comp_status)
-> > > > +					return
-> > > > PCIBIOS_DEVICE_NOT_FOUND;
-> > > > +
-> > > > +				if (value &&
-> > > > +				????????TLP_BYTE_COUNT(dw[1])
-> > > > =3D=3D
-> > > > sizeof(u32) &&
-> > > > +				????????count =3D=3D 4)
-> > > > +					*value =3D dw[3];
-> > > > +
-> > > > +				return PCIBIOS_SUCCESSFUL;
-> > > > +			}
-> > > Two more things.
-> > >=20
-> > > - Why don't you need a udelay() in the inner loop ?
-> > It has received start of packet (SOP) when in the inner loop, next
-> > DW
-> > will come on next. So, I don't add udelay here.
-> > >=20
-> > > - I think that count >=3D ARRAY_SIZE(dw) in the inner loop is an
-> > > error
-> > > ?? condition and it should be flagged up with a warning before
-> > > exiting.
-> > Yes, please add this.
-> > >=20
-> > >=20
-> > > I can make these changes if you let me know your thoughts on
-> > > this.
-> > Please go ahead and change this.
-> I rewrote the loop.
+On Mon, Mar 04, 2019 at 11:08:54AM +0530, Vidya Sagar wrote:
 >=20
-> Please have a look at my branch not-to-merge/pci-altera, if that's
-> OK and it passes the kbot tests I will try to get it upstream.
 >=20
-> Lorenzo
-We need return error if (i >=3D TLP_LOOP). Other than that is okay.
-
-
-+	if (i >=3D TLP_LOOP)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-
-I also attached a patch in attachment to fix the Sparse warnings.
-You can squash it to this patch.
-
-Thanks.
-
-
-Regards
-Ley Foon
-
->=20
-> >=20
-> > Thanks.
-> >=20
-> > Regards
-> > Ley Foon
-> > >=20
-> > >=20
-> > > Lorenzo
-> > >=20
+> On 3/2/2019 7:52 PM, Lucas Stach wrote:
+> > Am Samstag, den 02.03.2019, 08:20 +0530 schrieb Vidya Sagar:
+> > > On 3/1/2019 8:26 PM, Lucas Stach wrote:
+> > > > Am Freitag, den 01.03.2019, 08:45 +0530 schrieb Vidya Sagar:
+> > > > > On 3/1/2019 12:32 AM, Lucas Stach wrote:
+> > > > > > Am Donnerstag, den 28.02.2019, 20:30 +0530 schrieb Vidya Sagar:
+> > > > > > > The PCI host bridge found on Tegra SoCs doesn't require the M=
+SI target
+> > > > > > > address to be backed by physical system memory. Writes are in=
+tercepted
+> > > > > > > within the controller and never make it to the memory pointed=
+ to.
+> > > > > > >=20
+> > > > > > > Since no actual system memory is required, remove the allocat=
+ion of a
+> > > > > > > single page and hardcode the MSI target address with a specia=
+l address
+> > > > > > > on a per-SoC basis. Ideally this would be an address to an MM=
+IO memory
+> > > > > > > region (such as where the controller's register are located).=
+ However,
+> > > > > > > those addresses don't work reliably across all Tegra generati=
+ons. The
+> > > > > > > only set of addresses that work consistently are those that p=
+oint to
+> > > > > > > external memory.
+> > > > > > >=20
+> > > > > > > This is not ideal, since those addresses could technically be=
+ used for
+> > > > > > > DMA and hence be confusing. However, the first page of extern=
+al memory
+> > > > > > > is unlikely to be used and special enough to avoid confusion.
+> > > > > > So you are trading a slight memory waste of a single page again=
+st a
+> > > > > > sporadic (and probably hard to debug) DMA failure if any device=
+ happens
+> > > > > > to initiate DMA to the first page of physical memory? That does=
+ not
+> > > > > > sound like a good deal...
+> > > > > >=20
+> > > > > > Also why would the first page of external memory be unlikely to=
+ be
+> > > > > > used?
+> > > > > >=20
+> > > > > > Regards,
+> > > > > > Lucas
+> > > > > We are not wasting single page of memory here and if any device's=
+ DMA is
+> > > > > trying to access it, it will still go through. Its just that we a=
+re using that
+> > > > > same address for MSI (note that MSI writes don't go beyond PCIe I=
+P as they get
+> > > > > decoded at PCIe IP level itself and only an interrupt
+> > > > > goes to CPU) and that might be a bit confusing as same address is=
+ used
+> > > > > as normal memory as well as MSI target address. Since there can n=
+ever be any
+> > > > > issue with this would you suggest to remove the last paragraph fr=
+om commit
+> > > > > description?
+> > > > How does the core distinguish between a normal DMA memory write and=
+ a
+> > > > MSI? If I remember the PCIe spec correctly, there aren't any
+> > > > differences between the two besides the target address.
 > > > >=20
+> > > > So if you now set a non-reserved region of memory to decode as a MS=
+I at
+> > > > the PCIe host controller level, wouldn't this lead to normal DMA
+> > > > transactions to this address being wrongfully turned into an MSI and
+> > > > the write not reaching the targeted location?
 > > > >=20
-> > > > +		}
-> > > > +	}
-> > > > +
-> > > > +	return PCIBIOS_DEVICE_NOT_FOUND;
-> > > > +}
-> > > > +
-> > > > ??static void tlp_write_packet(struct altera_pcie *pcie, u32
-> > > > *headers,
-> > > > ??			??????????u32 data, bool align)
-> > > > ??{
-> > > > @@ -210,6 +306,15 @@ static void tlp_write_packet(struct
-> > > > altera_pcie *pcie, u32 *headers,
-> > > > ??	tlp_write_tx(pcie, &tlp_rp_regdata);
-> > > > ??}
-> > > > ??
-> > > > +static void s10_tlp_write_packet(struct altera_pcie *pcie, u32
-> > > > *headers,
-> > > > +				??u32 data, bool dummy)
-> > > > +{
-> > > > +	s10_tlp_write_tx(pcie, headers[0], RP_TX_SOP);
-> > > > +	s10_tlp_write_tx(pcie, headers[1], 0);
-> > > > +	s10_tlp_write_tx(pcie, headers[2], 0);
-> > > > +	s10_tlp_write_tx(pcie, data, RP_TX_EOP);
-> > > > +}
-> > > > +
-> > > > ??static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8
-> > > > bus,
-> > > > u32 devfn,
-> > > > ??			????????????int where, u8 byte_en,
-> > > > u32 *value)
-> > > > ??{
-> > > > @@ -219,9 +324,9 @@ static int tlp_cfg_dword_read(struct
-> > > > altera_pcie *pcie, u8 bus, u32 devfn,
-> > > > ??	headers[1] =3D TLP_CFG_DW1(pcie, TLP_READ_TAG,
-> > > > byte_en);
-> > > > ??	headers[2] =3D TLP_CFG_DW2(bus, devfn, where);
-> > > > ??
-> > > > -	tlp_write_packet(pcie, headers, 0, false);
-> > > > +	pcie->pcie_data->ops->tlp_write_pkt(pcie, headers, 0,
-> > > > false);
-> > > > ??
-> > > > -	return tlp_read_packet(pcie, value);
-> > > > +	return pcie->pcie_data->ops->tlp_read_pkt(pcie,
-> > > > value);
-> > > > ??}
-> > > > ??
-> > > > ??static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8
-> > > > bus,
-> > > > u32 devfn,
-> > > > @@ -236,11 +341,13 @@ static int tlp_cfg_dword_write(struct
-> > > > altera_pcie *pcie, u8 bus, u32 devfn,
-> > > > ??
-> > > > ??	/* check alignment to Qword */
-> > > > ??	if ((where & 0x7) =3D=3D 0)
-> > > > -		tlp_write_packet(pcie, headers, value, true);
-> > > > +		pcie->pcie_data->ops->tlp_write_pkt(pcie,
-> > > > headers,
-> > > > +						????????value,
-> > > > true);
-> > > > ??	else
-> > > > -		tlp_write_packet(pcie, headers, value, false);
-> > > > +		pcie->pcie_data->ops->tlp_write_pkt(pcie,
-> > > > headers,
-> > > > +						????????value,
-> > > > false);
-> > > > ??
-> > > > -	ret =3D tlp_read_packet(pcie, NULL);
-> > > > +	ret =3D pcie->pcie_data->ops->tlp_read_pkt(pcie, NULL);
-> > > > ??	if (ret !=3D PCIBIOS_SUCCESSFUL)
-> > > > ??		return ret;
-> > > > ??
-> > > > @@ -254,6 +361,53 @@ static int tlp_cfg_dword_write(struct
-> > > > altera_pcie *pcie, u8 bus, u32 devfn,
-> > > > ??	return PCIBIOS_SUCCESSFUL;
-> > > > ??}
-> > > > ??
-> > > > +static int s10_rp_read_cfg(struct altera_pcie *pcie, int
-> > > > where,
-> > > > +			??????int size, u32 *value)
-> > > > +{
-> > > > +	void *addr =3D S10_RP_CFG_ADDR(pcie, where);
-> > > > +
-> > > > +	switch (size) {
-> > > > +	case 1:
-> > > > +		*value =3D readb(addr);
-> > > > +		break;
-> > > > +	case 2:
-> > > > +		*value =3D readw(addr);
-> > > > +		break;
-> > > > +	default:
-> > > > +		*value =3D readl(addr);
-> > > > +		break;
-> > > > +	}
-> > > > +
-> > > > +	return PCIBIOS_SUCCESSFUL;
-> > > > +}
-> > > > +
-> > > > +static int s10_rp_write_cfg(struct altera_pcie *pcie, u8
-> > > > busno,
-> > > > +			????????int where, int size, u32
-> > > > value)
-> > > > +{
-> > > > +	void *addr =3D S10_RP_CFG_ADDR(pcie, where);
-> > > > +
-> > > > +	switch (size) {
-> > > > +	case 1:
-> > > > +		writeb(value, addr);
-> > > > +		break;
-> > > > +	case 2:
-> > > > +		writew(value, addr);
-> > > > +		break;
-> > > > +	default:
-> > > > +		writel(value, addr);
-> > > > +		break;
-> > > > +	}
-> > > > +
-> > > > +	/*
-> > > > +	??* Monitor changes to PCI_PRIMARY_BUS register on
-> > > > root
-> > > > port
-> > > > +	??* and update local copy of root bus number
-> > > > accordingly.
-> > > > +	??*/
-> > > > +	if (busno =3D=3D pcie->root_bus_nr && where =3D=3D
-> > > > PCI_PRIMARY_BUS)
-> > > > +		pcie->root_bus_nr =3D value & 0xff;
-> > > > +
-> > > > +	return PCIBIOS_SUCCESSFUL;
-> > > > +}
-> > > > +
-> > > > ??static int _altera_pcie_cfg_read(struct altera_pcie *pcie, u8
-> > > > busno,
-> > > > ??				??unsigned int devfn, int
-> > > > where,
-> > > > int size,
-> > > > ??				??u32 *value)
-> > > > @@ -262,6 +416,10 @@ static int _altera_pcie_cfg_read(struct
-> > > > altera_pcie *pcie, u8 busno,
-> > > > ??	u32 data;
-> > > > ??	u8 byte_en;
-> > > > ??
-> > > > +	if (busno =3D=3D pcie->root_bus_nr && pcie->pcie_data-
-> > > > >ops-
-> > > > >=20
-> > > > > rp_read_cfg)
-> > > > +		return pcie->pcie_data->ops->rp_read_cfg(pcie,
-> > > > where,
-> > > > +							??size
-> > > > ,
-> > > > value);
-> > > > +
-> > > > ??	switch (size) {
-> > > > ??	case 1:
-> > > > ??		byte_en =3D 1 << (where & 3);
-> > > > @@ -302,6 +460,10 @@ static int _altera_pcie_cfg_write(struct
-> > > > altera_pcie *pcie, u8 busno,
-> > > > ??	u32 shift =3D 8 * (where & 3);
-> > > > ??	u8 byte_en;
-> > > > ??
-> > > > +	if (busno =3D=3D pcie->root_bus_nr && pcie->pcie_data-
-> > > > >ops-
-> > > > >=20
-> > > > > rp_write_cfg)
-> > > > +		return pcie->pcie_data->ops-
-> > > > >rp_write_cfg(pcie,
-> > > > busno,
-> > > > +						??????????wher
-> > > > e, size,
-> > > > value);
-> > > > +
-> > > > ??	switch (size) {
-> > > > ??	case 1:
-> > > > ??		data32 =3D (value & 0xff) << shift;
-> > > > @@ -365,7 +527,8 @@ static int altera_read_cap_word(struct
-> > > > altera_pcie *pcie, u8 busno,
-> > > > ??	int ret;
-> > > > ??
-> > > > ??	ret =3D _altera_pcie_cfg_read(pcie, busno, devfn,
-> > > > -				????????PCIE_CAP_OFFSET +
-> > > > offset,
-> > > > sizeof(*value),
-> > > > +				????????pcie->pcie_data-
-> > > > >cap_offset +
-> > > > offset,
-> > > > +				????????sizeof(*value),
-> > > > ??				????????&data);
-> > > > ??	*value =3D data;
-> > > > ??	return ret;
-> > > > @@ -375,7 +538,8 @@ static int altera_write_cap_word(struct
-> > > > altera_pcie *pcie, u8 busno,
-> > > > ??				??unsigned int devfn, int
-> > > > offset,
-> > > > u16 value)
-> > > > ??{
-> > > > ??	return _altera_pcie_cfg_write(pcie, busno, devfn,
-> > > > -				????????????PCIE_CAP_OFFSET +
-> > > > offset,
-> > > > sizeof(value),
-> > > > +				????????????pcie->pcie_data-
-> > > > >cap_offset
-> > > > + offset,
-> > > > +				????????????sizeof(value),
-> > > > ??				????????????value);
-> > > > ??}
-> > > > ??
-> > > > @@ -403,7 +567,7 @@ static void altera_wait_link_retrain(struct
-> > > > altera_pcie *pcie)
-> > > > ??	/* Wait for link is up */
-> > > > ??	start_jiffies =3D jiffies;
-> > > > ??	for (;;) {
-> > > > -		if (altera_pcie_link_up(pcie))
-> > > > +		if (pcie->pcie_data->ops-
-> > > > >get_link_status(pcie))
-> > > > ??			break;
-> > > > ??
-> > > > ??		if (time_after(jiffies, start_jiffies +
-> > > > LINK_UP_TIMEOUT)) {
-> > > > @@ -418,7 +582,7 @@ static void altera_pcie_retrain(struct
-> > > > altera_pcie *pcie)
-> > > > ??{
-> > > > ??	u16 linkcap, linkstat, linkctl;
-> > > > ??
-> > > > -	if (!altera_pcie_link_up(pcie))
-> > > > +	if (!pcie->pcie_data->ops->get_link_status(pcie))
-> > > > ??		return;
-> > > > ??
-> > > > ??	/*
-> > > > @@ -540,12 +704,20 @@ static int altera_pcie_parse_dt(struct
-> > > > altera_pcie *pcie)
-> > > > ??	struct device *dev =3D &pcie->pdev->dev;
-> > > > ??	struct platform_device *pdev =3D pcie->pdev;
-> > > > ??	struct resource *cra;
-> > > > +	struct resource *hip;
-> > > > ??
-> > > > ??	cra =3D platform_get_resource_byname(pdev,
-> > > > IORESOURCE_MEM,
-> > > > "Cra");
-> > > > ??	pcie->cra_base =3D devm_ioremap_resource(dev, cra);
-> > > > ??	if (IS_ERR(pcie->cra_base))
-> > > > ??		return PTR_ERR(pcie->cra_base);
-> > > > ??
-> > > > +	if (pcie->pcie_data->version =3D=3D ALTERA_PCIE_V2) {
-> > > > +		hip =3D platform_get_resource_byname(pdev,
-> > > > IORESOURCE_MEM, "Hip");
-> > > > +		pcie->hip_base =3D devm_ioremap_resource(&pdev-
-> > > > >dev,=C2=A0
-> > > > hip);
-> > > > +		if (IS_ERR(pcie->hip_base))
-> > > > +			return PTR_ERR(pcie->hip_base);
-> > > > +	}
-> > > > +
-> > > > ??	/* setup IRQ */
-> > > > ??	pcie->irq =3D platform_get_irq(pdev, 0);
-> > > > ??	if (pcie->irq < 0) {
-> > > > @@ -562,6 +734,48 @@ static void altera_pcie_host_init(struct
-> > > > altera_pcie *pcie)
-> > > > ??	altera_pcie_retrain(pcie);
-> > > > ??}
-> > > > ??
-> > > > +static const struct altera_pcie_ops altera_pcie_ops_1_0 =3D {
-> > > > +	.tlp_read_pkt =3D tlp_read_packet,
-> > > > +	.tlp_write_pkt =3D tlp_write_packet,
-> > > > +	.get_link_status =3D altera_pcie_link_up,
-> > > > +};
-> > > > +
-> > > > +static const struct altera_pcie_ops altera_pcie_ops_2_0 =3D {
-> > > > +	.tlp_read_pkt =3D s10_tlp_read_packet,
-> > > > +	.tlp_write_pkt =3D s10_tlp_write_packet,
-> > > > +	.get_link_status =3D s10_altera_pcie_link_up,
-> > > > +	.rp_read_cfg =3D s10_rp_read_cfg,
-> > > > +	.rp_write_cfg =3D s10_rp_write_cfg,
-> > > > +};
-> > > > +
-> > > > +static const struct altera_pcie_data altera_pcie_1_0_data =3D {
-> > > > +	.ops =3D &altera_pcie_ops_1_0,
-> > > > +	.cap_offset =3D 0x80,
-> > > > +	.version =3D ALTERA_PCIE_V1,
-> > > > +	.cfgrd0 =3D TLP_FMTTYPE_CFGRD0,
-> > > > +	.cfgrd1 =3D TLP_FMTTYPE_CFGRD1,
-> > > > +	.cfgwr0 =3D TLP_FMTTYPE_CFGWR0,
-> > > > +	.cfgwr1 =3D TLP_FMTTYPE_CFGWR1,
-> > > > +};
-> > > > +
-> > > > +static const struct altera_pcie_data altera_pcie_2_0_data =3D {
-> > > > +	.ops =3D &altera_pcie_ops_2_0,
-> > > > +	.version =3D ALTERA_PCIE_V2,
-> > > > +	.cap_offset =3D 0x70,
-> > > > +	.cfgrd0 =3D S10_TLP_FMTTYPE_CFGRD0,
-> > > > +	.cfgrd1 =3D S10_TLP_FMTTYPE_CFGRD1,
-> > > > +	.cfgwr0 =3D S10_TLP_FMTTYPE_CFGWR0,
-> > > > +	.cfgwr1 =3D S10_TLP_FMTTYPE_CFGWR1,
-> > > > +};
-> > > > +
-> > > > +static const struct of_device_id altera_pcie_of_match[] =3D {
-> > > > +	{.compatible =3D "altr,pcie-root-port-1.0",
-> > > > +	??.data =3D &altera_pcie_1_0_data },
-> > > > +	{.compatible =3D "altr,pcie-root-port-2.0",
-> > > > +	??.data =3D &altera_pcie_2_0_data },
-> > > > +	{},
-> > > > +};
-> > > > +
-> > > > ??static int altera_pcie_probe(struct platform_device *pdev)
-> > > > ??{
-> > > > ??	struct device *dev =3D &pdev->dev;
-> > > > @@ -570,6 +784,7 @@ static int altera_pcie_probe(struct
-> > > > platform_device *pdev)
-> > > > ??	struct pci_bus *child;
-> > > > ??	struct pci_host_bridge *bridge;
-> > > > ??	int ret;
-> > > > +	const struct of_device_id *match;
-> > > > ??
-> > > > ??	bridge =3D devm_pci_alloc_host_bridge(dev,
-> > > > sizeof(*pcie));
-> > > > ??	if (!bridge)
-> > > > @@ -578,6 +793,12 @@ static int altera_pcie_probe(struct
-> > > > platform_device *pdev)
-> > > > ??	pcie =3D pci_host_bridge_priv(bridge);
-> > > > ??	pcie->pdev =3D pdev;
-> > > > ??
-> > > > +	match =3D of_match_device(altera_pcie_of_match, &pdev-
-> > > > >dev);
-> > > > +	if (!match)
-> > > > +		return -ENODEV;
-> > > > +
-> > > > +	pcie->pcie_data =3D match->data;
-> > > > +
-> > > > ??	ret =3D altera_pcie_parse_dt(pcie);
-> > > > ??	if (ret) {
-> > > > ??		dev_err(dev, "Parsing DT failed\n");
-> > > > @@ -628,11 +849,6 @@ static int altera_pcie_probe(struct
-> > > > platform_device *pdev)
-> > > > ??	return ret;
-> > > > ??}
-> > > > ??
-> > > > -static const struct of_device_id altera_pcie_of_match[] =3D {
-> > > > -	{ .compatible =3D "altr,pcie-root-port-1.0", },
-> > > > -	{},
-> > > > -};
-> > > > -
-> > > > ??static struct platform_driver altera_pcie_driver =3D {
-> > > > ??	.probe		=3D altera_pcie_probe,
-> > > > ??	.driver =3D {
---=-9hhI7CMo5Fjw/E4pBMop
-Content-Disposition: attachment; filename="0001-PCI-altera-Fixed-sparse-warning.patch"
-Content-Type: text/x-patch; name="0001-PCI-altera-Fixed-sparse-warning.patch";
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+> > > > Regards,
+> > > > Lucas
+> > > You are correct that core cannot distinguish between a normal DMA mem=
+ory and
+> > > MSI. In that case, the only way I see is to alloc memory using
+> > > dma_alloc_coherent()
+> > > and use the IOVA as the MSI target address. That way, a page gets
+> > > reserved (in a way wasted
+> > > also as the MSI writes don't really make it to RAM) and there won't be
+> > > any address
+> > > overlaps with normal DMA writes. I'll push a patch for it.
+> > At that point it's no longer different from the current code, which
+> > simply reserves a single page of memory and uses its address as the MSI
+> > target address.
+> But, I think there is still one issue with the current code base. Since w=
+hat
+> is used as
+> MSI target address is the physical address equivalent of the memory page
+> being reserved,
+> there is a chance that some IOVA might become equal to this physical addr=
+ess
+> there by
+> making PCIe IP to raise an MSI interrupt instead of forwarding the write =
+to
+> memory.
+> Do you agree with this?
 
-RnJvbSA1NDlkNjhmN2U4OTVkNzA0YTgzYzJmOTdiMzdiNGI2M2Y2OTQxNjg5IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBMZXkgRm9vbiBUYW4gPGxleS5mb29uLnRhbkBpbnRlbC5jb20+
-CkRhdGU6IE1vbiwgNCBNYXIgMjAxOSAxNDoyODowMyArMDgwMApTdWJqZWN0OiBbUEFUQ0hdIFBD
-STogYWx0ZXJhOiBGaXhlZCBzcGFyc2Ugd2FybmluZwoKd2FybmluZzogaW5jb3JyZWN0IHR5cGUg
-aW4gaW5pdGlhbGl6ZXIgKGRpZmZlcmVudCBhZGRyZXNzIHNwYWNlcykKClNpZ25lZC1vZmYtYnk6
-IExleSBGb29uIFRhbiA8bGV5LmZvb24udGFuQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL3BjaS9j
-b250cm9sbGVyL3BjaWUtYWx0ZXJhLmMgfCA0ICsrLS0KIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2Vy
-dGlvbnMoKyksIDIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvY29udHJv
-bGxlci9wY2llLWFsdGVyYS5jIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9wY2llLWFsdGVyYS5j
-CmluZGV4IDE0ZTVkOTUyNDE0Mi4uMTBlMmY5ZjAzODg4IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Bj
-aS9jb250cm9sbGVyL3BjaWUtYWx0ZXJhLmMKKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9w
-Y2llLWFsdGVyYS5jCkBAIC0zNjcsNyArMzY3LDcgQEAgc3RhdGljIGludCB0bHBfY2ZnX2R3b3Jk
-X3dyaXRlKHN0cnVjdCBhbHRlcmFfcGNpZSAqcGNpZSwgdTggYnVzLCB1MzIgZGV2Zm4sCiBzdGF0
-aWMgaW50IHMxMF9ycF9yZWFkX2NmZyhzdHJ1Y3QgYWx0ZXJhX3BjaWUgKnBjaWUsIGludCB3aGVy
-ZSwKIAkJCSAgIGludCBzaXplLCB1MzIgKnZhbHVlKQogewotCXZvaWQgKmFkZHIgPSBTMTBfUlBf
-Q0ZHX0FERFIocGNpZSwgd2hlcmUpOworCXZvaWQgX19pb21lbSAqYWRkciA9IFMxMF9SUF9DRkdf
-QUREUihwY2llLCB3aGVyZSk7CiAKIAlzd2l0Y2ggKHNpemUpIHsKIAljYXNlIDE6CkBAIC0zODcs
-NyArMzg3LDcgQEAgc3RhdGljIGludCBzMTBfcnBfcmVhZF9jZmcoc3RydWN0IGFsdGVyYV9wY2ll
-ICpwY2llLCBpbnQgd2hlcmUsCiBzdGF0aWMgaW50IHMxMF9ycF93cml0ZV9jZmcoc3RydWN0IGFs
-dGVyYV9wY2llICpwY2llLCB1OCBidXNubywKIAkJCSAgICBpbnQgd2hlcmUsIGludCBzaXplLCB1
-MzIgdmFsdWUpCiB7Ci0Jdm9pZCAqYWRkciA9IFMxMF9SUF9DRkdfQUREUihwY2llLCB3aGVyZSk7
-CisJdm9pZCBfX2lvbWVtICphZGRyID0gUzEwX1JQX0NGR19BRERSKHBjaWUsIHdoZXJlKTsKIAog
-CXN3aXRjaCAoc2l6ZSkgewogCWNhc2UgMToKLS0gCjIuMTkuMAoK
+Yeah, I think we need to make sure that the MSI target address is in the
+same address space as other memory allocated for PCI devices. If we
+continue to use __get_free_pages() that means we'd have to manually set
+up an IOMMU domain for the IOVA mapping of the MSI target address. That
+is pretty tedious and would probably also conflict with code in PCI
+device drivers that are presumably going to allocate memory using the
+DMA API and hence could get a different domain or IOVA space than the
+PCI controller itself.
 
+There's also still an issue with 32-bit vs. 64-bit addressing, if I'm
+not mistaken. I think we had meant to address that separately, but it
+looks like we never did. Or perhaps I'm forgetting what conclusion we
+had come to regarding that?
 
---=-9hhI7CMo5Fjw/E4pBMop--
+The original proposal to use a fixed address outside of system memory
+could've fixed the conflicting address issue and the 32-bit vs. 64-bit
+addressing problem, but it also wouldn't have worked for IOVA addresses
+because the MSI target address could easily clash with an address from
+the PCI IOVA space.
+
+> > So in conclusion this change should just be dropped.
+
+I think we need to do something, even if this change is perhaps not the
+best approach in retrospect.
+
+Perhaps as a first step we could try to solve the 32-bit vs. 64-bit
+addressing issue in a separate patch and then think about the SMMU case
+some more and then resolve that separately.
+
+I'm not exactly sure how SMMU works for PCI on Tegra, but I thought it
+was using a single IOVA space (or ASID in Tegra-speak) for anything PCI.
+What I don't understand is how that works in conjunction with the memory
+resource assignment code. If we enable SMMU for PCI, don't all of the
+BARs become invalid? I suppose if only memory accesses upwards of the
+PCI controller get translated through the SMMU, then the memory resource
+assignments might stay valid. But we would also have to ensure that IOVA
+allocations for PCI don't intersect with the PCI address ranges from
+which BARs are allocated.
+
+I've been working on a set of patches that address a similar problem for
+display. The problem that I'm seeing is that if we enable IOMMU-backed
+DMA API for display, then the IOMMU translation for display controllers
+gets enabled very early on, a long time before the driver gets a chance
+to program the hardware. The result is that if the bootloader has left
+the display controller enabled, it will now read from memory that has no
+IOVA mapping (the bootloader usually doesn't set up the SMMU). This is a
+bit of a bug without DMA/IOMMU as well because the display controller is
+reading memory that the kernel will at some point claim and write to.
+
+There are two things we need to fix that: one is to make sure that the
+kernel doesn't write to the memory currently being scanned out and the
+other is to properly set up the SMMU before it is enabled, but without
+requiring the kernel driver to be loaded.
+
+The first I solved using reserved-memory regions. See the documentation
+in Documentation/devicetree/bindings/reserved-memory/ for background on
+what these are. The idea is to use a reserved memory region to prevent
+the kernel from handing the framebuffer memory to the buddy allocator.
+The second problem can be fixed by implementing "reserved regions"
+support in the SMMU driver. I have an implementation for that ready and
+it works fine in conjunction with some bootloader patches that make sure
+the correct reserved memory regions are set up when the kernel boots.
+
+While not exactly the same, I think the issue for PCI is conceptually
+similar. It doesn't make much sense to add a reserved region for the PCI
+apertures because they aren't part of system memory in the first place.
+I'm not sure it would hurt, but it's possible that the reserved memory
+code is not prepared to deal with memory regions outside of system
+memory. However, I think what we want to do is establish reserved
+regions in the PCI ASID that represents the PCI apertures. That way we
+avoid ever programming PCI devices with DMA addresses that would point
+back into PCI memory.
+
+Thierry
+
+--AqsLC8rIMeq19msA
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlx846kACgkQ3SOs138+
+s6G98g/9EdQNGBHVvgss9nNuYlUGuN9AKHarDHjwZ2wzHIOA/smRop7jOK71NCV8
++2Dl7Tx0pszplJrty90yMyJPvocgnxXOhc6SwVbsUsVlqh4db0g1mlAnhABqtMWE
+yJnvbwuRDfZ/ie6CSi5cmySpCxNvT+azlSxYiGTaDbrAMQs7ijfrZEvnb3EQwHEr
+AJWzAx8dIJc234NDopBnCzX+8aP0RIyJJyZBCyA2nnU9Ln1OBjoZZqbJeftABfDs
++zDjjOYjdzA6jnXUKrCmfkn1/LYn4iuUkijD1YS82Mo7FC2A/rC77412933p+CWS
+499y5mQ5KifUJYaak6a0VpiqBwGnOvqwJW2Mwl1tOKepr0fQt3ETdGfSckYO9XU2
+cE6Ae+r7MT7J5lPgxmW6qMAKX+iKyIE8FQemYqjxNPUzs/VhW8ljyX1+yhUiXylJ
+ZqqFhM/WVQTcy1yygUM78UJJx+IiTmZsD03iJ4gnuKOmHQPiki5yvg+C9NDI3IRA
+efW6NdKqRdSdZRGRgezTorAIZ9YrnvXCUgXeCBe/xBsnkmagL7zDzRyshBYZ5mOd
+XGGuCxMfx1q4CmIAg33K9Eu/snB4VGzJGpdwB66myUHNJqd3QqpZ+hg+mgTCSxKd
+4YrmDQh5TqzTA2e9o8UbwrxAQ7/TUALPb8uz299N4IVIA2Q/21U=
+=5mGU
+-----END PGP SIGNATURE-----
+
+--AqsLC8rIMeq19msA--
