@@ -2,60 +2,60 @@ Return-Path: <SRS0=ZPBx=RJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-7.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5592DC43381
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 22:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 350B1C43381
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 23:13:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0CA4F20854
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 22:45:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBE94206DD
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 23:13:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q3IVc/hW"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VBd2SxJ+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725793AbfCFWpu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Mar 2019 17:45:50 -0500
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:45427 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725790AbfCFWpu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2019 17:45:50 -0500
-Received: by mail-lf1-f66.google.com with SMTP id f16so10167686lfk.12;
-        Wed, 06 Mar 2019 14:45:47 -0800 (PST)
+        id S1726195AbfCFXNb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Mar 2019 18:13:31 -0500
+Received: from mail-lj1-f194.google.com ([209.85.208.194]:38573 "EHLO
+        mail-lj1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725783AbfCFXNa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2019 18:13:30 -0500
+Received: by mail-lj1-f194.google.com with SMTP id 199so12488566ljj.5;
+        Wed, 06 Mar 2019 15:13:28 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:mail-followup-to:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=i5itA89J/tYrYODEBG5jmbM+0HmRYjtjVgjZwzskYHw=;
-        b=q3IVc/hWHFL6REcPhXTA3AHkvN9qTA3hSVWeqKRd1aBsdpFPNhH2oXpjRWw1LB620i
-         S2U3oT6rfQIovMo+kXyhgb0/L0LI/j+2nEVYJA4GTduuFP1bog/v6PiozzoSa9fmvYMU
-         fSJxUFdrV7kjTOqEwj5TlKRjvTz1KqVxpBZpdgSwRm6icgGuLpuhbj037wdW1oDEgy2U
-         YboTfL1xtD02ub5ckOPUWVoPgm71qcNgXeb2tdFOANs08WaXsyQO+uNmx4s7FW7EaBsF
-         vrN1EudE/4JSSbqTvolOb3jJxUPYrF+4xNXCoGnvEUuDWHx5PA5IUHE25C9cSm4j6toT
-         aYnA==
+        bh=aTzEPq963NUOgByo5HwPXtKbRC2xUp3lDNkLo3K0Ut8=;
+        b=VBd2SxJ+9fJZhBePdky8pZsP4mb40rJr8f74ShX5fw9beqVqQ+FJo/SaLLmOSLiBOu
+         DAl2wamjzHdKh3g/YYhw+KE43zSVCLLv18aPk7MSdkC9ZHgNfe+Kp9pU/TJ7kF6Qv4MB
+         XuBCkyyM4wE28i77/2n0r7GR02UqWZyOnSvLYY2OU0YgqtMD0CBovJC6OKUlzTijgREc
+         7KSFYr68vD6y2wephyLnjlD5h+yPLT8KOW1QEp0tTqCmlacM4G+654JYTYxBycnQ9ir4
+         Dcttme2gV1Xtl24yB+9hYWI4F7hiBqXZLL0nd54UqacYV6i3NxPdf9zF/ZULLxfPGhYw
+         6CuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id
          :mail-followup-to:references:mime-version:content-disposition
          :in-reply-to:user-agent;
-        bh=i5itA89J/tYrYODEBG5jmbM+0HmRYjtjVgjZwzskYHw=;
-        b=MKP9A0C/eHLEOqwBPwy0S4UrNRhVwvC7L47kSK6whI/kOF2x2PlDFVZs9WvFPMxgNw
-         pWTuPLd7SoN1QM5xM8KYR2scAELsDusP1oC6U8cKOLHNXWu4JjhXNcf9idFdYJMpePeq
-         ikwTGxGjrgL71lgCkKhoryVMTKQrrhAcSN1/Z+Ycq801JJknPyVifJvy4xMXnM+vO6FX
-         XI6L201HHcF839Yy3UPzOGSHtDi6YFqfJWcflJEteUhuwIPgknyMM8U7bXXuRxQ/SyRY
-         5mkvtKtDchJRXHZlaih/0XqAruC7bpUdtpLEkQvEhQpmghn6G0+HUtoRhEaXECmYbJx0
-         0Xjg==
-X-Gm-Message-State: APjAAAVyCOtZP+BE+pQpVkKk86Oj+t3Zck4VPn0bmSlLv6eu+FzNrl7v
-        nxqlIbPHFYZJswSqbLIMxkQ=
-X-Google-Smtp-Source: APXvYqykSP5ustfW7bB8VXOKGc987iAYF7DCDvC8jIesYpaHQ0LArZ3wTIsSTWDVg4x7OaaajIwb6g==
-X-Received: by 2002:a19:a2cf:: with SMTP id l198mr501480lfe.34.1551912346493;
-        Wed, 06 Mar 2019 14:45:46 -0800 (PST)
+        bh=aTzEPq963NUOgByo5HwPXtKbRC2xUp3lDNkLo3K0Ut8=;
+        b=JxSonDA4lq9KWfEqvk5m3OkRbm1sEmLVIzMjkXMPq3s97LcphJkqACFlqIpLoxyCrK
+         wV8eY5zYnN1+wrgi2YioEOvGn3vOhjtUfOHaNA061H6ou/Kgk9VeNxXH/BSOqaVXoqOL
+         fqwoNTj9NEnBkWs7p1gFfk1SxLR9AlVOlhT1+gaxVXJbiY/8jq2VEYSlFNwCk9wH3XnJ
+         aCy/JEIPaPiNjygsj3L83bzxfPUqXB4iQcBOSo/YvJxDMYt/HS7IcPBBx84+NhmqyNdj
+         gEeoiTrVaXwTHPskVa/hAVFYHNC/T6KqxEv8UPoOsDrxWDbSnryZXFovffrsEqsDg+TS
+         191A==
+X-Gm-Message-State: APjAAAXHdz2mCOBejkBvfX6vXctOqoLFOOg+/dSAqAQifwXaoH+sLAoe
+        3UcAVCEkXX3RvfP/t/9roBI=
+X-Google-Smtp-Source: APXvYqxrNk42nMhn7VEwrzRdgc/d8IDWcU7gggC9CLLQie16acqUl5d/YS8/OMwpSJTJIJYLGrOGMA==
+X-Received: by 2002:a2e:890b:: with SMTP id d11mr4196912lji.174.1551914007437;
+        Wed, 06 Mar 2019 15:13:27 -0800 (PST)
 Received: from mobilestation ([95.79.187.182])
-        by smtp.gmail.com with ESMTPSA id x87sm538061ljb.91.2019.03.06.14.45.45
+        by smtp.gmail.com with ESMTPSA id v1sm542663ljc.57.2019.03.06.15.13.26
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 06 Mar 2019 14:45:45 -0800 (PST)
-Date:   Thu, 7 Mar 2019 01:45:43 +0300
+        Wed, 06 Mar 2019 15:13:26 -0800 (PST)
+Date:   Thu, 7 Mar 2019 02:13:24 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
@@ -66,9 +66,8 @@ Cc:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
         Allen Hubbe <allenbh@gmail.com>,
         Dave Jiang <dave.jiang@intel.com>,
         Eric Pilmore <epilmore@gigaio.com>
-Subject: Re: [PATCH v2 07/12] NTB: Introduce functions to calculate
- multi-port resource index
-Message-ID: <20190306224542.4eu2dvsixfzc75gr@mobilestation>
+Subject: Re: [PATCH v2 09/12] NTB: Introduce MSI library
+Message-ID: <20190306231323.gtcuemtdukt6rhcd@mobilestation>
 Mail-Followup-To: Serge Semin <fancer.lancer@gmail.com>,
         Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
         linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
@@ -78,295 +77,163 @@ Mail-Followup-To: Serge Semin <fancer.lancer@gmail.com>,
         Dave Jiang <dave.jiang@intel.com>,
         Eric Pilmore <epilmore@gigaio.com>
 References: <20190213175454.7506-1-logang@deltatee.com>
- <20190213175454.7506-8-logang@deltatee.com>
- <20190306012420.wjeatxgb7nwq3j5q@mobilestation>
- <bd72f24f-5982-0fe7-59df-2fbbfe9f798a@deltatee.com>
+ <20190213175454.7506-10-logang@deltatee.com>
+ <20190306202631.3vc3b64e45ackcna@mobilestation>
+ <5b420eb7-5010-aae3-e9bd-1c612af409ae@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <bd72f24f-5982-0fe7-59df-2fbbfe9f798a@deltatee.com>
+In-Reply-To: <5b420eb7-5010-aae3-e9bd-1c612af409ae@deltatee.com>
 User-Agent: NeoMutt/20180716
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 06, 2019 at 12:11:11PM -0700, Logan Gunthorpe wrote:
+On Wed, Mar 06, 2019 at 02:35:53PM -0700, Logan Gunthorpe wrote:
 > 
 > 
-> On 2019-03-05 6:24 p.m., Serge Semin wrote:
-> >> + * In a 5 peer system, this function will return the following matrix
-> >> + *
-> >> + * pidx \ port    0    1    2    3    4
-> >> + * 0              0    0    1    2    3
-> >> + * 1              0    1    2    3    4
-> >> + * 2              0    1    2    3    4
-> >> + * 3              0    1    2    3    4
-> >> + *
+> On 2019-03-06 1:26 p.m., Serge Semin wrote:
+> > First of all, It might be unsafe to have some resources consumed by NTB
+> > MSI or some other library without a simple way to warn NTB client drivers
+> > about their attempts to access that resources, since it might lead to random
+> > errors. When I thought about implementing a transport library based on the
+> > Message/Spad+Doorbell registers, I had in mind to create an internal bits-field
+> > array with the resources busy-flags. If, for instance, some message or
+> > scratchpad register is occupied by the library (MSI, transport or some else),
+> > then it would be impossible to access these resources directly through NTB API
+> > methods. So NTB client driver shall retrieve an error in an attempt to
+> > write/read data to/from busy message or scratchpad register, or in an attempt
+> > to set some occupied doorbell bit. The same thing can be done for memory windows.
 > 
-> Oh, first, oops: looks like I copied this down wrong anyway; the code
-> was what I had intended, but the documented example should have been:
+> Yes, it would be nice to have a generic library to manage all the
+> resources, but right now we don't and it's unfair to expect us to take
+> on this work to get the features we care about merged. Right now, it's
+> not at all unsafe as the client is quite capable of ensuring it has the
+> resources for the MSI library. The changes for ntb_transport to ensure
+> this are quite reasonable.
 > 
-> pidx \ local_port     0    1    2    3    4
->  0                    0    0    1    2    3
->  1                    0    1    1    2    3
->  2                    0    1    2    2    3
->  3                    0    1    2    3    3
+> > Second tiny concern is about documentation. Since there is a special file for
+> > all NTB-related doc, it would be good to have some description about the
+> > NTB MSI library there as well:
+> > Documentation/ntb.txt
 > 
-> And this is definitely the correct table we are aiming for.
-> ntb_peer_resource_idx() is supposed to return the result of
-> ntb_peer_port_idx(ntb, local_port) when run on the peer specified by pidx.
-> 
-> Note: this table also makes sense because it only uses 4 resources for 5
-> ports which is the best case scenario. (In other words, to communicate
-> between N ports, N-1 resources are required on each peer).
-> 
-
-Yes, it does use as much and as tight resources as it possible, but
-only for the case of pure integer ports numbering. While in case if
-there are gaps in the port numbers space (which is the only case we have
-in supported hardware at this moment) it will lead to a failure if there
-are ports with higher numbers, than there are MWs available (MWs availability
-depends on the IDT chip firmware). Additionally it creates gaps in the MWs
-space if physical ports are numbered with gaps. Since the only multi-port
-device we've got now is IDT and it always has it' ports numbered with gaps as I
-described, then the current implementation will definitely produced the
-problems.
-
-> > This table is too simplified to represent a generic case of port-index
-> > mapping table. In particular the IDT PCIe switch got it ports numbered
-> > with uneven integers like: 0 2 4 6 8 12 16 20 or 0 8 16, and so on.
-> > Moreover some of the ports might be disabled or may have NTB functions
-> > deactivated, in which case these ports shouldn't be considered by NTB subsystem
-> > at all. Basically we may have any increasing subset of that port
-> > numbers depending on the current IDT PCIe-switch ports setup.
-> 
-> Yes, I did not consider situations where there would be gaps in the
-> "port number" space. It wasn't at all clear from the code that this was
-> possible. Switchtec hardware could be configured for such an
-> arrangement, but I don't know why anyone would do that as it just
-> needlessly complicates everything.
-> 
-> As you point out, with a gap, we end up with something that is wrong:
-> 
-> pidx \ port     0    1    3    4    5
->  0              0    0    2    3    4
->  1              0    1    2    3    4
->  2              0    1    3    3    4
->  3              0    1    3    4    4
-> 
-> Here, the relationship between ntb_peer_resource_idx() and
-> ntb_peer_port_idx() is not maintained and it seems to prescribe 5
-> resources for 5 ports. If there were more gaps it would be even more wrong.
+> Sure, I'll add a short blurb for v3. Though, I noticed it's quite out of
+> date since your changes. Especially in the ntb_tool section...
 > 
 
-Exactly. The table will look even worse for the port numbers: 0 2 4 6 8 12 16 20.
-
-> >> +static inline int ntb_peer_resource_idx(struct ntb_dev *ntb, int pidx)
-> >> +{
-> >> +	int local_port, peer_port;
-> >> +
-> >> +	if (pidx >= ntb_peer_port_count(ntb))
-> >> +		return -EINVAL;
-> >> +
-> >> +	local_port = ntb_port_number(ntb);
-> >> +	peer_port = ntb_peer_port_number(ntb, pidx);
-> >> +
-> >> +	if (peer_port < local_port)
-> >> +		return local_port - 1;
-> >> +	else
-> >> +		return local_port;
-> >> +}
-> >> +
-> > 
-> > Instead of redefining the port-index table we can just fix the
-> > ntb_peer_resource_idx() method, so it would return a global port index
-> > instead of some number based on the port number. It can be done just by
-> > the next modification:
-> > 
-> > +     if (peer_port <= local_port)
-> > +             return pidx;
-> > +     else
-> > +             return pidx + 1;
-> > 
-> 
-> This creates a table that looks like:
-> 
-> pidx \ port     0    1    2    3    4
->  0              1    0    0    0    0
->  1              2    2    1    1    1
->  2              3    3    3    2    2
->  3              4    4    4    4    3
-> 
-> Which is not correct. In fact, it seems to require 5 resources for 5
-> ports. This appears to be what is done in the current ntb_perf and I
-> think I figured it out several months ago but it's way too messy and
-> hard to understand and I don't want to spend the time to figure it out
-> again.
-> 
-
-Yes, this is how it used to be done in ntb_pingpong and is still done in the
-ntb_perf driver. And it is correctly working. As I already described and
-you wrote further, this table provides a Logical Ports numbering space:
-
-peer port \ local port   0  2  4  6  8  12  16  20
-        0                0  0  0  0  0   0   0   0
-        2                1  1  1  1  1   1   1   1
-        4                2  2  2  2  2   2   2   2
-        6                3  3  3  3  3   3   3   3
-        8                4  4  4  4  4   4   4   4
-       12                5  5  5  5  5   5   5   5
-       16                6  6  6  6  6   6   6   6
-       20                7  7  7  7  7   7   7   7
-
-(although I'd call it Global Port Indexes space)
-
-Currently local port indexes don't enumerate the local port number. So
-if you convert that table into the one you provided in the function
-comment, then it'll look like this (similar to what you called incorrect):
-
-pidx \ port     0  2  4  6  8  12  16  20
- 0              1  0  0  0  0   0   0   0
- 1              2  2  1  1  1   1   1   1
- 2              3  3  3  2  2   2   2   2
- 3              4  4  4  4  3   3   3   3
- 4              5  5  5  5  5   4   4   4
- 5              6  6  6  6  6   6   5   5
- 6              7  7  7  7  7   7   7   6
-
-Yes, by using this table we'll waste one resource as always existing
-gap (is it the only incorrect thing you had in mind?). But it is smaller
-problem than to use physical port numbers, which produces much bigger gaps
-in case of your table implementation as well.
-
-Note, in addition in this case you'd need to reconsider your algorithm of the
-resources initialization. Lets for example take alook at Port 0. You'd need
-to have its outbound memory windows [1-7] pointing to the peers with ports
-[2,4,...,20] (correspond to pidx [0-6] of Port 0). So in this case Port 2 would
-have a port 0 inbound MW #1 retrieving data from Port 0 outbound MW #1, Port 4
-would have a port 0 inbound MW #2 retrieving data from Port 0 outbound MW #2,
-and so on.
-
-So your current approach is inbound MW-centralized, while mine is developed
-around the outbound MWs.
-
-> IMO, in order to support gaps, we'd need to, on some layer, create an
-> un-gapped numbering scheme for the ports. I think the easiest thing is
-> to just have Logical and Physical port numbers; so we would have
-> something like:
-> 
-> Physical Port Number: 0  2  4  6  8  12  16  20
-> Logical Port Number:  0  1  2  3  4  5   6   7
-> Peer Index (Port 0):  x  0  1  2  3  4   5   6
-> Port Index (Port 8):  0  1  2  3  x  4   5   6
-> (etc)
-
-That's what I suggested in the two possible solutions:
-1st solution: replace current pidx with Logical Port Number,
-2nd solution: alter ntb_peer_resource_idx() so it would return the Logical Port Number.
-
-IMO In case of the 2nd solution I'd also suggest to rename the
-ntb_peer_resource_idx() method into ntb_peer_port_global_idx(),
-and then consider the current port indexes used in the NTB API
-as local port indexes. The resource indexing can be abstracted
-by a macro like this:
-#define ntb_peer_resource_idx ntb_peer_port_global_idx
-
-Finally in order to close the space up we'd also need to define
-a method: ntb_port_global_idx(), which would return a Logical (global)
-index of local port.
-
-> 
-> Where the Physical Port Number is whatever the hardware uses and the
-> logical port number is a numbering scheme starting with zero with no
-> gaps. Then the port indexes are still as we currently have them. If we
-> say that the port numbers we have now are the Logical Port Number, then
-> ntb_peer_resource_idx() is correct.
-> 
-
-Current port numbers are the physical port numbers with gaps. That's why we
-introduced the port-index NTB API abstraction in the first place, to have these gaps
-eliminated and to provide a simple way of bulk setup. Although that abstraction
-turned out not that suitable to distribute the shared resources. So
-the Logical (Global) indexing is needed to do it (that's what ntb_pingpong used
-to do and ntb_perf still does now).
-
-> I would strongly argue that the clients don't need to know anything
-> about the Physical Port Number and these should be handled strictly
-> inside the drivers. If multiple drivers need to do something similar to
-> map the logical to physical port numbers then we should introduce helper
-> functions to allow them to do so. If the Physical Numbers are not
-> contained in the driver than the API would need to be expanded to expose
-> which numbers are actually used to avoid needing to constantly loop
-> through all the indexes to find this out.
-> 
-
-Absolutely agree with you. The main idea of NTB API was to provide a set
-of methods to access the NTB hardware without any abstractions but
-with possible useful helpers, like your NTB MSI library, or transport library,
-or anything else. So the physical port numbers must be available for
-the client drivers.
-
-> On a similar vein, I'd  suggest that most clients shouldn't even really
-> need to do anything with the Logical Port Number and should deal largely
-> with Port Indexes. Ideally, Logical Port Numbers should only be used by
-> helper code in the common layer to help assign resources used by the
-> clients (like ntb_peer_resource_idx()).
-> 
-
-This is the main question. Do we really need the current port indexes
-implementation at all? After all these years of NTB API usage I don't really
-see it useful in any case except to loop over the outbound MW resources
-automatically skipping the local port (usefulness of this is also questionable).
-As I already said I created the port-index table this way due to the IDT NTB
-MWs peculiarity, which doesn't seem to me a big problem now comparing to all
-these additional complications we intend to introduce.
-
-The rest of the drivers code really need to have the Logical (global)
-port indexes, at least to distribute the shared resources, and don't use
-the current pidx that much.
-
-Wouldn't it be better to just redefine the current port-index table
-in the following way?
-ntb_port_number() - local physical port number,
-ntb_port_idx() - local port logical (global) index,
-ntb_peer_port_count() - total number of ports NTB device provide (including the local one),
-ntb_peer_port_number() - physical port number of the peer with passed logical port index,
-ntb_peer_port_idx - logical port index of the passed physical port number.
-
-while currently we have:
-ntb_port_number() - local physical port number,
-ntb_peer_port_count() - total number of ports NTB device provide (excluding the local one),
-ntb_peer_port_number() - physical port number of the peer with passed port index,
-ntb_peer_port_idx - port index of the passed physical port number;
+Ok. Thanks.
+If you want you can add some info to the ntb_tool section as well. If you
+don't have time, I'll update it next time I submit anything new to the
+subsystem.
 
 -Sergey
 
-> This world view isn't far off from what we have now, though you *may*
-> need to adjust your IDT driver and we will have to eventually clean up
-> the existing test clients to use the new helper functions.
+> >> +	u32 *peer_mws[];
+> > 
+> > Shouldn't we use the __iomem attribute here since later the devm_ioremap() is
+> > used to map MWs at these pointers?
 > 
-> > Personally I'd prefer the first solution even though it may lead to the
-> > "Unsupported TLP" errors and cause a greater code changes. Here is why:
-> > 1) the error might be IDT-specific, so we shouldn't limit the API due to
-> > one particular hardware peculiarity,
-> > 2) port-index table with global indexes implementation shall simplify the IDT
-> > NTB hw driver and provide a cleaner NTB API with simpler shared resources
-> > utilization code.
+> Yes, will change for v3.
 > 
-> > The final decision is after the NTB subsystem maintainers. If they agree with
-> > solution #1 I'll send a corresponding patchset on this week, so you can
-> > alter this patchset being based on it.
 > 
-> I think what we have right now is close enough and we just have to clean
-> up the code and fix things. I don't think we need to do another big
-> change to the semantics. I *certainly* don't want to risk breaking
-> everything again to do it.
->  Logan
+> > Simpler and faster cleanup-code would be:
+> 
+> > + unroll:
+> > + 	for (--i; i >= 0; --i)
+> > + 		devm_iounmap(&ntb->dev, ntb->msi->peer_mws[i]);
+> 
+> Faster, maybe, but I would not consider this simpler. It's much more
+> complicated to reason about and ensure it's correct. I prefer my way
+> because I don't care about speed, but I do care about readability.
+> 
+> 
+> > Alas calling the ntb_mw_set_trans() method isn't enough to fully initialize
+> > NTB Memory Windows. Yes, the library will work for Intel/AMD/Switchtec
+> > (two-ports legacy configuration), but will fail for IDT due to being based on
+> > the outbound MW xlat interface. So the library at this stage isn't portable
+> > across all NTB hardware. In order to make it working the translation address is
+> > supposed to be transferred to the peer side, where a peer code should call
+> > ntb_peer_mw_set_trans() method with the retrieved xlat address.
+> > See documentation for details:
+> 
+> > https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/Documentation/ntb.txt
+> > 
+> > ntb_perf driver can be also used as a reference of the portable NTB MWs setup.
+> 
+> Gross. Well, given that ntb_transport doesn't even support this and we
+> don't really have a sensible library to transfer this information, I'm
+> going to leave it as is for now. Someone can update ntb_msi when they
+> update ntb_transport, preferably after we have a nice library to handle
+> the transfers for us seeing I absolutely do not want to replicate the
+> mess in ntb_perf.
+> 
+> Actually, if we had a generic spad/msg communication library, it would
+> probably be better to have a common ntb_mw_set_trans() function that
+> uses the communications library to send the data and automatically call
+> ntb_peer_mw_set_trans() on the peer. That way we don't have to push this
+> mess into the clients.
+> 
+> > The same cleanup pattern can be utilized here:
+> > +error_out:
+> > +	for (--peer; peer >= 0; --peer) {
+> > +		peer_widx = ntb_peer_highest_mw_idx(ntb, peer);
+> > +		ntb_mw_clear_trans(ntb, i, peer_widx);
+> > +	}
+> > 
+> > So you won't need "i" variable here anymore. You also don't need to check the
+> > return value of ntb_peer_highest_mw_idx() in the cleanup loop because it
+> > was already checked in the main algo code.
+> 
+> See above.
+> 
+> >> +EXPORT_SYMBOL(ntb_msi_clear_mws);
+> >> +
+> > 
+> > Similarly something like ntb_msi_peer_clear_mws() should be added to
+> > unset a translation address on the peer side.
+> 
+> Well, we can table that for when ntb_msi supports the peer MW setting
+> functions.
+> >> +int ntb_msi_peer_trigger(struct ntb_dev *ntb, int peer,
+> >> +			 struct ntb_msi_desc *desc)
+> >> +{
+> >> +	int idx;
+> >> +
+> >> +	if (!ntb->msi)
+> >> +		return -EINVAL;
+> >> +
+> >> +	idx = desc->addr_offset / sizeof(*ntb->msi->peer_mws[peer]);
+> >> +
+> >> +	ntb->msi->peer_mws[peer][idx] = desc->data;
+> >> +
+> > 
+> > Shouldn't we use iowrite32() here instead of direct access to the IO-memory?
+> 
+> Yes, as above I'll fix it for v3.
+> 
+> >> @@ -425,6 +427,10 @@ struct ntb_dev {
+> >>  	spinlock_t			ctx_lock;
+> >>  	/* block unregister until device is fully released */
+> >>  	struct completion		released;
+> >> +
+> >> +	#ifdef CONFIG_NTB_MSI
+> >> +	struct ntb_msi *msi;
+> >> +	#endif
+> > 
+> > I'd align the macro-condition to the most left position:
+> > +#ifdef CONFIG_NTB_MSI
+> > +	struct ntb_msi *msi;
+> > +#endif
+> 
+> Fixed for v3.
+> 
+> 
+> Logan
 > 
 > -- 
 > You received this message because you are subscribed to the Google Groups "linux-ntb" group.
 > To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
 > To post to this group, send email to linux-ntb@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/bd72f24f-5982-0fe7-59df-2fbbfe9f798a%40deltatee.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/5b420eb7-5010-aae3-e9bd-1c612af409ae%40deltatee.com.
 > For more options, visit https://groups.google.com/d/optout.
