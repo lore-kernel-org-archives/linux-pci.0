@@ -2,718 +2,371 @@ Return-Path: <SRS0=ZPBx=RJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB2B5C43381
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 22:14:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5592DC43381
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 22:45:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ED2420684
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 22:14:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CA4F20854
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 22:45:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q3IVc/hW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726264AbfCFWOh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Mar 2019 17:14:37 -0500
-Received: from mga07.intel.com ([134.134.136.100]:13419 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726249AbfCFWOh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Mar 2019 17:14:37 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Mar 2019 14:13:34 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.58,449,1544515200"; 
-   d="scan'208";a="149937646"
-Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga004.fm.intel.com with ESMTP; 06 Mar 2019 14:13:33 -0800
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com, corbet@lwn.net
-Cc:     linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH v1 1/5] PCI/IOV: Add support to verify PF/VF spec compliance
-Date:   Wed,  6 Mar 2019 14:11:14 -0800
-Message-Id: <317aaed09820db65c21452663bed33468f874d3a.1551909341.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1551909341.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1551909341.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1725793AbfCFWpu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Mar 2019 17:45:50 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:45427 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725790AbfCFWpu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2019 17:45:50 -0500
+Received: by mail-lf1-f66.google.com with SMTP id f16so10167686lfk.12;
+        Wed, 06 Mar 2019 14:45:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mail-followup-to:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=i5itA89J/tYrYODEBG5jmbM+0HmRYjtjVgjZwzskYHw=;
+        b=q3IVc/hWHFL6REcPhXTA3AHkvN9qTA3hSVWeqKRd1aBsdpFPNhH2oXpjRWw1LB620i
+         S2U3oT6rfQIovMo+kXyhgb0/L0LI/j+2nEVYJA4GTduuFP1bog/v6PiozzoSa9fmvYMU
+         fSJxUFdrV7kjTOqEwj5TlKRjvTz1KqVxpBZpdgSwRm6icgGuLpuhbj037wdW1oDEgy2U
+         YboTfL1xtD02ub5ckOPUWVoPgm71qcNgXeb2tdFOANs08WaXsyQO+uNmx4s7FW7EaBsF
+         vrN1EudE/4JSSbqTvolOb3jJxUPYrF+4xNXCoGnvEUuDWHx5PA5IUHE25C9cSm4j6toT
+         aYnA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=i5itA89J/tYrYODEBG5jmbM+0HmRYjtjVgjZwzskYHw=;
+        b=MKP9A0C/eHLEOqwBPwy0S4UrNRhVwvC7L47kSK6whI/kOF2x2PlDFVZs9WvFPMxgNw
+         pWTuPLd7SoN1QM5xM8KYR2scAELsDusP1oC6U8cKOLHNXWu4JjhXNcf9idFdYJMpePeq
+         ikwTGxGjrgL71lgCkKhoryVMTKQrrhAcSN1/Z+Ycq801JJknPyVifJvy4xMXnM+vO6FX
+         XI6L201HHcF839Yy3UPzOGSHtDi6YFqfJWcflJEteUhuwIPgknyMM8U7bXXuRxQ/SyRY
+         5mkvtKtDchJRXHZlaih/0XqAruC7bpUdtpLEkQvEhQpmghn6G0+HUtoRhEaXECmYbJx0
+         0Xjg==
+X-Gm-Message-State: APjAAAVyCOtZP+BE+pQpVkKk86Oj+t3Zck4VPn0bmSlLv6eu+FzNrl7v
+        nxqlIbPHFYZJswSqbLIMxkQ=
+X-Google-Smtp-Source: APXvYqykSP5ustfW7bB8VXOKGc987iAYF7DCDvC8jIesYpaHQ0LArZ3wTIsSTWDVg4x7OaaajIwb6g==
+X-Received: by 2002:a19:a2cf:: with SMTP id l198mr501480lfe.34.1551912346493;
+        Wed, 06 Mar 2019 14:45:46 -0800 (PST)
+Received: from mobilestation ([95.79.187.182])
+        by smtp.gmail.com with ESMTPSA id x87sm538061ljb.91.2019.03.06.14.45.45
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Wed, 06 Mar 2019 14:45:45 -0800 (PST)
+Date:   Thu, 7 Mar 2019 01:45:43 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-kselftest@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Eric Pilmore <epilmore@gigaio.com>
+Subject: Re: [PATCH v2 07/12] NTB: Introduce functions to calculate
+ multi-port resource index
+Message-ID: <20190306224542.4eu2dvsixfzc75gr@mobilestation>
+Mail-Followup-To: Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>, linux-kernel@vger.kernel.org,
+        linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-kselftest@vger.kernel.org,
+        Jon Mason <jdmason@kudzu.us>, Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.org>, Allen Hubbe <allenbh@gmail.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Eric Pilmore <epilmore@gigaio.com>
+References: <20190213175454.7506-1-logang@deltatee.com>
+ <20190213175454.7506-8-logang@deltatee.com>
+ <20190306012420.wjeatxgb7nwq3j5q@mobilestation>
+ <bd72f24f-5982-0fe7-59df-2fbbfe9f798a@deltatee.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bd72f24f-5982-0fe7-59df-2fbbfe9f798a@deltatee.com>
+User-Agent: NeoMutt/20180716
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+On Wed, Mar 06, 2019 at 12:11:11PM -0700, Logan Gunthorpe wrote:
+> 
+> 
+> On 2019-03-05 6:24 p.m., Serge Semin wrote:
+> >> + * In a 5 peer system, this function will return the following matrix
+> >> + *
+> >> + * pidx \ port    0    1    2    3    4
+> >> + * 0              0    0    1    2    3
+> >> + * 1              0    1    2    3    4
+> >> + * 2              0    1    2    3    4
+> >> + * 3              0    1    2    3    4
+> >> + *
+> 
+> Oh, first, oops: looks like I copied this down wrong anyway; the code
+> was what I had intended, but the documented example should have been:
+> 
+> pidx \ local_port     0    1    2    3    4
+>  0                    0    0    1    2    3
+>  1                    0    1    1    2    3
+>  2                    0    1    2    2    3
+>  3                    0    1    2    3    3
+> 
+> And this is definitely the correct table we are aiming for.
+> ntb_peer_resource_idx() is supposed to return the result of
+> ntb_peer_port_idx(ntb, local_port) when run on the peer specified by pidx.
+> 
+> Note: this table also makes sense because it only uses 4 resources for 5
+> ports which is the best case scenario. (In other words, to communicate
+> between N ports, N-1 resources are required on each peer).
+> 
 
-PF/VF implementation must comply with PCIe specification as
-defined in r4.0, sec 9.3.4, 9.3.5, 9.3.6 and 9.3.7. And if
-it does not comply, return error and skip PF/VF device
-creation.
+Yes, it does use as much and as tight resources as it possible, but
+only for the case of pure integer ports numbering. While in case if
+there are gaps in the port numbers space (which is the only case we have
+in supported hardware at this moment) it will lead to a failure if there
+are ports with higher numbers, than there are MWs available (MWs availability
+depends on the IDT chip firmware). Additionally it creates gaps in the MWs
+space if physical ports are numbered with gaps. Since the only multi-port
+device we've got now is IDT and it always has it' ports numbered with gaps as I
+described, then the current implementation will definitely produced the
+problems.
 
-Also add a command line parameter support to skip error when
-PF/VF spec validation failed.
+> > This table is too simplified to represent a generic case of port-index
+> > mapping table. In particular the IDT PCIe switch got it ports numbered
+> > with uneven integers like: 0 2 4 6 8 12 16 20 or 0 8 16, and so on.
+> > Moreover some of the ports might be disabled or may have NTB functions
+> > deactivated, in which case these ports shouldn't be considered by NTB subsystem
+> > at all. Basically we may have any increasing subset of that port
+> > numbers depending on the current IDT PCIe-switch ports setup.
+> 
+> Yes, I did not consider situations where there would be gaps in the
+> "port number" space. It wasn't at all clear from the code that this was
+> possible. Switchtec hardware could be configured for such an
+> arrangement, but I don't know why anyone would do that as it just
+> needlessly complicates everything.
+> 
+> As you point out, with a gap, we end up with something that is wrong:
+> 
+> pidx \ port     0    1    3    4    5
+>  0              0    0    2    3    4
+>  1              0    1    2    3    4
+>  2              0    1    3    3    4
+>  3              0    1    3    4    4
+> 
+> Here, the relationship between ntb_peer_resource_idx() and
+> ntb_peer_port_idx() is not maintained and it seems to prescribe 5
+> resources for 5 ports. If there were more gaps it would be even more wrong.
+> 
 
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Suggested-by: Ashok Raj <ashok.raj@intel.com>
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- .../admin-guide/kernel-parameters.txt         |   2 +
- drivers/pci/iov.c                             | 468 ++++++++++++++++++
- drivers/pci/pci.c                             |   2 +
- drivers/pci/pci.h                             |   6 +
- include/linux/pci.h                           |  30 +-
- include/uapi/linux/pci_regs.h                 |  15 +-
- 6 files changed, 520 insertions(+), 3 deletions(-)
+Exactly. The table will look even worse for the port numbers: 0 2 4 6 8 12 16 20.
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 858b6c0b9a15..9e84b5f9c58d 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3363,6 +3363,8 @@
- 				bridges without forcing it upstream. Note:
- 				this removes isolation between devices and
- 				may put more devices in an IOMMU group.
-+		noiov_iverror	Don't skip PCIe device enumeration, if VF/PF
-+				function is not PCIe specification compliant.
- 
- 	pcie_aspm=	[PCIE] Forcibly enable or disable PCIe Active State Power
- 			Management.
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 3aa115ed3a65..9b121a649b90 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -17,6 +17,14 @@
- 
- #define VIRTFN_ID_LEN	16
- 
-+/* IOV invalid error */
-+static int pci_iov_iverror = 1;
-+
-+void pci_noiov_iverror(void)
-+{
-+	pci_iov_iverror = 0;
-+}
-+
- int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
- {
- 	if (!dev->is_physfn)
-@@ -136,6 +144,455 @@ static void pci_read_vf_config_common(struct pci_dev *virtfn)
- 	physfn->sriov->cfg_size = pci_cfg_space_size(virtfn);
- }
- 
-+static int pci_iov_physfn_valid(struct pci_dev *pdev)
-+{
-+	int status = 0, cap;
-+
-+	if (!pdev->is_physfn)
-+		return -EINVAL;
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.9, PF must not implement MRIOV
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_MRIOV);
-+	if (cap) {
-+		status = -EINVAL;
-+		pdev->invalid_cap |= PCI_IOV_INVALID_MRIOV;
-+		dev_warn(&pdev->dev, "%s: %s %s\n", "PF", "MRIOV Capability",
-+			 "must not be implemented");
-+	}
-+
-+	return status;
-+}
-+
-+static int pci_iov_virtfn_valid(struct pci_dev *vdev)
-+{
-+	struct pci_dev *pdev = vdev->physfn;
-+	u16 vreg16, preg16;
-+	u32 vreg32, preg32;
-+	u64 vreg64, preg64;
-+	int status = 0, cap;
-+
-+	if (!vdev->is_virtfn)
-+		return -EINVAL;
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.4.1.3, in Command register, I/O Space
-+	 * Enable, Memory Space Enable and Interrupt Disable bits should
-+	 * be tied to 0 for VFs.
-+	 */
-+	pci_read_config_word(vdev, PCI_COMMAND, &vreg16);
-+	if (vreg16 & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
-+		      PCI_COMMAND_INTX_DISABLE)) {
-+		dev_warn(&vdev->dev, "%s: %s\n", "VF",
-+			 "Non compilaint value in COMMAND register");
-+		status = -EINVAL;
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.4.1.6, Class Code value should match
-+	 * between PF and VF.
-+	 */
-+	pci_read_config_dword(vdev, PCI_CLASS_REVISION, &vreg32);
-+	pci_read_config_dword(pdev, PCI_CLASS_REVISION, &preg32);
-+	vreg32 = vreg32 >> 8;
-+	preg32 = preg32 >> 8;
-+	if (vreg32 != preg32) {
-+		dev_warn(&vdev->dev, "%s: %s %x!=%x\n", "PF/VF",
-+			 "Class Code mismatch", vreg32, preg32);
-+		status = -EINVAL;
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.4.1.13, Subsystem Vendor ID value should
-+	 * match between PF and VF.
-+	 */
-+	pci_read_config_word(vdev, PCI_SUBSYSTEM_VENDOR_ID, &vreg16);
-+	pci_read_config_word(pdev, PCI_SUBSYSTEM_VENDOR_ID, &preg16);
-+	if (vreg16 != preg16) {
-+		dev_warn(&vdev->dev, "%s: %s %x!=%x\n", "PF/VF",
-+			 "Subsystem Vendor ID mismatch", vreg16, preg16);
-+		status = -EINVAL;
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.6, VF must not implement Enhanced Allocation
-+	 * Capability.
-+	 */
-+	cap = pci_find_capability(vdev, PCI_CAP_ID_EA);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_EA;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Enhanced Allocation Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.6, VF must not implement Native PCIe
-+	 * Enclosure Management (NPEM) Capability.
-+	 */
-+	cap = pci_find_capability(vdev, PCI_CAP_ID_NPEM);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_NPEM;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Native PCIe Native PCIe Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.1, VF must not implement Virtual Channel
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_VC);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_VC;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Virtual Channel Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.1, VF must not implement Multi Function
-+	 * Virtual Channel Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_MFVC);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_MFVC;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Multi Function VC Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.1, VF must not implement Virtual Channel(9)
-+	 * Virtual Channel Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_VC9);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_VC9;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Virtual Channel(9) Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.2, VF can optionally implement Device
-+	 * Serial Number Capability. But if it implements it, the value
-+	 * should match the PF.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_DSN);
-+	if (cap) {
-+		pci_read_config_dword(vdev, cap + PCI_DSN_SNUR, &vreg32);
-+		vreg64 = (u64)vreg32 << 32;
-+		pci_read_config_dword(vdev, cap + PCI_DSN_SNLR, &vreg32);
-+		vreg64 |= vreg32;
-+		cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DSN);
-+		if (cap) {
-+			pci_read_config_dword(pdev, cap + PCI_DSN_SNUR,
-+					      &preg32);
-+			preg64 = (u64)preg32 << 32;
-+			pci_read_config_dword(pdev, cap + PCI_DSN_SNLR,
-+					      &preg32);
-+			preg64 |= preg32;
-+		}
-+		if (!cap || vreg64 != preg64) {
-+			status = -EINVAL;
-+			vdev->invalid_cap |= PCI_IOV_INVALID_DSN;
-+			dev_warn(&vdev->dev, "%s: %s\n", "PF/VF",
-+				 "Device Serial Number mismatch");
-+		}
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.3, VF must not implement Power Budgeting
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_PWR);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_PWR;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Power Budgeting Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.8, if VF implements Address Translation
-+	 * Services (ATS) Extended Capability then corresponding PF should
-+	 * also implement it.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_ATS);
-+	if (cap) {
-+		cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS);
-+		if (!cap) {
-+			status = -EINVAL;
-+			vdev->invalid_cap |= PCI_IOV_INVALID_ATS;
-+			dev_warn(&vdev->dev, "%s: %s\n", "PF/VF",
-+				 "ATS Capability mismatch");
-+		}
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement SRIOV
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_SRIOV);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_SRIOV;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF", "SRIOV Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.9, VF must not implement MRIOV
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_MRIOV);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_MRIOV;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF", "MRIOV Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.10, if VF implements Multicast
-+	 * Capability then corresponding PF should also implement it.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_MCAST);
-+	if (cap) {
-+		cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_MCAST);
-+		if (!cap) {
-+			status = -EINVAL;
-+			vdev->invalid_cap |= PCI_IOV_INVALID_MCAST;
-+			dev_warn(&vdev->dev, "%s: %s\n", "PF/VF",
-+				 "Multicast Capability mismatch");
-+		}
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.11, VF must not implement PRI
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_PRI);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_PRI;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF", "PRI Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.4, VF must not implement Resizable BAR
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_REBAR);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_REBAR;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Resizable BAR Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.4, VF must not implement VF Resizable BAR
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_VREBAR);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_VREBAR;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "VF Resizable BAR Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.12, VF must not implement Dynamic Power
-+	 * Allocation Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_DPA);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_DPA;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Dynamic Power Allocation Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement Latency Tolerance
-+	 * Reporting (LTR) Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_LTR);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_LTR;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Latency Tolerance Reporting Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement Secondary PCIe
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_SECPCI);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_SECPCI;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Secondary PCIe Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement Protocol
-+	 * Multiplexing Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_PMUX);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_PMUX;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Protocol Multiplexing Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.14, VF must not implement Process Address
-+	 * Space ID (PASID) Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_PASID);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_PASID;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Process Address Space ID Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement L1 PM Substates
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_L1SS);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_L1SS;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "L1 PM Substates Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement Precision Time
-+	 * Measurement Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_PTM);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_PTM;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Precision Time Measurement",
-+			 "Capability must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement PCI Express
-+	 * over M-PHY Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_MPHY);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_MPHY;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "PCI Express over M-PHY Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement Data Link Feature
-+	 * Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_DLF);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_DLF;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Data Link Feature Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement Physical Layer 16.0
-+	 * GT/s Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_PL16);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_PL16;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Physical Layer 16.0 GT/s Capability",
-+			 "must not be implemented");
-+	}
-+
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7, VF must not implement Physical Layer 16.0
-+	 * GT/s Margining Capability.
-+	 */
-+	cap = pci_find_ext_capability(vdev, PCI_EXT_CAP_ID_PL16M);
-+	if (cap) {
-+		status = -EINVAL;
-+		vdev->invalid_cap |= PCI_IOV_INVALID_PL16M;
-+		dev_warn(&vdev->dev, "%s: %s %s\n", "VF",
-+			 "Physical Layer 16.0 GT/s Margining Capability",
-+			 "must not be implemented");
-+	}
-+
-+	if (vdev->pcie_cap) {
-+		/*
-+		 * Per PCIe r4.0, sec 9.3.5.3, in VF device, Device
-+		 * Capabilities Register Phantom Functions Supported
-+		 * bit should be tied to 0 and Function Level Reset
-+		 * Capability bit should be tied to 1.
-+		 */
-+		pcie_capability_read_dword(vdev, PCI_EXP_DEVCAP, &vreg32);
-+		if (vreg32 & PCI_EXP_DEVCAP_PHANTOM) {
-+			dev_warn(&vdev->dev, "%s: %s\n", "VF",
-+				 "Phantom Functions Supported bit is invalid");
-+			status = -EINVAL;
-+		}
-+		if (!(vreg32 & PCI_EXP_DEVCAP_FLR)) {
-+			dev_warn(&vdev->dev, "%s: %s\n", "VF",
-+				 "Function Level Reset bit is invalid");
-+			status = -EINVAL;
-+		}
-+
-+		/*
-+		 * Per PCIe r4.0, sec 9.3.5.5, in VF device, Device Status
-+		 * Register AUX Power Detected bit and Emergency Power
-+		 * Reduction Detected bits should be tied to 0.
-+		 */
-+		pcie_capability_read_word(vdev, PCI_EXP_DEVSTA, &vreg16);
-+		if (vreg16 & (PCI_EXP_DEVSTA_AUXPD | PCI_EXP_DEVSTA_EPRD)) {
-+			dev_warn(&vdev->dev, "%s: %s\n", "VF",
-+				 "Device Status register value is invalid");
-+			status = -EINVAL;
-+		}
-+	}
-+
-+	return status;
-+}
-+
- int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- {
- 	int i;
-@@ -186,6 +643,11 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
- 
- 	pci_device_add(virtfn, virtfn->bus);
- 
-+	/* Verify whether VF complies with spec */
-+	rc = pci_iov_virtfn_valid(virtfn);
-+	if (rc < 0 && pci_iov_iverror)
-+		goto failed2;
-+
- 	sprintf(buf, "virtfn%u", id);
- 	rc = sysfs_create_link(&dev->dev.kobj, &virtfn->dev.kobj, buf);
- 	if (rc)
-@@ -511,6 +973,12 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 
- 	dev->sriov = iov;
- 	dev->is_physfn = 1;
-+
-+	/* Verify whether PF complies with spec */
-+	rc = pci_iov_physfn_valid(dev);
-+	if (rc < 0 && pci_iov_iverror)
-+		goto fail_max_buses;
-+
- 	rc = compute_max_vf_buses(dev);
- 	if (rc)
- 		goto fail_max_buses;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c25acace7d91..67fac64ba112 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6197,6 +6197,8 @@ static int __init pci_setup(char *str)
- 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
- 				disable_acs_redir_param =
- 					kstrdup(str + 18, GFP_KERNEL);
-+			} else if (!strcmp(str, "noiov_iverror")) {
-+				pci_noiov_iverror();
- 			} else {
- 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
- 						str);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 224d88634115..9cc04271b715 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -602,4 +602,10 @@ static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
- static inline void pci_aer_clear_device_status(struct pci_dev *dev) { }
- #endif
- 
-+#ifdef CONFIG_PCI_IOV
-+void pci_noiov_iverror(void);
-+#else
-+static inline void pci_noiov_iverror(void) { }
-+#endif
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 65f1d8c2f082..489fc0f68bb1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -435,6 +435,7 @@ struct pci_dev {
- #ifdef CONFIG_PCI_MSI
- 	const struct attribute_group **msi_irq_groups;
- #endif
-+	u64	invalid_cap;	/* PF/VF: Invalid Capability bitmap*/
- 	struct pci_vpd *vpd;
- #ifdef CONFIG_PCI_ATS
- 	union {
-@@ -446,7 +447,7 @@ struct pci_dev {
- 	atomic_t	ats_ref_cnt;	/* Number of VFs with ATS enabled */
- #endif
- #ifdef CONFIG_PCI_PRI
--	u32		pri_reqs_alloc; /* Number of PRI requests allocated */
-+	u32		pri_reqs_alloc;	/* Number of PRI requests allocated */
- #endif
- #ifdef CONFIG_PCI_PASID
- 	u16		pasid_features;
-@@ -1953,6 +1954,33 @@ extern int pci_pci_problems;
- #define PCIPCI_ALIMAGIK		32	/* Need low latency setting */
- #define PCIAGP_FAIL		64	/* No PCI to AGP DMA */
- 
-+/* invalid_cap bitmap definitions*/
-+#define PCI_IOV_INVALID_EA	BIT(0)	/* Invalid EA Capability */
-+#define PCI_IOV_INVALID_NPEM	BIT(1)	/* Invalid NPEM Capability */
-+#define PCI_IOV_INVALID_VC	BIT(2)	/* Invalid VC Capability */
-+#define PCI_IOV_INVALID_MFVC	BIT(3)	/* Invalid MFVC Capability */
-+#define PCI_IOV_INVALID_VC9	BIT(4)	/* Invalid VC9 Capability */
-+#define PCI_IOV_INVALID_DSN	BIT(5)	/* Invalid DSN Capability */
-+#define PCI_IOV_INVALID_PWR	BIT(6)	/* Invalid PWR Capability */
-+#define PCI_IOV_INVALID_ATS	BIT(7)	/* Invalid ATS Capability */
-+#define PCI_IOV_INVALID_SRIOV	BIT(8)	/* Invalid SRIOV Capability */
-+#define PCI_IOV_INVALID_MRIOV	BIT(9)	/* Invalid MRIOV Capability */
-+#define PCI_IOV_INVALID_MCAST	BIT(10)	/* Invalid MCAST Capability */
-+#define PCI_IOV_INVALID_PRI	BIT(11)	/* Invalid PRI Capability */
-+#define PCI_IOV_INVALID_REBAR	BIT(12)	/* Invalid REBAR Capability */
-+#define PCI_IOV_INVALID_VREBAR	BIT(13)	/* Invalid VREBAR Capability */
-+#define PCI_IOV_INVALID_DPA	BIT(14)	/* Invalid DPA Capability */
-+#define PCI_IOV_INVALID_LTR	BIT(15)	/* Invalid LTR Capability */
-+#define PCI_IOV_INVALID_SECPCI	BIT(16)	/* Invalid SECPCI Capability */
-+#define PCI_IOV_INVALID_PMUX	BIT(17)	/* Invalid PMUX Capability */
-+#define PCI_IOV_INVALID_PASID	BIT(18)	/* Invalid PASID Capability */
-+#define PCI_IOV_INVALID_L1SS	BIT(19)	/* Invalid L1SS Capability */
-+#define PCI_IOV_INVALID_PTM	BIT(20)	/* Invalid PTM Capability */
-+#define PCI_IOV_INVALID_MPHY	BIT(21)	/* Invalid MPHY Capability */
-+#define PCI_IOV_INVALID_DLF	BIT(22)	/* Invalid DLF Capability */
-+#define PCI_IOV_INVALID_PL16	BIT(23)	/* Invalid PL16 Capability */
-+#define PCI_IOV_INVALID_PL16M	BIT(24)	/* Invalid PL16M Capability */
-+
- extern unsigned long pci_cardbus_io_size;
- extern unsigned long pci_cardbus_mem_size;
- extern u8 pci_dfl_cache_line_size;
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e1e9888c85e6..d377d48ee99c 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -227,7 +227,8 @@
- #define  PCI_CAP_ID_SATA	0x12	/* SATA Data/Index Conf. */
- #define  PCI_CAP_ID_AF		0x13	/* PCI Advanced Features */
- #define  PCI_CAP_ID_EA		0x14	/* PCI Enhanced Allocation */
--#define  PCI_CAP_ID_MAX		PCI_CAP_ID_EA
-+#define  PCI_CAP_ID_NPEM	0x29	/* Native PCIe Enclosure Management */
-+#define  PCI_CAP_ID_MAX		PCI_CAP_ID_NPEM
- #define PCI_CAP_LIST_NEXT	1	/* Next capability in the list */
- #define PCI_CAP_FLAGS		2	/* Capability defined flags (16 bits) */
- #define PCI_CAP_SIZEOF		4
-@@ -517,6 +518,7 @@
- #define  PCI_EXP_DEVSTA_URD	0x0008	/* Unsupported Request Detected */
- #define  PCI_EXP_DEVSTA_AUXPD	0x0010	/* AUX Power Detected */
- #define  PCI_EXP_DEVSTA_TRPND	0x0020	/* Transactions Pending */
-+#define  PCI_EXP_DEVSTA_EPRD	0x0040	/* Emergency Power Reduction Detected */
- #define PCI_CAP_EXP_RC_ENDPOINT_SIZEOF_V1	12	/* v1 endpoints without link end here */
- #define PCI_EXP_LNKCAP		12	/* Link Capabilities */
- #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
-@@ -705,7 +707,12 @@
- #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
- #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
- #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
--#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PTM
-+#define PCI_EXT_CAP_ID_MPHY	0x20	/* PCI Express over M-PHY (M-PCIe) */
-+#define PCI_EXT_CAP_ID_VREBAR	0x24	/* VF Resizable BAR */
-+#define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
-+#define PCI_EXT_CAP_ID_PL16	0x26	/* Physical Layer 16.0 GT/s */
-+#define PCI_EXT_CAP_ID_PL16M	0x27	/* Physical Layer 16.0 GT/s Margining*/
-+#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL16M
- 
- #define PCI_EXT_CAP_DSN_SIZEOF	12
- #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
-@@ -798,6 +805,10 @@
- #define PCI_CAP_VC_BASE_SIZEOF		0x10
- #define PCI_CAP_VC_PER_VC_SIZEOF	0x0C
- 
-+/* Device Serial Number */
-+#define PCI_DSN_SNLR		0x04 /* Serial Number Lower Register */
-+#define PCI_DSN_SNUR		0x08 /* Serial Number Upper Register */
-+
- /* Power Budgeting */
- #define PCI_PWR_DSR		4	/* Data Select Register */
- #define PCI_PWR_DATA		8	/* Data Register */
--- 
-2.20.1
+> >> +static inline int ntb_peer_resource_idx(struct ntb_dev *ntb, int pidx)
+> >> +{
+> >> +	int local_port, peer_port;
+> >> +
+> >> +	if (pidx >= ntb_peer_port_count(ntb))
+> >> +		return -EINVAL;
+> >> +
+> >> +	local_port = ntb_port_number(ntb);
+> >> +	peer_port = ntb_peer_port_number(ntb, pidx);
+> >> +
+> >> +	if (peer_port < local_port)
+> >> +		return local_port - 1;
+> >> +	else
+> >> +		return local_port;
+> >> +}
+> >> +
+> > 
+> > Instead of redefining the port-index table we can just fix the
+> > ntb_peer_resource_idx() method, so it would return a global port index
+> > instead of some number based on the port number. It can be done just by
+> > the next modification:
+> > 
+> > +     if (peer_port <= local_port)
+> > +             return pidx;
+> > +     else
+> > +             return pidx + 1;
+> > 
+> 
+> This creates a table that looks like:
+> 
+> pidx \ port     0    1    2    3    4
+>  0              1    0    0    0    0
+>  1              2    2    1    1    1
+>  2              3    3    3    2    2
+>  3              4    4    4    4    3
+> 
+> Which is not correct. In fact, it seems to require 5 resources for 5
+> ports. This appears to be what is done in the current ntb_perf and I
+> think I figured it out several months ago but it's way too messy and
+> hard to understand and I don't want to spend the time to figure it out
+> again.
+> 
 
+Yes, this is how it used to be done in ntb_pingpong and is still done in the
+ntb_perf driver. And it is correctly working. As I already described and
+you wrote further, this table provides a Logical Ports numbering space:
+
+peer port \ local port   0  2  4  6  8  12  16  20
+        0                0  0  0  0  0   0   0   0
+        2                1  1  1  1  1   1   1   1
+        4                2  2  2  2  2   2   2   2
+        6                3  3  3  3  3   3   3   3
+        8                4  4  4  4  4   4   4   4
+       12                5  5  5  5  5   5   5   5
+       16                6  6  6  6  6   6   6   6
+       20                7  7  7  7  7   7   7   7
+
+(although I'd call it Global Port Indexes space)
+
+Currently local port indexes don't enumerate the local port number. So
+if you convert that table into the one you provided in the function
+comment, then it'll look like this (similar to what you called incorrect):
+
+pidx \ port     0  2  4  6  8  12  16  20
+ 0              1  0  0  0  0   0   0   0
+ 1              2  2  1  1  1   1   1   1
+ 2              3  3  3  2  2   2   2   2
+ 3              4  4  4  4  3   3   3   3
+ 4              5  5  5  5  5   4   4   4
+ 5              6  6  6  6  6   6   5   5
+ 6              7  7  7  7  7   7   7   6
+
+Yes, by using this table we'll waste one resource as always existing
+gap (is it the only incorrect thing you had in mind?). But it is smaller
+problem than to use physical port numbers, which produces much bigger gaps
+in case of your table implementation as well.
+
+Note, in addition in this case you'd need to reconsider your algorithm of the
+resources initialization. Lets for example take alook at Port 0. You'd need
+to have its outbound memory windows [1-7] pointing to the peers with ports
+[2,4,...,20] (correspond to pidx [0-6] of Port 0). So in this case Port 2 would
+have a port 0 inbound MW #1 retrieving data from Port 0 outbound MW #1, Port 4
+would have a port 0 inbound MW #2 retrieving data from Port 0 outbound MW #2,
+and so on.
+
+So your current approach is inbound MW-centralized, while mine is developed
+around the outbound MWs.
+
+> IMO, in order to support gaps, we'd need to, on some layer, create an
+> un-gapped numbering scheme for the ports. I think the easiest thing is
+> to just have Logical and Physical port numbers; so we would have
+> something like:
+> 
+> Physical Port Number: 0  2  4  6  8  12  16  20
+> Logical Port Number:  0  1  2  3  4  5   6   7
+> Peer Index (Port 0):  x  0  1  2  3  4   5   6
+> Port Index (Port 8):  0  1  2  3  x  4   5   6
+> (etc)
+
+That's what I suggested in the two possible solutions:
+1st solution: replace current pidx with Logical Port Number,
+2nd solution: alter ntb_peer_resource_idx() so it would return the Logical Port Number.
+
+IMO In case of the 2nd solution I'd also suggest to rename the
+ntb_peer_resource_idx() method into ntb_peer_port_global_idx(),
+and then consider the current port indexes used in the NTB API
+as local port indexes. The resource indexing can be abstracted
+by a macro like this:
+#define ntb_peer_resource_idx ntb_peer_port_global_idx
+
+Finally in order to close the space up we'd also need to define
+a method: ntb_port_global_idx(), which would return a Logical (global)
+index of local port.
+
+> 
+> Where the Physical Port Number is whatever the hardware uses and the
+> logical port number is a numbering scheme starting with zero with no
+> gaps. Then the port indexes are still as we currently have them. If we
+> say that the port numbers we have now are the Logical Port Number, then
+> ntb_peer_resource_idx() is correct.
+> 
+
+Current port numbers are the physical port numbers with gaps. That's why we
+introduced the port-index NTB API abstraction in the first place, to have these gaps
+eliminated and to provide a simple way of bulk setup. Although that abstraction
+turned out not that suitable to distribute the shared resources. So
+the Logical (Global) indexing is needed to do it (that's what ntb_pingpong used
+to do and ntb_perf still does now).
+
+> I would strongly argue that the clients don't need to know anything
+> about the Physical Port Number and these should be handled strictly
+> inside the drivers. If multiple drivers need to do something similar to
+> map the logical to physical port numbers then we should introduce helper
+> functions to allow them to do so. If the Physical Numbers are not
+> contained in the driver than the API would need to be expanded to expose
+> which numbers are actually used to avoid needing to constantly loop
+> through all the indexes to find this out.
+> 
+
+Absolutely agree with you. The main idea of NTB API was to provide a set
+of methods to access the NTB hardware without any abstractions but
+with possible useful helpers, like your NTB MSI library, or transport library,
+or anything else. So the physical port numbers must be available for
+the client drivers.
+
+> On a similar vein, I'd  suggest that most clients shouldn't even really
+> need to do anything with the Logical Port Number and should deal largely
+> with Port Indexes. Ideally, Logical Port Numbers should only be used by
+> helper code in the common layer to help assign resources used by the
+> clients (like ntb_peer_resource_idx()).
+> 
+
+This is the main question. Do we really need the current port indexes
+implementation at all? After all these years of NTB API usage I don't really
+see it useful in any case except to loop over the outbound MW resources
+automatically skipping the local port (usefulness of this is also questionable).
+As I already said I created the port-index table this way due to the IDT NTB
+MWs peculiarity, which doesn't seem to me a big problem now comparing to all
+these additional complications we intend to introduce.
+
+The rest of the drivers code really need to have the Logical (global)
+port indexes, at least to distribute the shared resources, and don't use
+the current pidx that much.
+
+Wouldn't it be better to just redefine the current port-index table
+in the following way?
+ntb_port_number() - local physical port number,
+ntb_port_idx() - local port logical (global) index,
+ntb_peer_port_count() - total number of ports NTB device provide (including the local one),
+ntb_peer_port_number() - physical port number of the peer with passed logical port index,
+ntb_peer_port_idx - logical port index of the passed physical port number.
+
+while currently we have:
+ntb_port_number() - local physical port number,
+ntb_peer_port_count() - total number of ports NTB device provide (excluding the local one),
+ntb_peer_port_number() - physical port number of the peer with passed port index,
+ntb_peer_port_idx - port index of the passed physical port number;
+
+-Sergey
+
+> This world view isn't far off from what we have now, though you *may*
+> need to adjust your IDT driver and we will have to eventually clean up
+> the existing test clients to use the new helper functions.
+> 
+> > Personally I'd prefer the first solution even though it may lead to the
+> > "Unsupported TLP" errors and cause a greater code changes. Here is why:
+> > 1) the error might be IDT-specific, so we shouldn't limit the API due to
+> > one particular hardware peculiarity,
+> > 2) port-index table with global indexes implementation shall simplify the IDT
+> > NTB hw driver and provide a cleaner NTB API with simpler shared resources
+> > utilization code.
+> 
+> > The final decision is after the NTB subsystem maintainers. If they agree with
+> > solution #1 I'll send a corresponding patchset on this week, so you can
+> > alter this patchset being based on it.
+> 
+> I think what we have right now is close enough and we just have to clean
+> up the code and fix things. I don't think we need to do another big
+> change to the semantics. I *certainly* don't want to risk breaking
+> everything again to do it.
+>  Logan
+> 
+> -- 
+> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
+> To post to this group, send email to linux-ntb@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/bd72f24f-5982-0fe7-59df-2fbbfe9f798a%40deltatee.com.
+> For more options, visit https://groups.google.com/d/optout.
