@@ -2,244 +2,206 @@ Return-Path: <SRS0=ZPBx=RJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB4CC43381
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 18:51:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86A27C43381
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 19:11:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B8582063F
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 18:51:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A9E62064A
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 19:11:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726721AbfCFSvR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Mar 2019 13:51:17 -0500
-Received: from mout.kundenserver.de ([217.72.192.73]:48915 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726545AbfCFSvQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Mar 2019 13:51:16 -0500
-Received: from orion.localdomain ([95.118.27.116]) by mrelayeu.kundenserver.de
- (mreue109 [212.227.15.183]) with ESMTPSA (Nemesis) id
- 1MqatK-1gflHP3Usy-00mY4K; Wed, 06 Mar 2019 19:51:07 +0100
-From:   "Enrico Weigelt, metux IT consult" <info@metux.net>
-To:     linux-kernel@vger.kernel.org
-Cc:     kurt.schwemmer@microsemi.com, logang@deltatee.com,
-        linux-ntb@googlegroups.com, linux-pci@vger.kernel.org
-Subject: [PATCH] drivers: ntb: Kconfig: pedantic cleanups
-Date:   Wed,  6 Mar 2019 19:51:05 +0100
-Message-Id: <1551898265-18909-1-git-send-email-info@metux.net>
-X-Mailer: git-send-email 1.9.1
-X-Provags-ID: V03:K1:5f39zJnw5ZY8mB6YYhZ0lzC2hbh8LIP7kjiVyiOaTLdIoC70MEa
- eLGwOwTCcil9oEZ2lj6nxytK1fQ1DLH5GAZLy2zKr9xk1VhaYIfO9uW34TkDc6i5fAeP7yj
- CeiDGVCWMbDLiQv3LyKjJgPHd3XWsJ7Xc6sfFo47VfheGqIApmsH3p7qc+JaDN/6C92UhKH
- W4jpT9dCsln+IubVis4dQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:dLVYLyFZ7b4=:w05iTnwv5BUqZejVhPj+GA
- oYkd2iOSIGTk2BZ/Sda9AUIT7uR9o0oBtrbX8JA6M6GpT1+7g6dC6NnbINcHspKv237OxYSSi
- Zg9jp8yotKxge1oAwCRxiXJOKcCydtiH2gRXfrWyP9rnFnJcnjBku5ydZjhrXLJpCzwVH2krP
- L44dcXmRWUIQUkrp8hImu66L9OiZmbxegSzq9oMf41L5BRoIRzziMOxlk2coNJrgFTw9HVib0
- e1iMZXIqazlBIkSYhk5XYrlBg1svbrZpM1sx8V2aTCGrl/nLZCxqrsmQDt1WdtLVbrfQBBbCg
- tZ3wpNTmWkyhFBrSU4qPlbFEO30dvyvoQa8Pfx10b+GopiWoN8D7CRkx6HstK5zo3C+qv0Q1O
- 87Z3iE7NKeKZOsUU4lzcLN3+7d18uHifM7NFy3lMJLY4i1lW3NUD4kAk9OWf/p3lgRh/rHphP
- 506RVnUi2ooNX6FpbpCdl4cYoYKWPMgMdvsR5kJfdDNBCt8/bH+Jyr5lfSaIQVhs0ZzmmjDHp
- rZJb6CPQUmvtgLM3oOnA5NMfV1AIdm1XMmLNsIwM9BpdfouP3/OELYssRmlCuW33I23ifCUul
- ytfEVgIfe57eG2yjjF1v0CUwDIeZusAU09dRoy4Xwg4dIhUP9wqilfNFoQhhee1e3Av6hMz6g
- 6dD0+4xTetQFCYqS3v7W4EcJ5CZAMl+54fbBdsMu51U/LB5X0DLW8wE0YWurSlje8TrWLQWve
- DjyPFDEWbi1pLDXnPg8af20BUTWLCAPYNdyvvg==
+        id S1726633AbfCFTL1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Mar 2019 14:11:27 -0500
+Received: from ale.deltatee.com ([207.54.116.67]:41746 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726630AbfCFTL1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Mar 2019 14:11:27 -0500
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtp (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1h1bwh-0002qW-Ui; Wed, 06 Mar 2019 12:11:17 -0700
+To:     Serge Semin <fancer.lancer@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-kselftest@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Eric Pilmore <epilmore@gigaio.com>
+References: <20190213175454.7506-1-logang@deltatee.com>
+ <20190213175454.7506-8-logang@deltatee.com>
+ <20190306012420.wjeatxgb7nwq3j5q@mobilestation>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <bd72f24f-5982-0fe7-59df-2fbbfe9f798a@deltatee.com>
+Date:   Wed, 6 Mar 2019 12:11:11 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
+MIME-Version: 1.0
+In-Reply-To: <20190306012420.wjeatxgb7nwq3j5q@mobilestation>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: epilmore@gigaio.com, dave.jiang@intel.com, allenbh@gmail.com, joro@8bytes.org, bhelgaas@google.com, jdmason@kudzu.us, linux-kselftest@vger.kernel.org, iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org, linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org, fancer.lancer@gmail.com
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH v2 07/12] NTB: Introduce functions to calculate multi-port
+ resource index
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
----
- drivers/ntb/Kconfig          | 20 ++++++++++----------
- drivers/ntb/hw/amd/Kconfig   |  4 ++--
- drivers/ntb/hw/idt/Kconfig   | 41 ++++++++++++++++++++---------------------
- drivers/ntb/hw/intel/Kconfig |  4 ++--
- drivers/ntb/hw/mscc/Kconfig  |  8 ++++----
- drivers/ntb/test/Kconfig     | 26 +++++++++++++-------------
- 6 files changed, 51 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/ntb/Kconfig b/drivers/ntb/Kconfig
-index 95944e5..5ce3fdd 100644
---- a/drivers/ntb/Kconfig
-+++ b/drivers/ntb/Kconfig
-@@ -2,13 +2,13 @@ menuconfig NTB
- 	tristate "Non-Transparent Bridge support"
- 	depends on PCI
- 	help
--	 The PCI-E Non-transparent bridge hardware is a point-to-point PCI-E bus
--	 connecting 2 systems.  When configured, writes to the device's PCI
--	 mapped memory will be mirrored to a buffer on the remote system.  The
--	 ntb Linux driver uses this point-to-point communication as a method to
--	 transfer data from one system to the other.
-+	  The PCI-E Non-transparent bridge hardware is a point-to-point PCI-E bus
-+	  connecting 2 systems.  When configured, writes to the device's PCI
-+	  mapped memory will be mirrored to a buffer on the remote system.  The
-+	  ntb Linux driver uses this point-to-point communication as a method to
-+	  transfer data from one system to the other.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
- 
- if NTB
- 
-@@ -19,10 +19,10 @@ source "drivers/ntb/test/Kconfig"
- config NTB_TRANSPORT
- 	tristate "NTB Transport Client"
- 	help
--	 This is a transport driver that enables connected systems to exchange
--	 messages over the ntb hardware.  The transport exposes a queue pair api
--	 to client drivers.
-+	  This is a transport driver that enables connected systems to exchange
-+	  messages over the ntb hardware.  The transport exposes a queue pair api
-+	  to client drivers.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
- 
- endif # NTB
-diff --git a/drivers/ntb/hw/amd/Kconfig b/drivers/ntb/hw/amd/Kconfig
-index cfe903c..9a90f17 100644
---- a/drivers/ntb/hw/amd/Kconfig
-+++ b/drivers/ntb/hw/amd/Kconfig
-@@ -2,6 +2,6 @@ config NTB_AMD
- 	tristate "AMD Non-Transparent Bridge support"
- 	depends on X86_64
- 	help
--	 This driver supports AMD NTB on capable Zeppelin hardware.
-+	  This driver supports AMD NTB on capable Zeppelin hardware.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
-diff --git a/drivers/ntb/hw/idt/Kconfig b/drivers/ntb/hw/idt/Kconfig
-index f8948cf..5d106ac 100644
---- a/drivers/ntb/hw/idt/Kconfig
-+++ b/drivers/ntb/hw/idt/Kconfig
-@@ -3,28 +3,27 @@ config NTB_IDT
- 	depends on PCI
- 	select HWMON
- 	help
--	 This driver supports NTB of cappable IDT PCIe-switches.
-+	  This driver supports NTB of cappable IDT PCIe-switches.
- 
--	 Some of the pre-initializations must be made before IDT PCIe-switch
--	 exposes it NT-functions correctly. It should be done by either proper
--	 initialisation of EEPROM connected to master smbus of the switch or
--	 by BIOS using slave-SMBus interface changing corresponding registers
--	 value. Evidently it must be done before PCI bus enumeration is
--	 finished in Linux kernel.
-+	  Some of the pre-initializations must be made before IDT PCIe-switch
-+	  exposes it NT-functions correctly. It should be done by either proper
-+	  initialisation of EEPROM connected to master smbus of the switch or
-+	  by BIOS using slave-SMBus interface changing corresponding registers
-+	  value. Evidently it must be done before PCI bus enumeration is
-+	  finished in Linux kernel.
- 
--	 First of all partitions must be activated and properly assigned to all
--	 the ports with NT-functions intended to be activated (see SWPARTxCTL
--	 and SWPORTxCTL registers). Then all NT-function BARs must be enabled
--	 with chosen valid aperture. For memory windows related BARs the
--	 aperture settings shall determine the maximum size of memory windows
--	 accepted by a BAR. Note that BAR0 must map PCI configuration space
--	 registers.
-+	  First of all partitions must be activated and properly assigned to all
-+	  the ports with NT-functions intended to be activated (see SWPARTxCTL
-+	  and SWPORTxCTL registers). Then all NT-function BARs must be enabled
-+	  with chosen valid aperture. For memory windows related BARs the
-+	  aperture settings shall determine the maximum size of memory windows
-+	  accepted by a BAR. Note that BAR0 must map PCI configuration space
-+	  registers.
- 
--	 It's worth to note, that since a part of this driver relies on the
--	 BAR settings of peer NT-functions, the BAR setups can't be done over
--	 kernel PCI fixups. That's why the alternative pre-initialization
--	 techniques like BIOS using SMBus interface or EEPROM should be
--	 utilized.
--
--	 If unsure, say N.
-+	  It's worth to note, that since a part of this driver relies on the
-+	  BAR settings of peer NT-functions, the BAR setups can't be done over
-+	  kernel PCI fixups. That's why the alternative pre-initialization
-+	  techniques like BIOS using SMBus interface or EEPROM should be
-+	  utilized.
- 
-+	  If unsure, say N.
-diff --git a/drivers/ntb/hw/intel/Kconfig b/drivers/ntb/hw/intel/Kconfig
-index 91f995e..c166d50 100644
---- a/drivers/ntb/hw/intel/Kconfig
-+++ b/drivers/ntb/hw/intel/Kconfig
-@@ -2,6 +2,6 @@ config NTB_INTEL
- 	tristate "Intel Non-Transparent Bridge support"
- 	depends on X86_64
- 	help
--	 This driver supports Intel NTB on capable Xeon and Atom hardware.
-+	  This driver supports Intel NTB on capable Xeon and Atom hardware.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
-diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
-index 013ed67..74ec015 100644
---- a/drivers/ntb/hw/mscc/Kconfig
-+++ b/drivers/ntb/hw/mscc/Kconfig
-@@ -2,8 +2,8 @@ config NTB_SWITCHTEC
- 	tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
- 	select PCI_SW_SWITCHTEC
- 	help
--	 Enables NTB support for Switchtec PCI switches. This also
--	 selects the Switchtec management driver as they share the same
--	 hardware interface.
-+	  Enables NTB support for Switchtec PCI switches. This also
-+	  selects the Switchtec management driver as they share the same
-+	  hardware interface.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
-diff --git a/drivers/ntb/test/Kconfig b/drivers/ntb/test/Kconfig
-index a5d0eda..416ab56 100644
---- a/drivers/ntb/test/Kconfig
-+++ b/drivers/ntb/test/Kconfig
-@@ -1,27 +1,27 @@
- config NTB_PINGPONG
- 	tristate "NTB Ping Pong Test Client"
- 	help
--	 This is a simple ping pong driver that exercises the scratchpads and
--	 doorbells of the ntb hardware.  This driver may be used to test that
--	 your ntb hardware and drivers are functioning at a basic level.
-+	  This is a simple ping pong driver that exercises the scratchpads and
-+	  doorbells of the ntb hardware.  This driver may be used to test that
-+	  your ntb hardware and drivers are functioning at a basic level.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
- 
- config NTB_TOOL
- 	tristate "NTB Debugging Tool Test Client"
- 	help
--	 This is a simple debugging driver that enables the doorbell and
--	 scratchpad registers to be read and written from the debugfs.  This
--	 enables more complicated debugging to be scripted from user space.
--	 This driver may be used to test that your ntb hardware and drivers are
--	 functioning at a basic level.
-+	  This is a simple debugging driver that enables the doorbell and
-+	  scratchpad registers to be read and written from the debugfs.  This
-+	  enables more complicated debugging to be scripted from user space.
-+	  This driver may be used to test that your ntb hardware and drivers are
-+	  functioning at a basic level.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
- 
- config NTB_PERF
- 	tristate "NTB RAW Perf Measuring Tool"
- 	help
--	 This is a tool to measure raw NTB performance by transferring data
--	 to and from the window without additional software interaction.
-+	  This is a tool to measure raw NTB performance by transferring data
-+	  to and from the window without additional software interaction.
- 
--	 If unsure, say N.
-+	  If unsure, say N.
--- 
-1.9.1
 
+On 2019-03-05 6:24 p.m., Serge Semin wrote:
+>> + * In a 5 peer system, this function will return the following matrix
+>> + *
+>> + * pidx \ port    0    1    2    3    4
+>> + * 0              0    0    1    2    3
+>> + * 1              0    1    2    3    4
+>> + * 2              0    1    2    3    4
+>> + * 3              0    1    2    3    4
+>> + *
+
+Oh, first, oops: looks like I copied this down wrong anyway; the code
+was what I had intended, but the documented example should have been:
+
+pidx \ local_port     0    1    2    3    4
+ 0                    0    0    1    2    3
+ 1                    0    1    1    2    3
+ 2                    0    1    2    2    3
+ 3                    0    1    2    3    3
+
+And this is definitely the correct table we are aiming for.
+ntb_peer_resource_idx() is supposed to return the result of
+ntb_peer_port_idx(ntb, local_port) when run on the peer specified by pidx.
+
+Note: this table also makes sense because it only uses 4 resources for 5
+ports which is the best case scenario. (In other words, to communicate
+between N ports, N-1 resources are required on each peer).
+
+> This table is too simplified to represent a generic case of port-index
+> mapping table. In particular the IDT PCIe switch got it ports numbered
+> with uneven integers like: 0 2 4 6 8 12 16 20 or 0 8 16, and so on.
+> Moreover some of the ports might be disabled or may have NTB functions
+> deactivated, in which case these ports shouldn't be considered by NTB subsystem
+> at all. Basically we may have any increasing subset of that port
+> numbers depending on the current IDT PCIe-switch ports setup.
+
+Yes, I did not consider situations where there would be gaps in the
+"port number" space. It wasn't at all clear from the code that this was
+possible. Switchtec hardware could be configured for such an
+arrangement, but I don't know why anyone would do that as it just
+needlessly complicates everything.
+
+As you point out, with a gap, we end up with something that is wrong:
+
+pidx \ port     0    1    3    4    5
+ 0              0    0    2    3    4
+ 1              0    1    2    3    4
+ 2              0    1    3    3    4
+ 3              0    1    3    4    4
+
+Here, the relationship between ntb_peer_resource_idx() and
+ntb_peer_port_idx() is not maintained and it seems to prescribe 5
+resources for 5 ports. If there were more gaps it would be even more wrong.
+
+>> +static inline int ntb_peer_resource_idx(struct ntb_dev *ntb, int pidx)
+>> +{
+>> +	int local_port, peer_port;
+>> +
+>> +	if (pidx >= ntb_peer_port_count(ntb))
+>> +		return -EINVAL;
+>> +
+>> +	local_port = ntb_port_number(ntb);
+>> +	peer_port = ntb_peer_port_number(ntb, pidx);
+>> +
+>> +	if (peer_port < local_port)
+>> +		return local_port - 1;
+>> +	else
+>> +		return local_port;
+>> +}
+>> +
+> 
+> Instead of redefining the port-index table we can just fix the
+> ntb_peer_resource_idx() method, so it would return a global port index
+> instead of some number based on the port number. It can be done just by
+> the next modification:
+> 
+> +     if (peer_port <= local_port)
+> +             return pidx;
+> +     else
+> +             return pidx + 1;
+> 
+
+This creates a table that looks like:
+
+pidx \ port     0    1    2    3    4
+ 0              1    0    0    0    0
+ 1              2    2    1    1    1
+ 2              3    3    3    2    2
+ 3              4    4    4    4    3
+
+Which is not correct. In fact, it seems to require 5 resources for 5
+ports. This appears to be what is done in the current ntb_perf and I
+think I figured it out several months ago but it's way too messy and
+hard to understand and I don't want to spend the time to figure it out
+again.
+
+IMO, in order to support gaps, we'd need to, on some layer, create an
+un-gapped numbering scheme for the ports. I think the easiest thing is
+to just have Logical and Physical port numbers; so we would have
+something like:
+
+Physical Port Number: 0  2  4  6  8  12  16  20
+Logical Port Number:  0  1  2  3  4  5   6   7
+Peer Index (Port 0):  x  0  1  2  3  4   5   6
+Port Index (Port 8):  0  1  2  3  x  4   5   6
+(etc)
+
+Where the Physical Port Number is whatever the hardware uses and the
+logical port number is a numbering scheme starting with zero with no
+gaps. Then the port indexes are still as we currently have them. If we
+say that the port numbers we have now are the Logical Port Number, then
+ntb_peer_resource_idx() is correct.
+
+I would strongly argue that the clients don't need to know anything
+about the Physical Port Number and these should be handled strictly
+inside the drivers. If multiple drivers need to do something similar to
+map the logical to physical port numbers then we should introduce helper
+functions to allow them to do so. If the Physical Numbers are not
+contained in the driver than the API would need to be expanded to expose
+which numbers are actually used to avoid needing to constantly loop
+through all the indexes to find this out.
+
+On a similar vein, I'd  suggest that most clients shouldn't even really
+need to do anything with the Logical Port Number and should deal largely
+with Port Indexes. Ideally, Logical Port Numbers should only be used by
+helper code in the common layer to help assign resources used by the
+clients (like ntb_peer_resource_idx()).
+
+This world view isn't far off from what we have now, though you *may*
+need to adjust your IDT driver and we will have to eventually clean up
+the existing test clients to use the new helper functions.
+
+> Personally I'd prefer the first solution even though it may lead to the
+> "Unsupported TLP" errors and cause a greater code changes. Here is why:
+> 1) the error might be IDT-specific, so we shouldn't limit the API due to
+> one particular hardware peculiarity,
+> 2) port-index table with global indexes implementation shall simplify the IDT
+> NTB hw driver and provide a cleaner NTB API with simpler shared resources
+> utilization code.
+
+> The final decision is after the NTB subsystem maintainers. If they agree with
+> solution #1 I'll send a corresponding patchset on this week, so you can
+> alter this patchset being based on it.
+
+I think what we have right now is close enough and we just have to clean
+up the code and fix things. I don't think we need to do another big
+change to the semantics. I *certainly* don't want to risk breaking
+everything again to do it.
+ Logan
