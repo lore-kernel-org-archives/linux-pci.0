@@ -1,228 +1,357 @@
-Return-Path: <SRS0=ZPBx=RJ=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=a/OH=RK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 350FEC43381
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 23:22:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28301C43381
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 09:13:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECC7420663
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Mar 2019 23:22:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF2A020840
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 09:13:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="lnkTDz6P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726104AbfCFXWo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Mar 2019 18:22:44 -0500
-Received: from ale.deltatee.com ([207.54.116.67]:43916 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725747AbfCFXWo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Mar 2019 18:22:44 -0500
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1h1frw-00065h-Dx; Wed, 06 Mar 2019 16:22:37 -0700
-To:     Serge Semin <fancer.lancer@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-kselftest@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+        id S1726131AbfCGJN2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Mar 2019 04:13:28 -0500
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:57988 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726028AbfCGJN2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2019 04:13:28 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x279DGLe094528;
+        Thu, 7 Mar 2019 03:13:16 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1551949996;
+        bh=OjAQKZ44BWBXft/K5ef1iaq468BRRq463KpZrG2zlo0=;
+        h=From:Subject:To:CC:References:Date:In-Reply-To;
+        b=lnkTDz6P/K1lM9t47cdIV4J+rKcbfQVqW3hYbf1AmxV2H0gks+5sG6I/vbcz7jJGE
+         ZoclxHuHHjdsx5Sfi3Fh7QmSzJbxgAbNTEYb3by9NY8fltr9eOzz0j2GODCNeFf0AB
+         SVSDAXVK19iVpwang5oCUcY9vMTHfOAZjYpug2qg=
+Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x279DGgY113843
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 7 Mar 2019 03:13:16 -0600
+Received: from DLEE112.ent.ti.com (157.170.170.23) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Thu, 7
+ Mar 2019 03:13:16 -0600
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE112.ent.ti.com
+ (157.170.170.23) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1591.10 via Frontend Transport;
+ Thu, 7 Mar 2019 03:13:16 -0600
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x279DD9b002430;
+        Thu, 7 Mar 2019 03:13:13 -0600
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v4 3/9] PCI: keystone: Convert to using hierarchy domain
+ for legacy interrupts
+To:     Marc Zyngier <marc.zyngier@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Murali Karicheri <m-karicheri2@ti.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Eric Pilmore <epilmore@gigaio.com>
-References: <20190213175454.7506-1-logang@deltatee.com>
- <20190213175454.7506-8-logang@deltatee.com>
- <20190306012420.wjeatxgb7nwq3j5q@mobilestation>
- <bd72f24f-5982-0fe7-59df-2fbbfe9f798a@deltatee.com>
- <20190306224542.4eu2dvsixfzc75gr@mobilestation>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <4acf79c1-766b-1db6-45c1-4cdd4cbba437@deltatee.com>
-Date:   Wed, 6 Mar 2019 16:22:33 -0700
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>
+References: <20190221101518.22604-1-kishon@ti.com>
+ <20190221101518.22604-4-kishon@ti.com>
+ <20190221162413.GA5815@e107981-ln.cambridge.arm.com>
+ <20190223121143.14c1f150@why.wild-wind.fr.eu.org>
+Message-ID: <4c55487d-213f-f5f5-6d67-93a417d2a0d7@ti.com>
+Date:   Thu, 7 Mar 2019 14:42:30 +0530
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <20190306224542.4eu2dvsixfzc75gr@mobilestation>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
+In-Reply-To: <20190223121143.14c1f150@why.wild-wind.fr.eu.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: epilmore@gigaio.com, dave.jiang@intel.com, allenbh@gmail.com, joro@8bytes.org, bhelgaas@google.com, jdmason@kudzu.us, linux-kselftest@vger.kernel.org, iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org, linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org, fancer.lancer@gmail.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH v2 07/12] NTB: Introduce functions to calculate multi-port
- resource index
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi,
 
-
-
-
-On 2019-03-06 3:45 p.m., Serge Semin wrote:
-[Snip]
-
-Pretty sure everything above is just agreement...
-
-> So your current approach is inbound MW-centralized, while mine is developed
-> around the outbound MWs.
-
-I don't think this has anything to do with inbound vs outbound. The
-problem is the same no matter from which direction you assign things.
-
->> Physical Port Number: 0  2  4  6  8  12  16  20
->> Logical Port Number:  0  1  2  3  4  5   6   7
->> Peer Index (Port 0):  x  0  1  2  3  4   5   6
->> Port Index (Port 8):  0  1  2  3  x  4   5   6
->> (etc)
+On 23/02/19 5:41 PM, Marc Zyngier wrote:
+> On Thu, 21 Feb 2019 16:24:14 +0000
+> Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
 > 
-> That's what I suggested in the two possible solutions:
-> 1st solution: replace current pidx with Logical Port Number,
-> 2nd solution: alter ntb_peer_resource_idx() so it would return the Logical Port Number.
-
-Well my solution wasn't to change pidx and no, we don't want to change
-ntb_peer_resource_idx() to return the logical port number because that's
-not how it's being used and I have no use for a
-ntb_peer_port_global_idx() function. Functions are supposed to be added
-by code that needs to call them, not by some grand design. Part of the
-reason we have this confusing mess is because the API was reviewed and
-merged before any users of the API were presented. Usually this is not
-accepted in kernel development.
-
-My suggestion is to simply say that the existing port numbers are the
-logical port number and have the drivers handle the physical port number
-mapping internally. That requires the fewest changes.
-
-> IMO In case of the 2nd solution I'd also suggest to rename the
-> ntb_peer_resource_idx() method into ntb_peer_port_global_idx(),
-> and then consider the current port indexes used in the NTB API
-> as local port indexes. The resource indexing can be abstracted
-> by a macro like this:
-> #define ntb_peer_resource_idx ntb_peer_port_global_idx
-
-That define would not be useful.
-
-> Finally in order to close the space up we'd also need to define
-> a method: ntb_port_global_idx(), which would return a Logical (global)
-> index of local port.
-
-Again, I'd rather not add a bunch of large semantic and infrastructure
-changes at this point. It's confusing enough as it is and we don't need
-to introduce yet another indexing scheme API to the clients that really
-do not need it. What the clients need is a simple API to decide which
-resources to use for which peers, and to figure out which peers used
-which resources. ntb_peer_port_idx() and ntb_peer_resource_idx() suit
-these purposes. Nothing else really needs to exist.
-
->> Where the Physical Port Number is whatever the hardware uses and the
->> logical port number is a numbering scheme starting with zero with no
->> gaps. Then the port indexes are still as we currently have them. If we
->> say that the port numbers we have now are the Logical Port Number, then
->> ntb_peer_resource_idx() is correct.
+>> On Thu, Feb 21, 2019 at 03:45:12PM +0530, Kishon Vijay Abraham I wrote:
+>>> K2G provides separate IRQ lines for each of the four legacy interrupts.
+>>> Model this using hierarchy domain instead of linear domain with chained
+>>> IRQ handler.
+>>>
+>>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>>> ---
+>>>  drivers/pci/controller/dwc/pci-keystone.c | 205 +++++++++++++---------
+>>>  1 file changed, 118 insertions(+), 87 deletions(-)  
 >>
-> 
-> Current port numbers are the physical port numbers with gaps. 
-
-I think that's up for interpretation as, based on the existing code, I
-naturally interpreted it the other way and therefore it's pretty simple
-to say that it's the logical port number and fix the one driver that
-needs to change.
-
-> That's why we
-> introduced the port-index NTB API abstraction in the first place, to have these gaps
-> eliminated and to provide a simple way of bulk setup. Although that abstraction
-> turned out not that suitable to distribute the shared resources. So
-> the Logical (Global) indexing is needed to do it (that's what ntb_pingpong used
-> to do and ntb_perf still does now).
-
-My interpretation of the port-index was simply to match what was done in
-the two port case seeing code like ntb_transport simply uses the default
-0 as the port index. There was no reason to believe, based on the code,
-that there would be gaps.
-
->> I would strongly argue that the clients don't need to know anything
->> about the Physical Port Number and these should be handled strictly
->> inside the drivers. If multiple drivers need to do something similar to
->> map the logical to physical port numbers then we should introduce helper
->> functions to allow them to do so. If the Physical Numbers are not
->> contained in the driver than the API would need to be expanded to expose
->> which numbers are actually used to avoid needing to constantly loop
->> through all the indexes to find this out.
+>> Hi Kishon,
 >>
+>> I CC'ed Marc because you are actually re-writing an interrupt controller
+>> driver so I would be happier to merge this refactoring if Marc can have
+>> a look and he is satisfied with it - more so because most of the code can
+>> be reused by other host bridge drivers with similar behaviour.
 > 
-> Absolutely agree with you. The main idea of NTB API was to provide a set
-> of methods to access the NTB hardware without any abstractions but
-> with possible useful helpers, like your NTB MSI library, or transport library,
-> or anything else. So the physical port numbers must be available for
-> the client drivers.
-
-Huh? How can you say you absolutely agree with me? I said the clients
-should not need to know about physical port numbers and you said the
-physical port numbers *must* be available to clients. I think this
-statement needs to be justified. Why should the clients need to know
-about the physical port numbers?
-
->> On a similar vein, I'd  suggest that most clients shouldn't even really
->> need to do anything with the Logical Port Number and should deal largely
->> with Port Indexes. Ideally, Logical Port Numbers should only be used by
->> helper code in the common layer to help assign resources used by the
->> clients (like ntb_peer_resource_idx()).
+> Cheers Lorenzo.
+> 
+> It doesn't look too bad, but there is a couple of points I'd like to see
+> clarified. Comments below.
+> 
 >>
+>> I will have a look too, unfortunately it is becoming a bit tight for
+>> v5.1 but let's see how it goes.
+>>
+>> Thanks,
+>> Lorenzo
+>>
+>>> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+>>> index 47f0dcf638f2..7f1648453f54 100644
+>>> --- a/drivers/pci/controller/dwc/pci-keystone.c
+>>> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+>>> @@ -61,6 +61,7 @@
+>>>  
+>>>  #define IRQ_STATUS(n)			(0x184 + ((n) << 4))
+>>>  #define IRQ_ENABLE_SET(n)		(0x188 + ((n) << 4))
+>>> +#define IRQ_ENABLE_CLR(n)		(0x18C + ((n) << 4))
+>>>  #define INTx_EN				BIT(0)
+>>>  
+>>>  #define ERR_IRQ_STATUS			0x1c4
+>>> @@ -87,7 +88,6 @@ struct keystone_pcie {
+>>>  	struct dw_pcie		*pci;
+>>>  	/* PCI Device ID */
+>>>  	u32			device_id;
+>>> -	int			legacy_host_irqs[PCI_NUM_INTX];
+>>>  	struct			device_node *legacy_intc_np;
+>>>  
+>>>  	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
+>>> @@ -96,7 +96,6 @@ struct keystone_pcie {
+>>>  	struct phy		**phy;
+>>>  	struct device_link	**link;
+>>>  	struct			device_node *msi_intc_np;
+>>> -	struct irq_domain	*legacy_irq_domain;
+>>>  	struct device_node	*np;
+>>>  
+>>>  	int error_irq;
+>>> @@ -199,26 +198,6 @@ static int ks_pcie_msi_host_init(struct pcie_port *pp)
+>>>  	return dw_pcie_allocate_domains(pp);
+>>>  }
+>>>  
+>>> -static void ks_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie,
+>>> -				      int offset)
+>>> -{
+>>> -	struct dw_pcie *pci = ks_pcie->pci;
+>>> -	struct device *dev = pci->dev;
+>>> -	u32 pending;
+>>> -	int virq;
+>>> -
+>>> -	pending = ks_pcie_app_readl(ks_pcie, IRQ_STATUS(offset));
+>>> -
+>>> -	if (BIT(0) & pending) {
+>>> -		virq = irq_linear_revmap(ks_pcie->legacy_irq_domain, offset);
+>>> -		dev_dbg(dev, ": irq: irq_offset %d, virq %d\n", offset, virq);
+>>> -		generic_handle_irq(virq);
+>>> -	}
+>>> -
+>>> -	/* EOI the INTx interrupt */
+>>> -	ks_pcie_app_writel(ks_pcie, IRQ_EOI, offset);
+>>> -}
+>>> -
+>>>  static void ks_pcie_enable_error_irq(struct keystone_pcie *ks_pcie)
+>>>  {
+>>>  	ks_pcie_app_writel(ks_pcie, ERR_IRQ_ENABLE_SET, ERR_IRQ_ALL);
+>>> @@ -256,39 +235,117 @@ static irqreturn_t ks_pcie_handle_error_irq(struct keystone_pcie *ks_pcie)
+>>>  	return IRQ_HANDLED;
+>>>  }
+>>>  
+>>> -static void ks_pcie_ack_legacy_irq(struct irq_data *d)
+>>> +void ks_pcie_irq_eoi(struct irq_data *data)
+>>>  {
+>>> +	struct keystone_pcie *ks_pcie = irq_data_get_irq_chip_data(data);
+>>> +	irq_hw_number_t hwirq = data->hwirq;
+>>> +
+>>> +	ks_pcie_app_writel(ks_pcie, IRQ_EOI, hwirq);
+>>> +	irq_chip_eoi_parent(data);
+>>>  }
+>>>  
+>>> -static void ks_pcie_mask_legacy_irq(struct irq_data *d)
+>>> +void ks_pcie_irq_enable(struct irq_data *data)
+>>>  {
+>>> +	struct keystone_pcie *ks_pcie = irq_data_get_irq_chip_data(data);
+>>> +	irq_hw_number_t hwirq = data->hwirq;
+>>> +
+>>> +	ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET(hwirq), INTx_EN);
+>>> +	irq_chip_enable_parent(data);
+>>>  }
+>>>  
+>>> -static void ks_pcie_unmask_legacy_irq(struct irq_data *d)
+>>> +void ks_pcie_irq_disable(struct irq_data *data)
+>>>  {
+>>> +	struct keystone_pcie *ks_pcie = irq_data_get_irq_chip_data(data);
+>>> +	irq_hw_number_t hwirq = data->hwirq;
+>>> +
+>>> +	ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_CLR(hwirq), INTx_EN);
+>>> +	irq_chip_disable_parent(data);
+>>>  }
+>>>  
+>>>  static struct irq_chip ks_pcie_legacy_irq_chip = {
+>>> -	.name = "Keystone-PCI-Legacy-IRQ",
+>>> -	.irq_ack = ks_pcie_ack_legacy_irq,
+>>> -	.irq_mask = ks_pcie_mask_legacy_irq,
+>>> -	.irq_unmask = ks_pcie_unmask_legacy_irq,
+>>> +	.name			= "Keystone-PCI-Legacy-IRQ",
+>>> +	.irq_enable		= ks_pcie_irq_enable,
+>>> +	.irq_disable		= ks_pcie_irq_disable,
+>>> +	.irq_eoi		= ks_pcie_irq_eoi,
+>>> +	.irq_mask		= irq_chip_mask_parent,
+>>> +	.irq_unmask		= irq_chip_unmask_parent,
+>>> +	.irq_retrigger		= irq_chip_retrigger_hierarchy,
+>>> +	.irq_set_type		= irq_chip_set_type_parent,
+>>> +	.irq_set_affinity	= irq_chip_set_affinity_parent,
+>>>  };
+>>>  
+>>> -static int ks_pcie_init_legacy_irq_map(struct irq_domain *d,
+>>> -				       unsigned int irq,
+>>> -				       irq_hw_number_t hw_irq)
+>>> +static int ks_pcie_legacy_irq_domain_alloc(struct irq_domain *domain,
+>>> +					   unsigned int virq,
+>>> +					   unsigned int nr_irqs, void *data)
+>>>  {
+>>> -	irq_set_chip_and_handler(irq, &ks_pcie_legacy_irq_chip,
+>>> -				 handle_level_irq);
+>>> -	irq_set_chip_data(irq, d->host_data);
+>>> +	struct keystone_pcie *ks_pcie = domain->host_data;
+>>> +	struct device_node *np = ks_pcie->legacy_intc_np;
+>>> +	struct irq_fwspec parent_fwspec, *fwspec = data;
+>>> +	struct of_phandle_args out_irq;
+>>> +	int ret, i;
+>>> +
+>>> +	if (nr_irqs != 1)
+>>> +		return -EINVAL;
+>>> +
+>>> +	ret = of_irq_parse_one(np, fwspec->param[0], &out_irq);
+>>> +	if (ret < 0) {
+>>> +		pr_err("Failed to parse interrupt node\n");
+>>> +		return ret;
+>>> +	}
 > 
-> This is the main question. Do we really need the current port indexes
-> implementation at all? After all these years of NTB API usage I don't really
-> see it useful in any case except to loop over the outbound MW resources
-> automatically skipping the local port (usefulness of this is also questionable).
-> As I already said I created the port-index table this way due to the IDT NTB
-> MWs peculiarity, which doesn't seem to me a big problem now comparing to all
-> these additional complications we intend to introduce.
+> What it this trying to do? Fishing out the interrupts from DT based on
+> the legacy pin? This looks at best obscure. I wonder why you don't do
+> that at probe time instead. Anyway, this requires documenting.
 
-To me, it seems like the port indexes are used everywhere. A client
-almost always wants to deal with every port except itself. That seems
-entirely natural to me. Using the port index as the resource index makes
-perfect sense (which is why I implemented the inverse
-ntb_peer_resource_idx()).
+The device-tree of PCIe node looks something like below.
 
-> The rest of the drivers code really need to have the Logical (global)
-> port indexes, at least to distribute the shared resources, and don't use
-> the current pidx that much.
+interrupt-map = <0 0 0 1 &pcie_intc0 0 IRQ_TYPE_EDGE_RISING>, /* INT A */
+		<0 0 0 2 &pcie_intc0 1 IRQ_TYPE_EDGE_RISING>, /* INT B */
+		<0 0 0 3 &pcie_intc0 2 IRQ_TYPE_EDGE_RISING>, /* INT C */
+		<0 0 0 4 &pcie_intc0 3 IRQ_TYPE_EDGE_RISING>; /* INT D */
+pcie_intc0: legacy-interrupt-controller {
+	interrupt-controller;
+	#interrupt-cells = <2>;
+	interrupt-parent = <&gic>;
+	interrupts = <GIC_SPI 48 IRQ_TYPE_EDGE_RISING>,
+		     <GIC_SPI 49 IRQ_TYPE_EDGE_RISING>,
+		     <GIC_SPI 50 IRQ_TYPE_EDGE_RISING>,
+		     <GIC_SPI 51 IRQ_TYPE_EDGE_RISING>;
+};
 
-Drivers don't care about port indexes or how the resources are
-distributed. I would expect that all they'd do is map the port index
-(which all existing APIs take) to the physical address and program
-hardware as necessary.
+INTA corresponds to HWIRQ '0' of the hierarchy irq domain we create in this
+driver which in turn corresponds to GIC_SPI '48' of GIC.
 
-> Wouldn't it be better to just redefine the current port-index table
-> in the following way?
-> ntb_port_number() - local physical port number,
-> ntb_port_idx() - local port logical (global) index,
-> ntb_peer_port_count() - total number of ports NTB device provide (including the local one),
-> ntb_peer_port_number() - physical port number of the peer with passed logical port index,
-> ntb_peer_port_idx - logical port index of the passed physical port number.
+We could create an array of parent_fwspec for each of the four interrupt lines
+in legacy-interrupt-controller during probe and use it directly here while
+invoking irq_domain_alloc_irqs_parent. I think you want me to do that instead
+of using of_irq_parse_one here?
+> 
+>>> +
+>>> +	parent_fwspec.fwnode = &out_irq.np->fwnode;
+>>> +	parent_fwspec.param_count = out_irq.args_count;
+>>> +
+>>> +	for (i = 0; i < out_irq.args_count; i++)
+>>> +		parent_fwspec.param[i] = out_irq.args[i];
+> 
+> This feels like a duplicate of of_phandle_args_to_fwspec(). If you need
+> such a helper, please export it from the irqdomain code.
 
-No, from the perspective of the client, the physical port numbers are
-useless. I don't want the count to include the local one because that
-means I'd always have to subtract one every time I want to loop through
-all peers (I never want to loop through all ports including the local
-one).  I have no idea what your distinction between logical (global)
-index and logical port index is. In fact I find this all confusing.
+sure.
+> 
+>>> +
+>>> +	ret = irq_domain_alloc_irqs_parent(domain, virq, 1, &parent_fwspec);
+>>> +	if (ret < 0) {
+>>> +		pr_err("Failed to allocate parent irq %u: %d\n",
+>>> +		       parent_fwspec.param[0], ret);
+>>> +		return ret;
+>>> +	}
+>>> +
+>>> +	ret = irq_domain_set_hwirq_and_chip(domain, virq, fwspec->param[0],
+>>> +					    &ks_pcie_legacy_irq_chip, ks_pcie);
+>>> +	if (ret < 0) {
+>>> +		pr_err("Failed to set hwirq and chip\n");
+>>> +		goto err_set_hwirq_and_chip;
+>>> +	}
+>>>  
+>>>  	return 0;
+>>> +
+>>> +err_set_hwirq_and_chip:
+>>> +	irq_domain_free_irqs_parent(domain, virq, 1);
+>>> +
+>>> +	return ret;
+>>> +}
+>>> +
+>>> +static int ks_pcie_irq_domain_translate(struct irq_domain *domain,
+>>> +					struct irq_fwspec *fwspec,
+>>> +					unsigned long *hwirq,
+>>> +					unsigned int *type)
+>>> +{
+>>> +	if (is_of_node(fwspec->fwnode)) {
+> 
+> If you don't plan to support ACPI, you can drop this.
 
-> while currently we have:
-> ntb_port_number() - local physical port number,
-> ntb_peer_port_count() - total number of ports NTB device provide (excluding the local one),
-> ntb_peer_port_number() - physical port number of the peer with passed port index,
-> ntb_peer_port_idx - port index of the passed physical port number;
+okay.
+> 
+>>> +		if (fwspec->param_count != 2)
+>>> +			return -EINVAL;
+> 
+> From the DT binding:
+> 
+> pcie_intc: Interrupt controller device node for Legacy IRQ chip
+>         interrupt-cells: should be set to 1
+> 
+> So why do we have 2 cells here?
 
-What we currently have all makes perfect sense to me and is exactly what
-I want for the clients, except I think ntb_port_number() needs to be the
-logical port number (with the gaps removed), so that we can more easily
-implement ntb_peer_resource_idx(). If ntb_port_number() corresponds to
-the physical port number, then the correct implementation of
-ntb_peer_resource_idx() is going to be crazy, essentially needing to
-generate a logical port number for every port, every time it's called.
+With '1' cells, it's not possible to specify irq trigger type. DT binding has
+to be fixed. I'll fix this in the next revision of the patch series.
+> 
+>>> +
+>>> +		if (fwspec->param[0] >= PCI_NUM_INTX)
+>>> +			return -EINVAL;
+> 
+> Most of the OF code assumes that the pin number describing the legacy
+> interrupt is 1-based, while you obviously treat it as 0-based. How does
+> it work?
 
-Logan
+INTA corresponds to '0' of the hierarchy interrupt domain (using interrupt-map).
+> 
+>>> +
+>>> +		*hwirq = fwspec->param[0];
+>>> +		*type = fwspec->param[1];
+> 
+> As far as I remember, PCI legacy interrupts are level triggered, so
+> there should be no need to advertise the trigger (which is consistent
+> with the way the binding is written).
 
+It is pulse triggered at subsystem level. Quoting the TRM
+"The interrupt request signal at the PCIe SS boundary is a pulse signal that is
+triggered each time an assert interrupt message is received." The PCIe
+subsystem also has a level signal (interrupt pending signal) but the interrupt
+request signal is the one that is connected to GIC.
+
+Thanks
+Kishon
