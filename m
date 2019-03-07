@@ -2,159 +2,115 @@ Return-Path: <SRS0=a/OH=RK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 800C7C10F03
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 20:50:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02AB1C43381
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 21:38:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EBCA2085A
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 20:50:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1551991817;
-	bh=1hi/Vwp2apJ/sVLtqASMN8pGP0T0d+D9yegIbgG9W1I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Uh1tQpzCVKtNQsu2SzGSpHjejH9HVb0cTlIDuKnvxOPcjvhLyViUTyitr6HfXylUB
-	 5H74gaYkALgeWnKIuKVMGlCxlxw86k57X6MLmfMjCPxcmkKrPD2NsXtWHxxftvG+SU
-	 g8XwtJECeROrAoT80ihoXqBnuN4J/RIIjG+0vsOA=
+	by mail.kernel.org (Postfix) with ESMTP id C053D20851
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 21:38:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q7y6Rbh4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726224AbfCGUuQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Mar 2019 15:50:16 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57512 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726185AbfCGUuQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Mar 2019 15:50:16 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 90B5020684;
-        Thu,  7 Mar 2019 20:50:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1551991814;
-        bh=1hi/Vwp2apJ/sVLtqASMN8pGP0T0d+D9yegIbgG9W1I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=rAUfvBH2tnWtnqDf258Ygs/ejbmYA1OCX04UADWu63j7PLGF0DcPALnmzc7/Karjs
-         cGKaS6SUOx0kvdXvwoCHqn5lt+csTTUStn1z9YLnEV2m+UbsJ8PgcoCph3d7dLOXNk
-         //2k/WutmlWMpxJpPhpaEuJFSyiycc5aZv7yiP6k=
-Date:   Thu, 7 Mar 2019 14:50:13 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     marek.vasut@gmail.com
-Cc:     linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V2] PCI: rcar: Add the initialization of PCIe link in
- resume_noirq
-Message-ID: <20190307205013.GA208051@google.com>
-References: <20190217132441.15139-1-marek.vasut@gmail.com>
+        id S1726250AbfCGVir (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Mar 2019 16:38:47 -0500
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:33489 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726186AbfCGViq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2019 16:38:46 -0500
+Received: by mail-ot1-f67.google.com with SMTP id q24so15585515otk.0;
+        Thu, 07 Mar 2019 13:38:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=275DqyDJ75q090yQcnZc8/uC8L31weVnBHUg5MKeeaM=;
+        b=q7y6Rbh45qBMt2XCIUU21iI7AYv+Y//5UQlqwoIwDg+Y7v2GQaTzMk+6jIwxb+IGPj
+         Ya07JoD65+w//700MAVVr9W+ozuFS6TiNnauBRMGyFEZcP/AAOBytVmmR/fsKd8OfPB/
+         qAr/dl2BDdGetuQiPOEbhGXWt7IkP4RHAWClZI0vTZNHeWE+XCwiu6oBw7KfRTWBpZBr
+         ZGGx+mEKDqYPbsw8FQEJQAqEBmTw0SjLnt24uTm5dW51hVcBvz5mEPZ6CGyv3cgCkwWR
+         8+S9mYOtLJIX8h+mhQNKR26EfL3fl54th9eoXWHlmv4a0jiVEH/ufyUY0giV1DGPuxdb
+         f+ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=275DqyDJ75q090yQcnZc8/uC8L31weVnBHUg5MKeeaM=;
+        b=Inxe0Sd79SH6hhOrbpq7lLihJ3gsA+4VKgqwjRrFH5BD4qhLus9caJ3yZgKFt8QFVq
+         n3BoNcfc1Vmq89TcaCJL73P8aqo6z50+8IjKAJJR53iOffTIOPTr1+2fhlW5QniySCEV
+         Z7bYn2hE/S5HMcfM1gybruUCzW6NSCaL1NsRU9bknuNbHgD6rSstwQeJVdDNxyM1BHfV
+         C+dOBzSLy7jKM8UnGAzBoxIHXLfnQzNesQ1/U7m3e3qn04MxzP0XXQ9oY+gDFmIL1VuO
+         g7bxxThrJw2rbuhVjBtyb0NMvno+p0GrE4nDzgpJ26mudBsy2EJB2IQtfYC78z3drwg2
+         pbdg==
+X-Gm-Message-State: APjAAAU/ZcrSRvpATbAvW5cFDrEZSGRJ/XNrpP9NG472Ul/IwhLROUGK
+        Er45/HriCix8QHdv6xhexYc=
+X-Google-Smtp-Source: APXvYqwir5zE5jpoTG93x5YY4GGSDaNebAiAsa3Olk/0pIiqfb6JkfhBGsifFRTa8cCh7kKVBSvTsA==
+X-Received: by 2002:a05:6830:1197:: with SMTP id u23mr9129644otq.254.1551994725657;
+        Thu, 07 Mar 2019 13:38:45 -0800 (PST)
+Received: from nuclearis2-1.lan ([2601:2c1:8501:182d::cdd])
+        by smtp.gmail.com with ESMTPSA id p188sm2352205oia.58.2019.03.07.13.38.44
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 07 Mar 2019 13:38:45 -0800 (PST)
+From:   Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To:     bhelgaas@google.com
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH RESEND v1 0/3] PCI: ACPI: Implement support for _HPX Type 3 tables
+Date:   Thu,  7 Mar 2019 15:38:24 -0600
+Message-Id: <20190307213834.5914-1-mr.nuke.me@gmail.com>
+X-Mailer: git-send-email 2.19.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190217132441.15139-1-marek.vasut@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Feb 17, 2019 at 02:24:41PM +0100, marek.vasut@gmail.com wrote:
-> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> 
-> Reestablish the PCIe link very early in the resume process in case it
-> went down to prevent PCI accesses from hanging the bus. Such accesses
-> can happen early in the PCI resume process, in the resume_noirq, thus
-> the link must be reestablished in the resume_noirq callback of the
-> driver.
-> 
-> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
-> V2: - Use BIT() macro for (1 << n)
->     - Since polling in rcar_pcie_wait_for_dl() uses udelay(), do not
->       add extra changes to this function anymore
->     - Make resume_noirq return early and clean up parenthesis therein
-> ---
->  drivers/pci/controller/pcie-rcar.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-> index c8febb009454..b8f8fb3bc640 100644
-> --- a/drivers/pci/controller/pcie-rcar.c
-> +++ b/drivers/pci/controller/pcie-rcar.c
-> @@ -46,6 +46,7 @@
->  
->  /* Transfer control */
->  #define PCIETCTLR		0x02000
-> +#define  DL_DOWN		BIT(3)
->  #define  CFINIT			1
+Every decade or so, give or take a decade, our ACPI overlords realize
+that the table they so generously gifted us is not really that useful.
+Not to be outdone, they make a betterer version of it, which seems
+like a good idea at the time. This is the story of the _HPX3 (well,
+most of ACPI really).
 
-I saw discussion after the V1 patch about using BIT() and making
-similar constants also use BIT() for consistency.  That makes sense to
-me, and I think the best way would be:
+Previous _HPX versions had a fixed number of fields, and could only
+describe a very narrow set of useless register settings. _HPX3 extends
+that to an arbitrary number of entries, that can cover the entire PCI
+config space, and will be The Last _HPX Table Ever (TM). For the
+sadomasochistic, the new ACPI 6.3 spec is here [1].
 
-  1) in *this* patch, use "#define DL_DOWN 8"
-  2) in a followup patch, convert them all to BIT()
+For our purposes, we had to re-organize code a bit, and the first two
+patches in the series do this, albeit with minimal noise.
+The last patch is the actual HPX3 stuff. In case you wonder why the
+ACPI enums don't match the PCI device types... nobody really thought
+of it or caught it at the spec writing stage.
 
-That way each revision of pcie-rcar.c is self-consistent.
+In _HPX3 there's also the notion of vendor-specific extensions, and
+VSEC/DVSEC. They are not implemented here because there's no hardware
+to test that code path.
 
->  #define PCIETSTR		0x02004
->  #define  DATA_LINK_ACTIVE	1
-> @@ -1130,6 +1131,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	pcie = pci_host_bridge_priv(bridge);
->  
->  	pcie->dev = dev;
-> +	platform_set_drvdata(pdev, pcie);
->  
->  	err = pci_parse_request_of_pci_ranges(dev, &pcie->resources, NULL);
->  	if (err)
-> @@ -1221,10 +1223,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	return err;
->  }
->  
-> +static int rcar_pcie_resume_noirq(struct device *dev)
-> +{
-> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> +
-> +	if (rcar_pci_read_reg(pcie, PMSR) &&
-> +	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
-> +		return 0;
-> +
-> +	/* Re-establish the PCIe link */
-> +	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> +	return rcar_pcie_wait_for_dl(pcie);
-> +}
-> +
-> +static const struct dev_pm_ops rcar_pcie_pm_ops = {
-> +	.resume_noirq = rcar_pcie_resume_noirq,
-> +};
+[1] https://uefi.org/sites/default/files/resources/ACPI_6_3_final_Jan30.pdf
 
-I think there's the beginning of a convention to use #ifdef
-CONFIG_PM_SLEEP around the ops themselves [1].  Otherwise I think
-we'll get a warning about unused code when CONFIG_PM_SLEEP is unset.
+RESEND because the first time 'git send-email' experienced an ID:10T error
+originating between my keyboard and my chair. As a result of that error, it
+did not send the cover letter to public mailing lists.
 
->  static struct platform_driver rcar_pcie_driver = {
->  	.driver = {
->  		.name = "rcar-pcie",
->  		.of_match_table = rcar_pcie_of_match,
-> +		.pm = &rcar_pcie_pm_ops,
->  		.suppress_bind_attrs = true,
->  	},
->  	.probe = rcar_pcie_probe,
-> -- 
-> 2.19.2
-> 
+Alexandru Gagniuc (3):
+  PCI / ACPI: Do not export pci_get_hp_params()
+  PCI / ACPI: Remove the need for 'struct hotplug_params'
+  PCI / ACPI: Implement Type 3 _HPX record
 
-[1] https://lore.kernel.org/linux-pci/20180531042020.GQ39853@bhelgaas-glaptop.roam.corp.google.com
+ drivers/pci/pci-acpi.c      | 172 +++++++++++++++++++++++++-----------
+ drivers/pci/probe.c         | 130 ++++++++++++++++++++++++---
+ include/linux/pci_hotplug.h |  74 +++++++++++++---
+ 3 files changed, 305 insertions(+), 71 deletions(-)
+
+-- 
+2.19.2
+
