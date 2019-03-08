@@ -1,196 +1,899 @@
-Return-Path: <SRS0=a/OH=RK=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=hZ+Q=RL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 731E8C10F03
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 22:49:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E48C43381
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Mar 2019 06:41:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3F63F20675
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Mar 2019 22:49:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D5502085A
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Mar 2019 06:41:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EBPCqw9L"
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="UIu8C1Kh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726249AbfCGWtj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Mar 2019 17:49:39 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:42081 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726243AbfCGWtj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Mar 2019 17:49:39 -0500
-Received: by mail-wr1-f66.google.com with SMTP id r5so19333379wrg.9;
-        Thu, 07 Mar 2019 14:49:37 -0800 (PST)
+        id S1725789AbfCHGlN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Mar 2019 01:41:13 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:44397 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726307AbfCHGlN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2019 01:41:13 -0500
+Received: by mail-wr1-f65.google.com with SMTP id w2so20088196wrt.11
+        for <linux-pci@vger.kernel.org>; Thu, 07 Mar 2019 22:41:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=+Q3kgEMy4xtnypAW5OOltDfgrxI3AyRh838JPrtjCT4=;
-        b=EBPCqw9LYtzJkG52jsz5bN7PEuqkDSQJVPgjkK/iTjOrV13r24u+szm3Enp6xULygs
-         xbKz05s95S32xBVguITevmg2zCLXcsl4Byn1yIXtg9QQhkWoj3Z8NaehdOkvqTFWS5nc
-         d0wdxwSt1XJ/xtX3fZhOQzeIOAH41fJ31VXsjIEPRl+LErk1tSkex4H5+Odtlby6E8fa
-         lQGS1ADCwVrhrGh46/Y0On4D7tfmWxUTJ6TrlpnmdCdAjYJtTuiS4lknU3vyVvj40pLX
-         +zFlrYkMqOUdaz9FNU+RQVJ44AWC4jgBX89z36mVlsZ5PIRra+vwq/HJwAK/RaYiMqfv
-         k4QA==
+        d=mobiveil.co.in; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=PLK9+J7ECtjSc07AQXqsCMkDInPMk/bmlmpYhna0aWk=;
+        b=UIu8C1Khz9GrFRtADE0cF/5v/Hziuo0ZoLCTQ1ItASFqjCmVMH8uOIYdvLcal/IsAl
+         /c579dS7QYvapStNJeI1hHZzUTGoRXHF4YJYQvRGOhM9gxWvXByIdBjbnrgPOPBDo/v3
+         KNXFA1ZJrJbT2LMPgs+rH57E3oMgubzXmgE2U=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=+Q3kgEMy4xtnypAW5OOltDfgrxI3AyRh838JPrtjCT4=;
-        b=JuFLMhZkSMAJSQBf65BVauBipq41UX5Tt20m1QDz4hGwd4Wd4fkYDlfhewlNNpf3C/
-         Ds/456e07Pu9qVmSi92XMrWwjaqNS8TV9PeeMCmg78iQtt/RbrzvcuniN1358QR6T4fI
-         bAn6q9HA991xQdZXIdeHDy+WylA9lCFeWQZQmpw1fMR0fd8nhBIFwgRoElZQoQpSAxhT
-         HFhRn/DIUjF5QuVv8bm3fifxr8zTuKvPqqpjwJt0XuMaj7wRtXf0+EMQ6V70xyk5LgVL
-         L56imtsUBxrkYAvTSd9xE6NjtrpVaE2vSGZTjujkteTeFkqqtZeR7CxvajFptYCIPv83
-         yyUA==
-X-Gm-Message-State: APjAAAV3fXNKf6PVsPfW7Zs9Idh7HR7tA2Nb21+J+RYkzIlKNJyHj6Y7
-        UM4q3mi1u30pTcwPH3r+ZuYDrEZJ
-X-Google-Smtp-Source: APXvYqyZ7eupaQIfCPQfv2ZPPgCt3jeRTa3m8iO3QlSWdZK5vvZIr91CpvoJ7J2jIxyCnazwnKxFpA==
-X-Received: by 2002:a05:6000:124d:: with SMTP id j13mr8117301wrx.102.1551998976303;
-        Thu, 07 Mar 2019 14:49:36 -0800 (PST)
-Received: from [192.168.1.4] (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id z129sm8297097wmc.33.2019.03.07.14.49.35
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Thu, 07 Mar 2019 14:49:35 -0800 (PST)
-Subject: Re: [PATCH V2] PCI: rcar: Add the initialization of PCIe link in
- resume_noirq
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-References: <20190217132441.15139-1-marek.vasut@gmail.com>
- <20190307205013.GA208051@google.com>
-From:   Marek Vasut <marek.vasut@gmail.com>
-Openpgp: preference=signencrypt
-Message-ID: <ae3659b1-5355-e6f3-16ef-7b458383a1f6@gmail.com>
-Date:   Thu, 7 Mar 2019 23:49:34 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=PLK9+J7ECtjSc07AQXqsCMkDInPMk/bmlmpYhna0aWk=;
+        b=dD3DXHgegtkEO7Y4MeIy22jmoqleUpr11W+wgtff5vinirp0gPM6zAjzBxoGfzfFy3
+         qSNO0pE7hqPqPDK1zCSg+/BgSOx7IgA/nBQL1FXk7eBVEKWr/+yfEezoCvKfdn8SM3Tr
+         AjbFAiVoA0AI3hmHYtsC3/0ZbcuCV1chnJA8AcVCOIP6NLkV+zGLeN1+oFMeKOE+t5/A
+         /7jECUtC3Ui1A4oCFSvUzCxHQb+8tgxeEArONm9q7/EBIvEEuWfHwTpgkui5bZTBvPeN
+         GkvCbjOP5nBd9ikyqKG+kxWDwKEiSYSk+mXbWVOsxrmgcet27SjycEYo4EveSxMGy99/
+         lBWQ==
+X-Gm-Message-State: APjAAAW0c7QXmDXBp152EjIYLQaJ4TAjTxFTyE2iDRwUvadqMVMyIrcI
+        QH+RS2ZWTx++tcb9s5FqA6aDaL6w8dkujSngZxNe/w==
+X-Google-Smtp-Source: APXvYqxhXEPlykKQIMYV7cf7G1wMz8j6VdEX7Xk1s+rwAJErzlGJe/U4pbUY6RwC73Dq0nj21fA/NAkyf706WUeyXCY=
+X-Received: by 2002:adf:c752:: with SMTP id b18mr9639388wrh.105.1552027269225;
+ Thu, 07 Mar 2019 22:41:09 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20190307205013.GA208051@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190218094643.2692-1-xiaowei.bao@nxp.com>
+In-Reply-To: <20190218094643.2692-1-xiaowei.bao@nxp.com>
+From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date:   Fri, 8 Mar 2019 12:14:33 +0530
+Message-ID: <CAFZiPx3FpSskuK3XykMXNqMk301+LOgNdJZ-9trMhDmXDXsmiQ@mail.gmail.com>
+Subject: Re: [PATCH 1/6] PCI: mobiveil: Add the EP mode support
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Z.q. Hou" <Zhiqiang.Hou@nxp.com>, robh+dt@kernel.org,
+        mark.rutland@arm.com, shawnguo@kernel.org,
+        Leo Li <leoyang.li@nxp.com>, kishon@ti.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        gregkh@linuxfoundation.org, arnd@arndb.de,
+        "M.h. Lian" <Minghuan.Lian@nxp.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/7/19 9:50 PM, Bjorn Helgaas wrote:
-> On Sun, Feb 17, 2019 at 02:24:41PM +0100, marek.vasut@gmail.com wrote:
->> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
->>
->> Reestablish the PCIe link very early in the resume process in case it
->> went down to prevent PCI accesses from hanging the bus. Such accesses
->> can happen early in the PCI resume process, in the resume_noirq, thus
->> the link must be reestablished in the resume_noirq callback of the
->> driver.
->>
->> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
->> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->> Cc: Simon Horman <horms+renesas@verge.net.au>
->> Cc: Wolfram Sang <wsa@the-dreams.de>
->> Cc: linux-renesas-soc@vger.kernel.org
->> ---
->> V2: - Use BIT() macro for (1 << n)
->>     - Since polling in rcar_pcie_wait_for_dl() uses udelay(), do not
->>       add extra changes to this function anymore
->>     - Make resume_noirq return early and clean up parenthesis therein
->> ---
->>  drivers/pci/controller/pcie-rcar.c | 20 ++++++++++++++++++++
->>  1 file changed, 20 insertions(+)
->>
->> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
->> index c8febb009454..b8f8fb3bc640 100644
->> --- a/drivers/pci/controller/pcie-rcar.c
->> +++ b/drivers/pci/controller/pcie-rcar.c
->> @@ -46,6 +46,7 @@
->>  
->>  /* Transfer control */
->>  #define PCIETCTLR		0x02000
->> +#define  DL_DOWN		BIT(3)
->>  #define  CFINIT			1
-> 
-> I saw discussion after the V1 patch about using BIT() and making
-> similar constants also use BIT() for consistency.  That makes sense to
-> me, and I think the best way would be:
-> 
->   1) in *this* patch, use "#define DL_DOWN 8"
->   2) in a followup patch, convert them all to BIT()
-> 
-> That way each revision of pcie-rcar.c is self-consistent.
-
-But the BIT() macros are already cleaned , see commit
-0ee40820989b330e24926d82953ffb9e1c7a8425
-
-    PCI: rcar: Clean up the macros
-
->>  #define PCIETSTR		0x02004
->>  #define  DATA_LINK_ACTIVE	1
->> @@ -1130,6 +1131,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>  	pcie = pci_host_bridge_priv(bridge);
->>  
->>  	pcie->dev = dev;
->> +	platform_set_drvdata(pdev, pcie);
->>  
->>  	err = pci_parse_request_of_pci_ranges(dev, &pcie->resources, NULL);
->>  	if (err)
->> @@ -1221,10 +1223,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->>  	return err;
->>  }
->>  
->> +static int rcar_pcie_resume_noirq(struct device *dev)
->> +{
->> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
->> +
->> +	if (rcar_pci_read_reg(pcie, PMSR) &&
->> +	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
->> +		return 0;
->> +
->> +	/* Re-establish the PCIe link */
->> +	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
->> +	return rcar_pcie_wait_for_dl(pcie);
->> +}
->> +
->> +static const struct dev_pm_ops rcar_pcie_pm_ops = {
->> +	.resume_noirq = rcar_pcie_resume_noirq,
->> +};
-> 
-> I think there's the beginning of a convention to use #ifdef
-> CONFIG_PM_SLEEP around the ops themselves [1].  Otherwise I think
-> we'll get a warning about unused code when CONFIG_PM_SLEEP is unset.
-
-Only if I used SET_NOIRQ_SYSTEM_SLEEP_PM_OPS() , but I set the
-resume_noirq directly.
-
->>  static struct platform_driver rcar_pcie_driver = {
->>  	.driver = {
->>  		.name = "rcar-pcie",
->>  		.of_match_table = rcar_pcie_of_match,
->> +		.pm = &rcar_pcie_pm_ops,
->>  		.suppress_bind_attrs = true,
->>  	},
->>  	.probe = rcar_pcie_probe,
->> -- 
->> 2.19.2
->>
-> 
-> [1] https://lore.kernel.org/linux-pci/20180531042020.GQ39853@bhelgaas-glaptop.roam.corp.google.com
-> 
+Xiaowei,
 
 
--- 
-Best regards,
-Marek Vasut
+On Mon, Feb 18, 2019 at 3:22 PM Xiaowei Bao <xiaowei.bao@nxp.com> wrote:
+>
+> Add the EP mode support for Mobiveil base on endpoint framework.
+>
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> ---
+> depends on: http://patchwork.ozlabs.org/project/linux-pci/list/?series=88754
+>
+>  drivers/pci/controller/mobiveil/Kconfig            |    5 +
+>  drivers/pci/controller/mobiveil/Makefile           |    1 +
+>  drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c |  527 ++++++++++++++++++++
+>  drivers/pci/controller/mobiveil/pcie-mobiveil.c    |  100 ++++-
+>  drivers/pci/controller/mobiveil/pcie-mobiveil.h    |   64 +++
+>  5 files changed, 691 insertions(+), 6 deletions(-)
+>  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c
+>
+> diff --git a/drivers/pci/controller/mobiveil/Kconfig b/drivers/pci/controller/mobiveil/Kconfig
+> index 3ddb7d6..c037db6 100644
+> --- a/drivers/pci/controller/mobiveil/Kconfig
+> +++ b/drivers/pci/controller/mobiveil/Kconfig
+> @@ -11,6 +11,11 @@ config PCIE_MOBIVEIL_HOST
+>         depends on PCI_MSI_IRQ_DOMAIN
+>          select PCIE_MOBIVEIL
+>
+> +config PCIE_MOBIVEIL_EP
+> +       bool
+> +       depends on PCI_ENDPOINT
+> +       select PCIE_MOBIVEIL
+> +
+>  config PCIE_MOBIVEIL_PLAT
+>         bool "Mobiveil AXI PCIe controller"
+>         depends on ARCH_ZYNQMP || COMPILE_TEST
+> diff --git a/drivers/pci/controller/mobiveil/Makefile b/drivers/pci/controller/mobiveil/Makefile
+> index ff66774..4f520b7 100644
+> --- a/drivers/pci/controller/mobiveil/Makefile
+> +++ b/drivers/pci/controller/mobiveil/Makefile
+> @@ -1,5 +1,6 @@
+>  # SPDX-License-Identifier: GPL-2.0
+>  obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
+>  obj-$(CONFIG_PCIE_MOBIVEIL_HOST) += pcie-mobiveil-host.o
+> +obj-$(CONFIG_PCIE_MOBIVEIL_EP) += pcie-mobiveil-ep.o
+>  obj-$(CONFIG_PCIE_MOBIVEIL_PLAT) += pcie-mobiveil-plat.o
+>  obj-$(CONFIG_PCI_LAYERSCAPE_GEN4) += pci-layerscape-gen4.o
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c b/drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c
+> new file mode 100644
+> index 0000000..16ca7fb
+> --- /dev/null
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c
+> @@ -0,0 +1,527 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/**
+> + * Mobiveil PCIe Endpoint controller driver
+> + *
+> + * Copyright (C) 2018 NXP Semiconductor.
+> + * Author: Xiaowei Bao <xiaowei.bao@nxp.com>
+> + */
+> +
+> +#include <linux/of.h>
+> +#include <linux/pci-epc.h>
+> +#include <linux/pci-epf.h>
+> +#include <linux/platform_device.h>
+> +#include "pcie-mobiveil.h"
+> +
+> +void mobiveil_pcie_ep_linkup(struct mobiveil_pcie_ep *ep)
+> +{
+> +       struct pci_epc *epc = ep->epc;
+> +
+> +       pci_epc_linkup(epc);
+> +}
+> +
+> +static void __mobiveil_pcie_ep_reset_bar(struct mobiveil_pcie *pcie,
+> +                                        enum pci_barno bar)
+> +{
+> +       csr_writel(pcie, bar, GPEX_BAR_SELECT);
+> +       csr_writel(pcie, 0, GPEX_BAR_SIZE_LDW);
+> +       csr_writel(pcie, 0, GPEX_BAR_SIZE_UDW);
+> +}
+> +
+> +void mobiveil_pcie_ep_reset_bar(struct mobiveil_pcie *pcie,
+> +                               enum pci_barno bar)
+> +{
+> +       __mobiveil_pcie_ep_reset_bar(pcie, bar);
+> +}
+> +
+> +static u8 __mobiveil_pcie_ep_find_next_cap(struct mobiveil_pcie *pcie,
+> +                                          u8 cap_ptr, u8 cap)
+> +{
+> +       u8 cap_id, next_cap_ptr;
+> +       u16 reg;
+> +
+> +       reg = csr_readw(pcie, cap_ptr);
+> +       next_cap_ptr = (reg & 0xff00) >> 8;
+> +       cap_id = (reg & 0x00ff);
+> +
+> +       if (cap_id == cap)
+> +               return cap_ptr;
+> +
+> +       if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
+> +               return 0;
+> +
+> +       return __mobiveil_pcie_ep_find_next_cap(pcie, next_cap_ptr, cap);
+> +}
+> +
+> +static u8 mobiveil_pcie_ep_find_capability(struct mobiveil_pcie *pcie,
+> +                                          u8 cap)
+> +{
+> +       u8 next_cap_ptr;
+> +       u16 reg;
+> +
+> +       reg = csr_readw(pcie, PCI_CAPABILITY_LIST);
+> +       next_cap_ptr = (reg & 0x00ff);
+> +
+> +       if (!next_cap_ptr)
+> +               return 0;
+> +
+> +       return __mobiveil_pcie_ep_find_next_cap(pcie, next_cap_ptr, cap);
+> +}
+> +
+> +static int mobiveil_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
+> +                                        struct pci_epf_header *hdr)
+> +{
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +
+> +       csr_writew(pcie, hdr->vendorid, PCI_VENDOR_ID);
+> +       csr_writew(pcie, hdr->deviceid, PCI_DEVICE_ID);
+> +       csr_writeb(pcie, hdr->revid, PCI_REVISION_ID);
+> +       csr_writeb(pcie, hdr->progif_code, PCI_CLASS_PROG);
+> +       csr_writew(pcie, hdr->subclass_code | hdr->baseclass_code << 8,
+> +                  PCI_CLASS_DEVICE);
+> +       csr_writeb(pcie, hdr->cache_line_size, PCI_CACHE_LINE_SIZE);
+> +       csr_writew(pcie, hdr->subsys_vendor_id, PCI_SUBSYSTEM_VENDOR_ID);
+> +       csr_writew(pcie, hdr->subsys_id, PCI_SUBSYSTEM_ID);
+> +       csr_writeb(pcie, hdr->interrupt_pin, PCI_INTERRUPT_PIN);
+> +
+> +       return 0;
+> +}
+> +
+> +static int mobiveil_pcie_ep_inbound_atu(struct mobiveil_pcie_ep *ep,
+> +                                       u8 func_no, enum pci_barno bar,
+> +                                       dma_addr_t cpu_addr)
+> +{
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +
+> +       program_ib_windows_ep(pcie, func_no, bar, cpu_addr);
+> +
+> +       return 0;
+> +}
+> +
+> +static int mobiveil_pcie_ep_outbound_atu(struct mobiveil_pcie_ep *ep,
+> +                                        phys_addr_t phys_addr,
+> +                                        u64 pci_addr, u8 func_no,
+> +                                        size_t size)
+> +{
+> +       int ret;
+> +       u32 free_win;
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +
+> +       free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
+> +       if (free_win >= ep->num_ob_windows) {
+> +               dev_err(&pcie->pdev->dev, "No free outbound window\n");
+> +               return -EINVAL;
+> +       }
+> +
+> +       ret = program_ob_windows_ep(pcie, free_win, MEM_WINDOW_TYPE,
+> +                                   phys_addr, pci_addr, func_no, size);
+> +       if (ret < 0) {
+> +               dev_err(&pcie->pdev->dev, "Failed to program IB window\n");
+> +               return ret;
+> +       }
+> +
+> +       set_bit(free_win, ep->ob_window_map);
+> +       ep->outbound_addr[free_win] = phys_addr;
+> +
+> +       return 0;
+> +}
+> +
+> +static void mobiveil_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
+> +                                      struct pci_epf_bar *epf_bar)
+> +{
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       enum pci_barno bar = epf_bar->barno;
+> +
+> +       if (bar < ep->bar_num) {
+> +               __mobiveil_pcie_ep_reset_bar(pcie,
+> +                                            func_no * ep->bar_num + bar);
+> +
+> +               mobiveil_pcie_disable_ib_win_ep(pcie, func_no, bar);
+> +       }
+> +}
+> +
+> +static int mobiveil_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
+> +                                   struct pci_epf_bar *epf_bar)
+> +{
+> +       int ret;
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       enum pci_barno bar = epf_bar->barno;
+> +       size_t size = epf_bar->size;
+> +
+> +       if (bar < ep->bar_num) {
+> +               ret = mobiveil_pcie_ep_inbound_atu(ep, func_no, bar,
+> +                                                  epf_bar->phys_addr);
+> +               if (ret)
+> +                       return ret;
+> +
+> +               csr_writel(pcie, func_no * ep->bar_num + bar,
+> +                          GPEX_BAR_SELECT);
+> +               csr_writel(pcie, lower_32_bits(~(size - 1)),
+> +                          GPEX_BAR_SIZE_LDW);
+> +               csr_writel(pcie, upper_32_bits(~(size - 1)),
+> +                          GPEX_BAR_SIZE_UDW);
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int mobiveil_pcie_find_index(struct mobiveil_pcie_ep *ep,
+> +                                   phys_addr_t addr,
+> +                                   u32 *atu_index)
+> +{
+> +       u32 index;
+> +
+> +       for (index = 0; index < ep->num_ob_windows; index++) {
+> +               if (ep->outbound_addr[index] != addr)
+> +                       continue;
+> +               *atu_index = index;
+> +               return 0;
+> +       }
+> +
+> +       return -EINVAL;
+> +}
+> +
+> +static void mobiveil_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
+> +                                       phys_addr_t addr)
+> +{
+> +       int ret;
+> +       u32 atu_index;
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +
+> +       ret = mobiveil_pcie_find_index(ep, addr, &atu_index);
+> +       if (ret < 0)
+> +               return;
+> +
+> +       mobiveil_pcie_disable_ob_win(pcie, atu_index);
+> +       clear_bit(atu_index, ep->ob_window_map);
+> +}
+> +
+> +static int mobiveil_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
+> +                                    phys_addr_t addr,
+> +                                    u64 pci_addr, size_t size)
+> +{
+> +       int ret;
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +
+> +       ret = mobiveil_pcie_ep_outbound_atu(ep, addr, pci_addr, func_no, size);
+> +       if (ret) {
+> +               dev_err(&pcie->pdev->dev, "Failed to enable address\n");
+> +               return ret;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int mobiveil_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
+> +{
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       u32 val, reg;
+> +
+> +       if (!ep->msi_cap)
+> +               return -EINVAL;
+> +
+> +       reg = ep->msi_cap + PCI_MSI_FLAGS;
+> +       val = csr_readw(pcie, reg);
+> +       if (!(val & PCI_MSI_FLAGS_ENABLE))
+> +               return -EINVAL;
+> +
+> +       val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
+> +
+> +       return val;
+> +}
+> +
+> +static int mobiveil_pcie_ep_set_msi(struct pci_epc *epc,
+> +                                   u8 func_no, u8 interrupts)
+> +{
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       u32 val, reg;
+> +
+> +       if (!ep->msi_cap)
+> +               return -EINVAL;
+> +
+> +       reg = ep->msi_cap + PCI_MSI_FLAGS;
+> +       val = csr_readw(pcie, reg);
+> +       val &= ~PCI_MSI_FLAGS_QMASK;
+> +       val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
+> +       csr_writew(pcie, val, reg);
+> +
+> +       return 0;
+> +}
+> +
+> +static int mobiveil_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
+> +{
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       u32 val, reg;
+> +
+> +       if (!ep->msix_cap)
+> +               return -EINVAL;
+> +
+> +       reg = ep->msix_cap + PCI_MSIX_FLAGS;
+> +       val = csr_readw(pcie, reg);
+> +       if (!(val & PCI_MSIX_FLAGS_ENABLE))
+> +               return -EINVAL;
+> +
+> +       val &= PCI_MSIX_FLAGS_QSIZE;
+> +
+> +       return val;
+> +}
+> +
+> +static int mobiveil_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no,
+> +                                    u16 interrupts)
+> +{
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       u32 val, reg;
+> +
+> +       if (!ep->msix_cap)
+> +               return -EINVAL;
+> +
+> +       reg = ep->msix_cap + PCI_MSIX_FLAGS;
+> +       val = csr_readw(pcie, reg);
+> +       val &= ~PCI_MSIX_FLAGS_QSIZE;
+> +       val |= interrupts;
+> +       csr_writew(pcie, val, reg);
+> +
+> +       return 0;
+> +}
+> +
+> +static int mobiveil_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
+> +                                     enum pci_epc_irq_type type,
+> +                                     u16 interrupt_num)
+> +{
+> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
+> +
+> +       if (!ep->ops->raise_irq)
+> +               return -EINVAL;
+> +
+> +       return ep->ops->raise_irq(ep, func_no, type, interrupt_num);
+> +}
+> +
+> +static const struct pci_epc_ops epc_ops = {
+> +       .write_header           = mobiveil_pcie_ep_write_header,
+> +       .set_bar                = mobiveil_pcie_ep_set_bar,
+> +       .clear_bar              = mobiveil_pcie_ep_clear_bar,
+> +       .map_addr               = mobiveil_pcie_ep_map_addr,
+> +       .unmap_addr             = mobiveil_pcie_ep_unmap_addr,
+> +       .set_msi                = mobiveil_pcie_ep_set_msi,
+> +       .get_msi                = mobiveil_pcie_ep_get_msi,
+> +       .set_msix               = mobiveil_pcie_ep_set_msix,
+> +       .get_msix               = mobiveil_pcie_ep_get_msix,
+> +       .raise_irq              = mobiveil_pcie_ep_raise_irq,
+> +};
+> +
+> +int mobiveil_pcie_ep_raise_legacy_irq(struct mobiveil_pcie_ep *ep, u8 func_no)
+> +{
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +
+> +       dev_err(&pcie->pdev->dev, "EP cannot trigger legacy IRQs\n");
+> +
+> +       return -EINVAL;
+> +}
+> +
+> +int mobiveil_pcie_ep_raise_msi_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
+> +                                  u8 interrupt_num)
+> +{
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       struct pci_epc *epc = ep->epc;
+> +       u16 msg_ctrl, msg_data;
+> +       u32 msg_addr_lower, msg_addr_upper, reg;
+> +       u64 msg_addr;
+> +       u32 func_num;
+> +       bool has_upper;
+> +       int ret;
+> +
+> +       if (!ep->msi_cap)
+> +               return -EINVAL;
+> +
+> +       /*
+> +        * In order ot get the PF's MSI capability register value from config
+> +        * space we need to set the PF number to the PAB_CTRL register.
+> +        */
+> +       func_num = csr_readl(pcie, PAB_CTRL);
+> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
+> +       func_num |= (func_no & FUNC_SEL_MASK) << FUNC_SEL_SHIFT;
+> +       csr_writel(pcie, func_num, PAB_CTRL);
+> +
+> +       reg = ep->msi_cap + PCI_MSI_FLAGS;
+> +       msg_ctrl = csr_readw(pcie, reg);
+> +       has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
+> +       reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
+> +       msg_addr_lower = csr_readl(pcie, reg);
+> +       if (has_upper) {
+> +               reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
+> +               msg_addr_upper = csr_readl(pcie, reg);
+> +               reg = ep->msi_cap + PCI_MSI_DATA_64;
+> +               msg_data = csr_readw(pcie, reg);
+> +       } else {
+> +               msg_addr_upper = 0;
+> +               reg = ep->msi_cap + PCI_MSI_DATA_32;
+> +               msg_data = csr_readw(pcie, reg);
+> +       }
+> +       msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+> +
+> +       /*
+> +        * clear the FUNC_SEL_SHIFT bits when access other registers except
+> +        * config space register.
+> +        */
+> +       func_num = csr_readl(pcie, PAB_CTRL);
+> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
+> +       csr_writel(pcie, func_num, PAB_CTRL);
+> +
+> +       ret = mobiveil_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys,
+> +                                       msg_addr, epc->mem->page_size);
+> +       if (ret)
+> +               return ret;
+> +
+> +       writel(msg_data | (interrupt_num - 1), ep->msi_mem);
+> +
+> +       mobiveil_pcie_ep_unmap_addr(epc, func_no, ep->msi_mem_phys);
+> +
+> +       return 0;
+> +}
+> +
+> +int mobiveil_pcie_ep_raise_msix_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
+> +                                   u16 interrupt_num)
+> +{
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       struct pci_epc *epc = ep->epc;
+> +       u32 msg_addr_upper, msg_addr_lower;
+> +       u32 msg_data;
+> +       u64 msg_addr;
+> +       u32 func_num;
+> +       int ret;
+> +
+> +       /*
+> +        * In order ot get the PF's MSI capability register value from config
+> +        * space we need to set the PF number to the PAB_CTRL register.
+> +        */
+> +       func_num = csr_readl(pcie, PAB_CTRL);
+> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
+> +       func_num |= (func_no & FUNC_SEL_MASK) << FUNC_SEL_SHIFT;
+> +       csr_writel(pcie, func_num, PAB_CTRL);
+> +
+> +       msg_addr_lower = csr_readl(pcie, PAB_MSIX_TABLE_PBA_ACCESS +
+> +                                  PCI_MSIX_ENTRY_LOWER_ADDR +
+> +                                  (interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE);
+> +       msg_addr_upper = csr_readl(pcie, PAB_MSIX_TABLE_PBA_ACCESS +
+> +                                  PCI_MSIX_ENTRY_UPPER_ADDR +
+> +                                  (interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE);
+> +       msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
+> +       msg_data = csr_readl(pcie, PAB_MSIX_TABLE_PBA_ACCESS +
+> +                            PCI_MSIX_ENTRY_DATA +
+> +                            (interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE);
+> +
+> +       /*
+> +        * clear the FUNC_SEL_SHIFT bits when access other registers except
+> +        * config space registers.
+> +        */
+> +       func_num = csr_readl(pcie, PAB_CTRL);
+> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
+> +       csr_writel(pcie, func_num, PAB_CTRL);
+> +
+> +       ret = mobiveil_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys,
+> +                                       msg_addr, epc->mem->page_size);
+> +       if (ret)
+> +               return ret;
+> +
+> +       writel(msg_data, ep->msi_mem);
+> +
+> +       mobiveil_pcie_ep_unmap_addr(epc, func_no, ep->msi_mem_phys);
+> +
+> +       return 0;
+> +}
+> +
+> +void mobiveil_pcie_ep_exit(struct mobiveil_pcie_ep *ep)
+> +{
+> +       struct pci_epc *epc = ep->epc;
+> +
+> +       pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
+> +                             epc->mem->page_size);
+> +
+> +       pci_epc_mem_exit(epc);
+> +}
+> +
+> +int mobiveil_pcie_ep_init(struct mobiveil_pcie_ep *ep)
+> +{
+> +       int ret;
+> +       void *addr;
+> +       struct pci_epc *epc;
+> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
+> +       struct device *dev = &pcie->pdev->dev;
+> +       struct device_node *np = dev->of_node;
+> +
+> +       if (!pcie->csr_axi_slave_base) {
+> +               dev_err(dev, "csr_base is not populated\n");
+> +               return -EINVAL;
+> +       }
+> +
+> +       ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
+> +       if (ret < 0) {
+> +               dev_err(dev, "Unable to read *num-ob-windows* property\n");
+> +               return ret;
+> +       }
+> +
+> +       if (ep->num_ob_windows > MAX_IATU_OUT) {
+> +               dev_err(dev, "Invalid *num-ob-windows*\n");
+> +               return -EINVAL;
+> +       }
+> +       ep->ob_window_map = devm_kcalloc(dev,
+> +                                        BITS_TO_LONGS(ep->num_ob_windows),
+> +                                        sizeof(long),
+> +                                        GFP_KERNEL);
+> +       if (!ep->ob_window_map)
+> +               return -ENOMEM;
+> +
+> +       addr = devm_kcalloc(dev, ep->num_ob_windows, sizeof(phys_addr_t),
+> +                           GFP_KERNEL);
+> +       if (!addr)
+> +               return -ENOMEM;
+> +       ep->outbound_addr = addr;
+> +
+> +       mobiveil_pcie_enable_bridge_pio(pcie);
+> +       mobiveil_pcie_enable_engine_apio(pcie);
+> +       mobiveil_pcie_enable_engine_ppio(pcie);
+> +       mobiveil_pcie_enable_msi_ep(pcie);
+> +
+> +       epc = devm_pci_epc_create(dev, &epc_ops);
+> +       if (IS_ERR(epc)) {
+> +               dev_err(dev, "Failed to create epc device\n");
+> +               return PTR_ERR(epc);
+> +       }
+> +
+> +       ep->epc = epc;
+> +       epc_set_drvdata(epc, ep);
+> +
+> +       ep->msi_cap = mobiveil_pcie_ep_find_capability(pcie, PCI_CAP_ID_MSI);
+> +
+> +       ep->msix_cap = mobiveil_pcie_ep_find_capability(pcie,
+> +                                                       PCI_CAP_ID_MSIX);
+> +
+> +       if (ep->ops->ep_init)
+> +               ep->ops->ep_init(ep);
+> +
+> +       epc->max_functions = ep->pf_num;
+> +
+> +       ret = __pci_epc_mem_init(epc, ep->phys_base, ep->addr_size,
+> +                                ep->page_size);
+> +       if (ret < 0) {
+> +               dev_err(dev, "Failed to initialize address space\n");
+> +               return ret;
+> +       }
+> +
+> +       ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
+> +                                            epc->mem->page_size);
+> +       if (!ep->msi_mem) {
+> +               dev_err(dev, "Failed to reserve memory for MSI/MSI-X\n");
+> +               return -ENOMEM;
+> +       }
+> +
+> +       return 0;
+> +}
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.c b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
+> index 49d471b..d1fdfed 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.c
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
+> @@ -210,6 +210,57 @@ void program_ob_windows(struct mobiveil_pcie *pcie, int win_num, u64 cpu_addr,
+>         pcie->ob_wins_configured++;
+>  }
+>
+> +int program_ob_windows_ep(struct mobiveil_pcie *pcie, int win_num, int type,
+> +                         u64 phys, u64 bus_addr, u8 func, u64 size)
+> +{
+> +       u32 val;
+> +       u32 size_h, size_l;
+> +
+> +       if (size & (size - 1))
+> +               size = 1 << (1 + ilog2(size));
+> +
+> +       size_h = upper_32_bits(~(size - 1));
+> +       size_l = lower_32_bits(~(size - 1));
+> +
+> +       val = csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
+> +       val &= ~(WIN_TYPE_MASK << WIN_TYPE_SHIFT |
+> +                WIN_SIZE_MASK << WIN_SIZE_SHIFT);
+> +       val |= 1 << WIN_ENABLE_SHIFT | type << WIN_TYPE_SHIFT |
+> +                (size_l & (WIN_SIZE_MASK << WIN_SIZE_SHIFT));
+> +       csr_writel(pcie, val, PAB_AXI_AMAP_CTRL(win_num));
+> +
+> +       csr_writel(pcie, func, PAB_AXI_AMAP_PCI_HDR_PARAM(win_num));
+> +       csr_writel(pcie, lower_32_bits(phys), PAB_AXI_AMAP_AXI_WIN(win_num));
+> +       csr_writel(pcie, upper_32_bits(phys),
+> +                  PAB_EXT_AXI_AMAP_AXI_WIN(win_num));
+> +       csr_writel(pcie, lower_32_bits(bus_addr),
+> +                  PAB_AXI_AMAP_PEX_WIN_L(win_num));
+> +       csr_writel(pcie, upper_32_bits(bus_addr),
+> +                  PAB_AXI_AMAP_PEX_WIN_H(win_num));
+> +       csr_writel(pcie, size_h, PAB_EXT_AXI_AMAP_SIZE(win_num));
+> +
+> +       return 0;
+> +}
+> +
+> +void program_ib_windows_ep(struct mobiveil_pcie *pcie, u8 func_no,
+> +                          int bar, u64 phys)
+> +{
+> +       csr_writel(pcie, upper_32_bits(phys),
+> +                  PAB_EXT_PEX_BAR_AMAP(func_no, bar));
+> +       csr_writel(pcie, lower_32_bits(phys) | PEX_BAR_AMAP_EN,
+> +                  PAB_PEX_BAR_AMAP(func_no, bar));
+> +}
+> +
+> +void mobiveil_pcie_disable_ib_win_ep(struct mobiveil_pcie *pcie,
+> +                                    u8 func_no, u8 bar)
+> +{
+> +       u32 val;
+> +
+> +       val = csr_readl(pcie, PAB_PEX_BAR_AMAP(func_no, bar));
+> +       val &= ~(1 << 0);
+> +       csr_writel(pcie, val, PAB_PEX_BAR_AMAP(func_no, bar));
+> +}
+> +
+>  int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
+>  {
+>         int retries;
+> @@ -227,20 +278,57 @@ int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
+>         return -ETIMEDOUT;
+>  }
+>
+> -void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num)
+> +void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pcie, int win_num)
+>  {
+>         u32 val;
+>
+> -       val = csr_readl(pci, PAB_PEX_AMAP_CTRL(win_num));
+> +       val = csr_readl(pcie, PAB_PEX_AMAP_CTRL(win_num));
+>         val &= ~(1 << AMAP_CTRL_EN_SHIFT);
+> -       csr_writel(pci, val, PAB_PEX_AMAP_CTRL(win_num));
+> +       csr_writel(pcie, val, PAB_PEX_AMAP_CTRL(win_num));
+>  }
+>
+> -void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num)
+> +void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pcie, int win_num)
+>  {
+>         u32 val;
+>
+> -       val = csr_readl(pci, PAB_AXI_AMAP_CTRL(win_num));
+> +       val = csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
+>         val &= ~(1 << WIN_ENABLE_SHIFT);
+> -       csr_writel(pci, val, PAB_AXI_AMAP_CTRL(win_num));
+> +       csr_writel(pcie, val, PAB_AXI_AMAP_CTRL(win_num));
+> +}
+> +
+> +void mobiveil_pcie_enable_bridge_pio(struct mobiveil_pcie *pcie)
+> +{
+> +       u32 val;
+> +
+> +       val = csr_readl(pcie, PAB_CTRL);
+> +       val |= 1 << AMBA_PIO_ENABLE_SHIFT;
+> +       val |= 1 << PEX_PIO_ENABLE_SHIFT;
+> +       csr_writel(pcie, val, PAB_CTRL);
+> +}
+> +
+> +void mobiveil_pcie_enable_engine_apio(struct mobiveil_pcie *pcie)
+> +{
+> +       u32 val;
+> +
+> +       val = csr_readl(pcie, PAB_AXI_PIO_CTRL);
+> +       val |= APIO_EN_MASK;
+> +       csr_writel(pcie, val, PAB_AXI_PIO_CTRL);
+> +}
+> +
+> +void mobiveil_pcie_enable_engine_ppio(struct mobiveil_pcie *pcie)
+> +{
+> +       u32 val;
+> +
+> +       val = csr_readl(pcie, PAB_PEX_PIO_CTRL);
+> +       val |= 1 << PIO_ENABLE_SHIFT;
+> +       csr_writel(pcie, val, PAB_PEX_PIO_CTRL);
+> +}
+> +
+> +void mobiveil_pcie_enable_msi_ep(struct mobiveil_pcie *pcie)
+> +{
+> +       u32 val;
+> +
+> +       val =  csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
+> +       val |= 1 << 0;
+> +       csr_writel(pcie, val, PAB_INTP_AMBA_MISC_ENB);
+>  }
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> index f0e2e4a..275c68f 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> @@ -15,6 +15,10 @@
+>  #include <linux/msi.h>
+>  #include "../../pci.h"
+>
+> +#include <linux/pci-epc.h>
+> +#include <linux/pci-epf.h>
+> +
+> +#define MAX_IATU_OUT                   256
+>  /* register offsets and bit positions */
+>
+>  /*
+> @@ -40,6 +44,9 @@
+>  #define  PAGE_SEL_MASK                 0x3f
+>  #define  PAGE_LO_MASK                  0x3ff
+>  #define  PAGE_SEL_OFFSET_SHIFT         10
+> +#define  FUNC_SEL_SHIFT        19
+> +#define  FUNC_SEL_MASK         0x1ff
+> +#define  MSI_SW_CTRL_EN        (1 << 29)
+>
+>  #define PAB_ACTIVITY_STAT              0x81c
+>
+> @@ -100,6 +107,19 @@
+>  #define PAB_PEX_AMAP_PEX_WIN_L(win)    PAB_REG_ADDR(0x4ba8, win)
+>  #define PAB_PEX_AMAP_PEX_WIN_H(win)    PAB_REG_ADDR(0x4bac, win)
+>
+> +/* PPIO WINs EP mode */
+> +#define PAB_PEX_BAR_AMAP(func, bar)            (0x1ba0 + 0x20 * func + 4 * bar)
+> +#define PAB_EXT_PEX_BAR_AMAP(func, bar)                (0x84a0 + 0x20 * func + 4 * bar)
+> +#define PEX_BAR_AMAP_EN                                (1 << 0)
+> +
+> +#define PAB_AXI_AMAP_PCI_HDR_PARAM(idx)                (0x5ba0 + 0x04 * idx)
+> +#define PAB_MSIX_TABLE_PBA_ACCESS              0xD000
+> +
+> +#define GPEX_BAR_ENABLE                         0x4D4
+> +#define GPEX_BAR_SIZE_LDW                       0x4D8
+> +#define GPEX_BAR_SIZE_UDW                       0x4DC
+> +#define GPEX_BAR_SELECT                         0x4E0
+> +
+>  /* starting offset of INTX bits in status register */
+>  #define PAB_INTX_START                 5
+>
+> @@ -137,6 +157,7 @@
+>         ((off >> PAGE_SEL_OFFSET_SHIFT) & PAGE_SEL_MASK)
+>
+>  struct mobiveil_pcie;
+> +struct mobiveil_pcie_ep;
+>
+>  struct mobiveil_msi {                  /* MSI information */
+>         struct mutex lock;              /* protect bitmap variable */
+> @@ -169,6 +190,29 @@ struct mobiveil_pab_ops {
+>         int (*host_init)(struct mobiveil_pcie *pcie);
+>  };
+>
+> +struct mobiveil_pcie_ep_ops {
+> +       void (*ep_init)(struct mobiveil_pcie_ep *ep);
+> +       int (*raise_irq)(struct mobiveil_pcie_ep *ep, u8 func_no,
+> +                        enum pci_epc_irq_type type, u16 interrupt_num);
+> +};
+> +
+> +struct mobiveil_pcie_ep {
+> +       struct pci_epc *epc;
+> +       struct mobiveil_pcie_ep_ops *ops;
+> +       phys_addr_t phys_base;
+> +       size_t addr_size;
+> +       size_t page_size;
+> +       phys_addr_t *outbound_addr;
+> +       unsigned long *ob_window_map;
+> +       u32 num_ob_windows;
+> +       void __iomem *msi_mem;
+> +       phys_addr_t msi_mem_phys;
+> +       u8 msi_cap;     /* MSI capability offset */
+> +       u8 msix_cap;    /* MSI-X capability offset */
+> +       u8 bar_num;
+> +       u32 pf_num;
+> +};
+> +
+>  struct mobiveil_pcie {
+>         struct platform_device *pdev;
+>         struct list_head *resources;
+> @@ -181,7 +225,10 @@ struct mobiveil_pcie {
+>         u32 ib_wins_configured;         /* configured inbound windows */
+>         const struct mobiveil_pab_ops *ops;
+>         struct root_port rp;
+> +       struct mobiveil_pcie_ep ep;
+>  };
+> +#define to_mobiveil_pcie_from_ep(endpoint)   \
+> +                           container_of((endpoint), struct mobiveil_pcie, ep)
+>
+>  int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie);
+>  int mobiveil_host_init(struct mobiveil_pcie *pcie, bool reinit);
+> @@ -226,4 +273,21 @@ static inline void csr_writeb(struct mobiveil_pcie *pcie, u32 val, u32 off)
+>         csr_write(pcie, val, off, 0x1);
+>  }
+>
+> +void program_ib_windows_ep(struct mobiveil_pcie *pcie, u8 func_no,
+> +                          int bar, u64 phys);
+> +int program_ob_windows_ep(struct mobiveil_pcie *pcie, int win_num, int type,
+> +                         u64 phys, u64 bus_addr, u8 func, u64 size);
+> +void mobiveil_pcie_disable_ib_win_ep(struct mobiveil_pcie *pci,
+> +                                    u8 func_no, u8 bar);
+> +int mobiveil_pcie_ep_init(struct mobiveil_pcie_ep *ep);
+> +int mobiveil_pcie_ep_raise_legacy_irq(struct mobiveil_pcie_ep *ep, u8 func_no);
+> +int mobiveil_pcie_ep_raise_msi_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
+> +                            u8 interrupt_num);
+> +int mobiveil_pcie_ep_raise_msix_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
+> +                            u16 interrupt_num);
+> +void mobiveil_pcie_ep_reset_bar(struct mobiveil_pcie *pci, enum pci_barno bar);
+> +void mobiveil_pcie_enable_bridge_pio(struct mobiveil_pcie *pci);
+> +void mobiveil_pcie_enable_engine_apio(struct mobiveil_pcie *pci);
+> +void mobiveil_pcie_enable_engine_ppio(struct mobiveil_pcie *pci);
+> +void mobiveil_pcie_enable_msi_ep(struct mobiveil_pcie *pci);
+>  #endif /* _PCIE_MOBIVEIL_H */
+> --
+> 1.7.1
+>
+
+Please review and fix macro alignments, otherwise looks ok.
+Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
