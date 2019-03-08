@@ -4,896 +4,695 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84E48C43381
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Mar 2019 06:41:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F9E9C43381
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Mar 2019 06:55:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D5502085A
-	for <linux-pci@archiver.kernel.org>; Fri,  8 Mar 2019 06:41:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B55F92081B
+	for <linux-pci@archiver.kernel.org>; Fri,  8 Mar 2019 06:55:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="UIu8C1Kh"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="JAjIJziT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725789AbfCHGlN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 8 Mar 2019 01:41:13 -0500
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:44397 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726307AbfCHGlN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 8 Mar 2019 01:41:13 -0500
-Received: by mail-wr1-f65.google.com with SMTP id w2so20088196wrt.11
-        for <linux-pci@vger.kernel.org>; Thu, 07 Mar 2019 22:41:10 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mobiveil.co.in; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=PLK9+J7ECtjSc07AQXqsCMkDInPMk/bmlmpYhna0aWk=;
-        b=UIu8C1Khz9GrFRtADE0cF/5v/Hziuo0ZoLCTQ1ItASFqjCmVMH8uOIYdvLcal/IsAl
-         /c579dS7QYvapStNJeI1hHZzUTGoRXHF4YJYQvRGOhM9gxWvXByIdBjbnrgPOPBDo/v3
-         KNXFA1ZJrJbT2LMPgs+rH57E3oMgubzXmgE2U=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=PLK9+J7ECtjSc07AQXqsCMkDInPMk/bmlmpYhna0aWk=;
-        b=dD3DXHgegtkEO7Y4MeIy22jmoqleUpr11W+wgtff5vinirp0gPM6zAjzBxoGfzfFy3
-         qSNO0pE7hqPqPDK1zCSg+/BgSOx7IgA/nBQL1FXk7eBVEKWr/+yfEezoCvKfdn8SM3Tr
-         AjbFAiVoA0AI3hmHYtsC3/0ZbcuCV1chnJA8AcVCOIP6NLkV+zGLeN1+oFMeKOE+t5/A
-         /7jECUtC3Ui1A4oCFSvUzCxHQb+8tgxeEArONm9q7/EBIvEEuWfHwTpgkui5bZTBvPeN
-         GkvCbjOP5nBd9ikyqKG+kxWDwKEiSYSk+mXbWVOsxrmgcet27SjycEYo4EveSxMGy99/
-         lBWQ==
-X-Gm-Message-State: APjAAAW0c7QXmDXBp152EjIYLQaJ4TAjTxFTyE2iDRwUvadqMVMyIrcI
-        QH+RS2ZWTx++tcb9s5FqA6aDaL6w8dkujSngZxNe/w==
-X-Google-Smtp-Source: APXvYqxhXEPlykKQIMYV7cf7G1wMz8j6VdEX7Xk1s+rwAJErzlGJe/U4pbUY6RwC73Dq0nj21fA/NAkyf706WUeyXCY=
-X-Received: by 2002:adf:c752:: with SMTP id b18mr9639388wrh.105.1552027269225;
- Thu, 07 Mar 2019 22:41:09 -0800 (PST)
-MIME-Version: 1.0
-References: <20190218094643.2692-1-xiaowei.bao@nxp.com>
-In-Reply-To: <20190218094643.2692-1-xiaowei.bao@nxp.com>
-From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Date:   Fri, 8 Mar 2019 12:14:33 +0530
-Message-ID: <CAFZiPx3FpSskuK3XykMXNqMk301+LOgNdJZ-9trMhDmXDXsmiQ@mail.gmail.com>
-Subject: Re: [PATCH 1/6] PCI: mobiveil: Add the EP mode support
-To:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Z.q. Hou" <Zhiqiang.Hou@nxp.com>, robh+dt@kernel.org,
-        mark.rutland@arm.com, shawnguo@kernel.org,
-        Leo Li <leoyang.li@nxp.com>, kishon@ti.com,
+        id S1726039AbfCHGz2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 8 Mar 2019 01:55:28 -0500
+Received: from mail-eopbgr40081.outbound.protection.outlook.com ([40.107.4.81]:5866
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725776AbfCHGz1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 8 Mar 2019 01:55:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Hb4pNroZGSV9j0QNrIeGiKDXUROWesr7R9NrISOKjsg=;
+ b=JAjIJziT4cQSaifU+P2CgPWd8lEhRzcEZZEZPdjgBdpruayHqxNYw57FXEkXxY/nL1anwb0x7n5A+OVTh1k2vo9784k8uC0YrgcYGKdFDm0Exaj1Mmx1jYYD+loeaPliBjeN5pwfR7wfLkP70l7HQecR0BnIsAj05Byeig72pa8=
+Received: from AM5PR04MB3299.eurprd04.prod.outlook.com (10.173.255.158) by
+ AM5PR04MB2961.eurprd04.prod.outlook.com (10.173.254.17) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1686.18; Fri, 8 Mar 2019 06:55:10 +0000
+Received: from AM5PR04MB3299.eurprd04.prod.outlook.com
+ ([fe80::d77:91ed:e5b1:81ee]) by AM5PR04MB3299.eurprd04.prod.outlook.com
+ ([fe80::d77:91ed:e5b1:81ee%5]) with mapi id 15.20.1686.018; Fri, 8 Mar 2019
+ 06:55:10 +0000
+From:   Xiaowei Bao <xiaowei.bao@nxp.com>
+To:     Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>, "kishon@ti.com" <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        gregkh@linuxfoundation.org, arnd@arndb.de,
-        "M.h. Lian" <Minghuan.Lian@nxp.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/6] PCI: mobiveil: Add the EP mode support
+Thread-Topic: [PATCH 1/6] PCI: mobiveil: Add the EP mode support
+Thread-Index: AQHUx2+3DnIqhcKED0awzdzidSt8lqYBZeeAgAACwMA=
+Date:   Fri, 8 Mar 2019 06:55:10 +0000
+Message-ID: <AM5PR04MB3299585BD2EFDD1225B82563F54D0@AM5PR04MB3299.eurprd04.prod.outlook.com>
+References: <20190218094643.2692-1-xiaowei.bao@nxp.com>
+ <CAFZiPx3FpSskuK3XykMXNqMk301+LOgNdJZ-9trMhDmXDXsmiQ@mail.gmail.com>
+In-Reply-To: <CAFZiPx3FpSskuK3XykMXNqMk301+LOgNdJZ-9trMhDmXDXsmiQ@mail.gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=xiaowei.bao@nxp.com; 
+x-originating-ip: [119.31.174.73]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: e06cca14-88b1-4493-eab3-08d6a39301c9
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM5PR04MB2961;
+x-ms-traffictypediagnostic: AM5PR04MB2961:
+x-ms-exchange-purlcount: 1
+x-microsoft-exchange-diagnostics: =?utf-8?B?MTtBTTVQUjA0TUIyOTYxOzIzOnlSdTgyc2lGT1p5NDdndGpoRWpxbUsvZGMx?=
+ =?utf-8?B?SUFCY1lHV3AwSkN2RXM5c1VDOTV3NHIzd1o1Wmp4S0ZVam5vYkJjVmdiYWVo?=
+ =?utf-8?B?aSt1UU1aTVBrL2tyNW9Pd0lEWjdCMlhoN1NqUEc4bUgvWnV0REFjRitmcXRO?=
+ =?utf-8?B?SHFxbFYzSEZpbHlQM1piWkVYaTdFbzI0clZoczVrbjlOSWFaMVdMc0JtS0to?=
+ =?utf-8?B?aUNaNVFXaWl6aFU3VEk0SWExc3BvV3JTNHpiVDYzZDRkZk55QUFJQm8wcVJk?=
+ =?utf-8?B?NU00cWJEQTk4cVFGUjEydDJoczV1OURXdkdNcGNUQjFZVHFtZFFMb2FXNmNP?=
+ =?utf-8?B?OS9TMytLWTg4aGUyektrYjMvR0R5Ylo0TXoyTkJZRjdYYkhwZXZHYm1GUWps?=
+ =?utf-8?B?VHlMZDFONGhTK3BWckpXQ3U0bFNDL2d1ZXl0U21PVTBpSVhUanpCKzYxNVZU?=
+ =?utf-8?B?SHZPaU42TE1tT3NDSmpJS2VuZmY3QjlKUHg4RVVXQ0hUcUlaTHR1SWR6L0FV?=
+ =?utf-8?B?SGZNSEp4T0VjUXErNjdPNVRkQmZJWWxkbDBaaCtIRHJpVVNEQS9iZ1hoZEx6?=
+ =?utf-8?B?UCs1a0JjcWJpZEZSd2pQQjZYRVptUGZoT216SkROZmp4TDRwd3JEUTZVeFgv?=
+ =?utf-8?B?ZnZ0QjAxcis4SHVVY1hXUEM5WVo2V1N2WlpuaGNSeHA3c3NlM3p4TERxWDVr?=
+ =?utf-8?B?WStJdWxZcmJrTmNGMDJlaWJ0d0VjU3IwaVNKdEIzbXBWWHRVWVhiYXlDRXYv?=
+ =?utf-8?B?aUp2cHJFL1lYUEdidnM4M0JCOFpaSUZ6YS9jM0pQci9GZXROaEQwSE04bWpE?=
+ =?utf-8?B?c2t0aldJSkg4TExwZmNIS3U4RDlocEhabUNiN1ZNMmUwYjBYaEVCT05Ea2tY?=
+ =?utf-8?B?dG05dWFhd0pGcG5nczl6U1NRWkdzNW1KVXZJcklCZGpIMklmTENla3E3U0NI?=
+ =?utf-8?B?UWgza0M4VFNQMUNhcjc3YkdHWXFsaE1nc0hvYVNjdnlrUnZQQ3BXeTdYTlFJ?=
+ =?utf-8?B?ZmswUk9wckdwd1lCbThjdlZoa0hlbFA1dnhDeGpFNDVrRWVQMXF1UGZPUHlV?=
+ =?utf-8?B?U2NTV0tZKzJ0Qno3UzFHUXI1eEVGeElKTjJ6U1o4WGxwVE4xQkNReFFUQkpM?=
+ =?utf-8?B?N28zdzFOMkxOMHRIbmlCU2Y3eUh5VzRIbmhwc2NTSThMQ3JTM3orZHRrUWF1?=
+ =?utf-8?B?dnBkQXcvK0xnMjFOaEtIQXc0Qi96dHFETzdud3JJdUFKU0cvZ0RvajZBU3hn?=
+ =?utf-8?B?amxjMGJweG15SUdjWkphb0tlQ0hTZ3JrWDF3L1dqbDhlMWFJRVRiWnV1K2I4?=
+ =?utf-8?B?RnAvd2djTGx1OWgzUFExLzhNTlRyVFBXTzdObk8waEZIeitITHNZWmJvVjZz?=
+ =?utf-8?B?dXZqUk43SzJMa1ZpR0Rta0M1RHcwNUlDM3M2bk96cEZZR2lPdGgyMFJSSzJZ?=
+ =?utf-8?B?UGxwVzFXckhxUTJ0RDhKOXduekc5TE8zdGJ3WHJYRmVMQVNkY1p1dXdkb0hN?=
+ =?utf-8?B?cUtXUGNyZTY3RGdYbVp0WjczbVZwamhYRU1ESW1ja0huSFcwZ1B3Rjh1aEk0?=
+ =?utf-8?B?QkhnT2VjZ05ocitVZU1MNWJUalZzZkRSckpWVVBpRVB6cXVHSjdUWkRKeUoy?=
+ =?utf-8?B?N3dSNlJQcFdDQ2FZOVFQRmVhL1djazR6Y3dMRm9Gek55YXJTaGtTdmNIa1Fs?=
+ =?utf-8?B?WTY5SDJiU2svRTNqbnJmalp3RzJ3bXdMa1pkaXhweHFYTzllQjBRUURmb1Uz?=
+ =?utf-8?B?bTcxT1NzS09odkRCSlNJbkpWMkE1TUFWUXlzMllGRGtxaTM0WnlJOUkwQXIr?=
+ =?utf-8?B?YTN2SU9UZ041citzTzBSTjcxcWdWbVZENHRqV01oaDZ3TDNBMUxvTUxuUjJS?=
+ =?utf-8?B?NWc1K3JLZDdkQVpDZnZ6eXdqT3dleWpzZnQzOVpPdjhkcmt0M0l0MDByMzFS?=
+ =?utf-8?B?d1F4NlpXMk5LMTdoek5SNDdBN1FHQWZrbGdZY3ZIMFFpTFRyL1JPdnpRR21G?=
+ =?utf-8?Q?nKVEmQ?=
+x-microsoft-antispam-prvs: <AM5PR04MB29617221683D8AEC1A4C0080F54D0@AM5PR04MB2961.eurprd04.prod.outlook.com>
+x-forefront-prvs: 0970508454
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(376002)(396003)(39860400002)(136003)(346002)(13464003)(199004)(189003)(86362001)(81156014)(44832011)(97736004)(11346002)(476003)(486006)(7416002)(68736007)(105586002)(81166006)(4326008)(14454004)(8936002)(102836004)(6246003)(53546011)(66066001)(106356001)(6506007)(7696005)(76176011)(446003)(45080400002)(25786009)(256004)(99286004)(966005)(478600001)(52536013)(6916009)(2906002)(53936002)(6436002)(6116002)(8676002)(305945005)(3846002)(229853002)(30864003)(6306002)(71190400001)(33656002)(316002)(71200400001)(186003)(54906003)(26005)(9686003)(55016002)(74316002)(14444005)(5660300002)(7736002)(53946003)(461764006)(559001)(569006);DIR:OUT;SFP:1101;SCL:1;SRVR:AM5PR04MB2961;H:AM5PR04MB3299.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: My4qXO6rwKDKZh9wtcoEPlzTa+PDr53wX53zbG+fsT+sWeCJOPz51Ea60CIFkCk0VeItBkS60exng2bUGlqf/A7W9IAKABx0JAXeu8SkzmfyOmafCQlu7vagCtfQbb5slyRu27StKDzbHW578jl4/fQKTqWKtzesybCX+u23TeYa2wYR+lKauekkkJEnlNobl007RrtCnmV1nTUqsiAqrO/6ShAaE4Xjywatzp184LzGBqnAeqhGW1CdcP0VbDIAxFh5KZ4dd+X2D5YiFd2vZ00BBbPdpiJsq/8jIQqovcel6dupnlkuQlIeWhwINZtWxEXUYB5vPNZdIPWyvLP5QQQfXPM16XoiZf79nmWtq3ZvxgepaiqY4msMWEqkfOg90ljeW3nzuQxfQKHKxAbQO5AE0AUUjRkM9bn+e8OL8tM=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e06cca14-88b1-4493-eab3-08d6a39301c9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Mar 2019 06:55:10.3823
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR04MB2961
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Xiaowei,
-
-
-On Mon, Feb 18, 2019 at 3:22 PM Xiaowei Bao <xiaowei.bao@nxp.com> wrote:
->
-> Add the EP mode support for Mobiveil base on endpoint framework.
->
-> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-> ---
-> depends on: http://patchwork.ozlabs.org/project/linux-pci/list/?series=88754
->
->  drivers/pci/controller/mobiveil/Kconfig            |    5 +
->  drivers/pci/controller/mobiveil/Makefile           |    1 +
->  drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c |  527 ++++++++++++++++++++
->  drivers/pci/controller/mobiveil/pcie-mobiveil.c    |  100 ++++-
->  drivers/pci/controller/mobiveil/pcie-mobiveil.h    |   64 +++
->  5 files changed, 691 insertions(+), 6 deletions(-)
->  create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c
->
-> diff --git a/drivers/pci/controller/mobiveil/Kconfig b/drivers/pci/controller/mobiveil/Kconfig
-> index 3ddb7d6..c037db6 100644
-> --- a/drivers/pci/controller/mobiveil/Kconfig
-> +++ b/drivers/pci/controller/mobiveil/Kconfig
-> @@ -11,6 +11,11 @@ config PCIE_MOBIVEIL_HOST
->         depends on PCI_MSI_IRQ_DOMAIN
->          select PCIE_MOBIVEIL
->
-> +config PCIE_MOBIVEIL_EP
-> +       bool
-> +       depends on PCI_ENDPOINT
-> +       select PCIE_MOBIVEIL
-> +
->  config PCIE_MOBIVEIL_PLAT
->         bool "Mobiveil AXI PCIe controller"
->         depends on ARCH_ZYNQMP || COMPILE_TEST
-> diff --git a/drivers/pci/controller/mobiveil/Makefile b/drivers/pci/controller/mobiveil/Makefile
-> index ff66774..4f520b7 100644
-> --- a/drivers/pci/controller/mobiveil/Makefile
-> +++ b/drivers/pci/controller/mobiveil/Makefile
-> @@ -1,5 +1,6 @@
->  # SPDX-License-Identifier: GPL-2.0
->  obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
->  obj-$(CONFIG_PCIE_MOBIVEIL_HOST) += pcie-mobiveil-host.o
-> +obj-$(CONFIG_PCIE_MOBIVEIL_EP) += pcie-mobiveil-ep.o
->  obj-$(CONFIG_PCIE_MOBIVEIL_PLAT) += pcie-mobiveil-plat.o
->  obj-$(CONFIG_PCI_LAYERSCAPE_GEN4) += pci-layerscape-gen4.o
-> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c b/drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c
-> new file mode 100644
-> index 0000000..16ca7fb
-> --- /dev/null
-> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c
-> @@ -0,0 +1,527 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/**
-> + * Mobiveil PCIe Endpoint controller driver
-> + *
-> + * Copyright (C) 2018 NXP Semiconductor.
-> + * Author: Xiaowei Bao <xiaowei.bao@nxp.com>
-> + */
-> +
-> +#include <linux/of.h>
-> +#include <linux/pci-epc.h>
-> +#include <linux/pci-epf.h>
-> +#include <linux/platform_device.h>
-> +#include "pcie-mobiveil.h"
-> +
-> +void mobiveil_pcie_ep_linkup(struct mobiveil_pcie_ep *ep)
-> +{
-> +       struct pci_epc *epc = ep->epc;
-> +
-> +       pci_epc_linkup(epc);
-> +}
-> +
-> +static void __mobiveil_pcie_ep_reset_bar(struct mobiveil_pcie *pcie,
-> +                                        enum pci_barno bar)
-> +{
-> +       csr_writel(pcie, bar, GPEX_BAR_SELECT);
-> +       csr_writel(pcie, 0, GPEX_BAR_SIZE_LDW);
-> +       csr_writel(pcie, 0, GPEX_BAR_SIZE_UDW);
-> +}
-> +
-> +void mobiveil_pcie_ep_reset_bar(struct mobiveil_pcie *pcie,
-> +                               enum pci_barno bar)
-> +{
-> +       __mobiveil_pcie_ep_reset_bar(pcie, bar);
-> +}
-> +
-> +static u8 __mobiveil_pcie_ep_find_next_cap(struct mobiveil_pcie *pcie,
-> +                                          u8 cap_ptr, u8 cap)
-> +{
-> +       u8 cap_id, next_cap_ptr;
-> +       u16 reg;
-> +
-> +       reg = csr_readw(pcie, cap_ptr);
-> +       next_cap_ptr = (reg & 0xff00) >> 8;
-> +       cap_id = (reg & 0x00ff);
-> +
-> +       if (cap_id == cap)
-> +               return cap_ptr;
-> +
-> +       if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
-> +               return 0;
-> +
-> +       return __mobiveil_pcie_ep_find_next_cap(pcie, next_cap_ptr, cap);
-> +}
-> +
-> +static u8 mobiveil_pcie_ep_find_capability(struct mobiveil_pcie *pcie,
-> +                                          u8 cap)
-> +{
-> +       u8 next_cap_ptr;
-> +       u16 reg;
-> +
-> +       reg = csr_readw(pcie, PCI_CAPABILITY_LIST);
-> +       next_cap_ptr = (reg & 0x00ff);
-> +
-> +       if (!next_cap_ptr)
-> +               return 0;
-> +
-> +       return __mobiveil_pcie_ep_find_next_cap(pcie, next_cap_ptr, cap);
-> +}
-> +
-> +static int mobiveil_pcie_ep_write_header(struct pci_epc *epc, u8 func_no,
-> +                                        struct pci_epf_header *hdr)
-> +{
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +
-> +       csr_writew(pcie, hdr->vendorid, PCI_VENDOR_ID);
-> +       csr_writew(pcie, hdr->deviceid, PCI_DEVICE_ID);
-> +       csr_writeb(pcie, hdr->revid, PCI_REVISION_ID);
-> +       csr_writeb(pcie, hdr->progif_code, PCI_CLASS_PROG);
-> +       csr_writew(pcie, hdr->subclass_code | hdr->baseclass_code << 8,
-> +                  PCI_CLASS_DEVICE);
-> +       csr_writeb(pcie, hdr->cache_line_size, PCI_CACHE_LINE_SIZE);
-> +       csr_writew(pcie, hdr->subsys_vendor_id, PCI_SUBSYSTEM_VENDOR_ID);
-> +       csr_writew(pcie, hdr->subsys_id, PCI_SUBSYSTEM_ID);
-> +       csr_writeb(pcie, hdr->interrupt_pin, PCI_INTERRUPT_PIN);
-> +
-> +       return 0;
-> +}
-> +
-> +static int mobiveil_pcie_ep_inbound_atu(struct mobiveil_pcie_ep *ep,
-> +                                       u8 func_no, enum pci_barno bar,
-> +                                       dma_addr_t cpu_addr)
-> +{
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +
-> +       program_ib_windows_ep(pcie, func_no, bar, cpu_addr);
-> +
-> +       return 0;
-> +}
-> +
-> +static int mobiveil_pcie_ep_outbound_atu(struct mobiveil_pcie_ep *ep,
-> +                                        phys_addr_t phys_addr,
-> +                                        u64 pci_addr, u8 func_no,
-> +                                        size_t size)
-> +{
-> +       int ret;
-> +       u32 free_win;
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +
-> +       free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
-> +       if (free_win >= ep->num_ob_windows) {
-> +               dev_err(&pcie->pdev->dev, "No free outbound window\n");
-> +               return -EINVAL;
-> +       }
-> +
-> +       ret = program_ob_windows_ep(pcie, free_win, MEM_WINDOW_TYPE,
-> +                                   phys_addr, pci_addr, func_no, size);
-> +       if (ret < 0) {
-> +               dev_err(&pcie->pdev->dev, "Failed to program IB window\n");
-> +               return ret;
-> +       }
-> +
-> +       set_bit(free_win, ep->ob_window_map);
-> +       ep->outbound_addr[free_win] = phys_addr;
-> +
-> +       return 0;
-> +}
-> +
-> +static void mobiveil_pcie_ep_clear_bar(struct pci_epc *epc, u8 func_no,
-> +                                      struct pci_epf_bar *epf_bar)
-> +{
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       enum pci_barno bar = epf_bar->barno;
-> +
-> +       if (bar < ep->bar_num) {
-> +               __mobiveil_pcie_ep_reset_bar(pcie,
-> +                                            func_no * ep->bar_num + bar);
-> +
-> +               mobiveil_pcie_disable_ib_win_ep(pcie, func_no, bar);
-> +       }
-> +}
-> +
-> +static int mobiveil_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no,
-> +                                   struct pci_epf_bar *epf_bar)
-> +{
-> +       int ret;
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       enum pci_barno bar = epf_bar->barno;
-> +       size_t size = epf_bar->size;
-> +
-> +       if (bar < ep->bar_num) {
-> +               ret = mobiveil_pcie_ep_inbound_atu(ep, func_no, bar,
-> +                                                  epf_bar->phys_addr);
-> +               if (ret)
-> +                       return ret;
-> +
-> +               csr_writel(pcie, func_no * ep->bar_num + bar,
-> +                          GPEX_BAR_SELECT);
-> +               csr_writel(pcie, lower_32_bits(~(size - 1)),
-> +                          GPEX_BAR_SIZE_LDW);
-> +               csr_writel(pcie, upper_32_bits(~(size - 1)),
-> +                          GPEX_BAR_SIZE_UDW);
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static int mobiveil_pcie_find_index(struct mobiveil_pcie_ep *ep,
-> +                                   phys_addr_t addr,
-> +                                   u32 *atu_index)
-> +{
-> +       u32 index;
-> +
-> +       for (index = 0; index < ep->num_ob_windows; index++) {
-> +               if (ep->outbound_addr[index] != addr)
-> +                       continue;
-> +               *atu_index = index;
-> +               return 0;
-> +       }
-> +
-> +       return -EINVAL;
-> +}
-> +
-> +static void mobiveil_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no,
-> +                                       phys_addr_t addr)
-> +{
-> +       int ret;
-> +       u32 atu_index;
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +
-> +       ret = mobiveil_pcie_find_index(ep, addr, &atu_index);
-> +       if (ret < 0)
-> +               return;
-> +
-> +       mobiveil_pcie_disable_ob_win(pcie, atu_index);
-> +       clear_bit(atu_index, ep->ob_window_map);
-> +}
-> +
-> +static int mobiveil_pcie_ep_map_addr(struct pci_epc *epc, u8 func_no,
-> +                                    phys_addr_t addr,
-> +                                    u64 pci_addr, size_t size)
-> +{
-> +       int ret;
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +
-> +       ret = mobiveil_pcie_ep_outbound_atu(ep, addr, pci_addr, func_no, size);
-> +       if (ret) {
-> +               dev_err(&pcie->pdev->dev, "Failed to enable address\n");
-> +               return ret;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static int mobiveil_pcie_ep_get_msi(struct pci_epc *epc, u8 func_no)
-> +{
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       u32 val, reg;
-> +
-> +       if (!ep->msi_cap)
-> +               return -EINVAL;
-> +
-> +       reg = ep->msi_cap + PCI_MSI_FLAGS;
-> +       val = csr_readw(pcie, reg);
-> +       if (!(val & PCI_MSI_FLAGS_ENABLE))
-> +               return -EINVAL;
-> +
-> +       val = (val & PCI_MSI_FLAGS_QSIZE) >> 4;
-> +
-> +       return val;
-> +}
-> +
-> +static int mobiveil_pcie_ep_set_msi(struct pci_epc *epc,
-> +                                   u8 func_no, u8 interrupts)
-> +{
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       u32 val, reg;
-> +
-> +       if (!ep->msi_cap)
-> +               return -EINVAL;
-> +
-> +       reg = ep->msi_cap + PCI_MSI_FLAGS;
-> +       val = csr_readw(pcie, reg);
-> +       val &= ~PCI_MSI_FLAGS_QMASK;
-> +       val |= (interrupts << 1) & PCI_MSI_FLAGS_QMASK;
-> +       csr_writew(pcie, val, reg);
-> +
-> +       return 0;
-> +}
-> +
-> +static int mobiveil_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no)
-> +{
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       u32 val, reg;
-> +
-> +       if (!ep->msix_cap)
-> +               return -EINVAL;
-> +
-> +       reg = ep->msix_cap + PCI_MSIX_FLAGS;
-> +       val = csr_readw(pcie, reg);
-> +       if (!(val & PCI_MSIX_FLAGS_ENABLE))
-> +               return -EINVAL;
-> +
-> +       val &= PCI_MSIX_FLAGS_QSIZE;
-> +
-> +       return val;
-> +}
-> +
-> +static int mobiveil_pcie_ep_set_msix(struct pci_epc *epc, u8 func_no,
-> +                                    u16 interrupts)
-> +{
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       u32 val, reg;
-> +
-> +       if (!ep->msix_cap)
-> +               return -EINVAL;
-> +
-> +       reg = ep->msix_cap + PCI_MSIX_FLAGS;
-> +       val = csr_readw(pcie, reg);
-> +       val &= ~PCI_MSIX_FLAGS_QSIZE;
-> +       val |= interrupts;
-> +       csr_writew(pcie, val, reg);
-> +
-> +       return 0;
-> +}
-> +
-> +static int mobiveil_pcie_ep_raise_irq(struct pci_epc *epc, u8 func_no,
-> +                                     enum pci_epc_irq_type type,
-> +                                     u16 interrupt_num)
-> +{
-> +       struct mobiveil_pcie_ep *ep = epc_get_drvdata(epc);
-> +
-> +       if (!ep->ops->raise_irq)
-> +               return -EINVAL;
-> +
-> +       return ep->ops->raise_irq(ep, func_no, type, interrupt_num);
-> +}
-> +
-> +static const struct pci_epc_ops epc_ops = {
-> +       .write_header           = mobiveil_pcie_ep_write_header,
-> +       .set_bar                = mobiveil_pcie_ep_set_bar,
-> +       .clear_bar              = mobiveil_pcie_ep_clear_bar,
-> +       .map_addr               = mobiveil_pcie_ep_map_addr,
-> +       .unmap_addr             = mobiveil_pcie_ep_unmap_addr,
-> +       .set_msi                = mobiveil_pcie_ep_set_msi,
-> +       .get_msi                = mobiveil_pcie_ep_get_msi,
-> +       .set_msix               = mobiveil_pcie_ep_set_msix,
-> +       .get_msix               = mobiveil_pcie_ep_get_msix,
-> +       .raise_irq              = mobiveil_pcie_ep_raise_irq,
-> +};
-> +
-> +int mobiveil_pcie_ep_raise_legacy_irq(struct mobiveil_pcie_ep *ep, u8 func_no)
-> +{
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +
-> +       dev_err(&pcie->pdev->dev, "EP cannot trigger legacy IRQs\n");
-> +
-> +       return -EINVAL;
-> +}
-> +
-> +int mobiveil_pcie_ep_raise_msi_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
-> +                                  u8 interrupt_num)
-> +{
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       struct pci_epc *epc = ep->epc;
-> +       u16 msg_ctrl, msg_data;
-> +       u32 msg_addr_lower, msg_addr_upper, reg;
-> +       u64 msg_addr;
-> +       u32 func_num;
-> +       bool has_upper;
-> +       int ret;
-> +
-> +       if (!ep->msi_cap)
-> +               return -EINVAL;
-> +
-> +       /*
-> +        * In order ot get the PF's MSI capability register value from config
-> +        * space we need to set the PF number to the PAB_CTRL register.
-> +        */
-> +       func_num = csr_readl(pcie, PAB_CTRL);
-> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
-> +       func_num |= (func_no & FUNC_SEL_MASK) << FUNC_SEL_SHIFT;
-> +       csr_writel(pcie, func_num, PAB_CTRL);
-> +
-> +       reg = ep->msi_cap + PCI_MSI_FLAGS;
-> +       msg_ctrl = csr_readw(pcie, reg);
-> +       has_upper = !!(msg_ctrl & PCI_MSI_FLAGS_64BIT);
-> +       reg = ep->msi_cap + PCI_MSI_ADDRESS_LO;
-> +       msg_addr_lower = csr_readl(pcie, reg);
-> +       if (has_upper) {
-> +               reg = ep->msi_cap + PCI_MSI_ADDRESS_HI;
-> +               msg_addr_upper = csr_readl(pcie, reg);
-> +               reg = ep->msi_cap + PCI_MSI_DATA_64;
-> +               msg_data = csr_readw(pcie, reg);
-> +       } else {
-> +               msg_addr_upper = 0;
-> +               reg = ep->msi_cap + PCI_MSI_DATA_32;
-> +               msg_data = csr_readw(pcie, reg);
-> +       }
-> +       msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-> +
-> +       /*
-> +        * clear the FUNC_SEL_SHIFT bits when access other registers except
-> +        * config space register.
-> +        */
-> +       func_num = csr_readl(pcie, PAB_CTRL);
-> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
-> +       csr_writel(pcie, func_num, PAB_CTRL);
-> +
-> +       ret = mobiveil_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys,
-> +                                       msg_addr, epc->mem->page_size);
-> +       if (ret)
-> +               return ret;
-> +
-> +       writel(msg_data | (interrupt_num - 1), ep->msi_mem);
-> +
-> +       mobiveil_pcie_ep_unmap_addr(epc, func_no, ep->msi_mem_phys);
-> +
-> +       return 0;
-> +}
-> +
-> +int mobiveil_pcie_ep_raise_msix_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
-> +                                   u16 interrupt_num)
-> +{
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       struct pci_epc *epc = ep->epc;
-> +       u32 msg_addr_upper, msg_addr_lower;
-> +       u32 msg_data;
-> +       u64 msg_addr;
-> +       u32 func_num;
-> +       int ret;
-> +
-> +       /*
-> +        * In order ot get the PF's MSI capability register value from config
-> +        * space we need to set the PF number to the PAB_CTRL register.
-> +        */
-> +       func_num = csr_readl(pcie, PAB_CTRL);
-> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
-> +       func_num |= (func_no & FUNC_SEL_MASK) << FUNC_SEL_SHIFT;
-> +       csr_writel(pcie, func_num, PAB_CTRL);
-> +
-> +       msg_addr_lower = csr_readl(pcie, PAB_MSIX_TABLE_PBA_ACCESS +
-> +                                  PCI_MSIX_ENTRY_LOWER_ADDR +
-> +                                  (interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE);
-> +       msg_addr_upper = csr_readl(pcie, PAB_MSIX_TABLE_PBA_ACCESS +
-> +                                  PCI_MSIX_ENTRY_UPPER_ADDR +
-> +                                  (interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE);
-> +       msg_addr = ((u64) msg_addr_upper) << 32 | msg_addr_lower;
-> +       msg_data = csr_readl(pcie, PAB_MSIX_TABLE_PBA_ACCESS +
-> +                            PCI_MSIX_ENTRY_DATA +
-> +                            (interrupt_num - 1) * PCI_MSIX_ENTRY_SIZE);
-> +
-> +       /*
-> +        * clear the FUNC_SEL_SHIFT bits when access other registers except
-> +        * config space registers.
-> +        */
-> +       func_num = csr_readl(pcie, PAB_CTRL);
-> +       func_num &= ~(FUNC_SEL_MASK << FUNC_SEL_SHIFT);
-> +       csr_writel(pcie, func_num, PAB_CTRL);
-> +
-> +       ret = mobiveil_pcie_ep_map_addr(epc, func_no, ep->msi_mem_phys,
-> +                                       msg_addr, epc->mem->page_size);
-> +       if (ret)
-> +               return ret;
-> +
-> +       writel(msg_data, ep->msi_mem);
-> +
-> +       mobiveil_pcie_ep_unmap_addr(epc, func_no, ep->msi_mem_phys);
-> +
-> +       return 0;
-> +}
-> +
-> +void mobiveil_pcie_ep_exit(struct mobiveil_pcie_ep *ep)
-> +{
-> +       struct pci_epc *epc = ep->epc;
-> +
-> +       pci_epc_mem_free_addr(epc, ep->msi_mem_phys, ep->msi_mem,
-> +                             epc->mem->page_size);
-> +
-> +       pci_epc_mem_exit(epc);
-> +}
-> +
-> +int mobiveil_pcie_ep_init(struct mobiveil_pcie_ep *ep)
-> +{
-> +       int ret;
-> +       void *addr;
-> +       struct pci_epc *epc;
-> +       struct mobiveil_pcie *pcie = to_mobiveil_pcie_from_ep(ep);
-> +       struct device *dev = &pcie->pdev->dev;
-> +       struct device_node *np = dev->of_node;
-> +
-> +       if (!pcie->csr_axi_slave_base) {
-> +               dev_err(dev, "csr_base is not populated\n");
-> +               return -EINVAL;
-> +       }
-> +
-> +       ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
-> +       if (ret < 0) {
-> +               dev_err(dev, "Unable to read *num-ob-windows* property\n");
-> +               return ret;
-> +       }
-> +
-> +       if (ep->num_ob_windows > MAX_IATU_OUT) {
-> +               dev_err(dev, "Invalid *num-ob-windows*\n");
-> +               return -EINVAL;
-> +       }
-> +       ep->ob_window_map = devm_kcalloc(dev,
-> +                                        BITS_TO_LONGS(ep->num_ob_windows),
-> +                                        sizeof(long),
-> +                                        GFP_KERNEL);
-> +       if (!ep->ob_window_map)
-> +               return -ENOMEM;
-> +
-> +       addr = devm_kcalloc(dev, ep->num_ob_windows, sizeof(phys_addr_t),
-> +                           GFP_KERNEL);
-> +       if (!addr)
-> +               return -ENOMEM;
-> +       ep->outbound_addr = addr;
-> +
-> +       mobiveil_pcie_enable_bridge_pio(pcie);
-> +       mobiveil_pcie_enable_engine_apio(pcie);
-> +       mobiveil_pcie_enable_engine_ppio(pcie);
-> +       mobiveil_pcie_enable_msi_ep(pcie);
-> +
-> +       epc = devm_pci_epc_create(dev, &epc_ops);
-> +       if (IS_ERR(epc)) {
-> +               dev_err(dev, "Failed to create epc device\n");
-> +               return PTR_ERR(epc);
-> +       }
-> +
-> +       ep->epc = epc;
-> +       epc_set_drvdata(epc, ep);
-> +
-> +       ep->msi_cap = mobiveil_pcie_ep_find_capability(pcie, PCI_CAP_ID_MSI);
-> +
-> +       ep->msix_cap = mobiveil_pcie_ep_find_capability(pcie,
-> +                                                       PCI_CAP_ID_MSIX);
-> +
-> +       if (ep->ops->ep_init)
-> +               ep->ops->ep_init(ep);
-> +
-> +       epc->max_functions = ep->pf_num;
-> +
-> +       ret = __pci_epc_mem_init(epc, ep->phys_base, ep->addr_size,
-> +                                ep->page_size);
-> +       if (ret < 0) {
-> +               dev_err(dev, "Failed to initialize address space\n");
-> +               return ret;
-> +       }
-> +
-> +       ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
-> +                                            epc->mem->page_size);
-> +       if (!ep->msi_mem) {
-> +               dev_err(dev, "Failed to reserve memory for MSI/MSI-X\n");
-> +               return -ENOMEM;
-> +       }
-> +
-> +       return 0;
-> +}
-> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.c b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-> index 49d471b..d1fdfed 100644
-> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
-> @@ -210,6 +210,57 @@ void program_ob_windows(struct mobiveil_pcie *pcie, int win_num, u64 cpu_addr,
->         pcie->ob_wins_configured++;
->  }
->
-> +int program_ob_windows_ep(struct mobiveil_pcie *pcie, int win_num, int type,
-> +                         u64 phys, u64 bus_addr, u8 func, u64 size)
-> +{
-> +       u32 val;
-> +       u32 size_h, size_l;
-> +
-> +       if (size & (size - 1))
-> +               size = 1 << (1 + ilog2(size));
-> +
-> +       size_h = upper_32_bits(~(size - 1));
-> +       size_l = lower_32_bits(~(size - 1));
-> +
-> +       val = csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
-> +       val &= ~(WIN_TYPE_MASK << WIN_TYPE_SHIFT |
-> +                WIN_SIZE_MASK << WIN_SIZE_SHIFT);
-> +       val |= 1 << WIN_ENABLE_SHIFT | type << WIN_TYPE_SHIFT |
-> +                (size_l & (WIN_SIZE_MASK << WIN_SIZE_SHIFT));
-> +       csr_writel(pcie, val, PAB_AXI_AMAP_CTRL(win_num));
-> +
-> +       csr_writel(pcie, func, PAB_AXI_AMAP_PCI_HDR_PARAM(win_num));
-> +       csr_writel(pcie, lower_32_bits(phys), PAB_AXI_AMAP_AXI_WIN(win_num));
-> +       csr_writel(pcie, upper_32_bits(phys),
-> +                  PAB_EXT_AXI_AMAP_AXI_WIN(win_num));
-> +       csr_writel(pcie, lower_32_bits(bus_addr),
-> +                  PAB_AXI_AMAP_PEX_WIN_L(win_num));
-> +       csr_writel(pcie, upper_32_bits(bus_addr),
-> +                  PAB_AXI_AMAP_PEX_WIN_H(win_num));
-> +       csr_writel(pcie, size_h, PAB_EXT_AXI_AMAP_SIZE(win_num));
-> +
-> +       return 0;
-> +}
-> +
-> +void program_ib_windows_ep(struct mobiveil_pcie *pcie, u8 func_no,
-> +                          int bar, u64 phys)
-> +{
-> +       csr_writel(pcie, upper_32_bits(phys),
-> +                  PAB_EXT_PEX_BAR_AMAP(func_no, bar));
-> +       csr_writel(pcie, lower_32_bits(phys) | PEX_BAR_AMAP_EN,
-> +                  PAB_PEX_BAR_AMAP(func_no, bar));
-> +}
-> +
-> +void mobiveil_pcie_disable_ib_win_ep(struct mobiveil_pcie *pcie,
-> +                                    u8 func_no, u8 bar)
-> +{
-> +       u32 val;
-> +
-> +       val = csr_readl(pcie, PAB_PEX_BAR_AMAP(func_no, bar));
-> +       val &= ~(1 << 0);
-> +       csr_writel(pcie, val, PAB_PEX_BAR_AMAP(func_no, bar));
-> +}
-> +
->  int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
->  {
->         int retries;
-> @@ -227,20 +278,57 @@ int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
->         return -ETIMEDOUT;
->  }
->
-> -void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num)
-> +void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pcie, int win_num)
->  {
->         u32 val;
->
-> -       val = csr_readl(pci, PAB_PEX_AMAP_CTRL(win_num));
-> +       val = csr_readl(pcie, PAB_PEX_AMAP_CTRL(win_num));
->         val &= ~(1 << AMAP_CTRL_EN_SHIFT);
-> -       csr_writel(pci, val, PAB_PEX_AMAP_CTRL(win_num));
-> +       csr_writel(pcie, val, PAB_PEX_AMAP_CTRL(win_num));
->  }
->
-> -void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num)
-> +void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pcie, int win_num)
->  {
->         u32 val;
->
-> -       val = csr_readl(pci, PAB_AXI_AMAP_CTRL(win_num));
-> +       val = csr_readl(pcie, PAB_AXI_AMAP_CTRL(win_num));
->         val &= ~(1 << WIN_ENABLE_SHIFT);
-> -       csr_writel(pci, val, PAB_AXI_AMAP_CTRL(win_num));
-> +       csr_writel(pcie, val, PAB_AXI_AMAP_CTRL(win_num));
-> +}
-> +
-> +void mobiveil_pcie_enable_bridge_pio(struct mobiveil_pcie *pcie)
-> +{
-> +       u32 val;
-> +
-> +       val = csr_readl(pcie, PAB_CTRL);
-> +       val |= 1 << AMBA_PIO_ENABLE_SHIFT;
-> +       val |= 1 << PEX_PIO_ENABLE_SHIFT;
-> +       csr_writel(pcie, val, PAB_CTRL);
-> +}
-> +
-> +void mobiveil_pcie_enable_engine_apio(struct mobiveil_pcie *pcie)
-> +{
-> +       u32 val;
-> +
-> +       val = csr_readl(pcie, PAB_AXI_PIO_CTRL);
-> +       val |= APIO_EN_MASK;
-> +       csr_writel(pcie, val, PAB_AXI_PIO_CTRL);
-> +}
-> +
-> +void mobiveil_pcie_enable_engine_ppio(struct mobiveil_pcie *pcie)
-> +{
-> +       u32 val;
-> +
-> +       val = csr_readl(pcie, PAB_PEX_PIO_CTRL);
-> +       val |= 1 << PIO_ENABLE_SHIFT;
-> +       csr_writel(pcie, val, PAB_PEX_PIO_CTRL);
-> +}
-> +
-> +void mobiveil_pcie_enable_msi_ep(struct mobiveil_pcie *pcie)
-> +{
-> +       u32 val;
-> +
-> +       val =  csr_readl(pcie, PAB_INTP_AMBA_MISC_ENB);
-> +       val |= 1 << 0;
-> +       csr_writel(pcie, val, PAB_INTP_AMBA_MISC_ENB);
->  }
-> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> index f0e2e4a..275c68f 100644
-> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> @@ -15,6 +15,10 @@
->  #include <linux/msi.h>
->  #include "../../pci.h"
->
-> +#include <linux/pci-epc.h>
-> +#include <linux/pci-epf.h>
-> +
-> +#define MAX_IATU_OUT                   256
->  /* register offsets and bit positions */
->
->  /*
-> @@ -40,6 +44,9 @@
->  #define  PAGE_SEL_MASK                 0x3f
->  #define  PAGE_LO_MASK                  0x3ff
->  #define  PAGE_SEL_OFFSET_SHIFT         10
-> +#define  FUNC_SEL_SHIFT        19
-> +#define  FUNC_SEL_MASK         0x1ff
-> +#define  MSI_SW_CTRL_EN        (1 << 29)
->
->  #define PAB_ACTIVITY_STAT              0x81c
->
-> @@ -100,6 +107,19 @@
->  #define PAB_PEX_AMAP_PEX_WIN_L(win)    PAB_REG_ADDR(0x4ba8, win)
->  #define PAB_PEX_AMAP_PEX_WIN_H(win)    PAB_REG_ADDR(0x4bac, win)
->
-> +/* PPIO WINs EP mode */
-> +#define PAB_PEX_BAR_AMAP(func, bar)            (0x1ba0 + 0x20 * func + 4 * bar)
-> +#define PAB_EXT_PEX_BAR_AMAP(func, bar)                (0x84a0 + 0x20 * func + 4 * bar)
-> +#define PEX_BAR_AMAP_EN                                (1 << 0)
-> +
-> +#define PAB_AXI_AMAP_PCI_HDR_PARAM(idx)                (0x5ba0 + 0x04 * idx)
-> +#define PAB_MSIX_TABLE_PBA_ACCESS              0xD000
-> +
-> +#define GPEX_BAR_ENABLE                         0x4D4
-> +#define GPEX_BAR_SIZE_LDW                       0x4D8
-> +#define GPEX_BAR_SIZE_UDW                       0x4DC
-> +#define GPEX_BAR_SELECT                         0x4E0
-> +
->  /* starting offset of INTX bits in status register */
->  #define PAB_INTX_START                 5
->
-> @@ -137,6 +157,7 @@
->         ((off >> PAGE_SEL_OFFSET_SHIFT) & PAGE_SEL_MASK)
->
->  struct mobiveil_pcie;
-> +struct mobiveil_pcie_ep;
->
->  struct mobiveil_msi {                  /* MSI information */
->         struct mutex lock;              /* protect bitmap variable */
-> @@ -169,6 +190,29 @@ struct mobiveil_pab_ops {
->         int (*host_init)(struct mobiveil_pcie *pcie);
->  };
->
-> +struct mobiveil_pcie_ep_ops {
-> +       void (*ep_init)(struct mobiveil_pcie_ep *ep);
-> +       int (*raise_irq)(struct mobiveil_pcie_ep *ep, u8 func_no,
-> +                        enum pci_epc_irq_type type, u16 interrupt_num);
-> +};
-> +
-> +struct mobiveil_pcie_ep {
-> +       struct pci_epc *epc;
-> +       struct mobiveil_pcie_ep_ops *ops;
-> +       phys_addr_t phys_base;
-> +       size_t addr_size;
-> +       size_t page_size;
-> +       phys_addr_t *outbound_addr;
-> +       unsigned long *ob_window_map;
-> +       u32 num_ob_windows;
-> +       void __iomem *msi_mem;
-> +       phys_addr_t msi_mem_phys;
-> +       u8 msi_cap;     /* MSI capability offset */
-> +       u8 msix_cap;    /* MSI-X capability offset */
-> +       u8 bar_num;
-> +       u32 pf_num;
-> +};
-> +
->  struct mobiveil_pcie {
->         struct platform_device *pdev;
->         struct list_head *resources;
-> @@ -181,7 +225,10 @@ struct mobiveil_pcie {
->         u32 ib_wins_configured;         /* configured inbound windows */
->         const struct mobiveil_pab_ops *ops;
->         struct root_port rp;
-> +       struct mobiveil_pcie_ep ep;
->  };
-> +#define to_mobiveil_pcie_from_ep(endpoint)   \
-> +                           container_of((endpoint), struct mobiveil_pcie, ep)
->
->  int mobiveil_pcie_host_probe(struct mobiveil_pcie *pcie);
->  int mobiveil_host_init(struct mobiveil_pcie *pcie, bool reinit);
-> @@ -226,4 +273,21 @@ static inline void csr_writeb(struct mobiveil_pcie *pcie, u32 val, u32 off)
->         csr_write(pcie, val, off, 0x1);
->  }
->
-> +void program_ib_windows_ep(struct mobiveil_pcie *pcie, u8 func_no,
-> +                          int bar, u64 phys);
-> +int program_ob_windows_ep(struct mobiveil_pcie *pcie, int win_num, int type,
-> +                         u64 phys, u64 bus_addr, u8 func, u64 size);
-> +void mobiveil_pcie_disable_ib_win_ep(struct mobiveil_pcie *pci,
-> +                                    u8 func_no, u8 bar);
-> +int mobiveil_pcie_ep_init(struct mobiveil_pcie_ep *ep);
-> +int mobiveil_pcie_ep_raise_legacy_irq(struct mobiveil_pcie_ep *ep, u8 func_no);
-> +int mobiveil_pcie_ep_raise_msi_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
-> +                            u8 interrupt_num);
-> +int mobiveil_pcie_ep_raise_msix_irq(struct mobiveil_pcie_ep *ep, u8 func_no,
-> +                            u16 interrupt_num);
-> +void mobiveil_pcie_ep_reset_bar(struct mobiveil_pcie *pci, enum pci_barno bar);
-> +void mobiveil_pcie_enable_bridge_pio(struct mobiveil_pcie *pci);
-> +void mobiveil_pcie_enable_engine_apio(struct mobiveil_pcie *pci);
-> +void mobiveil_pcie_enable_engine_ppio(struct mobiveil_pcie *pci);
-> +void mobiveil_pcie_enable_msi_ep(struct mobiveil_pcie *pci);
->  #endif /* _PCIE_MOBIVEIL_H */
-> --
-> 1.7.1
->
-
-Please review and fix macro alignments, otherwise looks ok.
-Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBTdWJyYWhtYW55YSBMaW5nYXBw
+YSA8bC5zdWJyYWhtYW55YUBtb2JpdmVpbC5jby5pbj4gDQpTZW50OiAyMDE55bm0M+aciDjml6Ug
+MTQ6NDUNClRvOiBYaWFvd2VpIEJhbyA8eGlhb3dlaS5iYW9AbnhwLmNvbT4NCkNjOiBCam9ybiBI
+ZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgWi5xLiBIb3UgPHpoaXFpYW5nLmhvdUBueHAu
+Y29tPjsgcm9iaCtkdEBrZXJuZWwub3JnOyBtYXJrLnJ1dGxhbmRAYXJtLmNvbTsgc2hhd25ndW9A
+a2VybmVsLm9yZzsgTGVvIExpIDxsZW95YW5nLmxpQG54cC5jb20+OyBraXNob25AdGkuY29tOyBM
+b3JlbnpvIFBpZXJhbGlzaSA8bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbT47IGdyZWdraEBsaW51
+eGZvdW5kYXRpb24ub3JnOyBhcm5kQGFybmRiLmRlOyBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5A
+bnhwLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS1rZXJuZWxAbGlz
+dHMuaW5mcmFkZWFkLm9yZzsgZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5l
+bEB2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMS82XSBQQ0k6IG1vYml2ZWls
+OiBBZGQgdGhlIEVQIG1vZGUgc3VwcG9ydA0KDQpYaWFvd2VpLA0KDQoNCk9uIE1vbiwgRmViIDE4
+LCAyMDE5IGF0IDM6MjIgUE0gWGlhb3dlaSBCYW8gPHhpYW93ZWkuYmFvQG54cC5jb20+IHdyb3Rl
+Og0KPg0KPiBBZGQgdGhlIEVQIG1vZGUgc3VwcG9ydCBmb3IgTW9iaXZlaWwgYmFzZSBvbiBlbmRw
+b2ludCBmcmFtZXdvcmsuDQo+DQo+IFNpZ25lZC1vZmYtYnk6IFhpYW93ZWkgQmFvIDx4aWFvd2Vp
+LmJhb0BueHAuY29tPg0KPiAtLS0NCj4gZGVwZW5kcyBvbjogDQo+IGh0dHBzOi8vZW1lYTAxLnNh
+ZmVsaW5rcy5wcm90ZWN0aW9uLm91dGxvb2suY29tLz91cmw9aHR0cCUzQSUyRiUyRnBhdGMNCj4g
+aHdvcmsub3psYWJzLm9yZyUyRnByb2plY3QlMkZsaW51eC1wY2klMkZsaXN0JTJGJTNGc2VyaWVz
+JTNEODg3NTQmYW1wOw0KPiBkYXRhPTAyJTdDMDElN0N4aWFvd2VpLmJhbyU0MG54cC5jb20lN0M4
+MWJiYTZlNjkxMWI0YzA0ZmIwODA4ZDZhMzkxMGNlDQo+IGUlN0M2ODZlYTFkM2JjMmI0YzZmYTky
+Y2Q5OWM1YzMwMTYzNSU3QzAlN0MwJTdDNjM2ODc2MjQwNzIwMjg3NzAwJmFtcDsNCj4gc2RhdGE9
+aTJnWlVYUXhSUHI4UjgyS091QkRaWldpYUtKQnRYWXdCOUpWN1N3SFRYWSUzRCZhbXA7cmVzZXJ2
+ZWQ9MA0KPg0KPiAgZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9LY29uZmlnICAgICAg
+ICAgICAgfCAgICA1ICsNCj4gIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvTWFrZWZp
+bGUgICAgICAgICAgIHwgICAgMSArDQo+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWls
+L3BjaWUtbW9iaXZlaWwtZXAuYyB8ICA1MjcgKysrKysrKysrKysrKysrKysrKysNCj4gIGRyaXZl
+cnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNpZS1tb2JpdmVpbC5jICAgIHwgIDEwMCArKysr
+LQ0KPiAgZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLmggICAg
+fCAgIDY0ICsrKw0KPiAgNSBmaWxlcyBjaGFuZ2VkLCA2OTEgaW5zZXJ0aW9ucygrKSwgNiBkZWxl
+dGlvbnMoLSkgIGNyZWF0ZSBtb2RlIA0KPiAxMDA2NDQgZHJpdmVycy9wY2kvY29udHJvbGxlci9t
+b2JpdmVpbC9wY2llLW1vYml2ZWlsLWVwLmMNCj4NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNp
+L2NvbnRyb2xsZXIvbW9iaXZlaWwvS2NvbmZpZyANCj4gYi9kcml2ZXJzL3BjaS9jb250cm9sbGVy
+L21vYml2ZWlsL0tjb25maWcNCj4gaW5kZXggM2RkYjdkNi4uYzAzN2RiNiAxMDA2NDQNCj4gLS0t
+IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9LY29uZmlnDQo+ICsrKyBiL2RyaXZl
+cnMvcGNpL2NvbnRyb2xsZXIvbW9iaXZlaWwvS2NvbmZpZw0KPiBAQCAtMTEsNiArMTEsMTEgQEAg
+Y29uZmlnIFBDSUVfTU9CSVZFSUxfSE9TVA0KPiAgICAgICAgIGRlcGVuZHMgb24gUENJX01TSV9J
+UlFfRE9NQUlODQo+ICAgICAgICAgIHNlbGVjdCBQQ0lFX01PQklWRUlMDQo+DQo+ICtjb25maWcg
+UENJRV9NT0JJVkVJTF9FUA0KPiArICAgICAgIGJvb2wNCj4gKyAgICAgICBkZXBlbmRzIG9uIFBD
+SV9FTkRQT0lOVA0KPiArICAgICAgIHNlbGVjdCBQQ0lFX01PQklWRUlMDQo+ICsNCj4gIGNvbmZp
+ZyBQQ0lFX01PQklWRUlMX1BMQVQNCj4gICAgICAgICBib29sICJNb2JpdmVpbCBBWEkgUENJZSBj
+b250cm9sbGVyIg0KPiAgICAgICAgIGRlcGVuZHMgb24gQVJDSF9aWU5RTVAgfHwgQ09NUElMRV9U
+RVNUIGRpZmYgLS1naXQgDQo+IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9NYWtl
+ZmlsZSANCj4gYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL01ha2VmaWxlDQo+IGlu
+ZGV4IGZmNjY3NzQuLjRmNTIwYjcgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvcGNpL2NvbnRyb2xs
+ZXIvbW9iaXZlaWwvTWFrZWZpbGUNCj4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2Jp
+dmVpbC9NYWtlZmlsZQ0KPiBAQCAtMSw1ICsxLDYgQEANCj4gICMgU1BEWC1MaWNlbnNlLUlkZW50
+aWZpZXI6IEdQTC0yLjANCj4gIG9iai0kKENPTkZJR19QQ0lFX01PQklWRUlMKSArPSBwY2llLW1v
+Yml2ZWlsLm8NCj4gIG9iai0kKENPTkZJR19QQ0lFX01PQklWRUlMX0hPU1QpICs9IHBjaWUtbW9i
+aXZlaWwtaG9zdC5vDQo+ICtvYmotJChDT05GSUdfUENJRV9NT0JJVkVJTF9FUCkgKz0gcGNpZS1t
+b2JpdmVpbC1lcC5vDQo+ICBvYmotJChDT05GSUdfUENJRV9NT0JJVkVJTF9QTEFUKSArPSBwY2ll
+LW1vYml2ZWlsLXBsYXQubw0KPiAgb2JqLSQoQ09ORklHX1BDSV9MQVlFUlNDQVBFX0dFTjQpICs9
+IHBjaS1sYXllcnNjYXBlLWdlbjQubyBkaWZmIC0tZ2l0IA0KPiBhL2RyaXZlcnMvcGNpL2NvbnRy
+b2xsZXIvbW9iaXZlaWwvcGNpZS1tb2JpdmVpbC1lcC5jIA0KPiBiL2RyaXZlcnMvcGNpL2NvbnRy
+b2xsZXIvbW9iaXZlaWwvcGNpZS1tb2JpdmVpbC1lcC5jDQo+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0
+DQo+IGluZGV4IDAwMDAwMDAuLjE2Y2E3ZmINCj4gLS0tIC9kZXYvbnVsbA0KPiArKysgYi9kcml2
+ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL3BjaWUtbW9iaXZlaWwtZXAuYw0KPiBAQCAtMCww
+ICsxLDUyNyBAQA0KPiArLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6IEdQTC0yLjANCj4gKy8q
+Kg0KPiArICogTW9iaXZlaWwgUENJZSBFbmRwb2ludCBjb250cm9sbGVyIGRyaXZlcg0KPiArICoN
+Cj4gKyAqIENvcHlyaWdodCAoQykgMjAxOCBOWFAgU2VtaWNvbmR1Y3Rvci4NCj4gKyAqIEF1dGhv
+cjogWGlhb3dlaSBCYW8gPHhpYW93ZWkuYmFvQG54cC5jb20+ICAqLw0KPiArDQo+ICsjaW5jbHVk
+ZSA8bGludXgvb2YuaD4NCj4gKyNpbmNsdWRlIDxsaW51eC9wY2ktZXBjLmg+DQo+ICsjaW5jbHVk
+ZSA8bGludXgvcGNpLWVwZi5oPg0KPiArI2luY2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2RldmljZS5o
+Pg0KPiArI2luY2x1ZGUgInBjaWUtbW9iaXZlaWwuaCINCj4gKw0KPiArdm9pZCBtb2JpdmVpbF9w
+Y2llX2VwX2xpbmt1cChzdHJ1Y3QgbW9iaXZlaWxfcGNpZV9lcCAqZXApIHsNCj4gKyAgICAgICBz
+dHJ1Y3QgcGNpX2VwYyAqZXBjID0gZXAtPmVwYzsNCj4gKw0KPiArICAgICAgIHBjaV9lcGNfbGlu
+a3VwKGVwYyk7DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyB2b2lkIF9fbW9iaXZlaWxfcGNpZV9lcF9y
+ZXNldF9iYXIoc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUsDQo+ICsgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgZW51bSBwY2lfYmFybm8gYmFyKSB7DQo+ICsgICAgICAg
+Y3NyX3dyaXRlbChwY2llLCBiYXIsIEdQRVhfQkFSX1NFTEVDVCk7DQo+ICsgICAgICAgY3NyX3dy
+aXRlbChwY2llLCAwLCBHUEVYX0JBUl9TSVpFX0xEVyk7DQo+ICsgICAgICAgY3NyX3dyaXRlbChw
+Y2llLCAwLCBHUEVYX0JBUl9TSVpFX1VEVyk7IH0NCj4gKw0KPiArdm9pZCBtb2JpdmVpbF9wY2ll
+X2VwX3Jlc2V0X2JhcihzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNpZSwNCj4gKyAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBlbnVtIHBjaV9iYXJubyBiYXIpIHsNCj4gKyAgICAgICBfX21v
+Yml2ZWlsX3BjaWVfZXBfcmVzZXRfYmFyKHBjaWUsIGJhcik7IH0NCj4gKw0KPiArc3RhdGljIHU4
+IF9fbW9iaXZlaWxfcGNpZV9lcF9maW5kX25leHRfY2FwKHN0cnVjdCBtb2JpdmVpbF9wY2llICpw
+Y2llLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdTggY2Fw
+X3B0ciwgdTggY2FwKSB7DQo+ICsgICAgICAgdTggY2FwX2lkLCBuZXh0X2NhcF9wdHI7DQo+ICsg
+ICAgICAgdTE2IHJlZzsNCj4gKw0KPiArICAgICAgIHJlZyA9IGNzcl9yZWFkdyhwY2llLCBjYXBf
+cHRyKTsNCj4gKyAgICAgICBuZXh0X2NhcF9wdHIgPSAocmVnICYgMHhmZjAwKSA+PiA4Ow0KPiAr
+ICAgICAgIGNhcF9pZCA9IChyZWcgJiAweDAwZmYpOw0KPiArDQo+ICsgICAgICAgaWYgKGNhcF9p
+ZCA9PSBjYXApDQo+ICsgICAgICAgICAgICAgICByZXR1cm4gY2FwX3B0cjsNCj4gKw0KPiArICAg
+ICAgIGlmICghbmV4dF9jYXBfcHRyIHx8IGNhcF9pZCA+IFBDSV9DQVBfSURfTUFYKQ0KPiArICAg
+ICAgICAgICAgICAgcmV0dXJuIDA7DQo+ICsNCj4gKyAgICAgICByZXR1cm4gX19tb2JpdmVpbF9w
+Y2llX2VwX2ZpbmRfbmV4dF9jYXAocGNpZSwgbmV4dF9jYXBfcHRyLCANCj4gK2NhcCk7IH0NCj4g
+Kw0KPiArc3RhdGljIHU4IG1vYml2ZWlsX3BjaWVfZXBfZmluZF9jYXBhYmlsaXR5KHN0cnVjdCBt
+b2JpdmVpbF9wY2llICpwY2llLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgdTggY2FwKSB7DQo+ICsgICAgICAgdTggbmV4dF9jYXBfcHRyOw0KPiArICAgICAg
+IHUxNiByZWc7DQo+ICsNCj4gKyAgICAgICByZWcgPSBjc3JfcmVhZHcocGNpZSwgUENJX0NBUEFC
+SUxJVFlfTElTVCk7DQo+ICsgICAgICAgbmV4dF9jYXBfcHRyID0gKHJlZyAmIDB4MDBmZik7DQo+
+ICsNCj4gKyAgICAgICBpZiAoIW5leHRfY2FwX3B0cikNCj4gKyAgICAgICAgICAgICAgIHJldHVy
+biAwOw0KPiArDQo+ICsgICAgICAgcmV0dXJuIF9fbW9iaXZlaWxfcGNpZV9lcF9maW5kX25leHRf
+Y2FwKHBjaWUsIG5leHRfY2FwX3B0ciwgDQo+ICtjYXApOyB9DQo+ICsNCj4gK3N0YXRpYyBpbnQg
+bW9iaXZlaWxfcGNpZV9lcF93cml0ZV9oZWFkZXIoc3RydWN0IHBjaV9lcGMgKmVwYywgdTggZnVu
+Y19ubywNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJ1Y3Qg
+cGNpX2VwZl9oZWFkZXIgKmhkcikgew0KPiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llX2Vw
+ICplcCA9IGVwY19nZXRfZHJ2ZGF0YShlcGMpOw0KPiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9w
+Y2llICpwY2llID0gdG9fbW9iaXZlaWxfcGNpZV9mcm9tX2VwKGVwKTsNCj4gKw0KPiArICAgICAg
+IGNzcl93cml0ZXcocGNpZSwgaGRyLT52ZW5kb3JpZCwgUENJX1ZFTkRPUl9JRCk7DQo+ICsgICAg
+ICAgY3NyX3dyaXRldyhwY2llLCBoZHItPmRldmljZWlkLCBQQ0lfREVWSUNFX0lEKTsNCj4gKyAg
+ICAgICBjc3Jfd3JpdGViKHBjaWUsIGhkci0+cmV2aWQsIFBDSV9SRVZJU0lPTl9JRCk7DQo+ICsg
+ICAgICAgY3NyX3dyaXRlYihwY2llLCBoZHItPnByb2dpZl9jb2RlLCBQQ0lfQ0xBU1NfUFJPRyk7
+DQo+ICsgICAgICAgY3NyX3dyaXRldyhwY2llLCBoZHItPnN1YmNsYXNzX2NvZGUgfCBoZHItPmJh
+c2VjbGFzc19jb2RlIDw8IDgsDQo+ICsgICAgICAgICAgICAgICAgICBQQ0lfQ0xBU1NfREVWSUNF
+KTsNCj4gKyAgICAgICBjc3Jfd3JpdGViKHBjaWUsIGhkci0+Y2FjaGVfbGluZV9zaXplLCBQQ0lf
+Q0FDSEVfTElORV9TSVpFKTsNCj4gKyAgICAgICBjc3Jfd3JpdGV3KHBjaWUsIGhkci0+c3Vic3lz
+X3ZlbmRvcl9pZCwgUENJX1NVQlNZU1RFTV9WRU5ET1JfSUQpOw0KPiArICAgICAgIGNzcl93cml0
+ZXcocGNpZSwgaGRyLT5zdWJzeXNfaWQsIFBDSV9TVUJTWVNURU1fSUQpOw0KPiArICAgICAgIGNz
+cl93cml0ZWIocGNpZSwgaGRyLT5pbnRlcnJ1cHRfcGluLCBQQ0lfSU5URVJSVVBUX1BJTik7DQo+
+ICsNCj4gKyAgICAgICByZXR1cm4gMDsNCj4gK30NCj4gKw0KPiArc3RhdGljIGludCBtb2JpdmVp
+bF9wY2llX2VwX2luYm91bmRfYXR1KHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwICplcCwNCj4gKyAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU4IGZ1bmNfbm8sIGVudW0gcGNp
+X2Jhcm5vIGJhciwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRt
+YV9hZGRyX3QgY3B1X2FkZHIpIHsNCj4gKyAgICAgICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNp
+ZSA9IHRvX21vYml2ZWlsX3BjaWVfZnJvbV9lcChlcCk7DQo+ICsNCj4gKyAgICAgICBwcm9ncmFt
+X2liX3dpbmRvd3NfZXAocGNpZSwgZnVuY19ubywgYmFyLCBjcHVfYWRkcik7DQo+ICsNCj4gKyAg
+ICAgICByZXR1cm4gMDsNCj4gK30NCj4gKw0KPiArc3RhdGljIGludCBtb2JpdmVpbF9wY2llX2Vw
+X291dGJvdW5kX2F0dShzdHJ1Y3QgbW9iaXZlaWxfcGNpZV9lcCAqZXAsDQo+ICsgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcGh5c19hZGRyX3QgcGh5c19hZGRyLA0KPiAr
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU2NCBwY2lfYWRkciwgdTgg
+ZnVuY19ubywNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzaXpl
+X3Qgc2l6ZSkgew0KPiArICAgICAgIGludCByZXQ7DQo+ICsgICAgICAgdTMyIGZyZWVfd2luOw0K
+PiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llID0gdG9fbW9iaXZlaWxfcGNpZV9m
+cm9tX2VwKGVwKTsNCj4gKw0KPiArICAgICAgIGZyZWVfd2luID0gZmluZF9maXJzdF96ZXJvX2Jp
+dChlcC0+b2Jfd2luZG93X21hcCwgZXAtPm51bV9vYl93aW5kb3dzKTsNCj4gKyAgICAgICBpZiAo
+ZnJlZV93aW4gPj0gZXAtPm51bV9vYl93aW5kb3dzKSB7DQo+ICsgICAgICAgICAgICAgICBkZXZf
+ZXJyKCZwY2llLT5wZGV2LT5kZXYsICJObyBmcmVlIG91dGJvdW5kIHdpbmRvd1xuIik7DQo+ICsg
+ICAgICAgICAgICAgICByZXR1cm4gLUVJTlZBTDsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAg
+ICByZXQgPSBwcm9ncmFtX29iX3dpbmRvd3NfZXAocGNpZSwgZnJlZV93aW4sIE1FTV9XSU5ET1df
+VFlQRSwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcGh5c19hZGRyLCBw
+Y2lfYWRkciwgZnVuY19ubywgc2l6ZSk7DQo+ICsgICAgICAgaWYgKHJldCA8IDApIHsNCj4gKyAg
+ICAgICAgICAgICAgIGRldl9lcnIoJnBjaWUtPnBkZXYtPmRldiwgIkZhaWxlZCB0byBwcm9ncmFt
+IElCIHdpbmRvd1xuIik7DQo+ICsgICAgICAgICAgICAgICByZXR1cm4gcmV0Ow0KPiArICAgICAg
+IH0NCj4gKw0KPiArICAgICAgIHNldF9iaXQoZnJlZV93aW4sIGVwLT5vYl93aW5kb3dfbWFwKTsN
+Cj4gKyAgICAgICBlcC0+b3V0Ym91bmRfYWRkcltmcmVlX3dpbl0gPSBwaHlzX2FkZHI7DQo+ICsN
+Cj4gKyAgICAgICByZXR1cm4gMDsNCj4gK30NCj4gKw0KPiArc3RhdGljIHZvaWQgbW9iaXZlaWxf
+cGNpZV9lcF9jbGVhcl9iYXIoc3RydWN0IHBjaV9lcGMgKmVwYywgdTggZnVuY19ubywNCj4gKyAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RydWN0IHBjaV9lcGZfYmFyICpl
+cGZfYmFyKSB7DQo+ICsgICAgICAgc3RydWN0IG1vYml2ZWlsX3BjaWVfZXAgKmVwID0gZXBjX2dl
+dF9kcnZkYXRhKGVwYyk7DQo+ICsgICAgICAgc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUgPSB0
+b19tb2JpdmVpbF9wY2llX2Zyb21fZXAoZXApOw0KPiArICAgICAgIGVudW0gcGNpX2Jhcm5vIGJh
+ciA9IGVwZl9iYXItPmJhcm5vOw0KPiArDQo+ICsgICAgICAgaWYgKGJhciA8IGVwLT5iYXJfbnVt
+KSB7DQo+ICsgICAgICAgICAgICAgICBfX21vYml2ZWlsX3BjaWVfZXBfcmVzZXRfYmFyKHBjaWUs
+DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZ1bmNfbm8g
+KiBlcC0+YmFyX251bSArIA0KPiArIGJhcik7DQo+ICsNCj4gKyAgICAgICAgICAgICAgIG1vYml2
+ZWlsX3BjaWVfZGlzYWJsZV9pYl93aW5fZXAocGNpZSwgZnVuY19ubywgYmFyKTsNCj4gKyAgICAg
+ICB9DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyBpbnQgbW9iaXZlaWxfcGNpZV9lcF9zZXRfYmFyKHN0
+cnVjdCBwY2lfZXBjICplcGMsIHU4IGZ1bmNfbm8sDQo+ICsgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgIHN0cnVjdCBwY2lfZXBmX2JhciAqZXBmX2Jhcikgew0KPiArICAgICAgIGlu
+dCByZXQ7DQo+ICsgICAgICAgc3RydWN0IG1vYml2ZWlsX3BjaWVfZXAgKmVwID0gZXBjX2dldF9k
+cnZkYXRhKGVwYyk7DQo+ICsgICAgICAgc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUgPSB0b19t
+b2JpdmVpbF9wY2llX2Zyb21fZXAoZXApOw0KPiArICAgICAgIGVudW0gcGNpX2Jhcm5vIGJhciA9
+IGVwZl9iYXItPmJhcm5vOw0KPiArICAgICAgIHNpemVfdCBzaXplID0gZXBmX2Jhci0+c2l6ZTsN
+Cj4gKw0KPiArICAgICAgIGlmIChiYXIgPCBlcC0+YmFyX251bSkgew0KPiArICAgICAgICAgICAg
+ICAgcmV0ID0gbW9iaXZlaWxfcGNpZV9lcF9pbmJvdW5kX2F0dShlcCwgZnVuY19ubywgYmFyLA0K
+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBlcGZf
+YmFyLT5waHlzX2FkZHIpOw0KPiArICAgICAgICAgICAgICAgaWYgKHJldCkNCj4gKyAgICAgICAg
+ICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4gKw0KPiArICAgICAgICAgICAgICAgY3NyX3dy
+aXRlbChwY2llLCBmdW5jX25vICogZXAtPmJhcl9udW0gKyBiYXIsDQo+ICsgICAgICAgICAgICAg
+ICAgICAgICAgICAgIEdQRVhfQkFSX1NFTEVDVCk7DQo+ICsgICAgICAgICAgICAgICBjc3Jfd3Jp
+dGVsKHBjaWUsIGxvd2VyXzMyX2JpdHMofihzaXplIC0gMSkpLA0KPiArICAgICAgICAgICAgICAg
+ICAgICAgICAgICBHUEVYX0JBUl9TSVpFX0xEVyk7DQo+ICsgICAgICAgICAgICAgICBjc3Jfd3Jp
+dGVsKHBjaWUsIHVwcGVyXzMyX2JpdHMofihzaXplIC0gMSkpLA0KPiArICAgICAgICAgICAgICAg
+ICAgICAgICAgICBHUEVYX0JBUl9TSVpFX1VEVyk7DQo+ICsgICAgICAgfQ0KPiArDQo+ICsgICAg
+ICAgcmV0dXJuIDA7DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyBpbnQgbW9iaXZlaWxfcGNpZV9maW5k
+X2luZGV4KHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwICplcCwNCj4gKyAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgcGh5c19hZGRyX3QgYWRkciwNCj4gKyAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgdTMyICphdHVfaW5kZXgpIHsNCj4gKyAgICAgICB1MzIgaW5kZXg7
+DQo+ICsNCj4gKyAgICAgICBmb3IgKGluZGV4ID0gMDsgaW5kZXggPCBlcC0+bnVtX29iX3dpbmRv
+d3M7IGluZGV4KyspIHsNCj4gKyAgICAgICAgICAgICAgIGlmIChlcC0+b3V0Ym91bmRfYWRkcltp
+bmRleF0gIT0gYWRkcikNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgY29udGludWU7DQo+ICsg
+ICAgICAgICAgICAgICAqYXR1X2luZGV4ID0gaW5kZXg7DQo+ICsgICAgICAgICAgICAgICByZXR1
+cm4gMDsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAgICByZXR1cm4gLUVJTlZBTDsNCj4gK30N
+Cj4gKw0KPiArc3RhdGljIHZvaWQgbW9iaXZlaWxfcGNpZV9lcF91bm1hcF9hZGRyKHN0cnVjdCBw
+Y2lfZXBjICplcGMsIHU4IGZ1bmNfbm8sDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICBwaHlzX2FkZHJfdCBhZGRyKSB7DQo+ICsgICAgICAgaW50IHJldDsNCj4gKyAg
+ICAgICB1MzIgYXR1X2luZGV4Ow0KPiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwICpl
+cCA9IGVwY19nZXRfZHJ2ZGF0YShlcGMpOw0KPiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2ll
+ICpwY2llID0gdG9fbW9iaXZlaWxfcGNpZV9mcm9tX2VwKGVwKTsNCj4gKw0KPiArICAgICAgIHJl
+dCA9IG1vYml2ZWlsX3BjaWVfZmluZF9pbmRleChlcCwgYWRkciwgJmF0dV9pbmRleCk7DQo+ICsg
+ICAgICAgaWYgKHJldCA8IDApDQo+ICsgICAgICAgICAgICAgICByZXR1cm47DQo+ICsNCj4gKyAg
+ICAgICBtb2JpdmVpbF9wY2llX2Rpc2FibGVfb2Jfd2luKHBjaWUsIGF0dV9pbmRleCk7DQo+ICsg
+ICAgICAgY2xlYXJfYml0KGF0dV9pbmRleCwgZXAtPm9iX3dpbmRvd19tYXApOyB9DQo+ICsNCj4g
+K3N0YXRpYyBpbnQgbW9iaXZlaWxfcGNpZV9lcF9tYXBfYWRkcihzdHJ1Y3QgcGNpX2VwYyAqZXBj
+LCB1OCBmdW5jX25vLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgcGh5
+c19hZGRyX3QgYWRkciwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU2
+NCBwY2lfYWRkciwgc2l6ZV90IHNpemUpIHsNCj4gKyAgICAgICBpbnQgcmV0Ow0KPiArICAgICAg
+IHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwICplcCA9IGVwY19nZXRfZHJ2ZGF0YShlcGMpOw0KPiAr
+ICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llID0gdG9fbW9iaXZlaWxfcGNpZV9mcm9t
+X2VwKGVwKTsNCj4gKw0KPiArICAgICAgIHJldCA9IG1vYml2ZWlsX3BjaWVfZXBfb3V0Ym91bmRf
+YXR1KGVwLCBhZGRyLCBwY2lfYWRkciwgZnVuY19ubywgc2l6ZSk7DQo+ICsgICAgICAgaWYgKHJl
+dCkgew0KPiArICAgICAgICAgICAgICAgZGV2X2VycigmcGNpZS0+cGRldi0+ZGV2LCAiRmFpbGVk
+IHRvIGVuYWJsZSBhZGRyZXNzXG4iKTsNCj4gKyAgICAgICAgICAgICAgIHJldHVybiByZXQ7DQo+
+ICsgICAgICAgfQ0KPiArDQo+ICsgICAgICAgcmV0dXJuIDA7DQo+ICt9DQo+ICsNCj4gK3N0YXRp
+YyBpbnQgbW9iaXZlaWxfcGNpZV9lcF9nZXRfbXNpKHN0cnVjdCBwY2lfZXBjICplcGMsIHU4IGZ1
+bmNfbm8pIA0KPiArew0KPiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwICplcCA9IGVw
+Y19nZXRfZHJ2ZGF0YShlcGMpOw0KPiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2ll
+ID0gdG9fbW9iaXZlaWxfcGNpZV9mcm9tX2VwKGVwKTsNCj4gKyAgICAgICB1MzIgdmFsLCByZWc7
+DQo+ICsNCj4gKyAgICAgICBpZiAoIWVwLT5tc2lfY2FwKQ0KPiArICAgICAgICAgICAgICAgcmV0
+dXJuIC1FSU5WQUw7DQo+ICsNCj4gKyAgICAgICByZWcgPSBlcC0+bXNpX2NhcCArIFBDSV9NU0lf
+RkxBR1M7DQo+ICsgICAgICAgdmFsID0gY3NyX3JlYWR3KHBjaWUsIHJlZyk7DQo+ICsgICAgICAg
+aWYgKCEodmFsICYgUENJX01TSV9GTEFHU19FTkFCTEUpKQ0KPiArICAgICAgICAgICAgICAgcmV0
+dXJuIC1FSU5WQUw7DQo+ICsNCj4gKyAgICAgICB2YWwgPSAodmFsICYgUENJX01TSV9GTEFHU19R
+U0laRSkgPj4gNDsNCj4gKw0KPiArICAgICAgIHJldHVybiB2YWw7DQo+ICt9DQo+ICsNCj4gK3N0
+YXRpYyBpbnQgbW9iaXZlaWxfcGNpZV9lcF9zZXRfbXNpKHN0cnVjdCBwY2lfZXBjICplcGMsDQo+
+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU4IGZ1bmNfbm8sIHU4IGludGVy
+cnVwdHMpIHsNCj4gKyAgICAgICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZV9lcCAqZXAgPSBlcGNfZ2V0
+X2RydmRhdGEoZXBjKTsNCj4gKyAgICAgICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNpZSA9IHRv
+X21vYml2ZWlsX3BjaWVfZnJvbV9lcChlcCk7DQo+ICsgICAgICAgdTMyIHZhbCwgcmVnOw0KPiAr
+DQo+ICsgICAgICAgaWYgKCFlcC0+bXNpX2NhcCkNCj4gKyAgICAgICAgICAgICAgIHJldHVybiAt
+RUlOVkFMOw0KPiArDQo+ICsgICAgICAgcmVnID0gZXAtPm1zaV9jYXAgKyBQQ0lfTVNJX0ZMQUdT
+Ow0KPiArICAgICAgIHZhbCA9IGNzcl9yZWFkdyhwY2llLCByZWcpOw0KPiArICAgICAgIHZhbCAm
+PSB+UENJX01TSV9GTEFHU19RTUFTSzsNCj4gKyAgICAgICB2YWwgfD0gKGludGVycnVwdHMgPDwg
+MSkgJiBQQ0lfTVNJX0ZMQUdTX1FNQVNLOw0KPiArICAgICAgIGNzcl93cml0ZXcocGNpZSwgdmFs
+LCByZWcpOw0KPiArDQo+ICsgICAgICAgcmV0dXJuIDA7DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyBp
+bnQgbW9iaXZlaWxfcGNpZV9lcF9nZXRfbXNpeChzdHJ1Y3QgcGNpX2VwYyAqZXBjLCB1OCBmdW5j
+X25vKSANCj4gK3sNCj4gKyAgICAgICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZV9lcCAqZXAgPSBlcGNf
+Z2V0X2RydmRhdGEoZXBjKTsNCj4gKyAgICAgICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNpZSA9
+IHRvX21vYml2ZWlsX3BjaWVfZnJvbV9lcChlcCk7DQo+ICsgICAgICAgdTMyIHZhbCwgcmVnOw0K
+PiArDQo+ICsgICAgICAgaWYgKCFlcC0+bXNpeF9jYXApDQo+ICsgICAgICAgICAgICAgICByZXR1
+cm4gLUVJTlZBTDsNCj4gKw0KPiArICAgICAgIHJlZyA9IGVwLT5tc2l4X2NhcCArIFBDSV9NU0lY
+X0ZMQUdTOw0KPiArICAgICAgIHZhbCA9IGNzcl9yZWFkdyhwY2llLCByZWcpOw0KPiArICAgICAg
+IGlmICghKHZhbCAmIFBDSV9NU0lYX0ZMQUdTX0VOQUJMRSkpDQo+ICsgICAgICAgICAgICAgICBy
+ZXR1cm4gLUVJTlZBTDsNCj4gKw0KPiArICAgICAgIHZhbCAmPSBQQ0lfTVNJWF9GTEFHU19RU0la
+RTsNCj4gKw0KPiArICAgICAgIHJldHVybiB2YWw7DQo+ICt9DQo+ICsNCj4gK3N0YXRpYyBpbnQg
+bW9iaXZlaWxfcGNpZV9lcF9zZXRfbXNpeChzdHJ1Y3QgcGNpX2VwYyAqZXBjLCB1OCBmdW5jX25v
+LA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdTE2IGludGVycnVwdHMp
+IHsNCj4gKyAgICAgICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZV9lcCAqZXAgPSBlcGNfZ2V0X2RydmRh
+dGEoZXBjKTsNCj4gKyAgICAgICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNpZSA9IHRvX21vYml2
+ZWlsX3BjaWVfZnJvbV9lcChlcCk7DQo+ICsgICAgICAgdTMyIHZhbCwgcmVnOw0KPiArDQo+ICsg
+ICAgICAgaWYgKCFlcC0+bXNpeF9jYXApDQo+ICsgICAgICAgICAgICAgICByZXR1cm4gLUVJTlZB
+TDsNCj4gKw0KPiArICAgICAgIHJlZyA9IGVwLT5tc2l4X2NhcCArIFBDSV9NU0lYX0ZMQUdTOw0K
+PiArICAgICAgIHZhbCA9IGNzcl9yZWFkdyhwY2llLCByZWcpOw0KPiArICAgICAgIHZhbCAmPSB+
+UENJX01TSVhfRkxBR1NfUVNJWkU7DQo+ICsgICAgICAgdmFsIHw9IGludGVycnVwdHM7DQo+ICsg
+ICAgICAgY3NyX3dyaXRldyhwY2llLCB2YWwsIHJlZyk7DQo+ICsNCj4gKyAgICAgICByZXR1cm4g
+MDsNCj4gK30NCj4gKw0KPiArc3RhdGljIGludCBtb2JpdmVpbF9wY2llX2VwX3JhaXNlX2lycShz
+dHJ1Y3QgcGNpX2VwYyAqZXBjLCB1OCBmdW5jX25vLA0KPiArICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIGVudW0gcGNpX2VwY19pcnFfdHlwZSB0eXBlLA0KPiArICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHUxNiBpbnRlcnJ1cHRfbnVtKSB7DQo+ICsgICAg
+ICAgc3RydWN0IG1vYml2ZWlsX3BjaWVfZXAgKmVwID0gZXBjX2dldF9kcnZkYXRhKGVwYyk7DQo+
+ICsNCj4gKyAgICAgICBpZiAoIWVwLT5vcHMtPnJhaXNlX2lycSkNCj4gKyAgICAgICAgICAgICAg
+IHJldHVybiAtRUlOVkFMOw0KPiArDQo+ICsgICAgICAgcmV0dXJuIGVwLT5vcHMtPnJhaXNlX2ly
+cShlcCwgZnVuY19ubywgdHlwZSwgaW50ZXJydXB0X251bSk7IH0NCj4gKw0KPiArc3RhdGljIGNv
+bnN0IHN0cnVjdCBwY2lfZXBjX29wcyBlcGNfb3BzID0gew0KPiArICAgICAgIC53cml0ZV9oZWFk
+ZXIgICAgICAgICAgID0gbW9iaXZlaWxfcGNpZV9lcF93cml0ZV9oZWFkZXIsDQo+ICsgICAgICAg
+LnNldF9iYXIgICAgICAgICAgICAgICAgPSBtb2JpdmVpbF9wY2llX2VwX3NldF9iYXIsDQo+ICsg
+ICAgICAgLmNsZWFyX2JhciAgICAgICAgICAgICAgPSBtb2JpdmVpbF9wY2llX2VwX2NsZWFyX2Jh
+ciwNCj4gKyAgICAgICAubWFwX2FkZHIgICAgICAgICAgICAgICA9IG1vYml2ZWlsX3BjaWVfZXBf
+bWFwX2FkZHIsDQo+ICsgICAgICAgLnVubWFwX2FkZHIgICAgICAgICAgICAgPSBtb2JpdmVpbF9w
+Y2llX2VwX3VubWFwX2FkZHIsDQo+ICsgICAgICAgLnNldF9tc2kgICAgICAgICAgICAgICAgPSBt
+b2JpdmVpbF9wY2llX2VwX3NldF9tc2ksDQo+ICsgICAgICAgLmdldF9tc2kgICAgICAgICAgICAg
+ICAgPSBtb2JpdmVpbF9wY2llX2VwX2dldF9tc2ksDQo+ICsgICAgICAgLnNldF9tc2l4ICAgICAg
+ICAgICAgICAgPSBtb2JpdmVpbF9wY2llX2VwX3NldF9tc2l4LA0KPiArICAgICAgIC5nZXRfbXNp
+eCAgICAgICAgICAgICAgID0gbW9iaXZlaWxfcGNpZV9lcF9nZXRfbXNpeCwNCj4gKyAgICAgICAu
+cmFpc2VfaXJxICAgICAgICAgICAgICA9IG1vYml2ZWlsX3BjaWVfZXBfcmFpc2VfaXJxLA0KPiAr
+fTsNCj4gKw0KPiAraW50IG1vYml2ZWlsX3BjaWVfZXBfcmFpc2VfbGVnYWN5X2lycShzdHJ1Y3Qg
+bW9iaXZlaWxfcGNpZV9lcCAqZXAsIHU4IA0KPiArZnVuY19ubykgew0KPiArICAgICAgIHN0cnVj
+dCBtb2JpdmVpbF9wY2llICpwY2llID0gdG9fbW9iaXZlaWxfcGNpZV9mcm9tX2VwKGVwKTsNCj4g
+Kw0KPiArICAgICAgIGRldl9lcnIoJnBjaWUtPnBkZXYtPmRldiwgIkVQIGNhbm5vdCB0cmlnZ2Vy
+IGxlZ2FjeSBJUlFzXG4iKTsNCj4gKw0KPiArICAgICAgIHJldHVybiAtRUlOVkFMOw0KPiArfQ0K
+PiArDQo+ICtpbnQgbW9iaXZlaWxfcGNpZV9lcF9yYWlzZV9tc2lfaXJxKHN0cnVjdCBtb2JpdmVp
+bF9wY2llX2VwICplcCwgdTggZnVuY19ubywNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICB1OCBpbnRlcnJ1cHRfbnVtKSB7DQo+ICsgICAgICAgc3RydWN0IG1vYml2ZWlsX3Bj
+aWUgKnBjaWUgPSB0b19tb2JpdmVpbF9wY2llX2Zyb21fZXAoZXApOw0KPiArICAgICAgIHN0cnVj
+dCBwY2lfZXBjICplcGMgPSBlcC0+ZXBjOw0KPiArICAgICAgIHUxNiBtc2dfY3RybCwgbXNnX2Rh
+dGE7DQo+ICsgICAgICAgdTMyIG1zZ19hZGRyX2xvd2VyLCBtc2dfYWRkcl91cHBlciwgcmVnOw0K
+PiArICAgICAgIHU2NCBtc2dfYWRkcjsNCj4gKyAgICAgICB1MzIgZnVuY19udW07DQo+ICsgICAg
+ICAgYm9vbCBoYXNfdXBwZXI7DQo+ICsgICAgICAgaW50IHJldDsNCj4gKw0KPiArICAgICAgIGlm
+ICghZXAtPm1zaV9jYXApDQo+ICsgICAgICAgICAgICAgICByZXR1cm4gLUVJTlZBTDsNCj4gKw0K
+PiArICAgICAgIC8qDQo+ICsgICAgICAgICogSW4gb3JkZXIgb3QgZ2V0IHRoZSBQRidzIE1TSSBj
+YXBhYmlsaXR5IHJlZ2lzdGVyIHZhbHVlIGZyb20gY29uZmlnDQo+ICsgICAgICAgICogc3BhY2Ug
+d2UgbmVlZCB0byBzZXQgdGhlIFBGIG51bWJlciB0byB0aGUgUEFCX0NUUkwgcmVnaXN0ZXIuDQo+
+ICsgICAgICAgICovDQo+ICsgICAgICAgZnVuY19udW0gPSBjc3JfcmVhZGwocGNpZSwgUEFCX0NU
+UkwpOw0KPiArICAgICAgIGZ1bmNfbnVtICY9IH4oRlVOQ19TRUxfTUFTSyA8PCBGVU5DX1NFTF9T
+SElGVCk7DQo+ICsgICAgICAgZnVuY19udW0gfD0gKGZ1bmNfbm8gJiBGVU5DX1NFTF9NQVNLKSA8
+PCBGVU5DX1NFTF9TSElGVDsNCj4gKyAgICAgICBjc3Jfd3JpdGVsKHBjaWUsIGZ1bmNfbnVtLCBQ
+QUJfQ1RSTCk7DQo+ICsNCj4gKyAgICAgICByZWcgPSBlcC0+bXNpX2NhcCArIFBDSV9NU0lfRkxB
+R1M7DQo+ICsgICAgICAgbXNnX2N0cmwgPSBjc3JfcmVhZHcocGNpZSwgcmVnKTsNCj4gKyAgICAg
+ICBoYXNfdXBwZXIgPSAhIShtc2dfY3RybCAmIFBDSV9NU0lfRkxBR1NfNjRCSVQpOw0KPiArICAg
+ICAgIHJlZyA9IGVwLT5tc2lfY2FwICsgUENJX01TSV9BRERSRVNTX0xPOw0KPiArICAgICAgIG1z
+Z19hZGRyX2xvd2VyID0gY3NyX3JlYWRsKHBjaWUsIHJlZyk7DQo+ICsgICAgICAgaWYgKGhhc191
+cHBlcikgew0KPiArICAgICAgICAgICAgICAgcmVnID0gZXAtPm1zaV9jYXAgKyBQQ0lfTVNJX0FE
+RFJFU1NfSEk7DQo+ICsgICAgICAgICAgICAgICBtc2dfYWRkcl91cHBlciA9IGNzcl9yZWFkbChw
+Y2llLCByZWcpOw0KPiArICAgICAgICAgICAgICAgcmVnID0gZXAtPm1zaV9jYXAgKyBQQ0lfTVNJ
+X0RBVEFfNjQ7DQo+ICsgICAgICAgICAgICAgICBtc2dfZGF0YSA9IGNzcl9yZWFkdyhwY2llLCBy
+ZWcpOw0KPiArICAgICAgIH0gZWxzZSB7DQo+ICsgICAgICAgICAgICAgICBtc2dfYWRkcl91cHBl
+ciA9IDA7DQo+ICsgICAgICAgICAgICAgICByZWcgPSBlcC0+bXNpX2NhcCArIFBDSV9NU0lfREFU
+QV8zMjsNCj4gKyAgICAgICAgICAgICAgIG1zZ19kYXRhID0gY3NyX3JlYWR3KHBjaWUsIHJlZyk7
+DQo+ICsgICAgICAgfQ0KPiArICAgICAgIG1zZ19hZGRyID0gKCh1NjQpIG1zZ19hZGRyX3VwcGVy
+KSA8PCAzMiB8IG1zZ19hZGRyX2xvd2VyOw0KPiArDQo+ICsgICAgICAgLyoNCj4gKyAgICAgICAg
+KiBjbGVhciB0aGUgRlVOQ19TRUxfU0hJRlQgYml0cyB3aGVuIGFjY2VzcyBvdGhlciByZWdpc3Rl
+cnMgZXhjZXB0DQo+ICsgICAgICAgICogY29uZmlnIHNwYWNlIHJlZ2lzdGVyLg0KPiArICAgICAg
+ICAqLw0KPiArICAgICAgIGZ1bmNfbnVtID0gY3NyX3JlYWRsKHBjaWUsIFBBQl9DVFJMKTsNCj4g
+KyAgICAgICBmdW5jX251bSAmPSB+KEZVTkNfU0VMX01BU0sgPDwgRlVOQ19TRUxfU0hJRlQpOw0K
+PiArICAgICAgIGNzcl93cml0ZWwocGNpZSwgZnVuY19udW0sIFBBQl9DVFJMKTsNCj4gKw0KPiAr
+ICAgICAgIHJldCA9IG1vYml2ZWlsX3BjaWVfZXBfbWFwX2FkZHIoZXBjLCBmdW5jX25vLCBlcC0+
+bXNpX21lbV9waHlzLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+bXNnX2FkZHIsIGVwYy0+bWVtLT5wYWdlX3NpemUpOw0KPiArICAgICAgIGlmIChyZXQpDQo+ICsg
+ICAgICAgICAgICAgICByZXR1cm4gcmV0Ow0KPiArDQo+ICsgICAgICAgd3JpdGVsKG1zZ19kYXRh
+IHwgKGludGVycnVwdF9udW0gLSAxKSwgZXAtPm1zaV9tZW0pOw0KPiArDQo+ICsgICAgICAgbW9i
+aXZlaWxfcGNpZV9lcF91bm1hcF9hZGRyKGVwYywgZnVuY19ubywgZXAtPm1zaV9tZW1fcGh5cyk7
+DQo+ICsNCj4gKyAgICAgICByZXR1cm4gMDsNCj4gK30NCj4gKw0KPiAraW50IG1vYml2ZWlsX3Bj
+aWVfZXBfcmFpc2VfbXNpeF9pcnEoc3RydWN0IG1vYml2ZWlsX3BjaWVfZXAgKmVwLCB1OCBmdW5j
+X25vLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB1MTYgaW50ZXJydXB0
+X251bSkgew0KPiArICAgICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llID0gdG9fbW9iaXZl
+aWxfcGNpZV9mcm9tX2VwKGVwKTsNCj4gKyAgICAgICBzdHJ1Y3QgcGNpX2VwYyAqZXBjID0gZXAt
+PmVwYzsNCj4gKyAgICAgICB1MzIgbXNnX2FkZHJfdXBwZXIsIG1zZ19hZGRyX2xvd2VyOw0KPiAr
+ICAgICAgIHUzMiBtc2dfZGF0YTsNCj4gKyAgICAgICB1NjQgbXNnX2FkZHI7DQo+ICsgICAgICAg
+dTMyIGZ1bmNfbnVtOw0KPiArICAgICAgIGludCByZXQ7DQo+ICsNCj4gKyAgICAgICAvKg0KPiAr
+ICAgICAgICAqIEluIG9yZGVyIG90IGdldCB0aGUgUEYncyBNU0kgY2FwYWJpbGl0eSByZWdpc3Rl
+ciB2YWx1ZSBmcm9tIGNvbmZpZw0KPiArICAgICAgICAqIHNwYWNlIHdlIG5lZWQgdG8gc2V0IHRo
+ZSBQRiBudW1iZXIgdG8gdGhlIFBBQl9DVFJMIHJlZ2lzdGVyLg0KPiArICAgICAgICAqLw0KPiAr
+ICAgICAgIGZ1bmNfbnVtID0gY3NyX3JlYWRsKHBjaWUsIFBBQl9DVFJMKTsNCj4gKyAgICAgICBm
+dW5jX251bSAmPSB+KEZVTkNfU0VMX01BU0sgPDwgRlVOQ19TRUxfU0hJRlQpOw0KPiArICAgICAg
+IGZ1bmNfbnVtIHw9IChmdW5jX25vICYgRlVOQ19TRUxfTUFTSykgPDwgRlVOQ19TRUxfU0hJRlQ7
+DQo+ICsgICAgICAgY3NyX3dyaXRlbChwY2llLCBmdW5jX251bSwgUEFCX0NUUkwpOw0KPiArDQo+
+ICsgICAgICAgbXNnX2FkZHJfbG93ZXIgPSBjc3JfcmVhZGwocGNpZSwgUEFCX01TSVhfVEFCTEVf
+UEJBX0FDQ0VTUyArDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgUENJX01T
+SVhfRU5UUllfTE9XRVJfQUREUiArDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgKGludGVycnVwdF9udW0gLSAxKSAqIFBDSV9NU0lYX0VOVFJZX1NJWkUpOw0KPiArICAgICAg
+IG1zZ19hZGRyX3VwcGVyID0gY3NyX3JlYWRsKHBjaWUsIFBBQl9NU0lYX1RBQkxFX1BCQV9BQ0NF
+U1MgKw0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFBDSV9NU0lYX0VOVFJZ
+X1VQUEVSX0FERFIgKw0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIChpbnRl
+cnJ1cHRfbnVtIC0gMSkgKiBQQ0lfTVNJWF9FTlRSWV9TSVpFKTsNCj4gKyAgICAgICBtc2dfYWRk
+ciA9ICgodTY0KSBtc2dfYWRkcl91cHBlcikgPDwgMzIgfCBtc2dfYWRkcl9sb3dlcjsNCj4gKyAg
+ICAgICBtc2dfZGF0YSA9IGNzcl9yZWFkbChwY2llLCBQQUJfTVNJWF9UQUJMRV9QQkFfQUNDRVNT
+ICsNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICBQQ0lfTVNJWF9FTlRSWV9EQVRBICsN
+Cj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAoaW50ZXJydXB0X251bSAtIDEpICogDQo+
+ICsgUENJX01TSVhfRU5UUllfU0laRSk7DQo+ICsNCj4gKyAgICAgICAvKg0KPiArICAgICAgICAq
+IGNsZWFyIHRoZSBGVU5DX1NFTF9TSElGVCBiaXRzIHdoZW4gYWNjZXNzIG90aGVyIHJlZ2lzdGVy
+cyBleGNlcHQNCj4gKyAgICAgICAgKiBjb25maWcgc3BhY2UgcmVnaXN0ZXJzLg0KPiArICAgICAg
+ICAqLw0KPiArICAgICAgIGZ1bmNfbnVtID0gY3NyX3JlYWRsKHBjaWUsIFBBQl9DVFJMKTsNCj4g
+KyAgICAgICBmdW5jX251bSAmPSB+KEZVTkNfU0VMX01BU0sgPDwgRlVOQ19TRUxfU0hJRlQpOw0K
+PiArICAgICAgIGNzcl93cml0ZWwocGNpZSwgZnVuY19udW0sIFBBQl9DVFJMKTsNCj4gKw0KPiAr
+ICAgICAgIHJldCA9IG1vYml2ZWlsX3BjaWVfZXBfbWFwX2FkZHIoZXBjLCBmdW5jX25vLCBlcC0+
+bXNpX21lbV9waHlzLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+bXNnX2FkZHIsIGVwYy0+bWVtLT5wYWdlX3NpemUpOw0KPiArICAgICAgIGlmIChyZXQpDQo+ICsg
+ICAgICAgICAgICAgICByZXR1cm4gcmV0Ow0KPiArDQo+ICsgICAgICAgd3JpdGVsKG1zZ19kYXRh
+LCBlcC0+bXNpX21lbSk7DQo+ICsNCj4gKyAgICAgICBtb2JpdmVpbF9wY2llX2VwX3VubWFwX2Fk
+ZHIoZXBjLCBmdW5jX25vLCBlcC0+bXNpX21lbV9waHlzKTsNCj4gKw0KPiArICAgICAgIHJldHVy
+biAwOw0KPiArfQ0KPiArDQo+ICt2b2lkIG1vYml2ZWlsX3BjaWVfZXBfZXhpdChzdHJ1Y3QgbW9i
+aXZlaWxfcGNpZV9lcCAqZXApIHsNCj4gKyAgICAgICBzdHJ1Y3QgcGNpX2VwYyAqZXBjID0gZXAt
+PmVwYzsNCj4gKw0KPiArICAgICAgIHBjaV9lcGNfbWVtX2ZyZWVfYWRkcihlcGMsIGVwLT5tc2lf
+bWVtX3BoeXMsIGVwLT5tc2lfbWVtLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICBl
+cGMtPm1lbS0+cGFnZV9zaXplKTsNCj4gKw0KPiArICAgICAgIHBjaV9lcGNfbWVtX2V4aXQoZXBj
+KTsNCj4gK30NCj4gKw0KPiAraW50IG1vYml2ZWlsX3BjaWVfZXBfaW5pdChzdHJ1Y3QgbW9iaXZl
+aWxfcGNpZV9lcCAqZXApIHsNCj4gKyAgICAgICBpbnQgcmV0Ow0KPiArICAgICAgIHZvaWQgKmFk
+ZHI7DQo+ICsgICAgICAgc3RydWN0IHBjaV9lcGMgKmVwYzsNCj4gKyAgICAgICBzdHJ1Y3QgbW9i
+aXZlaWxfcGNpZSAqcGNpZSA9IHRvX21vYml2ZWlsX3BjaWVfZnJvbV9lcChlcCk7DQo+ICsgICAg
+ICAgc3RydWN0IGRldmljZSAqZGV2ID0gJnBjaWUtPnBkZXYtPmRldjsNCj4gKyAgICAgICBzdHJ1
+Y3QgZGV2aWNlX25vZGUgKm5wID0gZGV2LT5vZl9ub2RlOw0KPiArDQo+ICsgICAgICAgaWYgKCFw
+Y2llLT5jc3JfYXhpX3NsYXZlX2Jhc2UpIHsNCj4gKyAgICAgICAgICAgICAgIGRldl9lcnIoZGV2
+LCAiY3NyX2Jhc2UgaXMgbm90IHBvcHVsYXRlZFxuIik7DQo+ICsgICAgICAgICAgICAgICByZXR1
+cm4gLUVJTlZBTDsNCj4gKyAgICAgICB9DQo+ICsNCj4gKyAgICAgICByZXQgPSBvZl9wcm9wZXJ0
+eV9yZWFkX3UzMihucCwgIm51bS1vYi13aW5kb3dzIiwgJmVwLT5udW1fb2Jfd2luZG93cyk7DQo+
+ICsgICAgICAgaWYgKHJldCA8IDApIHsNCj4gKyAgICAgICAgICAgICAgIGRldl9lcnIoZGV2LCAi
+VW5hYmxlIHRvIHJlYWQgKm51bS1vYi13aW5kb3dzKiBwcm9wZXJ0eVxuIik7DQo+ICsgICAgICAg
+ICAgICAgICByZXR1cm4gcmV0Ow0KPiArICAgICAgIH0NCj4gKw0KPiArICAgICAgIGlmIChlcC0+
+bnVtX29iX3dpbmRvd3MgPiBNQVhfSUFUVV9PVVQpIHsNCj4gKyAgICAgICAgICAgICAgIGRldl9l
+cnIoZGV2LCAiSW52YWxpZCAqbnVtLW9iLXdpbmRvd3MqXG4iKTsNCj4gKyAgICAgICAgICAgICAg
+IHJldHVybiAtRUlOVkFMOw0KPiArICAgICAgIH0NCj4gKyAgICAgICBlcC0+b2Jfd2luZG93X21h
+cCA9IGRldm1fa2NhbGxvYyhkZXYsDQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgQklUU19UT19MT05HUyhlcC0+bnVtX29iX3dpbmRvd3MpLA0KPiArICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHNpemVvZihsb25nKSwNCj4gKyAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBHRlBfS0VSTkVMKTsNCj4gKyAgICAgICBp
+ZiAoIWVwLT5vYl93aW5kb3dfbWFwKQ0KPiArICAgICAgICAgICAgICAgcmV0dXJuIC1FTk9NRU07
+DQo+ICsNCj4gKyAgICAgICBhZGRyID0gZGV2bV9rY2FsbG9jKGRldiwgZXAtPm51bV9vYl93aW5k
+b3dzLCBzaXplb2YocGh5c19hZGRyX3QpLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAg
+R0ZQX0tFUk5FTCk7DQo+ICsgICAgICAgaWYgKCFhZGRyKQ0KPiArICAgICAgICAgICAgICAgcmV0
+dXJuIC1FTk9NRU07DQo+ICsgICAgICAgZXAtPm91dGJvdW5kX2FkZHIgPSBhZGRyOw0KPiArDQo+
+ICsgICAgICAgbW9iaXZlaWxfcGNpZV9lbmFibGVfYnJpZGdlX3BpbyhwY2llKTsNCj4gKyAgICAg
+ICBtb2JpdmVpbF9wY2llX2VuYWJsZV9lbmdpbmVfYXBpbyhwY2llKTsNCj4gKyAgICAgICBtb2Jp
+dmVpbF9wY2llX2VuYWJsZV9lbmdpbmVfcHBpbyhwY2llKTsNCj4gKyAgICAgICBtb2JpdmVpbF9w
+Y2llX2VuYWJsZV9tc2lfZXAocGNpZSk7DQo+ICsNCj4gKyAgICAgICBlcGMgPSBkZXZtX3BjaV9l
+cGNfY3JlYXRlKGRldiwgJmVwY19vcHMpOw0KPiArICAgICAgIGlmIChJU19FUlIoZXBjKSkgew0K
+PiArICAgICAgICAgICAgICAgZGV2X2VycihkZXYsICJGYWlsZWQgdG8gY3JlYXRlIGVwYyBkZXZp
+Y2VcbiIpOw0KPiArICAgICAgICAgICAgICAgcmV0dXJuIFBUUl9FUlIoZXBjKTsNCj4gKyAgICAg
+ICB9DQo+ICsNCj4gKyAgICAgICBlcC0+ZXBjID0gZXBjOw0KPiArICAgICAgIGVwY19zZXRfZHJ2
+ZGF0YShlcGMsIGVwKTsNCj4gKw0KPiArICAgICAgIGVwLT5tc2lfY2FwID0gbW9iaXZlaWxfcGNp
+ZV9lcF9maW5kX2NhcGFiaWxpdHkocGNpZSwgDQo+ICsgUENJX0NBUF9JRF9NU0kpOw0KPiArDQo+
+ICsgICAgICAgZXAtPm1zaXhfY2FwID0gbW9iaXZlaWxfcGNpZV9lcF9maW5kX2NhcGFiaWxpdHko
+cGNpZSwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICANCj4gKyBQQ0lfQ0FQX0lEX01TSVgpOw0KPiArDQo+ICsgICAgICAgaWYgKGVwLT5v
+cHMtPmVwX2luaXQpDQo+ICsgICAgICAgICAgICAgICBlcC0+b3BzLT5lcF9pbml0KGVwKTsNCj4g
+Kw0KPiArICAgICAgIGVwYy0+bWF4X2Z1bmN0aW9ucyA9IGVwLT5wZl9udW07DQo+ICsNCj4gKyAg
+ICAgICByZXQgPSBfX3BjaV9lcGNfbWVtX2luaXQoZXBjLCBlcC0+cGh5c19iYXNlLCBlcC0+YWRk
+cl9zaXplLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBlcC0+cGFnZV9zaXpl
+KTsNCj4gKyAgICAgICBpZiAocmV0IDwgMCkgew0KPiArICAgICAgICAgICAgICAgZGV2X2Vycihk
+ZXYsICJGYWlsZWQgdG8gaW5pdGlhbGl6ZSBhZGRyZXNzIHNwYWNlXG4iKTsNCj4gKyAgICAgICAg
+ICAgICAgIHJldHVybiByZXQ7DQo+ICsgICAgICAgfQ0KPiArDQo+ICsgICAgICAgZXAtPm1zaV9t
+ZW0gPSBwY2lfZXBjX21lbV9hbGxvY19hZGRyKGVwYywgJmVwLT5tc2lfbWVtX3BoeXMsDQo+ICsg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGVwYy0+bWVtLT5wYWdl
+X3NpemUpOw0KPiArICAgICAgIGlmICghZXAtPm1zaV9tZW0pIHsNCj4gKyAgICAgICAgICAgICAg
+IGRldl9lcnIoZGV2LCAiRmFpbGVkIHRvIHJlc2VydmUgbWVtb3J5IGZvciBNU0kvTVNJLVhcbiIp
+Ow0KPiArICAgICAgICAgICAgICAgcmV0dXJuIC1FTk9NRU07DQo+ICsgICAgICAgfQ0KPiArDQo+
+ICsgICAgICAgcmV0dXJuIDA7DQo+ICt9DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9jb250
+cm9sbGVyL21vYml2ZWlsL3BjaWUtbW9iaXZlaWwuYyANCj4gYi9kcml2ZXJzL3BjaS9jb250cm9s
+bGVyL21vYml2ZWlsL3BjaWUtbW9iaXZlaWwuYw0KPiBpbmRleCA0OWQ0NzFiLi5kMWZkZmVkIDEw
+MDY0NA0KPiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL3BjaWUtbW9iaXZl
+aWwuYw0KPiArKysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL3BjaWUtbW9iaXZl
+aWwuYw0KPiBAQCAtMjEwLDYgKzIxMCw1NyBAQCB2b2lkIHByb2dyYW1fb2Jfd2luZG93cyhzdHJ1
+Y3QgbW9iaXZlaWxfcGNpZSAqcGNpZSwgaW50IHdpbl9udW0sIHU2NCBjcHVfYWRkciwNCj4gICAg
+ICAgICBwY2llLT5vYl93aW5zX2NvbmZpZ3VyZWQrKzsNCj4gIH0NCj4NCj4gK2ludCBwcm9ncmFt
+X29iX3dpbmRvd3NfZXAoc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUsIGludCB3aW5fbnVtLCBp
+bnQgdHlwZSwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICB1NjQgcGh5cywgdTY0IGJ1c19h
+ZGRyLCB1OCBmdW5jLCB1NjQgc2l6ZSkgew0KPiArICAgICAgIHUzMiB2YWw7DQo+ICsgICAgICAg
+dTMyIHNpemVfaCwgc2l6ZV9sOw0KPiArDQo+ICsgICAgICAgaWYgKHNpemUgJiAoc2l6ZSAtIDEp
+KQ0KPiArICAgICAgICAgICAgICAgc2l6ZSA9IDEgPDwgKDEgKyBpbG9nMihzaXplKSk7DQo+ICsN
+Cj4gKyAgICAgICBzaXplX2ggPSB1cHBlcl8zMl9iaXRzKH4oc2l6ZSAtIDEpKTsNCj4gKyAgICAg
+ICBzaXplX2wgPSBsb3dlcl8zMl9iaXRzKH4oc2l6ZSAtIDEpKTsNCj4gKw0KPiArICAgICAgIHZh
+bCA9IGNzcl9yZWFkbChwY2llLCBQQUJfQVhJX0FNQVBfQ1RSTCh3aW5fbnVtKSk7DQo+ICsgICAg
+ICAgdmFsICY9IH4oV0lOX1RZUEVfTUFTSyA8PCBXSU5fVFlQRV9TSElGVCB8DQo+ICsgICAgICAg
+ICAgICAgICAgV0lOX1NJWkVfTUFTSyA8PCBXSU5fU0laRV9TSElGVCk7DQo+ICsgICAgICAgdmFs
+IHw9IDEgPDwgV0lOX0VOQUJMRV9TSElGVCB8IHR5cGUgPDwgV0lOX1RZUEVfU0hJRlQgfA0KPiAr
+ICAgICAgICAgICAgICAgIChzaXplX2wgJiAoV0lOX1NJWkVfTUFTSyA8PCBXSU5fU0laRV9TSElG
+VCkpOw0KPiArICAgICAgIGNzcl93cml0ZWwocGNpZSwgdmFsLCBQQUJfQVhJX0FNQVBfQ1RSTCh3
+aW5fbnVtKSk7DQo+ICsNCj4gKyAgICAgICBjc3Jfd3JpdGVsKHBjaWUsIGZ1bmMsIFBBQl9BWElf
+QU1BUF9QQ0lfSERSX1BBUkFNKHdpbl9udW0pKTsNCj4gKyAgICAgICBjc3Jfd3JpdGVsKHBjaWUs
+IGxvd2VyXzMyX2JpdHMocGh5cyksIFBBQl9BWElfQU1BUF9BWElfV0lOKHdpbl9udW0pKTsNCj4g
+KyAgICAgICBjc3Jfd3JpdGVsKHBjaWUsIHVwcGVyXzMyX2JpdHMocGh5cyksDQo+ICsgICAgICAg
+ICAgICAgICAgICBQQUJfRVhUX0FYSV9BTUFQX0FYSV9XSU4od2luX251bSkpOw0KPiArICAgICAg
+IGNzcl93cml0ZWwocGNpZSwgbG93ZXJfMzJfYml0cyhidXNfYWRkciksDQo+ICsgICAgICAgICAg
+ICAgICAgICBQQUJfQVhJX0FNQVBfUEVYX1dJTl9MKHdpbl9udW0pKTsNCj4gKyAgICAgICBjc3Jf
+d3JpdGVsKHBjaWUsIHVwcGVyXzMyX2JpdHMoYnVzX2FkZHIpLA0KPiArICAgICAgICAgICAgICAg
+ICAgUEFCX0FYSV9BTUFQX1BFWF9XSU5fSCh3aW5fbnVtKSk7DQo+ICsgICAgICAgY3NyX3dyaXRl
+bChwY2llLCBzaXplX2gsIFBBQl9FWFRfQVhJX0FNQVBfU0laRSh3aW5fbnVtKSk7DQo+ICsNCj4g
+KyAgICAgICByZXR1cm4gMDsNCj4gK30NCj4gKw0KPiArdm9pZCBwcm9ncmFtX2liX3dpbmRvd3Nf
+ZXAoc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUsIHU4IGZ1bmNfbm8sDQo+ICsgICAgICAgICAg
+ICAgICAgICAgICAgICAgIGludCBiYXIsIHU2NCBwaHlzKSB7DQo+ICsgICAgICAgY3NyX3dyaXRl
+bChwY2llLCB1cHBlcl8zMl9iaXRzKHBoeXMpLA0KPiArICAgICAgICAgICAgICAgICAgUEFCX0VY
+VF9QRVhfQkFSX0FNQVAoZnVuY19ubywgYmFyKSk7DQo+ICsgICAgICAgY3NyX3dyaXRlbChwY2ll
+LCBsb3dlcl8zMl9iaXRzKHBoeXMpIHwgUEVYX0JBUl9BTUFQX0VOLA0KPiArICAgICAgICAgICAg
+ICAgICAgUEFCX1BFWF9CQVJfQU1BUChmdW5jX25vLCBiYXIpKTsgfQ0KPiArDQo+ICt2b2lkIG1v
+Yml2ZWlsX3BjaWVfZGlzYWJsZV9pYl93aW5fZXAoc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUs
+DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB1OCBmdW5jX25vLCB1OCBi
+YXIpIHsNCj4gKyAgICAgICB1MzIgdmFsOw0KPiArDQo+ICsgICAgICAgdmFsID0gY3NyX3JlYWRs
+KHBjaWUsIFBBQl9QRVhfQkFSX0FNQVAoZnVuY19ubywgYmFyKSk7DQo+ICsgICAgICAgdmFsICY9
+IH4oMSA8PCAwKTsNCj4gKyAgICAgICBjc3Jfd3JpdGVsKHBjaWUsIHZhbCwgUEFCX1BFWF9CQVJf
+QU1BUChmdW5jX25vLCBiYXIpKTsgfQ0KPiArDQo+ICBpbnQgbW9iaXZlaWxfYnJpbmd1cF9saW5r
+KHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llKSAgew0KPiAgICAgICAgIGludCByZXRyaWVzOw0K
+PiBAQCAtMjI3LDIwICsyNzgsNTcgQEAgaW50IG1vYml2ZWlsX2JyaW5ndXBfbGluayhzdHJ1Y3Qg
+bW9iaXZlaWxfcGNpZSAqcGNpZSkNCj4gICAgICAgICByZXR1cm4gLUVUSU1FRE9VVDsNCj4gIH0N
+Cj4NCj4gLXZvaWQgbW9iaXZlaWxfcGNpZV9kaXNhYmxlX2liX3dpbihzdHJ1Y3QgbW9iaXZlaWxf
+cGNpZSAqcGNpLCBpbnQgDQo+IHdpbl9udW0pDQo+ICt2b2lkIG1vYml2ZWlsX3BjaWVfZGlzYWJs
+ZV9pYl93aW4oc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUsIGludCANCj4gK3dpbl9udW0pDQo+
+ICB7DQo+ICAgICAgICAgdTMyIHZhbDsNCj4NCj4gLSAgICAgICB2YWwgPSBjc3JfcmVhZGwocGNp
+LCBQQUJfUEVYX0FNQVBfQ1RSTCh3aW5fbnVtKSk7DQo+ICsgICAgICAgdmFsID0gY3NyX3JlYWRs
+KHBjaWUsIFBBQl9QRVhfQU1BUF9DVFJMKHdpbl9udW0pKTsNCj4gICAgICAgICB2YWwgJj0gfigx
+IDw8IEFNQVBfQ1RSTF9FTl9TSElGVCk7DQo+IC0gICAgICAgY3NyX3dyaXRlbChwY2ksIHZhbCwg
+UEFCX1BFWF9BTUFQX0NUUkwod2luX251bSkpOw0KPiArICAgICAgIGNzcl93cml0ZWwocGNpZSwg
+dmFsLCBQQUJfUEVYX0FNQVBfQ1RSTCh3aW5fbnVtKSk7DQo+ICB9DQo+DQo+IC12b2lkIG1vYml2
+ZWlsX3BjaWVfZGlzYWJsZV9vYl93aW4oc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaSwgaW50IA0K
+PiB3aW5fbnVtKQ0KPiArdm9pZCBtb2JpdmVpbF9wY2llX2Rpc2FibGVfb2Jfd2luKHN0cnVjdCBt
+b2JpdmVpbF9wY2llICpwY2llLCBpbnQgDQo+ICt3aW5fbnVtKQ0KPiAgew0KPiAgICAgICAgIHUz
+MiB2YWw7DQo+DQo+IC0gICAgICAgdmFsID0gY3NyX3JlYWRsKHBjaSwgUEFCX0FYSV9BTUFQX0NU
+Ukwod2luX251bSkpOw0KPiArICAgICAgIHZhbCA9IGNzcl9yZWFkbChwY2llLCBQQUJfQVhJX0FN
+QVBfQ1RSTCh3aW5fbnVtKSk7DQo+ICAgICAgICAgdmFsICY9IH4oMSA8PCBXSU5fRU5BQkxFX1NI
+SUZUKTsNCj4gLSAgICAgICBjc3Jfd3JpdGVsKHBjaSwgdmFsLCBQQUJfQVhJX0FNQVBfQ1RSTCh3
+aW5fbnVtKSk7DQo+ICsgICAgICAgY3NyX3dyaXRlbChwY2llLCB2YWwsIFBBQl9BWElfQU1BUF9D
+VFJMKHdpbl9udW0pKTsgfQ0KPiArDQo+ICt2b2lkIG1vYml2ZWlsX3BjaWVfZW5hYmxlX2JyaWRn
+ZV9waW8oc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaWUpIHsNCj4gKyAgICAgICB1MzIgdmFsOw0K
+PiArDQo+ICsgICAgICAgdmFsID0gY3NyX3JlYWRsKHBjaWUsIFBBQl9DVFJMKTsNCj4gKyAgICAg
+ICB2YWwgfD0gMSA8PCBBTUJBX1BJT19FTkFCTEVfU0hJRlQ7DQo+ICsgICAgICAgdmFsIHw9IDEg
+PDwgUEVYX1BJT19FTkFCTEVfU0hJRlQ7DQo+ICsgICAgICAgY3NyX3dyaXRlbChwY2llLCB2YWws
+IFBBQl9DVFJMKTsgfQ0KPiArDQo+ICt2b2lkIG1vYml2ZWlsX3BjaWVfZW5hYmxlX2VuZ2luZV9h
+cGlvKHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llKSB7DQo+ICsgICAgICAgdTMyIHZhbDsNCj4g
+Kw0KPiArICAgICAgIHZhbCA9IGNzcl9yZWFkbChwY2llLCBQQUJfQVhJX1BJT19DVFJMKTsNCj4g
+KyAgICAgICB2YWwgfD0gQVBJT19FTl9NQVNLOw0KPiArICAgICAgIGNzcl93cml0ZWwocGNpZSwg
+dmFsLCBQQUJfQVhJX1BJT19DVFJMKTsgfQ0KPiArDQo+ICt2b2lkIG1vYml2ZWlsX3BjaWVfZW5h
+YmxlX2VuZ2luZV9wcGlvKHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llKSB7DQo+ICsgICAgICAg
+dTMyIHZhbDsNCj4gKw0KPiArICAgICAgIHZhbCA9IGNzcl9yZWFkbChwY2llLCBQQUJfUEVYX1BJ
+T19DVFJMKTsNCj4gKyAgICAgICB2YWwgfD0gMSA8PCBQSU9fRU5BQkxFX1NISUZUOw0KPiArICAg
+ICAgIGNzcl93cml0ZWwocGNpZSwgdmFsLCBQQUJfUEVYX1BJT19DVFJMKTsgfQ0KPiArDQo+ICt2
+b2lkIG1vYml2ZWlsX3BjaWVfZW5hYmxlX21zaV9lcChzdHJ1Y3QgbW9iaXZlaWxfcGNpZSAqcGNp
+ZSkgew0KPiArICAgICAgIHUzMiB2YWw7DQo+ICsNCj4gKyAgICAgICB2YWwgPSAgY3NyX3JlYWRs
+KHBjaWUsIFBBQl9JTlRQX0FNQkFfTUlTQ19FTkIpOw0KPiArICAgICAgIHZhbCB8PSAxIDw8IDA7
+DQo+ICsgICAgICAgY3NyX3dyaXRlbChwY2llLCB2YWwsIFBBQl9JTlRQX0FNQkFfTUlTQ19FTkIp
+Ow0KPiAgfQ0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9w
+Y2llLW1vYml2ZWlsLmggDQo+IGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2ll
+LW1vYml2ZWlsLmgNCj4gaW5kZXggZjBlMmU0YS4uMjc1YzY4ZiAxMDA2NDQNCj4gLS0tIGEvZHJp
+dmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLmgNCj4gKysrIGIvZHJp
+dmVycy9wY2kvY29udHJvbGxlci9tb2JpdmVpbC9wY2llLW1vYml2ZWlsLmgNCj4gQEAgLTE1LDYg
+KzE1LDEwIEBADQo+ICAjaW5jbHVkZSA8bGludXgvbXNpLmg+DQo+ICAjaW5jbHVkZSAiLi4vLi4v
+cGNpLmgiDQo+DQo+ICsjaW5jbHVkZSA8bGludXgvcGNpLWVwYy5oPg0KPiArI2luY2x1ZGUgPGxp
+bnV4L3BjaS1lcGYuaD4NCj4gKw0KPiArI2RlZmluZSBNQVhfSUFUVV9PVVQgICAgICAgICAgICAg
+ICAgICAgMjU2DQo+ICAvKiByZWdpc3RlciBvZmZzZXRzIGFuZCBiaXQgcG9zaXRpb25zICovDQo+
+DQo+ICAvKg0KPiBAQCAtNDAsNiArNDQsOSBAQA0KPiAgI2RlZmluZSAgUEFHRV9TRUxfTUFTSyAg
+ICAgICAgICAgICAgICAgMHgzZg0KPiAgI2RlZmluZSAgUEFHRV9MT19NQVNLICAgICAgICAgICAg
+ICAgICAgMHgzZmYNCj4gICNkZWZpbmUgIFBBR0VfU0VMX09GRlNFVF9TSElGVCAgICAgICAgIDEw
+DQo+ICsjZGVmaW5lICBGVU5DX1NFTF9TSElGVCAgICAgICAgMTkNCj4gKyNkZWZpbmUgIEZVTkNf
+U0VMX01BU0sgICAgICAgICAweDFmZg0KPiArI2RlZmluZSAgTVNJX1NXX0NUUkxfRU4gICAgICAg
+ICgxIDw8IDI5KQ0KPg0KPiAgI2RlZmluZSBQQUJfQUNUSVZJVFlfU1RBVCAgICAgICAgICAgICAg
+MHg4MWMNCj4NCj4gQEAgLTEwMCw2ICsxMDcsMTkgQEANCj4gICNkZWZpbmUgUEFCX1BFWF9BTUFQ
+X1BFWF9XSU5fTCh3aW4pICAgIFBBQl9SRUdfQUREUigweDRiYTgsIHdpbikNCj4gICNkZWZpbmUg
+UEFCX1BFWF9BTUFQX1BFWF9XSU5fSCh3aW4pICAgIFBBQl9SRUdfQUREUigweDRiYWMsIHdpbikN
+Cj4NCj4gKy8qIFBQSU8gV0lOcyBFUCBtb2RlICovDQo+ICsjZGVmaW5lIFBBQl9QRVhfQkFSX0FN
+QVAoZnVuYywgYmFyKSAgICAgICAgICAgICgweDFiYTAgKyAweDIwICogZnVuYyArIDQgKiBiYXIp
+DQo+ICsjZGVmaW5lIFBBQl9FWFRfUEVYX0JBUl9BTUFQKGZ1bmMsIGJhcikgICAgICAgICAgICAg
+ICAgKDB4ODRhMCArIDB4MjAgKiBmdW5jICsgNCAqIGJhcikNCj4gKyNkZWZpbmUgUEVYX0JBUl9B
+TUFQX0VOICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAoMSA8PCAwKQ0KPiArDQo+ICsj
+ZGVmaW5lIFBBQl9BWElfQU1BUF9QQ0lfSERSX1BBUkFNKGlkeCkgICAgICAgICAgICAgICAgKDB4
+NWJhMCArIDB4MDQgKiBpZHgpDQo+ICsjZGVmaW5lIFBBQl9NU0lYX1RBQkxFX1BCQV9BQ0NFU1Mg
+ICAgICAgICAgICAgIDB4RDAwMA0KPiArDQo+ICsjZGVmaW5lIEdQRVhfQkFSX0VOQUJMRSAgICAg
+ICAgICAgICAgICAgICAgICAgICAweDRENA0KPiArI2RlZmluZSBHUEVYX0JBUl9TSVpFX0xEVyAg
+ICAgICAgICAgICAgICAgICAgICAgMHg0RDgNCj4gKyNkZWZpbmUgR1BFWF9CQVJfU0laRV9VRFcg
+ICAgICAgICAgICAgICAgICAgICAgIDB4NERDDQo+ICsjZGVmaW5lIEdQRVhfQkFSX1NFTEVDVCAg
+ICAgICAgICAgICAgICAgICAgICAgICAweDRFMA0KPiArDQo+ICAvKiBzdGFydGluZyBvZmZzZXQg
+b2YgSU5UWCBiaXRzIGluIHN0YXR1cyByZWdpc3RlciAqLw0KPiAgI2RlZmluZSBQQUJfSU5UWF9T
+VEFSVCAgICAgICAgICAgICAgICAgNQ0KPg0KPiBAQCAtMTM3LDYgKzE1Nyw3IEBADQo+ICAgICAg
+ICAgKChvZmYgPj4gUEFHRV9TRUxfT0ZGU0VUX1NISUZUKSAmIFBBR0VfU0VMX01BU0spDQo+DQo+
+ICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZTsNCj4gK3N0cnVjdCBtb2JpdmVpbF9wY2llX2VwOw0KPg0K
+PiAgc3RydWN0IG1vYml2ZWlsX21zaSB7ICAgICAgICAgICAgICAgICAgLyogTVNJIGluZm9ybWF0
+aW9uICovDQo+ICAgICAgICAgc3RydWN0IG11dGV4IGxvY2s7ICAgICAgICAgICAgICAvKiBwcm90
+ZWN0IGJpdG1hcCB2YXJpYWJsZSAqLw0KPiBAQCAtMTY5LDYgKzE5MCwyOSBAQCBzdHJ1Y3QgbW9i
+aXZlaWxfcGFiX29wcyB7DQo+ICAgICAgICAgaW50ICgqaG9zdF9pbml0KShzdHJ1Y3QgbW9iaXZl
+aWxfcGNpZSAqcGNpZSk7ICB9Ow0KPg0KPiArc3RydWN0IG1vYml2ZWlsX3BjaWVfZXBfb3BzIHsN
+Cj4gKyAgICAgICB2b2lkICgqZXBfaW5pdCkoc3RydWN0IG1vYml2ZWlsX3BjaWVfZXAgKmVwKTsN
+Cj4gKyAgICAgICBpbnQgKCpyYWlzZV9pcnEpKHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwICplcCwg
+dTggZnVuY19ubywNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgIGVudW0gcGNpX2VwY19pcnFf
+dHlwZSB0eXBlLCB1MTYgDQo+ICtpbnRlcnJ1cHRfbnVtKTsgfTsNCj4gKw0KPiArc3RydWN0IG1v
+Yml2ZWlsX3BjaWVfZXAgew0KPiArICAgICAgIHN0cnVjdCBwY2lfZXBjICplcGM7DQo+ICsgICAg
+ICAgc3RydWN0IG1vYml2ZWlsX3BjaWVfZXBfb3BzICpvcHM7DQo+ICsgICAgICAgcGh5c19hZGRy
+X3QgcGh5c19iYXNlOw0KPiArICAgICAgIHNpemVfdCBhZGRyX3NpemU7DQo+ICsgICAgICAgc2l6
+ZV90IHBhZ2Vfc2l6ZTsNCj4gKyAgICAgICBwaHlzX2FkZHJfdCAqb3V0Ym91bmRfYWRkcjsNCj4g
+KyAgICAgICB1bnNpZ25lZCBsb25nICpvYl93aW5kb3dfbWFwOw0KPiArICAgICAgIHUzMiBudW1f
+b2Jfd2luZG93czsNCj4gKyAgICAgICB2b2lkIF9faW9tZW0gKm1zaV9tZW07DQo+ICsgICAgICAg
+cGh5c19hZGRyX3QgbXNpX21lbV9waHlzOw0KPiArICAgICAgIHU4IG1zaV9jYXA7ICAgICAvKiBN
+U0kgY2FwYWJpbGl0eSBvZmZzZXQgKi8NCj4gKyAgICAgICB1OCBtc2l4X2NhcDsgICAgLyogTVNJ
+LVggY2FwYWJpbGl0eSBvZmZzZXQgKi8NCj4gKyAgICAgICB1OCBiYXJfbnVtOw0KPiArICAgICAg
+IHUzMiBwZl9udW07DQo+ICt9Ow0KPiArDQo+ICBzdHJ1Y3QgbW9iaXZlaWxfcGNpZSB7DQo+ICAg
+ICAgICAgc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldjsNCj4gICAgICAgICBzdHJ1Y3QgbGlz
+dF9oZWFkICpyZXNvdXJjZXM7DQo+IEBAIC0xODEsNyArMjI1LDEwIEBAIHN0cnVjdCBtb2JpdmVp
+bF9wY2llIHsNCj4gICAgICAgICB1MzIgaWJfd2luc19jb25maWd1cmVkOyAgICAgICAgIC8qIGNv
+bmZpZ3VyZWQgaW5ib3VuZCB3aW5kb3dzICovDQo+ICAgICAgICAgY29uc3Qgc3RydWN0IG1vYml2
+ZWlsX3BhYl9vcHMgKm9wczsNCj4gICAgICAgICBzdHJ1Y3Qgcm9vdF9wb3J0IHJwOw0KPiArICAg
+ICAgIHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwIGVwOw0KPiAgfTsNCj4gKyNkZWZpbmUgdG9fbW9i
+aXZlaWxfcGNpZV9mcm9tX2VwKGVuZHBvaW50KSAgIFwNCj4gKyAgICAgICAgICAgICAgICAgICAg
+ICAgICAgIGNvbnRhaW5lcl9vZigoZW5kcG9pbnQpLCBzdHJ1Y3QgDQo+ICttb2JpdmVpbF9wY2ll
+LCBlcCkNCj4NCj4gIGludCBtb2JpdmVpbF9wY2llX2hvc3RfcHJvYmUoc3RydWN0IG1vYml2ZWls
+X3BjaWUgKnBjaWUpOyAgaW50IA0KPiBtb2JpdmVpbF9ob3N0X2luaXQoc3RydWN0IG1vYml2ZWls
+X3BjaWUgKnBjaWUsIGJvb2wgcmVpbml0KTsgQEAgLTIyNiw0IA0KPiArMjczLDIxIEBAIHN0YXRp
+YyBpbmxpbmUgdm9pZCBjc3Jfd3JpdGViKHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2llLCB1MzIg
+dmFsLCB1MzIgb2ZmKQ0KPiAgICAgICAgIGNzcl93cml0ZShwY2llLCB2YWwsIG9mZiwgMHgxKTsg
+IH0NCj4NCj4gK3ZvaWQgcHJvZ3JhbV9pYl93aW5kb3dzX2VwKHN0cnVjdCBtb2JpdmVpbF9wY2ll
+ICpwY2llLCB1OCBmdW5jX25vLA0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICBpbnQgYmFy
+LCB1NjQgcGh5cyk7IGludCANCj4gK3Byb2dyYW1fb2Jfd2luZG93c19lcChzdHJ1Y3QgbW9iaXZl
+aWxfcGNpZSAqcGNpZSwgaW50IHdpbl9udW0sIGludCB0eXBlLA0KPiArICAgICAgICAgICAgICAg
+ICAgICAgICAgIHU2NCBwaHlzLCB1NjQgYnVzX2FkZHIsIHU4IGZ1bmMsIHU2NCBzaXplKTsgDQo+
+ICt2b2lkIG1vYml2ZWlsX3BjaWVfZGlzYWJsZV9pYl93aW5fZXAoc3RydWN0IG1vYml2ZWlsX3Bj
+aWUgKnBjaSwNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHU4IGZ1bmNf
+bm8sIHU4IGJhcik7IGludCANCj4gK21vYml2ZWlsX3BjaWVfZXBfaW5pdChzdHJ1Y3QgbW9iaXZl
+aWxfcGNpZV9lcCAqZXApOyBpbnQgDQo+ICttb2JpdmVpbF9wY2llX2VwX3JhaXNlX2xlZ2FjeV9p
+cnEoc3RydWN0IG1vYml2ZWlsX3BjaWVfZXAgKmVwLCB1OCANCj4gK2Z1bmNfbm8pOyBpbnQgbW9i
+aXZlaWxfcGNpZV9lcF9yYWlzZV9tc2lfaXJxKHN0cnVjdCBtb2JpdmVpbF9wY2llX2VwICplcCwg
+dTggZnVuY19ubywNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICB1OCBpbnRlcnJ1cHRf
+bnVtKTsgaW50IA0KPiArbW9iaXZlaWxfcGNpZV9lcF9yYWlzZV9tc2l4X2lycShzdHJ1Y3QgbW9i
+aXZlaWxfcGNpZV9lcCAqZXAsIHU4IGZ1bmNfbm8sDQo+ICsgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgdTE2IGludGVycnVwdF9udW0pOyB2b2lkIA0KPiArbW9iaXZlaWxfcGNpZV9lcF9yZXNl
+dF9iYXIoc3RydWN0IG1vYml2ZWlsX3BjaWUgKnBjaSwgZW51bSBwY2lfYmFybm8gDQo+ICtiYXIp
+OyB2b2lkIG1vYml2ZWlsX3BjaWVfZW5hYmxlX2JyaWRnZV9waW8oc3RydWN0IG1vYml2ZWlsX3Bj
+aWUgDQo+ICsqcGNpKTsgdm9pZCBtb2JpdmVpbF9wY2llX2VuYWJsZV9lbmdpbmVfYXBpbyhzdHJ1
+Y3QgbW9iaXZlaWxfcGNpZSANCj4gKypwY2kpOyB2b2lkIG1vYml2ZWlsX3BjaWVfZW5hYmxlX2Vu
+Z2luZV9wcGlvKHN0cnVjdCBtb2JpdmVpbF9wY2llIA0KPiArKnBjaSk7IHZvaWQgbW9iaXZlaWxf
+cGNpZV9lbmFibGVfbXNpX2VwKHN0cnVjdCBtb2JpdmVpbF9wY2llICpwY2kpOw0KPiAgI2VuZGlm
+IC8qIF9QQ0lFX01PQklWRUlMX0ggKi8NCj4gLS0NCj4gMS43LjENCj4NCg0KUGxlYXNlIHJldmll
+dyBhbmQgZml4IG1hY3JvIGFsaWdubWVudHMsIG90aGVyd2lzZSBsb29rcyBvay4NCltYaWFvd2Vp
+IEJhb10gT0ssIHRoYW5rcy4NClJldmlld2VkLWJ5OiBTdWJyYWhtYW55YSBMaW5nYXBwYSA8bC5z
+dWJyYWhtYW55YUBtb2JpdmVpbC5jby5pbj4NCg==
