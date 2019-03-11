@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 901FAC10F06
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 141B1C10F0C
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F33C2230D
+	by mail.kernel.org (Postfix) with ESMTP id D15D322308
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="LPmcZXtt"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="oM4pJG36"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727654AbfCKNbh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Mar 2019 09:31:37 -0400
-Received: from mta-01.yadro.com ([89.207.88.251]:50966 "EHLO mta-01.yadro.com"
+        id S1727626AbfCKNbi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Mar 2019 09:31:38 -0400
+Received: from mta-01.yadro.com ([89.207.88.251]:50964 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727388AbfCKNbh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Mar 2019 09:31:37 -0400
+        id S1727320AbfCKNbi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Mar 2019 09:31:38 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id D941441992;
+        by mta-01.yadro.com (Postfix) with ESMTP id 83F5F419F2;
         Mon, 11 Mar 2019 13:31:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1552311094; x=1554125495; bh=9BP3Tbv9+ubeBXLOIcXMl63xSSLjPLFozXx
-        oo+2YPJw=; b=LPmcZXttUt0GGAXWzlUfEKdo0PFqn+bU9zEx13/PIhxYZU7kLnQ
-        IgEb1dOYJ6mSNfXKqPZS0/3Nqv3cjaZQuw4MlAby7sCSHK20PIUF72BJ2VpK5Myr
-        Ms3vmQ1FbYWv3NjzxbxAg4/9CMLKeznpNZBX4oZIXuwRWtrNXQtwF/y8=
+        1552311094; x=1554125495; bh=gIXHQd009lpgxVuce3TuU6iKAvHLcp7oViQ
+        HqJBpuOY=; b=oM4pJG36orAJjiug6BYUzXbId0D5PFADFlr/4h8ZfTx38dKbx8l
+        EMvV+bQtqy/ucfBuD0pSq2BC9JUJ7HFTfJ++k373X8nyTvOjEDRBSZaiita/zvu+
+        1uvac+IgDPNRR/OiYOFLb0zySjWKjRQ2VKIkYOqkzdqnPEHQCnMrFIh0=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id fNIflPFjFzos; Mon, 11 Mar 2019 16:31:34 +0300 (MSK)
+        with ESMTP id 5w5el8JkOmmg; Mon, 11 Mar 2019 16:31:34 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id EF6EF419CA;
+        by mta-01.yadro.com (Postfix) with ESMTPS id BAC9D41992;
         Mon, 11 Mar 2019 16:31:31 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
@@ -49,9 +49,9 @@ From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC v4 08/21] nvme-pci: Handle movable BARs
-Date:   Mon, 11 Mar 2019 16:31:09 +0300
-Message-ID: <20190311133122.11417-9-s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC v4 07/21] PCI: Wake up bridges during rescan when movable BARs enabled
+Date:   Mon, 11 Mar 2019 16:31:08 +0300
+Message-ID: <20190311133122.11417-8-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
 References: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
@@ -66,88 +66,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hotplugged devices can affect the existing ones by moving their BARs.
-PCI subsystem will inform the NVME driver about this by invoking
-reset_prepare()+reset_done(), then iounmap()+ioremap() must be called.
+Use the PM runtime methods to wake up the bridges before accessing
+their config space.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/nvme/host/pci.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 92bad1c810ac..ccea3033a67a 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -106,6 +106,7 @@ struct nvme_dev {
- 	unsigned int num_vecs;
- 	int q_depth;
- 	u32 db_stride;
-+	resource_size_t current_phys_bar;
- 	void __iomem *bar;
- 	unsigned long bar_mapped_size;
- 	struct work_struct remove_work;
-@@ -1672,13 +1673,16 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 88350dd56344..dc935f82a595 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3252,6 +3252,8 @@ static void pci_bus_rescan_prepare(struct pci_bus *bus)
  {
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+ 	struct pci_dev *dev;
  
--	if (size <= dev->bar_mapped_size)
-+	if (dev->bar &&
-+	    dev->current_phys_bar == pci_resource_start(pdev, 0) &&
-+	    size <= dev->bar_mapped_size)
- 		return 0;
- 	if (size > pci_resource_len(pdev, 0))
- 		return -ENOMEM;
- 	if (dev->bar)
- 		iounmap(dev->bar);
--	dev->bar = ioremap(pci_resource_start(pdev, 0), size);
-+	dev->current_phys_bar = pci_resource_start(pdev, 0);
-+	dev->bar = ioremap(dev->current_phys_bar, size);
- 	if (!dev->bar) {
- 		dev->bar_mapped_size = 0;
- 		return -ENOMEM;
-@@ -2504,6 +2508,8 @@ static void nvme_reset_work(struct work_struct *work)
- 	if (WARN_ON(dev->ctrl.state != NVME_CTRL_RESETTING))
- 		goto out;
- 
-+	nvme_remap_bar(dev, db_bar_size(dev, 0));
++	pm_runtime_get_sync(&bus->dev);
 +
- 	/*
- 	 * If we're called to reset a live controller first shut it down before
- 	 * moving on.
-@@ -2910,6 +2916,23 @@ static void nvme_error_resume(struct pci_dev *pdev)
- 	flush_work(&dev->ctrl.reset_work);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *child = dev->subordinate;
+ 
+@@ -3278,6 +3280,8 @@ static void pci_bus_rescan_done(struct pci_bus *bus)
+ 			dev->driver->rescan_done(dev);
+ 		}
+ 	}
++
++	pm_runtime_put(&bus->dev);
  }
  
-+void nvme_rescan_prepare(struct pci_dev *pdev)
-+{
-+	struct nvme_dev *dev = pci_get_drvdata(pdev);
-+
-+	nvme_dev_disable(dev, false);
-+	nvme_dev_unmap(dev);
-+	dev->bar = NULL;
-+}
-+
-+void nvme_rescan_done(struct pci_dev *pdev)
-+{
-+	struct nvme_dev *dev = pci_get_drvdata(pdev);
-+
-+	nvme_dev_map(dev);
-+	nvme_reset_ctrl_sync(&dev->ctrl);
-+}
-+
- static const struct pci_error_handlers nvme_err_handler = {
- 	.error_detected	= nvme_error_detected,
- 	.slot_reset	= nvme_slot_reset,
-@@ -2974,6 +2997,8 @@ static struct pci_driver nvme_driver = {
- 	},
- 	.sriov_configure = pci_sriov_configure_simple,
- 	.err_handler	= &nvme_err_handler,
-+	.rescan_prepare	= nvme_rescan_prepare,
-+	.rescan_done	= nvme_rescan_done,
- };
- 
- static int __init nvme_init(void)
+ /**
 -- 
 2.20.1
 
