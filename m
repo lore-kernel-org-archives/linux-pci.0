@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49727C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD326C4360F
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 11:52:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1934C20657
+	by mail.kernel.org (Postfix) with ESMTP id 787D420657
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 11:52:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Ry9TUJ53"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="DB2B4RcQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726675AbfCKLws (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726496AbfCKLws (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 11 Mar 2019 07:52:48 -0400
-Received: from mta-01.yadro.com ([89.207.88.251]:46924 "EHLO mta-01.yadro.com"
+Received: from mta-01.yadro.com ([89.207.88.251]:46910 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726496AbfCKLwr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726219AbfCKLwr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 11 Mar 2019 07:52:47 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 9B545412D2;
+        by mta-01.yadro.com (Postfix) with ESMTP id 6646841992;
         Mon, 11 Mar 2019 11:52:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1552305165; x=1554119566; bh=GF6kN91K+PfTL2Cb0UzmEfuUtJ/pzsAT2+q
-        FqgYGn6A=; b=Ry9TUJ53gRY7oTEw+P4l/y/tbJbgTQ1KiMSYsC17gGBoAdR5kOT
-        mDk3hhZVzCTf+NfQQtRC8LX1mMFd2gf+BSdxP1yfGs3ootmEENp8RdwWHnM0yB9n
-        PZ2pLVx6LXnlB+pnaqme6Wy+lF0kh+T2isEQejfJzafCKZG+3jL4GdGI=
+        1552305165; x=1554119566; bh=XtRgZNFl+3D9e0mv4Sc2JlgG002lcVOi16G
+        E2kRp7K4=; b=DB2B4RcQAh8Ni7QwlzpJ6OtJSohKjxAeWQTn7p9DwfWNx9xvR4T
+        gu7nDhuBlZqCXScDZ7aBP8ZPCfnrCLTXD5YtFtCzUvzSxC8kyXlprNWAyn2zl4A+
+        rgS6ravB8KZ3fiXTy301J+bGI5UxbmvABG8ar8KdLXvL+yykqnQcuz/o=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id VCkakqWUyQnt; Mon, 11 Mar 2019 14:52:45 +0300 (MSK)
+        with ESMTP id Rm5nwm54T9bw; Mon, 11 Mar 2019 14:52:45 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 5672B419D8;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 2953341995;
         Mon, 11 Mar 2019 14:52:42 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
@@ -53,9 +53,9 @@ CC:     Oliver O'Halloran <oohall@gmail.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Russell Currey <ruscur@russell.cc>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v5 8/8] powerpc/powernv/pci: Enable reassigning the bus numbers
-Date:   Mon, 11 Mar 2019 14:52:33 +0300
-Message-ID: <20190311115233.6514-9-s.miroshnichenko@yadro.com>
+Subject: [PATCH v5 7/8] powerpc/powernv/pci: Hook up the writes to PCI_SECONDARY_BUS register
+Date:   Mon, 11 Mar 2019 14:52:32 +0300
+Message-ID: <20190311115233.6514-8-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
 References: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
@@ -70,40 +70,152 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When the pci=realloc command line switch is enabled (which should only be
-set when working on on top of the skiboot with the "core/pci: Sync VFs and
-the changes of bdfns between the firmware and the OS" patch serie applied),
-PowerNV will not depend on PCIe topology info from DT anymore.
+Writing a new value to the PCI_SECONDARY_BUS register of the bridge means
+that its children will become addressable on another address (new B in BDF)
+or even un-addressable if the secondary bus is set to zero.
 
-This makes possible to re-enumerate the fabric, assign the new bus numbers
-and switch from the pnv_php module to the standard pciehp driver for PCIe
-hotplug functionality.
+On PowerNV, device PEs are heavily BDF-dependent, so they must be updated
+on every such change of its address.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- arch/powerpc/kernel/pci_dn.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ arch/powerpc/platforms/powernv/pci.c | 118 ++++++++++++++++++++++++++-
+ 1 file changed, 116 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index 17362a9b4678..9437af1a3b20 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -595,3 +595,15 @@ static void pci_dev_pdn_setup(struct pci_dev *pdev)
- 	pdev->dev.archdata.pci_data = pdn;
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 8cc6661781e2..40f68955f34f 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -722,13 +722,127 @@ int pnv_pci_cfg_read(struct pci_dn *pdn,
+ 				    where, size, val);
  }
- DECLARE_PCI_FIXUP_EARLY(PCI_ANY_ID, PCI_ANY_ID, pci_dev_pdn_setup);
-+
-+char * __init pcibios_setup(char *str)
+ 
++static void invalidate_children_pes(struct pci_dn *pdn)
 +{
-+	if (!strncmp(str, "realloc=", 8)) {
-+		if (!strncmp(str + 8, "on", 2))
-+			pci_add_flags(PCI_REASSIGN_ALL_BUS);
-+	} else if (!strncmp(str, "realloc", 7)) {
-+		pci_add_flags(PCI_REASSIGN_ALL_BUS);
++	struct pnv_phb *phb = pdn->phb->private_data;
++	struct pci_dn *child;
++	bool found_pe = false;
++	int pe_num;
++	int pe_bus;
++
++	list_for_each_entry(child, &pdn->child_list, list) {
++		struct pnv_ioda_pe *pe = (child->pe_number != IODA_INVALID_PE) ?
++			&phb->ioda.pe_array[child->pe_number] :
++			NULL;
++
++		if (!child->busno)
++			continue;
++
++		if ((child->class_code >> 8) == PCI_CLASS_BRIDGE_PCI)
++			invalidate_children_pes(child);
++
++		if (pe) {
++			u8 rid_bus = (pe->rid >> 8) & 0xff;
++
++			if (rid_bus) {
++				pe_num = child->pe_number;
++				pe_bus = rid_bus;
++				found_pe = true;
++			}
++
++			pe->rid &= 0xff;
++		}
++
++		child->busno = 0;
 +	}
 +
-+	return str;
++	if (found_pe) {
++		u16 rid = pe_bus << 8;
++
++		opal_pci_set_pe(phb->opal_id, pe_num, rid, 7, 0, 0, OPAL_UNMAP_PE);
++	}
 +}
++
++static u8 pre_hook_new_sec_bus(struct pci_dn *pdn, u8 new_secondary_bus)
++{
++	u32 old_secondary_bus = 0;
++
++	if ((pdn->class_code >> 8) != PCI_CLASS_BRIDGE_PCI)
++		return 0;
++
++	pnv_pci_cfg_read(pdn, PCI_SECONDARY_BUS, 1, &old_secondary_bus);
++	old_secondary_bus &= 0xff;
++
++	if (old_secondary_bus != new_secondary_bus)
++		invalidate_children_pes(pdn);
++
++	return old_secondary_bus;
++}
++
++static void update_children_pes(struct pci_dn *pdn, u8 new_secondary_bus)
++{
++	struct pnv_phb *phb = pdn->phb->private_data;
++	struct pci_dn *child;
++	bool found_pe = false;
++	int pe_num;
++
++	if (!new_secondary_bus)
++		return;
++
++	list_for_each_entry(child, &pdn->child_list, list) {
++		struct pnv_ioda_pe *pe = (child->pe_number != IODA_INVALID_PE) ?
++			&phb->ioda.pe_array[child->pe_number] :
++			NULL;
++
++		if (child->busno)
++			continue;
++
++		child->busno = new_secondary_bus;
++
++		if (pe) {
++			pe->rid |= (child->busno << 8);
++			pe_num = child->pe_number;
++			found_pe = true;
++		}
++	}
++
++	if (found_pe) {
++		u16 rid = new_secondary_bus << 8;
++
++		opal_pci_set_pe(phb->opal_id, pe_num, rid, 7, 0, 0, OPAL_MAP_PE);
++	}
++}
++
++static void post_hook_new_sec_bus(struct pci_dn *pdn, u8 new_secondary_bus)
++{
++	if ((pdn->class_code >> 8) != PCI_CLASS_BRIDGE_PCI)
++		return;
++
++	update_children_pes(pdn, new_secondary_bus);
++}
++
+ int pnv_pci_cfg_write(struct pci_dn *pdn,
+ 		      int where, int size, u32 val)
+ {
+ 	struct pnv_phb *phb = pdn->phb->private_data;
++	u8 old_secondary_bus = 0, new_secondary_bus = 0;
++	int rc;
++
++	if (where == PCI_SECONDARY_BUS) {
++		new_secondary_bus = val & 0xff;
++		old_secondary_bus = pre_hook_new_sec_bus(pdn, new_secondary_bus);
++	} else if (where == PCI_PRIMARY_BUS && size > 1) {
++		new_secondary_bus = (val >> 8) & 0xff;
++		old_secondary_bus = pre_hook_new_sec_bus(pdn, new_secondary_bus);
++	}
+ 
+-	return pnv_pci_cfg_write_raw(phb->opal_id, pdn->busno, pdn->devfn,
+-				     where, size, val);
++	rc = pnv_pci_cfg_write_raw(phb->opal_id, pdn->busno, pdn->devfn,
++				   where, size, val);
++
++	if (new_secondary_bus && old_secondary_bus != new_secondary_bus)
++		post_hook_new_sec_bus(pdn, new_secondary_bus);
++
++	return rc;
+ }
+ 
+ #if CONFIG_EEH
 -- 
 2.20.1
 
