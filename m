@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABCE8C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC57FC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:30:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7019920857
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:30:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B14F72084D
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:30:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Jcp/n/Ez"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="q1wv3SQW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727132AbfCKJaZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Mar 2019 05:30:25 -0400
-Received: from mail-eopbgr70072.outbound.protection.outlook.com ([40.107.7.72]:19328
+        id S1727083AbfCKJab (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Mar 2019 05:30:31 -0400
+Received: from mail-eopbgr70077.outbound.protection.outlook.com ([40.107.7.77]:10560
         "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727195AbfCKJaY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Mar 2019 05:30:24 -0400
+        id S1727195AbfCKJab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Mar 2019 05:30:31 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QNCN4livbs1wo+1uLQfsBQB2e+/P+52q+z6t6VPGPtc=;
- b=Jcp/n/EzRaghXYfrZLxVTTvgiVbi/sT64BNNDLoaJo6tUViuoweyoc5I/dC+4aR+EwoOhxQvhjZVeAzkc5V6wVXcHl5mb2gQoiEtYqDQ9CPc3S0E/po8veV0rig+DHESoQ5J59cATwbYXKp1YLdh+n1HH0DUoQXNG4qC2vZrZfs=
+ bh=11vMYtPjZFN2gkhgcCGW4FDZdYGpU4nuJcyKk/dfgqg=;
+ b=q1wv3SQWyGTs0Cu/9SqbnizLDJaG8vRp6A5iCkQ16cZJ6Q8IUROkXNuLlpUBSwTgjhxYAnyHz7AtlJrk9Kjq9W1dywohXe7p4VqLRdFN0p7RTrUmThtpvoYtMY4bjXCXRWtKUaXEIihb1+bwR8LlfqcvnY+XGB3jv/OsnNn3/34=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.3.19) by
  AM6PR04MB5592.eurprd04.prod.outlook.com (20.178.87.209) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1686.18; Mon, 11 Mar 2019 09:30:20 +0000
+ 15.20.1686.18; Mon, 11 Mar 2019 09:30:27 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::30cc:e034:1f7a:2cc7]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::30cc:e034:1f7a:2cc7%2]) with mapi id 15.20.1686.021; Mon, 11 Mar 2019
- 09:30:20 +0000
+ 09:30:27 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -53,11 +53,12 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCHv4 03/28] PCI: mobiveil: correct the returned error number
-Thread-Topic: [PATCHv4 03/28] PCI: mobiveil: correct the returned error number
-Thread-Index: AQHU1+0LmAHw3KdU9kO+wVi9R8LChg==
-Date:   Mon, 11 Mar 2019 09:30:20 +0000
-Message-ID: <20190311093130.7209-4-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv4 04/28] PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
+Thread-Topic: [PATCHv4 04/28] PCI: mobiveil: remove flag
+ MSI_FLAG_MULTI_PCI_MSI
+Thread-Index: AQHU1+0Ppa3nAagG1EaLvH5ZY14VkQ==
+Date:   Mon, 11 Mar 2019 09:30:27 +0000
+Message-ID: <20190311093130.7209-5-Zhiqiang.Hou@nxp.com>
 References: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -71,49 +72,49 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 35201a16-ed14-4bb7-99df-08d6a6042dd2
+x-ms-office365-filtering-correlation-id: 2ae83433-1db3-4f39-67fa-08d6a6043200
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB5592;
 x-ms-traffictypediagnostic: AM6PR04MB5592:
-x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;AM6PR04MB5592;23:ypj/CEkDDPDp/Yw8d2s72DM8FNHrvNO2X1uH+yH?=
- =?iso-8859-1?Q?xweAf+QATyV8xIi+TGdCu5qn+Q8Cn53w6mLalXhWGMu9CkitAa0cAQCTtW?=
- =?iso-8859-1?Q?bsjViO9pHuMT5Fl5xykCvn3Pg6uC07qxLyKWFm3zMi3rYLC8cSfH/5aQCF?=
- =?iso-8859-1?Q?xx+EgcWpBMJDeu4kbeafe8rGl6lgJYKatdEjs9/CFBiieS4M+YJdeIkhlC?=
- =?iso-8859-1?Q?t16Bn+aPLpHd/wAUQ6Uj6pRtxzSpWzhygKIBrnoAr6brlQnfDZRb7EpCzR?=
- =?iso-8859-1?Q?RJrjYSYTvY7cHfJFDekZ+YBhGQOgLDX+hShqJfhbSI8BSAsK+PurEFur87?=
- =?iso-8859-1?Q?JkrRHKLWOjCHm6yWdZXVo+/BOxaCNwhDjpMPCjfcqIKwVzgzZ/0AE5+yNq?=
- =?iso-8859-1?Q?N3BJPd6vmxAvkcnC7sFGSg6yLbcu4KrEk/UWRlPp6/bQoptUAobYDdBP9N?=
- =?iso-8859-1?Q?N7s3iIdhix/flsRc5eFDrScjEtsD1styWBrF5EoJqTeF4P1UGD0XXucRWW?=
- =?iso-8859-1?Q?oR5UH2B7LUBEx2C0BjwZ0OO6JdA6+9muUCpRcCRFYNWqu9fiGvu8fd5Mz6?=
- =?iso-8859-1?Q?TEk1McK0ShRzjWDwyT0PxGGNIcRfoXmv/i+VsP/kvpCSIjjckC4e0gQPO+?=
- =?iso-8859-1?Q?d13VR2W6z84Ypwr75Vl2fiyFp9+syYvq+iO00+574fXSkwTeIQRPvKcUnw?=
- =?iso-8859-1?Q?eok/yP908O3bGTgYvHGspz9bO8JYgYD66Pw90afv/y3YiuhZgT8wBbtf7B?=
- =?iso-8859-1?Q?+9yKtnoPYjUejOmPQyGscDPmmgFOAJmbmYkFjYF77J+cQkGyabDnavvLXc?=
- =?iso-8859-1?Q?bznImEq21ebN8g+6d+9jSjZjm5tqxU7bdLwfscm0q+hcVndn8PnMb8EzFo?=
- =?iso-8859-1?Q?tcfgguNKscnmPGRKP+7HkJKFYHhwgiPizbDRwaMBIkRKeXtIUdkEE0xDBH?=
- =?iso-8859-1?Q?4XFA2kE7iDddxrcKbu0YMpu3x3729s7BURE3tri7wql/ZFuVholQx03stV?=
- =?iso-8859-1?Q?VunjTrEouuLLLiiF+K9EdTsj8LGLVvobLjNzf5AsToCJb7lvgKH1S4x/WS?=
- =?iso-8859-1?Q?tYQx9oobkNjcDgdDa2SbtIy8BT9evL1QXQPb8qw61MFEJ5E/MfuA3BW+J7?=
- =?iso-8859-1?Q?bBRqoyB4RBiiotS/IkCudCD6nAk3oXdLGX4Z6E8rKI+NoUDy9Cx3ohpact?=
- =?iso-8859-1?Q?bQASSpMeJdhxcZsWjlgsHut7Moj2Ap+sVLupcBwOChNBJM192JUv1eajml?=
- =?iso-8859-1?Q?m9MuenkgzRT0YlCTdU1RglzqUmZETy3LjGufm3KoqoGC+AdTPZF2fSBbrv?=
- =?iso-8859-1?Q?ichEMeKZY5k8OlSwXVgBpX6qutKQcjuT3vCv6lnm3HNJzjJJWfofXvQ4Y0?=
- =?iso-8859-1?Q?bQJmj+lIZaeGAKDZOBM2U/sAp7LC5?=
-x-microsoft-antispam-prvs: <AM6PR04MB559222DFE3C3961998A16D4984480@AM6PR04MB5592.eurprd04.prod.outlook.com>
+x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;AM6PR04MB5592;23:b3TRoWyNDX4nhctorJUa2XLNqzOWYY9sRjxS1W/?=
+ =?iso-8859-1?Q?O20Qz7zOJXzh1lomzK3TtrPhcLpwDHyDcPBmIYmEK9LmsnGj85OlZUkg2d?=
+ =?iso-8859-1?Q?kyOjucMtZmB9kc7LfkgGRWSg8n8kFlp2lXfvEFjLQGEdS/wRPjlNVGIcXC?=
+ =?iso-8859-1?Q?qCH3ng1n13Bu7XkluDdgjgJEZfbUkaSOPbTX8NxRPPNegQmOyfpYbvtH4B?=
+ =?iso-8859-1?Q?nkLdd+6KbTPxsZGL4Wkqe5GIlcAli+hDac2V1D6bRdcFYVY0mmat4znVXM?=
+ =?iso-8859-1?Q?+0hnJcUIL1Nb54bdj+LH5BQKqi6qCGix9eezyU04jEDvtwtABbMmDIPLp1?=
+ =?iso-8859-1?Q?8y0VEmPPBtNcvCj6+qD3Md/DLO/4jXRQDbyr0moLTNPganmBDXYSOX3uzS?=
+ =?iso-8859-1?Q?DtELCGQB9GLwVXTFAFWPKTwFbxU9f+FzpzqzLE8rczWW0PRT9NZKQUZz1b?=
+ =?iso-8859-1?Q?Z/6A7DNpMwqFRbbAqe+G/q8Ydk/0ZZOddRDPzNIc2ELdhB6MAdTfEQa/9E?=
+ =?iso-8859-1?Q?ybzoSlQy1lxkz9lGbK/Vz21BR2sytVmMsocEGW3LngtljbUQKhuimH5Vw/?=
+ =?iso-8859-1?Q?uBmBbptaSYjbiy+o3yX2Cu1xsz7UMks+R77iBgeqxfdYa0ypLbwOhYruYS?=
+ =?iso-8859-1?Q?QkNsbdASO8EHDFotVW18tFZEDdWaesc8/rUs5H7OPTp32ozx4tfRM2dWNb?=
+ =?iso-8859-1?Q?/ot8zl0CVl+nc5bsyb61LIqwJxgEyFPqBuT633ESycr3byIK9ypf47iQlO?=
+ =?iso-8859-1?Q?WWAyHs1PSoolJuJIhYpZ4kaIUpTb1gx/DqN8QMeiajFe2Glwc8p9W7Nc1F?=
+ =?iso-8859-1?Q?d1MesLRCYmkOe2R8wpQLTQwc7o2uZleccO9OtyLCo/JmEbArV3cFniCr4c?=
+ =?iso-8859-1?Q?ZpKD3vfuI3/E+OL7tinvUHIcPm6MWuA6d0/f3QOUmtQBUKIQgQIzMR5mJI?=
+ =?iso-8859-1?Q?ugn70l+v8obe8kJ3vC7UlKfNqVoWdSS9mlC57uXLrgFJwWXC2e20LnYhz8?=
+ =?iso-8859-1?Q?8wy2j9xeM4DOsGRtYxoTC5zAHotlZF+DcsE5BP4zmNy2sWlQig3xb6Js3Y?=
+ =?iso-8859-1?Q?nS2wnWX2b5o3bjmFi+OJLlBwU5mVpzNJDd6EIkaqieFAD68S2vr5lGIM++?=
+ =?iso-8859-1?Q?TsLdLdE+xAy+Gmm8/Oc3cub1lfzmcfh0iolUBxd9+A3tQKta4nw7SxWQL4?=
+ =?iso-8859-1?Q?RTVlWo6lt71H0ImJEDictkdixw9zM5b8Zipz8UM0fIJ/6sEVhP/pZK3cnF?=
+ =?iso-8859-1?Q?vOvI3RBveLpPXurVsmmGrPxuud62jdB0VskQ1yyivyLBVABVTF1ICritNe?=
+ =?iso-8859-1?Q?aTpg0U+Iw9A9ygl3WM+i+BTIyfG7Tt7xzzidj1RyA0+B8qfIQ7askUL+Us?=
+ =?iso-8859-1?Q?owZEpl1L83TKOwhueHfAhX+r+3TnEwbvIUaViQE2NTJicJBFf8w=3D=3D?=
+x-microsoft-antispam-prvs: <AM6PR04MB5592D42E903BAF0D48B2911A84480@AM6PR04MB5592.eurprd04.prod.outlook.com>
 x-forefront-prvs: 09730BD177
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(346002)(396003)(376002)(136003)(39860400002)(199004)(189003)(5660300002)(4326008)(2201001)(8676002)(478600001)(81166006)(81156014)(14454004)(86362001)(8936002)(50226002)(7416002)(14444005)(256004)(1076003)(71200400001)(71190400001)(2616005)(476003)(486006)(11346002)(446003)(186003)(305945005)(7736002)(97736004)(68736007)(66066001)(36756003)(6486002)(105586002)(106356001)(6436002)(6512007)(110136005)(76176011)(54906003)(52116002)(99286004)(26005)(386003)(6506007)(3846002)(316002)(6116002)(102836004)(6346003)(25786009)(53936002)(2906002)(2501003)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB5592;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(346002)(396003)(376002)(136003)(39860400002)(199004)(189003)(4744005)(5660300002)(4326008)(2201001)(8676002)(478600001)(81166006)(81156014)(14454004)(86362001)(8936002)(50226002)(7416002)(14444005)(256004)(1076003)(71200400001)(71190400001)(2616005)(476003)(486006)(11346002)(446003)(186003)(305945005)(7736002)(97736004)(68736007)(66066001)(36756003)(6486002)(105586002)(106356001)(6436002)(6512007)(110136005)(76176011)(54906003)(52116002)(99286004)(26005)(386003)(6506007)(3846002)(316002)(6116002)(102836004)(6346003)(25786009)(53936002)(2906002)(2501003)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB5592;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
 authentication-results: spf=none (sender IP is )
  smtp.mailfrom=zhiqiang.hou@nxp.com; 
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 0Ixj8ln1ybbHp9zth2qAdTJ9Xd8HjnET8gIgiabTl26yhqW7gCJsT2vqXq1SmCGHLhKqNiO49pz8SbkmIzHxD0WaiHOOfYpnIFoMQCEwiWoNxdx83zIzNM1/wIhWquGp3qYuwOi5Py6EBFT5icbUvnRL9wM0/ns86TCJqlcibTwZxzfiEp4n4QcgwCkJ56rLkaMbkdqXR8xeC2U54zMzHRDMv6qzMf3t6ePYLl7WXWDBhGqey5iBSKfpG+FfCYpUWmbmUSP/kjKaR7rymPiZW5myHiyJSuUSBjozHyKwXznWhnbA0MEhkqO8pzOTCmQo8E7rFJUlN4kstF/pNNKAzdy0IOFDT/d9jFTqZ2U9+mgFRrX/N/pgx5rQ/OqapIB+blKXJ2Of5iKQ7K9iDQpxcWi8AzGwqAMV4+z9LsQq82Q=
+x-microsoft-antispam-message-info: F/FykdM32qe8JtnBXEKHuNH94BDvb9RxlqQ9/yR6WIZhFZN7637mlcsghnROks0ouram8oZ+l11dBivcQMEwcIELg/1xRWt6m6/ZhgUvfq1GvTA/8Rhq1roLMqFSTgNOsEdpkIETtCEX1ZAVuvM4PhiV3RkRJSWbw3rwqhs1auZHsLjqhk7Y7mLnjAlOyF0nSulqdYDfjHg4S4/KiNtxpyrqSHbrTZKtRRdIezqrxJNo6q7+opw2TsyPKsze/kDSyJ/an07oVRv5doCMS3tuYZ59hMLaY10OI/WRUriUyMZNNUKIdZuO/l8YcXBr52wUc+w0jadPX2vAI/ujG1rC/XtAHgE9N/S3tsJ1q+QCvbi3G9W3y7GduHQCE9X/Za73rBgFtcoBMS2Stnh3J/3+0y3xIHbaEt6cwr6ZKmO1JOQ=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 35201a16-ed14-4bb7-99df-08d6a6042dd2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2019 09:30:20.1332
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2ae83433-1db3-4f39-67fa-08d6a6043200
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2019 09:30:27.3354
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -126,58 +127,33 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-This patch corrected the returned error number by convention,
-and removed a unnecessary error check.
+The current code does not support multiple MSIs, so remove
+the corresponding flag from the msi_domain_info structure.
 
+Fixes: 1e913e58335f ("PCI: mobiveil: Add MSI support")
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 ---
 V4:
  - no change
 
- drivers/pci/controller/pcie-mobiveil.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/pci/controller/pcie-mobiveil.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controlle=
 r/pcie-mobiveil.c
-index b87471f08a40..563210e731d3 100644
+index 563210e731d3..a0dd337c6214 100644
 --- a/drivers/pci/controller/pcie-mobiveil.c
 +++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -819,7 +819,7 @@ static int mobiveil_pcie_init_irq_domain(struct mobivei=
-l_pcie *pcie)
+@@ -703,7 +703,7 @@ static struct irq_chip mobiveil_msi_irq_chip =3D {
 =20
- 	if (!pcie->intx_domain) {
- 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
--		return -ENODEV;
-+		return -ENOMEM;
- 	}
+ static struct msi_domain_info mobiveil_msi_domain_info =3D {
+ 	.flags	=3D (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+-		   MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX),
++		   MSI_FLAG_PCI_MSIX),
+ 	.chip	=3D &mobiveil_msi_irq_chip,
+ };
 =20
- 	raw_spin_lock_init(&pcie->intx_mask_lock);
-@@ -845,11 +845,9 @@ static int mobiveil_pcie_probe(struct platform_device =
-*pdev)
- 	/* allocate the PCIe port */
- 	bridge =3D devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
- 	if (!bridge)
--		return -ENODEV;
-+		return -ENOMEM;
-=20
- 	pcie =3D pci_host_bridge_priv(bridge);
--	if (!pcie)
--		return -ENOMEM;
-=20
- 	pcie->pdev =3D pdev;
-=20
-@@ -866,7 +864,7 @@ static int mobiveil_pcie_probe(struct platform_device *=
-pdev)
- 						    &pcie->resources, &iobase);
- 	if (ret) {
- 		dev_err(dev, "Getting bridge resources failed\n");
--		return -ENOMEM;
-+		return ret;
- 	}
-=20
- 	/*
 --=20
 2.17.1
 
