@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F398C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95702C10F06
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AC9522314
+	by mail.kernel.org (Postfix) with ESMTP id 6AA0521773
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="ZCJpYZ4y"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="NsikD/q4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727741AbfCKNbo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1727553AbfCKNbo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 11 Mar 2019 09:31:44 -0400
-Received: from mta-01.yadro.com ([89.207.88.251]:50974 "EHLO mta-01.yadro.com"
+Received: from mta-01.yadro.com ([89.207.88.251]:50964 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727553AbfCKNbo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1727673AbfCKNbo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Mon, 11 Mar 2019 09:31:44 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 33F86419E4;
+        by mta-01.yadro.com (Postfix) with ESMTP id 380A841980;
         Mon, 11 Mar 2019 13:31:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1552311100; x=1554125501; bh=R7IbRdTRKbIoc00RoB3Bk7kPe21b7o79Tav
-        On/8ZP3w=; b=ZCJpYZ4yq7nZg/pplJqpxKb++yYp2HFPD1QEfNM40a5U9WRfntA
-        htn0K5+zwZtKFyk3Kn1LHfap9GQQ8U+bJ6tMHGQ/umK83+m0k75vo9ogClTNgIO/
-        3ZYFUTNodGWC4esrOQAowron+oOWXA7nZLtVJPLR0KMvBKTmwdHFZbAk=
+        1552311096; x=1554125497; bh=XcwuVqHempHAfwnox4/GHtbL1ImHCqBJfQJ
+        RZzsuR4Q=; b=NsikD/q4CliFskFoKcpmrSW5mL9XkZLJh8IM9qo+0MEhCtiEPn0
+        W/zxAuOcVM38/yo8eCHAV9fXX5Vq9PIOBBB5T/OsfcDfc+9AZjaY+CYagc5atDoH
+        azVKdWWQ9VqkwXYHuRMrjcCrGN6Cq08smKk0BPpMK+Se3jnA9TOOrNBc=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id bj_zk5tmWxGs; Mon, 11 Mar 2019 16:31:40 +0300 (MSK)
+        with ESMTP id NRQ7k-twhriP; Mon, 11 Mar 2019 16:31:36 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id A95E341980;
-        Mon, 11 Mar 2019 16:31:33 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id A13C7419DD;
+        Mon, 11 Mar 2019 16:31:32 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 11
- Mar 2019 16:31:33 +0300
+ Mar 2019 16:31:32 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC v4 16/21] PCI: Calculate fixed areas of bridge windows based on fixed BARs
-Date:   Mon, 11 Mar 2019 16:31:17 +0300
-Message-ID: <20190311133122.11417-17-s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC v4 11/21] PCI: Release and reassign the root bridge resources during rescan
+Date:   Mon, 11 Mar 2019 16:31:12 +0300
+Message-ID: <20190311133122.11417-12-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
 References: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
@@ -66,218 +66,106 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For every (IO, MEM, MEM64) bridge window, count the fixed resources of
-its children endpoints and children bridge windows:
+When the movable BARs feature is enabled, don't rely on the memory gaps
+reserved by the BIOS/bootloader/firmware, but instead rearrange the BARs
+and bridge windows starting from the root.
 
-| <- BAR -> |    | <- child bus fixed_range_hard -> |   | <- fixed BAR -> |
-                 | <-            bus's fixed_range_hard                -> |
-| <-                       bus's bridge window                         -> |
+Endpoint device's BARs, after being released, are resorted and written
+back by the pci_assign_unassigned_root_bus_resources().
 
-These ranges will be later used to arrange bridge windows in a way which
-covers every immovable BAR as well as the movable ones during hotplug.
+The last step of writing the recalculated windows to the bridges is done
+by the new pci_setup_bridges() function.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/pci.h       | 14 +++++++
- drivers/pci/probe.c     | 82 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c | 17 +++++++++
- include/linux/pci.h     |  6 +++
- 4 files changed, 119 insertions(+)
+ drivers/pci/pci.h       |  1 +
+ drivers/pci/probe.c     | 22 ++++++++++++++++++++++
+ drivers/pci/setup-bus.c | 11 ++++++++++-
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 56b905068ac5..14e3ebe68010 100644
+index 224d88634115..e06e8692a7b1 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -364,6 +364,20 @@ static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
- 	return dev->error_state == pci_channel_io_perm_failure;
- }
+@@ -248,6 +248,7 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
++void pci_bus_release_root_bridge_resources(struct pci_bus *bus);
  
-+static inline int pci_get_bridge_resource_idx(struct resource *r)
-+{
-+	int idx = 1;
-+
-+	if (r->flags & IORESOURCE_IO)
-+		idx = 0;
-+	else if (!(r->flags & IORESOURCE_PREFETCH))
-+		idx = 1;
-+	else if (r->flags & IORESOURCE_MEM_64)
-+		idx = 2;
-+
-+	return idx;
-+}
-+
- /* pci_dev priv_flags */
- #define PCI_DEV_ADDED 0
- #define PCI_DEV_IGNORE 1
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+ void pci_disable_bridge_window(struct pci_dev *dev);
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 62f4058a001f..70b15654f253 100644
+index 1cf6ec960236..692752c71f71 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -551,6 +551,7 @@ void pci_read_bridge_bases(struct pci_bus *child)
- static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- {
- 	struct pci_bus *b;
-+	int idx;
- 
- 	b = kzalloc(sizeof(*b), GFP_KERNEL);
- 	if (!b)
-@@ -567,6 +568,11 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	if (parent)
- 		b->domain_nr = parent->domain_nr;
- #endif
-+	for (idx = 0; idx < PCI_BRIDGE_RESOURCE_NUM; ++idx) {
-+		b->fixed_range_hard[idx].start = (resource_size_t)-1;
-+		b->fixed_range_hard[idx].end = 0;
-+	}
-+
- 	return b;
+@@ -3299,6 +3299,25 @@ static void pci_bus_rescan_done(struct pci_bus *bus)
+ 	pm_runtime_put(&bus->dev);
  }
  
-@@ -3337,6 +3343,81 @@ static void pci_setup_bridges(struct pci_bus *bus)
- 		pci_setup_bridge(bus);
- }
- 
-+static void pci_bus_update_fixed_range_hard(struct pci_bus *bus)
++static void pci_setup_bridges(struct pci_bus *bus)
 +{
 +	struct pci_dev *dev;
-+	int idx;
-+	resource_size_t start, end;
-+
-+	for (idx = 0; idx < PCI_BRIDGE_RESOURCE_NUM; ++idx) {
-+		bus->fixed_range_hard[idx].start = (resource_size_t)-1;
-+		bus->fixed_range_hard[idx].end = 0;
-+	}
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->subordinate)
-+			pci_bus_update_fixed_range_hard(dev->subordinate);
 +
 +	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		int i;
++		struct pci_bus *child;
 +
-+		for (i = 0; i < PCI_BRIDGE_RESOURCES; ++i) {
-+			struct resource *r = &dev->resource[i];
++		if (!pci_dev_is_added(dev) || pci_dev_is_ignored(dev))
++			continue;
 +
-+			if (!r->flags || (r->flags & IORESOURCE_UNSET) || !r->parent)
-+				continue;
-+
-+			if (r->flags & IORESOURCE_PCI_FIXED) {
-+				idx = pci_get_bridge_resource_idx(r);
-+				start = bus->fixed_range_hard[idx].start;
-+				end = bus->fixed_range_hard[idx].end;
-+
-+				if (start > r->start)
-+					start = r->start;
-+				if (end < r->end)
-+					end = r->end;
-+
-+				if (bus->fixed_range_hard[idx].start != start ||
-+				    bus->fixed_range_hard[idx].end != end) {
-+					dev_dbg(&bus->dev, "%s: Found fixed 0x%llx-0x%llx in %s, expand the fixed bridge window %d to 0x%llx-0x%llx\n",
-+						__func__,
-+						(unsigned long long)r->start,
-+						(unsigned long long)r->end,
-+						dev_name(&dev->dev), idx,
-+						(unsigned long long)start,
-+						(unsigned long long)end);
-+					bus->fixed_range_hard[idx].start = start;
-+					bus->fixed_range_hard[idx].end = end;
-+				}
-+			}
-+		}
-+
-+		if (dev->subordinate) {
-+			struct pci_bus *child = dev->subordinate;
-+
-+			for (idx = 0; idx < PCI_BRIDGE_RESOURCE_NUM; ++idx) {
-+				start = bus->fixed_range_hard[idx].start;
-+				end = bus->fixed_range_hard[idx].end;
-+
-+				if (start > child->fixed_range_hard[idx].start)
-+					start = child->fixed_range_hard[idx].start;
-+				if (end < child->fixed_range_hard[idx].end)
-+					end = child->fixed_range_hard[idx].end;
-+
-+				if (start < bus->fixed_range_hard[idx].start ||
-+				    end > bus->fixed_range_hard[idx].end) {
-+					dev_dbg(&bus->dev, "%s: Expand the fixed bridge window %d from %s to 0x%llx-0x%llx\n",
-+						__func__, idx, dev_name(&child->dev),
-+						(unsigned long long)start,
-+						(unsigned long long)end);
-+					bus->fixed_range_hard[idx].start = start;
-+					bus->fixed_range_hard[idx].end = end;
-+				}
-+			}
-+		}
++		child = dev->subordinate;
++		if (child)
++			pci_setup_bridges(child);
 +	}
++
++	if (bus->self)
++		pci_setup_bridge(bus);
 +}
 +
- static struct pci_dev *pci_find_next_new_device(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
-@@ -3437,6 +3518,7 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
+ /**
+  * pci_rescan_bus - Scan a PCI bus for devices
+  * @bus: PCI bus to scan
+@@ -3321,8 +3340,11 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
  		pci_bus_rescan_prepare(root);
  
  		max = pci_scan_child_bus(root);
-+		pci_bus_update_fixed_range_hard(root);
++
++		pci_bus_release_root_bridge_resources(root);
+ 		pci_assign_unassigned_root_bus_resources(root);
  
- 		pci_reassign_root_bus_resources(root);
- 
++		pci_setup_bridges(root);
+ 		pci_bus_rescan_done(root);
+ 	} else {
+ 		max = pci_scan_child_bus(bus);
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c1559a4a8564..a1fd7f3c5ea8 100644
+index be7d4e6d7b65..36a1907d9509 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -879,9 +879,17 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	resource_size_t children_add_size = 0;
- 	resource_size_t min_align, align;
+@@ -1584,7 +1584,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 		pci_printk(KERN_DEBUG, dev, "resource %d %pR released\n",
+ 					PCI_BRIDGE_RESOURCES + idx, r);
+ 		/* keep the old size */
+-		r->end = resource_size(r) - 1;
++		r->end = pci_movable_bars_enabled() ? 0 : (resource_size(r) - 1);
+ 		r->start = 0;
+ 		r->flags = 0;
  
-+	resource_size_t fixed_start = bus->fixed_range_hard[0].start;
-+	resource_size_t fixed_end = bus->fixed_range_hard[0].end;
-+	resource_size_t fixed_size = (fixed_start < fixed_end) ?
-+		(fixed_end - fixed_start + 1) : 0;
-+
- 	if (!b_res)
- 		return;
+@@ -1637,6 +1637,15 @@ static void pci_bus_release_bridge_resources(struct pci_bus *bus,
+ 		pci_bridge_release_resources(bus, type);
+ }
  
-+	if (min_size < fixed_size)
-+		min_size = fixed_size;
++void pci_bus_release_root_bridge_resources(struct pci_bus *root_bus)
++{
++	pci_bus_release_bridge_resources(root_bus, IORESOURCE_IO, whole_subtree);
++	pci_bus_release_bridge_resources(root_bus, IORESOURCE_MEM, whole_subtree);
++	pci_bus_release_bridge_resources(root_bus,
++					 IORESOURCE_MEM_64 | IORESOURCE_PREFETCH,
++					 whole_subtree);
++}
 +
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-@@ -990,6 +998,15 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	resource_size_t children_add_size = 0;
- 	resource_size_t children_add_align = 0;
- 	resource_size_t add_align = 0;
-+	bool is_mem64 = (mask & IORESOURCE_MEM_64);
-+
-+	resource_size_t fixed_start = bus->fixed_range_hard[is_mem64 ? 2 : 1].start;
-+	resource_size_t fixed_end = bus->fixed_range_hard[is_mem64 ? 2 : 1].end;
-+	resource_size_t fixed_size = (fixed_start < fixed_end) ?
-+		(fixed_end - fixed_start + 1) : 0;
-+
-+	if (min_size < fixed_size)
-+		min_size = fixed_size;
- 
- 	if (!b_res)
- 		return -ENOSPC;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 26aa59cb6220..7a4d62d84bc1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -572,6 +572,12 @@ struct pci_bus {
- 	struct list_head resources;	/* Address space routed to this bus */
- 	struct resource busn_res;	/* Bus numbers routed to this bus */
- 
-+	/*
-+	 * If there are fixed resources in the bridge window, the hard range
-+	 * contains the lowest and the highest addresses of them.
-+	 */
-+	struct resource fixed_range_hard[PCI_BRIDGE_RESOURCE_NUM];
-+
- 	struct pci_ops	*ops;		/* Configuration access functions */
- 	struct msi_controller *msi;	/* MSI controller */
- 	void		*sysdata;	/* Hook for sys-specific extension */
+ static void pci_bus_dump_res(struct pci_bus *bus)
+ {
+ 	struct resource *res;
 -- 
 2.20.1
 
