@@ -2,137 +2,94 @@ Return-Path: <SRS0=PTHP=RO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ADF2C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 14:14:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EBAC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 14:56:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DFE732084F
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 14:14:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1552313646;
-	bh=DeX8Tnx+/DvUL5y4hqhKMNh6svHiIweAR/X01hBixrg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=uhHMcr6D4mpsG3jZARjF9EGD686Hy5BIyBazQL18d5az7Sayr02WqFalEtDgU+UBh
-	 yTBn9yjYT54j25/graSVMdhwbNOGkMGcO6XKC1Rl37H8hRbuRyMVIhel1Ycxr22OaC
-	 JI+SfvTmrYMqyCN5C0+pvnJZgl/XlHZRp6LV1y5o=
+	by mail.kernel.org (Postfix) with ESMTP id 8C6022075C
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 14:56:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727605AbfCKOOF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Mar 2019 10:14:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60016 "EHLO mail.kernel.org"
+        id S1727388AbfCKO46 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Mar 2019 10:56:58 -0400
+Received: from smtp3-g21.free.fr ([212.27.42.3]:48399 "EHLO smtp3-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727546AbfCKOOE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Mar 2019 10:14:04 -0400
-Received: from localhost (50-82-46-41.client.mchsi.com [50.82.46.41])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2011E2075C;
-        Mon, 11 Mar 2019 14:14:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1552313643;
-        bh=DeX8Tnx+/DvUL5y4hqhKMNh6svHiIweAR/X01hBixrg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jw3GanCNRK5zOAUggeNcCLXf2gu+Te/x/v63BGlFcM5iPhC4IOwu7qusrBLF2QC6c
-         1DPqMPZZERwbkicjMPy/bRFrbGixD/Gd2dybpkFgExHP+dJe2OpkKprEFMiSDcoi/I
-         9+4BXSxLCO89Wg9J/TK3F7U80s9c2HkASxYTUoyE=
-Date:   Mon, 11 Mar 2019 09:14:02 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: Re: [PATCHv4 11/28] PCI: mobiveil: only fix up the Class Code field
-Message-ID: <20190311141401.GG214730@google.com>
-References: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
- <20190311093130.7209-12-Zhiqiang.Hou@nxp.com>
+        id S1727320AbfCKO46 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Mar 2019 10:56:58 -0400
+Received: from [192.168.108.8] (unknown [213.36.7.13])
+        (Authenticated sender: marc.w.gonzalez)
+        by smtp3-g21.free.fr (Postfix) with ESMTPSA id C871713F895;
+        Mon, 11 Mar 2019 15:56:36 +0100 (CET)
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Jeffrey Hugo <jhugo@codeaurora.org>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Subject: [RFC PATCH v1] PCI: qcom: Use quirk to override incorrect device
+ class
+Message-ID: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
+Date:   Mon, 11 Mar 2019 15:56:36 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190311093130.7209-12-Zhiqiang.Hou@nxp.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 11, 2019 at 09:31:23AM +0000, Z.q. Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> Fix up the Class Code to PCI bridge, do not change the Revision ID.
-> And move the fixup to mobiveil_host_init function.
+Some chips report an incorrect device class. Override the incorrect
+value using a quirk, instead of code in the read function.
 
-Add parens after function name.
+Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+---
+FWIW, this quirk is no longer required on recent chips:
+msm8996 (tested by Stanimir), msm8998 (tested by me), sdm845 (untested) are unaffected
+apq/ipq8064 is affected => what is the device ID for these chips?
+others?
 
-Please explain why this change is needed.  Does it fix a bug?
+Stanimir added: "this will become a real problem (now we use the driver as RC)
+when someone decide to use it as an endpoint"
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Does this fix the problem that the PCI core didn't correctly identify
-the device as a bridge because it identified bridges by class code
-instead of header type?
-
-That problem *should* be fixed by b2fb5cc57469 ("PCI: Rely on config
-space header type, not class code"), which is now upstream.
-
-You might still want this class code change so that lspci shows the
-correct thing.  That's fine, but the changelog should say why we're
-doing it.
-
-> Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge
-> IP driver")
-
-Make this "Fixes:" line a single line again.
-
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-> Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-> ---
-> V4:
->  - no change
-> 
->  drivers/pci/controller/pcie-mobiveil.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-> index 78e575e71f4d..8eee1ab7ee24 100644
-> --- a/drivers/pci/controller/pcie-mobiveil.c
-> +++ b/drivers/pci/controller/pcie-mobiveil.c
-> @@ -653,6 +653,12 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
->  				   type, resource_size(win->res));
->  	}
->  
-> +	/* fixup for PCIe class register */
-> +	value = csr_readl(pcie, PAB_INTP_AXI_PIO_CLASS);
-> +	value &= 0xff;
-> +	value |= (PCI_CLASS_BRIDGE_PCI << 16);
-> +	csr_writel(pcie, value, PAB_INTP_AXI_PIO_CLASS);
-> +
->  	/* setup MSI hardware registers */
->  	mobiveil_pcie_enable_msi(pcie);
->  
-> @@ -896,9 +902,6 @@ static int mobiveil_pcie_probe(struct platform_device *pdev)
->  		goto error;
->  	}
->  
-> -	/* fixup for PCIe class register */
-> -	csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
-> -
->  	/* initialize the IRQ domains */
->  	ret = mobiveil_pcie_init_irq_domain(pcie);
->  	if (ret) {
-> -- 
-> 2.17.1
-> 
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 3de5510fd3d5..94da2c9c2ad5 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1136,17 +1136,15 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 
+-	/* the device class is not reported correctly from the register */
+-	if (where == PCI_CLASS_REVISION && size == 4) {
+-		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
+-		*val &= 0xff;	/* keep revision id */
+-		*val |= PCI_CLASS_BRIDGE_PCI << 16;
+-		return PCIBIOS_SUCCESSFUL;
+-	}
+-
+ 	return dw_pcie_read(pci->dbi_base + where, size, val);
+ }
+ 
++static void qcom_fixup_class(struct pci_dev *dev)
++{
++	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCI_ANY_ID, qcom_fixup_class);
++
+ static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
+ 	.host_init = qcom_pcie_host_init,
+ 	.rd_own_conf = qcom_pcie_rd_own_conf,
+-- 
+2.17.1
