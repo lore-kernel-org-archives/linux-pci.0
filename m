@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C23C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16765C4360F
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC80F22308
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC80422308
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:31:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="n2mFSY5G"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Vji5435/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727599AbfCKNbg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Mar 2019 09:31:36 -0400
-Received: from mta-01.yadro.com ([89.207.88.251]:50946 "EHLO mta-01.yadro.com"
+        id S1727579AbfCKNbh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Mar 2019 09:31:37 -0400
+Received: from mta-01.yadro.com ([89.207.88.251]:50956 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727388AbfCKNbf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Mar 2019 09:31:35 -0400
+        id S1727595AbfCKNbg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Mar 2019 09:31:36 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id D040C419E8;
-        Mon, 11 Mar 2019 13:31:33 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id D0640419F0;
+        Mon, 11 Mar 2019 13:31:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1552311092; x=1554125493; bh=D+5t+XYJy2whiChmoUpciLcCd/RVrE0+9uo
-        ha9o9Ma8=; b=n2mFSY5GApvd3DVC4xRrJJKCx8udjGs2eELsWla2kVeSoyNjMk1
-        MN7MuXfiGJOBuIuXE4w6Aoaq0OQJpukJ4LsQnqhoRiI76y23CmIXey62WeLkTqeW
-        aeF6F+t/4QrKbuSZJ3qK/c0rKZW++ZFANk53L8/FhaIFe29CBbZEO3NE=
+        1552311093; x=1554125494; bh=JVyoC34eGmx5ip94yGCGHtFiL2Yb7i7wQdT
+        eL3g7f0E=; b=Vji5435/EYsHto3qxulaR3Fsu5a2VZenvqnsNfPgWrYntsRj4yP
+        7bwlGxaXAdWPuNCa5Zl9ZmC8jZCiv2tcmgpKgVIBMecz4ZGZWdUoZ75c6QMJT5nf
+        rVeRwQMg+FdmWBmtOuQ0KNoKYWs3Rhz/wTzaMSIs6EfBVs1xX0oOd9oM=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id vN0iJy3olqB8; Mon, 11 Mar 2019 16:31:32 +0300 (MSK)
+        with ESMTP id ng4E5I6HCMU9; Mon, 11 Mar 2019 16:31:33 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 35CCB41987;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 8F9674198C;
         Mon, 11 Mar 2019 16:31:31 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 11
- Mar 2019 16:31:30 +0300
+ Mar 2019 16:31:31 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC v4 04/21] PCI: Define PCI-specific version of the release_child_resources()
-Date:   Mon, 11 Mar 2019 16:31:05 +0300
-Message-ID: <20190311133122.11417-5-s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC v4 06/21] PCI: Pause the devices with movable BARs during rescan
+Date:   Mon, 11 Mar 2019 16:31:07 +0300
+Message-ID: <20190311133122.11417-7-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
 References: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
@@ -66,81 +66,100 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Make the released resources of a bridge valid for later re-assignment:
-clear the STARTALIGN flag.
+Drivers indicate their support of movable BARs by implementing the
+new rescan_prepare() and rescan_done() hooks in the struct pci_driver.
 
-Resources marked with PCI_FIXED must preserve their offset and size.
+All device's activity must be stopped during a rescan, and iounmap()
++ioremap() must be applied to every used BAR.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/setup-bus.c | 47 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 46 insertions(+), 1 deletion(-)
+ drivers/pci/probe.c | 51 +++++++++++++++++++++++++++++++++++++++++++--
+ include/linux/pci.h |  2 ++
+ 2 files changed, 51 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ec44a0f3a7ac..3644feb13179 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1483,6 +1483,51 @@ static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
- 	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
- 	 IORESOURCE_MEM_64)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 977a127ce791..88350dd56344 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -3248,6 +3248,38 @@ unsigned int pci_rescan_bus_bridge_resize(struct pci_dev *bridge)
+ 	return max;
+ }
  
-+/*
-+ * Similar to release_child_resources(), but aware of PCI_FIXED and STARTALIGN flags
-+ */
-+static void pci_release_child_resources(struct resource *r)
++static void pci_bus_rescan_prepare(struct pci_bus *bus)
 +{
-+	struct resource *tmp, *p;
++	struct pci_dev *dev;
 +
-+	if (!r)
-+		return;
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct pci_bus *child = dev->subordinate;
 +
-+	if (r->flags & IORESOURCE_PCI_FIXED)
-+		return;
-+
-+	p = r->child;
-+	r->child = NULL;
-+	while (p) {
-+		resource_size_t size = resource_size(p);
-+
-+		tmp = p;
-+		p = p->sibling;
-+
-+		tmp->parent = NULL;
-+		tmp->sibling = NULL;
-+		pci_release_child_resources(tmp);
-+
-+		if (!tmp->flags)
-+			continue;
-+
-+		if (tmp->flags & IORESOURCE_PCI_FIXED) {
-+			pr_debug("PCI: release fixed %pR (%s), keep its flags, base and size\n",
-+				 tmp, tmp->name);
-+			continue;
++		if (child) {
++			pci_bus_rescan_prepare(child);
++		} else if (dev->driver &&
++			   dev->driver->rescan_prepare) {
++			dev->driver->rescan_prepare(dev);
 +		}
-+
-+		pr_debug("PCI: release %pR (%s)\n", tmp, tmp->name);
-+
-+		/* need to restore size, and keep all the flags but STARTALIGN */
-+		tmp->start = 0;
-+		tmp->end = size - 1;
-+
-+		tmp->flags &= ~IORESOURCE_STARTALIGN;
-+		tmp->flags |= IORESOURCE_SIZEALIGN;
 +	}
 +}
 +
- static void pci_bridge_release_resources(struct pci_bus *bus,
- 					  unsigned long type)
++static void pci_bus_rescan_done(struct pci_bus *bus)
++{
++	struct pci_dev *dev;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		struct pci_bus *child = dev->subordinate;
++
++		if (child) {
++			pci_bus_rescan_done(child);
++		} else if (dev->driver &&
++			   dev->driver->rescan_done) {
++			dev->driver->rescan_done(dev);
++		}
++	}
++}
++
+ /**
+  * pci_rescan_bus - Scan a PCI bus for devices
+  * @bus: PCI bus to scan
+@@ -3261,8 +3293,23 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
  {
-@@ -1528,7 +1573,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 * if there are children under that, we should release them
- 	 *  all
- 	 */
--	release_child_resources(r);
-+	pci_release_child_resources(r);
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
- 		pci_printk(KERN_DEBUG, dev, "resource %d %pR released\n",
+ 	unsigned int max;
+ 
+-	max = pci_scan_child_bus(bus);
+-	pci_assign_unassigned_bus_resources(bus);
++	if (pci_movable_bars_enabled()) {
++		struct pci_bus *root = bus;
++
++		while (!pci_is_root_bus(root))
++			root = root->parent;
++
++		pci_bus_rescan_prepare(root);
++
++		max = pci_scan_child_bus(root);
++		pci_assign_unassigned_root_bus_resources(root);
++
++		pci_bus_rescan_done(root);
++	} else {
++		max = pci_scan_child_bus(bus);
++		pci_assign_unassigned_bus_resources(bus);
++	}
++
+ 	pci_bus_add_devices(bus);
+ 
+ 	return max;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index cbe661aff9f5..3d52f5538282 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -780,6 +780,8 @@ struct pci_driver {
+ 	int  (*resume)(struct pci_dev *dev);	/* Device woken up */
+ 	void (*shutdown)(struct pci_dev *dev);
+ 	int  (*sriov_configure)(struct pci_dev *dev, int num_vfs); /* On PF */
++	void (*rescan_prepare)(struct pci_dev *dev);
++	void (*rescan_done)(struct pci_dev *dev);
+ 	const struct pci_error_handlers *err_handler;
+ 	const struct attribute_group **groups;
+ 	struct device_driver	driver;
 -- 
 2.20.1
 
