@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A641C43381
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB4BC10F0C
 	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 11:52:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8C9220857
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 11:52:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 497BD20857
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 11:52:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="geLIyNtg"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="pEc1b1rg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726688AbfCKLwr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726691AbfCKLwr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 11 Mar 2019 07:52:47 -0400
-Received: from mta-01.yadro.com ([89.207.88.251]:46882 "EHLO mta-01.yadro.com"
+Received: from mta-01.yadro.com ([89.207.88.251]:46904 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726496AbfCKLwq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Mar 2019 07:52:46 -0400
+        id S1726675AbfCKLwr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Mar 2019 07:52:47 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id C9F9B41980;
-        Mon, 11 Mar 2019 11:52:44 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id B5121419AF;
+        Mon, 11 Mar 2019 11:52:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1552305163; x=1554119564; bh=ZrIst2xnQ7ULBorrlRMljb8s29GRLVn+0Wx
-        Dv3ZOO3Y=; b=geLIyNtgbuskm0bE0YS2AZhKBrsA5I5SjaVaDNUCTSYTF3RkZFm
-        EwA7xUqUgC8LUquUUmUocFdnLPtzg5V6gq/rTOOtl6QT+9HNI9JTSI9bPPmOh7JG
-        StEniTbwaquOuRIHqQAYShBwQsgcsL9Li/Q9p24ZWMDrQpLpyDPsnK4E=
+        1552305164; x=1554119565; bh=jT1cbkurPuy7aqFjOnySUP0t9JaJnoAV6A3
+        D1832R8s=; b=pEc1b1rguu9K559N+GjevOZKfcJCR891StvWQRx/YerbS4hIXPG
+        a4LOghDLLNcowVljwz0yb+emJ6C2OiRnDjqOzAIlqVw4kF8z0EDnnmZSACyxXn2G
+        N1b5IQxP5SxWqQDBmfvSHmD6o2Uq0GN1duwZwoDeHlpp8GVOSS+vhHJs=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id JafX-PpWKQJt; Mon, 11 Mar 2019 14:52:43 +0300 (MSK)
+        with ESMTP id y4oDEFtd5Eft; Mon, 11 Mar 2019 14:52:44 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id AA39A41988;
+        by mta-01.yadro.com (Postfix) with ESMTPS id E39BD41992;
         Mon, 11 Mar 2019 14:52:41 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
@@ -53,9 +53,9 @@ CC:     Oliver O'Halloran <oohall@gmail.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Russell Currey <ruscur@russell.cc>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v5 4/8] powerpc/pci: Reduce code duplication in pci_add_device_node_info
-Date:   Mon, 11 Mar 2019 14:52:29 +0300
-Message-ID: <20190311115233.6514-5-s.miroshnichenko@yadro.com>
+Subject: [PATCH v5 6/8] powerpc/pci: Don't rely on DT is the PCI_REASSIGN_ALL_BUS is set
+Date:   Mon, 11 Mar 2019 14:52:31 +0300
+Message-ID: <20190311115233.6514-7-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
 References: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
@@ -70,97 +70,45 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It is possible now to allocate and fill a new pdn with add_one_dev_pci_data
+If supported by the platform, endpoint's pci_dn can be created dynamically,
+without need to wait for DT updates from the firmware.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- arch/powerpc/kernel/pci_dn.c | 38 +++++++++++++++---------------------
- 1 file changed, 16 insertions(+), 22 deletions(-)
+ arch/powerpc/kernel/pci_dn.c                 | 6 ++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 2 +-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index b594b055b2cf..7f12882d8882 100644
+index 7fa362f8038d..17362a9b4678 100644
 --- a/arch/powerpc/kernel/pci_dn.c
 +++ b/arch/powerpc/kernel/pci_dn.c
-@@ -159,22 +159,20 @@ static struct pci_dn *pci_alloc_pdn(struct pci_dn *parent,
- {
- 	struct pci_dn *pdn;
+@@ -555,8 +555,10 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 		phb->pci_data = pdn;
+ 	}
  
--	/* Except PHB, we always have the parent */
--	if (!parent)
--		return NULL;
--
- 	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
- 	if (!pdn)
- 		return NULL;
- 
--	pdn->phb = parent->phb;
- 	pdn->parent = parent;
- 	pdn->busno = busno;
- 	pdn->devfn = devfn;
- 	pdn->pe_number = IODA_INVALID_PE;
- 	INIT_LIST_HEAD(&pdn->child_list);
- 	INIT_LIST_HEAD(&pdn->list);
--	list_add_tail(&pdn->list, &parent->child_list);
-+	if (parent) {
-+		pdn->phb = parent->phb;
-+		list_add_tail(&pdn->list, &parent->child_list);
+-	/* Update dn->phb ptrs for new phb and children devices */
+-	pci_traverse_device_nodes(dn, add_pdn, phb);
++	if (!pci_has_flag(PCI_REASSIGN_ALL_BUS)) {
++		/* Update dn->phb ptrs for new phb and children devices */
++		pci_traverse_device_nodes(dn, add_pdn, phb);
 +	}
- 
- 	return pdn;
  }
-@@ -341,25 +339,29 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
- 	const __be32 *regs;
- 	struct device_node *parent;
- 	struct pci_dn *pdn;
-+	int busno = 0, devfn = 0;
- #ifdef CONFIG_EEH
- 	struct eeh_dev *edev;
- #endif
  
--	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
--	if (pdn == NULL)
--		return NULL;
--	dn->data = pdn;
--	pdn->phb = hose;
--	pdn->pe_number = IODA_INVALID_PE;
- 	regs = of_get_property(dn, "reg", NULL);
- 	if (regs) {
- 		u32 addr = of_read_number(regs, 1);
+ /** 
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index f38078976c5d..40feff2653a0 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -47,7 +47,7 @@ void pnv_pcibios_bus_add_device(struct pci_dev *pdev)
+ {
+ 	struct pci_dn *pdn = pci_get_pdn(pdev);
  
- 		/* First register entry is addr (00BBSS00)  */
--		pdn->busno = (addr >> 16) & 0xff;
--		pdn->devfn = (addr >> 8) & 0xff;
-+		busno = (addr >> 16) & 0xff;
-+		devfn = (addr >> 8) & 0xff;
- 	}
+-	if (!pdev->is_virtfn)
++	if (!pci_has_flag(PCI_REASSIGN_ALL_BUS) && !pdev->is_virtfn)
+ 		return;
  
-+	parent = of_get_parent(dn);
-+	pdn = pci_alloc_pdn(parent ? PCI_DN(parent) : NULL,
-+			    busno, devfn);
-+	if (!pdn)
-+		return NULL;
-+
-+	dn->data = pdn;
-+	pdn->phb = hose;
-+
- 	/* vendor/device IDs and class code */
- 	regs = of_get_property(dn, "vendor-id", NULL);
- 	pdn->vendor_id = regs ? of_read_number(regs, 1) : 0;
-@@ -380,14 +382,6 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
- 	}
- #endif
- 
--	/* Attach to parent node */
--	INIT_LIST_HEAD(&pdn->child_list);
--	INIT_LIST_HEAD(&pdn->list);
--	parent = of_get_parent(dn);
--	pdn->parent = parent ? PCI_DN(parent) : NULL;
--	if (pdn->parent)
--		list_add_tail(&pdn->list, &pdn->parent->child_list);
--
- 	return pdn;
- }
- EXPORT_SYMBOL_GPL(pci_add_device_node_info);
+ 	/*
 -- 
 2.20.1
 
