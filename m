@@ -2,42 +2,42 @@ Return-Path: <SRS0=PTHP=RO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D75A5C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:33:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE8B4C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 14:01:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A833422314
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 13:33:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FD7520857
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 14:01:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1552311199;
-	bh=FzmBTOYv3DlKkw61iNl06+QFZGEZ/z0t+KzY4FZ4t9o=;
+	s=default; t=1552312904;
+	bh=6wcilqyb4aQjpqrmBwUx6Nq4jANm14HdWg0P1G0r0cA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=SaBlA1N9riXd5MzIU9V+34zPhfC/PUhpQch0DHW/4Dssci10wvcNJpC+T1YsDi1zD
-	 z3V+Du42+nz3y22m6Yjg8OM4cJpnj3aCHbYGgyvYlc/PElPGro0vh1UyzWtJcsHdey
-	 Bbv1H3pu3cC/a7ehDCXXg/Y/0cqsDCLLfOLznPbI=
+	b=Iic1M5F7DRh8oh4Rw0P0on79NYpVWdjh+T3iEVegFe5pVOrT94q6hVO/SQsUvqTFt
+	 y8cJxF643fN1wiR8RNe/ivMDvwedUoBqVzSDgOL2MyiZJH9IwL6wuifnpfX6FJUhq0
+	 KnSW0L83ANIjJwLGkP96/D2/blgyNIL07S+nA1sA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726872AbfCKNdN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Mar 2019 09:33:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38270 "EHLO mail.kernel.org"
+        id S1727498AbfCKOBo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Mar 2019 10:01:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52506 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727426AbfCKNdN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Mar 2019 09:33:13 -0400
+        id S1726897AbfCKOBn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Mar 2019 10:01:43 -0400
 Received: from localhost (50-82-46-41.client.mchsi.com [50.82.46.41])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BF0B72147A;
-        Mon, 11 Mar 2019 13:33:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DE9CB20657;
+        Mon, 11 Mar 2019 14:01:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1552311192;
-        bh=FzmBTOYv3DlKkw61iNl06+QFZGEZ/z0t+KzY4FZ4t9o=;
+        s=default; t=1552312902;
+        bh=6wcilqyb4aQjpqrmBwUx6Nq4jANm14HdWg0P1G0r0cA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ReQmeHrkseghdTjlSkOu1EECP2CkfqlBDPPSFpSrpilimTMMH9sILYbsS+MyU633o
-         1xW4v1S5TCO/7Ce863cZKH2YvO1EZY1RLgTjjOG1wOW5DdcuVFPrwsu2ZqgYVpsVgL
-         JwhQwyDlrHMPoVYjxFx2x251z39eWTJ+U56NSCbE=
-Date:   Mon, 11 Mar 2019 08:33:10 -0500
+        b=FoK0VlP1j9uDENp2jAxHMZTD32jb4E+85bPq35zxVvJhY1W2BrRkUt7wXYixaGpBw
+         OoBMhgKtDLKaE/SzOHQQ25gpKG3cU32nEMPzeE6qjmavyHw0o3ufwCoES11GWo5ypA
+         nProHHmU5vh8VUsT7SGnRT8Q2FiNaAZcfbGOXie8=
+Date:   Mon, 11 Mar 2019 09:01:40 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -53,121 +53,430 @@ Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
         "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
         "will.deacon@arm.com" <will.deacon@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>
-Subject: Re: [PATCHv4 00/28] PCI: refactor Mobiveil driver and add PCIe Gen4
- driver for NXP Layerscape SoCs
-Message-ID: <20190311133310.GE214730@google.com>
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: Re: [PATCHv4 24/28] PCI: mobiveil: add PCIe Gen4 RC driver for NXP
+ Layerscape SoCs
+Message-ID: <20190311140140.GA161843@google.com>
 References: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
+ <20190311093130.7209-25-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190311093130.7209-25-Zhiqiang.Hou@nxp.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On Mon, Mar 11, 2019 at 09:29:54AM +0000, Z.q. Hou wrote:
+On Mon, Mar 11, 2019 at 09:33:16AM +0000, Z.q. Hou wrote:
 > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > 
-> This patch set is aim to refactor the Mobiveil driver and add
-> PCIe support for NXP Layerscape series SoCs integrated Mobiveil's
-> PCIe Gen4 controller.
+> This PCIe controller is based on the Mobiveil GPEX IP, which is
+> compatible with the PCI Express™ Base Specification, Revision 4.0.
 > 
-> Hou Zhiqiang (28):
->   PCI: mobiveil: uniform the register accessors
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+> ---
+> V4:
+>  - no change
+> 
+>  drivers/pci/controller/mobiveil/Kconfig       |  10 +
+>  drivers/pci/controller/mobiveil/Makefile      |   1 +
+>  .../controller/mobiveil/pci-layerscape-gen4.c | 254 ++++++++++++++++++
+>  .../pci/controller/mobiveil/pcie-mobiveil.h   |  16 +-
+>  4 files changed, 279 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+> 
+> diff --git a/drivers/pci/controller/mobiveil/Kconfig b/drivers/pci/controller/mobiveil/Kconfig
+> index 64343c07bfed..3ddb7d6163a9 100644
+> --- a/drivers/pci/controller/mobiveil/Kconfig
+> +++ b/drivers/pci/controller/mobiveil/Kconfig
+> @@ -21,4 +21,14 @@ config PCIE_MOBIVEIL_PLAT
+>  	  Soft IP. It has up to 8 outbound and inbound windows
+>  	  for address translation and it is a PCIe Gen4 IP.
+>  
+> +config PCI_LAYERSCAPE_GEN4
+> +	bool "Freescale Layerscpe PCIe Gen4 controller"
 
-"uniform" is not a verb.  Maybe "Unify register accessors"?
+"Layerscape"
 
->   PCI: mobiveil: format the code without function change
->   PCI: mobiveil: correct the returned error number
->   PCI: mobiveil: remove flag MSI_FLAG_MULTI_PCI_MSI
->   PCI: mobiveil: correct PCI base address in MEM/IO outbound windows
->   PCI: mobiveil: replace the resource list iteration function
->   PCI: mobiveil: use WIN_NUM_0 explicitly for CFG outbound window
->   PCI: mobiveil: use the 1st inbound window for MEM inbound transactions
->   PCI: mobiveil: correct inbound/outbound window setup routines
->   PCI: mobiveil: fix the INTx process error
->   PCI: mobiveil: only fix up the Class Code field
->   PCI: mobiveil: move out the link up waiting from mobiveil_host_init
+> +	depends on PCI
+> +	depends on OF && (ARM64 || ARCH_LAYERSCAPE)
+> +	depends on PCI_MSI_IRQ_DOMAIN
+> +	select PCIE_MOBIVEIL_HOST
+> +	help
+> +	  Say Y here if you want PCIe Gen4 controller support on
+> +	  Layerscape SoCs. The PCIe controller can work in RC or
+> +	  EP mode according to RCW[HOST_AGT_PEX] setting.
+>  endmenu
+> diff --git a/drivers/pci/controller/mobiveil/Makefile b/drivers/pci/controller/mobiveil/Makefile
+> index 9fb6d1c6504d..ff66774ccac4 100644
+> --- a/drivers/pci/controller/mobiveil/Makefile
+> +++ b/drivers/pci/controller/mobiveil/Makefile
+> @@ -2,3 +2,4 @@
+>  obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
+>  obj-$(CONFIG_PCIE_MOBIVEIL_HOST) += pcie-mobiveil-host.o
+>  obj-$(CONFIG_PCIE_MOBIVEIL_PLAT) += pcie-mobiveil-plat.o
+> +obj-$(CONFIG_PCI_LAYERSCAPE_GEN4) += pci-layerscape-gen4.o
+> diff --git a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+> new file mode 100644
+> index 000000000000..174cbcac4059
+> --- /dev/null
+> +++ b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
+> @@ -0,0 +1,254 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * PCIe host controller driver for NXP Layerscape SoCs
 
-Add parens for function names, e.g., "mobiveil_host_init()".  This
-occurs several more times, including both subject lines and changelogs.
+It would be nice to make "NXP Layerscape SoCs" a little more specific
+so we can tell how it's different from the existing pci-layerscape.c
+that says "Freescale Layerscape SoCs".  I assume this driver only
+works with gen4 parts.
 
->   PCI: mobiveil: move irq chained handler setup out of DT parse
+> + * Copyright 2018 NXP
 
-Capitalize acronyms in English text (subject lines, changelogs,
-comments), e.g., s/irq/IRQ/
+s/2018/2019/
 
->   PCI: mobiveil: initialize Primary/Secondary/Subordinate bus number
->   dt-bindings: pci: mobiveil: change gpio_slave and apb_csr to optional
->   PCI: mobiveil: refactor Mobiveil PCIe Host Bridge IP driver
+> + *
+> + * Author: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/init.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/of_irq.h>
+> +#include <linux/of_address.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/regmap.h>
+> +
+> +#include "pcie-mobiveil.h"
+> +
+> +/* LUT and PF control registers */
+> +#define PCIE_LUT_OFF			(0x80000)
+> +#define PCIE_PF_OFF			(0xc0000)
+> +#define PCIE_PF_INT_STAT		(0x18)
+> +#define PF_INT_STAT_PABRST		(31)
 
-This should give a hint about the purpose of refactoring.  Sounds like
-it's to make it easier to support both host and endpoint mode?
+You mix constants that are
 
->   PCI: mobiveil: fix the checking of valid device
->   PCI: mobiveil: add link up condition check
->   PCI: mobiveil: continue to initialize the host upon no PCIe link
->   PCI: mobiveil: disabled IB and OB windows set by bootloader
->   PCI: mobiveil: add Byte and Half-Word width register accessors
+  - the bit position (like this), and
+  - the actual bit mask, like PAB_INTP_RESET
 
-"Byte" and "Half-Word" do not need to be capitalized.  Also, the
-changelog has a typo: "Half-Work" for "half-word".
+Pick one and use a single style.  My personal preference is a plain
+hex bit mask, e.g.,
 
->   PCI: mobiveil: make mobiveil_host_init can be used to re-init host
+  #define PF_INT_STAT_PABRST    0x80000000
+  #define PAB_INTP_RESET        0x00000002
 
-Here's another of the places that need parens after the function name.
+But some people like BIT() or the style you used for PAB_INTP_RESET:
 
->   dt-bindings: pci: Add NXP Layerscape SoCs PCIe Gen4 controller
->   PCI: mobiveil: add PCIe Gen4 RC driver for NXP Layerscape SoCs
->   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011577
->   PCI: mobiveil: ls_pcie_g4: add Workaround for A-011451
+  #define PAB_INTP_RESET        BIT(1)
+  #define PAB_INTP_RESET        (0x1 << 1)
 
-The reader of these changelogs likely doesn't know what internal
-identifiers like "A-011577" mean, but *does* want a hint about what
-problem is being fixed and what platforms are affected.  So instead of
-the "ls_pcie_g4:" prefix, use something like:
+I definitely don't like the simple bit position like this:
 
-  PCI: mobiveil: Work around LX2160A r1.0 config access erratum
-  PCI: mobiveil: Work around LX2160A r1.0 split completion erratum
+  #define PF_INT_STAT_PABRST    31
 
-and mention the erratum ID (A-011577) in the changelog.  If you can
-include the actual erratum text in the changelog, that would be even
-better.
+because that means you have to repeat things like
+"1 << PF_INT_STAT_PABRST" everywhere you use it.
 
-s/ERRATA/errata/ in the changelogs.
+> +#define PCIE_PF_DBG			(0x7fc)
+> +#define PF_DBG_LTSSM_MASK		(0x3f)
+> +#define PF_DBG_WE			(31)
+> +#define PF_DBG_PABR			(27)
 
->   arm64: dts: freescale: lx2160a: add pcie DT nodes
+Parens are not needed around single constants like these.
 
-"PCIe"
+> +#define LS_PCIE_G4_LTSSM_L0		0x2d /* L0 state */
+> +
+> +#define to_ls_pcie_g4(x)		platform_get_drvdata((x)->pdev)
+> +
+> +struct ls_pcie_g4 {
+> +	struct mobiveil_pcie *pci;
+> +	struct delayed_work dwork;
+> +	int irq;
+> +};
+> +
+> +static inline u32 ls_pcie_g4_lut_readl(struct ls_pcie_g4 *pcie, u32 off)
+> +{
+> +	return ioread32(pcie->pci->csr_axi_slave_base + PCIE_LUT_OFF + off);
+> +}
+> +
+> +static inline void ls_pcie_g4_lut_writel(struct ls_pcie_g4 *pcie,
+> +					 u32 off, u32 val)
+> +{
+> +	iowrite32(val, pcie->pci->csr_axi_slave_base + PCIE_LUT_OFF + off);
+> +}
+> +
+> +static inline u32 ls_pcie_g4_pf_readl(struct ls_pcie_g4 *pcie, u32 off)
+> +{
+> +	return ioread32(pcie->pci->csr_axi_slave_base + PCIE_PF_OFF + off);
+> +}
+> +
+> +static inline void ls_pcie_g4_pf_writel(struct ls_pcie_g4 *pcie,
+> +					u32 off, u32 val)
+> +{
+> +	iowrite32(val, pcie->pci->csr_axi_slave_base + PCIE_PF_OFF + off);
+> +}
+> +
+> +static bool ls_pcie_g4_is_bridge(struct ls_pcie_g4 *pcie)
+> +{
+> +	struct mobiveil_pcie *mv_pci = pcie->pci;
+> +	u32 header_type;
+> +
+> +	header_type = csr_readb(mv_pci, PCI_HEADER_TYPE);
+> +	header_type &= 0x7f;
+> +
+> +	return header_type == PCI_HEADER_TYPE_BRIDGE;
+> +}
+> +
+> +static int ls_pcie_g4_link_up(struct mobiveil_pcie *pci)
+> +{
+> +	struct ls_pcie_g4 *pcie = to_ls_pcie_g4(pci);
+> +	u32 state;
+> +
+> +	state = ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
+> +	state =	state & PF_DBG_LTSSM_MASK;
+> +
+> +	if (state == LS_PCIE_G4_LTSSM_L0)
+> +		return 1;
+> +
+> +	return 0;
+> +}
+> +
+> +static void ls_pcie_g4_reinit_hw(struct ls_pcie_g4 *pcie)
+> +{
+> +	struct mobiveil_pcie *mv_pci = pcie->pci;
+> +	u32 val, act_stat;
+> +	int to = 100;
+> +
+> +	/* Poll for pab_csb_reset to set and PAB activity to clear */
+> +	do {
+> +		usleep_range(10, 15);
+> +		val = ls_pcie_g4_pf_readl(pcie, PCIE_PF_INT_STAT);
+> +		act_stat = csr_readl(mv_pci, PAB_ACTIVITY_STAT);
+> +	} while (((val & 1 << PF_INT_STAT_PABRST) == 0 || act_stat) && to--);
+> +	if (to < 0) {
+> +		dev_err(&mv_pci->pdev->dev, "poll PABRST&PABACT timeout\n");
+> +		return;
+> +	}
+> +
+> +	/* clear PEX_RESET bit in PEX_PF0_DBG register */
+> +	val = ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
+> +	val |= 1 << PF_DBG_WE;
+> +	ls_pcie_g4_pf_writel(pcie, PCIE_PF_DBG, val);
+> +
+> +	val = ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
+> +	val |= 1 << PF_DBG_PABR;
+> +	ls_pcie_g4_pf_writel(pcie, PCIE_PF_DBG, val);
+> +
+> +	val = ls_pcie_g4_pf_readl(pcie, PCIE_PF_DBG);
+> +	val &= ~(1 << PF_DBG_WE);
+> +	ls_pcie_g4_pf_writel(pcie, PCIE_PF_DBG, val);
+> +
+> +	mobiveil_host_init(mv_pci, true);
+> +
+> +	to = 100;
+> +	while (!ls_pcie_g4_link_up(mv_pci) && to--)
+> +		usleep_range(200, 250);
+> +	if (to < 0)
+> +		dev_err(&mv_pci->pdev->dev, "PCIe link trainning timeout\n");
 
->   arm64: defconfig: Enable CONFIG_PCI_LAYERSCAPE_GEN4
+s/trainning/training/
 
-I already asked you once [1] to:
+> +}
+> +
+> +static irqreturn_t ls_pcie_g4_handler(int irq, void *dev_id)
 
-  please pay attention to the changelog conventions, e.g., capitalize the
-  first word of the sentence ("Remove flag ...", "Correct PCI base address
-  ...", etc), capitalize acronyms like "PCI" and "IRQ", use parentheses
-  after function names, etc.  You can see the conventions by running "git
-  log --oneline drivers/pci/controller".
+Function name should include "irq_handler" or "isr".  Run
 
-For example, instead of this:
+  git grep request_irq drivers/pci/controller/
 
-  PCI: mobiveil: add link up condition check
+and follow the existing conventions.
 
-it should be this:
+> +{
+> +	struct ls_pcie_g4 *pcie = (struct ls_pcie_g4 *)dev_id;
+> +	struct mobiveil_pcie *mv_pci = pcie->pci;
+> +	u32 val;
+> +
+> +	val = csr_readl(mv_pci, PAB_INTP_AMBA_MISC_STAT);
+> +	if (!val)
+> +		return IRQ_NONE;
+> +
+> +	if (val & PAB_INTP_RESET)
+> +		schedule_delayed_work(&pcie->dwork, msecs_to_jiffies(1));
+> +
+> +	csr_writel(mv_pci, val, PAB_INTP_AMBA_MISC_STAT);
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +static int ls_pcie_g4_interrupt_init(struct mobiveil_pcie *mv_pci)
+> +{
+> +	struct ls_pcie_g4 *pcie = to_ls_pcie_g4(mv_pci);
+> +	u32 val;
+> +	int ret;
+> +
+> +	pcie->irq = platform_get_irq_byname(mv_pci->pdev, "intr");
+> +	if (pcie->irq < 0) {
+> +		dev_err(&mv_pci->pdev->dev, "Can't get 'intr' irq.\n");
 
-  PCI: mobiveil: Add link up condition check
+When you use &mv_pci->pdev->dev more than once, as you do here, please
+add
 
-Please wait at least a few days before posting a v5 in case there are
-other comments.
+  struct device *dev = &mv_pci->pdev->dev;
 
-Bjorn
+and use "dev" instead of repeating the whole "&mv_pci->pdev->dev"
+expression.
 
-[1] https://lore.kernel.org/linux-pci/20190130153447.GB229773@google.com
+s/irq./IRQ/ (Capitalize IRQ and omit period)
+
+> +		return pcie->irq;
+> +	}
+> +	ret = devm_request_irq(&mv_pci->pdev->dev, pcie->irq,
+> +			       ls_pcie_g4_handler, IRQF_SHARED,
+> +			       mv_pci->pdev->name, pcie);
+> +	if (ret) {
+> +		dev_err(&mv_pci->pdev->dev, "Can't register PCIe IRQ.\n");
+
+Omit period from message and maybe include the IRQ number.
+
+All your messages should start with lower-case or all should start
+with upper-case (the two in this function are capitalized, but the
+others are not).
+
+> +		return  ret;
+> +	}
+> +
+> +	/* Enable interrupts */
+> +	val = PAB_INTP_INTX_MASK | PAB_INTP_MSI | PAB_INTP_RESET |
+> +	      PAB_INTP_PCIE_UE | PAB_INTP_IE_PMREDI | PAB_INTP_IE_EC;
+> +	csr_writel(mv_pci, val, PAB_INTP_AMBA_MISC_ENB);
+> +
+> +	return 0;
+> +}
+> +
+> +static void ls_pcie_g4_reset(struct work_struct *work)
+> +{
+> +	struct delayed_work *dwork = container_of(work, struct delayed_work,
+> +						  work);
+> +	struct ls_pcie_g4 *pcie = container_of(dwork, struct ls_pcie_g4, dwork);
+> +	struct mobiveil_pcie *mv_pci = pcie->pci;
+> +	u16 ctrl;
+> +
+> +	ctrl = csr_readw(mv_pci, PCI_BRIDGE_CONTROL);
+> +	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+> +	csr_writew(mv_pci, ctrl, PCI_BRIDGE_CONTROL);
+> +	ls_pcie_g4_reinit_hw(pcie);
+> +}
+> +
+> +static struct mobiveil_rp_ops ls_pcie_g4_rp_ops = {
+> +	.interrupt_init = ls_pcie_g4_interrupt_init,
+> +};
+> +
+> +static const struct mobiveil_pab_ops ls_pcie_g4_pab_ops = {
+> +	.link_up = ls_pcie_g4_link_up,
+> +};
+> +
+> +static int __init ls_pcie_g4_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct mobiveil_pcie *mv_pci;
+> +	struct ls_pcie_g4 *pcie;
+> +	struct device_node *np = dev->of_node;
+> +	int ret;
+> +
+> +	if (!of_parse_phandle(np, "msi-parent", 0)) {
+> +		dev_err(dev, "failed to find msi-parent\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+> +	if (!pcie)
+> +		return -ENOMEM;
+> +
+> +	mv_pci = devm_kzalloc(dev, sizeof(*mv_pci), GFP_KERNEL);
+> +	if (!mv_pci)
+> +		return -ENOMEM;
+> +
+> +	mv_pci->pdev = pdev;
+> +	mv_pci->ops = &ls_pcie_g4_pab_ops;
+> +	mv_pci->rp.ops = &ls_pcie_g4_rp_ops;
+> +	pcie->pci = mv_pci;
+> +
+> +	platform_set_drvdata(pdev, pcie);
+> +
+> +	INIT_DELAYED_WORK(&pcie->dwork, ls_pcie_g4_reset);
+> +
+> +	ret = mobiveil_pcie_host_probe(mv_pci);
+> +	if (ret) {
+> +		dev_err(dev, "fail to probe!\n");
+> +		return  ret;
+> +	}
+> +
+> +	if (!ls_pcie_g4_is_bridge(pcie))
+> +		return -ENODEV;
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id ls_pcie_g4_of_match[] = {
+> +	{ .compatible = "fsl,lx2160a-pcie", },
+> +	{ },
+> +};
+> +
+> +static struct platform_driver ls_pcie_g4_driver = {
+> +	.driver = {
+> +		.name = "layerscape-pcie-gen4",
+> +		.of_match_table = ls_pcie_g4_of_match,
+> +		.suppress_bind_attrs = true,
+> +	},
+> +};
+> +
+> +builtin_platform_driver_probe(ls_pcie_g4_driver, ls_pcie_g4_probe);
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> index 0f5303962e88..0ccd6cee5f8f 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> @@ -41,6 +41,8 @@
+>  #define  PAGE_LO_MASK			0x3ff
+>  #define  PAGE_SEL_OFFSET_SHIFT		10
+>  
+> +#define PAB_ACTIVITY_STAT		0x81c
+> +
+>  #define PAB_AXI_PIO_CTRL		0x0840
+>  #define  APIO_EN_MASK			0xf
+>  
+> @@ -49,8 +51,18 @@
+>  
+>  #define PAB_INTP_AMBA_MISC_ENB		0x0b0c
+>  #define PAB_INTP_AMBA_MISC_STAT		0x0b1c
+> -#define  PAB_INTP_INTX_MASK		0x01e0
+> -#define  PAB_INTP_MSI_MASK		0x8
+> +#define  PAB_INTP_RESET			(0x1 << 1)
+> +#define  PAB_INTP_MSI			(0x1 << 3)
+> +#define  PAB_INTP_INTA			(0x1 << 5)
+> +#define  PAB_INTP_INTB			(0x1 << 6)
+> +#define  PAB_INTP_INTC			(0x1 << 7)
+> +#define  PAB_INTP_INTD			(0x1 << 8)
+> +#define  PAB_INTP_PCIE_UE		(0x1 << 9)
+> +#define  PAB_INTP_IE_PMREDI		(0x1 << 29)
+> +#define  PAB_INTP_IE_EC			(0x1 << 30)
+> +#define  PAB_INTP_MSI_MASK		PAB_INTP_MSI
+> +#define  PAB_INTP_INTX_MASK		(PAB_INTP_INTA | PAB_INTP_INTB |\
+> +					PAB_INTP_INTC | PAB_INTP_INTD)
+>  
+>  #define PAB_AXI_AMAP_CTRL(win)		PAB_REG_ADDR(0x0ba0, win)
+>  #define  WIN_ENABLE_SHIFT		0
+> -- 
+> 2.17.1
+> 
