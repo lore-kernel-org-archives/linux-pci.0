@@ -4,36 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2985BC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA66C4360F
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E43392084D
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:32:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1501E20850
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:32:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="I14Sxy26"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="DyzpigMq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727391AbfCKJcY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Mar 2019 05:32:24 -0400
-Received: from mail-eopbgr80085.outbound.protection.outlook.com ([40.107.8.85]:48938
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        id S1727184AbfCKJcw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Mar 2019 05:32:52 -0400
+Received: from mail-eopbgr70071.outbound.protection.outlook.com ([40.107.7.71]:26944
+        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727008AbfCKJcX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 11 Mar 2019 05:32:23 -0400
+        id S1727213AbfCKJcv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 11 Mar 2019 05:32:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bwQmuOG1mZDjPwBK/BZ1hEmqeje416sikwB+xbTSKZM=;
- b=I14Sxy26vp+AqplOiTtruqF87X8+vBBUBuzRT2bBBL0EKl3KqOiNvYJFKkUd4MtsIkpzQ8wOlx/K9pqC+Yp9uH0MZ+V5Jh6XCKq8eSGmOScAWrjDA/V67K99jag/oqma7rNgysSltsZaZKqrEIhn0b7mJ0K9vQz0L55RWe6FW6w=
+ bh=djRJedX0YnGMR+kxBuz6xh14Gf7Z72o/ke4jkc9v3Cw=;
+ b=DyzpigMqijpiqAvoKkgqsQF/oxGGmfUYiGs5Jf7Yn/YuYYHGvutYjB9twFJgPcevURnzvLAE0x1rcGkh1Iw5CGp90547uJfjWDG0tjVSd/SErmrN8EL+NJgUxPkTAGUr3daxnSwZc/5J/Y/2q0KFIJx6Jg/v+4eeVz6egjT/9To=
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.3.19) by
  AM6PR04MB6566.eurprd04.prod.outlook.com (20.179.246.143) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1686.16; Mon, 11 Mar 2019 09:31:55 +0000
+ 15.20.1686.16; Mon, 11 Mar 2019 09:32:41 +0000
 Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::30cc:e034:1f7a:2cc7]) by AM6PR04MB5781.eurprd04.prod.outlook.com
  ([fe80::30cc:e034:1f7a:2cc7%2]) with mapi id 15.20.1686.021; Mon, 11 Mar 2019
- 09:31:55 +0000
+ 09:32:40 +0000
 From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-arm-kernel@lists.infradead.org" 
@@ -53,13 +53,13 @@ CC:     Mingkai Hu <mingkai.hu@nxp.com>,
         "M.h. Lian" <minghuan.lian@nxp.com>,
         Xiaowei Bao <xiaowei.bao@nxp.com>,
         "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Subject: [PATCHv4 15/28] dt-bindings: pci: mobiveil: change gpio_slave and
- apb_csr to optional
-Thread-Topic: [PATCHv4 15/28] dt-bindings: pci: mobiveil: change gpio_slave
- and apb_csr to optional
-Thread-Index: AQHU1+1Eh+uOewU500u0mr9dSGaHtQ==
-Date:   Mon, 11 Mar 2019 09:31:54 +0000
-Message-ID: <20190311093130.7209-16-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv4 20/28] PCI: mobiveil: disabled IB and OB windows set by
+ bootloader
+Thread-Topic: [PATCHv4 20/28] PCI: mobiveil: disabled IB and OB windows set by
+ bootloader
+Thread-Index: AQHU1+1fWHXqD4bHmUakTFM3fhqbXg==
+Date:   Mon, 11 Mar 2019 09:32:40 +0000
+Message-ID: <20190311093130.7209-21-Zhiqiang.Hou@nxp.com>
 References: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
 In-Reply-To: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
 Accept-Language: zh-CN, en-US
@@ -75,46 +75,47 @@ x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.17.1
 x-originating-ip: [119.31.174.73]
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: aae8e711-33f7-4bcf-b7b2-08d6a604663f
+x-ms-office365-filtering-correlation-id: a5fbdb15-257a-48b1-6f2e-08d6a60480eb
 x-ms-office365-filtering-ht: Tenant
 x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB6566;
 x-ms-traffictypediagnostic: AM6PR04MB6566:
-x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;AM6PR04MB6566;23:OsF4Ey4/7FW24eXF7PPRHeZpP93nIgCyhgPx+Ng?=
- =?iso-8859-1?Q?akXTI27mH3qTxbo7TBNGsibZmCSHLFqDYN3x9jNH2XHEBIbioL9ikhNpkU?=
- =?iso-8859-1?Q?XrLbEyQTXCfIZrL+tjwHOppce8JOSCQtKGMBvfzY/enwqvx5UiB7BZA2Hs?=
- =?iso-8859-1?Q?IRHd+yLsinqVHLRMFo2r/Z3VhgejE/1hsY05lqWevufivl0Cc0K1q0ZPvj?=
- =?iso-8859-1?Q?GMlZqn+vbEklrD76cfATIRoAC7tzVqQCjC81oDjpmvoVSx07QBj9IlX8dm?=
- =?iso-8859-1?Q?AkvDPufL18qEcKDAF/Ym53VKzdxyKlYx3Q4aTLBtCI1LrtqmahqO1Vaftx?=
- =?iso-8859-1?Q?hmYPuNstNH8WfUdit4HM6OOjkWGfGXyUcr7SI73hep+cwXlrvVQSDqdGdJ?=
- =?iso-8859-1?Q?5b4pIIKbIK/RfhmPKM42qkm7VgKFwDE/rwf7XKtClx7EMLaY5r/60ZlHw4?=
- =?iso-8859-1?Q?fw/rLPGJMqvN9FBhkwSgmgA03y5J69hYcaVQXI3V4ZWR0MRvD2YSt2BXXv?=
- =?iso-8859-1?Q?p0Ia5n+fwPiQ2fUGSh7kJt5x0qW3X+ijEM17zhYHY2BTZuz36OQ6AccBy7?=
- =?iso-8859-1?Q?xWRma017mnzy8HmX0+5+CVC5vIbFsAbc2VepiP41J5hxjTaJ+mNKgUm43X?=
- =?iso-8859-1?Q?UKRUtekcHsAroZ+49DI2MabE7HutZAX1Ujvdqq3gWHpD04lPVy7e/yPf38?=
- =?iso-8859-1?Q?VLkoogKNe0Knsynki8a/Aw40M6ECCWqL2bOEtAuwCcUkd9yRsgVuwMKfxK?=
- =?iso-8859-1?Q?QsIqP7M7IVAyvaWmzuOMbuU5jaZkIFHVg96k2PvRduvFZ9WjGsgMzGzKDr?=
- =?iso-8859-1?Q?0Qh765Vpz7J7I9xTEOwdFKDq5ge2hOuFPSrc74xEPJ6t5hvBiAefVrKDTN?=
- =?iso-8859-1?Q?SYc9Y7ALUsksXyxAF5HBzQdtuCKmGZUljUgbZnfbfXRwZ/jRl1N3Kp2tIl?=
- =?iso-8859-1?Q?OjI+JAq14ca1lLMafM7PyuK/vs932TbBhCdUrkWPIJVwzlNqZ136OoiNa8?=
- =?iso-8859-1?Q?GNBfstEdauYCK1+8TSE10rm1gJXlgcARdYxiv9r6oavmdkwEyA1Bodxzb7?=
- =?iso-8859-1?Q?Zd2QZ0RS9ZnS6Iwi7OUdLg0M22KjwwBoy9IQQ4jqDKTp8vKkZ5RrM+NITu?=
- =?iso-8859-1?Q?M2WOID0iVI5MCAdIwy2woCkRfTxfNqMAljDnrE3Woe6h09lDZ7iEEW+lZE?=
- =?iso-8859-1?Q?bzUgTUDaJMwzydfD05rWMYADmHNa/GudPQpYlc+DwCeJdJ8ywS40dqv59n?=
- =?iso-8859-1?Q?VOFJmHJb8cEkY7eJBEd0lfjFpJdIIK8BjyDsZSOUbflp07RBJwyfXdDuvw?=
- =?iso-8859-1?Q?EWS6MXR9ii2dvjmOP6ZMRCeVdS1emxsC1pWWazERtc02w=3D=3D?=
-x-microsoft-antispam-prvs: <AM6PR04MB65664DAA445F5F8D7BBDFCA084480@AM6PR04MB6566.eurprd04.prod.outlook.com>
+x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;AM6PR04MB6566;23:kZOQMGleawVldBPA40VGBqc7m6H1+Z7xrUbr5m9?=
+ =?iso-8859-1?Q?QbdoQVVAQXwdzKR3ECibK170FG37QEV3Gey4Qgvb0XIuZhr3T3b5ZFl+no?=
+ =?iso-8859-1?Q?D/UvTs9yItBV1LxPs9zlgE8eUGo8YIZzkVlA0yJIwfNQnMkKmaP24ci3R7?=
+ =?iso-8859-1?Q?2pLlg0LXQlWv4//1q/aCELfbU9aeLf11dKdQIdEofhtevVYBqsG175a5n9?=
+ =?iso-8859-1?Q?0Sks+QAiQrBM2CD89sL3/514RcxRVNia5Z0VCe8DLYylBbi/2BMCPht79u?=
+ =?iso-8859-1?Q?lcY33AkC4TeYMIEme6xFUME4V2lkL7MNCz43ttYEpY09emtPYB2HPkNr8M?=
+ =?iso-8859-1?Q?U94+FxDCaXA1uWYyDlnh3oRaypKXKa3UhTlyCSBo/nGpbynVzGeHdixpYf?=
+ =?iso-8859-1?Q?+KHba8chp/1LJVdt1uiWeLPYdA2XPvSFkm7VX93UzYQlTNJTI81p6//xXV?=
+ =?iso-8859-1?Q?JF9iIn1Tc1yqLN36eVzQSp9bf5t4rCz7seH+ufCNya9zXyhk015u2wGkds?=
+ =?iso-8859-1?Q?JMaHQO7fCLYWpLebv3vlpamcxYLyheaodQHZdoOV8jxWZ3SfDmnVlTadbz?=
+ =?iso-8859-1?Q?T+DsZo5Q4cdoAIFul/mbcb7dm72AxCsgxh3O9AlptgG6Fd+EK3dTinUs0A?=
+ =?iso-8859-1?Q?IA4ATwqANYd821vYDF3IOZyClZfLqp1fEQ11hYS80r2qwHPeBw+Wgt+sJm?=
+ =?iso-8859-1?Q?luN0iuarjHVUjj6E9ardYN9/BDx8yhrnRyTB6fcHPQapznyKc3SIDew5GX?=
+ =?iso-8859-1?Q?n3MFmLMOzzr4HVJThm0OSuDTb57B7yF3CAIYsR9Qacr3gmEwD2ThQ5ZMnw?=
+ =?iso-8859-1?Q?uqL3GztDi8x31qzuQO1Ux45s1pKQnC+VUnvDndUqyWrJdDuJdm0zoBccGF?=
+ =?iso-8859-1?Q?BuNfinQ7ipv8crSPSYP9X5/HBElpHgqb1h7vy1iLO3LhW4ERXTPemqY4zH?=
+ =?iso-8859-1?Q?9OdHR2sHjSjSJG5S1TMHfobwZ59OqY+j9m9IriWq8aovAKFf8Yhj1y142W?=
+ =?iso-8859-1?Q?O4hBWnenOdwnPC9xYQl6t0k1TGkwoY32N232riHKL05qCnrPxHvyPoxMoU?=
+ =?iso-8859-1?Q?Xt5fs0Y47kCbGG/oHembJWgmV4ZyEPvjJ15w+cwV4FUAk+TgdL642Y6LpZ?=
+ =?iso-8859-1?Q?BLtTffULkn4IXaWAswzjDTYeONj8ofW57/iEucXoy0JQc3o6mH8bNuv2Lg?=
+ =?iso-8859-1?Q?k2ZsE3I6N79g/zpmWjtUzRadWAD1nERz6sSdmG3QNWHpZW/3iq1ieEpv0B?=
+ =?iso-8859-1?Q?HkxKrWXVOFAj1KuBoGmUY0ble6mpptgxn1jXJNUDk0qIfPEapK9o4oNpHo?=
+ =?iso-8859-1?Q?d9mGMMvVjCLvPk9roAxu1I7wPdWrhcNarJ8goOMCPR2LHDyYwpG4HpMi8V?=
+ =?iso-8859-1?Q?inlR1oN4=3D?=
+x-microsoft-antispam-prvs: <AM6PR04MB6566F6E527B5B39A90CF6EEE84480@AM6PR04MB6566.eurprd04.prod.outlook.com>
 x-forefront-prvs: 09730BD177
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(396003)(366004)(39860400002)(346002)(376002)(136003)(199004)(189003)(6436002)(478600001)(25786009)(99286004)(11346002)(2616005)(476003)(76176011)(3846002)(6116002)(81166006)(81156014)(486006)(71190400001)(71200400001)(2906002)(8676002)(2201001)(5660300002)(97736004)(6486002)(446003)(7416002)(2501003)(86362001)(256004)(14454004)(316002)(68736007)(26005)(8936002)(6512007)(53936002)(1076003)(66066001)(386003)(54906003)(50226002)(110136005)(102836004)(6506007)(36756003)(105586002)(4326008)(106356001)(186003)(305945005)(52116002)(7736002)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB6566;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(376002)(346002)(39860400002)(366004)(396003)(189003)(199004)(6512007)(8936002)(26005)(68736007)(53936002)(1076003)(316002)(14444005)(256004)(14454004)(186003)(305945005)(105586002)(4326008)(106356001)(7736002)(52116002)(386003)(66066001)(54906003)(50226002)(6506007)(36756003)(110136005)(102836004)(6116002)(76176011)(3846002)(486006)(81166006)(81156014)(478600001)(6436002)(25786009)(476003)(2616005)(11346002)(99286004)(97736004)(446003)(6486002)(2501003)(86362001)(7416002)(2906002)(71190400001)(71200400001)(2201001)(5660300002)(8676002)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB6566;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
 received-spf: None (protection.outlook.com: nxp.com does not designate
  permitted sender hosts)
 x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: A5VUvjamFratLulhhIws1fJrgKiySSPopYwFXEhnw5MDSpqtmbfc2SyukLkSJJqvQEh3WWHszj9M5WWhhH3Qyx4+8x2w/wfRhq4ich2CSb+x5MgNGMsdtp+xVj8N4oRBu3dLTzS/0ogW9DOqLCBfnXh1oC6ZVjydKYQy129Se/aRAzMAJYoWfsKv4z6D+ewzwxP+1NgaKhsX/D0YPQDfHcO3T1qZgvnHs/0JiYYtjq+IW1EllmoY2PwlJC54S5xtAFmAj+ZXJ0EY7hsaJZt8Cd7OQulJ+EVC+YP7H1jzU7V40S2LvM6vHqR8bIEW4hXfcO4Tc8PvuZ0MRYF5IOSi12qXH7GyE6zcP1t3rc3RJDCcCLX0xl0cCRcdLpjB3pCli+ftzdNcjn/KrexgSBTgCDKeQzGPEnEcfjrJ8fJnvRo=
+x-microsoft-antispam-message-info: VQR7s65k6XKP9vgc8+qRuJy08gPUUKos9KcnjajPfC5WUChq9nIrRE7J8v/g+mVgPXseQ47+gPJaq/GhluPIUuuqksQUwwxf8NuILDm6xgPJBRXzGhAjKR6/ezcGUUc21aH3t9XvnOJUq0zZc46kTiI6ceWveq1GHMsHt5dYX7HzXRlmEKC2ua6F81tV5/bEm0rIrfpiDAkosQOshJSrljvO9iIjznuVD7H5wLEOTWEOgD2E5OGMbx9x9LEfN+JbkdsHW3k8QHbt+llyw8r55kSTBUfZpv9MmlCjSzS6AKZ4T4yXtXLkDn4AhUB0MuCpDWVT1LUXRDMQc/boEvA/EzV4yJ545UlvSZWJgm+xJx+xmHgTuAQD4YX9WNg1ARNIdANXRpkDBqI0d3D0XnHVvQ0m2tyndrau4xoWbGk1oNQ=
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: aae8e711-33f7-4bcf-b7b2-08d6a604663f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2019 09:31:54.9729
+X-MS-Exchange-CrossTenant-Network-Message-Id: a5fbdb15-257a-48b1-6f2e-08d6a60480eb
+X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Mar 2019 09:32:40.5316
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
@@ -127,37 +128,83 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Change the "gpio_slave" and "apb_csr" to optional, the "gpio_slave"
-is not used in current code, and "apb_csr" is not used by some
-platforms.
+Disabled all inbound and outbound windows before set up the windows
+in kernel, in case transactions match the window set by bootloader.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Acked-by: Rob Herring <robh@kernel.org>
 Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 ---
 V4:
  - no change
 
- Documentation/devicetree/bindings/pci/mobiveil-pcie.txt | 2 ++
- 1 file changed, 2 insertions(+)
+ .../controller/mobiveil/pcie-mobiveil-host.c   |  7 +++++++
+ .../pci/controller/mobiveil/pcie-mobiveil.c    | 18 ++++++++++++++++++
+ .../pci/controller/mobiveil/pcie-mobiveil.h    |  2 ++
+ 3 files changed, 27 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Docu=
-mentation/devicetree/bindings/pci/mobiveil-pcie.txt
-index a618d4787dd7..64156993e052 100644
---- a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-@@ -10,8 +10,10 @@ Required properties:
- 	interrupt source. The value must be 1.
- - compatible: Should contain "mbvl,gpex40-pcie"
- - reg: Should contain PCIe registers location and length
-+	Mandatory:
- 	"config_axi_slave": PCIe controller registers
- 	"csr_axi_slave"	  : Bridge config registers
-+	Optional:
- 	"gpio_slave"	  : GPIO registers to control slot power
- 	"apb_csr"	  : MSI registers
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c b/drivers=
+/pci/controller/mobiveil/pcie-mobiveil-host.c
+index d1765d572f44..d028cdf31d0e 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil-host.c
+@@ -221,6 +221,13 @@ static int mobiveil_host_init(struct mobiveil_pcie *pc=
+ie)
+ {
+ 	u32 value, pab_ctrl, type;
+ 	struct resource_entry *win;
++	int i;
++
++	/* Disable all inbound/outbound windows */
++	for (i =3D 0; i < pcie->apio_wins; i++)
++		mobiveil_pcie_disable_ob_win(pcie, i);
++	for (i =3D 0; i < pcie->ppio_wins; i++)
++		mobiveil_pcie_disable_ib_win(pcie, i);
+=20
+ 	/* setup bus numbers */
+ 	value =3D csr_readl(pcie, PCI_PRIMARY_BUS);
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.c b/drivers/pci/=
+controller/mobiveil/pcie-mobiveil.c
+index 370658d6546d..49d471b75925 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil.c
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.c
+@@ -226,3 +226,21 @@ int mobiveil_bringup_link(struct mobiveil_pcie *pcie)
+=20
+ 	return -ETIMEDOUT;
+ }
++
++void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num)
++{
++	u32 val;
++
++	val =3D csr_readl(pci, PAB_PEX_AMAP_CTRL(win_num));
++	val &=3D ~(1 << AMAP_CTRL_EN_SHIFT);
++	csr_writel(pci, val, PAB_PEX_AMAP_CTRL(win_num));
++}
++
++void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num)
++{
++	u32 val;
++
++	val =3D csr_readl(pci, PAB_AXI_AMAP_CTRL(win_num));
++	val &=3D ~(1 << WIN_ENABLE_SHIFT);
++	csr_writel(pci, val, PAB_AXI_AMAP_CTRL(win_num));
++}
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/=
+controller/mobiveil/pcie-mobiveil.h
+index eb4cb61291a8..81685840b378 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+@@ -171,6 +171,8 @@ void program_ob_windows(struct mobiveil_pcie *pcie, int=
+ win_num, u64 cpu_addr,
+ 			u64 pci_addr, u32 type, u64 size);
+ void program_ib_windows(struct mobiveil_pcie *pcie, int win_num, u64 cpu_a=
+ddr,
+ 			u64 pci_addr, u32 type, u64 size);
++void mobiveil_pcie_disable_ob_win(struct mobiveil_pcie *pci, int win_num);
++void mobiveil_pcie_disable_ib_win(struct mobiveil_pcie *pci, int win_num);
+ u32 csr_read(struct mobiveil_pcie *pcie, u32 off, size_t size);
+ void csr_write(struct mobiveil_pcie *pcie, u32 val, u32 off, size_t size);
 =20
 --=20
 2.17.1
