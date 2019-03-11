@@ -3,112 +3,103 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D447CC4360F
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:42:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CEEFC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:52:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF7102075C
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:42:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63E9C206BA
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Mar 2019 09:52:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727130AbfCKJmE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 11 Mar 2019 05:42:04 -0400
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:39354 "EHLO
-        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727107AbfCKJmD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2019 05:42:03 -0400
-Received: by mail-vs1-f66.google.com with SMTP id w14so2275940vso.6;
-        Mon, 11 Mar 2019 02:42:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=57gL7QIWBOjEMnDeiMi1khiiWRbmBvZUkq/P810Uygo=;
-        b=RWr/Aqe7lYJG+hM3Ns48aNsN0MwND/1KBn4sStYCeYSoJ4xkboEiwoE4RUb5V8wpiX
-         z+jRL9gbFyVrDTVDaWddRC6CFLbuq7bbYOfPNZoic0RRPxCoaiSfqQiWq8MxWlOtrwdJ
-         ZQOPBHz/0qsjdtnHngeQiz+3u6uirE+Cu84NFsgYpWLnqsJFF6MGrWb7avjjEoBnx1zh
-         Hk8DCT9ltnTGT9iHdAIpKbi69XTH8ZjK3hK6bIIsaEA5I27iCaPbc/f2biQrb65Qduce
-         qNMfcgFOXh/C5sre9xc9nEeytDSzjQdJSFR+SKwZ9Z1nWJSvUhaq5MbgteIRkTmFBhhy
-         wQcQ==
-X-Gm-Message-State: APjAAAUhCZo7bZWNTFukizZY04VoZVscOdAkzLyKneV9Kk/vJEpRrNGa
-        w7/vxeDr04dfnzW2rn3fovIFKyDpT3SP2Dfm9Dc=
-X-Google-Smtp-Source: APXvYqz3odPDnMaAqUwgKEsuXF9q5oEMmdw00B2yhdRbxTFyjF/f74GcHeS9ONdgNRXghs1SQsGlerVYQrzxWbbHAxY=
-X-Received: by 2002:a67:78ce:: with SMTP id t197mr16171138vsc.152.1552297322801;
- Mon, 11 Mar 2019 02:42:02 -0700 (PDT)
+        id S1726074AbfCKJwJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 11 Mar 2019 05:52:09 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:43060 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725839AbfCKJwJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Mar 2019 05:52:09 -0400
+Received: from 79.184.254.189.ipv4.supernova.orange.pl (79.184.254.189) (HELO aspire.rjw.lan)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.213)
+ id 0a8ec5d0db2c5889; Mon, 11 Mar 2019 10:52:07 +0100
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Frederick Lawler <fred@fredlawl.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC] Log PCIe service info with pci_dev, not pcie_device
+Date:   Mon, 11 Mar 2019 10:50:23 +0100
+Message-ID: <1585578.yUfP4slHvQ@aspire.rjw.lan>
+In-Reply-To: <20190308180149.GD214730@google.com>
+References: <20190308180149.GD214730@google.com>
 MIME-Version: 1.0
-References: <20190309005613.1493-1-marek.vasut@gmail.com> <20190309005613.1493-2-marek.vasut@gmail.com>
-In-Reply-To: <20190309005613.1493-2-marek.vasut@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 11 Mar 2019 10:41:51 +0100
-Message-ID: <CAMuHMdXGn50+hAoPBmnatf+onXezhNUwDWv+izj3j_QVMMFNGw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: rcar: Replace unsigned long with u32 in register accessors
-To:     Marek Vasut <marek.vasut@gmail.com>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Marek,
+On Friday, March 8, 2019 7:01:49 PM CET Bjorn Helgaas wrote:
+> This is strictly a discussion starter, obviously not for application.
+> 
+> The portdrv driver binds to pci_dev for PCIe Root Ports and Switch
+> Ports.  It creates additional pcie_devices for each "service" (Power
+> Management events, AER, hotplug, Downstream Port Containment, etc).
+> These pcie_devices have their own struct device, in addition to the
+> one in the struct pci_dev.
+> 
+> Service drivers can then bind to those pcie_devices, and their
+> dev_printk output is typically associated with those, e.g.,
+> 
+>   pciehp 0000:80:10.0:pcie004: Slot #36 ...
+> 
+> The "pcie004" is a bitmask that identifies the particular service, but
+> I don't think it's very useful to users, especially since we already
+> have "pciehp" as the driver name.
+> 
+> I think the fact that pcie_device has its own struct device is
+> probably a design mistake and it would be better if those "services"
+> were more tightly integrated into the PCI core.
+> 
+> Changing that would be a big project that I don't want to tackle right
+> now, but I think a small step would be to simplify the dmesg logging
+> by doing it with the underlying pci_dev instead of the pcie_device.
+> For example, we could do something like the patch below, which would
+> change the dmesg output like this:
+> 
+>   - pciehp 0000:80:10.0:pcie004: Slot #36 AttnBtn- PwrCtrl- MRL- AttnInd+ PwrInd+ HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+>   + pcieport 0000:80:10.0: pciehp: Slot #36 AttnBtn- PwrCtrl- MRL- AttnInd+ PwrInd+ HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
+> 
+> Please discuss :)
 
-On Sat, Mar 9, 2019 at 1:56 AM <marek.vasut@gmail.com> wrote:
-> From: Marek Vasut <marek.vasut+renesas@gmail.com>
->
-> Replace unsigned long with u32 in register accessor functions,
-> since they access 32bit registers.
->
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+No strong opinion here, and please feel free to add
 
-Thanks for your patch!
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Minor nit below.
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+to this patch.
 
-BTW, there are a few more suspicious/incorrect uses of unsigned long:
-  - incorrect debug prints on arm64,
-  - more unsigned long register values,
-  - phys_addr_t
-Care to fix these as well?
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 7dd443aea5a5..2761778f2ecc 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -868,7 +868,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+>  		PCI_EXP_SLTSTA_MRLSC | PCI_EXP_SLTSTA_CC |
+>  		PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC);
+>  
+> -	ctrl_info(ctrl, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c%s\n",
+> +	pci_info(pdev, "Slot #%d AttnBtn%c PwrCtrl%c MRL%c AttnInd%c PwrInd%c HotPlug%c Surprise%c Interlock%c NoCompl%c LLActRep%c%s\n",
+>  		(slot_cap & PCI_EXP_SLTCAP_PSN) >> 19,
+>  		FLAG(slot_cap, PCI_EXP_SLTCAP_ABP),
+>  		FLAG(slot_cap, PCI_EXP_SLTCAP_PCP),
+> 
 
-Thanks!
 
-> --- a/drivers/pci/controller/pcie-rcar.c
-> +++ b/drivers/pci/controller/pcie-rcar.c
-> @@ -152,14 +152,12 @@ struct rcar_pcie {
->         struct                  rcar_msi msi;
->  };
->
-> -static void rcar_pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
-> -                              unsigned long reg)
-> +static void rcar_pci_write_reg(struct rcar_pcie *pcie, u32 val, u32 reg)
-
-Doesn't unsigned int make more sense for reg?
-
->  {
->         writel(val, pcie->base + reg);
->  }
->
-> -static unsigned long rcar_pci_read_reg(struct rcar_pcie *pcie,
-> -                                      unsigned long reg)
-> +static u32 rcar_pci_read_reg(struct rcar_pcie *pcie, u32 reg)
-
-Likewise.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
