@@ -2,211 +2,202 @@ Return-Path: <SRS0=lIFx=RP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D648FC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 13:34:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0588C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 16:00:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96BA22147C
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 13:34:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1552397697;
-	bh=c5SWOnWEyk1TNAkhujBCfkajP9wYzT7EUzp4gRDfQDA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=R14YTIjsOkQlLXbAKaW3tT/vUpJE4RB1yc+XnzgGzMEHRI/cHsMGzKxQ+h7tVXNya
-	 ME+iE+um6A1ssmIaJt+kG6jDonYmkmh5U/myf9hMReWqRzNtAhTjdYGw3WJuuHaiDR
-	 hnkcpVyMqQsI9lS3lLkc3kYwadPBOGbP0zc/kZ40=
+	by mail.kernel.org (Postfix) with ESMTP id C6C3B2054F
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 16:00:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725874AbfCLNe4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Mar 2019 09:34:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34734 "EHLO mail.kernel.org"
+        id S1726534AbfCLQAS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Mar 2019 12:00:18 -0400
+Received: from smtp3-g21.free.fr ([212.27.42.3]:57133 "EHLO smtp3-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725774AbfCLNe4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Mar 2019 09:34:56 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B22152075C;
-        Tue, 12 Mar 2019 13:34:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1552397694;
-        bh=c5SWOnWEyk1TNAkhujBCfkajP9wYzT7EUzp4gRDfQDA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aOzTYnyU5kdU6SOcjY47kaF1aQj2jIcoA+zONX6YydnEm3Aib4WXt6uSG7UyudnlU
-         Kt9UpDcQea27qxUqgHIDc+gwhv9yjWmFbfcIlVrI4yHZVzzLWZ15i5xvkZhCzAsQT3
-         V9k/jKoFe9wBjDf6j00JuHwgVn9eJz7iLaM/615k=
-Date:   Tue, 12 Mar 2019 08:34:52 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: Re: [PATCHv4 26/28] PCI: mobiveil: ls_pcie_g4: add Workaround for
- A-011451
-Message-ID: <20190312133452.GA210027@google.com>
-References: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
- <20190311093130.7209-27-Zhiqiang.Hou@nxp.com>
- <20190311173439.GH214730@google.com>
- <AM6PR04MB578187096D0CFD2B8D9C13FF84490@AM6PR04MB5781.eurprd04.prod.outlook.com>
+        id S1725887AbfCLQAS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Mar 2019 12:00:18 -0400
+Received: from [192.168.108.8] (unknown [213.36.7.13])
+        (Authenticated sender: marc.w.gonzalez)
+        by smtp3-g21.free.fr (Postfix) with ESMTPSA id 258F913F8FC;
+        Tue, 12 Mar 2019 16:59:55 +0100 (CET)
+Subject: Re: WIP: PCIe on MSM8998
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+To:     MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>
+Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        Robin Murphy <robin.murphy@arm.com>
+References: <c97b6f4e-4b4c-027f-5a0b-80b3f7054177@free.fr>
+ <fb5f2b94-34b7-d021-7ac9-832b08138ad4@free.fr>
+Message-ID: <6041e92f-4dbf-c6ce-d92a-220fc8239acb@free.fr>
+Date:   Tue, 12 Mar 2019 16:59:55 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
+In-Reply-To: <fb5f2b94-34b7-d021-7ac9-832b08138ad4@free.fr>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <AM6PR04MB578187096D0CFD2B8D9C13FF84490@AM6PR04MB5781.eurprd04.prod.outlook.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Mar 12, 2019 at 09:34:17AM +0000, Z.q. Hou wrote:
-> Hi Bjorn,
-> 
-> Thanks a lot for your comments!
-> 
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: 2019年3月12日 1:35
-> > To: Z.q. Hou <zhiqiang.hou@nxp.com>
-> > Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> > devicetree@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > robh+dt@kernel.org; mark.rutland@arm.com; l.subrahmanya@mobiveil.co.in;
-> > shawnguo@kernel.org; Leo Li <leoyang.li@nxp.com>;
-> > lorenzo.pieralisi@arm.com; catalin.marinas@arm.com;
-> > will.deacon@arm.com; Mingkai Hu <mingkai.hu@nxp.com>; M.h. Lian
-> > <minghuan.lian@nxp.com>; Xiaowei Bao <xiaowei.bao@nxp.com>
-> > Subject: Re: [PATCHv4 26/28] PCI: mobiveil: ls_pcie_g4: add Workaround for
-> > A-011451
-> > 
-> > On Mon, Mar 11, 2019 at 09:33:32AM +0000, Z.q. Hou wrote:
-> > > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> > >
-> > > When LX2 PCIe controller is sending multiple split completions and ACK
-> > > latency expires indicating that ACK should be send at priority.
-> > > But because of large number of split completions and FC update DLLP,
-> > > the controller does not give priority to ACK transmission. This
-> > > results into ACK latency timer timeout error at the link partner and
-> > > the pending TLPs are replayed by the link partner again.
-> > >
-> > > Workaround:
-> > > 1. Reduce the ACK latency timeout value to a very small value.
-> > > 2. Restrict the number of completions from the LX2 PCIe controller
-> > >    to 1, by changing the Max Read Request Size (MRRS) of link partner
-> > >    to the same value as Max Packet size (MPS).
-> > >
-> > > This patch implemented part 1, the part 2 can be set by kernel
-> > > parameter 'pci=pcie_bus_perf'
-> > 
-> > If I understand correctly, you're saying that LX2160A Rev1.0 will only work
-> > correctly if you have this patch applied AND you boot with
-> > "pci=pcie_bus_perf".
-> 
-> Your understanding is correct.
-> 
-> > That might be OK if these rev 1.0 parts are only used in the lab and are never
-> > shipped to customers.  But if these parts are ever shipped to customers, I
-> > don't think it's acceptable for them to have to figure out that they must boot
-> > with "pci=pcie_bus_perf".  Yes, you can document that in release notes, but
-> > it's still a poor user experience, and users will forget, and they will see
-> > mysterious hard-to-debug issues.
+On 27/02/2019 16:31, Marc Gonzalez wrote:
 
-Since you didn't respond here, I assume these rev 1.0 parts have been
-or will be shipped to end users?  Please confirm.
+> FTR, this is just a work-in-progress status, not a formal submission.
 
-> > Maybe there's a way for you to automatically set that pcie_bus_perf mode?
-> > With a dmesg note to indicate that you're overriding any mode the user may
-> > have selected?
-> 
-> Actually we don't have a way to set the pcie_bus_perf automatically
-> under Linux, we give this parameter in kernel cmdline.  Do you have
-> any advice about how to set this parameter automatically under
-> Linux?
+I still can't get the ethernet card to play ball. As soon as I set the link up,
+the system hangs a few seconds, then reboots.
 
-The beauty of Linux being open-source is that if you need something
-that doesn't exist, you are empowered to create it.
+Here are the relevant DT nodes:
+(There's probably an error or 12 lurking in there)
 
-We do have one place already (cns3xxx_pcie_hw_init()) that explicitly
-sets pcie_bus_config.  You might be able to do something similar.
+		anoc1_smmu: arm,smmu@1680000 {
+			compatible = "qcom,msm8996-smmu-v2", "qcom,smmu-v2";
+			reg = <0x01680000 0x10000>;
+			#iommu-cells = <0>;
 
-> > > This ERRATA is only for LX2160A Rev1.0, and it will be fixed in
-> > > Rev2.0.
-> > >
-> > > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> > > ---
-> > > V4:
-> > >  - no change
-> > >
-> > >  .../pci/controller/mobiveil/pci-layerscape-gen4.c | 15 +++++++++++++++
-> > >  drivers/pci/controller/mobiveil/pcie-mobiveil.h   |  4 ++++
-> > >  2 files changed, 19 insertions(+)
-> > >
-> > > diff --git a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> > > b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> > > index d2c5dbbd5e3c..20ce146788ca 100644
-> > > --- a/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> > > +++ b/drivers/pci/controller/mobiveil/pci-layerscape-gen4.c
-> > > @@ -82,12 +82,27 @@ static bool ls_pcie_g4_is_bridge(struct ls_pcie_g4
-> > *pcie)
-> > >  	return header_type == PCI_HEADER_TYPE_BRIDGE;  }
-> > >
-> > > +static void workaround_A011451(struct ls_pcie_g4 *pcie) {
-> > > +	struct mobiveil_pcie *mv_pci = pcie->pci;
-> > > +	u32 val;
-> > > +
-> > > +	/* Set ACK latency timeout */
-> > > +	val = csr_readl(mv_pci, GPEX_ACK_REPLAY_TO);
-> > > +	val &= ~(ACK_LAT_TO_VAL_MASK << ACK_LAT_TO_VAL_SHIFT);
-> > > +	val |= (4 << ACK_LAT_TO_VAL_SHIFT);
-> > > +	csr_writel(mv_pci, val, GPEX_ACK_REPLAY_TO); }
-> > > +
-> > >  static int ls_pcie_g4_host_init(struct mobiveil_pcie *pci)  {
-> > >  	struct ls_pcie_g4 *pcie = to_ls_pcie_g4(pci);
-> > >
-> > >  	pcie->rev = csr_readb(pci, PCI_REVISION_ID);
-> > >
-> > > +	if (pcie->rev == REV_1_0)
-> > > +		workaround_A011451(pcie);
-> > > +
-> > >  	return 0;
-> > >  }
-> > >
-> > > diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> > > b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> > > index ab43de5e4b2b..f0e2e4ae09b5 100644
-> > > --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> > > +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
-> > > @@ -85,6 +85,10 @@
-> > >  #define PAB_AXI_AMAP_PEX_WIN_H(win)	PAB_REG_ADDR(0x0bac,
-> > win)
-> > >  #define PAB_INTP_AXI_PIO_CLASS		0x474
-> > >
-> > > +#define GPEX_ACK_REPLAY_TO		0x438
-> > > +#define  ACK_LAT_TO_VAL_MASK		0x1fff
-> > > +#define  ACK_LAT_TO_VAL_SHIFT		0
-> > > +
-> > >  #define PAB_PEX_AMAP_CTRL(win)		PAB_REG_ADDR(0x4ba0,
-> > win)
-> > >  #define  AMAP_CTRL_EN_SHIFT		0
-> > >  #define  AMAP_CTRL_TYPE_SHIFT		1
-> > > --
-> > > 2.17.1
-> > >
-> 
-> Thanks,
-> Zhiqiang
+			#global-interrupts = <0>;
+			interrupts =
+				<GIC_SPI 364 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 365 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 366 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 367 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 368 IRQ_TYPE_EDGE_RISING>,
+				<GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
+
+		};
+
+		pcie0: pci@1c00000 {
+			compatible = "qcom,pcie-msm8996";
+			reg-names =
+				"parf",
+				"dbi",
+				"elbi",
+				"config";
+			reg =
+				<0x01c00000 0x2000>,
+				<0x1b000000 0xf1d>,
+				<0x1b000f20 0xa8>,
+				<0x1b100000 0x100000>;
+			device_type = "pci";
+			linux,pci-domain = <0>;
+			bus-range = <0x00 0xff>;
+			#address-cells = <3>;
+			#size-cells = <2>;
+			power-domains = <&gcc PCIE_0_GDSC>;
+
+			num-lanes = <1>;
+			phy-names = "pciephy";
+			phys = <&pciephy>;
+
+			ranges =
+			/*** downstream I/O ***/
+			<0x01000000 0x0 0x1b200000 0x1b200000 0x0 0x100000>,
+			/*** non-prefetchable memory ***/
+			<0x02000000 0x0 0x1b300000 0x1b300000 0x0 0xd00000>;
+
+			#interrupt-cells = <1>;
+			interrupt-names = "msi";
+			interrupts = <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-map-mask = <0 0 0 0x7>;
+			interrupt-map =
+				<0 0 0 1 &intc 0 135 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
+				<0 0 0 2 &intc 0 136 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
+				<0 0 0 3 &intc 0 138 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
+				<0 0 0 4 &intc 0 139 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+
+			clock-names =
+				"pipe",
+				"bus_master",
+				"bus_slave",
+				"cfg",
+				"aux";
+			clocks =
+				<&gcc GCC_PCIE_0_PIPE_CLK>,
+				<&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
+				<&gcc GCC_PCIE_0_SLV_AXI_CLK>,
+				<&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+				<&gcc GCC_PCIE_0_AUX_CLK>;
+
+			iommu-map = <0 &anoc1_smmu 0 1>;
+			iommu-map-mask = <0>;
+
+			/* PCIe Fundamental Reset */
+			perst-gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
+		};
+
+		phy@1c06000 {
+			compatible = "qcom,msm8998-qmp-pcie-phy";
+			reg = <0x01c06000 0x18c>;
+			#clock-cells = <1>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+
+			clock-names =
+				"aux",
+				"cfg_ahb",
+				"ref";
+			clocks =
+				<&gcc GCC_PCIE_PHY_AUX_CLK>,
+				<&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+				<&gcc GCC_PCIE_CLKREF_CLK>;
+
+			vdda-phy-supply = <&vreg_l1a_0p875>;
+			vdda-pll-supply = <&vreg_l2a_1p2>;
+
+			reset-names =
+				"phy",
+				"common",
+				"cfg";
+			resets =
+				<&gcc GCC_PCIE_PHY_BCR>,
+				<&gcc GCC_PCIE_PHY_COM_BCR>,
+				<&gcc GCC_PCIE_PHY_NOCSR_COM_PHY_BCR>;
+
+			pciephy: lane@1c06800 {
+				reg = <0x01c06200 0x128>, <0x01c06400 0x1fc>, <0x01c06800 0x20c>;
+				#phy-cells = <0>;
+
+				clock-names = "pipe0";
+				clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
+				clock-output-names = "pcie_0_pipe_clk_src";
+			};
+		};
+
+
+
+And here's the boot log, augmented with some custom stack dumps:
+https://pastebin.ubuntu.com/p/2PYTtnBfPV/
+
+
+What stands out:
+
+pci 0000:01:00.0: [Firmware Bug]: disabling VPD access (can't determine size of non-standard VPD format)
+
+OF: /soc/pci@1c00000: iommu-map, using mask 00000000, rid-base: 00000000, out-base: 00000000, length: 00000001, rid: 00000000 -> 00000000
+OF: /soc/pci@1c00000: iommu-map, using mask 00000000, rid-base: 00000000, out-base: 00000000, length: 00000001, rid: 00000100 -> 00000000
+OF: /soc/pci@1c00000: iommu-map, using mask 00000000, rid-base: 00000000, out-base: 00000000, length: 00000001, rid: 00000000 -> 00000000
+	(no idea what "out-base" is supposed to be set to)
+
+atl1c 0000:01:00.0: Adding to iommu group 0
+atl1c 0000:01:00.0: assign IRQ: got 0
+
+iommu_map | iommu_map_sg | iommu_dma_alloc | __iommu_alloc_attrs | dma_alloc_attrs | atl1c_open | __dev_open | __dev_change_flags | dev_change_flags | devinet_ioctl | inet_ioctl | sock_ioctl | do_vfs_ioctl | ksys_ioctl | __arm64_sys_ioctl |
+
+iommu_map | __iommu_dma_map | iommu_dma_map_page | __iommu_map_page | atl1c_alloc_rx_buffer | atl1c_configure | atl1c_up | atl1c_open | __dev_open | __dev_change_flags | dev_change_flags | devinet_ioctl | inet_ioctl | sock_ioctl | do_vfs_ioctl |
+
+iommu_map | __iommu_dma_map | iommu_dma_map_page | __iommu_map_page | atl1c_alloc_rx_buffer | atl1c_configure | atl1c_up | atl1c_common_task | process_one_work | worker_thread | kthread | ret_from_fork |
+
+
+In case anyone spots any glaring mistake...
+
+Regards.
