@@ -4,183 +4,233 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B328DC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 09:42:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF83C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 12:03:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F9272147C
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 09:42:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D7CA206BA
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 12:03:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="Eh3RDGDg"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="NjPK0FiF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726192AbfCLJmn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Mar 2019 05:42:43 -0400
-Received: from mail-eopbgr60083.outbound.protection.outlook.com ([40.107.6.83]:33195
-        "EHLO EUR04-DB3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725917AbfCLJmn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Mar 2019 05:42:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1OgG1QvdDkk1POhRqYdn6QsKQliIkYdpaeMZM9dOt7I=;
- b=Eh3RDGDg5jSt07Iz4mz2QuyEbQVTLJa9nIf7/g1bJGnpbLSMVwnu4hbPZderphG46xkLwFSxY+CplqLNFKTIaRoSDqRRUpD17XbxLtyyGTlnbYrjEw3gufVZRjZXPGs1OSV60Jdc96jdVnlp9/3K2e0XYpy5DNqFDFegiIj1Ng0=
-Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.3.19) by
- AM6PR04MB4054.eurprd04.prod.outlook.com (52.135.167.148) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1709.13; Tue, 12 Mar 2019 09:42:36 +0000
-Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
- ([fe80::30cc:e034:1f7a:2cc7]) by AM6PR04MB5781.eurprd04.prod.outlook.com
- ([fe80::30cc:e034:1f7a:2cc7%2]) with mapi id 15.20.1686.021; Tue, 12 Mar 2019
- 09:42:36 +0000
-From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>
-CC:     Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: RE: [PATCHv4 23/28] dt-bindings: pci: Add NXP Layerscape SoCs PCIe
- Gen4 controller
-Thread-Topic: [PATCHv4 23/28] dt-bindings: pci: Add NXP Layerscape SoCs PCIe
- Gen4 controller
-Thread-Index: AQHU1+1u2iPsWkLxw02FlhClA/G34KYHvxAg
-Date:   Tue, 12 Mar 2019 09:42:36 +0000
-Message-ID: <AM6PR04MB57811882B16E9DA956A515E684490@AM6PR04MB5781.eurprd04.prod.outlook.com>
-References: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com>
- <20190311093130.7209-24-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20190311093130.7209-24-Zhiqiang.Hou@nxp.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=zhiqiang.hou@nxp.com; 
-x-originating-ip: [120.244.120.247]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 0f6386bb-0c9c-4c9f-e11a-08d6a6cf0f52
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM6PR04MB4054;
-x-ms-traffictypediagnostic: AM6PR04MB4054:
-x-microsoft-antispam-prvs: <AM6PR04MB4054C891DBB4177F8139D82B84490@AM6PR04MB4054.eurprd04.prod.outlook.com>
-x-forefront-prvs: 09749A275C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(6029001)(376002)(136003)(366004)(346002)(39860400002)(396003)(53754006)(189003)(199004)(13464003)(110136005)(33656002)(26005)(54906003)(2501003)(478600001)(66066001)(316002)(8676002)(81156014)(81166006)(74316002)(71200400001)(7736002)(305945005)(229853002)(6436002)(4326008)(97736004)(14454004)(71190400001)(106356001)(9686003)(53936002)(446003)(11346002)(105586002)(8936002)(186003)(68736007)(55016002)(256004)(7416002)(6246003)(476003)(486006)(52536013)(99286004)(2201001)(86362001)(3846002)(6116002)(102836004)(25786009)(76176011)(6506007)(53546011)(2906002)(5660300002)(7696005)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4054;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: nxp.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 1+nI4ji24tHlTqRW7YI/+1GUYOgPbREnQbnZHiatnf5IcyjB6oOTojwQyqhoUaK/vcC48rkcwc7f2Smek98/8DK3+Y+9dcU1LFe/1ipoYaiyciDJrUKdOhJCaIKlrihzXnATcgAexQi2KPWQWfqZRWRv3NRDPic2B3grGSgWp2z3cedxae6Ov8XL7KA6eDhIh5Qy3bsgB5ud1u05h0+J4ojTbqNELTcTVGfNe4ZPLIn2WUR94UbBDELx0tTe9Dp/fsgVWyPF4Ve2LctuQWMsNUtOK1GgknjWO8oD6Bh0DtKq9HTDERDUnMMNrAjSIcRlkqQqQnen+Er7vQworEp9FJRWT+dcF/RzNv6c1pzCcLHLFWlyaGa82/QtS9XLjjBddmML9tPPmn3hxEB3+2hfQtH0H45Td+ts+ij9YU/4RPM=
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+        id S1725887AbfCLMDc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Mar 2019 08:03:32 -0400
+Received: from mta-01.yadro.com ([89.207.88.251]:53066 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725873AbfCLMDb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Mar 2019 08:03:31 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 21F9441974;
+        Tue, 12 Mar 2019 12:03:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:in-reply-to:mime-version:user-agent
+        :date:date:message-id:from:from:references:subject:subject
+        :received:received:received; s=mta-01; t=1552392202; x=
+        1554206603; bh=gTa5CjNbblsSZIg64hWlZ2NjcF+c9xUqI1aGqmeuJVo=; b=N
+        jPK0FiFq37CZAAPBCp1ZzyoqGca8txnP6I1ClFfxUgyQbOLITBlhYt1l/LELz8xO
+        Os1vRfQI8fmayNHZ3YkazIwgObbjVD8J3R5bdPsiEz0qqATig6BfAvNKn1VS7TEl
+        E9hEZTKaOjwPEbJ/4bZjI4I+vRCzr0aGFrIL2Zgz28=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id oUXi_jKvuYHE; Tue, 12 Mar 2019 15:03:22 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 2727641953;
+        Tue, 12 Mar 2019 15:03:22 +0300 (MSK)
+Received: from [172.17.15.60] (172.17.15.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Tue, 12
+ Mar 2019 15:03:21 +0300
+Subject: Re: [PATCH] PCI: pciehp: Fix re-enabling the slot marked for safe
+ removal
+To:     Lukas Wunner <lukas@wunner.de>
+CC:     <linux-pci@vger.kernel.org>, <linux@yadro.com>
+References: <20190301161251.26774-1-s.miroshnichenko@yadro.com>
+ <20190305110134.drw4hb7h2eruewkp@wunner.de>
+From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=s.miroshnichenko@yadro.com; prefer-encrypt=mutual; keydata=
+ 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
+ lHi50np+KDDPzZS51tw=
+Message-ID: <30e8d881-41ba-13ad-24a5-587d5eda959b@yadro.com>
+Date:   Tue, 12 Mar 2019 15:03:15 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0f6386bb-0c9c-4c9f-e11a-08d6a6cf0f52
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Mar 2019 09:42:36.4604
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB4054
+In-Reply-To: <20190305110134.drw4hb7h2eruewkp@wunner.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature";
+        boundary="7yX9B05X21s1wHv9023fdicUEbxf5SsEu"
+X-Originating-IP: [172.17.15.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGkgQWxsLA0KDQpQbGVhc2UgaWdub3JlIHRoaXMsIGhhcyByZS1zZW50IGl0IGFkZGluZyBsb3N0
-IFJldmlld2VkLWJ5IHRhZy4NCg0KVGhhbmtzLA0KWmhpcWlhbmcNCg0KPiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBaLnEuIEhvdQ0KPiBTZW50OiAyMDE5xOoz1MIxMcjVIDE3
-OjMzDQo+IFRvOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxp
-c3RzLmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1r
-ZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyByb2JoK2R0QGtl
-cm5lbC5vcmc7IG1hcmsucnV0bGFuZEBhcm0uY29tOw0KPiBsLnN1YnJhaG1hbnlhQG1vYml2ZWls
-LmNvLmluOyBzaGF3bmd1b0BrZXJuZWwub3JnOyBMZW8gTGkNCj4gPGxlb3lhbmcubGlAbnhwLmNv
-bT47IGxvcmVuem8ucGllcmFsaXNpQGFybS5jb207DQo+IGNhdGFsaW4ubWFyaW5hc0Bhcm0uY29t
-OyB3aWxsLmRlYWNvbkBhcm0uY29tDQo+IENjOiBNaW5na2FpIEh1IDxtaW5na2FpLmh1QG54cC5j
-b20+OyBNLmguIExpYW4NCj4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IFhpYW93ZWkgQmFvIDx4
-aWFvd2VpLmJhb0BueHAuY29tPjsgWi5xLiBIb3UNCj4gPHpoaXFpYW5nLmhvdUBueHAuY29tPg0K
-PiBTdWJqZWN0OiBbUEFUQ0h2NCAyMy8yOF0gZHQtYmluZGluZ3M6IHBjaTogQWRkIE5YUCBMYXll
-cnNjYXBlIFNvQ3MgUENJZQ0KPiBHZW40IGNvbnRyb2xsZXINCj4gDQo+IEZyb206IEhvdSBaaGlx
-aWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+IA0KPiBBZGQgUENJZSBHZW40IGNvbnRyb2xs
-ZXIgRFQgYmluZGluZ3Mgb2YgTlhQIExheWVyc2NhcGUgU29Dcy4NCj4gDQo+IFNpZ25lZC1vZmYt
-Ynk6IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+IC0tLQ0KPiBWNDoNCj4g
-IC0gbm8gY2hhbmdlDQo+IA0KPiAgLi4uL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS1nZW40
-LnR4dCAgICAgIHwgNTIgKysrKysrKysrKysrKysrKysrKw0KPiAgTUFJTlRBSU5FUlMgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDggKysrDQo+ICAyIGZpbGVzIGNoYW5nZWQs
-IDYwIGluc2VydGlvbnMoKykNCj4gIGNyZWF0ZSBtb2RlIDEwMDY0NA0KPiBEb2N1bWVudGF0aW9u
-L2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLWdlbjQudHh0DQo+IA0KPiBk
-aWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNj
-YXBlLXBjaS1nZW40LnR4dA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9w
-Y2kvbGF5ZXJzY2FwZS1wY2ktZ2VuNC50eHQNCj4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gaW5k
-ZXggMDAwMDAwMDAwMDAwLi5iNDBmYjVkMTVkM2QNCj4gLS0tIC9kZXYvbnVsbA0KPiArKysgYi9E
-b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLWdlbjQu
-dHh0DQo+IEBAIC0wLDAgKzEsNTIgQEANCj4gK05YUCBMYXllcnNjYXBlIFBDSWUgR2VuNCBjb250
-cm9sbGVyDQo+ICsNCj4gK1RoaXMgUENJZSBjb250cm9sbGVyIGlzIGJhc2VkIG9uIHRoZSBNb2Jp
-dmVpbCBQQ0llIElQIGFuZCB0aHVzIGluaGVyaXRzDQo+ICthbGwgdGhlIGNvbW1vbiBwcm9wZXJ0
-aWVzIGRlZmluZWQgaW4gbW9iaXZlaWwtcGNpZS50eHQuDQo+ICsNCj4gK1JlcXVpcmVkIHByb3Bl
-cnRpZXM6DQo+ICstIGNvbXBhdGlibGU6IHNob3VsZCBjb250YWluIHRoZSBwbGF0Zm9ybSBpZGVu
-dGlmaWVyIHN1Y2ggYXM6DQo+ICsgICJmc2wsbHgyMTYwYS1wY2llIg0KPiArLSByZWc6IGJhc2Ug
-YWRkcmVzc2VzIGFuZCBsZW5ndGhzIG9mIHRoZSBQQ0llIGNvbnRyb2xsZXIgcmVnaXN0ZXIgYmxv
-Y2tzLg0KPiArICAiY3NyX2F4aV9zbGF2ZSI6IEJyaWRnZSBjb25maWcgcmVnaXN0ZXJzDQo+ICsg
-ICJjb25maWdfYXhpX3NsYXZlIjogUENJZSBjb250cm9sbGVyIHJlZ2lzdGVycw0KPiArLSBpbnRl
-cnJ1cHRzOiBBIGxpc3Qgb2YgaW50ZXJydXB0IG91dHB1dHMgb2YgdGhlIGNvbnRyb2xsZXIuIE11
-c3QNCj4gK2NvbnRhaW4gYW4NCj4gKyAgZW50cnkgZm9yIGVhY2ggZW50cnkgaW4gdGhlIGludGVy
-cnVwdC1uYW1lcyBwcm9wZXJ0eS4NCj4gKy0gaW50ZXJydXB0LW5hbWVzOiBJdCBjb3VsZCBpbmNs
-dWRlIHRoZSBmb2xsb3dpbmcgZW50cmllczoNCj4gKyAgImludHIiOiBUaGUgaW50ZXJydXB0IHRo
-YXQgaXMgYXNzZXJ0ZWQgZm9yIGNvbnRyb2xsZXIgaW50ZXJydXB0cw0KPiArICAiYWVyIjogQXNz
-ZXJ0ZWQgZm9yIGFlciBpbnRlcnJ1cHQgd2hlbiBjaGlwIHN1cHBvcnQgdGhlIGFlciBpbnRlcnJ1
-cHQgd2l0aA0KPiArCSBub25lIE1TSS9NU0ktWC9JTlR4IG1vZGUsYnV0IHRoZXJlIGlzIGludGVy
-cnVwdCBsaW5lIGZvciBhZXIuDQo+ICsgICJwbWUiOiBBc3NlcnRlZCBmb3IgcG1lIGludGVycnVw
-dCB3aGVuIGNoaXAgc3VwcG9ydCB0aGUgcG1lIGludGVycnVwdA0KPiB3aXRoDQo+ICsJIG5vbmUg
-TVNJL01TSS1YL0lOVHggbW9kZSxidXQgdGhlcmUgaXMgaW50ZXJydXB0IGxpbmUgZm9yIHBtZS4N
-Cj4gKy0gZG1hLWNvaGVyZW50OiBJbmRpY2F0ZXMgdGhhdCB0aGUgaGFyZHdhcmUgSVAgYmxvY2sg
-Y2FuIGVuc3VyZSB0aGUNCj4gK2NvaGVyZW5jeQ0KPiArICBvZiB0aGUgZGF0YSB0cmFuc2ZlcnJl
-ZCBmcm9tL3RvIHRoZSBJUCBibG9jay4gVGhpcyBjYW4gYXZvaWQgdGhlDQo+ICtzb2Z0d2FyZQ0K
-PiArICBjYWNoZSBmbHVzaC9pbnZhbGlkIGFjdGlvbnMsIGFuZCBpbXByb3ZlIHRoZSBwZXJmb3Jt
-YW5jZSBzaWduaWZpY2FudGx5Lg0KPiArLSBtc2ktcGFyZW50IDogU2VlIHRoZSBnZW5lcmljIE1T
-SSBiaW5kaW5nIGRlc2NyaWJlZCBpbg0KPiArICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmlu
-ZGluZ3MvaW50ZXJydXB0LWNvbnRyb2xsZXIvbXNpLnR4dC4NCj4gKw0KPiArRXhhbXBsZToNCj4g
-Kw0KPiArCXBjaWVAMzQwMDAwMCB7DQo+ICsJCWNvbXBhdGlibGUgPSAiZnNsLGx4MjE2MGEtcGNp
-ZSI7DQo+ICsJCXJlZyA9IDwweDAwIDB4MDM0MDAwMDAgMHgwIDB4MDAxMDAwMDAgICAvKiBjb250
-cm9sbGVyIHJlZ2lzdGVycw0KPiAqLw0KPiArCQkgICAgICAgMHg4MCAweDAwMDAwMDAwIDB4MCAw
-eDAwMDAxMDAwPjsgLyogY29uZmlndXJhdGlvbiBzcGFjZQ0KPiAqLw0KPiArCQlyZWctbmFtZXMg
-PSAiY3NyX2F4aV9zbGF2ZSIsICJjb25maWdfYXhpX3NsYXZlIjsNCj4gKwkJaW50ZXJydXB0cyA9
-IDxHSUNfU1BJIDEwOCBJUlFfVFlQRV9MRVZFTF9ISUdIPiwgLyogQUVSDQo+IGludGVycnVwdCAq
-Lw0KPiArCQkJICAgICA8R0lDX1NQSSAxMDggSVJRX1RZUEVfTEVWRUxfSElHSD4sIC8qIFBNRSBp
-bnRlcnJ1cHQNCj4gKi8NCj4gKwkJCSAgICAgPEdJQ19TUEkgMTA4IElSUV9UWVBFX0xFVkVMX0hJ
-R0g+OyAvKiBjb250cm9sbGVyDQo+IGludGVycnVwdCAqLw0KPiArCQlpbnRlcnJ1cHQtbmFtZXMg
-PSAiYWVyIiwgInBtZSIsICJpbnRyIjsNCj4gKwkJI2FkZHJlc3MtY2VsbHMgPSA8Mz47DQo+ICsJ
-CSNzaXplLWNlbGxzID0gPDI+Ow0KPiArCQlkZXZpY2VfdHlwZSA9ICJwY2kiOw0KPiArCQlhcGlv
-LXdpbnMgPSA8OD47DQo+ICsJCXBwaW8td2lucyA9IDw4PjsNCj4gKwkJZG1hLWNvaGVyZW50Ow0K
-PiArCQlidXMtcmFuZ2UgPSA8MHgwIDB4ZmY+Ow0KPiArCQltc2ktcGFyZW50ID0gPCZpdHM+Ow0K
-PiArCQlyYW5nZXMgPSA8MHg4MjAwMDAwMCAweDAgMHg0MDAwMDAwMCAweDgwIDB4NDAwMDAwMDAg
-MHgwDQo+IDB4NDAwMDAwMDA+Ow0KPiArCQkjaW50ZXJydXB0LWNlbGxzID0gPDE+Ow0KPiArCQlp
-bnRlcnJ1cHQtbWFwLW1hc2sgPSA8MCAwIDAgNz47DQo+ICsJCWludGVycnVwdC1tYXAgPSA8MDAw
-MCAwIDAgMSAmZ2ljIDAgMCBHSUNfU1BJIDEwOQ0KPiBJUlFfVFlQRV9MRVZFTF9ISUdIPiwNCj4g
-KwkJCQk8MDAwMCAwIDAgMiAmZ2ljIDAgMCBHSUNfU1BJIDExMA0KPiBJUlFfVFlQRV9MRVZFTF9I
-SUdIPiwNCj4gKwkJCQk8MDAwMCAwIDAgMyAmZ2ljIDAgMCBHSUNfU1BJIDExMQ0KPiBJUlFfVFlQ
-RV9MRVZFTF9ISUdIPiwNCj4gKwkJCQk8MDAwMCAwIDAgNCAmZ2ljIDAgMCBHSUNfU1BJIDExMg0K
-PiBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCj4gKwl9Ow0KPiBkaWZmIC0tZ2l0IGEvTUFJTlRBSU5F
-UlMgYi9NQUlOVEFJTkVSUw0KPiBpbmRleCAxMDEzZTc0YjE0ZjIuLjJkMThjNzIxMzk5MSAxMDA2
-NDQNCj4gLS0tIGEvTUFJTlRBSU5FUlMNCj4gKysrIGIvTUFJTlRBSU5FUlMNCj4gQEAgLTExODM1
-LDYgKzExODM1LDE0IEBAIEw6CWxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZw0K
-PiAgUzoJTWFpbnRhaW5lZA0KPiAgRjoJZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvKmxheWVy
-c2NhcGUqDQo+IA0KPiArUENJIERSSVZFUiBGT1IgTlhQIExBWUVSU0NBUEUgR0VONCBDT05UUk9M
-TEVSDQo+ICtNOglIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiArTDoJbGlu
-dXgtcGNpQHZnZXIua2VybmVsLm9yZw0KPiArTDoJbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZy
-YWRlYWQub3JnDQo+ICtTOglNYWludGFpbmVkDQo+ICtGOglEb2N1bWVudGF0aW9uL2RldmljZXRy
-ZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLWdlbjQudHh0DQo+ICtGOglkcml2ZXJzL3Bj
-aS9jb250cm9sbGVyL21vYmliZWlsL3BjaS1sYXllcnNjYXBlLWdlbjQuYw0KPiArDQo+ICBQQ0kg
-RFJJVkVSIEZPUiBHRU5FUklDIE9GIEhPU1RTDQo+ICBNOglXaWxsIERlYWNvbiA8d2lsbC5kZWFj
-b25AYXJtLmNvbT4NCj4gIEw6CWxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcNCj4gLS0NCj4gMi4x
-Ny4xDQoNCg==
+--7yX9B05X21s1wHv9023fdicUEbxf5SsEu
+Content-Type: multipart/mixed; boundary="yehosS5NaRqhvl9INlEthYKdohQ2wiiJY";
+ protected-headers="v1"
+From: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux@yadro.com
+Message-ID: <30e8d881-41ba-13ad-24a5-587d5eda959b@yadro.com>
+Subject: Re: [PATCH] PCI: pciehp: Fix re-enabling the slot marked for safe
+ removal
+References: <20190301161251.26774-1-s.miroshnichenko@yadro.com>
+ <20190305110134.drw4hb7h2eruewkp@wunner.de>
+In-Reply-To: <20190305110134.drw4hb7h2eruewkp@wunner.de>
+
+--yehosS5NaRqhvl9INlEthYKdohQ2wiiJY
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+
+On 3/5/19 2:01 PM, Lukas Wunner wrote:
+> On Fri, Mar 01, 2019 at 07:12:51PM +0300, Sergey Miroshnichenko wrote:
+>> During the safe removal procedure, a Data Link Layer State Changed eve=
+nt
+>> may occur after pciehp_power_off_slot(), and it is handled when the sl=
+ot is
+>> already set to OFF_STATE. This results in re-enabling the device and m=
+akes
+>> it impossible to actually safely remove it.
+>>
+>> Add a check for a Presence Detect Changed bit to filter out this inter=
+rupt.
+>>
+>> It is still possible to re-enable the device if it remains in the slot=
+
+>> after pressing the Attention Button by pressing it again.
+>>
+>> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+>> Cc: Lukas Wunner <lukas@wunner.de>
+>> ---
+>>  drivers/pci/hotplug/pciehp_ctrl.c | 8 ++++++++
+>>  1 file changed, 8 insertions(+)
+>>
+>> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/p=
+ciehp_ctrl.c
+>> index 3f3df4c29f6e..941f77b71df4 100644
+>> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+>> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+>> @@ -251,6 +251,14 @@ void pciehp_handle_presence_or_link_change(struct=
+ controller *ctrl, u32 events)
+>>  		return;
+>>  	}
+>> =20
+>> +	/* Handle the DLLSC from the slot which just has been turned off */
+>> +	if ((events & PCI_EXP_SLTSTA_DLLSC) &&
+>> +	    !(events & PCI_EXP_SLTSTA_PDC) &&
+>> +	    present && !link_active) {
+>> +		mutex_unlock(&ctrl->state_lock);
+>> +		return;
+>> +	}
+>> +
+>>  	switch (ctrl->state) {
+>>  	case BLINKINGON_STATE:
+>>  		cancel_delayed_work(&ctrl->button_work);
+>=20
+> Hm, I'd instead prefer amending remove_board() like this:
+>=20
+>  	if (POWER_CTRL(ctrl)) {
+>  		pciehp_power_off_slot(ctrl);
+> =20
+>  		/*
+>  		 * After turning power off, we must wait for at least 1 second
+>  		 * before taking any action that relies on power having been
+>  		 * removed from the slot/adapter.
+>  		 */
+>  		msleep(1000);
+> =20
+> +		/* ignore link or presence changes caused by power off */
+> +		atomic_and(~(PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC),
+> +			   &ctrl->pending_events);
+>  	}
+>=20
+> Would this work for you?
+
+Thank you for the review and for the proposed change! This discards
+exactly the event which caused the issue - I've just checked it on our
+hardware, and will resend it as a v2.
+
+Best regards,
+Serge
+
+>=20
+> Thanks,
+>=20
+> Lukas
+>=20
+
+
+--yehosS5NaRqhvl9INlEthYKdohQ2wiiJY--
+
+--7yX9B05X21s1wHv9023fdicUEbxf5SsEu
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEHW7T7ovP/cFp8+b3DHQ+aNFTs7UFAlyHoAkACgkQDHQ+aNFT
+s7Vg7A//cDUhaw788GZr2epprusMwgRzj9PjHt+gm7NDYQWK3WgSexHj9JGlVe2b
+6yGdUmgGLA71XlQ7Iwd2lP9VfxCLVAo7dmDgW7IRKbuiOLIsfIFeuvPsCSbzVsBI
+3ol/7hJjqdvmiR6qnGAGVs2nEADNsawSGz6r3R8PlzSIEoXnUtqh6lCY2r20h5a3
+XbNd6HCHiTzMKZQZ1UDqgd5PgRcdDxxq8vQtBO8/mWWAa5ACgv0nsQkIXwzj02dM
+w9v+V42HD/4ddCZeY6IzaMWl4xYhyK0hsuRgQH5T61KPzQ0nsSfG/vWUzKkkRLtd
+7RwSy89GF9tsGT1V0mFaXlR5MtDX0vTivptOSifqwmQ6skF+Cy1wgIyLPmqtGFHe
+Mz6JPoQOdg2sXvkHzVK1n8RN9H1P59AqGY/GC8fVuVX1BhxR0Yx3x2tjGo8sCa7B
+qfkdOc+/VIyL0/tqN+Qif9kINJ6KE0HuyaBPs/BMO8B1RMs6eEU9z1mIt74FfVcX
+y+k2Z2M+yDJyvnj389geBtb2FofpyiffZkjqQZL6o507rBkrHFiY1o7N+hLalEDg
+aCnK8vJrdV30YC0Mi1ic9tz3fXBVMagRYuikDDfDMF9dolqRQfWNZamGyZ7wT5oj
+8lyq8d2QID4HS5aqfYp2Yntkp9usS2NAsaD934sf/ow2o1wK2O8=
+=bmEX
+-----END PGP SIGNATURE-----
+
+--7yX9B05X21s1wHv9023fdicUEbxf5SsEu--
