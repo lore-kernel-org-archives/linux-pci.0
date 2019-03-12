@@ -2,117 +2,156 @@ Return-Path: <SRS0=lIFx=RP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7393EC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 12:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF403C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 13:04:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4290B206BA
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 12:42:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 682C82147C
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 13:04:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=mm-sol.com header.i=@mm-sol.com header.b="OuvbnS/Y"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="JsOAJjjd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726255AbfCLMmw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Mar 2019 08:42:52 -0400
-Received: from ns.mm-sol.com ([37.157.136.199]:37519 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725957AbfCLMmw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Mar 2019 08:42:52 -0400
-Received: from [192.168.27.209] (unknown [37.157.136.206])
-        by extserv.mm-sol.com (Postfix) with ESMTPSA id 05188CE28;
-        Tue, 12 Mar 2019 14:42:49 +0200 (EET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
-        t=1552394569; bh=XuDKOdFZ35K3ZnPCJITHm6krw2gbYBRCmyJSsNPuA8o=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=OuvbnS/Yf1Aa11Mtn6WEwzs7oSuUM/2g08KPfivpySQH2Guc+8DlV6nPU4qDzDvL8
-         ZtxTuhnbv27+XTQYXWIT6rf01j/lwdUUnA+qXC5wntmAnkIj/Fe3q2DoqDUL48u7bI
-         sugMCih2UHw4Uca8geEmDHV2kY66wmb8lBxu2OtEwpO3rJAD1vBTYaAmlvsHW+Ui3w
-         aAUdrXihzBmZtXUibigEGBpW4L01ji2o6T2juVqbFy+SvW/6zFODKMr3ODt57npN6t
-         CFFFf6xkZprcdvR3JuM5NrLvqmKinRd9bwIloNU2Jz3+N2Xu6cR4p3DqF7DzWQhYRr
-         9vWZVro9hGq1A==
-Subject: Re: [RFC PATCH v1] PCI: qcom: Use quirk to override incorrect device
- class
-To:     Marc Gonzalez <marc.w.gonzalez@free.fr>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Jeffrey Hugo <jhugo@codeaurora.org>
-References: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
-From:   Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <65321fe3-ca29-c454-63ae-98a46c2e5158@mm-sol.com>
-Date:   Tue, 12 Mar 2019 14:42:46 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        id S1726192AbfCLNEA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Mar 2019 09:04:00 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:15475 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725917AbfCLNEA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Mar 2019 09:04:00 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c87ae3d0000>; Tue, 12 Mar 2019 06:04:01 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 12 Mar 2019 06:03:59 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 12 Mar 2019 06:03:59 -0700
+Received: from HQMAIL104.nvidia.com (172.18.146.11) by HQMAIL106.nvidia.com
+ (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 12 Mar
+ 2019 13:03:55 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL104.nvidia.com
+ (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 12 Mar 2019 13:03:55 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5c87ae380004>; Tue, 12 Mar 2019 06:03:55 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <treding@nvidia.com>, <swarren@nvidia.com>,
+        <mperttunen@nvidia.com>, <jonathanh@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>
+Subject: [PATCH] PCI: tegra: Use the DMA-API to get the MSI address
+Date:   Tue, 12 Mar 2019 18:33:48 +0530
+Message-ID: <1552395828-31021-1-git-send-email-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.7.4
+X-NVConfidentiality: public
 MIME-Version: 1.0
-In-Reply-To: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1552395841; bh=7gbZF6HfCAgpqMFMhWOWuaO8hRjsMTpNsr972vNQXok=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=JsOAJjjd7Sj6M0feH+K35IyYCFMyjH7LlLFLVRQSMA8zXYTr0fKU2mFt2lMNu5FKH
+         BJrZAJPohRj4ajDctFDELQ6gzjcyoLxcqu3/hBxwb+cH3f5VBqQ9vkPkLjWKr4SzWi
+         fmFX9+U5D7+8Ocvv1aRbKHe28PZ8CQcw95o6bWudHhF691+G2SYFjfJsgz2eYcAiZg
+         CfpAUU6A/UH9py6Y28nD5ms3oi9gXdUg5/SDWXNIW8A83Wi5WE8MvKrUVW91TdsWLp
+         i46X0CdOMt29BfDLxdWltXnvXT6GBiLgazZ6TsH/FVrbwWdklHl3Edid57mB0/KSQA
+         dHERm0xPPfFwA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Marc,
+Since the upstream MSI memory writes are generated by downstream devices,
+it is logically correct to have MSI target memory coming from the DMA pool
+reserved for PCIe than from the general memory pool reserved for CPU access.
+This avoids PCIe DMA addresses coinciding with MSI target address thereby
+raising unwanted MSI interrupts. This patch also enforces to limit the
+MSI target address to 32-bits to make it work for PCIe endponits that support
+only 32-bit MSI target address and those that support 64-bit MSI target
+address anyway work with 32-bit MSI target address
 
-Thanks for the patch!
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+Earlier, a different patch was sent with the subject
+"PCI: tegra: Do not allocate MSI target memory"
+( http://patchwork.ozlabs.org/patch/1049550/ )
+to address the same issue, but since I'm going to use a different subject for
+this patch, I'm sending it as a different patch instead of a different version
+to the previous patch
 
-On 3/11/19 4:56 PM, Marc Gonzalez wrote:
-> Some chips report an incorrect device class. Override the incorrect
-> value using a quirk, instead of code in the read function.
-> 
-> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
-> ---
-> FWIW, this quirk is no longer required on recent chips:
-> msm8996 (tested by Stanimir), msm8998 (tested by me), sdm845 (untested) are unaffected
-> apq/ipq8064 is affected => what is the device ID for these chips?
-> others?
-> 
-> Stanimir added: "this will become a real problem (now we use the driver as RC)
-> when someone decide to use it as an endpoint"
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 14 ++++++--------
->  1 file changed, 6 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 3de5510fd3d5..94da2c9c2ad5 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1136,17 +1136,15 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->  {
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  
-> -	/* the device class is not reported correctly from the register */
-> -	if (where == PCI_CLASS_REVISION && size == 4) {
-> -		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
-> -		*val &= 0xff;	/* keep revision id */
-> -		*val |= PCI_CLASS_BRIDGE_PCI << 16;
-> -		return PCIBIOS_SUCCESSFUL;
-> -	}
-> -
+ drivers/pci/controller/pci-tegra.c | 28 ++++++++++++++++++++--------
+ 1 file changed, 20 insertions(+), 8 deletions(-)
 
-once you dropped the above snippet this function becomes absolutely
-useless so please delete it at all and also from qcom_pcie_dw_ops.
-
->  	return dw_pcie_read(pci->dbi_base + where, size, val);
->  }
->  
-> +static void qcom_fixup_class(struct pci_dev *dev)
-> +{
-> +	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCI_ANY_ID, qcom_fixup_class);
-
-I wonder, in case that dw_pcie_setup_rc() already has a write to
-PCI_CLASS_DEVICE configuration register to set it as a bridge do we
-still need to do the above fixup?
-
+diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+index f4f53d092e00..55a1626ddb69 100644
+--- a/drivers/pci/controller/pci-tegra.c
++++ b/drivers/pci/controller/pci-tegra.c
+@@ -231,8 +231,8 @@ struct tegra_msi {
+ 	struct msi_controller chip;
+ 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+ 	struct irq_domain *domain;
+-	unsigned long pages;
+ 	struct mutex lock;
++	void *virt;
+ 	u64 phys;
+ 	int irq;
+ };
+@@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+ 	err = platform_get_irq_byname(pdev, "msi");
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to get IRQ: %d\n", err);
+-		goto err;
++		goto free_irq_domain;
+ 	}
+ 
+ 	msi->irq = err;
+@@ -1545,17 +1545,29 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+ 			  tegra_msi_irq_chip.name, pcie);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to request IRQ: %d\n", err);
+-		goto err;
++		goto free_irq_domain;
++	}
++
++	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
++	if (err < 0) {
++		dev_err(dev, "failed to set dma coherent mask: %d\n", err);
++		goto free_irq;
++	}
++
++	msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
++	if (!msi->virt) {
++		dev_err(dev, "failed to alloc dma mem for MSI\n");
++		err = -ENOMEM;
++		goto free_irq;
+ 	}
+ 
+-	/* setup AFI/FPCI range */
+-	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+-	msi->phys = virt_to_phys((void *)msi->pages);
+ 	host->msi = &msi->chip;
+ 
+ 	return 0;
+ 
+-err:
++free_irq:
++	free_irq(msi->irq, pcie);
++free_irq_domain:
+ 	irq_domain_remove(msi->domain);
+ 	return err;
+ }
+@@ -1592,7 +1604,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
+ 	struct tegra_msi *msi = &pcie->msi;
+ 	unsigned int i, irq;
+ 
+-	free_pages(msi->pages, 0);
++	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
+ 
+ 	if (msi->irq > 0)
+ 		free_irq(msi->irq, pcie);
 -- 
-regards,
-Stan
+2.7.4
+
