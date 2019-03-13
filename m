@@ -1,195 +1,198 @@
-Return-Path: <SRS0=lIFx=RP=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=vhAr=RQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD72BC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 21:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A840C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 09:15:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 71412213A2
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Mar 2019 21:30:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56B1D2171F
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 09:15:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="dQbx5G+9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726854AbfCLVaV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Mar 2019 17:30:21 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:44244 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726396AbfCLVaV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Mar 2019 17:30:21 -0400
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1h3oyQ-0006mW-PQ; Tue, 12 Mar 2019 15:30:12 -0600
-To:     Serge Semin <fancer.lancer@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-kselftest@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Eric Pilmore <epilmore@gigaio.com>
-References: <20190213175454.7506-1-logang@deltatee.com>
- <20190213175454.7506-8-logang@deltatee.com>
- <20190306012420.wjeatxgb7nwq3j5q@mobilestation>
- <bd72f24f-5982-0fe7-59df-2fbbfe9f798a@deltatee.com>
- <20190306224542.4eu2dvsixfzc75gr@mobilestation>
- <4acf79c1-766b-1db6-45c1-4cdd4cbba437@deltatee.com>
- <20190312204223.onyjmyrj2e3e63mr@mobilestation>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <403cad03-27bc-284d-e06c-15460791abe7@deltatee.com>
-Date:   Tue, 12 Mar 2019 15:30:07 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        id S1726809AbfCMJPe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Mar 2019 05:15:34 -0400
+Received: from mail-eopbgr00087.outbound.protection.outlook.com ([40.107.0.87]:17153
+        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726130AbfCMJPe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Mar 2019 05:15:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+ACY8UKxThHLtfB2LecMNjUfa6IcTVkrwTsBY81hlqk=;
+ b=dQbx5G+9tvFAXyv4rYZN0ntk3KGL2SHhURwMlT0OhO4uMcm/tkLcnrc7kSLvo9q8SKPcY0l1H8bAXTuGIb9uWrDVlU57AZqX4kRiEKRc8KQQaXHTr3sHVEqN1Ob1G17t48dRRhhDIBnS6L72APKMDMH+h4TQLO2pVM2n7gjL+7A=
+Received: from AM0PR0402MB3570.eurprd04.prod.outlook.com (52.133.46.11) by
+ AM0PR0402MB3732.eurprd04.prod.outlook.com (52.133.38.160) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1686.18; Wed, 13 Mar 2019 09:15:28 +0000
+Received: from AM0PR0402MB3570.eurprd04.prod.outlook.com
+ ([fe80::c9e:21a8:3eae:bdeb]) by AM0PR0402MB3570.eurprd04.prod.outlook.com
+ ([fe80::c9e:21a8:3eae:bdeb%3]) with mapi id 15.20.1709.011; Wed, 13 Mar 2019
+ 09:15:28 +0000
+From:   Richard Zhu <hongxing.zhu@nxp.com>
+To:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>
+Subject: [RFC 1/2] dt-bindings: imx6q-pcie: Add support for i.MX8QM/QXP PCIe
+Thread-Topic: [RFC 1/2] dt-bindings: imx6q-pcie: Add support for i.MX8QM/QXP
+ PCIe
+Thread-Index: AQHU2X1M51QS3U2KCE+Hs+Chb2Dsbg==
+Date:   Wed, 13 Mar 2019 09:15:28 +0000
+Message-ID: <1552467452-538-1-git-send-email-hongxing.zhu@nxp.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: git-send-email 2.7.4
+x-clientproxiedby: HK2PR0302CA0004.apcprd03.prod.outlook.com
+ (2603:1096:202::14) To AM0PR0402MB3570.eurprd04.prod.outlook.com
+ (2603:10a6:208:1c::11)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=hongxing.zhu@nxp.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [119.31.174.66]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 8756f89c-6403-442a-08f8-08d6a7946edc
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7153060)(7193020);SRVR:AM0PR0402MB3732;
+x-ms-traffictypediagnostic: AM0PR0402MB3732:
+x-microsoft-exchange-diagnostics: =?iso-8859-1?Q?1;AM0PR0402MB3732;23:cChCSknjkp9p9LrVYjyIbNo9U1fZIqufnKa3u?=
+ =?iso-8859-1?Q?Yx1W5LkqBLM77YUhNLl23Vdvxfw6hH0d7gVKK55m8iixbFuxh6e/Xau9l2?=
+ =?iso-8859-1?Q?blF3SqXFs4t6m3wtWZW/C+8vxMJ7Z8eezeit8BWb62bH00FLmzHzV7kqCZ?=
+ =?iso-8859-1?Q?MHgdQXsLMwAJ7DEpRzG3yIcI7y1CGVGIfAl3Xqb5uSwhlPKIVEq1kRruHv?=
+ =?iso-8859-1?Q?LSAMiSEi4VDT5zap6bP2mmni3CZZuxQY5NzawHFACb5ssLJPl3vs17+poh?=
+ =?iso-8859-1?Q?6i+6Ms9dkVjFDmMMwaVza5vxhgFDc2/B7yKI5ChPqAu9xIPSnAz7Fw0hJH?=
+ =?iso-8859-1?Q?kBnECvC9WtyL4doNwpri6BEMAHkE/GDW1mFEil1mkZi7u3+TZNadA3aXt6?=
+ =?iso-8859-1?Q?jKjqPGARlwaXKnDuLktv5ccMr3P5ysk56c4iojGiMxV28Fj7ANicft04BU?=
+ =?iso-8859-1?Q?8F3cAjoFWNZG2ATbCRXUZ0Y+r2gBU+vBEpWaEKKuc8iC62VDI46RMCHkts?=
+ =?iso-8859-1?Q?V6rMMLtDGaumYm5ECFf0GU26807evFQmAnPcrzwLaPGSC0hRVhhQNEkeYu?=
+ =?iso-8859-1?Q?wKCF+SCPZ9GPrwBth9W2K9s9vxXEgvyGhKjdDPGvZAyVq7nuC2/v9LV+Ar?=
+ =?iso-8859-1?Q?y0ao/YsQx4fyNAZdv/OYdVpjZqLoDfoUtBjBD+9HeS8/owvdd/yKhkWzGS?=
+ =?iso-8859-1?Q?Fk3zbU07IXjECrNbZnga2RlkpWKKS55jZONLxuR406q9Xs8ZAypBq1NwoV?=
+ =?iso-8859-1?Q?COVyM78He2eACZLsjOHMSor/1zE9QTVWtg7rYx1f6E/P5fos8qh2+mXJq6?=
+ =?iso-8859-1?Q?djjtZ/1rkaIBqDyv2ThJ9HDDLxgSVrKOLWS4IzSfFn7VpmQExfEjyfBGD2?=
+ =?iso-8859-1?Q?nRIQEs0h1WH5kwSkCQvquBsgiLDTP1zD+IQpPMFz2x91VFiX3AfmbOOLqA?=
+ =?iso-8859-1?Q?a3+MbfHuKjjCGWCbCRN/6CNe2lbrEoCloVPhRLSChEDkTrG35arpuVXs7e?=
+ =?iso-8859-1?Q?8Oqv7bm9CowMwlBAdVZQd11XASwluEMLY5D9HrDUpwypPGzoZ01SCvj2sf?=
+ =?iso-8859-1?Q?xSQ+XSzbr8AI+BwYym4WVdRp3ROKRCfD2Dz8WAg3j4/J4mdajBqr07+lFb?=
+ =?iso-8859-1?Q?MV3ba/WBN6U1LtTm/fJ1gtrImd5SWaStetPGq7A0ogReSMmn4+vB0BuxPD?=
+ =?iso-8859-1?Q?jfkYSL6KsfymiTLXB6jySym9C/+YQ2vQvTt0rTjOuolXIGDOeQaSH8Vtx8?=
+ =?iso-8859-1?Q?dVNimYnbIUJRPkQkqXX?=
+x-microsoft-antispam-prvs: <AM0PR0402MB37320E540B39FA2565444B8D8C4A0@AM0PR0402MB3732.eurprd04.prod.outlook.com>
+x-forefront-prvs: 09752BC779
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(396003)(39860400002)(376002)(366004)(346002)(199004)(189003)(5660300002)(52116002)(102836004)(110136005)(4326008)(81166006)(81156014)(2201001)(8936002)(316002)(54906003)(86362001)(53936002)(25786009)(6512007)(68736007)(6506007)(2501003)(3846002)(14454004)(6116002)(8676002)(386003)(478600001)(99286004)(97736004)(2616005)(26005)(6436002)(186003)(71190400001)(476003)(6486002)(71200400001)(2906002)(106356001)(14444005)(305945005)(36756003)(256004)(7736002)(66066001)(105586002)(486006)(50226002)(32563001);DIR:OUT;SFP:1101;SCL:1;SRVR:AM0PR0402MB3732;H:AM0PR0402MB3570.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: X8FXy6o6Uq4IQIzORYkaE4KiYLOggAwt4JySoVpoLZGBniZ7D9ndklH0KbyYjA7TmNAy6AIktGxchteLmMvcdDupim3jvlY8gP3rUk9PyNls1z1HpVNyhkHt1E7fqJHxgX50iunouuKxFu4z6JuMgg7asu9o+X9TtGYCzXokSEjscs+OioGoSEtSsXMqbsECQcWRT3PcTtAvDTt/MjyWNJgMumK0Eck78o+8VU2xsKwUaMHdXOmUgowDVWU7WoeCuWDurfz8I73YPQb1H7fcDYHXk9jZ9pRH0IXIP/xy047d8FXcSMXng8GbNY/nIbC8jDr1O4STcwpfPopNB0eN0IUwjwAotL7RNettazrPHE9NabPifiFRiRQBxLQD0a/PmED8VJh8gawwCskkfHaYHxR57WQh4F0cVnpazO2GLio=
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-In-Reply-To: <20190312204223.onyjmyrj2e3e63mr@mobilestation>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: epilmore@gigaio.com, dave.jiang@intel.com, allenbh@gmail.com, joro@8bytes.org, bhelgaas@google.com, jdmason@kudzu.us, linux-kselftest@vger.kernel.org, iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org, linux-ntb@googlegroups.com, linux-kernel@vger.kernel.org, fancer.lancer@gmail.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH v2 07/12] NTB: Introduce functions to calculate multi-port
- resource index
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8756f89c-6403-442a-08f8-08d6a7946edc
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Mar 2019 09:15:28.1549
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR0402MB3732
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add codes needed to support i.MX8QM/QXP PCIe.
+- HSIO(High Speed IO) subsystem is new defined on i.MX8QM/QXP.
+  The PCIe and SATA modules are contained in the HSIO subsystem. There
+  are two PCIe, one SATA controllers and three mixed lane PHYs on
+  i.MX8QM. There are three use cases of the HSIO subsystem on i.MX8QM.
+  1. PCIea 2 lanes and one SATA AHCI port.
+  2. PCIea 1 lane, PCIeb 1 lane and one SATA AHCI port.
+  3. PCIea 2 lanes, PCIeb 1 lane.
+  i.MX8QXP only has PCIeb controller and one lane PHY.
+  Use the hsio-cfg property to specify the different modes.
+- The HSIO address map as viewed from system level is as shown below.
+  address [31:24]    Local address    Target    Address Size
+  5F                 0                HSIO      16MB
+  60-6F              40-4F            HSIO      256MB
+  70-7F              80-8F            HSIO      256MB
+  The property local-addr is required to specify it.
+- Both external OSC and internal PLL can be used as PCIe reference
+  clock, use the ext_osc property to distinguish them.
+- clock request GPIO for controlling the PCI reference clock request
+  signal. And should be configure OD when L1SS maybe enabled later.
+- One more power domain HSIO_GPIO and clock PCIE_PER are required by
+  i.MX8QM/QXP PCIe.
+  Add these specific properties to enable i.MX8QM/QXP PCIe.
 
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt      | 21 +++++++++++++++++=
+++++
+ 1 file changed, 21 insertions(+)
 
-On 2019-03-12 2:42 p.m., Serge Semin wrote:
-> If you don't want to add a large semantic and infrastructure change at
-> this point, then it would be better to leave NTB port API the way it is
-> now, and use logical port indexes in the ntb_peer_resource_idx() method.
-> You'd also need to use this method to access both outbound and inbound
-> memory windows. In this case we wouldn't need to change anything in
-> current API and drivers. Yes, this approach would cause one resource being
-> wasted, but it would lead to simpler semantic of the port numbers API.
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Doc=
+umentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index a7f5f5a..f7586c9 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -10,6 +10,8 @@ Required properties:
+ 	- "fsl,imx6qp-pcie"
+ 	- "fsl,imx7d-pcie"
+ 	- "fsl,imx8mq-pcie"
++	- "fsl,imx8qm-pcie"
++	- "fsl,imx8qxp-pcie"
+ - reg: base address and length of the PCIe controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain =
+an
+   entry for each entry in the interrupt-names property.
+@@ -38,6 +40,10 @@ Optional properties:
+   The regulator will be enabled when initializing the PCIe host and
+   disabled either as part of the init process or when shutting down the
+   host.
++- clkreq-gpio: Should specify the GPIO for controlling the PCI reference c=
+lock
++  request signal.
++- ext_osc: External OSC is used as PCIe reference clock or not. 0: Interna=
+l
++  PLL. 1: External OSC.
+=20
+ Additional required properties for imx6sx-pcie:
+ - clock names: Must include the following additional entries:
+@@ -60,6 +66,21 @@ Additional required properties for imx8mq-pcie:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_aux"
+=20
++Additional required properties for imx8qm/qxp pcie:
++- power-domains: Must be set to a phandle pointing to PCIE, PCIE_PHY power=
+ and
++  HSIO_GPIO domains
++- power-domain-names: Must be "pcie", "pcie_phy", "hsio_gpio"
++- clock-names: Must include the following additional entries:
++	- "pcie_per"
++- hsio-cfg: hsio configration mode when the pcie node is supported.
++  1: pciea 2 lanes and one sata ahci port.
++  2: pciea 1 lane, pcieb 1 lane and one sata ahci port.
++  3: pciea 2 lanes, pcieb 1 lane.
++- local-addr: the local address used in hsio module on i.MX8QM/QXP.
++	Example:
++		hsio-cfg =3D <2>;
++		local-addr =3D <0x80000000>;
++
+ Example:
+=20
+ 	pcie@01000000 {
+--=20
+2.7.4
 
-Well my proposal would not require any changes in the API, it would just
-require a change to the IDT driver. And the mess in the test tools will
-still be a mess.
-
-
-> Sorry man, but how could you base your interpretation on a code, which didn't
-> support multi-port case in the first place and just couldn't provide you a full
-> impression by definition? You knew ntb_transport doesn't support the multi-port
-> NTB devices, right? Moreover as far as I remember we already concerned similar
-> problem in a discussion of your patches submitted for ntb_pingpong driver.
-> You knew ntb_pingpong and ntb_perf driver support multi-port devices.
-> So you could get your interpretation from there.
-
-Yes, but the test drivers were a mess and difficult to follow. Only now
-am I realizing that ntb_perf required one too many resources by design,
-thus are probably very broken for cases that previously worked because
-of it.
-
-> 
-> BTW I didn't figure out it at that time, but you could fix the ntb_pingpong
-> driver just by replacing the strict inequality in the conditional statement:
-> --- a/drivers/ntb/test/ntb_pingpong.c
-> +++ b/drivers/ntb/test/ntb_pingpong.c
-> @@ -299,7 +299,7 @@ static void pp_init_flds(struct pp_ctx *pp)
->         lport = ntb_port_number(pp->ntb);
->         pcnt = ntb_peer_port_count(pp->ntb);
->         for (pidx = 0; pidx < pcnt; pidx++) {
-> -               if (lport < ntb_peer_port_number(pp->ntb, pidx))
-> +               if (lport <= ntb_peer_port_number(pp->ntb, pidx))
->                         break;
->         }
-> 
-> This loop just finds out the logical index (as you named it) of the local port,
-> which then is used to select a doorbell bit from the shared doorbell register.
-> The similar algo is used in the ntb_perf driver.
-
-Yes, it just feels overly complex to have to do that loop every time.
-
-
-> Ah, I misunderstood your statement. I thought you implied the other way around.
-> I disagree then. Client drivers should be somehow able to retrieve the real physical port
-> number. Physical port numbers can be connected with some ports-specific functionality
-> (and they are in our projects), so they are used to enable/disable corresponding
-> code of the client drivers.
-
-Ok, you're saying that the user will need to be able to map these ports
-somehow to their physical address. I buy that, but NTB transport for
-example, doesn't really have any method for this. You just get network
-interfaces that will likely be numbered similarly to the logical port
-number. But that's a whole other problem that will need to be solved
-later when there is multi-port ntb-transport.
-
-> You said: "Part of the reason we have this confusing mess is because the API was
-> reviewed and merged before any users of the API were presented. Usually this is not
-> accepted in kernel development." A source code of my project is using current port
-> API and happy with it, so there was at least one user of the API at the time of
-> the API submission. I bet there are others now, since I constantly get private questions
-> regarding the IDT hardware configurations. So please don't be so judgemental. If you see
-> some confusing from your point of view things it doesn't always mean it is a mess,
-> you just may misunderstand something. I am sure a pro with experience like yours
-> doesn't need this to be explained.
-
-Users of the code that are not in upstream do not count. Developers
-cannot look at that code and reason about how the API is supposed to be
-used. This isn't being judgemental, it's stating a fact: kernel
-developers do not like having incomplete code in upstream[1][2]. When it
-happens, it just makes the code very hard to maintain and very hard to
-develop on. Many developers call this a disaster and commonly call for
-the code in question to be removed. I can understand this completely
-because I'm facing the exact same issues trying to work with the current
-upstream NTB code.
-
-> - cons:
->   use ntb_peer_resource_idx() method to distribute a shared resource on each side
-> of NTB (although it might be neutral or pros from some point of view);
->   waste one memory window (no problem with shared doorbell register).
-
-I think wasting one memory window is a no-go and should never have been
-merged in the first place. The code originally worked fine in the
-situation where you have 2 peers, each with one memory window, and that
-needs to be maintained.
-
-> The rest of the solutions would lead to overcomplications in the NTB port API,
-> which we don't want to introduce.
-
-Well, frankly, it's a mess right now so we just have to deal with it and
-try to find a short term solution to start fixing it. Complexity be damned.
-
-> Personally after all the considerations I am now more inclined to the (2)-nd
-> solution. Even though it causes more changes and makes the ports API
-> more abstract, it provides a way to create a simpler shared resources
-> distribution code as well as to exactly distribute the necessary number
-> of memory windows. While the physical port number still can be found by
-> client drivers directly from pci_dev descriptor.
-
-Ok I think, for v3, I'll introduce a logical_port_number helper function
-which is essentially the loop you proposed. It's needlessly slow (altho
-speed isn't an issue) and ugly but at least, I think, it should be as
-close to correct as we can get. Someone else will have to eventually
-clean up all the test tools because I suspect they are still broken (but
-they at least work for me after my fixup set was merged). I personally
-have no interest in working on NTB code anymore unless I am being
-contracted to do so.
-
-> The final decision regarding the solution is after the subsystem maintainers.
-> But although the provided by this patchset NTB MSI library consists some part
-> with multi-port API utilization like MWs distribution, as I said in comments
-> to the other patches, it doesn't really support the only multi-ports NTB device
-> currently available - IDT (which I only interested in). So I don't see a reason
-> why I should bother with providing a patch with alterations to the IDT hardware
-> driver unless this patchset provides a portable NTB MSI library.
-
-Yes, well the reason it won't work is because of the current mess which
-I don't feel like I should be responsible for sorting out. My code works
- correctly for the existing ntb_transport and I've made a best effort to
-get as much multiport support as I feel I can, given the available
-infrastructure.
-
-Logan
-
-[1] https://lwn.net/Articles/757124/
-[2] https://lwn.net/ml/linux-kernel/20190130075256.GA29665@lst.de/
