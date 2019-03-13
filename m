@@ -2,70 +2,103 @@ Return-Path: <SRS0=vhAr=RQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 867B8C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 22:26:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E9AAC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 23:21:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5607321019
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 22:26:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3F4A21019
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 23:21:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1552519275;
+	bh=4KYB1fuOeXgs3tIm3qTCeEG5sbuyLpyDeRE1rHgjPRw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=1dvYBiHCc8kDAaYMXKzDdQMQcjx5Y8xyhp4VlUBHuob4X0h2HtoKwn7weGylye+9I
+	 6V9nd789BrWTi9qJgAxA4HZ72DH4QU4qcLTsm4EW7n0xqbc90ltLdhE14F2lu/9oZk
+	 B8sgPRtbKOusiQiYfpAkHPTiv1zE0UM+VOQA0lQs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726442AbfCMW0b (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Mar 2019 18:26:31 -0400
-Received: from smtp4-g21.free.fr ([212.27.42.4]:8482 "EHLO smtp4-g21.free.fr"
+        id S1726183AbfCMXVP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Mar 2019 19:21:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57378 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725876AbfCMW0b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 13 Mar 2019 18:26:31 -0400
-Received: from [192.168.1.42] (unknown [77.207.133.132])
-        (Authenticated sender: marc.w.gonzalez)
-        by smtp4-g21.free.fr (Postfix) with ESMTPSA id 4F5F219F59E;
-        Wed, 13 Mar 2019 23:26:07 +0100 (CET)
-Subject: Re: [PATCH v2] PCI: qcom: Use default config space read function
-To:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Jeffrey Hugo <jhugo@codeaurora.org>
-References: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
- <65321fe3-ca29-c454-63ae-98a46c2e5158@mm-sol.com>
- <1205cbfb-ac06-63a5-9401-75d4e68b15b5@free.fr>
- <38ad143b-3b07-4d19-8ccd-ca39fb51e53d@free.fr>
- <7d3d788a-d6a3-a70b-adab-6c65771cacc4@free.fr>
- <3c76613e-e60d-94b8-dd6f-b8f4e1928263@linaro.org>
- <2f901228-52db-7661-8257-ca8fd2ff2a46@free.fr>
- <29664b43-535c-c4b1-a93d-18f49687f929@linaro.org>
-From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
-Message-ID: <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
-Date:   Wed, 13 Mar 2019 23:26:00 +0100
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
- Firefox/52.0 SeaMonkey/2.49.4
+        id S1726078AbfCMXVO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Mar 2019 19:21:14 -0400
+Received: from localhost (unknown [12.208.228.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1521720854;
+        Wed, 13 Mar 2019 23:21:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1552519274;
+        bh=4KYB1fuOeXgs3tIm3qTCeEG5sbuyLpyDeRE1rHgjPRw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ipEEOeCvWq+dY98ZUS9UGgzufcRz31+wbmuTXAHdkeJPBiLkhfvg12981/rpmytfZ
+         C8psuQSeY55Ajjx0VCDNpPU+4zYvDKwZ2VXsz5yzZN0WOPkgIB15/12EmkKKIUUsbE
+         SoisercyhfV/8XNFo1aht9Z7ZSotfI7z6TrdKG1I=
+Date:   Wed, 13 Mar 2019 18:21:13 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jesse Hathaway <jesse@mbuki-mvuki.org>
+Cc:     Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: Regression causes a hang on boot with a Comtrol PCI card
+Message-ID: <20190313232112.GC210027@google.com>
+References: <CANSNSoWiKd98Dt1N2sSjP9Af8zk1NPV-=3P4VLtFs_cSQG4RUg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <29664b43-535c-c4b1-a93d-18f49687f929@linaro.org>
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANSNSoWiKd98Dt1N2sSjP9Af8zk1NPV-=3P4VLtFs_cSQG4RUg@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 13/03/2019 22:52, Srinivas Kandagatla wrote:
+Hi Jesse,
 
-> On 13/03/2019 20:39, Marc Gonzalez wrote:
->
->> Could you pastebin the output of lspci -vvv -n in the working case?
->
-> This was already in my original reply:
-> working without patch : https://paste.ubuntu.com/p/TJm4hgjGW4/
+On Wed, Mar 13, 2019 at 11:50:07AM -0500, Jesse Hathaway wrote:
+> Two regressions cause Linux to hang on boot when a Comtrol PCI card
+> is present.
+> 
+> If I revert the following two commits, I can boot again and the card
+> operates without issue:
+> 
+> 1302fcf0d03e (refs/bisect/bad) PCI: Configure *all* devices, not just
+> hot-added ones
+> 1c3c5eab1715 sched/core: Enable might_sleep() and smp_processor_id()
+> checks early
 
-I needed to see the numeric values, hence the -n flag ;-)
+I'm very sorry about the regression, but thank you very much for
+narrowing it down and reporting it!
 
-	lspci -vvv -n
+How did you narrow it down to *two* commits, and do you have to revert
+both of them to avoid the hang?  Usually a bisection identifies a
+single commit, and the two you mention aren't related.
 
-Regards.
+> ; lspci -vs 82:00.0
+> 82:00.0 Multiport serial controller: Comtrol Corporation Device 0061
+>         Subsystem: Comtrol Corporation Device 0061
+>         Flags: 66MHz, medium devsel, IRQ 35, NUMA node 1
+>         Memory at c8004000 (32-bit, non-prefetchable) [size=4K]
+>         Memory at c8000000 (32-bit, non-prefetchable) [size=16K]
+>         Capabilities: [40] Hot-plug capable
+>         Capabilities: [48] Power Management version 2
+>         Kernel driver in use: rp2
+>         Kernel modules: rp2
+> 
+> Is it possible that the problem is that the card claims to support
+> Hot-plug, but does not?
+> 
+> I would love to help fix this issue, please let me know what other
+> information would be helpful to provide.
+
+Can you collect a complete dmesg log (with a working kernel) and
+output of "sudo lspci -vvxxx"?  You can open a bug report at
+https://bugzilla.kernel.org, attach the logs there, and respond here
+with the URL.
+
+Where does the hang happen?  Is it when we configure the Comtrol card?
+
+Bjorn
