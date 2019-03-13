@@ -4,179 +4,192 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B35C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 10:38:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EE39C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 10:59:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5537D2171F
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 10:38:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF3BC2177E
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Mar 2019 10:59:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="YWT4M/EO"
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="jHbxRFGF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725870AbfCMKiE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Mar 2019 06:38:04 -0400
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:59038 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725868AbfCMKiE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2019 06:38:04 -0400
-Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay.synopsys.com (Postfix) with ESMTPS id 2271D24E0969;
-        Wed, 13 Mar 2019 03:38:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1552473484; bh=fRn9dW93qpk3SMK4vDY3nYibYTYJ+W1xRSlyuh38EnI=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To:From;
-        b=YWT4M/EO3kG6bfAhgfbQ4ETsL4XqQEDrU4UCxjJhkoQVe/OSjudAmt5XRojW/Sepk
-         jGu8E03KQefZkorGB6Dk14skPNCcav2jLHIHjb0OnLX4cANmElahfo0a7aWiBHDMl8
-         ie8OvFxuQDbr6Gu15rF/BT8Znr0miUqVsd5jkuR5PNJO1hkyQCCTXwK2VlIcPfKimY
-         e7zdz76MeSBwMF6RWJqm8D14OW5AY9MZ/9jk76M0D+lYRU9pYR2zyV9MW1A2tt9yl0
-         UVJ2Pv8TTVUjw23klDflheIIAoR+PmGxjLGWz7JdIB71Fno3lxiNYaygwosOg0NKhD
-         qVRj4HBRJwcyQ==
-Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2.internal.synopsys.com [10.12.239.237])
-        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id D2FA9A0097;
-        Wed, 13 Mar 2019 10:38:03 +0000 (UTC)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WEHTC2.internal.synopsys.com (10.12.239.237) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 13 Mar 2019 03:38:03 -0700
-Received: from DE02WEHTCA.internal.synopsys.com (10.225.19.92) by
- DE02WEHTCB.internal.synopsys.com (10.225.19.94) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 13 Mar 2019 11:38:01 +0100
-Received: from [10.107.19.55] (10.107.19.55) by
- DE02WEHTCA.internal.synopsys.com (10.225.19.80) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 13 Mar 2019 11:38:01 +0100
-Subject: Re: [PATCH v2 4/5] PCI: dwc: Use devm_pci_alloc_host_bridge() to
- simplify the code
-To:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>
-References: <20190301125510.4e2ee985@xhacker.debian>
- <20190301125901.5ee7730c@xhacker.debian>
-From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Message-ID: <3b1a5c1e-e458-20cf-51ce-1a7846ebf8c0@synopsys.com>
-Date:   Wed, 13 Mar 2019 10:37:59 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.0
+        id S1726183AbfCMK7d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Mar 2019 06:59:33 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:38596 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725832AbfCMK7d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Mar 2019 06:59:33 -0400
+Received: by mail-wr1-f68.google.com with SMTP id g12so1466075wrm.5
+        for <linux-pci@vger.kernel.org>; Wed, 13 Mar 2019 03:59:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mobiveil.co.in; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=h4LFviQDP20Bf7IkpPDIpnlx1Y4FYEMNZGgLZoxCprA=;
+        b=jHbxRFGFdyci9bWQbeBNbGi9uoJUlqlqtvRH6d22tI80JqWTI4jJ7lWcjfCe4//WD9
+         A+y3CubwpsHLmF6UhyfVIt45Y4f27tzeEa3HMJDylpqIl3HZKfQavd4Iv6IPU8dFEoZo
+         789eGZMRAhKQBiuP9lJPabM+8OQfBdIriKAX4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=h4LFviQDP20Bf7IkpPDIpnlx1Y4FYEMNZGgLZoxCprA=;
+        b=K6dTMrPQdJrVn8KdkbTE7lPcGV8K9F+10k/PSQ+r1LeLasgFgcH7pKDVTF1alIQfVW
+         NX36fAvADyZQlZtzZ/SqNncPC0BjtySRGuljurEaRaccOhESAanlKrtsVcU/8Hz24s7B
+         Y4wANT4Em6sorCzY1uBq9xEc06nW1ZmVFGeo3l/RjUyOzM7ztQmpvtK3mHFi8t9NrIOB
+         EqzuHTD32iBZnLF/azLrlMmHI44m43UpQuOWglposafX1ZA/DCAlEUO36Ng+CoR0tHEX
+         mJU+TM2kqKNagKEAhOSJtoiKMeWCHm8oUQTGiHC5jWRN1CHe8oq4ezTdpeiCdJ6RjYjK
+         yI7Q==
+X-Gm-Message-State: APjAAAUJirUJXvSKXVX9Dz1czD3c/m/iCf0o99z9WIYvPYaoE0n9Nsf9
+        M0PRERy6IXdsXHgaZxkJqtPRbpV9COfNygb1gDPJ6A==
+X-Google-Smtp-Source: APXvYqzbcTYdPInRskGseTIRoOuptxRn3sAUFqbKuRjSH8ewSjomsDWaGx4qORQVvlqJcNn/hg2UGyacKPFnbn4iFls=
+X-Received: by 2002:a5d:6b07:: with SMTP id v7mr26531406wrw.314.1552474770378;
+ Wed, 13 Mar 2019 03:59:30 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20190301125901.5ee7730c@xhacker.debian>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.107.19.55]
+References: <20190311093130.7209-1-Zhiqiang.Hou@nxp.com> <20190311093130.7209-12-Zhiqiang.Hou@nxp.com>
+ <20190311141401.GG214730@google.com> <AM6PR04MB5781498315C6B69EB2586B9D84490@AM6PR04MB5781.eurprd04.prod.outlook.com>
+In-Reply-To: <AM6PR04MB5781498315C6B69EB2586B9D84490@AM6PR04MB5781.eurprd04.prod.outlook.com>
+From:   Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Date:   Wed, 13 Mar 2019 16:29:18 +0530
+Message-ID: <CAFZiPx1+SDPLZ3CAAhSxbTUWdKrnx3UkF99nTxwqoNx3mdXDcA@mail.gmail.com>
+Subject: Re: [PATCHv4 11/28] PCI: mobiveil: only fix up the Class Code field
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
+Bjorn/ZQ,
 
-On 01/03/2019 05:06, Jisheng Zhang wrote:
-> Use devm_pci_alloc_host_bridge() to simplify the error code path.
-> 
-> Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-> ---
->  .../pci/controller/dwc/pcie-designware-host.c | 21 +++++++------------
->  1 file changed, 8 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index 66569d0f3ab9..4831c12fee93 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -357,7 +357,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		dev_err(dev, "Missing *config* reg space\n");
->  	}
->  
-> -	bridge = pci_alloc_host_bridge(0);
-> +	bridge = devm_pci_alloc_host_bridge(dev, 0);
->  	if (!bridge)
->  		return -ENOMEM;
->  
-> @@ -368,7 +368,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  
->  	ret = devm_request_pci_bus_resources(dev, &bridge->windows);
->  	if (ret)
-> -		goto error;
-> +		return ret;
->  
->  	/* Get the I/O and memory ranges from DT */
->  	resource_list_for_each_entry_safe(win, tmp, &bridge->windows) {
-> @@ -412,8 +412,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  						resource_size(pp->cfg));
->  		if (!pci->dbi_base) {
->  			dev_err(dev, "Error with ioremap\n");
-> -			ret = -ENOMEM;
-> -			goto error;
-> +			return -ENOMEM;
->  		}
->  	}
->  
-> @@ -424,8 +423,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  					pp->cfg0_base, pp->cfg0_size);
->  		if (!pp->va_cfg0_base) {
->  			dev_err(dev, "Error with ioremap in function\n");
-> -			ret = -ENOMEM;
-> -			goto error;
-> +			return -ENOMEM;
->  		}
->  	}
->  
-> @@ -435,8 +433,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  						pp->cfg1_size);
->  		if (!pp->va_cfg1_base) {
->  			dev_err(dev, "Error with ioremap\n");
-> -			ret = -ENOMEM;
-> -			goto error;
-> +			return -ENOMEM;
->  		}
->  	}
->  
-> @@ -459,14 +456,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  			    pp->num_vectors == 0) {
->  				dev_err(dev,
->  					"Invalid number of vectors\n");
-> -				goto error;
-> +				return -EINVAL;
->  			}
->  		}
->  
->  		if (!pp->ops->msi_host_init) {
->  			ret = dw_pcie_allocate_domains(pp);
->  			if (ret)
-> -				goto error;
-> +				return ret;
->  
->  			if (pp->msi_irq)
->  				irq_set_chained_handler_and_data(pp->msi_irq,
-> @@ -475,7 +472,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		} else {
->  			ret = pp->ops->msi_host_init(pp);
->  			if (ret < 0)
-> -				goto error;
-> +				return ret;
->  		}
->  	}
->  
-> @@ -515,8 +512,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  err_free_msi:
->  	if (IS_ENABLED(CONFIG_PCI_MSI) && !pp->ops->msi_host_init)
->  		dw_pcie_free_msi(pp);
-> -error:
-> -	pci_free_host_bridge(bridge);
->  	return ret;
->  }
->  
-> 
 
-Nice!
+On Tue, Mar 12, 2019 at 2:48 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
+>
+> Hi Bjorn,
+>
+> Thanks a lot for your comments!
+>
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: 2019=E5=B9=B43=E6=9C=8811=E6=97=A5 22:14
+> > To: Z.q. Hou <zhiqiang.hou@nxp.com>
+> > Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > devicetree@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > robh+dt@kernel.org; mark.rutland@arm.com; l.subrahmanya@mobiveil.co.in;
+> > shawnguo@kernel.org; Leo Li <leoyang.li@nxp.com>;
+> > lorenzo.pieralisi@arm.com; catalin.marinas@arm.com;
+> > will.deacon@arm.com; Mingkai Hu <mingkai.hu@nxp.com>; M.h. Lian
+> > <minghuan.lian@nxp.com>; Xiaowei Bao <xiaowei.bao@nxp.com>
+> > Subject: Re: [PATCHv4 11/28] PCI: mobiveil: only fix up the Class Code =
+field
+> >
+> > On Mon, Mar 11, 2019 at 09:31:23AM +0000, Z.q. Hou wrote:
+> > > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> > >
+> > > Fix up the Class Code to PCI bridge, do not change the Revision ID.
+> > > And move the fixup to mobiveil_host_init function.
+> >
+> > Add parens after function name.
+> >
+> > Please explain why this change is needed.  Does it fix a bug?
+> >
+> > Does this fix the problem that the PCI core didn't correctly identify t=
+he device
+> > as a bridge because it identified bridges by class code instead of head=
+er type?
+> >
+> > That problem *should* be fixed by b2fb5cc57469 ("PCI: Rely on config sp=
+ace
+> > header type, not class code"), which is now upstream.
+> >
+> > You might still want this class code change so that lspci shows the cor=
+rect
+> > thing.  That's fine, but the changelog should say why we're doing it.
+> >
+>
+> Subrahmanya's original patch is to fixup 'Class Code' field, but it also =
+fixed the 'Revision ID' field. This patch is patch is to remove the fixup o=
+f 'Revision ID' field.
 
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+it was introduced during the test with 4.9 and 4.15 linux version,
+without this fix driver was not getting loaded.
+
+I belive it should be sufficient to mention in code comment:  "Fixing
+the class code as hardware is not reflecting the correct class code",
+And the changelog for this patch mentioning "avoid changing the
+revision ID  during the class code fix". Is that OK?
+
+Thanks,
+
+>
+> > > Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP
+> > > driver")
+> >
+> > Make this "Fixes:" line a single line again.
+> >
+> > > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> > > Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+> > > Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+> > > ---
+> > > V4:
+> > >  - no change
+> > >
+> > >  drivers/pci/controller/pcie-mobiveil.c | 9 ++++++---
+> > >  1 file changed, 6 insertions(+), 3 deletions(-)
+> > >
+> > > diff --git a/drivers/pci/controller/pcie-mobiveil.c
+> > > b/drivers/pci/controller/pcie-mobiveil.c
+> > > index 78e575e71f4d..8eee1ab7ee24 100644
+> > > --- a/drivers/pci/controller/pcie-mobiveil.c
+> > > +++ b/drivers/pci/controller/pcie-mobiveil.c
+> > > @@ -653,6 +653,12 @@ static int mobiveil_host_init(struct mobiveil_pc=
+ie
+> > *pcie)
+> > >                                type, resource_size(win->res));
+> > >     }
+> > >
+> > > +   /* fixup for PCIe class register */
+> > > +   value =3D csr_readl(pcie, PAB_INTP_AXI_PIO_CLASS);
+> > > +   value &=3D 0xff;
+> > > +   value |=3D (PCI_CLASS_BRIDGE_PCI << 16);
+> > > +   csr_writel(pcie, value, PAB_INTP_AXI_PIO_CLASS);
+> > > +
+> > >     /* setup MSI hardware registers */
+> > >     mobiveil_pcie_enable_msi(pcie);
+> > >
+> > > @@ -896,9 +902,6 @@ static int mobiveil_pcie_probe(struct
+> > platform_device *pdev)
+> > >             goto error;
+> > >     }
+> > >
+> > > -   /* fixup for PCIe class register */
+> > > -   csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
+> > > -
+> > >     /* initialize the IRQ domains */
+> > >     ret =3D mobiveil_pcie_init_irq_domain(pcie);
+> > >     if (ret) {
+> > > --
+> > > 2.17.1
+> > >
+>
+> Thanks,
+> Zhiqiang
