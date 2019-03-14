@@ -2,121 +2,129 @@ Return-Path: <SRS0=NdPK=RR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34399C10F06
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 17:44:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 452DBC43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 20:57:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0747E21855
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 17:44:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0523721874
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 20:57:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XLkdA9tI"
+	dkim=pass (2048-bit key) header.d=mbuki-mvuki-org.20150623.gappssmtp.com header.i=@mbuki-mvuki-org.20150623.gappssmtp.com header.b="YjrKN8ZC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726753AbfCNRoM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Mar 2019 13:44:12 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:35655 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726485AbfCNRoM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2019 13:44:12 -0400
-Received: by mail-pg1-f194.google.com with SMTP id e17so4488582pgd.2;
-        Thu, 14 Mar 2019 10:44:11 -0700 (PDT)
+        id S1727616AbfCNU5V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Mar 2019 16:57:21 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:45028 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727457AbfCNU5V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2019 16:57:21 -0400
+Received: by mail-wr1-f68.google.com with SMTP id w2so7338229wrt.11
+        for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2019 13:57:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=tYaxDGNFMUwYFraly5vXvXUYH0YyBkMh/ttyQ26pSI0=;
-        b=XLkdA9tI7UZhk7oZYgWl0NipavHBwTyVMNuRWAJI4a0BHy+JhLwYhlRdk59n4QHlso
-         w8yHxQ4Pp7wkOY95e9xIb+rXWquHzD0W//aDG96JdjHnw4EBoaillInrlmJJfGTBqJ3m
-         XgNFTJEp7NJFLwoFrs7cNyXXoKKbMZF/TAPOcLUtJrM/1y8+wr9msUqsbpUFmr1SbKvL
-         htVMG9uQM+kx8yVQv+p0LrM56QjHw34al2NdnjkxKfK8TSxKzn18KHtmnXdTtyq0rfVy
-         wV/sTcd8VsrDoU7G4d6Wqli/JregAsK1CArw6Ghnao37FFRqJEcWYW8UCV8vfUaPXm4c
-         RNIw==
+        d=mbuki-mvuki-org.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=0n+Yubwo3+VmfuEyCVcIzcBbnEVd7iC+Fb5ALd0vzzg=;
+        b=YjrKN8ZC41ArPSrj0jEaqlU4YzOOpZoWqbYM/ehGIDZKXKseeyLuCWiEWRB/90obzT
+         Iqdf02pwGiJTvBTjeB0V2RTpojLOPRyNeYT3PHdfG/2O6TbBmp3A46XSinGJwZrf4JSG
+         He7i12HS/Gkv0Pg/gA22aQYD+VNGqsC9ECUlwc43t7NBOlpuoHkE5Hx7PdM53YxzQ6FG
+         BVum16oZFCTwWPfRzVYgXe1O5fWazUbGYoGBkh53uDT6qjCTJnL2TCOA+4VPqLLMpFXw
+         RMnCVeJCsGaaDZaQgMvvotdbkDxDJr6SINUpwzJ2q1efNPcv8fYeZ3jyYSSRGCqh2JH0
+         SJ2Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=tYaxDGNFMUwYFraly5vXvXUYH0YyBkMh/ttyQ26pSI0=;
-        b=fbAoYyAELbuHxZCX/v2uDkrppLrpoWVPkyDbgSluFaYYRnYqeKoGDuV3tqGwxPGvBu
-         30Ck9Cb/GW/Gi7Pb9ZVgNTYG8BhhUd3MsuGhy00dSrOZzx9XYqxsMjI4unuVfxtKfBro
-         haV4t4Pi6EvbEfe5QWAETBe3jet2f0I7Zurkf4SI7MmfUEX5bZcC181sKjJK+aKHDiNK
-         zwE885FB4+hiW9CFaMUaIqObGaeTUoKGsQopbAlTj4fx2lO+ncVUDN+EcUhwuzm4Atu9
-         Whpg4o/D2zqxDxXLo9/uV48bOHJTbNyu6xk1Uwsu/3m7elEC/SoiKSETrgwFw7Y5UXVn
-         19JA==
-X-Gm-Message-State: APjAAAWHHG9oWqjgeKtMPVPfZRBWtxUOc/9B0tvalEeL9mWMAR0mkgeK
-        Cx8w8GxNGrTw/MAQMcvT8nM=
-X-Google-Smtp-Source: APXvYqyBlgsw1+sWp1NwLU4/09HZjeKFYXJfYyzu81cveHz8GTXr7oTL7U7D2UKGmKuhptd808k3tQ==
-X-Received: by 2002:a63:fd07:: with SMTP id d7mr45875465pgh.199.1552585451062;
-        Thu, 14 Mar 2019 10:44:11 -0700 (PDT)
-Received: from localhost ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id g2sm28399314pfm.144.2019.03.14.10.44.09
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Mar 2019 10:44:09 -0700 (PDT)
-Date:   Thu, 14 Mar 2019 10:44:08 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     John Garry <john.garry@huawei.com>
-Cc:     jdelvare@suse.com, bhelgaas@google.com, rafael@kernel.org,
-        arnd@arndb.de, lorenzo.pieralisi@arm.com, bp@suse.de,
-        linux-hwmon@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, wangkefeng.wang@huawei.com,
-        linuxarm@huawei.com
-Subject: Re: [RFC PATCH 2/2] hwmon: (f71805f): Use request_region() in
- f71805f_init()
-Message-ID: <20190314174408.GD14159@roeck-us.net>
-References: <1552582516-70855-1-git-send-email-john.garry@huawei.com>
- <1552582516-70855-3-git-send-email-john.garry@huawei.com>
- <20190314170534.GB14159@roeck-us.net>
- <db84d2d3-cb16-7633-afeb-913096c86e8d@huawei.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=0n+Yubwo3+VmfuEyCVcIzcBbnEVd7iC+Fb5ALd0vzzg=;
+        b=AtVKjY/qgw49BMDOZfHpezMgh1l2ER/dUC5abeeCaU+FWxSCHIg3FlbcEr7BDbo2aY
+         13wRcXD4CBPZuR8P/DmjpVYlYagGIMevSL6pTIxi5nk+qar74EAVpzns1VdLf9twxM+S
+         xbBUB9SbEWPAaI+byHoiEgQBI5XsLxPw07Nr8oGNC0C1XPguPMt2PIIUpoOom8AnNbsk
+         awrbF/3z9nEkqAuW/XpwjuUZuQddxF1a8FSSr/NSL0nV3Lt0R5jH2UJ0ky+Ptd8WI3Dl
+         IRzLw+H/iBIKUUVrh6MlFzCrvo9jRbPqMwv8BGtFHMBGpBWsYQDbJ3zDx1Pu7m6TuFAh
+         nmpw==
+X-Gm-Message-State: APjAAAXipCrap9IFplw5hnerqQPBWQPBEXlzrcMh4oPhVSTHmlkK1Jqa
+        6nfoK8Tpydvc4lygb1EFIHm8sK/WxUUF33LFcDhLsA==
+X-Google-Smtp-Source: APXvYqw0lPXN5Zx+E9zkLIeQwjb6vF8nfptwMRMufVE6lctcBMaNIw0IVzBD+zS7E5O86tPrDgwB0rLfvRGHrp7bq/E=
+X-Received: by 2002:adf:9065:: with SMTP id h92mr393712wrh.150.1552597039322;
+ Thu, 14 Mar 2019 13:57:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <db84d2d3-cb16-7633-afeb-913096c86e8d@huawei.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+References: <CANSNSoWiKd98Dt1N2sSjP9Af8zk1NPV-=3P4VLtFs_cSQG4RUg@mail.gmail.com>
+ <20190313232112.GC210027@google.com>
+In-Reply-To: <20190313232112.GC210027@google.com>
+From:   Jesse Hathaway <jesse@mbuki-mvuki.org>
+Date:   Thu, 14 Mar 2019 15:57:07 -0500
+Message-ID: <CANSNSoXPFDu9RQAUA6dUCUrSCAj68q-Nj2W7ECz3fKpFtSNU+Q@mail.gmail.com>
+Subject: Re: Regression causes a hang on boot with a Comtrol PCI card
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 14, 2019 at 05:21:32PM +0000, John Garry wrote:
-> On 14/03/2019 17:05, Guenter Roeck wrote:
-> >On Fri, Mar 15, 2019 at 12:55:16AM +0800, John Garry wrote:
-> >>Currently the driver does not call request_region() prior to
-> >>accessing IO port regions in f71805f_init(), so add it.
-> >>
-> >>Signed-off-by: John Garry <john.garry@huawei.com>
-> >>---
-> >> drivers/hwmon/f71805f.c | 13 ++++++++++++-
-> >> 1 file changed, 12 insertions(+), 1 deletion(-)
-> >>
-> >>diff --git a/drivers/hwmon/f71805f.c b/drivers/hwmon/f71805f.c
-> >>index 73c681162653..910082c7f184 100644
-> >>--- a/drivers/hwmon/f71805f.c
-> >>+++ b/drivers/hwmon/f71805f.c
-> >>@@ -1617,10 +1617,21 @@ static int __init f71805f_init(void)
-> >> 	int err;
-> >> 	unsigned short address;
-> >> 	struct f71805f_sio_data sio_data;
-> >>+	struct resource *res;
-> >>+	size_t size = 0x4e - 0x2e + SIO_REG_ADDR + 4;
-> >>+
-> >>+	/* Request the whole 0x2e - 0x4e region */
-> >>+	res = request_region(0x2e, size, "f71805f");
-> >
-> 
-> Hi Guenter,
-> 
-> >request_muxed_region() would be a better choice here since it doesn't
-> >bail out immediately if the region is temporarily busy.
-> 
-> Are you saying that this region could be busy due to another driver
-> accessing this same region (probably for the same purpose)?
-> 
-Depends on the definition of "same reason". To access the chip's
-Super-IO configuration registers, yes, that can happen. I don't
-see it used in the kernel today, but examples would be someone
-adding support for the chips supported by this driver to gpio-f7188x,
-or adding support for the F71872 watchdog to the f71808e_wdt driver.
+> > 1302fcf0d03e (refs/bisect/bad) PCI: Configure *all* devices, not just
+> > hot-added ones
+> > 1c3c5eab1715 sched/core: Enable might_sleep() and smp_processor_id()
+> > checks early
+>
+> How did you narrow it down to *two* commits, and do you have to revert
+> both of them to avoid the hang?  Usually a bisection identifies a
+> single commit, and the two you mention aren't related.
 
-Guenter
+Sorry I should have been more verbose in what the bisection process was, I
+found the problem after attempting to upgrade from linux v3.16 to v4.9. When
+v4.9 hung I tried the latest kernel, v5.0, which also hanged. I began a git
+bisect, but found there was more than one bad commit. Here is my current
+understanding:
+
+- [x] v3.18 vanilla, 1302fcf0d03e committed, hangs
+- [x] v3.18 with revert of 1302fcf0d03e, works
+.
+.
+.
+- [x] v4.12 vanilla, hangs
+- [x] v4.12 with revert of 1302fcf0d03e, works
+
+- [x] v4.13 vanilla, 1c3c5eab1715 committed, hangs
+- [x] v4.13 with revert of 1302fcf0d03e, hangs
+- [x] v4.13 with revert of 1c3c5eab1715, hangs
+- [x] v4.13 with revert of 1302fcf0d03e & 1c3c5eab1715, works
+
+- [x] v5.0 vanilla, hangs
+- [x] v5.0 with revert of 1302fcf0d03e & 1c3c5eab1715, works
+
+> Can you collect a complete dmesg log (with a working kernel) and
+> output of "sudo lspci -vvxxx"?  You can open a bug report at
+> https://bugzilla.kernel.org, attach the logs there, and respond here
+> with the URL.
+
+Bug submitted along with the requested logs,
+https://bugzilla.kernel.org/show_bug.cgi?id=202927
+
+> Where does the hang happen?  Is it when we configure the Comtrol card?
+
+Hang occurs after PCI is initialized, snippet below, I have included the full
+output in the bug report:
+
+[   10.561971] pci 0000:81:00.0:   bridge window [mem 0xc8000000-0xc80fffff]
+[   10.569661] pci 0000:80:01.0: PCI bridge to [bus 81-82]
+[   10.575594] pci 0000:80:01.0:   bridge window [mem 0xc8000000-0xc80fffff]
+[   10.583278] pci 0000:80:03.0: PCI bridge to [bus 83]
+[   10.589008] NET: Registered protocol family 2
+[   10.594254] tcp_listen_portaddr_hash hash table entries: 65536
+(order: 8, 1048576 bytes)
+[   10.603671] TCP established hash table entries: 524288 (order: 10,
+4194304 bytes)
+[   10.612729] TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
+[   10.620446] TCP: Hash tables configured (established 524288 bind 65536)
+[   10.628124] UDP hash table entries: 65536 (order: 9, 2097152 bytes)
+[   10.635541] UDP-Lite hash table entries: 65536 (order: 9, 2097152 bytes)
+[   10.643669] NET: Registered protocol family 1
+
+Please let me know if there is anything else I can provide, I am also happy to
+test any patches, Jesse Hathaway
