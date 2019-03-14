@@ -2,137 +2,104 @@ Return-Path: <SRS0=NdPK=RR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D18C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 09:30:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB126C4360F
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 11:10:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0D3F2085A
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 09:30:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88BCE21019
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 11:10:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QOj6bEhQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726786AbfCNJae (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Mar 2019 05:30:34 -0400
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:35711 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726629AbfCNJae (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2019 05:30:34 -0400
-Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
-        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
-        (envelope-from <l.stach@pengutronix.de>)
-        id 1h4Mh4-0002rU-Ig; Thu, 14 Mar 2019 10:30:30 +0100
-Message-ID: <1552555830.2453.57.camel@pengutronix.de>
-Subject: Re: [RFC 1/2] dt-bindings: imx6q-pcie: Add support for i.MX8QM/QXP
- PCIe
-From:   Lucas Stach <l.stach@pengutronix.de>
-To:     Richard Zhu <hongxing.zhu@nxp.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "andrew.smirnov@gmail.com" <andrew.smirnov@gmail.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Thu, 14 Mar 2019 10:30:30 +0100
-In-Reply-To: <1552467452-538-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1552467452-538-1-git-send-email-hongxing.zhu@nxp.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.22.6-1+deb9u1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
-X-SA-Exim-Mail-From: l.stach@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+        id S1727100AbfCNLKY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Mar 2019 07:10:24 -0400
+Received: from mail-wr1-f54.google.com ([209.85.221.54]:34714 "EHLO
+        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726697AbfCNLKX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2019 07:10:23 -0400
+Received: by mail-wr1-f54.google.com with SMTP id k1so4859683wre.1
+        for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2019 04:10:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=/JDj8TyDj39QEhF6L2k0Ejw4vMVzg6xp1kxfqEmJmRU=;
+        b=QOj6bEhQ0uWHIGjwGl/CDLhOGfJkuTn1GmeGmqGin19w0OJbhWRuXQwmvY49uvJ/tu
+         Af/4fpXRBW0U84JCOQjlyK1glEbDjdIEWhiQ941osgEgnzrlQ/6bmjgpng3HHCj/H0/c
+         9QECQ6k3pC3tpPJjz/LP47mArfbyDQbUr7HSq5f53aarQJqb2iK/zxsIaocg064b9j1D
+         QD4c7Lt6oLaRXzDS8G2/jHdh0+8RRHJnhReIEpK2a3meIbBEvQrOTf86Vx/B0DGeKgDy
+         GZUjORqh7+MiENo7fou9VSsemabK6B3T0nt2v8LaBSk71Ck0FZOBrbcUeKZINwruNQik
+         g5Gg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=/JDj8TyDj39QEhF6L2k0Ejw4vMVzg6xp1kxfqEmJmRU=;
+        b=XRhUT539xoK2C6/l2b79EIJpVdSujNowrmktbrRUgEfPxdebTF7OZieUqio2RjI7Uo
+         uPcHpkmvwOGiKJW1CjO9nFF80gW1Y0ag9C+Z1xXmvUfg5zbwx08yRMQBo7mTnL5gQgXX
+         bmDFDtWMd9V6lurWeCj6a2rU4zTUwJmhY+tfcxXJlOgvghvAlGxXxmjL8JLsxuNUkp0U
+         voC5NpvzgTNSCcGyBtyAusGqUJ8MyMv4kdwSm5cdPLRDPUZkhQCOjJUtKj+egxDgoSy0
+         7Cy1tIlTT9sHb/HS0M4nM2JbfWSYwJnC1q2F130GmhOBX8aVkQDHltRut1ZHx5UXOvVh
+         qYew==
+X-Gm-Message-State: APjAAAVkwLTCdXoAY8EnWXZEZ7l/B8Ih+SZ8tbJbGer/CmF8jAGPrA7T
+        In84BcFSUawjP4fOSmriOokNmg==
+X-Google-Smtp-Source: APXvYqyCW2aPuN2kBaWHCjx7eGFufkJ44XHzzz5KX3cZv0V0uP9+z83pG16rGQkqn/eAx2cmegTE+A==
+X-Received: by 2002:a05:6000:8b:: with SMTP id m11mr30123450wrx.243.1552561821743;
+        Thu, 14 Mar 2019 04:10:21 -0700 (PDT)
+Received: from [192.168.86.34] (cpc89974-aztw32-2-0-cust43.18-1.cable.virginm.net. [86.30.250.44])
+        by smtp.googlemail.com with ESMTPSA id g2sm15622832wrh.7.2019.03.14.04.10.20
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 14 Mar 2019 04:10:20 -0700 (PDT)
+Subject: Re: [PATCH v2] PCI: qcom: Use default config space read function
+To:     Marc Gonzalez <marc.w.gonzalez@free.fr>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Jeffrey Hugo <jhugo@codeaurora.org>
+References: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
+ <65321fe3-ca29-c454-63ae-98a46c2e5158@mm-sol.com>
+ <1205cbfb-ac06-63a5-9401-75d4e68b15b5@free.fr>
+ <38ad143b-3b07-4d19-8ccd-ca39fb51e53d@free.fr>
+ <7d3d788a-d6a3-a70b-adab-6c65771cacc4@free.fr>
+ <3c76613e-e60d-94b8-dd6f-b8f4e1928263@linaro.org>
+ <2f901228-52db-7661-8257-ca8fd2ff2a46@free.fr>
+ <29664b43-535c-c4b1-a93d-18f49687f929@linaro.org>
+ <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
+From:   Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Message-ID: <9c5a7620-e9ed-82d6-0708-34fe33e39030@linaro.org>
+Date:   Thu, 14 Mar 2019 11:10:19 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
+MIME-Version: 1.0
+In-Reply-To: <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Richard,
 
-Am Mittwoch, den 13.03.2019, 09:15 +0000 schrieb Richard Zhu:
-> Add codes needed to support i.MX8QM/QXP PCIe.
-> - HSIO(High Speed IO) subsystem is new defined on i.MX8QM/QXP.
->   The PCIe and SATA modules are contained in the HSIO subsystem. There
->   are two PCIe, one SATA controllers and three mixed lane PHYs on
->   i.MX8QM. There are three use cases of the HSIO subsystem on i.MX8QM.
->   1. PCIea 2 lanes and one SATA AHCI port.
->   2. PCIea 1 lane, PCIeb 1 lane and one SATA AHCI port.
->   3. PCIea 2 lanes, PCIeb 1 lane.
->   i.MX8QXP only has PCIeb controller and one lane PHY.
->   Use the hsio-cfg property to specify the different modes.
-> - The HSIO address map as viewed from system level is as shown below.
->   address [31:24]    Local address    Target    Address Size
->   5F                 0                HSIO      16MB
->   60-6F              40-4F            HSIO      256MB
->   70-7F              80-8F            HSIO      256MB
->   The property local-addr is required to specify it.
-> - Both external OSC and internal PLL can be used as PCIe reference
->   clock, use the ext_osc property to distinguish them.
-> - clock request GPIO for controlling the PCI reference clock request
->   signal. And should be configure OD when L1SS maybe enabled later.
-> - One more power domain HSIO_GPIO and clock PCIE_PER are required by
->   i.MX8QM/QXP PCIe.
->   Add these specific properties to enable i.MX8QM/QXP PCIe.
 
-All this HSIO handling should move into a separate PHY driver. This has
-nothing to do with the PCIe controller itself. See for example the
-Tegra XUSB PHY driver (drivers/phy/tegra/xusb.c), which is a similar
-combined PCIE/USB3/SATA PHY driver.
-
-Regards,
-Lucas
-
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-> ---
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt      | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
+On 13/03/2019 22:26, Marc Gonzalez wrote:
+> I needed to see the numeric values, hence the -n flag;-)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index a7f5f5a..f7586c9 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -10,6 +10,8 @@ Required properties:
-> >  	- "fsl,imx6qp-pcie"
-> >  	- "fsl,imx7d-pcie"
-> >  	- "fsl,imx8mq-pcie"
-> > +	- "fsl,imx8qm-pcie"
-> > +	- "fsl,imx8qxp-pcie"
->  - reg: base address and length of the PCIe controller
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
-> @@ -38,6 +40,10 @@ Optional properties:
->    The regulator will be enabled when initializing the PCIe host and
->    disabled either as part of the init process or when shutting down the
->    host.
-> +- clkreq-gpio: Should specify the GPIO for controlling the PCI reference clock
-> +  request signal.
-> +- ext_osc: External OSC is used as PCIe reference clock or not. 0: Internal
-> +  PLL. 1: External OSC.
->  
->  Additional required properties for imx6sx-pcie:
->  - clock names: Must include the following additional entries:
-> @@ -60,6 +66,21 @@ Additional required properties for imx8mq-pcie:
->  - clock-names: Must include the following additional entries:
-> >  	- "pcie_aux"
->  
-> +Additional required properties for imx8qm/qxp pcie:
-> +- power-domains: Must be set to a phandle pointing to PCIE, PCIE_PHY power and
-> +  HSIO_GPIO domains
-> +- power-domain-names: Must be "pcie", "pcie_phy", "hsio_gpio"
-> +- clock-names: Must include the following additional entries:
-> > +	- "pcie_per"
-> +- hsio-cfg: hsio configration mode when the pcie node is supported.
-> +  1: pciea 2 lanes and one sata ahci port.
-> +  2: pciea 1 lane, pcieb 1 lane and one sata ahci port.
-> +  3: pciea 2 lanes, pcieb 1 lane.
-> +- local-addr: the local address used in hsio module on i.MX8QM/QXP.
-> > +	Example:
-> > +		hsio-cfg = <2>;
-> > +		local-addr = <0x80000000>;
-> +
->  Example:
->  
-> >  	pcie@01000000 {
+> 	lspci -vvv -n
+> 
+
+Here is the output: https://paste.ubuntu.com/p/kFWZ4kXCxT/
+
+Thanks,
+srini
+
+> Regards.
