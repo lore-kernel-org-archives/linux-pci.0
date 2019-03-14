@@ -2,60 +2,31 @@ Return-Path: <SRS0=NdPK=RR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB126C4360F
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 11:10:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25919C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 13:24:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88BCE21019
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 11:10:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QOj6bEhQ"
+	by mail.kernel.org (Postfix) with ESMTP id F34252184E
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 13:24:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727100AbfCNLKY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Mar 2019 07:10:24 -0400
-Received: from mail-wr1-f54.google.com ([209.85.221.54]:34714 "EHLO
-        mail-wr1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726697AbfCNLKX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2019 07:10:23 -0400
-Received: by mail-wr1-f54.google.com with SMTP id k1so4859683wre.1
-        for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2019 04:10:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=/JDj8TyDj39QEhF6L2k0Ejw4vMVzg6xp1kxfqEmJmRU=;
-        b=QOj6bEhQ0uWHIGjwGl/CDLhOGfJkuTn1GmeGmqGin19w0OJbhWRuXQwmvY49uvJ/tu
-         Af/4fpXRBW0U84JCOQjlyK1glEbDjdIEWhiQ941osgEgnzrlQ/6bmjgpng3HHCj/H0/c
-         9QECQ6k3pC3tpPJjz/LP47mArfbyDQbUr7HSq5f53aarQJqb2iK/zxsIaocg064b9j1D
-         QD4c7Lt6oLaRXzDS8G2/jHdh0+8RRHJnhReIEpK2a3meIbBEvQrOTf86Vx/B0DGeKgDy
-         GZUjORqh7+MiENo7fou9VSsemabK6B3T0nt2v8LaBSk71Ck0FZOBrbcUeKZINwruNQik
-         g5Gg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=/JDj8TyDj39QEhF6L2k0Ejw4vMVzg6xp1kxfqEmJmRU=;
-        b=XRhUT539xoK2C6/l2b79EIJpVdSujNowrmktbrRUgEfPxdebTF7OZieUqio2RjI7Uo
-         uPcHpkmvwOGiKJW1CjO9nFF80gW1Y0ag9C+Z1xXmvUfg5zbwx08yRMQBo7mTnL5gQgXX
-         bmDFDtWMd9V6lurWeCj6a2rU4zTUwJmhY+tfcxXJlOgvghvAlGxXxmjL8JLsxuNUkp0U
-         voC5NpvzgTNSCcGyBtyAusGqUJ8MyMv4kdwSm5cdPLRDPUZkhQCOjJUtKj+egxDgoSy0
-         7Cy1tIlTT9sHb/HS0M4nM2JbfWSYwJnC1q2F130GmhOBX8aVkQDHltRut1ZHx5UXOvVh
-         qYew==
-X-Gm-Message-State: APjAAAVkwLTCdXoAY8EnWXZEZ7l/B8Ih+SZ8tbJbGer/CmF8jAGPrA7T
-        In84BcFSUawjP4fOSmriOokNmg==
-X-Google-Smtp-Source: APXvYqyCW2aPuN2kBaWHCjx7eGFufkJ44XHzzz5KX3cZv0V0uP9+z83pG16rGQkqn/eAx2cmegTE+A==
-X-Received: by 2002:a05:6000:8b:: with SMTP id m11mr30123450wrx.243.1552561821743;
-        Thu, 14 Mar 2019 04:10:21 -0700 (PDT)
-Received: from [192.168.86.34] (cpc89974-aztw32-2-0-cust43.18-1.cable.virginm.net. [86.30.250.44])
-        by smtp.googlemail.com with ESMTPSA id g2sm15622832wrh.7.2019.03.14.04.10.20
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Mar 2019 04:10:20 -0700 (PDT)
+        id S1727268AbfCNNYa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Mar 2019 09:24:30 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:60804 "EHLO ns.iliad.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726916AbfCNNYa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 14 Mar 2019 09:24:30 -0400
+X-Greylist: delayed 343 seconds by postgrey-1.27 at vger.kernel.org; Thu, 14 Mar 2019 09:24:28 EDT
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 6E042206C6;
+        Thu, 14 Mar 2019 14:18:44 +0100 (CET)
+Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 4B030206AA;
+        Thu, 14 Mar 2019 14:18:44 +0100 (CET)
 Subject: Re: [PATCH v2] PCI: qcom: Use default config space read function
-To:     Marc Gonzalez <marc.w.gonzalez@free.fr>,
+To:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Andy Gross <andy.gross@linaro.org>,
@@ -74,32 +45,87 @@ References: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
  <2f901228-52db-7661-8257-ca8fd2ff2a46@free.fr>
  <29664b43-535c-c4b1-a93d-18f49687f929@linaro.org>
  <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
-From:   Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Message-ID: <9c5a7620-e9ed-82d6-0708-34fe33e39030@linaro.org>
-Date:   Thu, 14 Mar 2019 11:10:19 +0000
+ <9c5a7620-e9ed-82d6-0708-34fe33e39030@linaro.org>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Message-ID: <29d33e81-fe8d-7fd9-843d-cc53ea6c9586@free.fr>
+Date:   Thu, 14 Mar 2019 14:18:44 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
+In-Reply-To: <9c5a7620-e9ed-82d6-0708-34fe33e39030@linaro.org>
+Content-Type: text/plain; charset=iso-8859-15
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Thu Mar 14 14:18:44 2019 +0100 (CET)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On 14/03/2019 12:10, Srinivas Kandagatla wrote:
 
+> Here is the output: https://paste.ubuntu.com/p/kFWZ4kXCxT/
 
-On 13/03/2019 22:26, Marc Gonzalez wrote:
-> I needed to see the numeric values, hence the -n flag;-)
-> 
-> 	lspci -vvv -n
-> 
+Could you test the following patch:
+And report boot log as well as output of lspci -vv ?
 
-Here is the output: https://paste.ubuntu.com/p/kFWZ4kXCxT/
-
-Thanks,
-srini
-
-> Regards.
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 45ff5e4f8af6..aca656eff8ca 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -727,7 +727,11 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	/* Enable write permission for the DBI read-only register */
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 	/* Program correct class for RC */
++	dw_pcie_rd_own_conf(pp, PCI_CLASS_REVISION, 4, &val);
++	printk("\tBEFORE: CLASS/REV=%08x\n", val);
+ 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++	dw_pcie_rd_own_conf(pp, PCI_CLASS_REVISION, 4, &val);
++	printk("\t AFTER: CLASS/REV=%08x\n", val);
+ 	/* Better disable write permission right after the update */
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index d185ea5fe996..c5e16f9aaf44 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1129,25 +1129,8 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+ 	return ret;
+ }
+ 
+-static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+-				 u32 *val)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-
+-	/* the device class is not reported correctly from the register */
+-	if (where == PCI_CLASS_REVISION && size == 4) {
+-		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
+-		*val &= 0xff;	/* keep revision id */
+-		*val |= PCI_CLASS_BRIDGE_PCI << 16;
+-		return PCIBIOS_SUCCESSFUL;
+-	}
+-
+-	return dw_pcie_read(pci->dbi_base + where, size, val);
+-}
+-
+ static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
+ 	.host_init = qcom_pcie_host_init,
+-	.rd_own_conf = qcom_pcie_rd_own_conf,
+ };
+ 
+ /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
+@@ -1299,6 +1282,13 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
++static void qcom_fixup_class(struct pci_dev *dev)
++{
++	printk("\tAPPLYING %s\n", __func__);
++	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0101, qcom_fixup_class); // 8064
++
+ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
+ 	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
