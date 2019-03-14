@@ -2,187 +2,124 @@ Return-Path: <SRS0=NdPK=RR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32F30C10F06
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 16:55:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60EB1C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 17:05:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0102B2087C
-	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 16:55:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D57C21855
+	for <linux-pci@archiver.kernel.org>; Thu, 14 Mar 2019 17:05:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X0Xf8zoD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727552AbfCNQza (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 14 Mar 2019 12:55:30 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:5249 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727131AbfCNQza (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 14 Mar 2019 12:55:30 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id B7D42B9A83B449BFEF63;
-        Fri, 15 Mar 2019 00:55:22 +0800 (CST)
-Received: from localhost.localdomain (10.67.212.75) by
- DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 15 Mar 2019 00:55:14 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <jdelvare@suse.com>, <linux@roeck-us.net>, <bhelgaas@google.com>,
-        <rafael@kernel.org>, <arnd@arndb.de>, <lorenzo.pieralisi@arm.com>,
-        <bp@suse.de>
-CC:     <linux-hwmon@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <wangkefeng.wang@huawei.com>,
-        <linuxarm@huawei.com>, John Garry <john.garry@huawei.com>
-Subject: [RFC PATCH 1/2] resource: Request IO port regions from children of ioport_resource
-Date:   Fri, 15 Mar 2019 00:55:15 +0800
-Message-ID: <1552582516-70855-2-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1552582516-70855-1-git-send-email-john.garry@huawei.com>
+        id S1726699AbfCNRFi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 14 Mar 2019 13:05:38 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:35521 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725992AbfCNRFi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 14 Mar 2019 13:05:38 -0400
+Received: by mail-pf1-f195.google.com with SMTP id j5so4277716pfa.2;
+        Thu, 14 Mar 2019 10:05:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=PbRwO4bTo46IUBcANVEXyYvr4JJT9mh+sEJE9ITj3xc=;
+        b=X0Xf8zoD9wAOlgjd4II2gRWCdetyfOckBfQE6vMZahGWW4F48E2D/YrCse5PuCUgys
+         U0Q810JTLcVmF2mtrDmnbTN5or2AIU1Hq4OANLwuhr9m3y+NRshAb8gpYc2C71hfXpaE
+         367oGOs2j7pvA5Hmhh3RoRkw0xBkvlVz742FAamSuoePprvQzHsBsSn6DeGQTOGz4lCX
+         Gbxekdg6Vb+I4cav9beRCneBayQqCMmPhdm6/jhuT8wffxrO/RJruoRM46LdOoP+ZYuS
+         G6LMFdv/Pq4JCJ+CdHKtiCrJWpBHTW6rqFSYYhuXDpSv6FwPgq02CE3CLvmgAcHDS9cw
+         zjUA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to:user-agent;
+        bh=PbRwO4bTo46IUBcANVEXyYvr4JJT9mh+sEJE9ITj3xc=;
+        b=oVVwNGMcr0XuT6VnP+adns++LHBI0FEjCxFn4vkh0qYTsOXD+ew0ckThR20GYVKsqk
+         xVMyEW3yruL+qWhTCAtzchA032nxMW2l5IyCK2cxg1RdtJVQ1KESXPrJ4TN9LDElJwrq
+         lO3g1VkdzAoBYXD+Bg9a0UVvILXTpED1DQgBygoLjkNV2Wdib8rln4O053wpiKAARlZf
+         dJYdfRu7A+I3In409CBG0FkIfu+fLPtBvuO3al8hBlEjmSVTWuU6OOWG8CRgJp4eUQTj
+         kBRxQgt8/4b72o9vrvhjCpLhvCL+u7lHX2EXLk2ytXF+z8vNH8EIRJ7ApEqv6Y9UAEia
+         6SHA==
+X-Gm-Message-State: APjAAAXWfFo8OdjIeyL74m6TdybWgm7KFODXrLdO7eVYM3FjHodDEez0
+        3QVC3btHugL9YaF4dl4WyCxUkuhe
+X-Google-Smtp-Source: APXvYqzcsXHeJnk6CamJjkFG5oHz6TxyKz84oe8rFqM7hWa/ReOwaxU46jCNigWnR5xJDkCSAkxxWQ==
+X-Received: by 2002:a17:902:2e01:: with SMTP id q1mr5909887plb.253.1552583136770;
+        Thu, 14 Mar 2019 10:05:36 -0700 (PDT)
+Received: from localhost ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id l2sm20668782pgj.64.2019.03.14.10.05.34
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 14 Mar 2019 10:05:35 -0700 (PDT)
+Date:   Thu, 14 Mar 2019 10:05:34 -0700
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     John Garry <john.garry@huawei.com>
+Cc:     jdelvare@suse.com, bhelgaas@google.com, rafael@kernel.org,
+        arnd@arndb.de, lorenzo.pieralisi@arm.com, bp@suse.de,
+        linux-hwmon@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, wangkefeng.wang@huawei.com,
+        linuxarm@huawei.com
+Subject: Re: [RFC PATCH 2/2] hwmon: (f71805f): Use request_region() in
+ f71805f_init()
+Message-ID: <20190314170534.GB14159@roeck-us.net>
 References: <1552582516-70855-1-git-send-email-john.garry@huawei.com>
+ <1552582516-70855-3-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.212.75]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1552582516-70855-3-git-send-email-john.garry@huawei.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently when we request an IO port region, the request is made directly
-to the top resource, ioport_resource.
+On Fri, Mar 15, 2019 at 12:55:16AM +0800, John Garry wrote:
+> Currently the driver does not call request_region() prior to
+> accessing IO port regions in f71805f_init(), so add it.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/hwmon/f71805f.c | 13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/hwmon/f71805f.c b/drivers/hwmon/f71805f.c
+> index 73c681162653..910082c7f184 100644
+> --- a/drivers/hwmon/f71805f.c
+> +++ b/drivers/hwmon/f71805f.c
+> @@ -1617,10 +1617,21 @@ static int __init f71805f_init(void)
+>  	int err;
+>  	unsigned short address;
+>  	struct f71805f_sio_data sio_data;
+> +	struct resource *res;
+> +	size_t size = 0x4e - 0x2e + SIO_REG_ADDR + 4;
+> +
+> +	/* Request the whole 0x2e - 0x4e region */
+> +	res = request_region(0x2e, size, "f71805f");
 
-There is an issue here, in that drivers may request an IO port region even
-if the IO port region has not even been mapped in (in pci_remap_iospace()).
+request_muxed_region() would be a better choice here since it doesn't
+bail out immediately if the region is temporarily busy.
 
-This may lead to crashes when the PCI host has not enumerated prior to
-accessing the IO port region, as below:
+Thanks,
+Guenter
 
-root@(none)$ insmod f71805f.ko
-[   32.264016] Unable to handle kernel paging request at virtual address ffff7dfffee0002e
-[   32.279936] Mem abort info:
-[   32.285536]   ESR = 0x96000046
-[   32.291657]   Exception class = DABT (current EL), IL = 32 bits
-[   32.303542]   SET = 0, FnV = 0
-[   32.309661]   EA = 0, S1PTW = 0
-[   32.315957] Data abort info:
-[   32.321728]   ISV = 0, ISS = 0x00000046
-[   32.329420]   CM = 0, WnR = 1
-[   32.335367] swapper pgtable: 4k pages, 48-bit VAs, pgdp = (____ptrval____)
-[   32.349174] [ffff7dfffee0002e] pgd=0000000001392003, pud=0000000001393003, pmd=0000000000000000
-[   32.366652] Internal error: Oops: 96000046 [#1] PREEMPT SMP
-[   32.377835] Modules linked in: f71805f(+)
-[   32.385876] CPU: 4 PID: 2681 Comm: insmod Not tainted 5.0.0-00003-ga6247cc0f8f2 #52
-[   32.401252] Hardware name: Huawei Taishan 2280 /D05, BIOS Hisilicon D05 IT21 Nemo 2.0 RC0 04/18/2018
-[   32.419597] pstate: 80000005 (Nzcv daif -PAN -UAO)
-[   32.429213] pc : logic_outb+0x54/0xb8
-[   32.436556] lr : f71805f_find+0x2c/0x1b8 [f71805f]
-[   32.446167] sp : ffff0000256bba90
-[   32.452808] x29: ffff0000256bba90 x28: ffff000008b544d0
-[   32.463468] x27: ffff0000256bbdf0 x26: 0000000000000100
-[   32.474127] x25: 000000000000002c x24: ffff000011396000
-[   32.484787] x23: ffff0000256bbb3e x22: ffff0000256bbb40
-[   32.495446] x21: ffff000008b591b8 x20: 0000000000000087
-[   32.506106] x19: 000000000000002e x18: ffffffffffffffff
-[   32.516765] x17: 0000000000000000 x16: 0000000000000000
-[   32.527424] x15: 0000000000000400 x14: 0000000000000400
-[   32.538084] x13: 0000000000001832 x12: 0000000000000000
-[   32.548743] x11: ffff801ffbf08ac0 x10: 0000801fead02000
-[   32.559403] x9 : ffff801ffbffe840 x8 : 0000000000000001
-[   32.570062] x7 : 0000000000210d00 x6 : 0000000000000000
-[   32.580721] x5 : ffff801fb3eac380 x4 : ffff801ffbef4b20
-[   32.591381] x3 : 0000000000ffbffe x2 : ffff0000256bbb40
-[   32.602040] x1 : ffff7dfffee0002e x0 : ffff7dfffee00000
-[   32.612701] Process insmod (pid: 2681, stack limit = 0x(____ptrval____))
-[   32.626155] Call trace:
-[   32.631050]  logic_outb+0x54/0xb8
-[   32.637693]  f71805f_find+0x2c/0x1b8 [f71805f]
-[   32.646607]  f71805f_init+0x38/0xe48 [f71805f]
-[   32.655521]  do_one_initcall+0x5c/0x178
-[   32.663212]  do_init_module+0x58/0x1b0
-[   32.670728]  load_module+0x1dc8/0x2178
-[   32.678243]  __se_sys_init_module+0x14c/0x1e8
-[   32.686981]  __arm64_sys_init_module+0x18/0x20
-[   32.695894]  el0_svc_common+0x60/0x100
-[   32.703409]  el0_svc_handler+0x2c/0x80
-[   32.710924]  el0_svc+0x8/0xc
-[   32.716693] Code: d2bfdc00 f2cfbfe0 f2ffffe0 8b000021 (39000034)
-[   32.728925] ---[ end trace ddb5e493ee686685 ]---
-Segmentation fault
-root@(none)$
-
-This issue was originally reported in [1].
-
-This patch changes the functionality of request_region() to request a
-region of the direct children of the top ioport_resource.
-
-In this, if the IO port region has not been mapped for a particular IO
-region, a suitable child region will not exist, and, as such,
-request_region() calls will fail.
-
-A side note: there are many drivers in the kernel which fail to even call
-request_region() prior to IO port accesses, and they also need to be fixed
-(to call request_region() as appropriate).
-
-[1] https://www.spinics.net/lists/linux-pci/msg49821.html
-
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- include/linux/ioport.h |  6 +++++-
- kernel/resource.c      | 19 +++++++++++++++++++
- 2 files changed, 24 insertions(+), 1 deletion(-)
-
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index da0ebaec25f0..cf40e1ed8211 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -217,7 +217,7 @@ static inline bool resource_contains(struct resource *r1, struct resource *r2)
- 
- 
- /* Convenience shorthand with allocation */
--#define request_region(start,n,name)		__request_region(&ioport_resource, (start), (n), (name), 0)
-+#define request_region(start,n,name)		__request_region_from_children(&ioport_resource, (start), (n), (name), 0)
- #define request_muxed_region(start,n,name)	__request_region(&ioport_resource, (start), (n), (name), IORESOURCE_MUXED)
- #define __request_mem_region(start,n,name, excl) __request_region(&iomem_resource, (start), (n), (name), excl)
- #define request_mem_region(start,n,name) __request_region(&iomem_resource, (start), (n), (name), 0)
-@@ -230,6 +230,10 @@ extern struct resource * __request_region(struct resource *,
- 					resource_size_t n,
- 					const char *name, int flags);
- 
-+extern struct resource * __request_region_from_children(struct resource *,
-+							resource_size_t start,
-+							resource_size_t n,
-+							const char *name, int flags);
- /* Compatibility cruft */
- #define release_region(start,n)	__release_region(&ioport_resource, (start), (n))
- #define release_mem_region(start,n)	__release_region(&iomem_resource, (start), (n))
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 915c02e8e5dd..4a4656bd6051 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -1098,6 +1098,25 @@ resource_size_t resource_alignment(struct resource *res)
- 
- static DECLARE_WAIT_QUEUE_HEAD(muxed_resource_wait);
- 
-+struct resource * __request_region_from_children(struct resource *parent,
-+						 resource_size_t start,
-+						 resource_size_t n,
-+						 const char *name, int flags)
-+{
-+	struct resource *child;
-+
-+	/* TODO - add locking */
-+	for (child = parent->child; child; child = child->sibling) {
-+		struct resource *res = __request_region(child, start, n, name, flags);
-+
-+		if (res)
-+			return res;
-+	}
-+
-+	return NULL;
-+}
-+EXPORT_SYMBOL(__request_region_from_children);
-+
- /**
-  * __request_region - create a new busy resource region
-  * @parent: parent resource descriptor
--- 
-2.17.1
-
+> +	if (!res)
+> +		return -EBUSY;
+>  
+>  	if (f71805f_find(0x2e, &address, &sio_data)
+> -	 && f71805f_find(0x4e, &address, &sio_data))
+> +	 && f71805f_find(0x4e, &address, &sio_data)) {
+> +		release_region(0x2e, size);
+>  		return -ENODEV;
+> +	}
+> +
+> +	release_region(0x2e, size);
+>  
+>  	err = platform_driver_register(&f71805f_driver);
+>  	if (err)
+> -- 
+> 2.17.1
+> 
