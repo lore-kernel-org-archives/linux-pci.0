@@ -6,177 +6,81 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D9EC43381
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Mar 2019 16:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07556C43381
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Mar 2019 21:40:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D492021900
-	for <linux-pci@archiver.kernel.org>; Sat, 16 Mar 2019 16:03:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC123218D0
+	for <linux-pci@archiver.kernel.org>; Sat, 16 Mar 2019 21:40:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726151AbfCPQDk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 16 Mar 2019 12:03:40 -0400
-Received: from relay7-d.mail.gandi.net ([217.70.183.200]:36997 "EHLO
-        relay7-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726105AbfCPQDk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Mar 2019 12:03:40 -0400
-X-Originating-IP: 88.190.179.123
-Received: from localhost (unknown [88.190.179.123])
-        (Authenticated sender: repk@triplefau.lt)
-        by relay7-d.mail.gandi.net (Postfix) with ESMTPSA id 399B720007;
-        Sat, 16 Mar 2019 16:03:35 +0000 (UTC)
-From:   Remi Pommarel <repk@triplefau.lt>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        id S1726647AbfCPVkd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 16 Mar 2019 17:40:33 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:39336 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726548AbfCPVkc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 16 Mar 2019 17:40:32 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+        (Exim 4.76)
+        (envelope-from <colin.king@canonical.com>)
+        id 1h5H2O-0004lx-Lx; Sat, 16 Mar 2019 21:40:16 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH v2] PCI: aardvark: Use LTSSM state to build link training flag
-Date:   Sat, 16 Mar 2019 17:12:43 +0100
-Message-Id: <20190316161243.29517-1-repk@triplefau.lt>
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] hotplug/drc-info: ininitialize fndit to zero
+Date:   Sat, 16 Mar 2019 21:40:16 +0000
+Message-Id: <20190316214016.6612-1-colin.king@canonical.com>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI_EXP_LNKSTA_LT flag in the emulated root device's PCI_EXP_LNKSTA
-config register does not reflect the actual link training state and is
-always cleared. The Link Training and Status State Machine (LTSSM) flag
-in LMI config register could be used as a link training indicator.
-Indeed if the LTSSM is in L0 or upper state then link training has
-completed (see [1]).
+From: Colin Ian King <colin.king@canonical.com>
 
-Unfortunately because setting the PCI_EXP_LINCTL_RL flag does not
-instantly imply a LTSSM state change (e.g. L0s to recovery state
-transition takes some time), LTSSM can be in L0 but link training has
-not finished yet. Thus a lower L0 LTSSM state followed by a L0 or upper
-state sequence has to be seen to be sure that link training has been
-done.
+Currently variable fndit is not initialized and contains a
+garbage value, later it is set to 1 if a drc entry is found.
+Ensure fndit is not containing garbage by initializing it to
+zero. Also remove an extraneous space at the end of an
+sprintf call.
 
-Because one may not call a pcie conf register read on LNKSTA after
-doing a retrain link or may miss the link down state due to timing, a
-20ms timeout is used. Passing this timeout link is considered retrained.
+Detected by static analysis with cppcheck.
 
-This fixes boot hang or kernel panic with the following callstack due to
-ASPM setup doing a link re-train and polling for PCI_EXP_LNKSTA_LT flag
-to be cleared before using it.
-
--------------------- 8< -------------------
-	[    0.915389]  dump_backtrace+0x0/0x140
-	[    0.915391]  show_stack+0x14/0x20
-	[    0.915393]  dump_stack+0x90/0xb4
-	[    0.915394]  panic+0x134/0x2c0
-	[    0.915396]  nmi_panic+0x6c/0x70
-	[    0.915398]  arm64_serror_panic+0x74/0x80
-	[    0.915400]  is_valid_bugaddr+0x0/0x8
-	[    0.915402]  el1_error+0x7c/0xe4
-	[    0.915404]  advk_pcie_rd_conf+0x4c/0x250
-	[    0.915406]  pci_bus_read_config_word+0x7c/0xd0
-	[    0.915408]  pcie_capability_read_word+0x90/0xc8
-	[    0.915410]  pcie_get_aspm_reg+0x68/0x118
-	[    0.915412]  pcie_aspm_init_link_state+0x460/0xa98
-	[    0.915414]  pci_scan_slot+0xe8/0x100
-	[    0.915416]  pci_scan_child_bus_extend+0x50/0x288
-	[    0.915418]  pci_scan_bridge_extend+0x348/0x4f0
-	[    0.915420]  pci_scan_child_bus_extend+0x1dc/0x288
-	[    0.915423]  pci_scan_root_bus_bridge+0xc4/0xe0
-	[    0.915424]  pci_host_probe+0x14/0xa8
-	[    0.915426]  advk_pcie_probe+0x838/0x910
-	[...]
--------------------- 8< -------------------
-
-[1] "PCI Express Base Specification", REV. 2.1
-    PCI Express, March 4 2009, Table 4-7
-
-Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+Fixes: 2fcf3ae508c2 ("hotplug/drc-info: Add code to search ibm,drc-info property")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
-Changes since v1:
-  - Rename retraining flag field
-  - Fix DEVCTL register writing
----
- drivers/pci/controller/pci-aardvark.c | 33 ++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
+ drivers/pci/hotplug/rpaphp_core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index eb58dfdaba1b..47b707b5fc2c 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -180,6 +180,7 @@
- #define LINK_WAIT_MAX_RETRIES		10
- #define LINK_WAIT_USLEEP_MIN		90000
- #define LINK_WAIT_USLEEP_MAX		100000
-+#define LINK_RETRAIN_DELAY_MAX		(20 * HZ / 1000) /* 20 ms */
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+index bcd5d357ca23..28213f44f64a 100644
+--- a/drivers/pci/hotplug/rpaphp_core.c
++++ b/drivers/pci/hotplug/rpaphp_core.c
+@@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+ 	struct of_drc_info drc;
+ 	const __be32 *value;
+ 	char cell_drc_name[MAX_DRC_NAME_LEN];
+-	int j, fndit;
++	int j, fndit = 0;
  
- #define MSI_IRQ_NUM			32
+ 	info = of_find_property(dn->parent, "ibm,drc-info", NULL);
+ 	if (info == NULL)
+@@ -254,7 +254,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+ 	/* Found it */
  
-@@ -199,6 +200,8 @@ struct advk_pcie {
- 	u16 msi_msg;
- 	int root_bus_nr;
- 	struct pci_bridge_emul bridge;
-+	unsigned long rl_deadline; /* Retrain link jiffies deadline */
-+	u8 rl_asked; /* Retraining has been asked and is in transition */
- };
+ 	if (fndit)
+-		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix, 
++		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
+ 			my_index);
  
- static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
-@@ -400,6 +403,19 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
- 	return -ETIMEDOUT;
- }
- 
-+static int advk_pcie_link_retraining(struct advk_pcie *pcie)
-+{
-+	if (!advk_pcie_link_up(pcie)) {
-+		pcie->rl_asked = 0;
-+		return 1;
-+	}
-+
-+	if (pcie->rl_asked && time_before(jiffies, pcie->rl_deadline))
-+		return 1;
-+
-+	pcie->rl_asked = 0;
-+	return 0;
-+}
- 
- static pci_bridge_emul_read_status_t
- advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
-@@ -426,11 +442,19 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
- 		return PCI_BRIDGE_EMUL_HANDLED;
- 	}
- 
-+	case PCI_EXP_LNKCTL: {
-+		u32 val = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg) &
-+			~(PCI_EXP_LNKSTA_LT << 16);
-+		if (advk_pcie_link_retraining(pcie))
-+			val |= (PCI_EXP_LNKSTA_LT << 16);
-+		*value = val;
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+	}
-+
- 	case PCI_CAP_LIST_ID:
- 	case PCI_EXP_DEVCAP:
- 	case PCI_EXP_DEVCTL:
- 	case PCI_EXP_LNKCAP:
--	case PCI_EXP_LNKCTL:
- 		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
- 		return PCI_BRIDGE_EMUL_HANDLED;
- 	default:
-@@ -447,8 +471,15 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 
- 	switch (reg) {
- 	case PCI_EXP_DEVCTL:
-+		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
-+		break;
-+
- 	case PCI_EXP_LNKCTL:
- 		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
-+		if (new & PCI_EXP_LNKCTL_RL) {
-+			pcie->rl_asked = 1;
-+			pcie->rl_deadline = jiffies + LINK_RETRAIN_DELAY_MAX;
-+		}
- 		break;
- 
- 	case PCI_EXP_RTCTL:
+ 	if (((drc_name == NULL) ||
 -- 
 2.20.1
 
