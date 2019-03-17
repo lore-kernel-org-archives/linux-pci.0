@@ -2,83 +2,79 @@ Return-Path: <SRS0=Lify=RU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A045FC4360F
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 23:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F70C4360F
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 23:39:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 71EC020872
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 23:39:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A13AD20872
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 23:39:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W1rV8nmj"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HgvUGmH6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726333AbfCQXjp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 17 Mar 2019 19:39:45 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:34840 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726229AbfCQXjp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 17 Mar 2019 19:39:45 -0400
-Received: by mail-wm1-f65.google.com with SMTP id 81so3630464wme.0;
-        Sun, 17 Mar 2019 16:39:44 -0700 (PDT)
+        id S1727329AbfCQXjs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 17 Mar 2019 19:39:48 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:33085 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726229AbfCQXjr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 17 Mar 2019 19:39:47 -0400
+Received: by mail-wm1-f68.google.com with SMTP id z6so934141wmi.0;
+        Sun, 17 Mar 2019 16:39:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=W0AGrUQU4RQ1Rh8lzIta0OsLxz/E85KjXJvIpuaCh8c=;
-        b=W1rV8nmj+umBdL19Lg+e/+kW8qz4Lm22Mx17qKXOCpnNuv7pxv8DL75wMoUic9jCEO
-         N1+wYp7Orc7LsvtkUqLy9VZyp6Z3uBFqnSD0cGu8jI3DvKqOX4aPhXStQgyGKHgXmf7S
-         XdSudlpqFPRVhomzl7o/W9rpC1u5nnPmk8fjbnABo8PjEKnMLDwDXM0L19rYF53M3zAv
-         xYaI/yULaei1DtyJfEff3YEPEmBsP1Eqn1nxaxePLEDrt7B5EsHJADRMR+xcKovJicwH
-         dUsJzYnBPrxN2L9gUZBoUVsWC7WvTmK0Vn9ynXIX7UYS+mH+X3XH3H40fe1VZ8+cqbUr
-         kMhQ==
+        bh=p9rqgpEXRqcaThH+Iu06pX1ydZZH6G1AsGRKpcQQGaU=;
+        b=HgvUGmH6bsFv9jTz5mtFx29SrgjYrYrsBsrYpTaGE+Zzm5BhMfbyo7jE6rvirZwrYP
+         5Qt9bdBRCRwBeR32hJOa7hTNwCXDXjM0RTqG8UrFJ+s5XcPpdQlymg5XAi2isgwzXioD
+         4lnJFZHeIayJENouXtVr9siCDmVh3QjCEcEQFg3hxxpJuTmzBqBrqZ4J+BakQHwqnmWX
+         vDQVz7bx1ubcTRJj0cbOgTv7/U0ADK7r76tXAP5oBRrDW6IL2CMWra2R/1YJI7fgKUYF
+         kyyyXLMaI91J3+JiCibcWrECE4eZWFm/94J5/LHfxmQoRqmIqJfvBfugWl5o+jPUDO5O
+         D4TQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
          :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=W0AGrUQU4RQ1Rh8lzIta0OsLxz/E85KjXJvIpuaCh8c=;
-        b=nULmMukU7/cVug/rm1Xc7rKw6Dm4tqraTIKCjlLQg9rRxX74oHPK4zdNIiHu//8MLc
-         QhMAg4NTnqwb1dn2hjfxwhatsNS3M1vSoX9Y0xXPzGacNFRKr/9xwLbZoQfmpP1jd5Sa
-         XJbpBUlM5cyvLa2RqAcYRmlx378dlneGE57LSVy5zFrBz/7TVK/AmUq8Z9vySXCqbVSB
-         Qu1bwLOoeHInCbIoPXzG3U4/bzUiOg1wy6qx5nIgSBAwaPSMIJFA1KH+mqudvuRjX22q
-         fMPBgdcL9AwxvUAFg74xTPmT/QzsbRsM9wk/UPr3X6tgLWPXglK5YiwFWCOp0TXrJOG3
-         0BtQ==
-X-Gm-Message-State: APjAAAWPUUKDnYZ49PR8BFSADRD+Imhdssx4eW+uJSu2wSmkSyt0JZ5C
-        L2zPn3ycBM/tdJDjKPjcMzKJARGA
-X-Google-Smtp-Source: APXvYqwdQFf8LaHA2AKorflKwj32R7yPtGxnUI9NOxd8MhpsfaYkkymgnxnEBOmjqEOLIhiGX6ztBw==
-X-Received: by 2002:a7b:cf03:: with SMTP id l3mr8975733wmg.14.1552865983348;
-        Sun, 17 Mar 2019 16:39:43 -0700 (PDT)
+        bh=p9rqgpEXRqcaThH+Iu06pX1ydZZH6G1AsGRKpcQQGaU=;
+        b=tMixJEXKBoUrop6Yz4A763lxSHJalDtbElijAcYRWisHl4E2xWsCDs62oURRtIZQly
+         j5ttO37EUFnPBw8erFfDm86xCG1B9ZioU1rIdvtaWzvvSQjLBCZkga0h/FNCC8TvsJC5
+         V+JnAYD3S4n2Y0wRcxHHsh/OnGYtKVsoznKMmfn5SCW0bQIo+/MAg0gUkrOxwc2Vak7p
+         JYi3tyM8kKXhdAazUj3gVXwlSB04J6yGLHuepzeEQcR9HGs0461DOntBmGCsPCIkCCGI
+         vUaELPtjHj8PyN8Av+4Wb1H2YIZox5InG4ohJ8UeXtxXJMmi8PiNaeYNbfTJe+qidwcY
+         /NKg==
+X-Gm-Message-State: APjAAAXQXlfw6lDB9Qd9LExqJnUFzlln7NXIWQ+pGGrO6ni0Qhal+5nL
+        84v9rQIZE0FrGVRUxj07nhhdMGeS
+X-Google-Smtp-Source: APXvYqy0uIx3pOh+dbUSLFn+mzoZwlo/eE4wBncQ1jH5Du3JhgEwTFK8izKTefXLNhl8nEwAs3KvsA==
+X-Received: by 2002:a7b:c92b:: with SMTP id h11mr9017359wml.33.1552865985499;
+        Sun, 17 Mar 2019 16:39:45 -0700 (PDT)
 Received: from [192.168.1.4] (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id y192sm7732148wmc.6.2019.03.17.16.39.41
+        by smtp.gmail.com with ESMTPSA id x22sm8015729wmc.19.2019.03.17.16.39.44
         (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Sun, 17 Mar 2019 16:39:42 -0700 (PDT)
-Subject: Re: [PATCH 2/2] PCI: rcar: Replace unsigned long with u32 in register
- accessors
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Sun, 17 Mar 2019 16:39:44 -0700 (PDT)
+Subject: Re: [PATCH 1/3] PCI: rcar: Replace unsigned long with u32 for
+ register values
+To:     Wolfram Sang <wsa@the-dreams.de>
+Cc:     linux-pci@vger.kernel.org,
         Marek Vasut <marek.vasut+renesas@gmail.com>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
         Phil Edworthy <phil.edworthy@renesas.com>,
         Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20190309005613.1493-1-marek.vasut@gmail.com>
- <20190309005613.1493-2-marek.vasut@gmail.com>
- <CAMuHMdXGn50+hAoPBmnatf+onXezhNUwDWv+izj3j_QVMMFNGw@mail.gmail.com>
- <d49be905-2e59-e65f-cf3b-191eb972ec45@gmail.com>
- <CAMuHMdXWKWtzmm=MiSxmBk-C0Y2QSGVQNNYstJidSOp637f3+g@mail.gmail.com>
+        linux-renesas-soc@vger.kernel.org
+References: <20190317000608.24881-1-marek.vasut@gmail.com>
+ <20190317090901.GA2268@kunai>
 From:   Marek Vasut <marek.vasut@gmail.com>
 Openpgp: preference=signencrypt
-Message-ID: <e3dc95ed-c331-2b92-8e3f-8e69937c8d66@gmail.com>
-Date:   Sun, 17 Mar 2019 23:50:30 +0100
+Message-ID: <1e6b0726-e767-600c-7725-72db9312d105@gmail.com>
+Date:   Sun, 17 Mar 2019 23:58:22 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdXWKWtzmm=MiSxmBk-C0Y2QSGVQNNYstJidSOp637f3+g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20190317090901.GA2268@kunai>
+Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -86,32 +82,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/17/19 11:22 AM, Geert Uytterhoeven wrote:
-> Hi Marek,
-
-Hi,
-
-> On Sun, Mar 17, 2019 at 1:06 AM Marek Vasut <marek.vasut@gmail.com> wrote:
->> On 3/11/19 10:41 AM, Geert Uytterhoeven wrote:
->>> On Sat, Mar 9, 2019 at 1:56 AM <marek.vasut@gmail.com> wrote:
->>>> --- a/drivers/pci/controller/pcie-rcar.c
->>>> +++ b/drivers/pci/controller/pcie-rcar.c
->>>> @@ -152,14 +152,12 @@ struct rcar_pcie {
->>>>         struct                  rcar_msi msi;
->>>>  };
->>>>
->>>> -static void rcar_pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
->>>> -                              unsigned long reg)
->>>> +static void rcar_pci_write_reg(struct rcar_pcie *pcie, u32 val, u32 reg)
->>>
->>> Doesn't unsigned int make more sense for reg?
+On 3/17/19 10:09 AM, Wolfram Sang wrote:
+> On Sun, Mar 17, 2019 at 01:06:06AM +0100, marek.vasut@gmail.com wrote:
+>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
 >>
->> Isn't u32 more explicit ?
+>> Replace unsigned long with u32 type for variables holding
 > 
-> It's just an offset in the register block, with a range much smaller than u32.
+> s/unsigned long/various variable types/
 
-We could use u16 ? However, Bjorn's concern was that using unsigned long
-for registers was not recommended ; how's unsigned int better ?
+Fixed
+
+>> register values, since the registers are 32bit. Note that
+>> rcar_pcie_msi_irq() still uses unsigned long because both
+>> find_first_bit() and __fls() require unsigned long as an
+>> argument.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> ...
+> 
+>> -	int shift = 8 * (where & 3);
+>> +	u32 shift = 8 * (where & 3);
+> 
+> Minor nit: Since this is about shifting, maybe replace 8 with << 3 while
+> we are here?
+> 
+> There is also a 'shift' var in rcar_pcie_write_conf(). I think we should
+> convert this for consistency, too?
+
+OK, I might as well collect this and the other cleanup series and repost
+it together as a V2 to make it easier to pick.
 
 -- 
 Best regards,
