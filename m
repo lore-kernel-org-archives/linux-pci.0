@@ -6,22 +6,22 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E181C10F05
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 09:09:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 111AFC10F05
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 09:12:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE9B7218A1
-	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 09:09:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D376A217F4
+	for <linux-pci@archiver.kernel.org>; Sun, 17 Mar 2019 09:12:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbfCQJJE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 17 Mar 2019 05:09:04 -0400
-Received: from sauhun.de ([88.99.104.3]:52364 "EHLO pokefinder.org"
+        id S1726223AbfCQJMb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 17 Mar 2019 05:12:31 -0400
+Received: from sauhun.de ([88.99.104.3]:52394 "EHLO pokefinder.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726092AbfCQJJE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 17 Mar 2019 05:09:04 -0400
+        id S1726112AbfCQJMb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 17 Mar 2019 05:12:31 -0400
 Received: from localhost (ip-109-41-130-14.web.vodafone.de [109.41.130.14])
-        by pokefinder.org (Postfix) with ESMTPSA id A139E2C27DA;
-        Sun, 17 Mar 2019 10:09:02 +0100 (CET)
-Date:   Sun, 17 Mar 2019 10:09:01 +0100
+        by pokefinder.org (Postfix) with ESMTPSA id 3F3B62C27DA;
+        Sun, 17 Mar 2019 10:12:29 +0100 (CET)
+Date:   Sun, 17 Mar 2019 10:12:28 +0100
 From:   Wolfram Sang <wsa@the-dreams.de>
 To:     marek.vasut@gmail.com
 Cc:     linux-pci@vger.kernel.org,
@@ -30,15 +30,15 @@ Cc:     linux-pci@vger.kernel.org,
         Phil Edworthy <phil.edworthy@renesas.com>,
         Simon Horman <horms+renesas@verge.net.au>,
         linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: rcar: Replace unsigned long with u32 for
- register values
-Message-ID: <20190317090901.GA2268@kunai>
+Subject: Re: [PATCH 2/3] PCI: rcar: Allow 64bit MSI addresses
+Message-ID: <20190317091228.GB2268@kunai>
 References: <20190317000608.24881-1-marek.vasut@gmail.com>
+ <20190317000608.24881-2-marek.vasut@gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="0F1p//8PRICkK4MW"
+        protocol="application/pgp-signature"; boundary="qlTNgmc+xy1dBmNv"
 Content-Disposition: inline
-In-Reply-To: <20190317000608.24881-1-marek.vasut@gmail.com>
+In-Reply-To: <20190317000608.24881-2-marek.vasut@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -46,54 +46,42 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---0F1p//8PRICkK4MW
+--qlTNgmc+xy1dBmNv
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Sun, Mar 17, 2019 at 01:06:06AM +0100, marek.vasut@gmail.com wrote:
+On Sun, Mar 17, 2019 at 01:06:07AM +0100, marek.vasut@gmail.com wrote:
 > From: Marek Vasut <marek.vasut+renesas@gmail.com>
 >=20
-> Replace unsigned long with u32 type for variables holding
-
-s/unsigned long/various variable types/
-
-> register values, since the registers are 32bit. Note that
-> rcar_pcie_msi_irq() still uses unsigned long because both
-> find_first_bit() and __fls() require unsigned long as an
-> argument.
+> The MSI address can be 64bit. Switch the data type used to hold the
+> result of virt_to_phys() to phys_addr_t to reflect it's properties
+> correctly and program the top 32bits of PA into PCIEMSIAUR.
 >=20
 > Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-=2E..
 
-> -	int shift =3D 8 * (where & 3);
-> +	u32 shift =3D 8 * (where & 3);
-
-Minor nit: Since this is about shifting, maybe replace 8 with << 3 while
-we are here?
-
-There is also a 'shift' var in rcar_pcie_write_conf(). I think we should
-convert this for consistency, too?
+Looks sane. Not being a PCI expert, I wonder: Were we just lucky to not
+hit a 64-bit MSI address before? Is this tied to our 32-bit limitation?
 
 
---0F1p//8PRICkK4MW
+--qlTNgmc+xy1dBmNv
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlyODqkACgkQFA3kzBSg
-KbYsYxAAn5gTKZySGDXx6NihcdKocAs1T2J+FKUmI8K9eQtk/vzUMOECUaCqPf+3
-xurHsrPdDVRhqXUoK0UAFbg1PXXpyER/5sigAnhS8IgEaV3l+/BSzphMeUPBzY6z
-vcXEIq269tOmPiJ60jcEfNvY9el8Wlt6+ILWSzdLdpgIfNbAnRLXhZROa/ndLM5l
-Xu9uhln4kpUlmHfAGTcr4lWuYr2daVfTzDCS7ECuJ/+loSbLRlrkOnC7qkFbAf//
-1txYNrdaIAj6lromIUR6qUpINB0Dbggfv+8VPBLNgxS2Dp2rTU3khzgHz5LKraXk
-ph9Huv3dg2lue2hpXs1/zQj0C61IJvRs9CMAXXW0gQWagw9K9RoRZY+E413ZFBgv
-RCZV0opwXNPOe9LkU2MTOi2JzKuCPrSgRvxrkxvsS72lebEV+rC2QpV16B6YIKaV
-oR1z5LsSOY5mcvyruOPnxAVJ1SbsQU3VaaD2a1vovKgaixSUjP6hKb/LYjDgeeG+
-oALCxk1uRZQRWv/UCYSY66TKk4ziteP5/O+pLYsk4Q68uicF2wRSYpRcX+keH85s
-mu6/AFm+emu0XG2Jk2fDB2WxIpK0EfKuwk0+IEn//xCAxMlTAHIqpsb+yoWo2/WL
-CbdgOZ9K9VSUgzdWBrpkHvANRH0TUls/k6srugAy1T+qDll6xsk=
-=RClu
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlyOD3wACgkQFA3kzBSg
+KbZZdQ/+JNE1/DZj3ApVMmrgAeeT/i9Sgne12kAGc31P7XF7cU6H36zSuhIJZnTB
+ZdWLCf3MNE9RQ08cdtmDHMk36bUXY3GQ0KDezGpvgAC0typ4k+sFwsQRZrG1MS1W
+499whdHBnuNuO5IqeRlH5aoNYqkbiCB0wbPTJ5wPHiZq8+R7CeBVZ8tJ6uj5IPJg
+zr+MPd/bJERAom3tFKWf61J+UYWIPOLBdRnTw5c/zHH3L11tO08BNbS4DAuGVAcm
+qLpYfb5dl6/z8kD369ROwi5kBlqxvPzwmA2nM1YiDBSdQN7ODdLCP7K/ACbmkW/P
+iXwmtyrmBN3rBg7DZB5QNoVnZFxuvHA0mRyv3bShx6g2/kfLKqr9k8tiaDtmvaI1
+OeKgYquvltmXyk1gbLXNPZRzgPOuQ8tGfk8EDXNwgN14bwH9BhdZ6p7I1oyvnXZt
+U7SZ1fMgzOE8u8qKE/MVscrp2anaIxVFgbbf00r7liVnbwjXscr/7p/PwrN3nHK2
+5v0WiSfwWhCZCIoICR/j+jjDaZOW1QpUMfsQJcdOBBOgrQxFK7V9u6sB7tzHW8xy
+WHpDcdfUdXPPqQKTeB0A7PDS5eEjtNtKs+OW7Vtw72m+ouTONENr7e3JWgmLyJdu
+4gcU+30yNLe0kSHAaEAcF8g8LHQFUI3xVCV1lMDoObnu4oaka7g=
+=f6V8
 -----END PGP SIGNATURE-----
 
---0F1p//8PRICkK4MW--
+--qlTNgmc+xy1dBmNv--
