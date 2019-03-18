@@ -2,78 +2,84 @@ Return-Path: <SRS0=G860=RV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A2E0C10F00
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:20:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D67EC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AFA321741
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:20:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F36892175B
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:28:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726714AbfCRIUk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Mar 2019 04:20:40 -0400
-Received: from mail-vs1-f68.google.com ([209.85.217.68]:34025 "EHLO
-        mail-vs1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726449AbfCRIUk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 04:20:40 -0400
-Received: by mail-vs1-f68.google.com with SMTP id e126so8703257vse.1;
-        Mon, 18 Mar 2019 01:20:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=KlHVI5FfEgn5ZvejHyEKOKyXpuCIPhO0e8g2ZVtqZ0I=;
-        b=ptzWTQUO9jfTRyNTcm9+7hrgP3Y+DaH7vD77G2VGO+Ru8AVd21tgxh9E0Ob2JP5re6
-         9XiK1uDQfQYoHVhA0iVI1jotZHr3+GaysZd+wAm4X4YWe/OExZK89cmjSuZqJ568is/v
-         6LSgnpOqy3jJgsTH3ywv7+iJ1UleSw/hQtEoNTeWgGQ1pD+BDU7Mh0Szx9LWXhUDsyK9
-         e/S60D9nW1gT6fMsjaZItXZ+jdpuYgtN1u/E57gZFxK3ri3x/AwVZHsVN7o0+FCWne3l
-         V8HktrTzpNCHp6M50zCpnmeNcyI0sV6aPVCdPMrolcVvaJJGSypwDBTequ+nvW7UlRBd
-         81Gw==
-X-Gm-Message-State: APjAAAUy/Hdbd1YhkrcTPWmlrKh3jKO8wKqeYfoEpWxpXRZWeYMcUB6D
-        Y7I7s6vv4HGciP3/xIcq6vY4GwptN8/kKarQXiU=
-X-Google-Smtp-Source: APXvYqyywp4MZ0to8ZmsKOg8dA9uCPpg7Q85tAPoNNbM1oQRX3h65bSAX+pKbadLQCheXM/cn+lE3guCw5+PUu6y/Sw=
-X-Received: by 2002:a67:8317:: with SMTP id f23mr4679472vsd.63.1552897239582;
- Mon, 18 Mar 2019 01:20:39 -0700 (PDT)
+        id S1726896AbfCRI2W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Mar 2019 04:28:22 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:8361 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726449AbfCRI2W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 04:28:22 -0400
+X-UUID: 5174bf46e835402c9f5527ad6629bb78-20190318
+X-UUID: 5174bf46e835402c9f5527ad6629bb78-20190318
+Received: from mtkexhb01.mediatek.inc [(172.21.101.102)] by mailgw02.mediatek.com
+        (envelope-from <honghui.zhang@mediatek.com>)
+        (mhqrelay.mediatek.com ESMTP with TLS)
+        with ESMTP id 1907058480; Mon, 18 Mar 2019 16:28:00 +0800
+Received: from mtkcas09.mediatek.inc (172.21.101.178) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Mon, 18 Mar 2019 16:27:58 +0800
+Received: from localhost.localdomain (10.17.3.153) by mtkcas09.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Mon, 18 Mar 2019 16:27:57 +0800
+From:   <honghui.zhang@mediatek.com>
+To:     <matthias.bgg@gmail.com>, <robh@kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <ryder.lee@mediatek.com>, <robh+dt@kernel.org>
+CC:     <youlin.pei@mediatek.com>, <jianjun.wang@mediatek.com>,
+        Honghui Zhang <honghui.zhang@mediatek.com>
+Subject: [PATCH] arm64: dts: mt2712: Remove un-used property for PCIe
+Date:   Mon, 18 Mar 2019 16:27:55 +0800
+Message-ID: <1552897675-8051-1-git-send-email-honghui.zhang@mediatek.com>
+X-Mailer: git-send-email 2.6.4
 MIME-Version: 1.0
-References: <20190317000608.24881-1-marek.vasut@gmail.com> <20190317000608.24881-3-marek.vasut@gmail.com>
-In-Reply-To: <20190317000608.24881-3-marek.vasut@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 18 Mar 2019 09:20:27 +0100
-Message-ID: <CAMuHMdXTz3408iNbdO8uCvSCVP5Jc6KuWkKVSVxED3pqRRtBrA@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI: rcar: Clean up debug messages
-To:     Marek Vasut <marek.vasut@gmail.com>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-TM-SNTS-SMTP: 488D1EAC7BC77AC6F87F14521D736D50EFE1CEDB1A2F7453B2A2DEDEBC2F73392000:8
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Mar 17, 2019 at 1:06 AM <marek.vasut@gmail.com> wrote:
-> From: Marek Vasut <marek.vasut+renesas@gmail.com>
->
-> Drop useless casts from debug messages, they are no longer needed
-> due to the data type cleanup.
->
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+The "num-lanes" property for PCIe is not used, remove it.
 
-Gr{oetje,eeting}s,
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ arch/arm64/boot/dts/mediatek/mt2712e.dtsi | 2 --
+ 1 file changed, 2 deletions(-)
 
-                        Geert
-
+diff --git a/arch/arm64/boot/dts/mediatek/mt2712e.dtsi b/arch/arm64/boot/dts/mediatek/mt2712e.dtsi
+index 976d92a..43307ba 100644
+--- a/arch/arm64/boot/dts/mediatek/mt2712e.dtsi
++++ b/arch/arm64/boot/dts/mediatek/mt2712e.dtsi
+@@ -819,7 +819,6 @@
+ 			#size-cells = <2>;
+ 			#interrupt-cells = <1>;
+ 			ranges;
+-			num-lanes = <1>;
+ 			interrupt-map-mask = <0 0 0 7>;
+ 			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
+ 					<0 0 0 2 &pcie_intc0 1>,
+@@ -840,7 +839,6 @@
+ 			#size-cells = <2>;
+ 			#interrupt-cells = <1>;
+ 			ranges;
+-			num-lanes = <1>;
+ 			interrupt-map-mask = <0 0 0 7>;
+ 			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
+ 					<0 0 0 2 &pcie_intc1 1>,
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+2.6.4
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
