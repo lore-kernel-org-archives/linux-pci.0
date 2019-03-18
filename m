@@ -2,87 +2,165 @@ Return-Path: <SRS0=G860=RV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FFAEC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 04:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AEFEC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 04:54:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F97120872
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 04:33:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7A79214AF
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 04:54:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="HLBMAam6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726027AbfCREdR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Mar 2019 00:33:17 -0400
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:48209 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725915AbfCREdQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 00:33:16 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id A643A2800B3F5;
-        Mon, 18 Mar 2019 05:33:14 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 5B1DC11431F; Mon, 18 Mar 2019 05:33:14 +0100 (CET)
-Date:   Mon, 18 Mar 2019 05:33:14 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Alex G <mr.nuke.me@gmail.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Linux List Kernel Mailing <linux-kernel@vger.kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [GIT PULL] PCI changes for v5.1
-Message-ID: <20190318043314.noyj6t4sh26spuzt@wunner.de>
-References: <20190308173154.GC214730@google.com>
- <CAHk-=wgM-5WfPW9LNHGfc1RxjVbDvHZqNfxyLVRSPP0R4jetDg@mail.gmail.com>
- <b723cbf8-be2a-bbdb-8ad5-eac8eddf2bb3@gmail.com>
+        id S1727379AbfCREyN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Mar 2019 00:54:13 -0400
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:16179 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726124AbfCREyN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 00:54:13 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c8f24650000>; Sun, 17 Mar 2019 21:53:57 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Sun, 17 Mar 2019 21:54:11 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Sun, 17 Mar 2019 21:54:11 -0700
+Received: from [10.24.47.158] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 18 Mar
+ 2019 04:54:08 +0000
+Subject: Re: [PATCH] PCI: tegra: Use the DMA-API to get the MSI address
+To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <treding@nvidia.com>, <swarren@nvidia.com>,
+        <mperttunen@nvidia.com>, <jonathanh@nvidia.com>,
+        Lucas Stach <dev@lynxeye.de>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
+References: <1552395828-31021-1-git-send-email-vidyas@nvidia.com>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <29463699-a928-ed98-4dcd-f3f8a8f81f37@nvidia.com>
+Date:   Mon, 18 Mar 2019 10:24:05 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b723cbf8-be2a-bbdb-8ad5-eac8eddf2bb3@gmail.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <1552395828-31021-1-git-send-email-vidyas@nvidia.com>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1552884837; bh=vPHRwrB7XlpVqtPnCjy8SxmxXhSZaPnO1aU6KJ8EBF4=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=HLBMAam6EtZoSxWt2k1Qu2ZfJtSwvr7mJzyKbcAsnBzHodvdQoIbZ9mz+eY0iHUap
+         75y5YoCd954zAHKJsmhi0zjVGvd6RBWXKiZLPM7rlHC1YhBztlquy0ej8I5US8YYX7
+         iWMUwT6lpIhDgygW/wNjCDY/M/L36tE1G1XmBC4iYCbRDobkPGSqEyPqoV6ed0rw2A
+         YoZ8g0VG+EZTEmX/xMpNCuyz+zyBVBV0YPDEGATZ71/8xT/pTDEISsL+LVCdRPuuCb
+         WxGm1RHBdYx0rAWKxk4DHcdKugAZwpNj0Jm7ZW44dI96xPZz+FBTMjmH4qPn8sAhXv
+         nlKP24XMQKkAw==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Mar 17, 2019 at 07:22:17PM -0500, Alex G wrote:
-> On 3/17/19 4:18 PM, Linus Torvalds wrote:
-> > On Fri, Mar 8, 2019 at 9:31 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > 
-> > >    - Report PCIe links that become degraded at run-time (Alexandru Gagniuc)
-> > 
-> > Gaah. Only now as I'm about to do the rc1 release am I looking at new
-> > runtime warnings, and noticing that this causes
-> > 
-> >    genirq: Threaded irq requested with handler=NULL and !ONESHOT for irq 16
-> >    pcie_bw_notification: probe of 0000:00:1b.0:pcie010 failed with error -22
-> > 
-> > because you can't have a NULL handler for a level-triggered interrupt
-> > (you need something to shut the interrupt off so that it doesn't keep
-> > screaming!).
-> 
-> Thanks for the catch. I did not see the error on my test machines. I'll take
-> a look tomorrow, and update through Bjorn. Seems like an easy fix.
+Any one for review?
+Adding Lucas Stach <dev@lynxeye.de> who reviewed my previous patch where 
+I tried to address the same issue
 
-My apologies for not spotting this during review.
+On 3/12/2019 6:33 PM, Vidya Sagar wrote:
+> Since the upstream MSI memory writes are generated by downstream devices,
+> it is logically correct to have MSI target memory coming from the DMA pool
+> reserved for PCIe than from the general memory pool reserved for CPU access.
+> This avoids PCIe DMA addresses coinciding with MSI target address thereby
+> raising unwanted MSI interrupts. This patch also enforces to limit the
+> MSI target address to 32-bits to make it work for PCIe endponits that support
+> only 32-bit MSI target address and those that support 64-bit MSI target
+> address anyway work with 32-bit MSI target address
+>
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+> Earlier, a different patch was sent with the subject
+> "PCI: tegra: Do not allocate MSI target memory"
+> ( http://patchwork.ozlabs.org/patch/1049550/ )
+> to address the same issue, but since I'm going to use a different subject for
+> this patch, I'm sending it as a different patch instead of a different version
+> to the previous patch
+>
+>   drivers/pci/controller/pci-tegra.c | 28 ++++++++++++++++++++--------
+>   1 file changed, 20 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index f4f53d092e00..55a1626ddb69 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -231,8 +231,8 @@ struct tegra_msi {
+>   	struct msi_controller chip;
+>   	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>   	struct irq_domain *domain;
+> -	unsigned long pages;
+>   	struct mutex lock;
+> +	void *virt;
+>   	u64 phys;
+>   	int irq;
+>   };
+> @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>   	err = platform_get_irq_byname(pdev, "msi");
+>   	if (err < 0) {
+>   		dev_err(dev, "failed to get IRQ: %d\n", err);
+> -		goto err;
+> +		goto free_irq_domain;
+>   	}
+>   
+>   	msi->irq = err;
+> @@ -1545,17 +1545,29 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>   			  tegra_msi_irq_chip.name, pcie);
+>   	if (err < 0) {
+>   		dev_err(dev, "failed to request IRQ: %d\n", err);
+> -		goto err;
+> +		goto free_irq_domain;
+> +	}
+> +
+> +	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
+> +	if (err < 0) {
+> +		dev_err(dev, "failed to set dma coherent mask: %d\n", err);
+> +		goto free_irq;
+> +	}
+> +
+> +	msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
+> +	if (!msi->virt) {
+> +		dev_err(dev, "failed to alloc dma mem for MSI\n");
+> +		err = -ENOMEM;
+> +		goto free_irq;
+>   	}
+>   
+> -	/* setup AFI/FPCI range */
+> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> -	msi->phys = virt_to_phys((void *)msi->pages);
+>   	host->msi = &msi->chip;
+>   
+>   	return 0;
+>   
+> -err:
+> +free_irq:
+> +	free_irq(msi->irq, pcie);
+> +free_irq_domain:
+>   	irq_domain_remove(msi->domain);
+>   	return err;
+>   }
+> @@ -1592,7 +1604,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
+>   	struct tegra_msi *msi = &pcie->msi;
+>   	unsigned int i, irq;
+>   
+> -	free_pages(msi->pages, 0);
+> +	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
+>   
+>   	if (msi->irq > 0)
+>   		free_irq(msi->irq, pcie);
 
-This can't be fixed by setting the IRQF_ONESHOT flag because the IRQ is
-always shared with pciehp, dpc and other port services, which do not set
-the flag, so you'd get a flags mismatch error in __setup_irq().
-
-The solution is thus to acknowledge the interrupt in
-pcie_bw_notification_handler() and move the portion which may sleep
-to a separate function which is used as IRQ thread.  In other words,
-move the down_read() / up_read() portion to a separate function and
-return IRQ_WAKE_THREAD instead of IRQ_HANDLED.
-
-The reason why it didn't show up on your test machines is likely that
-they're using MSI on all PCIe ports, whereas Linus' machines appear
-to possess at least one PCIe port which uses legacy INTx interrupts.
-(MSI sets IRQCHIP_ONESHOT_SAFE for the irq_chip.)
-
-Thanks,
-
-Lukas
