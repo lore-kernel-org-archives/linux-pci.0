@@ -2,236 +2,154 @@ Return-Path: <SRS0=G860=RV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E260C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9771FC10F00
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:47:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4154D2087C
-	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:46:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jHJKlu6w"
+	by mail.kernel.org (Postfix) with ESMTP id 7142620857
+	for <linux-pci@archiver.kernel.org>; Mon, 18 Mar 2019 08:47:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727081AbfCRIqs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Mar 2019 04:46:48 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:36152 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726678AbfCRIqs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 04:46:48 -0400
-Received: by mail-wm1-f66.google.com with SMTP id h18so3354582wml.1;
-        Mon, 18 Mar 2019 01:46:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=InmxzH8NRVy+XKZNy1Vw2o0v+8cbAZaFL//UVby0Gjw=;
-        b=jHJKlu6wJSwGttrdpwVSheJ+LlgVKLfaewDQbn91R6WRclPLzGhbgxTtHHvaKCByo6
-         LhUOsBK3NxrtwToE6J54bUkQOtBXTM92m0X5L6JcT5FbGA3LSNTMonXIV6UrjiChrMD9
-         iKwPbTBA1v4OZcw7yCnQMdqRo719x7PXjz9zevtaPiXuoF5W/zRiIzyRz5Nlub9Qe/Yv
-         7KEWSrm6m4lJg5mkUM2hpIGKcm4WA23m1LJJwMQzWRt62vw4JdaoFZHqUtEWzfHTvUuF
-         Linquj6Avq1noZS2UyvQol8omTlUN6HLn/OZ8nv0HliYOWDtDcfUH74vTNwqvMlr90U8
-         kytA==
+        id S1726689AbfCRIr0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Mar 2019 04:47:26 -0400
+Received: from mail-vk1-f195.google.com ([209.85.221.195]:44408 "EHLO
+        mail-vk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726335AbfCRIr0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 04:47:26 -0400
+Received: by mail-vk1-f195.google.com with SMTP id q189so3580607vkq.11;
+        Mon, 18 Mar 2019 01:47:26 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=InmxzH8NRVy+XKZNy1Vw2o0v+8cbAZaFL//UVby0Gjw=;
-        b=KPoF5KtYCPfOuk4EM1+jJQpdTW5yh/1t38xR32fv7jEGRvZ2rftE7OxvugHDIHRORG
-         1/NsENcYBODycJtt7mWfqaaYgndxpz/rYoQruVwQq3eKBRvspOSqgWOXcZXv9aiIQrDm
-         iw+61eTMnTsEjEjYp7p6EBuCrivKQjQunZ6U/Pw5ecJjsk+8qoB/sM6mLSCVyCHMElzQ
-         CkteIjsbdiwR+vcsCddSEd4gqe+oKEedUTdSp/zIhgGEN1UQF1OolQHH9mVc355rOtOK
-         gqrFXVpVcr3fnjiQXOcDUpRRqJ7ukps2pXu79poBXH/40mG2UOyJ/tDKwHkJT11sVmEj
-         tSlg==
-X-Gm-Message-State: APjAAAWF0cdmosxAO8gXupaCvXLRRZHpcuuxDo8UN4mN+2+aJKhpvrnj
-        gOCRIWt39PX+ueZoZKiM5Jo=
-X-Google-Smtp-Source: APXvYqyxJPmVNyD8xffQrIFUlzehOvoY78pL2DzXBTVL4s+0HjcuVnatgWz1BeuaoqbygqDOXt3ORQ==
-X-Received: by 2002:a1c:f906:: with SMTP id x6mr9544240wmh.142.1552898805676;
-        Mon, 18 Mar 2019 01:46:45 -0700 (PDT)
-Received: from localhost (pD9E51D2D.dip0.t-ipconnect.de. [217.229.29.45])
-        by smtp.gmail.com with ESMTPSA id q5sm9633296wrn.43.2019.03.18.01.46.44
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 18 Mar 2019 01:46:44 -0700 (PDT)
-Date:   Mon, 18 Mar 2019 09:46:43 +0100
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     bhelgaas@google.com, lorenzo.pieralisi@arm.com, treding@nvidia.com,
-        swarren@nvidia.com, mperttunen@nvidia.com, jonathanh@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com
-Subject: Re: [PATCH] PCI: tegra: Use the DMA-API to get the MSI address
-Message-ID: <20190318084643.GA14465@ulmo>
-References: <1552395828-31021-1-git-send-email-vidyas@nvidia.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=uMCOJBdT81x95nQSd+KHI/V3/nHjH2gKNc7RE2sG/yw=;
+        b=j/u3s23iGbx6ieiIEXBqyg7TFwJTSdld8HGkQCSWz8J5E5rA8g0RmWc9kvFX53mbjV
+         lN4e9mD2spc5gVAjFg/b4ImjRoMclRxIDnCDkm8cHm7TzvgsndeGw5rVkgHQuULnNDyf
+         QgNCXL99DDOv2x2/A67tVzRmrxFtUdtLNB3itRZGbtn7KXE+THtpPBBAythG8UNRSq98
+         BxayZ5jsPHrAiLckCqzoujkJqFhKHaOUrcsH9HFe6T80OdnjtcG3+rn7mFC+yad21PxQ
+         5tu0v/xOXfQa/ug6W3ElMhS5+NGi9fEhuUGlqIyv0uzaJml6ez/MVXJLBq+xk6LkXhzW
+         q2+g==
+X-Gm-Message-State: APjAAAWAxdSNXip1KvXmxL5/L8ss+wWvkLn5mf2rm0utY8fAlcdq7964
+        /LiB4fjKNYDrQHqht5He9dS4i8XV1iYzUZoASY8=
+X-Google-Smtp-Source: APXvYqxeL/kwdJY1CHyIBsO+YWUZkHtDnVJ0NIVZFATKOMP91cuZggqv1RBAkVKKrYy3sGxKJtwnNSisX6iAfYZLCT4=
+X-Received: by 2002:a1f:be81:: with SMTP id o123mr8563404vkf.83.1552898845483;
+ Mon, 18 Mar 2019 01:47:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="bp/iNruPH9dso1Pn"
-Content-Disposition: inline
-In-Reply-To: <1552395828-31021-1-git-send-email-vidyas@nvidia.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+References: <20190317000608.24881-1-marek.vasut@gmail.com>
+In-Reply-To: <20190317000608.24881-1-marek.vasut@gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 18 Mar 2019 09:47:13 +0100
+Message-ID: <CAMuHMdW5+aKVFdQYF-xiO3JyoyNYDwOTQqF8BJgku1b7ZzD1Mw@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: rcar: Replace unsigned long with u32 for
+ register values
+To:     Marek Vasut <marek.vasut@gmail.com>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Marek,
 
---bp/iNruPH9dso1Pn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Mar 12, 2019 at 06:33:48PM +0530, Vidya Sagar wrote:
-> Since the upstream MSI memory writes are generated by downstream devices,
-> it is logically correct to have MSI target memory coming from the DMA pool
-> reserved for PCIe than from the general memory pool reserved for CPU acce=
-ss.
-
-This is slightly confusing because there's no dedicated DMA pool that is
-reserved for PCIe. At least not upstream. That said, if there were such
-a pool, then, yes, we'd want the allocation to be from that pool, so I
-think this is okay as-is.
-
-> This avoids PCIe DMA addresses coinciding with MSI target address thereby
-> raising unwanted MSI interrupts. This patch also enforces to limit the
-> MSI target address to 32-bits to make it work for PCIe endponits that sup=
-port
-
-                                                         endpoints
-
-> only 32-bit MSI target address and those that support 64-bit MSI target
-> address anyway work with 32-bit MSI target address
-
-Fullstop at the end here.
-
->=20
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+On Sun, Mar 17, 2019 at 1:06 AM <marek.vasut@gmail.com> wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+>
+> Replace unsigned long with u32 type for variables holding
+> register values, since the registers are 32bit. Note that
+> rcar_pcie_msi_irq() still uses unsigned long because both
+> find_first_bit() and __fls() require unsigned long as an
+> argument.
+>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
 > ---
-> Earlier, a different patch was sent with the subject
-> "PCI: tegra: Do not allocate MSI target memory"
-> ( http://patchwork.ozlabs.org/patch/1049550/ )
-> to address the same issue, but since I'm going to use a different subject=
- for
-> this patch, I'm sending it as a different patch instead of a different ve=
-rsion
-> to the previous patch
->=20
->  drivers/pci/controller/pci-tegra.c | 28 ++++++++++++++++++++--------
->  1 file changed, 20 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/=
-pci-tegra.c
-> index f4f53d092e00..55a1626ddb69 100644
-> --- a/drivers/pci/controller/pci-tegra.c
-> +++ b/drivers/pci/controller/pci-tegra.c
-> @@ -231,8 +231,8 @@ struct tegra_msi {
->  	struct msi_controller chip;
->  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
->  	struct irq_domain *domain;
-> -	unsigned long pages;
->  	struct mutex lock;
-> +	void *virt;
->  	u64 phys;
+>  drivers/pci/controller/pcie-rcar.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> index 1408c8aa758b..857d88fd03d5 100644
+> --- a/drivers/pci/controller/pcie-rcar.c
+> +++ b/drivers/pci/controller/pcie-rcar.c
+> @@ -169,7 +169,7 @@ enum {
+>
+>  static void rcar_rmw32(struct rcar_pcie *pcie, int where, u32 mask, u32 data)
+>  {
+> -       int shift = 8 * (where & 3);
+> +       u32 shift = 8 * (where & 3);
 
-I think this now needs to be dma_addr_t.
+shift is not a register value, so IMHO the original type is fine (the "int"
+comes from the pci_ops API, BTW).
 
->  	int irq;
->  };
-> @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *=
-pcie)
->  	err =3D platform_get_irq_byname(pdev, "msi");
->  	if (err < 0) {
->  		dev_err(dev, "failed to get IRQ: %d\n", err);
-> -		goto err;
-> +		goto free_irq_domain;
->  	}
-> =20
->  	msi->irq =3D err;
-> @@ -1545,17 +1545,29 @@ static int tegra_pcie_msi_setup(struct tegra_pcie=
- *pcie)
->  			  tegra_msi_irq_chip.name, pcie);
->  	if (err < 0) {
->  		dev_err(dev, "failed to request IRQ: %d\n", err);
-> -		goto err;
-> +		goto free_irq_domain;
-> +	}
-> +
-> +	err =3D dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
+>         u32 val = rcar_pci_read_reg(pcie, where & ~3);
+>
+>         val &= ~(mask << shift);
+> @@ -179,7 +179,7 @@ static void rcar_rmw32(struct rcar_pcie *pcie, int where, u32 mask, u32 data)
+>
+>  static u32 rcar_read_conf(struct rcar_pcie *pcie, int where)
+>  {
+> -       int shift = 8 * (where & 3);
+> +       u32 shift = 8 * (where & 3);
 
-This is not technically correct because the controller supports a much
-wider address space (48 bits I think), so perhaps add a comment above
-the line to explain why you're restricting it to 32 bits here.
+Likewise
 
-> +	if (err < 0) {
-> +		dev_err(dev, "failed to set dma coherent mask: %d\n", err);
+>         u32 val = rcar_pci_read_reg(pcie, where & ~3);
+>
+>         return val >> shift;
+> @@ -190,7 +190,7 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
+>                 unsigned char access_type, struct pci_bus *bus,
+>                 unsigned int devfn, int where, u32 *data)
+>  {
+> -       int dev, func, reg, index;
+> +       u32 dev, func, reg, index;
 
-"dma" -> "DMA", please.
+reg is the only register value, isn't it?
 
-> +		goto free_irq;
-> +	}
-> +
-> +	msi->virt =3D dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL=
-);
-> +	if (!msi->virt) {
-> +		dev_err(dev, "failed to alloc dma mem for MSI\n");
+>
+>         dev = PCI_SLOT(devfn);
+>         func = PCI_FUNC(devfn);
+> @@ -508,7 +508,7 @@ static void phy_write_reg(struct rcar_pcie *pcie,
+>                                  unsigned int rate, unsigned int addr,
+>                                  unsigned int lane, unsigned int data)
+>  {
+> -       unsigned long phyaddr;
+> +       u32 phyaddr;
+>
+>         phyaddr = WRITE_CMD |
+>                 ((rate & 1) << RATE_POS) |
+> @@ -1116,7 +1116,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
+>  {
+>         struct device *dev = &pdev->dev;
+>         struct rcar_pcie *pcie;
+> -       unsigned int data;
+> +       u32 data;
+>         int err;
+>         int (*phy_init_fn)(struct rcar_pcie *);
+>         struct pci_host_bridge *bridge;
 
-I'm not sure this needs an error message. The system should already warn
-if this happens. It does so at least for regular memory allocations. But
-if you want to keep it, please spell out "allocate" and "memory". Also:
-"dma" -> "DMA".
+For the last two changes:
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-> +		err =3D -ENOMEM;
-> +		goto free_irq;
->  	}
-> =20
-> -	/* setup AFI/FPCI range */
-> -	msi->pages =3D __get_free_pages(GFP_KERNEL, 0);
-> -	msi->phys =3D virt_to_phys((void *)msi->pages);
->  	host->msi =3D &msi->chip;
-> =20
->  	return 0;
-> =20
-> -err:
-> +free_irq:
-> +	free_irq(msi->irq, pcie);
-> +free_irq_domain:
->  	irq_domain_remove(msi->domain);
->  	return err;
->  }
-> @@ -1592,7 +1604,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pc=
-ie *pcie)
->  	struct tegra_msi *msi =3D &pcie->msi;
->  	unsigned int i, irq;
-> =20
-> -	free_pages(msi->pages, 0);
-> +	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
-> =20
->  	if (msi->irq > 0)
->  		free_irq(msi->irq, pcie);
+Gr{oetje,eeting}s,
 
-With the above issues fixed, this is:
+                        Geert
 
-Reviewed-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
---bp/iNruPH9dso1Pn
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlyPWu8ACgkQ3SOs138+
-s6H3Nw//XFZA2ndd+ip1khNSKf9oF8/Dw1M01hdq3ORxa0XSvIctow5HMysgZcfI
-Ne2qq5jPunnmv9dKngAJuhW0PJbMy/Uq3SRdzPy47JgJliAYAHDBGGmM6AVspr7G
-Y+fkJPSd95JVzsTzTDW7clfmPw3amFqiniedbyHF9mjr1mmjoq8/TiOvfNH1qzWg
-Q8lIElMmGHSlQwdmUYDqL6JQtTW38vPRT4J9JqQptBJSwo8C5u34Ro04eNbJg4YO
-/j2iuVVbz/X8j6ZpX52gJMy632397/+1ftEGCa6dMohEQVXDC32BEhpy00omwlyB
-fLzq2ZdOX0LIsWl6jz1gEup7ALIoLPTQNBEI+Yvkuggyixu0UfokircDHE8XvaDQ
-H8i9K03IMLCwiMjOIQjoQW6qjkZA29q6/KtPKSiMcWkHIJ1EJa3+loHPbTgUElj0
-5uyRUCLOse9ZWnv+qmxvt+brh3WacRSCmDXKowJ82UboZaZ1NCSoF0hFkl4gvKtZ
-CZBoZteDRLoHYanp/UeNSiKkmUGSDuj/neTHdqwZklBuCiffCAEwY3UBL9JCPaVe
-k+Cldiftqa4xzXGb4QevANr2dX+SfTPQp55OQ3pxUEbt1zECrbJ2gu/UkpVjd+KI
-V223k7n2tu8D7QNAJHfRXhCD+HXmbC6v+ne7eSPdZmsQ7/7/87g=
-=mDSs
------END PGP SIGNATURE-----
-
---bp/iNruPH9dso1Pn--
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
