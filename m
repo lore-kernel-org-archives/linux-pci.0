@@ -2,108 +2,158 @@ Return-Path: <SRS0=xwy5=RW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9937DC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 00:26:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D5DC43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 01:12:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 607BC213F2
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 00:26:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D31FF20857
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 01:12:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="UlWp7EZK"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h9OWub+B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726639AbfCSA0h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Mar 2019 20:26:37 -0400
-Received: from mta-p5.oit.umn.edu ([134.84.196.205]:53618 "EHLO
-        mta-p5.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726575AbfCSA0h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 20:26:37 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p5.oit.umn.edu (Postfix) with ESMTP id 3B96F5D
-        for <linux-pci@vger.kernel.org>; Tue, 19 Mar 2019 00:26:36 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p5.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p5.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 2Sm_UJoV2EME for <linux-pci@vger.kernel.org>;
-        Mon, 18 Mar 2019 19:26:36 -0500 (CDT)
-Received: from mail-it1-f199.google.com (mail-it1-f199.google.com [209.85.166.199])
-        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mta-p5.oit.umn.edu (Postfix) with ESMTPS id 09A60A81
-        for <linux-pci@vger.kernel.org>; Mon, 18 Mar 2019 19:26:36 -0500 (CDT)
-Received: by mail-it1-f199.google.com with SMTP id z190so6094429itc.9
-        for <linux-pci@vger.kernel.org>; Mon, 18 Mar 2019 17:26:36 -0700 (PDT)
+        id S1726884AbfCSBMd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Mar 2019 21:12:33 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:35778 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726326AbfCSBMc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 21:12:32 -0400
+Received: by mail-oi1-f196.google.com with SMTP id j132so11680896oib.2;
+        Mon, 18 Mar 2019 18:12:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=OKcCKs/xYcl9Epux1dC9Bd1VY22SUBZOx1LoJhQbK3k=;
-        b=UlWp7EZKS7XwukfjHxGwZZdb5MOb7pTJZw8mDpSJ/Qzpvbu9hVou2VAktM61X1rsZy
-         j7r5lfj4vhLs8ydaxA9ao63rzvSL3xK/FsSDNr0vg4vDjnjiQ74d+ATkL8loVDiNqeBq
-         bJczM8mw9xlgKGK1/THi/XLJ8uAbrHcraGdWtsm2bxnQ4SUrDe0OlEf/BqFw2L+x5zP0
-         yNb0t2/zjIwlz8AszSNqDB7QJaLcezbfANSaj75jHsE9Ae/ZS1q+Q0CZPNAzVvS+HdmY
-         CBB0E9ZqvyP3SROaQni/SMqqyEaTYcAszw3zVI+xA8VMreamjexXJyerlY8lN3JgnaFa
-         YeYw==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=5ewgNApBOMFmKFh+iKZs3KgqIE0F4/W418nT0I54kEY=;
+        b=h9OWub+BErazz2+pibTai77gQV3cnND/vunX2ONcJleEgvNSpI6QdLNjpEBuPvk+tF
+         gXEPRr8QfPUvxKUiK7iLZHJEljsdZFyFqrlert+hPNR76SyZcIMRe3mpNooDAaF4nlP0
+         Zz9Rt5phMOnHTPk3c/DPorpWC+WW+scYPPvj1n6PkVzywD/1kxC+kUdWDEMh+lVir2ux
+         /xB0AJ8JCyT76+On1+ta0IXNLMTAuz6cJi+g7dUlOMHlSV+3KFV86tUVM1R0euwWW9Ni
+         fYV29jRwo8aO6KFLwlWwNhOsZZmNdiKgb2f/oCNJKs2yr1FfaE+iPYMYtNF+u6UFIDOT
+         a07A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=OKcCKs/xYcl9Epux1dC9Bd1VY22SUBZOx1LoJhQbK3k=;
-        b=P2RFjL0/eOnveCOilJfi04vRGWA137IW/SkMdrXLLiKD2DB09oil8BRgm5/HfQQlmN
-         92y6y1rgvx0X4saNFKg9RmzMTfqae536aJDMkVvpovImGW/o0etqHwz0ehbn5laBf+a9
-         c4UeplYcBTNtuBTtjH8UOd8EOguibX4KuUlcJCEx6xbJ61TKKoZ1DpQco7gUejRs/ca4
-         YxhZNb2u/8mANcJjRbhyP8Rq76jw61p547Z0yjMRz+E+Tfscib4JzFjMs3abhxMfOTjO
-         v7NgSXrSpQokinxNahejij2axyr8InMJmUeLzmi6bAJoI48+LhORyzW+NfOABs8LEV9a
-         b82w==
-X-Gm-Message-State: APjAAAVvvoEnXGi2ygzekRaWdzO23yItVL4wycHmTLWHf3sHNmbTZDRF
-        zQBXFdK29axxbsRv04b5/aI8s6kn35W+lRS/oqRoZ2dl1fxFLsFj3/hx6gex5zLdypX9XmTtWmb
-        gL4+kh586kAQP3xNpiI5WCCyx
-X-Received: by 2002:a24:2946:: with SMTP id p67mr1028406itp.114.1552955195621;
-        Mon, 18 Mar 2019 17:26:35 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqzcAY+bv3B/ximDoBnh912vC+9939t8Yge1Igs9QzN6ckUxBuMwE+bGjexclZOwRD266Ayxqg==
-X-Received: by 2002:a24:2946:: with SMTP id p67mr1028395itp.114.1552955195419;
-        Mon, 18 Mar 2019 17:26:35 -0700 (PDT)
-Received: from lenovo-1.hsd1.mn.comcast.net (c-73-242-25-233.hsd1.mn.comcast.net. [73.242.25.233])
-        by smtp.googlemail.com with ESMTPSA id w6sm4729538iom.22.2019.03.18.17.26.34
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 18 Mar 2019 17:26:34 -0700 (PDT)
-From:   Aditya Pakki <pakki001@umn.edu>
-To:     pakki001@umn.edu
-Cc:     kjlu@umn.edu, Will Deacon <will.deacon@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Fix to avoid potential NULL pointer dereference
-Date:   Mon, 18 Mar 2019 19:26:30 -0500
-Message-Id: <20190319002630.12485-1-pakki001@umn.edu>
-X-Mailer: git-send-email 2.17.1
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=5ewgNApBOMFmKFh+iKZs3KgqIE0F4/W418nT0I54kEY=;
+        b=Vc1q3Pnxmowym1Py3xCURvPe1WL/FFlBdpF9FFTr5lwKNX0Ld/4YIui2RPGOYRwoXe
+         7gGs12A0paBVCT7XrWtd5FI3bpjxEZxFAol14S1UfxfdIaMtFjbvpyVr07OncJKeMI3h
+         A+jp2jXSQXgkZTAm0cjMTAX+vnDIDEHoAUsClBlP+lADAAYzC5cJKVUcbMjU5dmkNZ+m
+         g8c2zr0W8usxetd8GVeD2CQfy0X5/e3AExIClBLaEacM0NTmZUcSRE47lhekLu3IJYEJ
+         Pq/Z17mMWJ30mbvDTE0taENtvmG8xpuXRDXewnc+IyEvjzki0gEBFkQSlKG9eSxNLSU4
+         B0kA==
+X-Gm-Message-State: APjAAAVqm7jjgdRNO51k5RwCxG38pgQqtREZuTVfo2EbQfZ7Ew/XHLwf
+        K9lbMtD+Xd5gU3wmD/TS9cA=
+X-Google-Smtp-Source: APXvYqxPv3SQNVha1YP9zXUhrNV6/FKSQhqwOd5Ft8RTwv8hKgl8Kr/RO4RzAGVnQrNimxzbNYLBGQ==
+X-Received: by 2002:aca:d513:: with SMTP id m19mr245407oig.73.1552957951926;
+        Mon, 18 Mar 2019 18:12:31 -0700 (PDT)
+Received: from nuclearis2-1.lan (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
+        by smtp.gmail.com with ESMTPSA id j18sm1722353otq.68.2019.03.18.18.12.30
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 18 Mar 2019 18:12:30 -0700 (PDT)
+From:   Alexandru Gagniuc <mr.nuke.me@gmail.com>
+To:     bhelgaas@google.com
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, torvalds@linux-foundation.org,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI/LINK: bw_notification: Do not leave interrupt handler NULL
+Date:   Mon, 18 Mar 2019 20:12:04 -0500
+Message-Id: <20190319011214.7847-1-mr.nuke.me@gmail.com>
+X-Mailer: git-send-email 2.19.2
+In-Reply-To: <CAHk-=wgM-5WfPW9LNHGfc1RxjVbDvHZqNfxyLVRSPP0R4jetDg@mail.gmail.com>
+References: <CAHk-=wgM-5WfPW9LNHGfc1RxjVbDvHZqNfxyLVRSPP0R4jetDg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In gen_pci_probe, of_match_node can return a NULL pointer in case of
-failure. The patch avoids a NULL pointer dereference in such a scenario.
+A threaded IRQ with a NULL handler does not work with level-triggered
+interrupts. request_threaded_irq() will return an error:
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+  genirq: Threaded irq requested with handler=NULL and !ONESHOT for irq 16
+  pcie_bw_notification: probe of 0000:00:1b.0:pcie010 failed with error -22
+
+For level interrupts we need to silence the interrupt before exiting
+the IRQ handler, so just clear the PCI_EXP_LNKSTA_LBMS bit there.
+
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 ---
- drivers/pci/controller/pci-host-generic.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-host-generic.c b/drivers/pci/controller/pci-host-generic.c
-index dea3ec7592a2..85f473f50e96 100644
---- a/drivers/pci/controller/pci-host-generic.c
-+++ b/drivers/pci/controller/pci-host-generic.c
-@@ -83,6 +83,8 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	struct pci_ecam_ops *ops;
+OOPS! I'm sorry for the noise. Here's the fix.
+
+I was able to test this on edge-triggered interrupts. None of my
+machines have PCIe ports that use level-triggered interrupts. This
+might not be too straightforward to test without a hardware yanker,
+but if there's a way to force a specific interrupt to be level
+triggered, I could do the testing on my end.
+
+ drivers/pci/pcie/bw_notification.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
+index d2eae3b7cc0f..001d6253ad48 100644
+--- a/drivers/pci/pcie/bw_notification.c
++++ b/drivers/pci/pcie/bw_notification.c
+@@ -44,11 +44,10 @@ static void pcie_disable_link_bandwidth_notification(struct pci_dev *dev)
+ 	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnk_ctl);
+ }
  
- 	of_id = of_match_node(gen_pci_of_match, pdev->dev.of_node);
-+	if (!of_id)
-+		return -ENXIO;
- 	ops = (struct pci_ecam_ops *)of_id->data;
+-static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
++static irqreturn_t pcie_bw_notification_irq(int irq, void *context)
+ {
+ 	struct pcie_device *srv = context;
+ 	struct pci_dev *port = srv->port;
+-	struct pci_dev *dev;
+ 	u16 link_status, events;
+ 	int ret;
  
- 	return pci_host_common_probe(pdev, ops);
+@@ -58,6 +57,17 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+ 	if (ret != PCIBIOS_SUCCESSFUL || !events)
+ 		return IRQ_NONE;
+ 
++	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
++	return IRQ_WAKE_THREAD;
++}
++
++static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
++{
++	struct pcie_device *srv = context;
++	struct pci_dev *port = srv->port;
++	struct pci_dev *dev;
++	u16 link_status;
++
+ 	/*
+ 	 * Print status from downstream devices, not this root port or
+ 	 * downstream switch port.
+@@ -67,8 +77,8 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+ 		__pcie_print_link_status(dev, false);
+ 	up_read(&pci_bus_sem);
+ 
++	pcie_capability_read_word(port, PCI_EXP_LNKSTA, &link_status);
+ 	pcie_update_link_speed(port->subordinate, link_status);
+-	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -80,7 +90,8 @@ static int pcie_bandwidth_notification_probe(struct pcie_device *srv)
+ 	if (!pcie_link_bandwidth_notification_supported(srv->port))
+ 		return -ENODEV;
+ 
+-	ret = request_threaded_irq(srv->irq, NULL, pcie_bw_notification_handler,
++	ret = request_threaded_irq(srv->irq, pcie_bw_notification_irq,
++				   pcie_bw_notification_handler,
+ 				   IRQF_SHARED, "PCIe BW notif", srv);
+ 	if (ret)
+ 		return ret;
 -- 
-2.17.1
+2.19.2
 
