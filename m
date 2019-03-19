@@ -2,164 +2,91 @@ Return-Path: <SRS0=xwy5=RW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45412C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 14:02:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE7ADC43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 15:43:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EAD352147C
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 14:02:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="J9FIkDxY"
+	by mail.kernel.org (Postfix) with ESMTP id BC68420850
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 15:43:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726688AbfCSOCK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Mar 2019 10:02:10 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11746 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726464AbfCSOCK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Mar 2019 10:02:10 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5c90f6620000>; Tue, 19 Mar 2019 07:02:10 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 19 Mar 2019 07:02:07 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 19 Mar 2019 07:02:07 -0700
-Received: from HQMAIL104.nvidia.com (172.18.146.11) by HQMAIL106.nvidia.com
- (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 19 Mar
- 2019 14:02:07 +0000
-Received: from hqnvemgw01.nvidia.com (172.20.150.20) by HQMAIL104.nvidia.com
- (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Tue, 19 Mar 2019 14:02:07 +0000
-Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5c90f65c0007>; Tue, 19 Mar 2019 07:02:07 -0700
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
-        <treding@nvidia.com>, <swarren@nvidia.com>,
-        <mperttunen@nvidia.com>, <jonathanh@nvidia.com>, <dev@lynxeye.de>,
-        <vidyas@nvidia.com>
-CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
-Subject: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
-Date:   Tue, 19 Mar 2019 19:32:01 +0530
-Message-ID: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.7.4
-X-NVConfidentiality: public
+        id S1726763AbfCSPna (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Mar 2019 11:43:30 -0400
+Received: from foss.arm.com ([217.140.101.70]:54112 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726466AbfCSPna (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Mar 2019 11:43:30 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 871CA1650;
+        Tue, 19 Mar 2019 08:43:29 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9A5A03F614;
+        Tue, 19 Mar 2019 08:43:28 -0700 (PDT)
+Date:   Tue, 19 Mar 2019 15:43:22 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Jean-Jacques Hiblot <jjhiblot@ti.com>, kishon@ti.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] tools: PCI: exit with error code when test fails
+Message-ID: <20190319154322.GA12647@e107981-ln.cambridge.arm.com>
+References: <1537455773-13470-1-git-send-email-jjhiblot@ti.com>
+ <20181004111144.GC5233@e107981-ln.cambridge.arm.com>
+ <20181116120113.GB3228@e107981-ln.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1553004130; bh=eqAWItGvhwMOEozblFQM9Qc95sY3mV0OLkY2w9e8joQ=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         X-NVConfidentiality:MIME-Version:Content-Type;
-        b=J9FIkDxYhA91xj93l/2L2OQ9V88O3C2oIlezEJSyzX7Vj3p2Gq+Fv5kRCijdjh0bT
-         b4aM1wkLZsnTxYarKeDHAIN1GrH58IY9bpMADFClTBpTBrn12ryICmlQgkKb97DpKi
-         U7N13anXWObkOe727sTYH+OpHkgpYGPV2PhuXwg5cz7OiutvkVJ74c+v+LR1kjU5J2
-         lyRyEv+J8LxrGch7hzH2c6opu+Bfh82/a/UOYGx9rLHN2tj7rMcK9xxklFXHHdaxpR
-         rcnbT8sHzMeFzsBC0fuh0ahqWb78JiWKfDE+6SuYzn+KAs/1PG3cP8EPYtGLGcInRA
-         uZeUyCleniO+A==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20181116120113.GB3228@e107981-ln.cambridge.arm.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since the upstream MSI memory writes are generated by downstream devices,
-it is logically correct to have MSI target memory coming from the DMA pool
-reserved for PCIe than from the general memory pool reserved for CPU
-access. This avoids PCIe DMA addresses coinciding with MSI target address
-thereby raising unwanted MSI interrupts. This patch also enforces to limit
-the MSI target address to 32-bits to make it work for PCIe endponits that
-support only 32-bit MSI target address and those endpoints that support
-64-bit MSI target address anyway work with 32-bit MSI target address.
+On Fri, Nov 16, 2018 at 12:01:13PM +0000, Lorenzo Pieralisi wrote:
+> On Thu, Oct 04, 2018 at 12:11:44PM +0100, Lorenzo Pieralisi wrote:
+> > On Thu, Sep 20, 2018 at 05:02:53PM +0200, Jean-Jacques Hiblot wrote:
+> > > This makes it easier to use pcitest in automated setups.
+> > > 
+> > > Signed-off-by: Jean-Jacques Hiblot <jjhiblot@ti.com>
+> > > ---
+> > >  tools/pci/pcitest.c | 4 ++--
+> > >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+> > > index af146bb..5adc8cd 100644
+> > > --- a/tools/pci/pcitest.c
+> > > +++ b/tools/pci/pcitest.c
+> > > @@ -143,6 +143,7 @@ static int run_test(struct pci_test *test)
+> > >  	}
+> > >  
+> > >  	fflush(stdout);
+> > > +	return (ret < 0) ? ret : 1 - ret; /* return 0 if test succeeded */
+> > >  }
+> > >  
+> > >  int main(int argc, char **argv)
+> > > @@ -231,6 +232,5 @@ int main(int argc, char **argv)
+> > >  		return -EINVAL;
+> > >  	}
+> > >  
+> > > -	run_test(test);
+> > > -	return 0;
+> > > +	return run_test(test);
+> > >  }
+> > > -- 
+> > > 2.7.4
+> > > 
+> > 
+> > Hi Kishon,
+> > 
+> > are you OK with this patch ? Please let me know.
+> 
+> Please let me know, I need your ACK on this to queue it.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Reviewed-by: Thierry Reding <treding@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
----
-v2:
-* changed 'phys' type to 'dma_addr_t' from 'u64'
-* added a comment on why DMA mask is set to 32-bit
-* replaced 'dma' with 'DMA'
+Hi Kishon,
 
- drivers/pci/controller/pci-tegra.c | 35 ++++++++++++++++++++++++++---------
- 1 file changed, 26 insertions(+), 9 deletions(-)
+I will merge this patch unless you have something against it,
+please let me know.
 
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index f4f53d092e00..f8173a5e352d 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -231,9 +231,9 @@ struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
- 	struct irq_domain *domain;
--	unsigned long pages;
- 	struct mutex lock;
--	u64 phys;
-+	void *virt;
-+	dma_addr_t phys;
- 	int irq;
- };
- 
-@@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
- 	err = platform_get_irq_byname(pdev, "msi");
- 	if (err < 0) {
- 		dev_err(dev, "failed to get IRQ: %d\n", err);
--		goto err;
-+		goto free_irq_domain;
- 	}
- 
- 	msi->irq = err;
-@@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
- 			  tegra_msi_irq_chip.name, pcie);
- 	if (err < 0) {
- 		dev_err(dev, "failed to request IRQ: %d\n", err);
--		goto err;
-+		goto free_irq_domain;
-+	}
-+
-+	/* Though the PCIe controller can address >32-bit address space, to
-+	 * facilitate endpoints that support only 32-bit MSI target address,
-+	 * the mask is set to 32-bit to make sure that MSI target address is
-+	 * always a 32-bit address
-+	 */
-+	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
-+	if (err < 0) {
-+		dev_err(dev, "failed to set DMA coherent mask: %d\n", err);
-+		goto free_irq;
-+	}
-+
-+	msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
-+	if (!msi->virt) {
-+		dev_err(dev, "failed to allocate DMA memory for MSI\n");
-+		err = -ENOMEM;
-+		goto free_irq;
- 	}
- 
--	/* setup AFI/FPCI range */
--	msi->pages = __get_free_pages(GFP_KERNEL, 0);
--	msi->phys = virt_to_phys((void *)msi->pages);
- 	host->msi = &msi->chip;
- 
- 	return 0;
- 
--err:
-+free_irq:
-+	free_irq(msi->irq, pcie);
-+free_irq_domain:
- 	irq_domain_remove(msi->domain);
- 	return err;
- }
-@@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
- 	struct tegra_msi *msi = &pcie->msi;
- 	unsigned int i, irq;
- 
--	free_pages(msi->pages, 0);
-+	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
- 
- 	if (msi->irq > 0)
- 		free_irq(msi->irq, pcie);
--- 
-2.7.4
-
+Thanks,
+Lorenzo
