@@ -2,134 +2,134 @@ Return-Path: <SRS0=xwy5=RW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 758FCC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 03:35:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE20C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 05:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3198320872
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 03:35:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C29220854
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 05:36:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oMqexT7S"
+	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="kkrIYIuM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726832AbfCSDfr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Mar 2019 23:35:47 -0400
-Received: from mail-wr1-f43.google.com ([209.85.221.43]:45838 "EHLO
-        mail-wr1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726743AbfCSDfr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 23:35:47 -0400
-Received: by mail-wr1-f43.google.com with SMTP id s15so3990029wra.12;
-        Mon, 18 Mar 2019 20:35:45 -0700 (PDT)
+        id S1726020AbfCSFgj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Mar 2019 01:36:39 -0400
+Received: from mail-eopbgr820077.outbound.protection.outlook.com ([40.107.82.77]:61168
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725913AbfCSFgj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 19 Mar 2019 01:36:39 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VBXYPXLWASjbaQjUFBFDYdnIs/DH3ZDLfgEjYjeu8Wg=;
-        b=oMqexT7SyNWILkJ0+1c1iAsj02rYoCijFaiSn/IVHd1GU2RRaLUIlLJvsVnLR7y2Nh
-         tnzcNrSptKhlRAi28qb8F/ZKrMYuOB0rpiVU911zEJekOXLdf+9hlzR2ORW5unN5iT57
-         52bgRKUUdTCBRV8mhxqWaytX/8a9IIOhI0ICZ6/3rluZmqAWA20GYA8uYFVQqciv3ejn
-         pPNQpqcnOOa4sk9T96CAAUdtmTNA6sjsmFf2CLSEIzYFpF/9mqnk8gf8ZssyfYq1aoI3
-         xI6NdhgJeUB6jOPy/PVwIQLvTdNw+NHidZoUmdvnXTFyphfziNVPwWXI2cGIRtB7CifN
-         PGCw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=VBXYPXLWASjbaQjUFBFDYdnIs/DH3ZDLfgEjYjeu8Wg=;
-        b=ZXKHucTQTmUzZxUUs7yrV7daZKLf7BWnXou4IkknJMJbgyVzqRHVq0wdtz5U+PQVD/
-         nitop8CX2kyiucXlmci8xBswA/VHFqyIj3grCQrvEaeU9aggcQL8dZWERn2qM3vFGXyk
-         p6P2pG3TIkZ7T6GhYqmuZ3sumjBg648gByVWDTQB+2iYBv0Pch1z0504tCtSQEv4av8y
-         9il38WnRasf/11QiFM8Z0VaZS198xBfsDE2WBq9cudVu/SmdWYz/fkaKhn/iEUjpW7h8
-         pM3BVWa20bs7R/Id1vvJonut/l+ryq59NQUiTqT5V/AvGdLlsn5zmZGg+pQiZPiz7H+p
-         KaUg==
-X-Gm-Message-State: APjAAAX7OcGcAMB0p10Mlrt39HvnM7CnXjCKg/LsdowhrA+tM+DRKuVO
-        NfA9ledFJx1m2Hp/94etqKEDKO1DgmINblL0l0SkVBmx
-X-Google-Smtp-Source: APXvYqyhIQShDAAhbOE3OapeABxnSyJWPLuQW4/o6+C6Gn/k+TxetOYdt8/F7h3rHgyflIsTU8gNTjtzE3Wy7vbb3Ak=
-X-Received: by 2002:adf:e510:: with SMTP id j16mr9653654wrm.259.1552966544870;
- Mon, 18 Mar 2019 20:35:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <1552467452-538-1-git-send-email-hongxing.zhu@nxp.com>
- <1552467452-538-2-git-send-email-hongxing.zhu@nxp.com> <CAHQ1cqE3fcCQ2mHk-SuLdBn3XDUy9U2h=qsTCS6aO+3za0Aptw@mail.gmail.com>
- <AM0PR0402MB357070EA4DF0331D0F29EDCE8C4B0@AM0PR0402MB3570.eurprd04.prod.outlook.com>
- <CAHQ1cqHjiLUFRUMO40fcpO83ATrkAa5NcZWnjjZMe+ZskSCQiQ@mail.gmail.com> <AM0PR0402MB35709D0CB62204A2AE49BDBD8C440@AM0PR0402MB3570.eurprd04.prod.outlook.com>
-In-Reply-To: <AM0PR0402MB35709D0CB62204A2AE49BDBD8C440@AM0PR0402MB3570.eurprd04.prod.outlook.com>
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-Date:   Mon, 18 Mar 2019 20:35:33 -0700
-Message-ID: <CAHQ1cqEQUw+nE9novFC2oh8OBAGQ_KW2Q=d8EsQnFmD+BN4EAg@mail.gmail.com>
-Subject: Re: [RFC 2/2] PCI: imx6: Add support for i.MX8QM/QXP PCIe
-To:     Richard Zhu <hongxing.zhu@nxp.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ d=Synaptics.onmicrosoft.com; s=selector1-synaptics-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EOxQgY00I4i1lRYj8TODCU6nTBYbA5CwEBNODAp6rfY=;
+ b=kkrIYIuMQUKPWr8ha5dUByKGxIP71sYnzO/8lSdo4Vzv5PiB2zfnLNLXqp8IyvR1EaJHSxQa1fEw6iyjroFJDzcSNyjgOcmf0kLTTspJDjbVorQkj9CWdQTRUhnbr4ePbIaI0HviPrn/MHAb00XlhJUzS2fRX/CnElno+Jz/hf8=
+Received: from BYAPR03MB4773.namprd03.prod.outlook.com (20.179.92.152) by
+ BYAPR03MB4165.namprd03.prod.outlook.com (20.177.184.206) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1709.14; Tue, 19 Mar 2019 05:36:36 +0000
+Received: from BYAPR03MB4773.namprd03.prod.outlook.com
+ ([fe80::1a8:1bc4:174b:472b]) by BYAPR03MB4773.namprd03.prod.outlook.com
+ ([fe80::1a8:1bc4:174b:472b%2]) with mapi id 15.20.1709.015; Tue, 19 Mar 2019
+ 05:36:36 +0000
+From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+To:     Aditya Pakki <pakki001@umn.edu>
+CC:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "kjlu@umn.edu" <kjlu@umn.edu>, Will Deacon <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH] PCI: Fix to avoid potential NULL pointer dereference
+Thread-Topic: [PATCH] PCI: Fix to avoid potential NULL pointer dereference
+Thread-Index: AQHU3epy9pCekv5IX063Y/R/DHluBaYSbYWA
+Date:   Tue, 19 Mar 2019 05:36:36 +0000
+Message-ID: <20190319132909.7d37b6cf@xhacker.debian>
+References: <20190319002630.12485-1-pakki001@umn.edu>
+In-Reply-To: <20190319002630.12485-1-pakki001@umn.edu>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [199.33.119.15]
+x-clientproxiedby: TY2PR01CA0019.jpnprd01.prod.outlook.com
+ (2603:1096:404:a::31) To BYAPR03MB4773.namprd03.prod.outlook.com
+ (2603:10b6:a03:134::24)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Jisheng.Zhang@synaptics.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 553b4c4c-6d83-4d56-c6fe-08d6ac2cda2e
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600127)(711020)(4605104)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:BYAPR03MB4165;
+x-ms-traffictypediagnostic: BYAPR03MB4165:
+x-ms-exchange-purlcount: 1
+x-microsoft-antispam-prvs: <BYAPR03MB4165D8BC3F92FB05771EAB75ED400@BYAPR03MB4165.namprd03.prod.outlook.com>
+x-forefront-prvs: 0981815F2F
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(366004)(376002)(396003)(39860400002)(346002)(199004)(189003)(6116002)(14454004)(8936002)(3846002)(316002)(52116002)(53936002)(99286004)(54906003)(2906002)(66066001)(26005)(6436002)(6486002)(97736004)(50226002)(76176011)(102836004)(8676002)(486006)(105586002)(386003)(9686003)(6506007)(106356001)(71200400001)(966005)(478600001)(6512007)(6306002)(256004)(229853002)(81156014)(86362001)(71190400001)(14444005)(72206003)(81166006)(11346002)(6246003)(476003)(5660300002)(305945005)(7736002)(6916009)(4326008)(186003)(446003)(1076003)(68736007)(2171002)(25786009)(39210200001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR03MB4165;H:BYAPR03MB4773.namprd03.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:0;MX:1;
+received-spf: None (protection.outlook.com: synaptics.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: EPgw4PqSiMHCpwdjLAx3XxMOmauIWbhiQnAP4xLQ2GmThilGZ8Pik0V73iSg66qZZraZUEVysR5XZUvI7aVp3Tk7h7hAc9HT1TTd09qMCfhUA6RZAmaMVIpDm7gxv51XMcImH+LExZ0x9Pw39GeqmFt9B87Svdpa0Fybi5s9MWX7dJHA6JjprTlU97MAfGe/Jw7gIJy7Io2Ic2fbXxu9NFB5izrYhbAsrv6Krw7Euc3mBDI/qAcyQnY8cQIpcn9n+j23ylBKDft2oKwsdg+orX1A9vY85T1durrQe1IYUdM9MzD46E9ZX2x+ZtB76j78mRF5tp0LghdU3J9ycfC8OivmUlVdLwaYXwT1sSmfOyYzOrttZ5aV5Bl59RXEYiDvPhDfVkaBoMtRbY1q2ISAeGeD0qC2cCl98BVwTA6CDWk=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <AC02BC5B156F2643A04B7B68F26A302A@namprd03.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: synaptics.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 553b4c4c-6d83-4d56-c6fe-08d6ac2cda2e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Mar 2019 05:36:36.1313
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 335d1fbc-2124-4173-9863-17e7051a2a0e
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR03MB4165
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 14, 2019 at 11:05 PM Richard Zhu <hongxing.zhu@nxp.com> wrote:
-> > > > > +               imx6_pcie->pcie_inbound_axi =
-> > > > devm_clk_get(&pdev->dev,
-> > > > > +                               "pcie_inbound_axi");
-> > > > > +               if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
-> > > > > +                       dev_err(&pdev->dev,
-> > > > > +                               "pcie clock source missing or
-> > > > invalid\n");
-> > > > > +                       return
-> > > > PTR_ERR(imx6_pcie->pcie_inbound_axi);
-> > > > > +               }
-> > > >
-> > > > On i.MX8MQ "pcie_bus" clock in vendor tree wasn't actually pointing
-> > > > to actual PCIE bus clock, so it might be worth checking if that's
-> > > > the case for i.MX8QM/X and you actually need one more clock.
-> > > [Richard Zhu] Regarding to my understanding, iMX PCIe module is
-> > connected to AXI bus.
-> > > Thus, the AXI related clock can be treated as bus clock. Correct me if my
-> > understand is wrong.
-> > > So, I use the pcie_bus clock for i.MX8QM/QXP PCIe in the dts binding.
-> > > Otherwise, I can use another new clock in codes to support i.MX8QM/QXP
-> > PCIes.
-> > >
-> >
-> > So, "pcie_bus" is supposed to be the clock driving PCIE bus itself. In this case
-> > the clock that is controlled by CLKREQ_B. On i.MX8MQ EVK that was an
-> > external 100 Mhz oscillator, so the final patch has "pcie_bus" pointing to a
-> > dedicated "fixed-clock":
-> > https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flore.ke
-> > rnel.org%2Flkml%2F20190220015857.7136-6-andrew.smirnov%40gmail.com
-> > %2FT%2F%23u&amp;data=02%7C01%7Chongxing.zhu%40nxp.com%7Cb745
-> > 5fe59e384723f44208d6a8ec835a%7C686ea1d3bc2b4c6fa92cd99c5c301635
-> > %7C0%7C0%7C636882131105162138&amp;sdata=s7438xBSNxnWwTMxZXkj
-> > LhgdPiS6puCRdrgr9suZpPQ%3D&amp;reserved=0
-> >
-> > Originally vendor tree was using "pcie_bus" to point at
-> > IMX8MQ_CLK_PCIE1_AUX. If the situation on i.MX8QM/QXP is similar, then,
-> > yeah, I think it should be moved out into a separate clock.
-> >
-> [Richard Zhu] The clocks of the i.MX8QM/QXP PCIe are different to the iMX8MQ PCIe's.
-> Five clocks MASTER_AXI, SLAVE_AXI, DBI_AXI, PIPE_CLK and PER_CLK are mandatory required.
-> Currently, They are named "pcie", "pcie_bus", "pcie_inbound_axi", "pcie_phy", "pcie_per" in the vendor tree.
-> PIPE_CLK is output to PHY, so "pcie_phy" clock name is used by it.
-> I'm not sure that the names of the xxx_AXI clocks are proper or not.
-> What're your suggests about the names of xxx_AXI clocks?
-> Did new clock names for all or part of these three xxx_AXI clocks shall be added in to the codes?
-> Thanks in advanced.
->
+On Mon, 18 Mar 2019 19:26:30 -0500 Aditya Pakki wrote:
 
-I am hardly an authority on how those clocks should be named, so don't
-put too much value in my suggestion. However if I had to do, I'd
-probably use "pcie" for MASTER_AXI and add "pcie_slave" or maybe
-"pcie2" to control SLAVE_AXI.
+>=20
+> In gen_pci_probe, of_match_node can return a NULL pointer in case of
 
-Lucas, if you don't mind, could you please comment on clock naming
-situation here?
+This could not happen. If the probe is called, it means OF registered a
+device with a valid compatible string, so of_match_node cannot be NULL.
 
-Thanks,
-Andrey Smirnov
+> failure. The patch avoids a NULL pointer dereference in such a scenario.
+>=20
+> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+> ---
+>  drivers/pci/controller/pci-host-generic.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/pci/controller/pci-host-generic.c b/drivers/pci/cont=
+roller/pci-host-generic.c
+> index dea3ec7592a2..85f473f50e96 100644
+> --- a/drivers/pci/controller/pci-host-generic.c
+> +++ b/drivers/pci/controller/pci-host-generic.c
+> @@ -83,6 +83,8 @@ static int gen_pci_probe(struct platform_device *pdev)
+>         struct pci_ecam_ops *ops;
+>=20
+>         of_id =3D of_match_node(gen_pci_of_match, pdev->dev.of_node);
+> +       if (!of_id)
+> +               return -ENXIO;
+>         ops =3D (struct pci_ecam_ops *)of_id->data;
+>=20
+>         return pci_host_common_probe(pdev, ops);
+> --
+> 2.17.1
+>=20
+>=20
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> https://urldefense.proofpoint.com/v2/url?u=3Dhttp-3A__lists.infradead.org=
+_mailman_listinfo_linux-2Darm-2Dkernel&d=3DDwICAg&c=3D7dfBJ8cXbWjhc0BhImu8w=
+Q&r=3DwlaKTGoVCDxOzHc2QUzpzGEf9oY3eidXlAe3OF1omvo&m=3DAaw3ijENR3L1GJbf1JjDl=
+Pa-S8-6UwqqXN40ECdoisk&s=3DByG7jEMATcZVHKP-JW7j4efNcV-iAfJDFTEzC8Ba7oc&e=3D
+
