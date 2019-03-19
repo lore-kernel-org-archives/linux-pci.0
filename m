@@ -2,132 +2,164 @@ Return-Path: <SRS0=xwy5=RW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B386FC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 11:35:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45412C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 14:02:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B9D82085A
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 11:35:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAD352147C
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 14:02:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="J9FIkDxY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726697AbfCSLf4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Mar 2019 07:35:56 -0400
-Received: from foss.arm.com ([217.140.101.70]:49892 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726036AbfCSLfz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 19 Mar 2019 07:35:55 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 0D00B1596;
-        Tue, 19 Mar 2019 04:35:55 -0700 (PDT)
-Received: from why.wild-wind.fr.eu.org (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 33A583F614;
-        Tue, 19 Mar 2019 04:35:53 -0700 (PDT)
-Date:   Tue, 19 Mar 2019 11:35:48 +0000
-From:   Marc Zyngier <marc.zyngier@arm.com>
-To:     Kishon Vijay Abraham I <kishon@ti.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 3/9] PCI: keystone: Convert to using hierarchy domain
- for legacy interrupts
-Message-ID: <20190319113548.2a5b77a7@why.wild-wind.fr.eu.org>
-In-Reply-To: <737e20d6-b389-522e-7e04-a381601fb128@ti.com>
-References: <20190221101518.22604-1-kishon@ti.com>
-        <20190221101518.22604-4-kishon@ti.com>
-        <20190221162413.GA5815@e107981-ln.cambridge.arm.com>
-        <20190223121143.14c1f150@why.wild-wind.fr.eu.org>
-        <4c55487d-213f-f5f5-6d67-93a417d2a0d7@ti.com>
-        <867eda28qh.wl-marc.zyngier@arm.com>
-        <73780998-919e-1a1c-7b8d-0bf8e33df015@ti.com>
-        <20190318111635.7eab3a97@why.wild-wind.fr.eu.org>
-        <737e20d6-b389-522e-7e04-a381601fb128@ti.com>
-Organization: ARM Ltd
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S1726688AbfCSOCK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Mar 2019 10:02:10 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:11746 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726464AbfCSOCK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Mar 2019 10:02:10 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c90f6620000>; Tue, 19 Mar 2019 07:02:10 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Tue, 19 Mar 2019 07:02:07 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Tue, 19 Mar 2019 07:02:07 -0700
+Received: from HQMAIL104.nvidia.com (172.18.146.11) by HQMAIL106.nvidia.com
+ (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 19 Mar
+ 2019 14:02:07 +0000
+Received: from hqnvemgw01.nvidia.com (172.20.150.20) by HQMAIL104.nvidia.com
+ (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 19 Mar 2019 14:02:07 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5c90f65c0007>; Tue, 19 Mar 2019 07:02:07 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <treding@nvidia.com>, <swarren@nvidia.com>,
+        <mperttunen@nvidia.com>, <jonathanh@nvidia.com>, <dev@lynxeye.de>,
+        <vidyas@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>
+Subject: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
+Date:   Tue, 19 Mar 2019 19:32:01 +0530
+Message-ID: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.7.4
+X-NVConfidentiality: public
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1553004130; bh=eqAWItGvhwMOEozblFQM9Qc95sY3mV0OLkY2w9e8joQ=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=J9FIkDxYhA91xj93l/2L2OQ9V88O3C2oIlezEJSyzX7Vj3p2Gq+Fv5kRCijdjh0bT
+         b4aM1wkLZsnTxYarKeDHAIN1GrH58IY9bpMADFClTBpTBrn12ryICmlQgkKb97DpKi
+         U7N13anXWObkOe727sTYH+OpHkgpYGPV2PhuXwg5cz7OiutvkVJ74c+v+LR1kjU5J2
+         lyRyEv+J8LxrGch7hzH2c6opu+Bfh82/a/UOYGx9rLHN2tj7rMcK9xxklFXHHdaxpR
+         rcnbT8sHzMeFzsBC0fuh0ahqWb78JiWKfDE+6SuYzn+KAs/1PG3cP8EPYtGLGcInRA
+         uZeUyCleniO+A==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 19 Mar 2019 16:22:39 +0530
-Kishon Vijay Abraham I <kishon@ti.com> wrote:
+Since the upstream MSI memory writes are generated by downstream devices,
+it is logically correct to have MSI target memory coming from the DMA pool
+reserved for PCIe than from the general memory pool reserved for CPU
+access. This avoids PCIe DMA addresses coinciding with MSI target address
+thereby raising unwanted MSI interrupts. This patch also enforces to limit
+the MSI target address to 32-bits to make it work for PCIe endponits that
+support only 32-bit MSI target address and those endpoints that support
+64-bit MSI target address anyway work with 32-bit MSI target address.
 
-Hi Kishon,
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Reviewed-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+---
+v2:
+* changed 'phys' type to 'dma_addr_t' from 'u64'
+* added a comment on why DMA mask is set to 32-bit
+* replaced 'dma' with 'DMA'
 
-> Hi Marc,
-> 
-> On 18/03/19 4:46 PM, Marc Zyngier wrote:
-> > On Mon, 18 Mar 2019 11:03:07 +0530
-> > Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> >   
-> >> Hi Marc,
-> >>
-> >> On 07/03/19 5:32 PM, Marc Zyngier wrote:  
-> >>> On Thu, 07 Mar 2019 09:12:30 +0000,
-> >>> Kishon Vijay Abraham I <kishon@ti.com> wrote:    
+ drivers/pci/controller/pci-tegra.c | 35 ++++++++++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 9 deletions(-)
 
-
-[...]
-
-> >>>> It is pulse triggered at subsystem level. Quoting the TRM
-> >>>> "The interrupt request signal at the PCIe SS boundary is a pulse signal that is
-> >>>> triggered each time an assert interrupt message is received." The PCIe
-> >>>> subsystem also has a level signal (interrupt pending signal) but the interrupt
-> >>>> request signal is the one that is connected to GIC.    
-> >>>
-> >>> This looks completely wrong. MSIs are always edge, and legacy always
-> >>> level, end of story. If your HW is any different, then it doesn't seem
-> >>> to be compliant with PCI.    
-> >>
-> >> Agree that Legacy interrupts ought to be level-triggered. I checked this with
-> >> HW team and I've copy-pasted the response.
-> >>
-> >> "The legacy interrupts from the PCIe controller are still level. The PCIe
-> >> controller will hold the legacy interrupt lines high until a de-assert message
-> >> is sent back. The pulse interrupt is only to send the interrupt from the PCIe
-> >> sub-system to the SoC interrupt controller. This should not impact the
-> >> operation of the legacy interrupt on the PCIe side."
-> >>
-> >> Looks like the interrupts are propagated multiple levels and only the last
-> >> level to the interrupt controller is pulse.  
-> > 
-> > Let's take an example: My device (let's assume a network controller of
-> > some sort) generates an interrupt. Level is high, and you observe an
-> > edge. The driver handles the interrupt, but due to a race, the line
-> > stays high (the device has received a new packet).
-> > 
-> > How is a *new* edge generated? The line never transited to low, and we
-> > have more packet to process. With a level triggered interrupt, you just
-> > take the interrupt again. With an edge interrupt, you need to actively
-> > resample the level and retrigger the interrupt. How is this done?  
-> 
-> There might be an actual issue in the HW while converting from level to edge
-> where new edge interrupt might not be generated in the case you just mentioned.
-> I am checking this with HW folks.
-
-There is (non-PCI) HW that does that. On EOI, they force the interrupt
-controller to resample the level, which results in a new edge to be
-generated if the level is high. This of course require some HW, usually
-a register taking the ID of the line that needs resampling. I'd be
-surprised if there wasn't something along those lines in your HW, at
-least as a debug mechanism.
-
-> Since this might take time, I'll remove this patch and resend only the MSI
-> cleanup in order to make progress.
-
-OK.
-
-Thanks,
-
-	M.
+diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+index f4f53d092e00..f8173a5e352d 100644
+--- a/drivers/pci/controller/pci-tegra.c
++++ b/drivers/pci/controller/pci-tegra.c
+@@ -231,9 +231,9 @@ struct tegra_msi {
+ 	struct msi_controller chip;
+ 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+ 	struct irq_domain *domain;
+-	unsigned long pages;
+ 	struct mutex lock;
+-	u64 phys;
++	void *virt;
++	dma_addr_t phys;
+ 	int irq;
+ };
+ 
+@@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+ 	err = platform_get_irq_byname(pdev, "msi");
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to get IRQ: %d\n", err);
+-		goto err;
++		goto free_irq_domain;
+ 	}
+ 
+ 	msi->irq = err;
+@@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+ 			  tegra_msi_irq_chip.name, pcie);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to request IRQ: %d\n", err);
+-		goto err;
++		goto free_irq_domain;
++	}
++
++	/* Though the PCIe controller can address >32-bit address space, to
++	 * facilitate endpoints that support only 32-bit MSI target address,
++	 * the mask is set to 32-bit to make sure that MSI target address is
++	 * always a 32-bit address
++	 */
++	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
++	if (err < 0) {
++		dev_err(dev, "failed to set DMA coherent mask: %d\n", err);
++		goto free_irq;
++	}
++
++	msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
++	if (!msi->virt) {
++		dev_err(dev, "failed to allocate DMA memory for MSI\n");
++		err = -ENOMEM;
++		goto free_irq;
+ 	}
+ 
+-	/* setup AFI/FPCI range */
+-	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+-	msi->phys = virt_to_phys((void *)msi->pages);
+ 	host->msi = &msi->chip;
+ 
+ 	return 0;
+ 
+-err:
++free_irq:
++	free_irq(msi->irq, pcie);
++free_irq_domain:
+ 	irq_domain_remove(msi->domain);
+ 	return err;
+ }
+@@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
+ 	struct tegra_msi *msi = &pcie->msi;
+ 	unsigned int i, irq;
+ 
+-	free_pages(msi->pages, 0);
++	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
+ 
+ 	if (msi->irq > 0)
+ 		free_irq(msi->irq, pcie);
 -- 
-Without deviation from the norm, progress is not possible.
+2.7.4
+
