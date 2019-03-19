@@ -2,125 +2,134 @@ Return-Path: <SRS0=xwy5=RW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85806C4360F
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 02:08:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 758FCC43381
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 03:35:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DAAA2173C
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 02:08:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3198320872
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Mar 2019 03:35:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ITC3hSdB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oMqexT7S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726998AbfCSCIX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 18 Mar 2019 22:08:23 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:41792 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726832AbfCSCIX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 22:08:23 -0400
-Received: by mail-wr1-f65.google.com with SMTP id p1so19206140wrs.8;
-        Mon, 18 Mar 2019 19:08:22 -0700 (PDT)
+        id S1726832AbfCSDfr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 18 Mar 2019 23:35:47 -0400
+Received: from mail-wr1-f43.google.com ([209.85.221.43]:45838 "EHLO
+        mail-wr1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726743AbfCSDfr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 18 Mar 2019 23:35:47 -0400
+Received: by mail-wr1-f43.google.com with SMTP id s15so3990029wra.12;
+        Mon, 18 Mar 2019 20:35:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=GxDi+nnEkBmFR+dwvAIZx1HmUdi9EKh99I6tfjS80f0=;
-        b=ITC3hSdBdzSW5NQbuXfAs4/2sRif7mDOLI2xba8wKMWSrnSoGS9gCqOALb4+8EeCRS
-         RKKq9qhvhAwbz1asjGIQH8gQSmon1Fh3nOT7stqm4jMbd/ovsNa3yGUXvmv2hVlx8r1M
-         4XYo8BSkO2cte3MWDX+0Cfd5n9VZxA8GmlhOE6WDavhKTpWZGtwYSYy/h6Iipq38ZC13
-         T21WEO4l9+ETegTd0X0OPzRFoevCt1USZlgkUN8pjmGOvN7Fzi1V6vO0YHYp4n3m8WTK
-         oz6vhsD/qNfGyIXKGjyMHJbiRBrqUygsaIz+/iRFH0eDFIDVqTIYhFP0a8FQDQ9z20Fk
-         aMBw==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=VBXYPXLWASjbaQjUFBFDYdnIs/DH3ZDLfgEjYjeu8Wg=;
+        b=oMqexT7SyNWILkJ0+1c1iAsj02rYoCijFaiSn/IVHd1GU2RRaLUIlLJvsVnLR7y2Nh
+         tnzcNrSptKhlRAi28qb8F/ZKrMYuOB0rpiVU911zEJekOXLdf+9hlzR2ORW5unN5iT57
+         52bgRKUUdTCBRV8mhxqWaytX/8a9IIOhI0ICZ6/3rluZmqAWA20GYA8uYFVQqciv3ejn
+         pPNQpqcnOOa4sk9T96CAAUdtmTNA6sjsmFf2CLSEIzYFpF/9mqnk8gf8ZssyfYq1aoI3
+         xI6NdhgJeUB6jOPy/PVwIQLvTdNw+NHidZoUmdvnXTFyphfziNVPwWXI2cGIRtB7CifN
+         PGCw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=GxDi+nnEkBmFR+dwvAIZx1HmUdi9EKh99I6tfjS80f0=;
-        b=LUyVzTOOzogD18LpLYnVtQvoY0rEUI5nogpT3G940QEd0VLdWYJkLLJrU1sPN79EHu
-         R6tU9VbMdAI3LJ0acEHHnLP0SJWn3stBHUOYHI9fiiSYCOTcOmkUDEUszXOkhzR6SVlA
-         nYsNvLVWNWMr62qakxPcVriy5iFnwwhoZdgFzt2i9kqEmYahzERiWTcm0kVCGYtC1rXH
-         U1iPSQklOEzLmcW6XbEB8CWA/8N9haUkRVJMzfz5h8GqnHAAStK+MASNhacnSsc5Rh17
-         pla8eBFxClNuoJS8JS7nZPlFNm1kNM125yostjxUC9leYmzAATiueMJ8Sv+ntRM8uFOV
-         PaIQ==
-X-Gm-Message-State: APjAAAWInD4g3KOseIixtnqD1giOnHKCEebGxRCYueTZvoWI8FRJ+bl3
-        uyuS2t2DGCG7xJ7fxkeOvyw9+OAc
-X-Google-Smtp-Source: APXvYqxEqdaSH15m7sIS6PO+Si/SgIjAPW3pXkgXLLZQm0JHdR5ZGJnjTz53/2n/4kJIcGK768tljQ==
-X-Received: by 2002:adf:eac9:: with SMTP id o9mr3259845wrn.85.1552961301064;
-        Mon, 18 Mar 2019 19:08:21 -0700 (PDT)
-Received: from [192.168.1.4] (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id d9sm23516406wrn.72.2019.03.18.19.08.19
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Mon, 18 Mar 2019 19:08:20 -0700 (PDT)
-Subject: Re: [PATCH 2/3] PCI: rcar: Allow 64bit MSI addresses
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Wolfram Sang <wsa@the-dreams.de>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20190317000608.24881-1-marek.vasut@gmail.com>
- <20190317000608.24881-2-marek.vasut@gmail.com> <20190317091228.GB2268@kunai>
- <940fd646-0049-890a-ac00-8bc9361b2431@gmail.com>
- <CAMuHMdVXEqqRjkXR-9WPVVpNXu_C3Xg6yeZ0Nrhr1KbmHPuouw@mail.gmail.com>
- <CAMuHMdWOL33eTMOWaHmxXpZoLmvMOtrcZN6Mi0REMbJvKwp+XQ@mail.gmail.com>
-From:   Marek Vasut <marek.vasut@gmail.com>
-Openpgp: preference=signencrypt
-Message-ID: <22e66804-574a-ed5a-e04e-00c8a29e9dc3@gmail.com>
-Date:   Tue, 19 Mar 2019 02:16:38 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=VBXYPXLWASjbaQjUFBFDYdnIs/DH3ZDLfgEjYjeu8Wg=;
+        b=ZXKHucTQTmUzZxUUs7yrV7daZKLf7BWnXou4IkknJMJbgyVzqRHVq0wdtz5U+PQVD/
+         nitop8CX2kyiucXlmci8xBswA/VHFqyIj3grCQrvEaeU9aggcQL8dZWERn2qM3vFGXyk
+         p6P2pG3TIkZ7T6GhYqmuZ3sumjBg648gByVWDTQB+2iYBv0Pch1z0504tCtSQEv4av8y
+         9il38WnRasf/11QiFM8Z0VaZS198xBfsDE2WBq9cudVu/SmdWYz/fkaKhn/iEUjpW7h8
+         pM3BVWa20bs7R/Id1vvJonut/l+ryq59NQUiTqT5V/AvGdLlsn5zmZGg+pQiZPiz7H+p
+         KaUg==
+X-Gm-Message-State: APjAAAX7OcGcAMB0p10Mlrt39HvnM7CnXjCKg/LsdowhrA+tM+DRKuVO
+        NfA9ledFJx1m2Hp/94etqKEDKO1DgmINblL0l0SkVBmx
+X-Google-Smtp-Source: APXvYqyhIQShDAAhbOE3OapeABxnSyJWPLuQW4/o6+C6Gn/k+TxetOYdt8/F7h3rHgyflIsTU8gNTjtzE3Wy7vbb3Ak=
+X-Received: by 2002:adf:e510:: with SMTP id j16mr9653654wrm.259.1552966544870;
+ Mon, 18 Mar 2019 20:35:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdWOL33eTMOWaHmxXpZoLmvMOtrcZN6Mi0REMbJvKwp+XQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <1552467452-538-1-git-send-email-hongxing.zhu@nxp.com>
+ <1552467452-538-2-git-send-email-hongxing.zhu@nxp.com> <CAHQ1cqE3fcCQ2mHk-SuLdBn3XDUy9U2h=qsTCS6aO+3za0Aptw@mail.gmail.com>
+ <AM0PR0402MB357070EA4DF0331D0F29EDCE8C4B0@AM0PR0402MB3570.eurprd04.prod.outlook.com>
+ <CAHQ1cqHjiLUFRUMO40fcpO83ATrkAa5NcZWnjjZMe+ZskSCQiQ@mail.gmail.com> <AM0PR0402MB35709D0CB62204A2AE49BDBD8C440@AM0PR0402MB3570.eurprd04.prod.outlook.com>
+In-Reply-To: <AM0PR0402MB35709D0CB62204A2AE49BDBD8C440@AM0PR0402MB3570.eurprd04.prod.outlook.com>
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+Date:   Mon, 18 Mar 2019 20:35:33 -0700
+Message-ID: <CAHQ1cqEQUw+nE9novFC2oh8OBAGQ_KW2Q=d8EsQnFmD+BN4EAg@mail.gmail.com>
+Subject: Re: [RFC 2/2] PCI: imx6: Add support for i.MX8QM/QXP PCIe
+To:     Richard Zhu <hongxing.zhu@nxp.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/18/19 10:30 AM, Geert Uytterhoeven wrote:
-> Hi Marek,
-> 
-> On Mon, Mar 18, 2019 at 9:39 AM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
->> On Mon, Mar 18, 2019 at 12:39 AM Marek Vasut <marek.vasut@gmail.com> wrote:
->>> On 3/17/19 10:12 AM, Wolfram Sang wrote:
->>>> On Sun, Mar 17, 2019 at 01:06:07AM +0100, marek.vasut@gmail.com wrote:
->>>>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>>
->>>>> The MSI address can be 64bit. Switch the data type used to hold the
->>>>> result of virt_to_phys() to phys_addr_t to reflect it's properties
->>>>> correctly and program the top 32bits of PA into PCIEMSIAUR.
->>>>>
->>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>
->>>> Looks sane. Not being a PCI expert, I wonder: Were we just lucky to not
->>>> hit a 64-bit MSI address before?
->>>
->>> I wonder about that, virt_to_phys(__get_free_pages(GFP_KERNEL, 0)) would
->>> happily return 64bit address, but with the cards I tested (a few intel
->>> NICs [igb, e1000e], PCIe NVME SSDs and xHCI HCD), I am getting the MSIs
->>> either way.
->>
->> No doubt you would be receiving the MSIs, if you have RAM at the truncated
->> address, but wouldn't that cause memory corruption?
->>
->> Fixes: 290c1fb358605402 ("PCI: rcar: Add MSI support for PCIe")
->>
->> When MSI support was added, only R-Car H1 and Gen2 were supported.
->> H1 doesn't have LPAE. Gen2 has, but it might have been disabled.
-> 
-> Correction: as this is always mapped kernel memory, LPAE doesn't matter.
-> So the bug matters for arm64 only.
+On Thu, Mar 14, 2019 at 11:05 PM Richard Zhu <hongxing.zhu@nxp.com> wrote:
+> > > > > +               imx6_pcie->pcie_inbound_axi =
+> > > > devm_clk_get(&pdev->dev,
+> > > > > +                               "pcie_inbound_axi");
+> > > > > +               if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
+> > > > > +                       dev_err(&pdev->dev,
+> > > > > +                               "pcie clock source missing or
+> > > > invalid\n");
+> > > > > +                       return
+> > > > PTR_ERR(imx6_pcie->pcie_inbound_axi);
+> > > > > +               }
+> > > >
+> > > > On i.MX8MQ "pcie_bus" clock in vendor tree wasn't actually pointing
+> > > > to actual PCIE bus clock, so it might be worth checking if that's
+> > > > the case for i.MX8QM/X and you actually need one more clock.
+> > > [Richard Zhu] Regarding to my understanding, iMX PCIe module is
+> > connected to AXI bus.
+> > > Thus, the AXI related clock can be treated as bus clock. Correct me if my
+> > understand is wrong.
+> > > So, I use the pcie_bus clock for i.MX8QM/QXP PCIe in the dts binding.
+> > > Otherwise, I can use another new clock in codes to support i.MX8QM/QXP
+> > PCIes.
+> > >
+> >
+> > So, "pcie_bus" is supposed to be the clock driving PCIE bus itself. In this case
+> > the clock that is controlled by CLKREQ_B. On i.MX8MQ EVK that was an
+> > external 100 Mhz oscillator, so the final patch has "pcie_bus" pointing to a
+> > dedicated "fixed-clock":
+> > https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Flore.ke
+> > rnel.org%2Flkml%2F20190220015857.7136-6-andrew.smirnov%40gmail.com
+> > %2FT%2F%23u&amp;data=02%7C01%7Chongxing.zhu%40nxp.com%7Cb745
+> > 5fe59e384723f44208d6a8ec835a%7C686ea1d3bc2b4c6fa92cd99c5c301635
+> > %7C0%7C0%7C636882131105162138&amp;sdata=s7438xBSNxnWwTMxZXkj
+> > LhgdPiS6puCRdrgr9suZpPQ%3D&amp;reserved=0
+> >
+> > Originally vendor tree was using "pcie_bus" to point at
+> > IMX8MQ_CLK_PCIE1_AUX. If the situation on i.MX8QM/QXP is similar, then,
+> > yeah, I think it should be moved out into a separate clock.
+> >
+> [Richard Zhu] The clocks of the i.MX8QM/QXP PCIe are different to the iMX8MQ PCIe's.
+> Five clocks MASTER_AXI, SLAVE_AXI, DBI_AXI, PIPE_CLK and PER_CLK are mandatory required.
+> Currently, They are named "pcie", "pcie_bus", "pcie_inbound_axi", "pcie_phy", "pcie_per" in the vendor tree.
+> PIPE_CLK is output to PHY, so "pcie_phy" clock name is used by it.
+> I'm not sure that the names of the xxx_AXI clocks are proper or not.
+> What're your suggests about the names of xxx_AXI clocks?
+> Did new clock names for all or part of these three xxx_AXI clocks shall be added in to the codes?
+> Thanks in advanced.
+>
 
-And since the address is in the 0x7_3xxx_xxxx range on H3 S-XS, there is
-no visible memory corruption. Joy ...
+I am hardly an authority on how those clocks should be named, so don't
+put too much value in my suggestion. However if I had to do, I'd
+probably use "pcie" for MASTER_AXI and add "pcie_slave" or maybe
+"pcie2" to control SLAVE_AXI.
 
--- 
-Best regards,
-Marek Vasut
+Lucas, if you don't mind, could you please comment on clock naming
+situation here?
+
+Thanks,
+Andrey Smirnov
