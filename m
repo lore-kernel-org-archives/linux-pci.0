@@ -2,264 +2,166 @@ Return-Path: <SRS0=Ivhv=RX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80D2AC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 21:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF511C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 21:37:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38568218AE
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 21:15:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553116523;
-	bh=j+E/RkT4UktfqqPBAngWwZyzd794VuSAqlhKXC2IEWQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=0bqmIer3N5W65RoP5LnaqRUkBM4lrOM7gEHeXSaahF5Mi6G5SpVdQ0r+ZFcLzIODv
-	 IQ2VjtAIInBHH2GDSKO+7OEzwlHRwbuhaU89sL0IxzTsEeIg4EA7suXQo1tNyU2ITt
-	 b4qxFNgK0guk02fU3Pl96kf6hi0yC3tC6k4PVaBM=
+	by mail.kernel.org (Postfix) with ESMTP id 93C7921909
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 21:37:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="hxrl7QjY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727493AbfCTVPW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Mar 2019 17:15:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36894 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727220AbfCTVPW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Mar 2019 17:15:22 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0E4BA218AE;
-        Wed, 20 Mar 2019 21:15:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553116520;
-        bh=j+E/RkT4UktfqqPBAngWwZyzd794VuSAqlhKXC2IEWQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=C++4YfbK7ptX2duVbZsJuK8wxmYPn5fHlTyYxOLo6HfbxXiJCU/qWHqiNjrTqUYVW
-         78saXUV0WzHvFgGHXHqGXuSOYL0Zvgme+f/r/QXzhgjIkC7EQuBufnQg5U7uzsclsD
-         bAM0k2XzfTXLe3Dwoh+JCuLXrkREDSvTvbVYbpls=
-Date:   Wed, 20 Mar 2019 16:15:18 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Enrico Weigelt, metux IT consult" <info@metux.net>
-Cc:     linux-kernel@vger.kernel.org, kurt.schwemmer@microsemi.com,
-        logang@deltatee.com, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>
-Subject: Re: [PATCH v2] drivers: ntb: Kconfig: pedantic cleanups
-Message-ID: <20190320211517.GG251185@google.com>
-References: <1551898265-18909-1-git-send-email-info@metux.net>
- <1551909774-24030-1-git-send-email-info@metux.net>
+        id S1727468AbfCTVhy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Mar 2019 17:37:54 -0400
+Received: from mail-eopbgr770131.outbound.protection.outlook.com ([40.107.77.131]:20558
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727381AbfCTVhy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Mar 2019 17:37:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=72O19RTsI1ctsnsQ5beIAK5lCvWm+ee/hJdcjd5NDQc=;
+ b=hxrl7QjYZnTubCAqaRp/8p++nSkpCbcO8JEPNOEu1p+0l75FugGnEYztcOZv7KCijYbr8ifYVk1hnI6CyJE2P6rIm6KfSD3qp94mKDPrW1EcMlSHq2V806HwmoapjuL6YShGryIgSZKC4OS+Ags4YoaaQTOiflD7Ma+GKgjiffI=
+Received: from DM5PR2101MB0918.namprd21.prod.outlook.com (52.132.132.163) by
+ DM5PR2101MB0967.namprd21.prod.outlook.com (52.132.133.25) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1750.5; Wed, 20 Mar 2019 21:37:50 +0000
+Received: from DM5PR2101MB0918.namprd21.prod.outlook.com
+ ([fe80::c92a:a5e0:ee92:5f6]) by DM5PR2101MB0918.namprd21.prod.outlook.com
+ ([fe80::c92a:a5e0:ee92:5f6%5]) with mapi id 15.20.1730.008; Wed, 20 Mar 2019
+ 21:37:50 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     Dexuan Cui <decui@microsoft.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sasha Levin <Alexander.Levin@microsoft.com>
+CC:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "driverdev-devel@linuxdriverproject.org" 
+        <driverdev-devel@linuxdriverproject.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        vkuznets <vkuznets@redhat.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "jackm@mellanox.com" <jackm@mellanox.com>,
+        "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH 1/3] PCI: hv: Fix a memory leak in hv_eject_device_work()
+Thread-Topic: [PATCH 1/3] PCI: hv: Fix a memory leak in hv_eject_device_work()
+Thread-Index: AQHU0tIYcblOk9ffn0yRsYTt0Z4pWaYVIKsQ
+Date:   Wed, 20 Mar 2019 21:37:49 +0000
+Message-ID: <DM5PR2101MB0918F6A089C461EEA4457998D7410@DM5PR2101MB0918.namprd21.prod.outlook.com>
+References: <20190304213357.16652-1-decui@microsoft.com>
+ <20190304213357.16652-2-decui@microsoft.com>
+In-Reply-To: <20190304213357.16652-2-decui@microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=mikelley@ntdev.microsoft.com;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-03-20T21:37:46.2345424Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
+ Information Protection;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=e434203d-b77d-43fb-8540-83db36fb089c;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 1b897d5c-575a-4146-da8d-08d6ad7c4d1c
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:DM5PR2101MB0967;
+x-ms-traffictypediagnostic: DM5PR2101MB0967:
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <DM5PR2101MB096737ED8E6B152B3A1F2DFFD7410@DM5PR2101MB0967.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-forefront-prvs: 098291215C
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39860400002)(366004)(376002)(346002)(136003)(396003)(199004)(189003)(486006)(99286004)(446003)(2906002)(33656002)(8936002)(6116002)(10090500001)(3846002)(476003)(22452003)(6636002)(105586002)(478600001)(316002)(2501003)(66066001)(256004)(11346002)(106356001)(1511001)(110136005)(54906003)(305945005)(7736002)(6246003)(74316002)(186003)(4326008)(26005)(14454004)(2201001)(71190400001)(71200400001)(7416002)(25786009)(6436002)(55016002)(81156014)(81166006)(52536014)(8676002)(9686003)(53936002)(5660300002)(86612001)(97736004)(76176011)(86362001)(8990500004)(6506007)(102836004)(6346003)(68736007)(10290500003)(229853002)(7696005);DIR:OUT;SFP:1102;SCL:1;SRVR:DM5PR2101MB0967;H:DM5PR2101MB0918.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=mikelley@microsoft.com; 
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: B0iAlPyXXcXlWe6h6Y6uOf/jcE4EeWaMof0wXHRcDcnpSmeznxI0CMI//0bJCNS53S/xzz7VLBaXBqe794Q254bNVxyG9BdO+keAT+YB2LG6VMbIyDL4j5WyF6OMS83BqPhZWWzuUsr4fGrxSolUffmN3TALTOeBvMEeS8aztiRSpDlwqKLbDYqZJivIF9uQ6oGzz7Vq13E1/b3fbbMSz6QLF0I/BNCmDigpBVDOPpbP8XN1xf+gLlfb6B0tNSP4tGVRVq5iS5RGFcFOJUToHnAtgTLA+qbDJXX4d0EmOKUG/Pvet3K79bcITh0OA19o/8MhvIxcCVzGYTScqWNHAEjPYaxdVGkjyXVyzSVIOJ2WaFKyTvYQsf13Npj8DR7QyppD6wkOSenIvSCwHkIDUBloQd4LJ3OHPn9tPjoE1VI=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1551909774-24030-1-git-send-email-info@metux.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1b897d5c-575a-4146-da8d-08d6ad7c4d1c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Mar 2019 21:37:49.3704
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR2101MB0967
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Jon, Dave, Allen]
+From: Dexuan Cui <decui@microsoft.com>
+>
+> After a device is just created in new_pcichild_device(), hpdev->refs is s=
+et
+> to 2 (i.e. the initial value of 1 plus the get_pcichild()).
+>=20
+> When we hot remove the device from the host, in Linux VM we first call
+> hv_pci_eject_device(), which increases hpdev->refs by get_pcichild() and
+> then schedules a work of hv_eject_device_work(), so hpdev->refs becomes 3
+> (let's ignore the paired get/put_pcichild() in other places). But in
+> hv_eject_device_work(), currently we only call put_pcichild() twice,
+> meaning the 'hpdev' struct can't be freed in put_pcichild(). This patch
+> adds one put_pcichild() to fix the memory leak.
+>=20
+> BTW, the device can also be removed when we run "rmmod pci-hyperv". On th=
+is
+> path (hv_pci_remove() -> hv_pci_bus_exit() -> hv_pci_devices_present()),
+> hpdev->refs is 2, and we do correctly call put_pcichild() twice in
+> pci_devices_present_work().
+>=20
+> Fixes: 4daace0d8ce8 ("PCI: hv: Add paravirtual PCI front-end for Microsof=
+t Hyper-V VMs")
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: <stable@vger.kernel.org>
 
-On Wed, Mar 06, 2019 at 11:02:54PM +0100, Enrico Weigelt, metux IT consult wrote:
-> Formatting of Kconfig files doesn't look so pretty, so just
-> take damp cloth and clean it up.
+Exiting new_pcichild_device() with hpdev->refs set to 2 seems OK to me.
+There is the reference in the hbus->children list, and there is the referen=
+ce that
+is returned to the caller.  But what is strange is that pci_devices_present=
+_work()
+overwrites the reference returned in local variable hpdev without doing a
+put_pcichild().  It seems like the "normal" reference count should be 1 whe=
+n the
+child device is not being manipulated, not 2.  The fix would be to add a ca=
+ll to
+put_pcichild() when the return value from new_pcichild_device() is overwrit=
+ten.
+Then remove the call to put_pcichild() in pci_device_present_work() when mi=
+ssing
+children are moved to the local list. The children have been moved from one=
+ list
+to another, so there's no need to decrement the reference count.  Then when
+everything in the local list is deleted, the reference is correctly decreme=
+nted,
+presumably freeing the memory.
 
-Oops, I didn't notice that this was a v2.  I first thought this was a
-2/2 patch.  Sorry for the noise.  Most of my comments still apply
-here, I think.
+With this approach, the code in hv_eject_device_work() is correct.  There's
+one call to put_pcichild() to reflect removing the child device from the hb=
+us->
+children list, and one call to put_pcichild() to pair with the get_pcichild=
+() in
+hv_pci_eject_device().
 
-> Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
-> ---
->  drivers/ntb/Kconfig          | 20 ++++++++++----------
->  drivers/ntb/hw/amd/Kconfig   |  4 ++--
->  drivers/ntb/hw/idt/Kconfig   | 41 ++++++++++++++++++++---------------------
->  drivers/ntb/hw/intel/Kconfig |  4 ++--
->  drivers/ntb/hw/mscc/Kconfig  |  8 ++++----
->  drivers/ntb/test/Kconfig     | 26 +++++++++++++-------------
->  6 files changed, 51 insertions(+), 52 deletions(-)
-> 
-> diff --git a/drivers/ntb/Kconfig b/drivers/ntb/Kconfig
-> index 95944e5..5ce3fdd 100644
-> --- a/drivers/ntb/Kconfig
-> +++ b/drivers/ntb/Kconfig
-> @@ -2,13 +2,13 @@ menuconfig NTB
->  	tristate "Non-Transparent Bridge support"
->  	depends on PCI
->  	help
-> -	 The PCI-E Non-transparent bridge hardware is a point-to-point PCI-E bus
-> -	 connecting 2 systems.  When configured, writes to the device's PCI
-> -	 mapped memory will be mirrored to a buffer on the remote system.  The
-> -	 ntb Linux driver uses this point-to-point communication as a method to
-> -	 transfer data from one system to the other.
-> +	  The PCI-E Non-transparent bridge hardware is a point-to-point PCI-E bus
-> +	  connecting 2 systems.  When configured, writes to the device's PCI
-> +	  mapped memory will be mirrored to a buffer on the remote system.  The
-> +	  ntb Linux driver uses this point-to-point communication as a method to
-> +	  transfer data from one system to the other.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
->  
->  if NTB
->  
-> @@ -19,10 +19,10 @@ source "drivers/ntb/test/Kconfig"
->  config NTB_TRANSPORT
->  	tristate "NTB Transport Client"
->  	help
-> -	 This is a transport driver that enables connected systems to exchange
-> -	 messages over the ntb hardware.  The transport exposes a queue pair api
-> -	 to client drivers.
-> +	  This is a transport driver that enables connected systems to exchange
-> +	  messages over the ntb hardware.  The transport exposes a queue pair api
-> +	  to client drivers.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
->  
->  endif # NTB
-> diff --git a/drivers/ntb/hw/amd/Kconfig b/drivers/ntb/hw/amd/Kconfig
-> index cfe903c..9a90f17 100644
-> --- a/drivers/ntb/hw/amd/Kconfig
-> +++ b/drivers/ntb/hw/amd/Kconfig
-> @@ -2,6 +2,6 @@ config NTB_AMD
->  	tristate "AMD Non-Transparent Bridge support"
->  	depends on X86_64
->  	help
-> -	 This driver supports AMD NTB on capable Zeppelin hardware.
-> +	  This driver supports AMD NTB on capable Zeppelin hardware.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
-> diff --git a/drivers/ntb/hw/idt/Kconfig b/drivers/ntb/hw/idt/Kconfig
-> index f8948cf..5d106ac 100644
-> --- a/drivers/ntb/hw/idt/Kconfig
-> +++ b/drivers/ntb/hw/idt/Kconfig
-> @@ -3,28 +3,27 @@ config NTB_IDT
->  	depends on PCI
->  	select HWMON
->  	help
-> -	 This driver supports NTB of cappable IDT PCIe-switches.
-> +	  This driver supports NTB of cappable IDT PCIe-switches.
->  
-> -	 Some of the pre-initializations must be made before IDT PCIe-switch
-> -	 exposes it NT-functions correctly. It should be done by either proper
-> -	 initialisation of EEPROM connected to master smbus of the switch or
-> -	 by BIOS using slave-SMBus interface changing corresponding registers
-> -	 value. Evidently it must be done before PCI bus enumeration is
-> -	 finished in Linux kernel.
-> +	  Some of the pre-initializations must be made before IDT PCIe-switch
-> +	  exposes it NT-functions correctly. It should be done by either proper
-> +	  initialisation of EEPROM connected to master smbus of the switch or
-> +	  by BIOS using slave-SMBus interface changing corresponding registers
-> +	  value. Evidently it must be done before PCI bus enumeration is
-> +	  finished in Linux kernel.
->  
-> -	 First of all partitions must be activated and properly assigned to all
-> -	 the ports with NT-functions intended to be activated (see SWPARTxCTL
-> -	 and SWPORTxCTL registers). Then all NT-function BARs must be enabled
-> -	 with chosen valid aperture. For memory windows related BARs the
-> -	 aperture settings shall determine the maximum size of memory windows
-> -	 accepted by a BAR. Note that BAR0 must map PCI configuration space
-> -	 registers.
-> +	  First of all partitions must be activated and properly assigned to all
-> +	  the ports with NT-functions intended to be activated (see SWPARTxCTL
-> +	  and SWPORTxCTL registers). Then all NT-function BARs must be enabled
-> +	  with chosen valid aperture. For memory windows related BARs the
-> +	  aperture settings shall determine the maximum size of memory windows
-> +	  accepted by a BAR. Note that BAR0 must map PCI configuration space
-> +	  registers.
->  
-> -	 It's worth to note, that since a part of this driver relies on the
-> -	 BAR settings of peer NT-functions, the BAR setups can't be done over
-> -	 kernel PCI fixups. That's why the alternative pre-initialization
-> -	 techniques like BIOS using SMBus interface or EEPROM should be
-> -	 utilized.
-> -
-> -	 If unsure, say N.
-> +	  It's worth to note, that since a part of this driver relies on the
-> +	  BAR settings of peer NT-functions, the BAR setups can't be done over
-> +	  kernel PCI fixups. That's why the alternative pre-initialization
-> +	  techniques like BIOS using SMBus interface or EEPROM should be
-> +	  utilized.
->  
-> +	  If unsure, say N.
-> diff --git a/drivers/ntb/hw/intel/Kconfig b/drivers/ntb/hw/intel/Kconfig
-> index 91f995e..c166d50 100644
-> --- a/drivers/ntb/hw/intel/Kconfig
-> +++ b/drivers/ntb/hw/intel/Kconfig
-> @@ -2,6 +2,6 @@ config NTB_INTEL
->  	tristate "Intel Non-Transparent Bridge support"
->  	depends on X86_64
->  	help
-> -	 This driver supports Intel NTB on capable Xeon and Atom hardware.
-> +	  This driver supports Intel NTB on capable Xeon and Atom hardware.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
-> diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
-> index 013ed67..74ec015 100644
-> --- a/drivers/ntb/hw/mscc/Kconfig
-> +++ b/drivers/ntb/hw/mscc/Kconfig
-> @@ -2,8 +2,8 @@ config NTB_SWITCHTEC
->  	tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
->  	select PCI_SW_SWITCHTEC
->  	help
-> -	 Enables NTB support for Switchtec PCI switches. This also
-> -	 selects the Switchtec management driver as they share the same
-> -	 hardware interface.
-> +	  Enables NTB support for Switchtec PCI switches. This also
-> +	  selects the Switchtec management driver as they share the same
-> +	  hardware interface.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
-> diff --git a/drivers/ntb/test/Kconfig b/drivers/ntb/test/Kconfig
-> index a5d0eda..416ab56 100644
-> --- a/drivers/ntb/test/Kconfig
-> +++ b/drivers/ntb/test/Kconfig
-> @@ -1,27 +1,27 @@
->  config NTB_PINGPONG
->  	tristate "NTB Ping Pong Test Client"
->  	help
-> -	 This is a simple ping pong driver that exercises the scratchpads and
-> -	 doorbells of the ntb hardware.  This driver may be used to test that
-> -	 your ntb hardware and drivers are functioning at a basic level.
-> +	  This is a simple ping pong driver that exercises the scratchpads and
-> +	  doorbells of the ntb hardware.  This driver may be used to test that
-> +	  your ntb hardware and drivers are functioning at a basic level.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
->  
->  config NTB_TOOL
->  	tristate "NTB Debugging Tool Test Client"
->  	help
-> -	 This is a simple debugging driver that enables the doorbell and
-> -	 scratchpad registers to be read and written from the debugfs.  This
-> -	 enables more complicated debugging to be scripted from user space.
-> -	 This driver may be used to test that your ntb hardware and drivers are
-> -	 functioning at a basic level.
-> +	  This is a simple debugging driver that enables the doorbell and
-> +	  scratchpad registers to be read and written from the debugfs.  This
-> +	  enables more complicated debugging to be scripted from user space.
-> +	  This driver may be used to test that your ntb hardware and drivers are
-> +	  functioning at a basic level.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
->  
->  config NTB_PERF
->  	tristate "NTB RAW Perf Measuring Tool"
->  	help
-> -	 This is a tool to measure raw NTB performance by transferring data
-> -	 to and from the window without additional software interaction.
-> +	  This is a tool to measure raw NTB performance by transferring data
-> +	  to and from the window without additional software interaction.
->  
-> -	 If unsure, say N.
-> +	  If unsure, say N.
-> -- 
-> 1.9.1
-> 
+Your patch works, but to me it leaves the ref count in an unnatural state
+most of the time.
+
+Michael
