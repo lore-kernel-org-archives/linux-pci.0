@@ -2,130 +2,126 @@ Return-Path: <SRS0=Ivhv=RX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B9E4C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA2D7C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:18:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21106218A2
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:13:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553112819;
-	bh=xNs9p+gqBF+VlURRJefF5+eyyEkxabgfa2EPw5Xm46I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ljHa36RkUgrGQCetDi2/Vx/ICjpY1MPcfJx9pb/lEBgTNx/gpy7+Cy/xONbr5/WfS
-	 SCcCiESO1KZuzI7LsQGp7ZZXWPpwuD206WA0CPj2Ai9bIAl0WZDVICaswEoKheS1kx
-	 ZF5nnj+uaj38vYz4OqaeDxu+6LFG11jLcyNNEO+0=
+	by mail.kernel.org (Postfix) with ESMTP id 87FBD218A3
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:18:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726303AbfCTUNi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Mar 2019 16:13:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41602 "EHLO mail.kernel.org"
+        id S1726239AbfCTUSS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Mar 2019 16:18:18 -0400
+Received: from smtp4-g21.free.fr ([212.27.42.4]:1606 "EHLO smtp4-g21.free.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726023AbfCTUNi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Mar 2019 16:13:38 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F21A121873;
-        Wed, 20 Mar 2019 20:13:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553112817;
-        bh=xNs9p+gqBF+VlURRJefF5+eyyEkxabgfa2EPw5Xm46I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=118iATCXJsVyKQEeC3k1HVveVYGQ0wB1lH2yGGSZG6iJU+gOoe6vw5f/Ov50CdtQx
-         2b33kda+fFbwSznjyHSN9VfvFa2gXOBs4Ox56Oktk121l7udwojZ8jVqA/Q3Z/AkvF
-         DnglwVDVWJxFpkzfddiEHUPV1rHz2OlY77msbyBI=
-Date:   Wed, 20 Mar 2019 15:13:35 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] PCI: Mark expected switch fall-throughs
-Message-ID: <20190320201335.GD251185@google.com>
-References: <20190320182715.GA9406@embeddedor>
+        id S1726006AbfCTUSS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Mar 2019 16:18:18 -0400
+Received: from [192.168.1.42] (unknown [77.207.133.132])
+        (Authenticated sender: marc.w.gonzalez)
+        by smtp4-g21.free.fr (Postfix) with ESMTPSA id F324219F4F8;
+        Wed, 20 Mar 2019 21:17:56 +0100 (CET)
+Subject: Re: WIP: PCIe on MSM8998
+To:     Robin Murphy <robin.murphy@arm.com>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>
+Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>
+References: <c97b6f4e-4b4c-027f-5a0b-80b3f7054177@free.fr>
+ <fb5f2b94-34b7-d021-7ac9-832b08138ad4@free.fr>
+ <6041e92f-4dbf-c6ce-d92a-220fc8239acb@free.fr>
+ <e0a650ce-e7d4-a803-5e08-f998722bf15d@arm.com>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Message-ID: <b027ad18-f7f4-cf05-b8de-ea951e0dc457@free.fr>
+Date:   Wed, 20 Mar 2019 21:17:56 +0100
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
+ Firefox/52.0 SeaMonkey/2.49.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190320182715.GA9406@embeddedor>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <e0a650ce-e7d4-a803-5e08-f998722bf15d@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 20, 2019 at 01:27:15PM -0500, Gustavo A. R. Silva wrote:
-> In preparation to enabling -Wimplicit-fallthrough, mark switch
-> cases where we are expecting to fall through.
-> 
-> This patch fixes the following warnings:
-> 
-> drivers/pci/proc.c: In function ‘proc_bus_pci_ioctl’:
-> drivers/pci/proc.c:216:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    if (arch_can_pci_mmap_wc()) {
->       ^
-> drivers/pci/proc.c:225:2: note: here
->   default:
->   ^~~~~~~
-> 
-> drivers/pci/xen-pcifront.c: In function ‘pcifront_backend_changed’:
-> drivers/pci/xen-pcifront.c:1105:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
->    if (xdev->state == XenbusStateClosed)
->       ^
-> drivers/pci/xen-pcifront.c:1108:2: note: here
->   case XenbusStateClosing:
->   ^~~~
-> 
-> Notice that, in this particular case, the /* fall through */
-> comment is placed at the very bottom of the case statement,
-> which is what GCC is expecting to find.
-> 
-> Warning level 3 was used: -Wimplicit-fallthrough=3
-> 
-> This patch is part of the ongoing efforts to enable
-> -Wimplicit-fallthrough.
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+On 20/03/2019 17:51, Robin Murphy wrote:
 
-Applied to pci/misc for v5.2, thanks!
+> On 12/03/2019 15:59, Marc Gonzalez wrote:
+>
+>> I still can't get the ethernet card to play ball. As soon as I set the link up,
+>> the system hangs a few seconds, then reboots.
+>>
+>> Here are the relevant DT nodes:
+>> (There's probably an error or 12 lurking in there)
+>>
+>> 		anoc1_smmu: arm,smmu@1680000 {
+>> 			compatible = "qcom,msm8996-smmu-v2", "qcom,smmu-v2";
+>> 			reg = <0x01680000 0x10000>;
+>> 			#iommu-cells = <0>;
+> 
+> That's almost certainly not what you want - note that the binding is 
+> only defined for 1 or 2 cells. The current Linux driver does actually 
+> happen to handle 0 cells, in which case it will assume every device uses 
+> Stream ID 0, but if the funky mappings in the SDM845 patch are anything 
+> to go by I doubt that's correct.
+> 
+>> 			#global-interrupts = <0>;
+> 
+> Ouch - not having a global fault interrupt will make this even more 
+> painful to debug. At least with that you can figure out what Stream IDs 
+> are in play by forcing stuff to fault.
 
-> ---
->  drivers/pci/proc.c         | 1 +
->  drivers/pci/xen-pcifront.c | 2 +-
->  2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index 6fa1627ce08d..445b51db75b0 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -222,6 +222,7 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
->  		}
->  		/* If arch decided it can't, fall through... */
->  #endif /* HAVE_PCI_MMAP */
-> +		/* fall through */
->  	default:
->  		ret = -EINVAL;
->  		break;
-> diff --git a/drivers/pci/xen-pcifront.c b/drivers/pci/xen-pcifront.c
-> index eba6e33147a2..14cf0f41ecf0 100644
-> --- a/drivers/pci/xen-pcifront.c
-> +++ b/drivers/pci/xen-pcifront.c
-> @@ -1104,7 +1104,7 @@ static void __ref pcifront_backend_changed(struct xenbus_device *xdev,
->  	case XenbusStateClosed:
->  		if (xdev->state == XenbusStateClosed)
->  			break;
-> -		/* Missed the backend's CLOSING state -- fallthrough */
-> +		/* fall through - Missed the backend's CLOSING state. */
->  	case XenbusStateClosing:
->  		dev_warn(&xdev->dev, "backend going away!\n");
->  		pcifront_try_disconnect(pdev);
-> -- 
-> 2.21.0
-> 
+Hello Robin,
+
+Your insight is always appreciated!
+
+I can't say I have wrapped my head around iommu-cells, iommu-map,
+and iommu-map-mask (yet) or stream IDs.
+
+FWIW, here is the DT node as it appears downstream:
+https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/arch/arm/boot/dts/qcom/msm-arm-smmu-8998.dtsi?h=LE.UM.1.3.r3.25#n18
+
+	anoc1_smmu: arm,smmu-anoc1@1680000 {
+		status = "ok";
+		compatible = "qcom,smmu-v2";
+		reg = <0x1680000 0x10000>;
+		#iommu-cells = <0>;
+		qcom,register-save;
+		qcom,skip-init;
+		#global-interrupts = <0>;
+		interrupts = <GIC_SPI 364 IRQ_TYPE_EDGE_RISING>,
+			   <GIC_SPI 365 IRQ_TYPE_EDGE_RISING>,
+			   <GIC_SPI 366 IRQ_TYPE_EDGE_RISING>,
+			   <GIC_SPI 367 IRQ_TYPE_EDGE_RISING>,
+			   <GIC_SPI 368 IRQ_TYPE_EDGE_RISING>,
+			   <GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
+		qcom,msm-bus,name = "smmu-bus-client-anoc1";
+		qcom,msm-bus,num-cases = <2>;
+		qcom,msm-bus,active-only;
+		qcom,msm-bus,num-paths = <1>;
+		/* aggre1_noc_clk */
+		qcom,msm-bus,vectors-KBps =
+				<84 10062 0 0>,
+				<84 10062 0 1000>;
+	};
+
+There's even a rationale for #iommu-cells=0, albeit for a different board:
+https://source.codeaurora.org/quic/la/kernel/msm-4.4/commit/arch/arm/boot/dts/qcom?h=LE.UM.1.3.r3.25&id=f1fa301f977f06dcf990c0452d85e2f67d8cbbf1
+
+> There's currently a placeholder stream ID of "1" in the PCIe RC
+> device tree node. The PCIe RC doesn't actually attach and doesn't
+> need a stream ID though, the "1" was put there to get around an error
+> caused by the fact that #iommu-cells was equal to 1 for the
+> anoc1_smmu, even though it should have actually been 0. Fix all this
+> by making #iommu-cells = <0> for the anoc1 SMMU and removing the
+> bogus placeholder stream ID.
+
+I can't say I understand this blurb.
+
+Regards.
