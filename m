@@ -4,149 +4,108 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BAA9C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 22:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B0F0C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 22:13:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39821218CD
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 22:03:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 085E7218D4
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 22:13:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553119422;
-	bh=74KpYV6dfYZDWtfuaUWmLfwBeifkLeo8R5Ykkyriqeo=;
+	s=default; t=1553119986;
+	bh=G+jCJeiztv5MQ05x6fsnzWCVxnBmXCrPv6xFGNTK3QU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=xT5FId8KLDbxknNDkWfPQATXiLauKeAf3eZ4wYDKBpBOPv8TtmUBH2ycQwxY5dfdI
-	 fai0nurtFmdvcxqb7dn2TPjH827qRJxR0Ftudq+OsOHEROWL1u5jYJ0fIM5q9Xwn+2
-	 clm4tIioTUhOmRbqWecWzItuPS7wnFpEQf+JJVxk=
+	b=1dImSMgZTNp/dT4TZv5qtg6FYFYknRc5Iuz8reG//0qv543CZK4gtZsfOZ+6ysM2j
+	 GHH7YyHcxeQevW153DqqsDTEQZi4Tv5cUHMh0kk1jUt38h75nozDsT6oHNkoHLkuMZ
+	 IZhKur7fQmPENPvCfChffTNFXDOmo7Zlq3eUtaTs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727573AbfCTWDl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Mar 2019 18:03:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34402 "EHLO mail.kernel.org"
+        id S1727564AbfCTWNA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Mar 2019 18:13:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38790 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727276AbfCTWDl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Mar 2019 18:03:41 -0400
+        id S1727382AbfCTWNA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Mar 2019 18:13:00 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1718B218AE;
-        Wed, 20 Mar 2019 22:03:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7FD822175B;
+        Wed, 20 Mar 2019 22:12:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553119420;
-        bh=74KpYV6dfYZDWtfuaUWmLfwBeifkLeo8R5Ykkyriqeo=;
+        s=default; t=1553119979;
+        bh=G+jCJeiztv5MQ05x6fsnzWCVxnBmXCrPv6xFGNTK3QU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=sb5W8cwBdrzvB3VHOdZnBsS5/X+R0cw/9L4srkVCZ9YmUS+ScFOgBKl57hz6kf5xH
-         3jOQJT486wwV2PkWhmW38nRwnGwChFMNT6PLR1RJuyjxYptXuuhuoMqo5zdBd5bSJU
-         UAEIsMkVqPsjOdJVdN1WdZKDX7J2p5OdACqRIFWA=
-Date:   Wed, 20 Mar 2019 17:03:38 -0500
+        b=uJoHSa2v+N2C+2ffE2ZjtdtUHENfqpuZEzkEH/u8U5gq13+AC2fUtHbl70bdiGcTZ
+         V6HxB2gV0HLADokaX8AnnvcQWK26UF8/1a9gF9A79LPmG/IIrgqjiRmrToRiYXzs5I
+         8yTwiLNrTvvmLECwwdNzUgRwWrlI21XD8SBWiuz0=
+Date:   Wed, 20 Mar 2019 17:12:57 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     robh+dt@kernel.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Jeremy.Linton@arm.com, Grant.Likely@arm.com, Robin.Murphy@arm.com,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/2] dt-bindings: Add external-facing PCIe port property
-Message-ID: <20190320220338.GH251185@google.com>
-References: <20190318182124.53859-1-jean-philippe.brucker@arm.com>
- <20190318182124.53859-2-jean-philippe.brucker@arm.com>
+To:     Colin King <colin.king@canonical.com>
+Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Michael Bringmann <mwb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] hotplug/drc-info: ininitialize fndit to zero
+Message-ID: <20190320221257.GI251185@google.com>
+References: <20190316214016.6612-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190318182124.53859-2-jean-philippe.brucker@arm.com>
+In-Reply-To: <20190316214016.6612-1-colin.king@canonical.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 18, 2019 at 06:21:23PM +0000, Jean-Philippe Brucker wrote:
-> Provide a way for the firmware to tell the OS which devices are external
-> to the machine and therefore untrusted. The property can describe for
-> example thunderbolt and other hot-pluggable ports, which should always
-> have the strongest IOMMU protection.
+[+cc Michael B (original author)]
 
-s/thunderbolt/Thunderbolt/
+On Sat, Mar 16, 2019 at 09:40:16PM +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Currently variable fndit is not initialized and contains a
+> garbage value, later it is set to 1 if a drc entry is found.
+> Ensure fndit is not containing garbage by initializing it to
+> zero. Also remove an extraneous space at the end of an
+> sprintf call.
+> 
+> Detected by static analysis with cppcheck.
+> 
+> Fixes: 2fcf3ae508c2 ("hotplug/drc-info: Add code to search ibm,drc-info property")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-I think the important bit is that the port is user-accessible, whether
-it is hot-pluggable or not, right?
+Michael E, I assume you'll take this since you took the original?
+Let me know if you want me to.
 
-I think I'm OK with this from a PCI perspective.
-
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 > ---
->  Documentation/devicetree/bindings/pci/pci.txt | 47 +++++++++++++++++++
->  1 file changed, 47 insertions(+)
+>  drivers/pci/hotplug/rpaphp_core.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-> index c77981c5dd18..55cdbc5d2804 100644
-> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> @@ -24,3 +24,50 @@ driver implementation may support the following properties:
->     unsupported link speed, for instance, trying to do training for
->     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
->     for gen2, and '1' for gen1. Any other values are invalid.
-> +
-> +PCI-PCI Bridge properties
-> +-------------------------
-> +
-> +Root ports and switch ports may be described explicitly in the device
-
-Maybe "PCIe root ports and switch ports" since pci.txt seems to apply
-to both conventional PCI and PCIe?
-
-> +tree, as children of the host bridge node. Even though those devices are
-> +discoverable by probing, it might be necessary to describe properties that
-> +aren't provided by standard PCIe capabilities.
-> +
-> +Required properties:
-> +
-> +- reg:
-> +   Identifies the PCI-PCI bridge. As defined in the IEEE Std 1275-1994
-> +   document, it is a five-cell address encoded as (phys.hi phys.mid
-> +   phys.lo size.hi size.lo). phys.hi should contain the device's BDF as
-> +   0b00000000 bbbbbbbb dddddfff 00000000. The other cells should be zero.
-> +
-> +   The bus number is defined by firmware, through the standard bridge
-> +   configuration mechanism. If this port is a switch port, then firmware
-> +   allocates the bus number and writes it into the Secondary Bus Number
-> +   register of the bridge directly above this port. Otherwise, the bus
-> +   number of a root port is the first number in the bus-range property,
-> +   defaulting to zero.
-> +
-> +   If firmware leaves the ARI Forwarding Enable bit set in the bridge
-> +   above this port, then phys.hi contains the 8-bit function number as
-> +   0b00000000 bbbbbbbb ffffffff 00000000. Note that the PCIe specification
-> +   recommends that firmware only leaves ARI enabled when it knows that the
-> +   OS is ARI-aware.
-> +
-> +Optional properties:
-> +
-> +- external-facing:
-> +   When present, the port is external facing. All bridges and endpoints
-> +   downstream of this port are external to the machine.
-
-Maybe include a note about why this is important, ie, we care because
-malicious devices may be attached to an external port?  I know you
-have that in the commit log but it would be more visible here.
-
-Elsewhere you use "external-facing", here too for consistency?
-
-> +Example:
-> +
-> +pcie@10000000 {
-> +	compatible = "pci-host-ecam-generic";
-> +	...
-> +	pcie@0008 {
-> +		/* Root port 00:01.0 is external-facing */
-> +		reg = <0x00000800 0 0 0 0>;
-> +		external-facing;
-> +	};
-> +};
+> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+> index bcd5d357ca23..28213f44f64a 100644
+> --- a/drivers/pci/hotplug/rpaphp_core.c
+> +++ b/drivers/pci/hotplug/rpaphp_core.c
+> @@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+>  	struct of_drc_info drc;
+>  	const __be32 *value;
+>  	char cell_drc_name[MAX_DRC_NAME_LEN];
+> -	int j, fndit;
+> +	int j, fndit = 0;
+>  
+>  	info = of_find_property(dn->parent, "ibm,drc-info", NULL);
+>  	if (info == NULL)
+> @@ -254,7 +254,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+>  	/* Found it */
+>  
+>  	if (fndit)
+> -		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix, 
+> +		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
+>  			my_index);
+>  
+>  	if (((drc_name == NULL) ||
 > -- 
-> 2.21.0
+> 2.20.1
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
