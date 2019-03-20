@@ -2,141 +2,142 @@ Return-Path: <SRS0=Ivhv=RX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A9BC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35F4DC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:52:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1C3D218C3
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:44:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03D57218D4
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 20:52:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553115158;
+	bh=KhM59fq0xMcxfrPWegt3eJ/Pj0d60Y1W4KnA/CcsvYA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=jv3ScWBrHddt69YviuGzfZROg2/pjCDDY8LRaLLsp+0Uk/uXumxVCRH6jEH1uekT2
+	 Z0XPDfmN5BjyTSE+LIz/3GHI+OHOxIcBSqPVOdqnbXDgkA+WvEYwrQDNiXa2loLDcZ
+	 QP6oQrgUwmHDmjyS74a+oiP9g9luvnnbTWIJXeZ0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727437AbfCTUoo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Mar 2019 16:44:44 -0400
-Received: from gateway31.websitewelcome.com ([192.185.143.31]:31822 "EHLO
-        gateway31.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727197AbfCTUon (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2019 16:44:43 -0400
-X-Greylist: delayed 1259 seconds by postgrey-1.27 at vger.kernel.org; Wed, 20 Mar 2019 16:44:42 EDT
-Received: from cm13.websitewelcome.com (cm13.websitewelcome.com [100.42.49.6])
-        by gateway31.websitewelcome.com (Postfix) with ESMTP id 1969E9A9EB
-        for <linux-pci@vger.kernel.org>; Wed, 20 Mar 2019 15:23:43 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id 6hkVhSATKYTGM6hkVhephp; Wed, 20 Mar 2019 15:23:43 -0500
-X-Authority-Reason: nr=8
-Received: from [189.250.104.39] (port=34576 helo=[192.168.1.76])
-        by gator4166.hostgator.com with esmtpsa (TLSv1.2:ECDHE-RSA-AES128-GCM-SHA256:128)
-        (Exim 4.91)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1h6hkU-003ssI-JF; Wed, 20 Mar 2019 15:23:42 -0500
-Subject: Re: [PATCH] PCI: Mark expected switch fall-throughs
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, Kees Cook <keescook@chromium.org>
-References: <20190320182715.GA9406@embeddedor>
- <20190320201335.GD251185@google.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Openpgp: preference=signencrypt
-Autocrypt: addr=gustavo@embeddedor.com; keydata=
- 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
- VtSixD1uOgytAP7RWS474w==
-Message-ID: <141bfdeb-6340-141c-7216-ba1ad8540ff7@embeddedor.com>
-Date:   Wed, 20 Mar 2019 15:23:41 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        id S1726644AbfCTUwh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Mar 2019 16:52:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51274 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726006AbfCTUwh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Mar 2019 16:52:37 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id E3D69218C3;
+        Wed, 20 Mar 2019 20:52:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553115155;
+        bh=KhM59fq0xMcxfrPWegt3eJ/Pj0d60Y1W4KnA/CcsvYA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=lyDrQ2lfJ8reyDeVFxG2UYbgulcfBgBQjpYvufZ2RV6cy+pjwJbUMsFoNTdVjApwN
+         jDY9JaM8KVc79RTb5fJL8rQzvLsszooOxN0bvFh1eOrevnb3ePnut9xH7zaBmP/Y0G
+         3fhjWZwYWmNEQFSpCIKQYz1zDaPa8Ncz0j6sPHVE=
+Date:   Wed, 20 Mar 2019 15:52:33 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oliver O'Halloran <oohall@gmail.com>
+Subject: Re: [PATCH v3] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+Message-ID: <20190320205233.GE251185@google.com>
+References: <20190222194808.15962-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190320201335.GD251185@google.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 189.250.104.39
-X-Source-L: No
-X-Exim-ID: 1h6hkU-003ssI-JF
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.1.76]) [189.250.104.39]:34576
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 57
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190222194808.15962-1-mr.nuke.me@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+[+cc Jon, Jens, Christoph, Sagi, Linus, linux-nvme from related discussion]
+[+cc Greg, Oliver, who responded to v2 of this patch]
 
-
-On 3/20/19 3:13 PM, Bjorn Helgaas wrote:
-> On Wed, Mar 20, 2019 at 01:27:15PM -0500, Gustavo A. R. Silva wrote:
-
-[..]
-
->>
->> Warning level 3 was used: -Wimplicit-fallthrough=3
->>
->> This patch is part of the ongoing efforts to enable
->> -Wimplicit-fallthrough.
->>
->> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+On Fri, Feb 22, 2019 at 01:48:06PM -0600, Alexandru Gagniuc wrote:
+> A SURPRISE removal of a hotplug PCIe device, caused by a Link Down
+> event will execute an orderly removal of the driver, which normally
+> includes releasing the IRQs with pci_free_irq(_vectors):
 > 
-> Applied to pci/misc for v5.2, thanks!
+>  * SURPRISE removal event causes Link Down
+>  * pciehp_disable_slot()
+>  * pci_device_remove()
+>  * driver->remove()
+>  * pci_free_irq(_vectors)()
+>  * irq_chip->irq_mask()
+>  * pci_msi_mask_irq()
 > 
+> Eventually, msi_set_mask_bit() will attempt to do MMIO over the dead
+> link, usually resulting in an Unsupported Request error. This can
+> confuse the firmware on FFS machines, and lead to a system crash.
+> 
+> Since the channel will have been marked "pci_channel_io_perm_failure"
+> by the hotplug thread, we know we should avoid sending blind IO to a
+> dead link.
+> When the device is disconnected, bail out of MSI teardown.
+> 
+> If device removal and Link Down are independent events, there exists a
+> race condition when the Link Down event occurs right after the
+> pci_dev_is_disconnected() check. This is outside the scope of this patch.
+> 
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 
-Awesome!
+I had actually applied this to pci/msi with the intent of merging it
+for v5.1, but by coincidence I noticed [1], where Jon was basically
+solving another piece of the same problem, this time in nvme-pci.
 
-Thanks
---
-Gustavo
+AFAICT, the consensus there was that it would be better to find some
+sort of platform solution instead of dealing with it in individual
+drivers.  The PCI core isn't really a driver, but I think the same
+argument applies to it: if we had a better way to recover from readl()
+errors, that way would work equally well in nvme-pci and the PCI core.
+
+It sounds like the problem has two parts: the PCI core part and the
+individual driver part.  Solving only the first (eg, with this patch)
+isn't enough by itself, and solving the second via some platform
+solution would also solve the first.  If that's the case, I don't
+think it's worth applying this one, but please correct me if I'm
+wrong.
+
+Bjorn
+
+[1] https://lore.kernel.org/lkml/20190222010502.2434-1-jonathan.derrick@intel.com/T/#u
+
+> ---
+> Changes since v2:
+>  * Updated commit message
+> 
+>  drivers/pci/msi.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 4c0b47867258..6b6541ab264f 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -227,6 +227,9 @@ static void msi_set_mask_bit(struct irq_data *data, u32 flag)
+>  {
+>  	struct msi_desc *desc = irq_data_get_msi_desc(data);
+>  
+> +	if (pci_dev_is_disconnected(msi_desc_to_pci_dev(desc)))
+> +		return;
+> +
+>  	if (desc->msi_attrib.is_msix) {
+>  		msix_mask_irq(desc, flag);
+>  		readl(desc->mask_base);		/* Flush write to device */
+> -- 
+> 2.19.2
+> 
