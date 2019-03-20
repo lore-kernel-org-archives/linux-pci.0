@@ -2,107 +2,151 @@ Return-Path: <SRS0=Ivhv=RX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED8D0C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 11:15:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D543C10F05
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 13:46:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2A142184E
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 11:15:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFF3C2184E
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Mar 2019 13:46:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553089596;
+	bh=80pi8CDhxhnAicATU26JM+WFWXonPnHkyJuvgaQVVOs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ZYVZuPkrYf+aEbXhZSoK2zf98aN5D8H9s0Zuf6lQEdsBM1xaBmOupOe92Twyj27YT
+	 JNkwgjTgFtnD1w4X0o4TcU9nD+kgAxVXR8RPyp1fP1gKZyHmyXchMMi/VNpg5IoAtf
+	 o2+ay5HAh14oXiRZ3ydP1yNf1o6K4NDiHDboYG3k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727437AbfCTLPg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Mar 2019 07:15:36 -0400
-Received: from mailout3.hostsharing.net ([176.9.242.54]:48631 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727415AbfCTLPf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2019 07:15:35 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        id S1727537AbfCTNqf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Mar 2019 09:46:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33464 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726065AbfCTNqf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 20 Mar 2019 09:46:35 -0400
+Received: from localhost (173-28-64-202.client.mchsi.com [173.28.64.202])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by mailout3.hostsharing.net (Postfix) with ESMTPS id 48C71101E68AA;
-        Wed, 20 Mar 2019 12:15:34 +0100 (CET)
-Received: from localhost (p5491779F.dip0.t-ipconnect.de [84.145.119.159])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by h08.hostsharing.net (Postfix) with ESMTPSA id C8E7F6233615;
-        Wed, 20 Mar 2019 12:15:33 +0100 (CET)
-X-Mailbox-Line: From 70cb1754e3f0da3b84712460b1017ac707cd2616 Mon Sep 17 00:00:00 2001
-Message-Id: <70cb1754e3f0da3b84712460b1017ac707cd2616.1553078908.git.lukas@wunner.de>
-In-Reply-To: <cover.1553078908.git.lukas@wunner.de>
-References: <cover.1553078908.git.lukas@wunner.de>
-From:   Lukas Wunner <lukas@wunner.de>
-Date:   Wed, 20 Mar 2019 12:05:30 +0100
-Subject: [PATCH 2/2] PCI/LINK: bw_notification: Deduplicate reports for
- multi-function devices
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Cc:     linux-pci@vger.kernel.org, Austin Bolen <austin_bolen@dell.com>,
-        Alexandru Gagniuc <alex_gagniuc@dellteam.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Shyam Iyer <Shyam_Iyer@Dell.com>, Sinan Kaya <okaya@kernel.org>
+        by mail.kernel.org (Postfix) with ESMTPSA id 27DA32184D;
+        Wed, 20 Mar 2019 13:46:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553089594;
+        bh=80pi8CDhxhnAicATU26JM+WFWXonPnHkyJuvgaQVVOs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=xd0wdsesv8JcbO6/LYsIh4yBobMUD8nwdXd+/btzwnKHuxCNazvISQESKYZTqgtwk
+         yR4pDL7hsov8+n8ahzxrr+j1xY7qSL3iMx98/8bszqaslloN7LBGvzDY2JUUBZUjbY
+         AcdXj3DtdCNbeMQfPjhLeq/QYZIkQH8+Hx49/n+c=
+Date:   Wed, 20 Mar 2019 08:46:32 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, torvalds@linux-foundation.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/LINK: bw_notification: Do not leave interrupt
+ handler NULL
+Message-ID: <20190320134632.GA251185@google.com>
+References: <CAHk-=wgM-5WfPW9LNHGfc1RxjVbDvHZqNfxyLVRSPP0R4jetDg@mail.gmail.com>
+ <20190319011214.7847-1-mr.nuke.me@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190319011214.7847-1-mr.nuke.me@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If a multi-function device's bandwidth is already limited when it is
-enumerated, a message is logged only for function 0.  By contrast, when
-downtraining occurs after enumeration, a message is logged for all
-functions.  That's because the former uses pcie_report_downtraining(),
-whereas the latter uses __pcie_print_link_status() (which doesn't filter
-functions != 0).  I am seeing this happen on a MacBookPro9,1 with a GPU
-(function 0) and an integrated HDA controller (function 1).
+Hi Alexandru,
 
-Avoid this incongruence by calling pcie_report_downtraining() in both
-cases.
+On Mon, Mar 18, 2019 at 08:12:04PM -0500, Alexandru Gagniuc wrote:
+> A threaded IRQ with a NULL handler does not work with level-triggered
+> interrupts. request_threaded_irq() will return an error:
+> 
+>   genirq: Threaded irq requested with handler=NULL and !ONESHOT for irq 16
+>   pcie_bw_notification: probe of 0000:00:1b.0:pcie010 failed with error -22
+> 
+> For level interrupts we need to silence the interrupt before exiting
+> the IRQ handler, so just clear the PCI_EXP_LNKSTA_LBMS bit there.
+> 
+> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/pci.h                  | 1 +
- drivers/pci/pcie/bw_notification.c | 2 +-
- drivers/pci/probe.c                | 2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
+What's your thought regarding Lukas' comment?  If you do repost this,
+please add a Fixes: tag to help connect this with the initial commit.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 224d88634115..d994839a3e24 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -273,6 +273,7 @@ enum pcie_link_width pcie_get_width_cap(struct pci_dev *dev);
- u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
- 			   enum pcie_link_width *width);
- void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
-+void pcie_report_downtraining(struct pci_dev *dev);
- 
- /* Single Root I/O Virtualization */
- struct pci_sriov {
-diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
-index 69e6ba2558bf..c26045f2a890 100644
---- a/drivers/pci/pcie/bw_notification.c
-+++ b/drivers/pci/pcie/bw_notification.c
-@@ -76,7 +76,7 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
- 	 */
- 	down_read(&pci_bus_sem);
- 	list_for_each_entry(dev, &port->subordinate->devices, bus_list)
--		__pcie_print_link_status(dev, false);
-+		pcie_report_downtraining(dev);
- 	up_read(&pci_bus_sem);
- 
- 	pcie_capability_read_word(port, PCI_EXP_LNKSTA, &link_status);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2ec0df04e0dc..7e12d0163863 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2388,7 +2388,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	return dev;
- }
- 
--static void pcie_report_downtraining(struct pci_dev *dev)
-+void pcie_report_downtraining(struct pci_dev *dev)
- {
- 	if (!pci_is_pcie(dev))
- 		return;
--- 
-2.20.1
+If not, I can add the tag myself.
 
+> ---
+> 
+> OOPS! I'm sorry for the noise. Here's the fix.
+> 
+> I was able to test this on edge-triggered interrupts. None of my
+> machines have PCIe ports that use level-triggered interrupts. This
+> might not be too straightforward to test without a hardware yanker,
+> but if there's a way to force a specific interrupt to be level
+> triggered, I could do the testing on my end.
+> 
+>  drivers/pci/pcie/bw_notification.c | 19 +++++++++++++++----
+>  1 file changed, 15 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
+> index d2eae3b7cc0f..001d6253ad48 100644
+> --- a/drivers/pci/pcie/bw_notification.c
+> +++ b/drivers/pci/pcie/bw_notification.c
+> @@ -44,11 +44,10 @@ static void pcie_disable_link_bandwidth_notification(struct pci_dev *dev)
+>  	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnk_ctl);
+>  }
+>  
+> -static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> +static irqreturn_t pcie_bw_notification_irq(int irq, void *context)
+>  {
+>  	struct pcie_device *srv = context;
+>  	struct pci_dev *port = srv->port;
+> -	struct pci_dev *dev;
+>  	u16 link_status, events;
+>  	int ret;
+>  
+> @@ -58,6 +57,17 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+>  	if (ret != PCIBIOS_SUCCESSFUL || !events)
+>  		return IRQ_NONE;
+>  
+> +	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
+> +	return IRQ_WAKE_THREAD;
+> +}
+> +
+> +static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> +{
+> +	struct pcie_device *srv = context;
+> +	struct pci_dev *port = srv->port;
+> +	struct pci_dev *dev;
+> +	u16 link_status;
+> +
+>  	/*
+>  	 * Print status from downstream devices, not this root port or
+>  	 * downstream switch port.
+> @@ -67,8 +77,8 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+>  		__pcie_print_link_status(dev, false);
+>  	up_read(&pci_bus_sem);
+>  
+> +	pcie_capability_read_word(port, PCI_EXP_LNKSTA, &link_status);
+>  	pcie_update_link_speed(port->subordinate, link_status);
+> -	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
+>  	return IRQ_HANDLED;
+>  }
+>  
+> @@ -80,7 +90,8 @@ static int pcie_bandwidth_notification_probe(struct pcie_device *srv)
+>  	if (!pcie_link_bandwidth_notification_supported(srv->port))
+>  		return -ENODEV;
+>  
+> -	ret = request_threaded_irq(srv->irq, NULL, pcie_bw_notification_handler,
+> +	ret = request_threaded_irq(srv->irq, pcie_bw_notification_irq,
+> +				   pcie_bw_notification_handler,
+>  				   IRQF_SHARED, "PCIe BW notif", srv);
+>  	if (ret)
+>  		return ret;
+> -- 
+> 2.19.2
+> 
