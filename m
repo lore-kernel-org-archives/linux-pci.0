@@ -2,129 +2,169 @@ Return-Path: <SRS0=33lb=RY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD9F7C10F05
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 00:42:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F2EC43381
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 01:27:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8AA2A218AE
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 00:42:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7087218C3
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 01:27:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="ambHfo6J"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lZZ7yu53"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727479AbfCUAmT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Mar 2019 20:42:19 -0400
-Received: from mail-eopbgr1320114.outbound.protection.outlook.com ([40.107.132.114]:64320
-        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726753AbfCUAmS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 20 Mar 2019 20:42:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=1Ca6vH2AqIImnQHoLXJOwExKBGBjABLNFlqQCFoNYe8=;
- b=ambHfo6Je3qn25Ci41onkV5JhMpH8NiRK5vi19cvLgSPOvgkKvAEBSjOliplIL7ZyPsBc3C0si2QnZxkR8dH1HmTWOm/jiZDC0FjnMHuyWShCCNaj04ieCYghVHTb9MhGoyYr2llNiQSCcs0MvE+uE0smD3u4UzNea9YSspGtk4=
-Received: from PU1P153MB0169.APCP153.PROD.OUTLOOK.COM (10.170.189.13) by
- PU1P153MB0203.APCP153.PROD.OUTLOOK.COM (52.133.194.146) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1750.3; Thu, 21 Mar 2019 00:42:11 +0000
-Received: from PU1P153MB0169.APCP153.PROD.OUTLOOK.COM
- ([fe80::8073:4441:ad0d:75c0]) by PU1P153MB0169.APCP153.PROD.OUTLOOK.COM
- ([fe80::8073:4441:ad0d:75c0%7]) with mapi id 15.20.1750.002; Thu, 21 Mar 2019
- 00:42:11 +0000
-From:   Dexuan Cui <decui@microsoft.com>
-To:     Dexuan Cui <decui@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <Alexander.Levin@microsoft.com>
-CC:     "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org" 
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        vkuznets <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "jackm@mellanox.com" <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH 3/3] PCI: hv: Add pci_destroy_slot() in
- pci_devices_present_work(), if necessary
-Thread-Topic: [PATCH 3/3] PCI: hv: Add pci_destroy_slot() in
- pci_devices_present_work(), if necessary
-Thread-Index: AQHU32YKEJIP46QDrEis0DD/jJcNx6YVOGoAgAAF9cA=
-Date:   Thu, 21 Mar 2019 00:42:10 +0000
-Message-ID: <PU1P153MB016935A5D6D203B9E44CEDB2BF420@PU1P153MB0169.APCP153.PROD.OUTLOOK.COM>
-References: <20190304213357.16652-1-decui@microsoft.com>
- <20190304213357.16652-4-decui@microsoft.com>
- <DM5PR2101MB091892992BB0431538A09A30D7410@DM5PR2101MB0918.namprd21.prod.outlook.com>
- <PU1P153MB01691FE3199135CE5C3BFFEDBF420@PU1P153MB0169.APCP153.PROD.OUTLOOK.COM>
-In-Reply-To: <PU1P153MB01691FE3199135CE5C3BFFEDBF420@PU1P153MB0169.APCP153.PROD.OUTLOOK.COM>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=mikelley@ntdev.microsoft.com;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-03-20T21:44:04.4186852Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
- Information Protection;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=85e9252e-0119-484c-a7d0-9f061de1f9c6;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
-x-originating-ip: [2601:600:a280:1760:b139:a24a:e67f:7afd]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6744cbd5-cb59-4992-3a9b-08d6ad960e05
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:PU1P153MB0203;
-x-ms-traffictypediagnostic: PU1P153MB0203:
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <PU1P153MB020336548C5613F727CC72E9BF420@PU1P153MB0203.APCP153.PROD.OUTLOOK.COM>
-x-ms-oob-tlc-oobclassifiers: OLM:6108;
-x-forefront-prvs: 0983EAD6B2
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(136003)(396003)(366004)(39860400002)(376002)(346002)(189003)(199004)(99286004)(10290500003)(1511001)(2201001)(54906003)(2501003)(102836004)(256004)(6346003)(11346002)(2940100002)(186003)(486006)(81166006)(5660300002)(8990500004)(86612001)(14454004)(446003)(86362001)(8676002)(93886005)(22452003)(478600001)(110136005)(476003)(10090500001)(316002)(81156014)(4744005)(6436002)(105586002)(6116002)(6246003)(33656002)(7416002)(8936002)(25786009)(7736002)(55016002)(71200400001)(7696005)(106356001)(46003)(53936002)(2906002)(74316002)(9686003)(52536014)(6506007)(4326008)(71190400001)(6636002)(68736007)(97736004)(229853002)(76176011)(93156006)(305945005);DIR:OUT;SFP:1102;SCL:1;SRVR:PU1P153MB0203;H:PU1P153MB0169.APCP153.PROD.OUTLOOK.COM;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=decui@microsoft.com; 
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 1Y0o/Wve5scTXJj1TgHAleBMqSv1Ov1JIljSOeI+QGrse9XprNEniSJLTWSHa92aO5m8rp4ckXAsM5sJ9V4OqdVyzAlJRiFeBp3/NVV2GEqgwDvsSW20ZOQlNkNEc7Wh9N7XKcbgWrq4ugduKxIu/tpiobocDioNS8Lh/WF2KoSlEVTy7dyyb6I2IjSO9az2mt8jWKlsG9whh42BOd6DvSGgjExLI3BAIf239Q1K0gEe6sR5y7oAk5lr7QcARqB2xOjvxk1BTpFyVa4so0tb+L3DL7/HM6U5ip7YDHf3YlQZbE4+gsgc2K08aiy+dSGVrvQcKCzMqHfnvZs0C/ZFzkVUi+W0lqmy0Bge8Rhlztxj/5AudkbzKhHz3OqMNxMmtLEm/8M9hOLdLU46FmPWYixgA4KpS5UrNy9i8iBowds=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726983AbfCUB1a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Mar 2019 21:27:30 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:44270 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726853AbfCUB13 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Mar 2019 21:27:29 -0400
+Received: by mail-io1-f65.google.com with SMTP id u12so3899714iop.11;
+        Wed, 20 Mar 2019 18:27:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=S9XU4J/k93OsMMylvZ1JNfWGTXAIB9da5OyR+QwYITk=;
+        b=lZZ7yu53IUzfpDigDTASS9vYegSXX5dIjqfO9Ae4Nxw/j3EdmkgJbdiyHFdDKsfMqn
+         n2wzdMkdaCvgK5RjLpr3buKhyhujov5a6Mc9cyqhTN7KQ7StbHQLAEZbBcQ4H2qdzVRn
+         gQIuyOzjVKkyjrEfKXmpgb1AJxyVW5tt39AdLH301xBS1yzatwj+Luoc6kwq5e9IOLHQ
+         T5B4wizgQnnctTHHTO85RxNvHnXqELNH/r6ROs/nScg3llDwJIUbMYtqLDdYOSKSw8bf
+         iEBUaf6jafpDPrk4HQgeFmEkI95TezO9RCXLmC/D0anbZOOEG3gYxuIlAKKpbDZCkHG9
+         UO3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=S9XU4J/k93OsMMylvZ1JNfWGTXAIB9da5OyR+QwYITk=;
+        b=EguwsL1DRXD1Po4cBhW+5v6IcmCZLj/WgF4mrNdznpMbzseyKAcLLU2y5RZFjxmc/u
+         Svl0gVUJAK8btCSGQr3byxO9J8sy4p9ZrrTD1hpivmKJuz9XqIeZIqgpaRHIDX6kgWSN
+         VDGIZbzw4+T0rbdzvMEwbkvEhU1MH4nSu3Hbhzo0jk1O+90If4tQV42AHKmak/kEbNpY
+         MK2mnjnXM95MWABeLviNutUgrMdNSgnt1CSPf0+a7MoQ0Z47NbzkB+OCS6fiYGlqDR78
+         Aefs536t9mDsCxZP+zJMQSVYV7zV2C4K6yekDfvq/BlpzlW4qYMHxQsRt8ngGY+R/JCe
+         EVOA==
+X-Gm-Message-State: APjAAAUWiCRUUPzwnOFlwREHAI7o76ejzaNiJN7u6Xz+OKqRwP2Wu9lx
+        2MpSziVxC/C20sLX+eEJH2I=
+X-Google-Smtp-Source: APXvYqy6AUWaBo++trS+bvcfVUpe1jR8bINT5cJe644bcU7SdBkFGuTWyyR4qGTmWYzszIKIbP63vg==
+X-Received: by 2002:a6b:b797:: with SMTP id h145mr735113iof.190.1553131648787;
+        Wed, 20 Mar 2019 18:27:28 -0700 (PDT)
+Received: from nukespec.gtech ([2601:2c1:8501:182d::987])
+        by smtp.gmail.com with ESMTPSA id v20sm1635196ioh.17.2019.03.20.18.27.11
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Wed, 20 Mar 2019 18:27:27 -0700 (PDT)
+Subject: Re: [PATCH v3] PCI/MSI: Don't touch MSI bits when the PCI device is
+ disconnected
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     austin_bolen@dell.com, Alex Gagniuc <alex_gagniuc@dellteam.com>,
+        Keith Busch <keith.busch@intel.com>, Shyam_Iyer@dell.com,
+        Lukas Wunner <lukas@wunner.de>, Sinan Kaya <okaya@kernel.org>,
+        linux-pci@vger.kernel.org,
+        Linux List Kernel Mailing <linux-kernel@vger.kernel.org>,
+        Jon Derrick <jonathan.derrick@intel.com>,
+        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Oliver O'Halloran <oohall@gmail.com>
+References: <20190222194808.15962-1-mr.nuke.me@gmail.com>
+ <20190320205233.GE251185@google.com>
+ <CAHk-=wjDY1C+E0gUHmb6O3THwoTNpm=-qthDRcW+sG2RB430Mw@mail.gmail.com>
+From:   Alex G <mr.nuke.me@gmail.com>
+Message-ID: <156dec38-438d-1ce9-64fa-af95d37c14bd@gmail.com>
+Date:   Wed, 20 Mar 2019 20:27:11 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6744cbd5-cb59-4992-3a9b-08d6ad960e05
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Mar 2019 00:42:10.6599
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PU1P153MB0203
+In-Reply-To: <CAHk-=wjDY1C+E0gUHmb6O3THwoTNpm=-qthDRcW+sG2RB430Mw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> From: linux-hyperv-owner@vger.kernel.org
-> <linux-hyperv-owner@vger.kernel.org> On Behalf Of Dexuan Cui
-> > ...
-> > Patch 2 in this series does set it to NULL, but this code does not.
-> In Patch2, i.e. in the code path hv_pci_remove() -> hv_pci_remove_slots()=
-,
-> we must set hpdev->pci_slot to NULL, otherwise, later, due to
-> hv_pci_remove() -> hv_pci_bus_exit() ->
-> hv_pci_devices_present() with the zero "relations", we'll double-free the
-> "hpdev" struct in pci_devices_present_work() -- see the above.
-A minor correction: I meant we'll call pci_destroy_slot(hpdev->pci_slot)
-twice, not "double-free hpdev".
+On 3/20/19 4:44 PM, Linus Torvalds wrote:
+> On Wed, Mar 20, 2019 at 1:52 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>
+>> AFAICT, the consensus there was that it would be better to find some
+>> sort of platform solution instead of dealing with it in individual
+>> drivers.  The PCI core isn't really a driver, but I think the same
+>> argument applies to it: if we had a better way to recover from readl()
+>> errors, that way would work equally well in nvme-pci and the PCI core.
+> 
+> I think that patches with the pattern "if (disconnected) don't do IO"
+> are fundamentally broken and we should look for alternatives in all
+> cases.
+> 
+> They are fundamentally broken because they are racy: if it's an actual
+> sudden disconnect in the middle of IO, there's no guarantee that we'll
+> even be notified in time.
+> 
+> They are fundamentally broken because they add new magic special cases
+> that very few people will ever test, and the people who do test them
+> tend to do so with old irrelevant kernels.
+> 
+> Finally, they are fundamentally broken because they always end up
+> being just special cases. One or two special case accesses in a
+> driver, or perhaps all accesses of a particular type in just _one_
+> special driver.
+> 
+> Yes, yes, I realize that people want error reporting, and that
+> hot-removal can cause various error conditions (perhaps just parity
+> errors for the IO, but also perhaps other random errors caused by
+> firmware perhaps doing special HW setup).
+> 
+> But the "you get a fatal interrupt, so avoid the IO" kind of model is
+> completely broken, and needs to just be fixed differently. See above
+> why it's so completely broken.
+> 
+> So if the hw is set up to send some kinf of synchronous interrupt or
+> machine check that cannot sanely be handled (perhaps because it will
+> just repeat forever), we should try to just disable said thing.
+> 
+> PCIe allows for just polling for errors on the bridges, afaik. It's
+> been years since I looked at it, and maybe I'm wrong. And I bet there
+> are various "platform-specific value add" registers etc that may need
+> tweaking outside of any standard spec for PCIe error reporting. But
+> let's do that in a platform driver, to set up the platform to not do
+> the silly "I'm just going to die if I see an error" thing.
+> 
+> It's way better to have a model where you poll each bridge once a
+> minute (or one an hour) and let people know "guys, your hardware
+> reports errors", than make random crappy changes to random drivers
+> because the hardware was set up to die on said errors.
+> 
+> And if some MIS person wants the "hardware will die" setting, then
+> they can damn well have that, and then it's not out problem, but it
+> also means that we don't start changing random drivers for that insane
+> setting. It's dead, Jim, and it was the users choice.
+> 
+> Notice how in neither case does it make sense to try to do some "if
+> (disconnected) dont_do_io()" model for the drivers.
 
-Thanks,
--- Dexuan
+I disagree with the idea of doing something you know can cause an error 
+to propagate. That being said, in this particular case we have come to 
+rely a little too much on the if (disconnected) model.
+
+You mentioned in the other thread that fixing the GHES driver will pay 
+much higher dividends. I'm working on reviving a couple of changes to do 
+just that. Some industry folk were very concerned about the "don't 
+panic()" approach, and I want to make sure I fairly present their 
+arguments in the cover letter.
+
+I'm hoping one day we'll have the ability to use page tables to prevent 
+the situations that we're trying to fix today in less than ideal ways. 
+Although there are other places in msi.c that use if (disconnected), I'm 
+okay with dropping this change -- provided we come up with an equivalent 
+fix.
+
+But even if FFS doesn't crash, do we really want to lose hundreds of 
+milliseconds to SMM --on all cores-- when all it takes is a couple of 
+cycles to check a flag?
+
+Alex
