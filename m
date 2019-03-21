@@ -2,100 +2,139 @@ Return-Path: <SRS0=33lb=RY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88882C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 23:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88519C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 23:23:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B5A621874
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 23:22:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DB50218D3
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 23:23:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553210526;
-	bh=qTC7yS2h3KzLCXNTvHs/l8ASP0bquxSEjlH8Ima2wWI=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=GQmVd09EweU6LP28qAM1NNhysOo9Wie68D2JGCu1Q0d7dMgMrw1GRlWuSLBhqZmLG
-	 5ODj3+ano0lO8EcS3wL0I9WPG03tXzK/9oBh8K7NbyA4hAXv1X8UWcX+mgywpmCwHM
-	 1bewKIQxOMql2tY9zgN2qGoPJQEAgNB5nkEiKyzk=
+	s=default; t=1553210594;
+	bh=6NHF+LBYMUEWWh8l4e7S4BOyNLjduudNq+et3aJp1Rc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=xxbV8KJ10hmpwAwO4XOz2uJMSojzTaKmw6xXZnkMP/qv4r0OA4XUFrqH0W290vpTS
+	 XYtCFz9XUH3VxKiw4GYRG4ol+y6KPlbGnD1hKGnEMomv3LuWYJkLZI1iZfSoXvdckP
+	 Lle5gE14+/GMh+1ij2WCnY6WLZMsFkJZ/BMESZgk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726980AbfCUXWF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Mar 2019 19:22:05 -0400
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:38915 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726374AbfCUXWF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2019 19:22:05 -0400
-Received: by mail-oi1-f196.google.com with SMTP id b4so363251oif.6;
-        Thu, 21 Mar 2019 16:22:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=E1Qqx9voHCC3xEJcZyXIOse36IMkps8hsS+4N7LMXD4=;
-        b=MQFOL6hX4zkGnPVyJ51XmT3J2Y5cabVFyIJx8MvbykNt5NjFk/wj5EV/RrWSyywcWc
-         sPqhwMDxPLlTrJP1i+lhC87gbWnB+eDaqKN7rPcZJ2VAP9Jx1zlclk/QzqXf4aEojRwC
-         JeyTkpfcnqQVzodvND19CDAHj+qc4sNA5/coS9iiHaO1HbsDR4kZ4L0Dk/UMjggMPhSR
-         +bABQ07RbEckrdDc7mKeoQS9eghRMmxCoWiyaYcOapCKc7YMpyyQIMO5z7HLHLRfriIn
-         TH+/K24lEB7EOcGxe6MtuZLwQ58PHYH9ziow6wFdVQ5qma3k8Lcs1MVsD6dQQsjoLDCw
-         Z3eg==
-X-Gm-Message-State: APjAAAXCHsRSkCROyoWhHjbsVuG/BcXnbNiYIRe0mJKUUSufXLcabBKZ
-        kIPTaf5l8XbzWJsw6vpJe0BwnCHWIIjz3/6Qzgk=
-X-Google-Smtp-Source: APXvYqyLok8SYEWtagDfsgpYdG18epPJuYV5WIZKtu/U1xmkxxR5nHr/NShbcBTem4aQKbD96uZYKWRSb4VkrmF3/bQ=
-X-Received: by 2002:aca:6046:: with SMTP id u67mr1321057oib.84.1553210522438;
- Thu, 21 Mar 2019 16:22:02 -0700 (PDT)
+        id S1726611AbfCUXXN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Mar 2019 19:23:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42872 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726374AbfCUXXN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Mar 2019 19:23:13 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1743E21874;
+        Thu, 21 Mar 2019 23:23:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553210592;
+        bh=6NHF+LBYMUEWWh8l4e7S4BOyNLjduudNq+et3aJp1Rc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=K8UINJe5hQavzhBgazIvZJ2J/clgnHPHYUDQQ5EOFM/tDxLyNWyiCPRB+Idn19ykk
+         H3bgiV8yNQgwG8xKoT9EFqVlBzQ0fUDyoCSprL/+PZOuV3Q94EWFGKmdnV08dB7ptE
+         6sEir2nGo2vR7+Kp7j40hTUyQqWnPqBgVpUcIIuY=
+Date:   Thu, 21 Mar 2019 18:23:10 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jesse Hathaway <jesse@mbuki-mvuki.org>
+Cc:     Ingo Molnar <mingo@redhat.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: Regression causes a hang on boot with a Comtrol PCI card
+Message-ID: <20190321232310.GL251185@google.com>
+References: <CANSNSoWiKd98Dt1N2sSjP9Af8zk1NPV-=3P4VLtFs_cSQG4RUg@mail.gmail.com>
+ <20190313232112.GC210027@google.com>
+ <CANSNSoXPFDu9RQAUA6dUCUrSCAj68q-Nj2W7ECz3fKpFtSNU+Q@mail.gmail.com>
 MIME-Version: 1.0
-References: <000000000000c4ba820579737025@google.com> <000000000000461a4c0584a2cfd2@google.com>
-In-Reply-To: <000000000000461a4c0584a2cfd2@google.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Fri, 22 Mar 2019 00:21:51 +0100
-Message-ID: <CAJZ5v0jVquKnFHrQ+=AyZM2rwOx3CkdGng1z2g2UX30+PJaKDQ@mail.gmail.com>
-Subject: Re: KASAN: slab-out-of-bounds Read in _decode_session6 (2)
-To:     syzbot <syzbot+240f9766d6be3d69431e@syzkaller.appspotmail.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, daniel@iogearbox.net,
-        David Miller <davem@davemloft.net>, devel@acpica.org,
-        Herbert Xu <herbert@gondor.apana.org.au>, kuznet@ms2.inr.ac.ru,
-        Len Brown <lenb@kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        linux-can@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>, Lv <lv.zheng@intel.com>,
-        mkl@pengutronix.de, netdev <netdev@vger.kernel.org>,
-        Rafael Wysocki <rafael.j.wysocki@intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Robert Moore <robert.moore@intel.com>, socketcan@hartkopp.net,
-        steffen.klassert@secunet.com, syzkaller-bugs@googlegroups.com,
-        yoshfuji@linux-ipv6.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CANSNSoXPFDu9RQAUA6dUCUrSCAj68q-Nj2W7ECz3fKpFtSNU+Q@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 22, 2019 at 12:08 AM syzbot
-<syzbot+240f9766d6be3d69431e@syzkaller.appspotmail.com> wrote:
->
-> syzbot has bisected this bug to:
->
-> commit 64fd1c7040880292710e6592ddc88d0d73cfb6fb
-> Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Date:   Mon Jun 12 20:48:41 2017 +0000
->
->      ACPI / PM: Run wakeup notify handlers synchronously
->
-> bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1555b12b200000
-> start commit:   64fd1c70 ACPI / PM: Run wakeup notify handlers synchronously
-> git tree:       upstream
-> final crash:    https://syzkaller.appspot.com/x/report.txt?x=1755b12b200000
-> console output: https://syzkaller.appspot.com/x/log.txt?x=1355b12b200000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=93932074d01b4a5
-> dashboard link: https://syzkaller.appspot.com/bug?extid=240f9766d6be3d69431e
-> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=13f35e4d400000
-> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1280edbd400000
->
-> Reported-by: syzbot+240f9766d6be3d69431e@syzkaller.appspotmail.com
-> Fixes: 64fd1c704088 ("ACPI / PM: Run wakeup notify handlers synchronously")
->
-> For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+On Thu, Mar 14, 2019 at 03:57:07PM -0500, Jesse Hathaway wrote:
+> > > 1302fcf0d03e (refs/bisect/bad) PCI: Configure *all* devices, not just
+> > > hot-added ones
+> > > 1c3c5eab1715 sched/core: Enable might_sleep() and smp_processor_id()
+> > > checks early
+> >
+> > How did you narrow it down to *two* commits, and do you have to revert
+> > both of them to avoid the hang?  Usually a bisection identifies a
+> > single commit, and the two you mention aren't related.
+> 
+> Sorry I should have been more verbose in what the bisection process was, I
+> found the problem after attempting to upgrade from linux v3.16 to v4.9. When
+> v4.9 hung I tried the latest kernel, v5.0, which also hanged. I began a git
+> bisect, but found there was more than one bad commit. Here is my current
+> understanding:
+> 
+> - [x] v3.18 vanilla, 1302fcf0d03e committed, hangs
+> - [x] v3.18 with revert of 1302fcf0d03e, works
+> .
+> .
+> .
+> - [x] v4.12 vanilla, hangs
+> - [x] v4.12 with revert of 1302fcf0d03e, works
+> 
+> - [x] v4.13 vanilla, 1c3c5eab1715 committed, hangs
+> - [x] v4.13 with revert of 1302fcf0d03e, hangs
+> - [x] v4.13 with revert of 1c3c5eab1715, hangs
+> - [x] v4.13 with revert of 1302fcf0d03e & 1c3c5eab1715, works
+> 
+> - [x] v5.0 vanilla, hangs
+> - [x] v5.0 with revert of 1302fcf0d03e & 1c3c5eab1715, works
 
-I don't see how the commit turned up by the bisection can be related
-to the reported crash.
+Thanks!  I doubt either of those commits is the real problem, but
+they're both related to system_state, so it's conceivable they're both
+involved in exposing the problem.
+
+> > Can you collect a complete dmesg log (with a working kernel) and
+> > output of "sudo lspci -vvxxx"?  You can open a bug report at
+> > https://bugzilla.kernel.org, attach the logs there, and respond here
+> > with the URL.
+> 
+> Bug submitted along with the requested logs,
+> https://bugzilla.kernel.org/show_bug.cgi?id=202927
+
+Thanks for that.
+
+> > Where does the hang happen?  Is it when we configure the Comtrol card?
+> 
+> Hang occurs after PCI is initialized, snippet below, I have included the full
+> output in the bug report:
+> 
+> [   10.561971] pci 0000:81:00.0:   bridge window [mem 0xc8000000-0xc80fffff]
+> [   10.569661] pci 0000:80:01.0: PCI bridge to [bus 81-82]
+> [   10.575594] pci 0000:80:01.0:   bridge window [mem 0xc8000000-0xc80fffff]
+> [   10.583278] pci 0000:80:03.0: PCI bridge to [bus 83]
+> [   10.589008] NET: Registered protocol family 2
+> [   10.594254] tcp_listen_portaddr_hash hash table entries: 65536
+> (order: 8, 1048576 bytes)
+> [   10.603671] TCP established hash table entries: 524288 (order: 10,
+> 4194304 bytes)
+> [   10.612729] TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
+> [   10.620446] TCP: Hash tables configured (established 524288 bind 65536)
+> [   10.628124] UDP hash table entries: 65536 (order: 9, 2097152 bytes)
+> [   10.635541] UDP-Lite hash table entries: 65536 (order: 9, 2097152 bytes)
+> [   10.643669] NET: Registered protocol family 1
+
+The successful boot continues on with this:
+
+  [   10.675996] pci 0000:00:1a.0: quirk_usb_early_handoff+0x0/0x6a0 took 22519 usecs
+  [   10.684519] pci 0000:03:00.0: [Firmware Bug]: disabling VPD access (can't determine size of non-standard VPD for)
+  [   10.696404] pci 0000:03:00.0: quirk_blacklist_vpd+0x0/0x30 took 11605 usecs
+  [   10.704515] pci 0000:0b:00.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+
+So apparently the hang happens while we're running the "final" PCI
+fixups.  This happens after all the rest of PCI is initialized.
+
+Can you boot v5.0 vanilla with "initcall_debug"?  Maybe we can narrow
+it down to a specific quirk.
+
+Bjorn
