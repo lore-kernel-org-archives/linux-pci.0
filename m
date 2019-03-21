@@ -2,176 +2,116 @@ Return-Path: <SRS0=33lb=RY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B99FC43381
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 04:57:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE61C10F00
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 07:31:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AC6F2077B
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 04:57:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="siojCPH1"
+	by mail.kernel.org (Postfix) with ESMTP id A3DD4218D3
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Mar 2019 07:31:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725881AbfCUE5u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Mar 2019 00:57:50 -0400
-Received: from mail-io1-f65.google.com ([209.85.166.65]:46750 "EHLO
-        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725800AbfCUE5u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2019 00:57:50 -0400
-Received: by mail-io1-f65.google.com with SMTP id b9so4188651iot.13;
-        Wed, 20 Mar 2019 21:57:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=3dyLsgRjy52GT6zOA+aLJRUshJeDc3eyQetzOoKEFkc=;
-        b=siojCPH1RG6sCukAfkZk2VjfJF+9XBYR34fEZ5mmaWuNRrN9YBmk+pQzk9PH+2JblD
-         Lmn12S29Ec8LWfYdkHI9mo3dKPoFjqpakChfNHHFVNw4lq0GNCcRG91z3hKClpEhIhI2
-         GLM5F7sEoTSGYtnxJRCn3O+xT12mlXKy9xmV0yzU0stTrecBBK0aUjfdgh4pkIBWnCSF
-         Rx56AjrmXSEhVx57HG4qxjHkIxXFK7B/rWT427+jWHjYzMx6Fk/A396QJ6uDEeSjUmbz
-         nco1JOMfwEOj+VYqww2J5xu8T5UICNQCFhSaFmssY5DmBYsWzBA9qno+zs7NuaeI1aSx
-         LO4g==
+        id S1727829AbfCUHbz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Mar 2019 03:31:55 -0400
+Received: from mail-vs1-f66.google.com ([209.85.217.66]:42611 "EHLO
+        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727575AbfCUHby (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2019 03:31:54 -0400
+Received: by mail-vs1-f66.google.com with SMTP id f15so355223vsk.9;
+        Thu, 21 Mar 2019 00:31:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=3dyLsgRjy52GT6zOA+aLJRUshJeDc3eyQetzOoKEFkc=;
-        b=kF7BcHAKy170ivcUGSY7X2cFU8TemvynkEZyF6wSGkR4zqdCJumpp7YHzbbkfvon2i
-         sxvwZlEntu+cvqW43qtHYgNavDPqvFRC7944ypAPTw2ViC5ixCObqY/rtcyZNH4MAztV
-         hn83T/G25P+whQQwosPd5bUImSZVjAbhptfaGARv+TNY8QX1/NZpHstprN+bWAo2mRLA
-         ZU7Ckj8gT3yyyfw10p7s/p29RPHDCkHIARBEbUbhFvu3bgqW3m2Wu1pMrBLMfWtjsSod
-         LYayrtoXIZfAe8dCtjoR+FwYUnLo0/2repFHYerS15H7HZfemZfSbINanZSI0LNjPGt/
-         RF9w==
-X-Gm-Message-State: APjAAAXRA7O9TbmOlCCo4Yj/VHwyWQwPH+hCx2wYnMTyBKPKP+vwbkV0
-        iFQUrsGYNtn8F+Ay8HNqnzq+qh3g3WNkQl0IG88=
-X-Google-Smtp-Source: APXvYqysPOoVymEmDIJkeTCu5EOAxrkkxA/slINgH6zE9mD1kpvqjNEjJiKTStjYu4l0yvNtQmzIA6XTnc5gWyQQJd8=
-X-Received: by 2002:a6b:e305:: with SMTP id u5mr1342124ioc.262.1553144268944;
- Wed, 20 Mar 2019 21:57:48 -0700 (PDT)
+        bh=f+YChVJl4NjwguJjT50EdRi4vKVlR8vqZWdsjGrIfdc=;
+        b=Xx2eK3CKA8vcrsrVIQOtvy0kVTN8W77NIX2Sggi6i/Pp9iKhVnud1agKbZElWk+GWC
+         5jZmHJnVPq8xC1g5HBvO9dwm8yWRZK8ONdv30MUeBZlO2mvMxS2R+2eivRG4ceqcUYZd
+         m0UtMmgfcj161xs90Tm13tUJ98NYRCgkIFRHr6XU6henOwBrqWEEVJBjuYDcQbyIYmw2
+         M5rLcV7HYCPd8ooK3EIfcHaglA0i+bMxnWlYug7ROG2YQn8ylGxyDqMG7GD/Zsk8zLQ9
+         soBQ+7/32I8dJdAHz5q7YJ3X85m8qQTcSILajxEy/6UmGymKtsutjgi5ul8+fmA0Hx2D
+         xvmw==
+X-Gm-Message-State: APjAAAWZfKv3JUqYLQW/cLilaVMU63c0nKLooPN1nJmQUeiT9HNWHrK3
+        4r7BlZdFs2JehafqCrKHBXJIg9F1VZsq3I5kdkg=
+X-Google-Smtp-Source: APXvYqxLazc9EzSefIBwppbkf9d0BlgC+g1ULVBGN/715ckGAmAvybktgSJpZCcuZdG/IycFSMJUZd9c43hyEvGtu8Y=
+X-Received: by 2002:a67:f843:: with SMTP id b3mr1085126vsp.152.1553153513604;
+ Thu, 21 Mar 2019 00:31:53 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190222194808.15962-1-mr.nuke.me@gmail.com> <20190320205233.GE251185@google.com>
- <CAHk-=wjDY1C+E0gUHmb6O3THwoTNpm=-qthDRcW+sG2RB430Mw@mail.gmail.com> <156dec38-438d-1ce9-64fa-af95d37c14bd@gmail.com>
-In-Reply-To: <156dec38-438d-1ce9-64fa-af95d37c14bd@gmail.com>
-From:   Oliver <oohall@gmail.com>
-Date:   Thu, 21 Mar 2019 15:57:37 +1100
-Message-ID: <CAOSf1CHpoO-1zbT75A+DtHZ5nE3xdaMYDr9kVRpJY=EuJHk9EQ@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI/MSI: Don't touch MSI bits when the PCI device is disconnected
-To:     Alex G <mr.nuke.me@gmail.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Bjorn Helgaas <helgaas@kernel.org>, austin_bolen@dell.com,
-        Alex Gagniuc <alex_gagniuc@dellteam.com>,
-        Keith Busch <keith.busch@intel.com>, Shyam_Iyer@dell.com,
-        Lukas Wunner <lukas@wunner.de>, Sinan Kaya <okaya@kernel.org>,
-        linux-pci@vger.kernel.org,
-        Linux List Kernel Mailing <linux-kernel@vger.kernel.org>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme@lists.infradead.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <20190317000608.24881-1-marek.vasut@gmail.com> <CAMuHMdW5+aKVFdQYF-xiO3JyoyNYDwOTQqF8BJgku1b7ZzD1Mw@mail.gmail.com>
+ <c7fa1a3c-f3cb-2c9c-3321-c8b53da609f2@gmail.com>
+In-Reply-To: <c7fa1a3c-f3cb-2c9c-3321-c8b53da609f2@gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Thu, 21 Mar 2019 08:31:41 +0100
+Message-ID: <CAMuHMdUYM=Yux+uoAuwGgKzzdvkr-3-JSHHWisZVPHiH=GqEiQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] PCI: rcar: Replace unsigned long with u32 for
+ register values
+To:     Marek Vasut <marek.vasut@gmail.com>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 21, 2019 at 12:27 PM Alex G <mr.nuke.me@gmail.com> wrote:
->
-> On 3/20/19 4:44 PM, Linus Torvalds wrote:
-> > On Wed, Mar 20, 2019 at 1:52 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+Hi Marek,
+
+On Thu, Mar 21, 2019 at 5:14 AM Marek Vasut <marek.vasut@gmail.com> wrote:
+> On 3/18/19 9:47 AM, Geert Uytterhoeven wrote:
+> > On Sun, Mar 17, 2019 at 1:06 AM <marek.vasut@gmail.com> wrote:
+> >> From: Marek Vasut <marek.vasut+renesas@gmail.com>
 > >>
-> >> AFAICT, the consensus there was that it would be better to find some
-> >> sort of platform solution instead of dealing with it in individual
-> >> drivers.  The PCI core isn't really a driver, but I think the same
-> >> argument applies to it: if we had a better way to recover from readl()
-> >> errors, that way would work equally well in nvme-pci and the PCI core.
+> >> Replace unsigned long with u32 type for variables holding
+> >> register values, since the registers are 32bit. Note that
+> >> rcar_pcie_msi_irq() still uses unsigned long because both
+> >> find_first_bit() and __fls() require unsigned long as an
+> >> argument.
+> >>
+> >> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> >> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> >> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> >> Cc: Simon Horman <horms+renesas@verge.net.au>
+> >> Cc: Wolfram Sang <wsa@the-dreams.de>
+> >> Cc: linux-renesas-soc@vger.kernel.org
+> >> To: linux-pci@vger.kernel.org
+> >> ---
+> >>  drivers/pci/controller/pcie-rcar.c | 10 +++++-----
+> >>  1 file changed, 5 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> >> index 1408c8aa758b..857d88fd03d5 100644
+> >> --- a/drivers/pci/controller/pcie-rcar.c
+> >> +++ b/drivers/pci/controller/pcie-rcar.c
+> >> @@ -169,7 +169,7 @@ enum {
+> >>
+> >>  static void rcar_rmw32(struct rcar_pcie *pcie, int where, u32 mask, u32 data)
+> >>  {
+> >> -       int shift = 8 * (where & 3);
+> >> +       u32 shift = 8 * (where & 3);
 > >
-> > I think that patches with the pattern "if (disconnected) don't do IO"
-> > are fundamentally broken and we should look for alternatives in all
-> > cases.
-> >
-> > They are fundamentally broken because they are racy: if it's an actual
-> > sudden disconnect in the middle of IO, there's no guarantee that we'll
-> > even be notified in time.
-> >
-> > They are fundamentally broken because they add new magic special cases
-> > that very few people will ever test, and the people who do test them
-> > tend to do so with old irrelevant kernels.
-> >
-> > Finally, they are fundamentally broken because they always end up
-> > being just special cases. One or two special case accesses in a
-> > driver, or perhaps all accesses of a particular type in just _one_
-> > special driver.
-> >
-> > Yes, yes, I realize that people want error reporting, and that
-> > hot-removal can cause various error conditions (perhaps just parity
-> > errors for the IO, but also perhaps other random errors caused by
-> > firmware perhaps doing special HW setup).
-> >
-> > But the "you get a fatal interrupt, so avoid the IO" kind of model is
-> > completely broken, and needs to just be fixed differently. See above
-> > why it's so completely broken.
-> >
-> > So if the hw is set up to send some kinf of synchronous interrupt or
-> > machine check that cannot sanely be handled (perhaps because it will
-> > just repeat forever), we should try to just disable said thing.
-> >
-> > PCIe allows for just polling for errors on the bridges, afaik. It's
-> > been years since I looked at it, and maybe I'm wrong. And I bet there
-> > are various "platform-specific value add" registers etc that may need
-> > tweaking outside of any standard spec for PCIe error reporting. But
-> > let's do that in a platform driver, to set up the platform to not do
-> > the silly "I'm just going to die if I see an error" thing.
-> >
-> > It's way better to have a model where you poll each bridge once a
-> > minute (or one an hour) and let people know "guys, your hardware
-> > reports errors", than make random crappy changes to random drivers
-> > because the hardware was set up to die on said errors.
-> >
-> > And if some MIS person wants the "hardware will die" setting, then
-> > they can damn well have that, and then it's not out problem, but it
-> > also means that we don't start changing random drivers for that insane
-> > setting. It's dead, Jim, and it was the users choice.
-> >
-> > Notice how in neither case does it make sense to try to do some "if
-> > (disconnected) dont_do_io()" model for the drivers.
+> > shift is not a register value, so IMHO the original type is fine (the "int"
+> > comes from the pci_ops API, BTW).
 >
-> I disagree with the idea of doing something you know can cause an error
-> to propagate. That being said, in this particular case we have come to
-> rely a little too much on the if (disconnected) model.
+> I presume it should be at least unsigned ?
 
-My main gripe with the if (disconnected) model is that it's only
-really good for inactive devices. If a device is being used then odds
-are the driver will do an MMIO before the pci core has had a chance to
-mark the device as broken so you crash anyway.
+Yes, and "where" too.
 
-> You mentioned in the other thread that fixing the GHES driver will pay
-> much higher dividends. I'm working on reviving a couple of changes to do
-> just that. Some industry folk were very concerned about the "don't
-> panic()" approach, and I want to make sure I fairly present their
-> arguments in the cover letter.
->
-> I'm hoping one day we'll have the ability to use page tables to prevent
-> the situations that we're trying to fix today in less than ideal ways.
-> Although there are other places in msi.c that use if (disconnected), I'm
-> okay with dropping this change -- provided we come up with an equivalent
-> fix.
+Note that the other uses of "where" are also int, and IMHO should be
+unsigned, too. But changing that means changing the PCI API and all
+drivers, sigh...
 
-What's the idea there? Scan the ioremap space for mappings over the
-device BARs and swap them with a normal memory page?
+Gr{oetje,eeting}s,
 
-> But even if FFS doesn't crash, do we really want to lose hundreds of
-> milliseconds to SMM --on all cores-- when all it takes is a couple of
-> cycles to check a flag?
+                        Geert
 
-Using pci_dev_is_disconnected() to opportunistically avoid waiting for
-MMIO timeouts is fair enough IMO, even if it's a bit ugly. It would
-help your case if you did some measurements to show the improvement
-and look for other cases it might help. It might also be a good idea
-to document when it is appropriate to use pci_is_dev_disconnected() so
-we aren't stuck having the same argument again and again, but that's
-probably a job for Bjorn though.
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-Oliver
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
