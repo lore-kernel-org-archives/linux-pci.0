@@ -6,110 +6,153 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0AFBC43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:18:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 268B2C10F03
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:19:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B9C62190A
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:18:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00A25218A2
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728640AbfCVQSM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Mar 2019 12:18:12 -0400
-Received: from mout.kundenserver.de ([212.227.17.13]:59561 "EHLO
+        id S1728195AbfCVQSL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Mar 2019 12:18:11 -0400
+Received: from mout.kundenserver.de ([217.72.192.75]:44337 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727898AbfCVQSM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2019 12:18:12 -0400
+        with ESMTP id S1726649AbfCVQSL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2019 12:18:11 -0400
 Received: from wuerfel.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
- 1N5mSj-1gwtJa2zff-017GR7; Fri, 22 Mar 2019 17:17:53 +0100
+ 1MOiPx-1hM1Sy32Yp-00QCNR; Fri, 22 Mar 2019 17:17:59 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
-To:     stable@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
+To:     stable@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Niklas Cassel <niklas.cassel@axis.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Sasha Levin <alexander.levin@microsoft.com>,
-        Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [BACKPORT 4.14.y 2/8] PCI: designware-ep: dw_pcie_ep_set_msi() should only set MMC bits
-Date:   Fri, 22 Mar 2019 17:17:17 +0100
-Message-Id: <20190322161727.1153278-3-arnd@arndb.de>
+Cc:     Robin Murphy <robin.murphy@arm.com>, Rob Herring <robh@kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Cyrille Pitchen <cyrille.pitchen@free-electrons.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [BACKPORT 4.14.y 4/8] PCI: endpoint: Use EPC's device in dma_alloc_coherent()/dma_free_coherent()
+Date:   Fri, 22 Mar 2019 17:17:19 +0100
+Message-Id: <20190322161727.1153278-5-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20190322161727.1153278-1-arnd@arndb.de>
 References: <20190322161727.1153278-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:Uo8SCd+/FXufp8zP23YIUZ9XHIAhfqzREoeT+kXGkT8DrQcIvtO
- ISLMiq4LYOZCjxilA5CckNAfOAqFDM+LAjWLcxmlmgVxM4p5Bgr6VgHEQIuJGeRFS2s/GYC
- ilIhAbagAtbWHr8HrO/vV7yevV+US9cos7fN8GQFx4BXmKoWrebgZilbJPg+jAo5alncl90
- z1hU1IY884EbOkFU6yBvg==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:JgGkVkB65co=:ZK0Oq82pszuJbkxPzXZ9Yj
- 73QDqJompKb4wnxLc5id8fEuPESPHDKbHZD+sh2o9651pNR5mtS+elVnpUUQH1VfuTvwRE74a
- jltal0bsxPt8UciDilVITIrcljRKJJk+Gnq9AHk3xZ2YArlfEv/Aop60qz8DIl1ssD/nfbQjS
- ttClDHA1MxHmYMG60Tld6z3lC3PFxzRBnUuCDWnfguvkJl/fTOahNCwolB6HAMaZRESHHNECE
- E1RKlc0Hl2miLYvVfK4vOajLAuoiO8yZhurMBKBfXBgWT8FtTW1mT/niodvRkm/QrS5q7o3Cg
- 2cXEsm/LswE04L+gCAtyFepmsIVsEfloAT4xYv57+8CQxycUmmo4tUHEn+XeUSwvHso44d5o6
- lpIb4+OpuEVkcwmeFb9EF91RlNjRhzBl8kfzEOMryFUCwflw7lUA0rCsTt1C6XE/gcTOgPHHM
- wJm+y262gz8OXYGAQ38EJWrEajVIhzXImAbUXgu4uEHrReRU4w6JV2xl1S0TzFwVv85bUJqXj
- DsYz0gF2/2VaGoKWkbrGjG7264IzWnugr2FP422/sn4l2++MjDsJ6925vL6PWKYkwqUAe+VD8
- unr1v9Mri/9wzc5o35Gh7og3uKEMnU8Rz+Bdjy7RJ6iQYjScHYug1DY+n8uCkdnvIdpiDjF6i
- lK13EFS/7jhs/GOfb7r8VZK+APxrrPFU9vzUlWYPYX9T4rqLkQrp1VwmJYWVT8YXuzZUhWru8
- hI8Gv+CORdm2j3FXOkJPtSfJRGnVY7UoBS3xbg==
+X-Provags-ID: V03:K1:o2CLoPPlNd8UOmBaKmOyATpVwB8HHtVtSKM+jhSfSQtfC+aMt0q
+ Qy8eWkE1aQFAplhErWK22aC11lYeUAfBhRJn1G7KaUwzS3+PfKvotAAzb2q/2Vitzgva2Sm
+ b/CLGslToUt3vsGJzvb5EtZB2z2rwSNwXouP3yRu7Ap2t1HNwcb8Xt7nTAfm/9l5zu4WN18
+ a3MZl5DvVAQpq5cbMtfyg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:MQsZCJCy4cU=:oI3MyfMmFwB3s/9sNcqbtp
+ PDb1eAr102e0g9COK2Xh5YELeGSqD4+p3tyBjSXv1MZlCzLi6iDWv7ir/iuJVbi3uxmfq3vWX
+ mUl24vGjKYbfq3ZDMAamq5OkzGnrNr0zyDV81ci5EOe1gelWA8KTiJpmb2AzFvjf69QSV6Pwy
+ 5xQtmYWA1eN2xvf56ex2SBBjPGvFTCaListYnKqt3A7Vd311U/B0h/eY5diZMCEpNIx2zFfq+
+ VIaB7eNiJDH3HH4g0KD1BgVgu9fmcyzHBaUIgJ57P1rsgbMGa3HEF9aGpmXD54EoWG3OPD/pO
+ paws2HxHC3U0sNR84cv3+aFKqtJuBwIP7ON007WQ4G+BN4Y2BQaqgmvQONsRyIvUOp+vBYV7U
+ jgpeGnpIfr3H22/US9E4cj9yJ8xf8SlQnsPRjSmh1Q1ZO/VTuUQv0W9M9MFqEZX5P0Kq0Vts9
+ TeiX/zO+tRqTVoVEcG8/fugZGUkQ+2MSSl7sL/rqtQjZcwqta4SgTmKdYSyo2hs4MObWqsedz
+ H7lNJH6KjdlCWDeyVRoo1BIYlFCMsdhohCojQSbe9VEhcDYL2fsYVCWBYFEyc9ZPi/BTGeFLM
+ Z04XS+CPv7JE377BdIPFmDhD164XnzuVZR7S5asOjzNqxC5GEwlVQoIupaYpsBYC89u8S0UZ2
+ x4+XxzaE9RQmvNv3frmnRd77CH2jL1pqkoUuHFWz3sZ5kFCYqmdjQY3nA+LZBTphI8xopbH84
+ o+9wMdO4tdMAtu6+C3UEHUdWSal6KmTveyZfzA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Niklas Cassel <niklas.cassel@axis.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
 
-Previously, dw_pcie_ep_set_msi() wrote all bits in the Message Control
-register, thus overwriting the PCI_MSI_FLAGS_64BIT bit.
-By clearing the PCI_MSI_FLAGS_64BIT bit, we break MSI
-on systems where the RC has set a 64 bit MSI address.
-Fix dw_pcie_ep_set_msi() so that it only sets MMC bits.
+After commit 723288836628 ("of: restrict DMA configuration"),
+of_dma_configure() doesn't configure the coherent_dma_mask/dma_mask
+of endpoint function device (since it doesn't have a DT node associated
+with and hence no dma-ranges property), resulting in
+dma_alloc_coherent() (used in pci_epf_alloc_space()) to fail.
 
-Tested-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+Fix it by making dma_alloc_coherent() use EPC's device for allocating
+memory address.
+
+Link: http://lkml.kernel.org/r/64d63468-d28f-8fcd-a6f3-cf2a6401c8cb@ti.com
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+[lorenzo.pieralisi@arm.com: tweaked commit log]
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
-(cherry picked from commit 099a95f3591ade29da52131895a3ba9f92a0e82c)
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Tested-by: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
+Tested-by: Niklas Cassel <niklas.cassel@axis.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+(cherry picked from commit b330104fa76df3eae6e199a23791fed5d35f06b4)
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/pci/dwc/pcie-designware-ep.c | 4 +++-
- drivers/pci/dwc/pcie-designware.h    | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/endpoint/pci-epc-core.c | 10 ----------
+ drivers/pci/endpoint/pci-epf-core.c |  4 ++--
+ 2 files changed, 2 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 7c621877a939..df317d390317 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -214,7 +214,9 @@ static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
- 	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 42c2a1156325..cd7d4788b94d 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -18,7 +18,6 @@
+  */
  
--	val = (encode_int << MSI_CAP_MMC_SHIFT);
-+	val = dw_pcie_readw_dbi(pci, MSI_MESSAGE_CONTROL);
-+	val &= ~MSI_CAP_MMC_MASK;
-+	val |= (encode_int << MSI_CAP_MMC_SHIFT) & MSI_CAP_MMC_MASK;
- 	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
+ #include <linux/device.h>
+-#include <linux/dma-mapping.h>
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/of_device.h>
+@@ -371,7 +370,6 @@ EXPORT_SYMBOL_GPL(pci_epc_write_header);
+ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ {
+ 	unsigned long flags;
+-	struct device *dev = epc->dev.parent;
  
- 	return 0;
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 3551dd607b90..5af29d125c7e 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -99,6 +99,7 @@
+ 	if (epf->epc)
+ 		return -EBUSY;
+@@ -383,12 +381,6 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
+ 		return -EINVAL;
  
- #define MSI_MESSAGE_CONTROL		0x52
- #define MSI_CAP_MMC_SHIFT		1
-+#define MSI_CAP_MMC_MASK		(7 << MSI_CAP_MMC_SHIFT)
- #define MSI_CAP_MME_SHIFT		4
- #define MSI_CAP_MSI_EN_MASK		0x1
- #define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
+ 	epf->epc = epc;
+-	if (dev->of_node) {
+-		of_dma_configure(&epf->dev, dev->of_node);
+-	} else {
+-		dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
+-		epf->dev.dma_mask = epc->dev.dma_mask;
+-	}
+ 
+ 	spin_lock_irqsave(&epc->lock, flags);
+ 	list_add_tail(&epf->list, &epc->pci_epf);
+@@ -503,9 +495,7 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+ 	INIT_LIST_HEAD(&epc->pci_epf);
+ 
+ 	device_initialize(&epc->dev);
+-	dma_set_coherent_mask(&epc->dev, dev->coherent_dma_mask);
+ 	epc->dev.class = pci_epc_class;
+-	epc->dev.dma_mask = dev->dma_mask;
+ 	epc->dev.parent = dev;
+ 	epc->ops = ops;
+ 
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index ae1611a62808..95ccc4b8a0a2 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -99,7 +99,7 @@ EXPORT_SYMBOL_GPL(pci_epf_bind);
+  */
+ void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar)
+ {
+-	struct device *dev = &epf->dev;
++	struct device *dev = epf->epc->dev.parent;
+ 
+ 	if (!addr)
+ 		return;
+@@ -122,7 +122,7 @@ EXPORT_SYMBOL_GPL(pci_epf_free_space);
+ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
+ {
+ 	void *space;
+-	struct device *dev = &epf->dev;
++	struct device *dev = epf->epc->dev.parent;
+ 	dma_addr_t phys_addr;
+ 
+ 	if (size < 128)
 -- 
 2.20.0
 
