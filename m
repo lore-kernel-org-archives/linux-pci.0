@@ -2,49 +2,63 @@ Return-Path: <SRS0=nTPQ=RZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 177E7C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 12:29:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82DAEC10F03
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 12:33:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3EF02070D
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 12:29:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54C072054F
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 12:33:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mM01Q1Gz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390992AbfCVM3s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Mar 2019 08:29:48 -0400
-Received: from mail-vs1-f66.google.com ([209.85.217.66]:43094 "EHLO
-        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390816AbfCVM3q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2019 08:29:46 -0400
-Received: by mail-vs1-f66.google.com with SMTP id i207so1234772vsd.10;
-        Fri, 22 Mar 2019 05:29:46 -0700 (PDT)
+        id S2389238AbfCVMdK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Mar 2019 08:33:10 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:52322 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388584AbfCVMdK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2019 08:33:10 -0400
+Received: by mail-wm1-f68.google.com with SMTP id a184so1991477wma.2;
+        Fri, 22 Mar 2019 05:33:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=RXAj0aHFadCPFYeVR3Dpi4dD8U8QNMibZrECrLsC8a4=;
+        b=mM01Q1GzCatq02rPNvYzSv30/KZ1lyFiQFn+5Ga5qGBwkaminJmGYpcEloV8UUApC5
+         k9gbJztAQKV6BiGJaJKv3yauQJcT7nLwJV4mUxkoU53JWoDwSceuNaM2m9LzGqx5+zdy
+         J4G1j1HMOC2STyHGi4FdjpQDYSfx55C+Zs95P81Sd7yifCVuJeOxjB2kelBKVE08enwc
+         uEOUe8HeqB6oEsHCYNSWpWIKzw7dY+iNGBHVS/V6I2Aw5Q+AU5I3n5cepg8ts+1Tev93
+         RAscLt69fqBBg9SiMADPXrwKxeDEL0LmWr8RajV41ohf/64aBl2UEomi1F66zWhg3616
+         bKLQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=u95oa377k1b3PA5wrjxR0goiknXMa0KRr9sfArFdG4M=;
-        b=DyjTu0gozUmcIUuHsMPkMfAGSai2eJw1COnlzlkQjP8huon4c6fInwXXKy4VgG2PFI
-         MqkJ1dmdbKhHkhxvuWiigPfcTU7Wq6RS1VP0fvBaFlSFv+c8Vjf9QzfTedyY4OEyMO6f
-         NaKWJKezTEf71VXQSZRpUj4iqBK1dS5EGnJg2rV+sxW3Mp/woy9WnaISY0dkLBJ7EE3w
-         Qp1eN4BscNbAqhObYGZ3L2UV0rwqZKYHbd6gXW6OUcd1mO3FNAjdR/6DkP4jKCatws8Q
-         gExAjmzunpHm9uXtNwMmg5EVaI17/LnD5rH6mcC6aLooei80ATkfeEwYgip4ypiEY2Hb
-         Rn1A==
-X-Gm-Message-State: APjAAAWtTk3Rd0qeBFQC4Um4/DneksKGIRrFK8JcgcjBPLGyfDzbp+Fq
-        rBWgtBWaR0580LsHa5Ub6y39+CNUN/i9GQ2L8042VL3F
-X-Google-Smtp-Source: APXvYqywg/+XVmRsSeS7kWLXLBEX4Orxlc3VLLe5WVqQ0Lr9T9pMgIU/TRgvPXgnV0wgyB2mj0GNK24mqWr7cBv//d0=
-X-Received: by 2002:a67:d011:: with SMTP id r17mr5179813vsi.96.1553257785506;
- Fri, 22 Mar 2019 05:29:45 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190217132441.15139-1-marek.vasut@gmail.com> <20190322113133.GB24257@e107981-ln.cambridge.arm.com>
- <95d1076c-5490-3803-f394-9a0928c2cccb@gmail.com> <20190322121822.GA26257@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20190322121822.GA26257@e107981-ln.cambridge.arm.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Fri, 22 Mar 2019 13:29:33 +0100
-Message-ID: <CAMuHMdVt9S8ECq=FFHHLRDF4ozQc5E-kEHLZsCZaWTTi2TeC=g@mail.gmail.com>
-Subject: Re: [PATCH V2] PCI: rcar: Add the initialization of PCIe link in resume_noirq
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Marek Vasut <marek.vasut@gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RXAj0aHFadCPFYeVR3Dpi4dD8U8QNMibZrECrLsC8a4=;
+        b=lU+VusATPj5Nci8yZESGH63pdjJ3uxZdVJDIRMO9eo4mxWF+2ZY0PmI4ssJCO57pdc
+         k1chnOvZK6f+4n95TEYxm87lOOUQH1I5hKMmJpniLw9KBIkJo18WyaI7i9Q/vFB+Ulfx
+         zUxAUrXFR7Q4Om2WG8RWaz1OCm65PtcP0xArDXILvu2PXM7CHDxISsac0/Pr/RZA2+dj
+         pooHGJMe0qbks02cKklbae0H9ET1Bu0Lwe/wjI2+a34hXlOkOCoryE+yiNAAv4Fy5Z4g
+         plKVvGP0Jnm3etKiSgzoGhrfD8mDkcwJVgwk/X27rxC+YCqNiC/5kiPTH7CHEg6kbRwk
+         dH6g==
+X-Gm-Message-State: APjAAAUSQbBOa90PzlypVEAhsyZXEqXrohmhQ20nxwC+TWjkBpHlLqTi
+        OiuYX6qUGXywyg4e7J/mJyRwCaJ6
+X-Google-Smtp-Source: APXvYqwBWs+8GfBtVqnhMipTBdQm+eUxztBpj/wXmC1F5NDzi3veUkd0lVgfMkgMqIx7mlT9LE0FeA==
+X-Received: by 2002:a1c:40d6:: with SMTP id n205mr2918264wma.140.1553257988105;
+        Fri, 22 Mar 2019 05:33:08 -0700 (PDT)
+Received: from [192.168.1.4] (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
+        by smtp.gmail.com with ESMTPSA id n19sm6396015wmk.35.2019.03.22.05.33.06
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Fri, 22 Mar 2019 05:33:07 -0700 (PDT)
+Subject: Re: [PATCH V2] PCI: rcar: Add the initialization of PCIe link in
+ resume_noirq
+To:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     linux-pci <linux-pci@vger.kernel.org>,
         Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
         Gaku Inami <gaku.inami.xw@bp.renesas.com>,
@@ -54,53 +68,72 @@ Cc:     linux-pci <linux-pci@vger.kernel.org>,
         Simon Horman <horms+renesas@verge.net.au>,
         Wolfram Sang <wsa@the-dreams.de>,
         Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+References: <20190217132441.15139-1-marek.vasut@gmail.com>
+ <20190322113133.GB24257@e107981-ln.cambridge.arm.com>
+ <95d1076c-5490-3803-f394-9a0928c2cccb@gmail.com>
+ <20190322121822.GA26257@e107981-ln.cambridge.arm.com>
+ <CAMuHMdVt9S8ECq=FFHHLRDF4ozQc5E-kEHLZsCZaWTTi2TeC=g@mail.gmail.com>
+From:   Marek Vasut <marek.vasut@gmail.com>
+Openpgp: preference=signencrypt
+Message-ID: <9b432b16-35a1-c4ec-df97-8f6f854ab8b4@gmail.com>
+Date:   Fri, 22 Mar 2019 13:33:06 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
+MIME-Version: 1.0
+In-Reply-To: <CAMuHMdVt9S8ECq=FFHHLRDF4ozQc5E-kEHLZsCZaWTTi2TeC=g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo, Marek,
+On 3/22/19 1:29 PM, Geert Uytterhoeven wrote:
+> Hi Lorenzo, Marek,
 
-On Fri, Mar 22, 2019 at 1:18 PM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Fri, Mar 22, 2019 at 01:09:13PM +0100, Marek Vasut wrote:
-> > On 3/22/19 12:31 PM, Lorenzo Pieralisi wrote:
-> > > On Sun, Feb 17, 2019 at 02:24:41PM +0100, marek.vasut@gmail.com wrote:
-> > >> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> > >>
-> > >> Reestablish the PCIe link very early in the resume process in case it
-> > >> went down to prevent PCI accesses from hanging the bus. Such accesses
-> > >> can happen early in the PCI resume process, in the resume_noirq, thus
-> > >> the link must be reestablished in the resume_noirq callback of the
-> > >> driver.
-> > >
-> > > This looks like a fix (most likely fixing initial S2R support, please
-> > > help me chase the commit ID), should we consider it for stable kernels ?
-> > >
-> > > Without it I understand S2R is actually broken on platforms with this
-> > > host bridge.
-> > I don't think this ever worked, so it's hard to find a Fixes: commit for
-> > this.
->
-> If we want to send it to stable kernels we have to select which versions
-> we are covering. I think the only options for a Fixes: tag are either
-> the initial S2R support commit for the platforms this driver runs on
-> or the initial driver commit that harks back to v3.16 AFAICS.
+Hi,
 
-This only started to become an issue when support for arm64 platforms
-was added, where PSCI may power down the SoC, right?
+> On Fri, Mar 22, 2019 at 1:18 PM Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+>> On Fri, Mar 22, 2019 at 01:09:13PM +0100, Marek Vasut wrote:
+>>> On 3/22/19 12:31 PM, Lorenzo Pieralisi wrote:
+>>>> On Sun, Feb 17, 2019 at 02:24:41PM +0100, marek.vasut@gmail.com wrote:
+>>>>> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
+>>>>>
+>>>>> Reestablish the PCIe link very early in the resume process in case it
+>>>>> went down to prevent PCI accesses from hanging the bus. Such accesses
+>>>>> can happen early in the PCI resume process, in the resume_noirq, thus
+>>>>> the link must be reestablished in the resume_noirq callback of the
+>>>>> driver.
+>>>>
+>>>> This looks like a fix (most likely fixing initial S2R support, please
+>>>> help me chase the commit ID), should we consider it for stable kernels ?
+>>>>
+>>>> Without it I understand S2R is actually broken on platforms with this
+>>>> host bridge.
+>>> I don't think this ever worked, so it's hard to find a Fixes: commit for
+>>> this.
+>>
+>> If we want to send it to stable kernels we have to select which versions
+>> we are covering. I think the only options for a Fixes: tag are either
+>> the initial S2R support commit for the platforms this driver runs on
+>> or the initial driver commit that harks back to v3.16 AFAICS.
+> 
+> This only started to become an issue when support for arm64 platforms
+> was added, where PSCI may power down the SoC, right?
 
-Hence:
-Fixes: e015f88c368da1e6 ("PCI: rcar: Add support for R-Car H3 to pcie-rcar")
+Wouldn't you also hit this on ARM32 LPAE ones ?
 
-Gr{oetje,eeting}s,
+> Hence:
+> Fixes: e015f88c368da1e6 ("PCI: rcar: Add support for R-Car H3 to pcie-rcar")
+> 
+> Gr{oetje,eeting}s,
+> 
+>                         Geert
+> 
 
-                        Geert
 
 -- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Best regards,
+Marek Vasut
