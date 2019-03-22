@@ -2,108 +2,117 @@ Return-Path: <SRS0=nTPQ=RZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF240C10F00
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:31:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36AACC10F00
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:38:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87DC721900
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:31:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0595421900
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:38:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oRITu0vM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l3wbQXEQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727073AbfCVCbg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Mar 2019 22:31:36 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:42046 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726460AbfCVCbf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2019 22:31:35 -0400
-Received: by mail-wr1-f66.google.com with SMTP id g3so651625wrx.9;
-        Thu, 21 Mar 2019 19:31:34 -0700 (PDT)
+        id S1727371AbfCVCiw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Mar 2019 22:38:52 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:42495 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726460AbfCVCiw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2019 22:38:52 -0400
+Received: by mail-wr1-f65.google.com with SMTP id g3so661601wrx.9;
+        Thu, 21 Mar 2019 19:38:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:subject:to:cc:references:openpgp:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=J3Fj+6NUMgIJaiwL4IgLV/04FbIGniueXIM7u0H/NNg=;
-        b=oRITu0vMBjkPJihpwFmye2r7ki+hVVv29nW6dzDPYDVWBkZxWMMrENXcL5PXvpU9NS
-         IPO/kGx6v0PLCf7hy8Hes2PgEWOXmn4VIAHoZcAYBv3z3HPThKIaU7z01+Fb6pOUl4UN
-         MT4nqe6/DWmlcdjqzAomf32cU6x0KPC1UNE63gZfEy91+LMJGk/3iTd6sQkK9rmJMhtn
-         loghEmQrzgBmKeEURxnpgV4luxaaDD8HcCaTC1RJ/fJkkqaCbVlJE+p+ytjPFzknDM53
-         zzZFQ6uM8ZJ2qfaQqL/u+oOSMKhk5iHWcjdu+eo4K9N3BA2vH04AQ0ddXgrzOd3J05AM
-         rEzQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Oyufogf+KDRw5kf68/JGm5ce3/ZrEBM4vcxMGmMiU5Q=;
+        b=l3wbQXEQf38Uxj8B2+OYcfwT+r6UOlJvIyUlqr1K5FPbpInuiLpcHHkY1THXDWfPJ4
+         J5KuUYs89dPhXeF+OiDJCqOZhG9ZFsSRXrxejVD9wwU3206+7o7Ft3Bzfkbq2CFBItT7
+         hBXRYjkHu8ovWMDZLcTIr1fjwnnXusOAsoW1DIAxlXtyX1ifDOsJU1YEr6+RVR466+yH
+         ovwf7ls/P/oQ9aSDNmZrUTYfksBrtMdntqwxouH941oAwZNem+AM3RX/EZNvdS2i00tM
+         YsamduA1MK4odBShKqoE6jtTvHhjKMntvaW+v1ECrRKK0VaPow4HXJBIvOx27uy49JTl
+         ua7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:openpgp:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=J3Fj+6NUMgIJaiwL4IgLV/04FbIGniueXIM7u0H/NNg=;
-        b=rFWi+yFZrrUP0WjyAp7xGmrBjmjndsApmZDWHQNHN4FTsusrosjjIt7Kc6TTWaJAwk
-         k1wXJdTOsuY+hxgTbhReGt4Uu7cD1xjlKkxohpaqIz20nkhHfkayC8Jq/zCaySzSgD6N
-         hHxQU2DxJeTan9A+IUVLjPtckz4H5kXEt4RQLDRG3p1QzqZFnJbMfSztznDQJvNB/CVK
-         5H4IzzTKIkWbMjhrisNZm6wOTS3Chn/ZYOm8h1XAFpIiZ1akDd8jamFCIVvhJDE7SCFm
-         RE6RktnqZhRr4AjNy5EUh+F50JEoscRryLFn59nr6sieyc/Z6yMlx3KdUqJWJ4fISqa3
-         loug==
-X-Gm-Message-State: APjAAAXIK+7zwfeWdfQXQQIPeI6RlDhq/oXqZs3KzLU2RD/xsrMS8Vmn
-        pbxny27jZx0TdpRAbZDu8i/yj5mc
-X-Google-Smtp-Source: APXvYqyA8yG9sRgJdMmF8zM3ZlJJxx27e4ODL3dhQABE7gfPxWlYdAplPL5lYPGhSerB/q5YV4BukA==
-X-Received: by 2002:a05:6000:12c8:: with SMTP id l8mr4395176wrx.80.1553221893476;
-        Thu, 21 Mar 2019 19:31:33 -0700 (PDT)
-Received: from [192.168.1.4] (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id z20sm7992763wma.48.2019.03.21.19.31.32
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Thu, 21 Mar 2019 19:31:32 -0700 (PDT)
-From:   Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH 2/3] PCI: rcar: Allow 64bit MSI addresses
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        bh=Oyufogf+KDRw5kf68/JGm5ce3/ZrEBM4vcxMGmMiU5Q=;
+        b=XLr5dhr63RzN4mdLGln10ff42BmhpsFkAoKBdb/rvpRPybVCMwaQ1pewMD8YOyzIkO
+         bXFC7shU3rI2Edk/VQutxqhCmq7eH6B+qISfX9V9dk3U8mULTLu81M2sq7y4BCbBX2z8
+         ciI+jH4UucRjx7A/fvtL3tUpDqVIn2F5MLLBfWndNoxcruxNpHZPbFl2nPv0ksg3Mp4E
+         dNWBqXAszTVOp1Wh9HWvwEE/zsqJovrjrtsCzrx2JU98QjB6s5UnA5nrjZOREcTvPgQh
+         fvjZKqlCrKy5aQyQpsaPRhG62/8KluAEeYloa023Gt+VQit0npjREj7ZbzUWm6SamHEV
+         aVJQ==
+X-Gm-Message-State: APjAAAVGwxrUNQkOQE3VxZ89b8b30e+NCtvScTd0aIIatgXCFVkdpF1o
+        zmU8duozykvcWVDD0d0RmRG8GYyU
+X-Google-Smtp-Source: APXvYqxHfLFUrz4uoApdUfCVgEgRwT9oP5IQbVM6stj3Nn94Akra9MZhMMK+mRDhSQN9JH5Jtk97Mg==
+X-Received: by 2002:a5d:5188:: with SMTP id k8mr4564550wrv.183.1553222329703;
+        Thu, 21 Mar 2019 19:38:49 -0700 (PDT)
+Received: from kurokawa.lan (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
+        by smtp.gmail.com with ESMTPSA id w18sm10432692wru.24.2019.03.21.19.38.47
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 21 Mar 2019 19:38:48 -0700 (PDT)
+From:   marek.vasut@gmail.com
+To:     linux-pci@vger.kernel.org
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
         Phil Edworthy <phil.edworthy@renesas.com>,
         Simon Horman <horms+renesas@verge.net.au>,
         Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20190317000608.24881-1-marek.vasut@gmail.com>
- <20190317000608.24881-2-marek.vasut@gmail.com>
- <CAMuHMdV0fUV8De4QGq9Jjaepic06nVVby8p3W6DYr9X9MqM+Jw@mail.gmail.com>
-Openpgp: preference=signencrypt
-Message-ID: <0fdfb018-23d9-e557-d413-10d8d5d72663@gmail.com>
-Date:   Fri, 22 Mar 2019 03:30:13 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        linux-renesas-soc@vger.kernel.org
+Subject: [PATCH V2 1/6] PCI: rcar: Clean up remaining macros defining bits
+Date:   Fri, 22 Mar 2019 03:38:39 +0100
+Message-Id: <20190322023844.18574-1-marek.vasut@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdV0fUV8De4QGq9Jjaepic06nVVby8p3W6DYr9X9MqM+Jw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/18/19 9:35 AM, Geert Uytterhoeven wrote:
-> On Sun, Mar 17, 2019 at 1:06 AM <marek.vasut@gmail.com> wrote:
->> From: Marek Vasut <marek.vasut+renesas@gmail.com>
->>
->> The MSI address can be 64bit. Switch the data type used to hold the
->> result of virt_to_phys() to phys_addr_t to reflect it's properties
-> 
-> Side note: probably this should use a proper DMA API instead of
-> get_free_pages()/virt_to_phys().
+From: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-In fact, I think it doesn't matter. The MSI message is never written
-into this page as an actual memory write, it is interpreted by the
-hardware as an interrupt when it arrives. So I believe this page is just
-a safety net, which is never actually written.
+Replace macros using constants with BIT()s instead, no functional change.
 
->> correctly and program the top 32bits of PA into PCIEMSIAUR.
->>
->> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+To: linux-pci@vger.kernel.org
+---
+V2: Bundle this patch with other cleanups before resending
+---
+ drivers/pci/controller/pcie-rcar.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-[...]
-
+diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+index c8febb009454..5b8736f0cd6b 100644
+--- a/drivers/pci/controller/pcie-rcar.c
++++ b/drivers/pci/controller/pcie-rcar.c
+@@ -46,14 +46,14 @@
+ 
+ /* Transfer control */
+ #define PCIETCTLR		0x02000
+-#define  CFINIT			1
++#define  CFINIT			BIT(0)
+ #define PCIETSTR		0x02004
+-#define  DATA_LINK_ACTIVE	1
++#define  DATA_LINK_ACTIVE	BIT(0)
+ #define PCIEERRFR		0x02020
+ #define  UNSUPPORTED_REQUEST	BIT(4)
+ #define PCIEMSIFR		0x02044
+ #define PCIEMSIALR		0x02048
+-#define  MSIFE			1
++#define  MSIFE			BIT(0)
+ #define PCIEMSIAUR		0x0204c
+ #define PCIEMSIIER		0x02050
+ 
 -- 
-Best regards,
-Marek Vasut
+2.20.1
+
