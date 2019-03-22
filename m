@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A0C2C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66074C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:51:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6ACF121900
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:47:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 313B021929
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:51:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553273271;
-	bh=+WR5/YkORYFKXnsrL4Kq4xe+UkSaYNt9o/GK851Cwdk=;
+	s=default; t=1553273475;
+	bh=6Innu0l4fJVjRs+PzWv0iPhNGdT4HcVKkNrHsJUnb3Y=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=KUP8624EC5lHwMuGY7c6GfqF5/NlS+szWj6m2hz7g1CDZRHvmEo6A1JxOcfpigIGi
-	 dOYHnap8R8SiWFRFw3MYxHkE49tiJH9waZ8Ks5AAMRoYD4Dzqh7KtHmuAFN2qSEbby
-	 j5SE8ZWkHjIIAw2fDCeaRYWyHnZoy/PsH23NSmao=
+	b=o4UEcNXBr2mDBfbUIrwvAFSUxnWyrfLC85W6JchymBHcvqzHcu4FHQZ7tTLmTujV2
+	 9Gck+sK1vNQ7cLeJINf87IFwrxZF4rYTUSSei3TUrlvXJH/x/uWGcDnPUT0zErZwqS
+	 Jhv/vnE4bIunj8snDS/0yZD0w8O2sLGHCl/aDMj4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727140AbfCVQrq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Mar 2019 12:47:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56528 "EHLO mail.kernel.org"
+        id S1727694AbfCVQvO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Mar 2019 12:51:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58458 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726023AbfCVQrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Mar 2019 12:47:46 -0400
+        id S1727443AbfCVQvO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Mar 2019 12:51:14 -0400
 Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 03E9621900;
-        Fri, 22 Mar 2019 16:47:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 113A320850;
+        Fri, 22 Mar 2019 16:51:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553273265;
-        bh=+WR5/YkORYFKXnsrL4Kq4xe+UkSaYNt9o/GK851Cwdk=;
+        s=default; t=1553273473;
+        bh=6Innu0l4fJVjRs+PzWv0iPhNGdT4HcVKkNrHsJUnb3Y=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=cN7cxwyrt4aXb+RwQl8Xo4qso2c8wK5bSKmQiiym/GXp+MdEPUr6QRhgRkD4he4wU
-         NZ0slkZCa2VyxBwE7V6d9dXRCNdFwmwvGAIH50fB27eNt3dSlthuDXZSkd24FXXMcg
-         UzdDEDYUQOCdjeaI34qJ5BdB83CySX5CvjcHoRHI=
-Date:   Fri, 22 Mar 2019 11:47:43 -0500
+        b=EP4tEBpLsgH+yMxNfDIctcUOf1/ZUK9wqGKQUbCF1+cmAB49yl+mjZp2dWNFogzQI
+         /966I53iko4Y8Rj5JLHT7VV4BB4cjdklovoBnGrrBCzgCJeFTbXIPegW4jP+fCEWRP
+         k3mQ4B2vh8kLSaF18ahpDf3AuZpI16BlDqV6ggT4=
+Date:   Fri, 22 Mar 2019 11:51:12 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
@@ -48,54 +48,57 @@ Cc:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
         Dave Jiang <dave.jiang@intel.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Eric Pilmore <epilmore@gigaio.com>
-Subject: Re: [PATCH v3 09/10] NTB: Add MSI interrupt support to ntb_transport
-Message-ID: <20190322164743.GN251185@google.com>
+Subject: Re: [PATCH v3 03/10] NTB: Introduce helper functions to calculate
+ logical port number
+Message-ID: <20190322165111.GO251185@google.com>
 References: <20190322000645.15580-1-logang@deltatee.com>
- <20190322000645.15580-10-logang@deltatee.com>
+ <20190322000645.15580-4-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190322000645.15580-10-logang@deltatee.com>
+In-Reply-To: <20190322000645.15580-4-logang@deltatee.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Logan,
-
-Drive-by nits:
-
-On Thu, Mar 21, 2019 at 06:06:44PM -0600, Logan Gunthorpe wrote:
-> Introduce the module parameter 'use_msi' which, when set uses
-
-s/set/set,/
-
-> MSI interrupts instead of doorbells for each queue pair (QP). T
-> he parameter is only available if NTB MSI support is configured into
-
-Spurious newline in the middle of "The".
-
-> the kernel. We also require there to be more than one memory window
-> (MW) so that an extra one is available to forward the APIC region.
+On Thu, Mar 21, 2019 at 06:06:38PM -0600, Logan Gunthorpe wrote:
+> This patch introduces the "Logical Port Number" which is similar to the
+> "Port Number" in that it enumerates the ports in the system.
 > 
-> To use MSIs, we request one interrupt per QP and forward the MSI address
-> and data to the peer using scratch pad registers (SPADS) above the MW
-> spads. (If there are not enough SPADS the MSI interrupt will not be used.)
+> The original (or Physical) "Port Number" can be any number used by the
+> hardware to uniquley identify a port in the system. The "Logical Port
 
-/spads/SPADS/ for consistency
+s/uniquley/uniquely/
 
-> Once registered, we simply use ntb_msi_peer_trigger and the recieving
-
-s/recieving/receiving/
-
-> ISR simply queues up the rxc_db_work for the queue.
+> Number" enumerates all ports in the system from 0 to the number of
+> ports minus one.
 > 
-> This addition can significantly improve performance of ntb_transport.
-> In a simple, untuned, apples-to-apples comparision using ntb_netdev
-> and iperf with switchtec hardware, I see 3.88Gb/s without MSI
-> interrupts and 14.1Gb/s which is a more than 3x improvement.
+> For example a system with 5 ports might have the following port numbers
+> which would be enumareted thusly:
 
-s/which is/with MSI, which is/
+s/enumareted/enumerated/
+
+> + * ntb_logical_port_number() - get the logical port number of the local port
+> + * @ntb:	NTB device context.
+> + *
+> + * The Logical Port Number is defined to be a unique number for each
+> + * port starting from zero through to the number of ports minus one.
+> + * This is in contrast to the Port Number where each port can be assigned
+> + * any unqique physical number by the hardware.
+
+s/unqique/unique/
+
+> + * ntb_peer_logical_port_number() - get the logical peer port by given index
+> + * @ntb:	NTB device context.
+> + * @pidx:	Peer port index.
+> + *
+> + * The Logical Port Number is defined to be a unique number for each
+> + * port starting from zero through to the number of ports minus one.
+> + * This is in contrast to the Port Number where each port can be assigned
+> + * any unqique physical number by the hardware.
+
+s/unqique/unique/
 
 Bjorn
