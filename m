@@ -3,25 +3,25 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F171C10F03
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 08:20:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 882B4C10F03
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 08:20:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0D0AB21873
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 08:20:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59D9F205F4
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 08:20:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727578AbfCVIUQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Mar 2019 04:20:16 -0400
-Received: from sauhun.de ([88.99.104.3]:48670 "EHLO pokefinder.org"
+        id S1727719AbfCVIUf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Mar 2019 04:20:35 -0400
+Received: from sauhun.de ([88.99.104.3]:48686 "EHLO pokefinder.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727545AbfCVIUQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Mar 2019 04:20:16 -0400
+        id S1727545AbfCVIUf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Mar 2019 04:20:35 -0400
 Received: from localhost (p54B3303C.dip0.t-ipconnect.de [84.179.48.60])
-        by pokefinder.org (Postfix) with ESMTPSA id 90FAE2C08C3;
-        Fri, 22 Mar 2019 09:20:14 +0100 (CET)
-Date:   Fri, 22 Mar 2019 09:20:14 +0100
+        by pokefinder.org (Postfix) with ESMTPSA id EE93A2C08C3;
+        Fri, 22 Mar 2019 09:20:33 +0100 (CET)
+Date:   Fri, 22 Mar 2019 09:20:33 +0100
 From:   Wolfram Sang <wsa@the-dreams.de>
 To:     marek.vasut@gmail.com
 Cc:     linux-pci@vger.kernel.org,
@@ -30,14 +30,16 @@ Cc:     linux-pci@vger.kernel.org,
         Phil Edworthy <phil.edworthy@renesas.com>,
         Simon Horman <horms+renesas@verge.net.au>,
         linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V2 1/6] PCI: rcar: Clean up remaining macros defining bits
-Message-ID: <20190322082014.GB1005@kunai>
+Subject: Re: [PATCH V2 2/6] PCI: rcar: Replace unsigned long with u32 in
+ register accessors
+Message-ID: <20190322082033.GC1005@kunai>
 References: <20190322023844.18574-1-marek.vasut@gmail.com>
+ <20190322023844.18574-2-marek.vasut@gmail.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="wq9mPyueHGvFACwf"
+        protocol="application/pgp-signature"; boundary="oJ71EGRlYNjSvfq7"
 Content-Disposition: inline
-In-Reply-To: <20190322023844.18574-1-marek.vasut@gmail.com>
+In-Reply-To: <20190322023844.18574-2-marek.vasut@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -45,39 +47,40 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---wq9mPyueHGvFACwf
+--oJ71EGRlYNjSvfq7
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Mar 22, 2019 at 03:38:39AM +0100, marek.vasut@gmail.com wrote:
+On Fri, Mar 22, 2019 at 03:38:40AM +0100, marek.vasut@gmail.com wrote:
 > From: Marek Vasut <marek.vasut+renesas@gmail.com>
 >=20
-> Replace macros using constants with BIT()s instead, no functional change.
+> Replace unsigned long with u32 in register accessor functions,
+> since they access 32bit registers.
 >=20
 > Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 
 Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
 
---wq9mPyueHGvFACwf
+--oJ71EGRlYNjSvfq7
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlyUmr4ACgkQFA3kzBSg
-KbYmLw/9FHc40IS4NJ24rvmvAxyzg9i8URsZIeSU1qQxwTCJJVtRaO9We8oUCSDH
-huk7g5pkVi3/zvD3zMxbg5oq66Zsjo4vsx+u1ZchXjmYykvAYoVqPomQIAR5la/O
-JPgLUimCEhZRSnmZ/i6U6ZM1s1bNWSavOJxQOXAMfyvD4lZlehCrCbNExY2FGaMI
-dUbsMP82arDZg0A15qr/bjwJ0fjrb4ZF6IE6hIbd6Yaxn0RnAuieoaU0NxlSWhkd
-BwBBmK5N1Yyo6UIdtXE0Bnxbfe3WuTCNFWVjnmoBKKFmyPyiitsM1zyEZqKXSeq0
-+osH+5kyESJsvzdRDXiyGay+LgFQMUbOqUbSFqdw13FYW/e8uMenqkck2Tfja3vY
-owuTb50v21Npi0Ql+hB0RWC9LgBvRnuoz6Uuip8egox/EQBqbej/yZgwSr+dkLZj
-MeHt8bljjWIjrI7eJMcWv6i5fsA5F4BwJQWnBmLYqyDrKyA2mPF0woNVhvqQng+W
-UEGW3V5jx1aI6Ec5ecLECZOsQLRScheUHxl5emhM9RDCMU/ljjc6Tjn3Bi+V88yC
-yFjkzctfnBQ32mRHbclkblB75TCqw21VFlEitzNX8gyttkOdLgZOpSTNGTQqZjPT
-knTdTboI27pb/splWrkMxLpCBOunNfsWJc9w+A7TdgQoN1gjd70=
-=WsLH
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlyUmtEACgkQFA3kzBSg
+KbazZQ//ZLF5h6Dst4bfw/W/O3sGUiQI0L74R6aE6fmUlzqyXX/o1KJbo2MtynwA
+YUFqNzf6Xb5GCwBMlL7sH8sQdag6OcYLBv793V+ZX9r9iI+B4fE6dB2voE7TLXhp
+lVOxfE1Sc4nW/LSwXLkVGseRCKh9tSL5CnFmicVbjbN3+Boe8VfDrivS490g/cPo
+Hs1pHuiagRRO6voRHadlBirbfIeeGWpTp2BOluhWHx3MaZebp8pRKRwP3pwuIiTc
+DaFiNhgdgfdQVCYyDE8L3oxOC46ixmWzHDw/6pSAUnAcgvY2q4YVawrsA1j1SGJu
+kSoVOBhCGTXiaGCjHe38CNwrHpBVUEQcXHPVkS0QE54r9g/dTLX1UQgOBBIu+p55
+i+vsEi5qzamIaZz0i8Wb1+lQxBkfpfyGob7dPetziw/+J48Ly028d6N2h1SRH9qD
+l9Q8uc/AmQnfJWs4MDghDXO0uvAIc4zO6zfIG/w0lw7sRQt6+6+s6xKEkhpvPFBx
+iZaGPvuP2KDDLgNztzyQIF5W4+xihs1MLltPh0NnNqiWQgA6DrP8WpA8pVVLZqld
+Wb5so9CWotpekq8ZMPrzd47XIquQWj8XvqMpz6f2ImYDSk5vEcG+SPOVwimensYS
+cbGnKP79y6XiIiHx64+M6frKCtjXrHPtl+iNPPrAGMg4y5nd0X4=
+=KEZI
 -----END PGP SIGNATURE-----
 
---wq9mPyueHGvFACwf--
+--oJ71EGRlYNjSvfq7--
