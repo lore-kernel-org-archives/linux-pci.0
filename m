@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50863C10F00
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:39:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E789C4360F
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:39:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2076A206C0
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:39:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D855206C0
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 02:39:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QHrLdy3j"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kK4SQ0h1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727406AbfCVCi7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Mar 2019 22:38:59 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:39966 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726695AbfCVCi7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2019 22:38:59 -0400
-Received: by mail-wm1-f65.google.com with SMTP id u10so653028wmj.5;
-        Thu, 21 Mar 2019 19:38:57 -0700 (PDT)
+        id S1727415AbfCVCjA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Mar 2019 22:39:00 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:38620 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727404AbfCVCjA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Mar 2019 22:39:00 -0400
+Received: by mail-wm1-f67.google.com with SMTP id a188so661609wmf.3;
+        Thu, 21 Mar 2019 19:38:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=tHCxIvDdxQb6gPnDJ6lurSWU6yyk4e/x/rzMANE5Lbg=;
-        b=QHrLdy3jMhUT/GMqizEDXFSSOcb9a39cvClwyMuBtH6AtF37b6F0qr26vEpM+CCu48
-         mKNWtu0L/xUKyIfKV6vmEGKtBqbrrKJm8xUouUEF6RfoPuEW6eIwkJremqA6ElDW+vxS
-         iPUKP+NzT3bXBvhfrZFEHQUHTxY03yMM84ewt0oTSfBQ5++DJ2Ft4o7Jbdd+6kRSBTFR
-         71LdwnrWj3j/uRv56UqjJmNSP1h0koSCfGIIecz6kHYUMXIHlaVd0Qiq3GAa3MixI+WS
-         VwQCjHDvPEBTWWK+ufI4URCM6d5uBk98oxckm8tsH88pNZjJpXd01iDHtbRXygGUlHh/
-         LfKA==
+        bh=6OuZ5lf2dx/eKeJVs4puZI0qRZx8tWmj1dHNl/FZeMg=;
+        b=kK4SQ0h1nR6U2k3uqdBLmYOlfVsRmeF9kQ1h9n0vrDSUTfz4XNi0/OB3NkSpHiidTT
+         YqXsZVdQaqwmDKvUL9Gf8MrJyRs+mhNtyUWOwG6LX8nMMqsO0lLGSPQObnZBwhZ6Oioq
+         zA0KSUlDejLgX5vQGOfUA30HXJ4lfmv4qMnQZil/iGjOUYu7/0T3C5bZy7Xgf7L9G+Rl
+         3c/JowBlDxLcAiekzCzl+fXzPOqVRns09y+1sAbSNJa4zWXDOAv4hKGXc63l/C8tQRfV
+         cX0osuThL4TmQxaHUhhaMyPuQwQp3GoE9CEBHrdDOIJajivA92GB3x/QrPRuvCNjIrHj
+         yg+Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tHCxIvDdxQb6gPnDJ6lurSWU6yyk4e/x/rzMANE5Lbg=;
-        b=CMzAX5/9OELHWiS+BDXgm+9Yqq6Wj8IVI3uaRZwboQRlwknaG2UHjsHcxqiqm6I17c
-         PTXw2sRuSyFzVoWjhu1SbHnIgpiMKxVqCbrqJGQ8RaaWaCc54fJG8d0K0R4x8wBXca/F
-         tlk419vgH2asIa539FubtHQLpeDEbafidGrgHfRQ7LQBKFhBWDiPgfdcUKJ4DZYlYTB9
-         0PF+WHlxODLYvvBK62lsvGRJ2BpXNgnE0UomE1NBt1Ux6dPX6BE20DAPxFC3fUDugM1h
-         sP30Q1FUaQB+lDnHhx7fc/ByT5T7sH8ACj2lc+ingJNBewXJQbJEiJLJFuaRSqVZtOwO
-         TX7Q==
-X-Gm-Message-State: APjAAAWTXn9AGRhIlqE+gpUJVvZLpycdFAfNhjunoiN99EW7CXw/1qQB
-        Btr6Rb0r5LDQNLHhW/OqVRpOKcIS
-X-Google-Smtp-Source: APXvYqwiogo+iIF5GqF8YHptj/vbiRoRfvjlwsEMawxk4I2yItn+WliiQnP+pmTrGMUxKO6Lo7eVAg==
-X-Received: by 2002:a1c:988d:: with SMTP id a135mr34109wme.24.1553222336242;
-        Thu, 21 Mar 2019 19:38:56 -0700 (PDT)
+        bh=6OuZ5lf2dx/eKeJVs4puZI0qRZx8tWmj1dHNl/FZeMg=;
+        b=ZYUnZPahdCUhymURReglI9FZTK6URSLEB3DVdhK8VJDIN55qRAOBuKoD2evBSKaFxe
+         +tUZBFrwOIrSuyxqypQJf6PtRbjse6TFC6BCk49aEMty+4az0UpL/km79IV04Yt+jeGd
+         V/dwMakX4BIxHf+QKa3fpofoiCjAW4jSn7V9lLA7PLVfcJ2WATN3XsmoCKsvj7OwikWy
+         AkXl/7+zzf+wSB1xvQ0kLusNkwEKxGhYqrWCbrLX7XnYcKcbuRRFBKNzJOfYlkYF8NlC
+         zbFoPNjbrOM53QnbQ6IInUDG96YEM0jHReqiAS3FpLsioSJPqpCB0MHwroVW3HXqcmNw
+         ZTPQ==
+X-Gm-Message-State: APjAAAUkHTLEjK0BVZzywJJfVNmPA5iIBsZwAU8/MA62HGR3OO5WQx4w
+        KIBqAtnQlUCUR6ackU7BcvoNB9sL
+X-Google-Smtp-Source: APXvYqwMMKC3QoN5klpbxAqsXYtEpSQ+Ynp/WmyOuVz18IgEMAwFJLREgCwwDZpgw0mti/P0xWVNeQ==
+X-Received: by 2002:a1c:7dcc:: with SMTP id y195mr1294604wmc.13.1553222337851;
+        Thu, 21 Mar 2019 19:38:57 -0700 (PDT)
 Received: from kurokawa.lan (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id w18sm10432692wru.24.2019.03.21.19.38.54
+        by smtp.gmail.com with ESMTPSA id w18sm10432692wru.24.2019.03.21.19.38.56
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 21 Mar 2019 19:38:55 -0700 (PDT)
+        Thu, 21 Mar 2019 19:38:56 -0700 (PDT)
 From:   marek.vasut@gmail.com
 To:     linux-pci@vger.kernel.org
 Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
@@ -63,9 +63,9 @@ Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Simon Horman <horms+renesas@verge.net.au>,
         Wolfram Sang <wsa@the-dreams.de>,
         linux-renesas-soc@vger.kernel.org
-Subject: [PATCH V2 5/6] PCI: rcar: Clean up debug messages
-Date:   Fri, 22 Mar 2019 03:38:43 +0100
-Message-Id: <20190322023844.18574-5-marek.vasut@gmail.com>
+Subject: [PATCH V2 6/6] PCI: rcar: Allow 64bit MSI addresses
+Date:   Fri, 22 Mar 2019 03:38:44 +0100
+Message-Id: <20190322023844.18574-6-marek.vasut@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190322023844.18574-1-marek.vasut@gmail.com>
 References: <20190322023844.18574-1-marek.vasut@gmail.com>
@@ -78,8 +78,9 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-Drop useless casts from debug messages, they are no longer needed
-due to the data type cleanup.
+The MSI address can be 64bit. Switch the data type used to hold the
+result of virt_to_phys() to phys_addr_t to reflect its properties
+correctly and program the top 32bits of PA into PCIEMSIAUR.
 
 Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 Cc: Geert Uytterhoeven <geert+renesas@glider.be>
@@ -90,38 +91,34 @@ Cc: linux-renesas-soc@vger.kernel.org
 To: linux-pci@vger.kernel.org
 Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
-V2: - Bundle this patch with other cleanups before resending
+V2: - s/it's/its/ in commit message
     - Add R-B from Geert
 ---
- drivers/pci/controller/pcie-rcar.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/controller/pcie-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-index 0ab05803bb70..989b7b73ed61 100644
+index 989b7b73ed61..75ac83f21035 100644
 --- a/drivers/pci/controller/pcie-rcar.c
 +++ b/drivers/pci/controller/pcie-rcar.c
-@@ -284,8 +284,8 @@ static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
- 	else if (size == 2)
- 		*val = (*val >> ((where & 2) << 3)) & 0xffff;
+@@ -889,7 +889,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct rcar_msi *msi = &pcie->msi;
+-	unsigned long base;
++	phys_addr_t base;
+ 	int err, i;
  
--	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08lx\n",
--		bus->number, devfn, where, size, (unsigned long)*val);
-+	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08x\n",
-+		bus->number, devfn, where, size, *val);
+ 	mutex_init(&msi->lock);
+@@ -931,7 +931,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+ 	base = virt_to_phys((void *)msi->pages);
  
- 	return ret;
- }
-@@ -303,8 +303,8 @@ static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
- 	if (ret != PCIBIOS_SUCCESSFUL)
- 		return ret;
+ 	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
+-	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
++	rcar_pci_write_reg(pcie, base >> 32, PCIEMSIAUR);
  
--	dev_dbg(&bus->dev, "pcie-config-write: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08lx\n",
--		bus->number, devfn, where, size, (unsigned long)val);
-+	dev_dbg(&bus->dev, "pcie-config-write: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08x\n",
-+		bus->number, devfn, where, size, val);
- 
- 	if (size == 1) {
- 		shift = (where & 3) << 3;
+ 	/* enable all MSI interrupts */
+ 	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
 -- 
 2.20.1
 
