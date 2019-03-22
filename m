@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 728FBC4360F
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:07:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93B48C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:07:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4AC8121917
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:07:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 650A821902
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:07:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727399AbfCVAHE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Mar 2019 20:07:04 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:54952 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727462AbfCVAGz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1727469AbfCVAGz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 21 Mar 2019 20:06:55 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:54904 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727439AbfCVAGy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Mar 2019 20:06:54 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1h77i1-0002XH-FB; Thu, 21 Mar 2019 18:06:54 -0600
+        id 1h77hx-0002XF-Rh; Thu, 21 Mar 2019 18:06:52 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1h77hw-00044d-9A; Thu, 21 Mar 2019 18:06:48 -0600
+        id 1h77hw-00044X-1v; Thu, 21 Mar 2019 18:06:48 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
         linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
@@ -37,8 +37,8 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Eric Pilmore <epilmore@gigaio.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 21 Mar 2019 18:06:45 -0600
-Message-Id: <20190322000645.15580-11-logang@deltatee.com>
+Date:   Thu, 21 Mar 2019 18:06:43 -0600
+Message-Id: <20190322000645.15580-9-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190322000645.15580-1-logang@deltatee.com>
 References: <20190322000645.15580-1-logang@deltatee.com>
@@ -47,7 +47,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-ntb@googlegroups.com, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, jdmason@kudzu.us, joro@8bytes.org, bhelgaas@google.com, dave.jiang@intel.com, allenbh@gmail.com, fancer.lancer@gmail.com, epilmore@gigaio.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v3 10/10] NTB: Describe the ntb_msi_test client in the documentation.
+Subject: [PATCH v3 08/10] NTB: Add ntb_msi_test support to ntb_test
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -55,52 +55,112 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a blurb in Documentation/ntb.txt to describe the ntb_msi_test tool's
-debugfs interface. Similar to the (out of date) ntb_tool description.
+When the ntb_msi_test module is available, the test code will trigger
+each of the interrupts and ensure the corresponding occurrences files
+gets incremented.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Allen Hubbe <allenbh@gmail.com>
 ---
- Documentation/ntb.txt | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ tools/testing/selftests/ntb/ntb_test.sh | 54 ++++++++++++++++++++++++-
+ 1 file changed, 52 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/ntb.txt b/Documentation/ntb.txt
-index a043854d28df..802a539f1592 100644
---- a/Documentation/ntb.txt
-+++ b/Documentation/ntb.txt
-@@ -194,6 +194,33 @@ Debugfs Files:
- 	This file is used to read and write peer scratchpads.  See
- 	*spad* for details.
+diff --git a/tools/testing/selftests/ntb/ntb_test.sh b/tools/testing/selftests/ntb/ntb_test.sh
+index 17ca36403d04..1a10b8f67727 100755
+--- a/tools/testing/selftests/ntb/ntb_test.sh
++++ b/tools/testing/selftests/ntb/ntb_test.sh
+@@ -87,10 +87,10 @@ set -e
  
-+NTB MSI Test Client (ntb\_msi\_test)
-+------------------------------------
-+
-+The MSI test client serves to test and debug the MSI library which
-+allows for passing MSI interrupts across NTB memory windows. The
-+test client is interacted with through the debugfs filesystem:
-+
-+* *debugfs*/ntb\_tool/*hw*/
-+	A directory in debugfs will be created for each
-+	NTB device probed by the tool.  This directory is shortened to *hw*
-+	below.
-+* *hw*/port
-+	This file describes the local port number
-+* *hw*/irq*_occurrences
-+	One occurrences file exists for each interrupt and, when read,
-+	returns the number of times the interrupt has been triggered.
-+* *hw*/peer*/port
-+	This file describes the port number for each peer
-+* *hw*/peer*/count
-+	This file describes the number of interrupts that can be
-+	triggered on each peer
-+* *hw*/peer*/trigger
-+	Writing an interrupt number (any number less than the value
-+	specified in count) will trigger the interrupt on the
-+	specified peer. That peer's interrupt's occurrence file
-+	should be incremented.
-+
- NTB Hardware Drivers
- ====================
+ function _modprobe()
+ {
+-	modprobe "$@"
++	modprobe "$@" || return 1
  
+ 	if [[ "$REMOTE_HOST" != "" ]]; then
+-		ssh "$REMOTE_HOST" modprobe "$@"
++		ssh "$REMOTE_HOST" modprobe "$@" || return 1
+ 	fi
+ }
+ 
+@@ -451,6 +451,30 @@ function pingpong_test()
+ 	echo "  Passed"
+ }
+ 
++function msi_test()
++{
++	LOC=$1
++	REM=$2
++
++	write_file 1 $LOC/ready
++
++	echo "Running MSI interrupt tests on: $(subdirname $LOC) / $(subdirname $REM)"
++
++	CNT=$(read_file "$LOC/count")
++	for ((i = 0; i < $CNT; i++)); do
++		START=$(read_file $REM/../irq${i}_occurrences)
++		write_file $i $LOC/trigger
++		END=$(read_file $REM/../irq${i}_occurrences)
++
++		if [[ $(($END - $START)) != 1 ]]; then
++			echo "MSI did not trigger the interrupt on the remote side!" >&2
++			exit 1
++		fi
++	done
++
++	echo "  Passed"
++}
++
+ function perf_test()
+ {
+ 	USE_DMA=$1
+@@ -529,6 +553,29 @@ function ntb_pingpong_tests()
+ 	_modprobe -r ntb_pingpong
+ }
+ 
++function ntb_msi_tests()
++{
++	LOCAL_MSI="$DEBUGFS/ntb_msi_test/$LOCAL_DEV"
++	REMOTE_MSI="$REMOTE_HOST:$DEBUGFS/ntb_msi_test/$REMOTE_DEV"
++
++	echo "Starting ntb_msi_test tests..."
++
++	if ! _modprobe ntb_msi_test 2> /dev/null; then
++		echo "  Not doing MSI tests seeing the module is not available."
++		return
++	fi
++
++	port_test $LOCAL_MSI $REMOTE_MSI
++
++	LOCAL_PEER="$LOCAL_MSI/peer$LOCAL_PIDX"
++	REMOTE_PEER="$REMOTE_MSI/peer$REMOTE_PIDX"
++
++	msi_test $LOCAL_PEER $REMOTE_PEER
++	msi_test $REMOTE_PEER $LOCAL_PEER
++
++	_modprobe -r ntb_msi_test
++}
++
+ function ntb_perf_tests()
+ {
+ 	LOCAL_PERF="$DEBUGFS/ntb_perf/$LOCAL_DEV"
+@@ -550,6 +597,7 @@ function cleanup()
+ 	_modprobe -r ntb_perf 2> /dev/null
+ 	_modprobe -r ntb_pingpong 2> /dev/null
+ 	_modprobe -r ntb_transport 2> /dev/null
++	_modprobe -r ntb_msi_test 2> /dev/null
+ 	set -e
+ }
+ 
+@@ -586,5 +634,7 @@ ntb_tool_tests
+ echo
+ ntb_pingpong_tests
+ echo
++ntb_msi_tests
++echo
+ ntb_perf_tests
+ echo
 -- 
 2.20.1
 
