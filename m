@@ -2,103 +2,90 @@ Return-Path: <SRS0=nTPQ=RZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66074C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:51:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE3D1C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 17:06:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 313B021929
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 16:51:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553273475;
-	bh=6Innu0l4fJVjRs+PzWv0iPhNGdT4HcVKkNrHsJUnb3Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=o4UEcNXBr2mDBfbUIrwvAFSUxnWyrfLC85W6JchymBHcvqzHcu4FHQZ7tTLmTujV2
-	 9Gck+sK1vNQ7cLeJINf87IFwrxZF4rYTUSSei3TUrlvXJH/x/uWGcDnPUT0zErZwqS
-	 Jhv/vnE4bIunj8snDS/0yZD0w8O2sLGHCl/aDMj4=
+	by mail.kernel.org (Postfix) with ESMTP id 8380D21916
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 17:06:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727694AbfCVQvO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Mar 2019 12:51:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58458 "EHLO mail.kernel.org"
+        id S1728408AbfCVRF6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Mar 2019 13:05:58 -0400
+Received: from mga05.intel.com ([192.55.52.43]:20937 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727443AbfCVQvO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 22 Mar 2019 12:51:14 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 113A320850;
-        Fri, 22 Mar 2019 16:51:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553273473;
-        bh=6Innu0l4fJVjRs+PzWv0iPhNGdT4HcVKkNrHsJUnb3Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EP4tEBpLsgH+yMxNfDIctcUOf1/ZUK9wqGKQUbCF1+cmAB49yl+mjZp2dWNFogzQI
-         /966I53iko4Y8Rj5JLHT7VV4BB4cjdklovoBnGrrBCzgCJeFTbXIPegW4jP+fCEWRP
-         k3mQ4B2vh8kLSaF18ahpDf3AuZpI16BlDqV6ggT4=
-Date:   Fri, 22 Mar 2019 11:51:12 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-kselftest@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Joerg Roedel <joro@8bytes.org>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Eric Pilmore <epilmore@gigaio.com>
-Subject: Re: [PATCH v3 03/10] NTB: Introduce helper functions to calculate
- logical port number
-Message-ID: <20190322165111.GO251185@google.com>
-References: <20190322000645.15580-1-logang@deltatee.com>
- <20190322000645.15580-4-logang@deltatee.com>
+        id S1727706AbfCVRF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 22 Mar 2019 13:05:58 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 22 Mar 2019 10:05:57 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,256,1549958400"; 
+   d="scan'208";a="329774387"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.72.86])
+  by fmsmga006.fm.intel.com with ESMTP; 22 Mar 2019 10:05:52 -0700
+Received: from andy by smile with local (Exim 4.92)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1h7Nc7-0004wO-0W; Fri, 22 Mar 2019 19:05:51 +0200
+Date:   Fri, 22 Mar 2019 19:05:50 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Sakari Ailus <sakari.ailus@linux.intel.com>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Petr Mladek <pmladek@suse.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-um@lists.infradead.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        xen-devel@lists.xenproject.org,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Lars Ellenberg <drbd-dev@lists.linbit.com>
+Subject: Re: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
+Message-ID: <20190322170550.GX9224@smile.fi.intel.com>
+References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
+ <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw@mail.gmail.com>
+ <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190322000645.15580-4-logang@deltatee.com>
+In-Reply-To: <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 21, 2019 at 06:06:38PM -0600, Logan Gunthorpe wrote:
-> This patch introduces the "Logical Port Number" which is similar to the
-> "Port Number" in that it enumerates the ports in the system.
-> 
-> The original (or Physical) "Port Number" can be any number used by the
-> hardware to uniquley identify a port in the system. The "Logical Port
+On Fri, Mar 22, 2019 at 03:53:50PM +0200, Sakari Ailus wrote:
 
-s/uniquley/uniquely/
+> Porting a patch
+> forward should have no issues either as checkpatch.pl has been complaining
+> of the use of %pf and %pF for a while now.
 
-> Number" enumerates all ports in the system from 0 to the number of
-> ports minus one.
-> 
-> For example a system with 5 ports might have the following port numbers
-> which would be enumareted thusly:
+And that's exactly the reason why I think instead of removing warning on
+checkpatch, it makes sense to convert to an error for a while. People are
+tending read documentation on internet and thus might have outdated one. And
+yes, the compiler doesn't tell a thing about it.
 
-s/enumareted/enumerated/
+P.S. Though, if majority of people will tell that I'm wrong, then it's okay to
+remove.
 
-> + * ntb_logical_port_number() - get the logical port number of the local port
-> + * @ntb:	NTB device context.
-> + *
-> + * The Logical Port Number is defined to be a unique number for each
-> + * port starting from zero through to the number of ports minus one.
-> + * This is in contrast to the Port Number where each port can be assigned
-> + * any unqique physical number by the hardware.
+-- 
+With Best Regards,
+Andy Shevchenko
 
-s/unqique/unique/
 
-> + * ntb_peer_logical_port_number() - get the logical peer port by given index
-> + * @ntb:	NTB device context.
-> + * @pidx:	Peer port index.
-> + *
-> + * The Logical Port Number is defined to be a unique number for each
-> + * port starting from zero through to the number of ports minus one.
-> + * This is in contrast to the Port Number where each port can be assigned
-> + * any unqique physical number by the hardware.
-
-s/unqique/unique/
-
-Bjorn
