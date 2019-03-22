@@ -3,29 +3,29 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51266C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAA32C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:07:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11B1B21902
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE0E621902
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Mar 2019 00:07:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726611AbfCVAGx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Mar 2019 20:06:53 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:54848 "EHLO ale.deltatee.com"
+        id S1727513AbfCVAHE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Mar 2019 20:07:04 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:54912 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725999AbfCVAGx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 21 Mar 2019 20:06:53 -0400
+        id S1725999AbfCVAGz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 21 Mar 2019 20:06:55 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1h77hx-0002X8-Rh; Thu, 21 Mar 2019 18:06:50 -0600
+        id 1h77hx-0002XG-Ri; Thu, 21 Mar 2019 18:06:52 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1h77hv-00044C-9F; Thu, 21 Mar 2019 18:06:47 -0600
+        id 1h77hw-00044a-60; Thu, 21 Mar 2019 18:06:48 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
         linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
@@ -37,8 +37,8 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Eric Pilmore <epilmore@gigaio.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 21 Mar 2019 18:06:36 -0600
-Message-Id: <20190322000645.15580-2-logang@deltatee.com>
+Date:   Thu, 21 Mar 2019 18:06:44 -0600
+Message-Id: <20190322000645.15580-10-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190322000645.15580-1-logang@deltatee.com>
 References: <20190322000645.15580-1-logang@deltatee.com>
@@ -47,7 +47,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-ntb@googlegroups.com, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, jdmason@kudzu.us, joro@8bytes.org, bhelgaas@google.com, dave.jiang@intel.com, allenbh@gmail.com, fancer.lancer@gmail.com, epilmore@gigaio.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v3 01/10] PCI/MSI: Support allocating virtual MSI interrupts
+Subject: [PATCH v3 09/10] NTB: Add MSI interrupt support to ntb_transport
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -55,253 +55,281 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For NTB devices, we want to be able to trigger MSI interrupts
-through a memory window. In these cases we may want to use
-more interrupts than the NTB PCI device has available in its MSI-X
-table.
+Introduce the module parameter 'use_msi' which, when set uses
+MSI interrupts instead of doorbells for each queue pair (QP). T
+he parameter is only available if NTB MSI support is configured into
+the kernel. We also require there to be more than one memory window
+(MW) so that an extra one is available to forward the APIC region.
 
-We allow for this by creating a new 'virtual' interrupt. These
-interrupts are allocated as usual but are not programmed into the
-MSI-X table (as there may not be space for them).
+To use MSIs, we request one interrupt per QP and forward the MSI address
+and data to the peer using scratch pad registers (SPADS) above the MW
+spads. (If there are not enough SPADS the MSI interrupt will not be used.)
 
-The MSI address and data will then handled through an NTB MSI library
-introduced later in this series.
+Once registered, we simply use ntb_msi_peer_trigger and the recieving
+ISR simply queues up the rxc_db_work for the queue.
+
+This addition can significantly improve performance of ntb_transport.
+In a simple, untuned, apples-to-apples comparision using ntb_netdev
+and iperf with switchtec hardware, I see 3.88Gb/s without MSI
+interrupts and 14.1Gb/s which is a more than 3x improvement.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jon Mason <jdmason@kudzu.us>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Allen Hubbe <allenbh@gmail.com>
 ---
- drivers/pci/msi.c   | 54 +++++++++++++++++++++++++++++++++++++--------
- include/linux/msi.h |  8 +++++++
- include/linux/pci.h |  9 ++++++++
- 3 files changed, 62 insertions(+), 9 deletions(-)
+ drivers/ntb/ntb_transport.c | 169 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 168 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 73986825d221..668bc16ef4d1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -192,6 +192,9 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index d4f39ba1d976..f1cf0942cb99 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -93,6 +93,12 @@ static bool use_dma;
+ module_param(use_dma, bool, 0644);
+ MODULE_PARM_DESC(use_dma, "Use DMA engine to perform large data copy");
  
- static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
- {
-+	if (desc->msi_attrib.is_virtual)
-+		return NULL;
++static bool use_msi;
++#ifdef CONFIG_NTB_MSI
++module_param(use_msi, bool, 0644);
++MODULE_PARM_DESC(use_msi, "Use MSI interrupts instead of doorbells");
++#endif
 +
- 	return desc->mask_base +
- 		desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
- }
-@@ -206,14 +209,19 @@ static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
- u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
- {
- 	u32 mask_bits = desc->masked;
-+	void __iomem *desc_addr;
+ static struct dentry *nt_debugfs_dir;
  
- 	if (pci_msi_ignore_mask)
- 		return 0;
-+	desc_addr = pci_msix_desc_addr(desc);
-+	if (!desc_addr)
-+		return 0;
- 
- 	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
- 	if (flag)
- 		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
--	writel(mask_bits, pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
+ /* Only two-ports NTB devices are supported */
+@@ -188,6 +194,11 @@ struct ntb_transport_qp {
+ 	u64 tx_err_no_buf;
+ 	u64 tx_memcpy;
+ 	u64 tx_async;
 +
-+	writel(mask_bits, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
++	bool use_msi;
++	int msi_irq;
++	struct ntb_msi_desc msi_desc;
++	struct ntb_msi_desc peer_msi_desc;
+ };
  
- 	return mask_bits;
+ struct ntb_transport_mw {
+@@ -221,6 +232,10 @@ struct ntb_transport_ctx {
+ 	u64 qp_bitmap;
+ 	u64 qp_bitmap_free;
+ 
++	bool use_msi;
++	unsigned int msi_spad_offset;
++	u64 msi_db_mask;
++
+ 	bool link_is_up;
+ 	struct delayed_work link_work;
+ 	struct work_struct link_cleanup;
+@@ -667,6 +682,114 @@ static int ntb_transport_setup_qp_mw(struct ntb_transport_ctx *nt,
+ 	return 0;
  }
-@@ -273,6 +281,11 @@ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	if (entry->msi_attrib.is_msix) {
- 		void __iomem *base = pci_msix_desc_addr(entry);
  
-+		if (!base) {
-+			WARN_ON(1);
++static irqreturn_t ntb_transport_isr(int irq, void *dev)
++{
++	struct ntb_transport_qp *qp = dev;
++
++	tasklet_schedule(&qp->rxc_db_work);
++
++	return IRQ_HANDLED;
++}
++
++static void ntb_transport_setup_qp_peer_msi(struct ntb_transport_ctx *nt,
++					    unsigned int qp_num)
++{
++	struct ntb_transport_qp *qp = &nt->qp_vec[qp_num];
++	int spad = qp_num * 2 + nt->msi_spad_offset;
++
++	if (!nt->use_msi)
++		return;
++
++	if (spad >= ntb_spad_count(nt->ndev))
++		return;
++
++	qp->peer_msi_desc.addr_offset =
++		ntb_peer_spad_read(qp->ndev, PIDX, spad);
++	qp->peer_msi_desc.data =
++		ntb_peer_spad_read(qp->ndev, PIDX, spad + 1);
++
++	dev_dbg(&qp->ndev->pdev->dev, "QP%d Peer MSI addr=%x data=%x\n",
++		qp_num, qp->peer_msi_desc.addr_offset, qp->peer_msi_desc.data);
++
++	if (qp->peer_msi_desc.addr_offset) {
++		qp->use_msi = true;
++		dev_info(&qp->ndev->pdev->dev,
++			 "Using MSI interrupts for QP%d\n", qp_num);
++	}
++}
++
++static void ntb_transport_setup_qp_msi(struct ntb_transport_ctx *nt,
++				       unsigned int qp_num)
++{
++	struct ntb_transport_qp *qp = &nt->qp_vec[qp_num];
++	int spad = qp_num * 2 + nt->msi_spad_offset;
++	int rc;
++
++	if (!nt->use_msi)
++		return;
++
++	if (spad >= ntb_spad_count(nt->ndev)) {
++		dev_warn_once(&qp->ndev->pdev->dev,
++			      "Not enough SPADS to use MSI interrupts\n");
++		return;
++	}
++
++	ntb_spad_write(qp->ndev, spad, 0);
++	ntb_spad_write(qp->ndev, spad + 1, 0);
++
++	if (!qp->msi_irq) {
++		qp->msi_irq = ntbm_msi_request_irq(qp->ndev, ntb_transport_isr,
++						   KBUILD_MODNAME, qp,
++						   &qp->msi_desc);
++		if (qp->msi_irq < 0) {
++			dev_warn(&qp->ndev->pdev->dev,
++				 "Unable to allocate MSI interrupt for qp%d\n",
++				 qp_num);
 +			return;
 +		}
++	}
 +
- 		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
- 		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
- 		msg->data = readl(base + PCI_MSIX_ENTRY_DATA);
-@@ -303,6 +316,9 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	} else if (entry->msi_attrib.is_msix) {
- 		void __iomem *base = pci_msix_desc_addr(entry);
- 
-+		if (!base)
-+			goto skip;
++	rc = ntb_spad_write(qp->ndev, spad, qp->msi_desc.addr_offset);
++	if (rc)
++		goto err_free_interrupt;
 +
- 		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
- 		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
- 		writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
-@@ -327,7 +343,13 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 					      msg->data);
- 		}
- 	}
++	rc = ntb_spad_write(qp->ndev, spad + 1, qp->msi_desc.data);
++	if (rc)
++		goto err_free_interrupt;
 +
-+skip:
- 	entry->msg = *msg;
++	dev_dbg(&qp->ndev->pdev->dev, "QP%d MSI %d addr=%x data=%x\n",
++		qp_num, qp->msi_irq, qp->msi_desc.addr_offset,
++		qp->msi_desc.data);
 +
-+	if (entry->write_msi_msg)
-+		entry->write_msi_msg(entry, entry->write_msi_msg_data);
++	return;
 +
- }
- 
- void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
-@@ -550,6 +572,7 @@ msi_setup_entry(struct pci_dev *dev, int nvec, struct irq_affinity *affd)
- 
- 	entry->msi_attrib.is_msix	= 0;
- 	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
-+	entry->msi_attrib.is_virtual    = 0;
- 	entry->msi_attrib.entry_nr	= 0;
- 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
-@@ -674,6 +697,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 	struct irq_affinity_desc *curmsk, *masks = NULL;
- 	struct msi_desc *entry;
- 	int ret, i;
-+	int vec_count = pci_msix_vec_count(dev);
- 
- 	if (affd)
- 		masks = irq_create_affinity_masks(nvec, affd);
-@@ -696,6 +720,10 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 			entry->msi_attrib.entry_nr = entries[i].entry;
- 		else
- 			entry->msi_attrib.entry_nr = i;
++err_free_interrupt:
++	devm_free_irq(&nt->ndev->dev, qp->msi_irq, qp);
++}
 +
-+		entry->msi_attrib.is_virtual =
-+			entry->msi_attrib.entry_nr >= vec_count;
++static void ntb_transport_msi_peer_desc_changed(struct ntb_transport_ctx *nt)
++{
++	int i;
 +
- 		entry->msi_attrib.default_irq	= dev->irq;
- 		entry->mask_base		= base;
- 
-@@ -714,12 +742,19 @@ static void msix_program_entries(struct pci_dev *dev,
++	dev_dbg(&nt->ndev->pdev->dev, "Peer MSI descriptors changed");
++
++	for (i = 0; i < nt->qp_count; i++)
++		ntb_transport_setup_qp_peer_msi(nt, i);
++}
++
++static void ntb_transport_msi_desc_changed(void *data)
++{
++	struct ntb_transport_ctx *nt = data;
++	int i;
++
++	dev_dbg(&nt->ndev->pdev->dev, "MSI descriptors changed");
++
++	for (i = 0; i < nt->qp_count; i++)
++		ntb_transport_setup_qp_msi(nt, i);
++
++	ntb_peer_db_set(nt->ndev, nt->msi_db_mask);
++}
++
+ static void ntb_free_mw(struct ntb_transport_ctx *nt, int num_mw)
  {
- 	struct msi_desc *entry;
- 	int i = 0;
-+	void __iomem *desc_addr;
+ 	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
+@@ -905,6 +1028,20 @@ static void ntb_transport_link_work(struct work_struct *work)
+ 	int rc = 0, i, spad;
  
- 	for_each_pci_msi_entry(entry, dev) {
- 		if (entries)
- 			entries[i++].vector = entry->irq;
--		entry->masked = readl(pci_msix_desc_addr(entry) +
--				PCI_MSIX_ENTRY_VECTOR_CTRL);
+ 	/* send the local info, in the opposite order of the way we read it */
 +
-+		desc_addr = pci_msix_desc_addr(entry);
-+		if (desc_addr)
-+			entry->masked = readl(desc_addr +
-+					      PCI_MSIX_ENTRY_VECTOR_CTRL);
-+		else
-+			entry->masked = 0;
++	if (nt->use_msi) {
++		rc = ntb_msi_setup_mws(ndev);
++		if (rc) {
++			dev_warn(&pdev->dev,
++				 "Failed to register MSI memory window: %d\n",
++				 rc);
++			nt->use_msi = false;
++		}
++	}
 +
- 		msix_mask_irq(entry, 1);
- 	}
- }
-@@ -932,7 +967,7 @@ int pci_msix_vec_count(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_msix_vec_count);
- 
- static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
--			     int nvec, struct irq_affinity *affd)
-+			     int nvec, struct irq_affinity *affd, int flags)
- {
- 	int nr_entries;
- 	int i, j;
-@@ -943,7 +978,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
- 	nr_entries = pci_msix_vec_count(dev);
- 	if (nr_entries < 0)
- 		return nr_entries;
--	if (nvec > nr_entries)
-+	if (nvec > nr_entries && !(flags & PCI_IRQ_VIRTUAL))
- 		return nr_entries;
- 
- 	if (entries) {
-@@ -1079,7 +1114,8 @@ EXPORT_SYMBOL(pci_enable_msi);
- 
- static int __pci_enable_msix_range(struct pci_dev *dev,
- 				   struct msix_entry *entries, int minvec,
--				   int maxvec, struct irq_affinity *affd)
-+				   int maxvec, struct irq_affinity *affd,
-+				   int flags)
- {
- 	int rc, nvec = maxvec;
- 
-@@ -1096,7 +1132,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 				return -ENOSPC;
- 		}
- 
--		rc = __pci_enable_msix(dev, entries, nvec, affd);
-+		rc = __pci_enable_msix(dev, entries, nvec, affd, flags);
- 		if (rc == 0)
- 			return nvec;
- 
-@@ -1127,7 +1163,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
- 		int minvec, int maxvec)
- {
--	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL);
-+	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL, 0);
- }
- EXPORT_SYMBOL(pci_enable_msix_range);
- 
-@@ -1167,7 +1203,7 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 
- 	if (flags & PCI_IRQ_MSIX) {
- 		msix_vecs = __pci_enable_msix_range(dev, NULL, min_vecs,
--						    max_vecs, affd);
-+						    max_vecs, affd, flags);
- 		if (msix_vecs > 0)
- 			return msix_vecs;
- 	}
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 7e9b81c3b50d..c278ae8760df 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -56,6 +56,10 @@ struct fsl_mc_msi_desc {
-  * @msg:	The last set MSI message cached for reuse
-  * @affinity:	Optional pointer to a cpu affinity mask for this descriptor
-  *
-+ * @write_msi_msg:	Callback that may be called when the MSI message
-+ *			address or data changes
-+ * @write_msi_msg_data:	Data parameter for the callback.
-+ *
-  * @masked:	[PCI MSI/X] Mask bits
-  * @is_msix:	[PCI MSI/X] True if MSI-X
-  * @multiple:	[PCI MSI/X] log2 num of messages allocated
-@@ -78,6 +82,9 @@ struct msi_desc {
- 	struct msi_msg			msg;
- 	struct irq_affinity_desc	*affinity;
- 
-+	void (*write_msi_msg)(struct msi_desc *entry, void *data);
-+	void *write_msi_msg_data;
++	for (i = 0; i < nt->qp_count; i++)
++		ntb_transport_setup_qp_msi(nt, i);
 +
- 	union {
- 		/* PCI MSI/X specific data */
- 		struct {
-@@ -88,6 +95,7 @@ struct msi_desc {
- 				u8	multi_cap	: 3;
- 				u8	maskbit		: 1;
- 				u8	is_64		: 1;
-+				u8	is_virtual	: 1;
- 				u16	entry_nr;
- 				unsigned default_irq;
- 			} msi_attrib;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 77448215ef5b..c482aaa8e970 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1355,6 +1355,15 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- #define PCI_IRQ_MSI		(1 << 1) /* Allow MSI interrupts */
- #define PCI_IRQ_MSIX		(1 << 2) /* Allow MSI-X interrupts */
- #define PCI_IRQ_AFFINITY	(1 << 3) /* Auto-assign affinity */
+ 	for (i = 0; i < nt->mw_count; i++) {
+ 		size = nt->mw_vec[i].phys_size;
+ 
+@@ -962,6 +1099,7 @@ static void ntb_transport_link_work(struct work_struct *work)
+ 		struct ntb_transport_qp *qp = &nt->qp_vec[i];
+ 
+ 		ntb_transport_setup_qp_mw(nt, i);
++		ntb_transport_setup_qp_peer_msi(nt, i);
+ 
+ 		if (qp->client_ready)
+ 			schedule_delayed_work(&qp->link_work, 0);
+@@ -1135,6 +1273,19 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 		return -ENOMEM;
+ 
+ 	nt->ndev = ndev;
 +
-+/*
-+ * Virtual interrupts allow for more interrupts to be allocated
-+ * than the device has interrupts for. These are not programmed
-+ * into the device's MSI-X table and must be handled by some
-+ * other driver means.
-+ */
-+#define PCI_IRQ_VIRTUAL		(1 << 4)
++	/*
++	 * If we are using MSI, and have at least one extra memory window,
++	 * we will reserve the last MW for the MSI window.
++	 */
++	if (use_msi && mw_count > 1) {
++		rc = ntb_msi_init(ndev, ntb_transport_msi_desc_changed);
++		if (!rc) {
++			mw_count -= 1;
++			nt->use_msi = true;
++		}
++	}
 +
- #define PCI_IRQ_ALL_TYPES \
- 	(PCI_IRQ_LEGACY | PCI_IRQ_MSI | PCI_IRQ_MSIX)
+ 	spad_count = ntb_spad_count(ndev);
+ 
+ 	/* Limit the MW's based on the availability of scratchpads */
+@@ -1148,6 +1299,8 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 	max_mw_count_for_spads = (spad_count - MW0_SZ_HIGH) / 2;
+ 	nt->mw_count = min(mw_count, max_mw_count_for_spads);
+ 
++	nt->msi_spad_offset = nt->mw_count * 2 + MW0_SZ_HIGH;
++
+ 	nt->mw_vec = kcalloc_node(mw_count, sizeof(*nt->mw_vec),
+ 				  GFP_KERNEL, node);
+ 	if (!nt->mw_vec) {
+@@ -1178,6 +1331,12 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 	qp_bitmap = ntb_db_valid_mask(ndev);
+ 
+ 	qp_count = ilog2(qp_bitmap);
++	if (nt->use_msi) {
++		qp_count -= 1;
++		nt->msi_db_mask = 1 << qp_count;
++		ntb_db_clear_mask(ndev, nt->msi_db_mask);
++	}
++
+ 	if (max_num_clients && max_num_clients < qp_count)
+ 		qp_count = max_num_clients;
+ 	else if (nt->mw_count < qp_count)
+@@ -1601,7 +1760,10 @@ static void ntb_tx_copy_callback(void *data,
+ 
+ 	iowrite32(entry->flags | DESC_DONE_FLAG, &hdr->flags);
+ 
+-	ntb_peer_db_set(qp->ndev, BIT_ULL(qp->qp_num));
++	if (qp->use_msi)
++		ntb_msi_peer_trigger(qp->ndev, PIDX, &qp->peer_msi_desc);
++	else
++		ntb_peer_db_set(qp->ndev, BIT_ULL(qp->qp_num));
+ 
+ 	/* The entry length can only be zero if the packet is intended to be a
+ 	 * "link down" or similar.  Since no payload is being sent in these
+@@ -2268,6 +2430,11 @@ static void ntb_transport_doorbell_callback(void *data, int vector)
+ 	u64 db_bits;
+ 	unsigned int qp_num;
+ 
++	if (ntb_db_read(nt->ndev) & nt->msi_db_mask) {
++		ntb_transport_msi_peer_desc_changed(nt);
++		ntb_db_clear(nt->ndev, nt->msi_db_mask);
++	}
++
+ 	db_bits = (nt->qp_bitmap & ~nt->qp_bitmap_free &
+ 		   ntb_db_vector_mask(nt->ndev, vector));
  
 -- 
 2.20.1
