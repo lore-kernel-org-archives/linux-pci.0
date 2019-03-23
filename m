@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98FDBC10F0E
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Mar 2019 01:54:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1305C10F10
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Mar 2019 01:54:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66D302087F
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Mar 2019 01:54:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DC2620883
+	for <linux-pci@archiver.kernel.org>; Sat, 23 Mar 2019 01:54:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FyiYCSFX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mZRox8/O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728175AbfCWByN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Mar 2019 21:54:13 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38225 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728136AbfCWByN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2019 21:54:13 -0400
-Received: by mail-wr1-f65.google.com with SMTP id g12so4205748wrm.5;
-        Fri, 22 Mar 2019 18:54:11 -0700 (PDT)
+        id S1728185AbfCWByO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Mar 2019 21:54:14 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:41525 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728136AbfCWByO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Mar 2019 21:54:14 -0400
+Received: by mail-wr1-f67.google.com with SMTP id p1so4186364wrs.8;
+        Fri, 22 Mar 2019 18:54:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=DYbg+Rd5CZUA/IeYEIt0PqnPXP6HNU4KEIYd+8v11jI=;
-        b=FyiYCSFX7kLkchey/QjFGPVq1OREFV+LNqeI6v8XClCwWuf6dlKo2NCoMsoan3CT0N
-         WwbGI0bG3MsbWEyfOHUze/TZplki+ShyAsDn/I+C1yBDOHgho30tfg29lZfo8L5lHiBK
-         WOHcOtTOdI7abrp7VFSBza1VE9NCnU3U5+yI8b3arqV6hxz9/DHzWJ7v9wsN/HUKk3EU
-         bSGOBI4PBboFlr+l1sUWsU3CnD7yVcrMmIEFhm/HTRlaaK/zF2fY5/NDWE2Dry/jWQrR
-         YB6QzLyLUcapgny7ouEBWxP1nY3D+wyjlpxny2dEsgN1jEpsmEP/2bLoSBfFPkJQN0sa
-         DK1Q==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=jSrlccwhQwc3GzuUl1Q5/05D6DwWtcM1QO2IngsuJg8=;
+        b=mZRox8/OZ6wbRPY56UM4jXNmNS2UXR9GcczYNxXFSTZgTtP7oFoahqV4xbiYMClZou
+         hKucxOaV2m8XXlU/UsHXawNn+htyPRIaluxfSwoDfzrcNDzO8j+T/cvuYZ+OHt+2wzvU
+         aWcMVNlqeGUACaatXCDK95q1eIMiy8mCorkTC9N3G/laysvSErtsey5dLNP24lVwMLzM
+         3eTiekhF6uukENghKxzlHi+h5hLDOAtdkjLzbqgvippmliM/j/MFcw4ThGTt60CU+vuq
+         Ufqy0oMvd8Nu6KbgAGBBSqZC8/Ei4P56ZL5+3IheYhKv7lhBhOiJ/HKdAHxakye1iFwv
+         mdJA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=DYbg+Rd5CZUA/IeYEIt0PqnPXP6HNU4KEIYd+8v11jI=;
-        b=l0Ivh6k1hHOWp27aN1FC1UGr9z5D9KkyZHjq5kDFJIDBy8UxGFlJMPxguBh7y/w5FK
-         0aPX2G83EEheOKQzXWcpBIxsn2rnYtlEzruXfY+wnAy1HXFqVOaZKW02KDUt8gYVbgAY
-         ph3nhx5avGCK6EDK5GvHh5Wv+9kHFsc1iRi8dNPzVBimWsiTp/OfRJYAD4B9vqFeN/zU
-         bSReNbwxoBxrxanaBhK7TzyhrEciA+QU3DmPTplgz+12S40R+96Yad6QwprfxdRZb3gH
-         jkUkk2o6v89BUB1RycNGEL7hmY1jRDiCgaeP4jFnkf9/zSoCXQsejaTShfZ3wCAEdFR+
-         5XkA==
-X-Gm-Message-State: APjAAAUlL+nrpzPsWDPNBLdegYbEZuOjr/ocgpswBPGgBJ1/yDh2X0Ur
-        QpQlFeLQfZveaJO3A5nssKDmtdDI
-X-Google-Smtp-Source: APXvYqz51rlmwWJ0haKM8EX4bws4mViTVxRG7/fzfSoObbA2bz0/oLIUHo4DTCwy6d6vJw7He5s0ow==
-X-Received: by 2002:adf:cd90:: with SMTP id q16mr8080155wrj.75.1553306050911;
-        Fri, 22 Mar 2019 18:54:10 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=jSrlccwhQwc3GzuUl1Q5/05D6DwWtcM1QO2IngsuJg8=;
+        b=iE6Uys4s5GaYu6yCHsRPcP8VCX2WOfw2lsGdZC8f8VW3tm0QPoPujAZc2Cu30hH1Ct
+         LywJdSR6y+adOFkbRF8tkHzE8CinTadOQwkYEPymkKdi01e/To9n4wKtpBs0yjVPBANd
+         5DWql6RKNsxBfxG5OMCDVdg/riqyYoMO+iIOANzNtI9fXShud3b5k3DBOT9xKLRR8D/+
+         UC5RzTaMVI8V4bIAND46Zb1GLT/0eoe0lp7KYfS92QWWfPzDp0UaaeF2AExHe7vFFWqw
+         jU+bNR6v5f9e9okWIIXRmGhi+wsAuontdKLAntuevq7ivNyUimYHQSNBwNthCHDwWS37
+         eRYA==
+X-Gm-Message-State: APjAAAVdw5kB4zv2MJTD87Tnnm13VB7E3qsoSPqCNsUl15/BLjuTWO/M
+        Pr4uB9IZrCAqkFZr+2ebRkcXJ+x6
+X-Google-Smtp-Source: APXvYqzUKJyqPc6ZyxLqylideCsJwCILEjY4iN2ZG6KopPLcTfPk74ywB7QSAhuXNbIxSRquOWkztA==
+X-Received: by 2002:adf:db10:: with SMTP id s16mr224429wri.181.1553306052507;
+        Fri, 22 Mar 2019 18:54:12 -0700 (PDT)
 Received: from kurokawa.lan (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id y192sm25433050wmc.6.2019.03.22.18.54.09
+        by smtp.gmail.com with ESMTPSA id y192sm25433050wmc.6.2019.03.22.18.54.10
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 22 Mar 2019 18:54:09 -0700 (PDT)
+        Fri, 22 Mar 2019 18:54:11 -0700 (PDT)
 From:   marek.vasut@gmail.com
 To:     linux-pci@vger.kernel.org
 Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
@@ -64,10 +64,12 @@ Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Wolfram Sang <wsa@the-dreams.de>,
         linux-renesas-soc@vger.kernel.org,
         Wolfram Sang <wsa+renesas@sang-engineering.com>
-Subject: [PATCH V3 1/6] PCI: rcar: Clean up remaining macros defining bits
-Date:   Sat, 23 Mar 2019 02:53:54 +0100
-Message-Id: <20190323015359.7231-1-marek.vasut@gmail.com>
+Subject: [PATCH V3 2/6] PCI: rcar: Replace unsigned long with u32 in register accessors
+Date:   Sat, 23 Mar 2019 02:53:55 +0100
+Message-Id: <20190323015359.7231-2-marek.vasut@gmail.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190323015359.7231-1-marek.vasut@gmail.com>
+References: <20190323015359.7231-1-marek.vasut@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -77,7 +79,8 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-Replace macros using constants with BIT()s instead, no functional change.
+Replace unsigned long with u32 in register accessor functions,
+since they access 32bit registers.
 
 Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 Cc: Geert Uytterhoeven <geert+renesas@glider.be>
@@ -91,31 +94,30 @@ Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 V2: Bundle this patch with other cleanups before resending
 V3: Add Wolfram's R-B
 ---
- drivers/pci/controller/pcie-rcar.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/controller/pcie-rcar.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-index c8febb009454..5b8736f0cd6b 100644
+index 5b8736f0cd6b..1408c8aa758b 100644
 --- a/drivers/pci/controller/pcie-rcar.c
 +++ b/drivers/pci/controller/pcie-rcar.c
-@@ -46,14 +46,14 @@
+@@ -152,14 +152,12 @@ struct rcar_pcie {
+ 	struct			rcar_msi msi;
+ };
  
- /* Transfer control */
- #define PCIETCTLR		0x02000
--#define  CFINIT			1
-+#define  CFINIT			BIT(0)
- #define PCIETSTR		0x02004
--#define  DATA_LINK_ACTIVE	1
-+#define  DATA_LINK_ACTIVE	BIT(0)
- #define PCIEERRFR		0x02020
- #define  UNSUPPORTED_REQUEST	BIT(4)
- #define PCIEMSIFR		0x02044
- #define PCIEMSIALR		0x02048
--#define  MSIFE			1
-+#define  MSIFE			BIT(0)
- #define PCIEMSIAUR		0x0204c
- #define PCIEMSIIER		0x02050
+-static void rcar_pci_write_reg(struct rcar_pcie *pcie, unsigned long val,
+-			       unsigned long reg)
++static void rcar_pci_write_reg(struct rcar_pcie *pcie, u32 val, u32 reg)
+ {
+ 	writel(val, pcie->base + reg);
+ }
  
+-static unsigned long rcar_pci_read_reg(struct rcar_pcie *pcie,
+-				       unsigned long reg)
++static u32 rcar_pci_read_reg(struct rcar_pcie *pcie, u32 reg)
+ {
+ 	return readl(pcie->base + reg);
+ }
 -- 
 2.20.1
 
