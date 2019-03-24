@@ -1,144 +1,108 @@
-Return-Path: <SRS0=AkHN=R2=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=7pJT=R3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F97EC43381
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Mar 2019 21:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 036DFC43381
+	for <linux-pci@archiver.kernel.org>; Sun, 24 Mar 2019 21:10:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19C4021873
-	for <linux-pci@archiver.kernel.org>; Sat, 23 Mar 2019 21:04:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="I4Ef8XT/"
+	by mail.kernel.org (Postfix) with ESMTP id CE49A20880
+	for <linux-pci@archiver.kernel.org>; Sun, 24 Mar 2019 21:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728029AbfCWVEd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 23 Mar 2019 17:04:33 -0400
-Received: from mta-p5.oit.umn.edu ([134.84.196.205]:52410 "EHLO
-        mta-p5.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727847AbfCWVE2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 23 Mar 2019 17:04:28 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p5.oit.umn.edu (Postfix) with ESMTP id 211C1C86
-        for <linux-pci@vger.kernel.org>; Sat, 23 Mar 2019 21:04:27 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p5.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p5.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id V5zPc5Cw74iP for <linux-pci@vger.kernel.org>;
-        Sat, 23 Mar 2019 16:04:26 -0500 (CDT)
-Received: from mail-io1-f69.google.com (mail-io1-f69.google.com [209.85.166.69])
-        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mta-p5.oit.umn.edu (Postfix) with ESMTPS id E63DDCBB
-        for <linux-pci@vger.kernel.org>; Sat, 23 Mar 2019 16:04:26 -0500 (CDT)
-Received: by mail-io1-f69.google.com with SMTP id k2so4795250ioj.2
-        for <linux-pci@vger.kernel.org>; Sat, 23 Mar 2019 14:04:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=5wG4f1fEkLp966T1bSVeSK99W1Qeu2nVeK0taNfKzzQ=;
-        b=I4Ef8XT/jnbi+tMmAHG5WICb8qdNlNkhEGeMnG7BX2cTmGzsbQWhpaDzogleFYvnOn
-         FTiGI9G++d4xNJ5aq4XKaWU3JUrelm+iFniQ8rZjxWdhm5LST/Dd3EyHgJn2uobP4Ue2
-         cqoNk5Bl+C2B+g8lToWMhw+4SDodFTvbBlxbhFM/GYYBuUmOiN7Yp+K8Yw9HuOr3A4v5
-         /WELYfLIaJnThcKTxv2kHZJNZmzh5YNVpkYgbwDfL4XRL14z8OTA7FPqFqtkdnR3nkKF
-         08Zdij3YbRiPw8FIqp68WCWtGpZg5wpjP3BkfJbsZVI7uXg91tmcxqATbDhF7IkX01N9
-         v17A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=5wG4f1fEkLp966T1bSVeSK99W1Qeu2nVeK0taNfKzzQ=;
-        b=Z8tAu7Kni5hkD+KjC/epVDl2lSJYnPnzN30F026nWQv+wT5VnHKDigFG51tc2CjCmf
-         Nx6drknIBv9E56aTluiNJpQMf+vMZ3niM5uvjtmfaG6VbvwjX6VezJD4Zkb3/jQu2oTD
-         meKIUgpJWlLl0OVGFC2/FEainUD4SamNT2vq8DqTUGe2IrELXIp3RZl/dJlEf5CHhUEW
-         Jl5uXUfDfW0zwYJdTYLEb3au7CdG0ipJ09JhIulLBZBa+gbf03NXoHzeYe4JsyRQv2rO
-         jEjmT4Imypw8WGYKnP+gSyKsaeHBSpR7+QqAH2EVxROeLugoF9cw3aWISYdMJdJxCrUr
-         S7qA==
-X-Gm-Message-State: APjAAAUEVxeRNSPk0qDe3cY0ujF0t2cbMOpEERPdeMur8Ozg8Gq3pGwQ
-        cKP8GrES/Gcjs0nCxRB9u2as2Lb+pMFyfXbSf6ZMXxkTyp89d/N3W6DjFMRDNjdHjqDUIAd5cOa
-        Qh4zaUnIGU6NUhCCwObjtExw2
-X-Received: by 2002:a05:660c:711:: with SMTP id l17mr3140861itk.92.1553375066581;
-        Sat, 23 Mar 2019 14:04:26 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqxy0U8g+TJEXWruwMJ6yj9GVhNXSU4I56D1uDEFVkrDtIqQ32mirdf4BRi6O68CHL7dEMQkZA==
-X-Received: by 2002:a05:660c:711:: with SMTP id l17mr3140846itk.92.1553375066381;
-        Sat, 23 Mar 2019 14:04:26 -0700 (PDT)
-Received: from cs-u-syssec1.dtc.umn.edu (cs-u-syssec1.cs.umn.edu. [128.101.106.66])
-        by smtp.gmail.com with ESMTPSA id c1sm3344399itd.23.2019.03.23.14.04.25
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 23 Mar 2019 14:04:25 -0700 (PDT)
-From:   Aditya Pakki <pakki001@umn.edu>
-To:     pakki001@umn.edu
-Cc:     kjlu@umn.edu, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] pci: pcie-xilinx: fix a missing-check bug for __get_free_pages
-Date:   Sat, 23 Mar 2019 16:04:23 -0500
-Message-Id: <20190323210423.8881-1-pakki001@umn.edu>
-X-Mailer: git-send-email 2.17.1
+        id S1728952AbfCXVKT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 24 Mar 2019 17:10:19 -0400
+Received: from mga02.intel.com ([134.134.136.20]:10185 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726317AbfCXVKT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 24 Mar 2019 17:10:19 -0400
+X-Amp-Result: UNSCANNABLE
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Mar 2019 14:10:16 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,256,1549958400"; 
+   d="scan'208";a="331600917"
+Received: from pnass-mobl.ger.corp.intel.com (HELO mara.localdomain) ([10.249.136.221])
+  by fmsmga005.fm.intel.com with ESMTP; 24 Mar 2019 14:10:11 -0700
+Received: from sailus by mara.localdomain with local (Exim 4.89)
+        (envelope-from <sakari.ailus@linux.intel.com>)
+        id 1h8ANd-0000IX-8x; Sun, 24 Mar 2019 23:10:09 +0200
+Date:   Sun, 24 Mar 2019 23:10:08 +0200
+From:   Sakari Ailus <sakari.ailus@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Petr Mladek <pmladek@suse.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-um@lists.infradead.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        xen-devel@lists.xenproject.org,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Lars Ellenberg <drbd-dev@lists.linbit.com>
+Subject: Re: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
+Message-ID: <20190324211008.lypghym3gqcp62th@mara.localdomain>
+References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
+ <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw@mail.gmail.com>
+ <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
+ <20190322170550.GX9224@smile.fi.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190322170550.GX9224@smile.fi.intel.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In case __get_free_pages fail, the fix returns error upstream
-to avoid NULL pointer dereference.
+Hi Andy,
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+On Fri, Mar 22, 2019 at 07:05:50PM +0200, Andy Shevchenko wrote:
+> On Fri, Mar 22, 2019 at 03:53:50PM +0200, Sakari Ailus wrote:
+> 
+> > Porting a patch
+> > forward should have no issues either as checkpatch.pl has been complaining
+> > of the use of %pf and %pF for a while now.
+> 
+> And that's exactly the reason why I think instead of removing warning on
+> checkpatch, it makes sense to convert to an error for a while. People are
+> tending read documentation on internet and thus might have outdated one. And
+> yes, the compiler doesn't tell a thing about it.
+> 
+> P.S. Though, if majority of people will tell that I'm wrong, then it's okay to
+> remove.
 
----
-v1: Return error upstream as suggested by Steven
----
- drivers/pci/controller/pcie-xilinx.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+I wonder if you wrote this before seeing my other patchset.
 
-diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-index 9bd1a35cd5d8..91d8945bfb0c 100644
---- a/drivers/pci/controller/pcie-xilinx.c
-+++ b/drivers/pci/controller/pcie-xilinx.c
-@@ -335,15 +335,19 @@ static const struct irq_domain_ops msi_domain_ops = {
- /**
-  * xilinx_pcie_enable_msi - Enable MSI support
-  * @port: PCIe port information
-+ * Return: 0 on success, negative error on failure
-  */
--static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
-+static int xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
- {
- 	phys_addr_t msg_addr;
- 
- 	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
-+	if (!port->msi_pages)
-+		return -ENOMEM;
- 	msg_addr = virt_to_phys((void *)port->msi_pages);
- 	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
- 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
-+	return 0;
- }
- 
- /* INTx Functions */
-@@ -498,6 +502,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 	struct device *dev = port->dev;
- 	struct device_node *node = dev->of_node;
- 	struct device_node *pcie_intc_node;
-+	int ret;
- 
- 	/* Setup INTx */
- 	pcie_intc_node = of_get_next_child(node, NULL);
-@@ -526,7 +531,9 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 			return -ENODEV;
- 		}
- 
--		xilinx_pcie_enable_msi(port);
-+		ret = xilinx_pcie_enable_msi(port);
-+		if (ret)
-+			return ret;
- 	}
- 
- 	return 0;
+For others as the background, it adds %pfw to print fwnode node names.
+Assuming this would be merged, %pfw could be in use relatively soon. With
+the current patchset, %pf prints nothing just as %pO ("F" missing).
+
+What I think could be done is to warn of plain %pf (without following "w")
+in checkpatch.pl, and %pf that is not followed by "w" in the kernel.
+Although we didn't have such checks to begin with. The case is still a
+little bit different as %pf used to be a valid conversion specifier whereas
+%pO likely has never existed.
+
+So, how about adding such checks in the other set? I can retain %p[fF] check
+here, too, if you like.
+
 -- 
-2.17.1
+Kind regards,
 
+Sakari Ailus
+sakari.ailus@linux.intel.com
