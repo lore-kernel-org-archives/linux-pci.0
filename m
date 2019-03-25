@@ -2,147 +2,143 @@ Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A982CC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 22:19:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41C53C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 22:25:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7889A2082F
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 22:19:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="Ri/IWHh+"
+	by mail.kernel.org (Postfix) with ESMTP id 1197A2082F
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 22:25:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553552706;
+	bh=f+bXjXNI8BpHf9wMt6NcJ8eY+crxFfT1ppviPjRKvN8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=tE0OZVi1jhdsNO3T1SRPsPKFDFWcUqC6nYpn3Jn08xjtO8GQ555pb9g88QJ5vcbI7
+	 BHmaIm749Wp+xUnV0ChMkBUa7HTTzIwZVoCQtZpVqWcTBvr9Rgyki77fzckA8t6EAs
+	 z3IhC6uL25dL12YDdwmJq/Fp8Ir7SZah6/rXMkAo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728912AbfCYWTV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 18:19:21 -0400
-Received: from mta-p8.oit.umn.edu ([134.84.196.208]:42462 "EHLO
-        mta-p8.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726217AbfCYWTR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 18:19:17 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-p8.oit.umn.edu (Postfix) with ESMTP id BAD1E172
-        for <linux-pci@vger.kernel.org>; Mon, 25 Mar 2019 22:19:15 +0000 (UTC)
-X-Virus-Scanned: amavisd-new at umn.edu
-Received: from mta-p8.oit.umn.edu ([127.0.0.1])
-        by localhost (mta-p8.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id hU_Ro4fxLO9Y for <linux-pci@vger.kernel.org>;
-        Mon, 25 Mar 2019 17:19:15 -0500 (CDT)
-Received: from mail-it1-f199.google.com (mail-it1-f199.google.com [209.85.166.199])
-        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+        id S1729127AbfCYWZF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 18:25:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56468 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728912AbfCYWZF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Mar 2019 18:25:05 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-p8.oit.umn.edu (Postfix) with ESMTPS id 8E9F81E6
-        for <linux-pci@vger.kernel.org>; Mon, 25 Mar 2019 17:19:15 -0500 (CDT)
-Received: by mail-it1-f199.google.com with SMTP id l140so2353382ita.4
-        for <linux-pci@vger.kernel.org>; Mon, 25 Mar 2019 15:19:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=umn.edu; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=wMN6xXX31A6AdzQAJGc2vG9ofT3CoZG7Cbz+jNnp6f8=;
-        b=Ri/IWHh+UZOTC7ZjY4+AHxTHHeE03LtftP/f73T6u1Ndc5c/G84oyC5h/XcypurBr/
-         m3txydiTyFZKrl9mX6le7RxJygALM1cd+VCRmv553UxKXOPiLu8qlHsLW6VQ/2GnfwF2
-         KrkNM+srVDJNlpryuymtMSzPYP3kgwtrXzmHqu+RxPVPspOm7GeAEu+Skr9X5YXgKZLU
-         DJta+7ZXNvdYf8U5t4Oiqvrw8GBrbsWn5ZWkM8THTE7wJvHxzX/TSidF6fYMEWa+5fR6
-         3zU+Kjn1+zbCNW3i7102e1rCdCkh0VJ4XapJQ7aqKBYlZPptSpcitFAsgaXnscRksF0Q
-         Sezg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=wMN6xXX31A6AdzQAJGc2vG9ofT3CoZG7Cbz+jNnp6f8=;
-        b=inQFMBXVqbs9+40Ew6NDWTu/TF2AVpbdMWMX5pzyussIbGfqycpA6UFdiwr3GteZ3I
-         AZ0ot+m87prP9s8aJaGt7zlOyOzaBu6ViK8R766YKT9SZW8a2EiuP8qiPCsrwvEw2RGU
-         ahqE2W9dK/cQoYMFa6oiJ5mpmQHLZ/z92Rc//yW7q43E9irimMurAtSzHfmkDKiTvNTK
-         mQ7SICa1lesU4fKGCZ1+Nw+ZycX2mCY9xTwdVvkVWftcZWYa4IjPmeUf2nhNd8c0R6r4
-         Aw/0vgdyMKPDfcRVjvw2P8DvLAUiVTiJ/wJ5JTvUI8sB4CUrSnFSAUUYBvgoYTDhscLC
-         gM4A==
-X-Gm-Message-State: APjAAAUTW0u3ceWiV1s7IjuksaRWlO6WIlC6uRaNecK5VXsdlLoqMJ9m
-        NAv3/jLxKu10m/x2HX50aMm/ahFzuEGqRwoI3oI9Fs/ggWk+oiLUl+7hrpk087YcIE7z9Nz9CNN
-        uskXOmacg57HWvp/ABMJy17eH
-X-Received: by 2002:a6b:e50d:: with SMTP id y13mr16967275ioc.142.1553552355184;
-        Mon, 25 Mar 2019 15:19:15 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqyJpikc1k86UuAZEIpBOenvhqms6j6+SUAXP6kJ8lTR9Ao9sezT7dyXG/DCDzkMGqenPZaMnw==
-X-Received: by 2002:a6b:e50d:: with SMTP id y13mr16967256ioc.142.1553552354910;
-        Mon, 25 Mar 2019 15:19:14 -0700 (PDT)
-Received: from bee.dtc.umn.edu (cs-bee-u.cs.umn.edu. [128.101.106.63])
-        by smtp.gmail.com with ESMTPSA id k4sm10043741itc.32.2019.03.25.15.19.13
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 25 Mar 2019 15:19:14 -0700 (PDT)
-From:   Kangjie Lu <kjlu@umn.edu>
-To:     kjlu@umn.edu
-Cc:     pakki001@umn.edu, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3] PCI: xilinx: Check for __get_free_pages() failure
-Date:   Mon, 25 Mar 2019 17:19:09 -0500
-Message-Id: <20190325221909.26315-1-kjlu@umn.edu>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190325215105.GB24180@google.com>
-References: <20190325215105.GB24180@google.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 909D220828;
+        Mon, 25 Mar 2019 22:25:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553552703;
+        bh=f+bXjXNI8BpHf9wMt6NcJ8eY+crxFfT1ppviPjRKvN8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=SVW+AcXTMWDwOWb1G3GGjIs50Fdyn97/RMHwmA7/UqyUSbYqURyoBeNvkCcInThfc
+         JaclYyE3tw7FffoWm26sIhO0jHHsYfRtteaF2W/BOsz2ikVrmQNP11/PfkJFiCeL4P
+         n2R7/fUlh+w1ycTr0CSdTpomEs9q5wCMHrBgyjrs=
+Date:   Mon, 25 Mar 2019 17:25:02 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, torvalds@linux-foundation.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/LINK: bw_notification: Do not leave interrupt
+ handler NULL
+Message-ID: <20190325222502.GC24180@google.com>
+References: <20190320193504.GC251185@google.com>
+ <20190323003700.7294-1-mr.nuke.me@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190323003700.7294-1-mr.nuke.me@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If __get_free_pages() fails, the patch returns -ENOMEM to avoid
-NULL pointer dereference.
+On Fri, Mar 22, 2019 at 07:36:51PM -0500, Alexandru Gagniuc wrote:
+> A threaded IRQ with a NULL handler does not work with level-triggered
+> interrupts. request_threaded_irq() will return an error:
+> 
+>   genirq: Threaded irq requested with handler=NULL and !ONESHOT for irq 16
+>   pcie_bw_notification: probe of 0000:00:1b.0:pcie010 failed with error -22
+> 
+> For level interrupts we need to silence the interrupt before exiting
+> the IRQ handler, so just clear the PCI_EXP_LNKSTA_LBMS bit there.
+> 
+> Fixes: e8303bb7a75c ("PCI/LINK: Report degraded links via link bandwidth notification")
+> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 
-Signed-off-by: Kangjie Lu <kjlu@umn.edu>
----
-v3: remove "unlikely", as suggested by Bjorn Helgaas.
-v2: caller is redefined to accept the error code, as suggested by
-Steven Price <steven.price@arm.com>
----
- drivers/pci/controller/pcie-xilinx.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Applied with the following subject line to for-linus for v5.1, thanks!
 
-diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-index 9bd1a35cd5d8..abc214e94f7c 100644
---- a/drivers/pci/controller/pcie-xilinx.c
-+++ b/drivers/pci/controller/pcie-xilinx.c
-@@ -336,14 +336,19 @@ static const struct irq_domain_ops msi_domain_ops = {
-  * xilinx_pcie_enable_msi - Enable MSI support
-  * @port: PCIe port information
-  */
--static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
-+static int xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
- {
- 	phys_addr_t msg_addr;
- 
- 	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
-+	if (!port->msi_pages)
-+		return -ENOMEM;
-+
- 	msg_addr = virt_to_phys((void *)port->msi_pages);
- 	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
- 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
-+
-+	return 0;
- }
- 
- /* INTx Functions */
-@@ -498,6 +503,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 	struct device *dev = port->dev;
- 	struct device_node *node = dev->of_node;
- 	struct device_node *pcie_intc_node;
-+	int ret;
- 
- 	/* Setup INTx */
- 	pcie_intc_node = of_get_next_child(node, NULL);
-@@ -526,7 +532,9 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 			return -ENODEV;
- 		}
- 
--		xilinx_pcie_enable_msi(port);
-+		ret = xilinx_pcie_enable_msi(port);
-+		if (ret)
-+			return ret;
- 	}
- 
- 	return 0;
--- 
-2.17.1
+  PCI/LINK: Supply IRQ handler so level-triggered IRQs are acked
 
+> ---
+> Changes since v1:
+>  - move pcie_update_link_speed() to irq to prevent duplicate read of link_status
+>  - Add Fixes: to commit message
+>  
+>  drivers/pci/pcie/bw_notification.c | 19 ++++++++++++++-----
+>  1 file changed, 14 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
+> index d2eae3b7cc0f..c48746f1cf3c 100644
+> --- a/drivers/pci/pcie/bw_notification.c
+> +++ b/drivers/pci/pcie/bw_notification.c
+> @@ -44,11 +44,10 @@ static void pcie_disable_link_bandwidth_notification(struct pci_dev *dev)
+>  	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnk_ctl);
+>  }
+>  
+> -static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> +static irqreturn_t pcie_bw_notification_irq(int irq, void *context)
+>  {
+>  	struct pcie_device *srv = context;
+>  	struct pci_dev *port = srv->port;
+> -	struct pci_dev *dev;
+>  	u16 link_status, events;
+>  	int ret;
+>  
+> @@ -58,6 +57,17 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+>  	if (ret != PCIBIOS_SUCCESSFUL || !events)
+>  		return IRQ_NONE;
+>  
+> +	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
+> +	pcie_update_link_speed(port->subordinate, link_status);
+> +	return IRQ_WAKE_THREAD;
+> +}
+> +
+> +static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> +{
+> +	struct pcie_device *srv = context;
+> +	struct pci_dev *port = srv->port;
+> +	struct pci_dev *dev;
+> +
+>  	/*
+>  	 * Print status from downstream devices, not this root port or
+>  	 * downstream switch port.
+> @@ -67,8 +77,6 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+>  		__pcie_print_link_status(dev, false);
+>  	up_read(&pci_bus_sem);
+>  
+> -	pcie_update_link_speed(port->subordinate, link_status);
+> -	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
+>  	return IRQ_HANDLED;
+>  }
+>  
+> @@ -80,7 +88,8 @@ static int pcie_bandwidth_notification_probe(struct pcie_device *srv)
+>  	if (!pcie_link_bandwidth_notification_supported(srv->port))
+>  		return -ENODEV;
+>  
+> -	ret = request_threaded_irq(srv->irq, NULL, pcie_bw_notification_handler,
+> +	ret = request_threaded_irq(srv->irq, pcie_bw_notification_irq,
+> +				   pcie_bw_notification_handler,
+>  				   IRQF_SHARED, "PCIe BW notif", srv);
+>  	if (ret)
+>  		return ret;
+> -- 
+> 2.19.2
+> 
