@@ -2,50 +2,50 @@ Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF035C10F03
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:44:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E23C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:45:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF8112147C
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:44:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2678B20870
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:45:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="dib0lyw+"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="IQph3MKj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730564AbfCYJov (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 05:44:51 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:46586 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730540AbfCYJou (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 05:44:50 -0400
+        id S1730379AbfCYJot (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 05:44:49 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:33566 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730367AbfCYJn6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 05:43:58 -0400
 Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P9hqXh075705;
-        Mon, 25 Mar 2019 04:43:52 -0500
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P9hfQl011167;
+        Mon, 25 Mar 2019 04:43:41 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553507032;
-        bh=q3j+eLddVjEWh3KTfPJhB6vOyzvGXKalq1Td4n5w/YE=;
+        s=ti-com-17Q1; t=1553507021;
+        bh=mRZ/N3tIORcVcdf8U0MRLHXGRFmU8jONue5muhGax30=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=dib0lyw+ZZqLtvVBmb5/4k//xg5E4076Nq4KJt1KEAdB5hG/zd3Vd1EpTGklXVhn+
-         OB5+s1HlAyusd4nU+xCy35xbFCdBBM8dZXOpeFDzy35IcCTz6aNj4qHLg1Ucwu8Ksl
-         KFoXHMXag9F+pDbpDsC+1/cQMB54x4AUFIPFiKgk=
-Received: from DLEE101.ent.ti.com (dlee101.ent.ti.com [157.170.170.31])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P9hqAV111677
+        b=IQph3MKj0FFIVKxRrdWpqnWE6Cbht0FZaHh/8sOKp5hdax6RXlg9LxsPZs1bvDoTP
+         ZvOzv2Xkiadn9RpJMh1mNBOOB0Yidkk2Rox3/m2JGgTcom2f7cHef+D3IF7sy9aWD+
+         LkgPT0qaXWQzU8yQF/yI2bisZXCR0Jowjts2KnjE=
+Received: from DFLE111.ent.ti.com (dfle111.ent.ti.com [10.64.6.32])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P9hfbE111505
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 04:43:52 -0500
-Received: from DLEE112.ent.ti.com (157.170.170.23) by DLEE101.ent.ti.com
- (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 25 Mar 2019 04:43:41 -0500
+Received: from DFLE113.ent.ti.com (10.64.6.34) by DFLE111.ent.ti.com
+ (10.64.6.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 04:43:51 -0500
-Received: from dflp32.itg.ti.com (10.64.6.15) by DLEE112.ent.ti.com
- (157.170.170.23) with Microsoft SMTP Server (version=TLS1_0,
+ Mar 2019 04:43:40 -0500
+Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE113.ent.ti.com
+ (10.64.6.34) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 04:43:51 -0500
+ Mon, 25 Mar 2019 04:43:40 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P9feac028077;
-        Mon, 25 Mar 2019 04:43:46 -0500
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P9feaa028077;
+        Mon, 25 Mar 2019 04:43:36 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -62,9 +62,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-arm-kernel@axis.com>, Minghuan Lian <minghuan.Lian@nxp.com>,
         Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
         Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: [PATCH v3 23/26] PCI: designware-ep: Configure RESBAR to advertise the smallest size
-Date:   Mon, 25 Mar 2019 15:09:44 +0530
-Message-ID: <20190325093947.32633-24-kishon@ti.com>
+Subject: [PATCH v3 21/26] PCI: dwc: Add callbacks for accessing dbi2 address space
+Date:   Mon, 25 Mar 2019 15:09:42 +0530
+Message-ID: <20190325093947.32633-22-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325093947.32633-1-kishon@ti.com>
 References: <20190325093947.32633-1-kishon@ti.com>
@@ -76,74 +76,100 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Configure RESBAR capability to advertise the smallest size (1MB) for
-couple of reasons. A) Host side resource allocation of BAR fails for
-larger sizes. B) Endpoint function driver does not allocate memory
-for all supported sizes in RESBAR capability.
-If and when there is a usecase required to add more flexibility using
-RESBAR, this can be revisited.
+Certain platforms like TI's AM654 doesn't have separate address space for
+dbi2 instead they are accessed using the same address space as dbi
+with some configuration bit set. In order to support such platforms,
+add callbacks for accessing dbi2 address space.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../pci/controller/dwc/pcie-designware-ep.c   | 34 +++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware.c | 31 ++++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h | 12 ++++++--
+ 2 files changed, 41 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 74477ad7467f..0c208b9bda43 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -504,10 +504,32 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 	pci_epc_mem_exit(epc);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 4e2f7946da89..d7cc1a0c1de6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -89,6 +89,37 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+ 		dev_err(pci->dev, "Write DBI address failed\n");
  }
  
-+static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
++u32 __dw_pcie_read_dbi2(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			size_t size)
 +{
-+	u32 header;
-+	int pos = PCI_CFG_SPACE_SIZE;
++	int ret;
++	u32 val;
 +
-+	while (pos) {
-+		header = dw_pcie_readl_dbi(pci, pos);
-+		if (PCI_EXT_CAP_ID(header) == cap)
-+			return pos;
++	if (pci->ops->read_dbi2)
++		return pci->ops->read_dbi2(pci, base, reg, size);
 +
-+		pos = PCI_EXT_CAP_NEXT(header);
-+		if (!pos)
-+			break;
-+	}
++	ret = dw_pcie_read(base + reg, size, &val);
++	if (ret)
++		dev_err(pci->dev, "read DBI address failed\n");
 +
-+	return 0;
++	return val;
 +}
 +
- int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- {
-+	int i;
- 	int ret;
-+	u32 reg;
- 	void *addr;
-+	unsigned int nbars;
-+	unsigned int offset;
- 	struct pci_epc *epc;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
- 	struct device *dev = pci->dev;
-@@ -591,6 +613,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 
- 	ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
- 
-+	offset = dw_pcie_ep_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
-+	if (offset) {
-+		reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-+		nbars = (reg & PCI_REBAR_CTRL_NBAR_MASK) >>
-+			PCI_REBAR_CTRL_NBAR_SHIFT;
++void __dw_pcie_write_dbi2(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			  size_t size, u32 val)
++{
++	int ret;
 +
-+		dw_pcie_dbi_ro_wr_en(pci);
-+		for (i = 0; i < nbars; i++, offset += PCI_REBAR_CTRL)
-+			dw_pcie_writel_dbi(pci, offset + PCI_REBAR_CAP, 0x0);
-+		dw_pcie_dbi_ro_wr_dis(pci);
++	if (pci->ops->write_dbi2) {
++		pci->ops->write_dbi2(pci, base, reg, size, val);
++		return;
 +	}
 +
- 	dw_pcie_setup(pci);
++	ret = dw_pcie_write(base + reg, size, val);
++	if (ret)
++		dev_err(pci->dev, "write DBI address failed\n");
++}
++
+ static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+ {
+ 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index e36941ff7cf6..7abca9eb00bf 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -218,6 +218,10 @@ struct dw_pcie_ops {
+ 			    size_t size);
+ 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+ 			     size_t size, u32 val);
++	u32     (*read_dbi2)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
++			     size_t size);
++	void    (*write_dbi2)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
++			      size_t size, u32 val);
+ 	int	(*link_up)(struct dw_pcie *pcie);
+ 	int	(*start_link)(struct dw_pcie *pcie);
+ 	void	(*stop_link)(struct dw_pcie *pcie);
+@@ -249,6 +253,10 @@ u32 __dw_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+ 		       size_t size);
+ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+ 			 size_t size, u32 val);
++u32 __dw_pcie_read_dbi2(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			size_t size);
++void __dw_pcie_write_dbi2(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			  size_t size, u32 val);
+ int dw_pcie_link_up(struct dw_pcie *pci);
+ int dw_pcie_wait_for_link(struct dw_pcie *pci);
+ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+@@ -292,12 +300,12 @@ static inline u8 dw_pcie_readb_dbi(struct dw_pcie *pci, u32 reg)
  
- 	return 0;
+ static inline void dw_pcie_writel_dbi2(struct dw_pcie *pci, u32 reg, u32 val)
+ {
+-	__dw_pcie_write_dbi(pci, pci->dbi_base2, reg, 0x4, val);
++	__dw_pcie_write_dbi2(pci, pci->dbi_base2, reg, 0x4, val);
+ }
+ 
+ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
+ {
+-	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
++	return __dw_pcie_read_dbi2(pci, pci->dbi_base2, reg, 0x4);
+ }
+ 
+ static inline void dw_pcie_writel_atu(struct dw_pcie *pci, u32 reg, u32 val)
 -- 
 2.17.1
 
