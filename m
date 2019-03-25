@@ -1,111 +1,89 @@
-Return-Path: <SRS0=7pJT=R3=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A62CC4360F
-	for <linux-pci@archiver.kernel.org>; Sun, 24 Mar 2019 21:19:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 021F8C10F03
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:03:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7233A20811
-	for <linux-pci@archiver.kernel.org>; Sun, 24 Mar 2019 21:19:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C386520830
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:03:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728912AbfCXVTl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 24 Mar 2019 17:19:41 -0400
-Received: from mga09.intel.com ([134.134.136.24]:61922 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726743AbfCXVTl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 24 Mar 2019 17:19:41 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 24 Mar 2019 14:19:39 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,256,1549958400"; 
-   d="scan'208";a="129807518"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.72.86])
-  by orsmga006.jf.intel.com with ESMTP; 24 Mar 2019 14:19:34 -0700
-Received: from andy by smile with local (Exim 4.92)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1h8AWi-0006Gz-Fh; Sun, 24 Mar 2019 23:19:32 +0200
-Date:   Sun, 24 Mar 2019 23:19:32 +0200
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Sakari Ailus <sakari.ailus@linux.intel.com>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        Petr Mladek <pmladek@suse.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-um@lists.infradead.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-block@vger.kernel.org,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        sparclinux <sparclinux@vger.kernel.org>,
-        xen-devel@lists.xenproject.org,
-        ceph-devel <ceph-devel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Lars Ellenberg <drbd-dev@lists.linbit.com>
-Subject: Re: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
-Message-ID: <20190324211932.GK9224@smile.fi.intel.com>
-References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
- <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw@mail.gmail.com>
- <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
- <20190322170550.GX9224@smile.fi.intel.com>
- <20190324211008.lypghym3gqcp62th@mara.localdomain>
+        id S1729934AbfCYIDx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 04:03:53 -0400
+Received: from mail-ua1-f68.google.com ([209.85.222.68]:45636 "EHLO
+        mail-ua1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729874AbfCYIDw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:03:52 -0400
+Received: by mail-ua1-f68.google.com with SMTP id c13so1269341uao.12;
+        Mon, 25 Mar 2019 01:03:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aNMSj/koiI0zBVOfomOQNutrO4hz21ndSV+8YNokP6o=;
+        b=Hnjld6MPPQ+3GdwqO6+0gmoNXcJ/Y6batLRZveC1Y8Iw+AHYkeVaAkNNJ1lH/mMDL6
+         qLagdidy9sxuEc5XwKy22Y4yMjoQoCATCMhIgqYLytOHUAOfs+Kdm8c39Ku99Q+MFm2P
+         k5L0TSDx9sxEhatNEJOpqB4sqtmrdTy6BXqy2u7YwBw6JGlXtF/U7m6cgCfO5og4I+bB
+         vPNOUcLr3HyyNC4RMAz5vidCxE2TuAGTnqiAXrMbPUGwpVGt4bp059mEAlIoPrAJwXbs
+         H/CsYvWjetYsPCwe9EQAfv3Zxg/iawbqyZVXB1kcFgF6TQe8499IJOxDfJFWeVtEROqA
+         AztA==
+X-Gm-Message-State: APjAAAXSmCvrEH4Ugrbym+pVHkeb9U3pZa8IqAmlR3RYvKXY4tpwYheE
+        jtXy1jmtY4/gzqp2aLtpEE7Wv3JrWE7JFsfUFbY=
+X-Google-Smtp-Source: APXvYqy7vUQaW9Zwp68wrZPT06Olqc/gbcR76JT4re7uK5Ru+ryYKDlyRT8wjkVgjFClZ7RqUecEuzkFqZPJXPPR08c=
+X-Received: by 2002:ab0:28d6:: with SMTP id g22mr13007997uaq.75.1553501031105;
+ Mon, 25 Mar 2019 01:03:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190324211008.lypghym3gqcp62th@mara.localdomain>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20190323015359.7231-1-marek.vasut@gmail.com>
+In-Reply-To: <20190323015359.7231-1-marek.vasut@gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 25 Mar 2019 09:03:39 +0100
+Message-ID: <CAMuHMdU2gtR5VsZ_pd2rd8zC0a8bZNxG3jj1n6YWbDuEk69Ysw@mail.gmail.com>
+Subject: Re: [PATCH V3 1/6] PCI: rcar: Clean up remaining macros defining bits
+To:     Marek Vasut <marek.vasut@gmail.com>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Mar 24, 2019 at 11:10:08PM +0200, Sakari Ailus wrote:
-> On Fri, Mar 22, 2019 at 07:05:50PM +0200, Andy Shevchenko wrote:
-> > On Fri, Mar 22, 2019 at 03:53:50PM +0200, Sakari Ailus wrote:
-> > 
-> > > Porting a patch
-> > > forward should have no issues either as checkpatch.pl has been complaining
-> > > of the use of %pf and %pF for a while now.
-> > 
-> > And that's exactly the reason why I think instead of removing warning on
-> > checkpatch, it makes sense to convert to an error for a while. People are
-> > tending read documentation on internet and thus might have outdated one. And
-> > yes, the compiler doesn't tell a thing about it.
-> > 
-> > P.S. Though, if majority of people will tell that I'm wrong, then it's okay to
-> > remove.
-> 
-> I wonder if you wrote this before seeing my other patchset.
+On Sat, Mar 23, 2019 at 2:54 AM <marek.vasut@gmail.com> wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+>
+> Replace macros using constants with BIT()s instead, no functional change.
+>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+> ---
+> V2: Bundle this patch with other cleanups before resending
+> V3: Add Wolfram's R-B
 
-Yes, I wrote it before seeing another series.
+Seems you forgot to add mine?
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-> What I think could be done is to warn of plain %pf (without following "w")
-> in checkpatch.pl, and %pf that is not followed by "w" in the kernel.
-> Although we didn't have such checks to begin with. The case is still a
-> little bit different as %pf used to be a valid conversion specifier whereas
-> %pO likely has never existed.
-> 
-> So, how about adding such checks in the other set? I can retain %p[fF] check
-> here, too, if you like.
+Gr{oetje,eeting}s,
 
-Consistency tells me that the warning->error transformation in checkpatch.pl
-belongs this series.
-
+                        Geert
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
