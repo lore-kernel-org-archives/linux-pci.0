@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C7EC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A76DCC10F03
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8A4120880
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61BBB2085A
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="nABhlNPl"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="XmFi9wAP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730218AbfCYIif (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 04:38:35 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:52578 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730482AbfCYIie (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:38:34 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8bjR9106850;
-        Mon, 25 Mar 2019 03:37:45 -0500
+        id S1730203AbfCYIiX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 04:38:23 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:33976 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726207AbfCYIhQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:16 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8awe7030937;
+        Mon, 25 Mar 2019 03:36:58 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553503065;
-        bh=ecY/+Ui4SK2VPooZ8MRoP5X7hto+xBrP5+SVRZo/EkI=;
+        s=ti-com-17Q1; t=1553503018;
+        bh=SUjfsDqc2WaNEpc2fxVl73YDMqaMFKKCWCaYoaLaUs0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=nABhlNPlJTLJIek0kqbIX0W+S3oBUO3cAcPsNZUZVPfQ57qIktE++39teT61zXVN8
-         KWKNtK5DZDVCtwasK5BGkDJpRttCU96MFyTKnlO1upOzTrkVNV3n2gw9hx5Kzw47XY
-         hiLzDsLZvuKif3++DBuVYdGbXRmxA0DqQ3qL9zb0=
-Received: from DFLE113.ent.ti.com (dfle113.ent.ti.com [10.64.6.34])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8bjsM018060
+        b=XmFi9wAPdN2u5ClCGun/Tz4SajZ3LuAtncHbdnzVu5iu3Yo/fLQykcEioYcKfxpKL
+         RtsX8GkJSZcqZdwO7vVibpcD3MBKcjeXA3OtGQ0QjBDhi2RrJXGHtmnyv69qUerKWh
+         zNjKAKkQL5uwgF3BIYFO3rjNva2tKrfgcGNOx5TA=
+Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8awIG053297
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 03:37:45 -0500
-Received: from DFLE107.ent.ti.com (10.64.6.28) by DFLE113.ent.ti.com
- (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 25 Mar 2019 03:36:58 -0500
+Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE100.ent.ti.com
+ (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 03:37:45 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE107.ent.ti.com
- (10.64.6.28) with Microsoft SMTP Server (version=TLS1_0,
+ Mar 2019 03:36:58 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 03:37:45 -0500
+ Mon, 25 Mar 2019 03:36:58 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsG7006534;
-        Mon, 25 Mar 2019 03:37:41 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFu006534;
+        Mon, 25 Mar 2019 03:36:54 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -59,87 +59,357 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 25/26] misc: pci_endpoint_test: Add support to test PCI EP in AM654x
-Date:   Mon, 25 Mar 2019 14:05:00 +0530
-Message-ID: <20190325083501.8088-26-kishon@ti.com>
+Subject: [PATCH v2 14/26] PCI: keystone: Add support for PCIe RC in AM654x Platforms
+Date:   Mon, 25 Mar 2019 14:04:49 +0530
+Message-ID: <20190325083501.8088-15-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325083501.8088-1-kishon@ti.com>
 References: <20190325083501.8088-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-TI's AM654x PCIe EP has a restriction that BAR_0 is mapped to
-application registers. "PCIe Inbound Address Translation" section in
-AM65x Sitara Processors TRM (SPRUID7 – April 2018) describes BAR0 is
-reserved. Configure pci_endpoint_test to use BAR_2 instead.
-Also set alignment to 64K since "PCIe Subsystem Address Translation"
-section in TRM indicates minimum ATU window size is 64K.
+Add PCIe RC support for AM654x Platforms in pci-keystone.c
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/misc/pci_endpoint_test.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/pci/controller/dwc/Kconfig        |   2 +-
+ drivers/pci/controller/dwc/pci-keystone.c | 161 ++++++++++++++++++++--
+ 2 files changed, 148 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 29582fe57151..e015e8fa9bd3 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -75,6 +75,11 @@
- #define PCI_ENDPOINT_TEST_IRQ_TYPE		0x24
- #define PCI_ENDPOINT_TEST_IRQ_NUMBER		0x28
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 6ea74b1c0d94..d1d00833e0b3 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -104,7 +104,7 @@ config PCIE_SPEAR13XX
  
-+#define PCI_DEVICE_ID_TI_AM654			0xb00c
+ config PCI_KEYSTONE
+ 	bool "TI Keystone PCIe controller"
+-	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
++	depends on ARCH_KEYSTONE || ARCH_K3 || ((ARM || ARM64) && COMPILE_TEST)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
+ 	help
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 93296d434f40..a6a482bd648f 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/irqchip/chained_irq.h>
+@@ -18,6 +19,7 @@
+ #include <linux/mfd/syscon.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
++#include <linux/of_device.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_pci.h>
+ #include <linux/phy/phy.h>
+@@ -65,6 +67,7 @@
+ #define ERR_IRQ_STATUS			0x1c4
+ #define ERR_IRQ_ENABLE_SET		0x1c8
+ #define ERR_AER				BIT(5)	/* ECRC error */
++#define AM6_ERR_AER			BIT(4)	/* AM6 ECRC error */
+ #define ERR_AXI				BIT(4)	/* AXI tag lookup fatal error */
+ #define ERR_CORR			BIT(3)	/* Correctable error */
+ #define ERR_NONFATAL			BIT(2)	/* Non-fatal error */
+@@ -88,8 +91,15 @@
+ 
+ #define KS_PCIE_SYSCLOCKOUTEN		BIT(0)
+ 
++#define AM654_PCIE_DEV_TYPE_MASK	0x3
 +
-+#define is_am654_pci_dev(pdev)		\
-+		((pdev)->device == PCI_DEVICE_ID_TI_AM654)
-+
- static DEFINE_IDA(pci_endpoint_test_ida);
+ #define to_keystone_pcie(x)		dev_get_drvdata((x)->dev)
  
- #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
-@@ -588,6 +593,7 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
- 	int ret = -EINVAL;
- 	enum pci_barno bar;
- 	struct pci_endpoint_test *test = to_endpoint_test(file->private_data);
-+	struct pci_dev *pdev = test->pdev;
- 
- 	mutex_lock(&test->mutex);
- 	switch (cmd) {
-@@ -595,6 +601,8 @@ static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
- 		bar = arg;
- 		if (bar < 0 || bar > 5)
- 			goto ret;
-+		if (is_am654_pci_dev(pdev) && bar == BAR_0)
-+			goto ret;
- 		ret = pci_endpoint_test_bar(test, bar);
- 		break;
- 	case PCITEST_LEGACY_IRQ:
-@@ -785,11 +793,20 @@ static void pci_endpoint_test_remove(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- }
- 
-+static const struct pci_endpoint_test_data am654_data = {
-+	.test_reg_bar = BAR_2,
-+	.alignment = SZ_64K,
-+	.irq_type = IRQ_TYPE_MSI,
++struct ks_pcie_of_data {
++	const struct dw_pcie_host_ops *host_ops;
++	unsigned int version;
 +};
 +
- static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
-+	  .driver_data = (kernel_ulong_t)&am654_data
-+	},
- 	{ }
+ struct keystone_pcie {
+ 	struct dw_pcie		*pci;
+ 	/* PCI Device ID */
+@@ -109,6 +119,7 @@ struct keystone_pcie {
+ 	/* Application register space */
+ 	void __iomem		*va_app_base;	/* DT 1st resource */
+ 	struct resource		app;
++	bool			is_am6;
  };
- MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+ 
+ static u32 ks_pcie_app_readl(struct keystone_pcie *ks_pcie, u32 offset)
+@@ -250,6 +261,16 @@ static void ks_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie,
+ 	ks_pcie_app_writel(ks_pcie, IRQ_EOI, offset);
+ }
+ 
++static int ks_pcie_am654_msi_host_init(struct pcie_port *pp)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct device *dev = pci->dev;
++
++	dev_vdbg(dev, "dummy function so that DW core doesn't configure MSI\n");
++
++	return 0;
++}
++
+ static void ks_pcie_enable_error_irq(struct keystone_pcie *ks_pcie)
+ {
+ 	ks_pcie_app_writel(ks_pcie, ERR_IRQ_ENABLE_SET, ERR_IRQ_ALL);
+@@ -276,10 +297,10 @@ static irqreturn_t ks_pcie_handle_error_irq(struct keystone_pcie *ks_pcie)
+ 	if (reg & ERR_CORR)
+ 		dev_dbg(dev, "Correctable Error\n");
+ 
+-	if (reg & ERR_AXI)
++	if (!ks_pcie->is_am6 && (reg & ERR_AXI))
+ 		dev_err(dev, "AXI tag lookup fatal Error\n");
+ 
+-	if (reg & ERR_AER)
++	if (reg & ERR_AER || (ks_pcie->is_am6 && (reg & AM6_ERR_AER)))
+ 		dev_err(dev, "ECRC Error\n");
+ 
+ 	ks_pcie_app_writel(ks_pcie, ERR_IRQ_STATUS, reg);
+@@ -377,6 +398,9 @@ static void ks_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0);
+ 	ks_pcie_clear_dbi_mode(ks_pcie);
+ 
++	if (ks_pcie->is_am6)
++		return;
++
+ 	val = ilog2(OB_WIN_SIZE);
+ 	ks_pcie_app_writel(ks_pcie, OB_SIZE, val);
+ 
+@@ -619,6 +643,8 @@ static int ks_pcie_config_msi_irq(struct keystone_pcie *ks_pcie)
+ 
+ 	intc_np = of_get_child_by_name(np, "msi-interrupt-controller");
+ 	if (!intc_np) {
++		if (ks_pcie->is_am6)
++			return 0;
+ 		dev_warn(dev, "msi-interrupt-controller node is absent\n");
+ 		return -EINVAL;
+ 	}
+@@ -668,6 +694,12 @@ static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
+ 
+ 	intc_np = of_get_child_by_name(np, "legacy-interrupt-controller");
+ 	if (!intc_np) {
++		/*
++		 * Since legacy interrupts are modeled as edge-interrupts in
++		 * AM6, keep it disabled for now.
++		 */
++		if (ks_pcie->is_am6)
++			return 0;
+ 		dev_warn(dev, "legacy-interrupt-controller node is absent\n");
+ 		return -EINVAL;
+ 	}
+@@ -749,8 +781,10 @@ static int __init ks_pcie_init_id(struct keystone_pcie *ks_pcie)
+ 	if (ret)
+ 		return ret;
+ 
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, id & PCIE_VENDORID_MASK);
+ 	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, id >> PCIE_DEVICEID_SHIFT);
++	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	return 0;
+ }
+@@ -803,6 +837,11 @@ static const struct dw_pcie_host_ops ks_pcie_host_ops = {
+ 	.scan_bus = ks_pcie_v3_65_scan_bus,
+ };
+ 
++static const struct dw_pcie_host_ops ks_pcie_am654_host_ops = {
++	.host_init = ks_pcie_host_init,
++	.msi_host_init = ks_pcie_am654_msi_host_init,
++};
++
+ static irqreturn_t ks_pcie_err_irq_handler(int irq, void *priv)
+ {
+ 	struct keystone_pcie *ks_pcie = priv;
+@@ -826,7 +865,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 
+ 	pp->va_cfg1_base = pp->va_cfg0_base;
+ 
+-	pp->ops = &ks_pcie_host_ops;
+ 	ret = dw_pcie_host_init(pp);
+ 	if (ret) {
+ 		dev_err(dev, "failed to initialize host\n");
+@@ -836,14 +874,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 	return 0;
+ }
+ 
+-static const struct of_device_id ks_pcie_of_match[] = {
+-	{
+-		.type = "pci",
+-		.compatible = "ti,keystone-pcie",
+-	},
+-	{ },
+-};
+-
+ static const struct dw_pcie_ops ks_pcie_dw_pcie_ops = {
+ 	.start_link = ks_pcie_start_link,
+ 	.stop_link = ks_pcie_stop_link,
+@@ -913,14 +943,67 @@ static int ks_pcie_set_mode(struct device *dev)
+ 	return 0;
+ }
+ 
++static int ks_pcie_am654_set_mode(struct device *dev)
++{
++	struct device_node *np = dev->of_node;
++	struct regmap *syscon;
++	u32 val;
++	u32 mask;
++	int ret = 0;
++
++	syscon = syscon_regmap_lookup_by_phandle(np, "ti,syscon-pcie-mode");
++	if (IS_ERR(syscon))
++		return 0;
++
++	mask = AM654_PCIE_DEV_TYPE_MASK;
++	val = RC;
++
++	ret = regmap_update_bits(syscon, 0, mask, val);
++	if (ret) {
++		dev_err(dev, "failed to set pcie mode\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static const struct ks_pcie_of_data ks_pcie_rc_of_data = {
++	.host_ops = &ks_pcie_host_ops,
++	.version = 0x365A,
++};
++
++static const struct ks_pcie_of_data ks_pcie_am654_rc_of_data = {
++	.host_ops = &ks_pcie_am654_host_ops,
++	.version = 0x490A,
++};
++
++static const struct of_device_id ks_pcie_of_match[] = {
++	{
++		.type = "pci",
++		.data = &ks_pcie_rc_of_data,
++		.compatible = "ti,keystone-pcie",
++	},
++	{
++		.data = &ks_pcie_am654_rc_of_data,
++		.compatible = "ti,am654-pcie-rc",
++	},
++	{ },
++};
++
+ static int __init ks_pcie_probe(struct platform_device *pdev)
+ {
++	const struct dw_pcie_host_ops *host_ops;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
++	const struct ks_pcie_of_data *data;
++	const struct of_device_id *match;
+ 	struct dw_pcie *pci;
+ 	struct keystone_pcie *ks_pcie;
+ 	struct device_link **link;
++	struct gpio_desc *gpiod;
++	void __iomem *atu_base;
+ 	struct resource *res;
++	unsigned int version;
+ 	void __iomem *base;
+ 	u32 num_viewport;
+ 	struct phy **phy;
+@@ -930,6 +1013,14 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	int irq;
+ 	int i;
+ 
++	match = of_match_device(of_match_ptr(ks_pcie_of_match), dev);
++	data = (struct ks_pcie_of_data *)match->data;
++	if (!data)
++		return -EINVAL;
++
++	version = data->version;
++	host_ops = data->host_ops;
++
+ 	ks_pcie = devm_kzalloc(dev, sizeof(*ks_pcie), GFP_KERNEL);
+ 	if (!ks_pcie)
+ 		return -ENOMEM;
+@@ -950,9 +1041,13 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ERR(base))
+ 		return PTR_ERR(base);
+ 
++	if (of_device_is_compatible(np, "ti,am654-pcie-rc"))
++		ks_pcie->is_am6 = true;
++
+ 	pci->dbi_base = base;
+ 	pci->dev = dev;
+ 	pci->ops = &ks_pcie_dw_pcie_ops;
++	pci->version = version;
+ 
+ 	ret = of_property_read_u32(np, "num-viewport", &num_viewport);
+ 	if (ret < 0) {
+@@ -1011,6 +1106,15 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	ks_pcie->num_viewport = num_viewport;
+ 	ks_pcie->phy = phy;
+ 
++	gpiod = devm_gpiod_get_optional(dev, "reset",
++					GPIOD_OUT_LOW);
++	if (IS_ERR(gpiod)) {
++		ret = PTR_ERR(gpiod);
++		if (ret != -EPROBE_DEFER)
++			dev_err(dev, "Failed to get reset GPIO\n");
++		goto err_link;
++	}
++
+ 	ret = ks_pcie_enable_phy(ks_pcie);
+ 	if (ret) {
+ 		dev_err(dev, "failed to enable phy\n");
+@@ -1025,10 +1129,39 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 		goto err_get_sync;
+ 	}
+ 
+-	ret = ks_pcie_set_mode(dev);
+-	if (ret < 0)
+-		goto err_get_sync;
++	if (pci->version >= 0x480A) {
++		res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "atu");
++		atu_base = devm_ioremap_resource(dev, res);
++		if (IS_ERR(atu_base)) {
++			ret = PTR_ERR(atu_base);
++			goto err_get_sync;
++		}
++
++		pci->atu_base = atu_base;
++
++		ret = ks_pcie_am654_set_mode(dev);
++		if (ret < 0)
++			goto err_get_sync;
++	} else {
++		ret = ks_pcie_set_mode(dev);
++		if (ret < 0)
++			goto err_get_sync;
++	}
++
++	/*
++	 * "Power Sequencing and Reset Signal Timings" table in
++	 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 2.0
++	 * indicates PERST# should be deasserted after minimum of 100us
++	 * once REFCLK is stable. The REFCLK to the connector in RC
++	 * mode is selected while enabling the PHY. So deassert PERST#
++	 * after 100 us.
++	 */
++	if (gpiod) {
++		usleep_range(100, 200);
++		gpiod_set_value_cansleep(gpiod, 1);
++	}
+ 
++	pci->pp.ops = host_ops;
+ 	ret = ks_pcie_add_pcie_port(ks_pcie, pdev);
+ 	if (ret < 0)
+ 		goto err_get_sync;
 -- 
 2.17.1
 
