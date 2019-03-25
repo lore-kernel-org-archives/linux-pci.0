@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E195CC4360F
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F27ADC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEC5B20989
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1A742087E
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="y3kNCOz8"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="G9yVLeaJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730368AbfCYIhj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 04:37:39 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:54964 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729929AbfCYIhi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:38 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8bOBu106956;
-        Mon, 25 Mar 2019 03:37:24 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553503044;
-        bh=F1vNw6974A4SxeLsowTyiNZ0yV33iVQDSJNdrli8b/8=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=y3kNCOz8dBIRp1kJky4rjbnokoiNeMhg9+CX8D4GZ3jb/M1ISn0gUgVyujyYT0E6t
-         25GX4h/rYcc/ioIfebB/cBLCBCIwRL3PCKN8DtoB2wWHVLjx3fwOAEXoP+5sJIJ5ID
-         3ohoWPVJxiWiNHx6TCJUTJ+vKCoh+6WC0EYGFuxU=
-Received: from DLEE111.ent.ti.com (dlee111.ent.ti.com [157.170.170.22])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8bOqM017802
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 03:37:24 -0500
-Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 03:37:23 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 03:37:24 -0500
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsG2006534;
+        id S1730339AbfCYIhf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 04:37:35 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:34048 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729929AbfCYIhf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:35 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8bKZd031107;
         Mon, 25 Mar 2019 03:37:20 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1553503040;
+        bh=FFBI81IHUSwFB45pqKhYDbRxN16ADNIUFkLN5k6S3dE=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=G9yVLeaJ1feWrZZP/o/42jlczvAF/UnU6BxyruGqEWTKaQkkIVxdd39I8YTS7qAdJ
+         +UN8xUUj2qVi4JMzTYVcyhyFUuCOHsrb9wgbaOmqFxuK5P9yVgCZoQQh1lv9zUlIVo
+         iTmPRmTOUMygakwOPKg+LRGspOzSRuDSjiw5heOg=
+Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8bKlA089711
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 25 Mar 2019 03:37:20 -0500
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
+ Mar 2019 03:37:19 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
+ Mon, 25 Mar 2019 03:37:19 -0500
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsG1006534;
+        Mon, 25 Mar 2019 03:37:15 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -59,9 +59,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 20/26] PCI: dwc: Fix dw_pcie_ep_find_capability to return correct capability offset
-Date:   Mon, 25 Mar 2019 14:04:55 +0530
-Message-ID: <20190325083501.8088-21-kishon@ti.com>
+Subject: [PATCH v2 19/26] PCI: dwc: Add const qualifier to struct dw_pcie_ep_ops
+Date:   Mon, 25 Mar 2019 14:04:54 +0530
+Message-ID: <20190325083501.8088-20-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325083501.8088-1-kishon@ti.com>
 References: <20190325083501.8088-1-kishon@ti.com>
@@ -73,58 +73,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-commit beb4641a787df79a ("PCI: dwc: Add MSI-X callbacks handler") while
-adding MSI-X callback handler, introduced dw_pcie_ep_find_capability and
-__dw_pcie_ep_find_next_cap for finding the MSI and MSIX capability.
+Add const qualifier to struct dw_pcie_ep_ops member of
+struct dw_pcie_ep.
 
-However if MSI or MSIX capability is the last capability (i.e there are
-no additional items in the capabilities list and the Next Capability
-Pointer is set to '0'), __dw_pcie_ep_find_next_cap will return '0'
-even though MSI or MSIX capability may be present. This is because of
-incorrect ordering of "next_cap_ptr" check. Fix it here.
-
-Fixes: beb4641a787df79a142 ("PCI: dwc: Add MSI-X callbacks handler")
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/controller/dwc/pci-dra7xx.c           | 2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c         | 2 +-
+ drivers/pci/controller/dwc/pcie-designware-plat.c | 2 +-
+ drivers/pci/controller/dwc/pcie-designware.h      | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index dc6a4bbd3ace..74477ad7467f 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -46,16 +46,19 @@ static u8 __dw_pcie_ep_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
- 	u8 cap_id, next_cap_ptr;
- 	u16 reg;
- 
-+	if (!cap_ptr)
-+		return 0;
-+
- 	reg = dw_pcie_readw_dbi(pci, cap_ptr);
--	next_cap_ptr = (reg & 0xff00) >> 8;
- 	cap_id = (reg & 0x00ff);
- 
--	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
-+	if (cap_id > PCI_CAP_ID_MAX)
- 		return 0;
- 
- 	if (cap_id == cap)
- 		return cap_ptr;
- 
-+	next_cap_ptr = (reg & 0xff00) >> 8;
- 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index ae84a69ae63a..b287dbf6914c 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -406,7 +406,7 @@ dra7xx_pcie_get_features(struct dw_pcie_ep *ep)
+ 	return &dra7xx_pcie_epc_features;
  }
  
-@@ -67,9 +70,6 @@ static u8 dw_pcie_ep_find_capability(struct dw_pcie *pci, u8 cap)
- 	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
- 	next_cap_ptr = (reg & 0x00ff);
- 
--	if (!next_cap_ptr)
--		return 0;
--
- 	return __dw_pcie_ep_find_next_cap(pci, next_cap_ptr, cap);
+-static struct dw_pcie_ep_ops pcie_ep_ops = {
++static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.ep_init = dra7xx_pcie_ep_init,
+ 	.raise_irq = dra7xx_pcie_raise_irq,
+ 	.get_features = dra7xx_pcie_get_features,
+diff --git a/drivers/pci/controller/dwc/pcie-artpec6.c b/drivers/pci/controller/dwc/pcie-artpec6.c
+index dba83abfe764..d00252bd8fae 100644
+--- a/drivers/pci/controller/dwc/pcie-artpec6.c
++++ b/drivers/pci/controller/dwc/pcie-artpec6.c
+@@ -444,7 +444,7 @@ static int artpec6_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	return 0;
  }
  
+-static struct dw_pcie_ep_ops pcie_ep_ops = {
++static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.ep_init = artpec6_pcie_ep_init,
+ 	.raise_irq = artpec6_pcie_raise_irq,
+ };
+diff --git a/drivers/pci/controller/dwc/pcie-designware-plat.c b/drivers/pci/controller/dwc/pcie-designware-plat.c
+index 932dbd0b34b6..b58fdcbc664b 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-plat.c
++++ b/drivers/pci/controller/dwc/pcie-designware-plat.c
+@@ -106,7 +106,7 @@ dw_plat_pcie_get_features(struct dw_pcie_ep *ep)
+ 	return &dw_plat_pcie_epc_features;
+ }
+ 
+-static struct dw_pcie_ep_ops pcie_ep_ops = {
++static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ 	.ep_init = dw_plat_pcie_ep_init,
+ 	.raise_irq = dw_plat_pcie_ep_raise_irq,
+ 	.get_features = dw_plat_pcie_get_features,
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 90a5b1215344..e36941ff7cf6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -196,7 +196,7 @@ struct dw_pcie_ep_ops {
+ 
+ struct dw_pcie_ep {
+ 	struct pci_epc		*epc;
+-	struct dw_pcie_ep_ops	*ops;
++	const struct dw_pcie_ep_ops *ops;
+ 	phys_addr_t		phys_base;
+ 	size_t			addr_size;
+ 	size_t			page_size;
 -- 
 2.17.1
 
