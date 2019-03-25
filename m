@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A42C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF9FC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6708C2087E
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29E572085A
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Ke9kO7Mr"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="CL/HInyt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730327AbfCYIhZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 04:37:25 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:36682 "EHLO
+        id S1730152AbfCYIiM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 04:38:12 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:36852 "EHLO
         fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730323AbfCYIhY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:24 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8bBjV039834;
-        Mon, 25 Mar 2019 03:37:11 -0500
+        with ESMTP id S1730012AbfCYIiL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:38:11 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8bbgt040030;
+        Mon, 25 Mar 2019 03:37:37 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553503031;
-        bh=chMDM1S73N5348Ke4wiey3wF6sgdC3UveRlW6BwAUuY=;
+        s=ti-com-17Q1; t=1553503057;
+        bh=q3j+eLddVjEWh3KTfPJhB6vOyzvGXKalq1Td4n5w/YE=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=Ke9kO7MrjIUhvbMmukZbWdEHyvEo7M3LIS+G7eg0BaR0QBDlF0PonhhK8+xZClZzx
-         24oWqUPuyTU4GwFQllys/7ZWLRmmfjwTmoynfxyliQkvqKiUWGP93cIh5m2SPgx5ZK
-         vdw9ae3vGe/D3k7lFm+f7135VhOXn+bG4eWplxCQ=
-Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8bBNN089549
+        b=CL/HInytVykafhYka/XXTXKvqidSBo80CmlUPc1DhcekQ3aSFn6ws/7rSMB55fDmS
+         ic7eK3xzSrs9gZzt+agu33/2NOHHqjDjwKDQpgYOTVtZ0KyKJe5J4UB26Q7M+yJb0/
+         syEQ/neq/6F6lr1BK3EXPKYjE97BbWuxtxOtb0Aw=
+Received: from DFLE107.ent.ti.com (dfle107.ent.ti.com [10.64.6.28])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8bbY2093041
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 03:37:11 -0500
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 25 Mar 2019 03:37:37 -0500
+Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE107.ent.ti.com
+ (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 03:37:11 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_0,
+ Mar 2019 03:37:36 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 03:37:11 -0500
+ Mon, 25 Mar 2019 03:37:36 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFx006534;
-        Mon, 25 Mar 2019 03:37:07 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsG5006534;
+        Mon, 25 Mar 2019 03:37:32 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -59,9 +59,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 17/26] PCI: keystone: Add support to set the max link speed from DT
-Date:   Mon, 25 Mar 2019 14:04:52 +0530
-Message-ID: <20190325083501.8088-18-kishon@ti.com>
+Subject: [PATCH v2 23/26] PCI: designware-ep: Configure RESBAR to advertise the smallest size
+Date:   Mon, 25 Mar 2019 14:04:58 +0530
+Message-ID: <20190325083501.8088-24-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325083501.8088-1-kishon@ti.com>
 References: <20190325083501.8088-1-kishon@ti.com>
@@ -73,93 +73,74 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe in TI's AM654 devices is by default configured to work in GEN3 mode.
-However PCIe doesn't work reliably in GEN3 mode because of SERDES
-configuration.
-
-Add support to set the link speed to GEN1, GEN2 or GEN3 based on
-"max-link-speed" dt property with GEN2 as the default speed if
-"max-link-speed" is absent.
+Configure RESBAR capability to advertise the smallest size (1MB) for
+couple of reasons. A) Host side resource allocation of BAR fails for
+larger sizes. B) Endpoint function driver does not allocate memory
+for all supported sizes in RESBAR capability.
+If and when there is a usecase required to add more flexibility using
+RESBAR, this can be revisited.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 35 +++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ .../pci/controller/dwc/pcie-designware-ep.c   | 34 +++++++++++++++++++
+ 1 file changed, 34 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index e4a816f53b8e..312fd0c49bbb 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -28,6 +28,7 @@
- #include <linux/resource.h>
- #include <linux/signal.h>
- 
-+#include "../../pci.h"
- #include "pcie-designware.h"
- 
- #define PCIE_VENDORID_MASK	0xffff
-@@ -89,6 +90,8 @@
- #define LEG_EP				0x1
- #define RC				0x2
- 
-+#define EXP_CAP_ID_OFFSET		0x70
-+
- #define KS_PCIE_SYSCLOCKOUTEN		BIT(0)
- 
- #define AM654_PCIE_DEV_TYPE_MASK	0x3
-@@ -971,6 +974,31 @@ static int ks_pcie_am654_set_mode(struct device *dev)
- 	return 0;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 74477ad7467f..0c208b9bda43 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -504,10 +504,32 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ 	pci_epc_mem_exit(epc);
  }
  
-+static void ks_pcie_set_link_speed(struct dw_pcie *pci, int link_speed)
++static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
 +{
-+	u32 val;
++	u32 header;
++	int pos = PCI_CFG_SPACE_SIZE;
 +
-+	dw_pcie_dbi_ro_wr_en(pci);
++	while (pos) {
++		header = dw_pcie_readl_dbi(pci, pos);
++		if (PCI_EXT_CAP_ID(header) == cap)
++			return pos;
 +
-+	val = dw_pcie_readl_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCAP);
-+	if ((val & PCI_EXP_LNKCAP_SLS) != link_speed) {
-+		val &= ~((u32)PCI_EXP_LNKCAP_SLS);
-+		val |= link_speed;
-+		dw_pcie_writel_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCAP,
-+				   val);
++		pos = PCI_EXT_CAP_NEXT(header);
++		if (!pos)
++			break;
 +	}
 +
-+	val = dw_pcie_readl_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCTL2);
-+	if ((val & PCI_EXP_LNKCAP_SLS) != link_speed) {
-+		val &= ~((u32)PCI_EXP_LNKCAP_SLS);
-+		val |= link_speed;
-+		dw_pcie_writel_dbi(pci, EXP_CAP_ID_OFFSET + PCI_EXP_LNKCTL2,
-+				   val);
-+	}
-+
-+	dw_pcie_dbi_ro_wr_dis(pci);
++	return 0;
 +}
 +
- static const struct ks_pcie_of_data ks_pcie_rc_of_data = {
- 	.host_ops = &ks_pcie_host_ops,
- 	.version = 0x365A,
-@@ -1011,6 +1039,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	void __iomem *base;
- 	u32 num_viewport;
- 	struct phy **phy;
-+	int link_speed;
- 	u32 num_lanes;
- 	char name[10];
+ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ {
++	int i;
  	int ret;
-@@ -1165,6 +1194,12 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 		gpiod_set_value_cansleep(gpiod, 1);
- 	}
++	u32 reg;
+ 	void *addr;
++	unsigned int nbars;
++	unsigned int offset;
+ 	struct pci_epc *epc;
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 	struct device *dev = pci->dev;
+@@ -591,6 +613,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
  
-+	link_speed = of_pci_get_max_link_speed(np);
-+	if (link_speed < 0)
-+		link_speed = 2;
+ 	ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
+ 
++	offset = dw_pcie_ep_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
++	if (offset) {
++		reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
++		nbars = (reg & PCI_REBAR_CTRL_NBAR_MASK) >>
++			PCI_REBAR_CTRL_NBAR_SHIFT;
 +
-+	ks_pcie_set_link_speed(pci, link_speed);
++		dw_pcie_dbi_ro_wr_en(pci);
++		for (i = 0; i < nbars; i++, offset += PCI_REBAR_CTRL)
++			dw_pcie_writel_dbi(pci, offset + PCI_REBAR_CAP, 0x0);
++		dw_pcie_dbi_ro_wr_dis(pci);
++	}
 +
- 	pci->pp.ops = host_ops;
- 	ret = ks_pcie_add_pcie_port(ks_pcie, pdev);
- 	if (ret < 0)
+ 	dw_pcie_setup(pci);
+ 
+ 	return 0;
 -- 
 2.17.1
 
