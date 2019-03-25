@@ -2,110 +2,135 @@ Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA8F2C43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 12:08:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EF5AC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 12:11:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 949BE20863
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 12:08:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47B4020863
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 12:11:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730899AbfCYMIg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 08:08:36 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46304 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729386AbfCYMIf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Mar 2019 08:08:35 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1144980D;
-        Mon, 25 Mar 2019 05:08:35 -0700 (PDT)
-Received: from [10.1.196.69] (e112269-lin.cambridge.arm.com [10.1.196.69])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9B2FD3F575;
-        Mon, 25 Mar 2019 05:08:33 -0700 (PDT)
-Subject: Re: [PATCH v2] pci: pcie-xilinx: fix a missing-check bug for
- __get_free_pages
-To:     Aditya Pakki <pakki001@umn.edu>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, kjlu@umn.edu,
-        Michal Simek <michal.simek@xilinx.com>,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org
-References: <20190323210423.8881-1-pakki001@umn.edu>
-From:   Steven Price <steven.price@arm.com>
-Message-ID: <71b9d48b-c921-1d5a-782f-04a331c1a694@arm.com>
-Date:   Mon, 25 Mar 2019 12:08:31 +0000
+        id S1731010AbfCYMLR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 08:11:17 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:52140 "EHLO ns.iliad.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730998AbfCYMLR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Mar 2019 08:11:17 -0400
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id EF0E2207E5;
+        Mon, 25 Mar 2019 13:11:14 +0100 (CET)
+Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id D3ACD1FF14;
+        Mon, 25 Mar 2019 13:11:14 +0100 (CET)
+Subject: Re: [PATCH v4] PCI: qcom: Use default config space read function
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+To:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Jeffrey Hugo <jhugo@codeaurora.org>
+References: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
+ <65321fe3-ca29-c454-63ae-98a46c2e5158@mm-sol.com>
+ <1205cbfb-ac06-63a5-9401-75d4e68b15b5@free.fr>
+ <38ad143b-3b07-4d19-8ccd-ca39fb51e53d@free.fr>
+ <7d3d788a-d6a3-a70b-adab-6c65771cacc4@free.fr>
+ <3c76613e-e60d-94b8-dd6f-b8f4e1928263@linaro.org>
+ <2f901228-52db-7661-8257-ca8fd2ff2a46@free.fr>
+ <29664b43-535c-c4b1-a93d-18f49687f929@linaro.org>
+ <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
+ <9c5a7620-e9ed-82d6-0708-34fe33e39030@linaro.org>
+ <29d33e81-fe8d-7fd9-843d-cc53ea6c9586@free.fr>
+ <a53911a5-198a-5073-59cf-a61ba067bfd8@free.fr>
+ <eb1d808e-00aa-5411-be03-2a1a8c8d655a@mm-sol.com>
+ <8cd24928-54d0-c320-b53f-08332d434477@free.fr>
+Message-ID: <f142da4d-303a-89f3-ba5a-b6800d613e15@free.fr>
+Date:   Mon, 25 Mar 2019 13:11:14 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.5.1
 MIME-Version: 1.0
-In-Reply-To: <20190323210423.8881-1-pakki001@umn.edu>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-GB
+In-Reply-To: <8cd24928-54d0-c320-b53f-08332d434477@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Mon Mar 25 13:11:15 2019 +0100 (CET)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 23/03/2019 21:04, Aditya Pakki wrote:
-> In case __get_free_pages fail, the fix returns error upstream
-> to avoid NULL pointer dereference.
-> 
-> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+Stanimir,
 
-Reviewed-by: Steven Price <steven.price@arm.com>
+Is v4 good enough for Bjorn to pick up?
 
+Regards.
+
+On 18/03/2019 18:14, Marc Gonzalez wrote:
+
+> We don't need to fudge the device class in qcom_pcie_rd_own_conf()
+> because dw_pcie_setup_rc() already does the right thing:
 > 
-> ---
-> v1: Return error upstream as suggested by Steven
-> ---
->  drivers/pci/controller/pcie-xilinx.c | 11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
+> 	/* Program correct class for RC */
+> 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
 > 
-> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-> index 9bd1a35cd5d8..91d8945bfb0c 100644
-> --- a/drivers/pci/controller/pcie-xilinx.c
-> +++ b/drivers/pci/controller/pcie-xilinx.c
-> @@ -335,15 +335,19 @@ static const struct irq_domain_ops msi_domain_ops = {
->  /**
->   * xilinx_pcie_enable_msi - Enable MSI support
->   * @port: PCIe port information
-> + * Return: 0 on success, negative error on failure
->   */
-> -static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
-> +static int xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
->  {
->  	phys_addr_t msg_addr;
->  
->  	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
-> +	if (!port->msi_pages)
-> +		return -ENOMEM;
->  	msg_addr = virt_to_phys((void *)port->msi_pages);
->  	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
->  	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
-> +	return 0;
+> However, the above has no effect on 8064, thus a fixup is required.
+> 
+> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+> Tested-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> ---
+> Changes from v3 to v4: Define and use DEV_ID_8064 (not in include/linux/pci_ids.h because not shared)
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 25 ++++++++-----------------
+>  1 file changed, 8 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index d185ea5fe996..712a83354f9d 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -1129,25 +1129,8 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
+>  	return ret;
 >  }
 >  
->  /* INTx Functions */
-> @@ -498,6 +502,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
->  	struct device *dev = port->dev;
->  	struct device_node *node = dev->of_node;
->  	struct device_node *pcie_intc_node;
-> +	int ret;
+> -static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+> -				 u32 *val)
+> -{
+> -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> -
+> -	/* the device class is not reported correctly from the register */
+> -	if (where == PCI_CLASS_REVISION && size == 4) {
+> -		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
+> -		*val &= 0xff;	/* keep revision id */
+> -		*val |= PCI_CLASS_BRIDGE_PCI << 16;
+> -		return PCIBIOS_SUCCESSFUL;
+> -	}
+> -
+> -	return dw_pcie_read(pci->dbi_base + where, size, val);
+> -}
+> -
+>  static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
+>  	.host_init = qcom_pcie_host_init,
+> -	.rd_own_conf = qcom_pcie_rd_own_conf,
+>  };
 >  
->  	/* Setup INTx */
->  	pcie_intc_node = of_get_next_child(node, NULL);
-> @@ -526,7 +531,9 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
->  			return -ENODEV;
->  		}
+>  /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
+> @@ -1309,6 +1292,14 @@ static const struct of_device_id qcom_pcie_match[] = {
+>  	{ }
+>  };
 >  
-> -		xilinx_pcie_enable_msi(port);
-> +		ret = xilinx_pcie_enable_msi(port);
-> +		if (ret)
-> +			return ret;
->  	}
->  
->  	return 0;
-> 
-
+> +#define DEV_ID_8064 0x0101
+> +
+> +static void qcom_fixup_class(struct pci_dev *dev)
+> +{
+> +	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, DEV_ID_8064, qcom_fixup_class);
+> +
+>  static struct platform_driver qcom_pcie_driver = {
+>  	.probe = qcom_pcie_probe,
+>  	.driver = {
