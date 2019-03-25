@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC439C4360F
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AF5C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:42:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEA6720880
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:42:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3A9E20879
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:42:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="tvDd6/Wu"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="f3DsT/1l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730456AbfCYJmU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 05:42:20 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:37404 "EHLO
+        id S1730416AbfCYJmR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 05:42:17 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:37400 "EHLO
         lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730399AbfCYJmT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 05:42:19 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P9g25h012616;
-        Mon, 25 Mar 2019 04:42:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553506923;
-        bh=ihkyMdfsHkHD9vI9gQR+6re/ZkoL2kW9Ay/31C8nCOI=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=tvDd6/WuYmRV/N4/iKEiqyLVnhJqE6JzDh4TPm/S8Xvsd+mSrySJJHW9n2PECusWD
-         X+hEmoWlKvfN4nmLU4EysWMFH3MV35vxN4mfkfaSoAGl7Eo/pKaNLglgabOgQBjsnT
-         HkIDg8UlDTWk8vNtMVDp31XJ1/gtGB3hR27EoIcg=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P9g2qx052533
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 04:42:02 -0500
-Received: from DLEE110.ent.ti.com (157.170.170.21) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 04:42:02 -0500
-Received: from dflp32.itg.ti.com (10.64.6.15) by DLEE110.ent.ti.com
- (157.170.170.21) with Microsoft SMTP Server (version=TLS1_0,
- cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 04:42:02 -0500
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P9feaI028077;
+        with ESMTP id S1730399AbfCYJmR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 05:42:17 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P9fvuV012556;
         Mon, 25 Mar 2019 04:41:57 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1553506917;
+        bh=HfjjoKmsDgZT6jDC5T6H72l2yvWvnghjKzXKSseYIoU=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References;
+        b=f3DsT/1lr7cjO7CpXgVsetyb6Z1Uk3vtX+jlHTF8JCyt5KtMdZsRJoigCzC5UmBrK
+         Aa3vIVojViV3r4Z6gmznBMT7ZSQF0E8xCDcn8/FWIaXt4BC0lydmkaqUm9pbmBPdFi
+         cgx+Lz0KlPZ4GpdzQpVF16+7w6f7xhFHtS4jsuvA=
+Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P9fvNN013838
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 25 Mar 2019 04:41:57 -0500
+Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
+ Mar 2019 04:41:56 -0500
+Received: from dflp32.itg.ti.com (10.64.6.15) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_0,
+ cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
+ Mon, 25 Mar 2019 04:41:56 -0500
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by dflp32.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P9feaH028077;
+        Mon, 25 Mar 2019 04:41:51 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -62,9 +62,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-arm-kernel@axis.com>, Minghuan Lian <minghuan.Lian@nxp.com>,
         Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
         Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: [PATCH v3 03/26] dt-bindings: PCI: keystone: Add "reg-names" binding information
-Date:   Mon, 25 Mar 2019 15:09:24 +0530
-Message-ID: <20190325093947.32633-4-kishon@ti.com>
+Subject: [PATCH v3 02/26] PCI: keystone: Cleanup error_irq configuration
+Date:   Mon, 25 Mar 2019 15:09:23 +0530
+Message-ID: <20190325093947.32633-3-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325093947.32633-1-kishon@ti.com>
 References: <20190325093947.32633-1-kishon@ti.com>
@@ -76,36 +76,112 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add "reg-names" binding information in order for device tree node
-to be populated with the correct register strings. This will break
-old dt compatibility. However Keystone PCI has never worked
-in upstream kernel due to lack of SERDES support. Before SERDES
-support is added, cleanup the Keystone PCI dt-bindngs. This new
-binding will also be used by PCI in AM654 platform.
+pci-keystone driver uses irq_of_parse_and_map to get irq number of
+error_irq. Use platform_get_irq instead and move platform_get_irq()
+and request_irq() of error_irq from ks_pcie_add_pcie_port to ks_pcie_probe
+since error_irq is common to both RC mode and EP mode.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/pci-keystone.txt | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pci-keystone.c | 43 +++++++++--------------
+ 1 file changed, 17 insertions(+), 26 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index 2030ee0dc4f9..3a551687cfa2 100644
---- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -12,8 +12,10 @@ described here as well as properties that are not applicable.
- Required Properties:-
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 07f55b355d75..e50f8773e768 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -98,8 +98,6 @@ struct keystone_pcie {
+ 	struct irq_domain	*legacy_irq_domain;
+ 	struct device_node	*np;
  
- compatibility: "ti,keystone-pcie"
--reg:	index 1 is the base address and length of DW application registers.
--	index 2 is the base address and length of PCI device ID register.
-+reg: Three register ranges as listed in the reg-names property
-+reg-names: "dbics" for the DesignWare PCIe registers, "app" for the
-+	   TI specific application registers, "config" for the
-+	   configuration space address
+-	int error_irq;
+-
+ 	/* Application register space */
+ 	void __iomem		*va_app_base;	/* DT 1st resource */
+ 	struct resource		app;
+@@ -743,12 +741,6 @@ static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
+ 	return ret;
+ }
  
- pcie_msi_intc : Interrupt controller device node for MSI IRQ chip
- 	interrupt-cells: should be set to 1
+-static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
+-{
+-	if (ks_pcie->error_irq > 0)
+-		ks_pcie_enable_error_irq(ks_pcie);
+-}
+-
+ /*
+  * When a PCI device does not exist during config cycles, keystone host gets a
+  * bus error instead of returning 0xffffffff. This handler always returns 0
+@@ -810,7 +802,6 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
+ 
+ 	ks_pcie_stop_link(pci);
+ 	ks_pcie_setup_rc_app_regs(ks_pcie);
+-	ks_pcie_setup_interrupts(ks_pcie);
+ 	writew(PCI_IO_RANGE_TYPE_32 | (PCI_IO_RANGE_TYPE_32 << 8),
+ 			pci->dbi_base + PCI_IO_BASE);
+ 
+@@ -854,23 +845,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 	struct device *dev = &pdev->dev;
+ 	int ret;
+ 
+-	/*
+-	 * Index 0 is the platform interrupt for error interrupt
+-	 * from RC.  This is optional.
+-	 */
+-	ks_pcie->error_irq = irq_of_parse_and_map(ks_pcie->np, 0);
+-	if (ks_pcie->error_irq <= 0)
+-		dev_info(dev, "no error IRQ defined\n");
+-	else {
+-		ret = request_irq(ks_pcie->error_irq, ks_pcie_err_irq_handler,
+-				  IRQF_SHARED, "pcie-error-irq", ks_pcie);
+-		if (ret < 0) {
+-			dev_err(dev, "failed to request error IRQ %d\n",
+-				ks_pcie->error_irq);
+-			return ret;
+-		}
+-	}
+-
+ 	pp->ops = &ks_pcie_host_ops;
+ 	ret = ks_pcie_dw_host_init(ks_pcie);
+ 	if (ret) {
+@@ -946,6 +920,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	u32 num_lanes;
+ 	char name[10];
+ 	int ret;
++	int irq;
+ 	int i;
+ 
+ 	ks_pcie = devm_kzalloc(dev, sizeof(*ks_pcie), GFP_KERNEL);
+@@ -965,6 +940,20 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0) {
++		dev_err(dev, "missing IRQ resource: %d\n", irq);
++		return irq;
++	}
++
++	ret = request_irq(irq, ks_pcie_err_irq_handler, IRQF_SHARED,
++			  "ks-pcie-error-irq", ks_pcie);
++	if (ret < 0) {
++		dev_err(dev, "failed to request error IRQ %d\n",
++			irq);
++		return ret;
++	}
++
+ 	ret = of_property_read_u32(np, "num-lanes", &num_lanes);
+ 	if (ret)
+ 		num_lanes = 1;
+@@ -1020,6 +1009,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		goto err_get_sync;
+ 
++	ks_pcie_enable_error_irq(ks_pcie);
++
+ 	return 0;
+ 
+ err_get_sync:
 -- 
 2.17.1
 
