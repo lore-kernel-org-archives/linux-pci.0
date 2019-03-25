@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 553D3C4360F
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91806C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 240992087E
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57CD22133F
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="gJQ+yQEX"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="bvvOX3aP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730312AbfCYIhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 04:37:22 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:33998 "EHLO
+        id S1730392AbfCYIho (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 04:37:44 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:34064 "EHLO
         lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730289AbfCYIhW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:22 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8ajCH030863;
-        Mon, 25 Mar 2019 03:36:45 -0500
+        with ESMTP id S1730384AbfCYIhm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:42 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8b7pY031019;
+        Mon, 25 Mar 2019 03:37:07 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553503005;
-        bh=Z5FsYHz2+eCaWuP/Fr5+/R+9oCvd7mzmcItqNVxbMQU=;
+        s=ti-com-17Q1; t=1553503027;
+        bh=dFVQ4pidiC5cYCJgE2pe5Ra71CSY84AMLd39Zm5xel0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=gJQ+yQEXu9b9udaGcXG/OL3a15kiZaOfNPDu/VsuhsuN6DIQKF95A4ZvkeBHbwcj4
-         CMMO1rzAXxQv3TpHNKOyoNXCjEWuAyJRgfqKl8B4YuHmXjwt9PixjFrFCgT1pWnXZl
-         0QUHwk+cx+rnM/yv9NWELUBCtGYJ7jt6dY1W/6mU=
-Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8ajHU088947
+        b=bvvOX3aPuVG2CgTj2NbwKfTkRdjvgSBQ6CFdQo8emOS3EcdAGZ/ZIFDU/gbvGXzTY
+         CwClzWFSqxrwEGPG6D07Z78bRYnpcG6+zPpJZIk2MvYUpc2bFqBoKk6/9TvKc04fgJ
+         BGEROm5xFWM04gDwSGxhs2z9VfJ6N9fGLahK/bVM=
+Received: from DFLE109.ent.ti.com (dfle109.ent.ti.com [10.64.6.30])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8b7lm092499
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 03:36:45 -0500
-Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 25 Mar 2019 03:37:07 -0500
+Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 03:36:45 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_0,
+ Mar 2019 03:37:06 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE101.ent.ti.com
+ (10.64.6.22) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 03:36:45 -0500
+ Mon, 25 Mar 2019 03:37:06 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFr006534;
-        Mon, 25 Mar 2019 03:36:41 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFw006534;
+        Mon, 25 Mar 2019 03:37:02 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -58,10 +58,11 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 11/26] PCI: dwc: Fix ATU identification for designware version >= 4.80
-Date:   Mon, 25 Mar 2019 14:04:46 +0530
-Message-ID: <20190325083501.8088-12-kishon@ti.com>
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-arm-kernel@axis.com>, Sekhar Nori <nsekhar@ti.com>
+Subject: [PATCH v2 16/26] PCI: OF: Allow of_pci_get_max_link_speed() to be used by PCI Endpoint drivers
+Date:   Mon, 25 Mar 2019 14:04:51 +0530
+Message-ID: <20190325083501.8088-17-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325083501.8088-1-kishon@ti.com>
 References: <20190325083501.8088-1-kishon@ti.com>
@@ -73,62 +74,99 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Synopsys designware version >= 4.80 uses a separate register space
-for programming ATU. The current code identifies if there exists a
-separate register space by accessing the register address of ATUs
-in designware version < 4.80. Accessing this address results in
-abort in the case of K2G.
-
-Fix it here by adding "version" member to struct dw_pcie. This should
-be set by platform specific drivers and designware core will use it
-to identify if the platform has a separate ATU space. For platforms
-which hasn't populated the version member, the old method of
-identification will still be used.
+of_pci_get_max_link_speed() is built only if CONFIG_PCI is enabled.
+Make of_pci_get_max_link_speed() to be also used by PCI Endpoint
+controllers with just CONFIG_PCI_ENDPOINT enabled.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 14 ++++++++------
- drivers/pci/controller/dwc/pcie-designware.h |  1 +
- 2 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/pci/Makefile |  2 +-
+ drivers/pci/of.c     | 44 +++++++++++++++++++++++---------------------
+ 2 files changed, 24 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index a14ca00f72aa..4e2f7946da89 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -358,13 +358,15 @@ void dw_pcie_setup(struct dw_pcie *pci)
- 	struct device *dev = pci->dev;
- 	struct device_node *np = dev->of_node;
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 657d642fcc67..28cdd8c0213a 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -10,10 +10,10 @@ obj-$(CONFIG_PCI)		+= access.o bus.o probe.o host-bridge.o \
+ ifdef CONFIG_PCI
+ obj-$(CONFIG_PROC_FS)		+= proc.o
+ obj-$(CONFIG_SYSFS)		+= slot.o
+-obj-$(CONFIG_OF)		+= of.o
+ obj-$(CONFIG_ACPI)		+= pci-acpi.o
+ endif
  
--	/* Get iATU unroll support */
--	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
--	dev_dbg(pci->dev, "iATU unroll: %s\n",
--		pci->iatu_unroll_enabled ? "enabled" : "disabled");
-+	if (pci->version >= 0x480A || (!pci->version &&
-+				       dw_pcie_iatu_unroll_enabled(pci))) {
-+		pci->iatu_unroll_enabled = true;
-+		if (!pci->atu_base)
-+			pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
-+	}
-+	dev_dbg(pci->dev, "iATU unroll: %s\n", pci->iatu_unroll_enabled ?
-+		"enabled" : "disabled");
++obj-$(CONFIG_OF)		+= of.o
+ obj-$(CONFIG_PCI_QUIRKS)	+= quirks.o
+ obj-$(CONFIG_PCIEPORTBUS)	+= pcie/
+ obj-$(CONFIG_HOTPLUG_PCI)	+= hotplug/
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index 3d32da15c215..8095933f8452 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -15,6 +15,7 @@
+ #include <linux/of_pci.h>
+ #include "pci.h"
  
--	if (pci->iatu_unroll_enabled && !pci->atu_base)
--		pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
++#ifdef CONFIG_PCI
+ void pci_set_of_node(struct pci_dev *dev)
+ {
+ 	if (!dev->bus->dev.of_node)
+@@ -196,27 +197,6 @@ int of_get_pci_domain_nr(struct device_node *node)
+ }
+ EXPORT_SYMBOL_GPL(of_get_pci_domain_nr);
  
- 	ret = of_property_read_u32(np, "num-lanes", &lanes);
- 	if (ret)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index ca3a3190a6f5..90a5b1215344 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -234,6 +234,7 @@ struct dw_pcie {
- 	struct pcie_port	pp;
- 	struct dw_pcie_ep	ep;
- 	const struct dw_pcie_ops *ops;
-+	unsigned int		version;
- };
+-/**
+- * This function will try to find the limitation of link speed by finding
+- * a property called "max-link-speed" of the given device node.
+- *
+- * @node: device tree node with the max link speed information
+- *
+- * Returns the associated max link speed from DT, or a negative value if the
+- * required property is not found or is invalid.
+- */
+-int of_pci_get_max_link_speed(struct device_node *node)
+-{
+-	u32 max_link_speed;
+-
+-	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
+-	    max_link_speed > 4)
+-		return -EINVAL;
+-
+-	return max_link_speed;
+-}
+-EXPORT_SYMBOL_GPL(of_pci_get_max_link_speed);
+-
+ /**
+  * of_pci_check_probe_only - Setup probe only mode if linux,pci-probe-only
+  *                           is present and valid
+@@ -537,3 +517,25 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
+ 	return err;
+ }
  
- #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
++#endif /* CONFIG_PCI */
++
++/**
++ * This function will try to find the limitation of link speed by finding
++ * a property called "max-link-speed" of the given device node.
++ *
++ * @node: device tree node with the max link speed information
++ *
++ * Returns the associated max link speed from DT, or a negative value if the
++ * required property is not found or is invalid.
++ */
++int of_pci_get_max_link_speed(struct device_node *node)
++{
++	u32 max_link_speed;
++
++	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
++	    max_link_speed > 4)
++		return -EINVAL;
++
++	return max_link_speed;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_max_link_speed);
 -- 
 2.17.1
 
