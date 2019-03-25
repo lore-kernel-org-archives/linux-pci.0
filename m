@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B47C10F03
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 553D3C4360F
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97BAE2085A
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 240992087E
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:37:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="IoaIWNfL"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="gJQ+yQEX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729920AbfCYIhR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 04:37:17 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:33980 "EHLO
+        id S1730312AbfCYIhW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 04:37:22 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:33998 "EHLO
         lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730289AbfCYIhP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:15 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8b3qD030975;
-        Mon, 25 Mar 2019 03:37:03 -0500
+        with ESMTP id S1730289AbfCYIhW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:22 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8ajCH030863;
+        Mon, 25 Mar 2019 03:36:45 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553503023;
-        bh=9+2eOM3oSY0oLj93leiipPk6vycQ1SmzvQwVGhiyl5g=;
+        s=ti-com-17Q1; t=1553503005;
+        bh=Z5FsYHz2+eCaWuP/Fr5+/R+9oCvd7mzmcItqNVxbMQU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=IoaIWNfLZqrC1CFmioiRHCzpk/z8u0zdxswV61Nh96AOAACivPQIpx8xiA7X6nTDF
-         qRQct3PEzSXvTQEeG0iYrSfFZ8Nn0YEBY7rAVh1Z04udUbS5Hrtt/L1OSOPy5IsTBR
-         20pVXY5dnOVnkdkNNAWHj8bxAvRUdQttJU3cic+E=
-Received: from DFLE109.ent.ti.com (dfle109.ent.ti.com [10.64.6.30])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8b2I7053481
+        b=gJQ+yQEXu9b9udaGcXG/OL3a15kiZaOfNPDu/VsuhsuN6DIQKF95A4ZvkeBHbwcj4
+         CMMO1rzAXxQv3TpHNKOyoNXCjEWuAyJRgfqKl8B4YuHmXjwt9PixjFrFCgT1pWnXZl
+         0QUHwk+cx+rnM/yv9NWELUBCtGYJ7jt6dY1W/6mU=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8ajHU088947
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 03:37:03 -0500
-Received: from DFLE111.ent.ti.com (10.64.6.32) by DFLE109.ent.ti.com
- (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 25 Mar 2019 03:36:45 -0500
+Received: from DFLE115.ent.ti.com (10.64.6.36) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 03:37:02 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE111.ent.ti.com
- (10.64.6.32) with Microsoft SMTP Server (version=TLS1_0,
+ Mar 2019 03:36:45 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE115.ent.ti.com
+ (10.64.6.36) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 03:37:02 -0500
+ Mon, 25 Mar 2019 03:36:45 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFv006534;
-        Mon, 25 Mar 2019 03:36:58 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFr006534;
+        Mon, 25 Mar 2019 03:36:41 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -59,9 +59,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 15/26] PCI: keystone: Invoke phy_reset API before enabling PHY
-Date:   Mon, 25 Mar 2019 14:04:50 +0530
-Message-ID: <20190325083501.8088-16-kishon@ti.com>
+Subject: [PATCH v2 11/26] PCI: dwc: Fix ATU identification for designware version >= 4.80
+Date:   Mon, 25 Mar 2019 14:04:46 +0530
+Message-ID: <20190325083501.8088-12-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325083501.8088-1-kishon@ti.com>
 References: <20190325083501.8088-1-kishon@ti.com>
@@ -73,32 +73,62 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SERDES connected to the PCIe controller in AM654 requires
-power on reset enable (POR_EN) to be set in the SERDES. The
-SERDES driver sets POR_EN in the reset ops and it has to be
-invoked before init or enable ops. In order for SERDES driver
-to set POR_EN, invoke phy_reset API in pci-keystone driver.
+Synopsys designware version >= 4.80 uses a separate register space
+for programming ATU. The current code identifies if there exists a
+separate register space by accessing the register address of ATUs
+in designware version < 4.80. Accessing this address results in
+abort in the case of K2G.
+
+Fix it here by adding "version" member to struct dw_pcie. This should
+be set by platform specific drivers and designware core will use it
+to identify if the platform has a separate ATU space. For platforms
+which hasn't populated the version member, the old method of
+identification will still be used.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware.c | 14 ++++++++------
+ drivers/pci/controller/dwc/pcie-designware.h |  1 +
+ 2 files changed, 9 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index a6a482bd648f..e4a816f53b8e 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -897,6 +897,10 @@ static int ks_pcie_enable_phy(struct keystone_pcie *ks_pcie)
- 	int num_lanes = ks_pcie->num_lanes;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index a14ca00f72aa..4e2f7946da89 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -358,13 +358,15 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	struct device *dev = pci->dev;
+ 	struct device_node *np = dev->of_node;
  
- 	for (i = 0; i < num_lanes; i++) {
-+		ret = phy_reset(ks_pcie->phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
-+
- 		ret = phy_init(ks_pcie->phy[i]);
- 		if (ret < 0)
- 			goto err_phy;
+-	/* Get iATU unroll support */
+-	pci->iatu_unroll_enabled = dw_pcie_iatu_unroll_enabled(pci);
+-	dev_dbg(pci->dev, "iATU unroll: %s\n",
+-		pci->iatu_unroll_enabled ? "enabled" : "disabled");
++	if (pci->version >= 0x480A || (!pci->version &&
++				       dw_pcie_iatu_unroll_enabled(pci))) {
++		pci->iatu_unroll_enabled = true;
++		if (!pci->atu_base)
++			pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
++	}
++	dev_dbg(pci->dev, "iATU unroll: %s\n", pci->iatu_unroll_enabled ?
++		"enabled" : "disabled");
+ 
+-	if (pci->iatu_unroll_enabled && !pci->atu_base)
+-		pci->atu_base = pci->dbi_base + DEFAULT_DBI_ATU_OFFSET;
+ 
+ 	ret = of_property_read_u32(np, "num-lanes", &lanes);
+ 	if (ret)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index ca3a3190a6f5..90a5b1215344 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -234,6 +234,7 @@ struct dw_pcie {
+ 	struct pcie_port	pp;
+ 	struct dw_pcie_ep	ep;
+ 	const struct dw_pcie_ops *ops;
++	unsigned int		version;
+ };
+ 
+ #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
 -- 
 2.17.1
 
