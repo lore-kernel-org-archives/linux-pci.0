@@ -2,135 +2,79 @@ Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACB8AC10F03
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 16:54:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA7F7C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 17:36:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8253E20863
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 16:54:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA4C221473
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 17:36:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553535416;
+	bh=Rg08QyK2vOPJcNoTgP9Jxsy+bxhC3JF1GS7obQA93kI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=JJfjWiIAxEYPdQiBg6H3hEIYIVJ8ELLsw2im4fe62JVlSg0JCsRuaYjozn3NMYQ2J
+	 pBFfV3UrYzdqjIVmgZjIxWX5xUCq5isu8W1NRluzKy3e7XSqn4JAXUz6+K8HnwMnqm
+	 eczz684KAhqxaCfLyvohq8ZBV5eJzwL2iTfL9ldQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725795AbfCYQys (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 12:54:48 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:51636 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725788AbfCYQys (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 25 Mar 2019 12:54:48 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1A81380D;
-        Mon, 25 Mar 2019 09:54:48 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D29193F575;
-        Mon, 25 Mar 2019 09:54:45 -0700 (PDT)
-Date:   Mon, 25 Mar 2019 16:54:39 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     marek.vasut@gmail.com
-Cc:     linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V2] PCI: rcar: Add the initialization of PCIe link in
- resume_noirq
-Message-ID: <20190325165439.GA19135@e107981-ln.cambridge.arm.com>
-References: <20190217132441.15139-1-marek.vasut@gmail.com>
+        id S1728991AbfCYRg4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 13:36:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34894 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726217AbfCYRgz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Mar 2019 13:36:55 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A67E4205C9;
+        Mon, 25 Mar 2019 17:36:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553535415;
+        bh=Rg08QyK2vOPJcNoTgP9Jxsy+bxhC3JF1GS7obQA93kI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Kqmcc/JxMJl1JvbDlPirFfgBNljY6znGfT6EFD3f5jSUfc8xCgeWOpKeKE1CHMQBJ
+         JDhlKhWNL998c4MELZHgnDcmakEtcJ/iv7DrDdu1GeEiIp+OWHWifkssppuexRjoff
+         o+PsZkdOrIDHH6kdFZMrE/7fayLGZDWkbh4JSt4A=
+Date:   Mon, 25 Mar 2019 12:36:47 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jonathan Chocron <jonnyc@amazon.com>
+Cc:     linux-pci@vger.kernel.org, lorenzo.pieralisi@arm.com,
+        linux-kernel@vger.kernel.org, vaerov@amazon.com, dwmw@amazon.co.uk,
+        benh@kernel.crashing.org, alisaidi@amazon.com, zeev@amazon.com,
+        ronenk@amazon.com, barakw@amazon.com,
+        Talel Shenhar <talel@amazon.com>
+Subject: Re: [PATCH] PCI: al: add pcie-al.c
+Message-ID: <20190325173646.GR251185@google.com>
+References: <1553512040-4453-1-git-send-email-jonnyc@amazon.com>
+ <20190325125832.GP251185@google.com>
+ <f2c79fae-d35c-a17f-8b5c-d2404ff067a0@amazon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190217132441.15139-1-marek.vasut@gmail.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <f2c79fae-d35c-a17f-8b5c-d2404ff067a0@amazon.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Feb 17, 2019 at 02:24:41PM +0100, marek.vasut@gmail.com wrote:
-> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> 
-> Reestablish the PCIe link very early in the resume process in case it
-> went down to prevent PCI accesses from hanging the bus. Such accesses
-> can happen early in the PCI resume process, in the resume_noirq, thus
-> the link must be reestablished in the resume_noirq callback of the
-> driver.
-> 
-> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
-> V2: - Use BIT() macro for (1 << n)
->     - Since polling in rcar_pcie_wait_for_dl() uses udelay(), do not
->       add extra changes to this function anymore
->     - Make resume_noirq return early and clean up parenthesis therein
-> ---
->  drivers/pci/controller/pcie-rcar.c | 20 ++++++++++++++++++++
->  1 file changed, 20 insertions(+)
+On Mon, Mar 25, 2019 at 05:56:35PM +0200, Jonathan Chocron wrote:
+> On 3/25/19 14:58, Bjorn Helgaas wrote:
 
-I applied it to pci/controller-fixes but the kbot barfed at it so we
-need to rework it.
+> > I think you're actually looking for a AMZN0001 device, not a PNP0C02
+> > device.  Your firmware might have a PNP0C02 _HID and AMZN0001 _CID, but
+> > that's not relevant here since you're only filtering by AMZN0001.
+> > 
+> Actually, the _HID is AMZN0001 and the _CID is PNP0C02, so that's why
+> I used PNP0C02 (to state that it is of this "type"). Please let me know if
+> you still think it should be changed, so I'll integrate it into v2.
 
-Thanks,
-Lorenzo
+I do still think it should be changed, because there's nothing in the
+code that refers to PNP0C02.  That _CID could be absent or could
+contain any other ID and it wouldn't make any difference to the
+driver.  But if there's no device with _HID or _CID of AMZN0001, the
+driver will fail.
 
-> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-> index c8febb009454..b8f8fb3bc640 100644
-> --- a/drivers/pci/controller/pcie-rcar.c
-> +++ b/drivers/pci/controller/pcie-rcar.c
-> @@ -46,6 +46,7 @@
->  
->  /* Transfer control */
->  #define PCIETCTLR		0x02000
-> +#define  DL_DOWN		BIT(3)
->  #define  CFINIT			1
->  #define PCIETSTR		0x02004
->  #define  DATA_LINK_ACTIVE	1
-> @@ -1130,6 +1131,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	pcie = pci_host_bridge_priv(bridge);
->  
->  	pcie->dev = dev;
-> +	platform_set_drvdata(pdev, pcie);
->  
->  	err = pci_parse_request_of_pci_ranges(dev, &pcie->resources, NULL);
->  	if (err)
-> @@ -1221,10 +1223,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	return err;
->  }
->  
-> +static int rcar_pcie_resume_noirq(struct device *dev)
-> +{
-> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> +
-> +	if (rcar_pci_read_reg(pcie, PMSR) &&
-> +	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
-> +		return 0;
-> +
-> +	/* Re-establish the PCIe link */
-> +	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> +	return rcar_pcie_wait_for_dl(pcie);
-> +}
-> +
-> +static const struct dev_pm_ops rcar_pcie_pm_ops = {
-> +	.resume_noirq = rcar_pcie_resume_noirq,
-> +};
-> +
->  static struct platform_driver rcar_pcie_driver = {
->  	.driver = {
->  		.name = "rcar-pcie",
->  		.of_match_table = rcar_pcie_of_match,
-> +		.pm = &rcar_pcie_pm_ops,
->  		.suppress_bind_attrs = true,
->  	},
->  	.probe = rcar_pcie_probe,
-> -- 
-> 2.19.2
-> 
+Bjorn
