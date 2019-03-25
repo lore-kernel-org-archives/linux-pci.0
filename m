@@ -2,93 +2,101 @@ Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA8CC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB650C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:59:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CBDE20879
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:49:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553507361;
-	bh=Oal7flNQwT9u03yT3aAACwafEYYaGm4K4yZxV7zkB6g=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=OTt5hVjExi3eiw8qzmzXfpOd2qYyhOIwYNVcGAY3OaIYPOWXFYLJAM13MexZSdf1z
-	 7+3RM6wJt78+CARQ7bE+XmlXS8eATJcl46CyWv8SpH+fCBNi6d067oEbAjsVQ99sTD
-	 OjhNqAYePlBcEfODex88HtThicJSZbUtIIuje5xo=
+	by mail.kernel.org (Postfix) with ESMTP id C41862087E
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 09:59:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730511AbfCYJtO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 05:49:14 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:43281 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730354AbfCYJtN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 05:49:13 -0400
-Received: by mail-oi1-f194.google.com with SMTP id 67so6387940oif.10;
-        Mon, 25 Mar 2019 02:49:12 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Oal7flNQwT9u03yT3aAACwafEYYaGm4K4yZxV7zkB6g=;
-        b=FhD6nSp2ggaC+i/1W1I+REYtXoWG9ZHbZpVyTNcRrnXnB7Z0ohiSraB+LKQhUzfQbc
-         eBfCe/TzqQWoSiJEvhqzLl/a7GYWdvJpK+Z8GOBpOHLHQzrg2Z3+freA9jpWjt3Xcdkj
-         CfkbKxeHTLskvLo3ze4PJtMDaTHn72I2LJG83VJnOt4v9bHTQPjJ85YtnSf3ufMDx1Kb
-         Ix2RC2Dc6g61vUBdbOq0wiUtK0b039ijxHGknZ2cM1mOhoMNPUe6LWmz8lLeBP09vcL/
-         LBCMztWvBv7LjQLjjtr6SfzgDylWg2WX4TpxH3vT0Cea2j+cZJ0il8mzvRU5Wv8pm0jM
-         ynrg==
-X-Gm-Message-State: APjAAAVA3Xta7/2mG01L9NwAfzG2s+QUNEV09Ll+Ds33lAq1IkPVDg0A
-        64/GzIzZJHkXYnQjHyIWOYGqlPV2tgG6cQiBZ14=
-X-Google-Smtp-Source: APXvYqzJNFY+7ARxSB+4c0sPo+9Jc49EQ+AENFDT1Rq9ALKT80u54QwmuukEqifSZ5X/P4w7O9C0yhDGnkFMiwI6NzM=
-X-Received: by 2002:aca:eb93:: with SMTP id j141mr11026445oih.178.1553507352232;
- Mon, 25 Mar 2019 02:49:12 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
- <20190322132108.25501-3-sakari.ailus@linux.intel.com> <CAJZ5v0i8JiQGk25yZKQqTzCCY+nrfoKXOH8nM6eNPhkN-i+y9w@mail.gmail.com>
-In-Reply-To: <CAJZ5v0i8JiQGk25yZKQqTzCCY+nrfoKXOH8nM6eNPhkN-i+y9w@mail.gmail.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Mon, 25 Mar 2019 10:49:01 +0100
-Message-ID: <CAJZ5v0ixukjWzSUqNCOpYuQci=7+ctdEhdZwOh=afz1b2zFVaw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] vsprintf: Remove support for %pF and %pf in favour of
- %pS and %ps
-To:     Sakari Ailus <sakari.ailus@linux.intel.com>
-Cc:     Petr Mladek <pmladek@suse.com>,
+        id S1730434AbfCYJ7l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 05:59:41 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5186 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730250AbfCYJ7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Mar 2019 05:59:40 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id C9F4FB21A0DF1DDCA60A;
+        Mon, 25 Mar 2019 17:59:36 +0800 (CST)
+Received: from [127.0.0.1] (10.202.227.238) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.408.0; Mon, 25 Mar 2019
+ 17:59:26 +0800
+Subject: Re: [PATCH v2 2/3] lib: logic_pio: Reject access to unregistered CPU
+ MMIO regions
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1553105650-28012-1-git-send-email-john.garry@huawei.com>
+ <1553105650-28012-3-git-send-email-john.garry@huawei.com>
+ <CAHp75VfRwp+XGdE6k4KU6hvLNu=h3TRVbm5AFOAZgsp-i1Ehjg@mail.gmail.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Borislav Petkov <bp@suse.de>,
+        Guenter Roeck <linux@roeck-us.net>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        sparclinux@vger.kernel.org, linux-um@lists.infradead.org,
-        xen-devel@lists.xenproject.org,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>, drbd-dev@lists.linbit.com,
-        linux-block@vger.kernel.org, linux-mmc <linux-mmc@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        linux-btrfs@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        ceph-devel@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        <linux-pci@vger.kernel.org>,
+        Kefeng Wang <wangkefeng.wang@huawei.com>,
+        Linuxarm <linuxarm@huawei.com>, Alexander Graf <agraf@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <3e638993-9541-1ed7-743b-5c2ddba4104e@huawei.com>
+Date:   Mon, 25 Mar 2019 09:59:18 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
+MIME-Version: 1.0
+In-Reply-To: <CAHp75VfRwp+XGdE6k4KU6hvLNu=h3TRVbm5AFOAZgsp-i1Ehjg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.238]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 10:30 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
+On 23/03/2019 19:15, Andy Shevchenko wrote:
+> On Wed, Mar 20, 2019 at 8:14 PM John Garry <john.garry@huawei.com> wrote:
+>>
+>> Currently when accessing logical indirect PIO addresses in
+>> logic_{in, out}{,s}, we first ensure that the region is registered.
+>>
+>> However, no such check exists for CPU MMIO regions. The CPU MMIO regions
+>> would be registered by the PCI host (when PCI_IOBASE is defined) in
+>> pci_register_io_range().
+>>
+>> We have seen scenarios when systems which don't have a PCI host or, they
+>> do, and the PCI host probe fails, that certain devices attempts to still
+>> attempt to access PCI IO ports; examples are in [1] and [2].
+>>
+>> And even though we would protect against this by ensuring the driver call
+>> request_{muxed_}region(), some don't do this:
+>>
 >
-> On Fri, Mar 22, 2019 at 2:21 PM Sakari Ailus
-> <sakari.ailus@linux.intel.com> wrote:
-> >
-> > %pS and %ps are now the preferred conversion specifiers to print function
-> > %names. The functionality is equivalent; remove the old, deprecated %pF
-> > %and %pf support.
->
-> Are %pF and %pf really not used any more in the kernel?
->
-> If that is not the case, you need to convert the remaining users of
-> them to using %ps or %pS before making support for them go away
-> completely.
 
-Well, this is a [2/2] in a series, sorry for the noise (/me blames
-gmail for the confusion).
+Hi Andy,
+
+>
+>>  #if defined(CONFIG_INDIRECT_PIO) && defined(PCI_IOBASE)
+>> +#define INVALID_RANGE(range) (!range || \
+>> +                             (range->flags == LOGIC_PIO_CPU_MMIO && !range->ops))
+>
+> It would be better to read in a form
+> #define foo(x) \
+
+Sure, I can change that if you think it reads better.
+
+>  (...)
+>
+>> +               ret = range->ops->in(range->hostdata,                   \
+>> +                                    addr, sizeof(type));               \
+>
+> Can it fit one line?
+
+It should be ok. I can shorten some variable names.
+
+>
+
+Thanks for checking,
+John
+
