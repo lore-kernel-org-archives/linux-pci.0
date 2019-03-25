@@ -2,79 +2,110 @@ Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF21AC10F03
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 11:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA8F2C43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 12:08:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E8AA20850
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 11:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 949BE20863
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 12:08:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730642AbfCYLqF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 07:46:05 -0400
-Received: from mail-vk1-f195.google.com ([209.85.221.195]:33417 "EHLO
-        mail-vk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730559AbfCYLqE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 07:46:04 -0400
-Received: by mail-vk1-f195.google.com with SMTP id r189so1873308vkb.0;
-        Mon, 25 Mar 2019 04:46:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=9sg9wb6at8RK3llFcehPcR8VorcjQ81v8o6bfHmHtJY=;
-        b=C7uXo2/CymC73ULBFfJ5GsBxngIsL2pl6M1Vx38LBEAXR5TkYN68v7PAcuYA0UAHbQ
-         T5KhtcS2ycm99oLvxlcGiw78EQlR/oUCXY6RKqJ/yT01StDpLBI7PSSBB/Y9nFcIsWxv
-         TSX9CnFHsqxijR0+hu3HlqEFJaRKFLycRL6ljlF6/qB8U3l2/Akb8cyfiC+yPhJDq45v
-         ueWudeqmwW3YNA+ydKpgOhF7w9KF3JGAMBOEAUnNt6SyL+/Joydx8pLe6UFfshqI1bKJ
-         3SqxwvMeSr4pLsEyUFw9dsVDXDaXq13au96Gt2AnqvJ5UoUWqginm5Ai9xy/HZiB3lRK
-         ZnkA==
-X-Gm-Message-State: APjAAAXnLE6/bwi1FsbFLMfZSpSjZonhyvx62baasui0WKdCKqdjYL72
-        1qbL33wmw9Vwg898Q44XXo3IlsYqvXPoQPBYwyA=
-X-Google-Smtp-Source: APXvYqzzGAPGOJVYCHQPkcBW91fsvUIZt4irrcD+lrT6QmcQaViKi0iyWeVaz6NoEn9WKLrsFeY6whGU1uTZ15RSP3Y=
-X-Received: by 2002:a1f:711:: with SMTP id 17mr14679864vkh.65.1553514363682;
- Mon, 25 Mar 2019 04:46:03 -0700 (PDT)
+        id S1730899AbfCYMIg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 08:08:36 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:46304 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729386AbfCYMIf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Mar 2019 08:08:35 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1144980D;
+        Mon, 25 Mar 2019 05:08:35 -0700 (PDT)
+Received: from [10.1.196.69] (e112269-lin.cambridge.arm.com [10.1.196.69])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9B2FD3F575;
+        Mon, 25 Mar 2019 05:08:33 -0700 (PDT)
+Subject: Re: [PATCH v2] pci: pcie-xilinx: fix a missing-check bug for
+ __get_free_pages
+To:     Aditya Pakki <pakki001@umn.edu>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, kjlu@umn.edu,
+        Michal Simek <michal.simek@xilinx.com>,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org
+References: <20190323210423.8881-1-pakki001@umn.edu>
+From:   Steven Price <steven.price@arm.com>
+Message-ID: <71b9d48b-c921-1d5a-782f-04a331c1a694@arm.com>
+Date:   Mon, 25 Mar 2019 12:08:31 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-References: <20190325114101.10198-1-marek.vasut@gmail.com> <20190325114101.10198-4-marek.vasut@gmail.com>
-In-Reply-To: <20190325114101.10198-4-marek.vasut@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 25 Mar 2019 12:45:51 +0100
-Message-ID: <CAMuHMdUUGniZCPb+Wn+wNDGUfiEUUQXwU3ie3S=wnye7JThPOw@mail.gmail.com>
-Subject: Re: [PATCH V4 4/6] PCI: rcar: Replace (8 * n) with (BITS_PER_BYTE * n)
-To:     Marek Vasut <marek.vasut@gmail.com>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20190323210423.8881-1-pakki001@umn.edu>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 12:41 PM <marek.vasut@gmail.com> wrote:
-> From: Marek Vasut <marek.vasut+renesas@gmail.com>
->
-> Replace (8 * n) with (BITS_PER_BYTE * n) to make bit shift operations
-> consistent. No functional change.
->
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+On 23/03/2019 21:04, Aditya Pakki wrote:
+> In case __get_free_pages fail, the fix returns error upstream
+> to avoid NULL pointer dereference.
+> 
+> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Steven Price <steven.price@arm.com>
 
-Gr{oetje,eeting}s,
+> 
+> ---
+> v1: Return error upstream as suggested by Steven
+> ---
+>  drivers/pci/controller/pcie-xilinx.c | 11 +++++++++--
+>  1 file changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+> index 9bd1a35cd5d8..91d8945bfb0c 100644
+> --- a/drivers/pci/controller/pcie-xilinx.c
+> +++ b/drivers/pci/controller/pcie-xilinx.c
+> @@ -335,15 +335,19 @@ static const struct irq_domain_ops msi_domain_ops = {
+>  /**
+>   * xilinx_pcie_enable_msi - Enable MSI support
+>   * @port: PCIe port information
+> + * Return: 0 on success, negative error on failure
+>   */
+> -static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+> +static int xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+>  {
+>  	phys_addr_t msg_addr;
+>  
+>  	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
+> +	if (!port->msi_pages)
+> +		return -ENOMEM;
+>  	msg_addr = virt_to_phys((void *)port->msi_pages);
+>  	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
+>  	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
+> +	return 0;
+>  }
+>  
+>  /* INTx Functions */
+> @@ -498,6 +502,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  	struct device *dev = port->dev;
+>  	struct device_node *node = dev->of_node;
+>  	struct device_node *pcie_intc_node;
+> +	int ret;
+>  
+>  	/* Setup INTx */
+>  	pcie_intc_node = of_get_next_child(node, NULL);
+> @@ -526,7 +531,9 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  			return -ENODEV;
+>  		}
+>  
+> -		xilinx_pcie_enable_msi(port);
+> +		ret = xilinx_pcie_enable_msi(port);
+> +		if (ret)
+> +			return ret;
+>  	}
+>  
+>  	return 0;
+> 
 
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
