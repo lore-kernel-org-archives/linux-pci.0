@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B526CC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F7DC43381
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 821E22085A
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF5B62080F
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 08:38:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="wsjy9X5h"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="g1F8xUgE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730043AbfCYIhH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 04:37:07 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:36634 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726207AbfCYIhH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:37:07 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8aouR039638;
-        Mon, 25 Mar 2019 03:36:50 -0500
+        id S1730161AbfCYIgj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 04:36:39 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:52224 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730134AbfCYIgi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 04:36:38 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x2P8aKsl106108;
+        Mon, 25 Mar 2019 03:36:20 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1553503010;
-        bh=QQnbdjchjriqY7MOSz5Hvpx/cYkzjC8wC0YfZRMaepc=;
+        s=ti-com-17Q1; t=1553502980;
+        bh=8ftV+tyeP19Er0Uqruzv3Zjv2HvQTzbCletDFZ3afkE=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=wsjy9X5hpudLUlezpxjcI0n4ctExu9X3P0yG3a/mwGns8iM0J17YmMadMLRrcY8zF
-         v3Q5dG3QzpdYkhHVKNjVZ+OFP+9/O14zPo3WdsLiBsUpivP4o5jX2HCRf8ngkM/seO
-         sxrOFIZoGb4VHzIwJQgkLMbBBd8YpHWt1Fss7w0c=
-Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8aoRM088988
+        b=g1F8xUgElVpNW9N2HFrxlKj+YXeJOYXNCm3GfUArEQMngr/Bc1z0YSVfwQeNPdMmg
+         o8brTMdPFxDDhgB+ZIcZF8x8flfiERBoLzxSJZlGPasdaebG4T2tNwbSrNl+zmu9Jq
+         eQEtM9KAgYIql0uLA+JxLuZAwVLz7X5pObUo7ChU=
+Received: from DLEE106.ent.ti.com (dlee106.ent.ti.com [157.170.170.36])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x2P8aKtj016379
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 25 Mar 2019 03:36:50 -0500
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE115.ent.ti.com
- (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+        Mon, 25 Mar 2019 03:36:20 -0500
+Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE106.ent.ti.com
+ (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 25
- Mar 2019 03:36:49 -0500
-Received: from dlep33.itg.ti.com (157.170.170.75) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_0,
+ Mar 2019 03:36:19 -0500
+Received: from dlep33.itg.ti.com (157.170.170.75) by DLEE101.ent.ti.com
+ (157.170.170.31) with Microsoft SMTP Server (version=TLS1_0,
  cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.1.1713.5 via Frontend Transport;
- Mon, 25 Mar 2019 03:36:49 -0500
+ Mon, 25 Mar 2019 03:36:19 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFs006534;
-        Mon, 25 Mar 2019 03:36:45 -0500
+        by dlep33.itg.ti.com (8.14.3/8.13.8) with ESMTP id x2P8ZsFl006534;
+        Mon, 25 Mar 2019 03:36:16 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -59,9 +59,9 @@ CC:     Kishon Vijay Abraham I <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 12/26] PCI: keystone: Prevent ARM32 specific code to be compiled for ARM64
-Date:   Mon, 25 Mar 2019 14:04:47 +0530
-Message-ID: <20190325083501.8088-13-kishon@ti.com>
+Subject: [PATCH v2 05/26] PCI: keystone: Use platform_get_resource_byname to get memory resources
+Date:   Mon, 25 Mar 2019 14:04:40 +0530
+Message-ID: <20190325083501.8088-6-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190325083501.8088-1-kishon@ti.com>
 References: <20190325083501.8088-1-kishon@ti.com>
@@ -73,50 +73,59 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-hook_fault_code is an ARM32 specific API for hooking into data abort.
-Since pci-keystone.c will be used for AM65X platforms which is an
-ARM64 platform, allow hook_fault_code to be compiled only for ARM32.
+Use platform_get_resource_byname() instead of platform_get_resource() which
+uses index to get memory resources. While at that get the memory resource
+defined specifically for configuration space instead of deriving the
+configuration space address from dbics address space. Since pci-keystone
+driver has never worked out of the box in mainline kernel, dt backward
+compatibility is ignored.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/dwc/pci-keystone.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/dwc/pci-keystone.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index dfe54553d832..93296d434f40 100644
+index 566718ea7ebf..5eebef9b9ada 100644
 --- a/drivers/pci/controller/dwc/pci-keystone.c
 +++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -710,6 +710,7 @@ static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
- 	return ret;
- }
+@@ -44,7 +44,6 @@
+ #define CFG_TYPE1			BIT(24)
  
-+#ifdef CONFIG_ARM
- /*
-  * When a PCI device does not exist during config cycles, keystone host gets a
-  * bus error instead of returning 0xffffffff. This handler always returns 0
-@@ -729,6 +730,7 @@ static int ks_pcie_fault(unsigned long addr, unsigned int fsr,
+ #define OB_SIZE				0x030
+-#define SPACE0_REMOTE_CFG_OFFSET	0x1000
+ #define OB_OFFSET_INDEX(n)		(0x200 + (8 * (n)))
+ #define OB_OFFSET_HI(n)			(0x204 + (8 * (n)))
+ #define OB_ENABLEN			BIT(0)
+@@ -807,21 +806,19 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 	struct resource *res;
+ 	int ret;
  
- 	return 0;
- }
-+#endif
+-	/* Index 0 is the config reg. space address */
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbics");
+ 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
+ 	if (IS_ERR(pci->dbi_base))
+ 		return PTR_ERR(pci->dbi_base);
  
- static int __init ks_pcie_init_id(struct keystone_pcie *ks_pcie)
- {
-@@ -778,12 +780,14 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
- 	if (ret < 0)
- 		return ret;
+-	/*
+-	 * We set these same and is used in pcie rd/wr_other_conf
+-	 * functions
+-	 */
+-	pp->va_cfg0_base = pci->dbi_base + SPACE0_REMOTE_CFG_OFFSET;
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
++	pp->va_cfg0_base = devm_pci_remap_cfg_resource(dev, res);
++	if (IS_ERR(pp->va_cfg0_base))
++		return PTR_ERR(pp->va_cfg0_base);
++
+ 	pp->va_cfg1_base = pp->va_cfg0_base;
  
-+#ifdef CONFIG_ARM
- 	/*
- 	 * PCIe access errors that result into OCP errors are caught by ARM as
- 	 * "External aborts"
- 	 */
- 	hook_fault_code(17, ks_pcie_fault, SIGBUS, 0,
- 			"Asynchronous external abort");
-+#endif
- 
- 	ks_pcie_start_link(pci);
- 	dw_pcie_wait_for_link(pci);
+-	/* Index 1 is the application reg. space address */
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "app");
+ 	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ks_pcie->va_app_base))
+ 		return PTR_ERR(ks_pcie->va_app_base);
 -- 
 2.17.1
 
