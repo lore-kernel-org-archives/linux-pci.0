@@ -2,97 +2,116 @@ Return-Path: <SRS0=Cb4Y=R4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8258AC43381
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 15:04:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A85C1C10F03
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 15:13:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51C8E2082F
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 15:04:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="to1WT3ty"
+	by mail.kernel.org (Postfix) with ESMTP id 8087921473
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 15:13:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726237AbfCYPEE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 11:04:04 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:39546 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726166AbfCYPEE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 11:04:04 -0400
-Received: by mail-pg1-f195.google.com with SMTP id k3so3025962pga.6;
-        Mon, 25 Mar 2019 08:04:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=MIjPQMEfFNnmxk2sYVSDBV/lHK9Z5CZQPf5ScXHK5UE=;
-        b=to1WT3tyTEQ2fO+l4y5negMx9c9JuPTWVqDx7+A63y3E2+lzzJbKsyRnTsWOgBttq4
-         5uPZDISOrvmMd/+ATJ6Y+v6tf+mNGjyuCRlUUPZreILU5j2k5+1yFtLK7ijDJsCPLaST
-         iVz1ClHFb+icEIE8YkgmnWlTrSKge9C8IXnanMoeUHs6w01dkP8jbnEk6KZyYF3JJMrc
-         4ONPMccBmBPxzAuoVSLZkik+gcmR6rTyBH7UEWN6pRz7C7C9+NgWCHGdLa8dmG22An0r
-         XU/fgHy/JqkBQ/5FMY51Za82ID7FuMhbFBFkT/WbsTbtyRHZE6iX6+5N69/Iw9CNDK8w
-         pxZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=MIjPQMEfFNnmxk2sYVSDBV/lHK9Z5CZQPf5ScXHK5UE=;
-        b=ph88LuVWLbkA3HaS/RqrEPtKDYnxB2uxiaWeMW5sef10KVcNsRSfU3C1grkkJ30ecE
-         uLpxLDn4u2RayLAxYnh6/UNpwVpunT+aVNz6+4YQxmR29iBxjuDij/thY0Rpp/SGyA7H
-         pWJO1q1VxIOJuoYh88VvWoRKIJsELI+KnuiaS1Z/P4ULR7A54Hpi+eIn9UeXI0JhH5FE
-         sQa2dmqKL8Nojrw+EO76qUHQRPh8CQ5JpjAEDWyR41bxQ6leN72aY6RSAbJGJsPthuFd
-         97bCHf/fP+vj0SpqaJZIVC5mwZ0Q+qWdT9QL+tYIkC0A5ZYuzcB5zEHhCg1Js+Qxpkuv
-         /R4g==
-X-Gm-Message-State: APjAAAWfMRwslaV96tqvdFEbyW0V7At80bstp5UEPv2ofOuyCBTTxuxL
-        OJNRQMMbqADteoa8/WoxIM9z21Sn595Gs8ay1Pw=
-X-Google-Smtp-Source: APXvYqzfAjm+v/MQ9UL6O5LFSlvho5wVwwMVpDD9Ecal2842bUMubnitMXOnJDXd6zoRLHwoqrTy/+sWdINzzOfRMzk=
-X-Received: by 2002:a65:5acc:: with SMTP id d12mr23972047pgt.337.1553526243650;
- Mon, 25 Mar 2019 08:04:03 -0700 (PDT)
-MIME-Version: 1.0
-References: <1553105650-28012-1-git-send-email-john.garry@huawei.com>
- <1553105650-28012-4-git-send-email-john.garry@huawei.com> <CAHp75VfyU5ZDqCZ55SoxW1pQt1KXZQZJeYixHQf8Kw2EZcXWrQ@mail.gmail.com>
- <1a26586d-803b-5fad-e611-449bdb49096e@huawei.com>
-In-Reply-To: <1a26586d-803b-5fad-e611-449bdb49096e@huawei.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Mon, 25 Mar 2019 17:03:52 +0200
-Message-ID: <CAHp75VefTFx-HdaVhVG9uYO4Ec_S20eMjGRPeso+raCU4XEjeg@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] lib: logic_pio: Make some prints explicitly hex
-To:     John Garry <john.garry@huawei.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Borislav Petkov <bp@suse.de>,
-        Guenter Roeck <linux@roeck-us.net>,
+        id S1729367AbfCYPNN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 11:13:13 -0400
+Received: from mga06.intel.com ([134.134.136.31]:51572 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726010AbfCYPNN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 25 Mar 2019 11:13:13 -0400
+X-Amp-Result: UNSCANNABLE
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Mar 2019 08:13:11 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,269,1549958400"; 
+   d="scan'208";a="330511062"
+Received: from ikahlonx-mobl.ger.corp.intel.com (HELO kekkonen.fi.intel.com) ([10.252.61.250])
+  by fmsmga006.fm.intel.com with ESMTP; 25 Mar 2019 08:13:06 -0700
+Received: by kekkonen.fi.intel.com (Postfix, from userid 1000)
+        id 75F7A21D09; Mon, 25 Mar 2019 17:13:00 +0200 (EET)
+Date:   Mon, 25 Mar 2019 17:13:00 +0200
+From:   Sakari Ailus <sakari.ailus@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Petr Mladek <pmladek@suse.com>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org,
-        Kefeng Wang <wangkefeng.wang@huawei.com>,
-        Linuxarm <linuxarm@huawei.com>, Alexander Graf <agraf@suse.de>
-Content-Type: text/plain; charset="UTF-8"
+        scsi <linux-scsi@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-um@lists.infradead.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-block@vger.kernel.org,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        sparclinux <sparclinux@vger.kernel.org>,
+        xen-devel@lists.xenproject.org,
+        ceph-devel <ceph-devel@vger.kernel.org>,
+        Linux MM <linux-mm@kvack.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Lars Ellenberg <drbd-dev@lists.linbit.com>
+Subject: Re: [PATCH 0/2] Remove support for deprecated %pf and %pF in vsprintf
+Message-ID: <20190325151259.2w22y4ijqilrbaxj@kekkonen.localdomain>
+References: <20190322132108.25501-1-sakari.ailus@linux.intel.com>
+ <CAMuHMdVmqqjVx7As9AAywYxYXG=grijF5rF77OBn6TUjM9+xKw@mail.gmail.com>
+ <20190322135350.2btpno7vspvewxvk@paasikivi.fi.intel.com>
+ <20190322170550.GX9224@smile.fi.intel.com>
+ <20190324211008.lypghym3gqcp62th@mara.localdomain>
+ <20190324211932.GK9224@smile.fi.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190324211932.GK9224@smile.fi.intel.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 11:49 AM John Garry <john.garry@huawei.com> wrote:
-> On 23/03/2019 19:12, Andy Shevchenko wrote:
-> > On Wed, Mar 20, 2019 at 8:14 PM John Garry <john.garry@huawei.com> wrote:
-> >>
-> >> Some prints in the code are for a hex number, but don't prefix "0x". Add
-> >> the prefix, as is the norm.
-> >
-> >> -       pr_err("addr %llx not registered in io_range_list\n",
-> >> +       pr_err("addr 0x%llx not registered in io_range_list\n",
-> >>                (unsigned long long) addr);
-> >
-> > Can we use %pa at the same time?
+Hi Andy,
 
-> OK, I think that we can use %pa and drop the casting to unsigned long long.
+On Sun, Mar 24, 2019 at 11:19:32PM +0200, Andy Shevchenko wrote:
+> On Sun, Mar 24, 2019 at 11:10:08PM +0200, Sakari Ailus wrote:
+> > On Fri, Mar 22, 2019 at 07:05:50PM +0200, Andy Shevchenko wrote:
+> > > On Fri, Mar 22, 2019 at 03:53:50PM +0200, Sakari Ailus wrote:
+> > > 
+> > > > Porting a patch
+> > > > forward should have no issues either as checkpatch.pl has been complaining
+> > > > of the use of %pf and %pF for a while now.
+> > > 
+> > > And that's exactly the reason why I think instead of removing warning on
+> > > checkpatch, it makes sense to convert to an error for a while. People are
+> > > tending read documentation on internet and thus might have outdated one. And
+> > > yes, the compiler doesn't tell a thing about it.
+> > > 
+> > > P.S. Though, if majority of people will tell that I'm wrong, then it's okay to
+> > > remove.
+> > 
+> > I wonder if you wrote this before seeing my other patchset.
+> 
+> Yes, I wrote it before seeing another series.
+> 
+> > What I think could be done is to warn of plain %pf (without following "w")
+> > in checkpatch.pl, and %pf that is not followed by "w" in the kernel.
+> > Although we didn't have such checks to begin with. The case is still a
+> > little bit different as %pf used to be a valid conversion specifier whereas
+> > %pO likely has never existed.
+> > 
+> > So, how about adding such checks in the other set? I can retain %p[fF] check
+> > here, too, if you like.
+> 
+> Consistency tells me that the warning->error transformation in checkpatch.pl
+> belongs this series.
 
-Yes, that it is the point.
+All other invalid pointer conversion specifiers currently result into a
+warning only. I see that as an orthogonal change to this set. I found
+another issue in checkpatch.pl that may require some discussion; would you
+be ok with addressing this in another set?
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Regards,
+
+Sakari Ailus
+sakari.ailus@linux.intel.com
