@@ -5,55 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96265C10F03
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 11:41:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F33BC10F03
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 11:41:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 669A92085A
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 11:41:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E424E2085A
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Mar 2019 11:41:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nuW7E2Lf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dR7kJa2l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730749AbfCYLlV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Mar 2019 07:41:21 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:43253 "EHLO
+        id S1730799AbfCYLlX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Mar 2019 07:41:23 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:34464 "EHLO
         mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726327AbfCYLlV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 07:41:21 -0400
-Received: by mail-wr1-f68.google.com with SMTP id k17so1766993wrx.10;
-        Mon, 25 Mar 2019 04:41:20 -0700 (PDT)
+        with ESMTP id S1730642AbfCYLlX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Mar 2019 07:41:23 -0400
+Received: by mail-wr1-f68.google.com with SMTP id p10so9751892wrq.1;
+        Mon, 25 Mar 2019 04:41:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=cgr+QFoF4osyfmKyRWjolF8arxagaIcsd3D6Oah1mFM=;
-        b=nuW7E2LfesyQnXrfug+FBSfHNcL/90eo+vbEI73BVQ/Ozuaez1FtvD8mozLyfdYNuM
-         dBk94l1IE0+jUGLiCaZcq5NykbXMlTrRu48RGZ9lZchv9bRJ3g3MHBzOs0fJfYJrygQ7
-         Np5omYno4kAPMF8gqne1Cou9IdS1acxjST0mwZvpWqYUtOnw+6cxnv+PQQMnOXd1sm+L
-         qqiCZys1FJDGHeYkii1RUPYfu20EC00tywL1NeMomrdAKaYGRP45JS5BknlYKBUoDT5v
-         rV5uaObV8uCTvnPShE6xxmUwXIGgYw8PdnUc2GQrg2bq7tf95tmR8BS299flZELjFpXh
-         dt3A==
+        bh=VUcTd4ffmxmZqw1aKgP9LKIf3+lH96Q0sGddIMfmQuA=;
+        b=dR7kJa2lr2hLomOYI3IDf3O2+SmxJa+ixIMdj35R1Q2M2SlgKo6TCiYoK0xE+C/oc9
+         CBDMbR0hTIFCrXV8xR2HxkYQGUcOhV6eJc2nPqXjMyuTr3VFSjHsCePMDwyvsdlRfJKC
+         SslMm6XZLV0sqGVnt5AqeXQN6DsehnclhY5vuoN1r6dBkaWQa7wOggcgpQ8U9+6pj6Qj
+         S9pfNXpb1edrxhaREFgXtZffeSOkVk+ZPtdrbJNYF29MZzVmEjuFEMLp+2x7O+anK06c
+         D16yXAlwWr6DIiAghFXmdu2/4XBGc2+Rn5na1iCX/PeZIv9AHefg0Sr32zh3GICKcYDq
+         4LEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cgr+QFoF4osyfmKyRWjolF8arxagaIcsd3D6Oah1mFM=;
-        b=SPHP1+SR+G3uPLTBmgM3q1D8Okb5BWekT9OZlPbWaO92ba5SXFDCr9dIvON6X8r3Eu
-         C2PdrzOGUSfjdz+UB+ADXdTySS+e+OnMkpXukVNV4AT8ITP/FeA0PQ/sL8xMlfoq87sJ
-         5IRvKV0JOnYBMAwR20w7r4SelBgEp0UapbiHbz4pD0gTvtaWRWAJRnV/+F65Nv7GVyfy
-         FIqM/jWv4Xaa7x1gQQBdtMVXq/XrhYHKP+daQ8iDPo+5lij9dUbi1Q5q7fVo2WEjp90m
-         QxySvAuFvlQ5B57lm5JOeFGyHaN8omvbIiSZTbbRRPJE9AVHjavCvGcdVT1lV5wzRdp1
-         azgg==
-X-Gm-Message-State: APjAAAWXpu+EyA1k7T7+bNWdgGlwH44P9JThlTa0rmY9uhCcSY/gmjHm
-        O0vmKr51155g1iBbrxHCfK+PAlgT
-X-Google-Smtp-Source: APXvYqyLV2DYx47Y6xT3kUt03JhcSqQa30oJ3v67sumUcrYZHRvouPA9dY5PJoNd7sWTbCHOAj0ERA==
-X-Received: by 2002:adf:ed90:: with SMTP id c16mr14751145wro.74.1553514079067;
-        Mon, 25 Mar 2019 04:41:19 -0700 (PDT)
+        bh=VUcTd4ffmxmZqw1aKgP9LKIf3+lH96Q0sGddIMfmQuA=;
+        b=lefnxRDFWnHUrdIvR4vh3G9pai0mihpuRVuZWNjMO2A9zn5rJh+4ILH2ldMR3iPx6h
+         8uzFT8+hUbiLal2+SzpUsRd9GOQwUfss7fX3RxD8gnwvrRZonVmy88ojDgC+xRDkyGQr
+         j22hzQsYyjC8IE5s4uTJa/aojVmJdXTkl7jW1bGbJONAG/jH1OI5WE/D97Mz7I2VA6u0
+         va6TiTBPwKAEMHjUr7CAGxjUIP5WJ96sCjQoX4VPT5MSiZkRxloCev7hikBy2J7qmboy
+         8HPwcwfludaJf9Zb47Opm9Z9aV3ADcQDEF4ACEx+i71nBt/Euo0c8gXGT0dT3RjICQBh
+         VDyQ==
+X-Gm-Message-State: APjAAAXWXrn0hY1AzWRq1fu7vCEBuDl/OHU/xC95/bNQoROpiMscBAve
+        iluT2oABUces9spkYemUh4zexqG8
+X-Google-Smtp-Source: APXvYqwnWXZnXB0yNIPnbfR5h4+I+vQdheNZ7shqfeUJIp17tDpsWVF5xiE+Zq2xmkyJ2cjTE6y2Mg==
+X-Received: by 2002:a5d:4087:: with SMTP id o7mr3726230wrp.9.1553514080589;
+        Mon, 25 Mar 2019 04:41:20 -0700 (PDT)
 Received: from kurokawa.lan (ip-86-49-110-70.net.upcbroadband.cz. [86.49.110.70])
-        by smtp.gmail.com with ESMTPSA id f1sm3905730wrt.87.2019.03.25.04.41.17
+        by smtp.gmail.com with ESMTPSA id f1sm3905730wrt.87.2019.03.25.04.41.19
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 25 Mar 2019 04:41:18 -0700 (PDT)
+        Mon, 25 Mar 2019 04:41:19 -0700 (PDT)
 From:   marek.vasut@gmail.com
 To:     linux-pci@vger.kernel.org
 Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
@@ -63,9 +64,9 @@ Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
         Wolfram Sang <wsa@the-dreams.de>,
         linux-renesas-soc@vger.kernel.org,
         Wolfram Sang <wsa+renesas@sang-engineering.com>
-Subject: [PATCH V4 4/6] PCI: rcar: Replace (8 * n) with (BITS_PER_BYTE * n)
-Date:   Mon, 25 Mar 2019 12:40:59 +0100
-Message-Id: <20190325114101.10198-4-marek.vasut@gmail.com>
+Subject: [PATCH V4 5/6] PCI: rcar: Clean up debug messages
+Date:   Mon, 25 Mar 2019 12:41:00 +0100
+Message-Id: <20190325114101.10198-5-marek.vasut@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190325114101.10198-1-marek.vasut@gmail.com>
 References: <20190325114101.10198-1-marek.vasut@gmail.com>
@@ -78,8 +79,8 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-Replace (8 * n) with (BITS_PER_BYTE * n) to make bit shift operations
-consistent. No functional change.
+Drop useless casts from debug messages, they are no longer needed
+due to the data type cleanup.
 
 Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
 Cc: Geert Uytterhoeven <geert+renesas@glider.be>
@@ -88,63 +89,43 @@ Cc: Simon Horman <horms+renesas@verge.net.au>
 Cc: Wolfram Sang <wsa@the-dreams.de>
 Cc: linux-renesas-soc@vger.kernel.org
 To: linux-pci@vger.kernel.org
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 ---
-V2: Bundle this patch with other cleanups before resending
+V2: - Bundle this patch with other cleanups before resending
+    - Add R-B from Geert
 V3: Add Wolfram's R-B
-V4: Change the patch from n << 3 to BITS_PER_BYTE * n
+V4: No change
 ---
- drivers/pci/controller/pcie-rcar.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/controller/pcie-rcar.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-index 6699211fdc9a..96210768e774 100644
+index 96210768e774..c6013f95bdb2 100644
 --- a/drivers/pci/controller/pcie-rcar.c
 +++ b/drivers/pci/controller/pcie-rcar.c
-@@ -170,7 +170,7 @@ enum {
- 
- static void rcar_rmw32(struct rcar_pcie *pcie, int where, u32 mask, u32 data)
- {
--	unsigned int shift = 8 * (where & 3);
-+	unsigned int shift = BITS_PER_BYTE * (where & 3);
- 	u32 val = rcar_pci_read_reg(pcie, where & ~3);
- 
- 	val &= ~(mask << shift);
-@@ -180,7 +180,7 @@ static void rcar_rmw32(struct rcar_pcie *pcie, int where, u32 mask, u32 data)
- 
- static u32 rcar_read_conf(struct rcar_pcie *pcie, int where)
- {
--	unsigned int shift = 8 * (where & 3);
-+	unsigned int shift = BITS_PER_BYTE * (where & 3);
- 	u32 val = rcar_pci_read_reg(pcie, where & ~3);
- 
- 	return val >> shift;
-@@ -280,9 +280,9 @@ static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
- 	}
- 
- 	if (size == 1)
--		*val = (*val >> (8 * (where & 3))) & 0xff;
-+		*val = (*val >> (BITS_PER_BYTE * (where & 3))) & 0xff;
+@@ -284,8 +284,8 @@ static int rcar_pcie_read_conf(struct pci_bus *bus, unsigned int devfn,
  	else if (size == 2)
--		*val = (*val >> (8 * (where & 2))) & 0xffff;
-+		*val = (*val >> (BITS_PER_BYTE * (where & 2))) & 0xffff;
+ 		*val = (*val >> (BITS_PER_BYTE * (where & 2))) & 0xffff;
  
- 	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08lx\n",
- 		bus->number, devfn, where, size, (unsigned long)*val);
-@@ -308,11 +308,11 @@ static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
- 		bus->number, devfn, where, size, (unsigned long)val);
+-	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08lx\n",
+-		bus->number, devfn, where, size, (unsigned long)*val);
++	dev_dbg(&bus->dev, "pcie-config-read: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08x\n",
++		bus->number, devfn, where, size, *val);
+ 
+ 	return ret;
+ }
+@@ -304,8 +304,8 @@ static int rcar_pcie_write_conf(struct pci_bus *bus, unsigned int devfn,
+ 	if (ret != PCIBIOS_SUCCESSFUL)
+ 		return ret;
+ 
+-	dev_dbg(&bus->dev, "pcie-config-write: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08lx\n",
+-		bus->number, devfn, where, size, (unsigned long)val);
++	dev_dbg(&bus->dev, "pcie-config-write: bus=%3d devfn=0x%04x where=0x%04x size=%d val=0x%08x\n",
++		bus->number, devfn, where, size, val);
  
  	if (size == 1) {
--		shift = 8 * (where & 3);
-+		shift = BITS_PER_BYTE * (where & 3);
- 		data &= ~(0xff << shift);
- 		data |= ((val & 0xff) << shift);
- 	} else if (size == 2) {
--		shift = 8 * (where & 2);
-+		shift = BITS_PER_BYTE * (where & 2);
- 		data &= ~(0xffff << shift);
- 		data |= ((val & 0xffff) << shift);
- 	} else
+ 		shift = BITS_PER_BYTE * (where & 3);
 -- 
 2.20.1
 
