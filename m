@@ -2,279 +2,125 @@ Return-Path: <SRS0=/keI=R5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.5 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FEBCC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BF6C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:44:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F9AA2075E
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:17:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53A822075D
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:44:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726278AbfCZMRe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Mar 2019 08:17:34 -0400
-Received: from foss.arm.com ([217.140.101.70]:35462 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726175AbfCZMRe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Mar 2019 08:17:34 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4F6951596;
-        Tue, 26 Mar 2019 05:17:34 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1800F3F59C;
-        Tue, 26 Mar 2019 05:17:31 -0700 (PDT)
-Date:   Tue, 26 Mar 2019 12:17:27 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jonathan Chocron <jonnyc@amazon.com>
-Cc:     linux-pci@vger.kernel.org, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org, vaerov@amazon.com, dwmw@amazon.co.uk,
-        benh@kernel.crashing.org, alisaidi@amazon.com, zeev@amazon.com,
-        ronenk@amazon.com, barakw@amazon.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [PATCH v2] PCI: al: Add Amazon Annapurna Labs PCIe host
- controller driver
-Message-ID: <20190326121727.GA4171@e107981-ln.cambridge.arm.com>
-References: <1553512040-4453-1-git-send-email-jonnyc@amazon.com>
- <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
+        id S1726175AbfCZMox (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Mar 2019 08:44:53 -0400
+Received: from bmailout2.hostsharing.net ([83.223.90.240]:51907 "EHLO
+        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726645AbfCZMow (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2019 08:44:52 -0400
+Received: from h08.hostsharing.net (unknown [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 7D1622800B3CC;
+        Tue, 26 Mar 2019 13:44:49 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 112A22FE95; Tue, 26 Mar 2019 13:44:49 +0100 (CET)
+Date:   Tue, 26 Mar 2019 13:44:49 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Dongdong Liu <liudongdong3@huawei.com>
+Cc:     mika.westerberg@linux.intel.com,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>
+Subject: Re: Question about Hotplug driver deadlock issue
+Message-ID: <20190326124449.3vdjmescrvswirop@wunner.de>
+References: <351f898c-f9e9-69e0-b023-cf72e0d7792b@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <351f898c-f9e9-69e0-b023-cf72e0d7792b@huawei.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+Zhou, Gustavo]
+On Tue, Mar 26, 2019 at 07:43:17PM +0800, Dongdong Liu wrote:
+> Current we met another deadlock issue in hotplug driver. The calltrace is as below.
+> The deadlock triggered by a hotplug event during a sysfs "remove" operation.
+> Any suggestion to fix such deadlock ?
 
-On Tue, Mar 26, 2019 at 12:00:55PM +0200, Jonathan Chocron wrote:
-> Adding support for Amazon's Annapurna Labs PCIe driver.
-> The HW controller is based on DesignWare's IP.
-> 
-> The HW doesn't support accessing the Root Port's config space via
-> ECAM, so we obtain its base address via an AMZN0001 device.
-> 
-> Furthermore, the DesignWare PCIe controller doesn't filter out
-> config transactions sent to devices 1 and up on its bus, so they
-> are filtered by the driver.
-> All subordinate buses do support ECAM access.
-> 
-> Implementing specific PCI config access functions involves:
->  - Adding an init function to obtain the Root Port's base address
->    from an AMZN0001 device.
->  - Adding a new entry in the mcfg quirk array
-> 
-> Co-developed-by: Vladimir Aerov <vaerov@amazon.com>
-> Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
-> Signed-off-by: Vladimir Aerov <vaerov@amazon.com>
-> Reviewed-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
+That's a known problem, deadlocks may occur if hotplug ports are
+cascaded.  I came up with a kludge to work around it but withdrew
+the patch:
+https://patchwork.ozlabs.org/patch/930403/
 
-Review tags should be given on public mailing lists for public
-review and I have not seen them (they were already there in v1) so
-you should drop them.
-
-> Changes from v1:
->   - Fix commit message comments (incl. using AMZN0001
->     instead of PNP0C02)
->   - Use the usual multi-line comment style
-> 
->  MAINTAINERS                          |  6 +++
->  drivers/acpi/pci_mcfg.c              | 12 +++++
->  drivers/pci/controller/dwc/Makefile  |  1 +
->  drivers/pci/controller/dwc/pcie-al.c | 93 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci-ecam.h             |  1 +
->  5 files changed, 113 insertions(+)
->  create mode 100644 drivers/pci/controller/dwc/pcie-al.c
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 32d444476a90..7a17017f9f82 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11769,6 +11769,12 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
->  S:	Supported
->  F:	drivers/pci/controller/
->  
-> +PCIE DRIVER FOR ANNAPURNA LABS
-> +M:	Jonathan Chocron <jonnyc@amazon.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/pci/controller/dwc/pcie-al.c
-
-I do not think we need a maintainer file for that see below, and
-actually this quirk should be handled by DWC maintainers since it is a
-DWC quirk, not a platform one.
-
-> +
->  PCIE DRIVER FOR AMLOGIC MESON
->  M:	Yue Wang <yue.wang@Amlogic.com>
->  L:	linux-pci@vger.kernel.org
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index a4e8432fc2fb..b42be067fb83 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -52,6 +52,18 @@ struct mcfg_fixup {
->  static struct mcfg_fixup mcfg_quirks[] = {
->  /*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
->  
-> +#define AL_ECAM(table_id, rev, seg, ops) \
-> +	{ "AMAZON", table_id, rev, seg, MCFG_BUS_ANY, ops }
-> +
-> +	AL_ECAM("GRAVITON", 0, 0, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 1, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 2, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 3, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 4, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 5, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 6, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 7, &al_pcie_ops),
-> +
->  #define QCOM_ECAM32(seg) \
->  	{ "QCOM  ", "QDF2432 ", 1, seg, MCFG_BUS_ANY, &pci_32b_ops }
->  
-> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-> index 7bcdcdf5024e..1ea773c0070d 100644
-> --- a/drivers/pci/controller/dwc/Makefile
-> +++ b/drivers/pci/controller/dwc/Makefile
-> @@ -28,5 +28,6 @@ obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
->  # depending on whether ACPI, the DT driver, or both are enabled.
->  
->  ifdef CONFIG_PCI
-> +obj-$(CONFIG_ARM64) += pcie-al.o
->  obj-$(CONFIG_ARM64) += pcie-hisi.o
->  endif
-> diff --git a/drivers/pci/controller/dwc/pcie-al.c b/drivers/pci/controller/dwc/pcie-al.c
-> new file mode 100644
-> index 000000000000..65a9776c12be
-> --- /dev/null
-> +++ b/drivers/pci/controller/dwc/pcie-al.c
-> @@ -0,0 +1,93 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * PCIe host controller driver for Amazon's Annapurna Labs IP (used in chips
-> + * such as Graviton and Alpine)
-> + *
-> + * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-> + *
-> + * Author: Jonathan Chocron <jonnyc@amazon.com>
-> + */
-> +
-> +#include <linux/pci.h>
-> +#include <linux/pci-ecam.h>
-> +#include <linux/pci-acpi.h>
-> +#include "../../pci.h"
-> +
-> +#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-> +
-> +struct al_pcie_acpi  {
-> +	void __iomem *dbi_base;
-> +};
-> +
-> +static void __iomem *al_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> +				     int where)
-> +{
-> +	struct pci_config_window *cfg = bus->sysdata;
-> +	struct al_pcie_acpi *pcie = cfg->priv;
-> +	void __iomem *dbi_base = pcie->dbi_base;
-> +
-> +	if (bus->number == cfg->busr.start) {
-> +		/*
-> +		 * The DW PCIe core doesn't filter out transactions to other
-> +		 * devices/functions on the primary bus num, so we do this here.
-> +		 */
-> +		if (PCI_SLOT(devfn) > 0)
-> +			return NULL;
-> +		else
-> +			return dbi_base + where;
-> +	}
-> +
-> +	return pci_ecam_map_bus(bus, devfn, where);
-> +}
-> +
-> +static int al_pcie_init(struct pci_config_window *cfg)
-> +{
-> +	struct device *dev = cfg->parent;
-> +	struct acpi_device *adev = to_acpi_device(dev);
-> +	struct acpi_pci_root *root = acpi_driver_data(adev);
-> +	struct al_pcie_acpi *al_pcie;
-> +	struct resource *res;
-> +	int ret;
-> +
-> +	al_pcie = devm_kzalloc(dev, sizeof(*al_pcie), GFP_KERNEL);
-> +	if (!al_pcie)
-> +		return -ENOMEM;
-> +
-> +	res = devm_kzalloc(dev, sizeof(*res), GFP_KERNEL);
-> +	if (!res)
-> +		return -ENOMEM;
-> +
-> +	ret = acpi_get_rc_resources(dev, "AMZN0001", root->segment, res);
-> +	if (ret) {
-> +		dev_err(dev, "can't get rc dbi base address for SEG %d\n",
-> +			root->segment);
-> +		return ret;
-> +	}
-> +
-> +	dev_dbg(dev, "Root port dbi res: %pR\n", res);
-> +
-> +	al_pcie->dbi_base = devm_pci_remap_cfg_resource(dev, res);
-> +	if (IS_ERR(al_pcie->dbi_base)) {
-> +		long err = PTR_ERR(al_pcie->dbi_base);
-> +
-> +		dev_err(dev, "couldn't remap dbi base %pR (err:%ld)\n",
-> +			res, err);
-> +		return err;
-> +	}
-> +
-> +	cfg->priv = al_pcie;
-> +
-> +	return 0;
-> +}
-
-This code is basically identical to (apart from the string matching
-the DBI resource)
-
-drivers/pci/controller/pcie-hisi.c
-
-because, as you said, that's a DW quirk that is really not
-platform specific AFAICS.
-
-Not that I am really fond of the idea but in practice we can
-create a quirk that applies to all host controllers DW based,
-in case they want to boot with ACPI, this patch is basically
-code duplication.
+The real solution is to make the sections protected by
+pci_lock_rescan_remove() smaller or eliminate them as far as
+possible.  So, no good solution available right now, sorry.
 
 Thanks,
-Lorenzo
 
-> +
-> +struct pci_ecam_ops al_pcie_ops = {
-> +	.bus_shift    = 20,
-> +	.init         =  al_pcie_init,
-> +	.pci_ops      = {
-> +		.map_bus    = al_pcie_map_bus,
-> +		.read       = pci_generic_config_read,
-> +		.write      = pci_generic_config_write,
-> +	}
-> +};
-> +
-> +#endif /* defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS) */
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> index 29efa09d686b..a73164c85e78 100644
-> --- a/include/linux/pci-ecam.h
-> +++ b/include/linux/pci-ecam.h
-> @@ -56,6 +56,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
->  extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
->  extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
->  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
-> +extern struct pci_ecam_ops al_pcie_ops; /* Amazon Annapurna Labs PCIe */
->  #endif
->  
->  #ifdef CONFIG_PCI_HOST_COMMON
-> -- 
-> 1.9.1
+Lukas
+
 > 
+> [ 4112.297250] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [ 4112.305069] bash            D    0  6502   2207 0x00000200
+> [ 4112.310544] Call trace:
+> [ 4112.312981]  __switch_to+0x94/0xe8
+> [ 4112.316373]  __schedule+0x270/0x8b0
+> [ 4112.319852]  schedule+0x2c/0x88
+> [ 4112.322981]  schedule_timeout+0x224/0x448
+> [ 4112.326979]  wait_for_common+0x198/0x2a0
+> [ 4112.330892]  wait_for_completion+0x28/0x38
+> [ 4112.334979]  kthread_stop+0x60/0x190
+> [ 4112.338544]  __free_irq+0x1c0/0x348
+> [ 4112.342022]  free_irq+0x40/0x88
+> [ 4112.345153]  pcie_shutdown_notification+0x54/0x80
+> [ 4112.349847]  pciehp_remove+0x30/0x50
+> [ 4112.353413]  pcie_port_remove_service+0x3c/0x58
+> [ 4112.357932]  device_release_driver_internal+0x1b4/0x250
+> [ 4112.363146]  device_release_driver+0x28/0x38
+> [ 4112.367406]  bus_remove_device+0xd4/0x160
+> [ 4112.371405]  device_del+0x128/0x348
+> [ 4112.374880]  device_unregister+0x24/0x78
+> [ 4112.378792]  remove_iter+0x48/0x58
+> [ 4112.382183]  device_for_each_child+0x6c/0xb8
+> [ 4112.386443]  pcie_port_device_remove+0x2c/0x48
+> [ 4112.390876]  pcie_portdrv_remove+0x5c/0x68
+> [ 4112.394963]  pci_device_remove+0x48/0xd8
+> [ 4112.398874]  device_release_driver_internal+0x1b4/0x250
+> [ 4112.404088]  device_release_driver+0x28/0x38
+> [ 4112.408348]  pci_stop_bus_device+0x84/0xb8
+> [ 4112.412434]  pci_stop_and_remove_bus_device_locked+0x24/0x40
+> [ 4112.418083]  remove_store+0xa4/0xb8
+> [ 4112.421560]  dev_attr_store+0x44/0x60
+> [ 4112.425213]  sysfs_kf_write+0x58/0x80
+> [ 4112.428864]  kernfs_fop_write+0xe8/0x1f0
+> [ 4112.432776]  __vfs_write+0x60/0x190
+> [ 4112.436255]  vfs_write+0xac/0x1c0
+> [ 4112.439560]  ksys_write+0x6c/0xd8
+> [ 4112.442861]  __arm64_sys_write+0x24/0x30
+> [ 4112.446773]  el0_svc_common+0xa0/0x180
+> [ 4112.450511]  el0_svc_handler+0x38/0x78
+> [ 4112.454249]  el0_svc+0x8/0xc
+> [ 4112.457122] INFO: task irq/97-pciehp:17365 blocked for more than 120 seconds.
+> [ 4112.464248]       Tainted: P        W  OE     4.19.25-vhulk1901.1.0.h111.aarch64+ #2
+> [ 4112.471980] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [ 4112.479798] irq/97-pciehp   D    0 17365      2 0x00000228
+> [ 4112.485273] Call trace:
+> [ 4112.487710]  __switch_to+0x94/0xe8
+> [ 4112.491098]  __schedule+0x270/0x8b0
+> [ 4112.494575]  schedule+0x2c/0x88
+> [ 4112.497706]  schedule_preempt_disabled+0x14/0x20
+> [ 4112.502313]  __mutex_lock.isra.1+0x1fc/0x540
+> [ 4112.506572]  __mutex_lock_slowpath+0x24/0x30
+> [ 4112.510833]  mutex_lock+0x80/0xa8
+> [ 4112.514138]  pci_lock_rescan_remove+0x20/0x28
+> [ 4112.518485]  pciehp_configure_device+0x30/0x140
+> [ 4112.523005]  pciehp_handle_presence_or_link_change+0x35c/0x4b0
+> [ 4112.528826]  pciehp_ist+0x1cc/0x1d0
+> [ 4112.532305]  irq_thread_fn+0x30/0x80
+> [ 4112.535870]  irq_thread+0x128/0x200
+> [ 4112.539349]  kthread+0x134/0x138
+> [ 4112.542563]  ret_from_fork+0x10/0x18
