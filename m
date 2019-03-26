@@ -7,38 +7,35 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4CEEC43381
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 15:14:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8F47C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 15:14:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6FC320857
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 15:14:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B87C120857
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 15:14:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="BJAuOBjy"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="EefYt/rQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731884AbfCZPOV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Mar 2019 11:14:21 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:4950 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726175AbfCZPOV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2019 11:14:21 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5c9a41c80000>; Tue, 26 Mar 2019 08:14:16 -0700
+        id S1726175AbfCZPOd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Mar 2019 11:14:33 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:18251 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731715AbfCZPOd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2019 11:14:33 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c9a41d60000>; Tue, 26 Mar 2019 08:14:30 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 26 Mar 2019 08:14:20 -0700
+  Tue, 26 Mar 2019 08:14:31 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 26 Mar 2019 08:14:20 -0700
-Received: from HQMAIL102.nvidia.com (172.18.146.10) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 26 Mar
- 2019 15:14:20 +0000
-Received: from HQMAIL108.nvidia.com (172.18.146.13) by HQMAIL102.nvidia.com
- (172.18.146.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 26 Mar
- 2019 15:14:19 +0000
-Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL108.nvidia.com
- (172.18.146.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Tue, 26 Mar 2019 15:14:19 +0000
+        by hqpgpgate101.nvidia.com on Tue, 26 Mar 2019 08:14:31 -0700
+Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 26 Mar
+ 2019 15:14:31 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 26 Mar 2019 15:14:31 +0000
 Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5c9a41c20000>; Tue, 26 Mar 2019 08:14:19 -0700
+        id <B5c9a41ce0000>; Tue, 26 Mar 2019 08:14:31 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
         <mark.rutland@arm.com>, <thierry.reding@gmail.com>,
@@ -60,9 +57,9 @@ CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>
-Subject: [PATCH 01/10] PCI: save pci_bus pointer in pcie_port structure
-Date:   Tue, 26 Mar 2019 20:43:18 +0530
-Message-ID: <1553613207-3988-2-git-send-email-vidyas@nvidia.com>
+Subject: [PATCH 02/10] PCI: perform dbi regs write lock towards the end
+Date:   Tue, 26 Mar 2019 20:43:19 +0530
+Message-ID: <1553613207-3988-3-git-send-email-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
 References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
@@ -70,62 +67,53 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1553613256; bh=ajoC/pclit004a1DH0iOXhHMxfdpECOLvK6JLTZhJKQ=;
+        t=1553613270; bh=hPLUL9Di6m8xA5FM/T73AfF2DuF3x/3OnB8VBnM4nyU=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=BJAuOBjyWFwg7r516BafCaDbsdk4nuDCtjbKFVYdWQNeiS8LJru9ZPI8ikHLj9juV
-         TcQuoMNHDhQKSabahrxVHvJjiIEVep8dZEiKLUMHm7lcoa6vRSen5QUNl+Z5pcq34n
-         bdLp896dGbpngZKf4qra/5FQiimAfzreB3NA6+bsuh1aTku15pQz4nqGi8wkuqolK+
-         oHPIhnYNCyQptfGC021zgyhZcstzO+OpzL6uQJbzFR/0ntXVlBS+EN8YoAc8T5PwtU
-         d17gtLE9aj7Hxos3j4xMYufCXwURFEsiytBExOh8PDJsJ6QRk9cca9V1PiK6HL9TVq
-         AWnLvIjiC4qpg==
+        b=EefYt/rQbDdaP2v2HJBMqtFP6hEyjkHDmLObi39nDEABMZuH4giSQaRJzFODvADmT
+         9WVnJTRmS5/3NbiKj7Tuv17KT5R5ceiBfv3KOKr+fhClodeAX4lzcIjUgfMxkiNNfw
+         J1EoSLHf3YqJrkjNnqpkq4Kqj+vka/9x8Zf8gLtVW3AdCFtiSb8aF4DbREyOyhvq37
+         2ssaufVV+mgTGMt0Co4pTasU46uwZ1iNga9Cigq5gv4ucm4E/OdPwOTodhO7tFFC6i
+         Gyz79CG0QMoE2DVQrecL3NFJCsGKOvm6OvxTjy2QCqItUYSefckx2Aoi5iyvXN4Adm
+         /rv0bK0WTKvgw==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-save pci_bus pointer created by PCIe sub-system's
-pci_scan_root_bus_bridge() to be used by host controller drivers for post
-processing. Tegra host controller driver needs it for the following
-reasons
-- to derive pci_host_bridge structure from pci_bus which is used to
-configure iATU's outbound regions for different windows accesses
-- to traverse and configure downstream hierarchy. One such case is,
-configuring all immediate downstream devices to D0 state before transiting
-link to L2 state. Saving pci_bus pointer seems the best method compared to
-deriving it by other means.
+Remove multiple write enable and disable sequences of dbi registers as
+Tegra194 implements writes to BAR-0 register (offset: 0x10) controlled by
+DBI write-lock enable bit thereby not allowing any further writes to BAR-0
+register in config space to take place. Hence disabling write permission
+only towards the end.
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
- drivers/pci/controller/dwc/pcie-designware.h      | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 25087d3c9a82..15add3cf3945 100644
+index 15add3cf3945..e17213f2217e 100644
 --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -494,6 +494,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		goto error;
+@@ -670,7 +670,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val &= 0xffff00ff;
+ 	val |= 0x00000100;
+ 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
+-	dw_pcie_dbi_ro_wr_dis(pci);
  
- 	bus = bridge->bus;
-+	pp->bus = bus;
+ 	/* Setup bus numbers */
+ 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
+@@ -710,8 +709,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
  
- 	if (pp->ops->scan_bus)
- 		pp->ops->scan_bus(pp);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 377f4c0b52da..70007276bc93 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -175,6 +175,7 @@ struct pcie_port {
- 	struct resource		*busn;
- 	int			irq;
- 	const struct dw_pcie_host_ops *ops;
-+	struct pci_bus		*bus;
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
- 	struct irq_domain	*msi_domain;
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
+-	/* Enable write permission for the DBI read-only register */
+-	dw_pcie_dbi_ro_wr_en(pci);
+ 	/* Program correct class for RC */
+ 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+ 	/* Better disable write permission right after the update */
 -- 
 2.7.4
 
