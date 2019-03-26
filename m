@@ -2,151 +2,115 @@ Return-Path: <SRS0=/keI=R5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A344DC4360F
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 11:24:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F6B1C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 11:40:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 753062070B
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 11:24:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16DAE2070D
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 11:40:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726261AbfCZLY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Mar 2019 07:24:26 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34650 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726175AbfCZLY0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Mar 2019 07:24:26 -0400
+        id S1725975AbfCZLkz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Mar 2019 07:40:55 -0400
+Received: from foss.arm.com ([217.140.101.70]:34926 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725948AbfCZLkz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Mar 2019 07:40:55 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7817D1596;
-        Tue, 26 Mar 2019 04:24:25 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 60EF93F59C;
-        Tue, 26 Mar 2019 04:24:23 -0700 (PDT)
-Date:   Tue, 26 Mar 2019 11:24:14 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     marek.vasut@gmail.com
-Cc:     linux-pci@vger.kernel.org,
-        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
-        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        stable@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V3] PCI: rcar: Add the initialization of PCIe link in
- resume_noirq()
-Message-ID: <20190326112405.GA3266@e107981-ln.cambridge.arm.com>
-References: <20190325194319.12850-1-marek.vasut@gmail.com>
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B2FCD1596;
+        Tue, 26 Mar 2019 04:40:54 -0700 (PDT)
+Received: from [10.1.196.69] (e112269-lin.cambridge.arm.com [10.1.196.69])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 43E933F59C;
+        Tue, 26 Mar 2019 04:40:53 -0700 (PDT)
+Subject: Re: [PATCH v3] PCI: xilinx: Check for __get_free_pages() failure
+To:     Kangjie Lu <kjlu@umn.edu>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, Michal Simek <michal.simek@xilinx.com>,
+        linux-kernel@vger.kernel.org, pakki001@umn.edu,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org
+References: <20190325215105.GB24180@google.com>
+ <20190325221909.26315-1-kjlu@umn.edu>
+From:   Steven Price <steven.price@arm.com>
+Message-ID: <377aa504-7bfa-4e8d-5db7-fce01c931e28@arm.com>
+Date:   Tue, 26 Mar 2019 11:40:51 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190325194319.12850-1-marek.vasut@gmail.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20190325221909.26315-1-kjlu@umn.edu>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 08:43:19PM +0100, marek.vasut@gmail.com wrote:
-> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
+On 25/03/2019 22:19, Kangjie Lu wrote:
+> If __get_free_pages() fails, the patch returns -ENOMEM to avoid
+
+As Bjorn suggested s/the patch returns/return/ would suffice and is
+slightly easier to read. But I'm happy either way.
+
+> NULL pointer dereference.
 > 
-> Reestablish the PCIe link very early in the resume process in case it
-> went down to prevent PCI accesses from hanging the bus. Such accesses
-> can happen early in the PCI resume process, as early as the
-> SUSPEND_RESUME_NOIRQ step, thus the link must be reestablished in the
-> driver resume_noirq() callback.
+> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+
+Reviewed-by: Steven Price <steven.price@arm.com>
+
+> ---
+> v3: remove "unlikely", as suggested by Bjorn Helgaas.
+> v2: caller is redefined to accept the error code, as suggested by
+> Steven Price <steven.price@arm.com>
+> ---
+>  drivers/pci/controller/pcie-xilinx.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
 > 
-> Fixes: e015f88c368d ("PCI: rcar: Add support for R-Car H3 to pcie-rcar")
-> Signed-off-by: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
-> Signed-off-by: Gaku Inami <gaku.inami.xw@bp.renesas.com>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> [lorenzo.pieralisi@arm.com: reformatted commit log]
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
-> Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-> Cc: stable@vger.kernel.org
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> ---
-> V2: - Use BIT() macro for (1 << n)
->     - Since polling in rcar_pcie_wait_for_dl() uses udelay(), do not
->       add extra changes to this function anymore
->     - Make resume_noirq return early and clean up parenthesis therein
-> V3: - Add missing PMSR register definition, dropped due to patch reshuffling
-> ---
->  drivers/pci/controller/pcie-rcar.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
-
-Applied to pci/controller-fixes for one of the upcoming -rc*.
-
-Thanks,
-Lorenzo
-
-> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-> index c8febb009454..6a4e435bd35f 100644
-> --- a/drivers/pci/controller/pcie-rcar.c
-> +++ b/drivers/pci/controller/pcie-rcar.c
-> @@ -46,6 +46,7 @@
+> diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
+> index 9bd1a35cd5d8..abc214e94f7c 100644
+> --- a/drivers/pci/controller/pcie-xilinx.c
+> +++ b/drivers/pci/controller/pcie-xilinx.c
+> @@ -336,14 +336,19 @@ static const struct irq_domain_ops msi_domain_ops = {
+>   * xilinx_pcie_enable_msi - Enable MSI support
+>   * @port: PCIe port information
+>   */
+> -static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+> +static int xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+>  {
+>  	phys_addr_t msg_addr;
 >  
->  /* Transfer control */
->  #define PCIETCTLR		0x02000
-> +#define  DL_DOWN		BIT(3)
->  #define  CFINIT			1
->  #define PCIETSTR		0x02004
->  #define  DATA_LINK_ACTIVE	1
-> @@ -94,6 +95,7 @@
->  #define MACCTLR			0x011058
->  #define  SPEED_CHANGE		BIT(24)
->  #define  SCRAMBLE_DISABLE	BIT(27)
-> +#define PMSR			0x01105c
->  #define MACS2R			0x011078
->  #define MACCGSPSETR		0x011084
->  #define  SPCNGRSN		BIT(31)
-> @@ -1130,6 +1132,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	pcie = pci_host_bridge_priv(bridge);
->  
->  	pcie->dev = dev;
-> +	platform_set_drvdata(pdev, pcie);
->  
->  	err = pci_parse_request_of_pci_ranges(dev, &pcie->resources, NULL);
->  	if (err)
-> @@ -1221,10 +1224,28 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	return err;
+>  	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
+> +	if (!port->msi_pages)
+> +		return -ENOMEM;
+> +
+>  	msg_addr = virt_to_phys((void *)port->msi_pages);
+>  	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
+>  	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
+> +
+> +	return 0;
 >  }
 >  
-> +static int rcar_pcie_resume_noirq(struct device *dev)
-> +{
-> +	struct rcar_pcie *pcie = dev_get_drvdata(dev);
-> +
-> +	if (rcar_pci_read_reg(pcie, PMSR) &&
-> +	    !(rcar_pci_read_reg(pcie, PCIETCTLR) & DL_DOWN))
-> +		return 0;
-> +
-> +	/* Re-establish the PCIe link */
-> +	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
-> +	return rcar_pcie_wait_for_dl(pcie);
-> +}
-> +
-> +static const struct dev_pm_ops rcar_pcie_pm_ops = {
-> +	.resume_noirq = rcar_pcie_resume_noirq,
-> +};
-> +
->  static struct platform_driver rcar_pcie_driver = {
->  	.driver = {
->  		.name = "rcar-pcie",
->  		.of_match_table = rcar_pcie_of_match,
-> +		.pm = &rcar_pcie_pm_ops,
->  		.suppress_bind_attrs = true,
->  	},
->  	.probe = rcar_pcie_probe,
-> -- 
-> 2.20.1
+>  /* INTx Functions */
+> @@ -498,6 +503,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  	struct device *dev = port->dev;
+>  	struct device_node *node = dev->of_node;
+>  	struct device_node *pcie_intc_node;
+> +	int ret;
+>  
+>  	/* Setup INTx */
+>  	pcie_intc_node = of_get_next_child(node, NULL);
+> @@ -526,7 +532,9 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>  			return -ENODEV;
+>  		}
+>  
+> -		xilinx_pcie_enable_msi(port);
+> +		ret = xilinx_pcie_enable_msi(port);
+> +		if (ret)
+> +			return ret;
+>  	}
+>  
+>  	return 0;
 > 
+
