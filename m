@@ -2,125 +2,98 @@ Return-Path: <SRS0=/keI=R5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BF6C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:44:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B94C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53A822075D
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:44:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31A1D20823
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 12:55:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553604912;
+	bh=zwrszH0q56mIPC28FXfodGT4P/TQFSU0NFXDHwmLx/w=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=uXW841xFrN2O68g8LCPBbLMVaBLvXFOK7DBTj1j2MAgkhLJNtF7aD9rkLnOTpYlLN
+	 fAlAHGw+TGTGQqDA/q8xq54h7O9nvaz/0A2rqozXpXSfJae+T1WB2b7oX0UQSoEWMR
+	 /ztu0AbDp15ttX6L4oHRx0HPwqzfTpmEGFJTA0Fg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726175AbfCZMox (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Mar 2019 08:44:53 -0400
-Received: from bmailout2.hostsharing.net ([83.223.90.240]:51907 "EHLO
-        bmailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726645AbfCZMow (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2019 08:44:52 -0400
-Received: from h08.hostsharing.net (unknown [IPv6:2a01:37:1000::53df:5f1c:0])
+        id S1726258AbfCZMzL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Mar 2019 08:55:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33152 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726241AbfCZMzL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Mar 2019 08:55:11 -0400
+Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 7D1622800B3CC;
-        Tue, 26 Mar 2019 13:44:49 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 112A22FE95; Tue, 26 Mar 2019 13:44:49 +0100 (CET)
-Date:   Tue, 26 Mar 2019 13:44:49 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Dongdong Liu <liudongdong3@huawei.com>
-Cc:     mika.westerberg@linux.intel.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>
-Subject: Re: Question about Hotplug driver deadlock issue
-Message-ID: <20190326124449.3vdjmescrvswirop@wunner.de>
-References: <351f898c-f9e9-69e0-b023-cf72e0d7792b@huawei.com>
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 221562070B;
+        Tue, 26 Mar 2019 12:55:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553604910;
+        bh=zwrszH0q56mIPC28FXfodGT4P/TQFSU0NFXDHwmLx/w=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZshjX7/kTWgu3JyqjG2xr7Y8OmvqDo35udLb4fRzMsCvP9EuJvZEJUuivNuC398ws
+         g+m2ztv0y0EWc1BOoKsrZGsB8SFSGUZ7r2Q+z1uLuBE/XiBgAYAEcxRXlS8wbNI2jJ
+         0Njhf5IUXJcOYfPJtUbGcbblriCvOhWbrOTsrbAY=
+Date:   Tue, 26 Mar 2019 07:55:08 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jonathan Chocron <jonnyc@amazon.com>
+Cc:     linux-pci@vger.kernel.org, lorenzo.pieralisi@arm.com,
+        linux-kernel@vger.kernel.org, vaerov@amazon.com, dwmw@amazon.co.uk,
+        benh@kernel.crashing.org, alisaidi@amazon.com, zeev@amazon.com,
+        ronenk@amazon.com, barakw@amazon.com
+Subject: Re: [PATCH v2] PCI: al: Add Amazon Annapurna Labs PCIe host
+ controller driver
+Message-ID: <20190326125508.GG24180@google.com>
+References: <1553512040-4453-1-git-send-email-jonnyc@amazon.com>
+ <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <351f898c-f9e9-69e0-b023-cf72e0d7792b@huawei.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Mar 26, 2019 at 07:43:17PM +0800, Dongdong Liu wrote:
-> Current we met another deadlock issue in hotplug driver. The calltrace is as below.
-> The deadlock triggered by a hotplug event during a sysfs "remove" operation.
-> Any suggestion to fix such deadlock ?
+Nits, probably Lorenzo will fix them up unless he sees more substantive
+things.
 
-That's a known problem, deadlocks may occur if hotplug ports are
-cascaded.  I came up with a kludge to work around it but withdrew
-the patch:
-https://patchwork.ozlabs.org/patch/930403/
+On Tue, Mar 26, 2019 at 12:00:55PM +0200, Jonathan Chocron wrote:
+> Adding support for Amazon's Annapurna Labs PCIe driver.
 
-The real solution is to make the sections protected by
-pci_lock_rescan_remove() smaller or eliminate them as far as
-possible.  So, no good solution available right now, sorry.
+Ideally, use "imperative mood", i.e., write it as a command:
 
-Thanks,
+  Add support for Amazon's Annapurna Labs PCIe driver.
 
-Lukas
-
+> The HW controller is based on DesignWare's IP.
 > 
-> [ 4112.297250] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [ 4112.305069] bash            D    0  6502   2207 0x00000200
-> [ 4112.310544] Call trace:
-> [ 4112.312981]  __switch_to+0x94/0xe8
-> [ 4112.316373]  __schedule+0x270/0x8b0
-> [ 4112.319852]  schedule+0x2c/0x88
-> [ 4112.322981]  schedule_timeout+0x224/0x448
-> [ 4112.326979]  wait_for_common+0x198/0x2a0
-> [ 4112.330892]  wait_for_completion+0x28/0x38
-> [ 4112.334979]  kthread_stop+0x60/0x190
-> [ 4112.338544]  __free_irq+0x1c0/0x348
-> [ 4112.342022]  free_irq+0x40/0x88
-> [ 4112.345153]  pcie_shutdown_notification+0x54/0x80
-> [ 4112.349847]  pciehp_remove+0x30/0x50
-> [ 4112.353413]  pcie_port_remove_service+0x3c/0x58
-> [ 4112.357932]  device_release_driver_internal+0x1b4/0x250
-> [ 4112.363146]  device_release_driver+0x28/0x38
-> [ 4112.367406]  bus_remove_device+0xd4/0x160
-> [ 4112.371405]  device_del+0x128/0x348
-> [ 4112.374880]  device_unregister+0x24/0x78
-> [ 4112.378792]  remove_iter+0x48/0x58
-> [ 4112.382183]  device_for_each_child+0x6c/0xb8
-> [ 4112.386443]  pcie_port_device_remove+0x2c/0x48
-> [ 4112.390876]  pcie_portdrv_remove+0x5c/0x68
-> [ 4112.394963]  pci_device_remove+0x48/0xd8
-> [ 4112.398874]  device_release_driver_internal+0x1b4/0x250
-> [ 4112.404088]  device_release_driver+0x28/0x38
-> [ 4112.408348]  pci_stop_bus_device+0x84/0xb8
-> [ 4112.412434]  pci_stop_and_remove_bus_device_locked+0x24/0x40
-> [ 4112.418083]  remove_store+0xa4/0xb8
-> [ 4112.421560]  dev_attr_store+0x44/0x60
-> [ 4112.425213]  sysfs_kf_write+0x58/0x80
-> [ 4112.428864]  kernfs_fop_write+0xe8/0x1f0
-> [ 4112.432776]  __vfs_write+0x60/0x190
-> [ 4112.436255]  vfs_write+0xac/0x1c0
-> [ 4112.439560]  ksys_write+0x6c/0xd8
-> [ 4112.442861]  __arm64_sys_write+0x24/0x30
-> [ 4112.446773]  el0_svc_common+0xa0/0x180
-> [ 4112.450511]  el0_svc_handler+0x38/0x78
-> [ 4112.454249]  el0_svc+0x8/0xc
-> [ 4112.457122] INFO: task irq/97-pciehp:17365 blocked for more than 120 seconds.
-> [ 4112.464248]       Tainted: P        W  OE     4.19.25-vhulk1901.1.0.h111.aarch64+ #2
-> [ 4112.471980] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> [ 4112.479798] irq/97-pciehp   D    0 17365      2 0x00000228
-> [ 4112.485273] Call trace:
-> [ 4112.487710]  __switch_to+0x94/0xe8
-> [ 4112.491098]  __schedule+0x270/0x8b0
-> [ 4112.494575]  schedule+0x2c/0x88
-> [ 4112.497706]  schedule_preempt_disabled+0x14/0x20
-> [ 4112.502313]  __mutex_lock.isra.1+0x1fc/0x540
-> [ 4112.506572]  __mutex_lock_slowpath+0x24/0x30
-> [ 4112.510833]  mutex_lock+0x80/0xa8
-> [ 4112.514138]  pci_lock_rescan_remove+0x20/0x28
-> [ 4112.518485]  pciehp_configure_device+0x30/0x140
-> [ 4112.523005]  pciehp_handle_presence_or_link_change+0x35c/0x4b0
-> [ 4112.528826]  pciehp_ist+0x1cc/0x1d0
-> [ 4112.532305]  irq_thread_fn+0x30/0x80
-> [ 4112.535870]  irq_thread+0x128/0x200
-> [ 4112.539349]  kthread+0x134/0x138
-> [ 4112.542563]  ret_from_fork+0x10/0x18
+> The HW doesn't support accessing the Root Port's config space via
+> ECAM, so we obtain its base address via an AMZN0001 device.
+> 
+> Furthermore, the DesignWare PCIe controller doesn't filter out
+> config transactions sent to devices 1 and up on its bus, so they
+> are filtered by the driver.
+> All subordinate buses do support ECAM access.
+
+I didn't communicate my point very clearly.  The above four lines
+should either be (1) a single paragraph, wrapped to fill the entire
+width, or (2) two paragraphs, with a blank line before "All
+subordinate buses ..."
+
+The fact that "... by the driver" ends in the middle of the line
+suggests that it's the end of the paragraph, but the fact that there's
+no blank line following suggests that it's not.  So it creates an
+unnecessary hiccup for the reader.
+
+> Implementing specific PCI config access functions involves:
+>  - Adding an init function to obtain the Root Port's base address
+>    from an AMZN0001 device.
+>  - Adding a new entry in the mcfg quirk array
+
+s/mcfg/MCFG/ since "MCFG" is an ACPI table ID, not a word.
+
+Bjorn
