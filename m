@@ -2,138 +2,171 @@ Return-Path: <SRS0=/keI=R5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1BFBC10F05
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 19:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5366C43381
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 20:20:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDB592084B
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 19:54:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B668D2075C
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 20:20:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1553631659;
+	bh=WlX3mKU7ybiZhB/KyE7ButxaXqtd5qA2M5Dl9dJjWTQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Dwcl8RdIqgCpadhfeT60+KL82I97gRiyZEHaJphdEiHXOViVvMgmyjJ16JTON9TJh
+	 y/OOiXI3iYD+CFuD2u1vNSeu1fqv+uHUFinvW/BwQsexfCRNbKQuK88xW/HT2OyOt9
+	 GDCUQhw859p+WKgCfvEoc32LBj1ZC+QIlg2dmjzk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732003AbfCZTyj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Mar 2019 15:54:39 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43294 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726207AbfCZTyj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 26 Mar 2019 15:54:39 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 432B180D;
-        Tue, 26 Mar 2019 12:54:38 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 4D4E03F575;
-        Tue, 26 Mar 2019 12:54:35 -0700 (PDT)
-Date:   Tue, 26 Mar 2019 19:54:30 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Dexuan Cui <decui@microsoft.com>
-Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        Sasha Levin <Alexander.Levin@microsoft.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "driverdev-devel@linuxdriverproject.org" 
-        <driverdev-devel@linuxdriverproject.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        vkuznets <vkuznets@redhat.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "jackm@mellanox.com" <jackm@mellanox.com>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH 3/3] PCI: hv: Add pci_destroy_slot() in
- pci_devices_present_work(), if necessary
-Message-ID: <20190326195429.GA15410@e107981-ln.cambridge.arm.com>
-References: <20190304213357.16652-1-decui@microsoft.com>
- <20190304213357.16652-4-decui@microsoft.com>
+        id S1731832AbfCZUU7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Mar 2019 16:20:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46028 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731736AbfCZUU7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 26 Mar 2019 16:20:59 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5473820657;
+        Tue, 26 Mar 2019 20:20:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553631657;
+        bh=WlX3mKU7ybiZhB/KyE7ButxaXqtd5qA2M5Dl9dJjWTQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=lCpYKWtMfFgGUD3pGqWHfPg5Urxvob4sjxEJnjqf/ReMO4qSgGqsTwea34UhdNTdM
+         Ybd46hyXcUeIUeC/pupENwrrx5bFZQOdDI6cmbUXvw6W44eeGc4n2KHUH6pbi+ztCh
+         Crmf+Kk96tntguibsrvalzBYHjq6SwDnIWnBax4k=
+Date:   Tue, 26 Mar 2019 15:20:55 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Cc:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux@yadro.com, Keith Busch <keith.busch@intel.com>,
+        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC v4 08/21] nvme-pci: Handle movable BARs
+Message-ID: <20190326202055.GP24180@google.com>
+References: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
+ <20190311133122.11417-9-s.miroshnichenko@yadro.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190304213357.16652-4-decui@microsoft.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20190311133122.11417-9-s.miroshnichenko@yadro.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 04, 2019 at 09:34:49PM +0000, Dexuan Cui wrote:
-> When we hot-remove a device, usually the host sends us a PCI_EJECT message,
-> and a PCI_BUS_RELATIONS message with bus_rel->device_count == 0. But when
-> we do the quick hot-add/hot-remove test, the host may not send us the
-> PCI_EJECT message, if the guest has not fully finished the initialization
-> by sending the PCI_RESOURCES_ASSIGNED* message to the host, so it's
-> potentially unsafe to only depend on the pci_destroy_slot() in
-> hv_eject_device_work(), though create_root_hv_pci_bus() ->
-> hv_pci_assign_slots() is not called in this case. Note: in this case, the
-> host still sends the guest a PCI_BUS_RELATIONS message with
-> bus_rel->device_count == 0.
-> 
-> And, in the quick hot-add/hot-remove test, we can have such a race: before
-> pci_devices_present_work() -> new_pcichild_device() adds the new device
-> into hbus->children, we may have already received the PCI_EJECT message,
-> and hence the taklet handler hv_pci_onchannelcallback() may fail to find
-> the "hpdev" by get_pcichild_wslot(hbus, dev_message->wslot.slot), so
-> hv_pci_eject_device() is NOT called; later create_root_hv_pci_bus() ->
-> hv_pci_assign_slots() creates the slot, and the PCI_BUS_RELATIONS message
-> with bus_rel->device_count == 0 removes the device from hbus->children, and
-> we end up being unable to remove the slot in hv_pci_remove() ->
-> hv_pci_remove_slots().
-> 
-> The patch removes the slot in pci_devices_present_work() when the device
-> is removed. This can address the above race. Note 1:
-> pci_devices_present_work() and hv_eject_device_work() run in the
-> singled-threaded hbus->wq, so there is not a double-remove issue for the
-> slot. Note 2: we can't offload hv_pci_eject_device() from
-> hv_pci_onchannelcallback() to the workqueue, because we need
-> hv_pci_onchannelcallback() synchronously call hv_pci_eject_device() to
-> poll the channel's ringbuffer to work around the
-> "hangs in hv_compose_msi_msg()" issue: see
-> commit de0aa7b2f97d ("PCI: hv: Fix 2 hang issues in hv_compose_msi_msg()")
+[+cc Keith, Jens, Christoph, Sagi, linux-nvme, LKML]
 
-This commit log is unreadable, sorry. Indentation, punctuation and
-formatting are just a mess, try to read it, you will notice by
-yourself.
+On Mon, Mar 11, 2019 at 04:31:09PM +0300, Sergey Miroshnichenko wrote:
+> Hotplugged devices can affect the existing ones by moving their BARs.
+> PCI subsystem will inform the NVME driver about this by invoking
+> reset_prepare()+reset_done(), then iounmap()+ioremap() must be called.
 
-I basically reformatted it completely and pushed the series to
-pci/controller-fixes but that's the last time I do it since I am not an
-editor, next time I won't merge it.
+Do you mean the PCI core will invoke ->rescan_prepare() and
+->rescan_done() (as opposed to *reset*)?
 
-More importantly, these patches are marked for stable, given the series
-of fixes that triggered this series please ensure it was tested
-thoroughly because it is honestly complicate to understand and I do not
-want to backport further fixes to stable kernels on top of this.
-
-Please have a look and report back.
-
-Thanks,
-Lorenzo
-
-> Fixes: a15f2c08c708 ("PCI: hv: support reporting serial number as slot information")
-> Signed-off-by: Dexuan Cui <decui@microsoft.com>
-> Cc: stable@vger.kernel.org
+> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 > ---
->  drivers/pci/controller/pci-hyperv.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>  drivers/nvme/host/pci.c | 29 +++++++++++++++++++++++++++--
+>  1 file changed, 27 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index b489412e3502..82acd6155adf 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -1776,6 +1776,10 @@ static void pci_devices_present_work(struct work_struct *work)
->  		hpdev = list_first_entry(&removed, struct hv_pci_dev,
->  					 list_entry);
->  		list_del(&hpdev->list_entry);
-> +
-> +		if (hpdev->pci_slot)
-> +			pci_destroy_slot(hpdev->pci_slot);
-> +
->  		put_pcichild(hpdev);
->  	}
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 92bad1c810ac..ccea3033a67a 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -106,6 +106,7 @@ struct nvme_dev {
+>  	unsigned int num_vecs;
+>  	int q_depth;
+>  	u32 db_stride;
+> +	resource_size_t current_phys_bar;
+>  	void __iomem *bar;
+>  	unsigned long bar_mapped_size;
+>  	struct work_struct remove_work;
+> @@ -1672,13 +1673,16 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev->dev);
 >  
+> -	if (size <= dev->bar_mapped_size)
+> +	if (dev->bar &&
+> +	    dev->current_phys_bar == pci_resource_start(pdev, 0) &&
+> +	    size <= dev->bar_mapped_size)
+>  		return 0;
+>  	if (size > pci_resource_len(pdev, 0))
+>  		return -ENOMEM;
+>  	if (dev->bar)
+>  		iounmap(dev->bar);
+> -	dev->bar = ioremap(pci_resource_start(pdev, 0), size);
+> +	dev->current_phys_bar = pci_resource_start(pdev, 0);
+> +	dev->bar = ioremap(dev->current_phys_bar, size);
+
+dev->current_phys_bar is different from pci_resource_start() in the
+case where the PCI core has moved the nvme BAR, but nvme has not yet
+remapped it.
+
+I'm not sure it's worth keeping track of current_phys_bar, as opposed
+to always unmapping and remapping.  Is this a performance path?  I
+think there are advantages to always exercising the same code path,
+regardless of whether the BAR happened to be moved, e.g., if there's a
+bug in the "BAR moved" path, it may be a heisenbug because whether we
+exercise that path depends on the current configuration.
+
+If you do need to cache current_phys_bar, maybe this, so it's a little
+easier to see that you're not changing the ioremap() itself:
+
+  dev->bar = ioremap(pci_resource_start(pdev, 0), size);
+  dev->current_phys_bar = pci_resource_start(pdev, 0);
+
+>  	if (!dev->bar) {
+>  		dev->bar_mapped_size = 0;
+>  		return -ENOMEM;
+> @@ -2504,6 +2508,8 @@ static void nvme_reset_work(struct work_struct *work)
+>  	if (WARN_ON(dev->ctrl.state != NVME_CTRL_RESETTING))
+>  		goto out;
+>  
+> +	nvme_remap_bar(dev, db_bar_size(dev, 0));
+
+How is this change connected to rescan?  This looks reset-related.
+
+>  	/*
+>  	 * If we're called to reset a live controller first shut it down before
+>  	 * moving on.
+> @@ -2910,6 +2916,23 @@ static void nvme_error_resume(struct pci_dev *pdev)
+>  	flush_work(&dev->ctrl.reset_work);
+>  }
+>  
+> +void nvme_rescan_prepare(struct pci_dev *pdev)
+> +{
+> +	struct nvme_dev *dev = pci_get_drvdata(pdev);
+> +
+> +	nvme_dev_disable(dev, false);
+> +	nvme_dev_unmap(dev);
+> +	dev->bar = NULL;
+> +}
+> +
+> +void nvme_rescan_done(struct pci_dev *pdev)
+> +{
+> +	struct nvme_dev *dev = pci_get_drvdata(pdev);
+> +
+> +	nvme_dev_map(dev);
+> +	nvme_reset_ctrl_sync(&dev->ctrl);
+> +}
+> +
+>  static const struct pci_error_handlers nvme_err_handler = {
+>  	.error_detected	= nvme_error_detected,
+>  	.slot_reset	= nvme_slot_reset,
+> @@ -2974,6 +2997,8 @@ static struct pci_driver nvme_driver = {
+>  	},
+>  	.sriov_configure = pci_sriov_configure_simple,
+>  	.err_handler	= &nvme_err_handler,
+> +	.rescan_prepare	= nvme_rescan_prepare,
+> +	.rescan_done	= nvme_rescan_done,
+>  };
+>  
+>  static int __init nvme_init(void)
 > -- 
-> 2.19.1
+> 2.20.1
 > 
