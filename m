@@ -2,166 +2,126 @@ Return-Path: <SRS0=/keI=R5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61167C43381
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 17:24:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E83CC10F05
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 17:24:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31E5920823
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 17:24:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E523D20879
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Mar 2019 17:24:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JHvJtvyJ"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ltHuqhiO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732061AbfCZRXx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Mar 2019 13:23:53 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:38803 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726278AbfCZRXx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2019 13:23:53 -0400
-Received: by mail-ot1-f66.google.com with SMTP id e80so12239220ote.5;
-        Tue, 26 Mar 2019 10:23:52 -0700 (PDT)
+        id S1731904AbfCZRY3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Mar 2019 13:24:29 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:40204 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727492AbfCZRY3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Mar 2019 13:24:29 -0400
+Received: by mail-wm1-f68.google.com with SMTP id z24so10600443wmi.5;
+        Tue, 26 Mar 2019 10:24:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=POhWQIt+7MKKaB0xpr8RCC2Gi7vnEhrJDayyqfFtsbU=;
-        b=JHvJtvyJPNSo+HDI3O7LUbgFSAoKWqiK3xAPrdEDOHPmAjIxTX8HdIgpu5kRLeTYmG
-         D2ic5C23vN3pW7Bv3LMc1JMFV48cFhW850dIIrA+t8tO3t0Rh2MJ7D6EnJHRWz52o2M6
-         HrOC9eDL5XDADZCU+UX42MHeImCYJMqWbzTCR5P1ZT71eLBmRfrFX+iCW2kpflatDeNz
-         5nEx6raxwOSBU5+OQOI/WxTChZxGdUTcoiIJFo/0fwLfIXwSb+h1hYxTal7y6MFkMLzd
-         x4qig8zmA/8PrYol34fPVvhv7SoAEB18tnbojWbrAw8U20QcG/aOxkU8l+4U4VuHJAZM
-         a5hQ==
+        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=gVLN1pxg7UWkSp/Tcnurq+jyhk0N/Fd73p7EHEMDktE=;
+        b=ltHuqhiOqZdrqskHj1/s6i0VconGX5YrSU5Kg84y25FYuyN5DQczh83kUQVyUQUwTV
+         Tph61+L/ZUjUJqCssgaHOZYgw4tGnTwJqIFivYL5+QFV8viPeWkKTtnqyunc8WgTZHM6
+         fN1BA4HPD5vUyCUz4V+Wl01gRHaP9xEV6Hcq+5C/P0nMEqRXO2GIGmQQDicZhIrxL+rE
+         lHxnM/cw9xnFtXkLpLq5nXOGcI06HqP0+6r2nGzi+7vXRdXFkN/79p8lC5MT3z13XgUJ
+         cQ1lMkNLr2oFGAfV8gHS67hdn1eOucMW1111EybMa2//H5O7XZLpjtUBjKC9utkUq4l7
+         PLBg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=POhWQIt+7MKKaB0xpr8RCC2Gi7vnEhrJDayyqfFtsbU=;
-        b=oW5I8xh8sS16OWwLlzWwr5rZhDOheycD6C+RJXmSETtj1teS4zS6cGBdw1gFMzOubo
-         0G33WxbBTrrm0MbkNppm3qYYpcqWtit7+STxkHD+pCWJmVctyUA/Sff49pAd/a4qXa+d
-         VCzOqE2nZUhfjh3BgKA0aj4P3pzpdiR9pQFkpJjvcxJQ7qSOuVsbM1YSo32NAQZOJxtg
-         VGuEKJz/oQjO33S153vFN3VpGTGJeK3uz5SP6mUe4+gUlE7mSn9j5zeGWSVx0sttWG3D
-         1ZCXjDC6NqFwY0kTEpHrCYkbofBUNl6IsjYtLwRBQ1quvMNQP/t1bSvvUa9vDYZlDYuP
-         3VZQ==
-X-Gm-Message-State: APjAAAUAUWNfdOgR/TQVy5lWbq/GXOZLSHitAJdje5jLWUbxDwYZTyhB
-        7FqSXzJxmtv7SiYIHSLBO/I=
-X-Google-Smtp-Source: APXvYqxV49KQ0KIVmX2RkMEowFct5KcJJEg8z5my4fLysNPQXWdjr4S/z3f64Wxu3k1PqZri9cA2MQ==
-X-Received: by 2002:a9d:5e90:: with SMTP id f16mr23703768otl.276.1553621032105;
-        Tue, 26 Mar 2019 10:23:52 -0700 (PDT)
-Received: from nuclearis2-1.lan (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
-        by smtp.gmail.com with ESMTPSA id z12sm3047459otp.2.2019.03.26.10.23.50
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 26 Mar 2019 10:23:51 -0700 (PDT)
-From:   Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To:     bhelgaas@google.com
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        okaya@kernel.org, scott.faasse@hpe.com, leo.duran@amd.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Russell Currey <ruscur@russell.cc>,
-        Sam Bobroff <sbobroff@linux.ibm.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v2 0/2] PCI/AER: Consistently use _OSC to determine who owns AER
-Date:   Tue, 26 Mar 2019 12:23:40 -0500
-Message-Id: <20190326172343.28946-1-mr.nuke.me@gmail.com>
-X-Mailer: git-send-email 2.19.2
+        bh=gVLN1pxg7UWkSp/Tcnurq+jyhk0N/Fd73p7EHEMDktE=;
+        b=KglS8hdLfYNe+iFDZ+gBzZ027r2LeQwYcVywnogWjS/XtXpNSCQYrJkFYGiMoZrrMQ
+         A9+iU8Dv16tURUpcfdu+0yYsxs4aJN+JkmGoHNRghGvqjlm0JY/UnGlJYldI5NQtvzkt
+         4alKpPUXTImRFdp6wujoPO2e7LQCPgKqyokBcaN31jqFheEIvaWnsJRHXxtYhBWrtRTc
+         OnwdOIlqbp2PUVottUVb5DhfYBV77y/ipOA5oGu88SDEW1ZQWPgRbQ0/TqzPHfrLeQGB
+         1le+LgR1y6oD8Sx29MVCAOOohQrj64rRZ7Kn3U3iBCU7hvwQTVL6UL7zP288GsZaanjc
+         N8yQ==
+X-Gm-Message-State: APjAAAXwMrojIBPQKs5zMlRSdxEN71pz0A810uXAv9KDGazt/mY0UD2h
+        DCg/7xJbhvir4Z6vgHWuP9c=
+X-Google-Smtp-Source: APXvYqzK7s6WOqstHGLvVku/AUziJjRnSoyxz0oLpGqu14ls9rCRb4mnLvBXIGX9m87UJZAANlkiTQ==
+X-Received: by 2002:a1c:7706:: with SMTP id t6mr9953652wmi.141.1553621067096;
+        Tue, 26 Mar 2019 10:24:27 -0700 (PDT)
+Received: from [192.168.42.184] (cst-prg-31-181.cust.vodafone.cz. [46.135.31.181])
+        by smtp.gmail.com with ESMTPSA id r63sm31255253wmr.32.2019.03.26.10.24.25
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Tue, 26 Mar 2019 10:24:26 -0700 (PDT)
+Subject: Re: [PATCH V4 1/6] PCI: rcar: Clean up remaining macros defining bits
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>
+References: <20190325114101.10198-1-marek.vasut@gmail.com>
+ <20190326130444.GA5466@e107981-ln.cambridge.arm.com>
+From:   Marek Vasut <marek.vasut@gmail.com>
+Openpgp: preference=signencrypt
+Message-ID: <515ae430-edf3-b895-cd3a-5cdc830ecd35@gmail.com>
+Date:   Tue, 26 Mar 2019 17:48:25 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190326130444.GA5466@e107981-ln.cambridge.arm.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This started as a nudge from Keith, who pointed out that it doesn't make sense
-to disable AER services when only one device has a FIRMWARE_FIRST HEST.
+On 3/26/19 2:04 PM, Lorenzo Pieralisi wrote:
+> On Mon, Mar 25, 2019 at 12:40:56PM +0100, marek.vasut@gmail.com wrote:
+>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>
+>> Replace macros using constants with BIT()s instead, no functional change.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> To: linux-pci@vger.kernel.org
+>> Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+>> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+>> ---
+>> V2: Bundle this patch with other cleanups before resending
+>> V3: Add Wolfram's R-B
+>> V4: Add Geert's R-B
+>> ---
+>>  drivers/pci/controller/pcie-rcar.c | 6 +++---
+>>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> Hi Marek,
 
-I won't re-phrase the points in the original patch [1]. The patch started a
-long discussion in the ACPI Software Working Group (ASWG). The nearly unanimous
-conclusion is that my original interpretation is correct.
+Hi,
 
-I'd like to quote one of the tables that was produced as part of that
-conversation:
+> I assume this series makes:
+> 
+> https://patchwork.ozlabs.org/patch/1053779/
+> https://patchwork.ozlabs.org/patch/1057454/
+> 
+> obsolete, please let me know and I will drop
+> them from the PCI patches queue, I will get to
+> this series later for v5.2.
+Yes, I decided to merge the two series together to make it easier to pick.
 
-(_OSC AER Control, HEST AER Structure FFS) = (0, 0)
-	* OSPM is prevented from writing to the PCI Express AER registers.
-	* OSPM has no guidance on how AER errors are being handled – but it
-	  does know that it is not in control of AER registers. PCI-e errors
-	  that make it to the OS (via NMI, etc) would be treated as spurious
-	  since access to the AER registers isn’t allowed for proper sourcing.
-
-
-(_OSC AER Control, HEST AER Structure FFS) = (0, 1)
-	* OSPM is prevented from writing to the PCI Express AER registers.
-	* OSPM is being given guidance that Firmware is handling AER errors and
-	  those interrupts are routed to the platform. Firmware may pass along
-	  error information via GHES
-
-
-(_OSC AER Control, HEST AER Structure FFS) = (0, Does not exist)
-	* OSPM is prevented from writing to the PCI Express AER registers.
-	* OSPM has no guidance on how AER errors are being handled – but it
-	  does know that it is not in control of AER registers. PCI-e errors
-	  that make it to the OS (via NMI, etc) would be treated as spurious
-	  since access to the AER registers isn’t allowed for proper sourcing.
-
-(_OSC AER Control, HEST AER Structure FFS) = (1, 0)
-	* OSPM is in control of writing to the PCI Express AER registers.
-	* OSPM is being given guidance that AER errors will interrupt the OS
-	  directly and that the OS is expected to handle all AER capability
-	  structure read/clears for the devices with this attribute (or all if
-	  the Global Bit is set.)
-
-(_OSC AER Control, HEST AER Structure FFS) = (1, 1)
-	* OSPM is in control of writing to the PCI Express AER registers.
-	* OSPM is being given guidance that although OS is in control of AER
-	  read/writes – the actual interrupt is being routed to the platform
-	  first.
-	* Subsequent fields with masks/enables should be performed by the OS
-	  during initialization on behalf of firmware. These are to be honoured
-	  in this mode because with FF, the firmware needs to be able to handle
-	  the errors it expects and not be given errors it was not expecting to
-	  handle.
-	* Firmware may pass along error information via GHES, or generate an OS
-	  interrupt and allow the OS to interrogate AER status directly via the
-	  AER capability structures.
-
-
-(_OSC AER Control, HEST AER Structure FFS) = (0, Does not exist)
-	* OSPM is in control of writing to the PCI Express AER registers.
-	* OSPM has no guidance from the platform and is in complete control of
-	  AER error handling.
-
-
-There may be one caveat. Someone mentioned in the original discussions that
-there may exist machines which make the assumption that HEST is authoritative,
-but did not identify any such machine. We should keep in mind that they may
-require a quirk.
-
-Alex
-
-
-[1] https://lkml.org/lkml/2018/11/16/202
-
-Changes since v1:
- * Started 6-month conversation in ASWG
- * Re-phrased commit message to reflect some of the points in ASWG discussion
-
-Alexandru Gagniuc (2):
-  PCI/AER: Do not use APEI/HEST to disable AER services globally
-  PCI/AER: Determine AER ownership based on _OSC instead of HEST
-
- drivers/acpi/pci_root.c  |  9 +----
- drivers/pci/pcie/aer.c   | 82 ++--------------------------------------
- include/linux/pci-acpi.h |  6 ---
- 3 files changed, 5 insertions(+), 92 deletions(-)
+Thanks
 
 -- 
-2.19.2
-
+Best regards,
+Marek Vasut
