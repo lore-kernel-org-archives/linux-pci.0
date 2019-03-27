@@ -6,36 +6,36 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7412CC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:40:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57F20C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 12:01:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 292AB2146E
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:40:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10FF62087C
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 12:01:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aRaHk8qV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="piQpRlRU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726319AbfC0Lku (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 07:40:50 -0400
-Received: from merlin.infradead.org ([205.233.59.134]:37386 "EHLO
+        id S1728110AbfC0MBc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 08:01:32 -0400
+Received: from merlin.infradead.org ([205.233.59.134]:37524 "EHLO
         merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726312AbfC0Lku (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 07:40:50 -0400
+        with ESMTP id S1727557AbfC0MBc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 08:01:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=merlin.20170209; h=Mime-Version:Content-Type:References:
         In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=RDCEVYyXa1je1R9JP9sefo94+Q4ml/ycjrgnI9N1sN8=; b=aRaHk8qViHPGptJ9QkOW9Yqsf
-        k+EYMJ9UFGzlhzenUB4jzugYqoZLbV27icW+DS2MQsUsKo+qlc3/xtMgMh3VA5/yoLcGgQcOGEAJJ
-        eNbmUNd0mJEBTRYv6cyvs0bq0pQsP9Aj3++hZsm9DNsLzBMaObcDC42HFHwD6hZdPGLc2Y6vhoxW2
-        QAU7ikNkzHkdJfdcoTfYS/h2tbo6roV2xRS8qUI92LtNlxvZ0+HbyYiR9x03tFGRCU05hosKP1xRF
-        ZcK373+KH8JXeUHTf1SVfCWKkqnKEPOp7cCA6HQBV142XZ0wec3fKe7beQqcLNYlrQJp0ltYXA2YG
-        t+PsYGdzg==;
+         bh=U9Hi9KyYljyy+PH/6dP3qjx95mgwxtpb84gVPrSfuSE=; b=piQpRlRU/ydmZ2tTBRCAQI3Rf
+        LitEqnblZYWypKs7w/nHOigW88ofCv3crs5pfT7QPBjEGRcsuORMAiusBom3aPqPpL5DSrvEsvq4V
+        cgOyNwyv2En5MbPBRhRzU0ZWru17FGplpIpssjz9lssjlMReRgPw112FjAqwlK+WEQwzAByz+A75a
+        O5vrs58DlCSgd59jSgb5vCKdICKX2jo/nhwsg+s5Rm11nvqYh8kNNERRJaRFYyX6a8TF1cgFc4fvm
+        N4IigPBuuzWxeUYGOdVkhTrMwY31DJoh1tBCnEbLVIvmQm1p1j5ocii9XuK4V0mZHahB0ySMcV3+0
+        vm7CIn1Zw==;
 Received: from [54.239.6.177] (helo=u3832b3a9db3152.ant.amazon.com)
         by merlin.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1h96v7-0007Pz-Os; Wed, 27 Mar 2019 11:40:38 +0000
-Message-ID: <5c640b0e9fe282ebb6e6b150abf7933ce9acf19f.camel@infradead.org>
+        id 1h97FG-0007Vn-8e; Wed, 27 Mar 2019 12:01:26 +0000
+Message-ID: <ce4039abb11177d6548dd3b9044e7d2300d2a0a0.camel@infradead.org>
 Subject: Re: [PATCH v2] PCI: al: Add Amazon Annapurna Labs PCIe host
  controller driver
 From:   David Woodhouse <dwmw2@infradead.org>
@@ -46,18 +46,16 @@ Cc:     Jonathan Chocron <jonnyc@amazon.com>, linux-pci@vger.kernel.org,
         zeev@amazon.com, ronenk@amazon.com, barakw@amazon.com,
         Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Zhou Wang <wangzhou1@hisilicon.com>
-Date:   Wed, 27 Mar 2019 11:40:34 +0000
-In-Reply-To: <20190327112052.GA8331@e107981-ln.cambridge.arm.com>
+Date:   Wed, 27 Mar 2019 12:01:23 +0000
+In-Reply-To: <20190327113911.GB8331@e107981-ln.cambridge.arm.com>
 References: <1553512040-4453-1-git-send-email-jonnyc@amazon.com>
          <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
          <20190326121727.GA4171@e107981-ln.cambridge.arm.com>
-         <07838dad0e0cdb14c42080ef19c11829f72c8814.camel@infradead.org>
-         <20190326155837.GA8820@e107981-ln.cambridge.arm.com>
-         <d02a76ff37dc2db153c7b9c4d00a0399f9ac1b47.camel@infradead.org>
-         <20190327112052.GA8331@e107981-ln.cambridge.arm.com>
+         <7bab98421e2144a934d369e49454f0424c2a3758.camel@amazon.co.uk>
+         <20190327113911.GB8331@e107981-ln.cambridge.arm.com>
 Content-Type: multipart/signed; micalg="sha-256";
         protocol="application/x-pkcs7-signature";
-        boundary="=-+kGI+6tdBo0EPZzQ3aW9"
+        boundary="=-+ZGZGt7D0FwQ7garjgdn"
 X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
 Mime-Version: 1.0
 X-SRS-Rewrite: SMTP reverse-path rewritten from <dwmw2@infradead.org> by merlin.infradead.org. See http://www.infradead.org/rpr.html
@@ -67,89 +65,28 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---=-+kGI+6tdBo0EPZzQ3aW9
+--=-+ZGZGt7D0FwQ7garjgdn
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, 2019-03-27 at 11:20 +0000, Lorenzo Pieralisi wrote:
-> On Wed, Mar 27, 2019 at 09:52:15AM +0000, David Woodhouse wrote:
-> > On Tue, 2019-03-26 at 15:58 +0000, Lorenzo Pieralisi wrote:
-> > > > We did that internally. You really don't want me telling engineers =
-to
-> > > > post to the list *first* without running things by me to get the ba=
-sics
-> > > > right. Not to start with, at least.
-> > >=20
-> > > Hi David,
-> > >=20
-> > > I am obviously in favour of internal review and I do not question it =
-was
-> > > carried out internally, I just kindly ask developers to drop review t=
-ags
-> > > given internally when going to public mailing lists - I understand it=
- is
-> > > churn for you but I prefer them to be given explicitly.
-> >=20
-> > Sure, I've provided mine in public now.
-> >=20
-> > I will attempt to remember your preference, although I'm not sure I
-> > think it's necessary.
-> >=20
-> > What's the failure mode we're protecting against here? That my
-> > engineers are lying and have *faked* my reviewed-by tag?
-> >=20
-> > Don't you think I'd *eat* them if I ever found that happening?
->=20
-> As I wrote above, I did not question the internal review process at all,
-> we do internal review at ARM too in preparation for posting publicly but
-> I think the patches review should take place on public mailing lists and
-> tags should be given accordingly, that's it.
->=20
-> You may see it as churn, fair enough, it is not a big deal either.
+On Wed, 2019-03-27 at 11:39 +0000, Lorenzo Pieralisi wrote:
+> I just want to keep MCFG ECAM quirks as simple as possible, code as it
+> stands is horrible enough and I wish I could remove the mechanism in
+> the future rather than adding more to it, hopefully we are getting
+> there.
 
-Understood. As I said, we will endeavour to comply.
+Obviously I cannot talk about future hardware or even admit that there
+is such as thing as "future hardware".
 
-Note that we may occasionally forget. Our internal review tooling
-automatically *adds* those tags, when internal review happens. And we
-have reduced the "legal" approval process to the point where myself or
-a handful of others only need to give the nod in that same internal
-technical review tool, for a patch to be sent upstream.
+But all the issues with the DW controller *have* already been worked
+around by different implementations, in different combinations. And I
+will be very sad if *we* somehow manage to make a new board which needs
+a new and different combination of quirks.
 
-This means that engineers will have to remember to actively *remove*
-those tags when they're sending PCI patches. We'll try to remember :)
+Actively, percussively, sad.
 
-> > What's next? That you only accept such tags in signed email, so that
-> > the dishonest engineer in question can't *fake* an email from me to the
-> > list? They know I'm afflicted by Exchange so they can always send that
-> > fake message with a message-id matching another message they know is
-> > already in my inbox, so Exchange will helpfully discard theirs. :)
->=20
-> There is nothing next :) - I just would like to see patches discussions
-> and reviews taking place on linux-pci@vger.kernel.org for PCI patches,
-> I do not think I am asking too much.
 
-Not asking too much at all. We will do as you request.
-
-I do think it's pointless =E2=80=94 you really *don't* want to see the firs=
-t
-rounds of review that happened internally, and once the patch makes it
-to the list, it doesn't make a lot of difference whether my Reviewed-
-By: tag is already there or not; you don't get to see the previous
-iterations of the patch or any of those prior review comments anyway.=20
-
-If *all* there is in my public response is that Reviewed-by: tag, there
-is literally no benefit to that at all, except that you know the
-engineer isn't lying. None at all.
-
-But it's fine. If it really annoys me, I can set up an autoresponder
-which sends an empty mail with a 'Reviewed-by:' tag, and my engineers
-can include a header in their patch submission which triggers that. We
-can even automate the tooling, to turn the normal Reviewed-by: tag into
-that header which triggers the response.
-
-We will comply with your request, even if we don't understand it :)
-
---=-+kGI+6tdBo0EPZzQ3aW9
+--=-+ZGZGt7D0FwQ7garjgdn
 Content-Type: application/x-pkcs7-signature; name="smime.p7s"
 Content-Disposition: attachment; filename="smime.p7s"
 Content-Transfer-Encoding: base64
@@ -232,20 +169,20 @@ BAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAY
 BgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRo
 ZW50aWNhdGlvbiBhbmQgU2VjdXJlIEVtYWlsIENBAhEA4rtJSHkq7AnpxKUY8ZlYZjANBglghkgB
 ZQMEAgEFAKCCAe0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTkw
-MzI3MTE0MDM0WjAvBgkqhkiG9w0BCQQxIgQg8h0sv3ujOUW1sERMvuaVlqOja0EKHIgLC/MbVK8B
-naQwgb4GCSsGAQQBgjcQBDGBsDCBrTCBlzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIg
+MzI3MTIwMTIzWjAvBgkqhkiG9w0BCQQxIgQgyZ7x3vvWUVzIBQPBvAzFbnxUXP9W0v6AQpkM7Zn/
+oEUwgb4GCSsGAQQBgjcQBDGBsDCBrTCBlzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIg
 TWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQx
 PTA7BgNVBAMTNENPTU9ETyBSU0EgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1h
 aWwgQ0ECEQDiu0lIeSrsCenEpRjxmVhmMIHABgsqhkiG9w0BCRACCzGBsKCBrTCBlzELMAkGA1UE
 BhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgG
 A1UEChMRQ09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENPTU9ETyBSU0EgQ2xpZW50IEF1dGhl
 bnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0ECEQDiu0lIeSrsCenEpRjxmVhmMA0GCSqGSIb3
-DQEBAQUABIIBAAbgxD2i5cGZlqZ3+q5v/taFEUTmohAEJqLlRzejPvOIM2tcNmqZ1PDJAosfBxFh
-Nhyp/G3UzmjltN/+7LfeHwB0ABkXXf+S0xBNsUPt3+ZxLVSRI7xEMTaDquw6jBTGyi/jPQz+sB+C
-abZGbL9TW5GUTjf90LxPlfiPYBGO/xwD1YbifGI64/dugJPRzBY1amRX3qKgeFhGRBXlEm05Sbye
-uppT6Ql9kEdV8tg4TQSkrHocVuArULxCyB5w0lzhc1qY4fYqSL3HBxEibhb/FqHfJondwoxex43R
-hYhv9/7dRRagd6T1i+OtWEGYP0FIZMXNGninP00ne2my/tnEuFYAAAAAAAA=
+DQEBAQUABIIBAH2Si1P03lNSo7DsTOnr/KGlOQood5ZKGjvJKyzrSHSTPrqqQgFik6Ks4ASPE+6U
+mA3wdJfJid0EWq95E7x+yZAucb65S3uo6YVhy7eGKTijbQ+QQyVUFXVEF9SwwFSl7ig0ucinSXgD
+lJ3oQoyfOKEu4laSMabuuGnEsJPNKpAnGb+neA6nglN1ahtAphX+kZ/5RL6tf1hVyl8NPbWvqgD1
+eY3xFdFiqQTPNamB1zPvIaT1Wkinj3P5MSTirWJWWdXHm4wlqfpNFV0Tk61+djMrKqAh6gw+ROlp
+F8TRjCmXFRahWuT5oo9mpxz/8oc7DZhotelMwLx5jm+ZfQ50MaEAAAAAAAA=
 
 
---=-+kGI+6tdBo0EPZzQ3aW9--
+--=-+ZGZGt7D0FwQ7garjgdn--
 
