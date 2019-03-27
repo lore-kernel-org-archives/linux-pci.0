@@ -2,114 +2,249 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0985C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:17:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B97CC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:30:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1C12206C0
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:17:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32C8E206B7
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:30:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cern.onmicrosoft.com header.i=@cern.onmicrosoft.com header.b="VHAfts1M"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="nmXRMbxj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727885AbfC0RRn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 13:17:43 -0400
-Received: from mail-eopbgr90053.outbound.protection.outlook.com ([40.107.9.53]:61520
-        "EHLO FRA01-MR2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727454AbfC0RRn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Mar 2019 13:17:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cern.onmicrosoft.com;
- s=selector1-cern-ch;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ggt2jDzPGUhcGamveXfCVTIM88RdqMc6+zSW/PuE51I=;
- b=VHAfts1MyKiYc5V5HdQfVhVzmwsyh5s7mznWA+ZHtvJIskO9rOqEcWqJ6Sedut4frBxf/L+xqy/GPdPWwP/C/qTrJo2cTnBi9JKePMX4czX5jk6sH571cRdhr7KNwJybu6Mgk9TpJU7MGWzBEvl1vaXCmupP6RgSCvVO7OSV3oU=
-Received: from DB8PR06CA0021.eurprd06.prod.outlook.com (2603:10a6:10:100::34)
- by PR1PR06MB4907.eurprd06.prod.outlook.com (2603:10a6:102:8::30) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1730.19; Wed, 27 Mar
- 2019 17:17:39 +0000
-Received: from HE1EUR02FT056.eop-EUR02.prod.protection.outlook.com
- (2a01:111:f400:7e05::203) by DB8PR06CA0021.outlook.office365.com
- (2603:10a6:10:100::34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1750.15 via Frontend
- Transport; Wed, 27 Mar 2019 17:17:38 +0000
-Authentication-Results: spf=pass (sender IP is 188.184.36.46)
- smtp.mailfrom=cern.ch; vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=bestguesspass action=none
- header.from=cern.ch;
-Received-SPF: Pass (protection.outlook.com: domain of cern.ch designates
- 188.184.36.46 as permitted sender) receiver=protection.outlook.com;
- client-ip=188.184.36.46; helo=cernmxgwlb4.cern.ch;
-Received: from cernmxgwlb4.cern.ch (188.184.36.46) by
- HE1EUR02FT056.mail.protection.outlook.com (10.152.11.21) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.1730.9 via Frontend Transport; Wed, 27 Mar 2019 17:17:38 +0000
-Received: from cernfe06.cern.ch (188.184.36.49) by cernmxgwlb4.cern.ch
- (188.184.36.46) with Microsoft SMTP Server (TLS) id 14.3.439.0; Wed, 27 Mar
- 2019 18:17:18 +0100
-Received: from pcbe13614.localnet (2001:1458:202:121::100:40) by smtp.cern.ch
- (2001:1458:201:66::100:14) with Microsoft SMTP Server (TLS) id 14.3.439.0;
- Wed, 27 Mar 2019 18:17:20 +0100
-From:   Federico Vaga <federico.vaga@cern.ch>
-To:     <linux-kernel@vger.kernel.org>, <linux-fpga@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-x86_64@vger.kernel.org>
-Reply-To: <federico.vaga@cern.ch>
-Subject: Device Description for FPGA Components on x86 system
-Date:   Wed, 27 Mar 2019 18:17:18 +0100
-Message-ID: <1629227.alSmCsHHUc@pcbe13614>
+        id S1727791AbfC0RaQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 13:30:16 -0400
+Received: from mta-01.yadro.com ([89.207.88.251]:39078 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728581AbfC0RaQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Mar 2019 13:30:16 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 77C0841A37;
+        Wed, 27 Mar 2019 17:30:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-transfer-encoding:content-language:content-type
+        :content-type:in-reply-to:mime-version:user-agent:date:date
+        :message-id:from:from:references:subject:subject:received
+        :received:received; s=mta-01; t=1553707811; x=1555522212; bh=kSU
+        9y6ZjfbrVlQ76vYI3yO++tQkgaT4bSitwn0LjxrM=; b=nmXRMbxjyp48gljeIhY
+        Ad/PzGHGPucERBhyZYdM/GAEvz0aPESvN3Yva7c9lkYui3YAJ6Y6JHZYZM2bnE4N
+        cAg2p3s70trOc2LK7g95TO2zLiZchU5dutAx19Ge7Rp9r3/fw5ueSGdJSOZ2vQF0
+        XwtJmKWxh2Vl+Rr3e6qD8/uw=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id Stzs9-EdUjOG; Wed, 27 Mar 2019 20:30:11 +0300 (MSK)
+Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id CA55F41A0C;
+        Wed, 27 Mar 2019 20:30:10 +0300 (MSK)
+Received: from [172.17.15.60] (172.17.15.60) by T-EXCH-02.corp.yadro.com
+ (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Wed, 27
+ Mar 2019 20:30:10 +0300
+Subject: Re: [PATCH RFC v4 08/21] nvme-pci: Handle movable BARs
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+        <linux@yadro.com>, Keith Busch <keith.busch@intel.com>,
+        Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        <linux-nvme@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+References: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
+ <20190311133122.11417-9-s.miroshnichenko@yadro.com>
+ <20190326202055.GP24180@google.com>
+From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=s.miroshnichenko@yadro.com; prefer-encrypt=mutual; keydata=
+ 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
+ lHi50np+KDDPzZS51tw=
+Message-ID: <63989325-c1f8-9579-8405-56dc83751a3b@yadro.com>
+Date:   Wed, 27 Mar 2019 20:30:10 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.3
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Originating-IP: [2001:1458:202:121::100:40]
-X-EOPAttributedMessage: 0
-X-Forefront-Antispam-Report: CIP:188.184.36.46;IPV:NLI;CTRY:CH;EFV:NLI;SFV:NSPM;SFS:(10001)(10009020)(459900002);DIR:OUT;SFP:1101;SCL:1;SRVR:PR1PR06MB4907;H:cernmxgwlb4.cern.ch;FPR:;SPF:None;LANG:en;
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: f09cc0d6-d779-4533-ba8c-08d6b2d81ced
-X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600127)(711020)(4605104)(4709054)(5565046)(2017052603328)(7153060)(7193020);SRVR:PR1PR06MB4907;
-X-MS-TrafficTypeDiagnostic: PR1PR06MB4907:
-X-Microsoft-Antispam-PRVS: <PR1PR06MB490713623AD87F472BDA1770EF580@PR1PR06MB4907.eurprd06.prod.outlook.com>
-X-Forefront-PRVS: 0989A7979C
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam-Message-Info: nWo+B0PgKMZ3aPvTxL6G9E3tbxQHP2AgNk21pDgSD1AUHDkjsNPRdASpipLl7tynDFnhVEaUyGW2gQJc0dGF/eeb2iRafhgsgtMwSid04Z7FS8eoShhWKrvmrJJXC0ig/aFjw70ytPJr3Wz/2VWnXedxE4359kdV1Bjd5vV4ps0JhfJ3iWydUQHoMpAtE8UJR5MnpF+SZhOiQuDnJz7OCj7tAYMXGh1zBTy+Fb/kSz5nuxUFL72x/uciafZozwhOze5ecgSzs5OdXhzTSdZOYskP8KDn1I/nkCAxosStEA8U/gFyT8zF508s2j6ZV0OkjwITpAI+F2cbNKwQ1/HrnjHb3b+YycaB8e7g0CqADoB09nqbRnJmhsQgnjX6B11KBaO7c4cKoffv8umB+dG2ntm1KyhuOmbj0wVZmOBPc4WmqcgnMJuqkqVvuyMNTdTsEXqRsBu8PJEJgjQ4/a3XtbfoAl9AbUubfeBqNRNr73otMTVI4R11Av/eBz43bDmy5D/nb57EbVsVaeNbWq6SKNKtKDpoTfL40JSiAAwlP24=
-X-OriginatorOrg: cern.ch
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Mar 2019 17:17:38.4603
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: f09cc0d6-d779-4533-ba8c-08d6b2d81ced
-X-MS-Exchange-CrossTenant-Id: c80d3499-4a40-4a8c-986e-abce017d6b19
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=c80d3499-4a40-4a8c-986e-abce017d6b19;Ip=[188.184.36.46];Helo=[cernmxgwlb4.cern.ch]
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR1PR06MB4907
+In-Reply-To: <20190326202055.GP24180@google.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [172.17.15.60]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-02.corp.yadro.com (172.17.10.102)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+On 3/26/19 11:20 PM, Bjorn Helgaas wrote:
+> [+cc Keith, Jens, Christoph, Sagi, linux-nvme, LKML]
+> 
+> On Mon, Mar 11, 2019 at 04:31:09PM +0300, Sergey Miroshnichenko wrote:
+>> Hotplugged devices can affect the existing ones by moving their BARs.
+>> PCI subsystem will inform the NVME driver about this by invoking
+>> reset_prepare()+reset_done(), then iounmap()+ioremap() must be called.
+> 
+> Do you mean the PCI core will invoke ->rescan_prepare() and
+> ->rescan_done() (as opposed to *reset*)?
+> 
 
-I'm looking for guidance
+Yes, of course, sorry for the confusion!
 
-What I have:
-* Intel x86_64 computer
-* PCIe card with FPGA on it
+These are new callbacks, so drivers can explicitly show their support of movable BARs, and
+the PCI core can detect if they don't and note that the corresponding BARs can't be moved
+for now.
 
-What I want to achieve:
-* load an FPGA bitstream on the card
-* load a device-tree like description for the FPGA devices contained in the 
-bitstream
+>> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+>> ---
+>>  drivers/nvme/host/pci.c | 29 +++++++++++++++++++++++++++--
+>>  1 file changed, 27 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+>> index 92bad1c810ac..ccea3033a67a 100644
+>> --- a/drivers/nvme/host/pci.c
+>> +++ b/drivers/nvme/host/pci.c
+>> @@ -106,6 +106,7 @@ struct nvme_dev {
+>>  	unsigned int num_vecs;
+>>  	int q_depth;
+>>  	u32 db_stride;
+>> +	resource_size_t current_phys_bar;
+>>  	void __iomem *bar;
+>>  	unsigned long bar_mapped_size;
+>>  	struct work_struct remove_work;
+>> @@ -1672,13 +1673,16 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
+>>  {
+>>  	struct pci_dev *pdev = to_pci_dev(dev->dev);
+>>  
+>> -	if (size <= dev->bar_mapped_size)
+>> +	if (dev->bar &&
+>> +	    dev->current_phys_bar == pci_resource_start(pdev, 0) &&
+>> +	    size <= dev->bar_mapped_size)
+>>  		return 0;
+>>  	if (size > pci_resource_len(pdev, 0))
+>>  		return -ENOMEM;
+>>  	if (dev->bar)
+>>  		iounmap(dev->bar);
+>> -	dev->bar = ioremap(pci_resource_start(pdev, 0), size);
+>> +	dev->current_phys_bar = pci_resource_start(pdev, 0);
+>> +	dev->bar = ioremap(dev->current_phys_bar, size);
+> 
+> dev->current_phys_bar is different from pci_resource_start() in the
+> case where the PCI core has moved the nvme BAR, but nvme has not yet
+> remapped it.
+> 
+> I'm not sure it's worth keeping track of current_phys_bar, as opposed
+> to always unmapping and remapping.  Is this a performance path?  I
+> think there are advantages to always exercising the same code path,
+> regardless of whether the BAR happened to be moved, e.g., if there's a
+> bug in the "BAR moved" path, it may be a heisenbug because whether we
+> exercise that path depends on the current configuration.
+> 
+> If you do need to cache current_phys_bar, maybe this, so it's a little
+> easier to see that you're not changing the ioremap() itself:
+> 
+>   dev->bar = ioremap(pci_resource_start(pdev, 0), size);
+>   dev->current_phys_bar = pci_resource_start(pdev, 0);
+> 
 
-This is achievable on ARM with DeviceTree, overlay-dt, fpga-mgr; but I'm 
-puzzled about the x86_64 use-case. I'm not able to find recent and clear 
-information.
+Oh, I see now. Rescan is rather a rare event, and unconditional remapping is simpler, so a
+bit more resistant to bugs.
 
-Does anyone know if this is doable? Perhaps with ACPI SSDTs overlay? Or with 
-the DT?
+>>  	if (!dev->bar) {
+>>  		dev->bar_mapped_size = 0;
+>>  		return -ENOMEM;
+>> @@ -2504,6 +2508,8 @@ static void nvme_reset_work(struct work_struct *work)
+>>  	if (WARN_ON(dev->ctrl.state != NVME_CTRL_RESETTING))
+>>  		goto out;
+>>  
+>> +	nvme_remap_bar(dev, db_bar_size(dev, 0));
+> 
+> How is this change connected to rescan?  This looks reset-related.
+> 
 
-thanks 
+Thanks for catching that! This has also slipped form early stage of this pathset, when
+reset_done() (which is rescan_done() now) just initiated an NVME reset.
 
+Best regards,
+Serge
 
-
-
+>>  	/*
+>>  	 * If we're called to reset a live controller first shut it down before
+>>  	 * moving on.
+>> @@ -2910,6 +2916,23 @@ static void nvme_error_resume(struct pci_dev *pdev)
+>>  	flush_work(&dev->ctrl.reset_work);
+>>  }
+>>  
+>> +void nvme_rescan_prepare(struct pci_dev *pdev)
+>> +{
+>> +	struct nvme_dev *dev = pci_get_drvdata(pdev);
+>> +
+>> +	nvme_dev_disable(dev, false);
+>> +	nvme_dev_unmap(dev);
+>> +	dev->bar = NULL;
+>> +}
+>> +
+>> +void nvme_rescan_done(struct pci_dev *pdev)
+>> +{
+>> +	struct nvme_dev *dev = pci_get_drvdata(pdev);
+>> +
+>> +	nvme_dev_map(dev);
+>> +	nvme_reset_ctrl_sync(&dev->ctrl);
+>> +}
+>> +
+>>  static const struct pci_error_handlers nvme_err_handler = {
+>>  	.error_detected	= nvme_error_detected,
+>>  	.slot_reset	= nvme_slot_reset,
+>> @@ -2974,6 +2997,8 @@ static struct pci_driver nvme_driver = {
+>>  	},
+>>  	.sriov_configure = pci_sriov_configure_simple,
+>>  	.err_handler	= &nvme_err_handler,
+>> +	.rescan_prepare	= nvme_rescan_prepare,
+>> +	.rescan_done	= nvme_rescan_done,
+>>  };
+>>  
+>>  static int __init nvme_init(void)
+>> -- 
+>> 2.20.1
+>>
