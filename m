@@ -6,59 +6,60 @@ X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C517AC10F00
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 08:39:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21526C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 08:44:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 82B7A206B8
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 08:39:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB3B82075E
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 08:44:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Rk6Bs+bZ"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="e/3thYEz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725786AbfC0Ii7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 04:38:59 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:40505 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725827AbfC0Ii7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 04:38:59 -0400
-Received: by mail-wm1-f67.google.com with SMTP id z24so12506560wmi.5
-        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2019 01:38:58 -0700 (PDT)
+        id S1726248AbfC0Ioe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 04:44:34 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:42259 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725997AbfC0Iod (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 04:44:33 -0400
+Received: by mail-wr1-f67.google.com with SMTP id g3so13978836wrx.9
+        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2019 01:44:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=yWTdMO/u4KOiskJtQBGHbF6j2v2MoP1IZWeewOD5oUU=;
-        b=Rk6Bs+bZmgRaisSLFc8nFs0apJ5prGC+gm0QebTOCIWTMT5G19UYvCHxxmrJhklIL6
-         wio3/1fMTtIrwTjztKqOCMSduTaGYrowCiq3OjuR0Fyh2XlRi45Qja2oH/mYeOSgIfkg
-         uAym3FIXdZU/f7zsxlTtOhPzHDyQbMXTtDsX0=
+        bh=SR8OMb+UAUrcn8HwqSynLhn9aEhG5yowsV6vWX9jKok=;
+        b=e/3thYEzcTFJAzj17ujOlqBfDVI03m65VG/zWHofex3e2sExQK71fgw0V2gPy8o9Dy
+         5RT3HOgDgVmtyNn/a2PzUeFqPDKf/w/WQTls68CczcBLouuYOWZF38zEMirWr2dKUGFb
+         KP6+QjGZ42eXxeh0uRlvc8XL59OW+PA4GTRyE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=yWTdMO/u4KOiskJtQBGHbF6j2v2MoP1IZWeewOD5oUU=;
-        b=qfPODT9MNMFoPPnfb32YK0BRLYq1JWkSbVvPmEAy/lyh6CXKgtk0kkWFP0A98j7V3R
-         bkSeIl0D5kKnFB5//Od9rnuduOLjHNBNVbEPKYWeKMJJY6nveHdYW9xuS0v7tARhQGFL
-         cZzPBwhZru9obi/cSfrysZfyZS3uRqrjMfeu526XpO4Sds6ikzJX2xKA2OtduK6UBca8
-         04dXkYiWHfKWwUQlO5GkW0D1RrEMV366uqxXRrY7clM2HTXOYInvTDLn0Tn+LIZJFrqx
-         7Zx5XPawct2ddmsh5u+M0yFMv1IqiuYRmYChACnqvc7moOHHd5shdVZGpuHH0St/d22+
-         fpmg==
-X-Gm-Message-State: APjAAAVP+To7ju0OfnvHh+CWO1S0YrS61bce3KLGVuBT2mVhQgCc4eYd
-        Hs3iFhSpBeWIbWBXAxqJIkWltM+AzH36vJxk63mqgg==
-X-Google-Smtp-Source: APXvYqxgYtcGlMbOfnJs1AcQu4Zatx7WN4kazaWkSdamJCzsDnYtRT4xBdZOcS5qbufv9JEMtZXQZ3/Qv00/vMwEEWk=
-X-Received: by 2002:a7b:cf2c:: with SMTP id m12mr7447073wmg.21.1553675937349;
- Wed, 27 Mar 2019 01:38:57 -0700 (PDT)
+        bh=SR8OMb+UAUrcn8HwqSynLhn9aEhG5yowsV6vWX9jKok=;
+        b=Mbz6N47en8MpGjanpXzXp4pRtv98cb7qa3qfIRxgIyRIUjIlQAEdtSDBGt8VM2/U70
+         XMnICo68B91Ut+yuYZ2XMDyI6/zPzIElDrQNqixz89TBWzZJBdC7/Euyz0V/7wX4PZsq
+         xue2cIN9yymQmjE6VstNKtc6ydE+dZtRAatbCOBPSIzTNp42hCF23XmZ+lY7/15FVvjm
+         qf3qd2F+6KFLyyMB5tXvdhNGrVrfW8u3c/TqIqWr2EEz9L4jPzPQ+BB0QtkEuALtgoS/
+         qajfnN1aDbFlGv+Xg5VEEfNsxV3qiXwccRRZHjWcadaYHaAsxBAwUeAyLXapng27eDac
+         JCmQ==
+X-Gm-Message-State: APjAAAX0OeB0qrH+LPwVrBX7BeAXiRDCJcKUdqulGKdmQEzAV1dmnTUw
+        Ne0L4OLuz6oArtBeu6Ags4/ZTNYMBSyrQlRlOLL+BA==
+X-Google-Smtp-Source: APXvYqwr58NmGoeNyR1OZ04imvsDScuLPnFkvGBJ2LFR9xZnBQKVDK0mDww6tN1BpWGhrj+LZw982OG+ArBv6HMjiHw=
+X-Received: by 2002:a5d:494c:: with SMTP id r12mr11555769wrs.250.1553676272048;
+ Wed, 27 Mar 2019 01:44:32 -0700 (PDT)
 MIME-Version: 1.0
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
-In-Reply-To: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
+References: <1548411231-27549-1-git-send-email-srinath.mannam@broadcom.com> <CABe79T66daJOditCZ-6ENKW2ugbpDUUfjn1CMHCcDtb3=HiiOQ@mail.gmail.com>
+In-Reply-To: <CABe79T66daJOditCZ-6ENKW2ugbpDUUfjn1CMHCcDtb3=HiiOQ@mail.gmail.com>
 From:   Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Wed, 27 Mar 2019 14:08:46 +0530
-Message-ID: <CABe79T5M3FJQed018aGfRhS7eLBbtmoO33mFP=K+xHgavto64Q@mail.gmail.com>
-Subject: Re: [PATCH v4 0/2] Add IPROC PCIe new features
+Date:   Wed, 27 Mar 2019 14:14:20 +0530
+Message-ID: <CABe79T6QVF-Dgajj6S_0Z9ZnfsV3vuWUasU-eLtTBPkEaBzjAw@mail.gmail.com>
+Subject: Re: [PATCH v3 0/3] PCIe Host request to reserve IOVA
 To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>
+        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>
 Cc:     BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
@@ -66,40 +67,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo/Bjorn,
+Hi Bjorn,
 
-Could you please help to review this patch series when you have time?
-I believe I have addressed all your review comments.
+Could you please help to review the patch series below?
 
 Thanks,
 Srinath.
 
-On Fri, Mar 1, 2019 at 10:22 AM Srinath Mannam
+On Thu, Feb 21, 2019 at 2:29 PM Srinath Mannam
 <srinath.mannam@broadcom.com> wrote:
 >
-> This patch set extends support of new IPROC PCIe host controller features
->  - Add CRS check using controller register status flags
->  - Add outbound window mapping configuration for 32-bit I/O region
+> Hi Bjorn,
 >
-> This patch set is based on Linux-5.0-rc2.
+> Please help to review this patch series.
+> Thank you.
 >
-> Changes from v3:
->   - Addressed Lorenzo Pieralisi comments.
->
-> Changes from v2:
->   - Based on Lorenzo Pieralisi comments, commit logs are expanded.
->
-> Changes from v1:
->   - Addressed Bjorn Helgaas comments.
->   - Removed set order mode patch from patchset.
->
-> Srinath Mannam (2):
->   PCI: iproc: Add CRS check in config read
->   PCI: iproc: Add outbound configuration for 32-bit I/O region
->
->  drivers/pci/controller/pcie-iproc.c | 44 +++++++++++++++++++++++++++++++++----
->  1 file changed, 40 insertions(+), 4 deletions(-)
->
-> --
-> 2.7.4
->
+> Regards,
+> Srinath.
+> On Fri, Jan 25, 2019 at 3:44 PM Srinath Mannam
+> <srinath.mannam@broadcom.com> wrote:
+> >
+> > Few SOCs have limitation that their PCIe host can't allow few inbound
+> > address ranges. Allowed inbound address ranges are listed in dma-ranges
+> > DT property and this address ranges are required to do IOVA mapping.
+> > Remaining address ranges have to be reserved in IOVA mapping.
+> >
+> > PCIe Host driver of those SOCs has to list all address ranges which have
+> > to reserve their IOVA address into PCIe host bridge resource entry list.
+> > IOMMU framework will reserve these IOVAs while initializing IOMMU domain.
+> >
+> > This patch set is based on Linux-5.0-rc2.
+> >
+> > Changes from v2:
+> >   - Patch set rebased to Linux-5.0-rc2
+> >
+> > Changes from v1:
+> >   - Addressed Oza review comments.
+> >
+> > Srinath Mannam (3):
+> >   PCI: Add dma-resv window list
+> >   iommu/dma: Reserve IOVA for PCI host reserve address list
+> >   PCI: iproc: Add dma reserve resources to host
+> >
+> >  drivers/iommu/dma-iommu.c           |  8 ++++++
+> >  drivers/pci/controller/pcie-iproc.c | 51 ++++++++++++++++++++++++++++++++++++-
+> >  drivers/pci/probe.c                 |  3 +++
+> >  include/linux/pci.h                 |  1 +
+> >  4 files changed, 62 insertions(+), 1 deletion(-)
+> >
+> > --
+> > 2.7.4
+> >
