@@ -2,122 +2,88 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9350C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 15:15:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E98DBC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:02:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B734B206B8
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 15:15:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="WkgaWEGf"
+	by mail.kernel.org (Postfix) with ESMTP id BFD6F2082F
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:02:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728836AbfC0PPe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 11:15:34 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:44404 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728089AbfC0PPd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 11:15:33 -0400
-Received: by mail-wr1-f68.google.com with SMTP id y7so14898193wrn.11
-        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2019 08:15:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hw4fnc4vtVAqbuNp/HPbYPz4Z7KAuxlltbSrQaJ0fJ8=;
-        b=WkgaWEGf6a2ktMdnDEJfczmlgtYtT12CTh9Rugf1gavb06+8FuRy8KOciGPelHGNu7
-         aVLX076xX9ZPBjkOpI36QcYMiIWdimYB2m+/UfNQImKFkJIgj6ryDIDHcOraPBg3NIiu
-         oN3u8y1RXVdeUUoop8YNJzpI1+V+H3EtlB4QE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=hw4fnc4vtVAqbuNp/HPbYPz4Z7KAuxlltbSrQaJ0fJ8=;
-        b=cb7mZF1ZcKv7tyo8m0NQQhxq4SFos0jrXvRiFGY2T8vF0+h17//3KNlG7znTk4zM+4
-         c8Fae7c6M1DEb0vVhLdhbl6eZxCVj8ioYTEWFsy5KBz8+kYlvu/nH1K7RV6ECxOGt5HU
-         ywJBUYuf2qV4LlKiUkzkDzf8RXM9l4imKTYFQm1M6G5VDUdiRn+Lr24N+95GXW7AO5+C
-         mM8NN/PTTi1Ag0IeFgePOnvHlXsZWFYKZ2E+ctKDGg/yP9Cbjodpi2q/SGD+xBYTpW0P
-         mnKDZFTV7ujoIW1TSfTRrWI1ySLam2+QsYhfQo+5IYUUT6Nm5gBT5Sqy4cOSMuzvW064
-         9fTw==
-X-Gm-Message-State: APjAAAXfXuaoRYfDx38s1i5q8DNaK8hunLj6HrWoDK1EEB40s4gkR/5H
-        g4PPqbfX2ZXpI67l+ukl9xo2xDZgummR4xwjzYN+Pg==
-X-Google-Smtp-Source: APXvYqzDloGTcppDsG4aqOFuy1CCSMtXMvGC98sX7Orh6pFr3cnr+yWp4y478hYQcV8++1WmHZqSNInbSq+52pPpv0s=
-X-Received: by 2002:a5d:494c:: with SMTP id r12mr12831982wrs.250.1553699732001;
- Wed, 27 Mar 2019 08:15:32 -0700 (PDT)
+        id S1727454AbfC0RCw convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 13:02:52 -0400
+Received: from eu-smtp-delivery-151.mimecast.com ([146.101.78.151]:58086 "EHLO
+        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727391AbfC0RCv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 13:02:51 -0400
+Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ uk-mta-45-fRGz32CyM7-BOn_PAxkpUg-1; Wed, 27 Mar 2019 17:02:47 +0000
+Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
+ (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Wed,
+ 27 Mar 2019 17:03:52 +0000
+Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
+ AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
+ Wed, 27 Mar 2019 17:03:52 +0000
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Bjorn Helgaas' <helgaas@kernel.org>,
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "linux@yadro.com" <linux@yadro.com>
+Subject: RE: [PATCH RFC v4 09/21] PCI: Mark immovable BARs with PCI_FIXED
+Thread-Topic: [PATCH RFC v4 09/21] PCI: Mark immovable BARs with PCI_FIXED
+Thread-Index: AQHU5BKo6oZy4EJXskG+oHCz+gArvaYftIQQ
+Date:   Wed, 27 Mar 2019 17:03:52 +0000
+Message-ID: <3e3e163cbf35446ea575bb7fae1912be@AcuMS.aculab.com>
+References: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
+ <20190311133122.11417-10-s.miroshnichenko@yadro.com>
+ <20190326202838.GQ24180@google.com>
+In-Reply-To: <20190326202838.GQ24180@google.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
- <CABe79T5M3FJQed018aGfRhS7eLBbtmoO33mFP=K+xHgavto64Q@mail.gmail.com> <20190327123114.GA9636@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20190327123114.GA9636@e107981-ln.cambridge.arm.com>
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Wed, 27 Mar 2019 20:45:19 +0530
-Message-ID: <CABe79T4pQQOVPDKSHcf7D1LMBzXUVD3_0NPdH+MORRZYMxtoFQ@mail.gmail.com>
-Subject: Re: [PATCH v4 0/2] Add IPROC PCIe new features
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+X-MC-Unique: fRGz32CyM7-BOn_PAxkpUg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+From: Bjorn Helgaas
+> Sent: 26 March 2019 20:29
+> 
+> On Mon, Mar 11, 2019 at 04:31:10PM +0300, Sergey Miroshnichenko wrote:
+> > If a PCIe device driver doesn't yet have support for movable BARs,
+> > mark device's BARs with IORESOURCE_PCI_FIXED.
+> 
+> I'm hesitant about using IORESOURCE_PCI_FIXED for this purpose.  That
+> was originally added to describe resources that can not be changed
+> because they're hardwired in the device, e.g., legacy resources and
+> Enhanced Allocation resources.
+> 
+> In general, I think the bits in res->flags should tell us things about
+> the hardware.  This particular use would be something about the
+> *driver*, and I think we should figure that out by looking at
+> dev->driver.
 
-Thanks for feedback, I will talk to our HW engineer.
+There will also be drivers that don't support BARs being moved,
+but may be in a state (ie not actually open) where they can go
+through a remove-rescan sequence to allow the BAR be moved.
 
-Regards,
-Srinath.
+This might even be true if the open count is non-zero.
 
-On Wed, Mar 27, 2019 at 6:01 PM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
->
-> On Wed, Mar 27, 2019 at 02:08:46PM +0530, Srinath Mannam wrote:
-> > Hi Lorenzo/Bjorn,
-> >
-> > Could you please help to review this patch series when you have time?
-> > I believe I have addressed all your review comments.
->
-> I will shortly keeping in mind that you should really ask HW designers
-> to get to grips with a proper design because there are ways too many HW
-> quirks this driver has to fix-up, it has become an unmanageable
-> collection of work arounds.
->
-> Lorenzo
->
-> > Thanks,
-> > Srinath.
-> >
-> > On Fri, Mar 1, 2019 at 10:22 AM Srinath Mannam
-> > <srinath.mannam@broadcom.com> wrote:
-> > >
-> > > This patch set extends support of new IPROC PCIe host controller features
-> > >  - Add CRS check using controller register status flags
-> > >  - Add outbound window mapping configuration for 32-bit I/O region
-> > >
-> > > This patch set is based on Linux-5.0-rc2.
-> > >
-> > > Changes from v3:
-> > >   - Addressed Lorenzo Pieralisi comments.
-> > >
-> > > Changes from v2:
-> > >   - Based on Lorenzo Pieralisi comments, commit logs are expanded.
-> > >
-> > > Changes from v1:
-> > >   - Addressed Bjorn Helgaas comments.
-> > >   - Removed set order mode patch from patchset.
-> > >
-> > > Srinath Mannam (2):
-> > >   PCI: iproc: Add CRS check in config read
-> > >   PCI: iproc: Add outbound configuration for 32-bit I/O region
-> > >
-> > >  drivers/pci/controller/pcie-iproc.c | 44 +++++++++++++++++++++++++++++++++----
-> > >  1 file changed, 40 insertions(+), 4 deletions(-)
-> > >
-> > > --
-> > > 2.7.4
-> > >
+	David
+
+-
+Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
+Registration No: 1397386 (Wales)
+
