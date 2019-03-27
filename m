@@ -2,198 +2,198 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E76B3C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 09:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADA03C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 09:52:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0DD22075D
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 09:00:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553677221;
-	bh=P+BWea7Vy8TW/xuf+//NirRtiRwrrQpZjBtnctni/UY=;
-	h=In-Reply-To:References:From:Date:Subject:To:Cc:List-ID:From;
-	b=FBtu2SYdF1CwExnIvoux0+jGg18sMCHa4RRKMWvMsWEzEIxup9+j/+bp8e9EhO+Ru
-	 A2+m2ISURSzzSjpZzrCDmCNrUB8U/bj5XqR51S5iDsQg+Fd9inaqOEJ7zM+sSyf/TS
-	 9SaV/3swa9vQfUjt77Z6CcPHLBo0pftRwV4vDUI4=
+	by mail.kernel.org (Postfix) with ESMTP id 740482075C
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 09:52:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kWGQCLuF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726305AbfC0JAV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 05:00:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38328 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725768AbfC0JAU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Mar 2019 05:00:20 -0400
-Received: from mail-oi1-f182.google.com (mail-oi1-f182.google.com [209.85.167.182])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4739A2075D
-        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2019 09:00:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553677219;
-        bh=P+BWea7Vy8TW/xuf+//NirRtiRwrrQpZjBtnctni/UY=;
-        h=In-Reply-To:References:From:Date:Subject:To:Cc:From;
-        b=KoHIlrYAnda5sb4XKtz5IpAlloS4TIiVrIJKB627hUBBaCwX9uaYmPOI/dJlqnvvS
-         olhK+e9kZBkV3dXpmIe3V0OhIYo6nlyxdRZDetjUVhgvguXRxMCcXTEuGt+0dUZ4RS
-         jj09s7u7ydIL/e7FNbEXt6BxdKHQ9AHewNRpwMVQ=
-Received: by mail-oi1-f182.google.com with SMTP id j132so12269709oib.2
-        for <linux-pci@vger.kernel.org>; Wed, 27 Mar 2019 02:00:19 -0700 (PDT)
-X-Gm-Message-State: APjAAAUUPETiqu16U/1260Z2FqKgoNXNQREaNXG9EFCRcv5Jj8u6LVnK
-        2ZSm8LXdDLxhL7PYM6MJ0fL+eHm1ZKnftA5v0aQ=
-X-Google-Smtp-Source: APXvYqz2XRqcSjorefWxkZ0yPv2BckO1zOcGXLczQvlAM76ktx1l4i1FV9CTr8HMYt8zaevVEDwL0r88A2gX3UtOaAI=
-X-Received: by 2002:aca:550c:: with SMTP id j12mr18949283oib.52.1553677218600;
- Wed, 27 Mar 2019 02:00:18 -0700 (PDT)
-MIME-Version: 1.0
-Received: by 2002:a4a:c618:0:0:0:0:0 with HTTP; Wed, 27 Mar 2019 02:00:17
- -0700 (PDT)
-In-Reply-To: <6f57df12-07f9-c401-dabf-2b7af0ec5797@huawei.com>
-References: <351f898c-f9e9-69e0-b023-cf72e0d7792b@huawei.com>
- <20190326124449.3vdjmescrvswirop@wunner.de> <6f57df12-07f9-c401-dabf-2b7af0ec5797@huawei.com>
-From:   Sinan Kaya <Okaya@kernel.org>
-Date:   Wed, 27 Mar 2019 05:00:17 -0400
-X-Gmail-Original-Message-ID: <CAK9iUCMQd-EqyD+R4t57n_3o4s9Exbxr+WQbbupf1=CDgC2Rkg@mail.gmail.com>
-Message-ID: <CAK9iUCMQd-EqyD+R4t57n_3o4s9Exbxr+WQbbupf1=CDgC2Rkg@mail.gmail.com>
-Subject: Re: Question about Hotplug driver deadlock issue
-To:     Dongdong Liu <liudongdong3@huawei.com>
-Cc:     Lukas Wunner <lukas@wunner.de>, mika.westerberg@linux.intel.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+        id S1726810AbfC0JwX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 05:52:23 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:38338 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725768AbfC0JwW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 05:52:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Mime-Version:Content-Type:References:
+        In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=25jiIoMP75VuQY7AxHHjoE81Wj2vmFoM4ekAAjTD+gQ=; b=kWGQCLuFtdH7oTSzgnqVB5RmP
+        YXP20A7blNVO/uNrWsJvDbkWwZDSZeyjPFnIq9kgPVK6YNnvpR9c52CXxbzHOuGrZff1zRDFV5x2a
+        roQT4K9Ze91vFov+SYlWoYbNyIDgxn3daE6vjy+l5KEKj03IcknAvF37WyAcBVPzu3r+ikeiW5ZMD
+        /Clex0vxmxvpH1YW6Vmw+k8XbFWnlD8j/FhG78gd5M6gC8UjJTI6hCKCE1UBQyB63CqGHBB9yPNbq
+        t/FsXZ8QXGPGtXMfWIm2sG/YQNtRxU35NK263T/5q+tOr/+IDv2gMN4n6tY94u9OG0I0+nruMHm1+
+        8S25tdbMQ==;
+Received: from [54.239.6.177] (helo=u3832b3a9db3152.ant.amazon.com)
+        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1h95EJ-0006Sa-4u; Wed, 27 Mar 2019 09:52:19 +0000
+Message-ID: <d02a76ff37dc2db153c7b9c4d00a0399f9ac1b47.camel@infradead.org>
+Subject: Re: [PATCH v2] PCI: al: Add Amazon Annapurna Labs PCIe host
+ controller driver
+From:   David Woodhouse <dwmw2@infradead.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Jonathan Chocron <jonnyc@amazon.com>, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, linux-kernel@vger.kernel.org,
+        vaerov@amazon.com, benh@kernel.crashing.org, alisaidi@amazon.com,
+        zeev@amazon.com, ronenk@amazon.com, barakw@amazon.com,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>
+Date:   Wed, 27 Mar 2019 09:52:15 +0000
+In-Reply-To: <20190326155837.GA8820@e107981-ln.cambridge.arm.com>
+References: <1553512040-4453-1-git-send-email-jonnyc@amazon.com>
+         <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
+         <20190326121727.GA4171@e107981-ln.cambridge.arm.com>
+         <07838dad0e0cdb14c42080ef19c11829f72c8814.camel@infradead.org>
+         <20190326155837.GA8820@e107981-ln.cambridge.arm.com>
+Content-Type: multipart/signed; micalg="sha-256";
+        protocol="application/x-pkcs7-signature";
+        boundary="=-F/WmsPzV8pVAfsLFczu6"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
+X-SRS-Rewrite: SMTP reverse-path rewritten from <dwmw2@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/27/19, Dongdong Liu <liudongdong3@huawei.com> wrote:
-> Hi Lukas
-> Many thanks for your reply.
->
-> =E5=9C=A8 2019/3/26 20:44, Lukas Wunner =E5=86=99=E9=81=93:
->> On Tue, Mar 26, 2019 at 07:43:17PM +0800, Dongdong Liu wrote:
->>> Current we met another deadlock issue in hotplug driver. The calltrace =
-is
->>> as below.
->>> The deadlock triggered by a hotplug event during a sysfs "remove"
->>> operation.
->>> Any suggestion to fix such deadlock ?
->>
->> That's a known problem, deadlocks may occur if hotplug ports are
->> cascaded.  I came up with a kludge to work around it but withdrew
->> the patch:
->> https://patchwork.ozlabs.org/patch/930403/
->
-> It seems the reason of two deadlock issues are not the same.
-> This deadlock issue triggered by a hotplug event during a sysfs "remove"
-> operation.
-> pciehp 0000:00:0c.0:pcie004: Slot(0-1): Card present
-> pciehp 0000:00:0c.0:pcie004: Slot(0-1): Link Up
-> echo 1 > 0000\:00\:0c.0/remove
->
-> The sysfs "remove" side is:
->        remove_store
->          pci_stop_and_remove_bus_device_locked
->           pci_lock_rescan_remove
->           pci_stop_and_remove_bus_device
->             ...
->             pciehp_remove
->               free_irq
->                    kthread_stop         # wait for hotplug IRQ handler
->           pci_unlock_rescan_remove
->
 
-Can we swap the above two lines so that code waits without holding the log?
+--=-F/WmsPzV8pVAfsLFczu6
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> The hotplug side is:
->          pciehp_ist
->             pciehp_handle_presence_or_link_change
->           pciehp_configure_device
->             pci_lock_rescan_remove     # wait for
-> pci_unlock_rescan_remove()
->
->>
->> The real solution is to make the sections protected by
->> pci_lock_rescan_remove() smaller or eliminate them as far as
->> possible.  So, no good solution available right now, sorry.
->>
-> Thanks, any suggestion is appreciated.
->
-> Thanks,
-> Dongdong.
->
->> Thanks,
->>
->> Lukas
->>
->>>
->>> [ 4112.297250] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
->>> disables this message.
->>> [ 4112.305069] bash            D    0  6502   2207 0x00000200
->>> [ 4112.310544] Call trace:
->>> [ 4112.312981]  __switch_to+0x94/0xe8
->>> [ 4112.316373]  __schedule+0x270/0x8b0
->>> [ 4112.319852]  schedule+0x2c/0x88
->>> [ 4112.322981]  schedule_timeout+0x224/0x448
->>> [ 4112.326979]  wait_for_common+0x198/0x2a0
->>> [ 4112.330892]  wait_for_completion+0x28/0x38
->>> [ 4112.334979]  kthread_stop+0x60/0x190
->>> [ 4112.338544]  __free_irq+0x1c0/0x348
->>> [ 4112.342022]  free_irq+0x40/0x88
->>> [ 4112.345153]  pcie_shutdown_notification+0x54/0x80
->>> [ 4112.349847]  pciehp_remove+0x30/0x50
->>> [ 4112.353413]  pcie_port_remove_service+0x3c/0x58
->>> [ 4112.357932]  device_release_driver_internal+0x1b4/0x250
->>> [ 4112.363146]  device_release_driver+0x28/0x38
->>> [ 4112.367406]  bus_remove_device+0xd4/0x160
->>> [ 4112.371405]  device_del+0x128/0x348
->>> [ 4112.374880]  device_unregister+0x24/0x78
->>> [ 4112.378792]  remove_iter+0x48/0x58
->>> [ 4112.382183]  device_for_each_child+0x6c/0xb8
->>> [ 4112.386443]  pcie_port_device_remove+0x2c/0x48
->>> [ 4112.390876]  pcie_portdrv_remove+0x5c/0x68
->>> [ 4112.394963]  pci_device_remove+0x48/0xd8
->>> [ 4112.398874]  device_release_driver_internal+0x1b4/0x250
->>> [ 4112.404088]  device_release_driver+0x28/0x38
->>> [ 4112.408348]  pci_stop_bus_device+0x84/0xb8
->>> [ 4112.412434]  pci_stop_and_remove_bus_device_locked+0x24/0x40
->>> [ 4112.418083]  remove_store+0xa4/0xb8
->>> [ 4112.421560]  dev_attr_store+0x44/0x60
->>> [ 4112.425213]  sysfs_kf_write+0x58/0x80
->>> [ 4112.428864]  kernfs_fop_write+0xe8/0x1f0
->>> [ 4112.432776]  __vfs_write+0x60/0x190
->>> [ 4112.436255]  vfs_write+0xac/0x1c0
->>> [ 4112.439560]  ksys_write+0x6c/0xd8
->>> [ 4112.442861]  __arm64_sys_write+0x24/0x30
->>> [ 4112.446773]  el0_svc_common+0xa0/0x180
->>> [ 4112.450511]  el0_svc_handler+0x38/0x78
->>> [ 4112.454249]  el0_svc+0x8/0xc
->>> [ 4112.457122] INFO: task irq/97-pciehp:17365 blocked for more than 120
->>> seconds.
->>> [ 4112.464248]       Tainted: P        W  OE
->>> 4.19.25-vhulk1901.1.0.h111.aarch64+ #2
->>> [ 4112.471980] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
->>> disables this message.
->>> [ 4112.479798] irq/97-pciehp   D    0 17365      2 0x00000228
->>> [ 4112.485273] Call trace:
->>> [ 4112.487710]  __switch_to+0x94/0xe8
->>> [ 4112.491098]  __schedule+0x270/0x8b0
->>> [ 4112.494575]  schedule+0x2c/0x88
->>> [ 4112.497706]  schedule_preempt_disabled+0x14/0x20
->>> [ 4112.502313]  __mutex_lock.isra.1+0x1fc/0x540
->>> [ 4112.506572]  __mutex_lock_slowpath+0x24/0x30
->>> [ 4112.510833]  mutex_lock+0x80/0xa8
->>> [ 4112.514138]  pci_lock_rescan_remove+0x20/0x28
->>> [ 4112.518485]  pciehp_configure_device+0x30/0x140
->>> [ 4112.523005]  pciehp_handle_presence_or_link_change+0x35c/0x4b0
->>> [ 4112.528826]  pciehp_ist+0x1cc/0x1d0
->>> [ 4112.532305]  irq_thread_fn+0x30/0x80
->>> [ 4112.535870]  irq_thread+0x128/0x200
->>> [ 4112.539349]  kthread+0x134/0x138
->>> [ 4112.542563]  ret_from_fork+0x10/0x18
->>
->> .
->>
->
->
+On Tue, 2019-03-26 at 15:58 +0000, Lorenzo Pieralisi wrote:
+> > We did that internally. You really don't want me telling engineers to
+> > post to the list *first* without running things by me to get the basics
+> > right. Not to start with, at least.
+>=20
+> Hi David,
+>=20
+> I am obviously in favour of internal review and I do not question it was
+> carried out internally, I just kindly ask developers to drop review tags
+> given internally when going to public mailing lists - I understand it is
+> churn for you but I prefer them to be given explicitly.
+
+Sure, I've provided mine in public now.
+
+I will attempt to remember your preference, although I'm not sure I
+think it's necessary.
+
+What's the failure mode we're protecting against here? That my
+engineers are lying and have *faked* my reviewed-by tag?
+
+Don't you think I'd *eat* them if I ever found that happening?
+
+What's next? That you only accept such tags in signed email, so that
+the dishonest engineer in question can't *fake* an email from me to the
+list? They know I'm afflicted by Exchange so they can always send that
+fake message with a message-id matching another message they know is
+already in my inbox, so Exchange will helpfully discard theirs. :)
+
+--=-F/WmsPzV8pVAfsLFczu6
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCECow
+ggUcMIIEBKADAgECAhEA4rtJSHkq7AnpxKUY8ZlYZjANBgkqhkiG9w0BAQsFADCBlzELMAkGA1UE
+BhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgG
+A1UEChMRQ09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENPTU9ETyBSU0EgQ2xpZW50IEF1dGhl
+bnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTkwMTAyMDAwMDAwWhcNMjIwMTAxMjM1
+OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjANBgkqhkiG9w0B
+AQEFAAOCAQ8AMIIBCgKCAQEAsv3wObLTCbUA7GJqKj9vHGf+Fa+tpkO+ZRVve9EpNsMsfXhvFpb8
+RgL8vD+L133wK6csYoDU7zKiAo92FMUWaY1Hy6HqvVr9oevfTV3xhB5rQO1RHJoAfkvhy+wpjo7Q
+cXuzkOpibq2YurVStHAiGqAOMGMXhcVGqPuGhcVcVzVUjsvEzAV9Po9K2rpZ52FE4rDkpDK1pBK+
+uOAyOkgIg/cD8Kugav5tyapydeWMZRJQH1vMQ6OVT24CyAn2yXm2NgTQMS1mpzStP2ioPtTnszIQ
+Ih7ASVzhV6csHb8Yrkx8mgllOyrt9Y2kWRRJFm/FPRNEurOeNV6lnYAXOymVJwIDAQABo4IB0zCC
+Ac8wHwYDVR0jBBgwFoAUgq9sjPjF/pZhfOgfPStxSF7Ei8AwHQYDVR0OBBYEFLfuNf820LvaT4AK
+xrGK3EKx1DE7MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMB0GA1UdJQQWMBQGCCsGAQUF
+BwMEBggrBgEFBQcDAjBGBgNVHSAEPzA9MDsGDCsGAQQBsjEBAgEDBTArMCkGCCsGAQUFBwIBFh1o
+dHRwczovL3NlY3VyZS5jb21vZG8ubmV0L0NQUzBaBgNVHR8EUzBRME+gTaBLhklodHRwOi8vY3Js
+LmNvbW9kb2NhLmNvbS9DT01PRE9SU0FDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3VyZUVtYWls
+Q0EuY3JsMIGLBggrBgEFBQcBAQR/MH0wVQYIKwYBBQUHMAKGSWh0dHA6Ly9jcnQuY29tb2RvY2Eu
+Y29tL0NPTU9ET1JTQUNsaWVudEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYI
+KwYBBQUHMAGGGGh0dHA6Ly9vY3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZy
+YWRlYWQub3JnMA0GCSqGSIb3DQEBCwUAA4IBAQALbSykFusvvVkSIWttcEeifOGGKs7Wx2f5f45b
+nv2ghcxK5URjUvCnJhg+soxOMoQLG6+nbhzzb2rLTdRVGbvjZH0fOOzq0LShq0EXsqnJbbuwJhK+
+PnBtqX5O23PMHutP1l88AtVN+Rb72oSvnD+dK6708JqqUx2MAFLMevrhJRXLjKb2Mm+/8XBpEw+B
+7DisN4TMlLB/d55WnT9UPNHmQ+3KFL7QrTO8hYExkU849g58Dn3Nw3oCbMUgny81ocrLlB2Z5fFG
+Qu1AdNiBA+kg/UxzyJZpFbKfCITd5yX49bOriL692aMVDyqUvh8fP+T99PqorH4cIJP6OxSTdxKM
+MIIFHDCCBASgAwIBAgIRAOK7SUh5KuwJ6cSlGPGZWGYwDQYJKoZIhvcNAQELBQAwgZcxCzAJBgNV
+BAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAY
+BgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRo
+ZW50aWNhdGlvbiBhbmQgU2VjdXJlIEVtYWlsIENBMB4XDTE5MDEwMjAwMDAwMFoXDTIyMDEwMTIz
+NTk1OVowJDEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBALL98Dmy0wm1AOxiaio/bxxn/hWvraZDvmUVb3vRKTbDLH14bxaW
+/EYC/Lw/i9d98CunLGKA1O8yogKPdhTFFmmNR8uh6r1a/aHr301d8YQea0DtURyaAH5L4cvsKY6O
+0HF7s5DqYm6tmLq1UrRwIhqgDjBjF4XFRqj7hoXFXFc1VI7LxMwFfT6PStq6WedhROKw5KQytaQS
+vrjgMjpICIP3A/CroGr+bcmqcnXljGUSUB9bzEOjlU9uAsgJ9sl5tjYE0DEtZqc0rT9oqD7U57My
+ECIewElc4VenLB2/GK5MfJoJZTsq7fWNpFkUSRZvxT0TRLqznjVepZ2AFzsplScCAwEAAaOCAdMw
+ggHPMB8GA1UdIwQYMBaAFIKvbIz4xf6WYXzoHz0rcUhexIvAMB0GA1UdDgQWBBS37jX/NtC72k+A
+CsaxitxCsdQxOzAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNVHSUEFjAUBggrBgEF
+BQcDBAYIKwYBBQUHAwIwRgYDVR0gBD8wPTA7BgwrBgEEAbIxAQIBAwUwKzApBggrBgEFBQcCARYd
+aHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9DUFMwWgYDVR0fBFMwUTBPoE2gS4ZJaHR0cDovL2Ny
+bC5jb21vZG9jYS5jb20vQ09NT0RPUlNBQ2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFp
+bENBLmNybDCBiwYIKwYBBQUHAQEEfzB9MFUGCCsGAQUFBzAChklodHRwOi8vY3J0LmNvbW9kb2Nh
+LmNvbS9DT01PRE9SU0FDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3VyZUVtYWlsQ0EuY3J0MCQG
+CCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0RBBcwFYETZHdtdzJAaW5m
+cmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAC20spBbrL71ZEiFrbXBHonzhhirO1sdn+X+O
+W579oIXMSuVEY1LwpyYYPrKMTjKECxuvp24c829qy03UVRm742R9Hzjs6tC0oatBF7KpyW27sCYS
+vj5wbal+TttzzB7rT9ZfPALVTfkW+9qEr5w/nSuu9PCaqlMdjABSzHr64SUVy4ym9jJvv/FwaRMP
+gew4rDeEzJSwf3eeVp0/VDzR5kPtyhS+0K0zvIWBMZFPOPYOfA59zcN6AmzFIJ8vNaHKy5QdmeXx
+RkLtQHTYgQPpIP1Mc8iWaRWynwiE3ecl+PWzq4i+vdmjFQ8qlL4fHz/k/fT6qKx+HCCT+jsUk3cS
+jDCCBeYwggPOoAMCAQICEGqb4Tg7/ytrnwHV2binUlYwDQYJKoZIhvcNAQEMBQAwgYUxCzAJBgNV
+BAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAY
+BgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMSswKQYDVQQDEyJDT01PRE8gUlNBIENlcnRpZmljYXRp
+b24gQXV0aG9yaXR5MB4XDTEzMDExMDAwMDAwMFoXDTI4MDEwOTIzNTk1OVowgZcxCzAJBgNVBAYT
+AkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNV
+BAoTEUNPTU9ETyBDQSBMaW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRoZW50
+aWNhdGlvbiBhbmQgU2VjdXJlIEVtYWlsIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEAvrOeV6wodnVAFsc4A5jTxhh2IVDzJXkLTLWg0X06WD6cpzEup/Y0dtmEatrQPTRI5Or1u6zf
++bGBSyD9aH95dDSmeny1nxdlYCeXIoymMv6pQHJGNcIDpFDIMypVpVSRsivlJTRENf+RKwrB6vcf
+WlP8dSsE3Rfywq09N0ZfxcBa39V0wsGtkGWC+eQKiz4pBZYKjrc5NOpG9qrxpZxyb4o4yNNwTqza
+aPpGRqXB7IMjtf7tTmU2jqPMLxFNe1VXj9XB1rHvbRikw8lBoNoSWY66nJN/VCJv5ym6Q0mdCbDK
+CMPybTjoNCQuelc0IAaO4nLUXk0BOSxSxt8kCvsUtQIDAQABo4IBPDCCATgwHwYDVR0jBBgwFoAU
+u69+Aj36pvE8hI6t7jiY7NkyMtQwHQYDVR0OBBYEFIKvbIz4xf6WYXzoHz0rcUhexIvAMA4GA1Ud
+DwEB/wQEAwIBhjASBgNVHRMBAf8ECDAGAQH/AgEAMBEGA1UdIAQKMAgwBgYEVR0gADBMBgNVHR8E
+RTBDMEGgP6A9hjtodHRwOi8vY3JsLmNvbW9kb2NhLmNvbS9DT01PRE9SU0FDZXJ0aWZpY2F0aW9u
+QXV0aG9yaXR5LmNybDBxBggrBgEFBQcBAQRlMGMwOwYIKwYBBQUHMAKGL2h0dHA6Ly9jcnQuY29t
+b2RvY2EuY29tL0NPTU9ET1JTQUFkZFRydXN0Q0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2Nz
+cC5jb21vZG9jYS5jb20wDQYJKoZIhvcNAQEMBQADggIBAHhcsoEoNE887l9Wzp+XVuyPomsX9vP2
+SQgG1NgvNc3fQP7TcePo7EIMERoh42awGGsma65u/ITse2hKZHzT0CBxhuhb6txM1n/y78e/4ZOs
+0j8CGpfb+SJA3GaBQ+394k+z3ZByWPQedXLL1OdK8aRINTsjk/H5Ns77zwbjOKkDamxlpZ4TKSDM
+KVmU/PUWNMKSTvtlenlxBhh7ETrN543j/Q6qqgCWgWuMAXijnRglp9fyadqGOncjZjaaSOGTTFB+
+E2pvOUtY+hPebuPtTbq7vODqzCM6ryEhNhzf+enm0zlpXK7q332nXttNtjv7VFNYG+I31gnMrwfH
+M5tdhYF/8v5UY5g2xANPECTQdu9vWPoqNSGDt87b3gXb1AiGGaI06vzgkejL580ul+9hz9D0S0U4
+jkhJiA7EuTecP/CFtR72uYRBcunwwH3fciPjviDDAI9SnC/2aPY8ydehzuZutLbZdRJ5PDEJM/1t
+yZR2niOYihZ+FCbtf3D9mB12D4ln9icgc7CwaxpNSCPt8i/GqK2HsOgkL3VYnwtx7cJUmpvVdZ4o
+gnzgXtgtdk3ShrtOS1iAN2ZBXFiRmjVzmehoMof06r1xub+85hFQzVxZx5/bRaTKTlL8YXLI8nAb
+R9HWdFqzcOoB/hxfEyIQpx9/s81rgzdEZOofSlZHynoSMYIDyjCCA8YCAQEwga0wgZcxCzAJBgNV
+BAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAY
+BgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMT0wOwYDVQQDEzRDT01PRE8gUlNBIENsaWVudCBBdXRo
+ZW50aWNhdGlvbiBhbmQgU2VjdXJlIEVtYWlsIENBAhEA4rtJSHkq7AnpxKUY8ZlYZjANBglghkgB
+ZQMEAgEFAKCCAe0wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTkw
+MzI3MDk1MjE1WjAvBgkqhkiG9w0BCQQxIgQgW5HEqRO3VRggxDYrQkpV/JguAWfoIBWXw+Mt0hiy
+72Ywgb4GCSsGAQQBgjcQBDGBsDCBrTCBlzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIg
+TWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQx
+PTA7BgNVBAMTNENPTU9ETyBSU0EgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1h
+aWwgQ0ECEQDiu0lIeSrsCenEpRjxmVhmMIHABgsqhkiG9w0BCRACCzGBsKCBrTCBlzELMAkGA1UE
+BhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgG
+A1UEChMRQ09NT0RPIENBIExpbWl0ZWQxPTA7BgNVBAMTNENPTU9ETyBSU0EgQ2xpZW50IEF1dGhl
+bnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0ECEQDiu0lIeSrsCenEpRjxmVhmMA0GCSqGSIb3
+DQEBAQUABIIBAJwNKx7QqOe4Tw5sPXcOI1M27L53e0UZzOb+sGI8CqGTKyc3g/aE/hpdY5b035jG
+GrwlVNT1CswGEMI1ZuL3RKvZMU3uMlLuveXgHyRJitvvSBeqA9o+89A4hOrgslbrH5vYxukZVR38
+ut0JoPO4IB0M6gEi9o+G4KfOzAqwCxGUwveMxNgBLd+W4tICghCWIb0W/7XiPn9qMT4Qr5nMpjXb
+PKjpM4r8G6VGIaOfID3v/jyiv9tt+gKJnZJ636GwB9ykBRseEkDg+EFlBHEyO/ujph1qVrkVxUI1
++JmK8O0nveVYdGLYn01zm4hCA6lXFzJ60aM7E8iCzB3WMJJX9kcAAAAAAAA=
+
+
+--=-F/WmsPzV8pVAfsLFczu6--
+
