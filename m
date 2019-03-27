@@ -2,88 +2,115 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E98DBC43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:02:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7482BC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:05:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFD6F2082F
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:02:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45B852082F
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 17:05:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727454AbfC0RCw convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 13:02:52 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([146.101.78.151]:58086 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727391AbfC0RCv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 13:02:51 -0400
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-45-fRGz32CyM7-BOn_PAxkpUg-1; Wed, 27 Mar 2019 17:02:47 +0000
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b::d117) by AcuMS.aculab.com
- (fd9f:af1c:a25b::d117) with Microsoft SMTP Server (TLS) id 15.0.1347.2; Wed,
- 27 Mar 2019 17:03:52 +0000
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Wed, 27 Mar 2019 17:03:52 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Bjorn Helgaas' <helgaas@kernel.org>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "linux@yadro.com" <linux@yadro.com>
-Subject: RE: [PATCH RFC v4 09/21] PCI: Mark immovable BARs with PCI_FIXED
-Thread-Topic: [PATCH RFC v4 09/21] PCI: Mark immovable BARs with PCI_FIXED
-Thread-Index: AQHU5BKo6oZy4EJXskG+oHCz+gArvaYftIQQ
-Date:   Wed, 27 Mar 2019 17:03:52 +0000
-Message-ID: <3e3e163cbf35446ea575bb7fae1912be@AcuMS.aculab.com>
-References: <20190311133122.11417-1-s.miroshnichenko@yadro.com>
- <20190311133122.11417-10-s.miroshnichenko@yadro.com>
- <20190326202838.GQ24180@google.com>
-In-Reply-To: <20190326202838.GQ24180@google.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        id S1727369AbfC0RFq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 13:05:46 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:35790 "EHLO ns.iliad.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727357AbfC0RFq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Mar 2019 13:05:46 -0400
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id C1ADA20631;
+        Wed, 27 Mar 2019 18:05:43 +0100 (CET)
+Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id A2C0A1FF74;
+        Wed, 27 Mar 2019 18:05:43 +0100 (CET)
+Subject: Re: WIP: PCIe on MSM8998
+To:     Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.org>, Rob Clark <robdclark@gmail.com>
+Cc:     MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Jeffrey Hugo <jhugo@codeaurora.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Lee Jones <lee.jones@linaro.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        iommu <iommu@lists.linux-foundation.org>
+References: <c97b6f4e-4b4c-027f-5a0b-80b3f7054177@free.fr>
+ <fb5f2b94-34b7-d021-7ac9-832b08138ad4@free.fr>
+ <6041e92f-4dbf-c6ce-d92a-220fc8239acb@free.fr>
+ <e0a650ce-e7d4-a803-5e08-f998722bf15d@arm.com>
+ <b027ad18-f7f4-cf05-b8de-ea951e0dc457@free.fr>
+ <2e7d4564-01ea-d0bc-51c8-2bc2c116c4cc@arm.com>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Message-ID: <851f14df-57de-209b-1a8c-c71eabec9d2c@free.fr>
+Date:   Wed, 27 Mar 2019 18:05:43 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-X-MC-Unique: fRGz32CyM7-BOn_PAxkpUg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <2e7d4564-01ea-d0bc-51c8-2bc2c116c4cc@arm.com>
+Content-Type: text/plain; charset=iso-8859-15
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Wed Mar 27 18:05:43 2019 +0100 (CET)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas
-> Sent: 26 March 2019 20:29
+On 21/03/2019 00:07, Robin Murphy wrote:
+
+> Unfortunately, having looked around the code, I think I do. 4.4 long 
+> predates the iommu-map binding, and in the absence of anything other 
+> than the hard-coded SID==RID assumption of arm-smmu at the time, they 
+> apparently went and did their own wacky thing[1]. AFAICS the Stream ID 
+> appears to be pretty much derived from the PCI topology as I would hope, 
+> but it looks like it might depend on some sort of lookup table being 
+> programmed appropriately as well.
 > 
-> On Mon, Mar 11, 2019 at 04:31:10PM +0300, Sergey Miroshnichenko wrote:
-> > If a PCIe device driver doesn't yet have support for movable BARs,
-> > mark device's BARs with IORESOURCE_PCI_FIXED.
+> Bear in mind that the this is _The Qualcomm Android Kernel_ we're trying 
+> to reason about here - playing true to the stereotype, the diff against 
+> the mainline driver is significantly bigger than the entire mainline 
+> driver itself; the line count of arm-smmu.c alone is pushing 
+> 2-and-a-half times that of the file in 4.4.y ;)
 > 
-> I'm hesitant about using IORESOURCE_PCI_FIXED for this purpose.  That
-> was originally added to describe resources that can not be changed
-> because they're hardwired in the device, e.g., legacy resources and
-> Enhanced Allocation resources.
+> Since the curiosity had set in, I finally got round to dumping the ACPI 
+> tables from my Snapdragon 835 laptop, and judging by the IORT it seems 
+> like the EFI firmware for Windows machines does provide some set of 
+> static ID mappings which could probably transcribe to an iommu-map (if 
+> indeed it's valid at all - Windows itself doesn't seem to be even 
+> touching PCI here), but I guess the Android BSP might not be so 
+> generous. That'll be a question for the Qualcomm folks. FWIW mine 
+> interestingly claims that its SMMU instances are all sharing SPI 231 as 
+> a global fault interrupt, but whether that's true and/or depends on the 
+> runtime firmware, again I really have no idea.
 > 
-> In general, I think the bits in res->flags should tell us things about
-> the hardware.  This particular use would be something about the
-> *driver*, and I think we should figure that out by looking at
-> dev->driver.
+> Robin.
+> 
+> [1] 
+> https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/drivers/pci/host/pci-msm.c?h=LE.UM.1.3.r3.25&id=f1fa301f977f06dcf990c0452d85e2f67d8cbbf1#n4687
 
-There will also be drivers that don't support BARs being moved,
-but may be in a state (ie not actually open) where they can go
-through a remove-rescan sequence to allow the BAR be moved.
+It works at last!
 
-This might even be true if the open count is non-zero.
+In the root complex DT node, I have:
 
-	David
+	iommu-map = <0 &anoc1_smmu 0x1480 0x10000>;
+	iommu-map-mask = <0>;
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+AFAIU, this means: "map every Requester ID onto stream ID 0x1480"
 
+AFAIU, there is only a single end-point on the system: RID 0x100
+
+As you pointed out Robin, we also need to set up some kind of lookup table:
+
+	writel(0x100, pcie->parf + PCIE_0_PCIE20_PARF_BDF_TRANSLATE_n);
+
+AFAIU, this means: "RID 0x100 <-> stream ID 0x1480" (???)
+
+
+Is this good enough for mainline?
+
+Regards.
