@@ -2,113 +2,135 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C67BC10F00
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 12:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB5BC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 12:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0813B21734
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 12:22:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80A432087C
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 12:27:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="gHCvm+Du"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728656AbfC0MWT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 08:22:19 -0400
-Received: from mail-vs1-f65.google.com ([209.85.217.65]:43813 "EHLO
-        mail-vs1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726233AbfC0MWT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 08:22:19 -0400
-Received: by mail-vs1-f65.google.com with SMTP id i207so9736735vsd.10;
-        Wed, 27 Mar 2019 05:22:18 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=rGrNea8lqZcnie44+KuMcw930p3XxUZwDotVRxbGavE=;
-        b=UpmJcQu2xneByxfS+k/sFGDTBtqwHjBEge0TLcXVFmmbA+4MVPB1lcbVfXE4nVSQqS
-         gZE6OhfN8Ig1ajyGS0fPptx8mO3S4h3E+TmUVjqHRZFrQcrV4oqBxz+K9WaN/9SDfIfo
-         564Na8T03+TlHeQI6KtO4JVV/YN/T5iJA8y5XQCbVtCiYrFgCGGRbM3v/COGdQk5B4iY
-         I043twsrTzfCGr+vWsnpH41qDac/M+pRtK1oFRohl8/1cljdDeNPvfRoBnxsEDXOM5bB
-         CdnkKra77okb8CGANcKBTxiqrSDcFrzPg+Vyh4qbIDLeD5boIhZ430WVbwj+dP3Actok
-         tSzQ==
-X-Gm-Message-State: APjAAAU/J4nRJ4eiELuF5tLNJY/ANBf6sKj5OANYmLEc4oAaWDNTTHN1
-        OCgB5Zhc/+ciyPE+EAxg9NYmgWphPAu/YMWFjHA=
-X-Google-Smtp-Source: APXvYqxW/qFQkhMbO6V8P8LqHQaZR7FyclyAPTV3eJwc22Y2D7153JyMf85sdXuwnx2/HXliYj7UZNFtVAZkvUGdydk=
-X-Received: by 2002:a05:6102:199:: with SMTP id r25mr687288vsq.166.1553689337935;
- Wed, 27 Mar 2019 05:22:17 -0700 (PDT)
+        id S1729294AbfC0M07 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 08:26:59 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:1670 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728184AbfC0M07 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 08:26:59 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5c9b6c150000>; Wed, 27 Mar 2019 05:27:01 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Wed, 27 Mar 2019 05:26:58 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Wed, 27 Mar 2019 05:26:58 -0700
+Received: from [10.21.132.148] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 27 Mar
+ 2019 12:26:51 +0000
+Subject: Re: [PATCH 10/10] arm64: Add Tegra194 PCIe driver to defconfig
+To:     Vidya Sagar <vidyas@nvidia.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <thierry.reding@gmail.com>, <kishon@ti.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <lorenzo.pieralisi@arm.com>, <jingoohan1@gmail.com>,
+        <gustavo.pimentel@synopsys.com>, <mperttunen@nvidia.com>,
+        <tiwai@suse.de>, <spujar@nvidia.com>, <skomatineni@nvidia.com>,
+        <liviu.dudau@arm.com>, <krzk@kernel.org>, <heiko@sntech.de>,
+        <horms+renesas@verge.net.au>, <olof@lixom.net>,
+        <maxime.ripard@bootlin.com>, <andy.gross@linaro.org>,
+        <bjorn.andersson@linaro.org>, <jagan@amarulasolutions.com>,
+        <enric.balletbo@collabora.com>, <ezequiel@collabora.com>,
+        <stefan.wahren@i2se.com>, <marc.w.gonzalez@free.fr>,
+        <l.stach@pengutronix.de>, <tpiepho@impinj.com>,
+        <hayashi.kunihiko@socionext.com>, <yue.wang@amlogic.com>,
+        <shawn.lin@rock-chips.com>, <xiaowei.bao@nxp.com>
+CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>
+References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
+ <1553613207-3988-11-git-send-email-vidyas@nvidia.com>
+ <a0491042-2f24-4ba8-754b-ba3959b77d6f@nvidia.com>
+ <44d7ff1d-c317-6ba2-86c0-981a6356ee9e@nvidia.com>
+From:   Jon Hunter <jonathanh@nvidia.com>
+Message-ID: <c5ca34fe-4290-d9b7-cda3-23b4a11ec5d8@nvidia.com>
+Date:   Wed, 27 Mar 2019 12:26:49 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-References: <20190325114101.10198-1-marek.vasut@gmail.com> <20190325114101.10198-6-marek.vasut@gmail.com>
- <20190327113023.zhnx5v5spcx7uoqj@verge.net.au>
-In-Reply-To: <20190327113023.zhnx5v5spcx7uoqj@verge.net.au>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 27 Mar 2019 13:22:05 +0100
-Message-ID: <CAMuHMdW_6hutek-vk+mwDHJ1kBUytLvtkgLKb2mkSEFFasJ_0g@mail.gmail.com>
-Subject: Re: [PATCH V4 6/6] PCI: rcar: Fix 64bit MSI message address handling
-To:     Simon Horman <horms@verge.net.au>
-Cc:     Marek Vasut <marek.vasut@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <44d7ff1d-c317-6ba2-86c0-981a6356ee9e@nvidia.com>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1553689621; bh=5qtjykd+Yy2wGhSpgzMIji4/i7wjv6QL+hQjLrgf6K0=;
+        h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
+         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
+         X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=gHCvm+Du6RzTKZnrekGcsOZP7e5IJt5sRvYFTLqdtliVM7hYzCEDfZqEZs0PtSUkw
+         9kExzTe5b5XFXY+6mbH5RdDB/VQDY2XhWzJjHXZBvVnkhmp0HVfrXj2PDHhEHn5Eek
+         YveunIKKF1RdHkMzBl0poWPsEL03Y2dcQfNIuK8Ve5QcWii+A4jk88zrJqvO6dULvi
+         rCK6wvy9/SQKQ144wmWLNS2VADcRYaOt9isCbNLcWE1a+bVMgP6WI7avYekgUnDL2x
+         Ois3vUu+HzYNfL2o8gC9mODFqRsFd5i6ln4zh/nzkJQOQ+ZRFhzM+WBaN7EqrRp7kG
+         2LNrEvx5UBwog==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 27, 2019 at 12:30 PM Simon Horman <horms@verge.net.au> wrote:
-> On Mon, Mar 25, 2019 at 12:41:01PM +0100, marek.vasut@gmail.com wrote:
-> > From: Marek Vasut <marek.vasut+renesas@gmail.com>
-> > The MSI message address in the RC address space can be 64 bit. The
-> > R-Car PCIe RC supports such a 64bit MSI message address as well.
-> > The code currently uses virt_to_phys(__get_free_pages()) to obtain
-> > a reserved page for the MSI message address, and the return value
-> > of which can be a 64 bit physical address on 64 bit system.
-> >
-> > However, the driver only programs PCIEMSIALR register with the bottom
-> > 32 bits of the virt_to_phys(__get_free_pages()) return value and does
-> > not program the top 32 bits into PCIEMSIAUR, but rather programs the
-> > PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
-> > SoCs, however may fail on new 64 bit R-Car SoCs.
-> >
-> > Since from a PCIe controller perspective, an inbound MSI is a memory
-> > write to a special address (in case of this controller, defined by
-> > the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
-> > never hits the DRAM _and_ because allocation of an MSI by a PCIe card
-> > driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
-> > in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
-> > cause memory corruption or other issues.
-> >
-> > There is however the possibility that if virt_to_phys(__get_free_pages())
-> > returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
-> > to 0x0 _and_ if the system had physical RAM at the address matching the
-> > value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
-> > physical address matching the value of PCIEMSIALR and a remote write to
-> > such a buffer by a PCIe card would trigger a spurious MSI.
-> >
-> > Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> > Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> > Cc: Simon Horman <horms+renesas@verge.net.au>
-> > Cc: Wolfram Sang <wsa@the-dreams.de>
-> > Cc: linux-renesas-soc@vger.kernel.org
-> > To: linux-pci@vger.kernel.org
-> > Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
->
-> Does this warrant a Fixes tag?
 
-(digging in old sent email)
-Fixes: 290c1fb358605402 ("PCI: rcar: Add MSI support for PCIe")
+On 27/03/2019 10:12, Vidya Sagar wrote:
+> On 3/27/2019 3:38 PM, Jon Hunter wrote:
+>>
+>> On 26/03/2019 15:13, Vidya Sagar wrote:
+>>> Add PCIe host controller driver for DesignWare core based
+>>> PCIe controller IP present in Tegra194.
+>>>
+>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>>> ---
+>>> =C2=A0 arch/arm64/configs/defconfig | 1 +
+>>> =C2=A0 1 file changed, 1 insertion(+)
+>>>
+>>> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfi=
+g
+>>> index 2d9c39033c1a..2ddea5c4e87d 100644
+>>> --- a/arch/arm64/configs/defconfig
+>>> +++ b/arch/arm64/configs/defconfig
+>>> @@ -87,6 +87,7 @@ CONFIG_PCIE_QCOM=3Dy
+>>> =C2=A0 CONFIG_PCIE_ARMADA_8K=3Dy
+>>> =C2=A0 CONFIG_PCIE_KIRIN=3Dy
+>>> =C2=A0 CONFIG_PCIE_HISI_STB=3Dy
+>>> +CONFIG_PCIE_TEGRA194=3Dy
+>>> =C2=A0 CONFIG_ARM64_VA_BITS_48=3Dy
+>>> =C2=A0 CONFIG_SCHED_MC=3Dy
+>>> =C2=A0 CONFIG_NUMA=3Dy
+>>
+>> Maybe building as a module is more appropriate here as I am not sure
+>> that anyone else will want this built-in and it is not critical to
+>> booting AFAIK.
+> Since the DesignWare core framework doesn't yet have support for making
+> this
+> as a module, I added it as a built-in driver. I'll switch it to a module
+> once support is available.
 
-Gr{oetje,eeting}s,
+Ah I see. We often get reports/patches if a driver has a removal
+function but is defined in the Kconfig to only support being built-in.
 
-                        Geert
+Does the designware core just need to export some symbols to support it
+being a module? If so it maybe worth adding these as part of the series
+to see if it is acceptable, otherwise it might not get done and there is
+no point us supporting it as a module.
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Cheers
+Jon
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+--=20
+nvpublic
