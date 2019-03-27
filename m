@@ -3,84 +3,163 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5DC5C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 13:58:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C33E8C10F00
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 14:10:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83DFF2087C
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 13:58:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8506B217F5
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 14:10:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553695131;
-	bh=aUmUklp7Ivv3GyGqbd0YUb6qmHm6kG8ZHeYPYC02o6Q=;
+	s=default; t=1553695815;
+	bh=bgHB+wJN6vYjXHAxa3KCEexObQLCB+901YU2ya0y75A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ENZckut4e4kSzXNeE4HPhGAgKGkZpuHPEFrTcSfB+yeuEEpQ6hH4LPuAIXgpV0vsx
-	 rYCgmm2UGDMlQilaLcdwbZJwEvhmeJj1hWJuA7wAtYDReP3K1YGvYG7UiQ4+C89Kcp
-	 nbZ0vEi6WLOYqzD6SSHZ5/wMzfTMvkNh97W+W+Ek=
+	b=KWkyf2uZOl4pyzRTOu3WZYrhfhne258M1adCYVIeW/MwdcLrSKAMUS0SCG7OqPNfn
+	 hn0PXhZPkpdauKvPSinB4Goah6rj8b2b9YCWSZ8HL4NgOZ3gIftZM4JT3kJnqTnRqb
+	 gX36aW61rsd1zmauZCGFDp352g4X3gBvYRa+wOA4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727488AbfC0N6u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 09:58:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55416 "EHLO mail.kernel.org"
+        id S1726319AbfC0OKN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 10:10:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34104 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725797AbfC0N6u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Mar 2019 09:58:50 -0400
+        id S1727488AbfC0OKN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Mar 2019 10:10:13 -0400
 Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AFDB22075E;
-        Wed, 27 Mar 2019 13:58:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9051F2075E;
+        Wed, 27 Mar 2019 14:10:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553695129;
-        bh=aUmUklp7Ivv3GyGqbd0YUb6qmHm6kG8ZHeYPYC02o6Q=;
+        s=default; t=1553695811;
+        bh=bgHB+wJN6vYjXHAxa3KCEexObQLCB+901YU2ya0y75A=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=zT1MCNlGj9RhY8AgOj7IDCfnOiEvbUdVWCLymPQFo59Hqp/D8zjye+yy2fnIIZ64w
-         aQnM7ANzKreDfZsb02u7JJnKUDFUYCIqE2A02wQTeh/yWUp/SC13Jv0YwV11A9CqRn
-         ReZFuutym3gfxX4lqR+E+vsM0IyNwr3o9WB2A0qM=
-Date:   Wed, 27 Mar 2019 08:58:48 -0500
+        b=SYt+osEdoZYOgisiMPKPhFzvFyoSJCIt4La2KxqyGNE7Ex9FIa4m9lH0BS4ZNq9Mi
+         Rb8YbEzUngku86fB+uX+rtKV+olOEmOEFt5wIse/eVt7joPNUiY116OHZI+iXbUKDk
+         djsnYUxxrbwqRPABloq7D0VjkxPuAVU6VK5Pez34=
+Date:   Wed, 27 Mar 2019 09:10:10 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     linux-pci@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 0/2] PCI/MSI: Remove unused interfaces
-Message-ID: <20190327135848.GA24180@google.com>
-References: <20190325221229.36930-1-helgaas@kernel.org>
+To:     Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Stewart Smith <stewart@linux.vnet.ibm.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Russell Currey <ruscur@russell.cc>, linux@yadro.com
+Subject: Re: [PATCH v5 0/8] powerpc/powernv/pci: Make hotplug
+ self-sufficient, independent of FW and DT
+Message-ID: <20190327141010.GB24180@google.com>
+References: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190325221229.36930-1-helgaas@kernel.org>
+In-Reply-To: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Lorenzo, Michal, linux-arm-kernel]
+Hi Sergey,
 
-On Mon, Mar 25, 2019 at 05:12:27PM -0500, Bjorn Helgaas wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> pcie-xilinx-nwl.c is the only driver to use mask_msi_irq() and
-> unmask_msi_irq(), which are trivial wrappers around PCI-specific functions.
-> We obviously know we need the PCI versions in this driver, so use them
-> directly, as all the other PCI host controller drivers do, and remove the
-> unused wrappers.
-> 
-> Unless there's objection, I'll merge both of these via my tree just to keep
-> them together.
+Since this doesn't touch drivers/pci, I assume powerpc folks will
+handle this series.  Let me know if otherwise.
 
-These are on pci/msi for v5.2.
+On Mon, Mar 11, 2019 at 02:52:25PM +0300, Sergey Miroshnichenko wrote:
+> This patchset allows switching from the pnv_php module to the standard
+> pciehp driver for PCIe hotplug functionality, if the platform supports it:
+> PowerNV working on on top of the skiboot with the "core/pci: Sync VFs and
+> the changes of bdfns between the firmware and the OS" [1] patch serie
+> applied.
 
-> Bjorn Helgaas (2):
->   PCI/MSI: Remove unused __write_msi_msg() and write_msi_msg()
->   PCI/MSI: Remove unused mask_msi_irq() and unmask_msi_irq()
+s/bdfns/BDFs/  Maybe?  I see this is a reference to another patch
+  series, but if it hasn't been merged yet, "BDFs" would be consistent
+  with "VFs" and give a hint that "bdfns" is not itself a word.
+
+s/serie/series/
+
+> The feature is activated by the "pci=realloc" command line argument.
+
+From a user point of view, it doesn't seem intuitive that
+"pci=realloc" also means "switch from pnv_php to pciehp".
+
+The only direct effect of "pci=realloc" is to set pci_realloc_enable.
+I haven't read the patches, but is there really something in
+arch/powerpc/ that does something different based on
+pci_realloc_enable?
+
+> The goal is ability to hotplug bridges full of devices in the future. The
+> "Movable BARs" [2] is a platform-independent part of our work in this. The
+> final part will be movable bus numbers to support inserting a bridge in the
+> middle of an existing PCIe tree.
 > 
->  drivers/pci/controller/pcie-xilinx-nwl.c |  9 ++++-----
->  include/linux/msi.h                      | 18 ------------------
->  2 files changed, 4 insertions(+), 23 deletions(-)
+> Tested on POWER8 PowerNV+PHB3 ppc64le (our Vesnin server) with:
+>  - the pciehp driver active;
+>  - the pnv_php driver disabled;
+>  - The "pci=realloc" argument is passed;
+>  - surprise hotplug of an NVME disk works;
+>  - controlled hotplug of a network card with SR-IOV works;
+>  - activating of SR-IOV on a network card works;
+>  - [with extra patches] manually initiated (via sysfs) rescan has found
+>    and turned on a hotplugged bridge;
+>  - Without "pci=realloc" works just as before.
+> 
+> Changes since v4:
+>  - Fixed failing build when EEH is disabled in a kernel config;
+>  - Unfreeze the bus on EEH_IO_ERROR_VALUE(size), not only 0xffffffff;
+>  - Replaced the 0xff magic constant with phb->ioda.reserved_pe_idx;
+>  - Renamed create_pdn() -> pci_create_pdn_from_dev();
+>  - Renamed add_one_dev_pci_data(..., vf_index, ...) -> pci_alloc_pdn();
+>  - Renamed add_dev_pci_data() -> pci_create_vf_pdns();
+>  - Renamed remove_dev_pci_data() -> pci_destroy_vf_pdns();
+>  - Removed the patch fixing uninitialized IOMMU group - now it is fixed in
+>    commit 8f5b27347e88 ("powerpc/powernv/sriov: Register IOMMU groups for
+>    VFs")
+> 
+> Changes since v3 [3]:
+>  - Subject changed;
+>  - Don't disable EEH during rescan anymore - instead just unfreeze the
+>    target buses deliberately;
+>  - Add synchronization with the firmware when changing the PCIe topology;
+>  - Fixed for VFs;
+>  - Code cleanup.
+> 
+> Changes since v2:
+>  - Don't reassign bus numbers on PowerNV by default (to retain the default
+>    behavior), but only when pci=realloc is passed;
+>  - Less code affected;
+>  - pci_add_device_node_info is refactored with add_one_dev_pci_data;
+>  - Minor code cleanup.
+> 
+> Changes since v1:
+>  - Fixed build for ppc64le and ppc64be when CONFIG_PCI_IOV is disabled;
+>  - Fixed build for ppc64e when CONFIG_EEH is disabled;
+>  - Fixed code style warnings.
+> 
+> [1] https://lists.ozlabs.org/pipermail/skiboot/2019-March/013571.html
+> [2] https://www.spinics.net/lists/linux-pci/msg79995.html
+> [3] https://lists.ozlabs.org/pipermail/linuxppc-dev/2018-September/178053.html
+> 
+> Sergey Miroshnichenko (8):
+>   powerpc/pci: Access PCI config space directly w/o pci_dn
+>   powerpc/powernv/pci: Suppress an EEH error when reading an empty slot
+>   powerpc/pci: Create pci_dn on demand
+>   powerpc/pci: Reduce code duplication in pci_add_device_node_info
+>   powerpc/pci/IOV: Add support for runtime enabling the VFs
+>   powerpc/pci: Don't rely on DT is the PCI_REASSIGN_ALL_BUS is set
+>   powerpc/powernv/pci: Hook up the writes to PCI_SECONDARY_BUS register
+>   powerpc/powernv/pci: Enable reassigning the bus numbers
+> 
+>  arch/powerpc/include/asm/pci-bridge.h        |   4 +-
+>  arch/powerpc/include/asm/ppc-pci.h           |   1 +
+>  arch/powerpc/kernel/pci_dn.c                 | 170 ++++++++++-----
+>  arch/powerpc/kernel/rtas_pci.c               |  97 ++++++---
+>  arch/powerpc/platforms/powernv/eeh-powernv.c |   2 +-
+>  arch/powerpc/platforms/powernv/pci-ioda.c    |   4 +-
+>  arch/powerpc/platforms/powernv/pci.c         | 205 +++++++++++++++++--
+>  arch/powerpc/platforms/pseries/pci.c         |   4 +-
+>  8 files changed, 379 insertions(+), 108 deletions(-)
 > 
 > -- 
-> 2.21.0.392.gf8f6787159e-goog
+> 2.20.1
 > 
