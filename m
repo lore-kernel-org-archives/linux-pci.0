@@ -2,209 +2,177 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41322C4360F
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 10:53:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29392C43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:02:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0597B208E4
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 10:53:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7AAE2082F
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:01:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="oNhtMDlK"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MeAVa46d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732159AbfC0Kxi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 06:53:38 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:8712 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729489AbfC0Kxi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 06:53:38 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5c9b562a0001>; Wed, 27 Mar 2019 03:53:30 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Wed, 27 Mar 2019 03:53:36 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Wed, 27 Mar 2019 03:53:36 -0700
-Received: from [10.24.47.154] (10.124.1.5) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 27 Mar
- 2019 10:53:23 +0000
-Subject: Re: [PATCH 05/10] dt-bindings: PCI: tegra: Add device tree support
- for T194
-To:     Jon Hunter <jonathanh@nvidia.com>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <thierry.reding@gmail.com>, <kishon@ti.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <lorenzo.pieralisi@arm.com>, <jingoohan1@gmail.com>,
-        <gustavo.pimentel@synopsys.com>, <mperttunen@nvidia.com>,
-        <tiwai@suse.de>, <spujar@nvidia.com>, <skomatineni@nvidia.com>,
-        <liviu.dudau@arm.com>, <krzk@kernel.org>, <heiko@sntech.de>,
-        <horms+renesas@verge.net.au>, <olof@lixom.net>,
-        <maxime.ripard@bootlin.com>, <andy.gross@linaro.org>,
-        <bjorn.andersson@linaro.org>, <jagan@amarulasolutions.com>,
-        <enric.balletbo@collabora.com>, <ezequiel@collabora.com>,
-        <stefan.wahren@i2se.com>, <marc.w.gonzalez@free.fr>,
-        <l.stach@pengutronix.de>, <tpiepho@impinj.com>,
-        <hayashi.kunihiko@socionext.com>, <yue.wang@amlogic.com>,
-        <shawn.lin@rock-chips.com>, <xiaowei.bao@nxp.com>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>
-References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
- <1553613207-3988-6-git-send-email-vidyas@nvidia.com>
- <b8a7db52-0bc6-2d9d-dd50-7b041f2bf56d@nvidia.com>
-X-Nvconfidentiality: public
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <43f1a198-fc1f-91ec-0fbb-6aff4d35eeb2@nvidia.com>
-Date:   Wed, 27 Mar 2019 16:23:19 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1732384AbfC0LB7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 07:01:59 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:37054 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731920AbfC0LB7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 07:01:59 -0400
+Received: by mail-wm1-f66.google.com with SMTP id v14so16261547wmf.2;
+        Wed, 27 Mar 2019 04:01:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=3pgMnHfWtPPHzxO9tml7t3zs2sBEK4YqFC1k6+SfGBY=;
+        b=MeAVa46d0cqcVwMmz80bBN5Mp8sGtqYDdO7tlhfC5KkvBS4c7DKEiz8jCGH7N7BEhP
+         pTkrS1dm5msbdcYJlUXMSZSnR3/IYiZiw98o/Ca5+lb73xfk4Aa1bBDMqJAOrUmMIRLd
+         IS8Rmsenl78K0UiuPqer+oz0hW3BLZbwdro83iPTOFSPlz+FPHEQoJUaujHA/RpvVO3d
+         lIRRvLZLOErro9sA4eiI+o4tdyFmtAhsA1smYVAkVp6dEQJN4Y5g5G42FY/f39mcm+fj
+         41mvVQgYvmTM3U+TsC7yVpu4/BIkRMP61XZE8UzNXwE80Wg7obT+bGESgayMmc+A5nKn
+         BJsA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=3pgMnHfWtPPHzxO9tml7t3zs2sBEK4YqFC1k6+SfGBY=;
+        b=bbymeUsR67YL4jpICJ9h5wQLoIRlarc9QCCs0GlJoadyWx4IvVDzb29tPOxzrGYfB6
+         kvre3ZRN2Yo2d4KiNufrWuzcKbUFw9eXeqYzX03AO3nlG85p3TUh29e7HvuZf23UKd8q
+         WNE/nsCYlb8qeTFY9OihlYc5/luUi6aHxVi3wB4GLRfYe8yUw4Z2dKjfE54dJAUcOUpL
+         SLIXS7Mqlrcl+GIxk7h3koopypjkYxt0TLU1u1EWDRXok/1Sikdnw6m4SkE/zMOmk2vQ
+         pShFrB58tG7Ke0M0NCAh4PjFZUSLiaaqb8sCTSJ8OwVpiZYyBOLu9dav+HDbTDCAls74
+         G6cA==
+X-Gm-Message-State: APjAAAXyizsePAaDd9tdLYDcqW2JVwmvlaZlm9urRr0q8/3vZOv9TcT3
+        GH+z8aIfivzyxCsXTT3Wm4Qi743QVbmbKZi9aP4=
+X-Google-Smtp-Source: APXvYqwiRK6Pmge8oiHCs4X99bdQYRI+qxDzaL+gk9PtdlimR0aWv3JtNlFym1TqeFjtl4jQ0NB90RLlcPhv0kahelY=
+X-Received: by 2002:a1c:f014:: with SMTP id a20mr17604083wmb.122.1553684516995;
+ Wed, 27 Mar 2019 04:01:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <b8a7db52-0bc6-2d9d-dd50-7b041f2bf56d@nvidia.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1553684011; bh=oqciHL8sB6iHSD7RDKxAcC79ZowKrMqdjfD2j9KBmZA=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=oNhtMDlKsHSfk2KYbHWJ04IAbUcvpV0xK/fCDwhGFF4zq8vxcrgO0m7lFJGiwe5+F
-         QElhjeGQXBvleG59vte3WpwFKv76GWotrlOilemwjxHC3LpiAmWguxoCOnPFxmcRib
-         At+/SOn87s1AyhgqwYqaKLH076XmZvyBKtrGzBDLhbBVzOnokRjAGEIgdBKYqpngIB
-         bxfbLUB5tZP0zAkahYcFAUQ8OIoFHgGyH9Ear8uYUq9HNkq+w5S5PHfuXLjQTGcbx3
-         0fQkreMdpwhFvWesAjULsO3A0HHWMLV+u6dP4BBi9PZr56r70MWwTivKCwiWuFlhLq
-         1zy6Q/a6Yp2Ug==
+References: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
+From:   vidya sagar <sagar.tv@gmail.com>
+Date:   Wed, 27 Mar 2019 16:31:45 +0530
+Message-ID: <CAN7O0+Kkw5oQWCX4LQWe7j84CyP8e5J5aVWB6k0bFdS17gCNig@mail.gmail.com>
+Subject: Re: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     bhelgaas@google.com, lorenzo.pieralisi@arm.com, treding@nvidia.com,
+        swarren@nvidia.com, mperttunen@nvidia.com, jonathanh@nvidia.com,
+        dev@lynxeye.de, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, kthota@nvidia.com,
+        NManikanta <mmaddireddy@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/27/2019 3:40 PM, Jon Hunter wrote:
-> 
-> On 26/03/2019 15:13, Vidya Sagar wrote:
->> Add support for Tegra194 PCIe controllers. These controllers are based
->> on Synopsys DesignWare core IP.
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> ---
->>   .../bindings/pci/nvidia,tegra194-pcie.txt          | 209 +++++++++++++++++++++
->>   .../devicetree/bindings/phy/phy-tegra194-p2u.txt   |  34 ++++
->>   2 files changed, 243 insertions(+)
->>   create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
->>   create mode 100644 Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
->>
->> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
->> new file mode 100644
->> index 000000000000..31527283a0cd
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
->> @@ -0,0 +1,209 @@
->> +NVIDIA Tegra PCIe controller (Synopsys DesignWare Core based)
->> +
->> +This PCIe host controller is based on the Synopsis Designware PCIe IP
->> +and thus inherits all the common properties defined in designware-pcie.txt.
->> +
->> +Required properties:
->> +- compatible: For Tegra19x, must contain "nvidia,tegra194-pcie".
->> +- device_type: Must be "pci"
->> +- reg: A list of physical base address and length for each set of controller
->> +  registers. Must contain an entry for each entry in the reg-names property.
->> +- reg-names: Must include the following entries:
->> +  "appl": Controller's application logic registers
->> +  "window1": This is the aperture of controller available under 4GB boundary
->> +             (i.e. within 32-bit space). This aperture is typically used for
->> +             accessing config space of root port itself and also the connected
->> +             endpoints (by appropriately programming internal Address
->> +             Translation Unit's (iATU) out bound region) and also to map
->> +             prefetchable/non-prefetchable BARs.
->> +  "config": As per the definition in designware-pcie.txt
->> +  "atu_dma": iATU and DMA register. This is where the iATU (internal Address
->> +             Translation Unit) registers of the PCIe core are made available
->> +             fow SW access.
->> +  "dbi": The aperture where root port's own configuration registers are
->> +         available
->> +  "window2": This is the larger (compared to window1) aperture available above
->> +             4GB boundary (i.e. in 64-bit space). This is typically used for
->> +             mapping prefetchable/non-prefetchable BARs of endpoints
->> +- interrupts: A list of interrupt outputs of the controller. Must contain an
->> +  entry for each entry in the interrupt-names property.
->> +- interrupt-names: Must include the following entries:
->> +  "intr": The Tegra interrupt that is asserted for controller interrupts
->> +  "msi": The Tegra interrupt that is asserted when an MSI is received
->> +- bus-range: Range of bus numbers associated with this controller
->> +- #address-cells: Address representation for root ports (must be 3)
->> +  - cell 0 specifies the bus and device numbers of the root port:
->> +    [23:16]: bus number
->> +    [15:11]: device number
->> +  - cell 1 denotes the upper 32 address bits and should be 0
->> +  - cell 2 contains the lower 32 address bits and is used to translate to the
->> +    CPU address space
->> +- #size-cells: Size representation for root ports (must be 2)
->> +- ranges: Describes the translation of addresses for root ports and standard
->> +  PCI regions. The entries must be 7 cells each, where the first three cells
->> +  correspond to the address as described for the #address-cells property
->> +  above, the fourth and fifth cells are for the physical CPU address to
->> +  translate to and the sixth and seventh cells are as described for the
->> +  #size-cells property above.
->> +  - Entries setup the mapping for the standard I/O, memory and
->> +    prefetchable PCI regions. The first cell determines the type of region
->> +    that is setup:
->> +    - 0x81000000: I/O memory region
->> +    - 0x82000000: non-prefetchable memory region
->> +    - 0xc2000000: prefetchable memory region
->> +  Please refer to the standard PCI bus binding document for a more detailed
->> +  explanation.
->> +- #interrupt-cells: Size representation for interrupts (must be 1)
->> +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
->> +  Please refer to the standard PCI bus binding document for a more detailed
->> +  explanation.
->> +- clocks: Must contain an entry for each entry in clock-names.
->> +  See ../clocks/clock-bindings.txt for details.
->> +- clock-names: Must include the following entries:
->> +  - core_clk
->> +- resets: Must contain an entry for each entry in reset-names.
->> +  See ../reset/reset.txt for details.
->> +- reset-names: Must include the following entries:
->> +  - core_apb_rst
->> +  - core_rst
->> +- phys: Must contain a phandle to P2U PHY for each entry in phy-names.
->> +- phy-names: Must include an entry for each active lane.
->> +  "pcie-p2u-N": where N ranges from 0 to one less than the total number of lanes
->> +- Controller dependent register offsets
->> +  - nvidia,event-cntr-ctrl: EVENT_COUNTER_CONTROL reg offset
->> +      0x168 - FPGA
->> +      0x1a8 - C1, C2 and C3
->> +      0x1c4 - C4
->> +      0x1d8 - C0 and C5
->> +  - nvidia,event-cntr-data: EVENT_COUNTER_DATA reg offset
->> +      0x16c - FPGA
->> +      0x1ac - C1, C2 and C3
->> +      0x1c8 - C4
->> +      0x1dc - C0 and C5
->> +- nvidia,controller-id : Controller specific ID
->> +      0x0 - C0
->> +      0x1 - C1
->> +      0x2 - C2
->> +      0x3 - C3
->> +      0x4 - C4
->> +      0x5 - C5
->> +- vddio-pex-ctl-supply: Regulator supply for PCIe side band signals
-> 
-> I don't see any power-domains listed here. We should have these for T194
-> right?
-Thanks for catching this.
-Yes. PCIe uses power-domains and I'll add that in the future patch.
+Hi Bjorn/Lorenzo,
+Can you please review this patch?
+Thierry has reviewed it and I already took care of his comments.
 
-> 
-> Cheers
-> Jon
-> 
+Thanks,
+Vidya Sagar
 
+On Tue, Mar 19, 2019 at 7:33 PM Vidya Sagar <vidyas@nvidia.com> wrote:
+>
+> Since the upstream MSI memory writes are generated by downstream devices,
+> it is logically correct to have MSI target memory coming from the DMA pool
+> reserved for PCIe than from the general memory pool reserved for CPU
+> access. This avoids PCIe DMA addresses coinciding with MSI target address
+> thereby raising unwanted MSI interrupts. This patch also enforces to limit
+> the MSI target address to 32-bits to make it work for PCIe endponits that
+> support only 32-bit MSI target address and those endpoints that support
+> 64-bit MSI target address anyway work with 32-bit MSI target address.
+>
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Reviewed-by: Thierry Reding <treding@nvidia.com>
+> Acked-by: Thierry Reding <treding@nvidia.com>
+> ---
+> v2:
+> * changed 'phys' type to 'dma_addr_t' from 'u64'
+> * added a comment on why DMA mask is set to 32-bit
+> * replaced 'dma' with 'DMA'
+>
+>  drivers/pci/controller/pci-tegra.c | 35 ++++++++++++++++++++++++++---------
+>  1 file changed, 26 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index f4f53d092e00..f8173a5e352d 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -231,9 +231,9 @@ struct tegra_msi {
+>         struct msi_controller chip;
+>         DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>         struct irq_domain *domain;
+> -       unsigned long pages;
+>         struct mutex lock;
+> -       u64 phys;
+> +       void *virt;
+> +       dma_addr_t phys;
+>         int irq;
+>  };
+>
+> @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>         err = platform_get_irq_byname(pdev, "msi");
+>         if (err < 0) {
+>                 dev_err(dev, "failed to get IRQ: %d\n", err);
+> -               goto err;
+> +               goto free_irq_domain;
+>         }
+>
+>         msi->irq = err;
+> @@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>                           tegra_msi_irq_chip.name, pcie);
+>         if (err < 0) {
+>                 dev_err(dev, "failed to request IRQ: %d\n", err);
+> -               goto err;
+> +               goto free_irq_domain;
+> +       }
+> +
+> +       /* Though the PCIe controller can address >32-bit address space, to
+> +        * facilitate endpoints that support only 32-bit MSI target address,
+> +        * the mask is set to 32-bit to make sure that MSI target address is
+> +        * always a 32-bit address
+> +        */
+> +       err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
+> +       if (err < 0) {
+> +               dev_err(dev, "failed to set DMA coherent mask: %d\n", err);
+> +               goto free_irq;
+> +       }
+> +
+> +       msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
+> +       if (!msi->virt) {
+> +               dev_err(dev, "failed to allocate DMA memory for MSI\n");
+> +               err = -ENOMEM;
+> +               goto free_irq;
+>         }
+>
+> -       /* setup AFI/FPCI range */
+> -       msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> -       msi->phys = virt_to_phys((void *)msi->pages);
+>         host->msi = &msi->chip;
+>
+>         return 0;
+>
+> -err:
+> +free_irq:
+> +       free_irq(msi->irq, pcie);
+> +free_irq_domain:
+>         irq_domain_remove(msi->domain);
+>         return err;
+>  }
+> @@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
+>         struct tegra_msi *msi = &pcie->msi;
+>         unsigned int i, irq;
+>
+> -       free_pages(msi->pages, 0);
+> +       dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
+>
+>         if (msi->irq > 0)
+>                 free_irq(msi->irq, pcie);
+> --
+> 2.7.4
+>
