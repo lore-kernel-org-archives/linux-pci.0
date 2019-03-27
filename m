@@ -2,95 +2,107 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BFC7C43381
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:21:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13D25C4360F
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:24:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D4872087C
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:21:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDC7F204FD
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 11:24:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=verge.net.au header.i=@verge.net.au header.b="UxnTelYa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729489AbfC0LVA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 07:21:00 -0400
-Received: from foss.arm.com ([217.140.101.70]:52884 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726241AbfC0LVA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Mar 2019 07:21:00 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 73B24A78;
-        Wed, 27 Mar 2019 04:20:59 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 33E8F3F557;
-        Wed, 27 Mar 2019 04:20:57 -0700 (PDT)
-Date:   Wed, 27 Mar 2019 11:20:52 +0000
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     David Woodhouse <dwmw2@infradead.org>
-Cc:     Jonathan Chocron <jonnyc@amazon.com>, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        vaerov@amazon.com, benh@kernel.crashing.org, alisaidi@amazon.com,
-        zeev@amazon.com, ronenk@amazon.com, barakw@amazon.com,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [PATCH v2] PCI: al: Add Amazon Annapurna Labs PCIe host
- controller driver
-Message-ID: <20190327112052.GA8331@e107981-ln.cambridge.arm.com>
-References: <1553512040-4453-1-git-send-email-jonnyc@amazon.com>
- <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
- <20190326121727.GA4171@e107981-ln.cambridge.arm.com>
- <07838dad0e0cdb14c42080ef19c11829f72c8814.camel@infradead.org>
- <20190326155837.GA8820@e107981-ln.cambridge.arm.com>
- <d02a76ff37dc2db153c7b9c4d00a0399f9ac1b47.camel@infradead.org>
+        id S1731920AbfC0LYH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 07:24:07 -0400
+Received: from kirsty.vergenet.net ([202.4.237.240]:55518 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726262AbfC0LYH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Mar 2019 07:24:07 -0400
+Received: from reginn.horms.nl (watermunt.horms.nl [80.127.179.77])
+        by kirsty.vergenet.net (Postfix) with ESMTPA id F166A25B7E4;
+        Wed, 27 Mar 2019 22:24:04 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=verge.net.au; s=mail;
+        t=1553685845; bh=932QkVaLNaVlIPi4qUY+BMaW97wSOdu+snEDjCL9SOg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UxnTelYa5j6xofr0Ksn2eufDHyZ92Q71rWndsxOvFJKYutln9g92nRb2mRTck+c1k
+         UgCtIHGLwOJ/odNIuSMN55r1XmLPEFtfOvJRZSNs2MRhHM+mPBdlaLSMJUSWaOS4Eu
+         GVqV1DdxOc/BfML3RliHKkAqpHZssELf20RH1aG4=
+Received: by reginn.horms.nl (Postfix, from userid 7100)
+        id 2EB4E940376; Wed, 27 Mar 2019 12:24:03 +0100 (CET)
+Date:   Wed, 27 Mar 2019 12:24:03 +0100
+From:   Simon Horman <horms@verge.net.au>
+To:     marek.vasut@gmail.com
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>
+Subject: Re: [PATCH V4 1/6] PCI: rcar: Clean up remaining macros defining bits
+Message-ID: <20190327112402.36uky2gvbx5l4upd@verge.net.au>
+References: <20190325114101.10198-1-marek.vasut@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d02a76ff37dc2db153c7b9c4d00a0399f9ac1b47.camel@infradead.org>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20190325114101.10198-1-marek.vasut@gmail.com>
+Organisation: Horms Solutions BV
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 27, 2019 at 09:52:15AM +0000, David Woodhouse wrote:
-> On Tue, 2019-03-26 at 15:58 +0000, Lorenzo Pieralisi wrote:
-> > > We did that internally. You really don't want me telling engineers to
-> > > post to the list *first* without running things by me to get the basics
-> > > right. Not to start with, at least.
-> > 
-> > Hi David,
-> > 
-> > I am obviously in favour of internal review and I do not question it was
-> > carried out internally, I just kindly ask developers to drop review tags
-> > given internally when going to public mailing lists - I understand it is
-> > churn for you but I prefer them to be given explicitly.
+On Mon, Mar 25, 2019 at 12:40:56PM +0100, marek.vasut@gmail.com wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
 > 
-> Sure, I've provided mine in public now.
+> Replace macros using constants with BIT()s instead, no functional change.
 > 
-> I will attempt to remember your preference, although I'm not sure I
-> think it's necessary.
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
+
+> ---
+> V2: Bundle this patch with other cleanups before resending
+> V3: Add Wolfram's R-B
+> V4: Add Geert's R-B
+> ---
+>  drivers/pci/controller/pcie-rcar.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> What's the failure mode we're protecting against here? That my
-> engineers are lying and have *faked* my reviewed-by tag?
+> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> index c8febb009454..5b8736f0cd6b 100644
+> --- a/drivers/pci/controller/pcie-rcar.c
+> +++ b/drivers/pci/controller/pcie-rcar.c
+> @@ -46,14 +46,14 @@
+>  
+>  /* Transfer control */
+>  #define PCIETCTLR		0x02000
+> -#define  CFINIT			1
+> +#define  CFINIT			BIT(0)
+>  #define PCIETSTR		0x02004
+> -#define  DATA_LINK_ACTIVE	1
+> +#define  DATA_LINK_ACTIVE	BIT(0)
+>  #define PCIEERRFR		0x02020
+>  #define  UNSUPPORTED_REQUEST	BIT(4)
+>  #define PCIEMSIFR		0x02044
+>  #define PCIEMSIALR		0x02048
+> -#define  MSIFE			1
+> +#define  MSIFE			BIT(0)
+>  #define PCIEMSIAUR		0x0204c
+>  #define PCIEMSIIER		0x02050
+>  
+> -- 
+> 2.20.1
 > 
-> Don't you think I'd *eat* them if I ever found that happening?
-
-As I wrote above, I did not question the internal review process at all,
-we do internal review at ARM too in preparation for posting publicly but
-I think the patches review should take place on public mailing lists and
-tags should be given accordingly, that's it.
-
-You may see it as churn, fair enough, it is not a big deal either.
-
-> What's next? That you only accept such tags in signed email, so that
-> the dishonest engineer in question can't *fake* an email from me to the
-> list? They know I'm afflicted by Exchange so they can always send that
-> fake message with a message-id matching another message they know is
-> already in my inbox, so Exchange will helpfully discard theirs. :)
-
-There is nothing next :) - I just would like to see patches discussions
-and reviews taking place on linux-pci@vger.kernel.org for PCI patches,
-I do not think I am asking too much.
-
-Thanks,
-Lorenzo
