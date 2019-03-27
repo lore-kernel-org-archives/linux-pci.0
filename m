@@ -2,164 +2,95 @@ Return-Path: <SRS0=cd0N=R6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C33E8C10F00
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 14:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C95DC43381
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 15:02:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8506B217F5
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 14:10:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553695815;
-	bh=bgHB+wJN6vYjXHAxa3KCEexObQLCB+901YU2ya0y75A=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=KWkyf2uZOl4pyzRTOu3WZYrhfhne258M1adCYVIeW/MwdcLrSKAMUS0SCG7OqPNfn
-	 hn0PXhZPkpdauKvPSinB4Goah6rj8b2b9YCWSZ8HL4NgOZ3gIftZM4JT3kJnqTnRqb
-	 gX36aW61rsd1zmauZCGFDp352g4X3gBvYRa+wOA4=
+	by mail.kernel.org (Postfix) with ESMTP id 3328A2082F
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Mar 2019 15:02:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726319AbfC0OKN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Mar 2019 10:10:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34104 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727488AbfC0OKN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 27 Mar 2019 10:10:13 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9051F2075E;
-        Wed, 27 Mar 2019 14:10:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553695811;
-        bh=bgHB+wJN6vYjXHAxa3KCEexObQLCB+901YU2ya0y75A=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=SYt+osEdoZYOgisiMPKPhFzvFyoSJCIt4La2KxqyGNE7Ex9FIa4m9lH0BS4ZNq9Mi
-         Rb8YbEzUngku86fB+uX+rtKV+olOEmOEFt5wIse/eVt7joPNUiY116OHZI+iXbUKDk
-         djsnYUxxrbwqRPABloq7D0VjkxPuAVU6VK5Pez34=
-Date:   Wed, 27 Mar 2019 09:10:10 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Cc:     linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Stewart Smith <stewart@linux.vnet.ibm.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Russell Currey <ruscur@russell.cc>, linux@yadro.com
-Subject: Re: [PATCH v5 0/8] powerpc/powernv/pci: Make hotplug
- self-sufficient, independent of FW and DT
-Message-ID: <20190327141010.GB24180@google.com>
-References: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
+        id S1728304AbfC0PCZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Mar 2019 11:02:25 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:56408 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728158AbfC0PCZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 27 Mar 2019 11:02:25 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BCE1880D;
+        Wed, 27 Mar 2019 08:02:24 -0700 (PDT)
+Received: from [10.1.196.75] (e110467-lin.cambridge.arm.com [10.1.196.75])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1C6CD3F575;
+        Wed, 27 Mar 2019 08:02:22 -0700 (PDT)
+Subject: Re: [PATCH v3 0/3] PCIe Host request to reserve IOVA
+To:     Srinath Mannam <srinath.mannam@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>
+Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+References: <1548411231-27549-1-git-send-email-srinath.mannam@broadcom.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <c92e07d7-78b2-d4ec-bf1a-29070a9d4145@arm.com>
+Date:   Wed, 27 Mar 2019 15:02:21 +0000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190311115233.6514-1-s.miroshnichenko@yadro.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1548411231-27549-1-git-send-email-srinath.mannam@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Sergey,
+On 25/01/2019 10:13, Srinath Mannam wrote:
+> Few SOCs have limitation that their PCIe host can't allow few inbound
+> address ranges. Allowed inbound address ranges are listed in dma-ranges
+> DT property and this address ranges are required to do IOVA mapping.
+> Remaining address ranges have to be reserved in IOVA mapping.
+> 
+> PCIe Host driver of those SOCs has to list all address ranges which have
+> to reserve their IOVA address into PCIe host bridge resource entry list.
+> IOMMU framework will reserve these IOVAs while initializing IOMMU domain.
 
-Since this doesn't touch drivers/pci, I assume powerpc folks will
-handle this series.  Let me know if otherwise.
+FWIW I'm still only interested in solving this problem generically, 
+because in principle it's not specific to PCI, for PCI it's certainly 
+not specific to iproc, and either way it's not specific to DT. That 
+said, I don't care strongly enough to keep pushing back on this 
+implementation outright, since it's not something which couldn't be 
+cleaned up 'properly' in future.
 
-On Mon, Mar 11, 2019 at 02:52:25PM +0300, Sergey Miroshnichenko wrote:
-> This patchset allows switching from the pnv_php module to the standard
-> pciehp driver for PCIe hotplug functionality, if the platform supports it:
-> PowerNV working on on top of the skiboot with the "core/pci: Sync VFs and
-> the changes of bdfns between the firmware and the OS" [1] patch serie
-> applied.
+One general comment I'd make, though, is that AFAIK PCI has a concept of 
+inbound windows much more than it has a concept of gaps-between-windows, 
+so if the PCI layer is going to track anything it should probably be the 
+actual windows, and leave the DMA layer to invert them into the 
+reservations it cares about as it consumes the list. That way you can 
+also avoid the undocumented requirement for the firmware to keep the 
+ranges property sorted in the first place.
 
-s/bdfns/BDFs/  Maybe?  I see this is a reference to another patch
-  series, but if it hasn't been merged yet, "BDFs" would be consistent
-  with "VFs" and give a hint that "bdfns" is not itself a word.
+Robin.
 
-s/serie/series/
-
-> The feature is activated by the "pci=realloc" command line argument.
-
-From a user point of view, it doesn't seem intuitive that
-"pci=realloc" also means "switch from pnv_php to pciehp".
-
-The only direct effect of "pci=realloc" is to set pci_realloc_enable.
-I haven't read the patches, but is there really something in
-arch/powerpc/ that does something different based on
-pci_realloc_enable?
-
-> The goal is ability to hotplug bridges full of devices in the future. The
-> "Movable BARs" [2] is a platform-independent part of our work in this. The
-> final part will be movable bus numbers to support inserting a bridge in the
-> middle of an existing PCIe tree.
 > 
-> Tested on POWER8 PowerNV+PHB3 ppc64le (our Vesnin server) with:
->  - the pciehp driver active;
->  - the pnv_php driver disabled;
->  - The "pci=realloc" argument is passed;
->  - surprise hotplug of an NVME disk works;
->  - controlled hotplug of a network card with SR-IOV works;
->  - activating of SR-IOV on a network card works;
->  - [with extra patches] manually initiated (via sysfs) rescan has found
->    and turned on a hotplugged bridge;
->  - Without "pci=realloc" works just as before.
+> This patch set is based on Linux-5.0-rc2.
 > 
-> Changes since v4:
->  - Fixed failing build when EEH is disabled in a kernel config;
->  - Unfreeze the bus on EEH_IO_ERROR_VALUE(size), not only 0xffffffff;
->  - Replaced the 0xff magic constant with phb->ioda.reserved_pe_idx;
->  - Renamed create_pdn() -> pci_create_pdn_from_dev();
->  - Renamed add_one_dev_pci_data(..., vf_index, ...) -> pci_alloc_pdn();
->  - Renamed add_dev_pci_data() -> pci_create_vf_pdns();
->  - Renamed remove_dev_pci_data() -> pci_destroy_vf_pdns();
->  - Removed the patch fixing uninitialized IOMMU group - now it is fixed in
->    commit 8f5b27347e88 ("powerpc/powernv/sriov: Register IOMMU groups for
->    VFs")
+> Changes from v2:
+>    - Patch set rebased to Linux-5.0-rc2
 > 
-> Changes since v3 [3]:
->  - Subject changed;
->  - Don't disable EEH during rescan anymore - instead just unfreeze the
->    target buses deliberately;
->  - Add synchronization with the firmware when changing the PCIe topology;
->  - Fixed for VFs;
->  - Code cleanup.
+> Changes from v1:
+>    - Addressed Oza review comments.
 > 
-> Changes since v2:
->  - Don't reassign bus numbers on PowerNV by default (to retain the default
->    behavior), but only when pci=realloc is passed;
->  - Less code affected;
->  - pci_add_device_node_info is refactored with add_one_dev_pci_data;
->  - Minor code cleanup.
+> Srinath Mannam (3):
+>    PCI: Add dma-resv window list
+>    iommu/dma: Reserve IOVA for PCI host reserve address list
+>    PCI: iproc: Add dma reserve resources to host
 > 
-> Changes since v1:
->  - Fixed build for ppc64le and ppc64be when CONFIG_PCI_IOV is disabled;
->  - Fixed build for ppc64e when CONFIG_EEH is disabled;
->  - Fixed code style warnings.
-> 
-> [1] https://lists.ozlabs.org/pipermail/skiboot/2019-March/013571.html
-> [2] https://www.spinics.net/lists/linux-pci/msg79995.html
-> [3] https://lists.ozlabs.org/pipermail/linuxppc-dev/2018-September/178053.html
-> 
-> Sergey Miroshnichenko (8):
->   powerpc/pci: Access PCI config space directly w/o pci_dn
->   powerpc/powernv/pci: Suppress an EEH error when reading an empty slot
->   powerpc/pci: Create pci_dn on demand
->   powerpc/pci: Reduce code duplication in pci_add_device_node_info
->   powerpc/pci/IOV: Add support for runtime enabling the VFs
->   powerpc/pci: Don't rely on DT is the PCI_REASSIGN_ALL_BUS is set
->   powerpc/powernv/pci: Hook up the writes to PCI_SECONDARY_BUS register
->   powerpc/powernv/pci: Enable reassigning the bus numbers
-> 
->  arch/powerpc/include/asm/pci-bridge.h        |   4 +-
->  arch/powerpc/include/asm/ppc-pci.h           |   1 +
->  arch/powerpc/kernel/pci_dn.c                 | 170 ++++++++++-----
->  arch/powerpc/kernel/rtas_pci.c               |  97 ++++++---
->  arch/powerpc/platforms/powernv/eeh-powernv.c |   2 +-
->  arch/powerpc/platforms/powernv/pci-ioda.c    |   4 +-
->  arch/powerpc/platforms/powernv/pci.c         | 205 +++++++++++++++++--
->  arch/powerpc/platforms/pseries/pci.c         |   4 +-
->  8 files changed, 379 insertions(+), 108 deletions(-)
-> 
-> -- 
-> 2.20.1
+>   drivers/iommu/dma-iommu.c           |  8 ++++++
+>   drivers/pci/controller/pcie-iproc.c | 51 ++++++++++++++++++++++++++++++++++++-
+>   drivers/pci/probe.c                 |  3 +++
+>   include/linux/pci.h                 |  1 +
+>   4 files changed, 62 insertions(+), 1 deletion(-)
 > 
