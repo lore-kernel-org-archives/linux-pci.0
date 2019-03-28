@@ -2,135 +2,154 @@ Return-Path: <SRS0=vCch=R7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D4BC43381
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 08:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEB02C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 10:34:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2FB2B20700
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 08:02:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCDF4206B6
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 10:34:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="f1QJreBt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725875AbfC1ICT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Mar 2019 04:02:19 -0400
-Received: from mail-vk1-f196.google.com ([209.85.221.196]:41185 "EHLO
-        mail-vk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726683AbfC1ICN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2019 04:02:13 -0400
-Received: by mail-vk1-f196.google.com with SMTP id d15so4298625vka.8;
-        Thu, 28 Mar 2019 01:02:12 -0700 (PDT)
+        id S1725994AbfC1KeS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Mar 2019 06:34:18 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:51424 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725875AbfC1KeR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2019 06:34:17 -0400
+Received: by mail-wm1-f66.google.com with SMTP id 4so3016892wmf.1
+        for <linux-pci@vger.kernel.org>; Thu, 28 Mar 2019 03:34:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4ZvJonE4G6rOM+u7Zr0b+pEWFruI2N0IqyQevceWziI=;
+        b=f1QJreBt80Jq4qYa4bYGXHfbJwJPBqLHccZ+hL1vgPAjE1WPA11P9PYd9qHhbnLtYa
+         ZGLU3D2a3kPJlpYy1yRTmpH/MlBtMSH0vWhUkZHZPhX1LU+a3uVGUWVobnL2mzd9gXHQ
+         L39da5XQvfrVVVEOJWfPzCPSAJS3rkaK14fOc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=8jIoQcDYSLd6STW28A60ELra91D1UTDe4qLqQRBF+Sc=;
-        b=DsK/OliMvncxvSdsKY6ULLYruAytEd9jPTbZwDyQWYqwctnIxZG3ubhuAOQYEjKY6M
-         N0qrQipBjo/5DEhZhXDQlTKddSYmN/sdZ8qhQ5mi3v8ktiDHLz0JdbCBy2FK2u9wNDhm
-         3HjS27xkmJeb8t56AgY9ycyqaHTYZ4lOQGHauiQ63nkUKS7q5haKO5UM6BLt/6E+UAJB
-         aIDyfGQCnjlT2o3DLso2HMC1HEY0qk4jUvNSDEQwPVn/xSvJwgrm1oHTuBdM0wvbnmK3
-         uPxSshhdpF2VCqJnb6Y39N+Ho20ZPDqQ2DBfPP33mQYsO8KTBZBMk+30+2NlJP6HFQLR
-         do2Q==
-X-Gm-Message-State: APjAAAWRM08/5qsjSgjLgxudp5DnSdHq9G3bzWe0E0yd1MwvxHticiWa
-        BvK2EhAzCRb6vkEwv5q+KEkuy/rl/XzlB+QcRRM=
-X-Google-Smtp-Source: APXvYqwS1G+4xy9oWE0x8xttkCEtdvItrBn3a4HSglWXw7aDQL7N5nQmJmDw0nFajdhforX+zg38rTx+OkR/78HfTnw=
-X-Received: by 2002:a1f:a5d3:: with SMTP id o202mr24639518vke.40.1553760132077;
- Thu, 28 Mar 2019 01:02:12 -0700 (PDT)
+        bh=4ZvJonE4G6rOM+u7Zr0b+pEWFruI2N0IqyQevceWziI=;
+        b=klm5uWnBqBGre4tW0gcU+Yku+K7ryIOiJdLSxqL+853e8WoXdTghxDIeU00M77wyFf
+         rSJPp5sbOMBXbGiJWZv5kd1/ksWcnCpyKWS/SyHIwshNGMIYbgtzwP/A6RTXw014ku7d
+         uW5kfOIxLXiWwmd3IKPUHaMTmnuTY0d7c5gTOod4dFrIcoj9em8dm0H0nvDysPg+NNZu
+         D1ztj6kjSYrdr4Ret+RXlPSHhM3kzeEOV+2lLgT8IIfuEXcgjmdF2eSyV/WFxPWy37Ji
+         kGGOluX/MnTqol/Cfl12gZTgF+ErNefPx/K5/BX/dEjrALQGBEW1jXsCF/NvJSR4QLPL
+         yb1w==
+X-Gm-Message-State: APjAAAV2H2BSoLLF4VcwWW7wdy81oYe6d5t3ZGF1pf/QBJkwCE0AdScZ
+        wKy3FNVosbDwhbBFnRxT0hJWwxJ3qrTv6etoG/8OfA==
+X-Google-Smtp-Source: APXvYqzpdc2UuNpd9Fafzm05LLWrlLCIU/A6KipYCdS95jCIY5ElM8bwZNsEfK/n4CSXYvdKXdSO9/hb9ulFUHy5OBk=
+X-Received: by 2002:a7b:cf2c:: with SMTP id m12mr11146421wmg.21.1553769255691;
+ Thu, 28 Mar 2019 03:34:15 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190325114101.10198-1-marek.vasut@gmail.com> <20190325114101.10198-6-marek.vasut@gmail.com>
- <20190327113023.zhnx5v5spcx7uoqj@verge.net.au> <CAMuHMdW_6hutek-vk+mwDHJ1kBUytLvtkgLKb2mkSEFFasJ_0g@mail.gmail.com>
- <efcf526b-cfbc-ea54-f97e-f280e1f672fa@gmail.com>
-In-Reply-To: <efcf526b-cfbc-ea54-f97e-f280e1f672fa@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 28 Mar 2019 09:02:00 +0100
-Message-ID: <CAMuHMdU7dQ=8UaSCoZ8TucMfaGyu38rxDYV=Tspw_UmCu5YVwQ@mail.gmail.com>
-Subject: Re: [PATCH V4 6/6] PCI: rcar: Fix 64bit MSI message address handling
-To:     Marek Vasut <marek.vasut@gmail.com>
-Cc:     Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <1548411231-27549-1-git-send-email-srinath.mannam@broadcom.com> <c92e07d7-78b2-d4ec-bf1a-29070a9d4145@arm.com>
+In-Reply-To: <c92e07d7-78b2-d4ec-bf1a-29070a9d4145@arm.com>
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+Date:   Thu, 28 Mar 2019 16:04:04 +0530
+Message-ID: <CABe79T7BC9AO3EF23=JjYwXCHDKX5mDYSPzHfpD_tLzX6gukHg@mail.gmail.com>
+Subject: Re: [PATCH v3 0/3] PCIe Host request to reserve IOVA
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Marek,
+Hi Robin,
 
-On Thu, Mar 28, 2019 at 4:19 AM Marek Vasut <marek.vasut@gmail.com> wrote:
-> On 3/27/19 1:22 PM, Geert Uytterhoeven wrote:
-> > On Wed, Mar 27, 2019 at 12:30 PM Simon Horman <horms@verge.net.au> wrote:
-> >> On Mon, Mar 25, 2019 at 12:41:01PM +0100, marek.vasut@gmail.com wrote:
-> >>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
-> >>> The MSI message address in the RC address space can be 64 bit. The
-> >>> R-Car PCIe RC supports such a 64bit MSI message address as well.
-> >>> The code currently uses virt_to_phys(__get_free_pages()) to obtain
-> >>> a reserved page for the MSI message address, and the return value
-> >>> of which can be a 64 bit physical address on 64 bit system.
-> >>>
-> >>> However, the driver only programs PCIEMSIALR register with the bottom
-> >>> 32 bits of the virt_to_phys(__get_free_pages()) return value and does
-> >>> not program the top 32 bits into PCIEMSIAUR, but rather programs the
-> >>> PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
-> >>> SoCs, however may fail on new 64 bit R-Car SoCs.
-> >>>
-> >>> Since from a PCIe controller perspective, an inbound MSI is a memory
-> >>> write to a special address (in case of this controller, defined by
-> >>> the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
-> >>> never hits the DRAM _and_ because allocation of an MSI by a PCIe card
-> >>> driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
-> >>> in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
-> >>> cause memory corruption or other issues.
-> >>>
-> >>> There is however the possibility that if virt_to_phys(__get_free_pages())
-> >>> returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
-> >>> to 0x0 _and_ if the system had physical RAM at the address matching the
-> >>> value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
-> >>> physical address matching the value of PCIEMSIALR and a remote write to
-> >>> such a buffer by a PCIe card would trigger a spurious MSI.
-> >>>
-> >>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> >>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> >>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> >>> Cc: Simon Horman <horms+renesas@verge.net.au>
-> >>> Cc: Wolfram Sang <wsa@the-dreams.de>
-> >>> Cc: linux-renesas-soc@vger.kernel.org
-> >>> To: linux-pci@vger.kernel.org
-> >>> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> >>
-> >> Does this warrant a Fixes tag?
-> >
-> > (digging in old sent email)
-> > Fixes: 290c1fb358605402 ("PCI: rcar: Add MSI support for PCIe")
+Thanks for your feedback. Please see my reply in line.
+
+On Wed, Mar 27, 2019 at 8:32 PM Robin Murphy <robin.murphy@arm.com> wrote:
 >
-> But does it really fix that commit, given that on Gen2 and earlier, it
-> was not broken as those were 32bit platforms ?
+> On 25/01/2019 10:13, Srinath Mannam wrote:
+> > Few SOCs have limitation that their PCIe host can't allow few inbound
+> > address ranges. Allowed inbound address ranges are listed in dma-ranges
+> > DT property and this address ranges are required to do IOVA mapping.
+> > Remaining address ranges have to be reserved in IOVA mapping.
+> >
+> > PCIe Host driver of those SOCs has to list all address ranges which have
+> > to reserve their IOVA address into PCIe host bridge resource entry list.
+> > IOMMU framework will reserve these IOVAs while initializing IOMMU domain.
+>
+> FWIW I'm still only interested in solving this problem generically,
+> because in principle it's not specific to PCI, for PCI it's certainly
+> not specific to iproc, and either way it's not specific to DT. That
+> said, I don't care strongly enough to keep pushing back on this
+> implementation outright, since it's not something which couldn't be
+> cleaned up 'properly' in future.
+Iproc PCIe host controller supports inbound address translation
+feature to restrict access
+to allowed address ranges. so that allowed memory ranges need to
+program to controller.
+allowed address ranges information is passed to controller driver
+through dma-ranges DT property.
+This feature is specific to iproc PCIe controller, so that I think
+this change has to specific to iproc
+PCIe driver and DT.
+Here I followed the same way how PCI IO regions are reserved
+"iova_reserve_pci_windows". so that this
+change also specific to PCI.
+>
+> One general comment I'd make, though, is that AFAIK PCI has a concept of
+> inbound windows much more than it has a concept of gaps-between-windows,
+> so if the PCI layer is going to track anything it should probably be the
+> actual windows, and leave the DMA layer to invert them into the
+> reservations it cares about as it consumes the list. That way you can
+> also avoid the undocumented requirement for the firmware to keep the
+> ranges property sorted in the first place.
+This implementation has three parts.
+1. parsing dma-ranges and extract allowed and reserved address ranges.
+2. program allowed ranges to iproc PCIe controller.
+3. reserve list of reserved address ranges in IOMMU layer.
+#1 and #2 are done using "of_pci_dma_range_parser_init" in present
+iproc PCIe driver.
+so that, I listed reserve windows at the same place.
+#3 requires list of reserve windows so that I add new
+variable(dma_resv) to carry these
+reserve windows list to iommu layer from iproc driver layer.
+The reasons to not use DMA layer for parsing dma-ranges are,
+1. This feature is not generic for all SOCs.
+2. To avoid dam-ranges parsing in multiple places, already done in
+iproc pcie driver.
+3. Need to do modify standard DMA layer source code "of_dma_configure"
+4. required a carrier to pass reserved windows list from DMA layer to
+IOMMU layer.
+5. I followed existing PCIe IO regions reserve procedure done in IOMMU layer.
 
-It does not fix the bug on that commit, as the bug cannot happen on arm32.
-It does fix that commit, in that that commit used "unsigned long" for a
-physical address, which is wrong, even on arm32 (esp. with LPAE).
-If you insist on having a Fixes tag for a commit where the bug could be
-seen:
-Fixes: e015f88c368da1e6 ("PCI: rcar: Add support for R-Car H3 to pcie-rcar")
-
-Apart from that, drivers should use the DMA API instead of virt_to_phys().
-However, now we have a better understanding of how MSI interrupts work,
-we don't even need to allocate that page. All we need is the physical
-address of a page that is guaranteed not to be backed by RAM
-(i.e. not to be a valid target for a legitimate PCI bus mastering transaction).
-
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Regards,
+Srinath.
+>
+> Robin.
+>
+> >
+> > This patch set is based on Linux-5.0-rc2.
+> >
+> > Changes from v2:
+> >    - Patch set rebased to Linux-5.0-rc2
+> >
+> > Changes from v1:
+> >    - Addressed Oza review comments.
+> >
+> > Srinath Mannam (3):
+> >    PCI: Add dma-resv window list
+> >    iommu/dma: Reserve IOVA for PCI host reserve address list
+> >    PCI: iproc: Add dma reserve resources to host
+> >
+> >   drivers/iommu/dma-iommu.c           |  8 ++++++
+> >   drivers/pci/controller/pcie-iproc.c | 51 ++++++++++++++++++++++++++++++++++++-
+> >   drivers/pci/probe.c                 |  3 +++
+> >   include/linux/pci.h                 |  1 +
+> >   4 files changed, 62 insertions(+), 1 deletion(-)
+> >
