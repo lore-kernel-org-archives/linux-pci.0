@@ -2,112 +2,287 @@ Return-Path: <SRS0=vCch=R7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28E69C43381
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 10:56:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E7A8C43381
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 11:45:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ECFBD20700
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 10:56:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 211112177E
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Mar 2019 11:45:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="UuqaO2EA"
+	dkim=pass (2048-bit key) header.d=kudzu-us.20150623.gappssmtp.com header.i=@kudzu-us.20150623.gappssmtp.com header.b="n1in9iTU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726170AbfC1Kz7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Mar 2019 06:55:59 -0400
-Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:40898 "EHLO
-        smtp-fw-6002.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725846AbfC1Kz7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2019 06:55:59 -0400
+        id S1726182AbfC1Lpk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Mar 2019 07:45:40 -0400
+Received: from mail-it1-f194.google.com ([209.85.166.194]:53891 "EHLO
+        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726046AbfC1Lpk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Mar 2019 07:45:40 -0400
+Received: by mail-it1-f194.google.com with SMTP id y204so5484209itf.3
+        for <linux-pci@vger.kernel.org>; Thu, 28 Mar 2019 04:45:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1553770558; x=1585306558;
-  h=subject:to:cc:references:from:message-id:date:
-   mime-version:in-reply-to:content-transfer-encoding;
-  bh=rDDlBVtCxpiKMvMhBxNC8z7ui2t4Kib6q0KlPK99CVE=;
-  b=UuqaO2EAjg9gF54vY7bHmz2TFl2uV2lyG1Cf2A8oPAfjB5c5TY72GgHf
-   n3rweGfeLn5JGv6oYlOGsGhPcUV6RVDesinKmnqPY0n82IGuQhbHeMDaN
-   onskoslk+LTlpLS0NSbWw7SaakIQFDQfaFog3f0X4sqk8e+KB4l40Rj+p
-   w=;
-X-IronPort-AV: E=Sophos;i="5.60,280,1549929600"; 
-   d="scan'208";a="393427394"
-Received: from iad6-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1e-62350142.us-east-1.amazon.com) ([10.124.125.6])
-  by smtp-border-fw-out-6002.iad6.amazon.com with ESMTP/TLS/DHE-RSA-AES256-SHA; 28 Mar 2019 10:55:57 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1e-62350142.us-east-1.amazon.com (8.14.7/8.14.7) with ESMTP id x2SAtot9033886
-        (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=FAIL);
-        Thu, 28 Mar 2019 10:55:55 GMT
-Received: from EX13D13UWA001.ant.amazon.com (10.43.160.136) by
- EX13MTAUWA001.ant.amazon.com (10.43.160.118) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 28 Mar 2019 10:55:55 +0000
-Received: from [10.55.99.41] (10.43.162.111) by EX13D13UWA001.ant.amazon.com
- (10.43.160.136) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Thu, 28 Mar
- 2019 10:55:51 +0000
-Subject: Re: [PATCH v2] PCI: al: Add Amazon Annapurna Labs PCIe host
- controller driver
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
-        <linux-kernel@vger.kernel.org>, <vaerov@amazon.com>,
-        <dwmw@amazon.co.uk>, <benh@kernel.crashing.org>,
-        <alisaidi@amazon.com>, <zeev@amazon.com>, <ronenk@amazon.com>,
-        <barakw@amazon.com>
-References: <1553512040-4453-1-git-send-email-jonnyc@amazon.com>
- <1553594455-30436-1-git-send-email-jonnyc@amazon.com>
- <20190326125508.GG24180@google.com>
-From:   Jonathan Chocron <jonnyc@amazon.com>
-Message-ID: <7a1c1611-bd88-de5e-c4ae-bc85113191b6@amazon.com>
-Date:   Thu, 28 Mar 2019 12:55:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        d=kudzu-us.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Stt24VhWO7/R9Ab9hsEcwa3VG0DfScK96kZoumRDhmY=;
+        b=n1in9iTUL13FOP70xGr5ILqLP2Ji3Fbf+aHfGnBGGBwLgAqQWx23VDq/WoniHKDs47
+         T5I6WYETHhH+yni4B2SUgkAEixcVZuZifkYyAdJOubxKEPUiKPwAhyeI6CIOQ+793QV7
+         ULmBknDYToGM1oz5cNpOcNE/mDpN89DGd4lRYcz+7X4aARPqx1BSpq3ggsANt1Jj76+k
+         EiDyMyULKglsxavXV44r56owrHEZVQFymBnMOPuOK/JVpst5UYRg/UvMOmhkdo7ORiZe
+         u11mWFRnmJmz1K4KsuExQPLdRaGGpTzW1kdbetj0anxEKwpB/deXBQiKb4syRAtR9OAZ
+         YrRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Stt24VhWO7/R9Ab9hsEcwa3VG0DfScK96kZoumRDhmY=;
+        b=aCurtH6f/iS2e4VZgZS0sjia9cdRCtzjA4UD4XyawrImqo766th6sqN7+q5w6/sQbN
+         oKhM3n/1hdK6EMggGMFHdy1T+8iiobUXI2aL2fTpjTkacFMB3fUhMg6EGoRtGC7XJ7VV
+         SVmWlh6fEePbXaqYtuOkWRkJERPmVRefqX6xPHZO8XL7r6FSA4+eloshsVXfHXv+df5R
+         oPdqykUl/kK8ARRB1hKOtxWEvD46VobD5R0S+zraDFbma21UJT3nUs4+204zRO7jiTTV
+         VfjKsBH9/n4rKqTxnybkn4hlOPs8Od8lLK/YAOTvd+ineOF6oyRQ76+BoiCbDD6otiiT
+         TJPA==
+X-Gm-Message-State: APjAAAV7Bd50cvbZeezK11OLqQFL/sKbgEr43aEGircpt7G7c/GoCk8b
+        Td8SrA8QEExKFBi7nYzF8jQ3U+pmDKPAO+RCdW1XKA==
+X-Google-Smtp-Source: APXvYqyKHpVrV9NT4WgjTr3kPeelwEitbSTgeTpX0eYo5sno9cLM527sY9IV3r2lozx3DYd+6YizbV5v6O2W0Rca4yc=
+X-Received: by 2002:a24:7553:: with SMTP id y80mr7658544itc.107.1553773538931;
+ Thu, 28 Mar 2019 04:45:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20190326125508.GG24180@google.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [10.43.162.111]
-X-ClientProxiedBy: EX13D25UWC004.ant.amazon.com (10.43.162.201) To
- EX13D13UWA001.ant.amazon.com (10.43.160.136)
+References: <1551898265-18909-1-git-send-email-info@metux.net>
+ <1551909774-24030-1-git-send-email-info@metux.net> <20190320211517.GG251185@google.com>
+In-Reply-To: <20190320211517.GG251185@google.com>
+From:   Jon Mason <jdmason@kudzu.us>
+Date:   Thu, 28 Mar 2019 11:45:28 +0000
+Message-ID: <CAPoiz9x6bSdFpE-cuOBinE7WdNvzaD5R+tsweUqWe+KsL87GQw@mail.gmail.com>
+Subject: Re: [PATCH v2] drivers: ntb: Kconfig: pedantic cleanups
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "Enrico Weigelt, metux IT consult" <info@metux.net>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-ntb <linux-ntb@googlegroups.com>,
+        linux-pci@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/26/19 14:55, Bjorn Helgaas wrote:
-> Nits, probably Lorenzo will fix them up unless he sees more substantive
-> things.
+On Wed, Mar 20, 2019 at 9:15 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
 >
-> On Tue, Mar 26, 2019 at 12:00:55PM +0200, Jonathan Chocron wrote:
->> Adding support for Amazon's Annapurna Labs PCIe driver.
-> Ideally, use "imperative mood", i.e., write it as a command:
+> [+cc Jon, Dave, Allen]
 >
->    Add support for Amazon's Annapurna Labs PCIe driver.
-Done.
->> The HW controller is based on DesignWare's IP.
->>
->> The HW doesn't support accessing the Root Port's config space via
->> ECAM, so we obtain its base address via an AMZN0001 device.
->>
->> Furthermore, the DesignWare PCIe controller doesn't filter out
->> config transactions sent to devices 1 and up on its bus, so they
->> are filtered by the driver.
->> All subordinate buses do support ECAM access.
-> I didn't communicate my point very clearly.  The above four lines
-> should either be (1) a single paragraph, wrapped to fill the entire
-> width, or (2) two paragraphs, with a blank line before "All
-> subordinate buses ..."
+> On Wed, Mar 06, 2019 at 11:02:54PM +0100, Enrico Weigelt, metux IT consult wrote:
+> > Formatting of Kconfig files doesn't look so pretty, so just
+> > take damp cloth and clean it up.
 >
-> The fact that "... by the driver" ends in the middle of the line
-> suggests that it's the end of the paragraph, but the fact that there's
-> no blank line following suggests that it's not.  So it creates an
-> unnecessary hiccup for the reader.
-Added a blank line.
->> Implementing specific PCI config access functions involves:
->>   - Adding an init function to obtain the Root Port's base address
->>     from an AMZN0001 device.
->>   - Adding a new entry in the mcfg quirk array
-> s/mcfg/MCFG/ since "MCFG" is an ACPI table ID, not a word.
-Done.
-> Bjorn
+> Oops, I didn't notice that this was a v2.  I first thought this was a
+> 2/2 patch.  Sorry for the noise.  Most of my comments still apply
+> here, I think.
 
+I 100% agree with the comments form Bjorn.  Though most of the
+comments were from previous versions, but if you are going to change
+it then might as well make it right.  :)
+Assuming you make the changes, I'll pull it in.
 
+Thanks,
+Jon
+
+>
+> > Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+> > ---
+> >  drivers/ntb/Kconfig          | 20 ++++++++++----------
+> >  drivers/ntb/hw/amd/Kconfig   |  4 ++--
+> >  drivers/ntb/hw/idt/Kconfig   | 41 ++++++++++++++++++++---------------------
+> >  drivers/ntb/hw/intel/Kconfig |  4 ++--
+> >  drivers/ntb/hw/mscc/Kconfig  |  8 ++++----
+> >  drivers/ntb/test/Kconfig     | 26 +++++++++++++-------------
+> >  6 files changed, 51 insertions(+), 52 deletions(-)
+> >
+> > diff --git a/drivers/ntb/Kconfig b/drivers/ntb/Kconfig
+> > index 95944e5..5ce3fdd 100644
+> > --- a/drivers/ntb/Kconfig
+> > +++ b/drivers/ntb/Kconfig
+> > @@ -2,13 +2,13 @@ menuconfig NTB
+> >       tristate "Non-Transparent Bridge support"
+> >       depends on PCI
+> >       help
+> > -      The PCI-E Non-transparent bridge hardware is a point-to-point PCI-E bus
+> > -      connecting 2 systems.  When configured, writes to the device's PCI
+> > -      mapped memory will be mirrored to a buffer on the remote system.  The
+> > -      ntb Linux driver uses this point-to-point communication as a method to
+> > -      transfer data from one system to the other.
+> > +       The PCI-E Non-transparent bridge hardware is a point-to-point PCI-E bus
+> > +       connecting 2 systems.  When configured, writes to the device's PCI
+> > +       mapped memory will be mirrored to a buffer on the remote system.  The
+> > +       ntb Linux driver uses this point-to-point communication as a method to
+> > +       transfer data from one system to the other.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> >
+> >  if NTB
+> >
+> > @@ -19,10 +19,10 @@ source "drivers/ntb/test/Kconfig"
+> >  config NTB_TRANSPORT
+> >       tristate "NTB Transport Client"
+> >       help
+> > -      This is a transport driver that enables connected systems to exchange
+> > -      messages over the ntb hardware.  The transport exposes a queue pair api
+> > -      to client drivers.
+> > +       This is a transport driver that enables connected systems to exchange
+> > +       messages over the ntb hardware.  The transport exposes a queue pair api
+> > +       to client drivers.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> >
+> >  endif # NTB
+> > diff --git a/drivers/ntb/hw/amd/Kconfig b/drivers/ntb/hw/amd/Kconfig
+> > index cfe903c..9a90f17 100644
+> > --- a/drivers/ntb/hw/amd/Kconfig
+> > +++ b/drivers/ntb/hw/amd/Kconfig
+> > @@ -2,6 +2,6 @@ config NTB_AMD
+> >       tristate "AMD Non-Transparent Bridge support"
+> >       depends on X86_64
+> >       help
+> > -      This driver supports AMD NTB on capable Zeppelin hardware.
+> > +       This driver supports AMD NTB on capable Zeppelin hardware.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> > diff --git a/drivers/ntb/hw/idt/Kconfig b/drivers/ntb/hw/idt/Kconfig
+> > index f8948cf..5d106ac 100644
+> > --- a/drivers/ntb/hw/idt/Kconfig
+> > +++ b/drivers/ntb/hw/idt/Kconfig
+> > @@ -3,28 +3,27 @@ config NTB_IDT
+> >       depends on PCI
+> >       select HWMON
+> >       help
+> > -      This driver supports NTB of cappable IDT PCIe-switches.
+> > +       This driver supports NTB of cappable IDT PCIe-switches.
+> >
+> > -      Some of the pre-initializations must be made before IDT PCIe-switch
+> > -      exposes it NT-functions correctly. It should be done by either proper
+> > -      initialisation of EEPROM connected to master smbus of the switch or
+> > -      by BIOS using slave-SMBus interface changing corresponding registers
+> > -      value. Evidently it must be done before PCI bus enumeration is
+> > -      finished in Linux kernel.
+> > +       Some of the pre-initializations must be made before IDT PCIe-switch
+> > +       exposes it NT-functions correctly. It should be done by either proper
+> > +       initialisation of EEPROM connected to master smbus of the switch or
+> > +       by BIOS using slave-SMBus interface changing corresponding registers
+> > +       value. Evidently it must be done before PCI bus enumeration is
+> > +       finished in Linux kernel.
+> >
+> > -      First of all partitions must be activated and properly assigned to all
+> > -      the ports with NT-functions intended to be activated (see SWPARTxCTL
+> > -      and SWPORTxCTL registers). Then all NT-function BARs must be enabled
+> > -      with chosen valid aperture. For memory windows related BARs the
+> > -      aperture settings shall determine the maximum size of memory windows
+> > -      accepted by a BAR. Note that BAR0 must map PCI configuration space
+> > -      registers.
+> > +       First of all partitions must be activated and properly assigned to all
+> > +       the ports with NT-functions intended to be activated (see SWPARTxCTL
+> > +       and SWPORTxCTL registers). Then all NT-function BARs must be enabled
+> > +       with chosen valid aperture. For memory windows related BARs the
+> > +       aperture settings shall determine the maximum size of memory windows
+> > +       accepted by a BAR. Note that BAR0 must map PCI configuration space
+> > +       registers.
+> >
+> > -      It's worth to note, that since a part of this driver relies on the
+> > -      BAR settings of peer NT-functions, the BAR setups can't be done over
+> > -      kernel PCI fixups. That's why the alternative pre-initialization
+> > -      techniques like BIOS using SMBus interface or EEPROM should be
+> > -      utilized.
+> > -
+> > -      If unsure, say N.
+> > +       It's worth to note, that since a part of this driver relies on the
+> > +       BAR settings of peer NT-functions, the BAR setups can't be done over
+> > +       kernel PCI fixups. That's why the alternative pre-initialization
+> > +       techniques like BIOS using SMBus interface or EEPROM should be
+> > +       utilized.
+> >
+> > +       If unsure, say N.
+> > diff --git a/drivers/ntb/hw/intel/Kconfig b/drivers/ntb/hw/intel/Kconfig
+> > index 91f995e..c166d50 100644
+> > --- a/drivers/ntb/hw/intel/Kconfig
+> > +++ b/drivers/ntb/hw/intel/Kconfig
+> > @@ -2,6 +2,6 @@ config NTB_INTEL
+> >       tristate "Intel Non-Transparent Bridge support"
+> >       depends on X86_64
+> >       help
+> > -      This driver supports Intel NTB on capable Xeon and Atom hardware.
+> > +       This driver supports Intel NTB on capable Xeon and Atom hardware.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> > diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
+> > index 013ed67..74ec015 100644
+> > --- a/drivers/ntb/hw/mscc/Kconfig
+> > +++ b/drivers/ntb/hw/mscc/Kconfig
+> > @@ -2,8 +2,8 @@ config NTB_SWITCHTEC
+> >       tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
+> >       select PCI_SW_SWITCHTEC
+> >       help
+> > -      Enables NTB support for Switchtec PCI switches. This also
+> > -      selects the Switchtec management driver as they share the same
+> > -      hardware interface.
+> > +       Enables NTB support for Switchtec PCI switches. This also
+> > +       selects the Switchtec management driver as they share the same
+> > +       hardware interface.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> > diff --git a/drivers/ntb/test/Kconfig b/drivers/ntb/test/Kconfig
+> > index a5d0eda..416ab56 100644
+> > --- a/drivers/ntb/test/Kconfig
+> > +++ b/drivers/ntb/test/Kconfig
+> > @@ -1,27 +1,27 @@
+> >  config NTB_PINGPONG
+> >       tristate "NTB Ping Pong Test Client"
+> >       help
+> > -      This is a simple ping pong driver that exercises the scratchpads and
+> > -      doorbells of the ntb hardware.  This driver may be used to test that
+> > -      your ntb hardware and drivers are functioning at a basic level.
+> > +       This is a simple ping pong driver that exercises the scratchpads and
+> > +       doorbells of the ntb hardware.  This driver may be used to test that
+> > +       your ntb hardware and drivers are functioning at a basic level.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> >
+> >  config NTB_TOOL
+> >       tristate "NTB Debugging Tool Test Client"
+> >       help
+> > -      This is a simple debugging driver that enables the doorbell and
+> > -      scratchpad registers to be read and written from the debugfs.  This
+> > -      enables more complicated debugging to be scripted from user space.
+> > -      This driver may be used to test that your ntb hardware and drivers are
+> > -      functioning at a basic level.
+> > +       This is a simple debugging driver that enables the doorbell and
+> > +       scratchpad registers to be read and written from the debugfs.  This
+> > +       enables more complicated debugging to be scripted from user space.
+> > +       This driver may be used to test that your ntb hardware and drivers are
+> > +       functioning at a basic level.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> >
+> >  config NTB_PERF
+> >       tristate "NTB RAW Perf Measuring Tool"
+> >       help
+> > -      This is a tool to measure raw NTB performance by transferring data
+> > -      to and from the window without additional software interaction.
+> > +       This is a tool to measure raw NTB performance by transferring data
+> > +       to and from the window without additional software interaction.
+> >
+> > -      If unsure, say N.
+> > +       If unsure, say N.
+> > --
+> > 1.9.1
+> >
