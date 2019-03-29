@@ -2,107 +2,115 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A3A1C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:24:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD26C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:36:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 18E3B218A2
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:24:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1553880249;
-	bh=VC4PyqRuLdoo3kJeLqcTkeedPqD2aigIHEsXG/WvdXc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=PQr4+H4LccmV2olJmcYuzcaPmRSUMjIhw9oP1prkstjqr1hQ4nDnzsaM45H+dyfgJ
-	 qUpQDExwrGTnF4iSoJl8t9ftD6po+IMMotRjcxZ+fJORP8wZlvvvg5mAxaMEBItuk+
-	 +CDsaTRN7b8UeLJtyezyvdw/Cz1qKfejYYyD8Wvc=
+	by mail.kernel.org (Postfix) with ESMTP id 9F3CB20811
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:36:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729702AbfC2RYI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 13:24:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35772 "EHLO mail.kernel.org"
+        id S1729815AbfC2RgC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 13:36:02 -0400
+Received: from foss.arm.com ([217.140.101.70]:36086 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729662AbfC2RYI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Mar 2019 13:24:08 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8605E206B7;
-        Fri, 29 Mar 2019 17:24:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553880247;
-        bh=VC4PyqRuLdoo3kJeLqcTkeedPqD2aigIHEsXG/WvdXc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=XaeoYxfB4xX1jfhvGuFD1WI4kG+oFo3r1S3pW+ox5/B43OnMZuqtpT8oFsiV+9Cw+
-         u9BRIA7PCBsYOE/vk5/YvaWN+1vM0bvRT4dcEZjmNHRArK6U+zE5OxFght0BcU+gif
-         xoZeW5pdZYT2VFr0N++31z8hdFteGOty//947LTo=
-Date:   Fri, 29 Mar 2019 12:24:06 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     akpm@linux-foundation.org, Logan Gunthorpe <logang@deltatee.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org,
-        linux-pci@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/6] pci/p2pdma: Fix the gen_pool_add_virt() failure path
-Message-ID: <20190329172406.GE24180@google.com>
-References: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
- <155387325926.2443841.6674640070856872301.stgit@dwillia2-desk3.amr.corp.intel.com>
+        id S1729850AbfC2RgB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Mar 2019 13:36:01 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2417180D;
+        Fri, 29 Mar 2019 10:36:01 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 568283F59C;
+        Fri, 29 Mar 2019 10:35:59 -0700 (PDT)
+Date:   Fri, 29 Mar 2019 17:35:53 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Srinath Mannam <srinath.mannam@broadcom.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Abhishek Shah <abhishek.shah@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>
+Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
+ I/O region
+Message-ID: <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
+References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
+ <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155387325926.2443841.6674640070856872301.stgit@dwillia2-desk3.amr.corp.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 29, 2019 at 08:27:39AM -0700, Dan Williams wrote:
-> The pci_p2pdma_add_resource() implementation immediately frees the pgmap
-> if gen_pool_add_virt() fails. However, that means that when @dev
-> triggers a devres release devm_memremap_pages_release() will crash
-> trying to access the freed @pgmap.
+On Fri, Mar 01, 2019 at 10:22:16AM +0530, Srinath Mannam wrote:
+> In the present driver outbound window configuration is done to map above
+> 32-bit address I/O regions with corresponding PCI memory range given in
+> ranges DT property.
 > 
-> Use the new devm_memunmap_pages() to manually free the mapping in the
-> error path.
+> This patch add outbound window configuration to map below 32-bit I/O range
+> with corresponding PCI memory, which helps to access I/O region in ARM
+> 32-bit and one to one mapping of I/O region to PCI memory.
 > 
-> Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
-> Cc: Logan Gunthorpe <logang@deltatee.com>
-> Cc: Ira Weiny <ira.weiny@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Ex:
+> 1. ranges DT property given for current driver is,
+>     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
+>     I/O region address is 0x400000000
+> 2. ranges DT property can be given after this patch,
+>     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
+>     I/O region address is 0x42000000
 
-Especially if you run "git log --oneline drivers/pci/p2pdma.c" and make
-yours match :),
+I was applying this patch but I don't understand the commit log and
+how it matches the code, please explain it to me and I will reword
+it.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Thanks,
+Lorenzo
 
+> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+> Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
+> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
 > ---
->  drivers/pci/p2pdma.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
+>  1 file changed, 19 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index c52298d76e64..595a534bd749 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -208,13 +208,15 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
->  			pci_bus_address(pdev, bar) + offset,
->  			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
->  	if (error)
-> -		goto pgmap_free;
-> +		goto pages_free;
+> diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+> index b882255..080f142 100644
+> --- a/drivers/pci/controller/pcie-iproc.c
+> +++ b/drivers/pci/controller/pcie-iproc.c
+> @@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+>  			resource_size_t window_size =
+>  				ob_map->window_sizes[size_idx] * SZ_1M;
 >  
->  	pci_info(pdev, "added peer-to-peer DMA memory %pR\n",
->  		 &pgmap->res);
+> -			if (size < window_size)
+> -				continue;
+> +			/*
+> +			 * Keep iterating until we reach the last window and
+> +			 * with the minimal window size at index zero. In this
+> +			 * case, we take a compromise by mapping it using the
+> +			 * minimum window size that can be supported
+> +			 */
+> +			if (size < window_size) {
+> +				if (size_idx > 0 || window_idx > 0)
+> +					continue;
+> +
+> +				/*
+> +				 * For the corner case of reaching the minimal
+> +				 * window size that can be supported on the
+> +				 * last window
+> +				 */
+> +				axi_addr = ALIGN_DOWN(axi_addr, window_size);
+> +				pci_addr = ALIGN_DOWN(pci_addr, window_size);
+> +				size = window_size;
+> +			}
 >  
->  	return 0;
->  
-> +pages_free:
-> +	devm_memunmap_pages(&pdev->dev, pgmap);
->  pgmap_free:
->  	devm_kfree(&pdev->dev, pgmap);
->  	return error;
+>  			if (!IS_ALIGNED(axi_addr, window_size) ||
+>  			    !IS_ALIGNED(pci_addr, window_size)) {
+> -- 
+> 2.7.4
 > 
