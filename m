@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D33BC10F05
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A95F3C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:40:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0F348218AC
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:40:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82D692075E
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:40:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729600AbfC2PkP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 11:40:15 -0400
-Received: from mga12.intel.com ([192.55.52.136]:55983 "EHLO mga12.intel.com"
+        id S1729595AbfC2PkU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 11:40:20 -0400
+Received: from mga18.intel.com ([134.134.136.126]:27033 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728956AbfC2PkO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Mar 2019 11:40:14 -0400
+        id S1729687AbfC2PkT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Mar 2019 11:40:19 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Mar 2019 08:40:13 -0700
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Mar 2019 08:40:18 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,284,1549958400"; 
-   d="scan'208";a="287036931"
+   d="scan'208";a="138515813"
 Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.16])
-  by orsmga004.jf.intel.com with ESMTP; 29 Mar 2019 08:40:13 -0700
-Subject: [PATCH 2/6] mm/devm_memremap_pages: Introduce devm_memunmap_pages
+  by fmsmga007.fm.intel.com with ESMTP; 29 Mar 2019 08:40:18 -0700
+Subject: [PATCH 3/6] pci/p2pdma: Fix the gen_pool_add_virt() failure path
 From:   Dan Williams <dan.j.williams@intel.com>
 To:     akpm@linux-foundation.org
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
@@ -36,8 +36,8 @@ Cc:     Logan Gunthorpe <logang@deltatee.com>,
         Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org,
         linux-pci@vger.kernel.org, linux-nvdimm@lists.01.org,
         linux-kernel@vger.kernel.org
-Date:   Fri, 29 Mar 2019 08:27:34 -0700
-Message-ID: <155387325416.2443841.6074930471073650165.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date:   Fri, 29 Mar 2019 08:27:39 -0700
+Message-ID: <155387325926.2443841.6674640070856872301.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
 User-Agent: StGit/0.18-2-gc94f
@@ -49,58 +49,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use the new devm_relase_action() facility to allow
-devm_memremap_pages_release() to be manually triggered.
+The pci_p2pdma_add_resource() implementation immediately frees the pgmap
+if gen_pool_add_virt() fails. However, that means that when @dev
+triggers a devres release devm_memremap_pages_release() will crash
+trying to access the freed @pgmap.
 
+Use the new devm_memunmap_pages() to manually free the mapping in the
+error path.
+
+Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
 Cc: Logan Gunthorpe <logang@deltatee.com>
 Cc: Ira Weiny <ira.weiny@intel.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- include/linux/memremap.h |    6 ++++++
- kernel/memremap.c        |    6 ++++++
- 2 files changed, 12 insertions(+)
+ drivers/pci/p2pdma.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index f0628660d541..7601ee314c4a 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -100,6 +100,7 @@ struct dev_pagemap {
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index c52298d76e64..595a534bd749 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -208,13 +208,15 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 			pci_bus_address(pdev, bar) + offset,
+ 			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
+ 	if (error)
+-		goto pgmap_free;
++		goto pages_free;
  
- #ifdef CONFIG_ZONE_DEVICE
- void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap);
-+void devm_memunmap_pages(struct device *dev, struct dev_pagemap *pgmap);
- struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
- 		struct dev_pagemap *pgmap);
+ 	pci_info(pdev, "added peer-to-peer DMA memory %pR\n",
+ 		 &pgmap->res);
  
-@@ -118,6 +119,11 @@ static inline void *devm_memremap_pages(struct device *dev,
- 	return ERR_PTR(-ENXIO);
- }
+ 	return 0;
  
-+static inline void devm_memunmap_pages(struct device *dev,
-+		struct dev_pagemap *pgmap)
-+{
-+}
-+
- static inline struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
- 		struct dev_pagemap *pgmap)
- {
-diff --git a/kernel/memremap.c b/kernel/memremap.c
-index a856cb5ff192..65afbacab44e 100644
---- a/kernel/memremap.c
-+++ b/kernel/memremap.c
-@@ -266,6 +266,12 @@ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
- }
- EXPORT_SYMBOL_GPL(devm_memremap_pages);
- 
-+void devm_memunmap_pages(struct device *dev, struct dev_pagemap *pgmap)
-+{
-+	devm_release_action(dev, devm_memremap_pages_release, pgmap);
-+}
-+EXPORT_SYMBOL_GPL(devm_memunmap_pages);
-+
- unsigned long vmem_altmap_offset(struct vmem_altmap *altmap)
- {
- 	/* number of pfns from base where pfn_to_page() is valid */
++pages_free:
++	devm_memunmap_pages(&pdev->dev, pgmap);
+ pgmap_free:
+ 	devm_kfree(&pdev->dev, pgmap);
+ 	return error;
 
