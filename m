@@ -2,135 +2,100 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3302C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 13:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F1C4C10F05
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 14:09:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD8952183F
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 13:48:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FC532184C
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 14:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729727AbfC2NsK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 09:48:10 -0400
-Received: from ns.iliad.fr ([212.27.33.1]:33312 "EHLO ns.iliad.fr"
+        id S1728808AbfC2OJn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 10:09:43 -0400
+Received: from foss.arm.com ([217.140.101.70]:32872 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729626AbfC2NsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Mar 2019 09:48:08 -0400
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-        by ns.iliad.fr (Postfix) with ESMTP id 4EE9420BAC;
-        Fri, 29 Mar 2019 14:48:06 +0100 (CET)
-Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
-        by ns.iliad.fr (Postfix) with ESMTP id 3023E20B19;
-        Fri, 29 Mar 2019 14:48:06 +0100 (CET)
-Subject: Re: [PATCH v5] PCI: qcom: Use default config space read function
-From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Jeffrey Hugo <jhugo@codeaurora.org>
-References: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
- <65321fe3-ca29-c454-63ae-98a46c2e5158@mm-sol.com>
- <1205cbfb-ac06-63a5-9401-75d4e68b15b5@free.fr>
- <38ad143b-3b07-4d19-8ccd-ca39fb51e53d@free.fr>
- <7d3d788a-d6a3-a70b-adab-6c65771cacc4@free.fr>
- <3c76613e-e60d-94b8-dd6f-b8f4e1928263@linaro.org>
- <2f901228-52db-7661-8257-ca8fd2ff2a46@free.fr>
- <29664b43-535c-c4b1-a93d-18f49687f929@linaro.org>
- <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
- <9c5a7620-e9ed-82d6-0708-34fe33e39030@linaro.org>
- <29d33e81-fe8d-7fd9-843d-cc53ea6c9586@free.fr>
- <a53911a5-198a-5073-59cf-a61ba067bfd8@free.fr>
- <eb1d808e-00aa-5411-be03-2a1a8c8d655a@mm-sol.com>
- <8cd24928-54d0-c320-b53f-08332d434477@free.fr>
- <f142da4d-303a-89f3-ba5a-b6800d613e15@free.fr>
- <df27f753-9464-02c0-b621-d5d7b54a3403@mm-sol.com>
- <66ae38dc-1c0c-5a76-be23-fb87db90b327@free.fr>
-Message-ID: <b2789ca1-b046-e154-2338-e5298080587a@free.fr>
-Date:   Fri, 29 Mar 2019 14:48:06 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        id S1728652AbfC2OJn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Mar 2019 10:09:43 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E258BA78;
+        Fri, 29 Mar 2019 07:09:42 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E32343F59C;
+        Fri, 29 Mar 2019 07:09:40 -0700 (PDT)
+Date:   Fri, 29 Mar 2019 14:09:35 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     marek.vasut@gmail.com
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>
+Subject: Re: [PATCH V4 1/6] PCI: rcar: Clean up remaining macros defining bits
+Message-ID: <20190329140842.GA535@e107981-ln.cambridge.arm.com>
+References: <20190325114101.10198-1-marek.vasut@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <66ae38dc-1c0c-5a76-be23-fb87db90b327@free.fr>
-Content-Type: text/plain; charset=iso-8859-15
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Fri Mar 29 14:48:06 2019 +0100 (CET)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190325114101.10198-1-marek.vasut@gmail.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Bjorn,
-
-I think this patch is good enough to land now.
-
-Regards.
-
-On 25/03/2019 16:42, Marc Gonzalez wrote:
-
-> Move the device class fudge to a proper fixup function, and remove
-> qcom_pcie_rd_own_conf() which has become useless.
+On Mon, Mar 25, 2019 at 12:40:56PM +0100, marek.vasut@gmail.com wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
 > 
-> NB: dw_pcie_setup_rc() already did the right thing, but it's broken
-> on older qcom chips, such as 8064.
+> Replace macros using constants with BIT()s instead, no functional change.
 > 
-> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 > ---
-> Changes from v4 to v5: Apply fixup to all qcom chips, the same way it was before
-> (thus the code remains functionally equivalent)
-> Drop Srinivas' Tested-by tag because of the change
+> V2: Bundle this patch with other cleanups before resending
+> V3: Add Wolfram's R-B
+> V4: Add Geert's R-B
 > ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 23 ++++++-----------------
->  1 file changed, 6 insertions(+), 17 deletions(-)
+>  drivers/pci/controller/pcie-rcar.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+
+Applied the series to pci/rcar for v5.2, thanks.
+
+Lorenzo
+
+> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> index c8febb009454..5b8736f0cd6b 100644
+> --- a/drivers/pci/controller/pcie-rcar.c
+> +++ b/drivers/pci/controller/pcie-rcar.c
+> @@ -46,14 +46,14 @@
+>  
+>  /* Transfer control */
+>  #define PCIETCTLR		0x02000
+> -#define  CFINIT			1
+> +#define  CFINIT			BIT(0)
+>  #define PCIETSTR		0x02004
+> -#define  DATA_LINK_ACTIVE	1
+> +#define  DATA_LINK_ACTIVE	BIT(0)
+>  #define PCIEERRFR		0x02020
+>  #define  UNSUPPORTED_REQUEST	BIT(4)
+>  #define PCIEMSIFR		0x02044
+>  #define PCIEMSIALR		0x02048
+> -#define  MSIFE			1
+> +#define  MSIFE			BIT(0)
+>  #define PCIEMSIAUR		0x0204c
+>  #define PCIEMSIIER		0x02050
+>  
+> -- 
+> 2.20.1
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index a7f703556790..0ed235d560e3 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1129,25 +1129,8 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
->  	return ret;
->  }
->  
-> -static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
-> -				 u32 *val)
-> -{
-> -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> -
-> -	/* the device class is not reported correctly from the register */
-> -	if (where == PCI_CLASS_REVISION && size == 4) {
-> -		*val = readl(pci->dbi_base + PCI_CLASS_REVISION);
-> -		*val &= 0xff;	/* keep revision id */
-> -		*val |= PCI_CLASS_BRIDGE_PCI << 16;
-> -		return PCIBIOS_SUCCESSFUL;
-> -	}
-> -
-> -	return dw_pcie_read(pci->dbi_base + where, size, val);
-> -}
-> -
->  static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
->  	.host_init = qcom_pcie_host_init,
-> -	.rd_own_conf = qcom_pcie_rd_own_conf,
->  };
->  
->  /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
-> @@ -1309,6 +1292,12 @@ static const struct of_device_id qcom_pcie_match[] = {
->  	{ }
->  };
->  
-> +static void qcom_fixup_class(struct pci_dev *dev)
-> +{
-> +	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCI_ANY_ID, qcom_fixup_class);
-> +
->  static struct platform_driver qcom_pcie_driver = {
->  	.probe = qcom_pcie_probe,
->  	.driver = {
