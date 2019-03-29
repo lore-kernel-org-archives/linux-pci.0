@@ -2,140 +2,126 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15533C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 19:24:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42903C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 19:32:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D828B218A3
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 19:24:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0038B2184D
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 19:32:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="zxZsAqHj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729725AbfC2TYW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 15:24:22 -0400
-Received: from mga07.intel.com ([134.134.136.100]:32765 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729380AbfC2TYW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Mar 2019 15:24:22 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Mar 2019 12:24:21 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,285,1549958400"; 
-   d="scan'208";a="145015390"
-Received: from smile.fi.intel.com (HELO smile) ([10.237.72.86])
-  by FMSMGA003.fm.intel.com with ESMTP; 29 Mar 2019 12:24:19 -0700
-Received: from andy by smile with local (Exim 4.92)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1h9x6w-0000KY-1W; Fri, 29 Mar 2019 21:24:18 +0200
-Date:   Fri, 29 Mar 2019 21:24:18 +0200
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Stefan =?iso-8859-1?Q?M=E4tje?= <stefan.maetje@esd.eu>
-Cc:     bhelgaas@google.com, bhull@redhat.com, linux-pci@vger.kernel.org,
-        rafael.j.wysocki@intel.com, ptalbert@redhat.com, lukas@wunner.de,
-        fred@fredlawl.com
-Subject: Re: [PATCH v3 0/3] Add a quirk to work around link retrain errata of
- Pericom PCIe brigdes
-Message-ID: <20190329192418.GA9224@smile.fi.intel.com>
-References: <20190329170736.1648-1-stefan.maetje@esd.eu>
+        id S1729808AbfC2Tc6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 15:32:58 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:40382 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729483AbfC2Tc5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2019 15:32:57 -0400
+Received: by mail-ot1-f68.google.com with SMTP id t8so3072112otp.7
+        for <linux-pci@vger.kernel.org>; Fri, 29 Mar 2019 12:32:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=s4Yzf+CeFFZ/OjTiJqtBkGZm16+m8nmoCemxugx67kE=;
+        b=zxZsAqHjy2Y9Bx4xA6zF2h+1CbpYruowgarysCor6ANLjnLGePYd87HqKjmFW25UWN
+         hPmO2ck4OPgaGeQJMv8/EEEWlng/kHNbGlTXKS9B7dGBi52AxxxV7mqOV9YXV5s+J5b9
+         46KrNLdVwWVSeUEdKUIQw/11HOobEoq2gXKv+Ga7wH72ZXFc4MPtFwgfzMiF0D+OiWtu
+         Se/2SEFgkY8o67XAMWtQQSHCVzrAgci4FUoJViyvTORZHdqQ5expOvSUC5Zwch0xld1d
+         4v7hpaOQRzUd704JnvlH6thRYy1kNEZd0zkL28FI61mqAGS3TN04F6ZYcALuPCb/a4dK
+         qApQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=s4Yzf+CeFFZ/OjTiJqtBkGZm16+m8nmoCemxugx67kE=;
+        b=sV9YX8I2ljGrcdlVCshrahAWof08eX71h4l2QrxeuWsieUgoPJX3paTuY8BNuMVyAY
+         rF+gQjcCwQt47SaekDVImpZUuA2EcrCxrQYeEM/5wXRlcjgV8eiAe+VUa5I+YafklB5w
+         vPyZrEW84xi3KtjKt8+khJesavHXgnY0EKU+nx0z80KQ3Kt60SxLIZCXCWg3GA1sDIxS
+         mXpVSv3fv9FNCe8cPzPNdbh+ZZ1NVFSLIwsamyAMcjJPNzh198vqKcEa1K/FxunvsfrV
+         YFQwoFN4jHOUIY3ZNINtSPsApHtxtdGhLFkf3GVTCu4LEZu/3cCTtsSspwmNdXWWciqP
+         ViRg==
+X-Gm-Message-State: APjAAAXeYsi/THPrOk6ZKDhV6SkvYspdZluu8RqiJYDnLqtHeOfdVhvo
+        UOzgf742Wryd4s3KATiT3XU4lDHvHvbvhR8jWw6y/w==
+X-Google-Smtp-Source: APXvYqwKKdJS1Ua99aSwjJMfej/Pl2KR1kuLlRSNXUVME1MVVPAjFR1jZGMaGITHccVokDGIy7QDL3CNtMKk6tuVlMc=
+X-Received: by 2002:a9d:7749:: with SMTP id t9mr6559409otl.229.1553887977043;
+ Fri, 29 Mar 2019 12:32:57 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190329170736.1648-1-stefan.maetje@esd.eu>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <155387327020.2443841.6446837127378298192.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <cfda881b-d99c-7c53-64cb-745ff4b257b0@deltatee.com>
+In-Reply-To: <cfda881b-d99c-7c53-64cb-745ff4b257b0@deltatee.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Fri, 29 Mar 2019 12:32:44 -0700
+Message-ID: <CAPcyv4jZiK+OHjwNqDARv4g326AQZx7N_Lmxj1Zux_bX1T2CLQ@mail.gmail.com>
+Subject: Re: [PATCH 5/6] pci/p2pdma: Track pgmap references per resource, not globally
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@lst.de>, Linux MM <linux-mm@kvack.org>,
+        linux-pci@vger.kernel.org,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Mar 29, 2019 at 06:07:33PM +0100, Stefan Mätje wrote:
-> This patch provides a quirk that works around PCIe link retrain issues
-> with some Pericom PCIe-to-PCI bridges.
-> 
-> This patches should be backported to the stable kernels ([1/3] and [2/3]). The
-> problem shows up since our customers use kernels 4.10 and later.
-> 
-> The original patch was only for the Pericom PI7C9X111SL bridge. This is the
-> only hardware I can test with.
-> 
-> In the meantime Brett Hull <bhull@redhat.com> brought to my attention that
-> the PI7C9X110 and PI7C9X130 devices are also affected. I had access to the
-> errata sheet for the PI7C9X130 PCI bridge and its has the same issue
-> documented.
-> 
-> Therefore the patch will now handle all three mentioned devices.
-> 
-> I'd like to quote the errata sheet PI7C9X111SLB_errata_rev1.2_102711.pdf
-> 
-> > In Reverse Mode, retrain Link bit is not cleared automatically; this bit
-> > needs to be cleared manually by configuration write after it is set.
+On Fri, Mar 29, 2019 at 10:50 AM Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+> Thanks Dan, this is great. I think the changes in this series are
+> cleaner and more understandable than the patch set I had sent earlier.
+>
+> However, I found a couple minor issues with this patch:
+>
+> On 2019-03-29 9:27 a.m., Dan Williams wrote:
+> >  static void pci_p2pdma_release(void *data)
+> >  {
+> >       struct pci_dev *pdev = data;
+> > @@ -103,12 +110,12 @@ static void pci_p2pdma_release(void *data)
+> >       if (!pdev->p2pdma)
+> >               return;
 > >
-> > Problem:
-> > In Reverse mode, after setting Retrain Link (bit 5 of register C0h), this
-> > bit will stay on and PI7C9x111SL will continuously retrain until this bit
-> > is cleared by another Configuration Write to register C0h.
+> > -     wait_for_completion(&pdev->p2pdma->devmap_ref_done);
+> > -     percpu_ref_exit(&pdev->p2pdma->devmap_ref);
+> > +     /* Flush and disable pci_alloc_p2p_mem() */
+> > +     pdev->p2pdma = NULL;
+> > +     synchronize_rcu();
 > >
-> > Workaround:
-> > Issue another configuration write to clear Retrain Link bit after setting
-> > this bit. No delay is required between these two configuration write.
-> 
-> There is no public URL to download these errata sheets. Because Pericom has
-> been acquired by Diodes Inc. all information has to be downloaded from their
-> web site. Following the link below one can find a datasheet and there is a
-> button to request additional documents like the errata sheet for instance.
-> 
-> https://www.diodes.com/products/connectivity-and-timing/pcie-packet-switchbridges/pcie-pci-bridges/part/PI7C9X111SL#tab-details
-> 
-> I'm still using msleep(1) here because I don't want to change the timing for
-> other parts of the kernel unintentionally.
-> Some notes regarding this:
-> 
-> a) The link retraining is fast. The time measured on two different PCs and PCIe
-> 	bridges is below 5µs.
-> b) My slower test PC needs ~2.5µs for a checking the PCI_EXP_LNKSTA register the
-> 	faster test PC needs ~1.5µs for that. So it comes the slower test PC runs
-> 	through the wait loop without calling msleep(1) but the faster machine needs
-> 	to wait once with msleep(1).
-> 	In this case waiting with udelay(10) would perhaps be more appropriate but
-> 	I didn't want to burden this pure bug fix patch with a timing change that
-> 	possibly needs discussion.
-> 
-> History:
-> 	[V3]
-> 		- Split into more patches to make backporting easier.
-> 		- Applied Andy Shevchenko's recommendations regarding wording and
-> 			code style.
-> 	[V2]
-> 		https://lore.kernel.org/linux-pci/20190305173122.11875-1-stefan.maetje@esd.eu/
-> 	[V1]
-> 		https://lore.kernel.org/linux-pci/20181101192229.48352-2-stefan.maetje@esd.eu/
-> 
+> >       gen_pool_destroy(pdev->p2pdma->pool);
+>
+> I missed this on my initial review, but it became obvious when I tried
+> to test the series: this is a NULL dereference seeing pdev->p2pdma was
+> set to NULL a few lines up.
 
-FWIW,
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Ah, yup.
 
-> 
-> Stefan Mätje (3):
->   PCI/ASPM: Prepare stand-alone pcie_retrain_link() function
->   PCI/ASPM: Work around link retrain errata of Pericom PCIe-to-PCI
->     bridges
->   PCI/ASPM: Trivial rework wait code in pcie_retrain_link()
-> 
->  drivers/pci/pcie/aspm.c | 47 ++++++++++++++++++++++++++++++++---------------
->  drivers/pci/quirks.c    | 20 ++++++++++++++++++++
->  include/linux/pci.h     |  2 ++
->  3 files changed, 54 insertions(+), 15 deletions(-)
-> 
-> --
-> 2.15.0
-> 
+> When I fix this by storing p2pdma in a local variable, the patch set
+> works and never seems to crash when I hot remove p2pdma memory.
 
--- 
-With Best Regards,
-Andy Shevchenko
+Great!
 
+>
+> >  void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
+> >  {
+> > -     void *ret;
+> > +     void *ret = NULL;
+> > +     struct percpu_ref *ref;
+> >
+> > +     rcu_read_lock();
+> >       if (unlikely(!pdev->p2pdma))
+> > -             return NULL;
+>
+> Using RCU here makes sense to me, however I expect we should be using
+> the proper rcu_assign_pointer(), rcu_dereference() and __rcu tag with
+> pdev->p2pdma. If only to better document what's being protected with the
+> new RCU calls.
 
+I think just add a comment because those helpers are for cases where
+the rcu protected pointer is allowed to race the teardown. In this
+case we're using rcu just as a barrier to force the NULL check to
+resolve.
