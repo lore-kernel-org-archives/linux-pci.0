@@ -2,608 +2,81 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 298ECC43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 16:05:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C191C10F05
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 16:22:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA090218A2
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 16:05:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PD2mFGwj"
+	by mail.kernel.org (Postfix) with ESMTP id 1EAAF218A3
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 16:22:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729823AbfC2QEm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 12:04:42 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:39938 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729784AbfC2QEl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2019 12:04:41 -0400
-Received: by mail-pf1-f194.google.com with SMTP id c207so1267815pfc.7;
-        Fri, 29 Mar 2019 09:04:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ovmX+ET7xhOP8iBNDBVGFFrB5gPoriaEhqbmcYkqj4A=;
-        b=PD2mFGwjhlba8YYKoQ/LiK+sUOq47TvX4P4lRHUyqI4bXmXvaluxlHeowPIKzqcxss
-         R5tWRfF/TziNncS9UqbvIQfuadF/iLxcnp9FnapAZ8O6NQ3k3KkHY8Xf18dLgQ4JKFIv
-         92RUGYrpMznAzpT9rIZTs7nIN2vLG0XjLLNI+zSTSHxz46hnlRFI0WO/w+MLC14kxUih
-         P41BJ3YP1aik7NH/AHaoEDguL3erQIBqmsQVoyGGRgju+UKjIMlBti3/wT8hvIl5mBNI
-         2m/YMEvF0MDyDhg+va8VYqUU+i4rigFwTVsZQd4dKKa5G+k01LvqBVogW0h9j4VWL+WN
-         cy7g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=ovmX+ET7xhOP8iBNDBVGFFrB5gPoriaEhqbmcYkqj4A=;
-        b=JujQNbTt+vcN2jEi5f0QXe3cO9Iq9h1HYlkS+RxCB46k+p6sdwWe+ubN8eYReHqGb5
-         dTiJQ70Ekdar5HDesQb+DhVUGExqhzoBz3g46YcgnOl4eq1L+I98tW70bMnPncxvQBcg
-         37zqvsJBHxYKGJHp3NkYgcbE3PrsS5IlwYQ5u1IPfTXItiQNnWISrNLnEBc1S7Ik6Mmz
-         pxnxUaOAzmZZHp33rujb8VobzHw2CZgAfBqgqoqE6IoG0fYaiYrpKiKjg2Ha4Swmw/P+
-         H3rvDhN+ouy58C0pzGUNetWK0B3Aw1n0WbHFiwZ5+IqwBtMemzcx/TtFeJBJ2V3QvECJ
-         A6vw==
-X-Gm-Message-State: APjAAAWUyQR8hPEk9KBr2oWKwVk9yqDtQQMLRo4zk6cNblNqe0nfYm3y
-        uPL/+i387kOPHSevzE6VUQo=
-X-Google-Smtp-Source: APXvYqzd8KjXRFlsgC/vZNuj8kzRXTJdATsdp33yGfvfhj7O9Ma2r0yLQC93/C8mjD0fumaAJAypQA==
-X-Received: by 2002:aa7:91c8:: with SMTP id z8mr37000526pfa.110.1553875479570;
-        Fri, 29 Mar 2019 09:04:39 -0700 (PDT)
-Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id i1sm9484285pgc.63.2019.03.29.09.04.35
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 29 Mar 2019 09:04:38 -0700 (PDT)
-From:   Changbin Du <changbin.du@gmail.com>
-To:     Jonathan Corbet <corbet@lwn.net>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH 02/12] pci doc: convert PCI/pci.txt to rst format
-Date:   Sat, 30 Mar 2019 00:04:03 +0800
-Message-Id: <20190329160413.4293-3-changbin.du@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190329160413.4293-1-changbin.du@gmail.com>
-References: <20190329160413.4293-1-changbin.du@gmail.com>
+        id S1729078AbfC2QW0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 12:22:26 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35300 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728924AbfC2QW0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Mar 2019 12:22:26 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id E60B380D;
+        Fri, 29 Mar 2019 09:22:25 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id AE9A33F68F;
+        Fri, 29 Mar 2019 09:22:24 -0700 (PDT)
+Date:   Fri, 29 Mar 2019 16:22:17 +0000
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Kangjie Lu <kjlu@umn.edu>
+Cc:     Simon Horman <horms@verge.net.au>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] pci: pcie-rcar: fix a potential NULL pointer
+ dereference
+Message-ID: <20190329162217.GA7138@e107981-ln.cambridge.arm.com>
+References: <CAMuHMdX=XwxVFb1eLupmyHBOMBGzB+=RXxcUCH9D-J1+YKiq5w@mail.gmail.com>
+ <20190315072943.22923-1-kjlu@umn.edu>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190315072943.22923-1-kjlu@umn.edu>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This converts the plain text documentation to reStructuredText format and
-add it to Sphinx TOC tree. No essential content change.
+On Fri, Mar 15, 2019 at 02:29:43AM -0500, Kangjie Lu wrote:
+> In case __get_free_pages fails and returns NULL, the fix returns
+> -ENOMEM and releases resources to avoid NULL pointer dereference.
+> 
+> Signed-off-by: Kangjie Lu <kjlu@umn.edu>
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> 
+> ---
+> V2 removes the error message.
+> ---
+>  drivers/pci/controller/pcie-rcar.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-Signed-off-by: Changbin Du <changbin.du@gmail.com>
----
- Documentation/PCI/index.rst            |   2 +
- Documentation/PCI/{pci.txt => pci.rst} | 218 +++++++++++++------------
- 2 files changed, 116 insertions(+), 104 deletions(-)
- rename Documentation/PCI/{pci.txt => pci.rst} (80%)
+Applied to pci/rcar for v5.2, thanks.
 
-diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index 11096447f535..06fce3d3c7da 100644
---- a/Documentation/PCI/index.rst
-+++ b/Documentation/PCI/index.rst
-@@ -6,3 +6,5 @@ Linux PCI Bus Subsystem
- 
- .. toctree::
-    :maxdepth: 2
-+
-+   pci
-diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.rst
-similarity index 80%
-rename from Documentation/PCI/pci.txt
-rename to Documentation/PCI/pci.rst
-index badb26ac33dc..26542559bc4e 100644
---- a/Documentation/PCI/pci.txt
-+++ b/Documentation/PCI/pci.rst
-@@ -1,10 +1,12 @@
-+.. SPDX-License-Identifier: GPL-2.0
- 
--			How To Write Linux PCI Drivers
-+==============================
-+How To Write Linux PCI Drivers
-+==============================
- 
--		by Martin Mares <mj@ucw.cz> on 07-Feb-2000
--	updated by Grant Grundler <grundler@parisc-linux.org> on 23-Dec-2006
-+:Authors: - Martin Mares <mj@ucw.cz> on 07-Feb-2000,
-+          - updated by Grant Grundler <grundler@parisc-linux.org> on 23-Dec-2006
- 
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- The world of PCI is vast and full of (mostly unpleasant) surprises.
- Since each CPU architecture implements different chip-sets and PCI devices
- have different requirements (erm, "features"), the result is the PCI support
-@@ -27,7 +29,7 @@ Please send questions/comments/patches about Linux PCI API to the
- 
- 
- 0. Structure of PCI drivers
--~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+===========================
- PCI drivers "discover" PCI devices in a system via pci_register_driver().
- Actually, it's the other way around. When the PCI generic code discovers
- a new device, the driver with a matching "description" will be notified.
-@@ -42,24 +44,25 @@ pointers and thus dictates the high level structure of a driver.
- Once the driver knows about a PCI device and takes ownership, the
- driver generally needs to perform the following initialization:
- 
--	Enable the device
--	Request MMIO/IOP resources
--	Set the DMA mask size (for both coherent and streaming DMA)
--	Allocate and initialize shared control data (pci_allocate_coherent())
--	Access device configuration space (if needed)
--	Register IRQ handler (request_irq())
--	Initialize non-PCI (i.e. LAN/SCSI/etc parts of the chip)
--	Enable DMA/processing engines
-+  - Enable the device
-+  - Request MMIO/IOP resources
-+  - Set the DMA mask size (for both coherent and streaming DMA)
-+  - Allocate and initialize shared control data (pci_allocate_coherent())
-+  - Access device configuration space (if needed)
-+  - Register IRQ handler (request_irq())
-+  - Initialize non-PCI (i.e. LAN/SCSI/etc parts of the chip)
-+  - Enable DMA/processing engines
- 
- When done using the device, and perhaps the module needs to be unloaded,
- the driver needs to take the follow steps:
--	Disable the device from generating IRQs
--	Release the IRQ (free_irq())
--	Stop all DMA activity
--	Release DMA buffers (both streaming and coherent)
--	Unregister from other subsystems (e.g. scsi or netdev)
--	Release MMIO/IOP resources
--	Disable the device
-+
-+  - Disable the device from generating IRQs
-+  - Release the IRQ (free_irq())
-+  - Stop all DMA activity
-+  - Release DMA buffers (both streaming and coherent)
-+  - Unregister from other subsystems (e.g. scsi or netdev)
-+  - Release MMIO/IOP resources
-+  - Disable the device
- 
- Most of these topics are covered in the following sections.
- For the rest look at LDD3 or <linux/pci.h> .
-@@ -72,11 +75,11 @@ lots of ifdefs in the drivers.
- 
- 
- 1. pci_register_driver() call
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+=============================
- 
- PCI device drivers call pci_register_driver() during their
- initialization with a pointer to a structure describing the driver
--(struct pci_driver):
-+(struct pci_driver)::
- 
- 	field name	Description
- 	----------	------------------------------------------------------
-@@ -125,7 +128,7 @@ initialization with a pointer to a structure describing the driver
- The ID table is an array of struct pci_device_id entries ending with an
- all-zero entry.  Definitions with static const are generally preferred.
- 
--Each entry consists of:
-+Each entry consists of::
- 
- 	vendor,device	Vendor and device ID to match (or PCI_ANY_ID)
- 
-@@ -160,9 +163,10 @@ echo "vendor device subvendor subdevice class class_mask driver_data" > \
- All fields are passed in as hexadecimal values (no leading 0x).
- The vendor and device fields are mandatory, the others are optional. Users
- need pass only as many optional fields as necessary:
--	o subvendor and subdevice fields default to PCI_ANY_ID (FFFFFFFF)
--	o class and classmask fields default to 0
--	o driver_data defaults to 0UL.
-+
-+  - subvendor and subdevice fields default to PCI_ANY_ID (FFFFFFFF)
-+  - class and classmask fields default to 0
-+  - driver_data defaults to 0UL.
- 
- Note that driver_data must match the value used by any of the pci_device_id
- entries defined in the driver. This makes the driver_data field mandatory
-@@ -176,28 +180,29 @@ automatically calls the remove hook for all devices handled by the driver.
- 
- 
- 1.1 "Attributes" for driver functions/data
-+------------------------------------------
- 
- Please mark the initialization and cleanup functions where appropriate
--(the corresponding macros are defined in <linux/init.h>):
-+(the corresponding macros are defined in <linux/init.h>)::
- 
- 	__init		Initialization code. Thrown away after the driver
- 			initializes.
- 	__exit		Exit code. Ignored for non-modular drivers.
- 
- Tips on when/where to use the above attributes:
--	o The module_init()/module_exit() functions (and all
-+	- The module_init()/module_exit() functions (and all
- 	  initialization functions called _only_ from these)
- 	  should be marked __init/__exit.
- 
--	o Do not mark the struct pci_driver.
-+	- Do not mark the struct pci_driver.
- 
--	o Do NOT mark a function if you are not sure which mark to use.
-+	- Do NOT mark a function if you are not sure which mark to use.
- 	  Better to not mark the function than mark the function wrong.
- 
- 
- 
- 2. How to find PCI devices manually
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+===================================
- 
- PCI drivers should have a really good reason for not using the
- pci_register_driver() interface to search for PCI devices.
-@@ -207,17 +212,17 @@ E.g. combined serial/parallel port/floppy controller.
- 
- A manual search may be performed using the following constructs:
- 
--Searching by vendor and device ID:
-+Searching by vendor and device ID::
- 
- 	struct pci_dev *dev = NULL;
- 	while (dev = pci_get_device(VENDOR_ID, DEVICE_ID, dev))
- 		configure_device(dev);
- 
--Searching by class ID (iterate in a similar way):
-+Searching by class ID (iterate in a similar way)::
- 
- 	pci_get_class(CLASS_ID, dev)
- 
--Searching by both vendor/device and subsystem vendor/device ID:
-+Searching by both vendor/device and subsystem vendor/device ID::
- 
- 	pci_get_subsys(VENDOR_ID,DEVICE_ID, SUBSYS_VENDOR_ID, SUBSYS_DEVICE_ID, dev).
- 
-@@ -232,19 +237,19 @@ decrement the reference count on these devices by calling pci_dev_put().
- 
- 
- 3. Device Initialization Steps
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+==============================
- 
- As noted in the introduction, most PCI drivers need the following steps
- for device initialization:
- 
--	Enable the device
--	Request MMIO/IOP resources
--	Set the DMA mask size (for both coherent and streaming DMA)
--	Allocate and initialize shared control data (pci_allocate_coherent())
--	Access device configuration space (if needed)
--	Register IRQ handler (request_irq())
--	Initialize non-PCI (i.e. LAN/SCSI/etc parts of the chip)
--	Enable DMA/processing engines.
-+  - Enable the device
-+  - Request MMIO/IOP resources
-+  - Set the DMA mask size (for both coherent and streaming DMA)
-+  - Allocate and initialize shared control data (pci_allocate_coherent())
-+  - Access device configuration space (if needed)
-+  - Register IRQ handler (request_irq())
-+  - Initialize non-PCI (i.e. LAN/SCSI/etc parts of the chip)
-+  - Enable DMA/processing engines.
- 
- The driver can access PCI config space registers at any time.
- (Well, almost. When running BIST, config space can go away...but
-@@ -253,16 +258,17 @@ will return garbage).
- 
- 
- 3.1 Enable the PCI device
--~~~~~~~~~~~~~~~~~~~~~~~~~
-+-------------------------
- Before touching any device registers, the driver needs to enable
- the PCI device by calling pci_enable_device(). This will:
--	o wake up the device if it was in suspended state,
--	o allocate I/O and memory regions of the device (if BIOS did not),
--	o allocate an IRQ (if BIOS did not).
- 
--NOTE: pci_enable_device() can fail! Check the return value.
-+  - wake up the device if it was in suspended state,
-+  - allocate I/O and memory regions of the device (if BIOS did not),
-+  - allocate an IRQ (if BIOS did not).
- 
--[ OS BUG: we don't check resource allocations before enabling those
-+.. note:: pci_enable_device() can fail! Check the return value.
-+
-+.. warning:: OS BUG: we don't check resource allocations before enabling those
-   resources. The sequence would make more sense if we called
-   pci_request_resources() before calling pci_enable_device().
-   Currently, the device drivers can't detect the bug when when two
-@@ -271,7 +277,7 @@ NOTE: pci_enable_device() can fail! Check the return value.
- 
-   This has been discussed before but not changed as of 2.6.19:
- 	http://lkml.org/lkml/2006/3/2/194
--]
-+
- 
- pci_set_master() will enable DMA by setting the bus master bit
- in the PCI_COMMAND register. It also fixes the latency timer value if
-@@ -289,7 +295,7 @@ Mem-Wr-Inval.
- 
- 
- 3.2 Request MMIO/IOP resources
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------------------------------
- Memory (MMIO), and I/O port addresses should NOT be read directly
- from the PCI device config space. Use the values in the pci_dev structure
- as the PCI "bus address" might have been remapped to a "host physical"
-@@ -304,9 +310,9 @@ Conversely, drivers should call pci_release_region() AFTER
- calling pci_disable_device().
- The idea is to prevent two devices colliding on the same address range.
- 
--[ See OS BUG comment above. Currently (2.6.19), The driver can only
-+.. tip:: See OS BUG comment above. Currently (2.6.19), The driver can only
-   determine MMIO and IO Port resource availability _after_ calling
--  pci_enable_device(). ]
-+  pci_enable_device().
- 
- Generic flavors of pci_request_region() are request_mem_region()
- (for MMIO ranges) and request_region() (for IO Port ranges).
-@@ -317,11 +323,11 @@ Also see pci_request_selected_regions() below.
- 
- 
- 3.3 Set the DMA mask size
--~~~~~~~~~~~~~~~~~~~~~~~~~
--[ If anything below doesn't make sense, please refer to
-+-------------------------
-+.. note:: If anything below doesn't make sense, please refer to
-   Documentation/DMA-API.txt. This section is just a reminder that
-   drivers need to indicate DMA capabilities of the device and is not
--  an authoritative source for DMA interfaces. ]
-+  an authoritative source for DMA interfaces.
- 
- While all drivers should explicitly indicate the DMA capability
- (e.g. 32 or 64 bit) of the PCI bus master, devices with more than
-@@ -343,7 +349,7 @@ Many 64-bit "PCI" devices (before PCI-X) and some PCI-X devices are
- 
- 
- 3.4 Setup shared control data
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+-----------------------------
- Once the DMA masks are set, the driver can allocate "consistent" (a.k.a. shared)
- memory.  See Documentation/DMA-API.txt for a full description of
- the DMA APIs. This section is just a reminder that it needs to be done
-@@ -351,14 +357,14 @@ before enabling DMA on the device.
- 
- 
- 3.5 Initialize device registers
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+-------------------------------
- Some drivers will need specific "capability" fields programmed
- or other "vendor specific" register initialized or reset.
- E.g. clearing pending interrupts.
- 
- 
- 3.6 Register IRQ handler
--~~~~~~~~~~~~~~~~~~~~~~~~
-+------------------------
- While calling request_irq() is the last step described here,
- this is often just another intermediate step to initialize a device.
- This step can often be deferred until the device is opened for use.
-@@ -396,6 +402,7 @@ and msix_enabled flags in the pci_dev structure after calling
- pci_alloc_irq_vectors.
- 
- There are (at least) two really good reasons for using MSI:
-+
- 1) MSI is an exclusive interrupt vector by definition.
-    This means the interrupt handler doesn't have to verify
-    its device caused the interrupt.
-@@ -412,22 +419,22 @@ of MSI/MSI-X usage.
- 
- 
- 4. PCI device shutdown
--~~~~~~~~~~~~~~~~~~~~~~~
-+======================
- 
- When a PCI device driver is being unloaded, most of the following
- steps need to be performed:
- 
--	Disable the device from generating IRQs
--	Release the IRQ (free_irq())
--	Stop all DMA activity
--	Release DMA buffers (both streaming and consistent)
--	Unregister from other subsystems (e.g. scsi or netdev)
--	Disable device from responding to MMIO/IO Port addresses
--	Release MMIO/IO Port resource(s)
-+  - Disable the device from generating IRQs
-+  - Release the IRQ (free_irq())
-+  - Stop all DMA activity
-+  - Release DMA buffers (both streaming and consistent)
-+  - Unregister from other subsystems (e.g. scsi or netdev)
-+  - Disable device from responding to MMIO/IO Port addresses
-+  - Release MMIO/IO Port resource(s)
- 
- 
- 4.1 Stop IRQs on the device
--~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+---------------------------
- How to do this is chip/device specific. If it's not done, it opens
- the possibility of a "screaming interrupt" if (and only if)
- the IRQ is shared with another device.
-@@ -447,7 +454,7 @@ are not susceptible to the "screaming interrupt" problem.
- 
- 
- 4.2 Release the IRQ
--~~~~~~~~~~~~~~~~~~~
-+-------------------
- Once the device is quiesced (no more IRQs), one can call free_irq().
- This function will return control once any pending IRQs are handled,
- "unhook" the drivers IRQ handler from that IRQ, and finally release
-@@ -455,7 +462,7 @@ the IRQ if no one else is using it.
- 
- 
- 4.3 Stop all DMA activity
--~~~~~~~~~~~~~~~~~~~~~~~~~
-+-------------------------
- It's extremely important to stop all DMA operations BEFORE attempting
- to deallocate DMA control data. Failure to do so can result in memory
- corruption, hangs, and on some chip-sets a hard crash.
-@@ -468,7 +475,7 @@ didn't get this step right in the past.
- 
- 
- 4.4 Release DMA buffers
--~~~~~~~~~~~~~~~~~~~~~~~
-+-----------------------
- Once DMA is stopped, clean up streaming DMA first.
- I.e. unmap data buffers and return buffers to "upstream"
- owners if there is one.
-@@ -479,7 +486,7 @@ See Documentation/DMA-API.txt for details on unmapping interfaces.
- 
- 
- 4.5 Unregister from other subsystems
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------------------------------------
- Most low level PCI device drivers support some other subsystem
- like USB, ALSA, SCSI, NetDev, Infiniband, etc. Make sure your
- driver isn't losing resources from that other subsystem.
-@@ -488,30 +495,30 @@ the subsystem attempts to call into a driver that has been unloaded.
- 
- 
- 4.6 Disable Device from responding to MMIO/IO Port addresses
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+~-----------------------------------------------------------
- io_unmap() MMIO or IO Port resources and then call pci_disable_device().
- This is the symmetric opposite of pci_enable_device().
- Do not access device registers after calling pci_disable_device().
- 
- 
- 4.7 Release MMIO/IO Port Resource(s)
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+------------------------------------
- Call pci_release_region() to mark the MMIO or IO Port range as available.
- Failure to do so usually results in the inability to reload the driver.
- 
- 
- 
- 5. How to access PCI config space
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+=================================
- 
--You can use pci_(read|write)_config_(byte|word|dword) to access the config
--space of a device represented by struct pci_dev *. All these functions return 0
--when successful or an error code (PCIBIOS_...) which can be translated to a text
--string by pcibios_strerror. Most drivers expect that accesses to valid PCI
-+You can use `pci_(read|write)_config_(byte|word|dword)` to access the config
-+space of a device represented by `struct pci_dev *`. All these functions return
-+0 when successful or an error code (`PCIBIOS_...`) which can be translated to a
-+text string by pcibios_strerror. Most drivers expect that accesses to valid PCI
- devices don't fail.
- 
- If you don't have a struct pci_dev available, you can call
--pci_bus_(read|write)_config_(byte|word|dword) to access a given device
-+`pci_bus_(read|write)_config_(byte|word|dword)` to access a given device
- and function on that bus.
- 
- If you access fields in the standard portion of the config header, please
-@@ -522,28 +529,29 @@ pci_find_capability() for the particular capability and it will find the
- corresponding register block for you.
- 
- 
--
- 6. Other interesting functions
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+==============================
- 
--pci_get_domain_bus_and_slot()	Find pci_dev corresponding to given domain,
--				bus and slot and number. If the device is
--				found, its reference count is increased.
--pci_set_power_state()		Set PCI Power Management state (0=D0 ... 3=D3)
--pci_find_capability()		Find specified capability in device's capability
-+::
-+
-+  pci_get_domain_bus_and_slot()	Find pci_dev corresponding to given domain,
-+  				bus and slot and number. If the device is
-+  				found, its reference count is increased.
-+  pci_set_power_state()		Set PCI Power Management state (0=D0 ... 3=D3)
-+  pci_find_capability()		Find specified capability in device's capability
- 				list.
--pci_resource_start()		Returns bus start address for a given PCI region
--pci_resource_end()		Returns bus end address for a given PCI region
--pci_resource_len()		Returns the byte length of a PCI region
--pci_set_drvdata()		Set private driver data pointer for a pci_dev
--pci_get_drvdata()		Return private driver data pointer for a pci_dev
--pci_set_mwi()			Enable Memory-Write-Invalidate transactions.
--pci_clear_mwi()			Disable Memory-Write-Invalidate transactions.
-+  pci_resource_start()		Returns bus start address for a given PCI region
-+  pci_resource_end()		Returns bus end address for a given PCI region
-+  pci_resource_len()		Returns the byte length of a PCI region
-+  pci_set_drvdata()		Set private driver data pointer for a pci_dev
-+  pci_get_drvdata()		Return private driver data pointer for a pci_dev
-+  pci_set_mwi()			Enable Memory-Write-Invalidate transactions.
-+  pci_clear_mwi()			Disable Memory-Write-Invalidate transactions.
- 
- 
- 
- 7. Miscellaneous hints
--~~~~~~~~~~~~~~~~~~~~~~
-+======================
- 
- When displaying PCI device names to the user (for example when a driver wants
- to tell the user what card has it found), please use pci_name(pci_dev).
-@@ -561,7 +569,7 @@ to be handled by platform and generic code, not individual drivers.
- 
- 
- 8. Vendor and device identifications
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+====================================
- 
- Do not add new device or vendor IDs to include/linux/pci_ids.h unless they
- are shared across multiple drivers.  You can add private definitions in
-@@ -577,17 +585,19 @@ and https://github.com/pciutils/pciids.
- 
- 
- 9. Obsolete functions
--~~~~~~~~~~~~~~~~~~~~~
-+=====================
- 
- There are several functions which you might come across when trying to
- port an old driver to the new PCI interface.  They are no longer present
- in the kernel as they aren't compatible with hotplug or PCI domains or
- having sane locking.
- 
--pci_find_device()	Superseded by pci_get_device()
--pci_find_subsys()	Superseded by pci_get_subsys()
--pci_find_slot()		Superseded by pci_get_domain_bus_and_slot()
--pci_get_slot()		Superseded by pci_get_domain_bus_and_slot()
-+::
-+
-+  pci_find_device()	Superseded by pci_get_device()
-+  pci_find_subsys()	Superseded by pci_get_subsys()
-+  pci_find_slot()	Superseded by pci_get_domain_bus_and_slot()
-+  pci_get_slot()	Superseded by pci_get_domain_bus_and_slot()
- 
- 
- The alternative is the traditional PCI device driver that walks PCI
-@@ -596,7 +606,7 @@ device lists. This is still possible but discouraged.
- 
- 
- 10. MMIO Space and "Write Posting"
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+==================================
- 
- Converting a driver from using I/O Port space to using MMIO space
- often requires some additional changes. Specifically, "write posting"
-@@ -609,14 +619,14 @@ the CPU before the transaction has reached its destination.
- 
- Thus, timing sensitive code should add readl() where the CPU is
- expected to wait before doing other work.  The classic "bit banging"
--sequence works fine for I/O Port space:
-+sequence works fine for I/O Port space::
- 
-        for (i = 8; --i; val >>= 1) {
-                outb(val & 1, ioport_reg);      /* write bit */
-                udelay(10);
-        }
- 
--The same sequence for MMIO space should be:
-+The same sequence for MMIO space should be::
- 
-        for (i = 8; --i; val >>= 1) {
-                writeb(val & 1, mmio_reg);      /* write bit */
--- 
-2.20.1
+Lorenzo
 
+> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> index c8febb009454..71e55995c058 100644
+> --- a/drivers/pci/controller/pcie-rcar.c
+> +++ b/drivers/pci/controller/pcie-rcar.c
+> @@ -929,6 +929,10 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>  
+>  	/* setup MSI data target */
+>  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> +	if (!msi->pages) {
+> +		err = -ENOMEM;
+> +		goto err;
+> +	}
+>  	base = virt_to_phys((void *)msi->pages);
+>  
+>  	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
+> -- 
+> 2.17.1
+> 
