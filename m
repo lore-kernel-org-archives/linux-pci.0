@@ -2,103 +2,134 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BAEFC43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 08:03:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF7A0C4360F
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 09:52:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 167EC21773
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 08:03:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A02282184C
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 09:52:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ghiXCBL6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728926AbfC2IDF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 04:03:05 -0400
-Received: from p-mail-ext.rd.orange.com ([161.106.1.9]:38752 "EHLO
-        p-mail-ext.rd.orange.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728790AbfC2IDF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2019 04:03:05 -0400
-Received: from p-mail-ext.rd.orange.com (localhost [127.0.0.1])
-        by localhost (Postfix) with SMTP id B584C5615A8;
-        Fri, 29 Mar 2019 09:02:43 +0100 (CET)
-Received: from p-mail-int.rd.francetelecom.fr (p-mail-int.rd.francetelecom.fr [10.192.117.12])
-        by p-mail-ext.rd.orange.com (Postfix) with ESMTP id 5F5D8561643;
-        Fri, 29 Mar 2019 09:02:36 +0100 (CET)
-Received: from p-mail-int.rd.francetelecom.fr (localhost.localdomain [127.0.0.1])
-        by localhost (Postfix) with SMTP id 13804181605;
-        Fri, 29 Mar 2019 09:02:37 +0100 (CET)
-Received: from yd-CZC9059FTQ.rd.francetelecom.fr (yd-CZC9059FTQ.rd.francetelecom.fr [10.193.71.88])
-        by p-mail-int.rd.francetelecom.fr (Postfix) with ESMTP id 8D1261815EE;
-        Fri, 29 Mar 2019 09:02:36 +0100 (CET)
-From:   =?UTF-8?q?Pierre=20Cr=C3=A9gut?= <pierre.cregut@orange.com>
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Pierre=20Cr=C3=A9gut?= <pierre.cregut@orange.com>
-Subject: [PATCH] PCI/IOV: update num_VFs earlier
-Date:   Fri, 29 Mar 2019 09:00:58 +0100
-Message-Id: <20190329080058.21736-1-pierre.cregut@orange.com>
-X-Mailer: git-send-email 2.17.1
+        id S1728764AbfC2JwL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 05:52:11 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:43216 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726590AbfC2JwL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2019 05:52:11 -0400
+Received: by mail-pg1-f195.google.com with SMTP id z9so959475pgu.10;
+        Fri, 29 Mar 2019 02:52:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=6rfQx6fc7H5V/jHPU82ei46X8QGQB9MSa5L0qpRdVLw=;
+        b=ghiXCBL6ZH1pZTFbUTnjiA8+3+9hzAfEzbcKSq6JnRJ5QEIzsrCVbk4mPZJttHgPAz
+         IZFWxOX9gZNwoHk4qxnS0neoR9Dj7qepW96U4ZsIuslxrek+FTydtj0L0QxsaJS6H/de
+         Hh+fMd/wmzjJbi5Po9i1AkkCkd4ZiD99wAu6xuVeRx1MEUpr/qb0VA2RCV3c+aossJ29
+         SxDQ5/avIIJ0xgAlTEjjpPT+e85a2xPzSG1ilNtbC6vmmEq+NoThWkjomZbZqgPD40m0
+         ZzwfoE8Dn1+CNFOGI3Z3QVdsPWxg3ZjwEzbxeaVqfIJZh/+/lq5Gb730SvAGnjItSxcc
+         kgug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=6rfQx6fc7H5V/jHPU82ei46X8QGQB9MSa5L0qpRdVLw=;
+        b=E6AKkXjuxzn4QDBzYdZz1owDyJ6oAPtXZewOBQtaefQttOqZwB7uqifFLD7E62no56
+         CU7abeHrAVOM9BjVbeA5iG+o+UNsSmxG47nW0U+unsb1sVISXf4Uk1TxT4tSugeiXjBx
+         /NlKqwyYXUnVBmt4h6DELE0ScYGkWqvPyf3wRijIGkvwx64wjn++n9ZSKi+lfLq8NoG9
+         38/s4y61WpMuTEA9yYzqAXEh5+63qBB8vAwJzGZXWQJxuroSkRc5M+iCi01ibtcCkKvo
+         bEdRT1Arm+CU/RHrM6r21Bq0R+g+OHSDyK9tgirfGOtabgQfD1A57KBKcN4cENkS13BU
+         htdA==
+X-Gm-Message-State: APjAAAVWYCWCsY1sxEKHGgKNuJFvEYWjzyZzjSdX7ZzRtx2LWpwL3zNd
+        bdW3MruYN4EW/vUQDkSKY5L2ioSv
+X-Google-Smtp-Source: APXvYqzTKSD23nbQZYp1JkSNW768bKwgAODRyIroQJvvuPVLemnNmV2y2ESLqiRb3i7iXG7kFe3GuQ==
+X-Received: by 2002:a63:df4d:: with SMTP id h13mr44259446pgj.220.1553853130440;
+        Fri, 29 Mar 2019 02:52:10 -0700 (PDT)
+Received: from [192.168.42.180] (219x120x4x122.ap219.ftth.ucom.ne.jp. [219.120.4.122])
+        by smtp.gmail.com with ESMTPSA id k9sm2538897pfc.57.2019.03.29.02.52.07
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 29 Mar 2019 02:52:09 -0700 (PDT)
+Subject: Re: [PATCH V3] PCI: rcar: Add the initialization of PCIe link in
+ resume_noirq()
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>,
+        Gaku Inami <gaku.inami.xw@bp.renesas.com>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        stable <stable@vger.kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20190325194319.12850-1-marek.vasut@gmail.com>
+ <20190328141822.GA156243@google.com>
+ <CAMuHMdVsJ1MW40ABuieLq7F6=zG_btAHZUr82Z4_pPVem3h=jA@mail.gmail.com>
+ <20190328185913.GC24180@google.com>
+From:   Marek Vasut <marek.vasut@gmail.com>
+Openpgp: preference=signencrypt
+Message-ID: <8cf5b9d4-37e1-7a8d-ed44-9b978430d5f6@gmail.com>
+Date:   Fri, 29 Mar 2019 10:52:05 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-PMX-Version: 6.4.6.2792898, Antispam-Engine: 2.7.2.2107409, Antispam-Data: 2019.3.29.75716, AntiVirus-Engine: 5.60.0, AntiVirus-Data: 2019.3.28.5600001
-X-PMX-Spam: Gauge=IIIIIIII, Probability=8%, Report='
- MULTIPLE_RCPTS 0.1, HTML_00_01 0.05, HTML_00_10 0.05, BODYTEXTP_SIZE_3000_LESS 0, BODY_SIZE_1800_1899 0, BODY_SIZE_2000_LESS 0, BODY_SIZE_5000_LESS 0, BODY_SIZE_7000_LESS 0, CT_TEXT_PLAIN_UTF8_CAPS 0, LEGITIMATE_SIGNS 0, MULTIPLE_REAL_RCPTS 0, SINGLE_URI_IN_BODY 0, URI_WITH_PATH_ONLY 0, __ANY_URI 0, __CC_NAME 0, __CC_NAME_DIFF_FROM_ACC 0, __CC_REAL_NAMES 0, __CP_URI_IN_BODY 0, __CT 0, __CTE 0, __CT_TEXT_PLAIN 0, __FRAUD_MONEY_CURRENCY 0, __FRAUD_MONEY_CURRENCY_DOLLAR 0, __FROM_DOMAIN_IN_ANY_CC1 0, __FROM_DOMAIN_IN_RCPT 0, __FROM_UTF_Q 0, __HAS_CC_HDR 0, __HAS_FROM 0, __HAS_MSGID 0, __HAS_X_MAILER 0, __HTTPS_URI 0, __MIME_TEXT_ONLY 0, __MIME_TEXT_P 0, __MIME_TEXT_P1 0, __MIME_VERSION 0, __MULTIPLE_RCPTS_CC_X2 0, __NO_HTML_TAG_RAW 0, __PHISH_SPEAR_SUBJ_PREDICATE 0, __SANE_MSGID 0, __SINGLE_URI_TEXT 0, __SUBJ_ALPHA_END 0, __TO_MALFORMED_2 0, __TO_NO_NAME 0, __URI_IN_BODY 0,
- __URI_NOT_IMG 0, __URI_NO_WWW 0, __URI_NS , __URI_WITH_PATH 0'
+In-Reply-To: <20190328185913.GC24180@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Ensure that iov->num_VFs is set before a netlink message is sent
-when the number of VFs is changed. Only the path for num_VFs > 0
-is affected. The path for num_VFs = 0 is already correct.
+On 3/28/19 7:59 PM, Bjorn Helgaas wrote:
+> On Thu, Mar 28, 2019 at 03:59:11PM +0100, Geert Uytterhoeven wrote:
+>> On Thu, Mar 28, 2019 at 3:18 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>> On Mon, Mar 25, 2019 at 08:43:19PM +0100, marek.vasut@gmail.com wrote:
+>>>> From: Kazufumi Ikeda <kaz-ikeda@xc.jp.nec.com>
+>>>>
+>>>> Reestablish the PCIe link very early in the resume process in case it
+>>>> went down to prevent PCI accesses from hanging the bus. Such accesses
+>>>> can happen early in the PCI resume process, as early as the
+>>>> SUSPEND_RESUME_NOIRQ step, thus the link must be reestablished in the
+>>>> driver resume_noirq() callback.
+>>>>
+>>>> Fixes: e015f88c368d ("PCI: rcar: Add support for R-Car H3 to pcie-rcar")
+>>>
+>>> I'm fine with the fix itself, but since e015f88c368d appeared more
+>>> than two years ago in v4.5, the justification for merging this after
+>>> the merge window is a little weak.
+>>
+>> V1 of this fix was posted in November 2017, but IIRC, the series became
+>> the target of some bike-shedding...
+>>
+>>> Is there a more recent change that exposed this problem?  The usual
+>>> situation is that we merged something during the v5.1 merge window
+>>> that caused a regression, and we're now fixing that before v5.1 final.
+>>
+>> There are several reasons most people couldn't even run suspend/resume
+>> cycles on their systems:
+>>   1. Early releases of the affected boards came with firmware revisions with
+>>      non-functional PSCI system suspend,
+>>   2. Preparing the PMIC for suspend required ugly assistance from i2cset
+>>      in userspace, until the Linux driver learned to take care of that itself
+>>      in v4.18/v4.19.
+>>
+>> I guess the fix can survive postponing to v5.2, though...
+> 
+> Ok, I'll merge it to -next for v5.2, thanks.
 
-Monitoring programs can relie on netlink messages to track interface
-change and query their state in /sys. But when sriov_numvfs is set to a
-positive value, the netlink message is sent before the value is available
-in sysfs. The value read after the message is received is always zero.
+ACK.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=202991
-Signed-off-by: Pierre Crégut <pierre.cregut@orange.com>
----
-note: the behaviour can be tested with the following shell script also
-available on the bugzilla (d being the phy device name):
-
-ip monitor dev $d | grep --line-buffered "^[0-9]*:" | \
-while read line; do cat /sys/class/net/$d/device/sriov_numvfs; done
-
- drivers/pci/iov.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 3aa115ed3a65..a9655c10e87f 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -351,6 +351,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		goto err_pcibios;
- 	}
- 
-+	iov->num_VFs = nr_virtfn;
- 	pci_iov_set_numvfs(dev, nr_virtfn);
- 	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
- 	pci_cfg_access_lock(dev);
-@@ -363,7 +364,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 		goto err_pcibios;
- 
- 	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
--	iov->num_VFs = nr_virtfn;
- 
- 	return 0;
- 
-@@ -379,6 +379,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
-+	iov->num_VFs = 0;
- 	pci_iov_set_numvfs(dev, 0);
- 	return rc;
- }
 -- 
-2.17.1
-
+Best regards,
+Marek Vasut
