@@ -2,281 +2,102 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C20C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05B7BC43381
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:55:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D6BD2218A5
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:41:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4AB0206BA
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:55:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=mm-sol.com header.i=@mm-sol.com header.b="Oj5wsHsV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729150AbfC2Pld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 11:41:33 -0400
-Received: from mga06.intel.com ([134.134.136.31]:8191 "EHLO mga06.intel.com"
+        id S1729652AbfC2PzL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 11:55:11 -0400
+Received: from ns.mm-sol.com ([37.157.136.199]:33671 "EHLO extserv.mm-sol.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728815AbfC2Plc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Mar 2019 11:41:32 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Mar 2019 08:40:30 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,284,1549958400"; 
-   d="scan'208";a="144965899"
-Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.16])
-  by FMSMGA003.fm.intel.com with ESMTP; 29 Mar 2019 08:40:29 -0700
-Subject: [PATCH 5/6] pci/p2pdma: Track pgmap references per resource,
- not globally
-From:   Dan Williams <dan.j.williams@intel.com>
-To:     akpm@linux-foundation.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org,
-        linux-pci@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-kernel@vger.kernel.org
-Date:   Fri, 29 Mar 2019 08:27:50 -0700
-Message-ID: <155387327020.2443841.6446837127378298192.stgit@dwillia2-desk3.amr.corp.intel.com>
-In-Reply-To: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
-References: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
-User-Agent: StGit/0.18-2-gc94f
+        id S1729658AbfC2PzK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Mar 2019 11:55:10 -0400
+Received: from [192.168.27.209] (unknown [37.157.136.206])
+        by extserv.mm-sol.com (Postfix) with ESMTPSA id A92FECE35;
+        Fri, 29 Mar 2019 17:55:07 +0200 (EET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
+        t=1553874907; bh=0OQcb1L9DuMNbj7v2/mLG6m0U/ZzVluwkG8H+Nb+Dqk=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=Oj5wsHsVdjjO6a0JrVbyfXY4X4WMEs0TH03rB+YA25OWeipDgFzYh+LHWMzf3sKBG
+         v/KR0lxYE3a4rwZTqFwWJU9nv04IkFHHQyypG6Ewz247dg/nMVmPuU/uuhncf7gCLA
+         ZdyA0Ezyx9gvXNoPj8tsmrjQe5CVaJ/x2CgHkWeQpglv9BqzM8fZBl8R0fHNnC/2VO
+         iwNY9a0LX/Sdng8yZPcz78DEe6ZeDMHOun9oepeCpEfoqOtTNWZSTC0VcksUWJHWbK
+         fWhj7lpeCai8rtbSsrOwAAt3bEkgPMC4BtxhGnWO3TAxO4avfqPzAW846meAj9kaJa
+         64ceuktmnoV0g==
+Subject: Re: [PATCH v5] PCI: qcom: Use default config space read function
+To:     Marc Gonzalez <marc.w.gonzalez@free.fr>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Andy Gross <andy.gross@linaro.org>,
+        David Brown <david.brown@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Jeffrey Hugo <jhugo@codeaurora.org>
+References: <94bb3f22-c5a7-1891-9d89-42a520e9a592@free.fr>
+ <65321fe3-ca29-c454-63ae-98a46c2e5158@mm-sol.com>
+ <1205cbfb-ac06-63a5-9401-75d4e68b15b5@free.fr>
+ <38ad143b-3b07-4d19-8ccd-ca39fb51e53d@free.fr>
+ <7d3d788a-d6a3-a70b-adab-6c65771cacc4@free.fr>
+ <3c76613e-e60d-94b8-dd6f-b8f4e1928263@linaro.org>
+ <2f901228-52db-7661-8257-ca8fd2ff2a46@free.fr>
+ <29664b43-535c-c4b1-a93d-18f49687f929@linaro.org>
+ <b0e0dc68-4be9-1b0f-7528-fb7d143fea2b@free.fr>
+ <9c5a7620-e9ed-82d6-0708-34fe33e39030@linaro.org>
+ <29d33e81-fe8d-7fd9-843d-cc53ea6c9586@free.fr>
+ <a53911a5-198a-5073-59cf-a61ba067bfd8@free.fr>
+ <eb1d808e-00aa-5411-be03-2a1a8c8d655a@mm-sol.com>
+ <8cd24928-54d0-c320-b53f-08332d434477@free.fr>
+ <f142da4d-303a-89f3-ba5a-b6800d613e15@free.fr>
+ <df27f753-9464-02c0-b621-d5d7b54a3403@mm-sol.com>
+ <66ae38dc-1c0c-5a76-be23-fb87db90b327@free.fr>
+From:   Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <9017c41a-a66c-0652-b2aa-6eb6af38c5c9@mm-sol.com>
+Date:   Fri, 29 Mar 2019 17:55:03 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <66ae38dc-1c0c-5a76-be23-fb87db90b327@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In preparation for fixing a race between devm_memremap_pages_release()
-and the final put of a page from the device-page-map, allocate a
-percpu-ref per p2pdma resource mapping.
+Hi Marc,
 
-Cc: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/pci/p2pdma.c |  114 ++++++++++++++++++++++++++++++++------------------
- 1 file changed, 73 insertions(+), 41 deletions(-)
+Thanks for the patch!
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 595a534bd749..1b96c1688715 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -20,12 +20,16 @@
- #include <linux/seq_buf.h>
- 
- struct pci_p2pdma {
--	struct percpu_ref devmap_ref;
--	struct completion devmap_ref_done;
- 	struct gen_pool *pool;
- 	bool p2pmem_published;
- };
- 
-+struct p2pdma_pagemap {
-+	struct dev_pagemap pgmap;
-+	struct percpu_ref ref;
-+	struct completion ref_done;
-+};
-+
- static ssize_t size_show(struct device *dev, struct device_attribute *attr,
- 			 char *buf)
- {
-@@ -74,28 +78,31 @@ static const struct attribute_group p2pmem_group = {
- 	.name = "p2pmem",
- };
- 
-+static struct p2pdma_pagemap *to_p2p_pgmap(struct percpu_ref *ref)
-+{
-+	return container_of(ref, struct p2pdma_pagemap, ref);
-+}
-+
- static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
- {
--	struct pci_p2pdma *p2p =
--		container_of(ref, struct pci_p2pdma, devmap_ref);
-+	struct p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(ref);
- 
--	complete_all(&p2p->devmap_ref_done);
-+	complete(&p2p_pgmap->ref_done);
- }
- 
- static void pci_p2pdma_percpu_kill(struct percpu_ref *ref)
- {
--	/*
--	 * pci_p2pdma_add_resource() may be called multiple times
--	 * by a driver and may register the percpu_kill devm action multiple
--	 * times. We only want the first action to actually kill the
--	 * percpu_ref.
--	 */
--	if (percpu_ref_is_dying(ref))
--		return;
--
- 	percpu_ref_kill(ref);
- }
- 
-+static void pci_p2pdma_percpu_cleanup(void *ref)
-+{
-+	struct p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(ref);
-+
-+	wait_for_completion(&p2p_pgmap->ref_done);
-+	percpu_ref_exit(&p2p_pgmap->ref);
-+}
-+
- static void pci_p2pdma_release(void *data)
- {
- 	struct pci_dev *pdev = data;
-@@ -103,12 +110,12 @@ static void pci_p2pdma_release(void *data)
- 	if (!pdev->p2pdma)
- 		return;
- 
--	wait_for_completion(&pdev->p2pdma->devmap_ref_done);
--	percpu_ref_exit(&pdev->p2pdma->devmap_ref);
-+	/* Flush and disable pci_alloc_p2p_mem() */
-+	pdev->p2pdma = NULL;
-+	synchronize_rcu();
- 
- 	gen_pool_destroy(pdev->p2pdma->pool);
- 	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
--	pdev->p2pdma = NULL;
- }
- 
- static int pci_p2pdma_setup(struct pci_dev *pdev)
-@@ -124,12 +131,6 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
- 	if (!p2p->pool)
- 		goto out;
- 
--	init_completion(&p2p->devmap_ref_done);
--	error = percpu_ref_init(&p2p->devmap_ref,
--			pci_p2pdma_percpu_release, 0, GFP_KERNEL);
--	if (error)
--		goto out_pool_destroy;
--
- 	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_release, pdev);
- 	if (error)
- 		goto out_pool_destroy;
-@@ -163,6 +164,7 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
- int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 			    u64 offset)
- {
-+	struct p2pdma_pagemap *p2p_pgmap;
- 	struct dev_pagemap *pgmap;
- 	void *addr;
- 	int error;
-@@ -185,14 +187,32 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 			return error;
- 	}
- 
--	pgmap = devm_kzalloc(&pdev->dev, sizeof(*pgmap), GFP_KERNEL);
--	if (!pgmap)
-+	p2p_pgmap = devm_kzalloc(&pdev->dev, sizeof(*p2p_pgmap), GFP_KERNEL);
-+	if (!p2p_pgmap)
- 		return -ENOMEM;
- 
-+	init_completion(&p2p_pgmap->ref_done);
-+	error = percpu_ref_init(&p2p_pgmap->ref,
-+			pci_p2pdma_percpu_release, 0, GFP_KERNEL);
-+	if (error)
-+		goto pgmap_free;
-+
-+	/*
-+	 * FIXME: the percpu_ref_exit needs to be coordinated internal
-+	 * to devm_memremap_pages_release(). Duplicate the same ordering
-+	 * as other devm_memremap_pages() users for now.
-+	 */
-+	error = devm_add_action(&pdev->dev, pci_p2pdma_percpu_cleanup,
-+			&p2p_pgmap->ref);
-+	if (error)
-+		goto ref_cleanup;
-+
-+	pgmap = &p2p_pgmap->pgmap;
-+
- 	pgmap->res.start = pci_resource_start(pdev, bar) + offset;
- 	pgmap->res.end = pgmap->res.start + size - 1;
- 	pgmap->res.flags = pci_resource_flags(pdev, bar);
--	pgmap->ref = &pdev->p2pdma->devmap_ref;
-+	pgmap->ref = &p2p_pgmap->ref;
- 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
- 	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
- 		pci_resource_start(pdev, bar);
-@@ -201,12 +221,13 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 	addr = devm_memremap_pages(&pdev->dev, pgmap);
- 	if (IS_ERR(addr)) {
- 		error = PTR_ERR(addr);
--		goto pgmap_free;
-+		goto ref_exit;
- 	}
- 
--	error = gen_pool_add_virt(pdev->p2pdma->pool, (unsigned long)addr,
-+	error = gen_pool_add_owner(pdev->p2pdma->pool, (unsigned long)addr,
- 			pci_bus_address(pdev, bar) + offset,
--			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
-+			resource_size(&pgmap->res), dev_to_node(&pdev->dev),
-+			&p2p_pgmap->ref);
- 	if (error)
- 		goto pages_free;
- 
-@@ -217,8 +238,10 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 
- pages_free:
- 	devm_memunmap_pages(&pdev->dev, pgmap);
-+ref_cleanup:
-+	percpu_ref_exit(&p2p_pgmap->ref);
- pgmap_free:
--	devm_kfree(&pdev->dev, pgmap);
-+	devm_kfree(&pdev->dev, p2p_pgmap);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(pci_p2pdma_add_resource);
-@@ -555,19 +578,25 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_find_many);
-  */
- void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
- {
--	void *ret;
-+	void *ret = NULL;
-+	struct percpu_ref *ref;
- 
-+	rcu_read_lock();
- 	if (unlikely(!pdev->p2pdma))
--		return NULL;
--
--	if (unlikely(!percpu_ref_tryget_live(&pdev->p2pdma->devmap_ref)))
--		return NULL;
--
--	ret = (void *)gen_pool_alloc(pdev->p2pdma->pool, size);
-+		goto out;
- 
--	if (unlikely(!ret))
--		percpu_ref_put(&pdev->p2pdma->devmap_ref);
-+	ret = (void *)gen_pool_alloc_owner(pdev->p2pdma->pool, size,
-+			(void **) &ref);
-+	if (!ret)
-+		goto out;
- 
-+	if (unlikely(!percpu_ref_tryget_live(ref))) {
-+		gen_pool_free(pdev->p2pdma->pool, (unsigned long) ret, size);
-+		ret = NULL;
-+		goto out;
-+	}
-+out:
-+	rcu_read_unlock();
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(pci_alloc_p2pmem);
-@@ -580,8 +609,11 @@ EXPORT_SYMBOL_GPL(pci_alloc_p2pmem);
-  */
- void pci_free_p2pmem(struct pci_dev *pdev, void *addr, size_t size)
- {
--	gen_pool_free(pdev->p2pdma->pool, (uintptr_t)addr, size);
--	percpu_ref_put(&pdev->p2pdma->devmap_ref);
-+	struct percpu_ref *ref;
-+
-+	gen_pool_free_owner(pdev->p2pdma->pool, (uintptr_t)addr, size,
-+			(void **) &ref);
-+	percpu_ref_put(ref);
- }
- EXPORT_SYMBOL_GPL(pci_free_p2pmem);
- 
+On 3/25/19 5:42 PM, Marc Gonzalez wrote:
+> Move the device class fudge to a proper fixup function, and remove
+> qcom_pcie_rd_own_conf() which has become useless.
+> 
+> NB: dw_pcie_setup_rc() already did the right thing, but it's broken
+> on older qcom chips, such as 8064.
+> 
+> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+> ---
+> Changes from v4 to v5: Apply fixup to all qcom chips, the same way it was before
+> (thus the code remains functionally equivalent)
+> Drop Srinivas' Tested-by tag because of the change
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 23 ++++++-----------------
+>  1 file changed, 6 insertions(+), 17 deletions(-)
 
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+
+
+-- 
+regards,
+Stan
