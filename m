@@ -2,173 +2,155 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C93C10F05
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 09:53:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6EACC43381
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 10:42:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A96082082F
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 09:53:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PYOEqrqA"
+	by mail.kernel.org (Postfix) with ESMTP id AF8AE2075E
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 10:42:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728776AbfC2JxZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 05:53:25 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:42715 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728705AbfC2JxY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2019 05:53:24 -0400
-Received: by mail-pg1-f195.google.com with SMTP id p6so962226pgh.9;
-        Fri, 29 Mar 2019 02:53:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=fFE8b3BpTyOPrNF2kNR6XYzB/xOh8vipwlT1IcJRG6w=;
-        b=PYOEqrqAPWQXnHedYY1p8DEB1BHcD/0BiRPtQ8oeeR8smnXHI051ILW9EBrK18Sh/2
-         XT6OaerP7V/gUjFC2kwcBDRK5LvQf09sZ40vgdHiHbLSQlIOLdMTqfW34cszGYrg/as9
-         kJoJmol9773Bdn1dHxaqapMOZ5HRGWU2W2Ve/hKxgUxuS476zWD09UHZUS3/RfS962vs
-         WdDKgKqI4Zy+HxE6qCkQPZ5hj1X2bwDBCMkb/ggeIjFeZSwDklGNxI4GFHoRvtR9fzJD
-         q718kDDPbb5NZkDTYlw9b1jUo/Xj7YtMm/aZbEZnL9xLYQdJYHbPNu2Pq+n1sGsImVdw
-         mG8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=fFE8b3BpTyOPrNF2kNR6XYzB/xOh8vipwlT1IcJRG6w=;
-        b=rRcZqgLM/YzBAoMOhYr1jYKguE4fDwV5UWbtC+2L0PSmrYFo9SydNM2Bbzh4X7xhT6
-         YxxifUW4gcZTiASNOC3lANvy6useeepHhO4/8ePDNPLIewUcHQC6UIIg8VPm3Sl658is
-         zCSqkMBLeX2dlan1MnIMV72D4yGuMAGzKzGP1HLkj1t5Lf+WVc6VL0wC43E4NRGhgpIu
-         01tAT2m115+57X1c9tco654th5OWoS7twxhZLugczozBwkHViye1YXP9af5GcymGI9j3
-         GHUahHyltlWaGMJZAEMBp4+wehO4HT8QfmCGPcr8WJYiOdBKBLqFgLwsUe0sSX/3/RjJ
-         M5dw==
-X-Gm-Message-State: APjAAAWIzJCNIjbTP48oFhQ4Nc/uKbtbSE7kJPqGBycWQDwlomcO0Awn
-        /Xiv0N46sP+CQLjX/c1wG+BtX0dj
-X-Google-Smtp-Source: APXvYqw8FlSTSsLaARoWxd7mwACxB9hqjYF/ZC4JvawQdnNQFWmonKqbT+ulJtlBeGE15p7BKnqaBw==
-X-Received: by 2002:a63:6e4c:: with SMTP id j73mr46204529pgc.276.1553853203649;
-        Fri, 29 Mar 2019 02:53:23 -0700 (PDT)
-Received: from [192.168.42.180] (219x120x4x122.ap219.ftth.ucom.ne.jp. [219.120.4.122])
-        by smtp.gmail.com with ESMTPSA id k22sm2300897pfa.84.2019.03.29.02.53.21
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 29 Mar 2019 02:53:22 -0700 (PDT)
-Subject: Re: [PATCH V4 6/6] PCI: rcar: Fix 64bit MSI message address handling
-To:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20190325114101.10198-1-marek.vasut@gmail.com>
- <20190325114101.10198-6-marek.vasut@gmail.com>
- <20190327113023.zhnx5v5spcx7uoqj@verge.net.au>
- <CAMuHMdW_6hutek-vk+mwDHJ1kBUytLvtkgLKb2mkSEFFasJ_0g@mail.gmail.com>
- <efcf526b-cfbc-ea54-f97e-f280e1f672fa@gmail.com>
- <CAMuHMdU7dQ=8UaSCoZ8TucMfaGyu38rxDYV=Tspw_UmCu5YVwQ@mail.gmail.com>
- <20190328162857.GB19825@red-moon>
- <CAMuHMdWuGx8wDmW7LZ3mbocieL1ZaKBvr=Um4XZ8FKdjiFqdzA@mail.gmail.com>
-From:   Marek Vasut <marek.vasut@gmail.com>
-Openpgp: preference=signencrypt
-Message-ID: <8a25537c-482f-fd74-a61c-de14e342c38b@gmail.com>
-Date:   Fri, 29 Mar 2019 10:53:20 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        id S1729115AbfC2Kmi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 06:42:38 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5763 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728737AbfC2Kmh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Mar 2019 06:42:37 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id AB8E973CA26D6D9B9EB3;
+        Fri, 29 Mar 2019 18:42:35 +0800 (CST)
+Received: from [127.0.0.1] (10.202.227.238) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.408.0; Fri, 29 Mar 2019
+ 18:42:25 +0800
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [RFC PATCH v2 1/3] resource: Request IO port regions from
+ children of ioport_resource
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+References: <1553105650-28012-1-git-send-email-john.garry@huawei.com>
+ <1553105650-28012-2-git-send-email-john.garry@huawei.com>
+ <20190325233255.GF24180@google.com>
+ <b9164269-c2a1-e0fa-4c17-2d06fb42f39b@huawei.com>
+ <20190326224810.GY24180@google.com> <20190328174655.GC19825@red-moon>
+CC:     <wangkefeng.wang@huawei.com>, <arnd@arndb.de>, <rafael@kernel.org>,
+        <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
+        <andy.shevchenko@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        "Catalin Marinas" <catalin.marinas@arm.com>, <bp@suse.de>,
+        <linux@roeck-us.net>
+Message-ID: <418943e2-19cd-f4b9-b5e1-2a49bce99b66@huawei.com>
+Date:   Fri, 29 Mar 2019 10:42:17 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdWuGx8wDmW7LZ3mbocieL1ZaKBvr=Um4XZ8FKdjiFqdzA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+In-Reply-To: <20190328174655.GC19825@red-moon>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.238]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 3/28/19 5:31 PM, Geert Uytterhoeven wrote:
-> Hi Lorenzo,
-> 
-> On Thu, Mar 28, 2019 at 5:28 PM Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
->> On Thu, Mar 28, 2019 at 09:02:00AM +0100, Geert Uytterhoeven wrote:
->>> On Thu, Mar 28, 2019 at 4:19 AM Marek Vasut <marek.vasut@gmail.com> wrote:
->>>> On 3/27/19 1:22 PM, Geert Uytterhoeven wrote:
->>>>> On Wed, Mar 27, 2019 at 12:30 PM Simon Horman <horms@verge.net.au> wrote:
->>>>>> On Mon, Mar 25, 2019 at 12:41:01PM +0100, marek.vasut@gmail.com wrote:
->>>>>>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>>>> The MSI message address in the RC address space can be 64 bit. The
->>>>>>> R-Car PCIe RC supports such a 64bit MSI message address as well.
->>>>>>> The code currently uses virt_to_phys(__get_free_pages()) to obtain
->>>>>>> a reserved page for the MSI message address, and the return value
->>>>>>> of which can be a 64 bit physical address on 64 bit system.
->>>>>>>
->>>>>>> However, the driver only programs PCIEMSIALR register with the bottom
->>>>>>> 32 bits of the virt_to_phys(__get_free_pages()) return value and does
->>>>>>> not program the top 32 bits into PCIEMSIAUR, but rather programs the
->>>>>>> PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
->>>>>>> SoCs, however may fail on new 64 bit R-Car SoCs.
->>>>>>>
->>>>>>> Since from a PCIe controller perspective, an inbound MSI is a memory
->>>>>>> write to a special address (in case of this controller, defined by
->>>>>>> the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
->>>>>>> never hits the DRAM _and_ because allocation of an MSI by a PCIe card
->>>>>>> driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
->>>>>>> in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
->>>>>>> cause memory corruption or other issues.
->>>>>>>
->>>>>>> There is however the possibility that if virt_to_phys(__get_free_pages())
->>>>>>> returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
->>>>>>> to 0x0 _and_ if the system had physical RAM at the address matching the
->>>>>>> value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
->>>>>>> physical address matching the value of PCIEMSIALR and a remote write to
->>>>>>> such a buffer by a PCIe card would trigger a spurious MSI.
->>>>>>>
->>>>>>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
->>>>>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
->>>>>>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
->>>>>>> Cc: Simon Horman <horms+renesas@verge.net.au>
->>>>>>> Cc: Wolfram Sang <wsa@the-dreams.de>
->>>>>>> Cc: linux-renesas-soc@vger.kernel.org
->>>>>>> To: linux-pci@vger.kernel.org
->>>>>>> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
->>>>>>
->>>>>> Does this warrant a Fixes tag?
->>>>>
->>>>> (digging in old sent email)
->>>>> Fixes: 290c1fb358605402 ("PCI: rcar: Add MSI support for PCIe")
->>>>
->>>> But does it really fix that commit, given that on Gen2 and earlier, it
->>>> was not broken as those were 32bit platforms ?
->>>
->>> It does not fix the bug on that commit, as the bug cannot happen on arm32.
->>> It does fix that commit, in that that commit used "unsigned long" for a
->>> physical address, which is wrong, even on arm32 (esp. with LPAE).
->>> If you insist on having a Fixes tag for a commit where the bug could be
->>> seen:
->>> Fixes: e015f88c368da1e6 ("PCI: rcar: Add support for R-Car H3 to pcie-rcar")
->>>
->>> Apart from that, drivers should use the DMA API instead of virt_to_phys().
->>> However, now we have a better understanding of how MSI interrupts
->>> work, we don't even need to allocate that page. All we need is the
->>> physical address of a page that is guaranteed not to be backed by RAM
->>> (i.e. not to be a valid target for a legitimate PCI bus mastering
->>> transaction).
+On 28/03/2019 17:46, Lorenzo Pieralisi wrote:
+> On Tue, Mar 26, 2019 at 05:48:10PM -0500, Bjorn Helgaas wrote:
+>
+> [...]
+>
+
+Hi Lorenzo,
+
+
+>> I'm not convinced about this last sentence.
 >>
->> Agreed but I would merge this patch first since it is a fix
->> and update it later.
-> 
-> Sure, definitely.
-> 
->> Shall I go with the Fixes: tag above ?
-> 
-> Fine for me, thanks!
+>> It's true that on most modern systems, including that Intel PCH, the
+>> Super I/O controller is attached via an LPC bridge on a PCI bus.
+>>
+>> But I don't think it's an actual requirement that PCI be involved.
+>> There certainly once were systems, e.g., PC/104, that had ISA devices
+>> but no PCI.  Maybe Super I/O attached via ISA is obsolete enough that
+>> we don't care any more, but I really don't know.
+>>
+>>>> On x86, I think inb/inw/inl from a port where nothing responds
+>>>> probably just returns ~0, and outb/outw/outl just get dropped.
+>>>> Shouldn't arm64 do the same, without crashing?
+>>>
+>>> That would be ideal and we're doing something similar in patch 2/3.
+>>>
+>>> So on ARM64 we have to IO remap the PCI IO resource. If this mapping is not
+>>> done (due to no PCI host), then any inb/inw/inl calls will crash the system.
+>>
+>> My take is that ARM64 is responsible for implementing inb/inw/inl in
+>> such a way that they don't crash.  I don't think it's practical to
+>> update all the old ISA drivers or even the core code to work around
+>> that.
+>
+> The problem is that those drivers are accessing a resource that does not
+> exist in practice, it is taken for granted on x86 systems (and on IA64)
+> because that was an actual bus (actual or emulated) and was made part of
+> the architecture. The ISA space is not necessarily tied to PCI,
+> at least not always.
+>
+> Side note: these drivers can't be compiled on PPC, it would be
+> good to understand why, I have a hunch it can be related.
 
-I don't feel strongly either way.
+I mentioned this earlier:
 
--- 
-Best regards,
-Marek Vasut
+I saw that in commits like 746cdfbf01c0 ("hwmon: Avoid building drivers 
+forpowerpc that read/write ISA addresses"), PPC would not build these
+drivers, as, like arm, it has no native ISA.
+
+However I still don't think just avoiding compiling these drivers for 
+certain archs solves the problem.
+
+[...]
+
+>>>>> [1] https://www.spinics.net/lists/linux-pci/msg49821.html
+>>>>
+>>>> Please use a https://lore.kernel.org/ URL instead of spinics.net.
+>>>
+>>> ok, I hope that I can find this old thread.
+>>
+>> The beauty of lore.kernel.org is that the URL contains the Message-ID, so
+>> it's easy build the URL and it would contain useful information even if
+>> lore.kernel.org disappeared:
+>>
+>> https://lore.kernel.org/linux-pci/56F209A9.4040304@huawei.com
+>
+> Yes, the bottom line is what Arnd outlined in the thread above.
+>
+> ISA IO port space is not necessarily PCI but it does not exist
+> architecturally on ARM systems.
+>
+> Taking the example of IA64, the ISA space is memory mapped (like any
+> other arch except for x86) but IIUC the virtual mapping for the ISA
+> port space _always_ exists on IA64 so this issue won't happen.
+>
+> Arnd pointed out a solution in the thread above but I need to check
+> if that's feasible.
+
+I doubt that it can work now.
+
+Since we when introduced the concept of logical PIO space, this IO space 
+became sparely populated by 2 regions - MMIO and indirect IO - so we 
+cannot grow it as we map in regions. I also don't think it works for 
+when we IO unmap regions.
+
+Thanks,
+John
+
+>
+> Lorenzo
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+> .
+>
+
+
