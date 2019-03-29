@@ -2,109 +2,126 @@ Return-Path: <SRS0=8ruR=SA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C628FC43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:03:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C3CFC43381
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:08:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 973BA218D9
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:03:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="EC8sc3aE"
+	by mail.kernel.org (Postfix) with ESMTP id 114692184D
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 17:08:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729823AbfC2RDn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 13:03:43 -0400
-Received: from mail-yw1-f66.google.com ([209.85.161.66]:42012 "EHLO
-        mail-yw1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729808AbfC2RDn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2019 13:03:43 -0400
-Received: by mail-yw1-f66.google.com with SMTP id e76so913242ywa.9
-        for <linux-pci@vger.kernel.org>; Fri, 29 Mar 2019 10:03:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=W7lLylrMLPHCAGUksv7phTRR5l4lL+wrbNb4nVTTI3U=;
-        b=EC8sc3aEu+o42Lz7ZTNOiKzzHjK/Cc1qEFQ3QLL+kviu9j/p4EcYSruPF3mg9PYqy/
-         UBhsl4c+ufriWbWNHUwWO0GLUoUw2rgMRFoGU49Km7HR2R6JO3yCCUDCvvY1rcPZZw8v
-         4J2Livfcgm024FE7wgwrq/VAQkbMqQovzl1Iw=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=W7lLylrMLPHCAGUksv7phTRR5l4lL+wrbNb4nVTTI3U=;
-        b=SHz084wjiyLEFN2yefVpsBomF8CCW0MoRHE65CmorpAldK3btOaypjQ9xDnG0ZBZ36
-         rDE570dAjnmPp8MeW6w/XEkU+IjtqIk2kbPoFMUd4VKodGx4A9tRGpc3ghiZ0O1n7dTM
-         fvWmd745YN37/KeFLPEROGWn98daQn0do90t1CTSz4/NSAttCJsynuOgUNGlgaj8YwH0
-         zvtaUCLyTYjxvPztlv3S+K1xZC1gWDevuZQjp7Ea7HYYQnSrk1gNWeaqws4fEyrSnrCP
-         bSm+2H+Gv3lovUd7ngBOwQiSPtOZzw4gziI2dJGN8kskI/Whi0VThoABKWo/iQKE7v24
-         4gjA==
-X-Gm-Message-State: APjAAAX6Sp5DCk6h4DBnDp2IPHysM0qJPiuNd/ZW8evYNB9CMo3RZ7d8
-        +e0YwovyN5mmJ+gwjJ8jlaIC6w==
-X-Google-Smtp-Source: APXvYqyeYDSQexnr3FGr8Gh2a+0J0RUTkckT7E54wveUyaGPapJFfeTzUlNBN9krRvmaeRINQUO9Vw==
-X-Received: by 2002:a0d:e707:: with SMTP id q7mr19402037ywe.148.1553879022151;
-        Fri, 29 Mar 2019 10:03:42 -0700 (PDT)
-Received: from [10.136.13.65] ([192.19.228.250])
-        by smtp.gmail.com with ESMTPSA id 79sm1461582ywr.110.2019.03.29.10.03.39
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 29 Mar 2019 10:03:40 -0700 (PDT)
-Subject: Re: [PATCH v4 0/2] Add IPROC PCIe new features
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
- <20190329165145.GC8768@e107981-ln.cambridge.arm.com>
-From:   Scott Branden <scott.branden@broadcom.com>
-Message-ID: <f154e036-c3c3-ad31-d7b1-09a81f11c23e@broadcom.com>
-Date:   Fri, 29 Mar 2019 10:03:37 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.5.1
+        id S1729808AbfC2RIu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 13:08:50 -0400
+Received: from mxpout02.htp-tel.de ([212.59.41.9]:61939 "EHLO
+        mxpout02.htp-tel.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729762AbfC2RIu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 29 Mar 2019 13:08:50 -0400
+Received: from mxpin02.htp-tel.de (a212594129.net-htp.de [212.59.41.29])
+        by mxpout02.htp-tel.de with ESMTPS id x2TH8PaC004519
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 29 Mar 2019 18:08:25 +0100 (CET)
+Received: from esd-s3.esd.local (a81-14-233-218.net-htp.de [81.14.233.218])
+        by mxpin02.htp-tel.de with ESMTPS id x2TH8P1M004780
+        (version=TLSv1 cipher=AES128-SHA bits=128 verify=FAIL);
+        Fri, 29 Mar 2019 18:08:25 +0100 (CET)
+Received: from esd-s9.esd.local (10.0.0.190) by esd-s3.esd.local (10.0.0.66)
+ with Microsoft SMTP Server id 8.2.176.0; Fri, 29 Mar 2019 18:08:23 +0100
+Received: by esd-s9.esd.local (Postfix, from userid 2044)       id E42E11400CB; Fri,
+ 29 Mar 2019 18:08:21 +0100 (CET)
+From:   =?UTF-8?q?Stefan=20M=C3=A4tje?= <stefan.maetje@esd.eu>
+To:     <bhelgaas@google.com>, <andriy.shevchenko@linux.intel.com>,
+        <bhull@redhat.com>, <linux-pci@vger.kernel.org>
+CC:     <rafael.j.wysocki@intel.com>, <ptalbert@redhat.com>,
+        <lukas@wunner.de>, <fred@fredlawl.com>,
+        =?UTF-8?q?Stefan=20M=C3=A4tje?= <stefan.maetje@esd.eu>
+Subject: [PATCH v3 0/3] Add a quirk to work around link retrain errata of Pericom PCIe brigdes
+Date:   Fri, 29 Mar 2019 18:07:33 +0100
+Message-ID: <20190329170736.1648-1-stefan.maetje@esd.eu>
+X-Mailer: git-send-email 2.15.0
 MIME-Version: 1.0
-In-Reply-To: <20190329165145.GC8768@e107981-ln.cambridge.arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.4.3 (mxpin02.htp-tel.de [172.19.12.5]); Fri, 29 Mar 2019 18:08:25 +0100 (CET)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+This patch provides a quirk that works around PCIe link retrain issues
+with some Pericom PCIe-to-PCI bridges.
 
-On 2019-03-29 9:51 a.m., Lorenzo Pieralisi wrote:
-> On Fri, Mar 01, 2019 at 10:22:14AM +0530, Srinath Mannam wrote:
->> This patch set extends support of new IPROC PCIe host controller features
->>   - Add CRS check using controller register status flags
->>   - Add outbound window mapping configuration for 32-bit I/O region
->>
->> This patch set is based on Linux-5.0-rc2.
->>
->> Changes from v3:
->>    - Addressed Lorenzo Pieralisi comments.
->>
->> Changes from v2:
->>    - Based on Lorenzo Pieralisi comments, commit logs are expanded.
->>
->> Changes from v1:
->>    - Addressed Bjorn Helgaas comments.
->>    - Removed set order mode patch from patchset.
->>
->> Srinath Mannam (2):
->>    PCI: iproc: Add CRS check in config read
->>    PCI: iproc: Add outbound configuration for 32-bit I/O region
->>
->>   drivers/pci/controller/pcie-iproc.c | 44 +++++++++++++++++++++++++++++++++----
-> I need Ray a/o Scott ACK to merge this series, thanks.
+This patches should be backported to the stable kernels ([1/3] and [2/3]). The
+problem shows up since our customers use kernels 4.10 and later.
 
-Unfortunately we need this due to hardware design (which we continue to 
-inform the silicon team to provide a proper design).
+The original patch was only for the Pericom PI7C9X111SL bridge. This is the
+only hardware I can test with.
 
+In the meantime Brett Hull <bhull@redhat.com> brought to my attention that
+the PI7C9X110 and PI7C9X130 devices are also affected. I had access to the
+errata sheet for the PI7C9X130 PCI bridge and its has the same issue
+documented.
 
-Acked-by: Scott Branden <scott.branden@broadcom.com>
+Therefore the patch will now handle all three mentioned devices.
+
+I'd like to quote the errata sheet PI7C9X111SLB_errata_rev1.2_102711.pdf
+
+> In Reverse Mode, retrain Link bit is not cleared automatically; this bit
+> needs to be cleared manually by configuration write after it is set.
 >
-> Lorenzo
+> Problem:
+> In Reverse mode, after setting Retrain Link (bit 5 of register C0h), this
+> bit will stay on and PI7C9x111SL will continuously retrain until this bit
+> is cleared by another Configuration Write to register C0h.
+>
+> Workaround:
+> Issue another configuration write to clear Retrain Link bit after setting
+> this bit. No delay is required between these two configuration write.
+
+There is no public URL to download these errata sheets. Because Pericom has
+been acquired by Diodes Inc. all information has to be downloaded from their
+web site. Following the link below one can find a datasheet and there is a
+button to request additional documents like the errata sheet for instance.
+
+https://www.diodes.com/products/connectivity-and-timing/pcie-packet-switchbridges/pcie-pci-bridges/part/PI7C9X111SL#tab-details
+
+I'm still using msleep(1) here because I don't want to change the timing for
+other parts of the kernel unintentionally.
+Some notes regarding this:
+
+a) The link retraining is fast. The time measured on two different PCs and PCIe
+	bridges is below 5µs.
+b) My slower test PC needs ~2.5µs for a checking the PCI_EXP_LNKSTA register the
+	faster test PC needs ~1.5µs for that. So it comes the slower test PC runs
+	through the wait loop without calling msleep(1) but the faster machine needs
+	to wait once with msleep(1).
+	In this case waiting with udelay(10) would perhaps be more appropriate but
+	I didn't want to burden this pure bug fix patch with a timing change that
+	possibly needs discussion.
+
+History:
+	[V3]
+		- Split into more patches to make backporting easier.
+		- Applied Andy Shevchenko's recommendations regarding wording and
+			code style.
+	[V2]
+		https://lore.kernel.org/linux-pci/20190305173122.11875-1-stefan.maetje@esd.eu/
+	[V1]
+		https://lore.kernel.org/linux-pci/20181101192229.48352-2-stefan.maetje@esd.eu/
+
+
+Stefan Mätje (3):
+  PCI/ASPM: Prepare stand-alone pcie_retrain_link() function
+  PCI/ASPM: Work around link retrain errata of Pericom PCIe-to-PCI
+    bridges
+  PCI/ASPM: Trivial rework wait code in pcie_retrain_link()
+
+ drivers/pci/pcie/aspm.c | 47 ++++++++++++++++++++++++++++++++---------------
+ drivers/pci/quirks.c    | 20 ++++++++++++++++++++
+ include/linux/pci.h     |  2 ++
+ 3 files changed, 54 insertions(+), 15 deletions(-)
+
+--
+2.15.0
+
