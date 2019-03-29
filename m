@@ -4,372 +4,279 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59D73C43381
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:40:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13C20C43381
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:41:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0CC93218A5
-	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:40:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6BD2218A5
+	for <linux-pci@archiver.kernel.org>; Fri, 29 Mar 2019 15:41:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729394AbfC2Pkg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 29 Mar 2019 11:40:36 -0400
-Received: from mga09.intel.com ([134.134.136.24]:16463 "EHLO mga09.intel.com"
+        id S1729150AbfC2Pld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 29 Mar 2019 11:41:33 -0400
+Received: from mga06.intel.com ([134.134.136.31]:8191 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729046AbfC2Pkg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 29 Mar 2019 11:40:36 -0400
+        id S1728815AbfC2Plc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 29 Mar 2019 11:41:32 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Mar 2019 08:40:35 -0700
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Mar 2019 08:40:30 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,284,1549958400"; 
-   d="scan'208";a="333233861"
+   d="scan'208";a="144965899"
 Received: from dwillia2-desk3.jf.intel.com (HELO dwillia2-desk3.amr.corp.intel.com) ([10.54.39.16])
-  by fmsmga005.fm.intel.com with ESMTP; 29 Mar 2019 08:40:34 -0700
-Subject: [PATCH 6/6] mm/devm_memremap_pages: Fix final page put race
+  by FMSMGA003.fm.intel.com with ESMTP; 29 Mar 2019 08:40:29 -0700
+Subject: [PATCH 5/6] pci/p2pdma: Track pgmap references per resource,
+ not globally
 From:   Dan Williams <dan.j.williams@intel.com>
 To:     akpm@linux-foundation.org
 Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Ira Weiny <ira.weiny@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        =?utf-8?b?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
         Christoph Hellwig <hch@lst.de>, linux-mm@kvack.org,
         linux-pci@vger.kernel.org, linux-nvdimm@lists.01.org,
         linux-kernel@vger.kernel.org
-Date:   Fri, 29 Mar 2019 08:27:55 -0700
-Message-ID: <155387327591.2443841.1024616899609926902.stgit@dwillia2-desk3.amr.corp.intel.com>
+Date:   Fri, 29 Mar 2019 08:27:50 -0700
+Message-ID: <155387327020.2443841.6446837127378298192.stgit@dwillia2-desk3.amr.corp.intel.com>
 In-Reply-To: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <155387324370.2443841.574715745262628837.stgit@dwillia2-desk3.amr.corp.intel.com>
 User-Agent: StGit/0.18-2-gc94f
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Logan noticed that devm_memremap_pages_release() kills the percpu_ref
-drops all the page references that were acquired at init and then
-immediately proceeds to unplug, arch_remove_memory(), the backing pages
-for the pagemap. If for some reason device shutdown actually collides
-with a busy / elevated-ref-count page then arch_remove_memory() should
-be deferred until after that reference is dropped.
+In preparation for fixing a race between devm_memremap_pages_release()
+and the final put of a page from the device-page-map, allocate a
+percpu-ref per p2pdma resource mapping.
 
-As it stands the "wait for last page ref drop" happens *after*
-devm_memremap_pages_release() returns, which is obviously too late and
-can lead to crashes.
-
-Fix this situation by assigning the responsibility to wait for the
-percpu_ref to go idle to devm_memremap_pages() with a new ->cleanup()
-callback. Implement the new cleanup callback for all
-devm_memremap_pages() users: pmem, devdax, hmm, and p2pdma.
-
-Reported-by: Logan Gunthorpe <logang@deltatee.com>
-Fixes: 41e94a851304 ("add devm_memremap_pages")
-Cc: Ira Weiny <ira.weiny@intel.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Jérôme Glisse" <jglisse@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/dax/device.c              |   13 +++----------
- drivers/nvdimm/pmem.c             |   17 +++++++++++++----
- drivers/pci/p2pdma.c              |   17 +++--------------
- include/linux/memremap.h          |    2 ++
- kernel/memremap.c                 |   17 ++++++++++++-----
- mm/hmm.c                          |   14 +++-----------
- tools/testing/nvdimm/test/iomap.c |    2 ++
- 7 files changed, 38 insertions(+), 44 deletions(-)
+ drivers/pci/p2pdma.c |  114 ++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 73 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/dax/device.c b/drivers/dax/device.c
-index e428468ab661..e3aa78dd1bb0 100644
---- a/drivers/dax/device.c
-+++ b/drivers/dax/device.c
-@@ -27,9 +27,8 @@ static void dev_dax_percpu_release(struct percpu_ref *ref)
- 	complete(&dev_dax->cmp);
- }
- 
--static void dev_dax_percpu_exit(void *data)
-+static void dev_dax_percpu_exit(struct percpu_ref *ref)
- {
--	struct percpu_ref *ref = data;
- 	struct dev_dax *dev_dax = ref_to_dev_dax(ref);
- 
- 	dev_dbg(&dev_dax->dev, "%s\n", __func__);
-@@ -468,18 +467,12 @@ int dev_dax_probe(struct device *dev)
- 	if (rc)
- 		return rc;
- 
--	rc = devm_add_action_or_reset(dev, dev_dax_percpu_exit, &dev_dax->ref);
--	if (rc)
--		return rc;
--
- 	dev_dax->pgmap.ref = &dev_dax->ref;
- 	dev_dax->pgmap.kill = dev_dax_percpu_kill;
-+	dev_dax->pgmap.cleanup = dev_dax_percpu_exit;
- 	addr = devm_memremap_pages(dev, &dev_dax->pgmap);
--	if (IS_ERR(addr)) {
--		devm_remove_action(dev, dev_dax_percpu_exit, &dev_dax->ref);
--		percpu_ref_exit(&dev_dax->ref);
-+	if (IS_ERR(addr))
- 		return PTR_ERR(addr);
--	}
- 
- 	inode = dax_inode(dax_dev);
- 	cdev = inode->i_cdev;
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index bc2f700feef8..507b9eda42aa 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -304,11 +304,19 @@ static const struct attribute_group *pmem_attribute_groups[] = {
- 	NULL,
- };
- 
--static void pmem_release_queue(void *q)
-+static void __pmem_release_queue(struct percpu_ref *ref)
- {
-+	struct request_queue *q;
-+
-+	q = container_of(ref, typeof(*q), q_usage_counter);
- 	blk_cleanup_queue(q);
- }
- 
-+static void pmem_release_queue(void *ref)
-+{
-+	__pmem_release_queue(ref);
-+}
-+
- static void pmem_freeze_queue(struct percpu_ref *ref)
- {
- 	struct request_queue *q;
-@@ -400,12 +408,10 @@ static int pmem_attach_disk(struct device *dev,
- 	if (!q)
- 		return -ENOMEM;
- 
--	if (devm_add_action_or_reset(dev, pmem_release_queue, q))
--		return -ENOMEM;
--
- 	pmem->pfn_flags = PFN_DEV;
- 	pmem->pgmap.ref = &q->q_usage_counter;
- 	pmem->pgmap.kill = pmem_freeze_queue;
-+	pmem->pgmap.cleanup = __pmem_release_queue;
- 	if (is_nd_pfn(dev)) {
- 		if (setup_pagemap_fsdax(dev, &pmem->pgmap))
- 			return -ENOMEM;
-@@ -426,6 +432,9 @@ static int pmem_attach_disk(struct device *dev,
- 		pmem->pfn_flags |= PFN_MAP;
- 		memcpy(&bb_res, &pmem->pgmap.res, sizeof(bb_res));
- 	} else {
-+		if (devm_add_action_or_reset(dev, pmem_release_queue,
-+					&q->q_usage_counter))
-+			return -ENOMEM;
- 		addr = devm_memremap(dev, pmem->phys_addr,
- 				pmem->size, ARCH_MEMREMAP_PMEM);
- 		memcpy(&bb_res, &nsio->res, sizeof(bb_res));
 diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 1b96c1688715..7ff5b8067670 100644
+index 595a534bd749..1b96c1688715 100644
 --- a/drivers/pci/p2pdma.c
 +++ b/drivers/pci/p2pdma.c
-@@ -95,7 +95,7 @@ static void pci_p2pdma_percpu_kill(struct percpu_ref *ref)
+@@ -20,12 +20,16 @@
+ #include <linux/seq_buf.h>
+ 
+ struct pci_p2pdma {
+-	struct percpu_ref devmap_ref;
+-	struct completion devmap_ref_done;
+ 	struct gen_pool *pool;
+ 	bool p2pmem_published;
+ };
+ 
++struct p2pdma_pagemap {
++	struct dev_pagemap pgmap;
++	struct percpu_ref ref;
++	struct completion ref_done;
++};
++
+ static ssize_t size_show(struct device *dev, struct device_attribute *attr,
+ 			 char *buf)
+ {
+@@ -74,28 +78,31 @@ static const struct attribute_group p2pmem_group = {
+ 	.name = "p2pmem",
+ };
+ 
++static struct p2pdma_pagemap *to_p2p_pgmap(struct percpu_ref *ref)
++{
++	return container_of(ref, struct p2pdma_pagemap, ref);
++}
++
+ static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
+ {
+-	struct pci_p2pdma *p2p =
+-		container_of(ref, struct pci_p2pdma, devmap_ref);
++	struct p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(ref);
+ 
+-	complete_all(&p2p->devmap_ref_done);
++	complete(&p2p_pgmap->ref_done);
+ }
+ 
+ static void pci_p2pdma_percpu_kill(struct percpu_ref *ref)
+ {
+-	/*
+-	 * pci_p2pdma_add_resource() may be called multiple times
+-	 * by a driver and may register the percpu_kill devm action multiple
+-	 * times. We only want the first action to actually kill the
+-	 * percpu_ref.
+-	 */
+-	if (percpu_ref_is_dying(ref))
+-		return;
+-
  	percpu_ref_kill(ref);
  }
  
--static void pci_p2pdma_percpu_cleanup(void *ref)
-+static void pci_p2pdma_percpu_cleanup(struct percpu_ref *ref)
++static void pci_p2pdma_percpu_cleanup(void *ref)
++{
++	struct p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(ref);
++
++	wait_for_completion(&p2p_pgmap->ref_done);
++	percpu_ref_exit(&p2p_pgmap->ref);
++}
++
+ static void pci_p2pdma_release(void *data)
  {
- 	struct p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(ref);
+ 	struct pci_dev *pdev = data;
+@@ -103,12 +110,12 @@ static void pci_p2pdma_release(void *data)
+ 	if (!pdev->p2pdma)
+ 		return;
  
-@@ -197,16 +197,6 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 	if (error)
- 		goto pgmap_free;
+-	wait_for_completion(&pdev->p2pdma->devmap_ref_done);
+-	percpu_ref_exit(&pdev->p2pdma->devmap_ref);
++	/* Flush and disable pci_alloc_p2p_mem() */
++	pdev->p2pdma = NULL;
++	synchronize_rcu();
  
--	/*
--	 * FIXME: the percpu_ref_exit needs to be coordinated internal
--	 * to devm_memremap_pages_release(). Duplicate the same ordering
--	 * as other devm_memremap_pages() users for now.
--	 */
--	error = devm_add_action(&pdev->dev, pci_p2pdma_percpu_cleanup,
--			&p2p_pgmap->ref);
+ 	gen_pool_destroy(pdev->p2pdma->pool);
+ 	sysfs_remove_group(&pdev->dev.kobj, &p2pmem_group);
+-	pdev->p2pdma = NULL;
+ }
+ 
+ static int pci_p2pdma_setup(struct pci_dev *pdev)
+@@ -124,12 +131,6 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
+ 	if (!p2p->pool)
+ 		goto out;
+ 
+-	init_completion(&p2p->devmap_ref_done);
+-	error = percpu_ref_init(&p2p->devmap_ref,
+-			pci_p2pdma_percpu_release, 0, GFP_KERNEL);
 -	if (error)
--		goto ref_cleanup;
+-		goto out_pool_destroy;
 -
- 	pgmap = &p2p_pgmap->pgmap;
+ 	error = devm_add_action_or_reset(&pdev->dev, pci_p2pdma_release, pdev);
+ 	if (error)
+ 		goto out_pool_destroy;
+@@ -163,6 +164,7 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
+ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 			    u64 offset)
+ {
++	struct p2pdma_pagemap *p2p_pgmap;
+ 	struct dev_pagemap *pgmap;
+ 	void *addr;
+ 	int error;
+@@ -185,14 +187,32 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 			return error;
+ 	}
  
+-	pgmap = devm_kzalloc(&pdev->dev, sizeof(*pgmap), GFP_KERNEL);
+-	if (!pgmap)
++	p2p_pgmap = devm_kzalloc(&pdev->dev, sizeof(*p2p_pgmap), GFP_KERNEL);
++	if (!p2p_pgmap)
+ 		return -ENOMEM;
+ 
++	init_completion(&p2p_pgmap->ref_done);
++	error = percpu_ref_init(&p2p_pgmap->ref,
++			pci_p2pdma_percpu_release, 0, GFP_KERNEL);
++	if (error)
++		goto pgmap_free;
++
++	/*
++	 * FIXME: the percpu_ref_exit needs to be coordinated internal
++	 * to devm_memremap_pages_release(). Duplicate the same ordering
++	 * as other devm_memremap_pages() users for now.
++	 */
++	error = devm_add_action(&pdev->dev, pci_p2pdma_percpu_cleanup,
++			&p2p_pgmap->ref);
++	if (error)
++		goto ref_cleanup;
++
++	pgmap = &p2p_pgmap->pgmap;
++
  	pgmap->res.start = pci_resource_start(pdev, bar) + offset;
-@@ -217,11 +207,12 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	pgmap->res.end = pgmap->res.start + size - 1;
+ 	pgmap->res.flags = pci_resource_flags(pdev, bar);
+-	pgmap->ref = &pdev->p2pdma->devmap_ref;
++	pgmap->ref = &p2p_pgmap->ref;
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
  	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
  		pci_resource_start(pdev, bar);
- 	pgmap->kill = pci_p2pdma_percpu_kill;
-+	pgmap->cleanup = pci_p2pdma_percpu_cleanup;
- 
+@@ -201,12 +221,13 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
  	addr = devm_memremap_pages(&pdev->dev, pgmap);
  	if (IS_ERR(addr)) {
  		error = PTR_ERR(addr);
--		goto ref_exit;
-+		goto pgmap_free;
+-		goto pgmap_free;
++		goto ref_exit;
  	}
  
- 	error = gen_pool_add_owner(pdev->p2pdma->pool, (unsigned long)addr,
-@@ -238,8 +229,6 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+-	error = gen_pool_add_virt(pdev->p2pdma->pool, (unsigned long)addr,
++	error = gen_pool_add_owner(pdev->p2pdma->pool, (unsigned long)addr,
+ 			pci_bus_address(pdev, bar) + offset,
+-			resource_size(&pgmap->res), dev_to_node(&pdev->dev));
++			resource_size(&pgmap->res), dev_to_node(&pdev->dev),
++			&p2p_pgmap->ref);
+ 	if (error)
+ 		goto pages_free;
+ 
+@@ -217,8 +238,10 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
  
  pages_free:
  	devm_memunmap_pages(&pdev->dev, pgmap);
--ref_cleanup:
--	percpu_ref_exit(&p2p_pgmap->ref);
++ref_cleanup:
++	percpu_ref_exit(&p2p_pgmap->ref);
  pgmap_free:
- 	devm_kfree(&pdev->dev, p2p_pgmap);
+-	devm_kfree(&pdev->dev, pgmap);
++	devm_kfree(&pdev->dev, p2p_pgmap);
  	return error;
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 7601ee314c4a..1732dea030b2 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -81,6 +81,7 @@ typedef void (*dev_page_free_t)(struct page *page, void *data);
-  * @res: physical address range covered by @ref
-  * @ref: reference count that pins the devm_memremap_pages() mapping
-  * @kill: callback to transition @ref to the dead state
-+ * @cleanup: callback to wait for @ref to be idle and reap it
-  * @dev: host device of the mapping for debug
-  * @data: private data pointer for page_free()
-  * @type: memory type: see MEMORY_* in memory_hotplug.h
-@@ -92,6 +93,7 @@ struct dev_pagemap {
- 	struct resource res;
- 	struct percpu_ref *ref;
- 	void (*kill)(struct percpu_ref *ref);
-+	void (*cleanup)(struct percpu_ref *ref);
- 	struct device *dev;
- 	void *data;
- 	enum memory_type type;
-diff --git a/kernel/memremap.c b/kernel/memremap.c
-index 65afbacab44e..05d1af5a2f15 100644
---- a/kernel/memremap.c
-+++ b/kernel/memremap.c
-@@ -96,6 +96,7 @@ static void devm_memremap_pages_release(void *data)
- 	pgmap->kill(pgmap->ref);
- 	for_each_device_pfn(pfn, pgmap)
- 		put_page(pfn_to_page(pfn));
-+	pgmap->cleanup(pgmap->ref);
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pdma_add_resource);
+@@ -555,19 +578,25 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_find_many);
+  */
+ void *pci_alloc_p2pmem(struct pci_dev *pdev, size_t size)
+ {
+-	void *ret;
++	void *ret = NULL;
++	struct percpu_ref *ref;
  
- 	/* pages are dead and unused, undo the arch mapping */
- 	align_start = res->start & ~(SECTION_SIZE - 1);
-@@ -134,8 +135,8 @@ static void devm_memremap_pages_release(void *data)
-  * 2/ The altmap field may optionally be initialized, in which case altmap_valid
-  *    must be set to true
-  *
-- * 3/ pgmap->ref must be 'live' on entry and will be killed at
-- *    devm_memremap_pages_release() time, or if this routine fails.
-+ * 3/ pgmap->ref must be 'live' on entry and will be killed and reaped
-+ *    at devm_memremap_pages_release() time, or if this routine fails.
-  *
-  * 4/ res is expected to be a host memory range that could feasibly be
-  *    treated as a "System RAM" range, i.e. not a device mmio range, but
-@@ -151,8 +152,10 @@ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
- 	pgprot_t pgprot = PAGE_KERNEL;
- 	int error, nid, is_ram;
++	rcu_read_lock();
+ 	if (unlikely(!pdev->p2pdma))
+-		return NULL;
+-
+-	if (unlikely(!percpu_ref_tryget_live(&pdev->p2pdma->devmap_ref)))
+-		return NULL;
+-
+-	ret = (void *)gen_pool_alloc(pdev->p2pdma->pool, size);
++		goto out;
  
--	if (!pgmap->ref || !pgmap->kill)
-+	if (!pgmap->ref || !pgmap->kill || !pgmap->cleanup) {
-+		WARN(1, "Missing reference count teardown definition\n");
- 		return ERR_PTR(-EINVAL);
+-	if (unlikely(!ret))
+-		percpu_ref_put(&pdev->p2pdma->devmap_ref);
++	ret = (void *)gen_pool_alloc_owner(pdev->p2pdma->pool, size,
++			(void **) &ref);
++	if (!ret)
++		goto out;
+ 
++	if (unlikely(!percpu_ref_tryget_live(ref))) {
++		gen_pool_free(pdev->p2pdma->pool, (unsigned long) ret, size);
++		ret = NULL;
++		goto out;
 +	}
- 
- 	align_start = res->start & ~(SECTION_SIZE - 1);
- 	align_size = ALIGN(res->start + resource_size(res), SECTION_SIZE)
-@@ -163,14 +166,16 @@ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
- 	if (conflict_pgmap) {
- 		dev_WARN(dev, "Conflicting mapping in same section\n");
- 		put_dev_pagemap(conflict_pgmap);
--		return ERR_PTR(-ENOMEM);
-+		error = -ENOMEM;
-+		goto err_array;
- 	}
- 
- 	conflict_pgmap = get_dev_pagemap(PHYS_PFN(align_end), NULL);
- 	if (conflict_pgmap) {
- 		dev_WARN(dev, "Conflicting mapping in same section\n");
- 		put_dev_pagemap(conflict_pgmap);
--		return ERR_PTR(-ENOMEM);
-+		error = -ENOMEM;
-+		goto err_array;
- 	}
- 
- 	is_ram = region_intersects(align_start, align_size,
-@@ -262,6 +267,8 @@ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
- 	pgmap_array_delete(res);
-  err_array:
- 	pgmap->kill(pgmap->ref);
-+	pgmap->cleanup(pgmap->ref);
++out:
++	rcu_read_unlock();
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(pci_alloc_p2pmem);
+@@ -580,8 +609,11 @@ EXPORT_SYMBOL_GPL(pci_alloc_p2pmem);
+  */
+ void pci_free_p2pmem(struct pci_dev *pdev, void *addr, size_t size)
+ {
+-	gen_pool_free(pdev->p2pdma->pool, (uintptr_t)addr, size);
+-	percpu_ref_put(&pdev->p2pdma->devmap_ref);
++	struct percpu_ref *ref;
 +
- 	return ERR_PTR(error);
++	gen_pool_free_owner(pdev->p2pdma->pool, (uintptr_t)addr, size,
++			(void **) &ref);
++	percpu_ref_put(ref);
  }
- EXPORT_SYMBOL_GPL(devm_memremap_pages);
-diff --git a/mm/hmm.c b/mm/hmm.c
-index fe1cd87e49ac..225ade644058 100644
---- a/mm/hmm.c
-+++ b/mm/hmm.c
-@@ -975,9 +975,8 @@ static void hmm_devmem_ref_release(struct percpu_ref *ref)
- 	complete(&devmem->completion);
- }
+ EXPORT_SYMBOL_GPL(pci_free_p2pmem);
  
--static void hmm_devmem_ref_exit(void *data)
-+static void hmm_devmem_ref_exit(struct percpu_ref *ref)
- {
--	struct percpu_ref *ref = data;
- 	struct hmm_devmem *devmem;
- 
- 	devmem = container_of(ref, struct hmm_devmem, ref);
-@@ -1054,10 +1053,6 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
- 	if (ret)
- 		return ERR_PTR(ret);
- 
--	ret = devm_add_action_or_reset(device, hmm_devmem_ref_exit, &devmem->ref);
--	if (ret)
--		return ERR_PTR(ret);
--
- 	size = ALIGN(size, PA_SECTION_SIZE);
- 	addr = min((unsigned long)iomem_resource.end,
- 		   (1UL << MAX_PHYSMEM_BITS) - 1);
-@@ -1096,6 +1091,7 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
- 	devmem->pagemap.ref = &devmem->ref;
- 	devmem->pagemap.data = devmem;
- 	devmem->pagemap.kill = hmm_devmem_ref_kill;
-+	devmem->pagemap.cleanup = hmm_devmem_ref_exit;
- 
- 	result = devm_memremap_pages(devmem->device, &devmem->pagemap);
- 	if (IS_ERR(result))
-@@ -1133,11 +1129,6 @@ struct hmm_devmem *hmm_devmem_add_resource(const struct hmm_devmem_ops *ops,
- 	if (ret)
- 		return ERR_PTR(ret);
- 
--	ret = devm_add_action_or_reset(device, hmm_devmem_ref_exit,
--			&devmem->ref);
--	if (ret)
--		return ERR_PTR(ret);
--
- 	devmem->pfn_first = devmem->resource->start >> PAGE_SHIFT;
- 	devmem->pfn_last = devmem->pfn_first +
- 			   (resource_size(devmem->resource) >> PAGE_SHIFT);
-@@ -1150,6 +1141,7 @@ struct hmm_devmem *hmm_devmem_add_resource(const struct hmm_devmem_ops *ops,
- 	devmem->pagemap.ref = &devmem->ref;
- 	devmem->pagemap.data = devmem;
- 	devmem->pagemap.kill = hmm_devmem_ref_kill;
-+	devmem->pagemap.cleanup = hmm_devmem_ref_exit;
- 
- 	result = devm_memremap_pages(devmem->device, &devmem->pagemap);
- 	if (IS_ERR(result))
-diff --git a/tools/testing/nvdimm/test/iomap.c b/tools/testing/nvdimm/test/iomap.c
-index c6635fee27d8..219dd0a1cb08 100644
---- a/tools/testing/nvdimm/test/iomap.c
-+++ b/tools/testing/nvdimm/test/iomap.c
-@@ -108,7 +108,9 @@ static void nfit_test_kill(void *_pgmap)
- {
- 	struct dev_pagemap *pgmap = _pgmap;
- 
-+	WARN_ON(!pgmap || !pgmap->ref || !pgmap->kill || !pgmap->cleanup);
- 	pgmap->kill(pgmap->ref);
-+	pgmap->cleanup(pgmap->ref);
- }
- 
- void *__wrap_devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
 
