@@ -2,121 +2,168 @@ Return-Path: <SRS0=NgI7=SB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 619C2C43381
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 04:00:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD12C10F00
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 07:46:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2227820663
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 04:00:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DF53218AC
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 07:46:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="A7Y7hpNS"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dDgKYI73"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725774AbfC3EAO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 30 Mar 2019 00:00:14 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:59544 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725320AbfC3EAO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2019 00:00:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=b0PRcjySJV9g1FLkDfsLDA2NdAo7Q/GRjEeeMMiAxdw=; b=A7Y7hpNSQV+NhTG6k2jDAjRyR
-        QI/WlkpramYnv9xxxWujcOrHeNNZVn+plyD8iMlTR2BSjxcwAihl5igBz67Hqdk4BMKirbMxmu0D+
-        zSahQyvorrTWTJ185ccoYkbChs4UIEhm+6gyOmk0iWdMO7et/XNLs3QgN2t3ZsB5Sfxge6I8kdJAn
-        wK6GDjqHm89eGmyJ9TWZ2579qJ6FPMd7p71k8MTNWX6mOzMcOQQka7a2Mv4jbq3Y1LURxXnV5PNyZ
-        QOR+/SG63aa0j8nboZyi1JEX5wu3FfnV8tDaC7x01JmENRBKCBgaHwKa7dsRdXMGAqLZTarjMmRyr
-        osWeVJ/Sw==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hA5A9-0007Sf-KP; Sat, 30 Mar 2019 04:00:09 +0000
-Date:   Fri, 29 Mar 2019 21:00:09 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Changbin Du <changbin.du@gmail.com>
-Cc:     Jonathan Corbet <corbet@lwn.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 05/12] pci doc: convert PCI/MSI-HOWTO.txt to rst format
-Message-ID: <20190330040009.GY10344@bombadil.infradead.org>
-References: <20190329160413.4293-1-changbin.du@gmail.com>
- <20190329160413.4293-6-changbin.du@gmail.com>
+        id S1727190AbfC3HqF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 Mar 2019 03:46:05 -0400
+Received: from mail-it1-f196.google.com ([209.85.166.196]:54773 "EHLO
+        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726378AbfC3HqF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2019 03:46:05 -0400
+Received: by mail-it1-f196.google.com with SMTP id w18so7385543itj.4;
+        Sat, 30 Mar 2019 00:46:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=u1beSa5oIAQ7wGPU59jRJJBM8WCUP2Zz2XbEbrMl6pk=;
+        b=dDgKYI73kdqr6XaEA0yjNb5MdPPZ6Ah6PLE/TiEHLtQwi4sVeHEZVXIn9wja5DDKFi
+         5fNX9fXJUGEAIog79g+TdyMnL9ylxqwBGzM4Dw3y2/YPmvIeFhd0Ln1EJ1N3QbQKgB1h
+         sK0Q3p+p1v2XhqwQCasCIS75ni3eFBOWvSNS0zLhmFb9hQGWH8l5jxTXKicdb3VqrZef
+         el/0eXAjc3H81oyi58CCvG7KMAV3R/8bc2jk73cok40ERZUi0xz47O+EVxGlG8Ue1BDz
+         J3uUpYP6vBEl3VWmlLTrOaNG3teFoou/j65srVqtOUn71Ht69ThRaFXplOXbPoxw5LbQ
+         fDHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=u1beSa5oIAQ7wGPU59jRJJBM8WCUP2Zz2XbEbrMl6pk=;
+        b=Nzva0cOS7MQetc9gLbpWi1JVDb+r2NgEwNSFByjsdX8yaC55enJx8xGWY8DQB8UHIH
+         W1tNS8rsUkCJFMLDpAZr0fedQLxPdVoR+O3Z7DN7/zuYkdYWXHiriU5lPhO3e3jKO39L
+         M+gJZH+6J5YHrFu5AMUAsfwCqb+bnAqjg9ErZ9TWQ7sJDP273MyuDWhUdyTO6Kgf9W3w
+         70LVzlRxaGvP8Cgaow6tINZODY81OvPNfTr5DrVjaoI5qPsUVTu/vBF1F00jC2jGF1wz
+         5HEgN0VkmO+3kzGfocqxRNrRou4BG+CIRtqjakUlxAveT0MY2vtxDpPDDbtoTMUuvWJ8
+         D52g==
+X-Gm-Message-State: APjAAAVOeSKNKzj+q2C1lWlT1IgGuDUD0mZFDpYAFKOkUv4raHClyD8f
+        CnPBECq8SFnN6iUaDXw9Z9HAbsl3
+X-Google-Smtp-Source: APXvYqx8x5v/lz4zVwyjFYQCCZDLVscZVCZBI35DNLqleYiuZI3iq+OGzgW6v2lFmCI7D5Vtagy3IQ==
+X-Received: by 2002:a24:35c9:: with SMTP id k192mr6951720ita.156.1553931963622;
+        Sat, 30 Mar 2019 00:46:03 -0700 (PDT)
+Received: from [192.168.43.97] ([1.1.125.121])
+        by smtp.gmail.com with ESMTPSA id y2sm1817000iob.44.2019.03.30.00.45.58
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 30 Mar 2019 00:46:02 -0700 (PDT)
+Subject: Re: [PATCH V4 6/6] PCI: rcar: Fix 64bit MSI message address handling
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <20190325114101.10198-1-marek.vasut@gmail.com>
+ <20190325114101.10198-6-marek.vasut@gmail.com>
+ <CAMuHMdUEDR+oTAXeE+rjzHw5HzsjB_SerJZP4b8uDtfxTht-ew@mail.gmail.com>
+From:   Marek Vasut <marek.vasut@gmail.com>
+Openpgp: preference=signencrypt
+Message-ID: <56b074ef-cfcf-bcba-d332-c4f766c73402@gmail.com>
+Date:   Sat, 30 Mar 2019 08:45:50 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190329160413.4293-6-changbin.du@gmail.com>
-User-Agent: Mutt/1.9.2 (2017-12-15)
+In-Reply-To: <CAMuHMdUEDR+oTAXeE+rjzHw5HzsjB_SerJZP4b8uDtfxTht-ew@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Mar 30, 2019 at 12:04:06AM +0800, Changbin Du wrote:
-> @@ -1,13 +1,18 @@
-> -		The MSI Driver Guide HOWTO
-> -	Tom L Nguyen tom.l.nguyen@intel.com
-> -			10/03/2003
-> -	Revised Feb 12, 2004 by Martine Silbermann
-> -		email: Martine.Silbermann@hp.com
-> -	Revised Jun 25, 2004 by Tom L Nguyen
-> -	Revised Jul  9, 2008 by Matthew Wilcox <willy@linux.intel.com>
-> -		Copyright 2003, 2008 Intel Corporation
-> +.. SPDX-License-Identifier: GPL-2.0
-> +.. include:: <isonum.txt>
-> +
-> +==========================
-> +The MSI Driver Guide HOWTO
-> +==========================
-> +
-> +:Authors: - Tom L Nguyen <tom.l.nguyen@intel.com> 10/03/2003
-> +          - Revised Feb 12, 2004 by Martine Silbermann <Martine.Silbermann@hp.com>
-> +	  - Revised Jun 25, 2004 by Tom L Nguyen
-> +	  - Revised Jul  9, 2008 by Matthew Wilcox <willy@linux.intel.com>
-> +	    Copyright 2003, 2008 Intel Corporation
+On 3/29/19 8:32 PM, Geert Uytterhoeven wrote:
+> Hi Marek,
+> 
+> On Mon, Mar 25, 2019 at 12:41 PM <marek.vasut@gmail.com> wrote:
+>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>
+>> The MSI message address in the RC address space can be 64 bit. The
+>> R-Car PCIe RC supports such a 64bit MSI message address as well.
+>> The code currently uses virt_to_phys(__get_free_pages()) to obtain
+>> a reserved page for the MSI message address, and the return value
+>> of which can be a 64 bit physical address on 64 bit system.
+>>
+>> However, the driver only programs PCIEMSIALR register with the bottom
+>> 32 bits of the virt_to_phys(__get_free_pages()) return value and does
+>> not program the top 32 bits into PCIEMSIAUR, but rather programs the
+>> PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
+>> SoCs, however may fail on new 64 bit R-Car SoCs.
+>>
+>> Since from a PCIe controller perspective, an inbound MSI is a memory
+>> write to a special address (in case of this controller, defined by
+>> the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
+>> never hits the DRAM _and_ because allocation of an MSI by a PCIe card
+>> driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
+>> in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
+>> cause memory corruption or other issues.
+>>
+>> There is however the possibility that if virt_to_phys(__get_free_pages())
+>> returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
+>> to 0x0 _and_ if the system had physical RAM at the address matching the
+>> value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
+>> physical address matching the value of PCIEMSIALR and a remote write to
+>> such a buffer by a PCIe card would trigger a spurious MSI.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> To: linux-pci@vger.kernel.org
+>> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+>> ---
+>> V2: - s/it's/its/ in commit message
+>>     - Add R-B from Geert
+>> V3: - Reworded commit message and thus dropped Geerts R-B
+>> V4: - Add Geert's R-B again
+>> ---
+>>  drivers/pci/controller/pcie-rcar.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+>> index c6013f95bdb2..62d2de9fbf1c 100644
+>> --- a/drivers/pci/controller/pcie-rcar.c
+>> +++ b/drivers/pci/controller/pcie-rcar.c
+>> @@ -890,7 +890,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>>  {
+>>         struct device *dev = pcie->dev;
+>>         struct rcar_msi *msi = &pcie->msi;
+>> -       unsigned long base;
+>> +       phys_addr_t base;
+>>         int err, i;
+>>
+>>         mutex_init(&msi->lock);
+>> @@ -932,7 +932,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>>         base = virt_to_phys((void *)msi->pages);
+>>
+>>         rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
+>> -       rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
+>> +       rcar_pci_write_reg(pcie, base >> 32, PCIEMSIAUR);
+> 
+> As reported by 0day, this causes a warning on arm32 without LPAE:
+> 
+>     drivers/pci/controller/pcie-rcar.c:935:32: warning: right shift
+> count >= width of type
+> 
+> Using upper_32_bits() instead of an explicit shift should fix that.
 
-The copyright line doesn't work quite the way it should in the rendered HTML.
+I saw the report too.
 
-It seems to me it should be:
+Lorenzo, do you want a separate patch to squash with this or V5 ?
 
-:Copyright: 2003, 2008 Intel Corporation
-
-Tom has used an ambiguous date format; given it appeared in the tree
-in December 2003, I suspect he's used middle-endian format.  It doesn't
-really seem relevant to have the dates here any more, so we could skip
-including them.  Also, none of these email addresses work, so perhaps
-just drop those too.
-
-:Authors: Tom L Nguyen; Martine Silbermann; Matthew Wilcox
-
->  1. About this guide
-> +===================
-
-Should we drop the numbering of sections as part of this conversion?
-I'd be inclined to.
-
->  4.2 Using MSI
-> +-------------
->  
->  Most of the hard work is done for the driver in the PCI layer.  The driver
->  simply has to request that the PCI layer set up the MSI capability for this
->  device.
->  
->  To automatically use MSI or MSI-X interrupt vectors, use the following
-> -function:
-> +function::
->  
->    int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
->  		unsigned int max_vecs, unsigned int flags);
-
-This should really be turned into kernel-doc and moved to pci.h, but
-that seems like an awfully large amount of work to ask you to do when
-you're already doing so much to improve the situation.
-
-This is also a really bad document.  It has three audiences; people
-configuring their kernel, people writing device drivers and people trying
-to debug why their kernel doesn't work.  Again, that's not on you to
-fix, but it's pretty frustrating to see so much good information so
-badly organised.
+-- 
+Best regards,
+Marek Vasut
