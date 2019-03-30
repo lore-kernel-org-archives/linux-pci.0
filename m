@@ -2,128 +2,206 @@ Return-Path: <SRS0=NgI7=SB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A95A6C43381
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 13:05:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F251AC43381
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 14:19:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A4FD2146F
-	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 13:05:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B95032183F
+	for <linux-pci@archiver.kernel.org>; Sat, 30 Mar 2019 14:19:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nifty.com header.i=@nifty.com header.b="YFyUHNT1"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="XmDsJuHO";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="eQu7VA8x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730815AbfC3NFP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 30 Mar 2019 09:05:15 -0400
-Received: from condef-05.nifty.com ([202.248.20.70]:37606 "EHLO
-        condef-05.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730799AbfC3NFP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2019 09:05:15 -0400
-X-Greylist: delayed 461 seconds by postgrey-1.27 at vger.kernel.org; Sat, 30 Mar 2019 09:05:13 EDT
-Received: from conssluserg-03.nifty.com ([10.126.8.82])by condef-05.nifty.com with ESMTP id x2UCroh0022231
-        for <linux-pci@vger.kernel.org>; Sat, 30 Mar 2019 21:53:50 +0900
-Received: from mail-vs1-f41.google.com (mail-vs1-f41.google.com [209.85.217.41]) (authenticated)
-        by conssluserg-03.nifty.com with ESMTP id x2UCrNxw007752;
-        Sat, 30 Mar 2019 21:53:23 +0900
-DKIM-Filter: OpenDKIM Filter v2.10.3 conssluserg-03.nifty.com x2UCrNxw007752
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1553950404;
-        bh=2bJ6Rz8EsFR+S/vsYNns82RctdtVzrPs2oGgHbgn+l8=;
+        id S1730865AbfC3OTF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 30 Mar 2019 10:19:05 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:37648 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730838AbfC3OTE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 30 Mar 2019 10:19:04 -0400
+Received: by smtp.codeaurora.org (Postfix, from userid 1000)
+        id 70876608FC; Sat, 30 Mar 2019 14:19:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553955543;
+        bh=XSBIGrKYq/HNtyPRsy92uBBfeOZ5Ahuh7HKEC7fyMEc=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=YFyUHNT1njYCY4ZzQroCC8CKNOgwEcHdCrfLvaddXQrQUkCiWpU69DmSbIGqXaenR
-         1iH19hsN9Hvd1uQGHD7DtBo+WGxr3VjNl1DCjqzcAo6xmeITixpeEgYFwtfNsRYb0L
-         lR0su/USKtErkVB4fRewoCGqCo8W7QDUKmnjV0AHYMSK7mde95AROp940vVf10H1jp
-         PXhz0ZcMo/kh8pXTZ/38zOnEd7WfeWR20uzJAORHCfE8hbN0wxRDGUX+8hd7X7RGDI
-         AL0nUZpkRkV5IaqYLSa2cvbyKDPbQD459k3rTFWUFjXuHtJHhPs+b9SlyJA5Taguyg
-         1oxMKGD8ocRRQ==
-X-Nifty-SrcIP: [209.85.217.41]
-Received: by mail-vs1-f41.google.com with SMTP id w13so1870212vsc.4;
-        Sat, 30 Mar 2019 05:53:23 -0700 (PDT)
-X-Gm-Message-State: APjAAAWIfcBHFqyF/dHGVqy5aSGf8ns23ueV42R1YX2uYXhpNqhdrubs
-        /bhXokJFl6o7AXFVbqcigJ+ny5dyrCp0qmfLGCY=
-X-Google-Smtp-Source: APXvYqxG1xe6Q0IBtKRSagLOMjCqZIMaW/ypjHUgEzQXmw9IPRtIaKQHi2wMyryG/cURnQYPx9GJGU0QEkmMpUSDpkc=
-X-Received: by 2002:a67:7f44:: with SMTP id a65mr15672913vsd.179.1553950402678;
- Sat, 30 Mar 2019 05:53:22 -0700 (PDT)
+        b=XmDsJuHOx04fXACGtPRy2jzpEExX+Gz+OBqtcPQryOyEJVJr9/CsgNnXFhnnNmH8O
+         K3L6zMkif2YB0WHuqR9kRCoh/lhu+j8AZroT5WtMrufhCiQ4qNSN1xlyCONOZv4kZe
+         //iZMAqrJGVs8tIK8xIHdhZspAeclH5gFrbphze4=
+Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: vivek.gautam@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 8B7C860907;
+        Sat, 30 Mar 2019 14:19:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
+        s=default; t=1553955541;
+        bh=XSBIGrKYq/HNtyPRsy92uBBfeOZ5Ahuh7HKEC7fyMEc=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=eQu7VA8xjXNolIo/GGIPuPsHepv3t5mzocKgOkuQQpbAgkFt5ALjRa/qNq0r69mIx
+         guJVP0ATOF35ipn8N2kwvfrdNjxukZCSIe2JS7y+Hv2hQQFVkSsoFOPhRIJHSxOa2H
+         W5Kc0t/Xxd2PVK/eIxhDLEf+vNRiqpDsm9ld7RBM=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 8B7C860907
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=vivek.gautam@codeaurora.org
+Received: by mail-ed1-f41.google.com with SMTP id p20so4412649eds.6;
+        Sat, 30 Mar 2019 07:19:01 -0700 (PDT)
+X-Gm-Message-State: APjAAAX22qCqfgnocvPg3M8H2Eu03EbkG5nXzIuNpDKCpWZ3iXAZWhSo
+        fh0nZN7/7Yo6pV2dnM3XnnfmrB0jpeu2SX8yF9Y=
+X-Google-Smtp-Source: APXvYqxTv1SqlRNZa9zPQt1k69tMcOOHtJ2vBDsNd79aaWJAW+br+MScKPszqPBtE8M0+ZwTGzNtfGCUNF2ip7oGTXg=
+X-Received: by 2002:a05:6402:383:: with SMTP id o3mr22851924edv.173.1553955540226;
+ Sat, 30 Mar 2019 07:19:00 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190325181425.247227-1-helgaas@kernel.org> <20190325181425.247227-5-helgaas@kernel.org>
- <20190325182608.GS251185@google.com>
-In-Reply-To: <20190325182608.GS251185@google.com>
-From:   Masahiro Yamada <yamada.masahiro@socionext.com>
-Date:   Sat, 30 Mar 2019 21:52:46 +0900
-X-Gmail-Original-Message-ID: <CAK7LNATKqbb1L4LzofncJsYCUL1iDwUyy6WOTOE0X82ydVPDdg@mail.gmail.com>
-Message-ID: <CAK7LNATKqbb1L4LzofncJsYCUL1iDwUyy6WOTOE0X82ydVPDdg@mail.gmail.com>
-Subject: Re: [PATCH 4/4] CPER: Remove unnecessary use of user-space types
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>
+References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr> <82ab78ee-4a38-4eee-f064-272b6f964f17@free.fr>
+ <e7c8137a-2408-a71a-f722-199a86a75d13@free.fr> <5aa56120-b686-194b-36d6-8177b5749a19@arm.com>
+In-Reply-To: <5aa56120-b686-194b-36d6-8177b5749a19@arm.com>
+From:   Vivek Gautam <vivek.gautam@codeaurora.org>
+Date:   Sat, 30 Mar 2019 19:48:49 +0530
+X-Gmail-Original-Message-ID: <CAFp+6iHOwW5jJmdVWo-E7154xk2jpR4ZLRoXEJdPwu8_ZJg14Q@mail.gmail.com>
+Message-ID: <CAFp+6iHOwW5jJmdVWo-E7154xk2jpR4ZLRoXEJdPwu8_ZJg14Q@mail.gmail.com>
+Subject: Re: [PATCH v1 2/3] arm64: dts: qcom: msm8998: Add PCIe SMMU node
+To:     Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc:     Robin Murphy <robin.murphy@arm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Jeffrey Hugo <jhugo@codeaurora.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Evan Green <evgreen@chromium.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        Manu Gautam <mgautam@codeaurora.org>,
+        iommu <iommu@lists.linux-foundation.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Mar 26, 2019 at 3:26 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+Hi Marc,
+
+On Fri, Mar 29, 2019 at 11:59 PM Robin Murphy <robin.murphy@arm.com> wrote:
 >
-> On Mon, Mar 25, 2019 at 01:14:25PM -0500, helgaas@kernel.org wrote:
-> > From: Bjorn Helgaas <bhelgaas@google.com>
+> On 29/03/2019 10:51, Marc Gonzalez wrote:
+> > On 28/03/2019 18:05, Marc Gonzalez wrote:
 > >
-> > "__u32" and similar types are intended for things exported to user-space,
-> > including structs used in ioctls; see include/uapi/asm-generic/int-l64.h.
+> >> ANOC1 SMMU filters PCIe accesses.
 > >
-> > They are not needed for the CPER struct definitions, which not exported to
-> > user-space and not used in ioctls.  Replace them with the typical "u32" and
-> > similar types.  No functional change intended.
+> > I'm not sure this description is entirely accurate...
 > >
-> > The reason for changing this is to remove the question of "why do we use
-> > __u32 here instead of u32?"  We should use __u32 when there's a reason for
-> > it; otherwise, we should prefer u32 for consistency.
+> > ANOC likely stands for "Application Network-On-Chip"
+
+How about simply saying - "Add device node for ANOC1 SMMU" for
+commit title.
+Commit text -
+ANOC1 smmu services a list of peripherals - USB, UFS, BLSP2, and PCIe.
+Add the device node for this smmu.
+
 > >
-> > Reference: Documentation/process/coding-style.rst
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > CC: Masahiro Yamada <yamada.masahiro@socionext.com>
-> > CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > CC: Andrew Morton <akpm@linux-foundation.org>
+> >
+> >>   arch/arm64/boot/dts/qcom/msm8998.dtsi | 15 +++++++++++++++
+> >>   1 file changed, 15 insertions(+)
+> >>
+> >> diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> >> index f9a922fdae75..5a1c0961b281 100644
+> >> --- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> >> +++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> >> @@ -606,6 +606,21 @@
+> >>                      #thermal-sensor-cells = <1>;
+> >>              };
+> >>
+> >> +            anoc1_smmu: arm,smmu@1680000 {
+> >> +                    compatible = "qcom,msm8996-smmu-v2", "qcom,smmu-v2";
+> >
+> > Maybe I should instead use "qcom,msm8998-smmu-v2", "qcom,smmu-v2";
+> > and define "qcom,msm8998-smmu-v2" in
+> > Documentation/devicetree/bindings/iommu/arm,smmu.txt ?
 >
-> I cc'd you folks because you were part of this conversation:
+> Yes please.
 >
->   https://lore.kernel.org/lkml/1526350925-14922-3-git-send-email-yamada.masahiro@socionext.com/T/#u
+> > (Would the Documentation change need to be in a separate patch?)
 >
-> I *think* the conclusion there was that this sort of change makes
-> sense, but I want to make sure.  If it does make sense, I'm surprised
-> at how much stuff in include/linux/ still uses __u32 when it doesn't
-> appear to need it.
+> That's generally preferred, yes.
+>
+> >
+> >> +                    reg = <0x01680000 0x10000>;
+> >> +                    #iommu-cells = <1>;
+> >
+> > I'm not sure about this property. IIRC, Robin said <0> is not valid,
+> > but I don't have any iommus prop, only iommu-map.
+>
+> You have to join the dots between the various bindings a little, but the
+> iommu-base part of each iommu-map entry is an IOMMU specifier, and IOMMU
+> specifiers are #iommu-cells long.
+>
+> To cut a long story short, 1 is definitely appropriate, because
+> arm-smmu's definition of a 2-cell specifier wouldn't make much sense in
+> the iommu-map context (and the current code for parsing iommu-map
+> actually just assumes 1 anyway).
+
+Besides this,
+Looking at the SID mappings for ANOC1 smmu, devices such as USB, and UFS
+can very well enable iommu support, and thus iommu-cells = 1 seems
+like the correct thingy.
+
+>
+> >> +
+> >> +                    #global-interrupts = <0>;
+> >> +                    interrupts =
+> >> +                            <GIC_SPI 364 IRQ_TYPE_EDGE_RISING>,
+> >> +                            <GIC_SPI 365 IRQ_TYPE_EDGE_RISING>,
+> >> +                            <GIC_SPI 366 IRQ_TYPE_EDGE_RISING>,
+> >> +                            <GIC_SPI 367 IRQ_TYPE_EDGE_RISING>,
+> >> +                            <GIC_SPI 368 IRQ_TYPE_EDGE_RISING>,
+> >> +                            <GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
+> >> +            };
+> >> +
+> >
+> > The rest of the node looks fairly straight-forward.
+>
+> You should probably have some "bus" and "iface" clocks too, per the
+> requirement of "qcom,smmu-v2". Maybe Vivek might know what's relevant
+> for MSM8998?
+
+As Jeffrey rightly mentioned, these clocks are not under the control of Linux.
+So, we won't need to add clocks to this SMMU.
+
+Thanks
+Vivek
+
+>
+> >
+> > DT code was adapted from:
+> >
+> > https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/arch/arm/boot/dts/qcom/msm-arm-smmu-8998.dtsi?h=LE.UM.1.3.r3.25#n18
+> >
+> > I left out the so-called implementation-defined init:
+> >
+> > https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/arch/arm/boot/dts/qcom/msm-arm-smmu-impl-defs-8998.dtsi?h=LE.UM.1.3.r3.25#n123
+> >
+> > Should I try to merge this part in mainline?
+> > (I don't have any documentation for it though.)
+>
+> "pls no :("
+>
+> I'm not sure what route the path takes from "DT describes the platform"
+> to get to "DT lists opaque register addresses and magic data to write
+> into them", but I imagine it might involve getting hit in the head along
+> the way.
+>
+> Robin.
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
 
 
-This patch looks good to me.
 
-I still fail to understand Greg's comment in
-the referred URL, though.
-
-
-"__u32" and similar types are intended for things exported to user-space.
-
-This is clearly documented.
-
-Documentation/process/coding-style.rst:
-
- (e) Types safe for use in userspace.
-
-     In certain structures which are visible to userspace, we cannot
-     require C99 types and cannot use the ``u32`` form above. Thus, we
-     use __u32 and similar types in all structures which are shared
-     with userspace.
-
-
-
-I'd be eager to see a document that suggests __u32 and similar types
-in ioctl structures.
-
-
-
-
---
-Best Regards
-Masahiro Yamada
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member
+of Code Aurora Forum, hosted by The Linux Foundation
