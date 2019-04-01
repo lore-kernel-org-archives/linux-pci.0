@@ -2,146 +2,161 @@ Return-Path: <SRS0=cJ9t=SD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23283C43381
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56BCBC43381
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 05:35:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E6AF320870
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E16D2086C
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 05:35:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mkFyuQqc"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Vv59NeIB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726845AbfDAE0C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Apr 2019 00:26:02 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:45168 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725992AbfDAE0C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 00:26:02 -0400
-Received: by mail-pl1-f195.google.com with SMTP id bf11so3804930plb.12;
-        Sun, 31 Mar 2019 21:26:01 -0700 (PDT)
+        id S1725867AbfDAFfC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Apr 2019 01:35:02 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:54778 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725860AbfDAFfC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 01:35:02 -0400
+Received: by mail-wm1-f67.google.com with SMTP id c1so7686254wml.4
+        for <linux-pci@vger.kernel.org>; Sun, 31 Mar 2019 22:35:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=9lh2H/6g5jBbi6IngiMFn0hLKnDUr/9F5dB06DXbVl8=;
-        b=mkFyuQqc67MMHTIgJJyZ3+5FCf97MK+MCJJde3c4fvPP9R0wzD+WU09igJNyqLJbpE
-         NQkiNtUCciSKNlCdFMGz9H8OOfxMjI3g9aSyczXB0WLVY+NbY5HBvTg0NTZbWsX8xHhi
-         a2bxAa+mfh8L8CHdOYaqhfJnaBtJUJzHGpBxZyG4h72JFLoorc0YB8nWnA/2VuV9ADq3
-         bTu6HJZ2AVu2ufGtJGI2xdmBobTXb35zMfTxXzshkhyoX1bArrvrGJsw5EVa/iTEGqvp
-         5DoE5AyvbN3HQbrx2R2ucoKKhVQbpDmiMiozWO7FNN63cA+nOm/ScbBzRNWn+KoDV+H9
-         AyTw==
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dRAuIUGaFSr94uLgX3ADRQgsKDLwcK6arp5c8ahQ7tI=;
+        b=Vv59NeIBeEp83M0BZWfWvqmR8TEkMmChusc9f5XndlRn315QeUrMxgNi2zj1PRkb6M
+         SI4THy5zTGQ3L5tw1DTVNxIpcy36+EQQ8gL8bsKLaGOXcSBaGZXFanPV3ZwUNJ+sv+Bf
+         jNh67vUqRSk0rn3gPObBiyrJNXrDq4oYiL/pY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=9lh2H/6g5jBbi6IngiMFn0hLKnDUr/9F5dB06DXbVl8=;
-        b=cvkLG5kDQ65I9ijG/3g7oX81YacsIy2VxlGkPAZWMobnZJLwmUCzhs40EgmACj6tZG
-         FgmyD9SG7WpLbq64/R40zU6YRWK8Cqrv90NJjx3S+1Odev7cAURk0x1swh4rfIQD7N47
-         dW7ueEc4EQNZPZS/NoZOw4Sa+nvuEzZ/caKaPEGPw/dj8ttDofXPZHZYYD0uI1DeleLG
-         XZaSqlSQ8LP+vSLJyx1edNtQj0XM5XJhGRWSRsifpbxpXpWtZalWNM1cjHfsTxc4/NJ9
-         ryJr8GSyklwbk3Mtp7d8E8sGKpwXHfeqtQaMCEBRlOjC9GsscKhH9RoHRaXkK4JZUdN5
-         fm9Q==
-X-Gm-Message-State: APjAAAVI3BVmkmjJZlUyzY2VXDfFcIshUnQvu+lBbJEWMbx8Brzlx6Lk
-        LvqZ+qrhhXdYlUn5HZlWSR1G+GR0
-X-Google-Smtp-Source: APXvYqxSB7+e3gFaCzu0rvu02ORh1qy0wI09Zfrn2l5rMxegtyN5WyS5gC7XMT60Ya2Epy0acP9aow==
-X-Received: by 2002:a17:902:a513:: with SMTP id s19mr10169288plq.97.1554092760719;
-        Sun, 31 Mar 2019 21:26:00 -0700 (PDT)
-Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id t22sm10996829pgu.45.2019.03.31.21.25.59
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 31 Mar 2019 21:25:59 -0700 (PDT)
-From:   Andrey Smirnov <andrew.smirnov@gmail.com>
-To:     linux-pci@vger.kernel.org
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 01/11] PCI: imx6: Simplify imx7d_pcie_wait_for_phy_pll_lock()
-Date:   Sun, 31 Mar 2019 21:25:37 -0700
-Message-Id: <20190401042547.14067-2-andrew.smirnov@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190401042547.14067-1-andrew.smirnov@gmail.com>
-References: <20190401042547.14067-1-andrew.smirnov@gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=dRAuIUGaFSr94uLgX3ADRQgsKDLwcK6arp5c8ahQ7tI=;
+        b=mFditpbNTKnBEknqAO6d9js0c31rMaqIkHOzZki4ojlad7+DZbkt4H3TBotdC53SrG
+         NOXMoLVZ8kskRa7MGAY6bU1ng1pMZSbGu2eVJRhSBNE3Gn48gp9qhkh7U4FfiwpqG531
+         +pZaACj1mJctyDobxA+EvQkcS8UCNm4xF7sc4rnE6cQgSKbO7vxgfn2iYZNG8eenUYmU
+         JmPab+qqyNT7i4bVv/xVKrGiwju8IPMQJQ1kzQo7V2gWdbD6KD65/PnTCAxGpdtnpZjU
+         k6bdlRxSB85KA7GOIh8Ig9IUdlBEAfoBj7hR3/ygXgw/nyOwKCw5HMbzt+GprPxDBtRv
+         A3nw==
+X-Gm-Message-State: APjAAAX7OoemlPqfRhFcp99V+Gg1/Yv7FPr3TMIPiRMKBOySzvsblgjP
+        9Y7rBxdAQF9Rxmo5mI0HCGRHijBebgx/NMbucNlvYA==
+X-Google-Smtp-Source: APXvYqw4f7wZn7qVGFgSxyjPeUCcSfix6LKXp1qFUIoEKrzbLLyupFqbsq40Cj1S1fWQKwdDkhhrg89sFr4DoPcKuJw=
+X-Received: by 2002:a1c:4844:: with SMTP id v65mr11119819wma.139.1554096899482;
+ Sun, 31 Mar 2019 22:34:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
+ <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com> <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
+In-Reply-To: <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+Date:   Mon, 1 Apr 2019 11:04:48 +0530
+Message-ID: <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
+Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
+ I/O region
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Abhishek Shah <abhishek.shah@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Make use of regmap_read_poll_timeout() to simplify
-imx7d_pcie_wait_for_phy_pll_lock(). No functional change intended.
+Hi Lorenzo,
 
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Chris Healy <cphealy@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-imx@nxp.com
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 21 +++++++--------------
- 1 file changed, 7 insertions(+), 14 deletions(-)
+Please see my reply below,
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 2eb39d5de4f6..fb0b29e5b1f0 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -89,9 +89,8 @@ struct imx6_pcie {
- };
- 
- /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
--#define PHY_PLL_LOCK_WAIT_MAX_RETRIES	2000
--#define PHY_PLL_LOCK_WAIT_USLEEP_MIN	50
- #define PHY_PLL_LOCK_WAIT_USLEEP_MAX	200
-+#define PHY_PLL_LOCK_WAIT_TIMEOUT	(2000 * PHY_PLL_LOCK_WAIT_USLEEP_MAX)
- 
- /* PCIe Root Complex registers (memory-mapped) */
- #define PCIE_RC_IMX6_MSI_CAP			0x50
-@@ -488,20 +487,14 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
- {
- 	u32 val;
--	unsigned int retries;
- 	struct device *dev = imx6_pcie->pci->dev;
- 
--	for (retries = 0; retries < PHY_PLL_LOCK_WAIT_MAX_RETRIES; retries++) {
--		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR22, &val);
--
--		if (val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED)
--			return;
--
--		usleep_range(PHY_PLL_LOCK_WAIT_USLEEP_MIN,
--			     PHY_PLL_LOCK_WAIT_USLEEP_MAX);
--	}
--
--	dev_err(dev, "PCIe PLL lock timeout\n");
-+	if (regmap_read_poll_timeout(imx6_pcie->iomuxc_gpr,
-+				     IOMUXC_GPR22, val,
-+				     val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED,
-+				     PHY_PLL_LOCK_WAIT_USLEEP_MAX,
-+				     PHY_PLL_LOCK_WAIT_TIMEOUT))
-+		dev_err(dev, "PCIe PLL lock timeout\n");
- }
- 
- static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
--- 
-2.20.1
+On Fri, Mar 29, 2019 at 11:06 PM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Fri, Mar 01, 2019 at 10:22:16AM +0530, Srinath Mannam wrote:
+> > In the present driver outbound window configuration is done to map above
+> > 32-bit address I/O regions with corresponding PCI memory range given in
+> > ranges DT property.
+> >
+> > This patch add outbound window configuration to map below 32-bit I/O range
+> > with corresponding PCI memory, which helps to access I/O region in ARM
+> > 32-bit and one to one mapping of I/O region to PCI memory.
+> >
+> > Ex:
+> > 1. ranges DT property given for current driver is,
+> >     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
+> >     I/O region address is 0x400000000
+> > 2. ranges DT property can be given after this patch,
+> >     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
+> >     I/O region address is 0x42000000
+>
+> I was applying this patch but I don't understand the commit log and
+> how it matches the code, please explain it to me and I will reword
+> it.
+Iproc PCIe host controller supports outbound address translation
+feature to translate AXI address to PCI bus address.
+IO address ranges (AXI and PCI) given through ranges DT property have
+to program to controller outbound window registers.
+Present driver has the support for only 64bit AXI address. so that
+ranges DT property has given as 64bit AXI address and 32 bit
+PCI bus address.
+But with this patch 32-bit AXI address also could be programmed to
+Iproc host controller outbound window registers. so that ranges
+DT property can have 32bit AXI address which can map to 32-bit PCI bus address.
+Example given in commit log is describing ranges DT property changes
+with and without this patch.
+In the case, without this patch AXI address is more than 32bit
+"0x400000000". and with this patch AXI address is 32-bit "0x42000000".
+PCI bus address is 32 bit address in both the cases "0x40000000" and 0x42000000.
 
+Regards,
+Srinath.
+> Thanks,
+> Lorenzo
+>
+> > Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+> > Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
+> > Signed-off-by: Ray Jui <ray.jui@broadcom.com>
+> > ---
+> >  drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
+> >  1 file changed, 19 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+> > index b882255..080f142 100644
+> > --- a/drivers/pci/controller/pcie-iproc.c
+> > +++ b/drivers/pci/controller/pcie-iproc.c
+> > @@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
+> >                       resource_size_t window_size =
+> >                               ob_map->window_sizes[size_idx] * SZ_1M;
+> >
+> > -                     if (size < window_size)
+> > -                             continue;
+> > +                     /*
+> > +                      * Keep iterating until we reach the last window and
+> > +                      * with the minimal window size at index zero. In this
+> > +                      * case, we take a compromise by mapping it using the
+> > +                      * minimum window size that can be supported
+> > +                      */
+> > +                     if (size < window_size) {
+> > +                             if (size_idx > 0 || window_idx > 0)
+> > +                                     continue;
+> > +
+> > +                             /*
+> > +                              * For the corner case of reaching the minimal
+> > +                              * window size that can be supported on the
+> > +                              * last window
+> > +                              */
+> > +                             axi_addr = ALIGN_DOWN(axi_addr, window_size);
+> > +                             pci_addr = ALIGN_DOWN(pci_addr, window_size);
+> > +                             size = window_size;
+> > +                     }
+> >
+> >                       if (!IS_ALIGNED(axi_addr, window_size) ||
+> >                           !IS_ALIGNED(pci_addr, window_size)) {
+> > --
+> > 2.7.4
+> >
