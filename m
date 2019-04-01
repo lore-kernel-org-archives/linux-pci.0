@@ -5,71 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE67C4360F
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59618C43381
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BC2A20870
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AAFA20879
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vLKrtTIX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J++HdVaF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731364AbfDAE0J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Apr 2019 00:26:09 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:39805 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725911AbfDAE0I (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 00:26:08 -0400
-Received: by mail-pg1-f196.google.com with SMTP id k3so4068582pga.6;
-        Sun, 31 Mar 2019 21:26:07 -0700 (PDT)
+        id S1731757AbfDAE0P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Apr 2019 00:26:15 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:37060 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731733AbfDAE0P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 00:26:15 -0400
+Received: by mail-pf1-f193.google.com with SMTP id 8so3885773pfr.4
+        for <linux-pci@vger.kernel.org>; Sun, 31 Mar 2019 21:26:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=8whUmPYH8KsqvkwsmrRZwN7fZI8OQ9E54/C8jqSTYVM=;
-        b=vLKrtTIXy4SD7SlQWtGDn/Rm38iDuIjIeGocg0oZARQHvW0QgDXqxpGBaC/CIBXIaa
-         tlug3ab3KQuyxMKo5ALEcNQEbFmlkV7L8LxOVpkzWotBEPydQ5ux9nm38/xk+lzeft4q
-         VFmeJX8EW/Dk8hI6Oex4a0wnZxY2ES3brJT5OVhz0Nd59Jp+WlviyRxWCYJ2DdeXALSD
-         0eQFYNM36x/bApzkmP3NAPd5t8WQh58vSBhGyaDe4ujIbjuOzhkku9ACLXBmU9Rke9ob
-         7fLWHk/JiElZpT5pw/MTxL1oXe/R92NYcFfB21qr6CpfVVq7LRjr6gxvvUM/dg0ihPSr
-         5Csw==
+        bh=mazOhM/Ixdx4XrIQEzfQUJQ6M0vk6dsGZPlsezBBEYs=;
+        b=J++HdVaFD5MxBTo9R9V3p0ngV9ndVJjPlu1SM+uHPfvjz1Q6vzQtOFVU2+iHI54wvL
+         9TlZ1BnXCyRE7Mr0mA1J9lqEbxzFaCUJVJEHJIMiVivjiV+vutyaDXuiW2TtQpWVXr/g
+         2S69fh2Z9qNzjL42qC0xSz6g+PZXqq8peUsjxZn1P8miABNHoHJbYc6/agl/8b3xbsPf
+         EWBydgsNvR51kZS2Ec+bAPu78Lg8w6gATKHnGuONftzKqW3R1vPpJv9pvkmBOD/Wk+i8
+         Xpy5PjSqXnadiHptiZ9poFoWId9jdLF3TJC4CkEvV3M0m9o0DBTABsdk8HtcHlUqigV+
+         rqmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8whUmPYH8KsqvkwsmrRZwN7fZI8OQ9E54/C8jqSTYVM=;
-        b=VkF5B7Gs+sP0slQfSTdST0+oM9R/4Go9CYrDLLXboe5ysjgtoGWwmFFJj7kYjQ5+CG
-         OC58NDMMsMTd9SyXv/d1Fw0GL1dF4XikJHgg0fJ4EkPGfKGQdHLU+kk8A3YsVeE+Vq+5
-         qsNWElBxdeJPN3SSWmAiTkuzTfepJt02AqRAaT08eOwazDrEGyQTieu4YKR3VJxM/6FB
-         FVqvfHd+rHfAEH/6TrBpCCkuqGSEn9/5PIQb/xLWamrjXh2QaA4Qm6zKS9+TznoafYPa
-         UHQjw+WEARbygUyqNGrpiOyVQtwg6BVrPraB0+plLfZ9VvxXZRGGbPBahpuI3c4/KoJe
-         EgNA==
-X-Gm-Message-State: APjAAAVXiH9hirvP02mUJxTqYQSyChC0RRN8woqF9a43toX7PMQ2er36
-        PYw+Vvcx6nwb2smimGj+uT3T4vrZ
-X-Google-Smtp-Source: APXvYqyglTsuRlhl/0izWWPDsxD4hoX3JRd6WuETqcXR6P2heRnmooiXnKqhRPv23Ruocf8sZyxL/w==
-X-Received: by 2002:a63:fa54:: with SMTP id g20mr4043801pgk.242.1554092767129;
-        Sun, 31 Mar 2019 21:26:07 -0700 (PDT)
+        bh=mazOhM/Ixdx4XrIQEzfQUJQ6M0vk6dsGZPlsezBBEYs=;
+        b=QO0gyBTrlTj+czVqtGD+CeLLKNIHSDMxtnjV3PlvFRt6Eo0Wg98mpDFGfpw90HvD9m
+         kz4Gc34XhmvNdBAownwfQRQY3hEdu9jeGZ9pujuk2iWcNAPU4ZODCDMQHiMtBs3WIO18
+         8LLgtKicSvmNAj2mt7BXh/J8eLC8jbq52JwmY1Ioa+GJrRcJpEbvbLp5Xq7kbJdGlYsj
+         +OiIfwHTZm7J1pzpO7Oz+mWzS9VGrevurYMhuyBwfgIn0AAI+Zbc6YoxIlpEY/dJxyXl
+         j9q2lBkKZZ4d9c0Vp25w5P7pWIW1f7rh7Md6ZFyMsj9KW58k6cO4KXsR1cpptPmMurrl
+         ZQPw==
+X-Gm-Message-State: APjAAAUqrRLZY90OqKG3vUiqGioiHBROstoy5iL66+wFw8szymKhxNYr
+        /8vCXyFMagrvDbqjfZr9tEEAKfMW
+X-Google-Smtp-Source: APXvYqxuZh0KscYmqFTKXUnjJ0fdaQwV0wM//Zt1xhJnz+EgMAElu50FQ/fmsfVZ/n9DS+dINwAR/Q==
+X-Received: by 2002:a63:e051:: with SMTP id n17mr58367463pgj.19.1554092774562;
+        Sun, 31 Mar 2019 21:26:14 -0700 (PDT)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id t22sm10996829pgu.45.2019.03.31.21.26.05
+        by smtp.gmail.com with ESMTPSA id t22sm10996829pgu.45.2019.03.31.21.26.13
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 31 Mar 2019 21:26:06 -0700 (PDT)
+        Sun, 31 Mar 2019 21:26:13 -0700 (PDT)
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
-Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 05/11] PCI: dwc: imx6: Share PHY debug register definitions
-Date:   Sun, 31 Mar 2019 21:25:41 -0700
-Message-Id: <20190401042547.14067-6-andrew.smirnov@gmail.com>
+Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>
+Subject: [PATCH v3 11/11] PCI: imx6: Replace calls to udelay() with usleep_range()
+Date:   Sun, 31 Mar 2019 21:25:47 -0700
+Message-Id: <20190401042547.14067-12-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190401042547.14067-1-andrew.smirnov@gmail.com>
 References: <20190401042547.14067-1-andrew.smirnov@gmail.com>
@@ -80,98 +70,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Both pcie-designware.c and pci-imx6.c contain custom definitions for
-PHY debug registers R0/R1 and on top of that there's already a
-definition for R0 in pcie-designware.h. Move all of the definitions to
-pcie-designware.h. No functional change intended.
+In both cases udelay() is called in non-atomic context, so there's
+really no need to use it there. Change the code to use usleep_range()
+instead.
 
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Chris Healy <cphealy@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Leonard Crestez <leonard.crestez@nxp.com>
-Cc: "A.s. Dong" <aisheng.dong@nxp.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: linux-imx@nxp.com
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
 Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c        |  6 ++----
- drivers/pci/controller/dwc/pcie-designware.c | 12 +++---------
- drivers/pci/controller/dwc/pcie-designware.h |  3 +++
- 3 files changed, 8 insertions(+), 13 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 92c40c250a34..bb95a3273ca2 100644
+index c9431a8a7ca1..3f13022991ec 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -103,8 +103,6 @@ struct imx6_pcie {
+@@ -167,7 +167,7 @@ static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, bool exp_val)
+ 		if (val == exp_val)
+ 			return 0;
  
- /* PCIe Port Logic registers (memory-mapped) */
- #define PL_OFFSET 0x700
--#define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
--#define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
+-		udelay(1);
++		usleep_range(10, 100);
+ 	} while (wait_counter < max_iterations);
  
- #define PCIE_PHY_CTRL (PL_OFFSET + 0x114)
- #define PCIE_PHY_CTRL_DATA_LOC 0
-@@ -839,8 +837,8 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 
- err_reset_phy:
- 	dev_dbg(dev, "PHY DEBUG_R0=0x%08x DEBUG_R1=0x%08x\n",
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
--		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
-+		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG0),
-+		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG1));
- 	imx6_pcie_reset_phy(imx6_pcie);
- 	return ret;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 31f6331ca46f..086e87a40316 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -14,12 +14,6 @@
- 
- #include "pcie-designware.h"
- 
--/* PCIe Port Logic registers */
--#define PLR_OFFSET			0x700
--#define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
--#define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
--#define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
--
- int dw_pcie_read(void __iomem *addr, int size, u32 *val)
- {
- 	if (!IS_ALIGNED((uintptr_t)addr, size)) {
-@@ -334,9 +328,9 @@ int dw_pcie_link_up(struct dw_pcie *pci)
- 	if (pci->ops->link_up)
- 		return pci->ops->link_up(pci);
- 
--	val = readl(pci->dbi_base + PCIE_PHY_DEBUG_R1);
--	return ((val & PCIE_PHY_DEBUG_R1_LINK_UP) &&
--		(!(val & PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING)));
-+	val = readl(pci->dbi_base + PCIE_PORT_DEBUG1);
-+	return ((val & PCIE_PORT_DEBUG1_LINK_UP) &&
-+		(!(val & PCIE_PORT_DEBUG1_LINK_IN_TRAINING)));
- }
- 
- void dw_pcie_setup(struct dw_pcie *pci)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 377f4c0b52da..662bb9082c76 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -41,6 +41,9 @@
- #define PCIE_PORT_DEBUG0		0x728
- #define PORT_LOGIC_LTSSM_STATE_MASK	0x1f
- #define PORT_LOGIC_LTSSM_STATE_L0	0x11
-+#define PCIE_PORT_DEBUG1		0x72C
-+#define PCIE_PORT_DEBUG1_LINK_UP		(0x1 << 4)
-+#define PCIE_PORT_DEBUG1_LINK_IN_TRAINING	(0x1 << 29)
- 
- #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
- #define PORT_LOGIC_SPEED_CHANGE		BIT(17)
+ 	return -ETIMEDOUT;
+@@ -449,7 +449,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 		 * reset time is too short, cannot meet the requirement.
+ 		 * add one ~10us delay here.
+ 		 */
+-		udelay(10);
++		usleep_range(10, 100);
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 		break;
 -- 
 2.20.1
 
