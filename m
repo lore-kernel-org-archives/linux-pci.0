@@ -7,156 +7,217 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56BCBC43381
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 05:35:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D027C43381
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 05:43:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E16D2086C
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 05:35:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F6DD20828
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 05:43:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Vv59NeIB"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="EyuHmIXC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725867AbfDAFfC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Apr 2019 01:35:02 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:54778 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725860AbfDAFfC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 01:35:02 -0400
-Received: by mail-wm1-f67.google.com with SMTP id c1so7686254wml.4
-        for <linux-pci@vger.kernel.org>; Sun, 31 Mar 2019 22:35:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dRAuIUGaFSr94uLgX3ADRQgsKDLwcK6arp5c8ahQ7tI=;
-        b=Vv59NeIBeEp83M0BZWfWvqmR8TEkMmChusc9f5XndlRn315QeUrMxgNi2zj1PRkb6M
-         SI4THy5zTGQ3L5tw1DTVNxIpcy36+EQQ8gL8bsKLaGOXcSBaGZXFanPV3ZwUNJ+sv+Bf
-         jNh67vUqRSk0rn3gPObBiyrJNXrDq4oYiL/pY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=dRAuIUGaFSr94uLgX3ADRQgsKDLwcK6arp5c8ahQ7tI=;
-        b=mFditpbNTKnBEknqAO6d9js0c31rMaqIkHOzZki4ojlad7+DZbkt4H3TBotdC53SrG
-         NOXMoLVZ8kskRa7MGAY6bU1ng1pMZSbGu2eVJRhSBNE3Gn48gp9qhkh7U4FfiwpqG531
-         +pZaACj1mJctyDobxA+EvQkcS8UCNm4xF7sc4rnE6cQgSKbO7vxgfn2iYZNG8eenUYmU
-         JmPab+qqyNT7i4bVv/xVKrGiwju8IPMQJQ1kzQo7V2gWdbD6KD65/PnTCAxGpdtnpZjU
-         k6bdlRxSB85KA7GOIh8Ig9IUdlBEAfoBj7hR3/ygXgw/nyOwKCw5HMbzt+GprPxDBtRv
-         A3nw==
-X-Gm-Message-State: APjAAAX7OoemlPqfRhFcp99V+Gg1/Yv7FPr3TMIPiRMKBOySzvsblgjP
-        9Y7rBxdAQF9Rxmo5mI0HCGRHijBebgx/NMbucNlvYA==
-X-Google-Smtp-Source: APXvYqw4f7wZn7qVGFgSxyjPeUCcSfix6LKXp1qFUIoEKrzbLLyupFqbsq40Cj1S1fWQKwdDkhhrg89sFr4DoPcKuJw=
-X-Received: by 2002:a1c:4844:: with SMTP id v65mr11119819wma.139.1554096899482;
- Sun, 31 Mar 2019 22:34:59 -0700 (PDT)
+        id S1727214AbfDAFnp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Apr 2019 01:43:45 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:9444 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725860AbfDAFnp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 01:43:45 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ca1a50d0001>; Sun, 31 Mar 2019 22:43:41 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Sun, 31 Mar 2019 22:43:43 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Sun, 31 Mar 2019 22:43:43 -0700
+Received: from [10.24.47.153] (172.20.13.39) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 1 Apr
+ 2019 05:43:39 +0000
+Subject: Re: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
+To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
+CC:     vidya sagar <sagar.tv@gmail.com>, <treding@nvidia.com>,
+        <swarren@nvidia.com>, <mperttunen@nvidia.com>,
+        <jonathanh@nvidia.com>, <dev@lynxeye.de>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, NManikanta <mmaddireddy@nvidia.com>
+References: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
+ <CAN7O0+LG8vbB+hApe2tz2LLE_a9XF1iPfD7tKY6=MmhqgoJm8w@mail.gmail.com>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <eca48917-edd0-15e2-13dd-fcd5becedf1c@nvidia.com>
+Date:   Mon, 1 Apr 2019 11:13:36 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
- <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com> <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
-In-Reply-To: <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
-From:   Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Mon, 1 Apr 2019 11:04:48 +0530
-Message-ID: <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
-Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
- I/O region
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAN7O0+LG8vbB+hApe2tz2LLE_a9XF1iPfD7tKY6=MmhqgoJm8w@mail.gmail.com>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL106.nvidia.com (172.18.146.12) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1554097421; bh=x5o+McQVbvfpJWl2gClmRRIdzd1rfbnzE9l0zNSDb/0=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=EyuHmIXCVixZtsdO4ilIX5HDkm8zzz0tiEY2Y3/Zjs5Q8KCij6uE0Xlmpacd+43Pk
+         yuRpTIppIAWQr59Shi+GW+lTYvBkNatxhTcoP89n1cyUFyc1CLkNL760XZFkKQBkoY
+         ZMancyxw0GNoBg44zef0j7F88HMwloFZoekinpl8NeHdJg+ipaeTLU5ExneBwO4Vq+
+         Z6QdX0zro6h8R12ZcX2XJcrmc3XFZYyevlr+G+xYF+wM7F/+K1Jdz4gqHLmiDNPu67
+         NGmhvZxneh3lBSUuEy1PMD6r1nKgY5eZuOTWAHDu5dURHBS3yQT9FGY/zqqH0ypmIM
+         y36jq8rztNyQw==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+Hi Bjorn / Lorenzo,
+Can you please review this patch?
 
-Please see my reply below,
+Thanks,
+Vidya Sagar
 
-On Fri, Mar 29, 2019 at 11:06 PM Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
->
-> On Fri, Mar 01, 2019 at 10:22:16AM +0530, Srinath Mannam wrote:
-> > In the present driver outbound window configuration is done to map above
-> > 32-bit address I/O regions with corresponding PCI memory range given in
-> > ranges DT property.
-> >
-> > This patch add outbound window configuration to map below 32-bit I/O range
-> > with corresponding PCI memory, which helps to access I/O region in ARM
-> > 32-bit and one to one mapping of I/O region to PCI memory.
-> >
-> > Ex:
-> > 1. ranges DT property given for current driver is,
-> >     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
-> >     I/O region address is 0x400000000
-> > 2. ranges DT property can be given after this patch,
-> >     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
-> >     I/O region address is 0x42000000
->
-> I was applying this patch but I don't understand the commit log and
-> how it matches the code, please explain it to me and I will reword
-> it.
-Iproc PCIe host controller supports outbound address translation
-feature to translate AXI address to PCI bus address.
-IO address ranges (AXI and PCI) given through ranges DT property have
-to program to controller outbound window registers.
-Present driver has the support for only 64bit AXI address. so that
-ranges DT property has given as 64bit AXI address and 32 bit
-PCI bus address.
-But with this patch 32-bit AXI address also could be programmed to
-Iproc host controller outbound window registers. so that ranges
-DT property can have 32bit AXI address which can map to 32-bit PCI bus address.
-Example given in commit log is describing ranges DT property changes
-with and without this patch.
-In the case, without this patch AXI address is more than 32bit
-"0x400000000". and with this patch AXI address is 32-bit "0x42000000".
-PCI bus address is 32 bit address in both the cases "0x40000000" and 0x42000000.
-
-Regards,
-Srinath.
+On 3/27/2019 4:29 PM, vidya sagar wrote:
+> Hi Bjorn/Lorenzo,
+> Can you please review this patch?
+> Thierry has reviewed it and I already took care=C2=A0of=C2=A0his comments=
+.
+>=20
 > Thanks,
-> Lorenzo
->
-> > Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> > Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
-> > Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> > ---
-> >  drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
-> >  1 file changed, 19 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> > index b882255..080f142 100644
-> > --- a/drivers/pci/controller/pcie-iproc.c
-> > +++ b/drivers/pci/controller/pcie-iproc.c
-> > @@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
-> >                       resource_size_t window_size =
-> >                               ob_map->window_sizes[size_idx] * SZ_1M;
-> >
-> > -                     if (size < window_size)
-> > -                             continue;
-> > +                     /*
-> > +                      * Keep iterating until we reach the last window and
-> > +                      * with the minimal window size at index zero. In this
-> > +                      * case, we take a compromise by mapping it using the
-> > +                      * minimum window size that can be supported
-> > +                      */
-> > +                     if (size < window_size) {
-> > +                             if (size_idx > 0 || window_idx > 0)
-> > +                                     continue;
-> > +
-> > +                             /*
-> > +                              * For the corner case of reaching the minimal
-> > +                              * window size that can be supported on the
-> > +                              * last window
-> > +                              */
-> > +                             axi_addr = ALIGN_DOWN(axi_addr, window_size);
-> > +                             pci_addr = ALIGN_DOWN(pci_addr, window_size);
-> > +                             size = window_size;
-> > +                     }
-> >
-> >                       if (!IS_ALIGNED(axi_addr, window_size) ||
-> >                           !IS_ALIGNED(pci_addr, window_size)) {
-> > --
-> > 2.7.4
-> >
+> Vidya Sagar
+>=20
+> On Tue, Mar 19, 2019 at 7:33 PM Vidya Sagar <vidyas@nvidia.com <mailto:vi=
+dyas@nvidia.com>> wrote:
+>=20
+>     Since the upstream MSI memory writes are generated by downstream devi=
+ces,
+>     it is logically correct to have MSI target memory coming from the DMA=
+ pool
+>     reserved for PCIe than from the general memory pool reserved for CPU
+>     access. This avoids PCIe DMA addresses coinciding with MSI target add=
+ress
+>     thereby raising unwanted MSI interrupts. This patch also enforces to =
+limit
+>     the MSI target address to 32-bits to make it work for PCIe endponits =
+that
+>     support only 32-bit MSI target address and those endpoints that suppo=
+rt
+>     64-bit MSI target address anyway work with 32-bit MSI target address.
+>=20
+>     Signed-off-by: Vidya Sagar <vidyas@nvidia.com <mailto:vidyas@nvidia.c=
+om>>
+>     Reviewed-by: Thierry Reding <treding@nvidia.com <mailto:treding@nvidi=
+a.com>>
+>     Acked-by: Thierry Reding <treding@nvidia.com <mailto:treding@nvidia.c=
+om>>
+>     ---
+>     v2:
+>     * changed 'phys' type to 'dma_addr_t' from 'u64'
+>     * added a comment on why DMA mask is set to 32-bit
+>     * replaced 'dma' with 'DMA'
+>=20
+>      =C2=A0drivers/pci/controller/pci-tegra.c | 35 ++++++++++++++++++++++=
+++++---------
+>      =C2=A01 file changed, 26 insertions(+), 9 deletions(-)
+>=20
+>     diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/control=
+ler/pci-tegra.c
+>     index f4f53d092e00..f8173a5e352d 100644
+>     --- a/drivers/pci/controller/pci-tegra.c
+>     +++ b/drivers/pci/controller/pci-tegra.c
+>     @@ -231,9 +231,9 @@ struct tegra_msi {
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct msi_controller chip;
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct irq_domain *domain;
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long pages;
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct mutex lock;
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0u64 phys;
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0void *virt;
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0dma_addr_t phys;
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 int irq;
+>      =C2=A0};
+>=20
+>     @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pc=
+ie *pcie)
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D platform_get_irq_byname(pdev, "m=
+si");
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err < 0) {
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 dev_err(dev,=
+ "failed to get IRQ: %d\n", err);
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto err;
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto free_irq=
+_domain;
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
+>=20
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 msi->irq =3D err;
+>     @@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_setup(struct tegra_=
+pcie *pcie)
+>     tegra_msi_irq_chip.name <http://tegra_msi_irq_chip.name>, pcie);
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err < 0) {
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 dev_err(dev,=
+ "failed to request IRQ: %d\n", err);
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto err;
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto free_irq=
+_domain;
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>     +
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0/* Though the PCIe controller can address=
+ >32-bit address space, to
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 * facilitate endpoints that support only=
+ 32-bit MSI target address,
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 * the mask is set to 32-bit to make sure=
+ that MSI target address is
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 * always a 32-bit address
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 */
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D dma_set_coherent_mask(dev, DMA_BI=
+T_MASK(32));
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0if (err < 0) {
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dev_err(dev, =
+"failed to set DMA coherent mask: %d\n", err);
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto free_irq=
+;
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0}
+>     +
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0msi->virt =3D dma_alloc_coherent(dev, PAG=
+E_SIZE, &msi->phys, GFP_KERNEL);
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0if (!msi->virt) {
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dev_err(dev, =
+"failed to allocate DMA memory for MSI\n");
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D -ENOM=
+EM;
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0goto free_irq=
+;
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
+>=20
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0/* setup AFI/FPCI range */
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0msi->pages =3D __get_free_pages(GFP_KERNE=
+L, 0);
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0msi->phys =3D virt_to_phys((void *)msi->p=
+ages);
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 host->msi =3D &msi->chip;
+>=20
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 0;
+>=20
+>     -err:
+>     +free_irq:
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0free_irq(msi->irq, pcie);
+>     +free_irq_domain:
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 irq_domain_remove(msi->domain);
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 return err;
+>      =C2=A0}
+>     @@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_teardown(struct tegr=
+a_pcie *pcie)
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct tegra_msi *msi =3D &pcie->msi;
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 unsigned int i, irq;
+>=20
+>     -=C2=A0 =C2=A0 =C2=A0 =C2=A0free_pages(msi->pages, 0);
+>     +=C2=A0 =C2=A0 =C2=A0 =C2=A0dma_free_coherent(pcie->dev, PAGE_SIZE, m=
+si->virt, msi->phys);
+>=20
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (msi->irq > 0)
+>      =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 free_irq(msi=
+->irq, pcie);
+>     --=20
+>     2.7.4
+>=20
+
