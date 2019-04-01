@@ -2,163 +2,134 @@ Return-Path: <SRS0=cJ9t=SD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA931C43381
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 16:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79BC1C43381
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 17:00:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4C7521473
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 16:44:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CADF2133D
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 17:00:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=xilinx.onmicrosoft.com header.i=@xilinx.onmicrosoft.com header.b="Fe6hT4Jc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728736AbfDAQo2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Apr 2019 12:44:28 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:37610 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728734AbfDAQo2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 1 Apr 2019 12:44:28 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id F248AA78;
-        Mon,  1 Apr 2019 09:44:27 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2B13C3F690;
-        Mon,  1 Apr 2019 09:44:26 -0700 (PDT)
-Date:   Mon, 1 Apr 2019 17:44:17 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Abhishek Shah <abhishek.shah@broadcom.com>,
-        Ray Jui <ray.jui@broadcom.com>
-Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
- I/O region
-Message-ID: <20190401164416.GA8616@e107981-ln.cambridge.arm.com>
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
- <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
- <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
- <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
+        id S1728567AbfDARAr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Apr 2019 13:00:47 -0400
+Received: from mail-eopbgr760054.outbound.protection.outlook.com ([40.107.76.54]:11342
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728040AbfDARAr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 1 Apr 2019 13:00:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=xilinx.onmicrosoft.com; s=selector1-xilinx-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xoxuok1bHfBzQmYLT92of1wjxbyXtmyzEjuhRBCW2q4=;
+ b=Fe6hT4Jczkisz3p8ToQwVn8nd8bHuCKrOGxy7bZukyHR6UHjqoUWCIYIq/yUtzPKaaO5pwIFIHJAI+eJaXgHQqZex4Q8PcBt8VBL1TtRfnV7ghG7rre4nrcwsP4dz+P4PgN3/yhpFMW3nphhcdqsDadRUakzNn6DyhMab2Ocuw4=
+Received: from BN6PR02MB2772.namprd02.prod.outlook.com (10.175.96.7) by
+ BN6PR02MB3332.namprd02.prod.outlook.com (10.161.152.156) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1750.16; Mon, 1 Apr 2019 17:00:40 +0000
+Received: from BN6PR02MB2772.namprd02.prod.outlook.com
+ ([fe80::6cf5:d9:3347:151a]) by BN6PR02MB2772.namprd02.prod.outlook.com
+ ([fe80::6cf5:d9:3347:151a%11]) with mapi id 15.20.1750.014; Mon, 1 Apr 2019
+ 17:00:40 +0000
+From:   Bharat Kumar Gogada <bharatku@xilinx.com>
+To:     Bharat Kumar Gogada <bharatku@xilinx.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2] PCI: xilinx-nwl: Fix Multi MSI data programming
+Thread-Topic: [PATCH v2] PCI: xilinx-nwl: Fix Multi MSI data programming
+Thread-Index: AQHU2AAQCHDXCwr68kiV0ZLjhatkq6YnqKVQ
+Date:   Mon, 1 Apr 2019 17:00:40 +0000
+Message-ID: <BN6PR02MB2772BFC74C01857BA58FB5C7A5550@BN6PR02MB2772.namprd02.prod.outlook.com>
+References: <1552304759-5394-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+In-Reply-To: <1552304759-5394-1-git-send-email-bharat.kumar.gogada@xilinx.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
+X-MS-TNEF-Correlator: 
+x-originating-ip: [60.243.144.4]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 6ab631f3-8f45-4457-fa78-08d6b6c3921f
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600139)(711020)(4605104)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7153060)(7193020);SRVR:BN6PR02MB3332;
+x-ms-traffictypediagnostic: BN6PR02MB3332:
+x-ld-processed: 657af505-d5df-48d0-8300-c31994686c5c,ExtAddr
+x-microsoft-antispam-prvs: <BN6PR02MB3332DC3D83376FAC7811762AA5550@BN6PR02MB3332.namprd02.prod.outlook.com>
+x-forefront-prvs: 0994F5E0C5
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(136003)(39860400002)(376002)(346002)(396003)(199004)(189003)(53754006)(76176011)(33656002)(316002)(52536014)(14454004)(4326008)(2906002)(25786009)(7696005)(478600001)(2501003)(86362001)(2201001)(97736004)(110136005)(3846002)(54906003)(66066001)(68736007)(6116002)(8936002)(6346003)(229853002)(476003)(102836004)(186003)(105586002)(256004)(7736002)(14444005)(486006)(9686003)(71200400001)(106356001)(5660300002)(81156014)(74316002)(26005)(6436002)(8676002)(305945005)(71190400001)(81166006)(6506007)(446003)(11346002)(55016002)(99286004)(6246003)(53936002);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR02MB3332;H:BN6PR02MB2772.namprd02.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: xilinx.com does not designate
+ permitted sender hosts)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=bharatku@xilinx.com; 
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: jBzYPlsJpiKblk+3Zweq0pRqWdLpCeAG01+dNaFM4TqpPEjT183WsE9TAWKi1Quj2rto5eLYAv1zA4s8d7f6UD6jkDFG55Fp+ESjdvfQpK3DHrprP24YbXHpUU+KWrca5dAR6DjPMxxwRvOHKemPhR1bvYOhpoiFRZGw8S/9UX0vKaWUgrH2XnAJQIHKCDO8QwaZNdOOqKBsXKI6jKGP/T5PbapTKV0yP26ftwZhHIl5dqbuSBak7zbwfqXxtWr04dCylEpQzJ16aDJpS5PRSkRMbFcVoStO62oHS9PHjhz3/wWf/cJi/IZCiqHAQM/21Dn81rY/UV0uVXEDmkt9JKteH9o64a6r195Tpoe+vqxiOQ2ENZrWcn03LrPH8pj1U0R8N2Oj+sinOEGuSklp4i6tfxP6IuxBxducEEKp8iE=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+X-OriginatorOrg: xilinx.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6ab631f3-8f45-4457-fa78-08d6b6c3921f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Apr 2019 17:00:40.2938
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR02MB3332
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 01, 2019 at 11:04:48AM +0530, Srinath Mannam wrote:
-> Hi Lorenzo,
-> 
-> Please see my reply below,
-> 
-> On Fri, Mar 29, 2019 at 11:06 PM Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> >
-> > On Fri, Mar 01, 2019 at 10:22:16AM +0530, Srinath Mannam wrote:
-> > > In the present driver outbound window configuration is done to map above
-> > > 32-bit address I/O regions with corresponding PCI memory range given in
-> > > ranges DT property.
-> > >
-> > > This patch add outbound window configuration to map below 32-bit I/O range
-> > > with corresponding PCI memory, which helps to access I/O region in ARM
-> > > 32-bit and one to one mapping of I/O region to PCI memory.
-> > >
-> > > Ex:
-> > > 1. ranges DT property given for current driver is,
-> > >     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
-> > >     I/O region address is 0x400000000
-> > > 2. ranges DT property can be given after this patch,
-> > >     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
-> > >     I/O region address is 0x42000000
-> >
-> > I was applying this patch but I don't understand the commit log and
-> > how it matches the code, please explain it to me and I will reword
-> > it.
-> Iproc PCIe host controller supports outbound address translation
-> feature to translate AXI address to PCI bus address.
-> IO address ranges (AXI and PCI) given through ranges DT property have
-> to program to controller outbound window registers.
-> Present driver has the support for only 64bit AXI address. so that
-> ranges DT property has given as 64bit AXI address and 32 bit
-> PCI bus address.
-> But with this patch 32-bit AXI address also could be programmed to
-> Iproc host controller outbound window registers. so that ranges
-> DT property can have 32bit AXI address which can map to 32-bit PCI bus address.
+Hi All,
 
-The code change seems to add a check for the window size, I see no
-notion of 64 vs 32 bit addressing there so I am pretty sure there is
-something you are not telling me that is implicit in the IProc outbound
-window configuration, for instance why is the lowest index window
-considered for 32-bit.
+Please let me know if anyone has any inputs on this.
 
-AFAICS you are adding code to allow a window whose size is < than
-the lowest index in the ob_map array. How this relates to 64 vs
-32 bit addresses is not clear but it should be.
+Regards,
+Bharat
+>=20
+> The current Multi MSI data programming fails if multiple end points
+> requesting MSI and multi MSI are connected with switch, i.e the current
+> multi MSI data being given is not considering the number of vectors being
+> requested in case of multi MSI.
+> Due to this if multiple end points are connected and requesting MSI and
+> multi MSI combination, the multi MSI data is ending up using wrong MSI
+> data, which might be used by different device.
+>=20
+> Fix Multi MSI data programming with required alignment by using number
+> of vectors being requested.
+>=20
+> Fixes: ab597d35ef11 ("PCI: xilinx-nwl: Add support for Xilinx NWL PCIe Ho=
+st
+> Controller")
+> Signed-off-by: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+> ---
+> V2:
+>  - Added more description of fix
+> ---
+>  drivers/pci/controller/pcie-xilinx-nwl.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c
+> b/drivers/pci/controller/pcie-xilinx-nwl.c
+> index 81538d7..36669c5 100644
+> --- a/drivers/pci/controller/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
+> @@ -484,7 +484,7 @@ static int nwl_irq_domain_alloc(struct irq_domain
+> *domain, unsigned int virq,
+>=20
+>  	mutex_lock(&msi->lock);
+>  	bit =3D bitmap_find_next_zero_area(msi->bitmap, INT_PCI_MSI_NR, 0,
+> -					 nr_irqs, 0);
+> +					 nr_irqs, nr_irqs - 1);
+>  	if (bit >=3D INT_PCI_MSI_NR) {
+>  		mutex_unlock(&msi->lock);
+>  		return -ENOSPC;
+> --
+> 2.7.4
 
-When I read your commit log it is impossible to understand how it
-correlates to the code you are changing - I still have not figured it
-out myself.
-
-Please explain in detail to me how this works, forget DT changes I
-want to understand how HW works.
-
-Lorenzo
-
-> Example given in commit log is describing ranges DT property changes
-> with and without this patch.
-> In the case, without this patch AXI address is more than 32bit
-> "0x400000000". and with this patch AXI address is 32-bit "0x42000000".
-> PCI bus address is 32 bit address in both the cases "0x40000000" and 0x42000000.
-> 
-> Regards,
-> Srinath.
-> > Thanks,
-> > Lorenzo
-> >
-> > > Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> > > Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
-> > > Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> > > ---
-> > >  drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
-> > >  1 file changed, 19 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> > > index b882255..080f142 100644
-> > > --- a/drivers/pci/controller/pcie-iproc.c
-> > > +++ b/drivers/pci/controller/pcie-iproc.c
-> > > @@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
-> > >                       resource_size_t window_size =
-> > >                               ob_map->window_sizes[size_idx] * SZ_1M;
-> > >
-> > > -                     if (size < window_size)
-> > > -                             continue;
-> > > +                     /*
-> > > +                      * Keep iterating until we reach the last window and
-> > > +                      * with the minimal window size at index zero. In this
-> > > +                      * case, we take a compromise by mapping it using the
-> > > +                      * minimum window size that can be supported
-> > > +                      */
-> > > +                     if (size < window_size) {
-> > > +                             if (size_idx > 0 || window_idx > 0)
-> > > +                                     continue;
-> > > +
-> > > +                             /*
-> > > +                              * For the corner case of reaching the minimal
-> > > +                              * window size that can be supported on the
-> > > +                              * last window
-> > > +                              */
-> > > +                             axi_addr = ALIGN_DOWN(axi_addr, window_size);
-> > > +                             pci_addr = ALIGN_DOWN(pci_addr, window_size);
-> > > +                             size = window_size;
-> > > +                     }
-> > >
-> > >                       if (!IS_ALIGNED(axi_addr, window_size) ||
-> > >                           !IS_ALIGNED(pci_addr, window_size)) {
-> > > --
-> > > 2.7.4
-> > >
