@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59618C43381
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C48B5C43381
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AAFA20879
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9552420870
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 04:26:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J++HdVaF"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nKGvunNg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731757AbfDAE0P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Apr 2019 00:26:15 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:37060 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731733AbfDAE0P (ORCPT
+        id S1726168AbfDAE0a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Apr 2019 00:26:30 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:35315 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731714AbfDAE0P (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 00:26:15 -0400
-Received: by mail-pf1-f193.google.com with SMTP id 8so3885773pfr.4
-        for <linux-pci@vger.kernel.org>; Sun, 31 Mar 2019 21:26:15 -0700 (PDT)
+Received: by mail-pg1-f196.google.com with SMTP id g8so4078636pgf.2
+        for <linux-pci@vger.kernel.org>; Sun, 31 Mar 2019 21:26:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=mazOhM/Ixdx4XrIQEzfQUJQ6M0vk6dsGZPlsezBBEYs=;
-        b=J++HdVaFD5MxBTo9R9V3p0ngV9ndVJjPlu1SM+uHPfvjz1Q6vzQtOFVU2+iHI54wvL
-         9TlZ1BnXCyRE7Mr0mA1J9lqEbxzFaCUJVJEHJIMiVivjiV+vutyaDXuiW2TtQpWVXr/g
-         2S69fh2Z9qNzjL42qC0xSz6g+PZXqq8peUsjxZn1P8miABNHoHJbYc6/agl/8b3xbsPf
-         EWBydgsNvR51kZS2Ec+bAPu78Lg8w6gATKHnGuONftzKqW3R1vPpJv9pvkmBOD/Wk+i8
-         Xpy5PjSqXnadiHptiZ9poFoWId9jdLF3TJC4CkEvV3M0m9o0DBTABsdk8HtcHlUqigV+
-         rqmA==
+        bh=kKSmgFelw3p2OWL+OlwzOpWPsYOlwS6LbJMo8debjJI=;
+        b=nKGvunNgcjxkrbzEsS0HcWRlKMa8rRjj6bwXWIo15bS1CYeXKnW9iico1gkc1fHUXa
+         dAcGOZIfIvIHTc/IGf9B0cvT4kUKmT9geMVanP1UOy6GBdLS0+luqJ510cE0jCo2cqpj
+         W0GQc8tumq/hFeJAk3DV9P/BOEIC4WOe+zvF24N666ruxLKQ7WtKrGHUgmXVvOTLg7H1
+         SbYI6xmcG2pkPOxcsGzAnvgaHk2V/rv7UrHn+z2B0WiuhK5e8BPDPQelyfwsyarPXKMP
+         JJNvm82Nn32OlotKTKepFWSyLsCbTNCO4d14iLuVj1sjxF6N0NNEFiOIv2W3A1M30EUH
+         t1/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=mazOhM/Ixdx4XrIQEzfQUJQ6M0vk6dsGZPlsezBBEYs=;
-        b=QO0gyBTrlTj+czVqtGD+CeLLKNIHSDMxtnjV3PlvFRt6Eo0Wg98mpDFGfpw90HvD9m
-         kz4Gc34XhmvNdBAownwfQRQY3hEdu9jeGZ9pujuk2iWcNAPU4ZODCDMQHiMtBs3WIO18
-         8LLgtKicSvmNAj2mt7BXh/J8eLC8jbq52JwmY1Ioa+GJrRcJpEbvbLp5Xq7kbJdGlYsj
-         +OiIfwHTZm7J1pzpO7Oz+mWzS9VGrevurYMhuyBwfgIn0AAI+Zbc6YoxIlpEY/dJxyXl
-         j9q2lBkKZZ4d9c0Vp25w5P7pWIW1f7rh7Md6ZFyMsj9KW58k6cO4KXsR1cpptPmMurrl
-         ZQPw==
-X-Gm-Message-State: APjAAAUqrRLZY90OqKG3vUiqGioiHBROstoy5iL66+wFw8szymKhxNYr
-        /8vCXyFMagrvDbqjfZr9tEEAKfMW
-X-Google-Smtp-Source: APXvYqxuZh0KscYmqFTKXUnjJ0fdaQwV0wM//Zt1xhJnz+EgMAElu50FQ/fmsfVZ/n9DS+dINwAR/Q==
-X-Received: by 2002:a63:e051:: with SMTP id n17mr58367463pgj.19.1554092774562;
-        Sun, 31 Mar 2019 21:26:14 -0700 (PDT)
+        bh=kKSmgFelw3p2OWL+OlwzOpWPsYOlwS6LbJMo8debjJI=;
+        b=GBzrWsZ0GqC7dn2pXZbRhdqpxrR1OpOp+kDE/q/KMevS+MOB+ePz2Lls6ASF+s49Zd
+         E0kDjgjHd02fPLDgJChMP8G2G+AXp48m/sqbA6HgJzR8b7xIDzfQqlh+p+0BaSdbMCYR
+         1p7md9guVpW4A2zKcWLchTccFHZ/ZEdDYwpKF6LCAAQUDDfoM/aZkLfnWGWYGqLJ2db4
+         vwYRMC74/7So7/+JG+eTN7bkH/756nTqx42WwIORDgrRxtm+Kjf47DEaRss0aqkZVG37
+         hC3Vg6pcIM4uJnKvbYaKNPGQBUrRTHDxiMIFYv9s6s/0ThQHHdPaCU+8gi68f27KIxx3
+         w8WQ==
+X-Gm-Message-State: APjAAAXN+3PYt+RSunxDMLavt/hBCzIb+0s/WnGi9SUDjnf9ieS1KfJi
+        j2s7hOsEP18By1LXNvMI6oxlptPO
+X-Google-Smtp-Source: APXvYqwmYXY/pA9858rM19p3WyyMpHO9Jd4Br1UZc1rPhzb+U7OOWitWPbUaNQavUGs18GRyekClpQ==
+X-Received: by 2002:aa7:91c8:: with SMTP id z8mr49683054pfa.110.1554092773792;
+        Sun, 31 Mar 2019 21:26:13 -0700 (PDT)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
         by smtp.gmail.com with ESMTPSA id t22sm10996829pgu.45.2019.03.31.21.26.13
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
@@ -57,9 +57,9 @@ Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: [PATCH v3 11/11] PCI: imx6: Replace calls to udelay() with usleep_range()
-Date:   Sun, 31 Mar 2019 21:25:47 -0700
-Message-Id: <20190401042547.14067-12-andrew.smirnov@gmail.com>
+Subject: [PATCH v3 10/11] PCI: imx6: Use flags to indicate support for suspend
+Date:   Sun, 31 Mar 2019 21:25:46 -0700
+Message-Id: <20190401042547.14067-11-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190401042547.14067-1-andrew.smirnov@gmail.com>
 References: <20190401042547.14067-1-andrew.smirnov@gmail.com>
@@ -70,37 +70,74 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In both cases udelay() is called in non-atomic context, so there's
-really no need to use it there. Change the code to use usleep_range()
-instead.
+Now that driver data has flags variable that can be used to indicate
+quirks/features supported we can switch the code to use it instead of
+having a special function that does so based on variant alone. No
+functional change intended.
 
 Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index c9431a8a7ca1..3f13022991ec 100644
+index 9c658ef55aa4..c9431a8a7ca1 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -167,7 +167,7 @@ static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, bool exp_val)
- 		if (val == exp_val)
- 			return 0;
+@@ -52,6 +52,7 @@ enum imx6_pcie_variants {
  
--		udelay(1);
-+		usleep_range(10, 100);
- 	} while (wait_counter < max_iterations);
+ #define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
+ #define IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE	BIT(1)
++#define IMX6_PCIE_FLAG_SUPPORTS_SUSPEND		BIT(2)
  
- 	return -ETIMEDOUT;
-@@ -449,7 +449,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 		 * reset time is too short, cannot meet the requirement.
- 		 * add one ~10us delay here.
- 		 */
--		udelay(10);
-+		usleep_range(10, 100);
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 		break;
+ struct imx6_pcie_drvdata {
+ 	enum imx6_pcie_variants variant;
+@@ -973,17 +974,11 @@ static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
+ 	}
+ }
+ 
+-static inline bool imx6_pcie_supports_suspend(struct imx6_pcie *imx6_pcie)
+-{
+-	return (imx6_pcie->drvdata->variant == IMX7D ||
+-		imx6_pcie->drvdata->variant == IMX6SX);
+-}
+-
+ static int imx6_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+ 
+-	if (!imx6_pcie_supports_suspend(imx6_pcie))
++	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_SUPPORTS_SUSPEND))
+ 		return 0;
+ 
+ 	imx6_pcie_pm_turnoff(imx6_pcie);
+@@ -999,7 +994,7 @@ static int imx6_pcie_resume_noirq(struct device *dev)
+ 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+ 	struct pcie_port *pp = &imx6_pcie->pci->pp;
+ 
+-	if (!imx6_pcie_supports_suspend(imx6_pcie))
++	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_SUPPORTS_SUSPEND))
+ 		return 0;
+ 
+ 	imx6_pcie_assert_core_reset(imx6_pcie);
+@@ -1229,7 +1224,8 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+ 	[IMX6SX] = {
+ 		.variant = IMX6SX,
+ 		.flags = IMX6_PCIE_FLAG_IMX6_PHY |
+-			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE,
++			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE |
++			 IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+ 	},
+ 	[IMX6QP] = {
+ 		.variant = IMX6QP,
+@@ -1238,6 +1234,7 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+ 	},
+ 	[IMX7D] = {
+ 		.variant = IMX7D,
++		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+ 	},
+ 	[IMX8MQ] = {
+ 		.variant = IMX8MQ,
 -- 
 2.20.1
 
