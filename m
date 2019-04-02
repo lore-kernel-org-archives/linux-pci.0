@@ -1,134 +1,124 @@
-Return-Path: <SRS0=cJ9t=SD=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=JkSV=SE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,NORMAL_HTTP_TO_IP,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B5A9C43381
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 23:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 932FEC4360F
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 01:33:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA3492084B
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Apr 2019 23:03:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554159805;
-	bh=3Mjx1vmB6gysLzxXmw82/5HSigtoJhMJSy+dfG3Uwq0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=G2dITAmlyd8IzNJc4/plp6QOE79zVkXiDjrMyzkqFW/63XPxp9LcaYcr45c5lmkHg
-	 7t6+R7kYT1LQ/mKGS/7kbm26BUgWJ2XCj2lgD7+OJGFIVFQAkEOvlFM7yHWvPl3byV
-	 9dgbl+tjBavsmj8swxj5ZCOqX3UP0LgCoSGoPYIM=
+	by mail.kernel.org (Postfix) with ESMTP id 645C020880
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 01:33:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MY9S2akV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725991AbfDAXDY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Apr 2019 19:03:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52140 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725867AbfDAXDY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 1 Apr 2019 19:03:24 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EDD432084B;
-        Mon,  1 Apr 2019 23:03:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554159803;
-        bh=3Mjx1vmB6gysLzxXmw82/5HSigtoJhMJSy+dfG3Uwq0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=oFsC2s0dfEhVf90//G02A9XJeoKu+bxVXOAdVHEvFmmLl5pqA5RFOFC/2ZxJ/kuzU
-         9ARCmw326KgmP0i+ggW6zqb2x4wwWJXgKp7zo/FXlRJhRU3IVi6AZ4ubaYOLKbRn30
-         0GsQ+aWKHjbaodJ7o04wAr1+LAuJHzSi5NpHgito=
-Date:   Mon, 1 Apr 2019 18:03:21 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Changbin Du <changbin.du@gmail.com>
-Cc:     Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 00/12] Include linux PCI docs into Sphinx TOC tree
-Message-ID: <20190401230321.GB141706@google.com>
-References: <20190329160413.4293-1-changbin.du@gmail.com>
+        id S1726192AbfDBBdV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Apr 2019 21:33:21 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:36617 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726163AbfDBBdV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Apr 2019 21:33:21 -0400
+Received: by mail-pl1-f195.google.com with SMTP id ck15so4181662plb.3;
+        Mon, 01 Apr 2019 18:33:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x+YBEyd8q21TVn0yuRHS8HNRncJHYiBpNY2O31LawgM=;
+        b=MY9S2akVFFxNVlenpTgcD/Y7QmDTalwQmT9VzBGVylWKN4s6MiZuG7S1OFd2VjhbB1
+         /d28H5AfBXqzbVrYD8SguhAI71iU1Nw7LYHdtgPoKU6bzscxN7n+keJpv9UCYTMvg/SD
+         HC3MZt+8Yh1TP041ZvqVY4uXfQgQywJzn9Mu8B2Qqykq3TNOc4B+0HOWwa+mRHxfSk+6
+         KBCSsuv6PUI8szmBJSU/B4so/C+Nhqijtjg8Edv3wtpjueonQf5LK2jCONxFx2JQaF6/
+         qUbdLbsDAgM7INLvvhQvmK/sJ97wAqS3hBazHUXjQ0Dq6fbhP2WBpC4cKgmeeXS3qvPQ
+         MD2A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x+YBEyd8q21TVn0yuRHS8HNRncJHYiBpNY2O31LawgM=;
+        b=tpJ6m4tKCTY3rc3FLQWeXYhq4TzUJwsSrfJruapmMUfe/uUAYvz5TWHGbc0toX6W3t
+         QtYCVAXC7z1zodKHWDPKbCRG2NNpZt8YDzDFq+xKoLtp2gVkZh6d6yZhhjlOYn+4Kagf
+         rwVqISY/p3lYGMzSOueD6DnL8IJ5hqYfWOHXoWBSvMSj3XZxUtllCgENUDuCrJB0Q7pt
+         EMhJM4UNu4SQGTFM0H4iyJhw0FYaEpZ1XKsORGL95LIauY2yEMu8V4+L/xSn5/uJ6iTE
+         d5/zxl9hF620goyLUaji8pXyiI1Vz+uduSHovYOr5HVGXUHZ7b7UN4oSnkO6Aw7Gl1qF
+         Uycg==
+X-Gm-Message-State: APjAAAXKAjIgUfckAdOibupHCXveXXDXDaZ9NL34RJVBZ1f+3+R3zkPo
+        4awaOs2pryXj9ahOrMmkJnGnzMRB
+X-Google-Smtp-Source: APXvYqzFtzgB1F0claRigwPcIYogwcOGNP4LX2ZbGuh/EKg940d72RLUTD023tVYezbsMi0P2u/3yQ==
+X-Received: by 2002:a17:902:820e:: with SMTP id x14mr4132652pln.207.1554168800315;
+        Mon, 01 Apr 2019 18:33:20 -0700 (PDT)
+Received: from localhost.localdomain ([1.1.125.76])
+        by smtp.gmail.com with ESMTPSA id q86sm27912247pfi.171.2019.04.01.18.33.15
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 01 Apr 2019 18:33:19 -0700 (PDT)
+From:   marek.vasut@gmail.com
+To:     linux-pci@vger.kernel.org
+Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>
+Subject: [PATCH V5 1/6] PCI: rcar: Clean up remaining macros defining bits
+Date:   Tue,  2 Apr 2019 03:33:02 +0200
+Message-Id: <20190402013307.20912-1-marek.vasut@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190329160413.4293-1-changbin.du@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Mar 30, 2019 at 12:04:01AM +0800, Changbin Du wrote:
-> Hi Corbet,
+From: Marek Vasut <marek.vasut+renesas@gmail.com>
 
-Conventional address would be "Hi Jonathan", just FYI.
+Replace macros using constants with BIT()s instead, no functional change.
 
-> I also did the conversion for PCI documentation. Please check, Thanks!
-> 
-> The kernel now uses Sphinx to generate intelligent and beautiful documentation
-> from reStructuredText files. I converted most of the Linux PCI docs to rst
-> format in this serias.
-> 
-> For you to preview, please visit below url:
-> http://104.238.181.70:8080/kernel-doc/PCI/index.html
-> 
-> Thank you!
-> 
-> Changbin Du (12):
->   Documentation: add Linux PCI to Sphinx TOC tree
->   pci doc: convert PCI/pci.txt to rst format
->   pci doc: convert PCI/PCIEBUS-HOWTO.txt to rst format
->   pci doc: convert PCI/pci-iov-howto.txt to rst format
->   pci doc: convert PCI/MSI-HOWTO.txt to rst format
->   pci doc: convert PCI/acpi-info.txt to rst format
->   pci doc: convert PCI/pci-error-recovery.txt to rst format
->   pci doc: convert PCI/pcieaer-howto.txt to rst format
->   pci doc: convert PCI/endpoint/pci-endpoint.txt to rst format
->   pci doc: convert PCI/endpoint/pci-endpoint-cfs.txt to rst format
->   pci doc: convert PCI/endpoint/pci-test-function.txt to rst format
->   pci doc: convert PCI/endpoint/pci-test-howto.txt to rst format
+Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Simon Horman <horms+renesas@verge.net.au>
+Cc: Wolfram Sang <wsa@the-dreams.de>
+Cc: linux-renesas-soc@vger.kernel.org
+To: linux-pci@vger.kernel.org
+Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+V2: Bundle this patch with other cleanups before resending
+V3: Add Wolfram's R-B
+V4: Add Geert's R-B
+V5: Rebase on next/master 20190401
+---
+ drivers/pci/controller/pcie-rcar.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks for doing all this work!
+diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+index 6a4e435bd35f..542b5bbf4bf1 100644
+--- a/drivers/pci/controller/pcie-rcar.c
++++ b/drivers/pci/controller/pcie-rcar.c
+@@ -47,14 +47,14 @@
+ /* Transfer control */
+ #define PCIETCTLR		0x02000
+ #define  DL_DOWN		BIT(3)
+-#define  CFINIT			1
++#define  CFINIT			BIT(0)
+ #define PCIETSTR		0x02004
+-#define  DATA_LINK_ACTIVE	1
++#define  DATA_LINK_ACTIVE	BIT(0)
+ #define PCIEERRFR		0x02020
+ #define  UNSUPPORTED_REQUEST	BIT(4)
+ #define PCIEMSIFR		0x02044
+ #define PCIEMSIALR		0x02048
+-#define  MSIFE			1
++#define  MSIFE			BIT(0)
+ #define PCIEMSIAUR		0x0204c
+ #define PCIEMSIIER		0x02050
+ 
+-- 
+2.20.1
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-There's not a real convention yet for subject lines in Documentation/,
-but I would propose:
-
-  Documentation: PCI: Convert pci.txt to reST
-  Documentation: PCI: Convert endpoint/pci-endpoint.txt to reST
-
-because that at least goes with some recent Documentation/PCI changes
-and it identifies "reST" as something other than a plain English word
-(RST or ReST would also work for me).
-
->  .../PCI/{MSI-HOWTO.txt => MSI-HOWTO.rst}      |  56 +++--
->  .../{PCIEBUS-HOWTO.txt => PCIEBUS-HOWTO.rst}  | 112 +++++----
->  .../PCI/{acpi-info.txt => acpi-info.rst}      |  11 +-
->  Documentation/PCI/endpoint/index.rst          |  13 ++
->  ...-endpoint-cfs.txt => pci-endpoint-cfs.rst} |  99 ++++----
->  .../{pci-endpoint.txt => pci-endpoint.rst}    |  74 +++---
->  ...est-function.txt => pci-test-function.rst} |  32 +--
->  ...{pci-test-howto.txt => pci-test-howto.rst} |  51 ++--
->  Documentation/PCI/index.rst                   |  17 ++
->  ...or-recovery.txt => pci-error-recovery.rst} | 180 ++++++++-------
->  .../{pci-iov-howto.txt => pci-iov-howto.rst}  | 144 +++++++-----
->  Documentation/PCI/{pci.txt => pci.rst}        | 218 +++++++++---------
->  .../{pcieaer-howto.txt => pcieaer-howto.rst}  |  67 ++++--
->  Documentation/index.rst                       |   1 +
->  MAINTAINERS                                   |   2 +-
->  15 files changed, 641 insertions(+), 436 deletions(-)
->  rename Documentation/PCI/{MSI-HOWTO.txt => MSI-HOWTO.rst} (89%)
->  rename Documentation/PCI/{PCIEBUS-HOWTO.txt => PCIEBUS-HOWTO.rst} (75%)
->  rename Documentation/PCI/{acpi-info.txt => acpi-info.rst} (97%)
->  create mode 100644 Documentation/PCI/endpoint/index.rst
->  rename Documentation/PCI/endpoint/{pci-endpoint-cfs.txt => pci-endpoint-cfs.rst} (64%)
->  rename Documentation/PCI/endpoint/{pci-endpoint.txt => pci-endpoint.rst} (86%)
->  rename Documentation/PCI/endpoint/{pci-test-function.txt => pci-test-function.rst} (84%)
->  rename Documentation/PCI/endpoint/{pci-test-howto.txt => pci-test-howto.rst} (83%)
->  create mode 100644 Documentation/PCI/index.rst
->  rename Documentation/PCI/{pci-error-recovery.txt => pci-error-recovery.rst} (80%)
->  rename Documentation/PCI/{pci-iov-howto.txt => pci-iov-howto.rst} (65%)
->  rename Documentation/PCI/{pci.txt => pci.rst} (80%)
->  rename Documentation/PCI/{pcieaer-howto.txt => pcieaer-howto.rst} (83%)
-> 
-> -- 
-> 2.20.1
-> 
