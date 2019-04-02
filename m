@@ -2,234 +2,168 @@ Return-Path: <SRS0=JkSV=SE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 522FCC4360F
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 10:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C384AC4360F
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 10:44:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A0D420857
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 10:26:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DB5E2070D
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 10:44:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729595AbfDBK0s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Apr 2019 06:26:48 -0400
-Received: from foss.arm.com ([217.140.101.70]:48068 "EHLO foss.arm.com"
+        id S1729323AbfDBKoD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Apr 2019 06:44:03 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:45008 "EHLO ns.iliad.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726193AbfDBK0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Apr 2019 06:26:48 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4C1E515AD;
-        Tue,  2 Apr 2019 03:26:47 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7D8E13F59C;
-        Tue,  2 Apr 2019 03:26:45 -0700 (PDT)
-Date:   Tue, 2 Apr 2019 11:26:39 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Ray Jui <ray.jui@broadcom.com>,
+        id S1726468AbfDBKoC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Apr 2019 06:44:02 -0400
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id DE44A207AE;
+        Tue,  2 Apr 2019 12:44:00 +0200 (CEST)
+Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id BB421201BA;
+        Tue,  2 Apr 2019 12:44:00 +0200 (CEST)
+Subject: Re: [PATCH v1 1/3] PCI: qcom: Setup PCIE20_PARF_BDF_TRANSLATE_N
+To:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Manu Gautam <mgautam@codeaurora.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Abhishek Shah <abhishek.shah@broadcom.com>
-Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
- I/O region
-Message-ID: <20190402102639.GB22708@e107981-ln.cambridge.arm.com>
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
- <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
- <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
- <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
- <20190401164416.GA8616@e107981-ln.cambridge.arm.com>
- <e7d3e5a1-db5c-8438-f10f-81b87aba0e03@broadcom.com>
- <CABe79T7uLo+68P0Yr7jpgn1+4H01qhoPRjX05gszin3FXkBZ5w@mail.gmail.com>
+        MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        iommu <iommu@lists.linux-foundation.org>
+References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr>
+ <958ae127-3aa2-6824-c875-e3012644ed3d@free.fr>
+ <58b4db00-a0fa-5058-99ee-c11c8e2fa529@mm-sol.com>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Message-ID: <46bfbfd7-a650-f78f-fd2f-32f84e434382@free.fr>
+Date:   Tue, 2 Apr 2019 12:44:00 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABe79T7uLo+68P0Yr7jpgn1+4H01qhoPRjX05gszin3FXkBZ5w@mail.gmail.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <58b4db00-a0fa-5058-99ee-c11c8e2fa529@mm-sol.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Tue Apr  2 12:44:00 2019 +0200 (CEST)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 02, 2019 at 03:20:21PM +0530, Srinath Mannam wrote:
-> Hi Ray,
+On 02/04/2019 10:08, Stanimir Varbanov wrote:
+
+> On 3/28/19 7:01 PM, Marc Gonzalez wrote:
 > 
-> Thanks for detailed explanation.
-> Please see some more details below.
+>> Initialize PCIE20_PARF_BDF_TRANSLATE_N for ops_2_3_2.
+>>
+>> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+>> ---
+>>  drivers/pci/controller/dwc/pcie-qcom.c | 4 ++++
+>>  1 file changed, 4 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+>> index 0ed235d560e3..5e5522a427b8 100644
+>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+>> @@ -54,6 +54,7 @@
+>>  #define PCIE20_PARF_LTSSM			0x1B0
+>>  #define PCIE20_PARF_SID_OFFSET			0x234
+>>  #define PCIE20_PARF_BDF_TRANSLATE_CFG		0x24C
+>> +#define PCIE20_PARF_BDF_TRANSLATE_N		0x250
+>>  
+>>  #define PCIE20_ELBI_SYS_CTRL			0x04
+>>  #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
+>> @@ -602,6 +603,9 @@ static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
+>>  	val |= BIT(31);
+>>  	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
+>>  
+>> +	val = PCI_DEVID(1, 0);
+>> +	writel(val, pcie->parf + PCIE20_PARF_BDF_TRANSLATE_N);
 > 
-> On Tue, Apr 2, 2019 at 3:33 AM Ray Jui <ray.jui@broadcom.com> wrote:
-> >
-> > Hi Lorenzo/Srinath,
-> >
-> > I look at the commit message again and indeed it looks quite confusing.
-> >
-> > I'll add my comment inline in the code section. I hope that will help to
-> > make it more clear.
-> >
-> > On 4/1/2019 9:44 AM, Lorenzo Pieralisi wrote:
-> > > On Mon, Apr 01, 2019 at 11:04:48AM +0530, Srinath Mannam wrote:
-> > >> Hi Lorenzo,
-> > >>
-> > >> Please see my reply below,
-> > >>
-> > >> On Fri, Mar 29, 2019 at 11:06 PM Lorenzo Pieralisi
-> > >> <lorenzo.pieralisi@arm.com> wrote:
-> > >>>
-> > >>> On Fri, Mar 01, 2019 at 10:22:16AM +0530, Srinath Mannam wrote:
-> > >>>> In the present driver outbound window configuration is done to map above
-> > >>>> 32-bit address I/O regions with corresponding PCI memory range given in
-> > >>>> ranges DT property.
-> > >>>>
-> > >>>> This patch add outbound window configuration to map below 32-bit I/O range
-> > >>>> with corresponding PCI memory, which helps to access I/O region in ARM
-> > >>>> 32-bit and one to one mapping of I/O region to PCI memory.
-> > >>>>
-> > >>>> Ex:
-> > >>>> 1. ranges DT property given for current driver is,
-> > >>>>     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
-> > >>>>     I/O region address is 0x400000000
-> > >>>> 2. ranges DT property can be given after this patch,
-> > >>>>     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
-> > >>>>     I/O region address is 0x42000000
-> > >>>
-> > >>> I was applying this patch but I don't understand the commit log and
-> > >>> how it matches the code, please explain it to me and I will reword
-> > >>> it.
-> > >> Iproc PCIe host controller supports outbound address translation
-> > >> feature to translate AXI address to PCI bus address.
-> > >> IO address ranges (AXI and PCI) given through ranges DT property have
-> > >> to program to controller outbound window registers.
-> > >> Present driver has the support for only 64bit AXI address. so that
-> > >> ranges DT property has given as 64bit AXI address and 32 bit
-> > >> PCI bus address.
-> > >> But with this patch 32-bit AXI address also could be programmed to
-> > >> Iproc host controller outbound window registers. so that ranges
-> > >> DT property can have 32bit AXI address which can map to 32-bit PCI bus address.
-> > >
-> > > The code change seems to add a check for the window size, I see no
-> > > notion of 64 vs 32 bit addressing there so I am pretty sure there is
-> > > something you are not telling me that is implicit in the IProc outbound
-> > > window configuration, for instance why is the lowest index window
-> > > considered for 32-bit.
-> > >
-> > > AFAICS you are adding code to allow a window whose size is < than
-> > > the lowest index in the ob_map array. How this relates to 64 vs
-> > > 32 bit addresses is not clear but it should be.
-> > >
-> > > When I read your commit log it is impossible to understand how it
-> > > correlates to the code you are changing - I still have not figured it
-> > > out myself.
-> > >
-> > > Please explain in detail to me how this works, forget DT changes I
-> > > want to understand how HW works.
-> > >
-> > > Lorenzo
-> > >
-> > >> Example given in commit log is describing ranges DT property changes
-> > >> with and without this patch.
-> > >> In the case, without this patch AXI address is more than 32bit
-> > >> "0x400000000". and with this patch AXI address is 32-bit "0x42000000".
-> > >> PCI bus address is 32 bit address in both the cases "0x40000000" and 0x42000000.
-> > >>
-> > >> Regards,
-> > >> Srinath.
-> > >>> Thanks,
-> > >>> Lorenzo
-> > >>>
-> > >>>> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> > >>>> Signed-off-by: Abhishek Shah <abhishek.shah@broadcom.com>
-> > >>>> Signed-off-by: Ray Jui <ray.jui@broadcom.com>
-> > >>>> ---
-> > >>>>  drivers/pci/controller/pcie-iproc.c | 21 +++++++++++++++++++--
-> > >>>>  1 file changed, 19 insertions(+), 2 deletions(-)
-> > >>>>
-> > >>>> diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> > >>>> index b882255..080f142 100644
-> > >>>> --- a/drivers/pci/controller/pcie-iproc.c
-> > >>>> +++ b/drivers/pci/controller/pcie-iproc.c
-> > >>>> @@ -955,8 +955,25 @@ static int iproc_pcie_setup_ob(struct iproc_pcie *pcie, u64 axi_addr,
-> > >>>>                       resource_size_t window_size =
-> > >>>>                               ob_map->window_sizes[size_idx] * SZ_1M;
-> > >>>>
-> > >>>> -                     if (size < window_size)
-> > >>>> -                             continue;
-> > >>>> +                     /*
-> > >>>> +                      * Keep iterating until we reach the last window and
-> > >>>> +                      * with the minimal window size at index zero. In this
-> > >>>> +                      * case, we take a compromise by mapping it using the
-> > >>>> +                      * minimum window size that can be supported
-> > >>>> +                      */
-> >
-> > I think the code comment above is much more clear than the commit
-> > message. It looks like the commit message was to describe a particular
-> > use case that prompts the code change. However, if I remember correctly,
-> > during our internal review, I already made some modification to the code
-> > to make the change much more generic than dealing with a special use
-> > case. This patch contains the generic change I made.
-> >
-> > Basically, 'size' is the intended outbound mapping size (from DT or ACPI
-> > or whatever, it does not really matter). 'window_size' is a specific
-> > mapping window size our PCIe controller can support. Our PCIe controller
-> > supports a fixed set of outbound mapping window sizes. I don't think
-> > this is much different from some other PCIe controllers.
-> >
-> > It looks like, there are cases where one cannot find an exact match
-> > between 'size' and 'window_size'. In this case, and when we know we have
-> > already exhausted all possible mapping windows, i.e., 'size_idx' == 0
-> > AND 'window_idx' == 0, we take a compromise by programming the outbound
-> > mapping by using a window size that's actually larger than the 'size'.
-> >
-> > Srinath, please correct me if I'm wrong. But I carefully reviewed the
-> > code again and I believe this is essentially what it is.
-> >
-> 128MB is the minimum size of window available to configure outbound
-> memory. But size of 32bit AXI address region
-> of our controller is 32MB. Also this 32bit AXI address region has to
-> configure in OARR0. so that 32bit AXI address region
-> is configured in 128MB window of OARR0.
-> this is the reason in the below to allow ob window configure only when
-> size_idx is 0 which means window size 128MB
-> and window_idx is 0 means OARR0 else continue using (size_idx > 0 ||
-> window_idx > 0) condition.
+> I wonder, shouldn't this register manipulation happen in common code
+> e.g. pcie-designware-host.c
 
-Ok - I start to understand. What does it mean in HW terms that your
-32bit AXI address region size is 32MB ? Please explain to me in details.
+I don't think so. PARF (PCIe Auxiliary Register File) appears to be
+a vendor-specific area. Perhaps someone with access to the Designware
+documentation could check. (Though it is possible that several vendors
+have implemented exactly the same PARF layout.)
 
-IIUC you are using an OARR0 of 128MB in size to map a 32MB address
-region, that's what I understand this patch does (and the lowest index
-corresponds to the smallest possible size - it is far from clear by
-looking at the patch).
+> and of course the manipulation should be conditional because
+> not all platforms might have iommu.
 
-Please clarify.
+My patch tweaks PCIE20_PARF_BDF_TRANSLATE_N in qcom_pcie_init_2_3_2()
+which means 8996 and 8998 only (and possibly sdm660)
 
-Thanks,
-Lorenzo
+$ git grep smmu-exist vendor -- arch/arm/boot/dts/qcom
+vendor:arch/arm/boot/dts/qcom/msm8996.dtsi:             qcom,smmu-exist;
+vendor:arch/arm/boot/dts/qcom/msm8996.dtsi:             qcom,smmu-exist;
+vendor:arch/arm/boot/dts/qcom/msm8996.dtsi:             qcom,smmu-exist;
+vendor:arch/arm/boot/dts/qcom/msm8998-interposer-sdm660.dtsi:           qcom,smmu-exist;
+vendor:arch/arm/boot/dts/qcom/msm8998.dtsi:             qcom,smmu-exist;
 
-> Regards,
-> Srinath.
-> > If so, then the commit message is quite misleading and can be changed to
-> > above descriptions.
-> >
-> > >>>> +                     if (size < window_size) {
-> > >>>> +                             if (size_idx > 0 || window_idx > 0)
-> > >>>> +                                     continue;
-> > >>>> +
-> > >>>> +                             /*
-> > >>>> +                              * For the corner case of reaching the minimal
-> > >>>> +                              * window size that can be supported on the
-> > >>>> +                              * last window
-> > >>>> +                              */
-> > >>>> +                             axi_addr = ALIGN_DOWN(axi_addr, window_size);
-> > >>>> +                             pci_addr = ALIGN_DOWN(pci_addr, window_size);
-> > >>>> +                             size = window_size;
-> > >>>> +                     }
-> > >>>>
-> > >>>>                       if (!IS_ALIGNED(axi_addr, window_size) ||
-> > >>>>                           !IS_ALIGNED(pci_addr, window_size)) {
-> > >>>> --
-> > >>>> 2.7.4
-> > >>>>
+https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/drivers/pci/host/pci-msm.c?h=LE.UM.1.3.r3.25#n3880
+
+
+> Also, could we have more generic iommu-map description like the one for
+> sdm845 at [1] ?
+
+I assume you meant https://patchwork.kernel.org/patch/10831293/
+
+I don't think that such a map is quite right for msm8998 -- and even
+for sdm845 :-p
+
+There is only a single PCIe master, other than the root complex:
+
+# lspci
+00:00.0 PCI bridge: Qualcomm Device 0105
+01:00.0 Ethernet controller: Qualcomm Atheros AR8151 v2.0 Gigabit Ethernet (rev c0)
+
+Hence iommu-map = <0x100 &anoc1_smmu 0x1480 1>;
+i.e. map stream-id 0x1480 to device-id 01:00.0
+
+We could pick a different stream-id for 0x100 but I don't see any
+advantage (??) in doing so...
+
+If a SoC designer took the msm8998 and added a PCIe bridge to support
+multiple PCIe EPs, then they would override the iommu-map in their
+board-specific DTS.
+
+
+I do have a nagging feeling that this patch is not perfect for 3 reasons:
+
+1) Did msm8996 PCIe work without tweaking PCIE20_PARF_BDF_TRANSLATE_N?
+If so, why? What is the difference with msm8998 PCIe?
+"MSM8998 does not have static SID configuration for PCIe."
+What about MSM8996?
+
+2) OF: /soc/pci@1c00000: no iommu-map translation for rid 0x0 on           (null)
+The kernel warns that the root complex has no asssigned stream-id.
+I'm not sure that's actually an issue...
+
+3) I just blindly write PCI_DEVID(1, 0) to PCIE20_PARF_BDF_TRANSLATE_N
+
+To be really generic, I would have to walk the iommu-map and do
+
+for_each_iommu_map_entry
+	offset = PCIE20_PARF_BDF_TRANSLATE_N + (out_base - 0x1480) * 4;
+	writel(rid_base, pcie->parf + offset);
+
+Perhaps do this in of_pci_iommu_init() ?
+Maybe have to tweak of_map_rid() or duplicate some code...
+
+On first approximation, maybe I can just do the blind write, but only
+for 8998. That way, I don't change anything for the other platforms.
+
+Comments?
+
+Regards.
