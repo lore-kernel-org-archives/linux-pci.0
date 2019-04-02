@@ -2,119 +2,144 @@ Return-Path: <SRS0=JkSV=SE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26E7BC10F00
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 06:28:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 477F6C43381
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 06:55:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F1EF720857
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 06:28:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 166AF20833
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 06:55:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726142AbfDBG2h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Apr 2019 02:28:37 -0400
-Received: from sauhun.de ([88.99.104.3]:37334 "EHLO pokefinder.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725778AbfDBG2h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Apr 2019 02:28:37 -0400
-Received: from localhost (p5486CD10.dip0.t-ipconnect.de [84.134.205.16])
-        by pokefinder.org (Postfix) with ESMTPSA id 172032CF606;
-        Tue,  2 Apr 2019 08:28:34 +0200 (CEST)
-Date:   Tue, 2 Apr 2019 08:28:33 +0200
-From:   Wolfram Sang <wsa@the-dreams.de>
-To:     marek.vasut@gmail.com
-Cc:     linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V5 6/6] PCI: rcar: Fix 64bit MSI message address handling
-Message-ID: <20190402062833.GB998@kunai>
-References: <20190402013307.20912-1-marek.vasut@gmail.com>
- <20190402013307.20912-6-marek.vasut@gmail.com>
+        id S1728881AbfDBGzG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Apr 2019 02:55:06 -0400
+Received: from Mailgw01.mediatek.com ([1.203.163.78]:6382 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726582AbfDBGzG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2019 02:55:06 -0400
+X-UUID: 4197decf5e6a4d2bab0cbb5cc8fc6b77-20190402
+X-UUID: 4197decf5e6a4d2bab0cbb5cc8fc6b77-20190402
+Received: from mtkcas32.mediatek.inc [(172.27.4.253)] by mailgw01.mediatek.com
+        (envelope-from <ryder.lee@mediatek.com>)
+        (mailgw01.mediatek.com ESMTP with TLS)
+        with ESMTP id 1763454159; Tue, 02 Apr 2019 14:55:01 +0800
+Received: from mtkcas09.mediatek.inc (172.21.101.178) by
+ MTKMBS31DR.mediatek.inc (172.27.6.102) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Tue, 2 Apr 2019 14:54:59 +0800
+Received: from [172.21.77.33] (172.21.77.33) by mtkcas09.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Tue, 2 Apr 2019 14:54:59 +0800
+Message-ID: <1554188098.2219.0.camel@mtkswgap22>
+Subject: Re: [v2 PATCH] PCI: mediatek: get optional clock by
+ devm_clk_get_optional()
+From:   Ryder Lee <ryder.lee@mediatek.com>
+To:     Chunfeng Yun <chunfeng.yun@mediatek.com>
+CC:     Honghui Zhang <honghui.zhang@mediatek.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Matthias Brugger" <matthias.bgg@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+Date:   Tue, 2 Apr 2019 14:54:58 +0800
+In-Reply-To: <1554036063-1381-1-git-send-email-chunfeng.yun@mediatek.com>
+References: <1554036063-1381-1-git-send-email-chunfeng.yun@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.2.3-0ubuntu6 
+Content-Transfer-Encoding: 7bit
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="BwCQnh7xodEAoBMC"
-Content-Disposition: inline
-In-Reply-To: <20190402013307.20912-6-marek.vasut@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Sun, 2019-03-31 at 20:41 +0800, Chunfeng Yun wrote:
+> Use devm_clk_get_optional() to get optional clock
+> 
+> Cc: Ryder Lee <ryder.lee@mediatek.com>
+> Cc: Honghui Zhang <honghui.zhang@mediatek.com>
+> Signed-off-by: Chunfeng Yun <chunfeng.yun@mediatek.com>
 
---BwCQnh7xodEAoBMC
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
 
-On Tue, Apr 02, 2019 at 03:33:07AM +0200, marek.vasut@gmail.com wrote:
-> From: Marek Vasut <marek.vasut+renesas@gmail.com>
->=20
-> The MSI message address in the RC address space can be 64 bit. The
-> R-Car PCIe RC supports such a 64bit MSI message address as well.
-> The code currently uses virt_to_phys(__get_free_pages()) to obtain
-> a reserved page for the MSI message address, and the return value
-> of which can be a 64 bit physical address on 64 bit system.
->=20
-> However, the driver only programs PCIEMSIALR register with the bottom
-> 32 bits of the virt_to_phys(__get_free_pages()) return value and does
-> not program the top 32 bits into PCIEMSIAUR, but rather programs the
-> PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
-> SoCs, however may fail on new 64 bit R-Car SoCs.
->=20
-> Since from a PCIe controller perspective, an inbound MSI is a memory
-> write to a special address (in case of this controller, defined by
-> the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
-> never hits the DRAM _and_ because allocation of an MSI by a PCIe card
-> driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
-> in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
-> cause memory corruption or other issues.
->=20
-> There is however the possibility that if virt_to_phys(__get_free_pages())
-> returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
-> to 0x0 _and_ if the system had physical RAM at the address matching the
-> value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
-> physical address matching the value of PCIEMSIALR and a remote write to
-> such a buffer by a PCIe card would trigger a spurious MSI.
+> ---
+> v2:
+>   1. cc Ryder and Honghui
+>   2. fix up omitted 'if (IS_ERR())'
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 50 ++++++++------------------
+>  1 file changed, 15 insertions(+), 35 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 0b6c72804e03..adb6cb15daa2 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -915,49 +915,29 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+>  
+>  	/* sys_ck might be divided into the following parts in some chips */
+>  	snprintf(name, sizeof(name), "ahb_ck%d", slot);
+> -	port->ahb_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->ahb_ck)) {
+> -		if (PTR_ERR(port->ahb_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->ahb_ck = NULL;
+> -	}
+> +	port->ahb_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->ahb_ck))
+> +		return PTR_ERR(port->ahb_ck);
+>  
+>  	snprintf(name, sizeof(name), "axi_ck%d", slot);
+> -	port->axi_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->axi_ck)) {
+> -		if (PTR_ERR(port->axi_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->axi_ck = NULL;
+> -	}
+> +	port->axi_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->axi_ck))
+> +		return PTR_ERR(port->axi_ck);
+>  
+>  	snprintf(name, sizeof(name), "aux_ck%d", slot);
+> -	port->aux_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->aux_ck)) {
+> -		if (PTR_ERR(port->aux_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->aux_ck = NULL;
+> -	}
+> +	port->aux_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->aux_ck))
+> +		return PTR_ERR(port->aux_ck);
+>  
+>  	snprintf(name, sizeof(name), "obff_ck%d", slot);
+> -	port->obff_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->obff_ck)) {
+> -		if (PTR_ERR(port->obff_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->obff_ck = NULL;
+> -	}
+> +	port->obff_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->obff_ck))
+> +		return PTR_ERR(port->obff_ck);
+>  
+>  	snprintf(name, sizeof(name), "pipe_ck%d", slot);
+> -	port->pipe_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->pipe_ck)) {
+> -		if (PTR_ERR(port->pipe_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->pipe_ck = NULL;
+> -	}
+> +	port->pipe_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->pipe_ck))
+> +		return PTR_ERR(port->pipe_ck);
+>  
+>  	snprintf(name, sizeof(name), "pcie-rst%d", slot);
+>  	port->reset = devm_reset_control_get_optional_exclusive(dev, name);
 
-Very good descripion!
 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> To: linux-pci@vger.kernel.org
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-I double-checked with the datasheets previously.
-
-Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-
-
---BwCQnh7xodEAoBMC
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlyjAREACgkQFA3kzBSg
-KbbkPg//alydZyG1QPBATYVKTSW5uTpr63+7OpdNOEyDldk7hNwvR7kxRxbVhsoq
-fFVYWdv5+ygW9QKYoKxj8AyiDyA5kuJRtLHCd4AJml/2JzZLymqQU87TDf6MHHZF
-cQTY4yWzPmtDrCKTeo/sv+0RKPMURoJN1WRoIiNbT3q+MQylMMzlt8Emzom5ldIl
-OgdqNZocpdcJs6ZMDUZUsrRtO6RDjZM+rgcepJ9o8firHv9GYi04zPZWmfiI1aAW
-l7tqnaFrTD9IlmMvbY5DxOviYXW8AVsPivyHWdcxmqXnWNBUsOB4NIO0K2cP7DU0
-WqhqOk7ef4ZcA353zORdG4QQ/uodpkP/DQISKaKpyddx3eqyTJ9gww9jtcnB1vkF
-K/UbDzaq2fwG6d5U5YpsyPEM13h7qdmw10Wl4U+efSD0+4BB6EZfTk4SWXHvcRXa
-TzWX/SRZvN/4OiBIdr23Ut6ezmbCcAKU41v68ar4fHgevT/D61DyM1L4twjbwThx
-WcyOAxoU1z6ubpW6qXDSleTQOpyct20jVMF0HJXQX+Ed5J0GOyaQRwHRCSZq52Bu
-eckHR2pr92h26ntscVbmYL6ELaDN44Vq8+ett+01cuBikSI6bnw+6yz6pA+LLR33
-YGn8XC4c3Oyzeq7Sm/KSSS5dWl2qegh3UinHnM9M7ajifJCEpUI=
-=N7SP
------END PGP SIGNATURE-----
-
---BwCQnh7xodEAoBMC--
