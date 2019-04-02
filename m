@@ -2,122 +2,131 @@ Return-Path: <SRS0=JkSV=SE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DA70C4360F
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:25:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C65D6C4360F
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:39:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D13F220830
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:25:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554211518;
-	bh=8P4i6Bu0rH//ReLxvdPoeaukhesEkQrl/4m74J+VgZA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=KUAOK1OhS6hzqGy3E6Kj6eWSk7xcENvXnlV3OKM4fT+HiMybMQWwv9LGYusLtbk7N
-	 xlJQzEHmUc1fmJ8vqhk2cAy/E2/gkmVy6b2yGSpY00itsoPfodD5OwSte5AVm41HHF
-	 LWY2Imuivbrt25QXYUFS84Q5VOiMVpdzdVb+CzDs=
+	by mail.kernel.org (Postfix) with ESMTP id 9F9802070B
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:38:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731236AbfDBNZS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Apr 2019 09:25:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57466 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726716AbfDBNZS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Apr 2019 09:25:18 -0400
-Received: from localhost (173-27-100-4.client.mchsi.com [173.27.100.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 570832133D;
-        Tue,  2 Apr 2019 13:25:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554211516;
-        bh=8P4i6Bu0rH//ReLxvdPoeaukhesEkQrl/4m74J+VgZA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=C3ZnPHkagTMFpj2ohh6vbkggK5B+jLn7PdpTkZJLzbeygEd508ccA5wYcPNQLt5uV
-         NrzzPzd8ub7PES9N2q1TBzojelMx6qxgpcs+tZ5QF0ZVasPCCdUGYToFcVKeOGMi/l
-         StkpUY15Y7H1Hc8mAtw9ndWV+qH+uSZXje0mE6d8=
-Date:   Tue, 2 Apr 2019 08:25:14 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     whiteheadm@acm.org
-Cc:     linux-pci@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        nic_swsd@realtek.com, linux-kernel@vger.kernel.org
-Subject: Re: r8169 not being recognized by different chipsets
-Message-ID: <20190402132514.GA10517@google.com>
-References: <CAP8WD_YguzTJ=O6aR_wOGYQoc4_XEu4j_VM8DNrdALwTDrS+FA@mail.gmail.com>
+        id S1729815AbfDBNi7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Apr 2019 09:38:59 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:51388 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728817AbfDBNi6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Apr 2019 09:38:58 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 63DA416A3;
+        Tue,  2 Apr 2019 06:38:58 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 93ACE3F721;
+        Tue,  2 Apr 2019 06:38:56 -0700 (PDT)
+Date:   Tue, 2 Apr 2019 14:38:51 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Srinath Mannam <srinath.mannam@broadcom.com>
+Cc:     Ray Jui <ray.jui@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Abhishek Shah <abhishek.shah@broadcom.com>
+Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
+ I/O region
+Message-ID: <20190402133851.GA26122@e107981-ln.cambridge.arm.com>
+References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
+ <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
+ <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
+ <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
+ <20190401164416.GA8616@e107981-ln.cambridge.arm.com>
+ <e7d3e5a1-db5c-8438-f10f-81b87aba0e03@broadcom.com>
+ <CABe79T7uLo+68P0Yr7jpgn1+4H01qhoPRjX05gszin3FXkBZ5w@mail.gmail.com>
+ <20190402102639.GB22708@e107981-ln.cambridge.arm.com>
+ <CABe79T5O-1EWVrR1vZ27LWuxTBqN4_x37bkpfKxfm1ZB+oDUvA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAP8WD_YguzTJ=O6aR_wOGYQoc4_XEu4j_VM8DNrdALwTDrS+FA@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <CABe79T5O-1EWVrR1vZ27LWuxTBqN4_x37bkpfKxfm1ZB+oDUvA@mail.gmail.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc PHY and r8169 maintainers, LKML]
+On Tue, Apr 02, 2019 at 04:16:13PM +0530, Srinath Mannam wrote:
 
-Hi Matthew,
+[...]
 
-On Wed, Mar 27, 2019 at 02:15:53PM -0400, tedheadster wrote:
-> The r8169 driver is not recognizing my CardBus ethernet card depending
-> on the chipset it has. It seems to be related to the PCI bus
-> recognizing the card.  It works with some hardware and not with others
-> on the same kernel.
+> > Ok - I start to understand. What does it mean in HW terms that your
+> > 32bit AXI address region size is 32MB ? Please explain to me in details.
+> >
+> In our PCIe controller HW, AXI address from 0x42000000 to 0x44000000
+> of 32MB size and .
+> AXI address from 0x400000000 to 0x480000000 of 2GB size are provided
+> to map ob address.
+> First IO region is inside 32bit address and second IO region is
+> outside 32bit address.
+> This code change is to map first IO region(0x42000000 to 0x44000000).
 > 
-> This is with both the 5.1.0-rc2 and 5.0.4 kernels, so I am up to date
-> with patches.
+> > IIUC you are using an OARR0 of 128MB in size to map a 32MB address
+> > region, that's what I understand this patch does (and the lowest index
+> > corresponds to the smallest possible size - it is far from clear by
+> > looking at the patch).
+> Yes, lowest index corresponds to smallest possible size (128MB).
+> In our controller we have multiple windows like OARR0, OARR1, OARR2,
+> OARR3 all supports multiple sizes from 128MB to 1024MB.
+> These details are given at the top of this driver file, as shown
+> below. all windows supports 128MB size still we must use OARR0 window
+> to configure first IO region(0x42000000 to 0x44000000).
+> 
+> static const struct iproc_pcie_ob_map paxb_v2_ob_map[] = {
+>         {
+>                 /* OARR0/OMAP0 */
+>                 .window_sizes = { 128, 256 },
+>                 .nr_sizes = 2,
+>         },
+>         {
+>                 /* OARR1/OMAP1 */
+>                 .window_sizes = { 128, 256 },
+>                 .nr_sizes = 2,
+>         },
+>         {
+>                 /* OARR2/OMAP2 */
+>                 .window_sizes = { 128, 256, 512, 1024 },
+>                 .nr_sizes = 4,
+>         },
+>         {
+>                 /* OARR3/OMAP3 */
+>                 .window_sizes = { 128, 256, 512, 1024 },
+>                 .nr_sizes = 4,
+>         },
+> };
 
-I assume this has never worked, i.e., it is not a regression?  If it
-*is* a regression, bisection is a possible approach if nobody has a
-better idea.
+Ok so this patch allows mapping an AXI I/O window that is smaller
+than OARR possible sizes, why it was not done from the beginning
+I really do not know.
 
-> I have been able to debug it down to  mdiobus_scan() returning
-> returned -EIO, but that failure probably should not happen.
+Now explain this to me please:
 
-I can't connect this failure to PCI yet (at least, I don't know enough
-to connect the dots).  Maybe the PHY or r8169 folks can shed more
-light.
+> This patch add outbound window configuration to map below 32-bit I/O range
+> with corresponding PCI memory, which helps to access I/O region in ARM
+> 32-bit and one to one mapping of I/O region to PCI memory.
+>
+> Ex:
+> 1. ranges DT property given for current driver is,
+>     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
+>     I/O region address is 0x400000000
+> 2. ranges DT property can be given after this patch,
+>     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
+>     I/O region address is 0x42000000
 
-> Below is the relevant PCI information:
-> 
-> Failing systems:
-> - The same 81801 bridge chip, different CardBus chips
-> 
-> 00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge
-> [8086:2448] (rev 81)
-> 02:00.0 CardBus bridge [0607]: Texas Instruments PCI4520 PC card
-> Cardbus Controller [104c:ac46] (rev 01)
-> 02:00.1 CardBus bridge [0607]: Texas Instruments PCI4520 PC card
-> Cardbus Controller [104c:ac46] (rev 01)
-> 07:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-> RTL8169 PCI Gigabit Ethernet Controller [10ec:8169] (rev 10)
-> 
-> 00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge
-> [8086:2448] (rev 81)
-> 02:01.0 CardBus bridge [0607]: Texas Instruments PCI1520 PC card
-> Cardbus Controller [104c:ac55] (rev 01)
-> 02:01.1 CardBus bridge [0607]: Texas Instruments PCI1520 PC card
-> Cardbus Controller [104c:ac55] (rev 01)
-> 03:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-> RTL8169 PCI Gigabit Ethernet Controller [10ec:8169] (rev 10)
-> 
-> Working systems:
-> 
-> 00:01.0 PCI bridge [0604]: Intel Corporation 440BX/ZX/DX -
-> 82443BX/ZX/DX AGP bridge [8086:7191] (rev 02)
-> 00:04.0 CardBus bridge [0607]: Texas Instruments PCI1220 [104c:ac17] (rev 02)
-> 00:04.1 CardBus bridge [0607]: Texas Instruments PCI1220 [104c:ac17] (rev 02)
-> 06:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-> RTL8169 PCI Gigabit Ethernet Controller [10ec:8169] (rev 10)
-> 
-> 00:00.0 Host bridge [0600]: Cyrix Corporation PCI Master [1078:0001]
-> 00:11.0 CardBus bridge [0607]: Texas Instruments PCI1221 [104c:ac19]
-> 00:11.1 CardBus bridge [0607]: Texas Instruments PCI1221 [104c:ac19]
-> 01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-> RTL8169 PCI Gigabit Ethernet Controller [10ec:8169] (rev 10)
-> 
-> - Matthew Whitehead
+Why 1:1 AXI<->PCI address mapping is not possible in (1), how does the
+current code works on 32-bit systems and what's the benefit your change
+is bringing.
+
+Thanks,
+Lorenzo
