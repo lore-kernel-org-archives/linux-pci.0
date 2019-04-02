@@ -2,131 +2,72 @@ Return-Path: <SRS0=JkSV=SE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C65D6C4360F
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:39:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA06C4360F
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:54:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F9802070B
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A93E2133D
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 13:54:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729815AbfDBNi7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Apr 2019 09:38:59 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:51388 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728817AbfDBNi6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Apr 2019 09:38:58 -0400
+        id S1731318AbfDBNyd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Apr 2019 09:54:33 -0400
+Received: from foss.arm.com ([217.140.101.70]:51732 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726790AbfDBNyc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Apr 2019 09:54:32 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 63DA416A3;
-        Tue,  2 Apr 2019 06:38:58 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 93ACE3F721;
-        Tue,  2 Apr 2019 06:38:56 -0700 (PDT)
-Date:   Tue, 2 Apr 2019 14:38:51 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Ray Jui <ray.jui@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Abhishek Shah <abhishek.shah@broadcom.com>
-Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
- I/O region
-Message-ID: <20190402133851.GA26122@e107981-ln.cambridge.arm.com>
-References: <1551415936-30174-1-git-send-email-srinath.mannam@broadcom.com>
- <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
- <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
- <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
- <20190401164416.GA8616@e107981-ln.cambridge.arm.com>
- <e7d3e5a1-db5c-8438-f10f-81b87aba0e03@broadcom.com>
- <CABe79T7uLo+68P0Yr7jpgn1+4H01qhoPRjX05gszin3FXkBZ5w@mail.gmail.com>
- <20190402102639.GB22708@e107981-ln.cambridge.arm.com>
- <CABe79T5O-1EWVrR1vZ27LWuxTBqN4_x37bkpfKxfm1ZB+oDUvA@mail.gmail.com>
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6166116A3;
+        Tue,  2 Apr 2019 06:54:32 -0700 (PDT)
+Received: from [10.1.196.75] (e110467-lin.cambridge.arm.com [10.1.196.75])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 043773F721;
+        Tue,  2 Apr 2019 06:54:29 -0700 (PDT)
+Subject: Re: [PATCH v1 2/3] arm64: dts: qcom: msm8998: Add PCIe SMMU node
+To:     Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Marc Gonzalez <marc.w.gonzalez@free.fr>
+Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Jeffrey Hugo <jhugo@codeaurora.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Evan Green <evgreen@chromium.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        Manu Gautam <mgautam@codeaurora.org>,
+        iommu <iommu@lists.linux-foundation.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr>
+ <82ab78ee-4a38-4eee-f064-272b6f964f17@free.fr>
+ <e7c8137a-2408-a71a-f722-199a86a75d13@free.fr>
+ <5aa56120-b686-194b-36d6-8177b5749a19@arm.com>
+ <CAFp+6iHOwW5jJmdVWo-E7154xk2jpR4ZLRoXEJdPwu8_ZJg14Q@mail.gmail.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <e6d2200d-f6b9-3c27-f166-537742b32bfe@arm.com>
+Date:   Tue, 2 Apr 2019 14:54:28 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CABe79T5O-1EWVrR1vZ27LWuxTBqN4_x37bkpfKxfm1ZB+oDUvA@mail.gmail.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <CAFp+6iHOwW5jJmdVWo-E7154xk2jpR4ZLRoXEJdPwu8_ZJg14Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 02, 2019 at 04:16:13PM +0530, Srinath Mannam wrote:
-
-[...]
-
-> > Ok - I start to understand. What does it mean in HW terms that your
-> > 32bit AXI address region size is 32MB ? Please explain to me in details.
-> >
-> In our PCIe controller HW, AXI address from 0x42000000 to 0x44000000
-> of 32MB size and .
-> AXI address from 0x400000000 to 0x480000000 of 2GB size are provided
-> to map ob address.
-> First IO region is inside 32bit address and second IO region is
-> outside 32bit address.
-> This code change is to map first IO region(0x42000000 to 0x44000000).
+On 30/03/2019 14:18, Vivek Gautam wrote:
+>> You should probably have some "bus" and "iface" clocks too, per the
+>> requirement of "qcom,smmu-v2". Maybe Vivek might know what's relevant
+>> for MSM8998?
 > 
-> > IIUC you are using an OARR0 of 128MB in size to map a 32MB address
-> > region, that's what I understand this patch does (and the lowest index
-> > corresponds to the smallest possible size - it is far from clear by
-> > looking at the patch).
-> Yes, lowest index corresponds to smallest possible size (128MB).
-> In our controller we have multiple windows like OARR0, OARR1, OARR2,
-> OARR3 all supports multiple sizes from 128MB to 1024MB.
-> These details are given at the top of this driver file, as shown
-> below. all windows supports 128MB size still we must use OARR0 window
-> to configure first IO region(0x42000000 to 0x44000000).
-> 
-> static const struct iproc_pcie_ob_map paxb_v2_ob_map[] = {
->         {
->                 /* OARR0/OMAP0 */
->                 .window_sizes = { 128, 256 },
->                 .nr_sizes = 2,
->         },
->         {
->                 /* OARR1/OMAP1 */
->                 .window_sizes = { 128, 256 },
->                 .nr_sizes = 2,
->         },
->         {
->                 /* OARR2/OMAP2 */
->                 .window_sizes = { 128, 256, 512, 1024 },
->                 .nr_sizes = 4,
->         },
->         {
->                 /* OARR3/OMAP3 */
->                 .window_sizes = { 128, 256, 512, 1024 },
->                 .nr_sizes = 4,
->         },
-> };
+> As Jeffrey rightly mentioned, these clocks are not under the control of Linux.
+> So, we won't need to add clocks to this SMMU.
 
-Ok so this patch allows mapping an AXI I/O window that is smaller
-than OARR possible sizes, why it was not done from the beginning
-I really do not know.
+OK, in that case the "clock-names" part of binding doc probably wants 
+refining to reflect which implementations do actually require clocks.
 
-Now explain this to me please:
-
-> This patch add outbound window configuration to map below 32-bit I/O range
-> with corresponding PCI memory, which helps to access I/O region in ARM
-> 32-bit and one to one mapping of I/O region to PCI memory.
->
-> Ex:
-> 1. ranges DT property given for current driver is,
->     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
->     I/O region address is 0x400000000
-> 2. ranges DT property can be given after this patch,
->     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
->     I/O region address is 0x42000000
-
-Why 1:1 AXI<->PCI address mapping is not possible in (1), how does the
-current code works on 32-bit systems and what's the benefit your change
-is bringing.
-
-Thanks,
-Lorenzo
+Robin.
