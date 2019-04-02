@@ -2,162 +2,345 @@ Return-Path: <SRS0=JkSV=SE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FBCC10F0B
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 08:33:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53769C4360F
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 09:17:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAB492084C
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 08:33:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 126EB2084C
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 09:17:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="P3NFcLsp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbfDBIdA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Apr 2019 04:33:00 -0400
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:59451 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726496AbfDBIdA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2019 04:33:00 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 4593030000CDB;
-        Tue,  2 Apr 2019 10:32:57 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 20D951D287; Tue,  2 Apr 2019 10:32:57 +0200 (CEST)
-Date:   Tue, 2 Apr 2019 10:32:57 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Theodore Ts'o <tytso@mit.edu>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: Lockdep warning in pciehp (v5.0-based kernel)
-Message-ID: <20190402083257.kyqmirq4ovzscxsv@wunner.de>
-References: <20190402021933.GA2966@mit.edu>
+        id S1726790AbfDBJRf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Apr 2019 05:17:35 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:12933 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728896AbfDBJRf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Apr 2019 05:17:35 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ca3287d0000>; Tue, 02 Apr 2019 02:16:46 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 02 Apr 2019 02:16:42 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 02 Apr 2019 02:16:42 -0700
+Received: from [10.24.47.153] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 2 Apr
+ 2019 09:16:30 +0000
+Subject: Re: [PATCH 05/10] dt-bindings: PCI: tegra: Add device tree support
+ for T194
+To:     Thierry Reding <thierry.reding@gmail.com>,
+        Rob Herring <robh@kernel.org>
+CC:     <bhelgaas@google.com>, <mark.rutland@arm.com>,
+        <jonathanh@nvidia.com>, <kishon@ti.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <lorenzo.pieralisi@arm.com>,
+        <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
+        <mperttunen@nvidia.com>, <tiwai@suse.de>, <spujar@nvidia.com>,
+        <skomatineni@nvidia.com>, <liviu.dudau@arm.com>, <krzk@kernel.org>,
+        <heiko@sntech.de>, <horms+renesas@verge.net.au>, <olof@lixom.net>,
+        <maxime.ripard@bootlin.com>, <andy.gross@linaro.org>,
+        <bjorn.andersson@linaro.org>, <jagan@amarulasolutions.com>,
+        <enric.balletbo@collabora.com>, <ezequiel@collabora.com>,
+        <stefan.wahren@i2se.com>, <marc.w.gonzalez@free.fr>,
+        <l.stach@pengutronix.de>, <tpiepho@impinj.com>,
+        <hayashi.kunihiko@socionext.com>, <yue.wang@amlogic.com>,
+        <shawn.lin@rock-chips.com>, <xiaowei.bao@nxp.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>
+References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
+ <1553613207-3988-6-git-send-email-vidyas@nvidia.com>
+ <5ca06149.1c69fb81.720fd.79e1@mx.google.com>
+ <5ef50168-2476-1088-7156-8a4488d7a2e1@nvidia.com>
+ <20190401143138.GA4874@ulmo>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <67f9b726-c075-0291-7777-8f10ecc9e29d@nvidia.com>
+Date:   Tue, 2 Apr 2019 14:46:27 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190402021933.GA2966@mit.edu>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <20190401143138.GA4874@ulmo>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1554196606; bh=qpB2HpWh9Rh9N17jpHX8wd0qoQBh0ZVFbnm2lss8LTA=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=P3NFcLspu7AcAO18Y9lgs4CgJZ+P57rRdNYMuan+esqp7vB/N6manFQEWtHfHacyj
+         K34l6D1t8v26bN1ZshrxS5zFGIo7KXAxe5tI0JXhkkU88AUwVp6M5ot8dkQr8lShZk
+         ZDJHhGI8efEAF8fcv9y/Ja5/HtDw12MxqS5X9Utnsmimmh2mI5y0Dm73aND22b9lz2
+         FAuZMg4xovpM+GLj0q9bitLRc0DWQ2B2emllXpXIhO+tHyhFJEMujPK5iMadryowqJ
+         68ae9/hWU5l5aGOBu8RzDIvCYLa1acayQ9S9CYfgYDjbWsM5TWBMiPbo95ksrJ4TsD
+         lKBR5rAjaA6PA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 01, 2019 at 10:19:33PM -0400, Theodore Ts'o wrote:
-> Hi, I got the following lockdep warning while booting a Dell XPS13.
-> Is this a known issue?
-
-No, it's not a known issue.  I just double-checked the code.
-It looks fine to me, so this appears to be a false positive.
-
-Your machine has a JHL6540 Thunderbolt controller built-in (Alpine Ridge,
-C-step) and you've attached a device with a DSL6540 Thunderbolt controller
-(Alpine Ridge).  Whenever you chain Thunderbolt devices together you get
-cascaded PCIe hotplug ports.  Each pciehp controller struct has a
-reset_lock.
-
-The lockdep splat happens when the upstream pciehp controller's IRQ thread
-handles a hotplug event (upon discovering the attached device on boot).
-It's holding the upstream controller's reset_lock while handling the event
-to prevent the user from concurrently initiating a reset via sysfs.
-
-Upon enumerating the downstream pciehp controller, its probe routine
-acquire's that second controller's reset_lock for the same reason.
-
-So these are different locks and in addition they're of type rw_semaphore
-and both the IRQ thread and the probe routine only acquire the locks for
-reading, hence wouldn't block each other even if it was the same lock.
-
-Not really being familiar with the intricacies of lockdep, I'm wondering
-if it's just not smart enough to recognize that these are different locks?
-And why is it not recognizing that both functions only acquire the locks
-for reading?  How can the code be annotated to avoid the false positive?
-
-The only other explanation I can think of is that 5.0.0-00034-gcaae0ec7396f
-is not a plain-vanilla 5.0 kernel and contains Google-specific additions
-to the pciehp code which might cause the lockdep splat.
-
-HTH,
-
-Lukas
-
-> [   13.836367] pciehp 0000:3b:04.0:pcie204: Slot #4 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl+ LLActRep+
+On 4/1/2019 8:01 PM, Thierry Reding wrote:
+> On Mon, Apr 01, 2019 at 04:48:42PM +0530, Vidya Sagar wrote:
+>> On 3/31/2019 12:12 PM, Rob Herring wrote:
+>>> On Tue, Mar 26, 2019 at 08:43:22PM +0530, Vidya Sagar wrote:
+>>>> Add support for Tegra194 PCIe controllers. These controllers are based
+>>>> on Synopsys DesignWare core IP.
+>>>>
+>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>>>> ---
+>>>>    .../bindings/pci/nvidia,tegra194-pcie.txt          | 209 +++++++++++++++++++++
+>>>>    .../devicetree/bindings/phy/phy-tegra194-p2u.txt   |  34 ++++
+>>>>    2 files changed, 243 insertions(+)
+>>>>    create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+>>>>    create mode 100644 Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+>>>> new file mode 100644
+>>>> index 000000000000..31527283a0cd
+>>>> --- /dev/null
+>>>> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+>>>> @@ -0,0 +1,209 @@
+>>>> +NVIDIA Tegra PCIe controller (Synopsys DesignWare Core based)
+>>>> +
+>>>> +This PCIe host controller is based on the Synopsis Designware PCIe IP
+>>>> +and thus inherits all the common properties defined in designware-pcie.txt.
+>>>> +
+>>>> +Required properties:
+>>>> +- compatible: For Tegra19x, must contain "nvidia,tegra194-pcie".
+>>>> +- device_type: Must be "pci"
+>>>> +- reg: A list of physical base address and length for each set of controller
+>>>> +  registers. Must contain an entry for each entry in the reg-names property.
+>>>> +- reg-names: Must include the following entries:
+>>>> +  "appl": Controller's application logic registers
+>>>> +  "window1": This is the aperture of controller available under 4GB boundary
+>>>> +             (i.e. within 32-bit space). This aperture is typically used for
+>>>> +             accessing config space of root port itself and also the connected
+>>>> +             endpoints (by appropriately programming internal Address
+>>>> +             Translation Unit's (iATU) out bound region) and also to map
+>>>> +             prefetchable/non-prefetchable BARs.
+>>>
+>>> This is usually represented in 'ranges' for BARs.
+>> I added window1 and window2 as the umbrella apertures that each PCIe controller has
+>> and gave a description of how each aperture *can* be used. This is an overview and as
+>> such these two entries are not directly used by the driver.
+>> 'ranges' property gives us the information as to how exactly are window1 and window2
+>> apertures used.
+>> Thierry Reding also gave few comments about these entries. If this is confusing,
+>> I'm ok to remove them as well. Please let me know.
 > 
-> [   13.837149] ============================================
-> [   13.837149] WARNING: possible recursive locking detected
-> [   13.837150] 5.0.0-00034-gcaae0ec7396f #54 Not tainted
-> [   13.837151] --------------------------------------------
-> [   13.837152] irq/125-pciehp/165 is trying to acquire lock:
-> [   13.837153] 000000000f8f89cc (&ctrl->reset_lock){.+.+}, at: pciehp_check_presence+0x1b/0x72
-> [   13.837159] 
->                but task is already holding lock:
-> [   13.837160] 000000001b052053 (&ctrl->reset_lock){.+.+}, at: pciehp_ist+0x10a/0x164
-> [   13.837162] 
->                other info that might help us debug this:
-> [   13.837162]  Possible unsafe locking scenario:
+> If all you want to do is document how these are used, it may be better
+> to enhance the device tree bindings for the ranges property if it does
+> not describe this fully enough yet, or add comments in the DT nodes to
+> clarify.
+It looks like having window1 and window2 is causing confusion here. I'll remove
+them in my next patch.
+
 > 
-> [   13.837163]        CPU0
-> [   13.837163]        ----
-> [   13.837164]   lock(&ctrl->reset_lock);
-> [   13.837164]   lock(&ctrl->reset_lock);
-> [   13.837165] 
->                 *** DEADLOCK ***
+>>>> +  "config": As per the definition in designware-pcie.txt
+>>>> +  "atu_dma": iATU and DMA register. This is where the iATU (internal Address
+>>>> +             Translation Unit) registers of the PCIe core are made available
+>>>> +             fow SW access.
+>>>> +  "dbi": The aperture where root port's own configuration registers are
+>>>> +         available
+>>>> +  "window2": This is the larger (compared to window1) aperture available above
+>>>> +             4GB boundary (i.e. in 64-bit space). This is typically used for
+>>>> +             mapping prefetchable/non-prefetchable BARs of endpoints
+>>>> +- interrupts: A list of interrupt outputs of the controller. Must contain an
+>>>> +  entry for each entry in the interrupt-names property.
+>>>> +- interrupt-names: Must include the following entries:
+>>>> +  "intr": The Tegra interrupt that is asserted for controller interrupts
+>>>> +  "msi": The Tegra interrupt that is asserted when an MSI is received
+>>>> +- bus-range: Range of bus numbers associated with this controller
+>>>> +- #address-cells: Address representation for root ports (must be 3)
+>>>> +  - cell 0 specifies the bus and device numbers of the root port:
+>>>> +    [23:16]: bus number
+>>>> +    [15:11]: device number
+>>>> +  - cell 1 denotes the upper 32 address bits and should be 0
+>>>> +  - cell 2 contains the lower 32 address bits and is used to translate to the
+>>>> +    CPU address space
+>>>> +- #size-cells: Size representation for root ports (must be 2)
+>>>> +- ranges: Describes the translation of addresses for root ports and standard
+>>>> +  PCI regions. The entries must be 7 cells each, where the first three cells
+>>>> +  correspond to the address as described for the #address-cells property
+>>>> +  above, the fourth and fifth cells are for the physical CPU address to
+>>>> +  translate to and the sixth and seventh cells are as described for the
+>>>> +  #size-cells property above.
+>>>> +  - Entries setup the mapping for the standard I/O, memory and
+>>>> +    prefetchable PCI regions. The first cell determines the type of region
+>>>> +    that is setup:
+>>>> +    - 0x81000000: I/O memory region
+>>>> +    - 0x82000000: non-prefetchable memory region
+>>>> +    - 0xc2000000: prefetchable memory region
+>>>> +  Please refer to the standard PCI bus binding document for a more detailed
+>>>> +  explanation.
+>>>> +- #interrupt-cells: Size representation for interrupts (must be 1)
+>>>> +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+>>>> +  Please refer to the standard PCI bus binding document for a more detailed
+>>>> +  explanation.
+>>>> +- clocks: Must contain an entry for each entry in clock-names.
+>>>> +  See ../clocks/clock-bindings.txt for details.
+>>>> +- clock-names: Must include the following entries:
+>>>> +  - core_clk
+>>>> +- resets: Must contain an entry for each entry in reset-names.
+>>>> +  See ../reset/reset.txt for details.
+>>>> +- reset-names: Must include the following entries:
+>>>> +  - core_apb_rst
+>>>> +  - core_rst
+>>>> +- phys: Must contain a phandle to P2U PHY for each entry in phy-names.
+>>>> +- phy-names: Must include an entry for each active lane.
+>>>> +  "pcie-p2u-N": where N ranges from 0 to one less than the total number of lanes
+>>>> +- Controller dependent register offsets
+>>>> +  - nvidia,event-cntr-ctrl: EVENT_COUNTER_CONTROL reg offset
+>>>> +      0x168 - FPGA
+>>>> +      0x1a8 - C1, C2 and C3
+>>>> +      0x1c4 - C4
+>>>> +      0x1d8 - C0 and C5
+>>>> +  - nvidia,event-cntr-data: EVENT_COUNTER_DATA reg offset
+>>>> +      0x16c - FPGA
+>>>> +      0x1ac - C1, C2 and C3
+>>>> +      0x1c8 - C4
+>>>> +      0x1dc - C0 and C5
+>>>> +- nvidia,controller-id : Controller specific ID
+>>>> +      0x0 - C0
+>>>> +      0x1 - C1
+>>>> +      0x2 - C2
+>>>> +      0x3 - C3
+>>>> +      0x4 - C4
+>>>> +      0x5 - C5
+>>>> +- vddio-pex-ctl-supply: Regulator supply for PCIe side band signals
+>>>> +
+>>>> +Optional properties:
+>>>> +- nvidia,max-speed: limits controllers max speed to this value.
+>>>> +    1 - Gen-1 (2.5 GT/s)
+>>>> +    2 - Gen-2 (5 GT/s)
+>>>> +    3 - Gen-3 (8 GT/s)
+>>>> +    4 - Gen-4 (16 GT/s)
+>>>> +- nvidia,init-speed: limits controllers init speed to this value.
+>>>> +    1 - Gen-1 (2. 5 GT/s)
+>>>> +    2 - Gen-2 (5 GT/s)
+>>>> +    3 - Gen-3 (8 GT/s)
+>>>> +    4 - Gen-4 (16 GT/s)
+>>>
+>>> Don't we have standard speed properties?
+>> Not that I'm aware of. If you come across any, please do let me know and
+>> I'll change these.
 > 
-> [   13.837165]  May be due to missing lock nesting notation
+> See Documentation/devicetree/bindings/pci/pci.txt, max-link-speed.
+> There's a standard of_pci_get_max_link_speed() property that reads it
+> from device tree.
+Thanks for the pointer. I'll switch to this in the next patch.
+
 > 
-> [   13.837166] 4 locks held by irq/125-pciehp/165:
-> [   13.837167]  #0: 000000001b052053 (&ctrl->reset_lock){.+.+}, at: pciehp_ist+0x10a/0x164
-> [   13.837169]  #1: 0000000087e07843 (pci_rescan_remove_lock){+.+.}, at: pciehp_configure_device+0x1e/0xfd
-> [   13.837171]  #2: 00000000e9b570d4 (&dev->mutex){....}, at: __device_attach+0x28/0x12d
-> [   13.837174]  #3: 000000004add66ea (&dev->mutex){....}, at: __device_attach+0x28/0x12d
-> [   13.837176] 
->                stack backtrace:
-> [   13.837178] CPU: 7 PID: 165 Comm: irq/125-pciehp Not tainted 5.0.0-00034-gcaae0ec7396f #54
-> [   13.837178] Hardware name: Dell Inc. XPS 13 9380/0KTW76, BIOS 1.2.1 02/14/2019
-> [   13.837179] Call Trace:
-> [   13.837183]  dump_stack+0x67/0x8e
-> [   13.837186]  __lock_acquire+0x9b2/0xddc
-> [   13.837189]  ? pci_hp_add+0x18a/0x1ee
-> [   13.837190]  ? pci_hp_add+0x18a/0x1ee
-> [   13.837192]  ? find_held_lock+0x2b/0x6e
-> [   13.837194]  lock_acquire+0x147/0x172
-> [   13.837196]  ? pciehp_check_presence+0x1b/0x72
-> [   13.837199]  down_read+0x44/0x87
-> [   13.837201]  ? pciehp_check_presence+0x1b/0x72
-> [   13.837203]  pciehp_check_presence+0x1b/0x72
-> [   13.837205]  pciehp_probe+0x229/0x24d
-> [   13.837207]  pcie_port_probe_service+0x38/0x4b
-> [   13.837209]  really_probe+0x1a5/0x372
-> [   13.837210]  ? driver_allows_async_probing+0x2c/0x2c
-> [   13.837211]  driver_probe_device+0xcf/0xff
-> [   13.837213]  ? driver_allows_async_probing+0x2c/0x2c
-> [   13.837215]  bus_for_each_drv+0x84/0xa8
-> [   13.837217]  __device_attach+0x9d/0x12d
-> [   13.837219]  bus_probe_device+0x31/0x9e
-> [   13.837221]  device_add+0x1c1/0x5bd
-> [   13.837223]  ? __init_waitqueue_head+0x36/0x47
-> [   13.837225]  pcie_port_device_register+0x3b9/0x41e
-> [   13.837228]  ? irq_thread_check_affinity+0x7b/0x7b
-> [   13.837230]  pcie_portdrv_probe+0x37/0xa4
-> [   13.837232]  pci_device_probe+0xbe/0x130
-> [   13.837234]  really_probe+0x1a5/0x372
-> [   13.837236]  ? driver_allows_async_probing+0x2c/0x2c
-> [   13.837237]  ? irq_thread+0x82/0x193
-> [   13.837238]  driver_probe_device+0xcf/0xff
-> [   13.837239]  ? driver_allows_async_probing+0x2c/0x2c
-> [   13.837241]  bus_for_each_drv+0x84/0xa8
-> [   13.837242]  __device_attach+0x9d/0x12d
-> [   13.837245]  pci_bus_add_device+0x4a/0x83
-> [   13.837247]  pci_bus_add_devices+0x2c/0x5d
-> [   13.837248]  pci_bus_add_devices+0x53/0x5d
-> [   13.837250]  pciehp_configure_device+0xef/0xfd
-> [   13.837253]  pciehp_handle_presence_or_link_change+0x28d/0x37b
-> [   13.837254]  pciehhp_ist+0x12c/0x164
-> [   13.837256]  ? irq_finalize_oneshot+0x9e/0x9e
-> [   13.837257]  irq_thread_fn+0x1e/0x41
-> [   13.837259]  irq_thread+0x138/0x193
-> [   13.837261]  ? wake_threads_waitq+0x27/0x27
-> [   13.837263]  ? irq_thread_check_affinity+0x7b/0x7b
-> [   13.837265]  kthread+0xf7/0xfc
-> [   13.837266]  ? kthread_cancel_delayed_work_sync+0xf/0xf
-> [   13.837269]  ret_from_fork+0x3a/0x50
-> [   13.837321] ------------[ cut here ]------------
+>>> Why do we need 2 values?
+>> max-speed configures the controller to advertise the speed mentioned through
+>> this flag, whereas, init-speed gets the link up at this speed and software
+>> can further take the link speed to a different speed by retraining the link.
+>> This is to give flexibility to developers depending on the platform.
+> 
+> This seems to me like overcomplicating things. Couldn't we do something
+> like start in the slowest mode by default and then upgrade if endpoints
+> support higher speeds?
+> 
+> I'm assuming that the maximum speed is already fixed by the IP hardware
+> instantiation, so why would we want to limit it additionally? Similarly,
+> what's the use-case for setting the initial link speed to something
+> other than the lowest speed?
+You are right that maximum speed supported by hardware is fixed and through
+max-link-speed DT option, flexibility is given to limit it to the desired speed
+for a controller on a given platform. As mentioned in the documentation for max-link-speed,
+this is a strategy to avoid unnecessary operation for unsupported link speed.
+There is no real use-case as such even for setting the initial link speed, but it is
+there to give flexibility (for any debugging) to get the link up at a certain speed
+and then take it to a higher speed at a later point of time. Please note that, hardware
+as such already has the capability to take the link to maximum speed agreed by both
+upstream and downstream ports. 'nvidia,init-speed' is only to give more flexibility
+while debugging. I'm OK to remove it if this is not adding much value here.
+
+> 
+>>>> +- nvidia,disable-aspm-states : controls advertisement of ASPM states
+>>>> +    bit-0 to '1' : disables advertisement of ASPM-L0s
+>>>> +    bit-1 to '1' : disables advertisement of ASPM-L1. This also disables
+>>>> +                 advertisement of ASPM-L1.1 and ASPM-L1.2
+>>>> +    bit-2 to '1' : disables advertisement of ASPM-L1.1
+>>>> +    bit-3 to '1' : disables advertisement of ASPM-L1.2
+>>>
+>>> Seems like these too should be common.
+>> This flag controls the advertisement of different ASPM states by root port.
+>> Again, I'm not aware of any common method for this.
+> 
+> rockchip-pcie-host.txt documents an "aspm-no-l0s" property that prevents
+> the root complex from advertising L0s. Sounds like maybe following a
+> similar scheme would be best for consistency. I think we'll also want
+> these to be non-NVIDIA specific, so drop the "nvidia," prefix and maybe
+> document them in pci.txt so that they can be more broadly used.
+Since we have ASPM-L0s, L1, L1.1 and L1.2 states, I prefer to have just one entry
+with different bit positions indicating which particular state should not be
+advertised by root port. Do you see any particular advantage to have 4 different options?
+If having one options is fine, I'll remove "nvidia," and document it in pci.txt.
+
+> 
+>>>> +- nvidia,disable-clock-request : gives a hint to driver that there is no
+>>>> +    CLKREQ signal routing on board
+>>>> +- nvidia,update-fc-fixup : needs it to improve perf when a platform is designed
+>>>> +    in such a way that it satisfies at least one of the following conditions
+>>>> +    1. If C0/C4/C5 run at x1/x2 link widths (irrespective of speed and MPS)
+>>>> +    2. If C0/C1/C2/C3/C4/C5 operate at their respective max link widths and
+>>>
+>>> What is Cx?
+>> Cx is the Controller with its ID.
+>>
+>>>
+>>>> +       a) speed is Gen-2 and MPS is 256B
+>>>> +       b) speed is >= Gen-3 with any MPS
+>>>> +- nvidia,cdm-check : Enables CDM checking. For more information, refer Synopsis
+>>>> +    DesignWare Cores  PCI Express Controller Databook r4.90a Chapter S.4
+>>>> +- nvidia,enable-power-down : Enables power down of respective controller and
+>>>> +    corresponding PLLs if they are not shared by any other entity
+>>>> +- "nvidia,pex-wake" : Add PEX_WAKE gpio number to provide wake support.
+>>>> +- "nvidia,plat-gpios" : Add gpio number that needs to be configured before
+>>>> +   system goes for enumeration. There could be platforms where enabling 3.3V and
+>>>> +   12V power supplies are done through GPIOs, in which case, list of all such
+>>>> +   GPIOs can be specified through this property.
+>>>
+>>> These should be split out to their specific function.
+>> Enabling Power rails is just an example and depending on the platform, there could be
+>> some on-board muxes which are controlled through GPIOs and all such platform specific
+>> configuration can be handled through this flag.
+> 
+> Doing this via a "generic" GPIO binding is bound to break at some point.
+> What if at some point one of those muxes needs additional power, perhaps
+> controlled through an I2C regulator? Or if the mux requires multiple
+> GPIOs for the correct configuration? How do you allow the mux to be
+> reconfigured to one of the other options?
+> 
+> If all you have is a generic GPIO consumer of GPIOs there's not enough
+> context for the driver to do anything with these GPIOs other than
+> perhaps setting them to a specific value at probe time. In that case you
+> could achieve the same thing using a gpio-hog.
+> 
+> I think we need to identify what the various uses for these can be and
+> then find the right bindings (or come up with new ones) to properly
+> describe the actual hardware. Otherwise we're going to paint ourselves
+> into a corner.
+> 
+> Are there any use-cases besides regulators and muxes? For regulators we
+> already have fixed and GPIO regulators, and for muxes there are a number
+> of bindings defined in Documentation/devicetree/bindings/mux.
+We don't have any other use cases apart from regulator and muxes and I agree with
+your comment that we should use regulator/mux frameworks than this generic GPIO
+configuration. I'll make changes for this in the next patch series.
+
+> 
+> Thierry
+> 
+
