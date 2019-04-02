@@ -2,96 +2,935 @@ Return-Path: <SRS0=JkSV=SE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3486BC4360F
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 18:07:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71FE4C4360F
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 18:23:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F10312070B
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 18:07:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554228470;
-	bh=lAMZlPOe2midBvWJDuHP7RuXcCyneM7lM2v31z/PEm0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=yWz5ajqGRkXncYIHYFTsARqiealtuGfbrG3R2fp/PzajIfhNWWF/MPa5cedSU8ILX
-	 NDIlJmuetAugW7QVPE6D89r8lNwnxnntoHVjLr56jXyHFESSZi4jTfFqX2joJNH/mS
-	 GwDfPoIqAr+x6jUGG0t85WbsZpGF/dyaKQLlIVH4=
+	by mail.kernel.org (Postfix) with ESMTP id 31EA02084B
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Apr 2019 18:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729571AbfDBSHt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Apr 2019 14:07:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54722 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725889AbfDBSHt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Apr 2019 14:07:49 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A33782070B;
-        Tue,  2 Apr 2019 18:07:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554228468;
-        bh=lAMZlPOe2midBvWJDuHP7RuXcCyneM7lM2v31z/PEm0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=B8VPES2ZJXfO8oNa1vATGg0HRlsWDW9Oux6axR4vZVdmy5N82rGCX8swiar0B+kSd
-         NUzE4U+Xox0TRB28opbDBiqGUIz73oRcgSdreW51N8h0HR4FOBWesGTTsqG/9j++jl
-         MI9htjPk8ArOGGEtpb6cfZLiXIkU64+rHSFKFF30=
-Date:   Tue, 2 Apr 2019 13:07:44 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Changbin Du <changbin.du@gmail.com>
-Cc:     Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 00/12] Include linux PCI docs into Sphinx TOC tree
-Message-ID: <20190402180744.GD141706@google.com>
-References: <20190329160413.4293-1-changbin.du@gmail.com>
- <20190401230321.GB141706@google.com>
- <20190402150852.juugbq7gripqbrmz@mail.google.com>
+        id S1730786AbfDBSXX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Apr 2019 14:23:23 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55410 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729158AbfDBSXX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Apr 2019 14:23:23 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7261D80D;
+        Tue,  2 Apr 2019 11:23:22 -0700 (PDT)
+Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 844C33F68F;
+        Tue,  2 Apr 2019 11:23:21 -0700 (PDT)
+Date:   Tue, 2 Apr 2019 19:23:17 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Daire McNamara <daire.mcnamara@microchip.com>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] PCI: microsemi: Add host driver for Microsemi
+ PCIe controller
+Message-ID: <20190402182317.GC30068@e107981-ln.cambridge.arm.com>
+References: <20190215162424.564-1-daire.mcnamara@microchip.com>
+ <20190215162424.564-4-daire.mcnamara@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190402150852.juugbq7gripqbrmz@mail.google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190215162424.564-4-daire.mcnamara@microchip.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 02, 2019 at 11:08:54PM +0800, Changbin Du wrote:
-> On Mon, Apr 01, 2019 at 06:03:21PM -0500, Bjorn Helgaas wrote:
-> > On Sat, Mar 30, 2019 at 12:04:01AM +0800, Changbin Du wrote:
-> > > Changbin Du (12):
-> > >   Documentation: add Linux PCI to Sphinx TOC tree
-> > >   pci doc: convert PCI/pci.txt to rst format
-> > >   pci doc: convert PCI/PCIEBUS-HOWTO.txt to rst format
-> > >   pci doc: convert PCI/pci-iov-howto.txt to rst format
-> > >   pci doc: convert PCI/MSI-HOWTO.txt to rst format
-> > >   pci doc: convert PCI/acpi-info.txt to rst format
-> > >   pci doc: convert PCI/pci-error-recovery.txt to rst format
-> > >   pci doc: convert PCI/pcieaer-howto.txt to rst format
-> > >   pci doc: convert PCI/endpoint/pci-endpoint.txt to rst format
-> > >   pci doc: convert PCI/endpoint/pci-endpoint-cfs.txt to rst format
-> > >   pci doc: convert PCI/endpoint/pci-test-function.txt to rst format
-> > >   pci doc: convert PCI/endpoint/pci-test-howto.txt to rst format
-> > 
-> > Thanks for doing all this work!
-> > 
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > There's not a real convention yet for subject lines in Documentation/,
-> > but I would propose:
-> > 
-> >   Documentation: PCI: Convert pci.txt to reST
-> >   Documentation: PCI: Convert endpoint/pci-endpoint.txt to reST
-> > 
-> > because that at least goes with some recent Documentation/PCI changes
-> > and it identifies "reST" as something other than a plain English word
-> > (RST or ReST would also work for me).
-> > 
-> I agree. I am just a little lazy to update all of them this time :)
-> Thanks for your ACK!
+On Fri, Feb 15, 2019 at 04:24:24PM +0000, Daire McNamara wrote:
+> This patch adds support to the Microsemi/Microchip PolarFire
+> PCIe controller when configured in host (Root Complex) mode.
+> 
+> Signed-off-by: Daire McNamara <daire.mcnamara@microchip.com>
+> ---
+>  drivers/pci/controller/Kconfig          |   8 +
+>  drivers/pci/controller/Makefile         |   1 +
+>  drivers/pci/controller/pcie-microsemi.c | 764 ++++++++++++++++++++++++
+>  3 files changed, 773 insertions(+)
+>  create mode 100644 drivers/pci/controller/pcie-microsemi.c
+> 
+> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+> index 6671946dbf66..31fa5e53d765 100644
+> --- a/drivers/pci/controller/Kconfig
+> +++ b/drivers/pci/controller/Kconfig
+> @@ -280,5 +280,13 @@ config VMD
+>  	  To compile this driver as a module, choose M here: the
+>  	  module will be called vmd.
+>  
+> +config PCIE_MICROSEMI
+> +	bool "Microsemi AXI PCIe host bridge support"
+> +	depends on PCI_MSI && OF
 
-Well, I guess I'm too lazy to fix them all for you, so I personally
-wouldn't apply these.  But maybe Jonathan will be more accommodating.
+There is no dependency on PCI_MSI.
 
-Bjorn
+> +	help
+> +	  Say 'Y' here if you want kernel to support the Microsemi AXI PCIe
+> +	  Host Bridge driver.
+> +
+> +
+>  source "drivers/pci/controller/dwc/Kconfig"
+>  endmenu
+> diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+> index d56a507495c5..c3b76ff221be 100644
+> --- a/drivers/pci/controller/Makefile
+> +++ b/drivers/pci/controller/Makefile
+> @@ -28,6 +28,7 @@ obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
+>  obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+>  obj-$(CONFIG_PCIE_MOBIVEIL) += pcie-mobiveil.o
+>  obj-$(CONFIG_PCIE_TANGO_SMP8759) += pcie-tango.o
+> +obj-$(CONFIG_PCIE_MICROSEMI) += pcie-microsemi.o
+>  obj-$(CONFIG_VMD) += vmd.o
+>  # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+>  obj-y				+= dwc/
+> diff --git a/drivers/pci/controller/pcie-microsemi.c b/drivers/pci/controller/pcie-microsemi.c
+> new file mode 100644
+> index 000000000000..60e185bebc60
+> --- /dev/null
+> +++ b/drivers/pci/controller/pcie-microsemi.c
+> @@ -0,0 +1,764 @@
+> +// SPDX-License-Identifier: GPL-2.0+
+> +/*
+> + * PCIe host controller driver for Microsemi AXI PCIe Bridge
+> + *
+> + * Copyright (c) 2018 - 2019 Microsemi Corporation.
+> + *
+> + * Based on:
+> + *	pcie-rcar.c
+> + *	pcie-xilinx.c
+> + *	pcie-altera.c
+
+Not the most up to date examples in terms of kernel APIs, more below.
+
+> + */
+> +
+> +#include <linux/bitmap.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/irq.h>
+> +#include <linux/irqdomain.h>
+> +#include <linux/kernel.h>
+> +#include <linux/init.h>
+> +#include <linux/msi.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/of_irq.h>
+> +#include <linux/pci.h>
+> +#include <linux/platform_device.h>
+
+Alphabetical order please.
+
+> +
+> +#include "../pci.h"
+> +
+> +/* ECAM definitions */
+> +#define ECAM_BUS_NUM_SHIFT		20
+> +#define ECAM_DEV_NUM_SHIFT		12
+> +
+> +/* Number of MSI IRQs */
+> +#define MICROSEMI_NUM_MSI_IRQS		32
+> +#define MICROSEMI_NUM_MSI_IRQS_CODED	 5
+> +
+> +/* PCIe Bridge Phy and Controller Phy offsets */
+> +#define MICROSEMI_PCIE0_BRIDGE_ADDR	0x00004000u
+> +#define MICROSEMI_PCIE0_CTRL_ADDR	0x00006000u
+> +
+> +#define MICROSEMI_PCIE1_BRIDGE_ADDR	0x00008000u
+> +#define MICROSEMI_PCIE1_CTRL_ADDR	0x0000a000u
+> +
+> +/* PCIe Controller Phy Regs */
+> +#define MICROSEMI_SEC_ERROR_INT			0x28
+> +#define SEC_ERROR_INT_TX_RAM_SEC_ERR_INT	GENMASK(3, 0)
+> +#define SEC_ERROR_INT_RX_RAM_SEC_ERR_INT	GENMASK(7, 4)
+> +#define SEC_ERROR_INT_PCIE2AXI_RAM_SEC_ERR_INT	GENMASK(11, 8)
+> +#define SEC_ERROR_INT_AXI2PCIE_RAM_SEC_ERR_INT	GENMASK(15, 12)
+> +#define MICROSEMI_SEC_ERROR_INT_MASK		0x2c
+> +#define MICROSEMI_DED_ERROR_INT			0x30
+> +#define DED_ERROR_INT_TX_RAM_DED_ERR_INT	GENMASK(3, 0)
+> +#define DED_ERROR_INT_RX_RAM_DED_ERR_INT	GENMASK(7, 4)
+> +#define DED_ERROR_INT_PCIE2AXI_RAM_DED_ERR_INT	GENMASK(11, 8)
+> +#define DED_ERROR_INT_AXI2PCIE_RAM_DED_ERR_INT	GENMASK(15, 12)
+> +#define MICROSEMI_DED_ERROR_INT_MASK		0x34
+> +#define MICROSEMI_ECC_CONTROL			0x38
+> +#define ECC_CONTROL_AXI2PCIE_RAM_ECC_BYPASS	BIT(27)
+> +#define ECC_CONTROL_PCIE2AXI_RAM_ECC_BYPASS	BIT(26)
+> +#define ECC_CONTROL_RX_RAM_ECC_BYPASS		BIT(25)
+> +#define ECC_CONTROL_TX_RAM_ECC_BYPASS		BIT(24)
+> +#define MICROSEMI_LTSSM_STATE			0x5c
+> +#define MICROSEMI_LTSSM_L0_STATE		0x10
+> +#define MICROSEMI_PCIE_EVENT_INT		0x14c
+> +#define PCIE_EVENT_INT_L2_EXIT_INT		BIT(0)
+> +#define PCIE_EVENT_INT_HOTRST_EXIT_INT		BIT(1)
+> +#define PCIE_EVENT_INT_DLUP_EXIT_INT		BIT(2)
+> +#define PCIE_EVENT_INT_L2_EXIT_INT_MASK		BIT(16)
+> +#define PCIE_EVENT_INT_HOTRST_EXIT_INT_MASK	BIT(17)
+> +#define PCIE_EVENT_INT_DLUP_EXIT_INT_MASK	BIT(18)
+> +
+> +/* PCIe Bridge Phy Regs */
+> +#define MICROSEMI_PCIE_PCI_IDS_DW1		0x9c
+> +#define MICROSEMI_IMASK_LOCAL			0x180
+> +#define MICROSEMI_PCIE_LOCAL_INT_ENABLE		0x0f000000u
+> +#define MICROSEMI_PCI_INTS			0x0f000000u
+> +#define MICROSEMI_PM_MSI_INT_SHIFT		24
+> +#define MICROSEMI_PCIE_ENABLE_MSI		0x10000000u
+> +#define MICROSEMI_MSI_INT			0x10000000u
+> +#define MICROSEMI_MSI_INT_SHIFT			28
+> +#define MICROSEMI_ISTATUS_LOCAL			0x184
+> +#define MICROSEMI_IMASK_HOST			0x188
+> +#define MICROSEMI_ISTATUS_HOST			0x18c
+> +#define MICROSEMI_ISTATUS_MSI			0x194
+
+If you use BIT and GENMASK either you use them everywhere or you
+do not use them at all.
+
+> +
+> +/* PCIe AXI slave table init defines */
+> +#define MICROSEMI_ATR0_AXI4_SLV0_SRCADDR_PARAM	0x800u
+> +#define ATR_SIZE_SHIFT				1
+> +#define ATR_IMPL_ENABLE				1
+> +#define MICROSEMI_ATR0_AXI4_SLV0_SRC_ADDR	0x804u
+> +#define MICROSEMI_ATR0_AXI4_SLV0_TRSL_ADDR_LSB	0x808u
+> +#define MICROSEMI_ATR0_AXI4_SLV0_TRSL_ADDR_UDW	0x80cu
+> +#define MICROSEMI_ATR0_AXI4_SLV0_TRSL_PARAM	0x810u
+> +#define MICROSEMI_PCIE_TX_RX_INTERFACE		0x00000000u
+> +#define MICROSEMI_PCIE_CONFIG_INTERFACE		0x00000001u
+> +
+> +#define MICROSEMI_ATR0_AXI4_SLV_SIZE		32
+> +
+> +/* PCIe Master table init defines */
+> +#define MICROSEMI_ATR0_PCIE_WIN0_SRCADDR_31_12	0x600u
+> +#define MICROSEMI_ATR0_PCIE_WIN0_SIZE		0x1f
+> +#define MICROSEMI_ATR0_PCIE_WIN0_SIZE_SHIFT	1
+> +#define MICROSEMI_ATR0_PCIE_WIN0_SRCADDR_63_32	0x604u
+> +
+> +#define MICROSEMI_MSI_MSG_ADDR			0x190u
+> +
+> +/* PCIe Config space MSI capability structure */
+> +#define MSI_CAP_CTRL_OFFSET		0xe0u
+> +#define MSI_ENABLE			(0x01u << 16)
+> +#define MSI_ENABLE_MULTI		(MICROSEMI_NUM_MSI_IRQS_CODED << 20)
+> +#define MSI_MSG_ADDR_OFFSET		0xe4u
+> +#define MSI_MSG_UPPER_ADDR_OFFSET	0xe8u
+> +#define MSI_MSG_DATA_OFFSET		0xf0u
+> +
+> +/**
+> + * struct microsemi_pcie_port - PCIe port information
+> + * @pcie_base_addr: IO Mapped Register Base
+> + * @axi_base_addr: AMBA Mapped Register Base
+> + * @irq: Interrupt number
+> + * @root_busno: Root Bus number
+> + * @dev: Device pointer
+> + * @msi_domain: MSI IRQ domain pointer
+> + * @leg_domain: Legacy IRQ domain pointer
+> + * @resources: Bus Resources
+> + */
+> +struct microsemi_pcie_port {
+> +	struct platform_device *pdev;
+> +	void __iomem *pcie_base_addr;
+> +	void __iomem *axi_base_addr;
+> +	void __iomem *bridge_base_addr;
+> +	void __iomem *ctrl_base_addr;
+> +	int bridge;
+> +	u32 irq;
+> +	u8 root_busno;
+> +	struct device *dev;
+> +	struct irq_domain *msi_domain;
+> +	struct irq_domain *leg_domain;
+> +	struct list_head resources;
+> +	struct mutex lock;			/* protect bitmap variable */
+> +	DECLARE_BITMAP(msi_irq_in_use, MICROSEMI_NUM_MSI_IRQS);
+> +};
+> +
+> +static inline u32 pcie_read(struct microsemi_pcie_port *port, u32 reg)
+> +{
+> +	return readl(port->pcie_base_addr + reg);
+> +}
+> +
+> +static inline void pcie_write(struct microsemi_pcie_port *port,
+> +			      u32 val, u32 reg)
+> +{
+> +	writel(val, port->pcie_base_addr + reg);
+> +}
+> +
+> +static void microsemi_pcie_enable(struct microsemi_pcie_port *port)
+> +{
+> +	u32 enb;
+> +
+> +	enb = readl(port->bridge_base_addr + MICROSEMI_LTSSM_STATE);
+> +	enb |= MICROSEMI_LTSSM_L0_STATE;
+> +	writel(enb, port->bridge_base_addr + MICROSEMI_LTSSM_STATE);
+> +}
+> +
+> +/**
+> + * microsemi_pcie_valid_device - Check if a valid device is present on bus
+> + * @bus: PCI Bus structure
+> + * @devfn: device/function
+> + *
+> + * Return: 'true' on success and 'false' if invalid device is found
+> + */
+> +static bool microsemi_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+> +{
+> +	struct microsemi_pcie_port *port = bus->sysdata;
+> +
+> +	/* Only one device down on each root port */
+> +	if (bus->number == port->root_busno && devfn > 0)
+> +		return false;
+> +
+> +	return true;
+> +}
+> +
+> +/**
+> + * microsemi_pcie_map_bus - Get configuration base
+> + * @bus: PCI Bus structure
+> + * @devfn: Device/function
+> + * @where: Offset from base
+> + *
+> + * Return: Base address of the configuration space needed to be
+> + *	 accessed.
+> + */
+> +static void __iomem *microsemi_pcie_map_bus(struct pci_bus *bus,
+> +					    unsigned int devfn, int where)
+> +{
+> +	struct microsemi_pcie_port *port = bus->sysdata;
+> +	int relbus;
+> +
+> +	if (!microsemi_pcie_valid_device(bus, devfn))
+> +		return NULL;
+> +
+> +	relbus = (bus->number << ECAM_BUS_NUM_SHIFT) |
+> +		(devfn << ECAM_DEV_NUM_SHIFT);
+> +
+> +	return port->pcie_base_addr + relbus + where;
+> +}
+> +
+> +/* PCIe operations */
+> +static struct pci_ops microsemi_pcie_ops = {
+> +	.map_bus = microsemi_pcie_map_bus,
+> +	.read	= pci_generic_config_read,
+> +	.write	= pci_generic_config_write,
+> +};
+> +
+> +/* MSI functions */
+> +
+> +/**
+> + * microsemi_pcie_destroy_msi - Free MSI number
+> + * @irq: IRQ to be freed
+> + */
+> +static void microsemi_pcie_destroy_msi(unsigned int irq)
+> +{
+> +	struct microsemi_pcie_port *port =
+> +		msi_desc_to_pci_sysdata(irq_get_msi_desc(irq));
+> +	irq_hw_number_t hwirq = irqd_to_hwirq(irq_get_irq_data(irq));
+> +
+> +	if (!port)
+> +		return;
+> +
+> +	if (!test_bit(hwirq, port->msi_irq_in_use))
+> +		dev_err(port->dev, "trying to free unused MSI%d\n", irq);
+> +	else
+> +		clear_bit(hwirq, port->msi_irq_in_use);
+
+Locking ?
+
+> +}
+> +
+> +/**
+> + * microsemi_pcie_assign_msi - Allocate MSI number
+> + *
+> + * Return: A valid IRQ on success and error value on failure.
+> + */
+> +static int microsemi_pcie_assign_msi(struct microsemi_pcie_port *port)
+> +{
+> +	int pos;
+> +
+> +	mutex_lock(&port->lock);
+> +	pos = find_first_zero_bit(port->msi_irq_in_use, MICROSEMI_NUM_MSI_IRQS);
+> +	if (pos < MICROSEMI_NUM_MSI_IRQS) {
+> +		set_bit(pos, port->msi_irq_in_use);
+> +	} else {
+> +		mutex_unlock(&port->lock);
+> +		return -ENOSPC;
+> +	}
+> +
+> +	mutex_unlock(&port->lock);
+> +	return pos;
+> +}
+> +
+> +/**
+> + * microsemi_msi_teardown_irq - Destroy the MSI
+> + * @chip: MSI Chip descriptor
+> + * @irq: MSI IRQ to destroy
+> + */
+> +static void microsemi_msi_teardown_irq(struct msi_controller *chip,
+> +				       unsigned int irq)
+> +{
+> +	microsemi_pcie_destroy_msi(irq);
+> +	irq_dispose_mapping(irq);
+> +}
+> +
+> +/**
+> + * microsemi_pcie_msi_setup_irq - Setup MSI request
+> + * @chip: MSI chip pointer
+> + * @pdev: PCIe device pointer
+> + * @desc: MSI descriptor pointer
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int microsemi_pcie_msi_setup_irq(struct msi_controller *chip,
+> +					struct pci_dev *pdev,
+> +					struct msi_desc *desc)
+> +{
+> +	struct microsemi_pcie_port *port = pdev->bus->sysdata;
+> +	unsigned int irq;
+> +	int hwirq;
+> +	struct msi_msg msg;
+> +
+> +	hwirq = microsemi_pcie_assign_msi(port);
+> +	if (hwirq < 0)
+> +		return hwirq;
+> +
+> +	irq = irq_create_mapping(port->msi_domain, hwirq);
+> +	if (!irq)
+> +		return -EINVAL;
+> +
+> +	irq_set_msi_desc(irq, desc);
+> +
+> +	msg.address_hi = upper_32_bits(MICROSEMI_MSI_MSG_ADDR);
+> +	msg.address_lo = lower_32_bits(MICROSEMI_MSI_MSG_ADDR);
+> +	msg.data = hwirq;
+> +
+> +	pci_write_msi_msg(irq, &msg);
+> +
+> +	return 0;
+> +}
+> +
+> +/* MSI Chip Descriptor */
+> +static struct msi_controller microsemi_pcie_msi_chip = {
+> +	.setup_irq = microsemi_pcie_msi_setup_irq,
+> +	.teardown_irq = microsemi_msi_teardown_irq,
+> +};
+
+Usage of struct msi_controller is deprecated, you could not
+know, no worries, more below.
+
+> +/* HW Interrupt Chip Descriptor */
+> +static struct irq_chip microsemi_msi_irq_chip = {
+> +	.name = "Microsemi PCIe MSI",
+> +	.irq_enable = pci_msi_unmask_irq,
+> +	.irq_disable = pci_msi_mask_irq,
+> +	.irq_mask = pci_msi_mask_irq,
+> +	.irq_unmask = pci_msi_unmask_irq,
+> +};
+> +
+> +/**
+> + * microsemi_pcie_msi_map - Set the handler for the MSI and mark IRQ as valid
+> + * @domain: IRQ domain
+> + * @irq: Virtual IRQ number
+> + * @hwirq: HW interrupt number
+> + *
+> + * Return: Always returns 0.
+> + */
+> +static int microsemi_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+> +				  irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &microsemi_msi_irq_chip,
+> +				 handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +
+> +	return 0;
+> +}
+> +
+> +/* IRQ Domain operations */
+> +static const struct irq_domain_ops msi_domain_ops = {
+> +	.map = microsemi_pcie_msi_map,
+> +};
+> +
+> +/**
+> + * microsemi_pcie_enable_msi - Enable MSI support
+> + * @port: PCIe port information
+> + */
+> +static void microsemi_pcie_enable_msi(struct microsemi_pcie_port *port)
+> +{
+> +	u32 cap_ctrl;
+> +
+> +	cap_ctrl = pcie_read(port, MSI_CAP_CTRL_OFFSET);
+> +
+> +	pcie_write(port, cap_ctrl | MSI_ENABLE_MULTI |
+> +		MSI_ENABLE, MSI_CAP_CTRL_OFFSET);
+> +	pcie_write(port, MICROSEMI_MSI_MSG_ADDR, MSI_MSG_ADDR_OFFSET);
+> +}
+
+Please rewrite MSI support following:
+
+drivers/pci/controller/pcie-tango.c
+
+It was heavily debated and it shows how to implement MSI through
+IRQ domains, if you have questions ask them.
+
+> +/* INTx Functions */
+> +
+> +/**
+> + * microsemi_pcie_intx_map - Set the handler for the INTx and mark IRQ as valid
+> + * @domain: IRQ domain
+> + * @irq: Virtual IRQ number
+> + * @hwirq: HW interrupt number
+> + *
+> + * Return: Always returns 0.
+> + */
+> +static int microsemi_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> +				   irq_hw_number_t hwirq)
+> +{
+> +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+> +	irq_set_chip_data(irq, domain->host_data);
+> +
+> +	return 0;
+> +}
+> +
+> +/* INTx IRQ Domain operations */
+> +static const struct irq_domain_ops intx_domain_ops = {
+> +	.map = microsemi_pcie_intx_map,
+> +	.xlate = pci_irqd_intx_xlate,
+
+No need for .xlate callback, see my comment on DT bindings.
+
+For INTX handling please have a look at:
+
+drivers/pci/controller/pci-ftpci100.c
+
+Same as above for questions.
+
+> +};
+> +
+> +/* PCIe HW Functions */
+> +
+> +/**
+> + * microsemi_pcie_intr_handler - Interrupt Service Handler
+> + * @irq: IRQ number
+> + * @data: PCIe port information
+> + *
+> + * Return: IRQ_HANDLED on success and IRQ_NONE on failure
+> + */
+> +static irqreturn_t microsemi_pcie_intr_handler(int irq, void *data)
+> +{
+> +	struct microsemi_pcie_port *port = (struct microsemi_pcie_port *)data;
+> +	struct device *dev = port->dev;
+> +	unsigned long status;
+> +	unsigned long msi;
+> +	u32 bit;
+> +	u32 virq;
+> +
+> +	status = readl(port->bridge_base_addr + MICROSEMI_ISTATUS_LOCAL);
+> +
+> +	/* Might be sharing interrupt line.  Check if interrupt is for us */
+> +	if (!status)
+> +		return IRQ_NONE;
+> +
+> +	status = (status & MICROSEMI_PCI_INTS) >> MICROSEMI_PM_MSI_INT_SHIFT;
+> +	for_each_set_bit(bit, &status, PCI_NUM_INTX) {
+> +		/* clear that interrupt bit */
+> +		writel(1 << (bit + MICROSEMI_PM_MSI_INT_SHIFT),
+> +		       port->bridge_base_addr + MICROSEMI_ISTATUS_LOCAL);
+> +		virq = irq_find_mapping(port->leg_domain, bit);
+> +
+> +		if (virq)
+> +			generic_handle_irq(virq);
+> +		else
+> +			dev_err(dev, "unexpected IRQ, INT%d\n", bit);
+> +	}
+> +
+> +	status = readl(port->bridge_base_addr + MICROSEMI_ISTATUS_LOCAL);
+> +	if (status & MICROSEMI_MSI_INT) {
+> +		/* Clear the ISTATUS MSI bit */
+> +		writel((1 << MICROSEMI_MSI_INT_SHIFT),
+> +		       port->bridge_base_addr + MICROSEMI_ISTATUS_LOCAL);
+> +		msi = readl(port->bridge_base_addr + MICROSEMI_ISTATUS_MSI);
+> +		for_each_set_bit(bit, &msi, MICROSEMI_NUM_MSI_IRQS) {
+> +			/* clear that MSI interrupt bit */
+> +			writel((1 << bit),
+> +			       port->bridge_base_addr + MICROSEMI_ISTATUS_MSI);
+> +			virq = irq_find_mapping(port->msi_domain, bit);
+> +			if (virq)
+> +				generic_handle_irq(virq);
+> +			else
+> +				dev_err(dev, "unexpected IRQ, INT%d\n", bit);
+> +		}
+> +	}
+> +
+> +	return IRQ_HANDLED;
+> +}
+
+This is not how the cascaded IRQ should be handled, this is an IRQ
+action, again have a look at the drivers above and get back to us
+with questions.
+
+> +
+> +/**
+> + * microsemi_pcie_init_irq_domain - Initialize IRQ domain
+> + * @port: PCIe port information
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int microsemi_pcie_init_irq_domain(struct microsemi_pcie_port *port)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct device_node *pcie_intc_node;
+> +
+> +	/* Setup INTx */
+> +	pcie_intc_node = of_get_next_child(node, NULL);
+> +	if (!pcie_intc_node) {
+> +		dev_err(dev, "no PCIe INTx node found\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
+> +						 &intx_domain_ops,
+> +						 port);
+> +	if (!port->leg_domain) {
+> +		dev_err(dev, "failed to get a INTx IRQ domain\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	/* Setup MSI */
+> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> +		port->msi_domain =
+> +			irq_domain_add_linear(node,
+> +					      MICROSEMI_NUM_MSI_IRQS,
+> +					      &msi_domain_ops,
+> +					      &microsemi_pcie_msi_chip);
+> +		if (!port->msi_domain) {
+> +			dev_err(dev, "failed to get an MSI IRQ domain\n");
+> +			return -ENODEV;
+> +		}
+> +		microsemi_pcie_enable_msi(port);
+> +	}
+> +
+> +	/* Enable interrupts */
+> +	writel(MICROSEMI_PCIE_ENABLE_MSI | MICROSEMI_PCIE_LOCAL_INT_ENABLE,
+> +	       port->bridge_base_addr + MICROSEMI_IMASK_LOCAL);
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * microsemi_pcie_init_port - Parse Device tree, Initialize hardware
+> + * @port: PCIe port information
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int microsemi_pcie_init_port(struct microsemi_pcie_port *port)
+> +{
+> +	struct device *dev = port->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct of_pci_range_parser parser;
+> +	struct of_pci_range range;
+> +	struct resource regs;
+> +	struct resource regs1;
+> +	resource_size_t size;
+> +	u32 atr_sz;
+> +	const char *type;
+> +	int err;
+> +	u32 val;
+> +	int index = 1;
+> +
+> +	type = of_get_property(node, "device_type", NULL);
+> +	if (!type || strcmp(type, "pci")) {
+> +		dev_err(dev, "invalid \"device_type\" %s\n", type);
+> +		return -EINVAL;
+> +	}
+
+Remove the "device_type" check, it is obsolete.
+
+> +
+> +	/* Only supporting bridge 1 */
+> +	port->bridge = 1;
+> +
+> +	mutex_init(&port->lock);
+> +
+> +	err = of_address_to_resource(node, 0, &regs);
+> +	if (err) {
+> +		dev_err(dev, "missing \"reg\" property\n");
+> +		return err;
+> +	}
+> +
+> +	port->pcie_base_addr = devm_pci_remap_cfg_resource(dev, &regs);
+> +	if (IS_ERR(port->pcie_base_addr))
+> +		return PTR_ERR(port->pcie_base_addr);
+> +
+> +	err = of_address_to_resource(node, 1, &regs1);
+> +	if (err) {
+> +		dev_err(dev, "missing \"reg\" property\n");
+> +		return err;
+> +	}
+> +
+> +	port->axi_base_addr = devm_ioremap_resource(dev, &regs1);
+> +	if (IS_ERR(port->axi_base_addr))
+> +		return PTR_ERR(port->axi_base_addr);
+> +
+> +	if (port->bridge == 0) {
+
+This is dead code, isn't it ? If we only support bridge 1...
+
+> +		port->bridge_base_addr = port->axi_base_addr
+> +			+ MICROSEMI_PCIE0_BRIDGE_ADDR;
+> +		port->ctrl_base_addr = port->axi_base_addr
+> +			+ MICROSEMI_PCIE0_CTRL_ADDR;
+> +	} else {
+> +		port->bridge_base_addr = port->axi_base_addr
+> +			+ MICROSEMI_PCIE1_BRIDGE_ADDR;
+> +		port->ctrl_base_addr = port->axi_base_addr
+> +			+ MICROSEMI_PCIE1_CTRL_ADDR;
+> +	}
+> +
+> +	port->irq = irq_of_parse_and_map(node, 0);
+
+of_irq_get()
+
+> +
+> +	err = devm_request_irq(dev, port->irq, microsemi_pcie_intr_handler,
+> +			       IRQF_SHARED | IRQF_NO_THREAD,
+> +			       "microsemi-pcie", port);
+
+No we are not requesting the IRQ line, it is a cascaded IRQ and must
+be handled differently, see drivers above for examples.
+
+> +	if (err) {
+> +		dev_err(dev, "unable to request IRQ%d\n", port->irq);
+> +		return err;
+> +	}
+> +
+> +	microsemi_pcie_enable(port);
+> +
+> +	/* Clear and Disable interrupts */
+> +	val = ECC_CONTROL_AXI2PCIE_RAM_ECC_BYPASS
+> +		| ECC_CONTROL_PCIE2AXI_RAM_ECC_BYPASS
+> +		| ECC_CONTROL_RX_RAM_ECC_BYPASS
+> +		| ECC_CONTROL_TX_RAM_ECC_BYPASS;
+> +	writel(val, port->ctrl_base_addr + MICROSEMI_ECC_CONTROL);
+> +
+> +	val = PCIE_EVENT_INT_L2_EXIT_INT
+> +		| PCIE_EVENT_INT_HOTRST_EXIT_INT
+> +		| PCIE_EVENT_INT_DLUP_EXIT_INT
+> +		| PCIE_EVENT_INT_L2_EXIT_INT_MASK
+> +		| PCIE_EVENT_INT_HOTRST_EXIT_INT_MASK
+> +		| PCIE_EVENT_INT_DLUP_EXIT_INT_MASK;
+> +	writel(val, port->ctrl_base_addr + MICROSEMI_PCIE_EVENT_INT);
+> +
+> +	val = SEC_ERROR_INT_TX_RAM_SEC_ERR_INT
+> +		| SEC_ERROR_INT_RX_RAM_SEC_ERR_INT
+> +		| SEC_ERROR_INT_PCIE2AXI_RAM_SEC_ERR_INT
+> +		| SEC_ERROR_INT_AXI2PCIE_RAM_SEC_ERR_INT;
+> +	writel(val, port->ctrl_base_addr + MICROSEMI_SEC_ERROR_INT);
+> +	writel(val, port->ctrl_base_addr + MICROSEMI_SEC_ERROR_INT_MASK);
+> +
+> +	val = DED_ERROR_INT_TX_RAM_DED_ERR_INT
+> +		| DED_ERROR_INT_RX_RAM_DED_ERR_INT
+> +		| DED_ERROR_INT_PCIE2AXI_RAM_DED_ERR_INT
+> +		| DED_ERROR_INT_AXI2PCIE_RAM_DED_ERR_INT;
+> +	writel(val, port->ctrl_base_addr + MICROSEMI_DED_ERROR_INT);
+> +	writel(val, port->ctrl_base_addr + MICROSEMI_DED_ERROR_INT_MASK);
+> +
+> +	writel(0x00000000, port->bridge_base_addr + MICROSEMI_IMASK_LOCAL);
+> +	writel(GENMASK(31, 0),
+> +	       port->bridge_base_addr + MICROSEMI_ISTATUS_LOCAL);
+> +	writel(0x00000000, port->bridge_base_addr + MICROSEMI_IMASK_HOST);
+> +	writel(GENMASK(31, 0), port->bridge_base_addr + MICROSEMI_ISTATUS_HOST);
+> +
+> +	/* Configure Address Translation Table 0 for PCIe config space */
+> +	writel(MICROSEMI_PCIE_CONFIG_INTERFACE,
+> +	       port->bridge_base_addr + MICROSEMI_ATR0_AXI4_SLV0_TRSL_PARAM);
+> +
+> +	size = resource_size(&regs);
+> +
+> +	atr_sz = find_first_bit((const unsigned long *)&size, 64) - 1;
+> +
+> +	writel(lower_32_bits(regs.start)
+> +		| atr_sz << ATR_SIZE_SHIFT | ATR_IMPL_ENABLE,
+> +		port->bridge_base_addr
+> +		+ MICROSEMI_ATR0_AXI4_SLV0_SRCADDR_PARAM);
+> +
+> +	writel(lower_32_bits(regs.start),
+> +	       port->bridge_base_addr + MICROSEMI_ATR0_AXI4_SLV0_TRSL_ADDR_LSB);
+> +
+> +	if (of_pci_range_parser_init(&parser, node)) {
+> +		dev_err(dev, "missing \"ranges\" property\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	for_each_of_pci_range(&parser, &range) {
+
+Why not call:
+
+devm_of_pci_get_host_bridge_resources()
+
+before this function so that you do not have to parse the host bridge
+resources again ?
+
+> +						    &iobase);
+> +		switch (range.flags & IORESOURCE_TYPE_BITS) {
+> +		case IORESOURCE_MEM:
+> +			size = range.size;
+> +			atr_sz =
+> +				find_first_bit((const unsigned long *)&size, 64)
+> +				- 1;
+> +
+> +			/* Configure Address Translation Table index for PCIe
+> +			 * mem space
+> +			 */
+> +			writel(MICROSEMI_PCIE_TX_RX_INTERFACE,
+> +			       port->bridge_base_addr
+> +				+ (index * MICROSEMI_ATR0_AXI4_SLV_SIZE)
+> +				+ MICROSEMI_ATR0_AXI4_SLV0_TRSL_PARAM);
+> +
+> +			writel(lower_32_bits(range.cpu_addr)
+> +				| (atr_sz << ATR_SIZE_SHIFT)
+> +				| ATR_IMPL_ENABLE,
+> +				port->bridge_base_addr
+> +				+ (index * MICROSEMI_ATR0_AXI4_SLV_SIZE)
+> +				+ MICROSEMI_ATR0_AXI4_SLV0_SRCADDR_PARAM);
+> +
+> +			writel(lower_32_bits(range.pci_addr),
+> +			       port->bridge_base_addr
+> +				+ (index * MICROSEMI_ATR0_AXI4_SLV_SIZE)
+> +				+ MICROSEMI_ATR0_AXI4_SLV0_TRSL_ADDR_LSB);
+> +
+> +			break;
+> +		}
+> +		index++;
+> +	}
+> +
+> +	writel(readl(port->bridge_base_addr
+> +		+ MICROSEMI_ATR0_PCIE_WIN0_SRCADDR_31_12)
+> +		| (MICROSEMI_ATR0_PCIE_WIN0_SIZE
+> +		<< MICROSEMI_ATR0_PCIE_WIN0_SIZE_SHIFT),
+> +		port->bridge_base_addr +
+> +		MICROSEMI_ATR0_PCIE_WIN0_SRCADDR_31_12);
+> +
+> +	writel(0x0,
+> +	       port->bridge_base_addr + MICROSEMI_ATR0_PCIE_WIN0_SRCADDR_63_32);
+> +
+> +	writel((readl(port->bridge_base_addr + MICROSEMI_PCIE_PCI_IDS_DW1)
+> +		& 0xffff)
+> +		| (PCI_CLASS_BRIDGE_PCI << 16),
+> +		port->bridge_base_addr + MICROSEMI_PCIE_PCI_IDS_DW1);
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * microsemi_pcie_probe - Probe function
+> + * @pdev: Platform device pointer
+> + *
+> + * Return: '0' on success and error value on failure
+> + */
+> +static int microsemi_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct microsemi_pcie_port *port;
+> +	struct pci_bus *bus, *child;
+> +	struct pci_host_bridge *bridge;
+> +	int err;
+> +	resource_size_t iobase = 0;
+> +	LIST_HEAD(res);
+> +
+> +	if (!dev->of_node)
+> +		return -ENODEV;
+> +
+> +	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*port));
+> +	if (!bridge)
+> +		return -ENODEV;
+> +
+> +	port = pci_host_bridge_priv(bridge);
+> +
+> +	port->dev = dev;
+> +	port->pdev = pdev;
+> +
+> +	err = microsemi_pcie_init_port(port);
+> +	if (err) {
+> +		dev_err(dev, "PCIe port initialization failed\n");
+> +		return err;
+> +	}
+> +
+> +	err = microsemi_pcie_init_irq_domain(port);
+> +	if (err) {
+> +		dev_err(dev, "failed creating IRQ domain\n");
+> +		return err;
+> +	}
+> +
+> +	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, &res,
+> +						    &iobase);
+> +	if (err) {
+> +		dev_err(dev, "getting bridge resources failed\n");
+> +		return err;
+> +	}
+> +
+> +	err = devm_request_pci_bus_resources(dev, &res);
+> +	if (err)
+> +		goto error;
+> +
+> +	list_splice_init(&res, &bridge->windows);
+> +	bridge->dev.parent = dev;
+> +	bridge->sysdata = port;
+> +	bridge->busnr = 0;
+> +	bridge->ops = &microsemi_pcie_ops;
+> +	bridge->map_irq = of_irq_parse_and_map_pci;
+> +	bridge->swizzle_irq = pci_common_swizzle;
+> +
+> +#ifdef CONFIG_PCI_MSI
+> +	microsemi_pcie_msi_chip.dev = dev;
+> +	bridge->msi = &microsemi_pcie_msi_chip;
+> +#endif
+
+This way of implementing MSIs is deprecated, remove this code, the
+matching of MSI IRQ chip with the PCI devices is carried out through
+DT bindings, there is no need for this bridge->msi pointer setting
+anymore; again check the drivers I listed above for hints they will
+help you understand the mechanism.
+
+Overall you are on the right track - update the MSI/INTX handling
+code as per my comments above and repost, if in doubt ask.
+
+Apologies for the delay in getting back to you.
+
+Lorenzo
+
+> +	err = pci_scan_root_bus_bridge(bridge);
+> +	if (err < 0)
+> +		goto error;
+> +
+> +	bus = bridge->bus;
+> +
+> +	pci_assign_unassigned_bus_resources(bus);
+> +	list_for_each_entry(child, &bus->children, node)
+> +		pcie_bus_configure_settings(child);
+> +	pci_bus_add_devices(bus);
+> +
+> +	return 0;
+> +
+> +error:
+> +	pci_free_resource_list(&res);
+> +	return err;
+> +}
+> +
+> +static const struct of_device_id microsemi_pcie_of_match[] = {
+> +	{ .compatible = "microsemi,ms-pf-axi-pcie-host", },
+> +	{}
+> +};
+> +
+> +static struct platform_driver microsemi_pcie_driver = {
+> +	.driver = {
+> +		.name = "microsemi-pcie",
+> +		.of_match_table = microsemi_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+> +	},
+> +	.probe = microsemi_pcie_probe,
+> +};
+> +builtin_platform_driver(microsemi_pcie_driver);
+> -- 
+> 2.17.0
+> 
