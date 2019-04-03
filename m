@@ -2,168 +2,159 @@ Return-Path: <SRS0=9zG9=SF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2467C4360F
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 17:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0FCBC4360F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 17:45:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 602E7206DF
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 17:36:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554313011;
-	bh=AVMXa3cG1N8pImjPVrC4CxhvQ77U3Fimk39UpmGZpnk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=s76R05IDhXzILnidd14RRhkiXfAEu5QldwHQgS8GManYuU5gzh5IkYx6YNiB/87Wh
-	 zsgoU0PYDb8qpC4fDr3BhaRgHvZpVnalVT5yEhBJHnPxcab3CsIrIQHuKIXbflT3Mt
-	 iV/m0TtUYE70gKbJCVN/gkdk12CvdUt9XGwsa6FI=
+	by mail.kernel.org (Postfix) with ESMTP id 8656B206DF
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 17:45:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tRi9+Oeg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726151AbfDCRgo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Apr 2019 13:36:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49602 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726084AbfDCRgo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Apr 2019 13:36:44 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3BE2B206DF;
-        Wed,  3 Apr 2019 17:36:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554313002;
-        bh=AVMXa3cG1N8pImjPVrC4CxhvQ77U3Fimk39UpmGZpnk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Db52NSfvGrnTYCWkR+TYzld6vI+TYwRltWYtH5c1y9xQhK08lUkCr6HEQSvuCaBdU
-         Z2qAw/z3JMUtclMRuaZqyXNVtn9kIyGw52DQLUIyeOBdPpNd7nQDOAkgnULYshuZGU
-         bg/YrCmWJ2Bh2Qdvb5HGOld2+fMATdSERPOqOQGM=
-Date:   Wed, 3 Apr 2019 12:36:41 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     robh+dt@kernel.org, mark.rutland@arm.com, thierry.reding@gmail.com,
-        jonathanh@nvidia.com, kishon@ti.com, catalin.marinas@arm.com,
-        will.deacon@arm.com, lorenzo.pieralisi@arm.com,
-        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        mperttunen@nvidia.com, tiwai@suse.de, spujar@nvidia.com,
-        skomatineni@nvidia.com, liviu.dudau@arm.com, krzk@kernel.org,
-        heiko@sntech.de, horms+renesas@verge.net.au, olof@lixom.net,
-        maxime.ripard@bootlin.com, andy.gross@linaro.org,
-        bjorn.andersson@linaro.org, jagan@amarulasolutions.com,
-        enric.balletbo@collabora.com, ezequiel@collabora.com,
-        stefan.wahren@i2se.com, marc.w.gonzalez@free.fr,
-        l.stach@pengutronix.de, tpiepho@impinj.com,
-        hayashi.kunihiko@socionext.com, yue.wang@amlogic.com,
-        shawn.lin@rock-chips.com, xiaowei.bao@nxp.com,
-        devicetree@vger.kernel.org, mmaddireddy@nvidia.com,
-        kthota@nvidia.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 09/10] PCI: tegra: Add Tegra194 PCIe support
-Message-ID: <20190403173641.GI141706@google.com>
-References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
- <1553613207-3988-10-git-send-email-vidyas@nvidia.com>
- <20190329203159.GG24180@google.com>
- <5eb9599c-a6d6-d3a3-beef-5225ed7393f9@nvidia.com>
- <20190402183110.GE141706@google.com>
- <dcbfbb32-9980-7ee4-89cd-baedfe624ce5@nvidia.com>
+        id S1726155AbfDCRpj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Apr 2019 13:45:39 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:42359 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726151AbfDCRpj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 13:45:39 -0400
+Received: by mail-wr1-f68.google.com with SMTP id g3so22575061wrx.9;
+        Wed, 03 Apr 2019 10:45:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ASBaQce5m6AuYGoEb0Us5O7ZWrd+DRD4Qy7hrVciAP0=;
+        b=tRi9+Oegu2N5yyzc2Wla/xPbQv9WeDeJOlI/N5kQp94bu7LTfQas23+4DBKWuBpxcW
+         5oumr2nopBuM/aRXH0IrPk6ZUcrh+tf4TXjYr1FaKwrj0lxdUO1c+j7tgZq9MigPQ55p
+         UmUCyz7FAEFLlJhz2Zt7dEGstJN6GAEHjarUTMAnZKBrA2u7Ukb9Cp9Q7fkwmufqLvDs
+         B/qfcZ6QKmtDW5lmKD/AX3JSRiCyoAk7CdRko0i8eWjhlir4cTI7NA718/7qSZNIaR7j
+         Qo4o053QY5y/HEW+GbbtqtWkMBDcH1buZny6DbluUDeCK9T0vRvclN2xAKNGfKvlsH4K
+         F8mA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ASBaQce5m6AuYGoEb0Us5O7ZWrd+DRD4Qy7hrVciAP0=;
+        b=Uy9YMuBmpoQpysuyIFluROHPfjNLOeABMORELSpUPEMzaKd0WBgG4LmaZW0eiQl2LT
+         jU1Cr2D+aG/v9QZOZoFD1FlaTO/UltyO6IwVLuMzCg5DmpMpq0k5Tn0ihUEZN7P+J4dU
+         z3jA5WYYb4RWwiMAXCaRd4aGIv+iDNvxPKwnoMOKylSt/VmJ1M04UZyb68CUQHbs7F9Y
+         8kDJ/AYxOP+CUa97oHPJGlSkpU6iP8hYTQNRTIuvCvAl6vvhvRxC/s3+hWFGeTVaIvQ8
+         Rr3/hDO8v17oSvAwgHNinfzurl1HUdouwECijDwQ2HyAI8jJfSJb3uUL5O4YeMMaqrtn
+         NuAw==
+X-Gm-Message-State: APjAAAXk8eG2MYSNX7pzhPmMqABc7U8QV5Bgc1BZBwMyU2yXHp0m+KWL
+        j5nFKt/JwNRGAjXCdiCttEw=
+X-Google-Smtp-Source: APXvYqzRoganwZB2Hscd29KmRNWF5sdG+XICEHbMrej1Rb0Q9LaI6QT18xRak/d5DyEtt7qRiZ6bkQ==
+X-Received: by 2002:adf:ea0b:: with SMTP id q11mr564753wrm.233.1554313536729;
+        Wed, 03 Apr 2019 10:45:36 -0700 (PDT)
+Received: from ?IPv6:2003:ea:8be1:dd00:ed2b:516:5ae8:487f? (p200300EA8BE1DD00ED2B05165AE8487F.dip0.t-ipconnect.de. [2003:ea:8be1:dd00:ed2b:516:5ae8:487f])
+        by smtp.googlemail.com with ESMTPSA id v14sm18979629wrr.20.2019.04.03.10.45.35
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 03 Apr 2019 10:45:36 -0700 (PDT)
+Subject: Re: [PATCH net] r8169: switch off ASPM by default and add sysfs
+ attribute to control ASPM
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Frederick Lawler <fred@fredlawl.com>
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Rajat Jain <rajatja@google.com>
+References: <275eb60f-8cfe-9ff6-97bc-39d9ef280d36@gmail.com>
+ <0640ba80-519f-ab76-a86d-e42833df46fb@gmail.com>
+ <4f0e0f6c-20b7-73f8-e524-9798dfbac6d9@gmail.com>
+ <20190402215752.GG141706@google.com>
+ <436d3d44-27ab-2d4b-988e-8411b8ea3759@gmail.com>
+ <20190403131446.GH141706@google.com>
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+Message-ID: <b8787012-0928-e613-bbf6-4de3e462f055@gmail.com>
+Date:   Wed, 3 Apr 2019 19:45:29 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <dcbfbb32-9980-7ee4-89cd-baedfe624ce5@nvidia.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190403131446.GH141706@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 03, 2019 at 03:13:09PM +0530, Vidya Sagar wrote:
-> On 4/3/2019 12:01 AM, Bjorn Helgaas wrote:
-> > On Tue, Apr 02, 2019 at 12:47:48PM +0530, Vidya Sagar wrote:
-> > > On 3/30/2019 2:22 AM, Bjorn Helgaas wrote:
-> > > > On Tue, Mar 26, 2019 at 08:43:26PM +0530, Vidya Sagar wrote:
-> > > > > Add support for Synopsys DesignWare core IP based PCIe host controller
-> > > > > present in Tegra194 SoC.
-> > 
-> >    - Why does this chip require pcie_pme_disable_msi()?  The only other
-> >      use is a DMI quirk for "MSI Wind U-100", added by c39fae1416d5
-> >      ("PCI PM: Make it possible to force using INTx for PCIe PME
-> >      signaling").
->
-> Because Tegra194 doesn't support raising PME interrupts through MSI line.
+On 03.04.2019 15:14, Bjorn Helgaas wrote:
+> [+cc Frederick]
+> 
+> On Wed, Apr 03, 2019 at 07:53:40AM +0200, Heiner Kallweit wrote:
+>> On 02.04.2019 23:57, Bjorn Helgaas wrote:
+>>> On Tue, Apr 02, 2019 at 10:41:20PM +0200, Heiner Kallweit wrote:
+>>>> On 02.04.2019 22:16, Florian Fainelli wrote:
+>>>>> On 4/2/19 12:55 PM, Heiner Kallweit wrote:
+>>>>>> There are numerous reports about different problems caused by ASPM
+>>>>>> incompatibilities between certain network chip versions and board
+>>>>>> chipsets. On the other hand on (especially mobile) systems where ASPM
+>>>>>> works properly it can significantly contribute to power-saving and
+>>>>>> increased battery runtime.
+>>>>>> One problem so far to make ASPM configurable was to find an acceptable
+>>>>>> way of configuration (e.g. module parameters are discouraged for that
+>>>>>> purpose).
+>>>>>>
+>>>>>> As a new attempt let's switch off ASPM per default and make it
+>>>>>> configurable by a sysfs attribute. The attribute is documented in
+>>>>>> new file Documentation/networking/device_drivers/realtek/r8169.txt.
+>>>
+>>> Both module parameters and sysfs attributes are a poor user
+>>> experience.  It's very difficult for users to figure out that
+>>> a tweak is needed.
+>>>
+>>>>> I am not sure this is where it should be solved, there is
+>>>>> definitively a device specific aspect to properly supporting the
+>>>>> enabling of ASPM L0s, L1s etc, but the actual sysfs knobs should
+>>>>> belong to the pci_device itself, since this is something that
+>>>>> likely other drivers would want to be able to expose. You would
+>>>>> probably want to work with the PCI maintainers to come up with a
+>>>>> standard solution that applies beyond just r8169 since presumably
+>>>>> there must be a gazillion of devices with the same issues.
+>>>
+>>> The Linux PCI core support for ASPM is poor.  Without more details,
+>>> it's impossible to tell whether these issues are hardware or firmware
+>>> defects on the device itself, or something that Linux is doing wrong.
+>>> There are several known defects, especially related to L1 substates
+>>> and hotplug.
+>>>
+>> The vendor refuses to release datasheets or errata. Only certain
+>> combinations of board chipsets (and maybe BIOS versions) and network
+>> chip versions (from the ~ 50 supported by the driver) seem to be
+>> affected. One typical symptom is missed RX packets, maybe the RX FIFO
+>> isn't big enough to buffer all packets until PCIe has woken up.
+>> The Windows vendor driver uses a hack, they dynamically disable ASPM
+>> under load.
+> 
+> I'm not super sympathetic to vendors like that or to OEMs that work
+> with them.  If we can make the NIC work reliably by disabling ASPM,
+> that's step one.  If we can figure out how to extend battery life by
+> enabling ASPM in some cases, great, but we have to be careful to do it
+> in a way that is supportable and doesn't generate lots of user
+> complaints that require debugging.
+> 
+> That said, I think Frederick has already started working on a plan for
+> the PCI core to expose sysfs files to manage ASPM.  This is similar to
+> the link_state files enabled by CONFIG_PCIEASPM_DEBUG, but it will be
+> always enabled and probably structured slightly differently.  The idea
+> is that this would be generic and would not require any driver
+> support.
+> 
+Thanks, Bjorn!
+Frederick, is there anything you could share already? Or any timeline?
+Based on Bjorns info what seems to be best to me:
+1. Disable ASPM for r8169 on stable (back to 4.19).
+2. Once the generic ASPM sysfs attributes are available, reenable ASPM
+   for r8169 in net-next.
 
-What does the spec say about this?  Is hardware supposed to support
-MSI for PME?  Given that MSI Wind U-100 and Tegra194 are the only two
-cases we know about where PME via MSI isn't supported, it seems like
-there must be either a requirement for that or some mechanism for the
-OS to figure this out, e.g., a capability bit.
-
-> > > > I see that an earlier patch added "bus" to struct pcie_port.
-> > > > I think it would be better to somehow connect to the
-> > > > pci_host_bridge struct.  Several other drivers already do
-> > > > this; see uses of pci_host_bridge_from_priv().
-> > >
-> > > All non-DesignWare based implementations save their private data
-> > > structure in 'private' pointer of struct pci_host_bridge and use
-> > > pci_host_bridge_from_priv() to get it back. But, DesignWare
-> > > based implementations save pcie_port in 'sysdata' and nothing in
-> > > 'private' pointer. So,  I'm not sure if
-> > > pci_host_bridge_from_priv() can be used in this case. Please do
-> > > let me know if you think otherwise.
-> > 
-> > DesignWare-based drivers should have a way to retrieve the
-> > pci_host_bridge pointer.  It doesn't have to be *exactly* the same
-> > as non-DesignWare drivers, but it should be similar.
->
-> I gave my reasoning as to why with the current code, it is not
-> possible to get the pci_host_bridge structure pointer from struct
-> pcie_port pointer in another thread as a reply to Thierry Reding's
-> comments. Since Jishen'g changes to support remove functionality are
-> accepted, I think using bus pointer saved in struct pcie_port
-> pointer shouldn't be any issue now. Please do let me know if that is
-> something not acceptable.
->
-> > > > That would give you the bus, as well as flags like
-> > > > no_ext_tags, native_aer, etc, which this driver, being a host
-> > > > bridge driver that's responsible for this part of the
-> > > > firmware/OS interface, may conceivably need.
-
-I think saving the pp->root_bus pointer as Jisheng's patch does is a
-sub-optimal solution.  If we figure out how to save the
-pci_host_bridge pointer, we automatically get the root bus pointer as
-well.
-
-It may require some restructuring to save the pci_host_bridge pointer,
-but I doubt it's really *impossible*.
-
-> > > > > +static int tegra_pcie_dw_runtime_suspend(struct device *dev)
-> > > > > +{
-> > > > > +	struct tegra_pcie_dw *pcie = dev_get_drvdata(dev);
-> > > > > +
-> > > > > +	tegra_pcie_downstream_dev_to_D0(pcie);
-> > > > > +
-> > > > > +	pci_stop_root_bus(pcie->pci.pp.bus);
-> > > > > +	pci_remove_root_bus(pcie->pci.pp.bus);
-> > > > 
-> > > > Why are you calling these?  No other drivers do this except in
-> > > > their .remove() methods.  Is there something special about
-> > > > Tegra, or is this something the other drivers *should* be
-> > > > doing?
-> > >
-> > > Since this API is called by remove, I'm removing the hierarchy
-> > > to safely bring down all the devices. I'll have to re-visit this
-> > > part as Jisheng Zhang's patches
-> > > https://patchwork.kernel.org/project/linux-pci/list/?series=98559
-> > > are now approved and I need to verify this part after
-> > > cherry-picking Jisheng's changes.
-> > 
-> > Tegra194 should do this the same way as other drivers, independent
-> > of Jisheng's changes.
->
-> When other Designware implementations add remove functionality, even
-> they should be calling these APIs (Jisheng also mentioned the same
-> in his commit message)
-
-My point is that these APIs should be called from driver .remove()
-methods, not from .runtime_suspend() methods.
-
-Bjorn
+> Bjorn
+> 
+Heiner
