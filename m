@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 340EBC4360F
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:51:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 514AAC10F06
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:51:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDF16206BA
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:51:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EB00206BA
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:51:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T9krHCM3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E35noDPk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728716AbfDCPvD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Apr 2019 11:51:03 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:37194 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728702AbfDCPvC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 11:51:02 -0400
-Received: by mail-pg1-f196.google.com with SMTP id e6so4176521pgc.4;
-        Wed, 03 Apr 2019 08:51:02 -0700 (PDT)
+        id S1728692AbfDCPu7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Apr 2019 11:50:59 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:41129 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728682AbfDCPu7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 11:50:59 -0400
+Received: by mail-pg1-f193.google.com with SMTP id f6so8527721pgs.8;
+        Wed, 03 Apr 2019 08:50:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=JiCc3xWTT61mWt/yeSj2EwwdCqRf8pJjDtK9JcvQptY=;
-        b=T9krHCM3RjQbcrCY+yX6c9c2Ys4OZiZV+L+GAECKJBaBZ3O2FmqltmzBWjvzb5E/t1
-         xrQQ49FxGFzRKwAkB2xLlWK9uXtSZC23S3LSi6nk088GrmKksNxe8G2kvgJa7RZvWrT9
-         2xQxvrS5V9BvS+FkLQksyZNfOH9jEyFXhP0OhD8I6VxvOleVx9hwEJYL9PjDHUAIAP9J
-         HJr6kmgZvT+e7Cm0BI/YJQsSUQBAmvCtWIpH+/xYqAaB9B61FvoJG0Q5FRjQJB1/0U4r
-         CQdroRDVklfcIV4Emjvcxg/sx3WTEffO0t+CRrtDDXCRi3LPQqTW2t9pIF6b26vJGxML
-         FLfg==
+        bh=KEZfO8Qu7It4AB6pzTfMyN1pmJD5Tm42+njWF0/CfxE=;
+        b=E35noDPkPqK8EOOg1lo+HRhuGmFLVJoBf0v9JXUjuXDfRhCKR8RnzLslW0BUlnJE1K
+         BfR3Ct1hak5UILnLSO1mGxp3xctuLpt5VhtIJzdPYENLG0fVKc2iCzpmvTw1eZHiSk1B
+         i/Zi/FybetTqdLRU+n3yPhgfO4y/2EvpIXVj2+CWgUyCkbsWXfVn0D7yYhHIz5kdOSCX
+         cc7b/Vtqt0/b64I6pdA5tmGRh+fradCTPUHMQVr+K8ZnoVGOVcXYFyo1dfZTAdSnOP0C
+         IDO8LsB08i8P5pl2uAcmaj4bkMFL8rld5AF9DiFaw2WLY2cvTRaNxfhINY7Uhdb0yRkF
+         edpQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JiCc3xWTT61mWt/yeSj2EwwdCqRf8pJjDtK9JcvQptY=;
-        b=mjkAZ9x1ff6gGzLLWCQuGrNj73pB6LIZd5zGZfoBftLbD3KlsPGw1ttItz6Iw0KqX5
-         +znx5NZam1CRhPiQGH+WNPSVMZ2EToceTqIIPGlV1f/MeQC6PqL+Zfkj2BXxFm69banX
-         gBc8g7O2WtgRxLvh+C/yL3QvLMRxuogvHd3K/t3sYibyRNsECrf2WTAeYJ+4O5bZRDpC
-         zk/kswWV0A33cQenSRqDumJLXeGt/qoQAYsj9PGEbxIsGesJfuOhiUOFkDMleIdnuu1l
-         VFxh3gCs+oYEtAkUHLbMByDKHgsQYp69/K4B8pW6YA61LG63OlH4QGcneFew6UvTC7qL
-         MheA==
-X-Gm-Message-State: APjAAAW3BdpeSagRb12YuLer9+DvKD49jd5ml7iaQzftOeD2hACP0UP0
-        eXv1uwMiA9RPEPFb/Qvln1Y=
-X-Google-Smtp-Source: APXvYqxYS5R29ABCMndJ6CgEEo3uygLgviwhDH0tlsZ+6iPk0oM0ZsMUzrAQnoqWmw0yIun2iKG4PA==
-X-Received: by 2002:a63:700f:: with SMTP id l15mr369478pgc.3.1554306661733;
-        Wed, 03 Apr 2019 08:51:01 -0700 (PDT)
+        bh=KEZfO8Qu7It4AB6pzTfMyN1pmJD5Tm42+njWF0/CfxE=;
+        b=muXo1iig0QKVCl5WZJbJ/NEcgGib25okoquNGU1X7lE5/e/HyS6YxtzMgATEohfbiK
+         EYfIKKD38vuitRvplbq4DeIh1Ld6t0CudwzmZwSkDdeH7qRDlftEqLWxRcOOVDntPikI
+         5BlAhVA8nTifbx7N7zqVH5Oe0O724uZ9/7iLFEZGx5f4Pv2vEIlXGJ9mpX9inUhFdrZS
+         aSYL8zEK88hmdK0HjwCmpknPFQtRHjTAHyiwvBW7emegOOMePCYIOcH0rAEHXWy3AuTR
+         My0HTMsHvtNLEzwLL5ZvP64nHjgsr2Dm5MqqlP83TDs/s1vyjW2uSU1PlFBkN+GK9kDq
+         9tJw==
+X-Gm-Message-State: APjAAAVLsY2RDRZP7YCIXz4KMEcgyTw+i33Pbde1USxsJ/Z/JAK59nss
+        tX/sJwO3Lxfl4IDYjZi+2Lc=
+X-Google-Smtp-Source: APXvYqzzmJ6+YsAtkUXagAQXK2kYsC23rzJwwyLBIDdVDIOp5r1x42fLaVOQuxAFO3rcjW/EWTfQHg==
+X-Received: by 2002:a63:384:: with SMTP id 126mr306518pgd.341.1554306658018;
+        Wed, 03 Apr 2019 08:50:58 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id b8sm18906922pgq.33.2019.04.03.08.50.58
+        by smtp.gmail.com with ESMTPSA id b8sm18906922pgq.33.2019.04.03.08.50.54
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 03 Apr 2019 08:51:00 -0700 (PDT)
+        Wed, 03 Apr 2019 08:50:56 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Jonathan Corbet <corbet@lwn.net>,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v2 12/12] Documentation: PCI: convert PCI/endpoint/pci-test-howto.txt to reST format
-Date:   Wed,  3 Apr 2019 23:49:55 +0800
-Message-Id: <20190403154955.12096-13-changbin.du@gmail.com>
+Subject: [PATCH v2 11/12] Documentation: PCI: convert PCI/endpoint/pci-test-function.txt to reST format
+Date:   Wed,  3 Apr 2019 23:49:54 +0800
+Message-Id: <20190403154955.12096-12-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190403154955.12096-1-changbin.du@gmail.com>
 References: <20190403154955.12096-1-changbin.du@gmail.com>
@@ -79,195 +79,107 @@ add it to Sphinx TOC tree. No essential content change.
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 ---
  Documentation/PCI/endpoint/index.rst          |  1 +
- ...{pci-test-howto.txt => pci-test-howto.rst} | 81 +++++++++++++------
- 2 files changed, 56 insertions(+), 26 deletions(-)
- rename Documentation/PCI/endpoint/{pci-test-howto.txt => pci-test-howto.rst} (78%)
+ ...est-function.txt => pci-test-function.rst} | 32 +++++++++++--------
+ 2 files changed, 20 insertions(+), 13 deletions(-)
+ rename Documentation/PCI/endpoint/{pci-test-function.txt => pci-test-function.rst} (84%)
 
 diff --git a/Documentation/PCI/endpoint/index.rst b/Documentation/PCI/endpoint/index.rst
-index b680a3fc4fec..d114ea74b444 100644
+index 3951de9f923c..b680a3fc4fec 100644
 --- a/Documentation/PCI/endpoint/index.rst
 +++ b/Documentation/PCI/endpoint/index.rst
-@@ -10,3 +10,4 @@ PCI Endpoint Framework
+@@ -9,3 +9,4 @@ PCI Endpoint Framework
+ 
     pci-endpoint
     pci-endpoint-cfs
-    pci-test-function
-+   pci-test-howto
-diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.rst
-similarity index 78%
-rename from Documentation/PCI/endpoint/pci-test-howto.txt
-rename to Documentation/PCI/endpoint/pci-test-howto.rst
-index 040479f437a5..909f770a07d6 100644
---- a/Documentation/PCI/endpoint/pci-test-howto.txt
-+++ b/Documentation/PCI/endpoint/pci-test-howto.rst
-@@ -1,38 +1,51 @@
--			    PCI TEST USERGUIDE
++   pci-test-function
+diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.rst
+similarity index 84%
+rename from Documentation/PCI/endpoint/pci-test-function.txt
+rename to Documentation/PCI/endpoint/pci-test-function.rst
+index 5916f1f592bb..ba02cddcec37 100644
+--- a/Documentation/PCI/endpoint/pci-test-function.txt
++++ b/Documentation/PCI/endpoint/pci-test-function.rst
+@@ -1,5 +1,10 @@
+-				PCI TEST
 -		    Kishon Vijay Abraham I <kishon@ti.com>
 +.. SPDX-License-Identifier: GPL-2.0
 +
-+===================
-+PCI Test User Guide
-+===================
++=================
++PCI Test Function
++=================
 +
 +:Author: Kishon Vijay Abraham I <kishon@ti.com>
  
- This document is a guide to help users use pci-epf-test function driver
- and pci_endpoint_test host driver for testing PCI. The list of steps to
- be followed in the host side and EP side is given below.
+ Traditionally PCI RC has always been validated by using standard
+ PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
+@@ -23,30 +28,31 @@ The PCI endpoint test device has the following registers:
+ 	8) PCI_ENDPOINT_TEST_IRQ_TYPE
+ 	9) PCI_ENDPOINT_TEST_IRQ_NUMBER
  
--1. Endpoint Device
-+Endpoint Device
-+===============
+-*) PCI_ENDPOINT_TEST_MAGIC
++* PCI_ENDPOINT_TEST_MAGIC
  
--1.1 Endpoint Controller Devices
-+Endpoint Controller Devices
-+---------------------------
+ This register will be used to test BAR0. A known pattern will be written
+ and read back from MAGIC register to verify BAR0.
  
--To find the list of endpoint controller devices in the system:
-+To find the list of endpoint controller devices in the system::
+-*) PCI_ENDPOINT_TEST_COMMAND:
++* PCI_ENDPOINT_TEST_COMMAND:
  
- 	# ls /sys/class/pci_epc/
- 	  51000000.pcie_ep
+ This register will be used by the host driver to indicate the function
+ that the endpoint device must perform.
  
--If PCI_ENDPOINT_CONFIGFS is enabled
-+If PCI_ENDPOINT_CONFIGFS is enabled::
+-Bitfield Description:
++Bitfield Description::
 +
- 	# ls /sys/kernel/config/pci_ep/controllers
- 	  51000000.pcie_ep
+   Bit 0		: raise legacy IRQ
+   Bit 1		: raise MSI IRQ
+   Bit 2		: raise MSI-X IRQ
+   Bit 3		: read command (read data from RC buffer)
+   Bit 4		: write command (write data to RC buffer)
+-  Bit 5		: copy command (copy data from one RC buffer to another
+-		  RC buffer)
++  Bit 5		: copy command (copy data from one RC buffer to another RC buffer)
  
--1.2 Endpoint Function Drivers
+-*) PCI_ENDPOINT_TEST_STATUS
++* PCI_ENDPOINT_TEST_STATUS
  
--To find the list of endpoint function drivers in the system:
-+Endpoint Function Drivers
-+-------------------------
+ This register reflects the status of the PCI endpoint device.
+ 
+-Bitfield Description:
++Bitfield Description::
 +
-+To find the list of endpoint function drivers in the system::
+   Bit 0		: read success
+   Bit 1		: read fail
+   Bit 2		: write success
+@@ -57,17 +63,17 @@ Bitfield Description:
+   Bit 7		: source address is invalid
+   Bit 8		: destination address is invalid
  
- 	# ls /sys/bus/pci-epf/drivers
- 	  pci_epf_test
+-*) PCI_ENDPOINT_TEST_SRC_ADDR
++* PCI_ENDPOINT_TEST_SRC_ADDR
  
--If PCI_ENDPOINT_CONFIGFS is enabled
-+If PCI_ENDPOINT_CONFIGFS is enabled::
-+
- 	# ls /sys/kernel/config/pci_ep/functions
- 	  pci_epf_test
+ This register contains the source address (RC buffer address) for the
+ COPY/READ command.
  
--1.3 Creating pci-epf-test Device
-+
-+Creating pci-epf-test Device
-+----------------------------
+-*) PCI_ENDPOINT_TEST_DST_ADDR
++* PCI_ENDPOINT_TEST_DST_ADDR
  
- PCI endpoint function device can be created using the configfs. To create
--pci-epf-test device, the following commands can be used
-+pci-epf-test device, the following commands can be used::
+ This register contains the destination address (RC buffer address) for
+ the COPY/WRITE command.
  
- 	# mount -t configfs none /sys/kernel/config
- 	# cd /sys/kernel/config/pci_ep/
-@@ -42,7 +55,7 @@ The "mkdir func1" above creates the pci-epf-test function device that will
- be probed by pci_epf_test driver.
+-*) PCI_ENDPOINT_TEST_IRQ_TYPE
++* PCI_ENDPOINT_TEST_IRQ_TYPE
  
- The PCI endpoint framework populates the directory with the following
--configurable fields.
-+configurable fields::
+ This register contains the interrupt type (Legacy/MSI) triggered
+ for the READ/WRITE/COPY and raise IRQ (Legacy/MSI) commands.
+@@ -77,7 +83,7 @@ Possible types:
+  - MSI		: 1
+  - MSI-X	: 2
  
- 	# ls functions/pci_epf_test/func1
- 	  baseclass_code	interrupt_pin	progif_code	subsys_id
-@@ -51,67 +64,83 @@ configurable fields.
+-*) PCI_ENDPOINT_TEST_IRQ_NUMBER
++* PCI_ENDPOINT_TEST_IRQ_NUMBER
  
- The PCI endpoint function driver populates these entries with default values
- when the device is bound to the driver. The pci-epf-test driver populates
--vendorid with 0xffff and interrupt_pin with 0x0001
-+vendorid with 0xffff and interrupt_pin with 0x0001::
- 
- 	# cat functions/pci_epf_test/func1/vendorid
- 	  0xffff
- 	# cat functions/pci_epf_test/func1/interrupt_pin
- 	  0x0001
- 
--1.4 Configuring pci-epf-test Device
-+
-+Configuring pci-epf-test Device
-+-------------------------------
- 
- The user can configure the pci-epf-test device using configfs entry. In order
- to change the vendorid and the number of MSI interrupts used by the function
--device, the following commands can be used.
-+device, the following commands can be used::
- 
- 	# echo 0x104c > functions/pci_epf_test/func1/vendorid
- 	# echo 0xb500 > functions/pci_epf_test/func1/deviceid
- 	# echo 16 > functions/pci_epf_test/func1/msi_interrupts
- 	# echo 8 > functions/pci_epf_test/func1/msix_interrupts
- 
--1.5 Binding pci-epf-test Device to EP Controller
-+
-+Binding pci-epf-test Device to EP Controller
-+--------------------------------------------
- 
- In order for the endpoint function device to be useful, it has to be bound to
- a PCI endpoint controller driver. Use the configfs to bind the function
--device to one of the controller driver present in the system.
-+device to one of the controller driver present in the system::
- 
- 	# ln -s functions/pci_epf_test/func1 controllers/51000000.pcie_ep/
- 
- Once the above step is completed, the PCI endpoint is ready to establish a link
- with the host.
- 
--1.6 Start the Link
-+
-+Start the Link
-+--------------
- 
- In order for the endpoint device to establish a link with the host, the _start_
--field should be populated with '1'.
-+field should be populated with '1'::
- 
- 	# echo 1 > controllers/51000000.pcie_ep/start
- 
--2. RootComplex Device
- 
--2.1 lspci Output
-+RootComplex Device
-+==================
-+
-+lspci Output
-+------------
- 
--Note that the devices listed here correspond to the value populated in 1.4 above
-+Note that the devices listed here correspond to the value populated in 1.4
-+above::
- 
- 	00:00.0 PCI bridge: Texas Instruments Device 8888 (rev 01)
- 	01:00.0 Unassigned class [ff00]: Texas Instruments Device b500
- 
--2.2 Using Endpoint Test function Device
-+
-+Using Endpoint Test function Device
-+-----------------------------------
- 
- pcitest.sh added in tools/pci/ can be used to run all the default PCI endpoint
--tests. To compile this tool the following commands should be used:
-+tests. To compile this tool the following commands should be used::
- 
- 	# cd <kernel-dir>
- 	# make -C tools/pci
- 
--or if you desire to compile and install in your system:
-+or if you desire to compile and install in your system::
- 
- 	# cd <kernel-dir>
- 	# make -C tools/pci install
- 
- The tool and script will be located in <rootfs>/usr/bin/
- 
--2.2.1 pcitest.sh Output
-+
-+pcitest.sh Output
-+~~~~~~~~~~~~~~~~~
-+::
-+
- 	# pcitest.sh
- 	BAR tests
+ This register contains the triggered ID interrupt.
  
 -- 
 2.20.1
