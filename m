@@ -5,63 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 950B0C4360F
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:50:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9507C4360F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 503D1206BA
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:50:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96399206DF
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:50:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gOp4O9Qa"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YvsBNYRP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728548AbfDCPug (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Apr 2019 11:50:36 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:39309 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726264AbfDCPuf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 11:50:35 -0400
-Received: by mail-pg1-f195.google.com with SMTP id k3so8531347pga.6;
-        Wed, 03 Apr 2019 08:50:34 -0700 (PDT)
+        id S1728627AbfDCPuq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Apr 2019 11:50:46 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:40845 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726838AbfDCPun (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 11:50:43 -0400
+Received: by mail-pf1-f195.google.com with SMTP id c207so8364087pfc.7;
+        Wed, 03 Apr 2019 08:50:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=iWoYGE2vdEJBQtC9GZQgMAhi1nhWWkn67bj8RYNc6wk=;
-        b=gOp4O9QahWLBIj8/FnfegoOpn9He3qpUqR9XzamSSiEHPPGcS5WWkfS7WegN41c98X
-         8phHd9lc+vrmz78N/CvzlK3kWemYRyw6ki0mt9/rEESmOmYP9yggm0TUl5FrES/Necyi
-         weDxt6FPmhO2QvxKIJC0Icze6FF0/dRhDV9eAc1CZVsizsXea+aZ4PTlnNKD++uWQfU5
-         RulcbavSSXOZ4dh7Yp7UW4mieLqtQ10qfEjRhTwC9PQSC00MkISaYxR6N9YYlWZwNfie
-         RVDMlfkWr5c/dWOMZpDwlU22lMCXhN7egMay2YusI/4mmYwRwfmslZOETqxCGeyCiBKM
-         S4YQ==
+        bh=hp94BP8ulBjJiDv4tTJV/hCtDHBHB4CwppicHdIc6NA=;
+        b=YvsBNYRPS11j7z5UKqJAQ1mzy8pFv1eu31Witj5z8MPqN7qT7aOR+oeumuPSeUVJWW
+         /KKcUUPOO3V/KV/1CKG26r392aNo8yuSxRH0vwRNeFI9RnU9vuQoH6BjyrJvhcp1RjCt
+         WxHqNY4zNwu1PuG3Lt7Luv5DX+cxUd61OoUUtNVTpen8NCu16YkZOuQm9um4FT/tRMHx
+         PdonvywKiA91XE/yhx7arC15MBX7GzcgoYf+ydzJw1dYmDb1K4T/lKcBb/d6+xMAnwI4
+         ctTni4NPtTTHSuB337wkN09oAYDVvIYicoQ/TbdOpxaJFui7Jg1CB9MtAkQX11v9GA98
+         KLdA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=iWoYGE2vdEJBQtC9GZQgMAhi1nhWWkn67bj8RYNc6wk=;
-        b=QSv2B9e1x5iaAuq+6rx/OT8anX1u2Nu3C1yKvuDUMV6F9VKdZGNwHT85mXZHJIRiep
-         N9YWe15rHjfIf2v/rxTypAyiIK0OVO6AgK1TLUQ+sM6e01S3H5A6aksVCzmm1/IfnnGv
-         mHhSNBWV6PMVGgt0Sf4svdfaZTASAAJMVRLLnCbzXAAV/NB+Lx5rVH99xBJrpWkw/hlX
-         xXYfxz69H3ZpiM08icC1ArzrxdGf79zd9DKYuD1cAGA67qjfZ+1BOGbcyuoc43fuptzZ
-         IYRsb5fESy9p6H38H16BwIL66nsGsGDpvrvI1ZoE5+RuvQZxeq5HqZiqLIG105qC3IEE
-         qYjQ==
-X-Gm-Message-State: APjAAAVpG+DM/e9Lgi3DysbIASoeuhTpJQczwAh/jn1Tl8iLi9dZJIf1
-        QkZZ/nH+50CMzd/05R+V5rg=
-X-Google-Smtp-Source: APXvYqwS2XGwXfHAzSP74T7FQrvZtp12Zb62qXUkazB30HLE4g182uTRqQzFiL9Tys/PEFfY3feqQA==
-X-Received: by 2002:a63:2c4a:: with SMTP id s71mr303621pgs.373.1554306634366;
-        Wed, 03 Apr 2019 08:50:34 -0700 (PDT)
+        bh=hp94BP8ulBjJiDv4tTJV/hCtDHBHB4CwppicHdIc6NA=;
+        b=opWwy4I+EBXOHeFSpNapIvl9BEOJzwA+rTDR1d9zTBjBj5+0KeD58nQzXUtGa08o/e
+         F+dC5Ls2FZZ2m/oS07dvev2i/CGYjLO3YDU3giF0X4UHki7JlpJn2WLJw9kLNUYIfryp
+         28LzBLluFUOoZHaXN/WDLDwen2OGE2Lc2GjeVebNKJcFTBoB3lEqHhOP3L+s23swgppG
+         9cb2ZDaMUDbuYYWS7onhjoYOOmN8AXkvMa+/P/V4Qatf505Ca04XKrgfqGAfL9QH0Sn1
+         RJcLJoooxPmfs7k1OPsHPI7rxZtUETISM7oxTVBIlxVwJSDopU2WHNwNVOuBucKy5LJg
+         pzTw==
+X-Gm-Message-State: APjAAAXTHg/s3OvEknmMjr0vDc7JF6mA7kcNAEbSs8x4EOotqIcARFpG
+        Be6k3Ay7AfSeRjgathPdwxE=
+X-Google-Smtp-Source: APXvYqyE+rIVp0YYItlSsZyTmVlx5e5Ou2aBIgRgDkXk3yCjPKXM7H0AYiLVEZ2F2xjN1FdA3x1omA==
+X-Received: by 2002:a63:7c45:: with SMTP id l5mr338384pgn.303.1554306642215;
+        Wed, 03 Apr 2019 08:50:42 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id b8sm18906922pgq.33.2019.04.03.08.50.31
+        by smtp.gmail.com with ESMTPSA id b8sm18906922pgq.33.2019.04.03.08.50.38
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 03 Apr 2019 08:50:33 -0700 (PDT)
+        Wed, 03 Apr 2019 08:50:41 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Jonathan Corbet <corbet@lwn.net>,
         Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v2 05/12] Documentation: PCI: convert PCI/MSI-HOWTO.txt to reST format
-Date:   Wed,  3 Apr 2019 23:49:48 +0800
-Message-Id: <20190403154955.12096-6-changbin.du@gmail.com>
+Subject: [PATCH v2 07/12] Documentation: PCI: convert PCI/pci-error-recovery.txt to reST format
+Date:   Wed,  3 Apr 2019 23:49:50 +0800
+Message-Id: <20190403154955.12096-8-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190403154955.12096-1-changbin.du@gmail.com>
 References: <20190403154955.12096-1-changbin.du@gmail.com>
@@ -76,270 +77,284 @@ This converts the plain text documentation to reStructuredText format and
 add it to Sphinx TOC tree. No essential content change.
 
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
-
 ---
-v2:
-  o drop numbering.
-  o simplify author list
----
- .../PCI/{MSI-HOWTO.txt => MSI-HOWTO.rst}      | 83 +++++++++++--------
- Documentation/PCI/index.rst                   |  1 +
- 2 files changed, 50 insertions(+), 34 deletions(-)
- rename Documentation/PCI/{MSI-HOWTO.txt => MSI-HOWTO.rst} (88%)
+ Documentation/PCI/index.rst                   |   1 +
+ ...or-recovery.txt => pci-error-recovery.rst} | 178 +++++++++---------
+ MAINTAINERS                                   |   2 +-
+ 3 files changed, 94 insertions(+), 87 deletions(-)
+ rename Documentation/PCI/{pci-error-recovery.txt => pci-error-recovery.rst} (80%)
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.rst
-similarity index 88%
-rename from Documentation/PCI/MSI-HOWTO.txt
-rename to Documentation/PCI/MSI-HOWTO.rst
-index 618e13d5e276..18cc3700489b 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.rst
-@@ -1,13 +1,14 @@
--		The MSI Driver Guide HOWTO
--	Tom L Nguyen tom.l.nguyen@intel.com
--			10/03/2003
--	Revised Feb 12, 2004 by Martine Silbermann
--		email: Martine.Silbermann@hp.com
--	Revised Jun 25, 2004 by Tom L Nguyen
--	Revised Jul  9, 2008 by Matthew Wilcox <willy@linux.intel.com>
--		Copyright 2003, 2008 Intel Corporation
-+.. SPDX-License-Identifier: GPL-2.0
-+.. include:: <isonum.txt>
- 
--1. About this guide
-+==========================
-+The MSI Driver Guide HOWTO
-+==========================
-+
-+:Authors: Tom L Nguyen; Martine Silbermann; Matthew Wilcox
-+
-+About this guide
-+================
- 
- This guide describes the basics of Message Signaled Interrupts (MSIs),
- the advantages of using MSI over traditional interrupt mechanisms, how
-@@ -15,7 +16,8 @@ to change your driver to use MSI or MSI-X and some basic diagnostics to
- try if a device doesn't support MSIs.
- 
- 
--2. What are MSIs?
-+What are MSIs?
-+==============
- 
- A Message Signaled Interrupt is a write from the device to a special
- address which causes an interrupt to be received by the CPU.
-@@ -29,7 +31,8 @@ Devices may support both MSI and MSI-X, but only one can be enabled at
- a time.
- 
- 
--3. Why use MSIs?
-+Why use MSIs?
-+=============
- 
- There are three reasons why using MSIs can give an advantage over
- traditional pin-based interrupts.
-@@ -61,14 +64,16 @@ Other possible designs include giving one interrupt to each packet queue
- in a network card or each port in a storage controller.
- 
- 
--4. How to use MSIs
-+How to use MSIs
-+===============
- 
- PCI devices are initialised to use pin-based interrupts.  The device
- driver has to set up the device to use MSI or MSI-X.  Not all machines
- support MSIs correctly, and for those machines, the APIs described below
- will simply fail and the device will continue to use pin-based interrupts.
- 
--4.1 Include kernel support for MSIs
-+Include kernel support for MSIs
-+-------------------------------
- 
- To support MSI or MSI-X, the kernel must be built with the CONFIG_PCI_MSI
- option enabled.  This option is only available on some architectures,
-@@ -76,14 +81,15 @@ and it may depend on some other options also being set.  For example,
- on x86, you must also enable X86_UP_APIC or SMP in order to see the
- CONFIG_PCI_MSI option.
- 
--4.2 Using MSI
-+Using MSI
-+---------
- 
- Most of the hard work is done for the driver in the PCI layer.  The driver
- simply has to request that the PCI layer set up the MSI capability for this
- device.
- 
- To automatically use MSI or MSI-X interrupt vectors, use the following
--function:
-+function::
- 
-   int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 		unsigned int max_vecs, unsigned int flags);
-@@ -101,12 +107,12 @@ any possible kind of interrupt.  If the PCI_IRQ_AFFINITY flag is set,
- pci_alloc_irq_vectors() will spread the interrupts around the available CPUs.
- 
- To get the Linux IRQ numbers passed to request_irq() and free_irq() and the
--vectors, use the following function:
-+vectors, use the following function::
- 
-   int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
- 
- Any allocated resources should be freed before removing the device using
--the following function:
-+the following function::
- 
-   void pci_free_irq_vectors(struct pci_dev *dev);
- 
-@@ -126,7 +132,7 @@ The typical usage of MSI or MSI-X interrupts is to allocate as many vectors
- as possible, likely up to the limit supported by the device.  If nvec is
- larger than the number supported by the device it will automatically be
- capped to the supported limit, so there is no need to query the number of
--vectors supported beforehand:
-+vectors supported beforehand::
- 
- 	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_ALL_TYPES)
- 	if (nvec < 0)
-@@ -135,7 +141,7 @@ vectors supported beforehand:
- If a driver is unable or unwilling to deal with a variable number of MSI
- interrupts it can request a particular number of interrupts by passing that
- number to pci_alloc_irq_vectors() function as both 'min_vecs' and
--'max_vecs' parameters:
-+'max_vecs' parameters::
- 
- 	ret = pci_alloc_irq_vectors(pdev, nvec, nvec, PCI_IRQ_ALL_TYPES);
- 	if (ret < 0)
-@@ -143,23 +149,24 @@ number to pci_alloc_irq_vectors() function as both 'min_vecs' and
- 
- The most notorious example of the request type described above is enabling
- the single MSI mode for a device.  It could be done by passing two 1s as
--'min_vecs' and 'max_vecs':
-+'min_vecs' and 'max_vecs'::
- 
- 	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
- 	if (ret < 0)
- 		goto out_err;
- 
- Some devices might not support using legacy line interrupts, in which case
--the driver can specify that only MSI or MSI-X is acceptable:
-+the driver can specify that only MSI or MSI-X is acceptable::
- 
- 	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_MSI | PCI_IRQ_MSIX);
- 	if (nvec < 0)
- 		goto out_err;
- 
--4.3 Legacy APIs
-+Legacy APIs
-+-----------
- 
- The following old APIs to enable and disable MSI or MSI-X interrupts should
--not be used in new code:
-+not be used in new code::
- 
-   pci_enable_msi()		/* deprecated */
-   pci_disable_msi()		/* deprecated */
-@@ -174,9 +181,11 @@ number of vectors.  If you have a legitimate special use case for the count
- of vectors we might have to revisit that decision and add a
- pci_nr_irq_vectors() helper that handles MSI and MSI-X transparently.
- 
--4.4 Considerations when using MSIs
-+Considerations when using MSIs
-+------------------------------
- 
--4.4.1 Spinlocks
-+Spinlocks
-+~~~~~~~~~
- 
- Most device drivers have a per-device spinlock which is taken in the
- interrupt handler.  With pin-based interrupts or a single MSI, it is not
-@@ -188,7 +197,8 @@ acquire the spinlock.  Such deadlocks can be avoided by using
- spin_lock_irqsave() or spin_lock_irq() which disable local interrupts
- and acquire the lock (see Documentation/kernel-hacking/locking.rst).
- 
--4.5 How to tell whether MSI/MSI-X is enabled on a device
-+How to tell whether MSI/MSI-X is enabled on a device
-+----------------------------------------------------
- 
- Using 'lspci -v' (as root) may show some devices with "MSI", "Message
- Signalled Interrupts" or "MSI-X" capabilities.  Each of these capabilities
-@@ -196,7 +206,8 @@ has an 'Enable' flag which is followed with either "+" (enabled)
- or "-" (disabled).
- 
- 
--5. MSI quirks
-+MSI quirks
-+==========
- 
- Several PCI chipsets or devices are known not to support MSIs.
- The PCI stack provides three ways to disable MSIs:
-@@ -205,7 +216,8 @@ The PCI stack provides three ways to disable MSIs:
- 2. on all devices behind a specific bridge
- 3. on a single device
- 
--5.1. Disabling MSIs globally
-+Disabling MSIs globally
-+-----------------------
- 
- Some host chipsets simply don't support MSIs properly.  If we're
- lucky, the manufacturer knows this and has indicated it in the ACPI
-@@ -219,7 +231,8 @@ on the kernel command line to disable MSIs on all devices.  It would be
- in your best interests to report the problem to linux-pci@vger.kernel.org
- including a full 'lspci -v' so we can add the quirks to the kernel.
- 
--5.2. Disabling MSIs below a bridge
-+Disabling MSIs below a bridge
-+-----------------------------
- 
- Some PCI bridges are not able to route MSIs between busses properly.
- In this case, MSIs must be disabled on all devices behind the bridge.
-@@ -230,7 +243,7 @@ as the nVidia nForce and Serverworks HT2000).  As with host chipsets,
- Linux mostly knows about them and automatically enables MSIs if it can.
- If you have a bridge unknown to Linux, you can enable
- MSIs in configuration space using whatever method you know works, then
--enable MSIs on that bridge by doing:
-+enable MSIs on that bridge by doing::
- 
-        echo 1 > /sys/bus/pci/devices/$bridge/msi_bus
- 
-@@ -244,7 +257,8 @@ below this bridge.
- Again, please notify linux-pci@vger.kernel.org of any bridges that need
- special handling.
- 
--5.3. Disabling MSIs on a single device
-+Disabling MSIs on a single device
-+---------------------------------
- 
- Some devices are known to have faulty MSI implementations.  Usually this
- is handled in the individual device driver, but occasionally it's necessary
-@@ -252,7 +266,8 @@ to handle this with a quirk.  Some drivers have an option to disable use
- of MSI.  While this is a convenient workaround for the driver author,
- it is not good practice, and should not be emulated.
- 
--5.4. Finding why MSIs are disabled on a device
-+Finding why MSIs are disabled on a device
-+-----------------------------------------
- 
- From the above three sections, you can see that there are many reasons
- why MSIs may not be enabled for a given device.  Your first step should
-@@ -260,8 +275,8 @@ be to examine your dmesg carefully to determine whether MSIs are enabled
- for your machine.  You should also check your .config to be sure you
- have enabled CONFIG_PCI_MSI.
- 
--Then, 'lspci -t' gives the list of bridges above a device.  Reading
--/sys/bus/pci/devices/*/msi_bus will tell you whether MSIs are enabled (1)
-+Then, 'lspci -t' gives the list of bridges above a device. Reading
-+`/sys/bus/pci/devices/*/msi_bus` will tell you whether MSIs are enabled (1)
- or disabled (0).  If 0 is found in any of the msi_bus files belonging
- to bridges between the PCI root and the device, MSIs are disabled.
- 
 diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index e1c19962a7f8..1b25bcc1edca 100644
+index c877a369481d..5ee4dba07116 100644
 --- a/Documentation/PCI/index.rst
 +++ b/Documentation/PCI/index.rst
-@@ -11,3 +11,4 @@ Linux PCI Bus Subsystem
-    pci
-    PCIEBUS-HOWTO
+@@ -13,3 +13,4 @@ Linux PCI Bus Subsystem
     pci-iov-howto
-+   MSI-HOWTO
+    MSI-HOWTO
+    acpi-info
++   pci-error-recovery
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.rst
+similarity index 80%
+rename from Documentation/PCI/pci-error-recovery.txt
+rename to Documentation/PCI/pci-error-recovery.rst
+index 0b6bb3ef449e..533ec4035bf5 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.rst
+@@ -1,12 +1,13 @@
++.. SPDX-License-Identifier: GPL-2.0
+ 
+-                       PCI Error Recovery
+-                       ------------------
+-                        February 2, 2006
++==================
++PCI Error Recovery
++==================
+ 
+-                 Current document maintainer:
+-             Linas Vepstas <linasvepstas@gmail.com>
+-          updated by Richard Lary <rlary@us.ibm.com>
+-       and Mike Mason <mmlnx@us.ibm.com> on 27-Jul-2009
++
++:Authors: - Linas Vepstas <linasvepstas@gmail.com>
++          - Richard Lary <rlary@us.ibm.com>
++          - Mike Mason <mmlnx@us.ibm.com>
+ 
+ 
+ Many PCI bus controllers are able to detect a variety of hardware
+@@ -63,7 +64,8 @@ mechanisms for dealing with SCSI bus errors and SCSI bus resets.
+ 
+ 
+ Detailed Design
+----------------
++===============
++
+ Design and implementation details below, based on a chain of
+ public email discussions with Ben Herrenschmidt, circa 5 April 2005.
+ 
+@@ -73,30 +75,33 @@ pci_driver. A driver that fails to provide the structure is "non-aware",
+ and the actual recovery steps taken are platform dependent.  The
+ arch/powerpc implementation will simulate a PCI hotplug remove/add.
+ 
+-This structure has the form:
+-struct pci_error_handlers
+-{
+-	int (*error_detected)(struct pci_dev *dev, enum pci_channel_state);
+-	int (*mmio_enabled)(struct pci_dev *dev);
+-	int (*slot_reset)(struct pci_dev *dev);
+-	void (*resume)(struct pci_dev *dev);
+-};
+-
+-The possible channel states are:
+-enum pci_channel_state {
+-	pci_channel_io_normal,  /* I/O channel is in normal state */
+-	pci_channel_io_frozen,  /* I/O to channel is blocked */
+-	pci_channel_io_perm_failure, /* PCI card is dead */
+-};
+-
+-Possible return values are:
+-enum pci_ers_result {
+-	PCI_ERS_RESULT_NONE,        /* no result/none/not supported in device driver */
+-	PCI_ERS_RESULT_CAN_RECOVER, /* Device driver can recover without slot reset */
+-	PCI_ERS_RESULT_NEED_RESET,  /* Device driver wants slot to be reset. */
+-	PCI_ERS_RESULT_DISCONNECT,  /* Device has completely failed, is unrecoverable */
+-	PCI_ERS_RESULT_RECOVERED,   /* Device driver is fully recovered and operational */
+-};
++This structure has the form::
++
++	struct pci_error_handlers
++	{
++		int (*error_detected)(struct pci_dev *dev, enum pci_channel_state);
++		int (*mmio_enabled)(struct pci_dev *dev);
++		int (*slot_reset)(struct pci_dev *dev);
++		void (*resume)(struct pci_dev *dev);
++	};
++
++The possible channel states are::
++
++	enum pci_channel_state {
++		pci_channel_io_normal,  /* I/O channel is in normal state */
++		pci_channel_io_frozen,  /* I/O to channel is blocked */
++		pci_channel_io_perm_failure, /* PCI card is dead */
++	};
++
++Possible return values are::
++
++	enum pci_ers_result {
++		PCI_ERS_RESULT_NONE,        /* no result/none/not supported in device driver */
++		PCI_ERS_RESULT_CAN_RECOVER, /* Device driver can recover without slot reset */
++		PCI_ERS_RESULT_NEED_RESET,  /* Device driver wants slot to be reset. */
++		PCI_ERS_RESULT_DISCONNECT,  /* Device has completely failed, is unrecoverable */
++		PCI_ERS_RESULT_RECOVERED,   /* Device driver is fully recovered and operational */
++	};
+ 
+ A driver does not have to implement all of these callbacks; however,
+ if it implements any, it must implement error_detected(). If a callback
+@@ -134,16 +139,17 @@ shouldn't do any new IOs. Called in task context. This is sort of a
+ 
+ All drivers participating in this system must implement this call.
+ The driver must return one of the following result codes:
+-		- PCI_ERS_RESULT_CAN_RECOVER:
+-		  Driver returns this if it thinks it might be able to recover
+-		  the HW by just banging IOs or if it wants to be given
+-		  a chance to extract some diagnostic information (see
+-		  mmio_enable, below).
+-		- PCI_ERS_RESULT_NEED_RESET:
+-		  Driver returns this if it can't recover without a
+-		  slot reset.
+-		- PCI_ERS_RESULT_DISCONNECT:
+-		  Driver returns this if it doesn't want to recover at all.
++
++  - PCI_ERS_RESULT_CAN_RECOVER:
++    Driver returns this if it thinks it might be able to recover
++    the HW by just banging IOs or if it wants to be given
++    a chance to extract some diagnostic information (see
++    mmio_enable, below).
++  - PCI_ERS_RESULT_NEED_RESET:
++    Driver returns this if it can't recover without a
++    slot reset.
++  - PCI_ERS_RESULT_DISCONNECT:
++    Driver returns this if it doesn't want to recover at all.
+ 
+ The next step taken will depend on the result codes returned by the
+ drivers.
+@@ -177,7 +183,7 @@ is STEP 6 (Permanent Failure).
+ >>> get the device working again.
+ 
+ STEP 2: MMIO Enabled
+--------------------
++--------------------
+ The platform re-enables MMIO to the device (but typically not the
+ DMA), and then calls the mmio_enabled() callback on all affected
+ device drivers.
+@@ -203,23 +209,23 @@ instead will have gone directly to STEP 3 (Link Reset) or STEP 4 (Slot Reset)
+ >>> into one of the next states, that is, link reset or slot reset.
+ 
+ The driver should return one of the following result codes:
+-		- PCI_ERS_RESULT_RECOVERED
+-		  Driver returns this if it thinks the device is fully
+-		  functional and thinks it is ready to start
+-		  normal driver operations again. There is no
+-		  guarantee that the driver will actually be
+-		  allowed to proceed, as another driver on the
+-		  same segment might have failed and thus triggered a
+-		  slot reset on platforms that support it.
+-
+-		- PCI_ERS_RESULT_NEED_RESET
+-		  Driver returns this if it thinks the device is not
+-		  recoverable in its current state and it needs a slot
+-		  reset to proceed.
+-
+-		- PCI_ERS_RESULT_DISCONNECT
+-		  Same as above. Total failure, no recovery even after
+-		  reset driver dead. (To be defined more precisely)
++  - PCI_ERS_RESULT_RECOVERED
++    Driver returns this if it thinks the device is fully
++    functional and thinks it is ready to start
++    normal driver operations again. There is no
++    guarantee that the driver will actually be
++    allowed to proceed, as another driver on the
++    same segment might have failed and thus triggered a
++    slot reset on platforms that support it.
++
++  - PCI_ERS_RESULT_NEED_RESET
++    Driver returns this if it thinks the device is not
++    recoverable in its current state and it needs a slot
++    reset to proceed.
++
++  - PCI_ERS_RESULT_DISCONNECT
++    Same as above. Total failure, no recovery even after
++    reset driver dead. (To be defined more precisely)
+ 
+ The next step taken depends on the results returned by the drivers.
+ If all drivers returned PCI_ERS_RESULT_RECOVERED, then the platform
+@@ -293,24 +299,24 @@ device will be considered "dead" in this case.
+ Drivers for multi-function cards will need to coordinate among
+ themselves as to which driver instance will perform any "one-shot"
+ or global device initialization. For example, the Symbios sym53cxx2
+-driver performs device init only from PCI function 0:
++driver performs device init only from PCI function 0::
+ 
+-+       if (PCI_FUNC(pdev->devfn) == 0)
+-+               sym_reset_scsi_bus(np, 0);
++	+       if (PCI_FUNC(pdev->devfn) == 0)
++	+               sym_reset_scsi_bus(np, 0);
+ 
+-	Result codes:
+-		- PCI_ERS_RESULT_DISCONNECT
+-		Same as above.
++Result codes:
++	- PCI_ERS_RESULT_DISCONNECT
++	  Same as above.
+ 
+ Drivers for PCI Express cards that require a fundamental reset must
+ set the needs_freset bit in the pci_dev structure in their probe function.
+ For example, the QLogic qla2xxx driver sets the needs_freset bit for certain
+-PCI card types:
++PCI card types::
+ 
+-+	/* Set EEH reset type to fundamental if required by hba  */
+-+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
+-+		pdev->needs_freset = 1;
+-+
++	+	/* Set EEH reset type to fundamental if required by hba  */
++	+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
++	+		pdev->needs_freset = 1;
++	+
+ 
+ Platform proceeds either to STEP 5 (Resume Operations) or STEP 6 (Permanent
+ Failure).
+@@ -370,23 +376,23 @@ The current policy is to turn this into a platform policy.
+ That is, the recovery API only requires that:
+ 
+  - There is no guarantee that interrupt delivery can proceed from any
+-device on the segment starting from the error detection and until the
+-slot_reset callback is called, at which point interrupts are expected
+-to be fully operational.
++   device on the segment starting from the error detection and until the
++   slot_reset callback is called, at which point interrupts are expected
++   to be fully operational.
+ 
+  - There is no guarantee that interrupt delivery is stopped, that is,
+-a driver that gets an interrupt after detecting an error, or that detects
+-an error within the interrupt handler such that it prevents proper
+-ack'ing of the interrupt (and thus removal of the source) should just
+-return IRQ_NOTHANDLED. It's up to the platform to deal with that
+-condition, typically by masking the IRQ source during the duration of
+-the error handling. It is expected that the platform "knows" which
+-interrupts are routed to error-management capable slots and can deal
+-with temporarily disabling that IRQ number during error processing (this
+-isn't terribly complex). That means some IRQ latency for other devices
+-sharing the interrupt, but there is simply no other way. High end
+-platforms aren't supposed to share interrupts between many devices
+-anyway :)
++   a driver that gets an interrupt after detecting an error, or that detects
++   an error within the interrupt handler such that it prevents proper
++   ack'ing of the interrupt (and thus removal of the source) should just
++   return IRQ_NOTHANDLED. It's up to the platform to deal with that
++   condition, typically by masking the IRQ source during the duration of
++   the error handling. It is expected that the platform "knows" which
++   interrupts are routed to error-management capable slots and can deal
++   with temporarily disabling that IRQ number during error processing (this
++   isn't terribly complex). That means some IRQ latency for other devices
++   sharing the interrupt, but there is simply no other way. High end
++   platforms aren't supposed to share interrupts between many devices
++   anyway :)
+ 
+ >>> Implementation details for the powerpc platform are discussed in
+ >>> the file Documentation/powerpc/eeh-pci-error-recovery.txt
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 0fe1fb801801..5e6f2f8afc66 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11965,7 +11965,7 @@ M:	Sam Bobroff <sbobroff@linux.ibm.com>
+ M:	Oliver O'Halloran <oohall@gmail.com>
+ L:	linuxppc-dev@lists.ozlabs.org
+ S:	Supported
+-F:	Documentation/PCI/pci-error-recovery.txt
++F:	Documentation/PCI/pci-error-recovery.rst
+ F:	drivers/pci/pcie/aer.c
+ F:	drivers/pci/pcie/dpc.c
+ F:	drivers/pci/pcie/err.c
 -- 
 2.20.1
 
