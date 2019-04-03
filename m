@@ -2,158 +2,128 @@ Return-Path: <SRS0=9zG9=SF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A4BC4360F
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 11:31:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEBC5C4360F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 13:14:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADA0C2147A
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 11:31:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B9552147C
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 13:14:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1554297289;
+	bh=HG9WifRKyyDiTzBy1ez5ZgwdhS7Vtx8XlpaFTlMgfAA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=hQTVrABHIllxFxfkRxOpQcIDI5RLzeXlgpxEpXZq5PFBR2jTue6aDeN+bGkVWAMdf
+	 9dEDlGYSA8JoJIxlo9yc3Hrj6wz95ekY8pABwNSj4pRK3xqsh1gzmYvN0pVOmNZols
+	 SzTGlTIamUmaIY1OJm37w3SSdqxDbrtghqQNIQzk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725954AbfDCLbc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Apr 2019 07:31:32 -0400
-Received: from foss.arm.com ([217.140.101.70]:38424 "EHLO foss.arm.com"
+        id S1726105AbfDCNOt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Apr 2019 09:14:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60102 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725935AbfDCLbc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Apr 2019 07:31:32 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 53E8B80D;
-        Wed,  3 Apr 2019 04:31:32 -0700 (PDT)
-Received: from e107981-ln.cambridge.arm.com (e107981-ln.cambridge.arm.com [10.1.197.40])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 879B03F59C;
-        Wed,  3 Apr 2019 04:31:30 -0700 (PDT)
-Date:   Wed, 3 Apr 2019 12:31:24 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Ray Jui <ray.jui@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Abhishek Shah <abhishek.shah@broadcom.com>
-Subject: Re: [PATCH v4 2/2] PCI: iproc: Add outbound configuration for 32-bit
- I/O region
-Message-ID: <20190403113124.GA16233@e107981-ln.cambridge.arm.com>
-References: <1551415936-30174-3-git-send-email-srinath.mannam@broadcom.com>
- <20190329173515.GA10367@e107981-ln.cambridge.arm.com>
- <CABe79T7LwFLST0dwwswv8sdqHcn0T4ked5WtcNpM78XUDUN3Jw@mail.gmail.com>
- <20190401164416.GA8616@e107981-ln.cambridge.arm.com>
- <e7d3e5a1-db5c-8438-f10f-81b87aba0e03@broadcom.com>
- <CABe79T7uLo+68P0Yr7jpgn1+4H01qhoPRjX05gszin3FXkBZ5w@mail.gmail.com>
- <20190402102639.GB22708@e107981-ln.cambridge.arm.com>
- <CABe79T5O-1EWVrR1vZ27LWuxTBqN4_x37bkpfKxfm1ZB+oDUvA@mail.gmail.com>
- <20190402133851.GA26122@e107981-ln.cambridge.arm.com>
- <CABe79T7JdOh0Lpr2vhWX5QPE5nuP9hZeviSB9E3tVteeAX89fw@mail.gmail.com>
+        id S1725959AbfDCNOs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Apr 2019 09:14:48 -0400
+Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C65D02084C;
+        Wed,  3 Apr 2019 13:14:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1554297288;
+        bh=HG9WifRKyyDiTzBy1ez5ZgwdhS7Vtx8XlpaFTlMgfAA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kOzzfPdW9vdgXdI2L8g2K4cZNu5LgJkCwHWzXIfHH05ClhvAsimaXDYidlbp3aNxS
+         WSoFvZduz+DobzP3l7vum017n0x25zA6EFLVtTnq3t4+AnnoP+HU/ZmziDiIh2v6kX
+         533MMAcPB0Lf5+vvSv7nFmv4DReR7mPvMsMeMqjg=
+Date:   Wed, 3 Apr 2019 08:14:46 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Heiner Kallweit <hkallweit1@gmail.com>
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        David Miller <davem@davemloft.net>,
+        Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Rajat Jain <rajatja@google.com>,
+        Frederick Lawler <fred@fredlawl.com>
+Subject: Re: [PATCH net] r8169: switch off ASPM by default and add sysfs
+ attribute to control ASPM
+Message-ID: <20190403131446.GH141706@google.com>
+References: <275eb60f-8cfe-9ff6-97bc-39d9ef280d36@gmail.com>
+ <0640ba80-519f-ab76-a86d-e42833df46fb@gmail.com>
+ <4f0e0f6c-20b7-73f8-e524-9798dfbac6d9@gmail.com>
+ <20190402215752.GG141706@google.com>
+ <436d3d44-27ab-2d4b-988e-8411b8ea3759@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CABe79T7JdOh0Lpr2vhWX5QPE5nuP9hZeviSB9E3tVteeAX89fw@mail.gmail.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <436d3d44-27ab-2d4b-988e-8411b8ea3759@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 03, 2019 at 08:41:44AM +0530, Srinath Mannam wrote:
-> Hi Lorenzo,
-> 
-> Please see my reply below,
-> 
-> On Tue, Apr 2, 2019 at 7:08 PM Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> >
-> > On Tue, Apr 02, 2019 at 04:16:13PM +0530, Srinath Mannam wrote:
-> >
-> > [...]
-> >
-> > > > Ok - I start to understand. What does it mean in HW terms that your
-> > > > 32bit AXI address region size is 32MB ? Please explain to me in details.
-> > > >
-> > > In our PCIe controller HW, AXI address from 0x42000000 to 0x44000000
-> > > of 32MB size and .
-> > > AXI address from 0x400000000 to 0x480000000 of 2GB size are provided
-> > > to map ob address.
-> > > First IO region is inside 32bit address and second IO region is
-> > > outside 32bit address.
-> > > This code change is to map first IO region(0x42000000 to 0x44000000).
-> > >
-> > > > IIUC you are using an OARR0 of 128MB in size to map a 32MB address
-> > > > region, that's what I understand this patch does (and the lowest index
-> > > > corresponds to the smallest possible size - it is far from clear by
-> > > > looking at the patch).
-> > > Yes, lowest index corresponds to smallest possible size (128MB).
-> > > In our controller we have multiple windows like OARR0, OARR1, OARR2,
-> > > OARR3 all supports multiple sizes from 128MB to 1024MB.
-> > > These details are given at the top of this driver file, as shown
-> > > below. all windows supports 128MB size still we must use OARR0 window
-> > > to configure first IO region(0x42000000 to 0x44000000).
-> > >
-> > > static const struct iproc_pcie_ob_map paxb_v2_ob_map[] = {
-> > >         {
-> > >                 /* OARR0/OMAP0 */
-> > >                 .window_sizes = { 128, 256 },
-> > >                 .nr_sizes = 2,
-> > >         },
-> > >         {
-> > >                 /* OARR1/OMAP1 */
-> > >                 .window_sizes = { 128, 256 },
-> > >                 .nr_sizes = 2,
-> > >         },
-> > >         {
-> > >                 /* OARR2/OMAP2 */
-> > >                 .window_sizes = { 128, 256, 512, 1024 },
-> > >                 .nr_sizes = 4,
-> > >         },
-> > >         {
-> > >                 /* OARR3/OMAP3 */
-> > >                 .window_sizes = { 128, 256, 512, 1024 },
-> > >                 .nr_sizes = 4,
-> > >         },
-> > > };
-> >
-> > Ok so this patch allows mapping an AXI I/O window that is smaller
-> > than OARR possible sizes, why it was not done from the beginning
-> > I really do not know.
-> >
-> Same Iproc driver we use for multiple SOCs, in previous SOCs does not
-> have 32-bit AXI address region to map ob.
-> In the present SOC, 32-bit AXI address region is available so that
-> this change is added.
-> 
-> > Now explain this to me please:
-> >
-> > > This patch add outbound window configuration to map below 32-bit I/O range
-> > > with corresponding PCI memory, which helps to access I/O region in ARM
-> > > 32-bit and one to one mapping of I/O region to PCI memory.
-> > >
-> > > Ex:
-> > > 1. ranges DT property given for current driver is,
-> > >     ranges = <0x83000000 0x0 0x40000000 0x4 0x00000000 0 0x40000000>;
-> > >     I/O region address is 0x400000000
-> > > 2. ranges DT property can be given after this patch,
-> > >     ranges = <0x83000000 0x0 0x42000000 0x0 0x42000000 0 0x2000000>;
-> > >     I/O region address is 0x42000000
-> >
-> > Why 1:1 AXI<->PCI address mapping is not possible in (1), how does the
-> > current code works on 32-bit systems and what's the benefit your change
-> > is bringing.
-> non-prefetchable memory range can only support 32-bit addresses, so
-> that we have taken 32-bit PCI bus address in (1).
-> current code does not work in 32-bit systems. In the present SOC with
-> this new change we can access from 32-bit CPU.
+[+cc Frederick]
 
-Thank you. I rewrote the log and pushed patches to pci/iproc, please
-have a look (Ray/Scott please do have a look too) and report back
-if that's fine.
+On Wed, Apr 03, 2019 at 07:53:40AM +0200, Heiner Kallweit wrote:
+> On 02.04.2019 23:57, Bjorn Helgaas wrote:
+> > On Tue, Apr 02, 2019 at 10:41:20PM +0200, Heiner Kallweit wrote:
+> >> On 02.04.2019 22:16, Florian Fainelli wrote:
+> >>> On 4/2/19 12:55 PM, Heiner Kallweit wrote:
+> >>>> There are numerous reports about different problems caused by ASPM
+> >>>> incompatibilities between certain network chip versions and board
+> >>>> chipsets. On the other hand on (especially mobile) systems where ASPM
+> >>>> works properly it can significantly contribute to power-saving and
+> >>>> increased battery runtime.
+> >>>> One problem so far to make ASPM configurable was to find an acceptable
+> >>>> way of configuration (e.g. module parameters are discouraged for that
+> >>>> purpose).
+> >>>>
+> >>>> As a new attempt let's switch off ASPM per default and make it
+> >>>> configurable by a sysfs attribute. The attribute is documented in
+> >>>> new file Documentation/networking/device_drivers/realtek/r8169.txt.
+> > 
+> > Both module parameters and sysfs attributes are a poor user
+> > experience.  It's very difficult for users to figure out that
+> > a tweak is needed.
+> > 
+> >>> I am not sure this is where it should be solved, there is
+> >>> definitively a device specific aspect to properly supporting the
+> >>> enabling of ASPM L0s, L1s etc, but the actual sysfs knobs should
+> >>> belong to the pci_device itself, since this is something that
+> >>> likely other drivers would want to be able to expose. You would
+> >>> probably want to work with the PCI maintainers to come up with a
+> >>> standard solution that applies beyond just r8169 since presumably
+> >>> there must be a gazillion of devices with the same issues.
+> > 
+> > The Linux PCI core support for ASPM is poor.  Without more details,
+> > it's impossible to tell whether these issues are hardware or firmware
+> > defects on the device itself, or something that Linux is doing wrong.
+> > There are several known defects, especially related to L1 substates
+> > and hotplug.
+> > 
+> The vendor refuses to release datasheets or errata. Only certain
+> combinations of board chipsets (and maybe BIOS versions) and network
+> chip versions (from the ~ 50 supported by the driver) seem to be
+> affected. One typical symptom is missed RX packets, maybe the RX FIFO
+> isn't big enough to buffer all packets until PCIe has woken up.
+> The Windows vendor driver uses a hack, they dynamically disable ASPM
+> under load.
 
-Do you agree that the initial commit was lacking _significant_
-information ? Please remember that the commit log plays a fundamental
-part in understanding a change and this one is a very important one
-so I am being pedantic on it.
+I'm not super sympathetic to vendors like that or to OEMs that work
+with them.  If we can make the NIC work reliably by disabling ASPM,
+that's step one.  If we can figure out how to extend battery life by
+enabling ASPM in some cases, great, but we have to be careful to do it
+in a way that is supportable and doesn't generate lots of user
+complaints that require debugging.
 
-Thanks,
-Lorenzo
+That said, I think Frederick has already started working on a plan for
+the PCI core to expose sysfs files to manage ASPM.  This is similar to
+the link_state files enabled by CONFIG_PCIEASPM_DEBUG, but it will be
+always enabled and probably structured slightly differently.  The idea
+is that this would be generic and would not require any driver
+support.
+
+Bjorn
