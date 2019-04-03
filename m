@@ -2,54 +2,38 @@ Return-Path: <SRS0=9zG9=SF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF1DAC4360F
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 08:08:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F303CC10F06
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 09:16:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B1B7321473
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 08:08:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA8772171F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 09:16:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="u5bP7fAt"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="XOXCngxm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726792AbfDCIIF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Apr 2019 04:08:05 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:48582 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726004AbfDCIIE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 04:08:04 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x3386UZA105501;
-        Wed, 3 Apr 2019 03:06:30 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1554278790;
-        bh=p1qtEm/la++hYPXZ2mkp+dlwk7pjUfaT6cVy62+YV7s=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=u5bP7fAtd8/aoiUYhQIZJPD7/sy8LweGZuSnoFQC7DAPGXioMAOqAq4T4PA8KIkIu
-         +oJoOUj21sPfJw3YImzBRcMIWp+Wc66qTScw6aRSxVFdWhmfXgIpzNFmAYEcOGvsfb
-         vKK1WK3SMrpSm8L3tn8sNV6OurB9bp+PB8U2TUQQ=
-Received: from DLEE108.ent.ti.com (dlee108.ent.ti.com [157.170.170.38])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x3386UFl118567
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 3 Apr 2019 03:06:30 -0500
-Received: from DLEE104.ent.ti.com (157.170.170.34) by DLEE108.ent.ti.com
- (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Wed, 3 Apr
- 2019 03:06:29 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE104.ent.ti.com
- (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Wed, 3 Apr 2019 03:06:29 -0500
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x3386IjH069260;
-        Wed, 3 Apr 2019 03:06:19 -0500
-Subject: Re: [PATCH 08/10] phy: tegra: Add PCIe PIPE2UPHY support
-To:     Vidya Sagar <vidyas@nvidia.com>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        id S1726461AbfDCJQF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Apr 2019 05:16:05 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:18363 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725935AbfDCJQF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 05:16:05 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5ca479d70000>; Wed, 03 Apr 2019 02:16:07 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Wed, 03 Apr 2019 02:16:03 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Wed, 03 Apr 2019 02:16:03 -0700
+Received: from [10.24.47.153] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 3 Apr
+ 2019 09:15:52 +0000
+Subject: Re: [PATCH 09/10] PCI: tegra: Add Tegra194 PCIe support
+To:     Thierry Reding <thierry.reding@gmail.com>
+CC:     Bjorn Helgaas <helgaas@kernel.org>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <jonathanh@nvidia.com>, <kishon@ti.com>,
         <catalin.marinas@arm.com>, <will.deacon@arm.com>,
         <lorenzo.pieralisi@arm.com>, <jingoohan1@gmail.com>,
         <gustavo.pimentel@synopsys.com>, <mperttunen@nvidia.com>,
@@ -62,205 +46,175 @@ To:     Vidya Sagar <vidyas@nvidia.com>, <bhelgaas@google.com>,
         <stefan.wahren@i2se.com>, <marc.w.gonzalez@free.fr>,
         <l.stach@pengutronix.de>, <tpiepho@impinj.com>,
         <hayashi.kunihiko@socionext.com>, <yue.wang@amlogic.com>,
-        <shawn.lin@rock-chips.com>, <xiaowei.bao@nxp.com>
-CC:     <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>
+        <shawn.lin@rock-chips.com>, <xiaowei.bao@nxp.com>,
+        <devicetree@vger.kernel.org>, <mmaddireddy@nvidia.com>,
+        <kthota@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
 References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
- <1553613207-3988-9-git-send-email-vidyas@nvidia.com>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <ee9bba31-c9ac-9275-6f55-f71fea1a33a0@ti.com>
-Date:   Wed, 3 Apr 2019 13:35:21 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ <1553613207-3988-10-git-send-email-vidyas@nvidia.com>
+ <20190329203159.GG24180@google.com>
+ <5eb9599c-a6d6-d3a3-beef-5225ed7393f9@nvidia.com>
+ <20190402141424.GB8017@ulmo>
+X-Nvconfidentiality: public
+From:   Vidya Sagar <vidyas@nvidia.com>
+Message-ID: <d51370ab-16be-18c8-5912-73ff9863a8ca@nvidia.com>
+Date:   Wed, 3 Apr 2019 14:45:49 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <1553613207-3988-9-git-send-email-vidyas@nvidia.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20190402141424.GB8017@ulmo>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1554282967; bh=c8MvKeNkm6jRMFC23RiJXHefhPBDTqQ9LaEl0LP157I=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=XOXCngxm765cJ6zww+F0HIGSXw86e6cX3pkHYvyOMqf3JbibcKhTASUKnfcdY96Nm
+         t72n3jP6kGHzhiOtRoj16nv8Qv7w44xaHd+7dowbFd1p+WviUEjbZ67sfRL+nqIkSP
+         TaYbkusIdEOSR4Qwr2WdCeb+c6wImfsZ8L7HJM8ddfkZmPOAg9SX0vKwmLMRUStFZW
+         HUNdRyveeOsxSFNwSx/Kw4dQIm9+sfi9SeeZLinKywWp1+W+frRBAlbrJOszBXH6KN
+         GBilyA7cC7vBakLVrrKAcEJXn5lqT9md9a0cCDCYopJHGLMIZGsmD7R3nWB5+SB1FB
+         FKrXHIN6Hc9pg==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 26/03/19 8:43 PM, Vidya Sagar wrote:
-> Synopsys DesignWare core based PCIe controllers in Tegra 194 SoC interface
-> with Universal PHY (UPHY) module through a PIPE2UPHY (P2U) module.
-> For each PCIe lane of a controller, there is a P2U unit instantiated at
-> hardware level. This driver provides support for the programming required
-> for each P2U that is going to be used for a PCIe controller.
+On 4/2/2019 7:44 PM, Thierry Reding wrote:
+> On Tue, Apr 02, 2019 at 12:47:48PM +0530, Vidya Sagar wrote:
+>> On 3/30/2019 2:22 AM, Bjorn Helgaas wrote:
+> [...]
+>>>> +static int tegra_pcie_dw_host_init(struct pcie_port *pp)
+>>>> +{
+> [...]
+>>>> +	val_w = dw_pcie_readw_dbi(pci, CFG_LINK_STATUS);
+>>>> +	while (!(val_w & PCI_EXP_LNKSTA_DLLLA)) {
+>>>> +		if (!count) {
+>>>> +			val = readl(pcie->appl_base + APPL_DEBUG);
+>>>> +			val &= APPL_DEBUG_LTSSM_STATE_MASK;
+>>>> +			val >>= APPL_DEBUG_LTSSM_STATE_SHIFT;
+>>>> +			tmp = readl(pcie->appl_base + APPL_LINK_STATUS);
+>>>> +			tmp &= APPL_LINK_STATUS_RDLH_LINK_UP;
+>>>> +			if (val == 0x11 && !tmp) {
+>>>> +				dev_info(pci->dev, "link is down in DLL");
+>>>> +				dev_info(pci->dev,
+>>>> +					 "trying again with DLFE disabled\n");
+>>>> +				/* disable LTSSM */
+>>>> +				val = readl(pcie->appl_base + APPL_CTRL);
+>>>> +				val &= ~APPL_CTRL_LTSSM_EN;
+>>>> +				writel(val, pcie->appl_base + APPL_CTRL);
+>>>> +
+>>>> +				reset_control_assert(pcie->core_rst);
+>>>> +				reset_control_deassert(pcie->core_rst);
+>>>> +
+>>>> +				offset =
+>>>> +				dw_pcie_find_ext_capability(pci,
+>>>> +							    PCI_EXT_CAP_ID_DLF)
+>>>> +				+ PCI_DLF_CAP;
+>>>
+>>> This capability offset doesn't change, does it?  Could it be computed
+>>> outside the loop?
+>> This is the only place where DLF offset is needed and gets calculated and this
+>> scenario is very rare as so far only a legacy ASMedia USB3.0 card requires DLF
+>> to be disabled to get PCIe link up. So, I thought of calculating the offset
+>> here itself instead of using a separate variable.
+>>
+>>>
+>>>> +				val = dw_pcie_readl_dbi(pci, offset);
+>>>> +				val &= ~DL_FEATURE_EXCHANGE_EN;
+>>>> +				dw_pcie_writel_dbi(pci, offset, val);
+>>>> +
+>>>> +				tegra_pcie_dw_host_init(&pcie->pci.pp);
+>>>
+>>> This looks like some sort of "wait for link up" retry loop, but a
+>>> recursive call seems a little unusual.  My 5 second analysis is that
+>>> the loop could run this 200 times, and you sure don't want the
+>>> possibility of a 200-deep call chain.  Is there way to split out the
+>>> host init from the link-up polling?
+>> Again, this recursive calling comes into picture only for a legacy ASMedia
+>> USB3.0 card and it is going to be a 1-deep call chain as the recursion takes
+>> place only once depending on the condition. Apart from the legacy ASMedia card,
+>> there is no other card at this point in time out of a huge number of cards that we have
+>> tested.
 > 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
->  drivers/phy/tegra/Kconfig             |   7 ++
->  drivers/phy/tegra/Makefile            |   1 +
->  drivers/phy/tegra/pcie-p2u-tegra194.c | 138 ++++++++++++++++++++++++++++++++++
->  3 files changed, 146 insertions(+)
->  create mode 100644 drivers/phy/tegra/pcie-p2u-tegra194.c
+> A more idiomatic way would be to add a "retry:" label somewhere and goto
+> that after disabling DLFE. That way you achieve the same effect, but you
+> can avoid the recursion, even if it is harmless in practice.
+Initially I thought of using goto to keep it simple, but I thought it would be
+discouraged and hence used recursion. But, yeah.. agree that goto would keep
+it simple and I'll switch to goto now.
+
 > 
-> diff --git a/drivers/phy/tegra/Kconfig b/drivers/phy/tegra/Kconfig
-> index a3b1de953fb7..1460c060fa70 100644
-> --- a/drivers/phy/tegra/Kconfig
-> +++ b/drivers/phy/tegra/Kconfig
-> @@ -6,3 +6,10 @@ config PHY_TEGRA_XUSB
->  
->  	  To compile this driver as a module, choose M here: the module will
->  	  be called phy-tegra-xusb.
-> +
-> +config PHY_TEGRA194_PCIE_P2U
-> +        tristate "NVIDIA Tegra P2U PHY Driver"
-> +        depends on ARCH_TEGRA
+>>>> +static int tegra_pcie_dw_probe(struct platform_device *pdev)
+>>>> +{
+>>>> +	struct tegra_pcie_dw *pcie;
+>>>> +	struct pcie_port *pp;
+>>>> +	struct dw_pcie *pci;
+>>>> +	struct phy **phy;
+>>>> +	struct resource	*dbi_res;
+>>>> +	struct resource	*atu_dma_res;
+>>>> +	const struct of_device_id *match;
+>>>> +	const struct tegra_pcie_of_data *data;
+>>>> +	char *name;
+>>>> +	int ret, i;
+>>>> +
+>>>> +	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
+>>>> +	if (!pcie)
+>>>> +		return -ENOMEM;
+>>>> +
+>>>> +	pci = &pcie->pci;
+>>>> +	pci->dev = &pdev->dev;
+>>>> +	pci->ops = &tegra_dw_pcie_ops;
+>>>> +	pp = &pci->pp;
+>>>> +	pcie->dev = &pdev->dev;
+>>>> +
+>>>> +	match = of_match_device(of_match_ptr(tegra_pcie_dw_of_match),
+>>>> +				&pdev->dev);
+>>>> +	if (!match)
+>>>> +		return -EINVAL;
+>>>
+>>> Logically could be the first thing in the function since it doesn't
+>>> depend on anything.
+>> Done
+>>
+>>>
+>>>> +	data = (struct tegra_pcie_of_data *)match->data;
+> 
+> of_device_get_match_data() can help remove some of the above
+> boilerplate. Also, there's no reason to check for a failure with these
+> functions. The driver is OF-only and can only ever be probed if the
+> device exists, in which case match (or data for that matter) will never
+> be NULL.
+Done.
 
-COMPILE_TEST
-> +        select GENERIC_PHY
-> +        help
-> +          Enable this to support the P2U (PIPE to UPHY) that is part of Tegra 19x SOCs.
-> diff --git a/drivers/phy/tegra/Makefile b/drivers/phy/tegra/Makefile
-> index 898589238fd9..f85b2c86643d 100644
-> --- a/drivers/phy/tegra/Makefile
-> +++ b/drivers/phy/tegra/Makefile
-> @@ -4,3 +4,4 @@ phy-tegra-xusb-y += xusb.o
->  phy-tegra-xusb-$(CONFIG_ARCH_TEGRA_124_SOC) += xusb-tegra124.o
->  phy-tegra-xusb-$(CONFIG_ARCH_TEGRA_132_SOC) += xusb-tegra124.o
->  phy-tegra-xusb-$(CONFIG_ARCH_TEGRA_210_SOC) += xusb-tegra210.o
-> +obj-$(CONFIG_PHY_TEGRA194_PCIE_P2U) += pcie-p2u-tegra194.o
-> diff --git a/drivers/phy/tegra/pcie-p2u-tegra194.c b/drivers/phy/tegra/pcie-p2u-tegra194.c
-> new file mode 100644
-> index 000000000000..bb2412ec4765
-> --- /dev/null
-> +++ b/drivers/phy/tegra/pcie-p2u-tegra194.c
-> @@ -0,0 +1,138 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * P2U (PIPE to UPHY) driver for Tegra T194 SoC
-> + *
-> + * Copyright (C) 2018 NVIDIA Corporation.
+> 
+>>> I see that an earlier patch added "bus" to struct pcie_port.  I think
+>>> it would be better to somehow connect to the pci_host_bridge struct.
+>>> Several other drivers already do this; see uses of
+>>> pci_host_bridge_from_priv().
+>> All non-DesignWare based implementations save their private data structure
+>> in 'private' pointer of struct pci_host_bridge and use pci_host_bridge_from_priv()
+>> to get it back. But, DesignWare based implementations save pcie_port in 'sysdata'
+>> and nothing in 'private' pointer. So,  I'm not sure if pci_host_bridge_from_priv()
+>> can be used in this case. Please do let me know if you think otherwise.
+> 
+> If nothing is currently stored in the private pointer, why not do like
+> the other drivers and store the struct pci_host_bridge pointer there?
+non-designware drivers get their private data allocated as part of pci_alloc_host_bridge()
+by passing the size of their private structure and use pci_host_bridge_from_priv() to get
+pointer to their own private structure (which is within struct pci_host_bridge).
+Whereas in Designware core, we can get the memory for struct pcie_port much before than
+calling pci_alloc_host_bridge() API, in fact, size '0' is passed as an argument to alloc API.
+This is the reason why struct pcie_port pointer is saved in 'sysdata'.
 
-2019
-> + *
-> + * Author: Vidya Sagar <vidyas@nvidia.com>
-> + */
-> +
-> +#include <linux/module.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/of.h>
-> +#include <linux/err.h>
-> +#include <linux/io.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/delay.h>
-> +#include <linux/of_platform.h>
-> +#include <soc/tegra/bpmp-abi.h>
-> +
-> +#define P2U_PERIODIC_EQ_CTRL_GEN3	0xc0
-> +#define P2U_PERIODIC_EQ_CTRL_GEN3_PERIODIC_EQ_EN		BIT(0)
-> +#define P2U_PERIODIC_EQ_CTRL_GEN3_INIT_PRESET_EQ_TRAIN_EN	BIT(1)
-> +#define P2U_PERIODIC_EQ_CTRL_GEN4	0xc4
-> +#define P2U_PERIODIC_EQ_CTRL_GEN4_INIT_PRESET_EQ_TRAIN_EN	BIT(1)
-> +
-> +#define P2U_RX_DEBOUNCE_TIME				0xa4
-> +#define P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_MASK	0xFFFF
-> +#define P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_VAL		160
-> +
-> +struct tegra_p2u {
-> +	void __iomem		*base;
-> +};
-> +
-> +static int tegra_p2u_power_off(struct phy *x)
-> +{
-> +	return 0;
+> 
+> Thierry
+> 
 
-Empty phy_ops are not required.
-> +}
-> +
-> +static int tegra_p2u_power_on(struct phy *x)
-> +{
-> +	u32 val;
-> +	struct tegra_p2u *phy = phy_get_drvdata(x);
-> +
-> +	val = readl(phy->base + P2U_PERIODIC_EQ_CTRL_GEN3);
-> +	val &= ~P2U_PERIODIC_EQ_CTRL_GEN3_PERIODIC_EQ_EN;
-> +	val |= P2U_PERIODIC_EQ_CTRL_GEN3_INIT_PRESET_EQ_TRAIN_EN;
-> +	writel(val, phy->base + P2U_PERIODIC_EQ_CTRL_GEN3);
-> +
-> +	val = readl(phy->base + P2U_PERIODIC_EQ_CTRL_GEN4);
-> +	val |= P2U_PERIODIC_EQ_CTRL_GEN4_INIT_PRESET_EQ_TRAIN_EN;
-> +	writel(val, phy->base + P2U_PERIODIC_EQ_CTRL_GEN4);
-> +
-> +	val = readl(phy->base + P2U_RX_DEBOUNCE_TIME);
-> +	val &= ~P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_MASK;
-> +	val |= P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_VAL;
-> +	writel(val, phy->base + P2U_RX_DEBOUNCE_TIME);
-
-This looks more like a init configuration rather than power on.
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_p2u_init(struct phy *x)
-> +{
-> +	return 0;
-> +}
-> +
-> +static int tegra_p2u_exit(struct phy *x)
-> +{
-> +	return 0;
-> +}
-
-Empty functions are not required.
-> +
-> +static const struct phy_ops ops = {
-> +	.init		= tegra_p2u_init,
-> +	.exit		= tegra_p2u_exit,
-> +	.power_on	= tegra_p2u_power_on,
-> +	.power_off	= tegra_p2u_power_off,
-> +	.owner		= THIS_MODULE,
-> +};
-> +
-> +static int tegra_p2u_probe(struct platform_device *pdev)
-> +{
-> +	struct tegra_p2u *phy;
-> +	struct phy *generic_phy;
-> +	struct phy_provider *phy_provider;
-> +	struct device *dev = &pdev->dev;
-> +	struct resource *res;
-> +
-> +	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
-> +	if (!phy)
-> +		return -ENOMEM;
-> +
-> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "base");
-> +	phy->base = devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(phy->base))
-> +		return PTR_ERR(phy->base);
-> +
-> +	platform_set_drvdata(pdev, phy);
-> +
-> +	generic_phy = devm_phy_create(dev, NULL, &ops);
-> +	if (IS_ERR(generic_phy))
-> +		return PTR_ERR(generic_phy);
-> +
-> +	phy_set_drvdata(generic_phy, phy);
-> +
-> +	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-> +	if (IS_ERR(phy_provider))
-> +		return PTR_ERR(phy_provider);
-> +
-
-return PTR_ERR_OR_ZERO(phy_provider);
-> +	return 0;
-> +}
-> +
-> +static int tegra_p2u_remove(struct platform_device *pdev)
-> +{
-> +	return 0;
-> +}
-
-not required.
-
-Thanks
-Kishon
