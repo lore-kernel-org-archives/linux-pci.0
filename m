@@ -2,107 +2,112 @@ Return-Path: <SRS0=9zG9=SF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1E0FC4360F
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 09:26:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAF69C10F06
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 09:27:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 936962147C
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 09:26:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70C15206B7
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 09:27:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="DaWsGAZN";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="CNorGnML"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=verge.net.au header.i=@verge.net.au header.b="cU2c0Gzj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725956AbfDCJ0S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Apr 2019 05:26:18 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53628 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbfDCJ0S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 05:26:18 -0400
-Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id 8EB8961196; Wed,  3 Apr 2019 09:26:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554283577;
-        bh=5pA59JnwmAsIHYPGsNGzbkxrq33gDyF3rYN9ztXq8yM=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=DaWsGAZNS9RWhpc5qWLDmjnyj7oC1kkOFIWNQg2Khk5RrHsPJj7YkWJe5j3fGIXv7
-         ZDZMQMPdABnwbLKfrA+9BiSG/kE71NwEUnQ6RjdA9z4sZYSP5SKWsYhQo67qtMCqm3
-         v4VaNDTV0xRW8G8f6uiZl22zjqIUD+m1z8Uhwsh4=
-Received: from [10.79.129.169] (blr-bdr-fw-01_globalnat_allzones-outside.qualcomm.com [103.229.18.19])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: vivek.gautam@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D5DFE60A44;
-        Wed,  3 Apr 2019 09:26:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1554283573;
-        bh=5pA59JnwmAsIHYPGsNGzbkxrq33gDyF3rYN9ztXq8yM=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=CNorGnML2GE8gy3PoPFP69jl7kqOCa0ylFHsG+/UTNkDeI4uBzVYPiTffSMbi5azs
-         RLTjDgPi2uHuuq/tTBgA2hW5YvQdnhInN6Bb6AbWTKQB/kKORODaCPD4KAmf67v//K
-         wa83bX99madn1WTtWgslmcgMu2xURZjcsyy/5M74=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org D5DFE60A44
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=vivek.gautam@codeaurora.org
-Subject: Re: [PATCH v1 2/3] arm64: dts: qcom: msm8998: Add PCIe SMMU node
-To:     Robin Murphy <robin.murphy@arm.com>,
-        Marc Gonzalez <marc.w.gonzalez@free.fr>
-Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Jeffrey Hugo <jhugo@codeaurora.org>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Evan Green <evgreen@chromium.org>,
-        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-        Manu Gautam <mgautam@codeaurora.org>,
-        iommu <iommu@lists.linux-foundation.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr>
- <82ab78ee-4a38-4eee-f064-272b6f964f17@free.fr>
- <e7c8137a-2408-a71a-f722-199a86a75d13@free.fr>
- <5aa56120-b686-194b-36d6-8177b5749a19@arm.com>
- <CAFp+6iHOwW5jJmdVWo-E7154xk2jpR4ZLRoXEJdPwu8_ZJg14Q@mail.gmail.com>
- <e6d2200d-f6b9-3c27-f166-537742b32bfe@arm.com>
-From:   Vivek Gautam <vivek.gautam@codeaurora.org>
-Message-ID: <868a3924-928c-ff23-e39f-8c521eec455a@codeaurora.org>
-Date:   Wed, 3 Apr 2019 14:56:05 +0530
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726425AbfDCJ1L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Apr 2019 05:27:11 -0400
+Received: from kirsty.vergenet.net ([202.4.237.240]:35824 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725940AbfDCJ1L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 05:27:11 -0400
+Received: from reginn.horms.nl (watermunt.horms.nl [80.127.179.77])
+        by kirsty.vergenet.net (Postfix) with ESMTPA id B144525BDFF;
+        Wed,  3 Apr 2019 20:27:09 +1100 (AEDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=verge.net.au; s=mail;
+        t=1554283630; bh=bGshz4cknrE21CA1w9W4cZ8MqHwSk4r3pYK0YffloZg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=cU2c0GzjFJ2I2yvADXD4Gi1uFZXUw2vKzhgQct1j44NqYXKHp5jlbXiOTrZAa7OBa
+         VEFY7q1/1lsHkXXjpisCZzCWtp4TZzuKwc88tlGfiySH5soj7/+JbwjJgtHJP+Lw0w
+         K1XU8k1ONPmdFBSKzGWLaMLqZSHC7kJCQHAJWKLY=
+Received: by reginn.horms.nl (Postfix, from userid 7100)
+        id BD67C940361; Wed,  3 Apr 2019 11:27:07 +0200 (CEST)
+Date:   Wed, 3 Apr 2019 11:27:07 +0200
+From:   Simon Horman <horms@verge.net.au>
+To:     marek.vasut@gmail.com
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>
+Subject: Re: [PATCH V5 1/6] PCI: rcar: Clean up remaining macros defining bits
+Message-ID: <20190403092707.x2skq65ll2q5m74p@verge.net.au>
+References: <20190402013307.20912-1-marek.vasut@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <e6d2200d-f6b9-3c27-f166-537742b32bfe@arm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190402013307.20912-1-marek.vasut@gmail.com>
+Organisation: Horms Solutions BV
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Tue, Apr 02, 2019 at 03:33:02AM +0200, marek.vasut@gmail.com wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+> 
+> Replace macros using constants with BIT()s instead, no functional change.
+> 
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> Reviewed-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-On 4/2/2019 7:24 PM, Robin Murphy wrote:
-> On 30/03/2019 14:18, Vivek Gautam wrote:
->>> You should probably have some "bus" and "iface" clocks too, per the
->>> requirement of "qcom,smmu-v2". Maybe Vivek might know what's relevant
->>> for MSM8998?
->>
->> As Jeffrey rightly mentioned, these clocks are not under the control 
->> of Linux.
->> So, we won't need to add clocks to this SMMU.
->
-> OK, in that case the "clock-names" part of binding doc probably wants 
-> refining to reflect which implementations do actually require clocks.
+I feel a sense of déjà vu when reading this.
 
-Certainly.
-Marc, do you want to push a patch for the same? Or, let me know I can 
-prepare one.
+Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
 
-Thanks
-Vivek
 
->
-> Robin.
+> ---
+> V2: Bundle this patch with other cleanups before resending
+> V3: Add Wolfram's R-B
+> V4: Add Geert's R-B
+> V5: Rebase on next/master 20190401
+> ---
+>  drivers/pci/controller/pcie-rcar.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> index 6a4e435bd35f..542b5bbf4bf1 100644
+> --- a/drivers/pci/controller/pcie-rcar.c
+> +++ b/drivers/pci/controller/pcie-rcar.c
+> @@ -47,14 +47,14 @@
+>  /* Transfer control */
+>  #define PCIETCTLR		0x02000
+>  #define  DL_DOWN		BIT(3)
+> -#define  CFINIT			1
+> +#define  CFINIT			BIT(0)
+>  #define PCIETSTR		0x02004
+> -#define  DATA_LINK_ACTIVE	1
+> +#define  DATA_LINK_ACTIVE	BIT(0)
+>  #define PCIEERRFR		0x02020
+>  #define  UNSUPPORTED_REQUEST	BIT(4)
+>  #define PCIEMSIFR		0x02044
+>  #define PCIEMSIALR		0x02048
+> -#define  MSIFE			1
+> +#define  MSIFE			BIT(0)
+>  #define PCIEMSIAUR		0x0204c
+>  #define PCIEMSIIER		0x02050
+>  
+> -- 
+> 2.20.1
+> 
