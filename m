@@ -2,116 +2,122 @@ Return-Path: <SRS0=9zG9=SF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8EC3C4360F
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 13:36:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A757C4360F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:39:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90B6A2075E
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 13:36:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11AFD2054F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Apr 2019 15:39:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="pZ8RyOJ3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oy1474TU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726105AbfDCNgV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Apr 2019 09:36:21 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:16398 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726064AbfDCNgV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 09:36:21 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5ca4b6d90000>; Wed, 03 Apr 2019 06:36:25 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Wed, 03 Apr 2019 06:36:21 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Wed, 03 Apr 2019 06:36:21 -0700
-Received: from [10.24.47.153] (10.124.1.5) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 3 Apr
- 2019 13:36:18 +0000
-Subject: Re: [PATCH v4 0/5] PCI: dwc: Support remove
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-CC:     Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        Robin Murphy <robin.murphy@arm.com>
-References: <20190329194750.265f6df6@xhacker.debian>
- <20190401134946.GA4722@e107981-ln.cambridge.arm.com>
-X-Nvconfidentiality: public
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <aff1dc7f-1108-1df7-1ccb-11be08413e28@nvidia.com>
-Date:   Wed, 3 Apr 2019 19:06:15 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726151AbfDCPj0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Apr 2019 11:39:26 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:41098 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726105AbfDCPj0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 Apr 2019 11:39:26 -0400
+Received: by mail-pf1-f196.google.com with SMTP id 188so8345833pfd.8;
+        Wed, 03 Apr 2019 08:39:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=4K7W0j8rTa+YRaaAstvUDc1uzqxpUCqMhMXLcqU75Hc=;
+        b=oy1474TUswjxugfN0Bu6CcbkHenxjvmFB5/KVpITrqwm3QTufVyDd8JTu8xFYegoWr
+         QeQGs/f8FknYLjzs2NQtUvZB1BkOrP0Lfu8GmYsii9D77HRx+PmeqmHG0FO2GyjaU2Tu
+         b6oog/NOgd8OI5PmYzPi0rEeMx+muDrHJIrx8buHEH79aZlRG8CvqlLncAtbw57UtAqm
+         1TKRhutqzb2GAVXggizw3AhvuXW4QRccQ8vMlcb7EfLBzgTQ3AMEWXTWUGMnBb7geBtX
+         /YXhebJCdjVcGVShGKW6F+4C7kEePemnsxzLXzWw1BXIWUdVV8/YgMV6fbH1b7i7Rv9P
+         qMDw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=4K7W0j8rTa+YRaaAstvUDc1uzqxpUCqMhMXLcqU75Hc=;
+        b=a76AM+7S5jbVbOQ/bw7WvhmShU2wbi9yOEAMDNzi0j4Wb8uR0RxiCkW4UWFZcQ3WRu
+         RuacvKCpzWlZHK//TNIRjRn4YwXXiNbt8dSvc9xqS9jscaC3aLz9ssLXXuH29okJbe3X
+         uLplB1Mef7VZEiCvf3dKLGPV7BZ2tNjiJ6P4WmI4M1I30nxDPa7RiluAHesSDTfcJhxs
+         0UqtT/pJgM3X8Uz8YXVQmSftLfGri8Q6qVJIvoaa8Q9d2bCj/gxocNehqU1gWAoUZXwc
+         PGw+Nf4SmMD9H7fSaoXAvWqz9QDcMD+aAYySL+3bsf8DpjuU7gtx5ap/QDN3hMQ/qiO2
+         0EEA==
+X-Gm-Message-State: APjAAAXZa6HgbWGuzMp7jAOPADwvBh/8dKbSREGkNmmDgJZKPLEYq7hG
+        oaj2eGHgbJAQeIjWL0y32xc=
+X-Google-Smtp-Source: APXvYqwPPcI2Q5taQ8Fbp4n8GiG8PnfWB+RprnDtY62cdNO1PArVojWfZfVbhTyAl4GDvwZKRwtz8w==
+X-Received: by 2002:aa7:80c8:: with SMTP id a8mr15488pfn.193.1554305965352;
+        Wed, 03 Apr 2019 08:39:25 -0700 (PDT)
+Received: from mail.google.com ([104.238.181.70])
+        by smtp.gmail.com with ESMTPSA id z21sm23213491pfn.139.2019.04.03.08.39.22
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 03 Apr 2019 08:39:24 -0700 (PDT)
+Date:   Wed, 3 Apr 2019 23:39:19 +0800
+From:   Changbin Du <changbin.du@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Changbin Du <changbin.du@gmail.com>,
+        Jonathan Corbet <corbet@lwn.net>, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 00/12] Include linux PCI docs into Sphinx TOC tree
+Message-ID: <20190403153917.4r73hhzjp6anuyhj@mail.google.com>
+References: <20190329160413.4293-1-changbin.du@gmail.com>
+ <20190401230321.GB141706@google.com>
+ <20190402150852.juugbq7gripqbrmz@mail.google.com>
+ <20190402180744.GD141706@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20190401134946.GA4722@e107981-ln.cambridge.arm.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1554298585; bh=C0oQ7FYIrJb0RBLM8r34YqTNLG1rc+1+fDNURJ0zZdQ=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=pZ8RyOJ31JvpJHEgduTQ+X1TvA10BMAhKQbSyCacJ80aQucnlJMI1QkfMgWZfJoRC
-         NbYFN96AehjJRtnSlawsE1/DWWLR6C/YTquP1VHdRxLf9qIBCpTYuQzffI0Aehmmfh
-         aJc5pbRdHsn+k5cJ8OXUvZxaNU5TBEXm51buwXmRzeaV4bf33D9slVmo6w5z5CFRhP
-         NFaELlAGPHCsk83oI+Fxq9WTy6k+2kFUrMy7ii0LEWpx5WdtT5gNJcdAOIRSE+cgVP
-         PB2eue4a6QKbgQ5pookLfqQNz7k48hHUfo0PeqsPMdiB9owBuODwP89PSHoBn1LwYO
-         QT5XuU2WlKjrA==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190402180744.GD141706@google.com>
+User-Agent: NeoMutt/20180716
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Verified it with Tegra194 PCIe host controller driver, but had to do
-EXPORT_SYMBOL_GPL() for a bunch of APIs.
-I'll push changes to export all those APIs as part of Tegra194 PCIe driver patch series.
-
-Thanks
-Vidya Sagar
-
-On 4/1/2019 7:20 PM, Lorenzo Pieralisi wrote:
-> On Fri, Mar 29, 2019 at 11:55:36AM +0000, Jisheng Zhang wrote:
->> Currently, the PCI dwc host users don't support the remove, but nothing
->> prevent us from supporting it. To achieve this goal, we need to ensure
->> we can do necessary clean up work.
->>
->> Changes since v3:
->>    - add Gustavo's ACK to patch2, patch5
->>    - remove IS_ENABLED(CONFIG_PCI_MSI) check
->>
->> Changes since v2:
->>    - address all Gustavo's comments
->>    - add Gustavo's ACK to patch1, patch3, patch4
->>
->> Changes since v1:
->>    - address Bjorn's comments, I.E Capitalize, s/irq/IRQ/, s/msi/MSI/
->>
->>
->> Jisheng Zhang (5):
->>    PCI: dwc: Fix dw_pcie_free_msi() if msi_irq is invalid
->>    PCI: dwc: Free the page for MSI IRQ in dw_pcie_free_msi()
->>    PCI: dwc: Free MSI in the error code path of dw_pcie_host_init()
->>    PCI: dwc: Use devm_pci_alloc_host_bridge() to simplify the code
->>    PCI: dwc: Save root bus for driver remove
->>
->>   .../pci/controller/dwc/pcie-designware-host.c | 60 ++++++++++---------
->>   drivers/pci/controller/dwc/pcie-designware.h  |  2 +
->>   2 files changed, 34 insertions(+), 28 deletions(-)
->   
-> Applied to pci/dwc for v5.2, thanks.
+On Tue, Apr 02, 2019 at 01:07:44PM -0500, Bjorn Helgaas wrote:
+> On Tue, Apr 02, 2019 at 11:08:54PM +0800, Changbin Du wrote:
+> > On Mon, Apr 01, 2019 at 06:03:21PM -0500, Bjorn Helgaas wrote:
+> > > On Sat, Mar 30, 2019 at 12:04:01AM +0800, Changbin Du wrote:
+> > > > Changbin Du (12):
+> > > >   Documentation: add Linux PCI to Sphinx TOC tree
+> > > >   pci doc: convert PCI/pci.txt to rst format
+> > > >   pci doc: convert PCI/PCIEBUS-HOWTO.txt to rst format
+> > > >   pci doc: convert PCI/pci-iov-howto.txt to rst format
+> > > >   pci doc: convert PCI/MSI-HOWTO.txt to rst format
+> > > >   pci doc: convert PCI/acpi-info.txt to rst format
+> > > >   pci doc: convert PCI/pci-error-recovery.txt to rst format
+> > > >   pci doc: convert PCI/pcieaer-howto.txt to rst format
+> > > >   pci doc: convert PCI/endpoint/pci-endpoint.txt to rst format
+> > > >   pci doc: convert PCI/endpoint/pci-endpoint-cfs.txt to rst format
+> > > >   pci doc: convert PCI/endpoint/pci-test-function.txt to rst format
+> > > >   pci doc: convert PCI/endpoint/pci-test-howto.txt to rst format
+> > > 
+> > > Thanks for doing all this work!
+> > > 
+> > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> > > 
+> > > There's not a real convention yet for subject lines in Documentation/,
+> > > but I would propose:
+> > > 
+> > >   Documentation: PCI: Convert pci.txt to reST
+> > >   Documentation: PCI: Convert endpoint/pci-endpoint.txt to reST
+> > > 
+> > > because that at least goes with some recent Documentation/PCI changes
+> > > and it identifies "reST" as something other than a plain English word
+> > > (RST or ReST would also work for me).
+> > > 
+> > I agree. I am just a little lazy to update all of them this time :)
+> > Thanks for your ACK!
 > 
-> Lorenzo
-> 
+> Well, I guess I'm too lazy to fix them all for you, so I personally
+> wouldn't apply these.  But maybe Jonathan will be more accommodating.
+>
+ok, I will fix this serias since they do matter.
 
+> Bjorn
+
+-- 
+Cheers,
+Changbin Du
