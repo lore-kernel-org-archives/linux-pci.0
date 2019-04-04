@@ -2,86 +2,100 @@ Return-Path: <SRS0=GqAx=SG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F890C4360F
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 17:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E7CC4360F
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 17:32:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9BD92075E
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 17:16:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE0582171F
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 17:32:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L2uo5L+Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728682AbfDDRQI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Apr 2019 13:16:08 -0400
-Received: from iolanthe.rowland.org ([192.131.102.54]:41196 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1727310AbfDDRQI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2019 13:16:08 -0400
-Received: (qmail 4442 invoked by uid 2102); 4 Apr 2019 13:16:06 -0400
-Received: from localhost (sendmail-bs@127.0.0.1)
-  by localhost with SMTP; 4 Apr 2019 13:16:06 -0400
-Date:   Thu, 4 Apr 2019 13:16:06 -0400 (EDT)
-From:   Alan Stern <stern@rowland.harvard.edu>
-X-X-Sender: stern@iolanthe.rowland.org
-To:     Jesse Hathaway <jesse@mbuki-mvuki.org>
-cc:     Bjorn Helgaas <helgaas@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-usb@vger.kernel.org>
-Subject: Re: Regression causes a hang on boot with a Comtrol PCI card
-In-Reply-To: <CANSNSoXOmExO2RSp1gS8myUuiDpva4=0GeGpv+t8+X9p0u0H_w@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1904041303090.1288-100000@iolanthe.rowland.org>
+        id S1728966AbfDDRcv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Apr 2019 13:32:51 -0400
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:33794 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727562AbfDDRcu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2019 13:32:50 -0400
+Received: by mail-lj1-f193.google.com with SMTP id j89so2857965ljb.1
+        for <linux-pci@vger.kernel.org>; Thu, 04 Apr 2019 10:32:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ttXfDlhzKFT3/WQXNSMy0/EwMiU4EkpxXdjFqXysLPE=;
+        b=L2uo5L+Z8RXjm3l1v4GGcGXNVObRUs1+8zUephbZHSiwiFxvio3z+W7WFdea5mAo26
+         xewkCsz+AXHXi7k4u8nEj/1lLB05I6nequTLRBp8TpwtKvNN8xeHYD7raQqRyRG4i4j4
+         UZN8mOltMDjQ+5iXN7qaH7eo/KVfWU85j6yNHTXoGLBbCalR/KmKn09WvACQ/5qDD+J6
+         zAlppaKyoiDyaEBOE1IKuukvs4mDJSFBtRDxSIAyfdUTV7DqsTKvz/q1+PCU46oFaSDx
+         v7Q0KXm7vL3Dy8sAfVgGpmjtbfbjv0/foiQU2MFWrv7t9GMattaF0h+bx2TF1XOXM2a1
+         Jd1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ttXfDlhzKFT3/WQXNSMy0/EwMiU4EkpxXdjFqXysLPE=;
+        b=W7d2j1ry0tOmplZ2J912YMwU+zNaBFs5FIo30sREQZZs03YHkkQEB4wDWq7P+2DFAG
+         CFDJA0ascBfCICftW7+5fBRPyFpW3WlWQFU8s+MRi69gP1Ao+3QV49fS3LRQum86+txK
+         QqKk8d9IcNoEvqY7ZOJtJDpB0PuyAfzo1G6xex3+5kwlyE5hJ62uwYJQy1akRqW5gJ0F
+         rN1yXRVQk6l8AlVXraSLtJPuyYUUOqbTgo78r7FCxn1FQ/24Tnml9eN8AczHiZvdLbGM
+         f1KmjN+H9u2702+0pLHdI4dUehGJYYeuOxWoQMxd5NpSXjclLrWBiFzzqIEqfRY+B/Pj
+         4VpQ==
+X-Gm-Message-State: APjAAAWxX+btNEE639otjhQD/KiINrGSrC4yv9QRA/DCmlsjMVDfLlK+
+        5aeHNR7hv01R3o6yF66bYXMWKIBircsu9CoDZD0=
+X-Google-Smtp-Source: APXvYqwBxwtRV3GlMuzoWc29WqND19hwdLLhbdWcfXceYBbC5dn1tHwlRvgH7+Sy72VbCunuW4PS4Y/adn1tvkElzoM=
+X-Received: by 2002:a2e:5d94:: with SMTP id v20mr4146947lje.138.1554399168654;
+ Thu, 04 Apr 2019 10:32:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+References: <20190404164517.17735-1-l.stach@pengutronix.de>
+In-Reply-To: <20190404164517.17735-1-l.stach@pengutronix.de>
+From:   Fabio Estevam <festevam@gmail.com>
+Date:   Thu, 4 Apr 2019 14:32:39 -0300
+Message-ID: <CAOMZO5Cycm23RFM=GBME_gGXT=F_oaT-XB2P1eCz8M9T+-DEjA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: imx6: Allow async probe
+To:     Lucas Stach <l.stach@pengutronix.de>
+Cc:     Richard Zhu <hongxing.zhu@nxp.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        Sascha Hauer <kernel@pengutronix.de>,
+        patchwork-lst@pengutronix.de
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 4 Apr 2019, Jesse Hathaway wrote:
+Hi Lucas,
 
-> On Tue, Apr 2, 2019 at 9:29 AM Alan Stern <stern@rowland.harvard.edu> wrote:
-> > Most likely the problem occurs somewhere inside
-> > quirk_usb_handoff_xhci().  Can Jesse add debugging statements to that
-> > routine in order to pin down exactly where the problem lies?
-> 
-> Alan,
-> 
-> I added debug statements to quirk_usb_early_handoff, quirk_usb_disable_ehci &
-> ehci_bios_handoff. The box hangs right before calling:
-> 
-> pci_write_config_byte(pdev, offset + 3, 1);
+On Thu, Apr 4, 2019 at 1:46 PM Lucas Stach <l.stach@pengutronix.de> wrote:
+>
+> Establishing a PCIe link can take a while. Allow async probing so all
+> this happens in the background while other devices are being probed.
+>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 3d627f94a166..2eb39d5de4f6 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -1279,6 +1279,7 @@ static struct platform_driver imx6_pcie_driver = {
+>                 .of_match_table = imx6_pcie_of_match,
+>                 .suppress_bind_attrs = true,
+>                 .pm = &imx6_pcie_pm_ops,
+> +               .probe_type = PROBE_PREFER_ASYNCHRONOUS,
 
-Right _before_ that line?  Not _after_ it?
+This does not seem to be imx6 specific.
 
-That's surprising because the two preceding lines of code are the 
-condition of an "if" statement and a dev_dbg() call.  I don't see how 
-either of them could cause a hang.
+Should this be moved to
+drivers/pci/controller/dwc/pcie-designware-plat.c instead?
 
-Maybe the hang is a delayed reaction to something happening somewhere
-else.  But on the assumption that it isn't, you could try commenting 
-out various parts of ehci_bios_handoff to see which ones make a 
-difference.
-
-> which is in ehci_bios_handoff:
-> 
-> [   10.698240] DEBUG: Passed quirk_usb_early_handoff 1300
-> [   10.704271] DEBUG: Passed quirk_usb_early_handoff 1308
-> [   10.710206] DEBUG: Passed quirk_usb_disable_ehci 939
-> [   10.715949] DEBUG: Passed quirk_usb_disable_ehci 945
-> [   10.721685] DEBUG: Passed quirk_usb_disable_ehci 950
-> [   10.727423] DEBUG: Passed quirk_usb_disable_ehci 958
-> [   10.733160] DEBUG: Passed quirk_usb_disable_ehci 964
-> [   10.738897] DEBUG: Passed quirk_usb_disable_ehci 968
-> [   10.744633] DEBUG: Passed ehci_bios_handoff 849
-> [   10.749884] DEBUG: Passed ehci_bios_handoff 884
-> 
-> I have attached the debug output, and my modified pci-quirks.c file
-> to the bug report, let me know what else I can do to help.
-
-Nothing was attached.
-
-Alan Stern
-
+Thanks
