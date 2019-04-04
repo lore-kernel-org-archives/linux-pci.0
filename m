@@ -2,96 +2,98 @@ Return-Path: <SRS0=GqAx=SG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C737C4360F
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 19:14:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41EBDC4360F
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 19:44:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D065206B7
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 19:14:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 012AF20882
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 19:44:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1554407097;
+	bh=GZSurZd+riZ1B6AIq/bj4OzZU1/H+koba2hqmizO6bs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ZkyZM1UOT/4VUWzITQp3MjYpq7Msy/5p4Acy3aYlVhSMhl/hyann4JuG+ILVfWkZt
+	 gCx0KsFmVN73rGmcwP2C8gGiNb1sLyLaa9czo9hCHdkwyGBfoq6ImfJG1dkYlXXhPZ
+	 aG/CTOlmJ4d22eM1IGOmOAYxK7t0a1fDzgTKHvk0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730193AbfDDTOt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Apr 2019 15:14:49 -0400
-Received: from iolanthe.rowland.org ([192.131.102.54]:41592 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1729287AbfDDTOs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2019 15:14:48 -0400
-Received: (qmail 27389 invoked by uid 2102); 4 Apr 2019 15:14:47 -0400
-Received: from localhost (sendmail-bs@127.0.0.1)
-  by localhost with SMTP; 4 Apr 2019 15:14:47 -0400
-Date:   Thu, 4 Apr 2019 15:14:47 -0400 (EDT)
-From:   Alan Stern <stern@rowland.harvard.edu>
-X-X-Sender: stern@iolanthe.rowland.org
-To:     Jesse Hathaway <jesse@mbuki-mvuki.org>
-cc:     Bjorn Helgaas <helgaas@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-usb@vger.kernel.org>
-Subject: Re: Regression causes a hang on boot with a Comtrol PCI card
-In-Reply-To: <CANSNSoWL-2hP6j+nQwjr26vUmvyJ_Y1c9CrJ4bHnuqYCXhecdg@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1904041509280.1288-100000@iolanthe.rowland.org>
+        id S1730024AbfDDTo4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Apr 2019 15:44:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50872 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729714AbfDDTo4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Apr 2019 15:44:56 -0400
+Received: from localhost (odyssey.drury.edu [64.22.249.253])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 48E7D2082E;
+        Thu,  4 Apr 2019 19:44:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1554407095;
+        bh=GZSurZd+riZ1B6AIq/bj4OzZU1/H+koba2hqmizO6bs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UmbCmQuLkCt1iHBViqm4d+kRIEUGCSF8COAkiHj4PpYpGNla9UIS6tq5OcYALoHI6
+         /C/ohCPZ1Wbdk6AtWI0TnhxuMUZ7pbVB7QzpdU6/AGJLJXpIdFDQ1jnaSDqDmpQckU
+         Dan7ZLnkHeUAAKNMxXVuifKO2z0qymrckyFjy8bU=
+Date:   Thu, 4 Apr 2019 14:44:54 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+Cc:     linux-pci@vger.kernel.org, linux@yadro.com,
+        Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH v2] PCI: pciehp: Fix re-enabling the slot marked for safe
+ removal
+Message-ID: <20190404194454.GB26522@google.com>
+References: <20190312120548.31875-1-s.miroshnichenko@yadro.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190312120548.31875-1-s.miroshnichenko@yadro.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 4 Apr 2019, Jesse Hathaway wrote:
-
-> On Thu, Apr 4, 2019 at 12:16 PM Alan Stern <stern@rowland.harvard.edu> wrote:
-> > > I added debug statements to quirk_usb_early_handoff, quirk_usb_disable_ehci &
-> > > ehci_bios_handoff. The box hangs right before calling:
-> > >
-> > > pci_write_config_byte(pdev, offset + 3, 1);
-> >
-> > Right _before_ that line?  Not _after_ it?
+On Tue, Mar 12, 2019 at 03:05:48PM +0300, Sergey Miroshnichenko wrote:
+> During the safe removal procedure, a Data Link Layer State Changed event
+> may occur after pciehp_power_off_slot(), and it is handled when the slot is
+> already set to OFF_STATE. This results in re-enabling the device and makes
+> it impossible to actually safely remove it.
 > 
-> Sorry I should have been more precise, it hangs executing the above
-> pci_write_config_function. I get the debug printk immediately preceding
-> that line.
+> Clear out the Presence Detect Changed and Data Link Layer State Changed
+> events when the disabled slot has settled down.
 > 
-> > That's surprising because the two preceding lines of code are the
-> > condition of an "if" statement and a dev_dbg() call.  I don't see how
-> > either of them could cause a hang.
-> >
-> > Maybe the hang is a delayed reaction to something happening somewhere
-> > else.  But on the assumption that it isn't, you could try commenting
-> > out various parts of ehci_bios_handoff to see which ones make a
-> > difference.
+> It is still possible to re-enable the device if it remains in the slot
+> after pressing the Attention Button by pressing it again.
 > 
-> will do
+> Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
+> Cc: Lukas Wunner <lukas@wunner.de>
+
+Applied to pci/hotplug with Lukas' reviewed-by and stable tag for v5.2,
+thanks!
+
+> ---
+>  drivers/pci/hotplug/pciehp_ctrl.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> > > which is in ehci_bios_handoff:
-> > >
-> > > [   10.698240] DEBUG: Passed quirk_usb_early_handoff 1300
-> > > [   10.704271] DEBUG: Passed quirk_usb_early_handoff 1308
-> > > [   10.710206] DEBUG: Passed quirk_usb_disable_ehci 939
-> > > [   10.715949] DEBUG: Passed quirk_usb_disable_ehci 945
-> > > [   10.721685] DEBUG: Passed quirk_usb_disable_ehci 950
-> > > [   10.727423] DEBUG: Passed quirk_usb_disable_ehci 958
-> > > [   10.733160] DEBUG: Passed quirk_usb_disable_ehci 964
-> > > [   10.738897] DEBUG: Passed quirk_usb_disable_ehci 968
-> > > [   10.744633] DEBUG: Passed ehci_bios_handoff 849
-> > > [   10.749884] DEBUG: Passed ehci_bios_handoff 884
-> > >
-> > > I have attached the debug output, and my modified pci-quirks.c file
-> > > to the bug report, let me know what else I can do to help.
+> diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+> index 3f3df4c29f6e..905282a8ddaa 100644
+> --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> @@ -115,6 +115,10 @@ static void remove_board(struct controller *ctrl, bool safe_removal)
+>  		 * removed from the slot/adapter.
+>  		 */
+>  		msleep(1000);
+> +
+> +		/* Ignore link or presence changes caused by power off */
+> +		atomic_and(~(PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC),
+> +			   &ctrl->pending_events);
+>  	}
+>  
+>  	/* turn off Green LED */
+> -- 
+> 2.20.1
 > 
-> sorry I attached them to the bug report, but I have attached them to this
-> email as well.
-
-Okay.  You could try skipping that pci_write_config_byte() call.  The 
-following loop would probably time out, and you might find that the 
-code crashes later on.
-
-You could also try setting try_handoff to 0 near the start of the
-routine.  Your system plus the Comtrol PCI card could have the same
-sort of bug as reported in Bugzilla #77021.
-
-Alan Stern
-
