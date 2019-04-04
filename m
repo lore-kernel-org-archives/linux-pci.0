@@ -2,95 +2,84 @@ Return-Path: <SRS0=GqAx=SG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6BAEC4360F
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 10:01:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA89BC4360F
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 11:07:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 801232075E
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 10:01:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87FF2206DF
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 11:07:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="SbYu6uHK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728844AbfDDKBv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Apr 2019 06:01:51 -0400
-Received: from ns.iliad.fr ([212.27.33.1]:33320 "EHLO ns.iliad.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726694AbfDDKBv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Apr 2019 06:01:51 -0400
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-        by ns.iliad.fr (Postfix) with ESMTP id 80B0F20A52;
-        Thu,  4 Apr 2019 12:01:49 +0200 (CEST)
-Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
-        by ns.iliad.fr (Postfix) with ESMTP id 662BE209AE;
-        Thu,  4 Apr 2019 12:01:49 +0200 (CEST)
-Subject: Re: [PATCH v1 3/3] arm64: dts: qcom: msm8998: Add PCIe PHY and RC
- nodes
-From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
-        Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Manu Gautam <mgautam@codeaurora.org>,
-        Evan Green <evgreen@chromium.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        iommu <iommu@lists.linux-foundation.org>,
-        Kishon Vijay Abraham <kishon@ti.com>,
-        Stephen Boyd <sboyd@kernel.org>
-References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr>
- <186f7ca2-84e2-a37e-79e6-f1fec8e25374@free.fr>
-Message-ID: <01e01e1c-c352-1dde-7d5e-2596208c870a@free.fr>
-Date:   Thu, 4 Apr 2019 12:01:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1728735AbfDDLHO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Apr 2019 07:07:14 -0400
+Received: from fllv0015.ext.ti.com ([198.47.19.141]:41174 "EHLO
+        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728658AbfDDLHO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2019 07:07:14 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x34B7BIJ004918;
+        Thu, 4 Apr 2019 06:07:11 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1554376031;
+        bh=9tFid7GAFl4WBXUVODa7Qf7LACXLRB23ou6j+MpxgOU=;
+        h=From:To:CC:Subject:Date;
+        b=SbYu6uHKWYiKU2iO3s66aHgp5Zjq/bPOEAfNpqRe9pNjieWs95P5hiVJ3eUQNniDj
+         mQT7qY+5shNB21Qwttiah3gNkn/OO2s/X/2N0ks65/doFuB9iviQV3ICo8vBCIuCNc
+         U3yRBPMyO0+2htVmJA0kGkKwn516LTjBg1jsFz7E=
+Received: from DLEE102.ent.ti.com (dlee102.ent.ti.com [157.170.170.32])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x34B7A2t077329
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 4 Apr 2019 06:07:11 -0500
+Received: from DLEE101.ent.ti.com (157.170.170.31) by DLEE102.ent.ti.com
+ (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Thu, 4 Apr
+ 2019 06:07:10 -0500
+Received: from fllv0039.itg.ti.com (10.64.41.19) by DLEE101.ent.ti.com
+ (157.170.170.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
+ Frontend Transport; Thu, 4 Apr 2019 06:07:10 -0500
+Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0039.itg.ti.com (8.15.2/8.15.2) with ESMTP id x34B78dU106541;
+        Thu, 4 Apr 2019 06:07:09 -0500
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 0/2] tools: Fixes for pcitest
+Date:   Thu, 4 Apr 2019 16:36:07 +0530
+Message-ID: <20190404110609.26158-1-kishon@ti.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <186f7ca2-84e2-a37e-79e6-f1fec8e25374@free.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Thu Apr  4 12:01:49 2019 +0200 (CEST)
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 28/03/2019 18:06, Marc Gonzalez wrote:
+Hi Lorenzo,
 
-> Add MSM8998 PCIe QMP PHY and PCIe root complex DT nodes.
+This series includes a couple of patches, one which fixes
+inadvertent removal of pcitest.sh from kernel repo when
+doing a "clean" and other lets the user use 'h' option to
+display the list of options supported by pcitest.
 
-I suppose I should add a reference to the downstream DTS:
+Thanks
+Kishon
 
-https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/arch/arm/boot/dts/qcom/msm8998.dtsi?h=LE.UM.1.3.r3.25#n2537
+Kishon Vijay Abraham I (2):
+  tools: PCI: Add 'h' in optstring of getopt()
+  tools: PCI: Handle pcitest.sh independently from pcitest
 
+ tools/pci/Makefile  | 8 +++++++-
+ tools/pci/pcitest.c | 4 ++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-> diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
-> index 5a1c0961b281..9f979a51f679 100644
-> --- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
-> @@ -621,6 +621,84 @@
->  				<GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
->  		};
->  
-> +		pcie0: pci@1c00000 {
-> +			compatible = "qcom,pcie-msm8996";
+-- 
+2.17.1
 
-Should probably be "qcom,pcie-msm8998"; in case we need to fudge something
-in 8998 and not in 8996.
-
-Apart from this minor issue, I think it's good to go for 5.2
-(I'll respin without the SMMU patch)
-
-I just need Kishon to take the PHY series, and Stephen to take the clock hack,
-and we're rolling.
-
-Oh and it would be useful to have someone review the PCIE20_PARF_BDF_TRANSLATE_N
-patch.
-
-Regards.
