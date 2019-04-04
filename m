@@ -2,131 +2,146 @@ Return-Path: <SRS0=GqAx=SG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3102C4360F
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 16:00:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46EBDC10F0E
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 16:20:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 910F421741
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 16:00:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1613320855
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 16:20:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZG8UEEqn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728824AbfDDQA1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Apr 2019 12:00:27 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:42716 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728159AbfDDQA1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Apr 2019 12:00:27 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id D3E89F261A06665AAF7B;
-        Fri,  5 Apr 2019 00:00:23 +0800 (CST)
-Received: from localhost.localdomain (10.67.212.75) by
- DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.408.0; Fri, 5 Apr 2019 00:00:17 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <bhelgaas@google.com>, <rafael@kernel.org>, <arnd@arndb.de>,
-        <lorenzo.pieralisi@arm.com>
-CC:     <linux@roeck-us.net>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <bp@suse.de>,
-        <wangkefeng.wang@huawei.com>, <linuxarm@huawei.com>,
-        <andy.shevchenko@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 0/4]  Fix system crash for accessing unmapped IO port regions
-Date:   Thu, 4 Apr 2019 23:59:58 +0800
-Message-ID: <1554393602-152448-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        id S1727562AbfDDQUe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Apr 2019 12:20:34 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:46373 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727191AbfDDQUe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2019 12:20:34 -0400
+Received: by mail-pl1-f193.google.com with SMTP id y6so1399363pll.13;
+        Thu, 04 Apr 2019 09:20:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:openpgp:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=2SEusfEFXsiILNdaOyq8RGU5v/5vptx1DUIt4v74SOE=;
+        b=ZG8UEEqnYmwA+v7DAMPYEpJY0D6ZOVQVjnSJ4jT8Uyq1pZhlGrZcoIh77ZpKMTLkL9
+         NqX7xI9+howvnDrxgC4IrhDJW0q7t8KK4NP3zroPqNHW4ERyzqB/6aTONhuTaN9M9fwe
+         w8VknQRLjQh/DI3PVPgeHUjSYWIWoqvzN7NXMcfglxgtu4F1Pugue5IsaPVACjEPmH9b
+         2bz4/UduOoDSRHGI6rU1LLSrzrOyiLYKHHd8sa58+qkC5M759e8br2ZDZ4dnqeeV7Bxb
+         1VgN+DdqEqnJAM21Bi0ZyEXA+cNxTVX01a4uLaga4FJl4+WZqD1SYsNPac20p1GhG83F
+         6znA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=2SEusfEFXsiILNdaOyq8RGU5v/5vptx1DUIt4v74SOE=;
+        b=LY56H+VDH2CDIh3yujV/B0HJITOTXZdTO/fTpPm9wesp89dvqPRGXKU6wGRZz6lIDb
+         uF1kwhhF5XzOohOUmb6gyvtkiu87a9hzPtdUTQMMrQL4belVF5JUi6IfbnFGtmnX6U3Z
+         O+SAXNIPfWURHJjw5I3EzRHz32LS/lceq2zuJTHbrelBiHWAB7V0WRq8sXr2+nztaasx
+         VrFx0wdqBynY+yNloG9xEMp7T4H1meT/ef0QR2BPmX4Zl6LLq1Hd74HDX9ruUx6tdtLO
+         10ebAHZPcNT65sTvNpb+NQsHdFrfgKbtAyaPEk6HkbzvBGqNLAt24GVBbcD8bKlloqUL
+         V8pg==
+X-Gm-Message-State: APjAAAUVa2Q9Hw4puAjiEpUs3yank8qN4JGF4VLZQj9ibcly8EUsc4oA
+        zf1UkyJhWIrAw3/kqZ9aVACFYVdU
+X-Google-Smtp-Source: APXvYqxFaiURWOnArfwq2OvSdhklthSldRb2fTIzjkp+1GAKNJkDTFeABq4lbb3PuluVyCUZKoVQnQ==
+X-Received: by 2002:a17:902:2888:: with SMTP id f8mr7426327plb.244.1554394833169;
+        Thu, 04 Apr 2019 09:20:33 -0700 (PDT)
+Received: from [192.168.42.180] (219x120x4x122.ap219.ftth.ucom.ne.jp. [219.120.4.122])
+        by smtp.gmail.com with ESMTPSA id y37sm29705052pgk.78.2019.04.04.09.20.29
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 04 Apr 2019 09:20:32 -0700 (PDT)
+Subject: Re: [PATCH V5 6/6] PCI: rcar: Fix 64bit MSI message address handling
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+References: <20190402013307.20912-1-marek.vasut@gmail.com>
+ <20190402013307.20912-6-marek.vasut@gmail.com>
+ <20190404092833.GA13236@red-moon>
+From:   Marek Vasut <marek.vasut@gmail.com>
+Openpgp: preference=signencrypt
+Message-ID: <267aa1b1-9761-aff7-8462-8efc644083bd@gmail.com>
+Date:   Thu, 4 Apr 2019 17:48:36 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.5.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.212.75]
-X-CFilter-Loop: Reflected
+In-Reply-To: <20190404092833.GA13236@red-moon>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It was reported some time ago that arm64 systems will crash if a driver
-attempts to access IO port addresses when the PCI IO port region has not
-been mapped [1].
+On 4/4/19 11:28 AM, Lorenzo Pieralisi wrote:
+> On Tue, Apr 02, 2019 at 03:33:07AM +0200, marek.vasut@gmail.com wrote:
+>> From: Marek Vasut <marek.vasut+renesas@gmail.com>
+>>
+>> The MSI message address in the RC address space can be 64 bit. The
+>> R-Car PCIe RC supports such a 64bit MSI message address as well.
+>> The code currently uses virt_to_phys(__get_free_pages()) to obtain
+>> a reserved page for the MSI message address, and the return value
+>> of which can be a 64 bit physical address on 64 bit system.
+>>
+>> However, the driver only programs PCIEMSIALR register with the bottom
+>> 32 bits of the virt_to_phys(__get_free_pages()) return value and does
+>> not program the top 32 bits into PCIEMSIAUR, but rather programs the
+>> PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
+>> SoCs, however may fail on new 64 bit R-Car SoCs.
+>>
+>> Since from a PCIe controller perspective, an inbound MSI is a memory
+>> write to a special address (in case of this controller, defined by
+>> the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
+>> never hits the DRAM _and_ because allocation of an MSI by a PCIe card
+>> driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
+>> in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
+>> cause memory corruption or other issues.
+>>
+>> There is however the possibility that if virt_to_phys(__get_free_pages())
+>> returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
+>> to 0x0 _and_ if the system had physical RAM at the address matching the
+>> value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
+>> physical address matching the value of PCIEMSIALR and a remote write to
+>> such a buffer by a PCIe card would trigger a spurious MSI.
+>>
+>> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+>> Cc: Simon Horman <horms+renesas@verge.net.au>
+>> Cc: Wolfram Sang <wsa@the-dreams.de>
+>> Cc: linux-renesas-soc@vger.kernel.org
+>> To: linux-pci@vger.kernel.org
+>> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+>> ---
+>> V2: - s/it's/its/ in commit message
+>>     - Add R-B from Geert
+>> V3: - Reworded commit message and thus dropped Geerts R-B
+>> V4: - Add Geert's R-B again
+>> V5: - Rebase on next/master 20190401
+>>     - Use {lower,upper}_32_bits() instead of >> 32
+> 
+> If that's the only reason you resent this series I will add the
+> lower_32_bits() code myself.
 
-More recently, a similar crash is where the system PCI host probe fails,
-and the IPMI driver crashes the system while attempting to do some IO port
-accesses [2].
+Yes, you asked me to resend the whole series after the bot complained.
 
-This patchset attempts to keep the kernel alive in such situations by 2
-complementary methods:
-1. Rejecting IO port resource requests until PCI IO port regions have been
-mapped (in a pci_remap_iospace() call).
-2. Rejecting logic PIO access to PCI IO regions until, again, PCI IO port
-regions have been mapped
+> Please do not rebase on top of next, apply code on top of a fixed -rc1
+> (we are currently using v5.1-rc1) and if there are dependencies on code
+> already queued do let us know, we will handle conflicts in next
+> ourselves.
 
-About 1:
-Currently the PCI IO port region is initialized to the full range,
-{0, IO_SPACE_LIMIT}. As such, any IO port region requests would not fail
-because of PCI IO port regions not being mapped.
-
-Patch 1/4 looks to remedy this issue by ensuring IO port requests are
-made to direct children of ioport_resource (PCI host IO port regions),
-similar to Arnd's solution, mentioned in [1]:
-
-"I see that ioport_resource gets initialized to the {0, IO_SPACE_LIMIT}
-range. If we could change it so that pci_remap_iospace() hooks up
-to ioport_resource and extends it whenever something gets mapped
-there up to IO_SPACE_LIMIT, we can change the default range to
-{0,0}, which would fail for any request_region call before the
-first pci_remap_iospace."
-
-I didn't use this solution, as logical PIO space is sparse in
-{0, IO_SPACE_LIMIT}, so we cannot simply grow the region.
-
-*As discussed with Bjorn in v2 series, we doubt that this approach is
-sound, as legacy ISA devices do not necessarily reply on PCI.*
-
-However I will keep the patch in the series as a reference and as a topic
-of debate.
-
-It's also an RFC as the implementation solution is not idea.
-
-About 2:
-Some drivers - like f71805f hwmon driver - do not call
-request_{muxed_}region() prior to accessing IO port regions, as they
-should do.
-
-So patches 2-3/4 adds a safeguard against this, in that unwarranted PIO IO
-accesses will be discarded in the low-level accessors.
-
-About the issue of f71805f driver not requesting the IO port region -
-many drivers do this, and need to be fixed up separately.
-
-1. https://lore.kernel.org/linux-pci/56F209A9.4040304@huawei.com
-2. https://lore.kernel.org/linux-arm-kernel/e6995b4a-184a-d8d4-f4d4-9ce75d8f47c0@huawei.com/
-
-Differences to v2 patchset:
-https://lkml.org/lkml/2019/3/20/788
-- Add a patch to use logical PIO accessors for !CONFIG_INDIRECT_PIO
-- Some tidy-up according to Andy's review
-
-Differences to v1 patchset:
-https://lkml.org/lkml/2019/3/14/630
-- Drop f71805f fix - it can be done in a separate patchset
-- Change implementation in resource.c patch to check if parent of region
-  is ioport_resource
-- Add patch to fix some logic_pio.c prints
-
-John Garry (4):
-  resource: Request IO port regions from children of ioport_resource
-  lib: logic_pio: Use logical PIO low-level accessors for
-    !CONFIG_INDIRECT_PIO
-  lib: logic_pio: Reject accesses to unregistered CPU MMIO regions
-  lib: logic_pio: Fix up some prints
-
- include/linux/ioport.h    |  11 ++-
- include/linux/logic_pio.h |   7 +-
- kernel/resource.c         |  28 +++++++
- lib/logic_pio.c           | 157 +++++++++++++++++++++++++++++---------
- 4 files changed, 159 insertions(+), 44 deletions(-)
+So do you want me to resend this one more time ?
 
 -- 
-2.17.1
-
+Best regards,
+Marek Vasut
