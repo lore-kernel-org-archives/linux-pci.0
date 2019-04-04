@@ -2,136 +2,95 @@ Return-Path: <SRS0=GqAx=SG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF597C4360F
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 09:28:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6BAEC4360F
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 10:01:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA791206B6
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 09:28:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 801232075E
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 10:01:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731603AbfDDJ2l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Apr 2019 05:28:41 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55936 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733193AbfDDJ2l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 Apr 2019 05:28:41 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7D8BB169E;
-        Thu,  4 Apr 2019 02:28:40 -0700 (PDT)
-Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 00D423F557;
-        Thu,  4 Apr 2019 02:28:38 -0700 (PDT)
-Date:   Thu, 4 Apr 2019 10:28:33 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     marek.vasut@gmail.com
-Cc:     linux-pci@vger.kernel.org,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH V5 6/6] PCI: rcar: Fix 64bit MSI message address handling
-Message-ID: <20190404092833.GA13236@red-moon>
-References: <20190402013307.20912-1-marek.vasut@gmail.com>
- <20190402013307.20912-6-marek.vasut@gmail.com>
+        id S1728844AbfDDKBv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Apr 2019 06:01:51 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:33320 "EHLO ns.iliad.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726694AbfDDKBv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Apr 2019 06:01:51 -0400
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 80B0F20A52;
+        Thu,  4 Apr 2019 12:01:49 +0200 (CEST)
+Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 662BE209AE;
+        Thu,  4 Apr 2019 12:01:49 +0200 (CEST)
+Subject: Re: [PATCH v1 3/3] arm64: dts: qcom: msm8998: Add PCIe PHY and RC
+ nodes
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Manu Gautam <mgautam@codeaurora.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        iommu <iommu@lists.linux-foundation.org>,
+        Kishon Vijay Abraham <kishon@ti.com>,
+        Stephen Boyd <sboyd@kernel.org>
+References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr>
+ <186f7ca2-84e2-a37e-79e6-f1fec8e25374@free.fr>
+Message-ID: <01e01e1c-c352-1dde-7d5e-2596208c870a@free.fr>
+Date:   Thu, 4 Apr 2019 12:01:49 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190402013307.20912-6-marek.vasut@gmail.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <186f7ca2-84e2-a37e-79e6-f1fec8e25374@free.fr>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Thu Apr  4 12:01:49 2019 +0200 (CEST)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 02, 2019 at 03:33:07AM +0200, marek.vasut@gmail.com wrote:
-> From: Marek Vasut <marek.vasut+renesas@gmail.com>
-> 
-> The MSI message address in the RC address space can be 64 bit. The
-> R-Car PCIe RC supports such a 64bit MSI message address as well.
-> The code currently uses virt_to_phys(__get_free_pages()) to obtain
-> a reserved page for the MSI message address, and the return value
-> of which can be a 64 bit physical address on 64 bit system.
-> 
-> However, the driver only programs PCIEMSIALR register with the bottom
-> 32 bits of the virt_to_phys(__get_free_pages()) return value and does
-> not program the top 32 bits into PCIEMSIAUR, but rather programs the
-> PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
-> SoCs, however may fail on new 64 bit R-Car SoCs.
-> 
-> Since from a PCIe controller perspective, an inbound MSI is a memory
-> write to a special address (in case of this controller, defined by
-> the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
-> never hits the DRAM _and_ because allocation of an MSI by a PCIe card
-> driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
-> in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
-> cause memory corruption or other issues.
-> 
-> There is however the possibility that if virt_to_phys(__get_free_pages())
-> returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
-> to 0x0 _and_ if the system had physical RAM at the address matching the
-> value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
-> physical address matching the value of PCIEMSIALR and a remote write to
-> such a buffer by a PCIe card would trigger a spurious MSI.
-> 
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Phil Edworthy <phil.edworthy@renesas.com>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Wolfram Sang <wsa@the-dreams.de>
-> Cc: linux-renesas-soc@vger.kernel.org
-> To: linux-pci@vger.kernel.org
-> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
-> V2: - s/it's/its/ in commit message
->     - Add R-B from Geert
-> V3: - Reworded commit message and thus dropped Geerts R-B
-> V4: - Add Geert's R-B again
-> V5: - Rebase on next/master 20190401
->     - Use {lower,upper}_32_bits() instead of >> 32
+On 28/03/2019 18:06, Marc Gonzalez wrote:
 
-If that's the only reason you resent this series I will add the
-lower_32_bits() code myself.
+> Add MSM8998 PCIe QMP PHY and PCIe root complex DT nodes.
 
-Please do not rebase on top of next, apply code on top of a fixed -rc1
-(we are currently using v5.1-rc1) and if there are dependencies on code
-already queued do let us know, we will handle conflicts in next
-ourselves.
+I suppose I should add a reference to the downstream DTS:
 
-Lorenzo
+https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/arch/arm/boot/dts/qcom/msm8998.dtsi?h=LE.UM.1.3.r3.25#n2537
 
-> ---
->  drivers/pci/controller/pcie-rcar.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-> index 168bc6b9bb93..5e0102796345 100644
-> --- a/drivers/pci/controller/pcie-rcar.c
-> +++ b/drivers/pci/controller/pcie-rcar.c
-> @@ -892,7 +892,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->  {
->  	struct device *dev = pcie->dev;
->  	struct rcar_msi *msi = &pcie->msi;
-> -	unsigned long base;
-> +	phys_addr_t base;
->  	int err, i;
+
+> diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> index 5a1c0961b281..9f979a51f679 100644
+> --- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> @@ -621,6 +621,84 @@
+>  				<GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
+>  		};
 >  
->  	mutex_init(&msi->lock);
-> @@ -933,8 +933,8 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
->  	base = virt_to_phys((void *)msi->pages);
->  
-> -	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
-> -	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
-> +	rcar_pci_write_reg(pcie, lower_32_bits(base) | MSIFE, PCIEMSIALR);
-> +	rcar_pci_write_reg(pcie, upper_32_bits(base), PCIEMSIAUR);
->  
->  	/* enable all MSI interrupts */
->  	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
-> -- 
-> 2.20.1
-> 
+> +		pcie0: pci@1c00000 {
+> +			compatible = "qcom,pcie-msm8996";
+
+Should probably be "qcom,pcie-msm8998"; in case we need to fudge something
+in 8998 and not in 8996.
+
+Apart from this minor issue, I think it's good to go for 5.2
+(I'll respin without the SMMU patch)
+
+I just need Kishon to take the PHY series, and Stephen to take the clock hack,
+and we're rolling.
+
+Oh and it would be useful to have someone review the PCIE20_PARF_BDF_TRANSLATE_N
+patch.
+
+Regards.
