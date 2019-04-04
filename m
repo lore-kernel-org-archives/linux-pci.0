@@ -2,97 +2,136 @@ Return-Path: <SRS0=GqAx=SG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 579F7C4360F
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 07:43:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF597C4360F
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 09:28:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2910B20882
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 07:43:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="uUjYa2MP"
+	by mail.kernel.org (Postfix) with ESMTP id BA791206B6
+	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 09:28:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726530AbfDDHni (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Apr 2019 03:43:38 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:46724 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726122AbfDDHni (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2019 03:43:38 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x347hTGA064131;
-        Thu, 4 Apr 2019 02:43:29 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1554363809;
-        bh=j1tJfLJ9K3b+a/cwVN/Xnyt70KNgMDwu+dzIRENh08w=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=uUjYa2MPeVCkCRBNp1O27ggyqpInZg3T3NbKO9+UCG0hArheaKYxnCOm57joKdtlV
-         o6pQjKu7wSihZo/5m5YxhnIPFFpifyYwsnqUOkbQP4T7+q7vWFHmgiVV0gPD4snO+c
-         El8e0H40SCITMARyxG8BbhZspXtRV7bVrjXSi6jQ=
-Received: from DLEE114.ent.ti.com (dlee114.ent.ti.com [157.170.170.25])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x347hTWg010231
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 4 Apr 2019 02:43:29 -0500
-Received: from DLEE113.ent.ti.com (157.170.170.24) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Thu, 4 Apr
- 2019 02:43:29 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE113.ent.ti.com
- (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Thu, 4 Apr 2019 02:43:28 -0500
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x347hOQ5113095;
-        Thu, 4 Apr 2019 02:43:26 -0500
-Subject: Re: [PATCH v5 8/8] PCI: dwc: Do not write to MSI control registers if
- the platform doesn't use it
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Murali Karicheri <m-karicheri2@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Jingoo Han <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>
-References: <20190321095927.7058-1-kishon@ti.com>
- <20190321095927.7058-9-kishon@ti.com> <20190403171902.GB3783@red-moon>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <7fb6436b-133b-0345-c8de-02fa77ebcf4d@ti.com>
-Date:   Thu, 4 Apr 2019 13:12:27 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1731603AbfDDJ2l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 4 Apr 2019 05:28:41 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55936 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1733193AbfDDJ2l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 Apr 2019 05:28:41 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7D8BB169E;
+        Thu,  4 Apr 2019 02:28:40 -0700 (PDT)
+Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 00D423F557;
+        Thu,  4 Apr 2019 02:28:38 -0700 (PDT)
+Date:   Thu, 4 Apr 2019 10:28:33 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     marek.vasut@gmail.com
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Phil Edworthy <phil.edworthy@renesas.com>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH V5 6/6] PCI: rcar: Fix 64bit MSI message address handling
+Message-ID: <20190404092833.GA13236@red-moon>
+References: <20190402013307.20912-1-marek.vasut@gmail.com>
+ <20190402013307.20912-6-marek.vasut@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190403171902.GB3783@red-moon>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190402013307.20912-6-marek.vasut@gmail.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
-
-On 03/04/19 10:49 PM, Lorenzo Pieralisi wrote:
-> On Thu, Mar 21, 2019 at 03:29:27PM +0530, Kishon Vijay Abraham I wrote:
->> Platforms which populate msi_host_init, has it's own MSI controller
->> logic. Writing to MSI control registers on platforms which doesn't use
->> Designware's MSI controller logic might have side effects. To
->> be safe, do not write to MSI control registers if the platform uses
->> it's own MSI controller logic instead of Designware's MSI controller
->> logic.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  .../pci/controller/dwc/pcie-designware-host.c | 24 ++++++++++---------
->>  1 file changed, 13 insertions(+), 11 deletions(-)
+On Tue, Apr 02, 2019 at 03:33:07AM +0200, marek.vasut@gmail.com wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
 > 
-> This patch is needed regardless of the rest of the series, correct ?
-> A.k.a. it is fixing an issue already in the mainline.
+> The MSI message address in the RC address space can be 64 bit. The
+> R-Car PCIe RC supports such a 64bit MSI message address as well.
+> The code currently uses virt_to_phys(__get_free_pages()) to obtain
+> a reserved page for the MSI message address, and the return value
+> of which can be a 64 bit physical address on 64 bit system.
+> 
+> However, the driver only programs PCIEMSIALR register with the bottom
+> 32 bits of the virt_to_phys(__get_free_pages()) return value and does
+> not program the top 32 bits into PCIEMSIAUR, but rather programs the
+> PCIEMSIAUR register with 0x0. This worked fine on older 32 bit R-Car
+> SoCs, however may fail on new 64 bit R-Car SoCs.
+> 
+> Since from a PCIe controller perspective, an inbound MSI is a memory
+> write to a special address (in case of this controller, defined by
+> the value in PCIEMSIAUR:PCIEMSIALR), which triggers an interrupt, but
+> never hits the DRAM _and_ because allocation of an MSI by a PCIe card
+> driver obtains the MSI message address by reading PCIEMSIAUR:PCIEMSIALR
+> in rcar_msi_setup_irqs(), incorrectly programmed PCIEMSIAUR cannot
+> cause memory corruption or other issues.
+> 
+> There is however the possibility that if virt_to_phys(__get_free_pages())
+> returned address above the 32bit boundary _and_ PCIEMSIAUR was programmed
+> to 0x0 _and_ if the system had physical RAM at the address matching the
+> value of PCIEMSIALR, a PCIe card driver could allocate a buffer with a
+> physical address matching the value of PCIEMSIALR and a remote write to
+> such a buffer by a PCIe card would trigger a spurious MSI.
+> 
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Simon Horman <horms+renesas@verge.net.au>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+> V2: - s/it's/its/ in commit message
+>     - Add R-B from Geert
+> V3: - Reworded commit message and thus dropped Geerts R-B
+> V4: - Add Geert's R-B again
+> V5: - Rebase on next/master 20190401
+>     - Use {lower,upper}_32_bits() instead of >> 32
 
-That's correct.
+If that's the only reason you resent this series I will add the
+lower_32_bits() code myself.
 
-Thanks
-Kishon
+Please do not rebase on top of next, apply code on top of a fixed -rc1
+(we are currently using v5.1-rc1) and if there are dependencies on code
+already queued do let us know, we will handle conflicts in next
+ourselves.
+
+Lorenzo
+
+> ---
+>  drivers/pci/controller/pcie-rcar.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> index 168bc6b9bb93..5e0102796345 100644
+> --- a/drivers/pci/controller/pcie-rcar.c
+> +++ b/drivers/pci/controller/pcie-rcar.c
+> @@ -892,7 +892,7 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>  {
+>  	struct device *dev = pcie->dev;
+>  	struct rcar_msi *msi = &pcie->msi;
+> -	unsigned long base;
+> +	phys_addr_t base;
+>  	int err, i;
+>  
+>  	mutex_init(&msi->lock);
+> @@ -933,8 +933,8 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
+>  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+>  	base = virt_to_phys((void *)msi->pages);
+>  
+> -	rcar_pci_write_reg(pcie, base | MSIFE, PCIEMSIALR);
+> -	rcar_pci_write_reg(pcie, 0, PCIEMSIAUR);
+> +	rcar_pci_write_reg(pcie, lower_32_bits(base) | MSIFE, PCIEMSIALR);
+> +	rcar_pci_write_reg(pcie, upper_32_bits(base), PCIEMSIAUR);
+>  
+>  	/* enable all MSI interrupts */
+>  	rcar_pci_write_reg(pcie, 0xffffffff, PCIEMSIIER);
+> -- 
+> 2.20.1
+> 
