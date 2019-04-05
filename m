@@ -7,85 +7,93 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 979F7C282CE
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:13:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 496F1C282DC
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 650802186A
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:13:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FE1721855
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:18:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554498816;
-	bh=tQBHfo1zQSHRmGi45vMjn4fdzO8w9ilCneck9mf2hLE=;
+	s=default; t=1554499124;
+	bh=EmDuMgKZldKwvdgYSsupdRNOccOPaaVD19Lj9XObv/Y=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=CGrU9LHdNtZgr4723tqgzGYzZ7LxRdGRfk4FmPkqflnH4NY78hP7FVDUqy36T3BEH
-	 x4Fuaa6jdx3LYyGa1aYtg5UUQyuRJzQCKuRAEqjyWxBzGG97A4bsuUqB8I0cwfDJE/
-	 uCuAEIuO29GeupMKnXmPnAG3RHo8vr3cs+v9tC1E=
+	b=ucMa7teQyKMWy+kQg8LWDH0NMyYKTGfvb2s0+2dwhYktmjtqTz6xONJ2vfhFRDB7p
+	 FWeoB1K4mM4S7lxsL3E/M/WLZ/ZKKXOWgGgIwFbb94gZGUCdHlsWSN9x2FvRXrvisV
+	 dhDWIag0o426PElU/As3bPUS80XS5ta7guVsJ9gQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726124AbfDEVNf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Apr 2019 17:13:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56866 "EHLO mail.kernel.org"
+        id S1726685AbfDEVSn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Apr 2019 17:18:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58772 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725967AbfDEVNf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Apr 2019 17:13:35 -0400
+        id S1726672AbfDEVSn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Apr 2019 17:18:43 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B50682173C;
-        Fri,  5 Apr 2019 21:13:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D4BD02173C;
+        Fri,  5 Apr 2019 21:18:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554498815;
-        bh=tQBHfo1zQSHRmGi45vMjn4fdzO8w9ilCneck9mf2hLE=;
+        s=default; t=1554499122;
+        bh=EmDuMgKZldKwvdgYSsupdRNOccOPaaVD19Lj9XObv/Y=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eyodfyfSW9CqeUzUJWAZ/M2Wf7tEe80NpqDJFaOINm2ZuFLoLm/XPodi6TbEt6qJS
-         CEGOBtLn351zSyvFJyj2smZuMbKm0hphXjlrZo3YzXdUCmm9THnSyVtPyhoPQIn9Ot
-         GWXmfuDYf+anSgN9/S38nr9ooS9iVClR0CTwAkqw=
-Date:   Fri, 5 Apr 2019 16:13:33 -0500
+        b=iA6CV9M6+GWWeAVe1x3iG2yq2cTxpzWgwV09R12dMm4SF4CtJJgM236fGjODQ68Cb
+         9c0bbxLJMUEkhHnT1uakGLJSloCqngamKgfxN5BstCHfSU3mGQEOuJVmDisRy+zjQ5
+         EhVDd03tFhOFxutOM3JjIvljF/9F2M1puxSs5U4A=
+Date:   Fri, 5 Apr 2019 16:18:40 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Andre Przywara <andre.przywara@arm.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add function 1 DMA alias quirk for Marvell 9170
- SATA controller
-Message-ID: <20190405211333.GA159318@google.com>
-References: <20190405152047.153417-1-andre.przywara@arm.com>
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc:     robh+dt@kernel.org, mark.rutland@arm.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Jeremy.Linton@arm.com, Grant.Likely@arm.com, Robin.Murphy@arm.com,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2 2/2] PCI: OF: Support external-facing property
+Message-ID: <20190405211840.GB159318@google.com>
+References: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
+ <20190402131548.41949-3-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190405152047.153417-1-andre.przywara@arm.com>
+In-Reply-To: <20190402131548.41949-3-jean-philippe.brucker@arm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Apr 05, 2019 at 04:20:47PM +0100, Andre Przywara wrote:
-> There is a Marvell 88SE9170 PCIe SATA controller I found on a board
-> here. Some quick testing with the ARM SMMU enabled reveals that it
-> suffers from the same requester ID mixup problems as the other Marvell
-> chips listed already.
+On Tue, Apr 02, 2019 at 02:15:48PM +0100, Jean-Philippe Brucker wrote:
+> Set the "untrusted" attribute to any PCIe port that has an
+> "external-facing" device tree property. Any device downstream of this
+> port will inherit the attribute and have only the strictest IOMMU
+> protection.
 > 
-> Add the PCI vendor/device ID to the list of chips which need the
-> workaround.
-> 
-> Signed-off-by: Andre Przywara <andre.przywara@arm.com>
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 
-Applied with stable tag to for-linus for v5.1, thanks!
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Rob, you can take both of these, or ack the first and I'll take them.
 
 > ---
->  drivers/pci/quirks.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/pci/of.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index a59ad09ce911..a077f67fe1da 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3877,6 +3877,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9128,
->  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c14 */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9130,
->  			 quirk_dma_func1_alias);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9170,
-> +			 quirk_dma_func1_alias);
->  /* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c47 + c57 */
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL_EXT, 0x9172,
->  			 quirk_dma_func1_alias);
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index 3d32da15c215..3e7ac7748d90 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -35,6 +35,9 @@ void pci_set_bus_of_node(struct pci_bus *bus)
+>  		bus->dev.of_node = pcibios_get_phb_of_node(bus);
+>  	else
+>  		bus->dev.of_node = of_node_get(bus->self->dev.of_node);
+> +
+> +	if (of_get_property(bus->dev.of_node, "external-facing", NULL))
+> +		bus->self->untrusted = true;
+>  }
+>  
+>  void pci_release_bus_of_node(struct pci_bus *bus)
 > -- 
-> 2.17.1
+> 2.21.0
 > 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
