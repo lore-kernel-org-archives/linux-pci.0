@@ -6,38 +6,39 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5069BC10F0F
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:45:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D538DC10F00
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:46:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24A4921850
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:45:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A434E217D7
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:46:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729833AbfDEHpn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Apr 2019 03:45:43 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:45158 "EHLO huawei.com"
+        id S1729142AbfDEHqe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Apr 2019 03:46:34 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:6256 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729142AbfDEHpn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Apr 2019 03:45:43 -0400
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 269A09C50600479DC1F0;
-        Fri,  5 Apr 2019 15:45:39 +0800 (CST)
-Received: from [127.0.0.1] (10.202.227.238) by DGGEMS405-HUB.china.huawei.com
- (10.3.19.205) with Microsoft SMTP Server id 14.3.408.0; Fri, 5 Apr 2019
- 15:45:36 +0800
-Subject: Re: [PATCH 1/4] hwmon: (f71805f) Use request_muxed_region for
+        id S1726694AbfDEHqe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Apr 2019 03:46:34 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 4EEF6AFB79AB21C628E3;
+        Fri,  5 Apr 2019 15:46:30 +0800 (CST)
+Received: from [127.0.0.1] (10.202.227.238) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.408.0; Fri, 5 Apr 2019
+ 15:46:28 +0800
+Subject: Re: [PATCH 2/4] hwmon: (pc87427) Use request_muxed_region for
  Super-IO accesses
 To:     Guenter Roeck <linux@roeck-us.net>,
         Hardware Monitoring <linux-hwmon@vger.kernel.org>
 References: <1554402838-19008-1-git-send-email-linux@roeck-us.net>
+ <1554402838-19008-2-git-send-email-linux@roeck-us.net>
 CC:     Jean Delvare <jdelvare@suse.com>,
         Linux PCI <linux-pci@vger.kernel.org>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <246ca687-cd96-036b-28e7-a4038766d333@huawei.com>
-Date:   Fri, 5 Apr 2019 08:45:32 +0100
+Message-ID: <6e61d629-9a49-a9fc-8e6a-edbc39750314@huawei.com>
+Date:   Fri, 5 Apr 2019 08:46:24 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.3.0
 MIME-Version: 1.0
-In-Reply-To: <1554402838-19008-1-git-send-email-linux@roeck-us.net>
+In-Reply-To: <1554402838-19008-2-git-send-email-linux@roeck-us.net>
 Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.202.227.238]
@@ -50,24 +51,14 @@ X-Mailing-List: linux-pci@vger.kernel.org
 On 04/04/2019 19:33, Guenter Roeck wrote:
 > Super-IO accesses may fail on a system with no or unmapped LPC bus.
 >
-> Unable to handle kernel paging request at virtual address ffffffbffee0002e
-> pgd = ffffffc1d68d4000
-> [ffffffbffee0002e] *pgd=0000000000000000, *pud=0000000000000000
-> Internal error: Oops: 94000046 [#1] PREEMPT SMP
-> Modules linked in: f71805f(+) hwmon
-> CPU: 3 PID: 1659 Comm: insmod Not tainted 4.5.0+ #88
-> Hardware name: linux,dummy-virt (DT)
-> task: ffffffc1f6665400 ti: ffffffc1d6418000 task.ti: ffffffc1d6418000
-> PC is at f71805f_find+0x6c/0x358 [f71805f]
->
 > Also, other drivers may attempt to access the LPC bus at the same time,
 > resulting in undefined behavior.
 >
 > Use request_muxed_region() to ensure that IO access on the requested
-> address space is supported, and to ensure that access by multiple
-> drivers is synchronized.
+> address space is supported, and to ensure that access by multiple drivers
+> is synchronized.
 >
-> Fixes: e53004e20a58e ("hwmon: New f71805f driver")
+> Fixes: ba224e2c4f0a7 ("hwmon: New PC87427 hardware monitoring driver")
 > Reported-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 > Reported-by: John Garry <john.garry@huawei.com>
 > Cc: John Garry <john.garry@huawei.com>
@@ -76,60 +67,48 @@ Acked-by: John Garry <john.garry@huawei.com>
 
 > Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 > ---
->  drivers/hwmon/f71805f.c | 15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
+>  drivers/hwmon/pc87427.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
 >
-> diff --git a/drivers/hwmon/f71805f.c b/drivers/hwmon/f71805f.c
-> index 73c681162653..623736d2a7c1 100644
-> --- a/drivers/hwmon/f71805f.c
-> +++ b/drivers/hwmon/f71805f.c
-> @@ -96,17 +96,23 @@ superio_select(int base, int ld)
->  	outb(ld, base + 1);
->  }
+> diff --git a/drivers/hwmon/pc87427.c b/drivers/hwmon/pc87427.c
+> index d1a3f2040c00..58eee8fa3e6d 100644
+> --- a/drivers/hwmon/pc87427.c
+> +++ b/drivers/hwmon/pc87427.c
+> @@ -106,6 +106,13 @@ static const char *logdev_str[2] = { DRVNAME " FMC", DRVNAME " HMC" };
+>  #define LD_IN		1
+>  #define LD_TEMP		1
 >
-> -static inline void
-> +static inline int
->  superio_enter(int base)
->  {
-> +	if (!request_muxed_region(base, 2, DRVNAME))
+> +static inline int superio_enter(int sioaddr)
+> +{
+> +	if (!request_muxed_region(sioaddr, 2, DRVNAME))
 > +		return -EBUSY;
-> +
->  	outb(0x87, base);
->  	outb(0x87, base);
-> +
 > +	return 0;
->  }
->
->  static inline void
->  superio_exit(int base)
+> +}
+> +
+>  static inline void superio_outb(int sioaddr, int reg, int val)
 >  {
->  	outb(0xaa, base);
-> +	release_region(base, 2);
+>  	outb(reg, sioaddr);
+> @@ -122,6 +129,7 @@ static inline void superio_exit(int sioaddr)
+>  {
+>  	outb(0x02, sioaddr);
+>  	outb(0x02, sioaddr + 1);
+> +	release_region(sioaddr, 2);
 >  }
 >
 >  /*
-> @@ -1561,7 +1567,7 @@ static int __init f71805f_device_add(unsigned short address,
->  static int __init f71805f_find(int sioaddr, unsigned short *address,
->  			       struct f71805f_sio_data *sio_data)
+> @@ -1195,7 +1203,11 @@ static int __init pc87427_find(int sioaddr, struct pc87427_sio_data *sio_data)
 >  {
-> -	int err = -ENODEV;
-> +	int err;
->  	u16 devid;
->
->  	static const char * const names[] = {
-> @@ -1569,8 +1575,11 @@ static int __init f71805f_find(int sioaddr, unsigned short *address,
->  		"F71872F/FG or F71806F/FG",
->  	};
->
-> -	superio_enter(sioaddr);
+>  	u16 val;
+>  	u8 cfg, cfg_b;
+> -	int i, err = 0;
+> +	int i, err;
+> +
 > +	err = superio_enter(sioaddr);
 > +	if (err)
 > +		return err;
 >
-> +	err = -ENODEV;
->  	devid = superio_inw(sioaddr, SIO_REG_MANID);
->  	if (devid != SIO_FINTEK_ID)
->  		goto exit;
+>  	/* Identify device */
+>  	val = force_id ? force_id : superio_inb(sioaddr, SIOREG_DEVID);
 >
 
 
