@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D538DC10F00
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:46:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA461C10F0F
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:47:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A434E217D7
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:46:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7F3B21850
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:47:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729142AbfDEHqe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Apr 2019 03:46:34 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:6256 "EHLO huawei.com"
+        id S1729833AbfDEHrZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Apr 2019 03:47:25 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5671 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726694AbfDEHqe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Apr 2019 03:46:34 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 4EEF6AFB79AB21C628E3;
-        Fri,  5 Apr 2019 15:46:30 +0800 (CST)
-Received: from [127.0.0.1] (10.202.227.238) by DGGEMS402-HUB.china.huawei.com
- (10.3.19.202) with Microsoft SMTP Server id 14.3.408.0; Fri, 5 Apr 2019
- 15:46:28 +0800
-Subject: Re: [PATCH 2/4] hwmon: (pc87427) Use request_muxed_region for
+        id S1726694AbfDEHrZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Apr 2019 03:47:25 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 407E4D5E79D3015C7FFD;
+        Fri,  5 Apr 2019 15:47:22 +0800 (CST)
+Received: from [127.0.0.1] (10.202.227.238) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.408.0; Fri, 5 Apr 2019
+ 15:47:20 +0800
+Subject: Re: [PATCH 3/4] hwmon: (smsc47b397) Use request_muxed_region for
  Super-IO accesses
 To:     Guenter Roeck <linux@roeck-us.net>,
         Hardware Monitoring <linux-hwmon@vger.kernel.org>
 References: <1554402838-19008-1-git-send-email-linux@roeck-us.net>
- <1554402838-19008-2-git-send-email-linux@roeck-us.net>
+ <1554402838-19008-3-git-send-email-linux@roeck-us.net>
 CC:     Jean Delvare <jdelvare@suse.com>,
         Linux PCI <linux-pci@vger.kernel.org>
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <6e61d629-9a49-a9fc-8e6a-edbc39750314@huawei.com>
-Date:   Fri, 5 Apr 2019 08:46:24 +0100
+Message-ID: <16a65cec-9d92-773b-141b-973401c77a52@huawei.com>
+Date:   Fri, 5 Apr 2019 08:47:16 +0100
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
  Thunderbird/45.3.0
 MIME-Version: 1.0
-In-Reply-To: <1554402838-19008-2-git-send-email-linux@roeck-us.net>
+In-Reply-To: <1554402838-19008-3-git-send-email-linux@roeck-us.net>
 Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.202.227.238]
@@ -58,57 +58,57 @@ On 04/04/2019 19:33, Guenter Roeck wrote:
 > address space is supported, and to ensure that access by multiple drivers
 > is synchronized.
 >
-> Fixes: ba224e2c4f0a7 ("hwmon: New PC87427 hardware monitoring driver")
+> Fixes: 8d5d45fb1468 ("I2C: Move hwmon drivers (2/3)")
 > Reported-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 > Reported-by: John Garry <john.garry@huawei.com>
-> Cc: John Garry <john.garry@huawei.com>
 
 Acked-by: John Garry <john.garry@huawei.com>
 
+> Cc: John Garry <john.garry@huawei.com>
 > Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 > ---
->  drivers/hwmon/pc87427.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
+>  drivers/hwmon/smsc47b397.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/hwmon/pc87427.c b/drivers/hwmon/pc87427.c
-> index d1a3f2040c00..58eee8fa3e6d 100644
-> --- a/drivers/hwmon/pc87427.c
-> +++ b/drivers/hwmon/pc87427.c
-> @@ -106,6 +106,13 @@ static const char *logdev_str[2] = { DRVNAME " FMC", DRVNAME " HMC" };
->  #define LD_IN		1
->  #define LD_TEMP		1
->
-> +static inline int superio_enter(int sioaddr)
-> +{
-> +	if (!request_muxed_region(sioaddr, 2, DRVNAME))
-> +		return -EBUSY;
-> +	return 0;
-> +}
-> +
->  static inline void superio_outb(int sioaddr, int reg, int val)
->  {
->  	outb(reg, sioaddr);
-> @@ -122,6 +129,7 @@ static inline void superio_exit(int sioaddr)
->  {
->  	outb(0x02, sioaddr);
->  	outb(0x02, sioaddr + 1);
-> +	release_region(sioaddr, 2);
+> diff --git a/drivers/hwmon/smsc47b397.c b/drivers/hwmon/smsc47b397.c
+> index c0775084dde0..60e193f2e970 100644
+> --- a/drivers/hwmon/smsc47b397.c
+> +++ b/drivers/hwmon/smsc47b397.c
+> @@ -72,14 +72,19 @@ static inline void superio_select(int ld)
+>  	superio_outb(0x07, ld);
 >  }
 >
->  /*
-> @@ -1195,7 +1203,11 @@ static int __init pc87427_find(int sioaddr, struct pc87427_sio_data *sio_data)
+> -static inline void superio_enter(void)
+> +static inline int superio_enter(void)
 >  {
->  	u16 val;
->  	u8 cfg, cfg_b;
-> -	int i, err = 0;
-> +	int i, err;
+> +	if (!request_muxed_region(REG, 2, DRVNAME))
+> +		return -EBUSY;
 > +
-> +	err = superio_enter(sioaddr);
+>  	outb(0x55, REG);
+> +	return 0;
+>  }
+>
+>  static inline void superio_exit(void)
+>  {
+>  	outb(0xAA, REG);
+> +	release_region(REG, 2);
+>  }
+>
+>  #define SUPERIO_REG_DEVID	0x20
+> @@ -300,8 +305,12 @@ static int __init smsc47b397_find(void)
+>  	u8 id, rev;
+>  	char *name;
+>  	unsigned short addr;
+> +	int err;
+> +
+> +	err = superio_enter();
 > +	if (err)
 > +		return err;
 >
->  	/* Identify device */
->  	val = force_id ? force_id : superio_inb(sioaddr, SIOREG_DEVID);
+> -	superio_enter();
+>  	id = force_id ? force_id : superio_inb(SUPERIO_REG_DEVID);
+>
+>  	switch (id) {
 >
 
 
