@@ -1,248 +1,135 @@
-Return-Path: <SRS0=GqAx=SG=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=e3W/=SH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C1E6C4360F
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 21:30:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5069BC10F0F
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:45:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 58CBB21741
-	for <linux-pci@archiver.kernel.org>; Thu,  4 Apr 2019 21:30:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="OhTUw/ig"
+	by mail.kernel.org (Postfix) with ESMTP id 24A4921850
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 07:45:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729657AbfDDVar (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 4 Apr 2019 17:30:47 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:18414 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729501AbfDDVar (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 Apr 2019 17:30:47 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5ca677790000>; Thu, 04 Apr 2019 14:30:33 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Thu, 04 Apr 2019 14:30:44 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Thu, 04 Apr 2019 14:30:44 -0700
-Received: from [10.25.75.5] (172.20.13.39) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 4 Apr
- 2019 21:30:40 +0000
-Subject: Re: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>
-CC:     vidya sagar <sagar.tv@gmail.com>, <treding@nvidia.com>,
-        <swarren@nvidia.com>, <mperttunen@nvidia.com>,
-        <jonathanh@nvidia.com>, <dev@lynxeye.de>,
-        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, NManikanta <mmaddireddy@nvidia.com>
-References: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
- <CAN7O0+LG8vbB+hApe2tz2LLE_a9XF1iPfD7tKY6=MmhqgoJm8w@mail.gmail.com>
- <eca48917-edd0-15e2-13dd-fcd5becedf1c@nvidia.com>
-X-Nvconfidentiality: public
-Message-ID: <9b6c7289-cc43-4fad-dcb0-97b4413ffd42@nvidia.com>
-Date:   Fri, 5 Apr 2019 03:00:36 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1729833AbfDEHpn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Apr 2019 03:45:43 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:45158 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729142AbfDEHpn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Apr 2019 03:45:43 -0400
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 269A09C50600479DC1F0;
+        Fri,  5 Apr 2019 15:45:39 +0800 (CST)
+Received: from [127.0.0.1] (10.202.227.238) by DGGEMS405-HUB.china.huawei.com
+ (10.3.19.205) with Microsoft SMTP Server id 14.3.408.0; Fri, 5 Apr 2019
+ 15:45:36 +0800
+Subject: Re: [PATCH 1/4] hwmon: (f71805f) Use request_muxed_region for
+ Super-IO accesses
+To:     Guenter Roeck <linux@roeck-us.net>,
+        Hardware Monitoring <linux-hwmon@vger.kernel.org>
+References: <1554402838-19008-1-git-send-email-linux@roeck-us.net>
+CC:     Jean Delvare <jdelvare@suse.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <246ca687-cd96-036b-28e7-a4038766d333@huawei.com>
+Date:   Fri, 5 Apr 2019 08:45:32 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
 MIME-Version: 1.0
-In-Reply-To: <eca48917-edd0-15e2-13dd-fcd5becedf1c@nvidia.com>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL106.nvidia.com (172.18.146.12) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1554413433; bh=qx87rYM84+xToigfohvAPpu6L6yIk1UJX7ckcAv8+r8=;
-        h=X-PGP-Universal:Subject:From:To:CC:References:X-Nvconfidentiality:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=OhTUw/igy0x7rgP8KxyJZxmk2smxBkZoAGzh96S6M3MgvYqyKYnBc2+WUgZm/622u
-         799EDt7PPPvQTGaBdO0pwT0kzAaHfI0Xf4+yskEl6Y9TDNAPiL7mpUCmXHZI1ij/Gd
-         fvyrQrQBnswSjhsrTVg1jbb0oNYSAucgySJNTRUmYnqJ3nh1UOq2ROovhnKPfzfC0d
-         LvMYPkbG8cso7Og1ivk+IZKWH2oN+ne99IrhRC/KuAc+Zw8rZ1Y6tG5MZtMSDT8kqI
-         NG5nEeqtotCxJkBDDdSxp95AFq3xbxoG4sCzgxewqHEk8rbIjTBBpO7kRdDJiEQsr0
-         5pK/KsYtSoPkw==
+In-Reply-To: <1554402838-19008-1-git-send-email-linux@roeck-us.net>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.238]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 4/1/2019 11:13 AM, Vidya Sagar wrote:
+On 04/04/2019 19:33, Guenter Roeck wrote:
+> Super-IO accesses may fail on a system with no or unmapped LPC bus.
+>
+> Unable to handle kernel paging request at virtual address ffffffbffee0002e
+> pgd = ffffffc1d68d4000
+> [ffffffbffee0002e] *pgd=0000000000000000, *pud=0000000000000000
+> Internal error: Oops: 94000046 [#1] PREEMPT SMP
+> Modules linked in: f71805f(+) hwmon
+> CPU: 3 PID: 1659 Comm: insmod Not tainted 4.5.0+ #88
+> Hardware name: linux,dummy-virt (DT)
+> task: ffffffc1f6665400 ti: ffffffc1d6418000 task.ti: ffffffc1d6418000
+> PC is at f71805f_find+0x6c/0x358 [f71805f]
+>
+> Also, other drivers may attempt to access the LPC bus at the same time,
+> resulting in undefined behavior.
+>
+> Use request_muxed_region() to ensure that IO access on the requested
+> address space is supported, and to ensure that access by multiple
+> drivers is synchronized.
+>
+> Fixes: e53004e20a58e ("hwmon: New f71805f driver")
+> Reported-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+> Reported-by: John Garry <john.garry@huawei.com>
+> Cc: John Garry <john.garry@huawei.com>
 
-Hi Bjorn / Lorenzo,
-Apologies for reminding you again. Could you please review this patch?
+Acked-by: John Garry <john.garry@huawei.com>
 
-Thanks,
-Vidya Sagar
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+> ---
+>  drivers/hwmon/f71805f.c | 15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/hwmon/f71805f.c b/drivers/hwmon/f71805f.c
+> index 73c681162653..623736d2a7c1 100644
+> --- a/drivers/hwmon/f71805f.c
+> +++ b/drivers/hwmon/f71805f.c
+> @@ -96,17 +96,23 @@ superio_select(int base, int ld)
+>  	outb(ld, base + 1);
+>  }
+>
+> -static inline void
+> +static inline int
+>  superio_enter(int base)
+>  {
+> +	if (!request_muxed_region(base, 2, DRVNAME))
+> +		return -EBUSY;
+> +
+>  	outb(0x87, base);
+>  	outb(0x87, base);
+> +
+> +	return 0;
+>  }
+>
+>  static inline void
+>  superio_exit(int base)
+>  {
+>  	outb(0xaa, base);
+> +	release_region(base, 2);
+>  }
+>
+>  /*
+> @@ -1561,7 +1567,7 @@ static int __init f71805f_device_add(unsigned short address,
+>  static int __init f71805f_find(int sioaddr, unsigned short *address,
+>  			       struct f71805f_sio_data *sio_data)
+>  {
+> -	int err = -ENODEV;
+> +	int err;
+>  	u16 devid;
+>
+>  	static const char * const names[] = {
+> @@ -1569,8 +1575,11 @@ static int __init f71805f_find(int sioaddr, unsigned short *address,
+>  		"F71872F/FG or F71806F/FG",
+>  	};
+>
+> -	superio_enter(sioaddr);
+> +	err = superio_enter(sioaddr);
+> +	if (err)
+> +		return err;
+>
+> +	err = -ENODEV;
+>  	devid = superio_inw(sioaddr, SIO_REG_MANID);
+>  	if (devid != SIO_FINTEK_ID)
+>  		goto exit;
+>
 
-> Hi Bjorn / Lorenzo,
-> Can you please review this patch?
->=20
-> Thanks,
-> Vidya Sagar
->=20
-> On 3/27/2019 4:29 PM, vidya sagar wrote:
->> Hi Bjorn/Lorenzo,
->> Can you please review this patch?
->> Thierry has reviewed it and I already took care=C2=A0of=C2=A0his comment=
-s.
->>
->> Thanks,
->> Vidya Sagar
->>
->> On Tue, Mar 19, 2019 at 7:33 PM Vidya Sagar <vidyas@nvidia.com <mailto:v=
-idyas@nvidia.com>> wrote:
->>
->> =C2=A0=C2=A0=C2=A0 Since the upstream MSI memory writes are generated by=
- downstream devices,
->> =C2=A0=C2=A0=C2=A0 it is logically correct to have MSI target memory com=
-ing from the DMA pool
->> =C2=A0=C2=A0=C2=A0 reserved for PCIe than from the general memory pool r=
-eserved for CPU
->> =C2=A0=C2=A0=C2=A0 access. This avoids PCIe DMA addresses coinciding wit=
-h MSI target address
->> =C2=A0=C2=A0=C2=A0 thereby raising unwanted MSI interrupts. This patch a=
-lso enforces to limit
->> =C2=A0=C2=A0=C2=A0 the MSI target address to 32-bits to make it work for=
- PCIe endponits that
->> =C2=A0=C2=A0=C2=A0 support only 32-bit MSI target address and those endp=
-oints that support
->> =C2=A0=C2=A0=C2=A0 64-bit MSI target address anyway work with 32-bit MSI=
- target address.
->>
->> =C2=A0=C2=A0=C2=A0 Signed-off-by: Vidya Sagar <vidyas@nvidia.com <mailto=
-:vidyas@nvidia.com>>
->> =C2=A0=C2=A0=C2=A0 Reviewed-by: Thierry Reding <treding@nvidia.com <mail=
-to:treding@nvidia.com>>
->> =C2=A0=C2=A0=C2=A0 Acked-by: Thierry Reding <treding@nvidia.com <mailto:=
-treding@nvidia.com>>
->> =C2=A0=C2=A0=C2=A0 ---
->> =C2=A0=C2=A0=C2=A0 v2:
->> =C2=A0=C2=A0=C2=A0 * changed 'phys' type to 'dma_addr_t' from 'u64'
->> =C2=A0=C2=A0=C2=A0 * added a comment on why DMA mask is set to 32-bit
->> =C2=A0=C2=A0=C2=A0 * replaced 'dma' with 'DMA'
->>
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0drivers/pci/controller/pci-tegra.c | 35 +=
-+++++++++++++++++++++++++---------
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A01 file changed, 26 insertions(+), 9 delet=
-ions(-)
->>
->> =C2=A0=C2=A0=C2=A0 diff --git a/drivers/pci/controller/pci-tegra.c b/dri=
-vers/pci/controller/pci-tegra.c
->> =C2=A0=C2=A0=C2=A0 index f4f53d092e00..f8173a5e352d 100644
->> =C2=A0=C2=A0=C2=A0 --- a/drivers/pci/controller/pci-tegra.c
->> =C2=A0=C2=A0=C2=A0 +++ b/drivers/pci/controller/pci-tegra.c
->> =C2=A0=C2=A0=C2=A0 @@ -231,9 +231,9 @@ struct tegra_msi {
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct msi_controll=
-er chip;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 DECLARE_BITMAP(used=
-, INT_PCI_MSI_NR);
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct irq_domain *=
-domain;
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned long pages;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct mutex lock;
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0u64 phys;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0void *virt;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0dma_addr_t phys;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 int irq;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0};
->>
->> =C2=A0=C2=A0=C2=A0 @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup=
-(struct tegra_pcie *pcie)
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D platform_ge=
-t_irq_byname(pdev, "msi");
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err < 0) {
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 dev_err(dev, "failed to get IRQ: %d\n", err);
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0goto err;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0goto free_irq_domain;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
->>
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 msi->irq =3D err;
->> =C2=A0=C2=A0=C2=A0 @@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_set=
-up(struct tegra_pcie *pcie)
->> =C2=A0=C2=A0=C2=A0 tegra_msi_irq_chip.name <http://tegra_msi_irq_chip.na=
-me>, pcie);
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err < 0) {
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 dev_err(dev, "failed to request IRQ: %d\n", err);
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0goto err;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0goto free_irq_domain;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0}
->> =C2=A0=C2=A0=C2=A0 +
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0/* Though the PCIe contro=
-ller can address >32-bit address space, to
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 * facilitate endpoints t=
-hat support only 32-bit MSI target address,
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 * the mask is set to 32-=
-bit to make sure that MSI target address is
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 * always a 32-bit addres=
-s
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 */
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0err =3D dma_set_coherent_=
-mask(dev, DMA_BIT_MASK(32));
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0if (err < 0) {
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0dev_err(dev, "failed to set DMA coherent mask: %d\n", err);
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0goto free_irq;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0}
->> =C2=A0=C2=A0=C2=A0 +
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0msi->virt =3D dma_alloc_c=
-oherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0if (!msi->virt) {
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0dev_err(dev, "failed to allocate DMA memory for MSI\n");
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0err =3D -ENOMEM;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0goto free_irq;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
->>
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0/* setup AFI/FPCI range *=
-/
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0msi->pages =3D __get_free=
-_pages(GFP_KERNEL, 0);
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0msi->phys =3D virt_to_phy=
-s((void *)msi->pages);
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 host->msi =3D &msi-=
->chip;
->>
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return 0;
->>
->> =C2=A0=C2=A0=C2=A0 -err:
->> =C2=A0=C2=A0=C2=A0 +free_irq:
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0free_irq(msi->irq, pcie);
->> =C2=A0=C2=A0=C2=A0 +free_irq_domain:
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 irq_domain_remove(m=
-si->domain);
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return err;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0}
->> =C2=A0=C2=A0=C2=A0 @@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_tear=
-down(struct tegra_pcie *pcie)
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 struct tegra_msi *m=
-si =3D &pcie->msi;
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 unsigned int i, irq=
-;
->>
->> =C2=A0=C2=A0=C2=A0 -=C2=A0 =C2=A0 =C2=A0 =C2=A0free_pages(msi->pages, 0)=
-;
->> =C2=A0=C2=A0=C2=A0 +=C2=A0 =C2=A0 =C2=A0 =C2=A0dma_free_coherent(pcie->d=
-ev, PAGE_SIZE, msi->virt, msi->phys);
->>
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (msi->irq > 0)
->> =C2=A0=C2=A0=C2=A0=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 free_irq(msi->irq, pcie);
->> =C2=A0=C2=A0=C2=A0 -- =C2=A0=C2=A0=C2=A0 2.7.4
->>
->=20
 
