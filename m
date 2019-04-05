@@ -6,123 +6,111 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C42BC282CE
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 22:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 569D8C282CE
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 23:04:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4A49121855
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 22:51:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25F3021855
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 23:04:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554504667;
-	bh=Uv8T5XkijlF/iPY/OSSxFTQYFyUxGEd5wyOr5X3v9jA=;
+	s=default; t=1554505488;
+	bh=B/VUhNvhr91k6lbYbAfhAz7J78aF270M2nTme/nZQfM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ikxcldnpaC2YdujC0+9sOiWmMG2Lk3qeREGc9qobdjpDA4BgWamMmxPdmNSMxFPjO
-	 7R3xMad6lNZZaGhshoy3kNLbU5c9VoZeqDLkMJMdNNsKkz3iHD2pCvwfX1YhDjgffS
-	 kxiIq+4D1EUJI3eDuPkQUxv4UKohmD/bwVsRjMqc=
+	b=a0ChXsVfX1Sy4TRlJNSmddxkI+R1h7+4/D6XtDijA06REyjCX4bMaefDd00s5eJkG
+	 QqAROpl8yhhd+E9yq1ziAfPvg3vQGnL1zyLu4IiSayOWAGecdc7E+bXCjl7kQiBpxV
+	 15Xv3PFntZH84UOgpnhm6Ypd+rJvIwJxahv/UfAw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726397AbfDEWvG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Apr 2019 18:51:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47242 "EHLO mail.kernel.org"
+        id S1726265AbfDEXEr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Apr 2019 19:04:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49842 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726206AbfDEWvG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Apr 2019 18:51:06 -0400
+        id S1726124AbfDEXEr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Apr 2019 19:04:47 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 736AC2171F;
-        Fri,  5 Apr 2019 22:51:05 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0A7192175B;
+        Fri,  5 Apr 2019 23:04:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554504665;
-        bh=Uv8T5XkijlF/iPY/OSSxFTQYFyUxGEd5wyOr5X3v9jA=;
+        s=default; t=1554505486;
+        bh=B/VUhNvhr91k6lbYbAfhAz7J78aF270M2nTme/nZQfM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=z5BXW0eX4Q4pTV22oMZ3rjhl46Qr1F6TnkyDiGGcpJ2mMpP1uRAIDJMzVn41kJvUF
-         hCzP4U8A9y10bSK1PUednKRxDUNNTMAZJ+wEAlOjekmu8Jn0eSQnKEUC8lYRVI1/2t
-         fZOuwoiDzbh6qgKGsE3meFNNQZike0bJcuGZBvVs=
-Date:   Fri, 5 Apr 2019 17:51:02 -0500
+        b=ZqhWLj8uOAwlcKN+ANFOCpxxDXW6uV3ip2PtIdEPhd+9jbUAmRHBDUWFQ7+8EFsF/
+         z1bMZUy4i3R5ZSXWIs+DW2ABn8QiWdTU7bsUYyuYvgOrq9fhVsn9oGc8R2Z7oz2OMV
+         xpC6FMF518Jzk3qExZHI+tsWVvUZz3+STC/u1lT4=
+Date:   Fri, 5 Apr 2019 18:04:43 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     lorenzo.pieralisi@arm.com, linux-pci@vger.kernel.org,
-        Vidya Sagar <vidyas@nvidia.com>
-Subject: Re: [PATCH] PCI: Fix pci_host_bridge initialization
-Message-ID: <20190405225102.GE159318@google.com>
-References: <20190318160718.10925-1-jean-philippe.brucker@arm.com>
+To:     Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] pci: rpadlpar: fix leaked device_node references in
+ add/remove paths
+Message-ID: <20190405230443.GA200379@google.com>
+References: <20190322182722.8255-1-tyreld@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190318160718.10925-1-jean-philippe.brucker@arm.com>
+In-Reply-To: <20190322182722.8255-1-tyreld@linux.vnet.ibm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Vidya -- Jean-Philippe magically fixed the "tangent 2" problem :)]
-
-On Mon, Mar 18, 2019 at 04:07:18PM +0000, Jean-Philippe Brucker wrote:
-> Two functions allocate a host bridge, devm_pci_alloc_host_bridge() and
-> pci_alloc_host_bridge(). At the moment, only the unmanaged one
-> initializes the PCIe feature bits, which prevents from using features
-> such as hotplug or AER on some systems, when booting with device tree.
-> Make the initialization code common.
+On Fri, Mar 22, 2019 at 01:27:21PM -0500, Tyrel Datwyler wrote:
+> The find_dlpar_node() helper returns a device node with its reference
+> incremented. Both the add and remove paths use this helper for find the
+> appropriate node, but fail to release the reference when done.
 > 
-> Fixes: 02bfeb484230 ("PCI/portdrv: Simplify PCIe feature permission checking")
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> Annotate the find_dlpar_node() helper with a comment about the incremented
+> reference count, and call of_node_put() on the obtained device_node in the
+> add and remove paths. Also, fixup a reference leak in the find_vio_slot()
+> helper where we fail to call of_node_put() on the vdevice node after we
+> iterate over its children.
+> 
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-Applied with stable tag to pci/enumeration for v5.2, thanks!
+Both applied to pci/hotplug for v5.2, thanks!
 
 > ---
->  drivers/pci/probe.c | 23 ++++++++++++++---------
->  1 file changed, 14 insertions(+), 9 deletions(-)
+>  drivers/pci/hotplug/rpadlpar_core.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 2ec0df04e0dc..012250a78da7 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -586,16 +586,9 @@ static void pci_release_host_bridge_dev(struct device *dev)
->  	kfree(to_pci_host_bridge(dev));
+> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+> index e2356a9c7088..182f9e3443ee 100644
+> --- a/drivers/pci/hotplug/rpadlpar_core.c
+> +++ b/drivers/pci/hotplug/rpadlpar_core.c
+> @@ -51,6 +51,7 @@ static struct device_node *find_vio_slot_node(char *drc_name)
+>  		if (rc == 0)
+>  			break;
+>  	}
+> +	of_node_put(parent);
+>  
+>  	return dn;
+>  }
+> @@ -71,6 +72,7 @@ static struct device_node *find_php_slot_pci_node(char *drc_name,
+>  	return np;
 >  }
 >  
-> -struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
-> +static void pci_init_host_bridge(struct pci_host_bridge *bridge)
+> +/* Returns a device_node with its reference count incremented */
+>  static struct device_node *find_dlpar_node(char *drc_name, int *node_type)
 >  {
-> -	struct pci_host_bridge *bridge;
-> -
-> -	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
-> -	if (!bridge)
-> -		return NULL;
-> -
->  	INIT_LIST_HEAD(&bridge->windows);
-> -	bridge->dev.release = pci_release_host_bridge_dev;
+>  	struct device_node *dn;
+> @@ -306,6 +308,7 @@ int dlpar_add_slot(char *drc_name)
+>  			rc = dlpar_add_phb(drc_name, dn);
+>  			break;
+>  	}
+> +	of_node_put(dn);
 >  
->  	/*
->  	 * We assume we can manage these PCIe features.  Some systems may
-> @@ -608,6 +601,18 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
->  	bridge->native_shpc_hotplug = 1;
->  	bridge->native_pme = 1;
->  	bridge->native_ltr = 1;
-> +}
-> +
-> +struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
-> +{
-> +	struct pci_host_bridge *bridge;
-> +
-> +	bridge = kzalloc(sizeof(*bridge) + priv, GFP_KERNEL);
-> +	if (!bridge)
-> +		return NULL;
-> +
-> +	pci_init_host_bridge(bridge);
-> +	bridge->dev.release = pci_release_host_bridge_dev;
+>  	printk(KERN_INFO "%s: slot %s added\n", DLPAR_MODULE_NAME, drc_name);
+>  exit:
+> @@ -439,6 +442,7 @@ int dlpar_remove_slot(char *drc_name)
+>  			rc = dlpar_remove_pci_slot(drc_name, dn);
+>  			break;
+>  	}
+> +	of_node_put(dn);
+>  	vm_unmap_aliases();
 >  
->  	return bridge;
->  }
-> @@ -622,7 +627,7 @@ struct pci_host_bridge *devm_pci_alloc_host_bridge(struct device *dev,
->  	if (!bridge)
->  		return NULL;
->  
-> -	INIT_LIST_HEAD(&bridge->windows);
-> +	pci_init_host_bridge(bridge);
->  	bridge->dev.release = devm_pci_release_host_bridge_dev;
->  
->  	return bridge;
+>  	printk(KERN_INFO "%s: slot %s removed\n", DLPAR_MODULE_NAME, drc_name);
 > -- 
-> 2.21.0
+> 2.12.3
 > 
