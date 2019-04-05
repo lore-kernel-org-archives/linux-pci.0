@@ -2,98 +2,79 @@ Return-Path: <SRS0=e3W/=SH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 496F1C282DC
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E35CEC282CE
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FE1721855
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:18:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554499124;
-	bh=EmDuMgKZldKwvdgYSsupdRNOccOPaaVD19Lj9XObv/Y=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ucMa7teQyKMWy+kQg8LWDH0NMyYKTGfvb2s0+2dwhYktmjtqTz6xONJ2vfhFRDB7p
-	 FWeoB1K4mM4S7lxsL3E/M/WLZ/ZKKXOWgGgIwFbb94gZGUCdHlsWSN9x2FvRXrvisV
-	 dhDWIag0o426PElU/As3bPUS80XS5ta7guVsJ9gQ=
+	by mail.kernel.org (Postfix) with ESMTP id B8E1221726
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 21:28:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726685AbfDEVSn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Apr 2019 17:18:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58772 "EHLO mail.kernel.org"
+        id S1726204AbfDEV2O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Apr 2019 17:28:14 -0400
+Received: from foss.arm.com ([217.140.101.70]:55822 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726672AbfDEVSn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Apr 2019 17:18:43 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D4BD02173C;
-        Fri,  5 Apr 2019 21:18:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554499122;
-        bh=EmDuMgKZldKwvdgYSsupdRNOccOPaaVD19Lj9XObv/Y=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=iA6CV9M6+GWWeAVe1x3iG2yq2cTxpzWgwV09R12dMm4SF4CtJJgM236fGjODQ68Cb
-         9c0bbxLJMUEkhHnT1uakGLJSloCqngamKgfxN5BstCHfSU3mGQEOuJVmDisRy+zjQ5
-         EhVDd03tFhOFxutOM3JjIvljF/9F2M1puxSs5U4A=
-Date:   Fri, 5 Apr 2019 16:18:40 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     robh+dt@kernel.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Jeremy.Linton@arm.com, Grant.Likely@arm.com, Robin.Murphy@arm.com,
-        linux-arm-kernel@lists.infradead.org
+        id S1725973AbfDEV2O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Apr 2019 17:28:14 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 44CFD16A3;
+        Fri,  5 Apr 2019 14:28:13 -0700 (PDT)
+Received: from [192.168.1.123] (usa-sjc-mx-foss1.foss.arm.com [217.140.101.70])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D2D103F68F;
+        Fri,  5 Apr 2019 14:28:10 -0700 (PDT)
 Subject: Re: [PATCH v2 2/2] PCI: OF: Support external-facing property
-Message-ID: <20190405211840.GB159318@google.com>
+To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, Grant.Likely@arm.com,
+        Jeremy.Linton@arm.com
 References: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
  <20190402131548.41949-3-jean-philippe.brucker@arm.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <17400193-bf44-1573-a35a-852ab9127721@arm.com>
+Date:   Fri, 5 Apr 2019 22:28:05 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <20190402131548.41949-3-jean-philippe.brucker@arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 02, 2019 at 02:15:48PM +0100, Jean-Philippe Brucker wrote:
+On 2019-04-02 2:15 pm, Jean-Philippe Brucker wrote:
 > Set the "untrusted" attribute to any PCIe port that has an
 > "external-facing" device tree property. Any device downstream of this
 > port will inherit the attribute and have only the strictest IOMMU
 > protection.
 > 
 > Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Rob, you can take both of these, or ack the first and I'll take them.
-
 > ---
->  drivers/pci/of.c | 3 +++
->  1 file changed, 3 insertions(+)
+>   drivers/pci/of.c | 3 +++
+>   1 file changed, 3 insertions(+)
 > 
 > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
 > index 3d32da15c215..3e7ac7748d90 100644
 > --- a/drivers/pci/of.c
 > +++ b/drivers/pci/of.c
 > @@ -35,6 +35,9 @@ void pci_set_bus_of_node(struct pci_bus *bus)
->  		bus->dev.of_node = pcibios_get_phb_of_node(bus);
->  	else
->  		bus->dev.of_node = of_node_get(bus->self->dev.of_node);
+>   		bus->dev.of_node = pcibios_get_phb_of_node(bus);
+>   	else
+>   		bus->dev.of_node = of_node_get(bus->self->dev.of_node);
 > +
 > +	if (of_get_property(bus->dev.of_node, "external-facing", NULL))
+
+You could use of_property_read_bool() for this, but either way,
+
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+
 > +		bus->self->untrusted = true;
->  }
->  
->  void pci_release_bus_of_node(struct pci_bus *bus)
-> -- 
-> 2.21.0
+>   }
+>   
+>   void pci_release_bus_of_node(struct pci_bus *bus)
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
