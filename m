@@ -2,149 +2,244 @@ Return-Path: <SRS0=e3W/=SH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A041DC282CE
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 18:29:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 727D3C282DA
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 18:58:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6846620863
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 18:29:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ipssB9oQ"
+	by mail.kernel.org (Postfix) with ESMTP id 28FDF2171F
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Apr 2019 18:58:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1554490732;
+	bh=jD5xzicU+7ZXVYfabqjsIAi+ZftcZLuosrYDdzxVhhA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=WwB1E2ur4iuMyXWoUqNLSKmhGKgQHd56qC4B+cUDO3zboRm/5jDOZT9bRwytv6FiH
+	 VqiYoiABoxZqkmHkODIAkKwPYOzMRJlFtiXXfg9gHd5kMhnEl6LA+7JkXdijELIOfG
+	 ahK552f0i7ANm4E/2tySHbSUBqwEiHeZCY/UPP5k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731474AbfDES30 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Apr 2019 14:29:26 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:39576 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731362AbfDES30 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 Apr 2019 14:29:26 -0400
-Received: by mail-pl1-f195.google.com with SMTP id b65so3461139plb.6;
-        Fri, 05 Apr 2019 11:29:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=71zxO+3RgkOG48rQkFIqJMveOCUt6KsJU18Cau9oLO4=;
-        b=ipssB9oQiLMzivHetEDYyj0SDVzOvp+URZYcCB/dhy2KT2NWDycTy8pWZzZKSPMKPL
-         3j2Yx568scEOWbJsx4zVdEGevWNe3ZfPLhWipQlSrLhQIoTrFA1BI0Ev1wNRJ9aBPHLx
-         W6cTsMJKieJfJ7H5I2bgOlbmgXuZrWJMdpm2pg3rjSrt5XVAEMqSO7fuQ7eQmpvFPkMw
-         zXv8oXt6Lyo0j/lv1z954bmh1yw3Pq5acIm3cPHbxcewTC3lYs8kMDiJ9CLAD+nEStcc
-         Z31aqN6yG3c+QWvthcBMPDKv6EMyYNmlNGyO8OsM9H8pbkMRHr2A0q35KZpUDul0HaNH
-         4pkg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=71zxO+3RgkOG48rQkFIqJMveOCUt6KsJU18Cau9oLO4=;
-        b=VA0QiUgn+Sbj/ABYEcDh74fvAL+hc4oBsEcgg7eYmrYryjGpMF4pkGc4MC8HB2RMjE
-         AG4UkEYqggZznV6+UHHIDcMHPqimkKGzBqv9ybexBkqlnNm2I0hIwDOKHpCtQ07odsjp
-         VnOKGWfO04l5ykm+LRa6O7M1hpn71vhkTwvNMIN/LVdqLcW7cO8AqjT584Nc43CyNSEo
-         aLxZ/7kxGtLMzTMYKfHyrQ886pgqShPXEW3dgGFQGibsA1vfMmT6CN4ioj/TAM8p6dmx
-         zilGxklt4xzSKajEOMAbFvNTFXWpsznlQyi37haf9LcdsoV30gIIHzbHAixQF9aaqjTS
-         o8pw==
-X-Gm-Message-State: APjAAAU3eB8R+hlTrKbO+65spdM41NMz6IIgXreDydMAeQ1x1luXU3Vf
-        NRxIryuTSTEZ8Cq3qmbMpRs=
-X-Google-Smtp-Source: APXvYqzzvExXt142yVBlHCBB0352pnU5JZM9Hx+kwx/Q493jkClFsy0XjeqXC6tVj7mQNxoyyMYrig==
-X-Received: by 2002:a17:902:b713:: with SMTP id d19mr14707327pls.54.1554488965353;
-        Fri, 05 Apr 2019 11:29:25 -0700 (PDT)
-Received: from localhost ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id i13sm26975273pgq.17.2019.04.05.11.29.23
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 05 Apr 2019 11:29:24 -0700 (PDT)
-Date:   Fri, 5 Apr 2019 11:29:23 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     John Garry <john.garry@huawei.com>, wangkefeng.wang@huawei.com,
-        lorenzo.pieralisi@arm.com, arnd@arndb.de, rafael@kernel.org,
-        linux-pci@vger.kernel.org, will.deacon@arm.com,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        andy.shevchenko@gmail.com, catalin.marinas@arm.com, bp@suse.de,
+        id S1731646AbfDES6q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Apr 2019 14:58:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45576 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731183AbfDES6q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Apr 2019 14:58:46 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9B7A52171F;
+        Fri,  5 Apr 2019 18:58:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1554490724;
+        bh=jD5xzicU+7ZXVYfabqjsIAi+ZftcZLuosrYDdzxVhhA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=1M0yqwpifnmo4YaHHKK/7CI1VMvd/HbH8LRZPGxdWc2MfobxlzElQixK8D51bDP+c
+         OP3cP5gSzZXtO27Kl8kSlyyDjPQXredtHLoK4IQ/IauJnjw8lYhOspflwIxmC2Jg//
+         ly9rbRGBEMgoKe2V5CevRaa1CZFFjIQ+DubOakHY=
+Date:   Fri, 5 Apr 2019 13:58:42 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     robh+dt@kernel.org, mark.rutland@arm.com, thierry.reding@gmail.com,
+        jonathanh@nvidia.com, kishon@ti.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, lorenzo.pieralisi@arm.com,
+        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        mperttunen@nvidia.com, tiwai@suse.de, spujar@nvidia.com,
+        skomatineni@nvidia.com, liviu.dudau@arm.com, krzk@kernel.org,
+        heiko@sntech.de, horms+renesas@verge.net.au, olof@lixom.net,
+        maxime.ripard@bootlin.com, andy.gross@linaro.org,
+        bjorn.andersson@linaro.org, jagan@amarulasolutions.com,
+        enric.balletbo@collabora.com, ezequiel@collabora.com,
+        stefan.wahren@i2se.com, marc.w.gonzalez@free.fr,
+        l.stach@pengutronix.de, tpiepho@impinj.com,
+        hayashi.kunihiko@socionext.com, yue.wang@amlogic.com,
+        shawn.lin@rock-chips.com, xiaowei.bao@nxp.com,
+        devicetree@vger.kernel.org, mmaddireddy@nvidia.com,
+        kthota@nvidia.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v3 3/4] lib: logic_pio: Reject accesses to unregistered
- CPU MMIO regions
-Message-ID: <20190405182923.GA11563@roeck-us.net>
-References: <1554393602-152448-1-git-send-email-john.garry@huawei.com>
- <1554393602-152448-4-git-send-email-john.garry@huawei.com>
- <20190404164130.GA12203@roeck-us.net>
- <24cc8006-0f0d-6b20-a466-e4a32a0bb656@huawei.com>
- <20190404174336.GA10404@roeck-us.net>
- <20190404185815.GA26522@google.com>
- <2d0f583a-cabe-df4e-ad89-c1800d9b4804@huawei.com>
- <20190405180615.GB109021@google.com>
+Subject: Re: [PATCH 09/10] PCI: tegra: Add Tegra194 PCIe support
+Message-ID: <20190405185842.GC26522@google.com>
+References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
+ <1553613207-3988-10-git-send-email-vidyas@nvidia.com>
+ <20190329203159.GG24180@google.com>
+ <5eb9599c-a6d6-d3a3-beef-5225ed7393f9@nvidia.com>
+ <20190402183110.GE141706@google.com>
+ <dcbfbb32-9980-7ee4-89cd-baedfe624ce5@nvidia.com>
+ <20190403173641.GI141706@google.com>
+ <6cc7e047-bc7e-fa60-88ba-0b69c3d5a3f0@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190405180615.GB109021@google.com>
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <6cc7e047-bc7e-fa60-88ba-0b69c3d5a3f0@nvidia.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Apr 05, 2019 at 01:06:15PM -0500, Bjorn Helgaas wrote:
-> On Fri, Apr 05, 2019 at 09:10:27AM +0100, John Garry wrote:
-> > On 04/04/2019 19:58, Bjorn Helgaas wrote:
-> > > On Thu, Apr 04, 2019 at 10:43:36AM -0700, Guenter Roeck wrote:
-> > > > On Thu, Apr 04, 2019 at 05:52:35PM +0100, John Garry wrote:
-> > > > > > > Note that the f71805f driver does not call
-> > > > > > > request_{muxed_}region(), as it should.
-> > > > > 
-> > > > > > ... which is the real problem, one that is not solved by this
-> > > > > > patch. This may result in parallel and descructive accesses if
-> > > > > > there is another device on the LPC bus, and another driver
-> > > > > > accessing that device. Personally I'd rather have
-> > > > > > request_muxed_region() added to the f71805f driver.
-> > > > > 
-> > > > > Right, we should and will still fix f71805f. If you recall, I did
-> > > > > have the f71805f fix in the v1 series, but you committed that it
-> > > > > was orthogonal, so I decided to take it out of this work for now.
-> > > > > 
-> > > > > And even if we fix up f71805f and other known drivers which don't
-> > > > > call request_muxed_region(), we still need to police against these
-> > > > > rogue accesses, which is what this patch attempts to do.
-> > > > > 
-> > > > Do we ? I am personally not convinced that LPC accesses _have_ to
-> > > > occur through PCI on any given system.
+On Fri, Apr 05, 2019 at 01:23:51AM +0530, Vidya Sagar wrote:
+> On 4/3/2019 11:06 PM, Bjorn Helgaas wrote:
+> > On Wed, Apr 03, 2019 at 03:13:09PM +0530, Vidya Sagar wrote:
+> > > On 4/3/2019 12:01 AM, Bjorn Helgaas wrote:
+> > > > On Tue, Apr 02, 2019 at 12:47:48PM +0530, Vidya Sagar wrote:
+> > > > > On 3/30/2019 2:22 AM, Bjorn Helgaas wrote:
+> > > > > > On Tue, Mar 26, 2019 at 08:43:26PM +0530, Vidya Sagar wrote:
+> > > > > > > Add support for Synopsys DesignWare core IP based PCIe host controller
+> > > > > > > present in Tegra194 SoC.
+> > > > 
+> > > >     - Why does this chip require pcie_pme_disable_msi()?  The only other
+> > > >       use is a DMI quirk for "MSI Wind U-100", added by c39fae1416d5
+> > > >       ("PCI PM: Make it possible to force using INTx for PCIe PME
+> > > >       signaling").
 > > > 
-> > > On current systems, I suspect ISA/LPC devices are typically connected
-> > > via a PCI-to-ISA/LPC bridge.  But AFAIK there's no actual requirement
-> > > for that bridge, and there certainly *were* systems with ISA devices
-> > > but no PCI at all.
+> > > Because Tegra194 doesn't support raising PME interrupts through MSI line.
+> > 
+> > What does the spec say about this?  Is hardware supposed to
+> > support MSI for PME?  Given that MSI Wind U-100 and Tegra194 are
+> > the only two cases we know about where PME via MSI isn't
+> > supported, it seems like there must be either a requirement for
+> > that or some mechanism for the OS to figure this out, e.g., a
+> > capability bit.
+>
+> AFAIU, Spec doesn't say anything about whether PME interrupt should
+> be through MSI or by other means. As far as Tegra194 is concerned,
+> there are only two interrupt lanes that go from PCIe IP to GIC, one
+> being legacy interrupt (that represents legacy interrupts coming
+> over PCIe bus from downstream devices and also the events happening
+> internal to root port) and the other being MSI interrupt (that
+> represents MSI interrupts coming over PCIe bus from downstream
+> devices). Since hardware folks had a choice to route PME interrupts
+> either through legacy interrupt line or through MSI interrupt line
+> and legacy interrupt line was chosen as a design choice. That being
+> the case at hardware level, I tried to inform the same through
+> pcie_pme_disable_msi() to PCIe sub-system that PME interrupts are
+> not expected over MSI.
+
+There's something wrong here.  Either the question of how PME is
+signaled is generic and the spec provides a way for the OS to discover
+that method, or it's part of the device-specific architecture that
+each host bridge driver has to know about its device.  If the former,
+we need to make the PCI core smart enough to figure it out.  If the
+latter, we need a better interface than this ad hoc
+pcie_pme_disable_msi() thing.  But if it is truly the latter, your
+current code is sufficient and we can refine it over time.
+
+> > > > > > I see that an earlier patch added "bus" to struct pcie_port.
+> > > > > > I think it would be better to somehow connect to the
+> > > > > > pci_host_bridge struct.  Several other drivers already do
+> > > > > > this; see uses of pci_host_bridge_from_priv().
+> > > > > 
+> > > > > All non-DesignWare based implementations save their private data
+> > > > > structure in 'private' pointer of struct pci_host_bridge and use
+> > > > > pci_host_bridge_from_priv() to get it back. But, DesignWare
+> > > > > based implementations save pcie_port in 'sysdata' and nothing in
+> > > > > 'private' pointer. So,  I'm not sure if
+> > > > > pci_host_bridge_from_priv() can be used in this case. Please do
+> > > > > let me know if you think otherwise.
+> > > > 
+> > > > DesignWare-based drivers should have a way to retrieve the
+> > > > pci_host_bridge pointer.  It doesn't have to be *exactly* the same
+> > > > as non-DesignWare drivers, but it should be similar.
 > > > 
-> > > IMO, if you want to build ISA drivers on your arch, you need to make
-> > > sure the inb() probing done by those drivers works like it does on
-> > > x86.  If there's no device there, the inb() should return 0xff with no
-> > > fuss and no crash.
+> > > I gave my reasoning as to why with the current code, it is not
+> > > possible to get the pci_host_bridge structure pointer from struct
+> > > pcie_port pointer in another thread as a reply to Thierry Reding's
+> > > comments. Since Jishen'g changes to support remove functionality are
+> > > accepted, I think using bus pointer saved in struct pcie_port
+> > > pointer shouldn't be any issue now. Please do let me know if that is
+> > > something not acceptable.
+> > > 
+> > > > > > That would give you the bus, as well as flags like
+> > > > > > no_ext_tags, native_aer, etc, which this driver, being a host
+> > > > > > bridge driver that's responsible for this part of the
+> > > > > > firmware/OS interface, may conceivably need.
 > > 
-> > Right, and this is what I am attempting to do here.
+> > I think saving the pp->root_bus pointer as Jisheng's patch does is a
+> > sub-optimal solution.  If we figure out how to save the
+> > pci_host_bridge pointer, we automatically get the root bus pointer as
+> > well.
 > > 
-> > So today a call to request_muxed_region() can still succeed even if no IO
-> > space mapped.
+> > It may require some restructuring to save the pci_host_bridge pointer,
+> > but I doubt it's really *impossible*.
+>
+> Is it OK to save pci_host_bridge pointer in pcie_port structure
+> directly? I see that as another way to get pci_host_bridge pointer
+> from pcie_port structure. My understanding is that, to get
+> pci_host_bridge pointer, either pcie_port structure should be part
+> of pci_host_bridge structure (which is the case with all non-DW
+> implementations) or pcie_port should have a pointer to some
+> structure which is directly (and not by means of a pointer) part of
+> pci_host_bridge structure so that container_of() can be used to get
+> pci_host_bridge.  As I see, there is no data object of
+> pci_host_bridge whose pointer is saved in pcie_port structure. In
+> fact, in reverse, pcie_port's struct dev pointer is saved as parent
+> to pci_host_bridge's struct dev. So, another way would be to iterate
+> over the children of pcie_port's struct dev pointer to find
+> pci_host_bridge's dev pointer and from there get pci_host_bridge
+> through container_of. But, I think is complicating it more than
+> using bus pointer from pcie_port. I'm not sure if I'm able to convey
+> the issue I'm facing here to get pci_host_bridge from pcie_port, but
+> doing any other thing seems complicating it even more.
+
+What I suspect should happen eventually is the DWC driver should call
+devm_pci_alloc_host_bridge() directly, as all the non-DWC drivers do.
+That would require a little reorganization of the DWC data structures,
+but it would be good to be more consistent.
+
+For now, I think stashing the pointer in pcie_port or dw_pcie would be
+OK.  I'm not 100% clear on the difference, but it looks like either
+should be common across all the DWC drivers, which is what we want.
+
+(Tangent, dw_pcie_host_init() currently uses pci_alloc_host_bridge(),
+not devm_pci_alloc_host_bridge(), even though it uses other devm
+interfaces.  This looks like a probable buglet.)
+
+(Tangent 2, devm_pci_alloc_host_bridge() doesn't initialize
+bridge->native_aer, etc, as pci_alloc_host_bridge() does.  This looks
+like my fault from 02bfeb484230 ("PCI/portdrv: Simplify PCIe feature
+permission checking"), and it probably means none of those PCIe
+services work correctly for these native host bridge drivers.)
+
+> > > > > > > +static int tegra_pcie_dw_runtime_suspend(struct device *dev)
+> > > > > > > +{
+> > > > > > > +	struct tegra_pcie_dw *pcie = dev_get_drvdata(dev);
+> > > > > > > +
+> > > > > > > +	tegra_pcie_downstream_dev_to_D0(pcie);
+> > > > > > > +
+> > > > > > > +	pci_stop_root_bus(pcie->pci.pp.bus);
+> > > > > > > +	pci_remove_root_bus(pcie->pci.pp.bus);
+> > > > > > 
+> > > > > > Why are you calling these?  No other drivers do this except in
+> > > > > > their .remove() methods.  Is there something special about
+> > > > > > Tegra, or is this something the other drivers *should* be
+> > > > > > doing?
+> > > > > 
+> > > > > Since this API is called by remove, I'm removing the hierarchy
+> > > > > to safely bring down all the devices. I'll have to re-visit this
+> > > > > part as Jisheng Zhang's patches
+> > > > > https://patchwork.kernel.org/project/linux-pci/list/?series=98559
+> > > > > are now approved and I need to verify this part after
+> > > > > cherry-picking Jisheng's changes.
+> > > > 
+> > > > Tegra194 should do this the same way as other drivers, independent
+> > > > of Jisheng's changes.
+> > > 
+> > > When other Designware implementations add remove functionality, even
+> > > they should be calling these APIs (Jisheng also mentioned the same
+> > > in his commit message)
 > > 
-> > As such, even well-behaved drivers like f71882fg can still crash the system,
-> > as noted in RFC patch 1/4 ("resource: Request IO port regions from children
-> > of ioport_resource").
-> 
-> Maybe I'm missing something, but on x86, drivers like f71882fg do not
-> crash the system because inb() *never* causes a crash.
-> 
-> If you want to build that driver for ARM, I think you need to make
-> sure that inb() on ARM also *never* causes a crash.  I don't think
-> changing f71882fg and all the similar drivers is the right answer.
-> 
+> > My point is that these APIs should be called from driver .remove()
+> > methods, not from .runtime_suspend() methods.
+>
+> .remove() internally calls pm_runtime_put_sync() API which calls
+> .runtime_suspend(). I made a new patch to add a host_deinit() call
+> which make all these calls. Since host_init() is called from inside
+> .runtime_resume() of this driver, to be in sync, I'm now calling
+> host_deinit() from inside .runtime_suspend() API.
 
-Agreed. As I had mentioned earlier, the driver changes are orthogonal:
-the drivers should request the IO region before accessing it, primarily
-to avoid conflicting accesses by multiple drivers in parallel. For
-example, the f71882fg driver supports chips which implement hardware
-monitoring as well as watchdog functionality, and both the hwmon
-and the watchdog driver may try to access the io space.
+I think this is wrong.  pci_stop_root_bus() will detach all the
+drivers from all the devices.  We don't want to do that if we're
+merely runtime suspending the host bridge, do we?
 
-If and how the system ensures that the IO region exists and/or that 
-inb() always succeeds is a different question. I would prefer a less
-complex solution than the one suggested here, but that is my personal
-opionion.
-
-Guenter
+Bjorn
