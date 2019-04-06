@@ -2,84 +2,121 @@ Return-Path: <SRS0=JDZy=SI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 877B3C10F06
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Apr 2019 15:32:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A441CC10F06
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Apr 2019 19:42:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5960621019
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Apr 2019 15:32:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E3E52175B
+	for <linux-pci@archiver.kernel.org>; Sat,  6 Apr 2019 19:42:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=armh.onmicrosoft.com header.i=@armh.onmicrosoft.com header.b="iVpIPueL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726458AbfDFPcc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 6 Apr 2019 11:32:32 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:41917 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1726456AbfDFPcc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 6 Apr 2019 11:32:32 -0400
-Received: (qmail 19478 invoked by uid 500); 6 Apr 2019 11:32:31 -0400
-Received: from localhost (sendmail-bs@127.0.0.1)
-  by localhost with SMTP; 6 Apr 2019 11:32:31 -0400
-Date:   Sat, 6 Apr 2019 11:32:31 -0400 (EDT)
-From:   Alan Stern <stern@rowland.harvard.edu>
-X-X-Sender: stern@netrider.rowland.org
-To:     Jesse Hathaway <jesse@mbuki-mvuki.org>
-cc:     Bjorn Helgaas <helgaas@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <linux-usb@vger.kernel.org>
-Subject: Re: Regression causes a hang on boot with a Comtrol PCI card
-In-Reply-To: <CANSNSoVGLEkRE5DPyVhPVdsCbu44SOu0Tpf7smWjPUn_qwRHHA@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1904061121410.19196-100000@netrider.rowland.org>
+        id S1726564AbfDFTmb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 6 Apr 2019 15:42:31 -0400
+Received: from mail-eopbgr40076.outbound.protection.outlook.com ([40.107.4.76]:44800
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726452AbfDFTmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 6 Apr 2019 15:42:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=armh.onmicrosoft.com;
+ s=selector1-arm-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4yqAc2QggMHaq10ZyhSYN6X8VZ7XTcKaoQf7E4N1nvU=;
+ b=iVpIPueLqlZD/MYuBQb9Kl1q6TV3/lUF4pI4mVknQjIO3qhB05j2qOttdnMv3O4UC6l1NRKRaxUmrQSPvfjBT0InyACTUfis7Zt/P/OLGV8quxTqFTTX7tkuokhyiStDUvYkGL77eFhiV5U4CyPBZR9ey8TY4p85gxo8wAmkfAw=
+Received: from DB6PR08MB2678.eurprd08.prod.outlook.com (10.170.221.155) by
+ DB6PR08MB2903.eurprd08.prod.outlook.com (10.175.235.24) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1771.16; Sat, 6 Apr 2019 19:42:27 +0000
+Received: from DB6PR08MB2678.eurprd08.prod.outlook.com
+ ([fe80::b4c9:2f05:c626:e634]) by DB6PR08MB2678.eurprd08.prod.outlook.com
+ ([fe80::b4c9:2f05:c626:e634%4]) with mapi id 15.20.1771.014; Sat, 6 Apr 2019
+ 19:42:27 +0000
+From:   Grant Likely <Grant.Likely@arm.com>
+To:     Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        Mark Rutland <Mark.Rutland@arm.com>
+CC:     nd <nd@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        Jeremy Linton <Jeremy.Linton@arm.com>,
+        Robin Murphy <Robin.Murphy@arm.com>
+Subject: Re: [PATCH v2 0/2] PCI: Describe external-facing ports in device tree
+Thread-Topic: [PATCH v2 0/2] PCI: Describe external-facing ports in device
+ tree
+Thread-Index: AQHU6Vb0d47mIKzu002oBF6sY+GHH6YvX0sA
+Date:   Sat, 6 Apr 2019 19:42:27 +0000
+Message-ID: <31d32816-be43-3507-ac7c-b31481e80e55@arm.com>
+References: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
+In-Reply-To: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: LO2P265CA0376.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:a3::28) To DB6PR08MB2678.eurprd08.prod.outlook.com
+ (2603:10a6:6:1b::27)
+user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.6.1
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Grant.Likely@arm.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [185.69.145.230]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 8e0b9107-473e-413b-4a05-08d6bac7ffd4
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:DB6PR08MB2903;
+x-ms-traffictypediagnostic: DB6PR08MB2903:
+x-ms-exchange-purlcount: 3
+nodisclaimer: True
+x-microsoft-antispam-prvs: <DB6PR08MB29034C33335A173DA023779F95520@DB6PR08MB2903.eurprd08.prod.outlook.com>
+x-forefront-prvs: 0999136621
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(366004)(39850400004)(396003)(136003)(346002)(199004)(189003)(65806001)(14454004)(65956001)(6636002)(44832011)(6512007)(25786009)(64126003)(6506007)(256004)(6486002)(386003)(53546011)(31686004)(966005)(72206003)(105586002)(71200400001)(71190400001)(106356001)(54906003)(229853002)(478600001)(6306002)(8676002)(2906002)(81156014)(110136005)(4326008)(2501003)(68736007)(81166006)(102836004)(53936002)(66066001)(446003)(11346002)(476003)(186003)(305945005)(52116002)(6436002)(26005)(86362001)(6246003)(316002)(7736002)(58126008)(3846002)(6116002)(65826007)(97736004)(99286004)(2616005)(36756003)(5660300002)(486006)(76176011)(31696002)(8936002);DIR:OUT;SFP:1101;SCL:1;SRVR:DB6PR08MB2903;H:DB6PR08MB2678.eurprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: arm.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: QWHrqGiZyJJfqtFAAjkjpXvn+rIqj4r5Kft8PmD+cWv895eSj3Twg1lTFvkwSMrK6FiY5SGLbULNhu07i1pFTlITKFOvI5m+xJYrjcqErjxjGsUQU7qj8RIyQqTbopCRQWB4TStu79Vct30CYQ+mQrKW0CmqTC9sl9anvmFGKGpTA6vJLlCvEJIRrE0Q9lWO42S3Q21s6xf/2xxtL7ZgT5jgxZANjLgn3tfewq7Fs3jXsfmDjEBNVaGhW3xiJm1oYr9fMsjqO38NxY1sd4sek/WWkJ7yhziDbyDsNNH9JM1MJ0YnuR0wZ87NVmO6lLZoX6Kxt97GpG5N7cluQhjQdben2jPf6zUyXo7eUeT9hivhZtQ3oGko+27yr46ZMqkrRuN92aP/VdyiPjEJ9MNDEDupGYkfDNmDdaIWM0z9BaE=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <E8E442CF2580E84E82747BEF91D4B7BC@eurprd08.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-OriginatorOrg: arm.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8e0b9107-473e-413b-4a05-08d6bac7ffd4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Apr 2019 19:42:27.6157
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: f34e5979-57d9-4aaa-ad4d-b122a662184d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB6PR08MB2903
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 5 Apr 2019, Jesse Hathaway wrote:
-
-> On Thu, Apr 4, 2019 at 2:14 PM Alan Stern <stern@rowland.harvard.edu> wrote:
-> > Okay.  You could try skipping that pci_write_config_byte() call.  The
-> > following loop would probably time out, and you might find that the
-> > code crashes later on.
-> >
-> > You could also try setting try_handoff to 0 near the start of the
-> > routine.  Your system plus the Comtrol PCI card could have the same
-> > sort of bug as reported in Bugzilla #77021.
-> 
-> I tried both of those options and the output was similar, here is the output
-> with try_handoff set to 0. In both cases the box then hangs on initializing
-> pstore.
-
-Well, at least that's forward progress.  I don't know what pstore is or
-what connection it has to the USB subsystem.  Does the machine hang 
-similarly if you boot without the Comtrol PCI card present?
-
-For that matter, what happens if you remove EHCI from the kernel 
-configuration completely?
-
->  Excuse my ignorance on understanding how having the Comtrol
-> card present would effect the USB handoff, but would there be any
-> value in trying to boot this box via UEFI, rather than via the BIOS? Does
-> UEFI handle the handoff differently?
-
-The UEFI and the legacy BIOS are two separate pieces of code with no 
-particular connection to one another.  It's a good bet that they do 
-pretty much everything differently.
-
-As for how the PCI card affects the USB handoff, it depends on how the
-BIOS behaves.  Normally the BIOS will take control of all the available
-EHCI controllers during bootup (so that it can use them to communicate
-with a USB keyboard or mouse), including controllers on add-on PCI
-cards as well as those on the motherboard.  When the kernel starts up,
-it tries to take ownership of the controllers away from the BIOS
-(that's the handoff) so that Linux can use them.  However, if the BIOS
-was never tested for handoff of USB controllers on add-on PCI cards, it
-could easily have a bug that would crash the machine.
-
-Alan Stern
-
+T24gMDIvMDQvMjAxOSAyMDoxNSwgSmVhbi1QaGlsaXBwZSBCcnVja2VyIHdyb3RlOg0KPiBTaW5j
+ZSB2MSBbMV0sIEkgaW1wcm92ZWQgdGhlIHdvcmRpbmcgb2YgcGF0Y2ggMS8yIGFzIHN1Z2dlc3Rl
+ZCBieSBCam9ybi4NCj4gDQo+IEFkZCBhbiAiZXh0ZXJuYWwtZmFjaW5nIiBwcm9wZXJ0eSB0byBQ
+Q0kgcG9ydHMgaW4gZGV2aWNlLXRyZWUsIHRvIGhlbHANCj4gaWRlbnRpZnkgdW50cnVzdGVkIGRl
+dmljZXMuIFRoZSBub3Rpb24gb2YgdW50cnVzdGVkIFBDSSBkZXZpY2VzIHdhcw0KPiBhZGRlZCB0
+byB0aGUgdjUuMCBrZXJuZWwgdG8gZGVzY3JpYmUgZGV2aWNlcyB0aGF0IHNob3VsZCBoYXZlIHN0
+cmljdA0KPiBJT01NVSBwcm90ZWN0aW9uIFsyXSwgZm9yIGV4YW1wbGUgZGV2aWNlcyB0aGF0IGFy
+ZSBwbHVnZ2VkIGluIGENCj4gVGh1bmRlcmJvbHQgcG9ydC4gQUNQSSBzeXN0ZW1zIHVzZSB0aGUg
+RXh0ZXJuYWxGYWNpbmdQb3J0IHByb3BlcnR5IFszXS4NCj4gQWRkIGFuIGVxdWl2YWxlbnQgbWVj
+aGFuaXNtIHRvIGRldmljZSB0cmVlLg0KPiANCj4gWzFdIGh0dHBzOi8vbG9yZS5rZXJuZWwub3Jn
+L2xpbnV4LXBjaS8yMDE5MDMxODE4MjEyNC41Mzg1OS0xLWplYW4tcGhpbGlwcGUuYnJ1Y2tlckBh
+cm0uY29tLw0KPiBbMl0gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTgvMTEvMjYvNjMxDQo+IFsz
+XSBodHRwczovL2RvY3MubWljcm9zb2Z0LmNvbS9lbi11cy93aW5kb3dzLWhhcmR3YXJlL2RyaXZl
+cnMvcGNpL2RzZC1mb3ItcGNpZS1yb290LXBvcnRzI2lkZW50aWZ5aW5nLWV4dGVybmFsbHktZXhw
+b3NlZC1wY2llLXJvb3QtcG9ydHMNCg0KRm9yIGJvdGg6DQoNClJldmlld2VkLWJ5OiBHcmFudCBM
+aWtlbHkgPGdyYW50Lmxpa2VseUBhcm0uY29tPg0KDQo+IA0KPiBKZWFuLVBoaWxpcHBlIEJydWNr
+ZXIgKDIpOg0KPiAgICBkdC1iaW5kaW5nczogQWRkIGV4dGVybmFsLWZhY2luZyBQQ0llIHBvcnQg
+cHJvcGVydHkNCj4gICAgUENJOiBPRjogU3VwcG9ydCBleHRlcm5hbC1mYWNpbmcgcHJvcGVydHkN
+Cj4gDQo+ICAgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9wY2kudHh0IHwg
+NTAgKysrKysrKysrKysrKysrKysrKw0KPiAgIGRyaXZlcnMvcGNpL29mLmMgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICB8ICAzICsrDQo+ICAgMiBmaWxlcyBjaGFuZ2VkLCA1MyBpbnNlcnRp
+b25zKCspDQo+IA0KDQo=
