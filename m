@@ -1,122 +1,199 @@
-Return-Path: <SRS0=JDZy=SI=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=/7fE=SK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=DATE_IN_FUTURE_06_12,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A441CC10F06
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Apr 2019 19:42:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90B05C282CE
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Apr 2019 06:36:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E3E52175B
-	for <linux-pci@archiver.kernel.org>; Sat,  6 Apr 2019 19:42:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=armh.onmicrosoft.com header.i=@armh.onmicrosoft.com header.b="iVpIPueL"
+	by mail.kernel.org (Postfix) with ESMTP id 644DE20833
+	for <linux-pci@archiver.kernel.org>; Mon,  8 Apr 2019 06:36:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726564AbfDFTmb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 6 Apr 2019 15:42:31 -0400
-Received: from mail-eopbgr40076.outbound.protection.outlook.com ([40.107.4.76]:44800
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726452AbfDFTmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 6 Apr 2019 15:42:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=armh.onmicrosoft.com;
- s=selector1-arm-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4yqAc2QggMHaq10ZyhSYN6X8VZ7XTcKaoQf7E4N1nvU=;
- b=iVpIPueLqlZD/MYuBQb9Kl1q6TV3/lUF4pI4mVknQjIO3qhB05j2qOttdnMv3O4UC6l1NRKRaxUmrQSPvfjBT0InyACTUfis7Zt/P/OLGV8quxTqFTTX7tkuokhyiStDUvYkGL77eFhiV5U4CyPBZR9ey8TY4p85gxo8wAmkfAw=
-Received: from DB6PR08MB2678.eurprd08.prod.outlook.com (10.170.221.155) by
- DB6PR08MB2903.eurprd08.prod.outlook.com (10.175.235.24) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1771.16; Sat, 6 Apr 2019 19:42:27 +0000
-Received: from DB6PR08MB2678.eurprd08.prod.outlook.com
- ([fe80::b4c9:2f05:c626:e634]) by DB6PR08MB2678.eurprd08.prod.outlook.com
- ([fe80::b4c9:2f05:c626:e634%4]) with mapi id 15.20.1771.014; Sat, 6 Apr 2019
- 19:42:27 +0000
-From:   Grant Likely <Grant.Likely@arm.com>
-To:     Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>
-CC:     nd <nd@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        Jeremy Linton <Jeremy.Linton@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>
-Subject: Re: [PATCH v2 0/2] PCI: Describe external-facing ports in device tree
-Thread-Topic: [PATCH v2 0/2] PCI: Describe external-facing ports in device
- tree
-Thread-Index: AQHU6Vb0d47mIKzu002oBF6sY+GHH6YvX0sA
-Date:   Sat, 6 Apr 2019 19:42:27 +0000
-Message-ID: <31d32816-be43-3507-ac7c-b31481e80e55@arm.com>
-References: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
-In-Reply-To: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: LO2P265CA0376.GBRP265.PROD.OUTLOOK.COM
- (2603:10a6:600:a3::28) To DB6PR08MB2678.eurprd08.prod.outlook.com
- (2603:10a6:6:1b::27)
-user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.6.1
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Grant.Likely@arm.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [185.69.145.230]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 8e0b9107-473e-413b-4a05-08d6bac7ffd4
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:DB6PR08MB2903;
-x-ms-traffictypediagnostic: DB6PR08MB2903:
-x-ms-exchange-purlcount: 3
-nodisclaimer: True
-x-microsoft-antispam-prvs: <DB6PR08MB29034C33335A173DA023779F95520@DB6PR08MB2903.eurprd08.prod.outlook.com>
-x-forefront-prvs: 0999136621
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(376002)(366004)(39850400004)(396003)(136003)(346002)(199004)(189003)(65806001)(14454004)(65956001)(6636002)(44832011)(6512007)(25786009)(64126003)(6506007)(256004)(6486002)(386003)(53546011)(31686004)(966005)(72206003)(105586002)(71200400001)(71190400001)(106356001)(54906003)(229853002)(478600001)(6306002)(8676002)(2906002)(81156014)(110136005)(4326008)(2501003)(68736007)(81166006)(102836004)(53936002)(66066001)(446003)(11346002)(476003)(186003)(305945005)(52116002)(6436002)(26005)(86362001)(6246003)(316002)(7736002)(58126008)(3846002)(6116002)(65826007)(97736004)(99286004)(2616005)(36756003)(5660300002)(486006)(76176011)(31696002)(8936002);DIR:OUT;SFP:1101;SCL:1;SRVR:DB6PR08MB2903;H:DB6PR08MB2678.eurprd08.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: arm.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: QWHrqGiZyJJfqtFAAjkjpXvn+rIqj4r5Kft8PmD+cWv895eSj3Twg1lTFvkwSMrK6FiY5SGLbULNhu07i1pFTlITKFOvI5m+xJYrjcqErjxjGsUQU7qj8RIyQqTbopCRQWB4TStu79Vct30CYQ+mQrKW0CmqTC9sl9anvmFGKGpTA6vJLlCvEJIRrE0Q9lWO42S3Q21s6xf/2xxtL7ZgT5jgxZANjLgn3tfewq7Fs3jXsfmDjEBNVaGhW3xiJm1oYr9fMsjqO38NxY1sd4sek/WWkJ7yhziDbyDsNNH9JM1MJ0YnuR0wZ87NVmO6lLZoX6Kxt97GpG5N7cluQhjQdben2jPf6zUyXo7eUeT9hivhZtQ3oGko+27yr46ZMqkrRuN92aP/VdyiPjEJ9MNDEDupGYkfDNmDdaIWM0z9BaE=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <E8E442CF2580E84E82747BEF91D4B7BC@eurprd08.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1726220AbfDHGgD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 8 Apr 2019 02:36:03 -0400
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:47288 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726012AbfDHGgD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 Apr 2019 02:36:03 -0400
+X-IronPort-AV: E=Sophos;i="5.60,324,1549954800"; 
+   d="scan'208";a="29649301"
+Received: from unknown (HELO smtp.microsemi.com) ([208.19.100.22])
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 07 Apr 2019 23:35:57 -0700
+Received: from AVMBX3.microsemi.net (10.100.34.33) by AVMBX2.microsemi.net
+ (10.100.34.32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Sun, 7 Apr 2019
+ 23:35:56 -0700
+Received: from server1.microsemi.net (10.188.116.154) by avmbx3.microsemi.net
+ (10.100.34.33) with Microsoft SMTP Server id 15.1.1713.5 via Frontend
+ Transport; Sun, 7 Apr 2019 23:35:53 -0700
+From:   Wesley Sheng <wesley.sheng@microchip.com>
+To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <wesleyshenggit@sina.com>, <wesley.sheng@microchip.com>,
+        <kelvin.cao@microchip.com>
+Subject: [PATCH 1/2] switchtec: Fix false maximum supported PCIe function number issue
+Date:   Mon, 8 Apr 2019 22:34:47 +0800
+Message-ID: <1554734088-5755-2-git-send-email-wesley.sheng@microchip.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1554734088-5755-1-git-send-email-wesley.sheng@microchip.com>
+References: <1554734088-5755-1-git-send-email-wesley.sheng@microchip.com>
 MIME-Version: 1.0
-X-OriginatorOrg: arm.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8e0b9107-473e-413b-4a05-08d6bac7ffd4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Apr 2019 19:42:27.6157
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: f34e5979-57d9-4aaa-ad4d-b122a662184d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB6PR08MB2903
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-T24gMDIvMDQvMjAxOSAyMDoxNSwgSmVhbi1QaGlsaXBwZSBCcnVja2VyIHdyb3RlOg0KPiBTaW5j
-ZSB2MSBbMV0sIEkgaW1wcm92ZWQgdGhlIHdvcmRpbmcgb2YgcGF0Y2ggMS8yIGFzIHN1Z2dlc3Rl
-ZCBieSBCam9ybi4NCj4gDQo+IEFkZCBhbiAiZXh0ZXJuYWwtZmFjaW5nIiBwcm9wZXJ0eSB0byBQ
-Q0kgcG9ydHMgaW4gZGV2aWNlLXRyZWUsIHRvIGhlbHANCj4gaWRlbnRpZnkgdW50cnVzdGVkIGRl
-dmljZXMuIFRoZSBub3Rpb24gb2YgdW50cnVzdGVkIFBDSSBkZXZpY2VzIHdhcw0KPiBhZGRlZCB0
-byB0aGUgdjUuMCBrZXJuZWwgdG8gZGVzY3JpYmUgZGV2aWNlcyB0aGF0IHNob3VsZCBoYXZlIHN0
-cmljdA0KPiBJT01NVSBwcm90ZWN0aW9uIFsyXSwgZm9yIGV4YW1wbGUgZGV2aWNlcyB0aGF0IGFy
-ZSBwbHVnZ2VkIGluIGENCj4gVGh1bmRlcmJvbHQgcG9ydC4gQUNQSSBzeXN0ZW1zIHVzZSB0aGUg
-RXh0ZXJuYWxGYWNpbmdQb3J0IHByb3BlcnR5IFszXS4NCj4gQWRkIGFuIGVxdWl2YWxlbnQgbWVj
-aGFuaXNtIHRvIGRldmljZSB0cmVlLg0KPiANCj4gWzFdIGh0dHBzOi8vbG9yZS5rZXJuZWwub3Jn
-L2xpbnV4LXBjaS8yMDE5MDMxODE4MjEyNC41Mzg1OS0xLWplYW4tcGhpbGlwcGUuYnJ1Y2tlckBh
-cm0uY29tLw0KPiBbMl0gaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTgvMTEvMjYvNjMxDQo+IFsz
-XSBodHRwczovL2RvY3MubWljcm9zb2Z0LmNvbS9lbi11cy93aW5kb3dzLWhhcmR3YXJlL2RyaXZl
-cnMvcGNpL2RzZC1mb3ItcGNpZS1yb290LXBvcnRzI2lkZW50aWZ5aW5nLWV4dGVybmFsbHktZXhw
-b3NlZC1wY2llLXJvb3QtcG9ydHMNCg0KRm9yIGJvdGg6DQoNClJldmlld2VkLWJ5OiBHcmFudCBM
-aWtlbHkgPGdyYW50Lmxpa2VseUBhcm0uY29tPg0KDQo+IA0KPiBKZWFuLVBoaWxpcHBlIEJydWNr
-ZXIgKDIpOg0KPiAgICBkdC1iaW5kaW5nczogQWRkIGV4dGVybmFsLWZhY2luZyBQQ0llIHBvcnQg
-cHJvcGVydHkNCj4gICAgUENJOiBPRjogU3VwcG9ydCBleHRlcm5hbC1mYWNpbmcgcHJvcGVydHkN
-Cj4gDQo+ICAgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9wY2kudHh0IHwg
-NTAgKysrKysrKysrKysrKysrKysrKw0KPiAgIGRyaXZlcnMvcGNpL29mLmMgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICB8ICAzICsrDQo+ICAgMiBmaWxlcyBjaGFuZ2VkLCA1MyBpbnNlcnRp
-b25zKCspDQo+IA0KDQo=
+The hardware supports up to 255 PFFs and the driver only supports 48, so
+this patch updates the driver to support them all.
+To be backward compatible, a new ioctl and corresponding data
+structure are created, while keep the deprecated one.
+
+Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
+---
+ drivers/pci/switch/switchtec.c       | 39 +++++++++++++++++++++++++-----------
+ include/linux/switchtec.h            |  2 +-
+ include/uapi/linux/switchtec_ioctl.h | 13 +++++++++++-
+ 3 files changed, 40 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index e22766c..7df9a69 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -658,19 +658,25 @@ static int ioctl_flash_part_info(struct switchtec_dev *stdev,
+ 
+ static int ioctl_event_summary(struct switchtec_dev *stdev,
+ 	struct switchtec_user *stuser,
+-	struct switchtec_ioctl_event_summary __user *usum)
++	struct switchtec_ioctl_event_summary __user *usum,
++	size_t size)
+ {
+-	struct switchtec_ioctl_event_summary s = {0};
++	struct switchtec_ioctl_event_summary *s;
+ 	int i;
+ 	u32 reg;
++	int ret = 0;
+ 
+-	s.global = ioread32(&stdev->mmio_sw_event->global_summary);
+-	s.part_bitmap = ioread32(&stdev->mmio_sw_event->part_event_bitmap);
+-	s.local_part = ioread32(&stdev->mmio_part_cfg->part_event_summary);
++	s = kzalloc(sizeof(*s), GFP_KERNEL);
++	if (!s)
++		return -ENOMEM;
++
++	s->global = ioread32(&stdev->mmio_sw_event->global_summary);
++	s->part_bitmap = ioread32(&stdev->mmio_sw_event->part_event_bitmap);
++	s->local_part = ioread32(&stdev->mmio_part_cfg->part_event_summary);
+ 
+ 	for (i = 0; i < stdev->partition_count; i++) {
+ 		reg = ioread32(&stdev->mmio_part_cfg_all[i].part_event_summary);
+-		s.part[i] = reg;
++		s->part[i] = reg;
+ 	}
+ 
+ 	for (i = 0; i < SWITCHTEC_MAX_PFF_CSR; i++) {
+@@ -679,15 +685,19 @@ static int ioctl_event_summary(struct switchtec_dev *stdev,
+ 			break;
+ 
+ 		reg = ioread32(&stdev->mmio_pff_csr[i].pff_event_summary);
+-		s.pff[i] = reg;
++		s->pff[i] = reg;
+ 	}
+ 
+-	if (copy_to_user(usum, &s, sizeof(s)))
+-		return -EFAULT;
++	if (copy_to_user(usum, s, size)) {
++		ret = -EFAULT;
++		goto error_case;
++	}
+ 
+ 	stuser->event_cnt = atomic_read(&stdev->event_cnt);
+ 
+-	return 0;
++error_case:
++	kfree(s);
++	return ret;
+ }
+ 
+ static u32 __iomem *global_ev_reg(struct switchtec_dev *stdev,
+@@ -977,8 +987,9 @@ static long switchtec_dev_ioctl(struct file *filp, unsigned int cmd,
+ 	case SWITCHTEC_IOCTL_FLASH_PART_INFO:
+ 		rc = ioctl_flash_part_info(stdev, argp);
+ 		break;
+-	case SWITCHTEC_IOCTL_EVENT_SUMMARY:
+-		rc = ioctl_event_summary(stdev, stuser, argp);
++	case SWITCHTEC_IOCTL_EVENT_SUMMARY_LEGACY:
++		rc = ioctl_event_summary(stdev, stuser, argp,
++					 sizeof(struct switchtec_ioctl_event_summary_legacy));
+ 		break;
+ 	case SWITCHTEC_IOCTL_EVENT_CTL:
+ 		rc = ioctl_event_ctl(stdev, argp);
+@@ -989,6 +1000,10 @@ static long switchtec_dev_ioctl(struct file *filp, unsigned int cmd,
+ 	case SWITCHTEC_IOCTL_PORT_TO_PFF:
+ 		rc = ioctl_port_to_pff(stdev, argp);
+ 		break;
++	case SWITCHTEC_IOCTL_EVENT_SUMMARY:
++		rc = ioctl_event_summary(stdev, stuser, argp,
++					 sizeof(struct switchtec_ioctl_event_summary));
++		break;
+ 	default:
+ 		rc = -ENOTTY;
+ 		break;
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 52a079b..0cfc34a 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -20,7 +20,7 @@
+ #include <linux/cdev.h>
+ 
+ #define SWITCHTEC_MRPC_PAYLOAD_SIZE 1024
+-#define SWITCHTEC_MAX_PFF_CSR 48
++#define SWITCHTEC_MAX_PFF_CSR 255
+ 
+ #define SWITCHTEC_EVENT_OCCURRED BIT(0)
+ #define SWITCHTEC_EVENT_CLEAR    BIT(0)
+diff --git a/include/uapi/linux/switchtec_ioctl.h b/include/uapi/linux/switchtec_ioctl.h
+index 4f4daf8..c912b5a 100644
+--- a/include/uapi/linux/switchtec_ioctl.h
++++ b/include/uapi/linux/switchtec_ioctl.h
+@@ -50,7 +50,7 @@ struct switchtec_ioctl_flash_part_info {
+ 	__u32 active;
+ };
+ 
+-struct switchtec_ioctl_event_summary {
++struct switchtec_ioctl_event_summary_legacy {
+ 	__u64 global;
+ 	__u64 part_bitmap;
+ 	__u32 local_part;
+@@ -59,6 +59,15 @@ struct switchtec_ioctl_event_summary {
+ 	__u32 pff[48];
+ };
+ 
++struct switchtec_ioctl_event_summary {
++	__u64 global;
++	__u64 part_bitmap;
++	__u32 local_part;
++	__u32 padding;
++	__u32 part[48];
++	__u32 pff[255];
++};
++
+ #define SWITCHTEC_IOCTL_EVENT_STACK_ERROR		0
+ #define SWITCHTEC_IOCTL_EVENT_PPU_ERROR			1
+ #define SWITCHTEC_IOCTL_EVENT_ISP_ERROR			2
+@@ -127,6 +136,8 @@ struct switchtec_ioctl_pff_port {
+ 	_IOWR('W', 0x41, struct switchtec_ioctl_flash_part_info)
+ #define SWITCHTEC_IOCTL_EVENT_SUMMARY \
+ 	_IOR('W', 0x42, struct switchtec_ioctl_event_summary)
++#define SWITCHTEC_IOCTL_EVENT_SUMMARY_LEGACY \
++	_IOR('W', 0x42, struct switchtec_ioctl_event_summary_legacy)
+ #define SWITCHTEC_IOCTL_EVENT_CTL \
+ 	_IOWR('W', 0x43, struct switchtec_ioctl_event_ctl)
+ #define SWITCHTEC_IOCTL_PFF_TO_PORT \
+-- 
+2.7.4
+
