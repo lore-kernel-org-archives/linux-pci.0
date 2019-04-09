@@ -2,91 +2,83 @@ Return-Path: <SRS0=JnZd=SL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE99C10F0E
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 23:11:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F5EC10F0E
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 23:32:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D76EB217F4
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 23:11:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554851474;
-	bh=kzt1Obrpb6634tF78ZGYwr/I4vgjioLT6Naah1lCkTE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=CfcYod57Ulv5DxfcrGn2TD1qZxMLLRHpllPLuUG8yXzDXU/DrJkD/fceEEdVIvVSb
-	 YOMiV/JPIA9Z9xm/5AyVsHgzfpEaMurgnr1vmBXAaPsBT9AFLTvYMDvRj56jEjOXdy
-	 WzFZZCFFucsL0Jow2hVYx0TNHXuPOEmjQa6Yks20=
+	by mail.kernel.org (Postfix) with ESMTP id 5B6F320850
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 23:32:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726680AbfDIXLO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Apr 2019 19:11:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50520 "EHLO mail.kernel.org"
+        id S1726723AbfDIXcR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Apr 2019 19:32:17 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:40612 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726627AbfDIXLO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Apr 2019 19:11:14 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0BC5620883;
-        Tue,  9 Apr 2019 23:11:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554851473;
-        bh=kzt1Obrpb6634tF78ZGYwr/I4vgjioLT6Naah1lCkTE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fOL8quSvN3oe3o3rxodrCn5iTyC3c2Nmqi6LtSsFe+JQKcSAETFn1H7uCvwEo5RwB
-         X7y/QXuLw96KGLcC9iGT798N9P+8yUcKyKWhnUKHUrLCwP0OY/HPcSe7SxW5Yzk5cd
-         nWQcWMridLhvPBfn9ZzxwDSepZxOfxQlZx55CqzA=
-Date:   Tue, 9 Apr 2019 18:11:11 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     robh+dt@kernel.org, mark.rutland@arm.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Jeremy.Linton@arm.com, Grant.Likely@arm.com, Robin.Murphy@arm.com,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2 0/2] PCI: Describe external-facing ports in device tree
-Message-ID: <20190409231111.GE256045@google.com>
-References: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
+        id S1726606AbfDIXcR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 9 Apr 2019 19:32:17 -0400
+Received: from guinness.priv.deltatee.com ([172.16.1.162])
+        by ale.deltatee.com with esmtp (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1hE0Dv-0005yk-9G; Tue, 09 Apr 2019 17:32:16 -0600
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Wesley Sheng <wesley.sheng@microchip.com>
+Cc:     kurt.schwemmer@microsemi.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, wesleyshenggit@sina.com,
+        kelvin.cao@microchip.com
+References: <1554734088-5755-1-git-send-email-wesley.sheng@microchip.com>
+ <1554734088-5755-2-git-send-email-wesley.sheng@microchip.com>
+ <20190409223642.GD256045@google.com>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <634db3fa-286d-1136-b2af-1bf45501275f@deltatee.com>
+Date:   Tue, 9 Apr 2019 17:32:13 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190402131548.41949-1-jean-philippe.brucker@arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190409223642.GD256045@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 172.16.1.162
+X-SA-Exim-Rcpt-To: kelvin.cao@microchip.com, wesleyshenggit@sina.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, kurt.schwemmer@microsemi.com, wesley.sheng@microchip.com, helgaas@kernel.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH 1/2] switchtec: Fix false maximum supported PCIe function
+ number issue
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 02, 2019 at 02:15:46PM +0100, Jean-Philippe Brucker wrote:
-> Since v1 [1], I improved the wording of patch 1/2 as suggested by Bjorn.
-> 
-> Add an "external-facing" property to PCI ports in device-tree, to help
-> identify untrusted devices. The notion of untrusted PCI devices was
-> added to the v5.0 kernel to describe devices that should have strict
-> IOMMU protection [2], for example devices that are plugged in a
-> Thunderbolt port. ACPI systems use the ExternalFacingPort property [3].
-> Add an equivalent mechanism to device tree.
-> 
-> [1] https://lore.kernel.org/linux-pci/20190318182124.53859-1-jean-philippe.brucker@arm.com/
-> [2] https://lkml.org/lkml/2018/11/26/631
-> [3] https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-externally-exposed-pcie-root-ports
-> 
-> Jean-Philippe Brucker (2):
->   dt-bindings: Add external-facing PCIe port property
->   PCI: OF: Support external-facing property
 
-Applied to pci/enumeration for v5.2, with reviewed-by from Robin and Grant
-and from Rob (patch 2 only), thanks!
 
->  Documentation/devicetree/bindings/pci/pci.txt | 50 +++++++++++++++++++
->  drivers/pci/of.c                              |  3 ++
->  2 files changed, 53 insertions(+)
+On 2019-04-09 4:36 p.m., Bjorn Helgaas wrote:
+> Hi Wesley,
 > 
-> -- 
-> 2.21.0
+> On Mon, Apr 08, 2019 at 10:34:47PM +0800, Wesley Sheng wrote:
+>> The hardware supports up to 255 PFFs and the driver only supports 48, so
+>> this patch updates the driver to support them all.
+>> To be backward compatible, a new ioctl and corresponding data
+>> structure are created, while keep the deprecated one.
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> The above is either one paragraph that needs to be rewrapped, or two
+> paragraphs that need a blank line between.
+
+Wesley can address this.
+
+> What's a PFF?
+
+PFF is really a concept internal to the Switchtec device. It stands for
+PCIe Function Framework. Essentially, there is a bank of registers for
+every PCIe Function (aka endpoint) in the switch. When I originally
+wrote the driver, I assumed incorrectly there would only ever be one PFF
+per port and the maximum number of ports for Switchtec parts is 48. In
+fact, the hardware supports up to 255 and there are typically two PFFs
+per upstream port (one for the port itself and one for the management
+endpoint).
+
+Logan
+
+
+
