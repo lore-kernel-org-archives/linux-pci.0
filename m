@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB73DC282CE
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B14ADC10F0E
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 957C22133D
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76F412084F
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KgXvRSMc"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gyQmYhPw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726833AbfDIP5B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Apr 2019 11:57:01 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:36782 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726830AbfDIP5B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:01 -0400
-Received: by mail-pl1-f196.google.com with SMTP id ck15so9661329plb.3;
-        Tue, 09 Apr 2019 08:57:00 -0700 (PDT)
+        id S1726776AbfDIP4x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Apr 2019 11:56:53 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:34691 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726446AbfDIP4x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:56:53 -0400
+Received: by mail-pl1-f193.google.com with SMTP id y6so9657141plt.1;
+        Tue, 09 Apr 2019 08:56:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=r30BuVTEkfz816kYgjZwkEOyK5c3wp16TB066btRDaU=;
-        b=KgXvRSMcO7J+IQxOz4X+LPzXdMjAWwgjWLVHOr0wYmnSHgZklRIwGsL7kLWhaBLl5Q
-         FG6hvMYNUVWH2n33v9PAEyGiILB7OuQ3IcuSE2tsrzBdGUwekuxhZrwjp9X+9s+J/VYU
-         5dizUZTEIkL9BlweJPeMqrvLdd2BEtqIWXqfwqVHhqCIbPb+96PwvOiIoMu6aOwW89nk
-         j48qzu4gtUTY7nNCo0QDxI9VBppLeKMTcEK181q9QGYJZwDDTsWC2orzS4CvUguoGXka
-         5q/mIyRpQ4vRne4V4sSh7CHgXYiXKpGvJwmoFj0YFHy/HN2BiMOWRLaAOtBnyL8NMt1Z
-         KUbg==
+        bh=M5HFAKWUCr5U5uYHe5yyobnPaLvGutqLb7zNlZCPKwM=;
+        b=gyQmYhPwEDG0ycbcusRQvumZALLRNKitRCHTbO1qYrZJDax/zijcxQZ2ePTyZ9i++x
+         KjH2RGkPAJ6lrNTT6yb8oRK1YfbfFEMlOwrJFWIskalNBUv6exbpAqGjoJm3TZwYtley
+         fZJo9a2uvqMaZJwebeJIaTjoB6W37ERtIss0VDv3nohJdOkp+VUFcMdadrF1sY+A2syN
+         yKd6oCTkWsJJJ/1mzCxuOzi69QI52PAFKNaHgIYCZeGSOtKsVo0LKXfe7WR0H/g9RgUx
+         XkYk10775fxw+xOTQmbxsf3ao5rm1epqJBHTzEC75Ukg6hx29k2fVuGqVFUXklw0YRpp
+         wcYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=r30BuVTEkfz816kYgjZwkEOyK5c3wp16TB066btRDaU=;
-        b=j+qosd3VfzTo04kuOsUady1u72UBwaX/PN95G96kYJEsIqJ+bsanlbYw9HNunF5F/J
-         mvcdYlSOa2t7edyTIf36ozKSXQ8Tjzuxkd9BapXLCpZ9Pv9iMzgLPTdWMTkrZQWvr61t
-         V2fj5+JfTmwV5ZwhLzei2mgU6KXkotxz85GHB1pKmW5+gXRwdE8B7SW/0F4efQzJCa+v
-         9wx2sqJ34pwx691qeKft9sorz656H/ZZhEUaeVGBaHXbPrLv9f7XAUGAFBmuiDVrhxQ9
-         fZcw+9V2rbvpiEdjZ2qKQn5jYmF9OVlUkI0MO0GmtvfH1RNdrM+QoQ0F3e+szFjud0qy
-         tlrQ==
-X-Gm-Message-State: APjAAAUpNeL8GpVil/uL6WuGKXHAupu/cAf031K1+DMaBsnqRbGg1wJ9
-        K0f0Pg8pyj+5hXVoSWrxkYM=
-X-Google-Smtp-Source: APXvYqzw1GekNDtQrFOt1xcpnQgquO5Em4pMJS+lVaz0MxKUJZJsc0QJgJQ8R9Ce52X75LAOnBTsxw==
-X-Received: by 2002:a17:902:364:: with SMTP id 91mr26542636pld.72.1554825420097;
-        Tue, 09 Apr 2019 08:57:00 -0700 (PDT)
+        bh=M5HFAKWUCr5U5uYHe5yyobnPaLvGutqLb7zNlZCPKwM=;
+        b=l0+sfhWT1+Oh5HO5kTDdGqOfqMr+JoAcS3a6N1w4H+NaQUk8zYAVQK5VL+wkIXLpQF
+         zQgyBFBSAHU2VJfYyVO4QEaCryjX2F+DfXz8qXovca3rxo+JuhJYv4pZ2oRcrCTamC6K
+         HJaKDegvkFnDTN2oZszKKVn2Ktg2TmRejxhwGWa9qotdrRI1rrfIQEMYNJuyRw/xZy+A
+         PkvAW+L/ghZEeDuLrtPTateXTPcM7mCTbX5SuAcxQZ9IDfKSycekRttlfJoTIeqWhxCf
+         mo5xC0jYOSWRXI3Hbf8MzHjMrFAmEB74vTe0S6DlkpuQ0zaOMzxBRLVH29vqb6Zd6YVZ
+         wMbQ==
+X-Gm-Message-State: APjAAAXxipUH5y6aEFC6uci/7hGOvnA1a/vROth8HgV46JK+cwY90idz
+        2U1D7ORWrU8NqohwUf+6igPmYKSt
+X-Google-Smtp-Source: APXvYqx9aeSrrpNGAv8AFC/Ritsby4txL0TbXoHOcufDOAFYQG25tRRThOpKC6EFr3b4iw4H2xuLRw==
+X-Received: by 2002:a17:902:a506:: with SMTP id s6mr36630652plq.164.1554825412030;
+        Tue, 09 Apr 2019 08:56:52 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.56.55
+        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.56.47
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Apr 2019 08:56:59 -0700 (PDT)
+        Tue, 09 Apr 2019 08:56:51 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v3 05/12] Documentation: PCI: convert MSI-HOWTO.txt to reST
-Date:   Tue,  9 Apr 2019 23:56:19 +0800
-Message-Id: <20190409155626.6049-6-changbin.du@gmail.com>
+Subject: [PATCH v3 03/12] Documentation: PCI: convert PCIEBUS-HOWTO.txt to reST
+Date:   Tue,  9 Apr 2019 23:56:17 +0800
+Message-Id: <20190409155626.6049-4-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190409155626.6049-1-changbin.du@gmail.com>
 References: <20190409155626.6049-1-changbin.du@gmail.com>
@@ -78,270 +78,259 @@ add it to Sphinx TOC tree. No essential content change.
 
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
 ---
-v2:
-  o drop numbering.
-  o simplify author list
----
- .../PCI/{MSI-HOWTO.txt => MSI-HOWTO.rst}      | 83 +++++++++++--------
- Documentation/PCI/index.rst                   |  1 +
- 2 files changed, 50 insertions(+), 34 deletions(-)
- rename Documentation/PCI/{MSI-HOWTO.txt => MSI-HOWTO.rst} (88%)
+ .../{PCIEBUS-HOWTO.txt => PCIEBUS-HOWTO.rst}  | 140 ++++++++++--------
+ Documentation/PCI/index.rst                   |   1 +
+ 2 files changed, 82 insertions(+), 59 deletions(-)
+ rename Documentation/PCI/{PCIEBUS-HOWTO.txt => PCIEBUS-HOWTO.rst} (70%)
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.rst
-similarity index 88%
-rename from Documentation/PCI/MSI-HOWTO.txt
-rename to Documentation/PCI/MSI-HOWTO.rst
-index 618e13d5e276..18cc3700489b 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.rst
-@@ -1,13 +1,14 @@
--		The MSI Driver Guide HOWTO
+diff --git a/Documentation/PCI/PCIEBUS-HOWTO.txt b/Documentation/PCI/PCIEBUS-HOWTO.rst
+similarity index 70%
+rename from Documentation/PCI/PCIEBUS-HOWTO.txt
+rename to Documentation/PCI/PCIEBUS-HOWTO.rst
+index 15f0bb3b5045..f882ff62c51f 100644
+--- a/Documentation/PCI/PCIEBUS-HOWTO.txt
++++ b/Documentation/PCI/PCIEBUS-HOWTO.rst
+@@ -1,16 +1,23 @@
+-		The PCI Express Port Bus Driver Guide HOWTO
 -	Tom L Nguyen tom.l.nguyen@intel.com
--			10/03/2003
--	Revised Feb 12, 2004 by Martine Silbermann
--		email: Martine.Silbermann@hp.com
--	Revised Jun 25, 2004 by Tom L Nguyen
--	Revised Jul  9, 2008 by Matthew Wilcox <willy@linux.intel.com>
--		Copyright 2003, 2008 Intel Corporation
+-			11/03/2004
 +.. SPDX-License-Identifier: GPL-2.0
 +.. include:: <isonum.txt>
  
 -1. About this guide
-+==========================
-+The MSI Driver Guide HOWTO
-+==========================
++===========================================
++The PCI Express Port Bus Driver Guide HOWTO
++===========================================
 +
-+:Authors: Tom L Nguyen; Martine Silbermann; Matthew Wilcox
++:Author: Tom L Nguyen tom.l.nguyen@intel.com 11/03/2004
++:Copyright: |copy| 2004 Intel Corporation
 +
 +About this guide
 +================
  
- This guide describes the basics of Message Signaled Interrupts (MSIs),
- the advantages of using MSI over traditional interrupt mechanisms, how
-@@ -15,7 +16,8 @@ to change your driver to use MSI or MSI-X and some basic diagnostics to
- try if a device doesn't support MSIs.
+ This guide describes the basics of the PCI Express Port Bus driver
+ and provides information on how to enable the service drivers to
+ register/unregister with the PCI Express Port Bus Driver.
  
+-2. Copyright 2004 Intel Corporation
  
--2. What are MSIs?
-+What are MSIs?
-+==============
+-3. What is the PCI Express Port Bus Driver
++What is the PCI Express Port Bus Driver
++=======================================
  
- A Message Signaled Interrupt is a write from the device to a special
- address which causes an interrupt to be received by the CPU.
-@@ -29,7 +31,8 @@ Devices may support both MSI and MSI-X, but only one can be enabled at
- a time.
+ A PCI Express Port is a logical PCI-PCI Bridge structure. There
+ are two types of PCI Express Port: the Root Port and the Switch
+@@ -30,7 +37,8 @@ support (AER), and virtual channel support (VC). These services may
+ be handled by a single complex driver or be individually distributed
+ and handled by corresponding service drivers.
  
+-4. Why use the PCI Express Port Bus Driver?
++Why use the PCI Express Port Bus Driver?
++========================================
  
--3. Why use MSIs?
-+Why use MSIs?
-+=============
+ In existing Linux kernels, the Linux Device Driver Model allows a
+ physical device to be handled by only a single driver. The PCI
+@@ -51,28 +59,31 @@ PCI Express Ports and distributes all provided service requests
+ to the corresponding service drivers as required. Some key
+ advantages of using the PCI Express Port Bus driver are listed below:
  
- There are three reasons why using MSIs can give an advantage over
- traditional pin-based interrupts.
-@@ -61,14 +64,16 @@ Other possible designs include giving one interrupt to each packet queue
- in a network card or each port in a storage controller.
+-	- Allow multiple service drivers to run simultaneously on
+-	  a PCI-PCI Bridge Port device.
++  - Allow multiple service drivers to run simultaneously on
++    a PCI-PCI Bridge Port device.
  
+-	- Allow service drivers implemented in an independent
+-	  staged approach.
++  - Allow service drivers implemented in an independent
++    staged approach.
  
--4. How to use MSIs
-+How to use MSIs
-+===============
+-	- Allow one service driver to run on multiple PCI-PCI Bridge
+-	  Port devices.
++  - Allow one service driver to run on multiple PCI-PCI Bridge
++    Port devices.
  
- PCI devices are initialised to use pin-based interrupts.  The device
- driver has to set up the device to use MSI or MSI-X.  Not all machines
- support MSIs correctly, and for those machines, the APIs described below
- will simply fail and the device will continue to use pin-based interrupts.
+-	- Manage and distribute resources of a PCI-PCI Bridge Port
+-	  device to requested service drivers.
++  - Manage and distribute resources of a PCI-PCI Bridge Port
++    device to requested service drivers.
  
--4.1 Include kernel support for MSIs
-+Include kernel support for MSIs
+-5. Configuring the PCI Express Port Bus Driver vs. Service Drivers
++Configuring the PCI Express Port Bus Driver vs. Service Drivers
++===============================================================
+ 
+-5.1 Including the PCI Express Port Bus Driver Support into the Kernel
++Including the PCI Express Port Bus Driver Support into the Kernel
++-----------------------------------------------------------------
+ 
+ Including the PCI Express Port Bus driver depends on whether the PCI
+ Express support is included in the kernel config. The kernel will
+ automatically include the PCI Express Port Bus driver as a kernel
+ driver when the PCI Express support is enabled in the kernel.
+ 
+-5.2 Enabling Service Driver Support
++Enabling Service Driver Support
 +-------------------------------
  
- To support MSI or MSI-X, the kernel must be built with the CONFIG_PCI_MSI
- option enabled.  This option is only available on some architectures,
-@@ -76,14 +81,15 @@ and it may depend on some other options also being set.  For example,
- on x86, you must also enable X86_UP_APIC or SMP in order to see the
- CONFIG_PCI_MSI option.
+ PCI device drivers are implemented based on Linux Device Driver Model.
+ All service drivers are PCI device drivers. As discussed above, it is
+@@ -89,9 +100,11 @@ header file /include/linux/pcieport_if.h, before calling these APIs.
+ Failure to do so will result an identity mismatch, which prevents
+ the PCI Express Port Bus driver from loading a service driver.
  
--4.2 Using MSI
-+Using MSI
-+---------
+-5.2.1 pcie_port_service_register
++pcie_port_service_register
++~~~~~~~~~~~~~~~~~~~~~~~~~~
++::
  
- Most of the hard work is done for the driver in the PCI layer.  The driver
- simply has to request that the PCI layer set up the MSI capability for this
- device.
+-int pcie_port_service_register(struct pcie_port_service_driver *new)
++  int pcie_port_service_register(struct pcie_port_service_driver *new)
  
- To automatically use MSI or MSI-X interrupt vectors, use the following
--function:
-+function::
+ This API replaces the Linux Driver Model's pci_register_driver API. A
+ service driver should always calls pcie_port_service_register at
+@@ -99,69 +112,76 @@ module init. Note that after service driver being loaded, calls
+ such as pci_enable_device(dev) and pci_set_master(dev) are no longer
+ necessary since these calls are executed by the PCI Port Bus driver.
  
-   int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int min_vecs,
- 		unsigned int max_vecs, unsigned int flags);
-@@ -101,12 +107,12 @@ any possible kind of interrupt.  If the PCI_IRQ_AFFINITY flag is set,
- pci_alloc_irq_vectors() will spread the interrupts around the available CPUs.
+-5.2.2 pcie_port_service_unregister
++pcie_port_service_unregister
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++::
  
- To get the Linux IRQ numbers passed to request_irq() and free_irq() and the
--vectors, use the following function:
-+vectors, use the following function::
+-void pcie_port_service_unregister(struct pcie_port_service_driver *new)
++  void pcie_port_service_unregister(struct pcie_port_service_driver *new)
  
-   int pci_irq_vector(struct pci_dev *dev, unsigned int nr);
+ pcie_port_service_unregister replaces the Linux Driver Model's
+ pci_unregister_driver. It's always called by service driver when a
+ module exits.
  
- Any allocated resources should be freed before removing the device using
--the following function:
-+the following function::
+-5.2.3 Sample Code
++Sample Code
++~~~~~~~~~~~
  
-   void pci_free_irq_vectors(struct pci_dev *dev);
+ Below is sample service driver code to initialize the port service
+ driver data structure.
++::
  
-@@ -126,7 +132,7 @@ The typical usage of MSI or MSI-X interrupts is to allocate as many vectors
- as possible, likely up to the limit supported by the device.  If nvec is
- larger than the number supported by the device it will automatically be
- capped to the supported limit, so there is no need to query the number of
--vectors supported beforehand:
-+vectors supported beforehand::
+-static struct pcie_port_service_id service_id[] = { {
+-	.vendor = PCI_ANY_ID,
+-	.device = PCI_ANY_ID,
+-	.port_type = PCIE_RC_PORT,
+-	.service_type = PCIE_PORT_SERVICE_AER,
+-	}, { /* end: all zeroes */ }
+-};
++  static struct pcie_port_service_id service_id[] = { {
++    .vendor = PCI_ANY_ID,
++    .device = PCI_ANY_ID,
++    .port_type = PCIE_RC_PORT,
++    .service_type = PCIE_PORT_SERVICE_AER,
++    }, { /* end: all zeroes */ }
++  };
  
- 	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_ALL_TYPES)
- 	if (nvec < 0)
-@@ -135,7 +141,7 @@ vectors supported beforehand:
- If a driver is unable or unwilling to deal with a variable number of MSI
- interrupts it can request a particular number of interrupts by passing that
- number to pci_alloc_irq_vectors() function as both 'min_vecs' and
--'max_vecs' parameters:
-+'max_vecs' parameters::
+-static struct pcie_port_service_driver root_aerdrv = {
+-	.name		= (char *)device_name,
+-	.id_table	= &service_id[0],
++  static struct pcie_port_service_driver root_aerdrv = {
++    .name		= (char *)device_name,
++    .id_table	= &service_id[0],
  
- 	ret = pci_alloc_irq_vectors(pdev, nvec, nvec, PCI_IRQ_ALL_TYPES);
- 	if (ret < 0)
-@@ -143,23 +149,24 @@ number to pci_alloc_irq_vectors() function as both 'min_vecs' and
+-	.probe		= aerdrv_load,
+-	.remove		= aerdrv_unload,
++    .probe		= aerdrv_load,
++    .remove		= aerdrv_unload,
  
- The most notorious example of the request type described above is enabling
- the single MSI mode for a device.  It could be done by passing two 1s as
--'min_vecs' and 'max_vecs':
-+'min_vecs' and 'max_vecs'::
+-	.suspend	= aerdrv_suspend,
+-	.resume		= aerdrv_resume,
+-};
++    .suspend	= aerdrv_suspend,
++    .resume		= aerdrv_resume,
++  };
  
- 	ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
- 	if (ret < 0)
- 		goto out_err;
+ Below is a sample code for registering/unregistering a service
+ driver.
++::
  
- Some devices might not support using legacy line interrupts, in which case
--the driver can specify that only MSI or MSI-X is acceptable:
-+the driver can specify that only MSI or MSI-X is acceptable::
+-static int __init aerdrv_service_init(void)
+-{
+-	int retval = 0;
++  static int __init aerdrv_service_init(void)
++  {
++    int retval = 0;
  
- 	nvec = pci_alloc_irq_vectors(pdev, 1, nvec, PCI_IRQ_MSI | PCI_IRQ_MSIX);
- 	if (nvec < 0)
- 		goto out_err;
+-	retval = pcie_port_service_register(&root_aerdrv);
+-	if (!retval) {
+-		/*
+-		 * FIX ME
+-		 */
+-	}
+-	return retval;
+-}
++    retval = pcie_port_service_register(&root_aerdrv);
++    if (!retval) {
++      /*
++      * FIX ME
++      */
++    }
++    return retval;
++  }
  
--4.3 Legacy APIs
-+Legacy APIs
-+-----------
+-static void __exit aerdrv_service_exit(void)
+-{
+-	pcie_port_service_unregister(&root_aerdrv);
+-}
++  static void __exit aerdrv_service_exit(void)
++  {
++    pcie_port_service_unregister(&root_aerdrv);
++  }
  
- The following old APIs to enable and disable MSI or MSI-X interrupts should
--not be used in new code:
-+not be used in new code::
+-module_init(aerdrv_service_init);
+-module_exit(aerdrv_service_exit);
++  module_init(aerdrv_service_init);
++  module_exit(aerdrv_service_exit);
  
-   pci_enable_msi()		/* deprecated */
-   pci_disable_msi()		/* deprecated */
-@@ -174,9 +181,11 @@ number of vectors.  If you have a legitimate special use case for the count
- of vectors we might have to revisit that decision and add a
- pci_nr_irq_vectors() helper that handles MSI and MSI-X transparently.
+-6. Possible Resource Conflicts
++Possible Resource Conflicts
++===========================
  
--4.4 Considerations when using MSIs
-+Considerations when using MSIs
-+------------------------------
+ Since all service drivers of a PCI-PCI Bridge Port device are
+ allowed to run simultaneously, below lists a few of possible resource
+ conflicts with proposed solutions.
  
--4.4.1 Spinlocks
-+Spinlocks
-+~~~~~~~~~
- 
- Most device drivers have a per-device spinlock which is taken in the
- interrupt handler.  With pin-based interrupts or a single MSI, it is not
-@@ -188,7 +197,8 @@ acquire the spinlock.  Such deadlocks can be avoided by using
- spin_lock_irqsave() or spin_lock_irq() which disable local interrupts
- and acquire the lock (see Documentation/kernel-hacking/locking.rst).
- 
--4.5 How to tell whether MSI/MSI-X is enabled on a device
-+How to tell whether MSI/MSI-X is enabled on a device
-+----------------------------------------------------
- 
- Using 'lspci -v' (as root) may show some devices with "MSI", "Message
- Signalled Interrupts" or "MSI-X" capabilities.  Each of these capabilities
-@@ -196,7 +206,8 @@ has an 'Enable' flag which is followed with either "+" (enabled)
- or "-" (disabled).
- 
- 
--5. MSI quirks
-+MSI quirks
-+==========
- 
- Several PCI chipsets or devices are known not to support MSIs.
- The PCI stack provides three ways to disable MSIs:
-@@ -205,7 +216,8 @@ The PCI stack provides three ways to disable MSIs:
- 2. on all devices behind a specific bridge
- 3. on a single device
- 
--5.1. Disabling MSIs globally
-+Disabling MSIs globally
-+-----------------------
- 
- Some host chipsets simply don't support MSIs properly.  If we're
- lucky, the manufacturer knows this and has indicated it in the ACPI
-@@ -219,7 +231,8 @@ on the kernel command line to disable MSIs on all devices.  It would be
- in your best interests to report the problem to linux-pci@vger.kernel.org
- including a full 'lspci -v' so we can add the quirks to the kernel.
- 
--5.2. Disabling MSIs below a bridge
-+Disabling MSIs below a bridge
+-6.1 MSI and MSI-X Vector Resource
++MSI and MSI-X Vector Resource
 +-----------------------------
  
- Some PCI bridges are not able to route MSIs between busses properly.
- In this case, MSIs must be disabled on all devices behind the bridge.
-@@ -230,7 +243,7 @@ as the nVidia nForce and Serverworks HT2000).  As with host chipsets,
- Linux mostly knows about them and automatically enables MSIs if it can.
- If you have a bridge unknown to Linux, you can enable
- MSIs in configuration space using whatever method you know works, then
--enable MSIs on that bridge by doing:
-+enable MSIs on that bridge by doing::
+ Once MSI or MSI-X interrupts are enabled on a device, it stays in this
+ mode until they are disabled again.  Since service drivers of the same
+@@ -179,7 +199,8 @@ driver. Service drivers should use (struct pcie_device*)dev->irq to
+ call request_irq/free_irq. In addition, the interrupt mode is stored
+ in the field interrupt_mode of struct pcie_device.
  
-        echo 1 > /sys/bus/pci/devices/$bridge/msi_bus
+-6.3 PCI Memory/IO Mapped Regions
++PCI Memory/IO Mapped Regions
++----------------------------
  
-@@ -244,7 +257,8 @@ below this bridge.
- Again, please notify linux-pci@vger.kernel.org of any bridges that need
- special handling.
+ Service drivers for PCI Express Power Management (PME), Advanced
+ Error Reporting (AER), Hot-Plug (HP) and Virtual Channel (VC) access
+@@ -188,7 +209,8 @@ registers accessed are independent of each other. This patch assumes
+ that all service drivers will be well behaved and not overwrite
+ other service driver's configuration settings.
  
--5.3. Disabling MSIs on a single device
-+Disabling MSIs on a single device
-+---------------------------------
+-6.4 PCI Config Registers
++PCI Config Registers
++--------------------
  
- Some devices are known to have faulty MSI implementations.  Usually this
- is handled in the individual device driver, but occasionally it's necessary
-@@ -252,7 +266,8 @@ to handle this with a quirk.  Some drivers have an option to disable use
- of MSI.  While this is a convenient workaround for the driver author,
- it is not good practice, and should not be emulated.
- 
--5.4. Finding why MSIs are disabled on a device
-+Finding why MSIs are disabled on a device
-+-----------------------------------------
- 
- From the above three sections, you can see that there are many reasons
- why MSIs may not be enabled for a given device.  Your first step should
-@@ -260,8 +275,8 @@ be to examine your dmesg carefully to determine whether MSIs are enabled
- for your machine.  You should also check your .config to be sure you
- have enabled CONFIG_PCI_MSI.
- 
--Then, 'lspci -t' gives the list of bridges above a device.  Reading
--/sys/bus/pci/devices/*/msi_bus will tell you whether MSIs are enabled (1)
-+Then, 'lspci -t' gives the list of bridges above a device. Reading
-+`/sys/bus/pci/devices/*/msi_bus` will tell you whether MSIs are enabled (1)
- or disabled (0).  If 0 is found in any of the msi_bus files belonging
- to bridges between the PCI root and the device, MSIs are disabled.
- 
+ Each service driver runs its PCI config operations on its own
+ capability structure except the PCI Express capability structure, in
 diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index e1c19962a7f8..1b25bcc1edca 100644
+index 7babf43709b0..452723318405 100644
 --- a/Documentation/PCI/index.rst
 +++ b/Documentation/PCI/index.rst
-@@ -11,3 +11,4 @@ Linux PCI Bus Subsystem
+@@ -9,3 +9,4 @@ Linux PCI Bus Subsystem
+    :numbered:
+ 
     pci
-    PCIEBUS-HOWTO
-    pci-iov-howto
-+   MSI-HOWTO
++   PCIEBUS-HOWTO
 -- 
 2.20.1
 
