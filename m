@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F5EC282DA
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 661ABC10F0E
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BDD2D2084C
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2077C2084C
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BDQsclKt"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZrnzZRZ2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726932AbfDIP5U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Apr 2019 11:57:20 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:44277 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726499AbfDIP5T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:19 -0400
-Received: by mail-pf1-f193.google.com with SMTP id y13so9946056pfm.11;
-        Tue, 09 Apr 2019 08:57:19 -0700 (PDT)
+        id S1726494AbfDIP5R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Apr 2019 11:57:17 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:34723 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726898AbfDIP5Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:16 -0400
+Received: by mail-pl1-f195.google.com with SMTP id y6so9657894plt.1;
+        Tue, 09 Apr 2019 08:57:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=1Gd8uAluhwpSrTMHyHIeaXrT2bcwIAaHkdeZrwzi8Fk=;
-        b=BDQsclKtFO0FELYk0g+0O9d4ojJ6XFTSXVFeaWckDbfucFZkUg54tdbQx7gwjtObDv
-         xGyTvwurSX83XlBSeAfepVddg4pnw+Brka69TiEOVxGBoe3lmSNE9waz2mdZ3j7iYPC8
-         CfAPJfe1KgLTcDHFvW4JSnYN5GEktXqBWuf8UJ1Ao8FSlZtBMYyhvX51k0RSk5KD61PX
-         wqrpPpid4mvrQFN0s6wU4++CLMjLq5JjhiMIrXeuI0WWNrH74D/oSh9mg7ptyDalIw+q
-         IPer2iOToquV2LsPp9qhSNihymIbV0L8xgVqrqtsS/kPqfIhj/MHSZWyCSpr6/i64ynR
-         3+/g==
+        bh=RxPz3kqf9b1KlwYkSSSltNJ55Lu6mN3Thr3gyuYUboU=;
+        b=ZrnzZRZ2pRGTlSxnz6pWk0ASNk+JXBpvfaJplVcHXKFaiTeK0k9tW7xkQ2ZyrRZ9b4
+         m1BNgHN1M3IZAQ1LhulRf6i3GKVw/6xypMyaWNyIdsXAoogF4fP0XoyTprc3SkpaValw
+         0otEK78AHVabn+Nin6HfCH1dJYQrGr3nZOVlorC12LEQ+sgwWQM8CWqASeOOnDUSX91F
+         ORRWMpq8tq+wiayVuXlAyXqPwD4WqVvwD0ozMPU8uoqiID3GrutxzNQSWZzteEkJ34gu
+         ZQidd1nsOW/QoQ+xj6SNEFYAHpRHDZVcIuJztjEFe9oVCzdHdXuglQhdNRGXMoUa/LuE
+         20jQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1Gd8uAluhwpSrTMHyHIeaXrT2bcwIAaHkdeZrwzi8Fk=;
-        b=d7BD3//0At8l9iTEmtpjjqS41OCakerV/HLuGCjlxvu0wIe0lO+Mh6N79nGukXVn2L
-         m4hRPC3tthOAV6etSj0z2eBsMJ5INH6ghFHjFtR/lrwetJRmV+uklY9v/EWz7NI41S78
-         xmgqjVDL5qNyFOpzUAWXjEIfheEFDxu0SMX7fS8m0rpeOCSXcuzYrlooWFMHemK+h+9n
-         ZMve6EWRcxI6jyNjZXTH5KjfrADfHMNvxXhScQYKwv1eGXkP1WudGRS5EMNAjY6QTn7h
-         mQvMd3HSSOu2lot86vkifdA/wG5Bp6oLyS3Flreq5SX0vYhQRkgV6yVo9ksIaR7ZYOn4
-         vm9Q==
-X-Gm-Message-State: APjAAAWU+e5aU1TQlOtDs0VqypV047JYzoSrHE7Gl9v15+hzUhEcFx70
-        5hp7hrWbpgmidqLwcG1stMg=
-X-Google-Smtp-Source: APXvYqypUJ8djJLH5rqQAzR+zxS4PnKh3aTp5YVpVvNNLqk9PEBlvATvhJOepCGDBjSVj3GSj1u3Ug==
-X-Received: by 2002:a62:424f:: with SMTP id p76mr37589822pfa.141.1554825438910;
-        Tue, 09 Apr 2019 08:57:18 -0700 (PDT)
+        bh=RxPz3kqf9b1KlwYkSSSltNJ55Lu6mN3Thr3gyuYUboU=;
+        b=lrSxgcBx+raGXWoc3E0aCB7V5wlXMPcVstPjr6NphobOE7/UT50wf5LrtevqzVlceJ
+         /JbAEPlIThFH+YN5dMb5wk5p541vRQmEklMkHHkv10CMDkaQgYbRltOYBo838ECwhaH1
+         5JBWt85LWzoWVLyjrcm1u5tzes/f1lCU4EDlGvDamC6f3avxXSDvok9bGP/jxr8KpAj1
+         JR38YduSSFdKrWBxs8Y7z3zhsQYClCR5GlfU/QfLXCGVGOIRyg3xRCGBGue5UtRNFST8
+         HHMbA3yZJhPPsSmDKi3vM+yScn0WBd21aucJRfKxYugq0FsIKS6bzGbDLYlJ5pPwIHjw
+         5hmg==
+X-Gm-Message-State: APjAAAVQntwyK8NRZwPVtophSgV0973CT2lXfCIjZHDxnMEImLGVfqr5
+        WhGQ7xbdelx8NlXVgFuO9Oc=
+X-Google-Smtp-Source: APXvYqxoDhb2wqijQpifV8xgdH8ZrRO5pHYrJu1+bEm1y14GVJ2sLrAUygihSJ4jspOD4ktc24knjg==
+X-Received: by 2002:a17:902:70c6:: with SMTP id l6mr11366521plt.95.1554825435285;
+        Tue, 09 Apr 2019 08:57:15 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.57.15
+        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.57.11
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Apr 2019 08:57:18 -0700 (PDT)
+        Tue, 09 Apr 2019 08:57:14 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v3 10/12] Documentation: PCI: convert endpoint/pci-endpoint-cfs.txt to reST
-Date:   Tue,  9 Apr 2019 23:56:24 +0800
-Message-Id: <20190409155626.6049-11-changbin.du@gmail.com>
+Subject: [PATCH v3 09/12] Documentation: PCI: convert endpoint/pci-endpoint.txt to reST
+Date:   Tue,  9 Apr 2019 23:56:23 +0800
+Message-Id: <20190409155626.6049-10-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190409155626.6049-1-changbin.du@gmail.com>
 References: <20190409155626.6049-1-changbin.du@gmail.com>
@@ -79,173 +79,301 @@ add it to Sphinx TOC tree. No essential content change.
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- Documentation/PCI/endpoint/index.rst          |  1 +
- ...-endpoint-cfs.txt => pci-endpoint-cfs.rst} | 99 +++++++++++--------
- 2 files changed, 57 insertions(+), 43 deletions(-)
- rename Documentation/PCI/endpoint/{pci-endpoint-cfs.txt => pci-endpoint-cfs.rst} (64%)
+ Documentation/PCI/endpoint/index.rst          | 10 ++
+ .../{pci-endpoint.txt => pci-endpoint.rst}    | 95 +++++++++++--------
+ Documentation/PCI/index.rst                   |  1 +
+ 3 files changed, 68 insertions(+), 38 deletions(-)
+ create mode 100644 Documentation/PCI/endpoint/index.rst
+ rename Documentation/PCI/endpoint/{pci-endpoint.txt => pci-endpoint.rst} (82%)
 
 diff --git a/Documentation/PCI/endpoint/index.rst b/Documentation/PCI/endpoint/index.rst
-index 0db4f2fcd7f0..3951de9f923c 100644
---- a/Documentation/PCI/endpoint/index.rst
+new file mode 100644
+index 000000000000..0db4f2fcd7f0
+--- /dev/null
 +++ b/Documentation/PCI/endpoint/index.rst
-@@ -8,3 +8,4 @@ PCI Endpoint Framework
-    :maxdepth: 2
- 
-    pci-endpoint
-+   pci-endpoint-cfs
-diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-similarity index 64%
-rename from Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-rename to Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-index d740f29960a4..b6d39cdec56e 100644
---- a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-+++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.rst
-@@ -1,41 +1,51 @@
--                   CONFIGURING PCI ENDPOINT USING CONFIGFS
--                    Kishon Vijay Abraham I <kishon@ti.com>
+@@ -0,0 +1,10 @@
 +.. SPDX-License-Identifier: GPL-2.0
 +
-+=======================================
-+Configuring PCI Endpoint Using CONFIGFS
-+=======================================
++======================
++PCI Endpoint Framework
++======================
++
++.. toctree::
++   :maxdepth: 2
++
++   pci-endpoint
+diff --git a/Documentation/PCI/endpoint/pci-endpoint.txt b/Documentation/PCI/endpoint/pci-endpoint.rst
+similarity index 82%
+rename from Documentation/PCI/endpoint/pci-endpoint.txt
+rename to Documentation/PCI/endpoint/pci-endpoint.rst
+index e86a96b66a6a..6674ce5425bf 100644
+--- a/Documentation/PCI/endpoint/pci-endpoint.txt
++++ b/Documentation/PCI/endpoint/pci-endpoint.rst
+@@ -1,11 +1,17 @@
+-			    PCI ENDPOINT FRAMEWORK
+-		    Kishon Vijay Abraham I <kishon@ti.com>
++.. SPDX-License-Identifier: GPL-2.0
++
++======================
++PCI Endpoint Framework
++======================
 +
 +:Author: Kishon Vijay Abraham I <kishon@ti.com>
  
- The PCI Endpoint Core exposes configfs entry (pci_ep) to configure the
- PCI endpoint function and to bind the endpoint function
- with the endpoint controller. (For introducing other mechanisms to
- configure the PCI Endpoint Function refer to [1]).
+ This document is a guide to use the PCI Endpoint Framework in order to create
+ endpoint controller driver, endpoint function driver, and using configfs
+ interface to bind the function driver to the controller driver.
  
--*) Mounting configfs
-+Mounting configfs
+-1. Introduction
++Introduction
++============
+ 
+ Linux has a comprehensive PCI subsystem to support PCI controllers that
+ operates in Root Complex mode. The subsystem has capability to scan PCI bus,
+@@ -19,24 +25,27 @@ add endpoint mode support in Linux. This will help to run Linux in an
+ EP system which can have a wide variety of use cases from testing or
+ validation, co-processor accelerator, etc.
+ 
+-2. PCI Endpoint Core
++PCI Endpoint Core
 +=================
  
- The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
--directory. configfs can be mounted using the following command.
-+directory. configfs can be mounted using the following command::
+ The PCI Endpoint Core layer comprises 3 components: the Endpoint Controller
+ library, the Endpoint Function library, and the configfs layer to bind the
+ endpoint function with the endpoint controller.
  
- 	mount -t configfs none /sys/kernel/config
+-2.1 PCI Endpoint Controller(EPC) Library
++PCI Endpoint Controller(EPC) Library
++------------------------------------
  
--*) Directory Structure
-+Directory Structure
-+===================
+ The EPC library provides APIs to be used by the controller that can operate
+ in endpoint mode. It also provides APIs to be used by function driver/library
+ in order to implement a particular endpoint function.
  
- The pci_ep configfs has two directories at its root: controllers and
- functions. Every EPC device present in the system will have an entry in
- the *controllers* directory and and every EPF driver present in the system
- will have an entry in the *functions* directory.
-+::
+-2.1.1 APIs for the PCI controller Driver
++APIs for the PCI controller Driver
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  
--/sys/kernel/config/pci_ep/
--	.. controllers/
--	.. functions/
-+	/sys/kernel/config/pci_ep/
-+		.. controllers/
-+		.. functions/
+ This section lists the APIs that the PCI Endpoint core provides to be used
+ by the PCI controller driver.
  
--*) Creating EPF Device
-+Creating EPF Device
-+===================
+-*) devm_pci_epc_create()/pci_epc_create()
++* devm_pci_epc_create()/pci_epc_create()
  
- Every registered EPF driver will be listed in controllers directory. The
- entries corresponding to EPF driver will be created by the EPF core.
-+::
+    The PCI controller driver should implement the following ops:
+ 	 * write_header: ops to populate configuration space header
+@@ -51,110 +60,116 @@ by the PCI controller driver.
+    The PCI controller driver can then create a new EPC device by invoking
+    devm_pci_epc_create()/pci_epc_create().
  
--/sys/kernel/config/pci_ep/functions/
--	.. <EPF Driver1>/
--		... <EPF Device 11>/
--		... <EPF Device 21>/
--	.. <EPF Driver2>/
--		... <EPF Device 12>/
--		... <EPF Device 22>/
-+	/sys/kernel/config/pci_ep/functions/
-+		.. <EPF Driver1>/
-+			... <EPF Device 11>/
-+			... <EPF Device 21>/
-+		.. <EPF Driver2>/
-+			... <EPF Device 12>/
-+			... <EPF Device 22>/
+-*) devm_pci_epc_destroy()/pci_epc_destroy()
++* devm_pci_epc_destroy()/pci_epc_destroy()
  
- In order to create a <EPF device> of the type probed by <EPF Driver>, the
- user has to create a directory inside <EPF DriverN>.
-@@ -44,34 +54,37 @@ Every <EPF device> directory consists of the following entries that can be
- used to configure the standard configuration header of the endpoint function.
- (These entries are created by the framework when any new <EPF Device> is
- created)
--
--	.. <EPF Driver1>/
--		... <EPF Device 11>/
--			... vendorid
--			... deviceid
--			... revid
--			... progif_code
--			... subclass_code
--			... baseclass_code
--			... cache_line_size
--			... subsys_vendor_id
--			... subsys_id
--			... interrupt_pin
--
--*) EPC Device
-+::
+    The PCI controller driver can destroy the EPC device created by either
+    devm_pci_epc_create() or pci_epc_create() using devm_pci_epc_destroy() or
+    pci_epc_destroy().
+ 
+-*) pci_epc_linkup()
++* pci_epc_linkup()
+ 
+    In order to notify all the function devices that the EPC device to which
+    they are linked has established a link with the host, the PCI controller
+    driver should invoke pci_epc_linkup().
+ 
+-*) pci_epc_mem_init()
++* pci_epc_mem_init()
+ 
+    Initialize the pci_epc_mem structure used for allocating EPC addr space.
+ 
+-*) pci_epc_mem_exit()
++* pci_epc_mem_exit()
+ 
+    Cleanup the pci_epc_mem structure allocated during pci_epc_mem_init().
+ 
+-2.1.2 APIs for the PCI Endpoint Function Driver
 +
-+		.. <EPF Driver1>/
-+			... <EPF Device 11>/
-+				... vendorid
-+				... deviceid
-+				... revid
-+				... progif_code
-+				... subclass_code
-+				... baseclass_code
-+				... cache_line_size
-+				... subsys_vendor_id
-+				... subsys_id
-+				... interrupt_pin
++APIs for the PCI Endpoint Function Driver
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ This section lists the APIs that the PCI Endpoint core provides to be used
+ by the PCI endpoint function driver.
+ 
+-*) pci_epc_write_header()
++* pci_epc_write_header()
+ 
+    The PCI endpoint function driver should use pci_epc_write_header() to
+    write the standard configuration header to the endpoint controller.
+ 
+-*) pci_epc_set_bar()
++* pci_epc_set_bar()
+ 
+    The PCI endpoint function driver should use pci_epc_set_bar() to configure
+    the Base Address Register in order for the host to assign PCI addr space.
+    Register space of the function driver is usually configured
+    using this API.
+ 
+-*) pci_epc_clear_bar()
++* pci_epc_clear_bar()
+ 
+    The PCI endpoint function driver should use pci_epc_clear_bar() to reset
+    the BAR.
+ 
+-*) pci_epc_raise_irq()
++* pci_epc_raise_irq()
+ 
+    The PCI endpoint function driver should use pci_epc_raise_irq() to raise
+    Legacy Interrupt, MSI or MSI-X Interrupt.
+ 
+-*) pci_epc_mem_alloc_addr()
++* pci_epc_mem_alloc_addr()
+ 
+    The PCI endpoint function driver should use pci_epc_mem_alloc_addr(), to
+    allocate memory address from EPC addr space which is required to access
+    RC's buffer
+ 
+-*) pci_epc_mem_free_addr()
++* pci_epc_mem_free_addr()
+ 
+    The PCI endpoint function driver should use pci_epc_mem_free_addr() to
+    free the memory space allocated using pci_epc_mem_alloc_addr().
+ 
+-2.1.3 Other APIs
++Other APIs
++~~~~~~~~~~
+ 
+ There are other APIs provided by the EPC library. These are used for binding
+ the EPF device with EPC device. pci-ep-cfs.c can be used as reference for
+ using these APIs.
+ 
+-*) pci_epc_get()
++* pci_epc_get()
+ 
+    Get a reference to the PCI endpoint controller based on the device name of
+    the controller.
+ 
+-*) pci_epc_put()
++* pci_epc_put()
+ 
+    Release the reference to the PCI endpoint controller obtained using
+    pci_epc_get()
+ 
+-*) pci_epc_add_epf()
++* pci_epc_add_epf()
+ 
+    Add a PCI endpoint function to a PCI endpoint controller. A PCIe device
+    can have up to 8 functions according to the specification.
+ 
+-*) pci_epc_remove_epf()
++* pci_epc_remove_epf()
+ 
+    Remove the PCI endpoint function from PCI endpoint controller.
+ 
+-*) pci_epc_start()
++* pci_epc_start()
+ 
+    The PCI endpoint function driver should invoke pci_epc_start() once it
+    has configured the endpoint function and wants to start the PCI link.
+ 
+-*) pci_epc_stop()
++* pci_epc_stop()
+ 
+    The PCI endpoint function driver should invoke pci_epc_stop() to stop
+    the PCI LINK.
+ 
+-2.2 PCI Endpoint Function(EPF) Library
 +
-+EPC Device
-+==========
++PCI Endpoint Function(EPF) Library
++----------------------------------
  
- Every registered EPC device will be listed in controllers directory. The
- entries corresponding to EPC device will be created by the EPC core.
--
--/sys/kernel/config/pci_ep/controllers/
--	.. <EPC Device1>/
--		... <Symlink EPF Device11>/
--		... <Symlink EPF Device12>/
--		... start
--	.. <EPC Device2>/
--		... <Symlink EPF Device21>/
--		... <Symlink EPF Device22>/
--		... start
-+::
+ The EPF library provides APIs to be used by the function driver and the EPC
+ library to provide endpoint mode functionality.
+ 
+-2.2.1 APIs for the PCI Endpoint Function Driver
++APIs for the PCI Endpoint Function Driver
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ This section lists the APIs that the PCI Endpoint core provides to be used
+ by the PCI endpoint function driver.
+ 
+-*) pci_epf_register_driver()
++* pci_epf_register_driver()
+ 
+    The PCI Endpoint Function driver should implement the following ops:
+ 	 * bind: ops to perform when a EPC device has been bound to EPF device
+@@ -166,50 +181,54 @@ by the PCI endpoint function driver.
+   The PCI Function driver can then register the PCI EPF driver by using
+   pci_epf_register_driver().
+ 
+-*) pci_epf_unregister_driver()
++* pci_epf_unregister_driver()
+ 
+   The PCI Function driver can unregister the PCI EPF driver by using
+   pci_epf_unregister_driver().
+ 
+-*) pci_epf_alloc_space()
++* pci_epf_alloc_space()
+ 
+   The PCI Function driver can allocate space for a particular BAR using
+   pci_epf_alloc_space().
+ 
+-*) pci_epf_free_space()
++* pci_epf_free_space()
+ 
+   The PCI Function driver can free the allocated space
+   (using pci_epf_alloc_space) by invoking pci_epf_free_space().
+ 
+-2.2.2 APIs for the PCI Endpoint Controller Library
++APIs for the PCI Endpoint Controller Library
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 +
-+	/sys/kernel/config/pci_ep/controllers/
-+		.. <EPC Device1>/
-+			... <Symlink EPF Device11>/
-+			... <Symlink EPF Device12>/
-+			... start
-+		.. <EPC Device2>/
-+			... <Symlink EPF Device21>/
-+			... <Symlink EPF Device22>/
-+			... start
+ This section lists the APIs that the PCI Endpoint core provides to be used
+ by the PCI endpoint controller library.
  
- The <EPC Device> directory will have a list of symbolic links to
- <EPF Device>. These symbolic links should be created by the user to
-@@ -81,7 +94,7 @@ The <EPC Device> directory will also have a *start* field. Once
- "1" is written to this field, the endpoint device will be ready to
- establish the link with the host. This is usually done after
- all the EPF devices are created and linked with the EPC device.
--
-+::
+-*) pci_epf_linkup()
++* pci_epf_linkup()
  
- 			 | controllers/
- 				| <Directory: EPC name>/
-@@ -102,4 +115,4 @@ all the EPF devices are created and linked with the EPC device.
- 						| interrupt_pin
- 						| function
+    The PCI endpoint controller library invokes pci_epf_linkup() when the
+    EPC device has established the connection to the host.
  
--[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
-+[1] :doc:`pci-endpoint`
+-2.2.2 Other APIs
++Other APIs
++~~~~~~~~~~
++
+ There are other APIs provided by the EPF library. These are used to notify
+ the function driver when the EPF device is bound to the EPC device.
+ pci-ep-cfs.c can be used as reference for using these APIs.
+ 
+-*) pci_epf_create()
++* pci_epf_create()
+ 
+    Create a new PCI EPF device by passing the name of the PCI EPF device.
+    This name will be used to bind the the EPF device to a EPF driver.
+ 
+-*) pci_epf_destroy()
++* pci_epf_destroy()
+ 
+    Destroy the created PCI EPF device.
+ 
+-*) pci_epf_bind()
++* pci_epf_bind()
+ 
+    pci_epf_bind() should be invoked when the EPF device has been bound to
+    a EPC device.
+ 
+-*) pci_epf_unbind()
++* pci_epf_unbind()
+ 
+    pci_epf_unbind() should be invoked when the binding between EPC device
+    and EPF device is lost.
+diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
+index 86c76c22810b..c8ea2e626c20 100644
+--- a/Documentation/PCI/index.rst
++++ b/Documentation/PCI/index.rst
+@@ -15,3 +15,4 @@ Linux PCI Bus Subsystem
+    acpi-info
+    pci-error-recovery
+    pcieaer-howto
++   endpoint/index
 -- 
 2.20.1
 
