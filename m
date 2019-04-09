@@ -5,64 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B72C282CE
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:56:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7021AC282DA
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97C7E214AF
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:56:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B5D0217F4
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="poaYvC8y"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kvCuBpQa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726799AbfDIP45 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Apr 2019 11:56:57 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:45991 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726446AbfDIP44 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:56:56 -0400
-Received: by mail-pg1-f195.google.com with SMTP id y3so9523450pgk.12;
-        Tue, 09 Apr 2019 08:56:55 -0700 (PDT)
+        id S1726867AbfDIP5J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Apr 2019 11:57:09 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:43991 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726494AbfDIP5I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:08 -0400
+Received: by mail-pg1-f193.google.com with SMTP id z9so6608416pgu.10;
+        Tue, 09 Apr 2019 08:57:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=xbDzPgrG7sGMDqtDgEqDecIChfX7yasg95T4JIMF8ig=;
-        b=poaYvC8y90H6Ywp90NpRkMEj/1Kvus9KfcAsGKrMD2jGK0B6HREX3eDgybEBhdRJFM
-         qtwmifuAVpXUNL+BEI3rEeCp2hvmGkdWKpbWji39VGwexowAGwy8BiL0CR3DfLYi7ElD
-         HUrgwDEuxMrFC8b/+bhFf6VfZrCLVm5q02TTilbu/ozsrylbNHFuSWZ9wOeYsripY3Vt
-         9kWPHwE+fiK7qBNMxPdVVFtcX68vmb1nAK3BvAbGT2wZAtizPqBdPSog/yCnmtmYffmO
-         lx/bQ/+nsRtlN8NB/VGTFLdOK/sPY/PT7RvB1/gSOujvycPVVVvBhB/jHv+EfLOVkgkI
-         fBOg==
+        bh=pdmZLVbtP1zgMYnPoSBcK8KK6r5w23riajsbmPc+EHM=;
+        b=kvCuBpQaa5Rq7FizZeejAXRVqgtdWslmF8/sOgXk0K8B7aJI4CmVBL6gOPkGP2UqC8
+         P2Lo5A+JUGd98LGu0THD7aDhBZqgSDMnYu4ZE2RA34BISLSDOTcIqnRjuYeYfxJbfGM5
+         IPi49kcoCf12kaZVjlxLkfU9TXVZx/CybYq4+4Nr7GefoGsPRDpNlSqibNyW/Ue1gXn1
+         1TlUP1kb6Lld1ouPf5eByTJ6P62N/oZE5XRg+vvPAWK4jnV4ZXP6UoZC+TAzltZSu3yc
+         /EQ3TVqzvtos0wqfRbsmmWCMjtA5njUZL9nbTmtBNi3KCc41gJYOxBO3QkZDdTYlB3Xw
+         aukQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=xbDzPgrG7sGMDqtDgEqDecIChfX7yasg95T4JIMF8ig=;
-        b=E9BYKJlQ4iVSlwv35RzV4dqsXcHRPqpE6fuy7U0jmhw5chtTYXUyOghxFmtAsilhXZ
-         EmSApEExKuRHB+KabvWG8JSwwgEnUCoSn7+K179VbcmXUFr8/mVBrlC23Yg2k7SKy9Bt
-         tawLxfBwhoRk1sdh6scAiMpX+zuC4uEmAbhCCuiRo6whCUK6wNanKYYIVBfszGvH6NPK
-         6F2chEx15YUb/VXBEmZKFV48G1Iz17PTBOE2gzizlCirE6mZNmfEsHnXlTy6A5Z+MDW5
-         6Gsp5+znvvnLZ6hWCTOsGuLefHLO3G4Z/WvBmJyt2uIg5fFdOPwbv8H6K+CF34gpEIJc
-         Jywg==
-X-Gm-Message-State: APjAAAXJI6lXBHmfBYaY4GFXHYCOJtIldUmXWFTu7JWUmzLjnR6prcVg
-        zbHpZy4KV1bIF308zvsBej8=
-X-Google-Smtp-Source: APXvYqyLHZ+XWyB92EqtFDRHk3ioHGyOdKtlW7F6XBfi+Vwk/b2d+Ftokg662lL1KWo1GVhbyBmUKw==
-X-Received: by 2002:a62:69c2:: with SMTP id e185mr37248078pfc.119.1554825415595;
-        Tue, 09 Apr 2019 08:56:55 -0700 (PDT)
+        bh=pdmZLVbtP1zgMYnPoSBcK8KK6r5w23riajsbmPc+EHM=;
+        b=pR8elZT7zBlyowy5V7LBaIw/NuxKkMFx+xq0cX9ha2I2TtdhAFFUNvlgyF5OX/2gqM
+         jjU0G4IeiN4LIGq8xCTMMgLK1HaCyV5PICFCE1l0L+0CmrwHFb9gFVEh445k19mnVL2I
+         3mLa4OeyjyvZRIvg/k5oIyJ1faRIIx7+u2iKyAADsEChMHKbg0uYlGNd5hgAt/14sTgQ
+         uJvdLbipIVNy4Mme7QnhyXgOHbV3Idkw62ocOKhMMHAzT2tlTqGOKPkPiB0NcrEW2Gq8
+         9ESEcXD2ekYSvn2rRFZ1Isd1TSjj09D8MoUHl27HyOryrJmAADaeXlzdpwKky5hpPBeQ
+         3gJg==
+X-Gm-Message-State: APjAAAXy7g8RXWHC50w2cxnJcZVFvCiejaIUrb93o3wKyFjigbpIqt62
+        ChIPekQ1XdJBRs6rlybEy2g=
+X-Google-Smtp-Source: APXvYqxxNlvmEMq+7GsFysvXjBncgyj/aKRivrVYUPZSOCP7p0E4nLWJea4cRaH1F766xa3DurukWQ==
+X-Received: by 2002:a63:ef09:: with SMTP id u9mr35577678pgh.126.1554825427014;
+        Tue, 09 Apr 2019 08:57:07 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.56.52
+        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.57.03
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Apr 2019 08:56:54 -0700 (PDT)
+        Tue, 09 Apr 2019 08:57:06 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v3 04/12] Documentation: PCI: convert pci-iov-howto.txt to reST
-Date:   Tue,  9 Apr 2019 23:56:18 +0800
-Message-Id: <20190409155626.6049-5-changbin.du@gmail.com>
+Subject: [PATCH v3 07/12] Documentation: PCI: convert pci-error-recovery.txt to reST
+Date:   Tue,  9 Apr 2019 23:56:21 +0800
+Message-Id: <20190409155626.6049-8-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190409155626.6049-1-changbin.du@gmail.com>
 References: <20190409155626.6049-1-changbin.du@gmail.com>
@@ -80,250 +80,282 @@ Signed-off-by: Changbin Du <changbin.du@gmail.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
  Documentation/PCI/index.rst                   |   1 +
- .../{pci-iov-howto.txt => pci-iov-howto.rst}  | 161 ++++++++++--------
- 2 files changed, 94 insertions(+), 68 deletions(-)
- rename Documentation/PCI/{pci-iov-howto.txt => pci-iov-howto.rst} (63%)
+ ...or-recovery.txt => pci-error-recovery.rst} | 178 +++++++++---------
+ MAINTAINERS                                   |   2 +-
+ 3 files changed, 94 insertions(+), 87 deletions(-)
+ rename Documentation/PCI/{pci-error-recovery.txt => pci-error-recovery.rst} (80%)
 
 diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index 452723318405..e1c19962a7f8 100644
+index c877a369481d..5ee4dba07116 100644
 --- a/Documentation/PCI/index.rst
 +++ b/Documentation/PCI/index.rst
-@@ -10,3 +10,4 @@ Linux PCI Bus Subsystem
- 
-    pci
-    PCIEBUS-HOWTO
-+   pci-iov-howto
-diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pci-iov-howto.rst
-similarity index 63%
-rename from Documentation/PCI/pci-iov-howto.txt
-rename to Documentation/PCI/pci-iov-howto.rst
-index d2a84151e99c..b9fd003206f1 100644
---- a/Documentation/PCI/pci-iov-howto.txt
-+++ b/Documentation/PCI/pci-iov-howto.rst
-@@ -1,14 +1,19 @@
--		PCI Express I/O Virtualization Howto
--		Copyright (C) 2009 Intel Corporation
--		    Yu Zhao <yu.zhao@intel.com>
+@@ -13,3 +13,4 @@ Linux PCI Bus Subsystem
+    pci-iov-howto
+    MSI-HOWTO
+    acpi-info
++   pci-error-recovery
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.rst
+similarity index 80%
+rename from Documentation/PCI/pci-error-recovery.txt
+rename to Documentation/PCI/pci-error-recovery.rst
+index 0b6bb3ef449e..533ec4035bf5 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.rst
+@@ -1,12 +1,13 @@
 +.. SPDX-License-Identifier: GPL-2.0
-+.. include:: <isonum.txt>
  
--		Update: November 2012
--			-- sysfs-based SRIOV enable-/disable-ment
--		Donald Dutile <ddutile@redhat.com>
-+====================================
-+PCI Express I/O Virtualization Howto
-+====================================
+-                       PCI Error Recovery
+-                       ------------------
+-                        February 2, 2006
++==================
++PCI Error Recovery
++==================
  
--1. Overview
-+:Copyright: |copy| 2009 Intel Corporation
-+:Authors: - Yu Zhao <yu.zhao@intel.com>
-+          - Donald Dutile <ddutile@redhat.com>
- 
--1.1 What is SR-IOV
-+Overview
-+========
+-                 Current document maintainer:
+-             Linas Vepstas <linasvepstas@gmail.com>
+-          updated by Richard Lary <rlary@us.ibm.com>
+-       and Mike Mason <mmlnx@us.ibm.com> on 27-Jul-2009
 +
-+What is SR-IOV
-+--------------
++:Authors: - Linas Vepstas <linasvepstas@gmail.com>
++          - Richard Lary <rlary@us.ibm.com>
++          - Mike Mason <mmlnx@us.ibm.com>
  
- Single Root I/O Virtualization (SR-IOV) is a PCI Express Extended
- capability which makes one physical device appear as multiple virtual
-@@ -23,9 +28,11 @@ Memory Space, which is used to map its register set. VF device driver
- operates on the register set so it can be functional and appear as a
- real existing PCI device.
  
--2. User Guide
-+User Guide
-+==========
+ Many PCI bus controllers are able to detect a variety of hardware
+@@ -63,7 +64,8 @@ mechanisms for dealing with SCSI bus errors and SCSI bus resets.
  
--2.1 How can I enable SR-IOV capability
-+How can I enable SR-IOV capability
-+----------------------------------
  
- Multiple methods are available for SR-IOV enablement.
- In the first method, the device driver (PF driver) will control the
-@@ -43,105 +50,123 @@ checks, e.g., check numvfs == 0 if enabling VFs, ensure
- numvfs <= totalvfs.
- The second method is the recommended method for new/future VF devices.
- 
--2.2 How can I use the Virtual Functions
-+How can I use the Virtual Functions
-+-----------------------------------
- 
- The VF is treated as hot-plugged PCI devices in the kernel, so they
- should be able to work in the same way as real PCI devices. The VF
- requires device driver that is same as a normal PCI device's.
- 
--3. Developer Guide
-+Developer Guide
+ Detailed Design
+----------------
 +===============
++
+ Design and implementation details below, based on a chain of
+ public email discussions with Ben Herrenschmidt, circa 5 April 2005.
  
--3.1 SR-IOV API
-+SR-IOV API
-+----------
+@@ -73,30 +75,33 @@ pci_driver. A driver that fails to provide the structure is "non-aware",
+ and the actual recovery steps taken are platform dependent.  The
+ arch/powerpc implementation will simulate a PCI hotplug remove/add.
  
- To enable SR-IOV capability:
--(a) For the first method, in the driver:
-+
-+(a) For the first method, in the driver::
-+
- 	int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
--	'nr_virtfn' is number of VFs to be enabled.
--(b) For the second method, from sysfs:
-+
-+'nr_virtfn' is number of VFs to be enabled.
-+
-+(b) For the second method, from sysfs::
-+
- 	echo 'nr_virtfn' > \
-         /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
- 
- To disable SR-IOV capability:
--(a) For the first method, in the driver:
-+
-+(a) For the first method, in the driver::
-+
- 	void pci_disable_sriov(struct pci_dev *dev);
--(b) For the second method, from sysfs:
-+
-+(b) For the second method, from sysfs::
-+
- 	echo  0 > \
-         /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
- 
- To enable auto probing VFs by a compatible driver on the host, run
- command below before enabling SR-IOV capabilities. This is the
- default behavior.
-+::
-+
- 	echo 1 > \
-         /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
- 
- To disable auto probing VFs by a compatible driver on the host, run
- command below before enabling SR-IOV capabilities. Updating this
- entry will not affect VFs which are already probed.
-+::
-+
- 	echo  0 > \
-         /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
- 
--3.2 Usage example
-+Usage example
-+-------------
- 
- Following piece of code illustrates the usage of the SR-IOV API.
-+::
- 
--static int dev_probe(struct pci_dev *dev, const struct pci_device_id *id)
+-This structure has the form:
+-struct pci_error_handlers
 -{
--	pci_enable_sriov(dev, NR_VIRTFN);
-+	static int dev_probe(struct pci_dev *dev, const struct pci_device_id *id)
-+	{
-+		pci_enable_sriov(dev, NR_VIRTFN);
- 
--	...
--
--	return 0;
--}
-+		...
- 
--static void dev_remove(struct pci_dev *dev)
--{
--	pci_disable_sriov(dev);
-+		return 0;
-+	}
- 
--	...
--}
-+	static void dev_remove(struct pci_dev *dev)
-+	{
-+		pci_disable_sriov(dev);
- 
--static int dev_suspend(struct pci_dev *dev, pm_message_t state)
--{
--	...
-+		...
-+	}
- 
--	return 0;
--}
-+	static int dev_suspend(struct pci_dev *dev, pm_message_t state)
-+	{
-+		...
- 
--static int dev_resume(struct pci_dev *dev)
--{
--	...
-+		return 0;
-+	}
- 
--	return 0;
--}
-+	static int dev_resume(struct pci_dev *dev)
-+	{
-+		...
- 
--static void dev_shutdown(struct pci_dev *dev)
--{
--	...
--}
-+		return 0;
-+	}
- 
--static int dev_sriov_configure(struct pci_dev *dev, int numvfs)
--{
--	if (numvfs > 0) {
--		...
--		pci_enable_sriov(dev, numvfs);
-+	static void dev_shutdown(struct pci_dev *dev)
-+	{
- 		...
--		return numvfs;
- 	}
--	if (numvfs == 0) {
--		....
--		pci_disable_sriov(dev);
--		...
--		return 0;
-+
-+	static int dev_sriov_configure(struct pci_dev *dev, int numvfs)
-+	{
-+		if (numvfs > 0) {
-+			...
-+			pci_enable_sriov(dev, numvfs);
-+			...
-+			return numvfs;
-+		}
-+		if (numvfs == 0) {
-+			....
-+			pci_disable_sriov(dev);
-+			...
-+			return 0;
-+		}
- 	}
--}
--
--static struct pci_driver dev_driver = {
--	.name =		"SR-IOV Physical Function driver",
--	.id_table =	dev_id_table,
--	.probe =	dev_probe,
--	.remove =	dev_remove,
--	.suspend =	dev_suspend,
--	.resume =	dev_resume,
--	.shutdown =	dev_shutdown,
--	.sriov_configure = dev_sriov_configure,
+-	int (*error_detected)(struct pci_dev *dev, enum pci_channel_state);
+-	int (*mmio_enabled)(struct pci_dev *dev);
+-	int (*slot_reset)(struct pci_dev *dev);
+-	void (*resume)(struct pci_dev *dev);
 -};
+-
+-The possible channel states are:
+-enum pci_channel_state {
+-	pci_channel_io_normal,  /* I/O channel is in normal state */
+-	pci_channel_io_frozen,  /* I/O to channel is blocked */
+-	pci_channel_io_perm_failure, /* PCI card is dead */
+-};
+-
+-Possible return values are:
+-enum pci_ers_result {
+-	PCI_ERS_RESULT_NONE,        /* no result/none/not supported in device driver */
+-	PCI_ERS_RESULT_CAN_RECOVER, /* Device driver can recover without slot reset */
+-	PCI_ERS_RESULT_NEED_RESET,  /* Device driver wants slot to be reset. */
+-	PCI_ERS_RESULT_DISCONNECT,  /* Device has completely failed, is unrecoverable */
+-	PCI_ERS_RESULT_RECOVERED,   /* Device driver is fully recovered and operational */
+-};
++This structure has the form::
 +
-+	static struct pci_driver dev_driver = {
-+		.name =		"SR-IOV Physical Function driver",
-+		.id_table =	dev_id_table,
-+		.probe =	dev_probe,
-+		.remove =	dev_remove,
-+		.suspend =	dev_suspend,
-+		.resume =	dev_resume,
-+		.shutdown =	dev_shutdown,
-+		.sriov_configure = dev_sriov_configure,
++	struct pci_error_handlers
++	{
++		int (*error_detected)(struct pci_dev *dev, enum pci_channel_state);
++		int (*mmio_enabled)(struct pci_dev *dev);
++		int (*slot_reset)(struct pci_dev *dev);
++		void (*resume)(struct pci_dev *dev);
 +	};
++
++The possible channel states are::
++
++	enum pci_channel_state {
++		pci_channel_io_normal,  /* I/O channel is in normal state */
++		pci_channel_io_frozen,  /* I/O to channel is blocked */
++		pci_channel_io_perm_failure, /* PCI card is dead */
++	};
++
++Possible return values are::
++
++	enum pci_ers_result {
++		PCI_ERS_RESULT_NONE,        /* no result/none/not supported in device driver */
++		PCI_ERS_RESULT_CAN_RECOVER, /* Device driver can recover without slot reset */
++		PCI_ERS_RESULT_NEED_RESET,  /* Device driver wants slot to be reset. */
++		PCI_ERS_RESULT_DISCONNECT,  /* Device has completely failed, is unrecoverable */
++		PCI_ERS_RESULT_RECOVERED,   /* Device driver is fully recovered and operational */
++	};
+ 
+ A driver does not have to implement all of these callbacks; however,
+ if it implements any, it must implement error_detected(). If a callback
+@@ -134,16 +139,17 @@ shouldn't do any new IOs. Called in task context. This is sort of a
+ 
+ All drivers participating in this system must implement this call.
+ The driver must return one of the following result codes:
+-		- PCI_ERS_RESULT_CAN_RECOVER:
+-		  Driver returns this if it thinks it might be able to recover
+-		  the HW by just banging IOs or if it wants to be given
+-		  a chance to extract some diagnostic information (see
+-		  mmio_enable, below).
+-		- PCI_ERS_RESULT_NEED_RESET:
+-		  Driver returns this if it can't recover without a
+-		  slot reset.
+-		- PCI_ERS_RESULT_DISCONNECT:
+-		  Driver returns this if it doesn't want to recover at all.
++
++  - PCI_ERS_RESULT_CAN_RECOVER:
++    Driver returns this if it thinks it might be able to recover
++    the HW by just banging IOs or if it wants to be given
++    a chance to extract some diagnostic information (see
++    mmio_enable, below).
++  - PCI_ERS_RESULT_NEED_RESET:
++    Driver returns this if it can't recover without a
++    slot reset.
++  - PCI_ERS_RESULT_DISCONNECT:
++    Driver returns this if it doesn't want to recover at all.
+ 
+ The next step taken will depend on the result codes returned by the
+ drivers.
+@@ -177,7 +183,7 @@ is STEP 6 (Permanent Failure).
+ >>> get the device working again.
+ 
+ STEP 2: MMIO Enabled
+--------------------
++--------------------
+ The platform re-enables MMIO to the device (but typically not the
+ DMA), and then calls the mmio_enabled() callback on all affected
+ device drivers.
+@@ -203,23 +209,23 @@ instead will have gone directly to STEP 3 (Link Reset) or STEP 4 (Slot Reset)
+ >>> into one of the next states, that is, link reset or slot reset.
+ 
+ The driver should return one of the following result codes:
+-		- PCI_ERS_RESULT_RECOVERED
+-		  Driver returns this if it thinks the device is fully
+-		  functional and thinks it is ready to start
+-		  normal driver operations again. There is no
+-		  guarantee that the driver will actually be
+-		  allowed to proceed, as another driver on the
+-		  same segment might have failed and thus triggered a
+-		  slot reset on platforms that support it.
+-
+-		- PCI_ERS_RESULT_NEED_RESET
+-		  Driver returns this if it thinks the device is not
+-		  recoverable in its current state and it needs a slot
+-		  reset to proceed.
+-
+-		- PCI_ERS_RESULT_DISCONNECT
+-		  Same as above. Total failure, no recovery even after
+-		  reset driver dead. (To be defined more precisely)
++  - PCI_ERS_RESULT_RECOVERED
++    Driver returns this if it thinks the device is fully
++    functional and thinks it is ready to start
++    normal driver operations again. There is no
++    guarantee that the driver will actually be
++    allowed to proceed, as another driver on the
++    same segment might have failed and thus triggered a
++    slot reset on platforms that support it.
++
++  - PCI_ERS_RESULT_NEED_RESET
++    Driver returns this if it thinks the device is not
++    recoverable in its current state and it needs a slot
++    reset to proceed.
++
++  - PCI_ERS_RESULT_DISCONNECT
++    Same as above. Total failure, no recovery even after
++    reset driver dead. (To be defined more precisely)
+ 
+ The next step taken depends on the results returned by the drivers.
+ If all drivers returned PCI_ERS_RESULT_RECOVERED, then the platform
+@@ -293,24 +299,24 @@ device will be considered "dead" in this case.
+ Drivers for multi-function cards will need to coordinate among
+ themselves as to which driver instance will perform any "one-shot"
+ or global device initialization. For example, the Symbios sym53cxx2
+-driver performs device init only from PCI function 0:
++driver performs device init only from PCI function 0::
+ 
+-+       if (PCI_FUNC(pdev->devfn) == 0)
+-+               sym_reset_scsi_bus(np, 0);
++	+       if (PCI_FUNC(pdev->devfn) == 0)
++	+               sym_reset_scsi_bus(np, 0);
+ 
+-	Result codes:
+-		- PCI_ERS_RESULT_DISCONNECT
+-		Same as above.
++Result codes:
++	- PCI_ERS_RESULT_DISCONNECT
++	  Same as above.
+ 
+ Drivers for PCI Express cards that require a fundamental reset must
+ set the needs_freset bit in the pci_dev structure in their probe function.
+ For example, the QLogic qla2xxx driver sets the needs_freset bit for certain
+-PCI card types:
++PCI card types::
+ 
+-+	/* Set EEH reset type to fundamental if required by hba  */
+-+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
+-+		pdev->needs_freset = 1;
+-+
++	+	/* Set EEH reset type to fundamental if required by hba  */
++	+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
++	+		pdev->needs_freset = 1;
++	+
+ 
+ Platform proceeds either to STEP 5 (Resume Operations) or STEP 6 (Permanent
+ Failure).
+@@ -370,23 +376,23 @@ The current policy is to turn this into a platform policy.
+ That is, the recovery API only requires that:
+ 
+  - There is no guarantee that interrupt delivery can proceed from any
+-device on the segment starting from the error detection and until the
+-slot_reset callback is called, at which point interrupts are expected
+-to be fully operational.
++   device on the segment starting from the error detection and until the
++   slot_reset callback is called, at which point interrupts are expected
++   to be fully operational.
+ 
+  - There is no guarantee that interrupt delivery is stopped, that is,
+-a driver that gets an interrupt after detecting an error, or that detects
+-an error within the interrupt handler such that it prevents proper
+-ack'ing of the interrupt (and thus removal of the source) should just
+-return IRQ_NOTHANDLED. It's up to the platform to deal with that
+-condition, typically by masking the IRQ source during the duration of
+-the error handling. It is expected that the platform "knows" which
+-interrupts are routed to error-management capable slots and can deal
+-with temporarily disabling that IRQ number during error processing (this
+-isn't terribly complex). That means some IRQ latency for other devices
+-sharing the interrupt, but there is simply no other way. High end
+-platforms aren't supposed to share interrupts between many devices
+-anyway :)
++   a driver that gets an interrupt after detecting an error, or that detects
++   an error within the interrupt handler such that it prevents proper
++   ack'ing of the interrupt (and thus removal of the source) should just
++   return IRQ_NOTHANDLED. It's up to the platform to deal with that
++   condition, typically by masking the IRQ source during the duration of
++   the error handling. It is expected that the platform "knows" which
++   interrupts are routed to error-management capable slots and can deal
++   with temporarily disabling that IRQ number during error processing (this
++   isn't terribly complex). That means some IRQ latency for other devices
++   sharing the interrupt, but there is simply no other way. High end
++   platforms aren't supposed to share interrupts between many devices
++   anyway :)
+ 
+ >>> Implementation details for the powerpc platform are discussed in
+ >>> the file Documentation/powerpc/eeh-pci-error-recovery.txt
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 27b0de13506c..b5075f234046 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11966,7 +11966,7 @@ M:	Sam Bobroff <sbobroff@linux.ibm.com>
+ M:	Oliver O'Halloran <oohall@gmail.com>
+ L:	linuxppc-dev@lists.ozlabs.org
+ S:	Supported
+-F:	Documentation/PCI/pci-error-recovery.txt
++F:	Documentation/PCI/pci-error-recovery.rst
+ F:	drivers/pci/pcie/aer.c
+ F:	drivers/pci/pcie/dpc.c
+ F:	drivers/pci/pcie/err.c
 -- 
 2.20.1
 
