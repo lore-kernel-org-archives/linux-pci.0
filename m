@@ -2,67 +2,67 @@ Return-Path: <SRS0=JnZd=SL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B37C282CE
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4F6AC10F0E
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99FC12084F
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 893092084C
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p8+h6+MD"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SPB16sTC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726884AbfDIP5O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Apr 2019 11:57:14 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:45266 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726494AbfDIP5M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:12 -0400
-Received: by mail-pf1-f193.google.com with SMTP id e24so9940288pfi.12;
-        Tue, 09 Apr 2019 08:57:11 -0700 (PDT)
+        id S1726527AbfDIP52 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Apr 2019 11:57:28 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:40035 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726499AbfDIP51 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:27 -0400
+Received: by mail-pg1-f196.google.com with SMTP id d31so5004717pgl.7;
+        Tue, 09 Apr 2019 08:57:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=cPBWtsg+36gllYWhNGP3v3p3CvhW7bWaWVSWgF9mrKc=;
-        b=p8+h6+MDRa64rCbTqQaAXVG8oZLg3L1zR+E9r6yNKrz+22e9FdwYkfGccMywZTpBKU
-         E/489sLUIA9sP1rZ+Sr8jof9uhBZ4Dt2UAW3RW+OlLeVC7s+Ia9QlYAPdUSI5asfYKQX
-         1Om+5DxtoOJKSBqTSw3zgyFMknkNBRRCTcmsPhBrzXh1jjyDV2HpOgIbrzmfcW0WaQoQ
-         DxtaOyE/sZAIYjAvRLefHdsAUQrPUMyXyUys70JMB/bRJ/p8wOFlNeon7bzQxSkci9RL
-         7s0KZ2I8L6AXa9+sym5J2XhZaYwXYS+LfUP3QL06Ov0Tuudf3KVOuZ7Va3Fpr1JMOX6O
-         m1gQ==
+        bh=70bPnOCiyT/McnTHJ3/ThQzEgD9Y96j/IQ+8yT0RXAA=;
+        b=SPB16sTCvMJPQO9GdrEhPEsKQ3jc6/0SHl1bV9/1wBiM6pW5RaZF1ohRngkdAwiJAW
+         2OGEqTIB2IkZ+YM3vZkZUC7mn22xmQH5+Hl9PsTjrQCNtAvWMPtiFSoY5KvpBJWPL0p1
+         zFrDYRON5oGTvBcakTPiah0WktIYsEi4xDGfbsFykYVJxFYgrONB+nuM3MwXQlIzDOPa
+         ZUQvVcOqIEw8VnKPQxd4DXJcndL4n1Tlj0bWDHOsJJ2kgoNj0pjlyJKwjLcXdVCfVLXX
+         6o4fHsqbpfuy0++ZoE8RdZ9ppiWaTGL3amjYvYPTvPpqV8zLuURxKXwpRwm3gnn6OkQY
+         4aaw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cPBWtsg+36gllYWhNGP3v3p3CvhW7bWaWVSWgF9mrKc=;
-        b=J48+zXYS+Vv1s+9KnG1Pt08KnZtRHF90nsoQ3zXav2hSWUhFweZ54MdrXbzjidII8d
-         KvcHzl0fzo/pdsgiBuN5EVSmCF+O/UVB5Y06ijLSYk+JzXBTD/I8FJ6EtIO9/4sO23G+
-         ngdsiTBM2xOvAKNNBB6RSxNMLYVALbDMnWNsicC0l0xBObc/XQcUI6QxTsXQjgzptjgC
-         iSiyJDbPQmnopSz+4J2CUIGeSF0GS236EfEYpdwYMLl0UqxxpUS6EXf09X8UG4m4HH5g
-         Yivd/X2bvUqSbtWx+NpJ/JU42MSeR/JilV5pDfzHk8d6rH6/l2U2DywxpH+h6tP8Hli1
-         8QpA==
-X-Gm-Message-State: APjAAAUAEcoP5saJWL6MkYxzUluCQGRsrES7af6qIYm6B2d6lGXERh+G
-        uBGBya5paVzKtuuEGjXTPxQ=
-X-Google-Smtp-Source: APXvYqyVJpYedEhCVGfQDRJkwoEmOP/UZrHSXDpwGKD2W+pu/SWPaN7mVqYcZCGr5xhYwbse3NgieQ==
-X-Received: by 2002:a63:1659:: with SMTP id 25mr34310109pgw.275.1554825430989;
-        Tue, 09 Apr 2019 08:57:10 -0700 (PDT)
+        bh=70bPnOCiyT/McnTHJ3/ThQzEgD9Y96j/IQ+8yT0RXAA=;
+        b=LGNZENurRTSx2kmUK1cs3nUXOpmL3eTosmC3MY0LsyJ+vJODxlpL+FR9cxR79Z7RNK
+         G0BuoqHtIVxGI8xDESMtyUpgu37ltwQpPmrlfxjcZ0xcwSzzoktY7735+x0d07IvO2RL
+         fIEO9JsZcp1+4lnxmzKdp4uNNcNMoAvXKXrAlqmhU01cdQxKHrazw2LEpPqxmdt9F4ar
+         5E6auyG1pMzJlvEAGiP0in4eG3y4Hqadg9CHia6AyCr81vwaghoRAlrpqtsJpEJ1xdgB
+         vdFLszFVm1OCQcwgjGZn6+tmsR7LgFpb8ct2PqALcHnGsOzRIV1rNPhl28+5uIr4kZ7q
+         UDZQ==
+X-Gm-Message-State: APjAAAX8LErFaksxtg7wu7cfSzLWwvDjT04q/J/2xpRDv8+eSvd/doHE
+        9UaUJmMqLcuPNtt4EZS4L4A=
+X-Google-Smtp-Source: APXvYqxgscPMjcN8Wqt3u/bC0HtMPqhOVDlke3DBjdczX6Y9h2Z6lbf4gmh5P7SCXfvlQo3A332vFA==
+X-Received: by 2002:a62:7648:: with SMTP id r69mr18322984pfc.114.1554825446239;
+        Tue, 09 Apr 2019 08:57:26 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.57.07
+        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.57.23
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Apr 2019 08:57:10 -0700 (PDT)
+        Tue, 09 Apr 2019 08:57:25 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v3 08/12] Documentation: PCI: convert pcieaer-howto.txt to reST
-Date:   Tue,  9 Apr 2019 23:56:22 +0800
-Message-Id: <20190409155626.6049-9-changbin.du@gmail.com>
+Subject: [PATCH v3 12/12] Documentation: PCI: convert endpoint/pci-test-howto.txt to reST
+Date:   Tue,  9 Apr 2019 23:56:26 +0800
+Message-Id: <20190409155626.6049-13-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190409155626.6049-1-changbin.du@gmail.com>
 References: <20190409155626.6049-1-changbin.du@gmail.com>
@@ -79,272 +79,197 @@ add it to Sphinx TOC tree. No essential content change.
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- Documentation/PCI/index.rst                   |   1 +
- .../{pcieaer-howto.txt => pcieaer-howto.rst}  | 110 ++++++++++++------
- 2 files changed, 74 insertions(+), 37 deletions(-)
- rename Documentation/PCI/{pcieaer-howto.txt => pcieaer-howto.rst} (81%)
+ Documentation/PCI/endpoint/index.rst          |  1 +
+ ...{pci-test-howto.txt => pci-test-howto.rst} | 81 +++++++++++++------
+ 2 files changed, 56 insertions(+), 26 deletions(-)
+ rename Documentation/PCI/endpoint/{pci-test-howto.txt => pci-test-howto.rst} (78%)
 
-diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index 5ee4dba07116..86c76c22810b 100644
---- a/Documentation/PCI/index.rst
-+++ b/Documentation/PCI/index.rst
-@@ -14,3 +14,4 @@ Linux PCI Bus Subsystem
-    MSI-HOWTO
-    acpi-info
-    pci-error-recovery
-+   pcieaer-howto
-diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.rst
-similarity index 81%
-rename from Documentation/PCI/pcieaer-howto.txt
-rename to Documentation/PCI/pcieaer-howto.rst
-index 48ce7903e3c6..67f77ff76865 100644
---- a/Documentation/PCI/pcieaer-howto.txt
-+++ b/Documentation/PCI/pcieaer-howto.rst
-@@ -1,21 +1,29 @@
--   The PCI Express Advanced Error Reporting Driver Guide HOWTO
--		T. Long Nguyen	<tom.l.nguyen@intel.com>
--		Yanmin Zhang	<yanmin.zhang@intel.com>
--				07/29/2006
+diff --git a/Documentation/PCI/endpoint/index.rst b/Documentation/PCI/endpoint/index.rst
+index b680a3fc4fec..d114ea74b444 100644
+--- a/Documentation/PCI/endpoint/index.rst
++++ b/Documentation/PCI/endpoint/index.rst
+@@ -10,3 +10,4 @@ PCI Endpoint Framework
+    pci-endpoint
+    pci-endpoint-cfs
+    pci-test-function
++   pci-test-howto
+diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.rst
+similarity index 78%
+rename from Documentation/PCI/endpoint/pci-test-howto.txt
+rename to Documentation/PCI/endpoint/pci-test-howto.rst
+index 040479f437a5..909f770a07d6 100644
+--- a/Documentation/PCI/endpoint/pci-test-howto.txt
++++ b/Documentation/PCI/endpoint/pci-test-howto.rst
+@@ -1,38 +1,51 @@
+-			    PCI TEST USERGUIDE
+-		    Kishon Vijay Abraham I <kishon@ti.com>
 +.. SPDX-License-Identifier: GPL-2.0
-+.. include:: <isonum.txt>
- 
-+===========================================================
-+The PCI Express Advanced Error Reporting Driver Guide HOWTO
-+===========================================================
- 
--1. Overview
-+:Authors: - T. Long Nguyen <tom.l.nguyen@intel.com>
-+          - Yanmin Zhang <yanmin.zhang@intel.com>
- 
--1.1 About this guide
-+:Copyright: |copy| 2006 Intel Corporation
 +
-+Overview
-+===========
++===================
++PCI Test User Guide
++===================
 +
-+About this guide
-+----------------
++:Author: Kishon Vijay Abraham I <kishon@ti.com>
  
- This guide describes the basics of the PCI Express Advanced Error
- Reporting (AER) driver and provides information on how to use it, as
- well as how to enable the drivers of endpoint devices to conform with
- PCI Express AER driver.
+ This document is a guide to help users use pci-epf-test function driver
+ and pci_endpoint_test host driver for testing PCI. The list of steps to
+ be followed in the host side and EP side is given below.
  
--1.2 Copyright (C) Intel Corporation 2006.
- 
--1.3 What is the PCI Express AER Driver?
-+What is the PCI Express AER Driver?
-+-----------------------------------
- 
- PCI Express error signaling can occur on the PCI Express link itself
- or on behalf of transactions initiated on the link. PCI Express
-@@ -30,17 +38,19 @@ The PCI Express AER driver provides the infrastructure to support PCI
- Express Advanced Error Reporting capability. The PCI Express AER
- driver provides three basic functions:
- 
---	Gathers the comprehensive error information if errors occurred.
---	Reports error to the users.
---	Performs error recovery actions.
-+  - Gathers the comprehensive error information if errors occurred.
-+  - Reports error to the users.
-+  - Performs error recovery actions.
- 
- AER driver only attaches root ports which support PCI-Express AER
- capability.
- 
- 
--2. User Guide
-+User Guide
-+==========
- 
--2.1 Include the PCI Express AER Root Driver into the Linux Kernel
-+Include the PCI Express AER Root Driver into the Linux Kernel
-+-------------------------------------------------------------
- 
- The PCI Express AER Root driver is a Root Port service driver attached
- to the PCI Express Port Bus driver. If a user wants to use it, the driver
-@@ -48,7 +58,8 @@ has to be compiled. Option CONFIG_PCIEAER supports this capability. It
- depends on CONFIG_PCIEPORTBUS, so pls. set CONFIG_PCIEPORTBUS=y and
- CONFIG_PCIEAER = y.
- 
--2.2 Load PCI Express AER Root Driver
-+Load PCI Express AER Root Driver
-+--------------------------------
- 
- Some systems have AER support in firmware. Enabling Linux AER support at
- the same time the firmware handles AER may result in unpredictable
-@@ -56,30 +67,34 @@ behavior. Therefore, Linux does not handle AER events unless the firmware
- grants AER control to the OS via the ACPI _OSC method. See the PCI FW 3.0
- Specification for details regarding _OSC usage.
- 
--2.3 AER error output
-+AER error output
-+----------------
- 
- When a PCIe AER error is captured, an error message will be output to
- console. If it's a correctable error, it is output as a warning.
- Otherwise, it is printed as an error. So users could choose different
- log level to filter out correctable error messages.
- 
--Below shows an example:
--0000:50:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id=0500(Requester ID)
--0000:50:00.0:   device [8086:0329] error status/mask=00100000/00000000
--0000:50:00.0:    [20] Unsupported Request    (First)
--0000:50:00.0:   TLP Header: 04000001 00200a03 05010000 00050100
-+Below shows an example::
-+
-+  0000:50:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id=0500(Requester ID)
-+  0000:50:00.0:   device [8086:0329] error status/mask=00100000/00000000
-+  0000:50:00.0:    [20] Unsupported Request    (First)
-+  0000:50:00.0:   TLP Header: 04000001 00200a03 05010000 00050100
- 
- In the example, 'Requester ID' means the ID of the device who sends
- the error message to root port. Pls. refer to pci express specs for
- other fields.
- 
--2.4 AER Statistics / Counters
-+AER Statistics / Counters
-+-------------------------
- 
- When PCIe AER errors are captured, the counters / statistics are also exposed
- in the form of sysfs attributes which are documented at
- Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
- 
--3. Developer Guide
-+Developer Guide
+-1. Endpoint Device
++Endpoint Device
 +===============
  
- To enable AER aware support requires a software driver to configure
- the AER capability structure within its device and to provide callbacks.
-@@ -120,7 +135,8 @@ hierarchy and links. These errors do not include any device specific
- errors because device specific errors will still get sent directly to
- the device driver.
+-1.1 Endpoint Controller Devices
++Endpoint Controller Devices
++---------------------------
  
--3.1 Configure the AER capability structure
-+Configure the AER capability structure
-+--------------------------------------
+-To find the list of endpoint controller devices in the system:
++To find the list of endpoint controller devices in the system::
  
- AER aware drivers of PCI Express component need change the device
- control registers to enable AER. They also could change AER registers,
-@@ -128,9 +144,11 @@ including mask and severity registers. Helper function
- pci_enable_pcie_error_reporting could be used to enable AER. See
- section 3.3.
+ 	# ls /sys/class/pci_epc/
+ 	  51000000.pcie_ep
  
--3.2. Provide callbacks
-+Provide callbacks
-+-----------------
+-If PCI_ENDPOINT_CONFIGFS is enabled
++If PCI_ENDPOINT_CONFIGFS is enabled::
++
+ 	# ls /sys/kernel/config/pci_ep/controllers
+ 	  51000000.pcie_ep
  
--3.2.1 callback reset_link to reset pci express link
-+callback reset_link to reset pci express link
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-1.2 Endpoint Function Drivers
  
- This callback is used to reset the pci express physical link when a
- fatal error happens. The root port aer service driver provides a
-@@ -140,13 +158,15 @@ upstream ports should provide their own reset_link functions.
+-To find the list of endpoint function drivers in the system:
++Endpoint Function Drivers
++-------------------------
++
++To find the list of endpoint function drivers in the system::
  
- In struct pcie_port_service_driver, a new pointer, reset_link, is
- added.
+ 	# ls /sys/bus/pci-epf/drivers
+ 	  pci_epf_test
+ 
+-If PCI_ENDPOINT_CONFIGFS is enabled
++If PCI_ENDPOINT_CONFIGFS is enabled::
++
+ 	# ls /sys/kernel/config/pci_ep/functions
+ 	  pci_epf_test
+ 
+-1.3 Creating pci-epf-test Device
++
++Creating pci-epf-test Device
++----------------------------
+ 
+ PCI endpoint function device can be created using the configfs. To create
+-pci-epf-test device, the following commands can be used
++pci-epf-test device, the following commands can be used::
+ 
+ 	# mount -t configfs none /sys/kernel/config
+ 	# cd /sys/kernel/config/pci_ep/
+@@ -42,7 +55,7 @@ The "mkdir func1" above creates the pci-epf-test function device that will
+ be probed by pci_epf_test driver.
+ 
+ The PCI endpoint framework populates the directory with the following
+-configurable fields.
++configurable fields::
+ 
+ 	# ls functions/pci_epf_test/func1
+ 	  baseclass_code	interrupt_pin	progif_code	subsys_id
+@@ -51,67 +64,83 @@ configurable fields.
+ 
+ The PCI endpoint function driver populates these entries with default values
+ when the device is bound to the driver. The pci-epf-test driver populates
+-vendorid with 0xffff and interrupt_pin with 0x0001
++vendorid with 0xffff and interrupt_pin with 0x0001::
+ 
+ 	# cat functions/pci_epf_test/func1/vendorid
+ 	  0xffff
+ 	# cat functions/pci_epf_test/func1/interrupt_pin
+ 	  0x0001
+ 
+-1.4 Configuring pci-epf-test Device
++
++Configuring pci-epf-test Device
++-------------------------------
+ 
+ The user can configure the pci-epf-test device using configfs entry. In order
+ to change the vendorid and the number of MSI interrupts used by the function
+-device, the following commands can be used.
++device, the following commands can be used::
+ 
+ 	# echo 0x104c > functions/pci_epf_test/func1/vendorid
+ 	# echo 0xb500 > functions/pci_epf_test/func1/deviceid
+ 	# echo 16 > functions/pci_epf_test/func1/msi_interrupts
+ 	# echo 8 > functions/pci_epf_test/func1/msix_interrupts
+ 
+-1.5 Binding pci-epf-test Device to EP Controller
++
++Binding pci-epf-test Device to EP Controller
++--------------------------------------------
+ 
+ In order for the endpoint function device to be useful, it has to be bound to
+ a PCI endpoint controller driver. Use the configfs to bind the function
+-device to one of the controller driver present in the system.
++device to one of the controller driver present in the system::
+ 
+ 	# ln -s functions/pci_epf_test/func1 controllers/51000000.pcie_ep/
+ 
+ Once the above step is completed, the PCI endpoint is ready to establish a link
+ with the host.
+ 
+-1.6 Start the Link
++
++Start the Link
++--------------
+ 
+ In order for the endpoint device to establish a link with the host, the _start_
+-field should be populated with '1'.
++field should be populated with '1'::
+ 
+ 	# echo 1 > controllers/51000000.pcie_ep/start
+ 
+-2. RootComplex Device
+ 
+-2.1 lspci Output
++RootComplex Device
++==================
++
++lspci Output
++------------
+ 
+-Note that the devices listed here correspond to the value populated in 1.4 above
++Note that the devices listed here correspond to the value populated in 1.4
++above::
+ 
+ 	00:00.0 PCI bridge: Texas Instruments Device 8888 (rev 01)
+ 	01:00.0 Unassigned class [ff00]: Texas Instruments Device b500
+ 
+-2.2 Using Endpoint Test function Device
++
++Using Endpoint Test function Device
++-----------------------------------
+ 
+ pcitest.sh added in tools/pci/ can be used to run all the default PCI endpoint
+-tests. To compile this tool the following commands should be used:
++tests. To compile this tool the following commands should be used::
+ 
+ 	# cd <kernel-dir>
+ 	# make -C tools/pci
+ 
+-or if you desire to compile and install in your system:
++or if you desire to compile and install in your system::
+ 
+ 	# cd <kernel-dir>
+ 	# make -C tools/pci install
+ 
+ The tool and script will be located in <rootfs>/usr/bin/
+ 
+-2.2.1 pcitest.sh Output
++
++pcitest.sh Output
++~~~~~~~~~~~~~~~~~
 +::
- 
--pci_ers_result_t (*reset_link) (struct pci_dev *dev);
-+	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
- 
- Section 3.2.2.2 provides more detailed info on when to call
- reset_link.
- 
--3.2.2 PCI error-recovery callbacks
-+PCI error-recovery callbacks
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
- The PCI Express AER Root driver uses error callbacks to coordinate
- with downstream device drivers associated with a hierarchy in question
-@@ -161,7 +181,8 @@ definitions of the callbacks.
- 
- Below sections specify when to call the error callback functions.
- 
--3.2.2.1 Correctable errors
-+Correctable errors
-+~~~~~~~~~~~~~~~~~~
- 
- Correctable errors pose no impacts on the functionality of
- the interface. The PCI Express protocol can recover without any
-@@ -169,13 +190,16 @@ software intervention or any loss of data. These errors do not
- require any recovery actions. The AER driver clears the device's
- correctable error status register accordingly and logs these errors.
- 
--3.2.2.2 Non-correctable (non-fatal and fatal) errors
-+Non-correctable (non-fatal and fatal) errors
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
- If an error message indicates a non-fatal error, performing link reset
- at upstream is not required. The AER driver calls error_detected(dev,
- pci_channel_io_normal) to all drivers associated within a hierarchy in
--question. for example,
--EndPoint<==>DownstreamPort B<==>UpstreamPort A<==>RootPort.
-+question. for example::
 +
-+  EndPoint<==>DownstreamPort B<==>UpstreamPort A<==>RootPort
-+
- If Upstream port A captures an AER error, the hierarchy consists of
- Downstream port B and EndPoint.
+ 	# pcitest.sh
+ 	BAR tests
  
-@@ -199,23 +223,33 @@ function. If error_detected returns PCI_ERS_RESULT_CAN_RECOVER and
- reset_link returns PCI_ERS_RESULT_RECOVERED, the error handling goes
- to mmio_enabled.
- 
--3.3 helper functions
-+helper functions
-+----------------
-+::
-+
-+  int pci_enable_pcie_error_reporting(struct pci_dev *dev);
- 
--3.3.1 int pci_enable_pcie_error_reporting(struct pci_dev *dev);
- pci_enable_pcie_error_reporting enables the device to send error
- messages to root port when an error is detected. Note that devices
- don't enable the error reporting by default, so device drivers need
- call this function to enable it.
- 
--3.3.2 int pci_disable_pcie_error_reporting(struct pci_dev *dev);
-+::
-+
-+  int pci_disable_pcie_error_reporting(struct pci_dev *dev);
-+
- pci_disable_pcie_error_reporting disables the device to send error
- messages to root port when an error is detected.
- 
--3.3.3 int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
-+::
-+
-+  int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);`
-+
- pci_cleanup_aer_uncorrect_error_status cleanups the uncorrectable
- error status register.
- 
--3.4 Frequent Asked Questions
-+Frequent Asked Questions
-+------------------------
- 
- Q: What happens if a PCI Express device driver does not provide an
- error recovery handler (pci_driver->err_handler is equal to NULL)?
-@@ -245,7 +279,8 @@ A: It could call the helper functions to enable AER in devices and
- cleanup uncorrectable status register. Pls. refer to section 3.3.
- 
- 
--4. Software error injection
-+Software error injection
-+========================
- 
- Debugging PCIe AER error recovery code is quite difficult because it
- is hard to trigger real hardware errors. Software based error
-@@ -261,6 +296,7 @@ After reboot with new kernel or insert the module, a device file named
- 
- Then, you need a user space tool named aer-inject, which can be gotten
- from:
-+
-     https://git.kernel.org/cgit/linux/kernel/git/gong.chen/aer-inject.git/
- 
- More information about aer-inject can be found in the document comes
 -- 
 2.20.1
 
