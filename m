@@ -2,67 +2,67 @@ Return-Path: <SRS0=JnZd=SL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7021AC282DA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B37C282CE
 	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B5D0217F4
+	by mail.kernel.org (Postfix) with ESMTP id 99FC12084F
 	for <linux-pci@archiver.kernel.org>; Tue,  9 Apr 2019 15:57:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kvCuBpQa"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p8+h6+MD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbfDIP5J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Apr 2019 11:57:09 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:43991 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726494AbfDIP5I (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:08 -0400
-Received: by mail-pg1-f193.google.com with SMTP id z9so6608416pgu.10;
-        Tue, 09 Apr 2019 08:57:07 -0700 (PDT)
+        id S1726884AbfDIP5O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Apr 2019 11:57:14 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:45266 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726494AbfDIP5M (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Apr 2019 11:57:12 -0400
+Received: by mail-pf1-f193.google.com with SMTP id e24so9940288pfi.12;
+        Tue, 09 Apr 2019 08:57:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=pdmZLVbtP1zgMYnPoSBcK8KK6r5w23riajsbmPc+EHM=;
-        b=kvCuBpQaa5Rq7FizZeejAXRVqgtdWslmF8/sOgXk0K8B7aJI4CmVBL6gOPkGP2UqC8
-         P2Lo5A+JUGd98LGu0THD7aDhBZqgSDMnYu4ZE2RA34BISLSDOTcIqnRjuYeYfxJbfGM5
-         IPi49kcoCf12kaZVjlxLkfU9TXVZx/CybYq4+4Nr7GefoGsPRDpNlSqibNyW/Ue1gXn1
-         1TlUP1kb6Lld1ouPf5eByTJ6P62N/oZE5XRg+vvPAWK4jnV4ZXP6UoZC+TAzltZSu3yc
-         /EQ3TVqzvtos0wqfRbsmmWCMjtA5njUZL9nbTmtBNi3KCc41gJYOxBO3QkZDdTYlB3Xw
-         aukQ==
+        bh=cPBWtsg+36gllYWhNGP3v3p3CvhW7bWaWVSWgF9mrKc=;
+        b=p8+h6+MDRa64rCbTqQaAXVG8oZLg3L1zR+E9r6yNKrz+22e9FdwYkfGccMywZTpBKU
+         E/489sLUIA9sP1rZ+Sr8jof9uhBZ4Dt2UAW3RW+OlLeVC7s+Ia9QlYAPdUSI5asfYKQX
+         1Om+5DxtoOJKSBqTSw3zgyFMknkNBRRCTcmsPhBrzXh1jjyDV2HpOgIbrzmfcW0WaQoQ
+         DxtaOyE/sZAIYjAvRLefHdsAUQrPUMyXyUys70JMB/bRJ/p8wOFlNeon7bzQxSkci9RL
+         7s0KZ2I8L6AXa9+sym5J2XhZaYwXYS+LfUP3QL06Ov0Tuudf3KVOuZ7Va3Fpr1JMOX6O
+         m1gQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=pdmZLVbtP1zgMYnPoSBcK8KK6r5w23riajsbmPc+EHM=;
-        b=pR8elZT7zBlyowy5V7LBaIw/NuxKkMFx+xq0cX9ha2I2TtdhAFFUNvlgyF5OX/2gqM
-         jjU0G4IeiN4LIGq8xCTMMgLK1HaCyV5PICFCE1l0L+0CmrwHFb9gFVEh445k19mnVL2I
-         3mLa4OeyjyvZRIvg/k5oIyJ1faRIIx7+u2iKyAADsEChMHKbg0uYlGNd5hgAt/14sTgQ
-         uJvdLbipIVNy4Mme7QnhyXgOHbV3Idkw62ocOKhMMHAzT2tlTqGOKPkPiB0NcrEW2Gq8
-         9ESEcXD2ekYSvn2rRFZ1Isd1TSjj09D8MoUHl27HyOryrJmAADaeXlzdpwKky5hpPBeQ
-         3gJg==
-X-Gm-Message-State: APjAAAXy7g8RXWHC50w2cxnJcZVFvCiejaIUrb93o3wKyFjigbpIqt62
-        ChIPekQ1XdJBRs6rlybEy2g=
-X-Google-Smtp-Source: APXvYqxxNlvmEMq+7GsFysvXjBncgyj/aKRivrVYUPZSOCP7p0E4nLWJea4cRaH1F766xa3DurukWQ==
-X-Received: by 2002:a63:ef09:: with SMTP id u9mr35577678pgh.126.1554825427014;
-        Tue, 09 Apr 2019 08:57:07 -0700 (PDT)
+        bh=cPBWtsg+36gllYWhNGP3v3p3CvhW7bWaWVSWgF9mrKc=;
+        b=J48+zXYS+Vv1s+9KnG1Pt08KnZtRHF90nsoQ3zXav2hSWUhFweZ54MdrXbzjidII8d
+         KvcHzl0fzo/pdsgiBuN5EVSmCF+O/UVB5Y06ijLSYk+JzXBTD/I8FJ6EtIO9/4sO23G+
+         ngdsiTBM2xOvAKNNBB6RSxNMLYVALbDMnWNsicC0l0xBObc/XQcUI6QxTsXQjgzptjgC
+         iSiyJDbPQmnopSz+4J2CUIGeSF0GS236EfEYpdwYMLl0UqxxpUS6EXf09X8UG4m4HH5g
+         Yivd/X2bvUqSbtWx+NpJ/JU42MSeR/JilV5pDfzHk8d6rH6/l2U2DywxpH+h6tP8Hli1
+         8QpA==
+X-Gm-Message-State: APjAAAUAEcoP5saJWL6MkYxzUluCQGRsrES7af6qIYm6B2d6lGXERh+G
+        uBGBya5paVzKtuuEGjXTPxQ=
+X-Google-Smtp-Source: APXvYqyVJpYedEhCVGfQDRJkwoEmOP/UZrHSXDpwGKD2W+pu/SWPaN7mVqYcZCGr5xhYwbse3NgieQ==
+X-Received: by 2002:a63:1659:: with SMTP id 25mr34310109pgw.275.1554825430989;
+        Tue, 09 Apr 2019 08:57:10 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.57.03
+        by smtp.gmail.com with ESMTPSA id b72sm70383560pga.86.2019.04.09.08.57.07
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Apr 2019 08:57:06 -0700 (PDT)
+        Tue, 09 Apr 2019 08:57:10 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v3 07/12] Documentation: PCI: convert pci-error-recovery.txt to reST
-Date:   Tue,  9 Apr 2019 23:56:21 +0800
-Message-Id: <20190409155626.6049-8-changbin.du@gmail.com>
+Subject: [PATCH v3 08/12] Documentation: PCI: convert pcieaer-howto.txt to reST
+Date:   Tue,  9 Apr 2019 23:56:22 +0800
+Message-Id: <20190409155626.6049-9-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190409155626.6049-1-changbin.du@gmail.com>
 References: <20190409155626.6049-1-changbin.du@gmail.com>
@@ -80,282 +80,271 @@ Signed-off-by: Changbin Du <changbin.du@gmail.com>
 Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
  Documentation/PCI/index.rst                   |   1 +
- ...or-recovery.txt => pci-error-recovery.rst} | 178 +++++++++---------
- MAINTAINERS                                   |   2 +-
- 3 files changed, 94 insertions(+), 87 deletions(-)
- rename Documentation/PCI/{pci-error-recovery.txt => pci-error-recovery.rst} (80%)
+ .../{pcieaer-howto.txt => pcieaer-howto.rst}  | 110 ++++++++++++------
+ 2 files changed, 74 insertions(+), 37 deletions(-)
+ rename Documentation/PCI/{pcieaer-howto.txt => pcieaer-howto.rst} (81%)
 
 diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index c877a369481d..5ee4dba07116 100644
+index 5ee4dba07116..86c76c22810b 100644
 --- a/Documentation/PCI/index.rst
 +++ b/Documentation/PCI/index.rst
-@@ -13,3 +13,4 @@ Linux PCI Bus Subsystem
-    pci-iov-howto
+@@ -14,3 +14,4 @@ Linux PCI Bus Subsystem
     MSI-HOWTO
     acpi-info
-+   pci-error-recovery
-diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.rst
-similarity index 80%
-rename from Documentation/PCI/pci-error-recovery.txt
-rename to Documentation/PCI/pci-error-recovery.rst
-index 0b6bb3ef449e..533ec4035bf5 100644
---- a/Documentation/PCI/pci-error-recovery.txt
-+++ b/Documentation/PCI/pci-error-recovery.rst
-@@ -1,12 +1,13 @@
+    pci-error-recovery
++   pcieaer-howto
+diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.rst
+similarity index 81%
+rename from Documentation/PCI/pcieaer-howto.txt
+rename to Documentation/PCI/pcieaer-howto.rst
+index 48ce7903e3c6..67f77ff76865 100644
+--- a/Documentation/PCI/pcieaer-howto.txt
++++ b/Documentation/PCI/pcieaer-howto.rst
+@@ -1,21 +1,29 @@
+-   The PCI Express Advanced Error Reporting Driver Guide HOWTO
+-		T. Long Nguyen	<tom.l.nguyen@intel.com>
+-		Yanmin Zhang	<yanmin.zhang@intel.com>
+-				07/29/2006
 +.. SPDX-License-Identifier: GPL-2.0
++.. include:: <isonum.txt>
  
--                       PCI Error Recovery
--                       ------------------
--                        February 2, 2006
-+==================
-+PCI Error Recovery
-+==================
++===========================================================
++The PCI Express Advanced Error Reporting Driver Guide HOWTO
++===========================================================
  
--                 Current document maintainer:
--             Linas Vepstas <linasvepstas@gmail.com>
--          updated by Richard Lary <rlary@us.ibm.com>
--       and Mike Mason <mmlnx@us.ibm.com> on 27-Jul-2009
+-1. Overview
++:Authors: - T. Long Nguyen <tom.l.nguyen@intel.com>
++          - Yanmin Zhang <yanmin.zhang@intel.com>
+ 
+-1.1 About this guide
++:Copyright: |copy| 2006 Intel Corporation
 +
-+:Authors: - Linas Vepstas <linasvepstas@gmail.com>
-+          - Richard Lary <rlary@us.ibm.com>
-+          - Mike Mason <mmlnx@us.ibm.com>
++Overview
++===========
++
++About this guide
++----------------
+ 
+ This guide describes the basics of the PCI Express Advanced Error
+ Reporting (AER) driver and provides information on how to use it, as
+ well as how to enable the drivers of endpoint devices to conform with
+ PCI Express AER driver.
+ 
+-1.2 Copyright (C) Intel Corporation 2006.
+ 
+-1.3 What is the PCI Express AER Driver?
++What is the PCI Express AER Driver?
++-----------------------------------
+ 
+ PCI Express error signaling can occur on the PCI Express link itself
+ or on behalf of transactions initiated on the link. PCI Express
+@@ -30,17 +38,19 @@ The PCI Express AER driver provides the infrastructure to support PCI
+ Express Advanced Error Reporting capability. The PCI Express AER
+ driver provides three basic functions:
+ 
+--	Gathers the comprehensive error information if errors occurred.
+--	Reports error to the users.
+--	Performs error recovery actions.
++  - Gathers the comprehensive error information if errors occurred.
++  - Reports error to the users.
++  - Performs error recovery actions.
+ 
+ AER driver only attaches root ports which support PCI-Express AER
+ capability.
  
  
- Many PCI bus controllers are able to detect a variety of hardware
-@@ -63,7 +64,8 @@ mechanisms for dealing with SCSI bus errors and SCSI bus resets.
+-2. User Guide
++User Guide
++==========
  
+-2.1 Include the PCI Express AER Root Driver into the Linux Kernel
++Include the PCI Express AER Root Driver into the Linux Kernel
++-------------------------------------------------------------
  
- Detailed Design
-----------------
+ The PCI Express AER Root driver is a Root Port service driver attached
+ to the PCI Express Port Bus driver. If a user wants to use it, the driver
+@@ -48,7 +58,8 @@ has to be compiled. Option CONFIG_PCIEAER supports this capability. It
+ depends on CONFIG_PCIEPORTBUS, so pls. set CONFIG_PCIEPORTBUS=y and
+ CONFIG_PCIEAER = y.
+ 
+-2.2 Load PCI Express AER Root Driver
++Load PCI Express AER Root Driver
++--------------------------------
+ 
+ Some systems have AER support in firmware. Enabling Linux AER support at
+ the same time the firmware handles AER may result in unpredictable
+@@ -56,30 +67,34 @@ behavior. Therefore, Linux does not handle AER events unless the firmware
+ grants AER control to the OS via the ACPI _OSC method. See the PCI FW 3.0
+ Specification for details regarding _OSC usage.
+ 
+-2.3 AER error output
++AER error output
++----------------
+ 
+ When a PCIe AER error is captured, an error message will be output to
+ console. If it's a correctable error, it is output as a warning.
+ Otherwise, it is printed as an error. So users could choose different
+ log level to filter out correctable error messages.
+ 
+-Below shows an example:
+-0000:50:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id=0500(Requester ID)
+-0000:50:00.0:   device [8086:0329] error status/mask=00100000/00000000
+-0000:50:00.0:    [20] Unsupported Request    (First)
+-0000:50:00.0:   TLP Header: 04000001 00200a03 05010000 00050100
++Below shows an example::
++
++  0000:50:00.0: PCIe Bus Error: severity=Uncorrected (Fatal), type=Transaction Layer, id=0500(Requester ID)
++  0000:50:00.0:   device [8086:0329] error status/mask=00100000/00000000
++  0000:50:00.0:    [20] Unsupported Request    (First)
++  0000:50:00.0:   TLP Header: 04000001 00200a03 05010000 00050100
+ 
+ In the example, 'Requester ID' means the ID of the device who sends
+ the error message to root port. Pls. refer to pci express specs for
+ other fields.
+ 
+-2.4 AER Statistics / Counters
++AER Statistics / Counters
++-------------------------
+ 
+ When PCIe AER errors are captured, the counters / statistics are also exposed
+ in the form of sysfs attributes which are documented at
+ Documentation/ABI/testing/sysfs-bus-pci-devices-aer_stats
+ 
+-3. Developer Guide
++Developer Guide
 +===============
+ 
+ To enable AER aware support requires a software driver to configure
+ the AER capability structure within its device and to provide callbacks.
+@@ -120,7 +135,8 @@ hierarchy and links. These errors do not include any device specific
+ errors because device specific errors will still get sent directly to
+ the device driver.
+ 
+-3.1 Configure the AER capability structure
++Configure the AER capability structure
++--------------------------------------
+ 
+ AER aware drivers of PCI Express component need change the device
+ control registers to enable AER. They also could change AER registers,
+@@ -128,9 +144,11 @@ including mask and severity registers. Helper function
+ pci_enable_pcie_error_reporting could be used to enable AER. See
+ section 3.3.
+ 
+-3.2. Provide callbacks
++Provide callbacks
++-----------------
+ 
+-3.2.1 callback reset_link to reset pci express link
++callback reset_link to reset pci express link
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ This callback is used to reset the pci express physical link when a
+ fatal error happens. The root port aer service driver provides a
+@@ -140,13 +158,15 @@ upstream ports should provide their own reset_link functions.
+ 
+ In struct pcie_port_service_driver, a new pointer, reset_link, is
+ added.
++::
+ 
+-pci_ers_result_t (*reset_link) (struct pci_dev *dev);
++	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
+ 
+ Section 3.2.2.2 provides more detailed info on when to call
+ reset_link.
+ 
+-3.2.2 PCI error-recovery callbacks
++PCI error-recovery callbacks
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ The PCI Express AER Root driver uses error callbacks to coordinate
+ with downstream device drivers associated with a hierarchy in question
+@@ -161,7 +181,8 @@ definitions of the callbacks.
+ 
+ Below sections specify when to call the error callback functions.
+ 
+-3.2.2.1 Correctable errors
++Correctable errors
++~~~~~~~~~~~~~~~~~~
+ 
+ Correctable errors pose no impacts on the functionality of
+ the interface. The PCI Express protocol can recover without any
+@@ -169,13 +190,16 @@ software intervention or any loss of data. These errors do not
+ require any recovery actions. The AER driver clears the device's
+ correctable error status register accordingly and logs these errors.
+ 
+-3.2.2.2 Non-correctable (non-fatal and fatal) errors
++Non-correctable (non-fatal and fatal) errors
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+ If an error message indicates a non-fatal error, performing link reset
+ at upstream is not required. The AER driver calls error_detected(dev,
+ pci_channel_io_normal) to all drivers associated within a hierarchy in
+-question. for example,
+-EndPoint<==>DownstreamPort B<==>UpstreamPort A<==>RootPort.
++question. for example::
 +
- Design and implementation details below, based on a chain of
- public email discussions with Ben Herrenschmidt, circa 5 April 2005.
- 
-@@ -73,30 +75,33 @@ pci_driver. A driver that fails to provide the structure is "non-aware",
- and the actual recovery steps taken are platform dependent.  The
- arch/powerpc implementation will simulate a PCI hotplug remove/add.
- 
--This structure has the form:
--struct pci_error_handlers
--{
--	int (*error_detected)(struct pci_dev *dev, enum pci_channel_state);
--	int (*mmio_enabled)(struct pci_dev *dev);
--	int (*slot_reset)(struct pci_dev *dev);
--	void (*resume)(struct pci_dev *dev);
--};
--
--The possible channel states are:
--enum pci_channel_state {
--	pci_channel_io_normal,  /* I/O channel is in normal state */
--	pci_channel_io_frozen,  /* I/O to channel is blocked */
--	pci_channel_io_perm_failure, /* PCI card is dead */
--};
--
--Possible return values are:
--enum pci_ers_result {
--	PCI_ERS_RESULT_NONE,        /* no result/none/not supported in device driver */
--	PCI_ERS_RESULT_CAN_RECOVER, /* Device driver can recover without slot reset */
--	PCI_ERS_RESULT_NEED_RESET,  /* Device driver wants slot to be reset. */
--	PCI_ERS_RESULT_DISCONNECT,  /* Device has completely failed, is unrecoverable */
--	PCI_ERS_RESULT_RECOVERED,   /* Device driver is fully recovered and operational */
--};
-+This structure has the form::
++  EndPoint<==>DownstreamPort B<==>UpstreamPort A<==>RootPort
 +
-+	struct pci_error_handlers
-+	{
-+		int (*error_detected)(struct pci_dev *dev, enum pci_channel_state);
-+		int (*mmio_enabled)(struct pci_dev *dev);
-+		int (*slot_reset)(struct pci_dev *dev);
-+		void (*resume)(struct pci_dev *dev);
-+	};
+ If Upstream port A captures an AER error, the hierarchy consists of
+ Downstream port B and EndPoint.
+ 
+@@ -199,23 +223,33 @@ function. If error_detected returns PCI_ERS_RESULT_CAN_RECOVER and
+ reset_link returns PCI_ERS_RESULT_RECOVERED, the error handling goes
+ to mmio_enabled.
+ 
+-3.3 helper functions
++helper functions
++----------------
++::
 +
-+The possible channel states are::
++  int pci_enable_pcie_error_reporting(struct pci_dev *dev);
+ 
+-3.3.1 int pci_enable_pcie_error_reporting(struct pci_dev *dev);
+ pci_enable_pcie_error_reporting enables the device to send error
+ messages to root port when an error is detected. Note that devices
+ don't enable the error reporting by default, so device drivers need
+ call this function to enable it.
+ 
+-3.3.2 int pci_disable_pcie_error_reporting(struct pci_dev *dev);
++::
 +
-+	enum pci_channel_state {
-+		pci_channel_io_normal,  /* I/O channel is in normal state */
-+		pci_channel_io_frozen,  /* I/O to channel is blocked */
-+		pci_channel_io_perm_failure, /* PCI card is dead */
-+	};
++  int pci_disable_pcie_error_reporting(struct pci_dev *dev);
 +
-+Possible return values are::
+ pci_disable_pcie_error_reporting disables the device to send error
+ messages to root port when an error is detected.
+ 
+-3.3.3 int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
++::
 +
-+	enum pci_ers_result {
-+		PCI_ERS_RESULT_NONE,        /* no result/none/not supported in device driver */
-+		PCI_ERS_RESULT_CAN_RECOVER, /* Device driver can recover without slot reset */
-+		PCI_ERS_RESULT_NEED_RESET,  /* Device driver wants slot to be reset. */
-+		PCI_ERS_RESULT_DISCONNECT,  /* Device has completely failed, is unrecoverable */
-+		PCI_ERS_RESULT_RECOVERED,   /* Device driver is fully recovered and operational */
-+	};
- 
- A driver does not have to implement all of these callbacks; however,
- if it implements any, it must implement error_detected(). If a callback
-@@ -134,16 +139,17 @@ shouldn't do any new IOs. Called in task context. This is sort of a
- 
- All drivers participating in this system must implement this call.
- The driver must return one of the following result codes:
--		- PCI_ERS_RESULT_CAN_RECOVER:
--		  Driver returns this if it thinks it might be able to recover
--		  the HW by just banging IOs or if it wants to be given
--		  a chance to extract some diagnostic information (see
--		  mmio_enable, below).
--		- PCI_ERS_RESULT_NEED_RESET:
--		  Driver returns this if it can't recover without a
--		  slot reset.
--		- PCI_ERS_RESULT_DISCONNECT:
--		  Driver returns this if it doesn't want to recover at all.
++  int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);`
 +
-+  - PCI_ERS_RESULT_CAN_RECOVER:
-+    Driver returns this if it thinks it might be able to recover
-+    the HW by just banging IOs or if it wants to be given
-+    a chance to extract some diagnostic information (see
-+    mmio_enable, below).
-+  - PCI_ERS_RESULT_NEED_RESET:
-+    Driver returns this if it can't recover without a
-+    slot reset.
-+  - PCI_ERS_RESULT_DISCONNECT:
-+    Driver returns this if it doesn't want to recover at all.
+ pci_cleanup_aer_uncorrect_error_status cleanups the uncorrectable
+ error status register.
  
- The next step taken will depend on the result codes returned by the
- drivers.
-@@ -177,7 +183,7 @@ is STEP 6 (Permanent Failure).
- >>> get the device working again.
+-3.4 Frequent Asked Questions
++Frequent Asked Questions
++------------------------
  
- STEP 2: MMIO Enabled
---------------------
-+--------------------
- The platform re-enables MMIO to the device (but typically not the
- DMA), and then calls the mmio_enabled() callback on all affected
- device drivers.
-@@ -203,23 +209,23 @@ instead will have gone directly to STEP 3 (Link Reset) or STEP 4 (Slot Reset)
- >>> into one of the next states, that is, link reset or slot reset.
+ Q: What happens if a PCI Express device driver does not provide an
+ error recovery handler (pci_driver->err_handler is equal to NULL)?
+@@ -245,7 +279,8 @@ A: It could call the helper functions to enable AER in devices and
+ cleanup uncorrectable status register. Pls. refer to section 3.3.
  
- The driver should return one of the following result codes:
--		- PCI_ERS_RESULT_RECOVERED
--		  Driver returns this if it thinks the device is fully
--		  functional and thinks it is ready to start
--		  normal driver operations again. There is no
--		  guarantee that the driver will actually be
--		  allowed to proceed, as another driver on the
--		  same segment might have failed and thus triggered a
--		  slot reset on platforms that support it.
--
--		- PCI_ERS_RESULT_NEED_RESET
--		  Driver returns this if it thinks the device is not
--		  recoverable in its current state and it needs a slot
--		  reset to proceed.
--
--		- PCI_ERS_RESULT_DISCONNECT
--		  Same as above. Total failure, no recovery even after
--		  reset driver dead. (To be defined more precisely)
-+  - PCI_ERS_RESULT_RECOVERED
-+    Driver returns this if it thinks the device is fully
-+    functional and thinks it is ready to start
-+    normal driver operations again. There is no
-+    guarantee that the driver will actually be
-+    allowed to proceed, as another driver on the
-+    same segment might have failed and thus triggered a
-+    slot reset on platforms that support it.
+ 
+-4. Software error injection
++Software error injection
++========================
+ 
+ Debugging PCIe AER error recovery code is quite difficult because it
+ is hard to trigger real hardware errors. Software based error
+@@ -261,6 +296,7 @@ After reboot with new kernel or insert the module, a device file named
+ 
+ Then, you need a user space tool named aer-inject, which can be gotten
+ from:
 +
-+  - PCI_ERS_RESULT_NEED_RESET
-+    Driver returns this if it thinks the device is not
-+    recoverable in its current state and it needs a slot
-+    reset to proceed.
-+
-+  - PCI_ERS_RESULT_DISCONNECT
-+    Same as above. Total failure, no recovery even after
-+    reset driver dead. (To be defined more precisely)
+     https://git.kernel.org/cgit/linux/kernel/git/gong.chen/aer-inject.git/
  
- The next step taken depends on the results returned by the drivers.
- If all drivers returned PCI_ERS_RESULT_RECOVERED, then the platform
-@@ -293,24 +299,24 @@ device will be considered "dead" in this case.
- Drivers for multi-function cards will need to coordinate among
- themselves as to which driver instance will perform any "one-shot"
- or global device initialization. For example, the Symbios sym53cxx2
--driver performs device init only from PCI function 0:
-+driver performs device init only from PCI function 0::
- 
--+       if (PCI_FUNC(pdev->devfn) == 0)
--+               sym_reset_scsi_bus(np, 0);
-+	+       if (PCI_FUNC(pdev->devfn) == 0)
-+	+               sym_reset_scsi_bus(np, 0);
- 
--	Result codes:
--		- PCI_ERS_RESULT_DISCONNECT
--		Same as above.
-+Result codes:
-+	- PCI_ERS_RESULT_DISCONNECT
-+	  Same as above.
- 
- Drivers for PCI Express cards that require a fundamental reset must
- set the needs_freset bit in the pci_dev structure in their probe function.
- For example, the QLogic qla2xxx driver sets the needs_freset bit for certain
--PCI card types:
-+PCI card types::
- 
--+	/* Set EEH reset type to fundamental if required by hba  */
--+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
--+		pdev->needs_freset = 1;
--+
-+	+	/* Set EEH reset type to fundamental if required by hba  */
-+	+	if (IS_QLA24XX(ha) || IS_QLA25XX(ha) || IS_QLA81XX(ha))
-+	+		pdev->needs_freset = 1;
-+	+
- 
- Platform proceeds either to STEP 5 (Resume Operations) or STEP 6 (Permanent
- Failure).
-@@ -370,23 +376,23 @@ The current policy is to turn this into a platform policy.
- That is, the recovery API only requires that:
- 
-  - There is no guarantee that interrupt delivery can proceed from any
--device on the segment starting from the error detection and until the
--slot_reset callback is called, at which point interrupts are expected
--to be fully operational.
-+   device on the segment starting from the error detection and until the
-+   slot_reset callback is called, at which point interrupts are expected
-+   to be fully operational.
- 
-  - There is no guarantee that interrupt delivery is stopped, that is,
--a driver that gets an interrupt after detecting an error, or that detects
--an error within the interrupt handler such that it prevents proper
--ack'ing of the interrupt (and thus removal of the source) should just
--return IRQ_NOTHANDLED. It's up to the platform to deal with that
--condition, typically by masking the IRQ source during the duration of
--the error handling. It is expected that the platform "knows" which
--interrupts are routed to error-management capable slots and can deal
--with temporarily disabling that IRQ number during error processing (this
--isn't terribly complex). That means some IRQ latency for other devices
--sharing the interrupt, but there is simply no other way. High end
--platforms aren't supposed to share interrupts between many devices
--anyway :)
-+   a driver that gets an interrupt after detecting an error, or that detects
-+   an error within the interrupt handler such that it prevents proper
-+   ack'ing of the interrupt (and thus removal of the source) should just
-+   return IRQ_NOTHANDLED. It's up to the platform to deal with that
-+   condition, typically by masking the IRQ source during the duration of
-+   the error handling. It is expected that the platform "knows" which
-+   interrupts are routed to error-management capable slots and can deal
-+   with temporarily disabling that IRQ number during error processing (this
-+   isn't terribly complex). That means some IRQ latency for other devices
-+   sharing the interrupt, but there is simply no other way. High end
-+   platforms aren't supposed to share interrupts between many devices
-+   anyway :)
- 
- >>> Implementation details for the powerpc platform are discussed in
- >>> the file Documentation/powerpc/eeh-pci-error-recovery.txt
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 27b0de13506c..b5075f234046 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -11966,7 +11966,7 @@ M:	Sam Bobroff <sbobroff@linux.ibm.com>
- M:	Oliver O'Halloran <oohall@gmail.com>
- L:	linuxppc-dev@lists.ozlabs.org
- S:	Supported
--F:	Documentation/PCI/pci-error-recovery.txt
-+F:	Documentation/PCI/pci-error-recovery.rst
- F:	drivers/pci/pcie/aer.c
- F:	drivers/pci/pcie/dpc.c
- F:	drivers/pci/pcie/err.c
+ More information about aer-inject can be found in the document comes
 -- 
 2.20.1
 
