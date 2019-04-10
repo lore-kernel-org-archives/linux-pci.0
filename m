@@ -2,661 +2,317 @@ Return-Path: <SRS0=u0zl=SM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 736E6C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 22:13:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B9EC10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 22:52:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 361E221741
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 22:13:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07DD120830
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 22:52:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1554936759;
+	bh=NgUY/kAl30XKCotoENqvRAbiGzMy6ElAApKHZkqCHAI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=zVrtVxRlvNaWrzyUFTPr+yyBh1XC6Mg1ouv9D3AOCmORkRfF1CZ0hrrYw4NZeSEcj
+	 YbKco9sbc2Fchn865unqgj5U9Wqd4P8LzxlYbMyGFdNzabAg7X3z0Mbj4Jm5M8GzvR
+	 kchg/vCL6fG0r22OuZFNUf5iAMHMGH8khKERPTPM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726690AbfDJWNc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Apr 2019 18:13:32 -0400
-Received: from mga17.intel.com ([192.55.52.151]:53146 "EHLO mga17.intel.com"
+        id S1726536AbfDJWwc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Apr 2019 18:52:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37940 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726612AbfDJWNb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Apr 2019 18:13:31 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Apr 2019 15:13:31 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,334,1549958400"; 
-   d="scan'208";a="335654041"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga006.fm.intel.com with ESMTP; 10 Apr 2019 15:13:24 -0700
-Received: from [10.54.74.33] (skuppusw-desk.jf.intel.com [10.54.74.33])
-        by linux.intel.com (Postfix) with ESMTP id 65A83580310;
-        Wed, 10 Apr 2019 15:13:24 -0700 (PDT)
-Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: Re: [PATCH v2 2/2] PCI/DPC: Add Error Disconnect Recover (EDR)
- support
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     rjw@rjwysocki.net, lenb@kernel.org, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, keith.busch@intel.com
-References: <cover.1553027719.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <4818f4dfa41bddc3968da4717c453897d4ad5717.1553027719.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <20190410184124.GF256045@google.com>
-From:   sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Organization: Intel
-Message-ID: <dc4e2bcf-44c9-1ffb-ab4f-75c04340b8dd@linux.intel.com>
-Date:   Wed, 10 Apr 2019 15:12:05 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726723AbfDJWwb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Apr 2019 18:52:31 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 94BAB20830;
+        Wed, 10 Apr 2019 22:52:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1554936749;
+        bh=NgUY/kAl30XKCotoENqvRAbiGzMy6ElAApKHZkqCHAI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=xTXrV1XIXsFJ9RNTITNwhgmv0Qxn4LqLJXlPACoCpHS3wGWATVwz0UW9ye8twDMzJ
+         XmMGV5SDNmVo2235+0lKQAYENLEbjTpMH2+Dbo84sQeBjMDCPYgwVW0h40k1P5/p79
+         L/qUxCFo/Vr0+gs1XJXIMPUMxhwVW9W/Z5q3TXs4=
+Date:   Wed, 10 Apr 2019 17:52:28 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+        "corbet@lwn.net" <corbet@lwn.net>
+Subject: Re: [PATCH v2 4/4] PCI: modify kernel parameters to differentiate
+ between MMIO and MMIO_PREF sizes
+Message-ID: <20190410225228.GM256045@google.com>
+References: <20190311162154.3852-1-nicholas.johnson-opensource@outlook.com.au>
+ <PS2P216MB0642F184D07467C1BA17064D80480@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-In-Reply-To: <20190410184124.GF256045@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <PS2P216MB0642F184D07467C1BA17064D80480@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi ,
+On Mon, Mar 11, 2019 at 04:23:55PM +0000, Nicholas Johnson wrote:
+> Add new kernel parameters:
+>         - hp_io_size=nn
+>         - hp_mmio_size=nnM
+>         - hp_mmio_pref_size=nnM
+> 
+> Depreciate old kernel parameters and print warning when used:
+>         - hpiosize=nn
+>         - hpmemsize=nnM
 
-On 4/10/19 11:41 AM, Bjorn Helgaas wrote:
-> On Tue, Mar 19, 2019 at 01:47:29PM -0700, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
->> From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
->>
->> As per PCI firmware specification v3.2 ECN
->> (https://members.pcisig.com/wg/PCI-SIG/document/12614), when firmware
->> owns Downstream Port Containment (DPC), its expected to use the "Error
->> Disconnect Recover" (EDR) notification to alert OSPM of a DPC event and
->> if OS supports EDR, its expected to handle the software state invalidation
->> and port recovery in OS and let firmware know the recovery status via _OST
->> ACPI call.
->>
->> Since EDR is a hybrid service, DPC service shall be enabled in OS even
->> if AER is not natively enabled in OS.
->>
->> Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
->> ---
->>   drivers/pci/pcie/Kconfig        |  10 +
->>   drivers/pci/pcie/dpc.c          | 326 ++++++++++++++++++++++++++++++--
-Thanks for the review comments.
-> I'll be looking for Keith's reviewed-by for this eventually.
->
-> It looks like this could be split into some smaller patches:
->
->    - Add dpc_dev.native_dpc (hopefully we can find a less confusing name)
->    - Convert dpc_handler() to dpc_handler() + dpc_process_error()
->    - Add EDR support
-Ok. I will split them in next patch set.
->
->>   drivers/pci/pcie/portdrv_core.c |   9 +-
->>   3 files changed, 329 insertions(+), 16 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
->> index 5cbdbca904ac..55f65d1cbc9e 100644
->> --- a/drivers/pci/pcie/Kconfig
->> +++ b/drivers/pci/pcie/Kconfig
->> @@ -142,3 +142,13 @@ config PCIE_PTM
->>   
->>   	  This is only useful if you have devices that support PTM, but it
->>   	  is safe to enable even if you don't.
->> +
->> +config PCIE_EDR
->> +	bool "PCI Express Error Disconnect Recover support"
->> +	default n
->> +	depends on PCIE_DPC && ACPI
->> +	help
->> +	  This options adds Error Disconnect Recover support as specified
->> +	  in PCI firmware specification v3.2 Downstream Port Containment
->> +	  Related Enhancements ECN. Enable this if you want to support hybrid
->> +	  DPC model which uses both firmware and OS to implement DPC.
->> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
->> index 7b77754a82de..bdf4ca8a0acb 100644
->> --- a/drivers/pci/pcie/dpc.c
->> +++ b/drivers/pci/pcie/dpc.c
->> @@ -11,6 +11,7 @@
->>   #include <linux/interrupt.h>
->>   #include <linux/init.h>
->>   #include <linux/pci.h>
->> +#include <linux/acpi.h>
->>   
->>   #include "portdrv.h"
->>   #include "../pci.h"
->> @@ -20,8 +21,23 @@ struct dpc_dev {
->>   	u16			cap_pos;
->>   	bool			rp_extensions;
->>   	u8			rp_log_size;
->> +	bool			native_dpc;
-> This is going to be way too confusing with a "native_dpc" in both the
-> struct pci_host_bridge and the struct dpc_dev.
-Any suggestions? what about native_mode ?
->
->> +	pci_ers_result_t	error_state;
->> +#ifdef CONFIG_ACPI
->> +	struct acpi_device	*adev;
->> +#endif
->>   };
->>   
->> +#ifdef CONFIG_ACPI
->> +
->> +#define EDR_PORT_ENABLE_DSM     0x0C
->> +#define EDR_PORT_LOCATE_DSM     0x0D
->> +
->> +static const guid_t pci_acpi_dsm_guid =
->> +		GUID_INIT(0xe5c937d0, 0x3553, 0x4d7a,
->> +			  0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d);
->> +#endif
->> +
->>   static const char * const rp_pio_error_string[] = {
->>   	"Configuration Request received UR Completion",	 /* Bit Position 0  */
->>   	"Configuration Request received CA Completion",	 /* Bit Position 1  */
->> @@ -67,6 +83,9 @@ void pci_save_dpc_state(struct pci_dev *dev)
->>   	if (!dpc)
->>   		return;
->>   
->> +	if (!dpc->native_dpc)
->> +		return;
->> +
->>   	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
->>   	if (!save_state)
->>   		return;
->> @@ -88,6 +107,9 @@ void pci_restore_dpc_state(struct pci_dev *dev)
->>   	if (!dpc)
->>   		return;
->>   
->> +	if (!dpc->native_dpc)
->> +		return;
->> +
->>   	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
->>   	if (!save_state)
->>   		return;
->> @@ -224,10 +246,9 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
->>   	return 1;
->>   }
->>   
->> -static irqreturn_t dpc_handler(int irq, void *context)
->> +static void dpc_process_error(struct dpc_dev *dpc)
->>   {
->>   	struct aer_err_info info;
->> -	struct dpc_dev *dpc = context;
->>   	struct pci_dev *pdev = dpc->dev->port;
->>   	struct device *dev = &dpc->dev->device;
->>   	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
->> @@ -261,6 +282,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
->>   
->>   	/* We configure DPC so it only triggers on ERR_FATAL */
->>   	pcie_do_recovery(pdev, pci_channel_io_frozen, PCIE_PORT_SERVICE_DPC);
->> +}
->> +
->> +static irqreturn_t dpc_handler(int irq, void *context)
->> +{
->> +	struct dpc_dev *dpc = context;
->> +
->> +	dpc_process_error(dpc);
->>   
->>   	return IRQ_HANDLED;
->>   }
->> @@ -283,6 +311,230 @@ static irqreturn_t dpc_irq(int irq, void *context)
->>   	return IRQ_HANDLED;
->>   }
->>   
->> +void dpc_error_resume(struct pci_dev *dev)
-> Looks like this should be static?
-yes. I will fix it in next version.
->
->> +{
->> +	struct dpc_dev *dpc;
->> +
->> +	dpc = to_dpc_dev(dev);
->> +	if (!dpc)
->> +		return;
-> I don't think it's possible for dpc to be NULL, is it?  Remove the
-> test if not.
-ok.
->
->> +	dpc->error_state = PCI_ERS_RESULT_RECOVERED;
->> +}
->> +
->> +#ifdef CONFIG_ACPI
->> +
->> +/*
->> + * _DSM wrapper function to enable/disable DPC port.
->> + * @dpc   : DPC device structure
->> + * @enable: status of DPC port (0 or 1).
->> + *
->> + * returns 0 on success or errno on failure.
->> + */
->> +static int acpi_enable_dpc_port(struct dpc_dev *dpc, bool enable)
->> +{
->> +	union acpi_object *obj;
->> +	int status;
->> +	union acpi_object argv4;
->> +
->> +	/* Check whether EDR_PORT_ENABLE_DSM is supported in firmware */
->> +	status = acpi_check_dsm(dpc->adev->handle, &pci_acpi_dsm_guid, 1,
->> +				1 << EDR_PORT_ENABLE_DSM);
-> I don't think this acpi_check_dsm() is necessary, is it?  I expect
-> acpi_evaluate_dsm() to fail nicely if there's no _DSM or it doesn't
-> support the function.
-will remove it next version.
->
->> +	if (!status)
->> +		return -ENOTSUPP;
->> +
->> +	argv4.type = ACPI_TYPE_INTEGER;
->> +	argv4.integer.value = enable;
->> +
->> +	obj = acpi_evaluate_dsm(dpc->adev->handle, &pci_acpi_dsm_guid, 1,
->> +				EDR_PORT_ENABLE_DSM, &argv4);
->> +	if (!obj)
->> +		return -EIO;
->> +
->> +	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == enable)
->> +		status = 0;
->> +	else
->> +		status = -EIO;
->> +
->> +	ACPI_FREE(obj);
->> +
->> +	return status;
->> +}
->> +
->> +/*
->> + * _DSM wrapper function to locate DPC port.
->> + * @dpc   : DPC device structure
->> + *
->> + * returns pci_dev or NULL.
->> + */
->> +static struct pci_dev *acpi_locate_dpc_port(struct dpc_dev *dpc)
->> +{
->> +	union acpi_object *obj;
->> +	int status;
->> +	u16 port;
->> +
->> +	/* Check whether EDR_PORT_LOCATE_DSM is supported in firmware */
->> +	status = acpi_check_dsm(dpc->adev->handle, &pci_acpi_dsm_guid, 1,
->> +				1 << EDR_PORT_LOCATE_DSM);
-> Unnecessary?
-Agreed
->
->> +	if (!status)
->> +		return dpc->dev->port;
-> If you *do* need the acpi_check_dsm(), I would have expected to return
-> NULL in this error case?
->
->> +
->> +
-> Extra blank line here.
->
->> +	obj = acpi_evaluate_dsm(dpc->adev->handle, &pci_acpi_dsm_guid, 1,
->> +				EDR_PORT_LOCATE_DSM, NULL);
->> +	if (!obj)
->> +		return NULL;
->> +
->> +	if (obj->type == ACPI_TYPE_INTEGER) {
->> +		/*
->> +		 * Firmware returns DPC port BDF details in following format:
->> +		 *	15:8 = bus
->> +		 *	7:3 = device
->> +		 *	2:0 = function
->> +		 */
->> +		port = obj->integer.value;
->> +		ACPI_FREE(obj);
->> +	} else {
->> +		ACPI_FREE(obj);
->> +		return NULL;
->> +	}
->> +
->> +	return pci_get_domain_bus_and_slot(0, PCI_BUS_NUM(port), port & 0xff);
->> +}
->> +
->> +/*
->> + * _OST wrapper function to let firmware know the status of EDR event.
->> + * @dpc   : DPC device structure.
->> + * @status: Status of EDR event.
->> + *
-> Spurious blank line in the comment.
->
->> + */
->> +static int acpi_send_edr_status(struct dpc_dev *dpc,  u16 status)
->> +{
->> +	u32 ost_status;
->> +	struct pci_dev *pdev = dpc->dev->port;
->> +
->> +	dev_dbg(&pdev->dev, "Sending EDR status :%x\n", status);
->> +
->> +	ost_status =  PCI_DEVID(pdev->bus->number, pdev->devfn);
->> +	ost_status = (ost_status << 16) | status;
->> +
->> +	if (!acpi_has_method(dpc->adev->handle, "_OST"))
->> +		return -ENOTSUPP;
-> This acpi_has_method() check is superfluous, isn't it?  I would expect
-> acpi_evaluate_ost() to fail gracefully if there's no _OST.
->
-> I do see several other instances of code of the form:
->
->    if (!acpi_has_method(handle, "XXXX"))
->      return false;
->
->    status = acpi_evaluate_*(handle, "XXXX", ...);
->
-> But I think that's a pointless pattern.  I think we could just try to
-> evaluate the method directly, since the evaluation will fail if the
-> method doesn't exist:
->
->    status = acpi_evaluate_*(handle, "XXXX", ...);
-Agreed.
->
->> +	status = acpi_evaluate_ost(dpc->adev->handle,
->> +				   ACPI_NOTIFY_DISCONNECT_RECOVER,
->> +				   ost_status, NULL);
->> +	if (ACPI_FAILURE(status))
->> +		return -EINVAL;
->> +
->> +	return 0;
->> +}
->> +
->> +/*
->> + * Helper function used for disconnecting the child devices when EDR event is
->> + * received from firmware.
->> + */
->> +static void dpc_disconnect_devices(struct pci_dev *dev)
->> +{
->> +	struct pci_dev *udev;
->> +	struct pci_bus *parent;
->> +	struct pci_dev *pdev, *temp;
->> +
->> +	dev_dbg(&dev->dev, "Disconnecting the child devices\n");
->> +
->> +	if (dev->hdr_type == PCI_HEADER_TYPE_BRIDGE)
->> +		udev = dev;
->> +	else
->> +		udev = dev->bus->self;
->> +
->> +	parent = udev->subordinate;
->> +	pci_walk_bus(parent, pci_dev_set_disconnected, NULL);
->> +
->> +	pci_lock_rescan_remove();
->> +	pci_dev_get(dev);
->> +	list_for_each_entry_safe_reverse(pdev, temp, &parent->devices,
->> +					 bus_list) {
->> +		pci_stop_and_remove_bus_device(pdev);
->> +	}
->> +	pci_dev_put(dev);
->> +	pci_unlock_rescan_remove();
->> +}
->> +
->> +static void edr_handle_event(acpi_handle handle, u32 event, void *data)
->> +{
->> +	struct dpc_dev *dpc = (struct dpc_dev *) data;
->> +	struct pci_dev *pdev;
->> +	u16 status, cap;
->> +
->> +	if (event != ACPI_NOTIFY_DISCONNECT_RECOVER)
->> +		return;
->> +
->> +	if (!data) {
->> +		pr_err("Invalid EDR event\n");
-> In what instance can "data" be NULL?  I think *never*, unless ACPI
-> screwed up and lost the context you supplied to
-> acpi_install_notify_handler().  In that case, we should do something
-> more significant than print a message and just return.  I think we
-> should just omit this test, and if ACPI screwed up, we'll take a null
-> pointer dereference oops, we'll see exactly where, and we'll have a
-> chance to fix the problem.
-Makes sense. I will fix it in next version.
->
->> +		return;
->> +	}
->> +
->> +	dev_dbg(&dpc->dev->port->dev, "Valid EDR event received\n");
-> Set "pdev" at declaration and use it in these printks.
->
->> +
->> +	/*
->> +	 * Check if _DSM(0xD) is available, and if present locate the
->> +	 * port which issued EDR event.
->> +	 */
->> +	pdev = acpi_locate_dpc_port(dpc);
-> Can this be done at probe-time instead of event-time?
->
->> +	if (!pdev) {
->> +		dev_err(&dpc->dev->port->dev, "No valid port found\n");
->> +		return;
->> +	}
->> +
->> +	/*
->> +	 * Get DPC priv data for given pdev
->> +	 */
->> +	dpc = to_dpc_dev(pdev);
->> +	dpc->error_state = PCI_ERS_RESULT_DISCONNECT;
->> +	pdev = dpc->dev->port;
-> It's quite confusing to reassign pdev here.  The comment about "Get
-> DPC priv data for given pdev" is really superfluous since that much is
-> obvious from the code.  What's *not* obvious is whether this "pdev =
-> dpc->dev->port" changes anything and if so, why.
-No its not required. It does not add any value. I will remove it in next 
-version.
->
->> +	cap = dpc->cap_pos;
->> +
->> +	/*
->> +	 * Check if the port supports DPC:
->> +	 *
->> +	 * if port does not support DPC, then let firmware handle
->> +	 * the error recovery and OS is responsible for cleaning
->> +	 * up the child devices.
->> +	 *
->> +	 * if port supports DPC, then fall back to default error
->> +	 * recovery.
-> Capitalize first letter of sentences.
-ok
->
->> +	 *
->> +	 */
->> +	if (cap) {
->> +		/* Check if there is a valid DPC trigger */
->> +		pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
->> +		if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
->> +			dev_err(&pdev->dev, "Invalid DPC trigger\n");
-> Include "status" value in the printk.
-ok
->
->> +			return;
->> +		}
->> +		dpc_process_error(dpc);
->> +	}
->> +
->> +	if (dpc->error_state == PCI_ERS_RESULT_RECOVERED) {
->> +		/*
->> +		 * Recovery is successful, so send
->> +		 * _OST(0xF, BDF << 16 | 0x80, "") to firmware.
->> +		 */
->> +		status = 0x80;
->> +	} else {
->> +		/*
->> +		 * Recovery is not successful, so disconnect child devices
->> +		 * and send _OST(0xF, BDF << 16 | 0x81, "") to firmware.
->> +		 */
->> +		dpc_disconnect_devices(pdev);
->> +		status = 0x81;
->> +	}
->> +
->> +	acpi_send_edr_status(dpc, status);
->> +}
->> +
->> +#endif
->> +
->>   #define FLAG(x, y) (((x) & (y)) ? '+' : '-')
->>   static int dpc_probe(struct pcie_device *dev)
->>   {
->> @@ -291,9 +543,10 @@ static int dpc_probe(struct pcie_device *dev)
->>   	struct device *device = &dev->device;
->>   	int status;
->>   	u16 ctl, cap;
->> -
->> -	if (pcie_aer_get_firmware_first(pdev))
->> -		return -ENOTSUPP;
->> +#ifdef CONFIG_ACPI
->> +	struct acpi_device *adev = ACPI_COMPANION(&pdev->dev);
->> +	acpi_status astatus;
->> +#endif
->>   
->>   	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
->>   	if (!dpc)
->> @@ -302,16 +555,53 @@ static int dpc_probe(struct pcie_device *dev)
->>   	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
->>   	dpc->dev = dev;
->>   	set_service_data(dev, dpc);
->> +	dpc->error_state = PCI_ERS_RESULT_NONE;
->> +
->> +	if (!pcie_aer_get_firmware_first(pdev))
->> +		if (pci_aer_available() && dpc->cap_pos)
->> +			dpc->native_dpc = 1;
->>   
->> -	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
->> -					   dpc_handler, IRQF_SHARED,
->> -					   "pcie-dpc", dpc);
->> -	if (status) {
->> -		dev_warn(device, "request IRQ%d failed: %d\n", dev->irq,
->> -			 status);
->> -		return status;
->> +	/*
->> +	 * If native support is not enabled and ACPI is not
->> +	 * enabled then return error.
->> +	 */
->> +	if (!dpc->native_dpc && !IS_ENABLED(CONFIG_APCI))
->> +		return -ENODEV;
->> +
->> +	if (dpc->native_dpc) {
->> +		status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
->> +						   dpc_handler, IRQF_SHARED,
->> +						   "pcie-dpc", dpc);
->> +		if (status) {
->> +			dev_warn(device, "request IRQ%d failed: %d\n", dev->irq,
->> +				 status);
->> +			return status;
->> +		}
->>   	}
->>   
->> +#ifdef CONFIG_ACPI
->> +	if (!dpc->native_dpc) {
->> +		if (!adev) {
->> +			dev_err(device, "No valid acpi device found\n");
-> s/acpi/ACPI/ (in comments, printk, other English text)
-ok
->
->> +			return -ENODEV;
->> +		}
->> +
->> +		dpc->adev = adev;
->> +
->> +		/* Register ACPI notifier for EDR event */
-> "Register handler for System events, one of which is the EDR event"?
-In our case, we only handle EDR event. So I just explicitly mentioned it.
->
->> +		astatus = acpi_install_notify_handler(adev->handle,
->> +						      ACPI_SYSTEM_NOTIFY,
->> +						      edr_handle_event,
->> +						      dpc);
->> +
->> +		if (ACPI_FAILURE(astatus)) {
->> +			dev_err(device, "Install notifier failed\n");
-> Mention "ACPI notify handler" here.
-ok
->
->> +			return -EBUSY;
->> +		}
->> +
->> +		acpi_enable_dpc_port(dpc, true);
->> +	}
->> +#endif
->>   	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
->>   	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
->>   
->> @@ -325,8 +615,12 @@ static int dpc_probe(struct pcie_device *dev)
->>   		}
->>   	}
->>   
->> -	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN;
->> -	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
->> +	if (dpc->native_dpc) {
->> +		ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL |
->> +			PCI_EXP_DPC_CTL_INT_EN;
->> +		pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
->> +				      ctl);
->> +	}
->>   
->>   	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
->>   		cap & PCI_EXP_DPC_IRQ, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
->> @@ -344,6 +638,9 @@ static void dpc_remove(struct pcie_device *dev)
->>   	struct pci_dev *pdev = dev->port;
->>   	u16 ctl;
->>   
->> +	if (!dpc->native_dpc)
->> +		return;
->> +
->>   	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
->>   	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
->>   	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
->> @@ -356,6 +653,7 @@ static struct pcie_port_service_driver dpcdriver = {
->>   	.probe		= dpc_probe,
->>   	.remove		= dpc_remove,
->>   	.reset_link	= dpc_reset_link,
->> +	.error_resume   = dpc_error_resume,
->>   };
->>   
->>   int __init pcie_dpc_init(void)
->> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
->> index 865f12f4b314..050cbb7a5083 100644
->> --- a/drivers/pci/pcie/portdrv_core.c
->> +++ b/drivers/pci/pcie/portdrv_core.c
->> @@ -249,9 +249,14 @@ static int get_port_device_capability(struct pci_dev *dev)
->>   		pcie_pme_interrupt_enable(dev, false);
->>   	}
->>   
->> +	/*
->> +	 * If EDR support is enabled in OS, then even if AER is not handled in
->> +	 * OS, DPC service can be enabled.
->> +	 */
->>   	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
->> -	    pci_aer_available() && services & PCIE_PORT_SERVICE_AER &&
->> -	    (pcie_ports_native || host->native_dpc))
->> +	    ((IS_ENABLED(CONFIG_PCIE_EDR) && !host->native_dpc) ||
->> +	    (pci_aer_available() && services & PCIE_PORT_SERVICE_AER &&
->> +	    (pcie_ports_native || host->native_dpc))))
-> Holy cow, I think I'll have to schedule an hour sometime to figure
-> out what's going on here :)
-Please check the previous patch in this series for details related to 
-host->native_dpc.
+s/Depreciate/Deprecate/ (several occurrences)
 
-host->native_dpc is set/unset based on _OSC negotiation in 
-drivers/acpi/pci_root.c
+> Make hp_io_size function identically to hpiosize.
+> Make hp_mmio_size set additional size for MMIO bridge window.
+> Make hp_mmio_pref_size set additional size for MMIO_PREF bridge window.
 
-Previously if BIOS handles AER and DPC then we don't need to enable 
-AER/DPC services in OS. But with EDR support (hybrid mode), even if BIOS 
-handles DPC support, there is way for it let OS handle the port recovery 
-and error handling. So we should enable the DPC service independently. 
-That's why I have added additional if condition for non-native DPC mode 
-with EDR support enabled.
+Help me understand this -- I think the point of this is today,
+a value specified with "hpmemsize=" applies to both the MMIO
+(non-prefetchable) and the MMIO_PREF window, and you want to control
+them separately, right?
 
-If we expand the if condition it would look like,
+That seems reasonable.  I also agree that your proposed new parameter
+names are nicer than the existing ones.  But the renames make this
+patch much bigger than it would be otherwise, and I'm not really
+convinced that the user confusion of deprecating the old ones is worth
+the trouble.
 
-if (port has dpc capability) {
+What I would suggest is either dropping the rename or splitting this
+into two patches:
 
-     if (EDR support is supported/enabled in OS and bios_handles_dpc) then
-         services |= PCIE_PORT_SERVICE_DPC;
+  1) add "hpmemprefsize=" parameter
+  2) rename the parameters
 
-         if ( AER/DPC is handled in OS)
-         services |= PCIE_PORT_SERVICE_DPC;
+Then the first patch would be a little smaller but would have all the
+important functionality, and the second would be pretty easy to review
+because it only changes names.
 
-}
-
->
->>   		services |= PCIE_PORT_SERVICE_DPC;
->>   
->>   	if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM || -- 2.20.1
->>
--- 
-Sathyanarayanan Kuppuswamy
-Linux kernel developer
-
+> Override old kernel parameters if any of the new ones are specified.
+> 
+> Make sure old kernel parameters still work identically when none of the
+> new kernel parameters are specified.
+> 
+> Make sure it is easy to remove old kernel parameters from the source
+> when it is deemed that sufficient time has passed to allow users to
+> migrate to the new kernel parameters.
+> 
+> Update documentation to reflect changes.
+> 
+> Signed-off-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+> ---
+>  .../admin-guide/kernel-parameters.txt         | 21 ++++++++--
+>  drivers/pci/pci.c                             | 39 +++++++++++++++++--
+>  drivers/pci/setup-bus.c                       | 26 +++++++------
+>  include/linux/pci.h                           |  3 +-
+>  4 files changed, 69 insertions(+), 20 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 858b6c0b9..29406ae8f 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -3326,12 +3326,27 @@
+>  				the default.
+>  				off: Turn ECRC off
+>  				on: Turn ECRC on.
+> -		hpiosize=nn[KMG]	The fixed amount of bus space which is
+> +
+> +		hpiosize=nn[KMG]	Depreciated. Overridden by hp_io_size
+> +				value if any of hp_io_size, hp_mmio_size
+> +				or hp_mmio_pref_size are used. This sets
+> +				hp_io_size to the given value if not
+> +				overridden.
+> +
+> +		hpmemsize=nn[KMG]	Depreciated. Overridden if any of
+> +				hp_io_size, hp_mmio_size or
+> +				hp_mmio_pref_size are used. This sets
+> +				hp_mmio_size and hp_mmio_pref_size to
+> +				the given value if not overridden.
+> +		hp_io_size=nn[KMG]	The fixed amount of bus space which is
+>  				reserved for hotplug bridge's IO window.
+>  				Default size is 256 bytes.
+> -		hpmemsize=nn[KMG]	The fixed amount of bus space which is
+> -				reserved for hotplug bridge's memory window.
+> +		hp_mmio_size=nn[KMG]	The fixed amount of bus space which is
+> +				reserved for hotplug bridge's 32-bit mmio window.
+>  				Default size is 2 megabytes.
+> +		hp_mmio_pref_size=nn[KMG]	The fixed amount of bus space
+> +				which is reserved for hotplug bridge's 64-bit
+> +				mmio_pref window. Default size is 2 megabytes.
+>  		hpbussize=nn	The minimum amount of additional bus numbers
+>  				reserved for buses below a hotplug bridge.
+>  				Default is 1.
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index c25acace7..64978bf84 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -85,12 +85,15 @@ unsigned long pci_cardbus_io_size = DEFAULT_CARDBUS_IO_SIZE;
+>  unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
+>  
+>  #define DEFAULT_HOTPLUG_IO_SIZE		(256)
+> -#define DEFAULT_HOTPLUG_MEM_SIZE	(2*1024*1024)
+> -/* pci=hpmemsize=nnM,hpiosize=nn can override this */
+> +#define DEFAULT_HOTPLUG_MMIO_SIZE	(2*1024*1024)
+> +#define DEFAULT_HOTPLUG_MMIO_PREF_SIZE	(2*1024*1024)
+> +/* Override with pci=hp_io_size=nn,hp_mmio_size=nnM,hp_mmio_pref_size=nnM */
+>  unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
+> -unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
+> +unsigned long pci_hotplug_mmio_size  = DEFAULT_HOTPLUG_MMIO_SIZE;
+> +unsigned long pci_hotplug_mmio_pref_size  = DEFAULT_HOTPLUG_MMIO_PREF_SIZE;
+>  
+>  #define DEFAULT_HOTPLUG_BUS_SIZE	1
+> +/* Override with pci=hpbussize=nn,assign-busses */
+>  unsigned long pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
+>  
+>  enum pcie_bus_config_types pcie_bus_config = PCIE_BUS_DEFAULT;
+> @@ -6144,6 +6147,15 @@ EXPORT_SYMBOL(pci_fixup_cardbus);
+>  
+>  static int __init pci_setup(char *str)
+>  {
+> +	/*
+> +	 * Depreciated pci=hpmemsize=nnM but keep the functionality for now.
+> +	 * If none of hp_io_size, hp_mmio_size or hp_mmio_pref_size are set
+> +	 * then override hp_mmio_size and hp_mmio_pref_size with hpmemsize.
+> +	 */
+> +	unsigned long pci_hotplug_io_size_old = DEFAULT_HOTPLUG_IO_SIZE;
+> +	unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MMIO_SIZE;
+> +	bool use_new_pci_hotplug_params = 0;
+> +
+>  	while (str) {
+>  		char *k = strchr(str, ',');
+>  		if (k)
+> @@ -6176,9 +6188,23 @@ static int __init pci_setup(char *str)
+>  			} else if (!strncmp(str, "ecrc=", 5)) {
+>  				pcie_ecrc_get_policy(str + 5);
+>  			} else if (!strncmp(str, "hpiosize=", 9)) {
+> -				pci_hotplug_io_size = memparse(str + 9, &str);
+> +				printk(KERN_WARNING "PCI: Depreciated option 'hpiosize', use 'hp_io_size' instead\n");
+> +				pci_hotplug_io_size_old =
+> +					memparse(str + 9, &str);
+>  			} else if (!strncmp(str, "hpmemsize=", 10)) {
+> +				printk(KERN_WARNING "PCI: Depreciated option 'hpmemsize', use 'hp_mmio_size' and 'hp_mmio_pref_size' instead\n");
+>  				pci_hotplug_mem_size = memparse(str + 10, &str);
+> +			} else if (!strncmp(str, "hp_io_size=", 11)) {
+> +				use_new_pci_hotplug_params = 1;
+> +				pci_hotplug_io_size = memparse(str + 11, &str);
+> +			} else if (!strncmp(str, "hp_mmio_size=", 13)) {
+> +				use_new_pci_hotplug_params = 1;
+> +				pci_hotplug_mmio_size =
+> +					memparse(str + 13, &str);
+> +			} else if (!strncmp(str, "hp_mmio_pref_size=", 18)) {
+> +				use_new_pci_hotplug_params = 1;
+> +				pci_hotplug_mmio_pref_size =
+> +					memparse(str + 18, &str);
+>  			} else if (!strncmp(str, "hpbussize=", 10)) {
+>  				pci_hotplug_bus_size =
+>  					simple_strtoul(str + 10, &str, 0);
+> @@ -6204,6 +6230,11 @@ static int __init pci_setup(char *str)
+>  		}
+>  		str = k;
+>  	}
+> +	if (!use_new_pci_hotplug_params) {
+> +		pci_hotplug_io_size = pci_hotplug_io_size_old;
+> +		pci_hotplug_mmio_size = pci_hotplug_mem_size;
+> +		pci_hotplug_mmio_pref_size = pci_hotplug_mem_size;
+> +	}
+>  	return 0;
+>  }
+>  early_param("pci", pci_setup);
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index efe899b02..56d227227 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1223,7 +1223,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  {
+>  	struct pci_dev *dev;
+>  	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+> -	resource_size_t additional_mem_size = 0, additional_io_size = 0;
+> +	resource_size_t additional_io_size = 0, additional_mmio_size = 0,
+> +		additional_mmio_pref_size = 0;
+>  	struct resource *b_res;
+>  	int ret;
+>  
+> @@ -1256,8 +1257,9 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  	case PCI_CLASS_BRIDGE_PCI:
+>  		pci_bridge_check_ranges(bus);
+>  		if (bus->self->is_hotplug_bridge) {
+> -			additional_io_size  = pci_hotplug_io_size;
+> -			additional_mem_size = pci_hotplug_mem_size;
+> +			additional_io_size = pci_hotplug_io_size;
+> +			additional_mmio_size = pci_hotplug_mmio_size;
+> +			additional_mmio_pref_size = pci_hotplug_mmio_pref_size;
+>  		}
+>  		/* Fall through */
+>  	default:
+> @@ -1275,9 +1277,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  			prefmask |= IORESOURCE_MEM_64;
+>  			ret = pbus_size_mem(bus, prefmask, prefmask,
+>  				  prefmask, prefmask,
+> -				  realloc_head ? 0 : additional_mem_size,
+> -				  additional_mem_size, realloc_head);
+> -
+> +				  realloc_head ? 0 : additional_mmio_pref_size,
+> +				  additional_mmio_pref_size, realloc_head);
+>  			/*
+>  			 * If successful, all non-prefetchable resources and any
+>  			 * 32-bit prefetchable resources will go in the
+> @@ -1298,9 +1299,9 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  		if (!type2) {
+>  			prefmask &= ~IORESOURCE_MEM_64;
+>  			ret = pbus_size_mem(bus, prefmask, prefmask,
+> -					 prefmask, prefmask,
+> -					 realloc_head ? 0 : additional_mem_size,
+> -					 additional_mem_size, realloc_head);
+> +				prefmask, prefmask,
+> +				realloc_head ? 0 : additional_mmio_pref_size,
+> +				additional_mmio_pref_size, realloc_head);
+>  
+>  			/*
+>  			 * If successful, only non-prefetchable resources
+> @@ -1309,7 +1310,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  			if (ret == 0)
+>  				mask = prefmask;
+>  			else
+> -				additional_mem_size += additional_mem_size;
+> +				additional_mmio_size +=
+> +					additional_mmio_pref_size;
+>  
+>  			type2 = type3 = IORESOURCE_MEM;
+>  		}
+> @@ -1329,8 +1331,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  		 * prefetchable resource in a 64-bit prefetchable window.
+>  		 */
+>  		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+> -				realloc_head ? 0 : additional_mem_size,
+> -				additional_mem_size, realloc_head);
+> +				realloc_head ? 0 : additional_mmio_size,
+> +				additional_mmio_size, realloc_head);
+>  		break;
+>  	}
+>  }
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 65f1d8c2f..b30d55697 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1959,7 +1959,8 @@ extern u8 pci_dfl_cache_line_size;
+>  extern u8 pci_cache_line_size;
+>  
+>  extern unsigned long pci_hotplug_io_size;
+> -extern unsigned long pci_hotplug_mem_size;
+> +extern unsigned long pci_hotplug_mmio_size;
+> +extern unsigned long pci_hotplug_mmio_pref_size;
+>  extern unsigned long pci_hotplug_bus_size;
+>  
+>  /* Architecture-specific versions may override these (weak) */
+> -- 
+> 2.20.1
+> 
