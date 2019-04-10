@@ -2,281 +2,208 @@ Return-Path: <SRS0=u0zl=SM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3650DC10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 15:14:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBB5EC10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 15:32:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E384B2083E
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 15:14:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C2302083E
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 15:32:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=cern.onmicrosoft.com header.i=@cern.onmicrosoft.com header.b="Tjl5gpPA"
+	dkim=pass (2048-bit key) header.d=mm-sol.com header.i=@mm-sol.com header.b="ck5XxTcY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733058AbfDJPOE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Apr 2019 11:14:04 -0400
-Received: from mail-eopbgr70059.outbound.protection.outlook.com ([40.107.7.59]:45511
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732908AbfDJPOD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Apr 2019 11:14:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cern.onmicrosoft.com;
- s=selector1-cern-ch;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=w7EtTtBV1Hn50AaXA78pW6N2in8l1szT+DfC13o/yTE=;
- b=Tjl5gpPAbYs7UBesx6KEu486I2OPMICOEdSe3eZP4lb8VGw3D43HM8Ms+tI6IwaAi3RJxKryd3Clts6YadJMrS4FUplagEgo8brHGWAGvUAA7bAxHJur+5Ydlyeo6U4ChAgmhdllS8/ncbLUL6GhR5M4JwF+yvCBVvjXYP/X15A=
-Received: from AM5PR0601CA0026.eurprd06.prod.outlook.com
- (2603:10a6:203:68::12) by DB7PR06MB5813.eurprd06.prod.outlook.com
- (2603:10a6:10:58::10) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1771.13; Wed, 10 Apr
- 2019 15:13:58 +0000
-Received: from VE1EUR02FT032.eop-EUR02.prod.protection.outlook.com
- (2a01:111:f400:7e06::208) by AM5PR0601CA0026.outlook.office365.com
- (2603:10a6:203:68::12) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1792.15 via Frontend
- Transport; Wed, 10 Apr 2019 15:13:58 +0000
-Authentication-Results: spf=pass (sender IP is 188.184.36.46)
- smtp.mailfrom=cern.ch; kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=bestguesspass action=none
- header.from=cern.ch;
-Received-SPF: Pass (protection.outlook.com: domain of cern.ch designates
- 188.184.36.46 as permitted sender) receiver=protection.outlook.com;
- client-ip=188.184.36.46; helo=cernmxgwlb4.cern.ch;
-Received: from cernmxgwlb4.cern.ch (188.184.36.46) by
- VE1EUR02FT032.mail.protection.outlook.com (10.152.12.129) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.1771.16 via Frontend Transport; Wed, 10 Apr 2019 15:13:57 +0000
-Received: from cernfe06.cern.ch (188.184.36.49) by cernmxgwlb4.cern.ch
- (188.184.36.46) with Microsoft SMTP Server (TLS) id 14.3.439.0; Wed, 10 Apr
- 2019 17:13:31 +0200
-Received: from pcbe13614.localnet (2001:1458:202:121::100:40) by smtp.cern.ch
- (2001:1458:201:66::100:14) with Microsoft SMTP Server (TLS) id 14.3.439.0;
- Wed, 10 Apr 2019 17:13:34 +0200
-From:   Federico Vaga <federico.vaga@cern.ch>
-To:     Alan Tull <atull@kernel.org>
-Reply-To: <federico.vaga@cern.ch>
-CC:     Eric Schwarz <eas@sw-optimization.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        <linux-fpga@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, <linux-x86_64@vger.kernel.org>,
-        <linux-fpga-owner@vger.kernel.org>
-Subject: Re: Device Description for FPGA Components on x86 system
-Date:   Wed, 10 Apr 2019 17:13:32 +0200
-Message-ID: <2706675.qmhD4SUPsn@pcbe13614>
-In-Reply-To: <CANk1AXSQCFGE94R8ZxVSF2Gp+diCHJhFJPSVSx+iEyWp2URcpw@mail.gmail.com>
-References: <1629227.alSmCsHHUc@pcbe13614> <31100498.IIhqzTXyFT@pcbe13614> <CANk1AXSQCFGE94R8ZxVSF2Gp+diCHJhFJPSVSx+iEyWp2URcpw@mail.gmail.com>
+        id S1730673AbfDJPcX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Apr 2019 11:32:23 -0400
+Received: from ns.mm-sol.com ([37.157.136.199]:33604 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730505AbfDJPcX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Apr 2019 11:32:23 -0400
+Received: from [192.168.27.209] (unknown [37.157.136.206])
+        by extserv.mm-sol.com (Postfix) with ESMTPSA id 9F555CE4B;
+        Wed, 10 Apr 2019 18:32:20 +0300 (EEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
+        t=1554910340; bh=XXPgJMJyJt7h/9ISOTmKgP9FjHwXVVgG5f9Snk+ArQI=;
+        h=Subject:To:Cc:From:Date:From;
+        b=ck5XxTcYCBFY26wp3mq+zxNNEP9d/LefJLUAdna7ppWJp9l5+/L+kPV1l/MNPSVlF
+         +kCtQnVAwie8CYS7KD5p6ALDmfId4LKvTM0HG7Uf9/XSYDTOZXisQ3TFh1/oavSGk8
+         nLTZq731W/x3XWXcyOyfduXNL4uMsCXir1hQMoCKvNUvYhVUp8/xt+S2i/PZguUSDh
+         DRygISSTA6zz7KdphnT0RG5AY3gUCczx0f9KHk3wUygTqhmDXxf2x+fKjfKaAdodN8
+         qhjVBfftNQSd+IBF280ysEcvUM330AG8B0hwQ4znjt55AXhAEItCM0j+4ydpQCfCQv
+         0NsH3LNlCHnog==
+Subject: Re: [PATCH v1 3/3] arm64: dts: qcom: msm8998: Add PCIe PHY and RC
+ nodes
+To:     Marc Gonzalez <marc.w.gonzalez@free.fr>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Manu Gautam <mgautam@codeaurora.org>,
+        Evan Green <evgreen@chromium.org>,
+        Douglas Anderson <dianders@chromium.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        iommu <iommu@lists.linux-foundation.org>
+References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr>
+ <186f7ca2-84e2-a37e-79e6-f1fec8e25374@free.fr>
+From:   Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <3f32cfb9-6528-9f5e-85db-cee89fdcfc5d@mm-sol.com>
+Date:   Wed, 10 Apr 2019 18:32:18 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-X-Originating-IP: [2001:1458:202:121::100:40]
-X-EOPAttributedMessage: 0
-X-Forefront-Antispam-Report: CIP:188.184.36.46;IPV:NLI;CTRY:CH;EFV:NLI;SFV:NSPM;SFS:(10001)(10009020)(459900002);DIR:OUT;SFP:1101;SCL:1;SRVR:DB7PR06MB5813;H:cernmxgwlb4.cern.ch;FPR:;SPF:None;LANG:en;
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 14ce44d3-7e9e-4613-0fdc-08d6bdc727b0
-X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(4709054)(5565046)(2017052603328)(7193020);SRVR:DB7PR06MB5813;
-X-MS-TrafficTypeDiagnostic: DB7PR06MB5813:
-X-MS-Exchange-PUrlCount: 7
-X-Microsoft-Antispam-PRVS: <DB7PR06MB581384D441485137553F3CAEEF2E0@DB7PR06MB5813.eurprd06.prod.outlook.com>
-X-Forefront-PRVS: 00032065B2
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam-Message-Info: izymWfnRuvmC7cxu3RWGoNXnA9wwOPhZTjGHIXxlAJgb2JM3EFCAXTqCV6lQfLiQRuWG6hmjr7b+w5ImqjuG/mJ6vGfJvXdJAoBdUmIycEc3rcsYUoZSd8eUswL/d5SUOOJUbpR8XaCzJb5DHbrbGyU/OJAGE29Ii06WsBJFJiYKnU+KbZfDBi5pG7cXApc6j2zMgWPjUH/FZmt6yTNVAs7F2hDz2audDg2WnE8FSIXcq0o1g3OlfldeEY95sjEJ7QPsS4M09MajAPYOrCc7gZ0OVWzJC2Ul6IgYuOzzvJ3F8ihJgLKjPkahC7rbECVCI5eN1AwVQBwCLVKTsSbd6YC64Wslgu0kOhALfbcWEsvHXNfd7ps3XLpyHBtL82A3k8d7f1bapWXdC4FE3ceZNWelvZX1qCD5gtuGMmecSNO2TGvXKNydFmOHjiZ+GUr+UZbIglnz/x+tCvDyqBxSWr+bhu99d+iEbrL3DM7Ef9eW5a6JwJU+CI1qhTDqiEP6zCntNyjb0auh6876qFLGDGxWtV/iwO7cGJJ36dj/tcw=
-X-OriginatorOrg: cern.ch
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Apr 2019 15:13:57.8893
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 14ce44d3-7e9e-4613-0fdc-08d6bdc727b0
-X-MS-Exchange-CrossTenant-Id: c80d3499-4a40-4a8c-986e-abce017d6b19
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=c80d3499-4a40-4a8c-986e-abce017d6b19;Ip=[188.184.36.46];Helo=[cernmxgwlb4.cern.ch]
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB7PR06MB5813
+In-Reply-To: <186f7ca2-84e2-a37e-79e6-f1fec8e25374@free.fr>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Alan,
+Hi Marc,
 
-thanks for your answer
+Few comments inline.
 
-On Wednesday, April 10, 2019 4:21:09 PM CEST Alan Tull wrote:
-> On Wed, Apr 10, 2019 at 7:50 AM Federico Vaga <federico.vaga@cern.ch> wrote:
+On 3/28/19 7:06 PM, Marc Gonzalez wrote:
+> Add MSM8998 PCIe QMP PHY and PCIe root complex DT nodes.
 > 
-> Hi Federico,
+> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
+> ---
+>  arch/arm64/boot/dts/qcom/msm8998.dtsi | 78 +++++++++++++++++++++++++++
+>  1 file changed, 78 insertions(+)
 > 
-> I wish I could point you to a complete solution, but there is a lot of
-> work to be done in this area.  Most of what is in the kernel is a low
-> level in-kernel API [4].  As you correctly state, the hardest part of
-> this is doing the enumerating if you are on x86 and aren't using
-> devicetree.
+> diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> index 5a1c0961b281..9f979a51f679 100644
+> --- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> @@ -621,6 +621,84 @@
+>  				<GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
+>  		};
+>  
+> +		pcie0: pci@1c00000 {
+> +			compatible = "qcom,pcie-msm8996";
+> +			reg-names = "parf", "dbi", "elbi", "config";
+> +			reg =	<0x01c00000 0x2000>,
+> +				<0x1b000000 0xf1d>,
+> +				<0x1b000f20 0xa8>,
+> +				<0x1b100000 0x100000>;
+
+could you please populate reg property and after that reg-names property.
+
+> +			device_type = "pci";
+> +			linux,pci-domain = <0>;
+> +			bus-range = <0x00 0xff>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			power-domains = <&gcc PCIE_0_GDSC>;
+> +
+> +			num-lanes = <1>;
+> +			phy-names = "pciephy";
+> +			phys = <&pciephy>;
+> +
+> +			ranges =
+> +			/*** downstream I/O ***/
+
+could you make this a standard kernel comment or completely drop it
+
+> +			<0x01000000 0x0 0x1b200000 0x1b200000 0x0 0x100000>,
+> +			/*** non-prefetchable memory ***/
+
+ditto
+
+> +			<0x02000000 0x0 0x1b300000 0x1b300000 0x0 0xd00000>;
+> +
+> +			#interrupt-cells = <1>;
+> +			interrupt-names = "msi";
+> +			interrupts = <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-map-mask = <0 0 0 0x7>;
+> +			interrupt-map =
+> +				<0 0 0 1 &intc 0 135 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
+
+move this to a line upper
+
+> +				<0 0 0 2 &intc 0 136 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
+> +				<0 0 0 3 &intc 0 138 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
+> +				<0 0 0 4 &intc 0 139 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+> +
+> +			clock-names = "pipe", "bus_master", "bus_slave", "cfg", "aux";
+> +			clocks =
+> +				<&gcc GCC_PCIE_0_PIPE_CLK>,
+
+move this to a line upper
+
+> +				<&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
+> +				<&gcc GCC_PCIE_0_SLV_AXI_CLK>,
+> +				<&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+> +				<&gcc GCC_PCIE_0_AUX_CLK>;
+
+please swap the order clocks and clock-names
+
+> +
+> +			iommu-map = <0x100 &anoc1_smmu 0x1480 1>;
+
+iommu-map-mask? It is optional but I had to ask :)
+
+> +
+> +			/* PCIe Fundamental Reset */
+
+this comment is useless :) please drop it
+
+> +			perst-gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
+> +		};
+> +
+> +		phy@1c06000 {
+> +			compatible = "qcom,msm8998-qmp-pcie-phy";
+> +			reg = <0x01c06000 0x18c>;
+> +			#address-cells = <1>;
+> +			#size-cells = <1>;
+> +			ranges;
+> +
+> +			clock-names = "aux", "cfg_ahb", "ref";
+> +			clocks =
+> +				<&gcc GCC_PCIE_PHY_AUX_CLK>,
+> +				<&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+> +				<&gcc GCC_PCIE_CLKREF_CLK>;\
+
+please, swap the order of clocks and clock-names, and move first clock a
+line upper. Also delete '\' symbol at the end of last line.
+
+> +
+> +			reset-names = "phy", "common";
+> +			resets = <&gcc GCC_PCIE_0_PHY_BCR>, <&gcc GCC_PCIE_PHY_BCR>;
+
+resets prop and after that reset-names, please.
+
+> +
+> +			vdda-phy-supply = <&vreg_l1a_0p875>;
+> +			vdda-pll-supply = <&vreg_l2a_1p2>;
+> +
+> +			pciephy: lane@1c06800 {
+> +				reg = <0x01c06200 0x128>, <0x01c06400 0x1fc>, <0x01c06800 0x20c>;
+> +				#phy-cells = <0>;
+> +
+> +				clock-names = "pipe0";
+> +				clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
+
+please, swap clocks and clock-names
+
+> +				clock-output-names = "pcie_0_pipe_clk_src";
+> +				#clock-cells = <0>;
+> +			};
+> +		};
+> +
+>  		tcsr_mutex_regs: syscon@1f40000 {
+>  			compatible = "syscon";
+>  			reg = <0x1f40000 0x20000>;
 > 
-> > Hi,
-> > 
-> > P.S. sorry if I'm too verbose, hopefully it is useful
-> > 
-> > thanks for the answer
-> > 
-> > On Wednesday, April 10, 2019 12:30:14 PM CEST Eric Schwarz wrote:
-> > > Hi,
-> > > 
-> > > everything you want is already available and on the way to mainline
-> > > concerning support for various FPGA loading modes or available for
-> > > checkout from a git repository.
-> > > All that has already been discussed on the mailing list.
-> > > 
-> > > FPGA loading interface is available here [1].
-> > > Patchset missing for FPGA loading has been sent to the mailing list from
-> > > Anatolij Gustschin for various Linux kernel versions. Link to the most
-> > > recent patchset version [2].
-> > > FPGA Manager mailing list archive link [3] - Please read up the story
-> > > here around those patches and also the replies of the others.
-> > 
-> > This does not answer the problem, which perhaps need to be clarified.
-> > 
-> > Loading FPGA is **not** the problem, I listed it in the things I want to
-> > achieve because it is a pre-requirement for the real problem and because
-> > the two processes are linked (or could be).
-> > 
-> > I continue by commenting myself below, trying to make the use case
-> > clearer.
-> > 
-> > > Cheers
-> > > Eric
-> > > 
-> > > [1] https://github.com/vdsao/fpga-cfg
-> > > [2] https://marc.info/?l=linux-fpga&m=155078072107199&w=2
-> > > [3] https://marc.info/?l=linux-fpga
-> > > 
-> > > Am 10.04.2019 12:01, schrieb Federico Vaga:
-> > > > Hello,
-> > > > 
-> > > > sorry to push for an answer but I do not want to take the risk of
-> > > > designing
-> > > > something useless. I do not know how should I interpret a no-answer.
-> > > > 
-> > > > If the solution really does not exist today, then I would like to
-> > > > collect
-> > > > opinions/arguments/requirements on the topic so that I can write
-> > > > something
-> > > > useful not only for CERN but for the entire community.
-> > > > 
-> > > > Thank you
-> > > > 
-> > > > On Wednesday, March 27, 2019 6:17:18 PM CEST Federico Vaga wrote:
-> > > >> Hello,
-> > > >> 
-> > > >> I'm looking for guidance
-> > > >> 
-> > > >> What I have:
-> > > >> * Intel x86_64 computer
-> > > >> * PCIe card with FPGA on it
-> > > >> 
-> > > >> What I want to achieve:
-> > > >> * load an FPGA bitstream on the card
-> > > >> * load a device-tree like description for the FPGA devices contained
-> > > >> in the bitstream
-> > 
-> > Let me first elaborate on my knowledge to avoid misunderstandings.
-> > 
-> > On ARM, nowadays, we boot with a device tree. Later we program an FPGA in
-> > which there are other devices described by a device tree overlay. This can
-> > be done easily.
-> > 
-> > A typical PC (x86/x86_64) does not boot with DeviceTree (it is possible,
-> > but it is not common and probably not even suggested, not sure), instead
-> > it uses ACPI.
-> 
-> I have heard it suggested that we work on using DT overlays on x86*.
-> It's clear there's work to be done to make that work.  I don't know if
-> anybody has really tried.  It seems impractical to map or translate a
-> x86 systems ACPI into a DT and go from there.  
 
-
-> One suggestion a few
-> years ago was adding a partial DT that had nodes that could serve as
-> overlay targets and have that running in parallel with ACPI.
-
-This is also one of my ideas for a solution to our problems. Are you able to 
-easily retrieve that conversation? Perhaps this is something on which I can 
-work on.
-
-> > The FPGA Manager has support only for DeviceTree (there are patching
-> > floating around to load a bitstream with configfs, debugfs or a
-> > chardevice (guilty))
-> There's one other interface in the kernel upstream. The DFL (device
-> feature list) framework built on the FPGA manager/bridge/region stuff
-> [5].   It's probably not what you specifically are looking for, I'm
-> mentioning as it exists in upstream.  It has a limited type of
-> enumeration and appears to mostly be geared for acceleration rather
-> than adding and enumerating any random hardware block.  Also it
-> requires specific bitstreams as the feature list is in fpga fabric.
-> 
-> > Most drivers foresee a DeviceTree loading but not an ACPI one (my feeling,
-> > I did not extract exact numbers from the sources)
-> > 
-> > DeviceTree overlay requires that the system boots with DeviceTree.
-> > 
-> > DeviceTree and ACPI do not work together
-> > 
-> > So, this is the state of art that I am aware of. Correct me if, and where,
-> > I am wrong.
-> > 
-> > 
-> > Restarting from this point. I have a PC (x86_64) with a PCIe FPGA card
-> > (e.g. sis8160, spec, links below). How to load the FPGA bitstream (not
-> > really a problem as you correctly pointed out) **and** load all the
-> > IP-core instances in that FPGA bitstream so that drivers will start
-> > running?
-> > 
-> > - Is there a recommendation for such use case?
-> > - ACPI SSDT overlay?
-> > - DT overlay?
-> > - is there a standard way to load FPGA IP-core devices which is
-> > architecture independent?
-> > 
-> > A simple and practical example. The i2c-ocore.c is a platform_driver for
-> > an
-> > HDL I2C Master from open cores. I synthesize it and then load it on the
-> > FPGA. How to create the Linux platform_device instance to driver that
-> > IP-core? How to do that when you have also IRQ controller(s), DMA
-> > engine(s), EEPROM(s) and other devices?
-> > 
-> > The fastest solution is to do what was common on ARM systems: having all
-> > platform devices declared (hard coded) in a file and load them. Which is
-> > not a good solution, for the same reasons why arm stuff moved to
-> > devicetree.
-> > 
-> > Is it clearer?
-> > 
-> > I do not know if it important to highlight but those cards are extensible,
-> > potentially any FMC module could be plugged and this needs a different
-> > FPGA, with different FPGA devices etc. So, It is not possible to hardcode
-> > the description of all possible FPGA code (infinite) that can enable the
-> > usage of all possible FMC module (not infinite, but definitively grater
-> > than 1)
-> > 
-> > 
-> > https://www.struck.de/sis8160.html
-> > https://ohwr.org/project/spec/wikis/home
-> > 
-> > > >> This is achievable on ARM with DeviceTree, overlay-dt, fpga-mgr; but
-> > > >> I'm
-> > > >> puzzled about the x86_64 use-case. I'm not able to find recent and
-> > > >> clear
-> > > >> information.
-> > > >> 
-> > > >> Does anyone know if this is doable? Perhaps with ACPI SSDTs overlay?
-> > > >> Or with
-> > > >> the DT?
-> > > >> 
-> > > >> thanks
-> 
-> Thanks,
-> Alan
-> 
-> [4] https://www.kernel.org/doc/html/latest/driver-api/fpga/index.html
-> [5] https://github.com/torvalds/linux/blob/master/Documentation/fpga/dfl.txt
-
-
-
-
+-- 
+regards,
+Stan
