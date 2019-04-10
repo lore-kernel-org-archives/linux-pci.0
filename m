@@ -2,196 +2,135 @@ Return-Path: <SRS0=u0zl=SM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70BA8C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 08:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D5A6C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 08:26:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34930204FD
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 08:16:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554884183;
-	bh=rKjHnzRWOdzY2O5Fsf83bi15P7EFHUFI1vh7gVnauvk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=AmbmehSayjzZ22chKI1EPVKiWV1OqXhSRTcTFCqX72AMDBXk2D+9WibID6WzTicTl
-	 wyUL3/g6vURrpbLx41rK+QZEc7TW7tyVXUM0c7QaYt42nACUwZgFQ3fLfh8KBMMyhI
-	 /C3ePQWoqgpvG0LO1caeDkOnu1WjmaL/DCtWM4SQ=
+	by mail.kernel.org (Postfix) with ESMTP id DC64A206B6
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 08:26:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729026AbfDJIQW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Apr 2019 04:16:22 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:37847 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729080AbfDJIQW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2019 04:16:22 -0400
-Received: by mail-wm1-f68.google.com with SMTP id v14so1525369wmf.2;
-        Wed, 10 Apr 2019 01:16:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=EA/aq9S/+GfrhWnl5dtJCDqgCdCuVUBYk4FOtE4najY=;
-        b=ds52kFbQLrRvCgyyDB45sCCl+jVMLYSu7S0EQDnC1Uqajrfz/gihtXfNMo/E0QEn6N
-         OVmUMWIAv/fymEGZ0QAQj946dztUhEBDOLyQ+cBKyzGK8rT9WEfj+rUCghmcC5v0PSM4
-         aEVXVIhMDhU2jy/iiwdFIP2e1cfah6KRIrU07sFLO4hWMWVYpsFevxza2kc9OLh/Ai3F
-         DPBDLv9o7gQ9MHwv0JoMgA5lVlXxKn3m3s0dxW0Pu/t/+MLN1+NeYmmmQiUWgGRb9KzE
-         owPX7cMIbKuy6y4xr99MLCogZMj1nSP9gwWFXDlU8gTeLz9aX6eOc9/GBeNSct5ZrpDk
-         RXhg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=EA/aq9S/+GfrhWnl5dtJCDqgCdCuVUBYk4FOtE4najY=;
-        b=bEhZ8F/2AxivMv5IJq/P8yrwqlhnQLP9eIKuU3q6fwdVRFH4/i9Sb4QZHmpquZUWKh
-         shuUm03bkWqVtQXQpL6SMRPMUyCsvyLvJb9cBknI4XGws6vVtdeXchhHjfywWmmkINTU
-         aXm7heX77oLV7PDGi2kBbZYO4z5Fm3KJz42sXAHe0qKtX+TncfmhLGWpTeVuHXK1HKkh
-         ARNHIROmoJe/geULJ9FWR4azJsIhKPoFvz1IM9axaQO1pQTXiaavxV2apz6uJBqYclN4
-         zLveA7ZfHbD2HiNRuMWbmlAwRfXIwEWEHL+6XGZuOEGrSjn6Xe/VrMVNp/gsKMPV27e0
-         GP+g==
-X-Gm-Message-State: APjAAAUy5DmHZb8GqEF7ciRVGdTTS6/YhJFZtBtzrLukJw+2CvN86iSP
-        LbiK97LgKH1cm5NXqt+pGN0=
-X-Google-Smtp-Source: APXvYqxrid2tsl48d58BeOWWpWv+0VefqWAAX7rIOOAHGaK4+bB0MHItVxioZr9CqbtLt1+QmkZayw==
-X-Received: by 2002:a1c:5f08:: with SMTP id t8mr1746298wmb.65.1554884179767;
-        Wed, 10 Apr 2019 01:16:19 -0700 (PDT)
-Received: from gmail.com (2E8B0CD5.catv.pool.telekom.hu. [46.139.12.213])
-        by smtp.gmail.com with ESMTPSA id r196sm2235207wmf.22.2019.04.10.01.16.18
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 10 Apr 2019 01:16:19 -0700 (PDT)
-Date:   Wed, 10 Apr 2019 10:16:17 +0200
-From:   Ingo Molnar <mingo@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc:     x86@kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] x86/pci: Clean up usage of X86_DEV_DMA_OPS
-Message-ID: <20190410081617.GA54229@gmail.com>
-References: <20190410080220.21705-1-hch@lst.de>
- <20190410080220.21705-3-hch@lst.de>
+        id S1729531AbfDJI0m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Apr 2019 04:26:42 -0400
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:40055 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729258AbfDJI0m (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2019 04:26:42 -0400
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout3.hostsharing.net (Postfix) with ESMTPS id 082D7100D940E;
+        Wed, 10 Apr 2019 10:26:39 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id A763C23213F; Wed, 10 Apr 2019 10:26:38 +0200 (CEST)
+Date:   Wed, 10 Apr 2019 10:26:38 +0200
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
+        linux-pci@vger.kernel.org, linux@yadro.com,
+        Micah Parrish <micah.parrish@hpe.com>
+Subject: Re: [PATCH v2] PCI: pciehp: Fix re-enabling the slot marked for safe
+ removal
+Message-ID: <20190410082638.6unp2pw4k6hysodq@wunner.de>
+References: <20190312120548.31875-1-s.miroshnichenko@yadro.com>
+ <20190408195540.GF159318@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190410080220.21705-3-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20190408195540.GF159318@google.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+[cc += Micah]
 
-
-(+Cc. Patch quoted below. Acked-by from an x86 perspective.)
-
-* Christoph Hellwig <hch@lst.de> wrote:
-
-> We have supported per-device dma_map_ops in generic code for a long
-> time, and this symbol just guards the inclusion of the dma_map_ops
-> registry used for vmd.  Stop enabling it for anything but vmd.
+On Mon, Apr 08, 2019 at 02:55:40PM -0500, Bjorn Helgaas wrote:
+> On Tue, Mar 12, 2019 at 03:05:48PM +0300, Sergey Miroshnichenko wrote:
+> > --- a/drivers/pci/hotplug/pciehp_ctrl.c
+> > +++ b/drivers/pci/hotplug/pciehp_ctrl.c
+> > @@ -115,6 +115,10 @@ static void remove_board(struct controller *ctrl, bool safe_removal)
+> >  		 * removed from the slot/adapter.
+> >  		 */
+> >  		msleep(1000);
+> > +
+> > +		/* Ignore link or presence changes caused by power off */
+> > +		atomic_and(~(PCI_EXP_SLTSTA_DLLSC | PCI_EXP_SLTSTA_PDC),
+> > +			   &ctrl->pending_events);
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  arch/x86/Kconfig               | 3 ---
->  drivers/misc/mic/Kconfig       | 4 ++--
->  drivers/pci/controller/Kconfig | 1 +
->  drivers/pci/controller/vmd.c   | 7 -------
->  4 files changed, 3 insertions(+), 12 deletions(-)
+> I did apply this and I'm told that it fixes an issue where pressing an
+> NVMe drive power button does not turn off the drive.
 > 
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index 38c62ff8a3f0..d8e2e6519a61 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -28,7 +28,6 @@ config X86_64
->  	select MODULES_USE_ELF_RELA
->  	select NEED_DMA_MAP_STATE
->  	select SWIOTLB
-> -	select X86_DEV_DMA_OPS
->  	select ARCH_HAS_SYSCALL_WRAPPER
->  
->  #
-> @@ -703,7 +702,6 @@ config STA2X11
->  	bool "STA2X11 Companion Chip Support"
->  	depends on X86_32_NON_STANDARD && PCI
->  	select ARCH_HAS_PHYS_TO_DMA
-> -	select X86_DEV_DMA_OPS
->  	select SWIOTLB
->  	select MFD_STA2X11
->  	select GPIOLIB
-> @@ -2877,7 +2875,6 @@ config HAVE_ATOMIC_IOMAP
->  
->  config X86_DEV_DMA_OPS
->  	bool
-> -	depends on X86_64 || STA2X11
->  
->  config HAVE_GENERIC_GUP
->  	def_bool y
-> diff --git a/drivers/misc/mic/Kconfig b/drivers/misc/mic/Kconfig
-> index 242dcee14689..6736f72cc14a 100644
-> --- a/drivers/misc/mic/Kconfig
-> +++ b/drivers/misc/mic/Kconfig
-> @@ -4,7 +4,7 @@ comment "Intel MIC Bus Driver"
->  
->  config INTEL_MIC_BUS
->  	tristate "Intel MIC Bus Driver"
-> -	depends on 64BIT && PCI && X86 && X86_DEV_DMA_OPS
-> +	depends on 64BIT && PCI && X86
->  	help
->  	  This option is selected by any driver which registers a
->  	  device or driver on the MIC Bus, such as CONFIG_INTEL_MIC_HOST,
-> @@ -21,7 +21,7 @@ comment "SCIF Bus Driver"
->  
->  config SCIF_BUS
->  	tristate "SCIF Bus Driver"
-> -	depends on 64BIT && PCI && X86 && X86_DEV_DMA_OPS
-> +	depends on 64BIT && PCI && X86
->  	help
->  	  This option is selected by any driver which registers a
->  	  device or driver on the SCIF Bus, such as CONFIG_INTEL_MIC_HOST
-> diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-> index 6012f3059acd..011c57cae4b0 100644
-> --- a/drivers/pci/controller/Kconfig
-> +++ b/drivers/pci/controller/Kconfig
-> @@ -267,6 +267,7 @@ config PCIE_TANGO_SMP8759
->  
->  config VMD
->  	depends on PCI_MSI && X86_64 && SRCU
-> +	select X86_DEV_DMA_OPS
->  	tristate "Intel Volume Management Device Driver"
->  	---help---
->  	  Adds support for the Intel Volume Management Device (VMD). VMD is a
-> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-> index cf6816b55b5e..999a5509e57e 100644
-> --- a/drivers/pci/controller/vmd.c
-> +++ b/drivers/pci/controller/vmd.c
-> @@ -95,10 +95,8 @@ struct vmd_dev {
->  	struct irq_domain	*irq_domain;
->  	struct pci_bus		*bus;
->  
-> -#ifdef CONFIG_X86_DEV_DMA_OPS
->  	struct dma_map_ops	dma_ops;
->  	struct dma_domain	dma_domain;
-> -#endif
->  };
->  
->  static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
-> @@ -293,7 +291,6 @@ static struct msi_domain_info vmd_msi_domain_info = {
->  	.chip		= &vmd_msi_controller,
->  };
->  
-> -#ifdef CONFIG_X86_DEV_DMA_OPS
->  /*
->   * VMD replaces the requester ID with its own.  DMA mappings for devices in a
->   * VMD domain need to be mapped for the VMD, not the device requiring
-> @@ -438,10 +435,6 @@ static void vmd_setup_dma_ops(struct vmd_dev *vmd)
->  	add_dma_domain(domain);
->  }
->  #undef ASSIGN_VMD_DMA_OPS
-> -#else
-> -static void vmd_teardown_dma_ops(struct vmd_dev *vmd) {}
-> -static void vmd_setup_dma_ops(struct vmd_dev *vmd) {}
-> -#endif
->  
->  static char __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
->  				  unsigned int devfn, int reg, int len)
-> -- 
-> 2.20.1
-> 
+> But I wonder if it would be feasible to just turn off reporting of the
+> events we don't care about, as opposed to figuring out that we should
+> ignore them if they do occur.  E.g., maybe when we write
+> PCI_EXP_SLTCTL_PWR_OFF, we should clear PCI_EXP_SLTCTL_DLLSCE and
+> PCI_EXP_SLTCTL_PDCE at the same time.  Of course, then we'd have to clear
+> any pending events and re-enable them later.
+
+I think we'd have to re-enable them immediately after disabling them:
+
+My understanding is that even if the slot is powered off, it may signal
+a presence change from out-of-band presence detection.  For such form
+factors, the user may power off the slot (via sysfs or Attention Button),
+remove the card and replace it with another once.  The slot then signals
+a presence change, whereupon pciehp automatically brings up the slot
+again (without the need for another button press or sysfs interaction).
+At least that's how the code would have worked up until v4.18 for such
+form factors AFAICS.
+
+So remove_board() would have to look like this:
+
+	pciehp_unconfigure_device(ctrl, safe_removal);
+
+	if (POWER_CTRL(ctrl)) {
++		pcie_disable_notification(ctrl);
+		pciehp_power_off_slot(ctrl);
+		msleep(1000);
++		pcie_clear_hotplug_events(ctrl);
++		pcie_enable_notification(ctrl);
+	}
+
+So, three lines instead of just one line to achieve the same thing
+and also three MMIO accesses instead of just a single memory change,
+hence the solution in Sergey's patch seems simpler to me.
+
+
+> It's somewhat non-obvious that we ignore these events by clearing out
+> bits in pending_events that might have been set somewhere else (I
+> assume by pciehp_isr()) and will be consumed in a third place (maybe
+> pciehp_ist()?)
+
+Yes that is correct, pciehp_isr() collects events for later consumption
+by pciehp_ist().  They're stored in pending_events in struct controller.
+
+We already use the same atomic_and() trick of Sergey's patch in
+pciehp_check_link_status() to ignore link or presence flaps that
+occur during the first 100 ms on slot bringup.  This was done to
+fix an issue reported by Stefan Roese, cf. commit 6c35a1ac3da6
+("PCI: pciehp: Tolerate initially unstable link").
+
+We also use the pending_events to synthesize events in
+pciehp_sysfs_enable_slot(), pciehp_sysfs_disable_slot() and
+pciehp_queue_pushbutton_work() by setting bits in pending_events
+and calling irq_wake_thread() to force pciehp_ist() to run.
+If pciehp_ist() is already running at the moment irq_wake_thread()
+is called, another run is automagically queued up by the IRQ core.
+We take advantage of the fact that the IRQ core already has this
+race-free, high-performance event handling implemented so that
+there's no need to duplicate the functionality in pciehp.
+
+Basically all the event handling is in one place and that's
+pciehp_ist() and everything else interfaces with it via the
+pending_events.  So the pending_events is quite central to how
+pciehp now works.
+
+I meant to write a few paragraphs to document the inner workings
+of pciehp, just haven't gotten to it yet, sorry.
+
+Thanks,
+
+Lukas
