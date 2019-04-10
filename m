@@ -2,202 +2,138 @@ Return-Path: <SRS0=u0zl=SM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F707C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 06:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D61ABC10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 06:57:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D77EA2133D
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 06:11:03 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="UlXDiDDB"
+	by mail.kernel.org (Postfix) with ESMTP id ABBFD2083E
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 06:57:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727004AbfDJGK5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Apr 2019 02:10:57 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:3336 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725924AbfDJGK5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2019 02:10:57 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cad88df0002>; Tue, 09 Apr 2019 23:10:40 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 09 Apr 2019 23:10:55 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 09 Apr 2019 23:10:55 -0700
-Received: from [10.24.47.181] (10.124.1.5) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 10 Apr
- 2019 06:10:43 +0000
-Subject: Re: [PATCH 09/10] PCI: tegra: Add Tegra194 PCIe support
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <kishon@ti.com>, <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <lorenzo.pieralisi@arm.com>, <jingoohan1@gmail.com>,
-        <gustavo.pimentel@synopsys.com>, <mperttunen@nvidia.com>,
-        <tiwai@suse.de>, <spujar@nvidia.com>, <skomatineni@nvidia.com>,
-        <liviu.dudau@arm.com>, <krzk@kernel.org>, <heiko@sntech.de>,
-        <horms+renesas@verge.net.au>, <olof@lixom.net>,
-        <maxime.ripard@bootlin.com>, <andy.gross@linaro.org>,
-        <bjorn.andersson@linaro.org>, <jagan@amarulasolutions.com>,
-        <enric.balletbo@collabora.com>, <ezequiel@collabora.com>,
-        <stefan.wahren@i2se.com>, <marc.w.gonzalez@free.fr>,
-        <l.stach@pengutronix.de>, <tpiepho@impinj.com>,
-        <hayashi.kunihiko@socionext.com>, <yue.wang@amlogic.com>,
-        <shawn.lin@rock-chips.com>, <xiaowei.bao@nxp.com>,
-        <devicetree@vger.kernel.org>, <mmaddireddy@nvidia.com>,
-        <kthota@nvidia.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <1553613207-3988-1-git-send-email-vidyas@nvidia.com>
- <1553613207-3988-10-git-send-email-vidyas@nvidia.com>
- <20190329203159.GG24180@google.com>
- <5eb9599c-a6d6-d3a3-beef-5225ed7393f9@nvidia.com>
- <20190402183110.GE141706@google.com>
- <dcbfbb32-9980-7ee4-89cd-baedfe624ce5@nvidia.com>
- <20190403173641.GI141706@google.com>
- <6cc7e047-bc7e-fa60-88ba-0b69c3d5a3f0@nvidia.com>
- <20190405185842.GC26522@google.com>
- <40c97eaa-e37e-860e-111d-879a135d9f51@nvidia.com>
- <20190409132604.GA256045@google.com>
-From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <a414b42c-ce10-e2db-55f0-9428cfd23e68@nvidia.com>
-Date:   Wed, 10 Apr 2019 11:40:40 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1728656AbfDJG5p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Apr 2019 02:57:45 -0400
+Received: from mailgw01.mediatek.com ([210.61.82.183]:51483 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726894AbfDJG5p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 Apr 2019 02:57:45 -0400
+X-UUID: bbb14080766e4b3fbe1539bb8f27c0c3-20190410
+X-UUID: bbb14080766e4b3fbe1539bb8f27c0c3-20190410
+Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
+        (envelope-from <chunfeng.yun@mediatek.com>)
+        (mhqrelay.mediatek.com ESMTP with TLS)
+        with ESMTP id 1622885347; Wed, 10 Apr 2019 14:57:31 +0800
+Received: from mtkcas08.mediatek.inc (172.21.101.126) by
+ mtkmbs08n1.mediatek.inc (172.21.101.55) with Microsoft SMTP Server (TLS) id
+ 15.0.1395.4; Wed, 10 Apr 2019 14:57:30 +0800
+Received: from localhost.localdomain (10.17.3.153) by mtkcas08.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1395.4 via Frontend
+ Transport; Wed, 10 Apr 2019 14:57:29 +0800
+From:   Chunfeng Yun <chunfeng.yun@mediatek.com>
+To:     Ryder Lee <ryder.lee@mediatek.com>,
+        Honghui Zhang <honghui.zhang@mediatek.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     Bjorn Helgaas <bhelgaas@google.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Chunfeng Yun <chunfeng.yun@mediatek.com>
+Subject: [v3 PATCH] PCI: mediatek: get optional clock by devm_clk_get_optional()
+Date:   Wed, 10 Apr 2019 14:54:16 +0800
+Message-ID: <c4579e5a72f169808a9ad4aefdd7bf7b75d10d61.1554879079.git.chunfeng.yun@mediatek.com>
+X-Mailer: git-send-email 1.7.9.5
 MIME-Version: 1.0
-In-Reply-To: <20190409132604.GA256045@google.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1554876640; bh=XP5pBaAzq9ceuDVxSs3r6ZAnlMLHTJVkOLBlgo77z7o=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
-         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
-         X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=UlXDiDDBMhWq2TWyoaZ8R+NTy5qZL6UD/l2nVF185kZM1jhudocKUNFkcJoW67n0G
-         5An6PhPQeDMynKsesGDzqoKfRd29idTmuztikN8+ixwPelF1afpq18Q2xnv5ME9A1i
-         LlTT5yNZriSjqvh8KnFbO/0Fe2taeu2yd+XvyX+xhXhq0G1Y7HhyiNEwMgjNWHnTPy
-         Lzb8h9aMm3AZHktSQuJV+/B6KU143gCrNzdsNecp/WFaoNZ4M1teAbihf5/pbgwMfw
-         Dxf+f5MQxJAfPtG1a59Y9YaV/yuA0IwvE5Y7wWWZrk+NId4KJeGRKoVvoRZlepjDRp
-         FQ3+C3aRFH85Q==
+Content-Type: text/plain
+X-MTK:  N
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 4/9/2019 6:56 PM, Bjorn Helgaas wrote:
-> On Tue, Apr 09, 2019 at 05:00:53PM +0530, Vidya Sagar wrote:
->> On 4/6/2019 12:28 AM, Bjorn Helgaas wrote:
->>> On Fri, Apr 05, 2019 at 01:23:51AM +0530, Vidya Sagar wrote:
->>>> On 4/3/2019 11:06 PM, Bjorn Helgaas wrote:
->>>>> On Wed, Apr 03, 2019 at 03:13:09PM +0530, Vidya Sagar wrote:
->>>>>> On 4/3/2019 12:01 AM, Bjorn Helgaas wrote:
->>>>>>> On Tue, Apr 02, 2019 at 12:47:48PM +0530, Vidya Sagar wrote:
->>>>>>>> On 3/30/2019 2:22 AM, Bjorn Helgaas wrote:
->>>>>>>>> On Tue, Mar 26, 2019 at 08:43:26PM +0530, Vidya Sagar wrote:
->>>>>>>>>> Add support for Synopsys DesignWare core IP based PCIe host controller
->>>>>>>>>> present in Tegra194 SoC.
->>>>>>>
->>>>>>>       - Why does this chip require pcie_pme_disable_msi()?  The only other
->>>>>>>         use is a DMI quirk for "MSI Wind U-100", added by c39fae1416d5
->>>>>>>         ("PCI PM: Make it possible to force using INTx for PCIe PME
->>>>>>>         signaling").
->>>>>>
->>>>>> Because Tegra194 doesn't support raising PME interrupts through MSI line.
-> 
->>> There's something wrong here.  Either the question of how PME is
->>> signaled is generic and the spec provides a way for the OS to discover
->>> that method, or it's part of the device-specific architecture that
->>> each host bridge driver has to know about its device.  If the former,
->>> we need to make the PCI core smart enough to figure it out.  If the
->>> latter, we need a better interface than this ad hoc
->>> pcie_pme_disable_msi() thing.  But if it is truly the latter, your
->>> current code is sufficient and we can refine it over time.
->>
->> In case of Tegra194, it is the latter case.
-> 
-> This isn't a Tegra194 question; it's a question of whether this
-> behavior is covered by the PCIe spec.
-AFAIU the spec and what I heard from Nvidia hardware folks is that spec doesn't
-explicitly talk about this and it was a design choice made by Nvidia hardware
-folks to route these interrupts through legacy line instead of MSI line.
+Use devm_clk_get_optional() to get optional clock
 
-> 
->>> What I suspect should happen eventually is the DWC driver should call
->>> devm_pci_alloc_host_bridge() directly, as all the non-DWC drivers do.
->>> That would require a little reorganization of the DWC data structures,
->>> but it would be good to be more consistent.
->>>
->>> For now, I think stashing the pointer in pcie_port or dw_pcie would be
->>> OK.  I'm not 100% clear on the difference, but it looks like either
->>> should be common across all the DWC drivers, which is what we want.
->>
->> Since dw_pcie is common for both root port and end point mode structures,
->> I think it makes sense to keep the pointer in pcie_port as this structure
->> is specific to root port mode of operation.
->> I'll make a note to reorganize code to have devm_pci_alloc_host_bridge()
->> used in the beginning itself to be inline with non-DWC implementations.
->> But, I'll take it up later (after I'm done with upstreaming current series)
-> 
-> Fair enough.
-> 
->>>> .remove() internally calls pm_runtime_put_sync() API which calls
->>>> .runtime_suspend(). I made a new patch to add a host_deinit() call
->>>> which make all these calls. Since host_init() is called from inside
->>>> .runtime_resume() of this driver, to be in sync, I'm now calling
->>>> host_deinit() from inside .runtime_suspend() API.
->>>
->>> I think this is wrong.  pci_stop_root_bus() will detach all the
->>> drivers from all the devices.  We don't want to do that if we're
->>> merely runtime suspending the host bridge, do we?
->>
->> In the current driver, the scenarios in which .runtime_suspend() is called
->> are
->> a) during .remove() call and
-> 
-> It makes sense that you should call pci_stop_root_bus() during
-> .remove(), i.e., when the host controller driver is being removed,
-> because the PCI bus will no longer be accessible.  I think you should
-> call it *directly* from tegra_pcie_dw_remove() because that will match
-> what other drivers do.
-> 
->> b) when there is no endpoint found and controller would be shutdown
->> In both cases, it is required to stop the root bus and remove all devices,
->> so, instead of having same call present in respective paths, I kept them
->> in .runtime_suspend() itself to avoid code duplication.
-> 
-> I don't understand this part.  We should be able to runtime suspend
-> the host controller without detaching drivers for child devices.
-> 
-> If you shutdown the controller completely and detach the *host
-> controller driver*, sure, it makes sense to detach drivers from child
-> devices.  But that would be handled by the host controller .remove()
-> method, not by the runtime suspend method.
-I think it is time I give some background about why I chose to implement
-.runtime_suspend() and .runtime_resume() APIs in the first place. We wanted to
-powerdown PCIe controller if there is no link up (i.e. slot is open and no endpoint
-devices are connected). We want to achieve this without returning a failure in
-.probe() call. Given PCIe IP power partitioning is handled by generic power domain
-framework, power partition gets unpowergated before .probe() gets called and gets
-powergated either when a failure is returned in .probe() or when pm_runtime_put_sync()
-is called. So, I chose to call pm_runtime_put_sync() in no-link-up scenario and chose
-to implement .runtime_suspend() to handle all the cleanup work before PCIe partition
-getting powergated. In fact, to match this, I'm doing all the PCIe IP bring up
-activity in .runtime_resume() implementation which gets invoked by pm_runtime_get_sync()
-which in turn is called in .probe() path. In fact the very dw_pcie_host_init() itself
-is called from .runtime_resume() implementation. So, it is because of these reasons that
-I called pci_stop_root_bus() and pci_remove_root_bus() as part of .runtime_suspend()
-implementation as pm_runtime_put_sync() is called from both .remove() and also during
-no-link-up scenario. Please do let me know if there is a better way to do this.
+Cc: Ryder Lee <ryder.lee@mediatek.com>
+Cc: Honghui Zhang <honghui.zhang@mediatek.com>
+Signed-off-by: Chunfeng Yun <chunfeng.yun@mediatek.com>
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+Acked-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+v3: add Acked-by Ryder and Honghui
+---
+ drivers/pci/controller/pcie-mediatek.c | 50 ++++++++------------------
+ 1 file changed, 15 insertions(+), 35 deletions(-)
 
-> 
-> Bjorn
-> 
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 0b6c72804e03..adb6cb15daa2 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -915,49 +915,29 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+ 
+ 	/* sys_ck might be divided into the following parts in some chips */
+ 	snprintf(name, sizeof(name), "ahb_ck%d", slot);
+-	port->ahb_ck = devm_clk_get(dev, name);
+-	if (IS_ERR(port->ahb_ck)) {
+-		if (PTR_ERR(port->ahb_ck) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
+-
+-		port->ahb_ck = NULL;
+-	}
++	port->ahb_ck = devm_clk_get_optional(dev, name);
++	if (IS_ERR(port->ahb_ck))
++		return PTR_ERR(port->ahb_ck);
+ 
+ 	snprintf(name, sizeof(name), "axi_ck%d", slot);
+-	port->axi_ck = devm_clk_get(dev, name);
+-	if (IS_ERR(port->axi_ck)) {
+-		if (PTR_ERR(port->axi_ck) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
+-
+-		port->axi_ck = NULL;
+-	}
++	port->axi_ck = devm_clk_get_optional(dev, name);
++	if (IS_ERR(port->axi_ck))
++		return PTR_ERR(port->axi_ck);
+ 
+ 	snprintf(name, sizeof(name), "aux_ck%d", slot);
+-	port->aux_ck = devm_clk_get(dev, name);
+-	if (IS_ERR(port->aux_ck)) {
+-		if (PTR_ERR(port->aux_ck) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
+-
+-		port->aux_ck = NULL;
+-	}
++	port->aux_ck = devm_clk_get_optional(dev, name);
++	if (IS_ERR(port->aux_ck))
++		return PTR_ERR(port->aux_ck);
+ 
+ 	snprintf(name, sizeof(name), "obff_ck%d", slot);
+-	port->obff_ck = devm_clk_get(dev, name);
+-	if (IS_ERR(port->obff_ck)) {
+-		if (PTR_ERR(port->obff_ck) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
+-
+-		port->obff_ck = NULL;
+-	}
++	port->obff_ck = devm_clk_get_optional(dev, name);
++	if (IS_ERR(port->obff_ck))
++		return PTR_ERR(port->obff_ck);
+ 
+ 	snprintf(name, sizeof(name), "pipe_ck%d", slot);
+-	port->pipe_ck = devm_clk_get(dev, name);
+-	if (IS_ERR(port->pipe_ck)) {
+-		if (PTR_ERR(port->pipe_ck) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
+-
+-		port->pipe_ck = NULL;
+-	}
++	port->pipe_ck = devm_clk_get_optional(dev, name);
++	if (IS_ERR(port->pipe_ck))
++		return PTR_ERR(port->pipe_ck);
+ 
+ 	snprintf(name, sizeof(name), "pcie-rst%d", slot);
+ 	port->reset = devm_reset_control_get_optional_exclusive(dev, name);
+-- 
+2.21.0
 
