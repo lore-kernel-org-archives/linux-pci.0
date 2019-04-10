@@ -2,237 +2,173 @@ Return-Path: <SRS0=u0zl=SM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0DB9C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 14:21:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAE8EC10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 14:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62A7520854
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 14:21:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554906110;
-	bh=30bt21JYBRQYnSdO8yJFiC48EYrxWJJyLsYQnwBb2Ps=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=c/4/gLTeSoFTb+tnj8qG8bp26HU6V48nB3/aNKdvNapfDiT8NkUPjOiaEvmyrK/Tz
-	 kNkTqPquXXwUgmROPNFgNPRVQbzdffGI+ruF5BBiFiBs3nybjB8IywEs61melzMFZ3
-	 6frsuawNrrHAEz65Drz8tv+TrhV2HrjrPeFvxsdY=
+	by mail.kernel.org (Postfix) with ESMTP id 69789205F4
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Apr 2019 14:46:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=amdcloud.onmicrosoft.com header.i=@amdcloud.onmicrosoft.com header.b="DoqS19R+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732678AbfDJOVt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Apr 2019 10:21:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57044 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732410AbfDJOVt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Apr 2019 10:21:49 -0400
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 69D2920854;
-        Wed, 10 Apr 2019 14:21:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554906107;
-        bh=30bt21JYBRQYnSdO8yJFiC48EYrxWJJyLsYQnwBb2Ps=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=dsThSkPDc4U3Z41Hk3iLqyZKgLCaoxselE1msvmZGAKGELXnSB4vIlngp4Ly8eVGN
-         M2PQmjtIpZW75YsVxdV9OIO/c/5BNVHBM/gp19UrOVR+1OV6DLCbDEKfdyorbw87Mr
-         Nx+o1DpI+N5wj4lv6jplXVYwetn7IPuIoc1KtLFw=
-Received: by mail-ed1-f47.google.com with SMTP id h22so2202001edw.7;
-        Wed, 10 Apr 2019 07:21:47 -0700 (PDT)
-X-Gm-Message-State: APjAAAVyq+b2ItJMx7rjRODIlGRLwCknyjnaCLfv1ta3mu2lBYNVYtFy
-        nc84+2pBV4Pfwu9hOAmo7NOk3Ge3NFUAzJKasp8=
-X-Google-Smtp-Source: APXvYqxE2+ZkgdQ7Ch+JKLyR7sQQIEBYR7tpdIhgnO5hQ0FFnx/rjI9S7rGRZ3eIrpP00vfs66Jblhzl2O/Bvf+ggk4=
-X-Received: by 2002:a50:fe15:: with SMTP id f21mr18469618edt.135.1554906105952;
- Wed, 10 Apr 2019 07:21:45 -0700 (PDT)
+        id S1732471AbfDJOql (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Apr 2019 10:46:41 -0400
+Received: from mail-eopbgr820059.outbound.protection.outlook.com ([40.107.82.59]:41280
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732418AbfDJOql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Apr 2019 10:46:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=amdcloud.onmicrosoft.com; s=selector1-amd-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EOWrc3OPZFm84Qd/q3nvXFBQNf4w5CHpWzMIvjDT84s=;
+ b=DoqS19R+CfiO4Yn6jjNKE6dBQabV4BFv3t2UcJoevUkbA+Anr7ryh6wc2Gbee1sZLr3Noqdwfi5KNXHEn8LuvzzdxdgWSLllKOnPnUIPIMFjmcgZ8MGn5m8TyzZNko/4I6vkNvRC9Oyg8E6D3e/J3wMRhgX6AmET+GAIFI9iGuE=
+Received: from BN6PR12MB1809.namprd12.prod.outlook.com (10.175.101.17) by
+ BN6PR12MB1633.namprd12.prod.outlook.com (10.172.18.143) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1771.13; Wed, 10 Apr 2019 14:46:37 +0000
+Received: from BN6PR12MB1809.namprd12.prod.outlook.com
+ ([fe80::687a:46f8:c99c:a46c]) by BN6PR12MB1809.namprd12.prod.outlook.com
+ ([fe80::687a:46f8:c99c:a46c%2]) with mapi id 15.20.1771.016; Wed, 10 Apr 2019
+ 14:46:37 +0000
+From:   "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Nikolai Kostrigin <nickel@altlinux.org>,
+        "Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+        "Lendacky, Thomas" <Thomas.Lendacky@amd.com>,
+        "Kuehling, Felix" <Felix.Kuehling@amd.com>,
+        "Koenig, Christian" <Christian.Koenig@amd.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "jroedel@suse.de" <jroedel@suse.de>
+Subject: RE: [PATCH RESEND 1/1] PCI: Add ATS-disable quirk for AMD Radeon R7
+ GPUs
+Thread-Topic: [PATCH RESEND 1/1] PCI: Add ATS-disable quirk for AMD Radeon R7
+ GPUs
+Thread-Index: AQHU7x+DAmu/NcPAdEyJYqSbzdz726Y1cLAw
+Date:   Wed, 10 Apr 2019 14:46:37 +0000
+Message-ID: <BN6PR12MB1809C529684D59E8DF3D1F0FF72E0@BN6PR12MB1809.namprd12.prod.outlook.com>
+References: <20190408103725.30426-1-nickel@altlinux.org>
+ <20190408103725.30426-2-nickel@altlinux.org>
+ <20190409215927.GC256045@google.com>
+In-Reply-To: <20190409215927.GC256045@google.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Alexander.Deucher@amd.com; 
+x-originating-ip: [208.253.63.55]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 34b96f16-1d32-4e12-8030-08d6bdc355ce
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:BN6PR12MB1633;
+x-ms-traffictypediagnostic: BN6PR12MB1633:
+x-ms-exchange-purlcount: 2
+x-microsoft-antispam-prvs: <BN6PR12MB1633B8238476C83871F50BB5F72E0@BN6PR12MB1633.namprd12.prod.outlook.com>
+x-forefront-prvs: 00032065B2
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(346002)(136003)(366004)(39860400002)(396003)(376002)(199004)(189003)(13464003)(305945005)(6306002)(74316002)(446003)(5660300002)(105586002)(106356001)(9686003)(6636002)(97736004)(256004)(25786009)(52536014)(71190400001)(71200400001)(86362001)(14444005)(486006)(476003)(4326008)(110136005)(8676002)(6436002)(81156014)(966005)(478600001)(6246003)(45080400002)(72206003)(186003)(66066001)(14454004)(81166006)(99286004)(53546011)(26005)(6116002)(33656002)(6506007)(102836004)(68736007)(7696005)(53936002)(2906002)(229853002)(316002)(55016002)(3846002)(7736002)(76176011)(54906003)(11346002)(8936002)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:BN6PR12MB1633;H:BN6PR12MB1809.namprd12.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: amd.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: ihqDHKd65r8kcD5NjKULe/+fCQ8RfeKawFRlV0zKqzzurJQBRlGjgj5xbJiHa5G7pH1ysG9Hv9iF16gTg/b6VFlS8V6ZcviHb3rI3JffQIAkN3VRbG0k8YJW2RHRE1rOjcXyWE1eJyvGKN2AQUlJ14r3Wvl2+TGQ2dnBENUZmQ/NB8e0Utb19vTjhO4HTvn/9fpToyzSEmagcjSf0Ru7R/tFXle9WgMZjn5RUbX/by3i46RoDBcoQ4nM4wKT75EuSE+G/QJEI5L02H10uQUGqZwHAoodwDOkVcuhUspthzdeg+RdQWvWMQqaHgQoFKNP7XU6CDL28lXFfk0dMOHqBNwgZQuKRYthvciTRz/dTkLeutPDF2rdq/HURptaZ/IsVYHkulFw8JPIc+SD6RWN9GMvylf/bHwoAhdLFAffqMQ=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <1629227.alSmCsHHUc@pcbe13614> <6563205.xRkLC0driV@pcbe13614>
- <dae0b7ba500cc03fab23956eac85ca79@sw-optimization.com> <31100498.IIhqzTXyFT@pcbe13614>
-In-Reply-To: <31100498.IIhqzTXyFT@pcbe13614>
-From:   Alan Tull <atull@kernel.org>
-Date:   Wed, 10 Apr 2019 09:21:09 -0500
-X-Gmail-Original-Message-ID: <CANk1AXSQCFGE94R8ZxVSF2Gp+diCHJhFJPSVSx+iEyWp2URcpw@mail.gmail.com>
-Message-ID: <CANk1AXSQCFGE94R8ZxVSF2Gp+diCHJhFJPSVSx+iEyWp2URcpw@mail.gmail.com>
-Subject: Re: Device Description for FPGA Components on x86 system
-To:     Federico Vaga <federico.vaga@cern.ch>
-Cc:     Eric Schwarz <eas@sw-optimization.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-fpga@vger.kernel.org, linux-pci@vger.kernel.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, linux-x86_64@vger.kernel.org,
-        linux-fpga-owner@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 34b96f16-1d32-4e12-8030-08d6bdc355ce
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Apr 2019 14:46:37.3741
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR12MB1633
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 10, 2019 at 7:50 AM Federico Vaga <federico.vaga@cern.ch> wrote:
-
-Hi Federico,
-
-I wish I could point you to a complete solution, but there is a lot of
-work to be done in this area.  Most of what is in the kernel is a low
-level in-kernel API [4].  As you correctly state, the hardest part of
-this is doing the enumerating if you are on x86 and aren't using
-devicetree.
-
->
-> Hi,
->
-> P.S. sorry if I'm too verbose, hopefully it is useful
->
-> thanks for the answer
->
-> On Wednesday, April 10, 2019 12:30:14 PM CEST Eric Schwarz wrote:
-> > Hi,
+> -----Original Message-----
+> From: Bjorn Helgaas <helgaas@kernel.org>
+> Sent: Tuesday, April 9, 2019 5:59 PM
+> To: Nikolai Kostrigin <nickel@altlinux.org>
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> jroedel@suse.de; Deucher, Alexander <Alexander.Deucher@amd.com>
+> Subject: Re: [PATCH RESEND 1/1] PCI: Add ATS-disable quirk for AMD Radeon
+> R7 GPUs
+>=20
+> [+cc Alex]
+>=20
+> This claims to be a resend, but I don't see a previous posting.
+>=20
+> There *was* discussion when the quirk was added two years ago for a
+> different device.  As part of that, Alex thought only that device would b=
+e
+> affected and ATS was validated on other GPUs:
+>=20
+>=20
+> https://lore.kernel.org/lkml/BN6PR12MB165278346BE8A76B1E4412AFF7EA0
+> @BN6PR12MB1652.namprd12.prod.outlook.com/
+>=20
+> On Mon, Apr 08, 2019 at 01:37:25PM +0300, Nikolai Kostrigin wrote:
+> > ATS is broken on this hardware (at least for Stoney Ridge based
+> > laptop) and causes IOMMU stalls and system failure. Disable ATS on
+> > these devices to make them usable again with IOMMU enabled Thanks to
+> > Joerg Roedel <jroedel@suse.de> for help.
 > >
-> > everything you want is already available and on the way to mainline
-> > concerning support for various FPGA loading modes or available for
-> > checkout from a git repository.
-> > All that has already been discussed on the mailing list.
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D194521
 > >
-> > FPGA loading interface is available here [1].
-> > Patchset missing for FPGA loading has been sent to the mailing list from
-> > Anatolij Gustschin for various Linux kernel versions. Link to the most
-> > recent patchset version [2].
-> > FPGA Manager mailing list archive link [3] - Please read up the story
-> > here around those patches and also the replies of the others.
->
-> This does not answer the problem, which perhaps need to be clarified.
->
-> Loading FPGA is **not** the problem, I listed it in the things I want to
-> achieve because it is a pre-requirement for the real problem and because the
-> two processes are linked (or could be).
->
-> I continue by commenting myself below, trying to make the use case clearer.
->
+
++ a few AMD people
+
+Seeing this bug makes it more clear.  I don't think this is a problem with =
+the GPU.  I think it's a problem with either the sbios or iommu.  I think t=
+he original quirk added for stoney (0x98e4) is probably wrong as well.  I s=
+uspect we need a quirk for a particular laptop or sbios versions.  We valid=
+ated ATS extensively with Carrizo based systems (the system in the bug repo=
+rt above is Carrizo based) since it is the basis of our ROCm support on APU=
+s.  We have also been involved in tons of Linux OEM preloads with both Carr=
+izo and Stoney based APUs in combination with TOPAZ dGPUs (0x6900) and have=
+n't seen this issue in those programs.  We also have TOPAZ dGPUs used in OE=
+M programs with Intel chipsets and haven't seen the issue.  I suspect since=
+ windows does not use the IOMMU by default, the sbios settings may not be w=
+ell validated on certain windows only skus.  I'd rather make these DMI matc=
+hes or something like that for the platform or at the very least match the =
+SSIDs as well.
+
+Alex
+
+> > Signed-off-by: Nikolai Kostrigin <nickel@altlinux.org>
+>=20
+> Joerg, I'm happy to merge this if you would review or ack it.  I don't kn=
+ow
+> enough to conclude that this is the root cause.  It'd be nice to have an =
+actual
+> AMD erratum.  Maybe it would even have a list of affected devices so we
+> could get them all at once so people wouldn't have to trip over them one =
+by
+> one.
+>=20
+> > ---
+> >  drivers/pci/quirks.c | 1 +
+> >  1 file changed, 1 insertion(+)
 > >
-> > Cheers
-> > Eric
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c index
+> > 4700d24e5d55..abb2532e16bf 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -4876,6 +4876,7 @@ static void quirk_no_ats(struct pci_dev *pdev)
 > >
-> > [1] https://github.com/vdsao/fpga-cfg
-> > [2] https://marc.info/?l=linux-fpga&m=155078072107199&w=2
-> > [3] https://marc.info/?l=linux-fpga
+> >  /* AMD Stoney platform GPU */
+> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_no_ats);
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6900,
+> quirk_no_ats);
+> >  #endif /* CONFIG_PCI_ATS */
 > >
-> > Am 10.04.2019 12:01, schrieb Federico Vaga:
-> > > Hello,
-> > >
-> > > sorry to push for an answer but I do not want to take the risk of
-> > > designing
-> > > something useless. I do not know how should I interpret a no-answer.
-> > >
-> > > If the solution really does not exist today, then I would like to
-> > > collect
-> > > opinions/arguments/requirements on the topic so that I can write
-> > > something
-> > > useful not only for CERN but for the entire community.
-> > >
-> > > Thank you
-> > >
-> > > On Wednesday, March 27, 2019 6:17:18 PM CEST Federico Vaga wrote:
-> > >> Hello,
-> > >>
-> > >> I'm looking for guidance
-> > >>
-> > >> What I have:
-> > >> * Intel x86_64 computer
-> > >> * PCIe card with FPGA on it
-> > >>
-> > >> What I want to achieve:
-> > >> * load an FPGA bitstream on the card
-> > >> * load a device-tree like description for the FPGA devices contained
-> > >> in the bitstream
->
-> Let me first elaborate on my knowledge to avoid misunderstandings.
->
-> On ARM, nowadays, we boot with a device tree. Later we program an FPGA in
-> which there are other devices described by a device tree overlay. This can be
-> done easily.
->
-> A typical PC (x86/x86_64) does not boot with DeviceTree (it is possible, but
-> it is not common and probably not even suggested, not sure), instead it uses
-> ACPI.
-
-I have heard it suggested that we work on using DT overlays on x86*.
-It's clear there's work to be done to make that work.  I don't know if
-anybody has really tried.  It seems impractical to map or translate a
-x86 systems ACPI into a DT and go from there.  One suggestion a few
-years ago was adding a partial DT that had nodes that could serve as
-overlay targets and have that running in parallel with ACPI.
-
->
-> The FPGA Manager has support only for DeviceTree (there are patching floating
-> around to load a bitstream with configfs, debugfs or a chardevice (guilty))
-
-There's one other interface in the kernel upstream. The DFL (device
-feature list) framework built on the FPGA manager/bridge/region stuff
-[5].   It's probably not what you specifically are looking for, I'm
-mentioning as it exists in upstream.  It has a limited type of
-enumeration and appears to mostly be geared for acceleration rather
-than adding and enumerating any random hardware block.  Also it
-requires specific bitstreams as the feature list is in fpga fabric.
-
->
-> Most drivers foresee a DeviceTree loading but not an ACPI one (my feeling, I
-> did not extract exact numbers from the sources)
->
-> DeviceTree overlay requires that the system boots with DeviceTree.
->
-> DeviceTree and ACPI do not work together
->
-> So, this is the state of art that I am aware of. Correct me if, and where, I
-> am wrong.
->
->
-> Restarting from this point. I have a PC (x86_64) with a PCIe FPGA card (e.g.
-> sis8160, spec, links below). How to load the FPGA bitstream (not really a
-> problem as you correctly pointed out) **and** load all the IP-core instances
-> in that FPGA bitstream so that drivers will start running?
->
-> - Is there a recommendation for such use case?
-> - ACPI SSDT overlay?
-> - DT overlay?
-> - is there a standard way to load FPGA IP-core devices which is architecture
-> independent?
->
-> A simple and practical example. The i2c-ocore.c is a platform_driver for an
-> HDL I2C Master from open cores. I synthesize it and then load it on the FPGA.
-> How to create the Linux platform_device instance to driver that IP-core? How
-> to do that when you have also IRQ controller(s), DMA engine(s), EEPROM(s) and
-> other devices?
->
-> The fastest solution is to do what was common on ARM systems: having all
-> platform devices declared (hard coded) in a file and load them. Which is not a
-> good solution, for the same reasons why arm stuff moved to devicetree.
->
-> Is it clearer?
->
-> I do not know if it important to highlight but those cards are extensible,
-> potentially any FMC module could be plugged and this needs a different FPGA,
-> with different FPGA devices etc. So, It is not possible to hardcode the
-> description of all possible FPGA code (infinite) that can enable the usage of
-> all possible FMC module (not infinite, but definitively grater than 1)
->
->
-> https://www.struck.de/sis8160.html
-> https://ohwr.org/project/spec/wikis/home
->
->
-> > >>
-> > >> This is achievable on ARM with DeviceTree, overlay-dt, fpga-mgr; but
-> > >> I'm
-> > >> puzzled about the x86_64 use-case. I'm not able to find recent and
-> > >> clear
-> > >> information.
-> > >>
-> > >> Does anyone know if this is doable? Perhaps with ACPI SSDTs overlay?
-> > >> Or with
-> > >> the DT?
-> > >>
-> > >> thanks
-
-Thanks,
-Alan
-
-[4] https://www.kernel.org/doc/html/latest/driver-api/fpga/index.html
-[5] https://github.com/torvalds/linux/blob/master/Documentation/fpga/dfl.txt
+> >  /* Freescale PCIe doesn't support MSI in RC mode */
+> > --
+> > 2.21.0
+> >
