@@ -2,37 +2,39 @@ Return-Path: <SRS0=+gKf=SN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD942C10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 12:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4201C10F14
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 12:41:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B65862184B
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 12:41:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D42B21852
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 12:41:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726538AbfDKMld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 08:41:33 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:41976 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726264AbfDKMlc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Apr 2019 08:41:32 -0400
+        id S1726145AbfDKMlf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 08:41:35 -0400
+Received: from foss.arm.com ([217.140.101.70]:41990 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726264AbfDKMle (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 08:41:34 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5A44D374;
-        Thu, 11 Apr 2019 05:41:32 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 18F17A78;
+        Thu, 11 Apr 2019 05:41:34 -0700 (PDT)
 Received: from ostrya.cambridge.arm.com (ostrya.cambridge.arm.com [10.1.196.129])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id C4EAB3F557;
-        Thu, 11 Apr 2019 05:41:30 -0700 (PDT)
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 90FA43F557;
+        Thu, 11 Apr 2019 05:41:32 -0700 (PDT)
 From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 To:     bhelgaas@google.com
 Cc:     Robin.Murphy@arm.com, robh+dt@kernel.org, Mark.Rutland@arm.com,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, Grant.Likely@arm.com
-Subject: [PATCH v3 0/2] PCI: Describe external-facing ports in device tree
-Date:   Thu, 11 Apr 2019 13:40:25 +0100
-Message-Id: <20190411124027.9490-1-jean-philippe.brucker@arm.com>
+Subject: [PATCH v3 1/2] dt-bindings: Add external-facing PCIe port property
+Date:   Thu, 11 Apr 2019 13:40:26 +0100
+Message-Id: <20190411124027.9490-2-jean-philippe.brucker@arm.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190411124027.9490-1-jean-philippe.brucker@arm.com>
+References: <20190411124027.9490-1-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -40,28 +42,77 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since v2 [1] I fixed a possible NULL dereference reported by smatch,
-sorry about that. I dropped all tags for patch 2.
+Provide a way for the firmware to tell the OS which devices are external
+to the machine and therefore untrusted. The property can describe for
+example Thunderbolt and other user-accessible ports, which should always
+have the strongest IOMMU protection.
 
-Add an "external-facing" property to PCI ports in device-tree, to help
-identify untrusted devices. The notion of untrusted PCI devices was
-added to the v5.0 kernel to describe devices that should have strict
-IOMMU protection [2], for example devices that are plugged in a
-Thunderbolt port. ACPI systems use the ExternalFacingPort property [3].
-Add an equivalent mechanism to device tree.
-
-[1] https://lore.kernel.org/linux-pci/20190402131548.41949-1-jean-philippe.brucker@arm.com/
-[2] https://lkml.org/lkml/2018/11/26/631
-[3] https://docs.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#identifying-externally-exposed-pcie-root-ports
-
-Jean-Philippe Brucker (2):
-  dt-bindings: Add external-facing PCIe port property
-  PCI: OF: Support external-facing property
-
+Reviewed-by: Grant Likely <grant.likely@arm.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
  Documentation/devicetree/bindings/pci/pci.txt | 50 +++++++++++++++++++
- drivers/pci/of.c                              | 14 ++++--
- 2 files changed, 60 insertions(+), 4 deletions(-)
+ 1 file changed, 50 insertions(+)
 
+diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
+index c77981c5dd18..92c01db610df 100644
+--- a/Documentation/devicetree/bindings/pci/pci.txt
++++ b/Documentation/devicetree/bindings/pci/pci.txt
+@@ -24,3 +24,53 @@ driver implementation may support the following properties:
+    unsupported link speed, for instance, trying to do training for
+    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
+    for gen2, and '1' for gen1. Any other values are invalid.
++
++PCI-PCI Bridge properties
++-------------------------
++
++PCIe root ports and switch ports may be described explicitly in the device
++tree, as children of the host bridge node. Even though those devices are
++discoverable by probing, it might be necessary to describe properties that
++aren't provided by standard PCIe capabilities.
++
++Required properties:
++
++- reg:
++   Identifies the PCI-PCI bridge. As defined in the IEEE Std 1275-1994
++   document, it is a five-cell address encoded as (phys.hi phys.mid
++   phys.lo size.hi size.lo). phys.hi should contain the device's BDF as
++   0b00000000 bbbbbbbb dddddfff 00000000. The other cells should be zero.
++
++   The bus number is defined by firmware, through the standard bridge
++   configuration mechanism. If this port is a switch port, then firmware
++   allocates the bus number and writes it into the Secondary Bus Number
++   register of the bridge directly above this port. Otherwise, the bus
++   number of a root port is the first number in the bus-range property,
++   defaulting to zero.
++
++   If firmware leaves the ARI Forwarding Enable bit set in the bridge
++   above this port, then phys.hi contains the 8-bit function number as
++   0b00000000 bbbbbbbb ffffffff 00000000. Note that the PCIe specification
++   recommends that firmware only leaves ARI enabled when it knows that the
++   OS is ARI-aware.
++
++Optional properties:
++
++- external-facing:
++   When present, the port is external-facing. All bridges and endpoints
++   downstream of this port are external to the machine. The OS can, for
++   example, use this information to identify devices that cannot be
++   trusted with relaxed DMA protection, as users could easily attach
++   malicious devices to this port.
++
++Example:
++
++pcie@10000000 {
++	compatible = "pci-host-ecam-generic";
++	...
++	pcie@0008 {
++		/* Root port 00:01.0 is external-facing */
++		reg = <0x00000800 0 0 0 0>;
++		external-facing;
++	};
++};
 -- 
 2.21.0
 
