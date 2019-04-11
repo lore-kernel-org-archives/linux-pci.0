@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4813DC10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B080C10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15A212082E
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B60D2146F
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="IAvDUlH/"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="VCBnG/S8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726691AbfDKRFd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 13:05:33 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11745 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726655AbfDKRFd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 13:05:33 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5caf73e10000>; Thu, 11 Apr 2019 10:05:37 -0700
+        id S1726992AbfDKRFh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 13:05:37 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:7162 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726585AbfDKRFh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 13:05:37 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5caf73de0000>; Thu, 11 Apr 2019 10:05:34 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Thu, 11 Apr 2019 10:05:32 -0700
+  Thu, 11 Apr 2019 10:05:36 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Thu, 11 Apr 2019 10:05:32 -0700
-Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL106.nvidia.com
- (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
- 2019 17:05:32 +0000
+        by hqpgpgate101.nvidia.com on Thu, 11 Apr 2019 10:05:36 -0700
+Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
+ 2019 17:05:36 +0000
 Received: from manikanta-bm2.nvidia.com (172.20.13.39) by HQMAIL.nvidia.com
  (172.20.187.11) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Thu, 11 Apr 2019 17:05:28 +0000
+ Transport; Thu, 11 Apr 2019 17:05:32 +0000
 From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -42,9 +42,9 @@ To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
 CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>,
         Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 17/30] PCI: tegra: Use switch statements in tegra_pcie_isr()
-Date:   Thu, 11 Apr 2019 22:33:42 +0530
-Message-ID: <20190411170355.6882-18-mmaddireddy@nvidia.com>
+Subject: [PATCH 18/30] PCI: tegra: Change PRSNT_SENSE irq log to debug
+Date:   Thu, 11 Apr 2019 22:33:43 +0530
+Message-ID: <20190411170355.6882-19-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190411170355.6882-1-mmaddireddy@nvidia.com>
 References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
@@ -52,89 +52,45 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1555002337; bh=KUzqy8x/MZMoYmHpvgNJ2hVhlJQFIfFH9C+cROpYFr0=;
+        t=1555002334; bh=9VfDfe5jGU/GmLhYKRipijeH5Cjn62XH8VjLJj+t2H8=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=IAvDUlH/CR/DPUP8HmsRui1N0A3kHV+AkrIH0s8cNo8vvvCWzj9wE7+0obHi7AlBB
-         5QTwP15qcJd7ndOWK7hA0tWx+9zS0z1OQEmxuzuM5pnGi8OCVLWAIYslJcnwC+rsor
-         XLRFWreo17WGcUsHwUme3VZxrrpMV9QtxCPZ/ODNa9Zzzi3Oc+l0k7fX3U27W14R23
-         3NWbEw59esBDZ1sD8UcRGkhhNzZeLo7ws5MINdwZiWA2NFkknnuHs2sSsjcdGyCfe7
-         hUxRspMS53ph9EkIaTfe9MqMcPRxbcdOCPNZQmBRfLFSwPd4gKh98T7CGc1pxHN/vD
-         Llu7yaxfPPwpg==
+        b=VCBnG/S8OKUwFSjmkrVwXz1OVf3XFOOZaUcHYAsxhwOjqYGz59IEe47WcFSHPfKBI
+         JqH+f58mu/0xDh0PcjNV2L7Bte15TpIQ6SMy+tESA90IyrLAOdAs05KhQ1zIWzRsUh
+         4ZmYzyxS9id12uNIqjbPiINcbgTUkYKK2NVO+pkPI1vfN8fI4ESp3ZYZnUR1xSS7lx
+         ckRU6N5rDE0WDJB5Cs1Bc3Iceo5Go0q3iEaf39s0lVKjUUFRxC9Wts99ehHX1MkeLS
+         z2FHwoncys7kD+VZ7Tx+qf80Y+fTQstHXNsJogCOr1AiV87mKSejdWx5ww2TPMkpbm
+         dL1yi+CP0/fGQ==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use switch statements in tegra_pcie_isr() for better code readability.
+PRSNT_MAP bit field is programmed to update the slot present status.
+PRSNT_SENSE irq is triggered when this bit field is programmed, which is
+not an error. Add a new switch case to trap RSNT_SENSE code and print it
+with debug log level.
 
 Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- drivers/pci/controller/pci-tegra.c | 37 ++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 17 deletions(-)
+ drivers/pci/controller/pci-tegra.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index cdaaf13a9fd7..cf2715065a53 100644
+index cf2715065a53..dcfe97711cb5 100644
 --- a/drivers/pci/controller/pci-tegra.c
 +++ b/drivers/pci/controller/pci-tegra.c
-@@ -842,36 +842,39 @@ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
- 	};
- 	struct tegra_pcie *pcie = arg;
- 	struct device *dev = pcie->dev;
--	u32 code, signature;
-+	u32 code, signature, fpci;
-+	u64 address;
- 
- 	code = afi_readl(pcie, AFI_INTR_CODE) & AFI_INTR_CODE_MASK;
- 	signature = afi_readl(pcie, AFI_INTR_SIGNATURE);
- 	afi_writel(pcie, 0, AFI_INTR_CODE);
- 
--	if (code == AFI_INTR_LEGACY)
--		return IRQ_NONE;
--
- 	if (code >= ARRAY_SIZE(err_msg))
--		code = 0;
-+		return IRQ_NONE;
- 
-+	switch (code) {
-+	case AFI_INTR_LEGACY:
-+		return IRQ_NONE;
+@@ -855,6 +855,9 @@ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+ 	switch (code) {
+ 	case AFI_INTR_LEGACY:
+ 		return IRQ_NONE;
++	case AFI_INTR_PE_PRSNT_SENSE:
++		dev_dbg(dev, "%s, signature: %08x\n", err_msg[code], signature);
++		break;
  	/*
  	 * do not pollute kernel log with master abort reports since they
  	 * happen a lot during enumeration
- 	 */
--	if (code == AFI_INTR_MASTER_ABORT)
-+	case AFI_INTR_MASTER_ABORT:
- 		dev_dbg(dev, "%s, signature: %08x\n", err_msg[code], signature);
--	else
-+		fpci = afi_readl(pcie, AFI_UPPER_FPCI_ADDRESS) & 0xff;
-+		address = (u64)fpci << 32 | (signature & 0xfffffffc);
-+		dev_dbg(dev, "  FPCI address: %10llx\n", address);
-+		break;
-+	case AFI_INTR_TARGET_ABORT:
-+	case AFI_INTR_FPCI_DECODE_ERROR:
- 		dev_err(dev, "%s, signature: %08x\n", err_msg[code], signature);
--
--	if (code == AFI_INTR_TARGET_ABORT || code == AFI_INTR_MASTER_ABORT ||
--	    code == AFI_INTR_FPCI_DECODE_ERROR) {
--		u32 fpci = afi_readl(pcie, AFI_UPPER_FPCI_ADDRESS) & 0xff;
--		u64 address = (u64)fpci << 32 | (signature & 0xfffffffc);
--
--		if (code == AFI_INTR_MASTER_ABORT)
--			dev_dbg(dev, "  FPCI address: %10llx\n", address);
--		else
--			dev_err(dev, "  FPCI address: %10llx\n", address);
-+		fpci = afi_readl(pcie, AFI_UPPER_FPCI_ADDRESS) & 0xff;
-+		address = (u64)fpci << 32 | (signature & 0xfffffffc);
-+		dev_err(dev, "  FPCI address: %10llx\n", address);
-+		break;
-+	default:
-+		dev_err(dev, "%s, signature: %08x\n", err_msg[code], signature);
-+		break;
- 	}
- 
- 	return IRQ_HANDLED;
 -- 
 2.17.1
 
