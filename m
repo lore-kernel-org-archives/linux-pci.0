@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 481A8C10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8300BC10F14
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 19D6C2082E
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50DC320818
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="OnDFRFfO"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="F3ELa1ji"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726599AbfDKRF0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 13:05:26 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:15236 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726585AbfDKRF0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 13:05:26 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5caf73c50000>; Thu, 11 Apr 2019 10:05:09 -0700
+        id S1726968AbfDKRF3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 13:05:29 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:7142 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726585AbfDKRF3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 13:05:29 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5caf73d60000>; Thu, 11 Apr 2019 10:05:26 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Thu, 11 Apr 2019 10:05:25 -0700
+  Thu, 11 Apr 2019 10:05:28 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Thu, 11 Apr 2019 10:05:25 -0700
-Received: from HQMAIL110.nvidia.com (172.18.146.15) by HQMAIL103.nvidia.com
- (172.20.187.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
- 2019 17:05:24 +0000
-Received: from HQMAIL103.nvidia.com (172.20.187.11) by hqmail110.nvidia.com
- (172.18.146.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
- 2019 17:05:24 +0000
+        by hqpgpgate101.nvidia.com on Thu, 11 Apr 2019 10:05:28 -0700
+Received: from HQMAIL112.nvidia.com (172.18.146.18) by HQMAIL106.nvidia.com
+ (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
+ 2019 17:05:28 +0000
+Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL112.nvidia.com
+ (172.18.146.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
+ 2019 17:05:28 +0000
 Received: from manikanta-bm2.nvidia.com (172.20.13.39) by HQMAIL.nvidia.com
  (172.20.187.11) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Thu, 11 Apr 2019 17:05:21 +0000
+ Transport; Thu, 11 Apr 2019 17:05:25 +0000
 From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -45,9 +45,9 @@ To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
 CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>,
         Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 15/30] PCI: tegra: Fix PLLE powerdown issue due to CLKREQ# signal
-Date:   Thu, 11 Apr 2019 22:33:40 +0530
-Message-ID: <20190411170355.6882-16-mmaddireddy@nvidia.com>
+Subject: [PATCH 16/30] PCI: tegra: Program AFI_CACHE* registers only for Tegra20
+Date:   Thu, 11 Apr 2019 22:33:41 +0530
+Message-ID: <20190411170355.6882-17-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190411170355.6882-1-mmaddireddy@nvidia.com>
 References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
@@ -55,77 +55,60 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1555002309; bh=fpQyGKzWcbpG2EvBxXOM/hFJGEKFGoDhEQZ9A074Pws=;
+        t=1555002326; bh=aCV3jISdvVgfuMdoLHQA8F7pI8usjEAzqgQaE1nKx7k=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=OnDFRFfOQpTGntAqdVOlg/U0nAjcklWwASwFSeS6imA5eaD2o+zzvBlJlGA3kjeeg
-         dtJTopRCjBy0apwiCmyTs9SNfLRodKXKv1ffIFeaSxZQfngLYqpH6xWi52pY6Kn4Rx
-         gS+afk0SSPFZgvIE/vUbrhmKlBZiP+erKu9aqrbtCnYzFB8aWABuz5VPw3o0yYOQVY
-         lzNjhFgjMuU33ni86+64lNGmNLQHGV2fkPx38+5LOLULd5ch8rY3KMJC2R2pnqaUqb
-         +DrE4umb9JAlB21nDlB6yj0Ii1chHYqrGkf9GypYakFRFOKpLhiuiHFkD59meYcHt1
-         zWR0FgccCScOA==
+        b=F3ELa1jiISVsw8UrQPMCR/Wa/nkK+1gh2HfZLCqTjEGCj2q5I07A8U3eKSC3vI3YH
+         fhwCZIYRTFbp5nkJekClneidt1M8AN7E5yR7bSAZFRmP9EZLxhlLLOCGou9cEUoUHf
+         76hH3hC231TExrd6DSd0ZImPDeBPYq6mZQUAXadnjw8YWuuG5NK8YmribnY/iGMgMJ
+         tYc/p/EHl9NC2Un7Yxtm9r0CaNfEfKyVaBwWQ+h51RtWpi3tRzFC6orcpOZef67B2k
+         8SJ63//3bGWnt4S7ysGyMTKJFgWOYgPAVO7XxOHYF2UAB9FjDEVf1OOp0iVqQxaw8W
+         nXDHY0VMsiXcA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Disable controllers which failed to link up and configure CLKREQ# signals
-of these controllers as GPIO. This is required to avoid CLKREQ# signal of
-inactive controllers interfering with PLLE powerdown sequence.
-
-PCIE_CLKREQ_GPIO bits are defined only in Tegra186, however programming
-these bits in other SoCs doesn't cause any side effects. Program these
-bits for all Tegra SoCs to avoid conditional check.
+AFI_CACHE* registers are available only in Tegra20, program them only
+for Tegra20.
 
 Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- drivers/pci/controller/pci-tegra.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pci-tegra.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 7e24eac12668..8e5fdc8ce3d6 100644
+index 8e5fdc8ce3d6..cdaaf13a9fd7 100644
 --- a/drivers/pci/controller/pci-tegra.c
 +++ b/drivers/pci/controller/pci-tegra.c
-@@ -160,6 +160,8 @@
- #define  AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_211	(0x1 << 20)
- #define  AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_411	(0x2 << 20)
- #define  AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_111	(0x2 << 20)
-+#define  AFI_PCIE_CONFIG_PCIE_CLKREQ_GPIO(x)		(1 << ((x) + 29))
-+#define  AFI_PCIE_CONFIG_PCIE_CLKREQ_GPIO_ALL		(0x7 << 29)
+@@ -887,6 +887,7 @@ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+  */
+ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+ {
++	struct device_node *np = pcie->dev->of_node;
+ 	u32 fpci_bar, size, axi_address;
  
- #define AFI_FUSE			0x104
- #define  AFI_FUSE_PCIE_T0_GEN2_DIS	(1 << 2)
-@@ -733,6 +735,15 @@ static void tegra_pcie_port_disable(struct tegra_pcie_port *port)
+ 	/* Bar 0: type 1 extended configuration space */
+@@ -927,11 +928,13 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+ 	afi_writel(pcie, 0, AFI_AXI_BAR5_SZ);
+ 	afi_writel(pcie, 0, AFI_FPCI_BAR5);
  
- 	value &= ~AFI_PEX_CTRL_REFCLK_EN;
- 	afi_writel(port->pcie, value, ctrl);
-+
-+	/*
-+	 * disable PCIe device and set CLKREQ# as gpio
-+	 * to allow PLLE power down
-+	 */
-+	value = afi_readl(port->pcie, AFI_PCIE_CONFIG);
-+	value |= AFI_PCIE_CONFIG_PCIE_DISABLE(port->index);
-+	value |= AFI_PCIE_CONFIG_PCIE_CLKREQ_GPIO(port->index);
-+	afi_writel(port->pcie, value, AFI_PCIE_CONFIG);
- }
- 
- static void tegra_pcie_port_free(struct tegra_pcie_port *port)
-@@ -1147,9 +1158,12 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 	value = afi_readl(pcie, AFI_PCIE_CONFIG);
- 	value &= ~AFI_PCIE_CONFIG_SM2TMS0_XBAR_CONFIG_MASK;
- 	value |= AFI_PCIE_CONFIG_PCIE_DISABLE_ALL | pcie->xbar_config;
-+	value |= AFI_PCIE_CONFIG_PCIE_CLKREQ_GPIO_ALL;
- 
--	list_for_each_entry(port, &pcie->ports, list)
-+	list_for_each_entry(port, &pcie->ports, list) {
- 		value &= ~AFI_PCIE_CONFIG_PCIE_DISABLE(port->index);
-+		value &= ~AFI_PCIE_CONFIG_PCIE_CLKREQ_GPIO(port->index);
+-	/* map all upstream transactions as uncached */
+-	afi_writel(pcie, 0, AFI_CACHE_BAR0_ST);
+-	afi_writel(pcie, 0, AFI_CACHE_BAR0_SZ);
+-	afi_writel(pcie, 0, AFI_CACHE_BAR1_ST);
+-	afi_writel(pcie, 0, AFI_CACHE_BAR1_SZ);
++	if (of_device_is_compatible(np, "nvidia,tegra20-pcie")) {
++		/* map all upstream transactions as uncached */
++		afi_writel(pcie, 0, AFI_CACHE_BAR0_ST);
++		afi_writel(pcie, 0, AFI_CACHE_BAR0_SZ);
++		afi_writel(pcie, 0, AFI_CACHE_BAR1_ST);
++		afi_writel(pcie, 0, AFI_CACHE_BAR1_SZ);
 +	}
  
- 	afi_writel(pcie, value, AFI_PCIE_CONFIG);
- 
+ 	/* MSI translations are setup only when needed */
+ 	afi_writel(pcie, 0, AFI_MSI_FPCI_BAR_ST);
 -- 
 2.17.1
 
