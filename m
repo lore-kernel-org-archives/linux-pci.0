@@ -6,25 +6,25 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 019DAC282CE
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 15:03:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6354FC10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 15:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE44D21850
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 15:03:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E4802083E
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 15:32:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726595AbfDKPDi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 11:03:38 -0400
-Received: from foss.arm.com ([217.140.101.70]:44468 "EHLO foss.arm.com"
+        id S1726644AbfDKPcp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 11:32:45 -0400
+Received: from foss.arm.com ([217.140.101.70]:44976 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726106AbfDKPDi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Apr 2019 11:03:38 -0400
+        id S1726073AbfDKPcp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 11:32:45 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id ADD11A78;
-        Thu, 11 Apr 2019 08:03:37 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A90DF80D;
+        Thu, 11 Apr 2019 08:32:44 -0700 (PDT)
 Received: from red-moon (unknown [10.1.197.39])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B3C5A3F68F;
-        Thu, 11 Apr 2019 08:03:34 -0700 (PDT)
-Date:   Thu, 11 Apr 2019 16:03:32 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 84FE83F68F;
+        Thu, 11 Apr 2019 08:32:41 -0700 (PDT)
+Date:   Thu, 11 Apr 2019 16:32:39 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To:     Kishon Vijay Abraham I <kishon@ti.com>
 Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -40,75 +40,141 @@ Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Minghuan Lian <minghuan.Lian@nxp.com>,
         Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
         Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: Re: [PATCH v3 12/26] PCI: keystone: Prevent ARM32 specific code to
- be compiled for ARM64
-Message-ID: <20190411150332.GC6862@red-moon>
+Subject: Re: [PATCH v3 18/26] PCI: endpoint: Add support to allocate aligned
+ buffers to be mapped in BARs
+Message-ID: <20190411153238.GD6862@red-moon>
 References: <20190325093947.32633-1-kishon@ti.com>
- <20190325093947.32633-13-kishon@ti.com>
+ <20190325093947.32633-19-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190325093947.32633-13-kishon@ti.com>
+In-Reply-To: <20190325093947.32633-19-kishon@ti.com>
 User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 03:09:33PM +0530, Kishon Vijay Abraham I wrote:
-> hook_fault_code is an ARM32 specific API for hooking into data abort.
-> Since pci-keystone.c will be used for AM65X platforms which is an
-> ARM64 platform,
+On Mon, Mar 25, 2019 at 03:09:39PM +0530, Kishon Vijay Abraham I wrote:
+> Modify pci_epf_alloc_space API to take alignment size as argument in
+> order to argument in order to allocate aligned buffers to be mapped to
+> BARs.
+> 
+> Add 'align' parameter to epc_features which can be used by platform
+> drivers to specifiy the BAR allocation alignment requirements and use
+> this while invoking pci_epf_alloc_space.
+> 
+> This is mainly required for Synopsys Designware PCIe core which masks
+> the lower bits based on the BAR size (See "I/O and MEM Match Modes"
+> section in DesignWare Cores PCI Express Controller Databook version
+> 4.90a).
 
 Hi Kishon,
 
-How is the problem plugged by the fault hook fixed on ARM64 ?
+isn't this a generic PCI BAR requirement rather than a Designware
+specific one ?
+
+The patch is fine I just would like to understand the statement above.
 
 Thanks,
 Lorenzo
 
-> allow hook_fault_code to be compiled only for ARM32.
-> 
 > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
->  drivers/pci/controller/dwc/pci-keystone.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>  drivers/pci/endpoint/functions/pci-epf-test.c |  5 +++--
+>  drivers/pci/endpoint/pci-epf-core.c           | 10 ++++++++--
+>  include/linux/pci-epc.h                       |  2 ++
+>  include/linux/pci-epf.h                       |  3 ++-
+>  4 files changed, 15 insertions(+), 5 deletions(-)
 > 
-> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-> index dfe54553d832..93296d434f40 100644
-> --- a/drivers/pci/controller/dwc/pci-keystone.c
-> +++ b/drivers/pci/controller/dwc/pci-keystone.c
-> @@ -710,6 +710,7 @@ static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
->  	return ret;
->  }
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index d0b91da49bf4..c0786ca74312 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -438,7 +438,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+>  	epc_features = epf_test->epc_features;
 >  
-> +#ifdef CONFIG_ARM
->  /*
->   * When a PCI device does not exist during config cycles, keystone host gets a
->   * bus error instead of returning 0xffffffff. This handler always returns 0
-> @@ -729,6 +730,7 @@ static int ks_pcie_fault(unsigned long addr, unsigned int fsr,
+>  	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
+> -				   test_reg_bar);
+> +				   test_reg_bar, epc_features->align);
+>  	if (!base) {
+>  		dev_err(dev, "Failed to allocated register space\n");
+>  		return -ENOMEM;
+> @@ -453,7 +453,8 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+>  		if (!!(epc_features->reserved_bar & (1 << bar)))
+>  			continue;
 >  
->  	return 0;
->  }
-> +#endif
->  
->  static int __init ks_pcie_init_id(struct keystone_pcie *ks_pcie)
+> -		base = pci_epf_alloc_space(epf, bar_size[bar], bar);
+> +		base = pci_epf_alloc_space(epf, bar_size[bar], bar,
+> +					   epc_features->align);
+>  		if (!base)
+>  			dev_err(dev, "Failed to allocate space for BAR%d\n",
+>  				bar);
+> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> index 8bfdcd291196..fb1306de8f40 100644
+> --- a/drivers/pci/endpoint/pci-epf-core.c
+> +++ b/drivers/pci/endpoint/pci-epf-core.c
+> @@ -109,10 +109,12 @@ EXPORT_SYMBOL_GPL(pci_epf_free_space);
+>   * pci_epf_alloc_space() - allocate memory for the PCI EPF register space
+>   * @size: the size of the memory that has to be allocated
+>   * @bar: the BAR number corresponding to the allocated register space
+> + * @align: alignment size for the allocation region
+>   *
+>   * Invoke to allocate memory for the PCI EPF register space.
+>   */
+> -void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
+> +void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
+> +			  size_t align)
 >  {
-> @@ -778,12 +780,14 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
->  	if (ret < 0)
->  		return ret;
+>  	void *space;
+>  	struct device *dev = epf->epc->dev.parent;
+> @@ -120,7 +122,11 @@ void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
 >  
-> +#ifdef CONFIG_ARM
->  	/*
->  	 * PCIe access errors that result into OCP errors are caught by ARM as
->  	 * "External aborts"
->  	 */
->  	hook_fault_code(17, ks_pcie_fault, SIGBUS, 0,
->  			"Asynchronous external abort");
-> +#endif
+>  	if (size < 128)
+>  		size = 128;
+> -	size = roundup_pow_of_two(size);
+> +
+> +	if (align)
+> +		size = ALIGN(size, align);
+> +	else
+> +		size = roundup_pow_of_two(size);
 >  
->  	ks_pcie_start_link(pci);
->  	dw_pcie_wait_for_link(pci);
+>  	space = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
+>  	if (!space) {
+> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+> index c3ffa3917f88..f641badc2c61 100644
+> --- a/include/linux/pci-epc.h
+> +++ b/include/linux/pci-epc.h
+> @@ -109,6 +109,7 @@ struct pci_epc {
+>   * @reserved_bar: bitmap to indicate reserved BAR unavailable to function driver
+>   * @bar_fixed_64bit: bitmap to indicate fixed 64bit BARs
+>   * @bar_fixed_size: Array specifying the size supported by each BAR
+> + * @align: alignment size required for BAR buffer allocation
+>   */
+>  struct pci_epc_features {
+>  	unsigned int	linkup_notifier : 1;
+> @@ -117,6 +118,7 @@ struct pci_epc_features {
+>  	u8	reserved_bar;
+>  	u8	bar_fixed_64bit;
+>  	u64	bar_fixed_size[BAR_5 + 1];
+> +	size_t	align;
+>  };
+>  
+>  #define to_pci_epc(device) container_of((device), struct pci_epc, dev)
+> diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+> index ec02f58758c8..2d6f07556682 100644
+> --- a/include/linux/pci-epf.h
+> +++ b/include/linux/pci-epf.h
+> @@ -149,7 +149,8 @@ void pci_epf_destroy(struct pci_epf *epf);
+>  int __pci_epf_register_driver(struct pci_epf_driver *driver,
+>  			      struct module *owner);
+>  void pci_epf_unregister_driver(struct pci_epf_driver *driver);
+> -void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar);
+> +void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar,
+> +			  size_t align);
+>  void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar);
+>  int pci_epf_bind(struct pci_epf *epf);
+>  void pci_epf_unbind(struct pci_epf *epf);
 > -- 
 > 2.17.1
 > 
