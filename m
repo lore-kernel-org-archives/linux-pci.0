@@ -2,145 +2,144 @@ Return-Path: <SRS0=+gKf=SN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07BE2C10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 08:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2EF3C10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 09:09:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D52C321850
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 08:50:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 876552084D
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 09:09:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726685AbfDKIu4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 04:50:56 -0400
-Received: from ns.iliad.fr ([212.27.33.1]:52116 "EHLO ns.iliad.fr"
+        id S1726562AbfDKJJD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 05:09:03 -0400
+Received: from foss.arm.com ([217.140.101.70]:38382 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726256AbfDKIuz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Apr 2019 04:50:55 -0400
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-        by ns.iliad.fr (Postfix) with ESMTP id B74B1208FF;
-        Thu, 11 Apr 2019 10:50:53 +0200 (CEST)
-Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
-        by ns.iliad.fr (Postfix) with ESMTP id 9FBA7203E9;
-        Thu, 11 Apr 2019 10:50:53 +0200 (CEST)
-Subject: [PATCH v3] arm64: dts: qcom: msm8998: Add PCIe PHY and RC nodes
-From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
-        Vivek Gautam <vivek.gautam@codeaurora.org>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>
-References: <f9d9afc3-06cb-a0bf-e420-8188f8255a88@free.fr>
-Message-ID: <c41c4057-8352-3b8e-1bdb-631df1ec3cd8@free.fr>
-Date:   Thu, 11 Apr 2019 10:50:53 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726230AbfDKJJD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 05:09:03 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5AC5880D;
+        Thu, 11 Apr 2019 02:09:03 -0700 (PDT)
+Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id AE0CC3F718;
+        Thu, 11 Apr 2019 02:09:01 -0700 (PDT)
+Date:   Thu, 11 Apr 2019 10:08:56 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Chunfeng Yun <chunfeng.yun@mediatek.com>
+Cc:     Ryder Lee <ryder.lee@mediatek.com>,
+        Honghui Zhang <honghui.zhang@mediatek.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-mediatek@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [v3 PATCH] PCI: mediatek: get optional clock by
+ devm_clk_get_optional()
+Message-ID: <20190411090856.GA6227@red-moon>
+References: <c4579e5a72f169808a9ad4aefdd7bf7b75d10d61.1554879079.git.chunfeng.yun@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <f9d9afc3-06cb-a0bf-e420-8188f8255a88@free.fr>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Thu Apr 11 10:50:53 2019 +0200 (CEST)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <c4579e5a72f169808a9ad4aefdd7bf7b75d10d61.1554879079.git.chunfeng.yun@mediatek.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add MSM8998 PCIe QMP PHY and PCIe root complex DT nodes.
+On Wed, Apr 10, 2019 at 02:54:16PM +0800, Chunfeng Yun wrote:
+> Use devm_clk_get_optional() to get optional clock
+> 
+> Cc: Ryder Lee <ryder.lee@mediatek.com>
+> Cc: Honghui Zhang <honghui.zhang@mediatek.com>
+> Signed-off-by: Chunfeng Yun <chunfeng.yun@mediatek.com>
+> Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+> Acked-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+> v3: add Acked-by Ryder and Honghui
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 50 ++++++++------------------
+>  1 file changed, 15 insertions(+), 35 deletions(-)
 
-Based on the following DTS downstream:
-https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/arch/arm/boot/dts/qcom/msm8998.dtsi?h=LE.UM.1.3.r3.25#n2537
+Applied to pci/mediatek for v5.2, thanks.
 
-Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
----
-Changes from v2:
-	- Move all X-names props *after* corresponding X(s) prop
-	- Drop comments
----
- arch/arm64/boot/dts/qcom/msm8998.dtsi | 69 +++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
+Lorenzo
 
-diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
-index f807ea3e2c6e..dab3333e21f4 100644
---- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
-+++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
-@@ -621,6 +621,75 @@
- 				<GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
- 		};
- 
-+		pcie0: pci@1c00000 {
-+			compatible = "qcom,pcie-msm8996";
-+			reg =	<0x01c00000 0x2000>,
-+				<0x1b000000 0xf1d>,
-+				<0x1b000f20 0xa8>,
-+				<0x1b100000 0x100000>;
-+			reg-names = "parf", "dbi", "elbi", "config";
-+			device_type = "pci";
-+			linux,pci-domain = <0>;
-+			bus-range = <0x00 0xff>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			num-lanes = <1>;
-+			phys = <&pciephy>;
-+			phy-names = "pciephy";
-+
-+			ranges = <0x01000000 0x0 0x1b200000 0x1b200000 0x0 0x100000>,
-+				 <0x02000000 0x0 0x1b300000 0x1b300000 0x0 0xd00000>;
-+
-+			#interrupt-cells = <1>;
-+			interrupts = <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi";
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map =	<0 0 0 1 &intc 0 135 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &intc 0 136 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &intc 0 138 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &intc 0 139 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>,
-+				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_0_AUX_CLK>;
-+			clock-names = "pipe", "bus_master", "bus_slave", "cfg", "aux";
-+
-+			power-domains = <&gcc PCIE_0_GDSC>;
-+			iommu-map = <0x100 &anoc1_smmu 0x1480 1>;
-+			perst-gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
-+		};
-+
-+		phy@1c06000 {
-+			compatible = "qcom,msm8998-qmp-pcie-phy";
-+			reg = <0x01c06000 0x18c>;
-+			#address-cells = <1>;
-+			#size-cells = <1>;
-+			ranges;
-+
-+			clocks = <&gcc GCC_PCIE_PHY_AUX_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_CLKREF_CLK>;
-+			clock-names = "aux", "cfg_ahb", "ref";
-+
-+			resets = <&gcc GCC_PCIE_0_PHY_BCR>, <&gcc GCC_PCIE_PHY_BCR>;
-+			reset-names = "phy", "common";
-+
-+			vdda-phy-supply = <&vreg_l1a_0p875>;
-+			vdda-pll-supply = <&vreg_l2a_1p2>;
-+
-+			pciephy: lane@1c06800 {
-+				reg = <0x01c06200 0x128>, <0x01c06400 0x1fc>, <0x01c06800 0x20c>;
-+				#phy-cells = <0>;
-+
-+				clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
-+				clock-names = "pipe0";
-+				clock-output-names = "pcie_0_pipe_clk_src";
-+				#clock-cells = <0>;
-+			};
-+		};
-+
- 		tcsr_mutex_regs: syscon@1f40000 {
- 			compatible = "syscon";
- 			reg = <0x1f40000 0x20000>;
--- 
-2.17.1
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 0b6c72804e03..adb6cb15daa2 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -915,49 +915,29 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+>  
+>  	/* sys_ck might be divided into the following parts in some chips */
+>  	snprintf(name, sizeof(name), "ahb_ck%d", slot);
+> -	port->ahb_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->ahb_ck)) {
+> -		if (PTR_ERR(port->ahb_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->ahb_ck = NULL;
+> -	}
+> +	port->ahb_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->ahb_ck))
+> +		return PTR_ERR(port->ahb_ck);
+>  
+>  	snprintf(name, sizeof(name), "axi_ck%d", slot);
+> -	port->axi_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->axi_ck)) {
+> -		if (PTR_ERR(port->axi_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->axi_ck = NULL;
+> -	}
+> +	port->axi_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->axi_ck))
+> +		return PTR_ERR(port->axi_ck);
+>  
+>  	snprintf(name, sizeof(name), "aux_ck%d", slot);
+> -	port->aux_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->aux_ck)) {
+> -		if (PTR_ERR(port->aux_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->aux_ck = NULL;
+> -	}
+> +	port->aux_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->aux_ck))
+> +		return PTR_ERR(port->aux_ck);
+>  
+>  	snprintf(name, sizeof(name), "obff_ck%d", slot);
+> -	port->obff_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->obff_ck)) {
+> -		if (PTR_ERR(port->obff_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->obff_ck = NULL;
+> -	}
+> +	port->obff_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->obff_ck))
+> +		return PTR_ERR(port->obff_ck);
+>  
+>  	snprintf(name, sizeof(name), "pipe_ck%d", slot);
+> -	port->pipe_ck = devm_clk_get(dev, name);
+> -	if (IS_ERR(port->pipe_ck)) {
+> -		if (PTR_ERR(port->pipe_ck) == -EPROBE_DEFER)
+> -			return -EPROBE_DEFER;
+> -
+> -		port->pipe_ck = NULL;
+> -	}
+> +	port->pipe_ck = devm_clk_get_optional(dev, name);
+> +	if (IS_ERR(port->pipe_ck))
+> +		return PTR_ERR(port->pipe_ck);
+>  
+>  	snprintf(name, sizeof(name), "pcie-rst%d", slot);
+>  	port->reset = devm_reset_control_get_optional_exclusive(dev, name);
+> -- 
+> 2.21.0
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
