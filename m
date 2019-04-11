@@ -2,98 +2,94 @@ Return-Path: <SRS0=+gKf=SN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5CAC10F14
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 20:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D0FC10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 20:42:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7C324218E2
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 20:18:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555013907;
-	bh=Tum1w9fXrp9kimeXyVj7hipZFM3gVPW0vat4a5pupU0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=QBcBk9SHMo8U2E4VnEQZ8bDzKbe//IcafNCk9qbbsGUmcDrXYzGpGnwUkcxoW7NMZ
-	 gcCqmIDOMkZCIXZXSWlHAYuDurrDvVeScPJjvdOkfHADW/OmgT6TlQVzDbVsHSrr67
-	 K6fh2fFZZ59IOof3RFx9QBDqSuR9NcoN+s+PHcus=
+	by mail.kernel.org (Postfix) with ESMTP id 6F17C2184B
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 20:42:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726889AbfDKUSZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 16:18:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44896 "EHLO mail.kernel.org"
+        id S1726851AbfDKUmy convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 16:42:54 -0400
+Received: from mga04.intel.com ([192.55.52.120]:26407 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727006AbfDKUSQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Apr 2019 16:18:16 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D093020850;
-        Thu, 11 Apr 2019 20:18:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555013895;
-        bh=Tum1w9fXrp9kimeXyVj7hipZFM3gVPW0vat4a5pupU0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=V0Nu4AiEkpv5tw5Wns+H8DFKfcNZXRmGbICPvgjtptOWUfJ/ellEKo8hGJQiezWpk
-         0aiyOhwUJxvHvP+2ulCUMj6HQWgUxig+D5fTL50wLj/uYPskS4UqIqLDKiNd4oimqk
-         w1JCSNeVVMO8IFcZ+8QbL6628bb7zLdNYh3/cjYc=
-Date:   Thu, 11 Apr 2019 15:18:13 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc:     thierry.reding@gmail.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 26/30] dt-bindings: pci: tegra: Document
- nvidia,plat-gpios optional prop
-Message-ID: <20190411201813.GT256045@google.com>
-References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-27-mmaddireddy@nvidia.com>
+        id S1726812AbfDKUmy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 16:42:54 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 11 Apr 2019 13:42:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,338,1549958400"; 
+   d="scan'208";a="142002025"
+Received: from orsmsx102.amr.corp.intel.com ([10.22.225.129])
+  by fmsmga007.fm.intel.com with ESMTP; 11 Apr 2019 13:37:54 -0700
+Received: from orsmsx108.amr.corp.intel.com ([169.254.2.238]) by
+ ORSMSX102.amr.corp.intel.com ([169.254.3.217]) with mapi id 14.03.0415.000;
+ Thu, 11 Apr 2019 13:37:53 -0700
+From:   "Arumugam, Kamenee" <kamenee.arumugam@intel.com>
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+CC:     "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Ruhl, Michael J" <michael.j.ruhl@intel.com>,
+        "dledford@redhat.com" <dledford@redhat.com>,
+        "Arumugam, Kamenee" <kamenee.arumugam@intel.com>
+Subject: RE: [PATCH for-next 2/2] IB/hfi1: Make Unsupported Request error
+ non-fatal
+Thread-Topic: [PATCH for-next 2/2] IB/hfi1: Make Unsupported Request error
+ non-fatal
+Thread-Index: AQHU75nXBeeESwYKgU6W3nz6YBGO26Y2PakAgAExpwD//44bwIAASLuwgAB5CQD//6r2oA==
+Date:   Thu, 11 Apr 2019 20:37:53 +0000
+Message-ID: <A503C24F5B2FB844864C0DD400A8F742121C859F@ORSMSX108.amr.corp.intel.com>
+References: <20190410123253.26818.37261.stgit@scvm10.sc.intel.com>
+ <20190410123455.26818.49424.stgit@scvm10.sc.intel.com>
+ <20190410192948.GG256045@google.com>
+ <14063C7AD467DE4B82DEDB5C278E8663BE6A1B14@FMSMSX108.amr.corp.intel.com>
+ <A503C24F5B2FB844864C0DD400A8F742121C8525@ORSMSX108.amr.corp.intel.com>
+ <20190411182938.GB14495@ziepe.ca>
+In-Reply-To: <20190411182938.GB14495@ziepe.ca>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+dlp-product: dlpe-windows
+dlp-version: 11.0.600.7
+dlp-reaction: no-action
+x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiMTE4NDk4ZmEtYTE0MS00Yjk2LWI2YjktZTg4YThlNDliY2FhIiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiUXRxWk1CQmdBMTNNYTVzNmprZTBjaUxaNEFrZjdUSG5FMjJNU0NONjZ5cUpSc2t5dzF3M3FIXC85RHlxam95QkMifQ==
+x-ctpclassification: CTP_NT
+x-originating-ip: [10.22.254.139]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190411170355.6882-27-mmaddireddy@nvidia.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 11, 2019 at 10:33:51PM +0530, Manikanta Maddireddy wrote:
-> Document "nvidia,plat-gpios" optional property which supports configuring
-> of platform specific gpios.
 
-s/gpios/GPIOs/ (also in the description below)
+-----Original Message-----
+From: Jason Gunthorpe [mailto:jgg@ziepe.ca] 
+Sent: Thursday, April 11, 2019 2:30 PM
+To: Arumugam, Kamenee <kamenee.arumugam@intel.com>
+Cc: Dalessandro, Dennis <dennis.dalessandro@intel.com>; bhelgaas@google.com; linux-rdma@vger.kernel.org; linux-pci@vger.kernel.org; Ruhl, Michael J <michael.j.ruhl@intel.com>; dledford@redhat.com
+Subject: Re: [PATCH for-next 2/2] IB/hfi1: Make Unsupported Request error non-fatal
 
-Acronyms in commit logs, comments, printks, etc should be capitalized.
+On Thu, Apr 11, 2019 at 06:22:45PM +0000, Arumugam, Kamenee wrote:
 
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
->  Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> index fbbd3bcb3435..dca8393b86d1 100644
-> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> @@ -73,6 +73,8 @@ Optional properties:
->    pinctrl phandle to allow driver to explicitly put PCIe IO in DPD state.
->  - pinctrl-1: PCIe IO(bias & REFCLK) deep power down(DPD) enable state.
->    Pass pinctrl phandle to allow driver bring PCIe IO out of DPD state.
-> +- nvidia,plat-gpios: A list of platform specific gpios which controls
-> +  endpoint's internal regulator or PCIe logic.
->  
->  Required properties on Tegra124 and later (deprecated):
->  - phys: Must contain an entry for each entry in phy-names.
-> @@ -567,6 +569,7 @@ Board DTS:
->  		pci@2,0 {
->  			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-4}>;
->  			phy-names = "pcie-0";
-> +			nvidia,plat-gpios = <&gpio TEGRA_GPIO(X, 3) GPIO_ACTIVE_HIGH>;
->  			status = "okay";
->  		};
->  	};
-> -- 
-> 2.17.1
-> 
+> This is a device bug then. 
+
+> A RDMA device must accept and respond to all TLPs that the CPU could create for the user accessible BAR pages.
+
+> A user process must not be able to crash the CPU or make the device malfunction by accessing the exposed BAR page. This includes a broad range of topics, like mis-aligned acceses, SSE instructions, atomics, >etc.
+
+> Is blocking AER even enough here? If the device isn't generating a reasonable reply I have a bad feeling worse will happen.
+
+After blocking unsupported request error, we don't see any other issue including no system hang. 
+
+
