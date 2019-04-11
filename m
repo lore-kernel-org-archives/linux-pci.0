@@ -2,113 +2,92 @@ Return-Path: <SRS0=+gKf=SN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E62C10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 18:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BC0BC10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 20:01:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2C132083E
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 18:29:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="SZ/XerVG"
+	by mail.kernel.org (Postfix) with ESMTP id CB4242184E
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 20:01:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555012886;
+	bh=dN9Fffpho2GTZtkhAZhrjF2+hvzdaaIJu18EdMFpz8o=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=kd/9XBdzeJZVC/suxQPmafrVUsHFg+9vPQnXVFqyOmURlkc3pixh/WIraow27RK3r
+	 zuCzKWpFYjFdGsal9z5b0VlLBsuTJNlByQ5TeAlF1Cer6+Ze0V6kmyIX03hDZCpqlR
+	 jCNOEBB4rFP0Cz23bRSEnG91fRue18H2VCZ56byI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726656AbfDKS3m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 14:29:42 -0400
-Received: from mail-qt1-f194.google.com ([209.85.160.194]:38464 "EHLO
-        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726646AbfDKS3m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 14:29:42 -0400
-Received: by mail-qt1-f194.google.com with SMTP id d13so8302304qth.5
-        for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2019 11:29:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=X+mWAyprOrUEog4xOHIMxAKBjMgvdmNhakLkR6iLN7Q=;
-        b=SZ/XerVGc443kh4FlddTGeYDFe+BuEEGVCuKsGDxMgmjZjqsyzi0xL8sFwOxukLHCK
-         hwuPrRnJ/HEDS39RWku1e2q972axu19uUXMxySTKzAsW3GzzX/bRZcYNF+UAHo/aLX6R
-         l3osEWNAvzbwf/QnArdShyBm9/d4gHHOYKFLT8CYT2FECPqyZfUAqaQbEubM7ChLJZ0q
-         ptve+CYy4DnXfqmfor/YXYTXMkcnl4gLwjBO0fud6ZA2kIUxjotKXQghM6XNyHKB0JpU
-         hdrQX64PLcE3/3QjsKxNZDJLZqxF84bKdeHlYYywAVYvyrrdQydSelzB1Q3uBcogF7NM
-         cZNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=X+mWAyprOrUEog4xOHIMxAKBjMgvdmNhakLkR6iLN7Q=;
-        b=tm4+m9g3S4UGZkFJHPCExISs8Av5E5oDh4h7CERufOsbnUUuPteTr7MgIajwXofaoz
-         cvJOegtwMq1Pi0J0QKprRfKWNfabwZQVMGNEFS5kH67+aHCg+rgJ71cY/yf8ESGGL+Il
-         mzXrH7Tj+cxiNWbK82bRJWIuRB8TZZ2cmrjkN3UrCwBBJ9yvhXfEDUw6ZdgKKEjfoxjM
-         sDS5e604a221wEp1zE/mIHumc8GHkOjwTywGB7fcxPdjO2lxqEYQN85ArxELluWHX6y+
-         37LXzWTqtNrVo2T+WhmKlsLvnKSW4UOWtbUnWrsdjttLfUXQ+IRexiUvhfOsv+sb6uFi
-         Tl+w==
-X-Gm-Message-State: APjAAAW1SO1fH87zSOWcyO4ajm3unylk7cC5J0VDwJ3heZGznA/mmfsD
-        qdX6f2WOD9KHxFHLjb2ucBdfZw==
-X-Google-Smtp-Source: APXvYqwFYRfE8aC+miwD5OZY4kbrvXR9Aret/En6N2mJSFyJFtI5zAujJYatI9Jxed+wtYPVa+tQHA==
-X-Received: by 2002:aed:3f49:: with SMTP id q9mr44683764qtf.279.1555007380913;
-        Thu, 11 Apr 2019 11:29:40 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-49-251.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.49.251])
-        by smtp.gmail.com with ESMTPSA id g34sm28680505qtc.9.2019.04.11.11.29.39
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 11 Apr 2019 11:29:39 -0700 (PDT)
-Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1hEeSB-0007PM-0D; Thu, 11 Apr 2019 15:29:39 -0300
-Date:   Thu, 11 Apr 2019 15:29:38 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     "Arumugam, Kamenee" <kamenee.arumugam@intel.com>
-Cc:     "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Ruhl, Michael J" <michael.j.ruhl@intel.com>,
-        "dledford@redhat.com" <dledford@redhat.com>
-Subject: Re: [PATCH for-next 2/2] IB/hfi1: Make Unsupported Request error
- non-fatal
-Message-ID: <20190411182938.GB14495@ziepe.ca>
-References: <20190410123253.26818.37261.stgit@scvm10.sc.intel.com>
- <20190410123455.26818.49424.stgit@scvm10.sc.intel.com>
- <20190410192948.GG256045@google.com>
- <14063C7AD467DE4B82DEDB5C278E8663BE6A1B14@FMSMSX108.amr.corp.intel.com>
- <A503C24F5B2FB844864C0DD400A8F742121C8525@ORSMSX108.amr.corp.intel.com>
+        id S1726640AbfDKUBZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 16:01:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36518 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726633AbfDKUBZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 16:01:25 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D207C2184B;
+        Thu, 11 Apr 2019 20:01:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1555012884;
+        bh=dN9Fffpho2GTZtkhAZhrjF2+hvzdaaIJu18EdMFpz8o=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Sit4zWfP2285ZrUG1dlPANHVZsVzT/Xw4vouNZmd0EHm/dnuOOaNBZPJhXK0HP/hk
+         2kSrQO0AxpijAU9MbnZdJHgGeA9mxSxIlVwTRyfBaq5FMux5Oc0bLfUqvQpV13M1d3
+         O6ZDICxWBkuad/glDmf2G9UKsccppY/xeln9qTWg=
+Date:   Thu, 11 Apr 2019 15:01:21 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc:     thierry.reding@gmail.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 12/30] PCI: tegra: Add SW fixup for RAW violations
+Message-ID: <20190411200121.GQ256045@google.com>
+References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
+ <20190411170355.6882-13-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <A503C24F5B2FB844864C0DD400A8F742121C8525@ORSMSX108.amr.corp.intel.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20190411170355.6882-13-mmaddireddy@nvidia.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 11, 2019 at 06:22:45PM +0000, Arumugam, Kamenee wrote:
-
-> > What exactly is causing the UR?  Is it something the driver could
-> > potentially avoid, e.g., an AtomicOp that HFI doesn't support?  I
-> > have a > vague notion that InfiniBand allows some sort of direct
-> > user-space access to hardware; is there something there that can
-> > cause a UR?
+On Thu, Apr 11, 2019 at 10:33:37PM +0530, Manikanta Maddireddy wrote:
+> The logic which blocks read requests till AFI gets ACK for all outstanding
+> MC writes does not behave correctly when number of outstanding write
+> becomes more than 32 in Tegra124 and 132.
 > 
-> HFI PCIe BAR are mapped to user space to implement kernel bypass for
-> MPI/PSM jobs. In this case, user-level application is making
-> spurious read accesses (invalid width access) to this memory mapping
-> causing the device to report an unsupported request error through
-> AER. The spurious read accesses may be due to errant application
-> behavior (e.g. reading beyond the end of an array).
+> SW fixup to prevent this issue is to limit outstanding posted writes and
+> tweak updateFC timer threshold.
+> 
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 
-This is a device bug then. 
+>  static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
+> @@ -2381,6 +2408,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.program_uphy = true,
+>  	.update_clamp_threshold = false,
+>  	.program_deskew_time = false,
+> +	.raw_violation_fixup = false,
+>  	.ectl.enable = false,
 
-A RDMA device must accept and respond to all TLPs that the CPU could
-create for the user accessible BAR pages.
+It doesn't really matter either way, but you don't *have* to
+initialize all these flags to "false" since that's the default for
+uninitialized fields in static structs like these.  If you left them
+out, the structs would only contain the "true" items, and it'd be
+easier to see what's special about each SoC.
 
-A user process must not be able to crash the CPU or make the device
-malfunction by accessing the exposed BAR page. This includes a broad
-range of topics, like mis-aligned acceses, SSE instructions, atomics,
-etc.
-
-Is blocking AER even enough here? If the device isn't generating a
-reasonable reply I have a bad feeling worse will happen.
-
-Jason
+>  };
+>  
+> @@ -2407,6 +2435,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.program_uphy = true,
+>  	.update_clamp_threshold = false,
+>  	.program_deskew_time = false,
+> +	.raw_violation_fixup = false,
+>  	.ectl.enable = false,
+>  };
