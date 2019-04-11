@@ -2,100 +2,152 @@ Return-Path: <SRS0=+gKf=SN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-6.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B6DC10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 13:59:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC3DC10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 14:55:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAF1721850
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 13:59:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554991146;
-	bh=UIlNqxvk93zRDvNWk0ZBa+AvDSCtLAEelJmiigQdZdk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ZV0Dzd12RL/NkFE+lvnKO1WZQ8Hr5gs0K4Og/npinfD7YZvU1JmE1NAihPMW2Ejo5
-	 f9IYkRkSRAi7W2qYk0BzCpysnuu0SFoWVyx2kE/TXaRiUQ3bKvokXAjiD3j04NO0zW
-	 PUoRgUpsCIxPivBtx+acIvu93rukKhdvSEz4Omnc=
+	by mail.kernel.org (Postfix) with ESMTP id 870282184B
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 14:55:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726588AbfDKN7G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 09:59:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50650 "EHLO mail.kernel.org"
+        id S1726685AbfDKOzm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 10:55:42 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:58718 "EHLO ns.iliad.fr"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726106AbfDKN7G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Apr 2019 09:59:06 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0C7E32077C;
-        Thu, 11 Apr 2019 13:59:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554991145;
-        bh=UIlNqxvk93zRDvNWk0ZBa+AvDSCtLAEelJmiigQdZdk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=a0XS+UMn4sQvtSD6Nrtowp1/UIi5JMJwt0MrOwQcHtiqOL1mB02HqyB+LTL1TIDhL
-         zFJy4m/wty5P9kfcOHVvm3SvRW5iQM+EE8ypaaalQ/tAz7QB3F0jxHe3UmF+qykeTi
-         uVYA3/U/MX6RVKFzF2aB6TJnrIAXGbFzwa3TuWr8=
-Date:   Thu, 11 Apr 2019 08:59:03 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Nikolai Kostrigin <nickel@altlinux.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Joerg Roedel <jroedel@suse.de>,
-        Alexander Deucher <Alexander.Deucher@amd.com>,
-        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-        Thomas Lendacky <Thomas.Lendacky@amd.com>,
-        Felix Kuehling <Felix.Kuehling@amd.com>,
-        Christian Koenig <Christian.Koenig@amd.com>
-Subject: Re: [PATCH RESEND 1/1] PCI: Add ATS-disable quirk for AMD Radeon R7
- GPUs
-Message-ID: <20190411135903.GP256045@google.com>
-References: <20190408103725.30426-1-nickel@altlinux.org>
- <20190408103725.30426-2-nickel@altlinux.org>
+        id S1726640AbfDKOzm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 10:55:42 -0400
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 719CB215C6;
+        Thu, 11 Apr 2019 16:55:40 +0200 (CEST)
+Received: from [192.168.108.49] (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 5702D21549;
+        Thu, 11 Apr 2019 16:55:40 +0200 (CEST)
+Subject: Re: [PATCH v3] arm64: dts: qcom: msm8998: Add PCIe PHY and RC nodes
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>
+Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>
+References: <f9d9afc3-06cb-a0bf-e420-8188f8255a88@free.fr>
+ <c41c4057-8352-3b8e-1bdb-631df1ec3cd8@free.fr>
+Message-ID: <d484ff63-d149-3a0e-f010-3ea761af0219@free.fr>
+Date:   Thu, 11 Apr 2019 16:55:40 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190408103725.30426-2-nickel@altlinux.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <c41c4057-8352-3b8e-1bdb-631df1ec3cd8@free.fr>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Thu Apr 11 16:55:40 2019 +0200 (CEST)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Alex, Suravee, Thomas, Felix, Christian]
++robh, +mrutland for DT, +rmurphy for PCI
 
-On Mon, Apr 08, 2019 at 01:37:25PM +0300, Nikolai Kostrigin wrote:
-> ATS is broken on this hardware (at least for Stoney Ridge
-> based laptop) and causes IOMMU stalls and
-> system failure. Disable ATS on these devices to make them
-> usable again with IOMMU enabled
-> Thanks to Joerg Roedel <jroedel@suse.de> for help.
+On 11/04/2019 10:50, Marc Gonzalez wrote:
+
+> Add MSM8998 PCIe QMP PHY and PCIe root complex DT nodes.
 > 
-> https://bugzilla.kernel.org/show_bug.cgi?id=194521
+> Based on the following DTS downstream:
+> https://source.codeaurora.org/quic/la/kernel/msm-4.4/tree/arch/arm/boot/dts/qcom/msm8998.dtsi?h=LE.UM.1.3.r3.25#n2537
 > 
-> Signed-off-by: Nikolai Kostrigin <nickel@altlinux.org>
-
-I applied this to pci/virtualization for v5.2 with Joerg's ack, a stable
-tag, and a note about Alex's suspicion that this may be system-specific and
-may also affect other devices.
-
+> Signed-off-by: Marc Gonzalez <marc.w.gonzalez@free.fr>
 > ---
->  drivers/pci/quirks.c | 1 +
->  1 file changed, 1 insertion(+)
+> Changes from v2:
+> 	- Move all X-names props *after* corresponding X(s) prop
+> 	- Drop comments
+> ---
+>  arch/arm64/boot/dts/qcom/msm8998.dtsi | 69 +++++++++++++++++++++++++++
+>  1 file changed, 69 insertions(+)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 4700d24e5d55..abb2532e16bf 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4876,6 +4876,7 @@ static void quirk_no_ats(struct pci_dev *pdev)
+> diff --git a/arch/arm64/boot/dts/qcom/msm8998.dtsi b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> index f807ea3e2c6e..dab3333e21f4 100644
+> --- a/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> +++ b/arch/arm64/boot/dts/qcom/msm8998.dtsi
+> @@ -621,6 +621,75 @@
+>  				<GIC_SPI 369 IRQ_TYPE_EDGE_RISING>;
+>  		};
 >  
->  /* AMD Stoney platform GPU */
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_no_ats);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6900, quirk_no_ats);
->  #endif /* CONFIG_PCI_ATS */
->  
->  /* Freescale PCIe doesn't support MSI in RC mode */
-> -- 
-> 2.21.0
-> 
+> +		pcie0: pci@1c00000 {
+> +			compatible = "qcom,pcie-msm8996";
+> +			reg =	<0x01c00000 0x2000>,
+> +				<0x1b000000 0xf1d>,
+> +				<0x1b000f20 0xa8>,
+> +				<0x1b100000 0x100000>;
+> +			reg-names = "parf", "dbi", "elbi", "config";
+> +			device_type = "pci";
+> +			linux,pci-domain = <0>;
+> +			bus-range = <0x00 0xff>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			num-lanes = <1>;
+> +			phys = <&pciephy>;
+> +			phy-names = "pciephy";
+> +
+> +			ranges = <0x01000000 0x0 0x1b200000 0x1b200000 0x0 0x100000>,
+> +				 <0x02000000 0x0 0x1b300000 0x1b300000 0x0 0xd00000>;
+> +
+> +			#interrupt-cells = <1>;
+> +			interrupts = <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>;
+> +			interrupt-names = "msi";
+> +			interrupt-map-mask = <0 0 0 0x7>;
+> +			interrupt-map =	<0 0 0 1 &intc 0 135 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 2 &intc 0 136 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 3 &intc 0 138 IRQ_TYPE_LEVEL_HIGH>,
+> +					<0 0 0 4 &intc 0 139 IRQ_TYPE_LEVEL_HIGH>;
+> +
+> +			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>,
+> +				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
+> +				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
+> +				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+> +				 <&gcc GCC_PCIE_0_AUX_CLK>;
+> +			clock-names = "pipe", "bus_master", "bus_slave", "cfg", "aux";
+> +
+> +			power-domains = <&gcc PCIE_0_GDSC>;
+> +			iommu-map = <0x100 &anoc1_smmu 0x1480 1>;
+> +			perst-gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
+> +		};
+> +
+> +		phy@1c06000 {
+> +			compatible = "qcom,msm8998-qmp-pcie-phy";
+> +			reg = <0x01c06000 0x18c>;
+> +			#address-cells = <1>;
+> +			#size-cells = <1>;
+> +			ranges;
+> +
+> +			clocks = <&gcc GCC_PCIE_PHY_AUX_CLK>,
+> +				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
+> +				 <&gcc GCC_PCIE_CLKREF_CLK>;
+> +			clock-names = "aux", "cfg_ahb", "ref";
+> +
+> +			resets = <&gcc GCC_PCIE_0_PHY_BCR>, <&gcc GCC_PCIE_PHY_BCR>;
+> +			reset-names = "phy", "common";
+> +
+> +			vdda-phy-supply = <&vreg_l1a_0p875>;
+> +			vdda-pll-supply = <&vreg_l2a_1p2>;
+> +
+> +			pciephy: lane@1c06800 {
+> +				reg = <0x01c06200 0x128>, <0x01c06400 0x1fc>, <0x01c06800 0x20c>;
+> +				#phy-cells = <0>;
+> +
+> +				clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
+> +				clock-names = "pipe0";
+> +				clock-output-names = "pcie_0_pipe_clk_src";
+> +				#clock-cells = <0>;
+> +			};
+> +		};
+> +
+>  		tcsr_mutex_regs: syscon@1f40000 {
+>  			compatible = "syscon";
+>  			reg = <0x1f40000 0x20000>;
