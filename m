@@ -2,99 +2,151 @@ Return-Path: <SRS0=+gKf=SN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3729C10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 09:38:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE80C10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 09:40:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B405720850
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 09:38:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5368620818
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 09:40:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726264AbfDKJiw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 05:38:52 -0400
-Received: from ns.iliad.fr ([212.27.33.1]:34314 "EHLO ns.iliad.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726230AbfDKJiv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Apr 2019 05:38:51 -0400
-Received: from ns.iliad.fr (localhost [127.0.0.1])
-        by ns.iliad.fr (Postfix) with ESMTP id 0A6C2217FB;
-        Thu, 11 Apr 2019 11:38:50 +0200 (CEST)
-Received: from [192.168.108.8] (freebox.vlq16.iliad.fr [213.36.7.13])
-        by ns.iliad.fr (Postfix) with ESMTP id DF9CE217F7;
-        Thu, 11 Apr 2019 11:38:49 +0200 (CEST)
-Subject: Re: [PATCH v1 3/3] arm64: dts: qcom: msm8998: Add PCIe PHY and RC
- nodes
-To:     Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Jeffrey Hugo <jhugo@codeaurora.org>,
-        Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Manu Gautam <mgautam@codeaurora.org>,
-        Evan Green <evgreen@chromium.org>,
-        Douglas Anderson <dianders@chromium.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        MSM <linux-arm-msm@vger.kernel.org>,
-        PCI <linux-pci@vger.kernel.org>,
-        iommu <iommu@lists.linux-foundation.org>
-References: <5eedbe6d-f440-1a77-8a7e-81a920e3a0e7@free.fr>
- <186f7ca2-84e2-a37e-79e6-f1fec8e25374@free.fr>
- <3f32cfb9-6528-9f5e-85db-cee89fdcfc5d@mm-sol.com>
- <8ee2ca1b-2a0d-0c98-f770-a47b5b529295@free.fr>
- <8ada0472-0692-2f03-b52f-c1702bb0c33d@mm-sol.com>
-From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
-Message-ID: <8d890fdf-233e-5454-2696-fe30bd73f54c@free.fr>
-Date:   Thu, 11 Apr 2019 11:38:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726661AbfDKJka (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 05:40:30 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:39064 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726629AbfDKJka (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 05:40:30 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9683F374;
+        Thu, 11 Apr 2019 02:40:29 -0700 (PDT)
+Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7FCB83F59C;
+        Thu, 11 Apr 2019 02:40:27 -0700 (PDT)
+Date:   Thu, 11 Apr 2019 10:40:24 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     bhelgaas@google.com, treding@nvidia.com, swarren@nvidia.com,
+        mperttunen@nvidia.com, jonathanh@nvidia.com, dev@lynxeye.de,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        kthota@nvidia.com, mmaddireddy@nvidia.com, robin.murphy@arm.com
+Subject: Re: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
+Message-ID: <20190411094024.GC6227@red-moon>
+References: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <8ada0472-0692-2f03-b52f-c1702bb0c33d@mm-sol.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Thu Apr 11 11:38:50 2019 +0200 (CEST)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/04/2019 11:09, Stanimir Varbanov wrote:
+[+Robin]
 
-> On 4/11/19 11:44 AM, Marc Gonzalez wrote:
+I would like Robin to have a look before merging this patch so
+that we agree that's the expected approach.
+
+Lorenzo
+
+On Tue, Mar 19, 2019 at 07:32:01PM +0530, Vidya Sagar wrote:
+> Since the upstream MSI memory writes are generated by downstream devices,
+> it is logically correct to have MSI target memory coming from the DMA pool
+> reserved for PCIe than from the general memory pool reserved for CPU
+> access. This avoids PCIe DMA addresses coinciding with MSI target address
+> thereby raising unwanted MSI interrupts. This patch also enforces to limit
+> the MSI target address to 32-bits to make it work for PCIe endponits that
+> support only 32-bit MSI target address and those endpoints that support
+> 64-bit MSI target address anyway work with 32-bit MSI target address.
 > 
->> Since we just want to map 0x100, we don't need an iommu-map-mask.
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> Reviewed-by: Thierry Reding <treding@nvidia.com>
+> Acked-by: Thierry Reding <treding@nvidia.com>
+> ---
+> v2:
+> * changed 'phys' type to 'dma_addr_t' from 'u64'
+> * added a comment on why DMA mask is set to 32-bit
+> * replaced 'dma' with 'DMA'
 > 
-> Do you see warnings during boot about missing property?
-
-Absent iommu-map-mask property is expected. No warning:
-
-https://elixir.bootlin.com/linux/latest/source/drivers/of/base.c#L2245
-
-	/* The default is to select all bits. */
-	map_mask = 0xffffffff;
-
-	/*
-	 * Can be overridden by "{iommu,msi}-map-mask" property.
-	 * If of_property_read_u32() fails, the default is used.
-	 */
-	if (map_mask_name)
-		of_property_read_u32(np, map_mask_name, &map_mask);
-
-
->>>> +			/* PCIe Fundamental Reset */
->>>
->>> this comment is useless :) please drop it
->>
->> IMO, "perst" is a poor name. Can you guess what it stands for?
+>  drivers/pci/controller/pci-tegra.c | 35 ++++++++++++++++++++++++++---------
+>  1 file changed, 26 insertions(+), 9 deletions(-)
 > 
-> The name is got from PCIE base specification. See 6.6.1.
-> Conventional Reset from "PCI EXPRESS BASE SPECIFICATION, REV. 3.0"
-
-Indeed... Well, "perst" still sucks :-p
-
-Regards.
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index f4f53d092e00..f8173a5e352d 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -231,9 +231,9 @@ struct tegra_msi {
+>  	struct msi_controller chip;
+>  	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>  	struct irq_domain *domain;
+> -	unsigned long pages;
+>  	struct mutex lock;
+> -	u64 phys;
+> +	void *virt;
+> +	dma_addr_t phys;
+>  	int irq;
+>  };
+>  
+> @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>  	err = platform_get_irq_byname(pdev, "msi");
+>  	if (err < 0) {
+>  		dev_err(dev, "failed to get IRQ: %d\n", err);
+> -		goto err;
+> +		goto free_irq_domain;
+>  	}
+>  
+>  	msi->irq = err;
+> @@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>  			  tegra_msi_irq_chip.name, pcie);
+>  	if (err < 0) {
+>  		dev_err(dev, "failed to request IRQ: %d\n", err);
+> -		goto err;
+> +		goto free_irq_domain;
+> +	}
+> +
+> +	/* Though the PCIe controller can address >32-bit address space, to
+> +	 * facilitate endpoints that support only 32-bit MSI target address,
+> +	 * the mask is set to 32-bit to make sure that MSI target address is
+> +	 * always a 32-bit address
+> +	 */
+> +	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
+> +	if (err < 0) {
+> +		dev_err(dev, "failed to set DMA coherent mask: %d\n", err);
+> +		goto free_irq;
+> +	}
+> +
+> +	msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
+> +	if (!msi->virt) {
+> +		dev_err(dev, "failed to allocate DMA memory for MSI\n");
+> +		err = -ENOMEM;
+> +		goto free_irq;
+>  	}
+>  
+> -	/* setup AFI/FPCI range */
+> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> -	msi->phys = virt_to_phys((void *)msi->pages);
+>  	host->msi = &msi->chip;
+>  
+>  	return 0;
+>  
+> -err:
+> +free_irq:
+> +	free_irq(msi->irq, pcie);
+> +free_irq_domain:
+>  	irq_domain_remove(msi->domain);
+>  	return err;
+>  }
+> @@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
+>  	struct tegra_msi *msi = &pcie->msi;
+>  	unsigned int i, irq;
+>  
+> -	free_pages(msi->pages, 0);
+> +	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
+>  
+>  	if (msi->irq > 0)
+>  		free_irq(msi->irq, pcie);
+> -- 
+> 2.7.4
+> 
