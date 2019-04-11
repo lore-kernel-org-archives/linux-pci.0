@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9877C10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 10:13:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2090C10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 10:17:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 95E3F20818
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 10:13:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F8FD2184B
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 10:17:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L5repd78"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J2l9ojnt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726230AbfDKKN7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 06:13:59 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:39306 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726104AbfDKKN6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 06:13:58 -0400
-Received: by mail-wr1-f67.google.com with SMTP id j9so6557781wrn.6;
-        Thu, 11 Apr 2019 03:13:56 -0700 (PDT)
+        id S1726106AbfDKKRD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 06:17:03 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:54635 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726026AbfDKKRD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 06:17:03 -0400
+Received: by mail-wm1-f65.google.com with SMTP id c1so5977800wml.4;
+        Thu, 11 Apr 2019 03:17:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=AHwzttuhA7DO8ITpRLUHkH5/Yi142wVjw+S5wWHn5Mw=;
-        b=L5repd78WBjyQvpurU3hL0bVuHnIM25uaTn1PO00nQEr+1NqkDAt7HvPHkz5HcUOGj
-         a2SdQyxJRMEzY3I95ipFh9gk0H+u1ly0RQo278NIvqaVIvPl50saWYQxMT1e8LllpN/O
-         /PdYonYa8wuJWu400H42TPVLCabjIqSj26ErzvDqOfeexUzWmZe/mvbQxaQ/uBtqM9LJ
-         N5gAhmpk2/CYZfs2WWki2WODcQ0ycbWzJC/TjZrnzirF6JrVw4GMZgxnRqU7SRgxchaH
-         uMHscXse0Wu1j0vW263xlulQEzS/ADIdkN5FgufLiq19nivJClmXIGEYOmFcjTJ5YfBR
-         fMMQ==
+        bh=RblycNJZFRqa7MldVoQZQ/Xu05FPCTLCvJAt4kE/QIk=;
+        b=J2l9ojntHi2kFn4tdcHEN5Z2f06cSuYgQr4FzmgJNkP7h29iO1z551QJJTn8aFgpE9
+         okthCZc9QP+bd3MC7fvB1vjWpinTTPnMs6Vg68yTcl+ccqSd/RKYdw//NygIbS/+OAyQ
+         7UUWxMUnxJkjJKNqjGQ41KKQb1UpNdfU+6GwX2jYrYQ6I8shbjdrVar4sDO56Et85khQ
+         l8Ggm+0MjRD0BnJTR2YqcdTIC+XD3lOR+zlOeVYsfE7SJrrFOPWib1zg6+jHrpHwTsvN
+         +yYqEatBuen82xsrNsqvPWKGik3Z6zduNMdfnaiYyscotWQG6hCgG549QgV+OSeN4RYg
+         szmw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=AHwzttuhA7DO8ITpRLUHkH5/Yi142wVjw+S5wWHn5Mw=;
-        b=swiuRydR7wOYyo2suiMb8KyC+47b5fnPn1VDiULkINBj/Fg1sK31eNQfefRdzjS1qw
-         Tr56bsP1bkg6U3ii71stMYbLk4ef347m3KnPejTOJfVunCK4AJF6WBVvI+BMbeQiOXoW
-         VKlIVruFz2goCCzmGd9fdTe9APwWG1bkdluNXDp8e1z9JiAwXTNzs6tXVUmA6c91gFxg
-         4a6TnUa2JlQTvlitDQf03fqIgRFg4s6YZON4PYmKRG1LhywJM42bQljnrQ3spZ4+H2tY
-         3ZYBQGJA7easq8IMd9AZTk4Ns+3Bt0E0R1D4NksGD4elXNSNYJfDUDKgnaw/aDtnaKUf
-         n0hg==
-X-Gm-Message-State: APjAAAXFttXcBAOooH5iAp/2xIJEVOFUI6n5Zo2plLNf2v9Ncsp8Y7D8
-        pip3wJt7VuSa7XjwmWSo+v0=
-X-Google-Smtp-Source: APXvYqwgHrK8lcFw9rpObVZuOhITVqtXNc+HEQiwPVHWt657Nb0/iTxapCzCWX0KdA0AvqjV3pO1vw==
-X-Received: by 2002:adf:ec0a:: with SMTP id x10mr30441884wrn.193.1554977635656;
-        Thu, 11 Apr 2019 03:13:55 -0700 (PDT)
+        bh=RblycNJZFRqa7MldVoQZQ/Xu05FPCTLCvJAt4kE/QIk=;
+        b=FTtEZ6KwfZ4FWnO7yBsMsbyURbSuviezYuiwWwzSE16LaQrif84ryI6tX83GY6BNdF
+         itVuVZyhkgvEXaxF0guWFeIv19+FBuPEoVexUS7PvDml0dl5BsGasRdTK+nHjditEnN8
+         5apYJMhzjq+/L5yyaGWtEC14uuqc1ohkFULCN5q2WR+kCAtOkk7wa1pzLDIEP/q75c7y
+         r8u809zZHl0JUIRv/oSrE16UKYambf2zog5bCJSfs5w/anJTYTNQ7tQ+0QKlZg3xjGaa
+         kgEY/XxjgQGxquQmcjWRoyLfBDa2Ad6fQ9Kjz+lBSQY+JrzXvmdd3GsyfrJ1IctYcIXe
+         YHWg==
+X-Gm-Message-State: APjAAAXtXCEA3IR12W1YncAFn/SvoQhFSCRHhVxQjivvcXE1+PEwURMd
+        9Zw7Q8A2hL4LL5gOmu2Vm+Y=
+X-Google-Smtp-Source: APXvYqxEAhvPpOptFZA84zkR7+mvLRRjkp/ZckZdkMLy6BdfPtVk49xK2JQzRXHxi4zRVxDAGKoEIg==
+X-Received: by 2002:a1c:9ec7:: with SMTP id h190mr6327161wme.105.1554977821269;
+        Thu, 11 Apr 2019 03:17:01 -0700 (PDT)
 Received: from localhost (pD9E51B25.dip0.t-ipconnect.de. [217.229.27.37])
-        by smtp.gmail.com with ESMTPSA id o15sm34817870wrj.59.2019.04.11.03.13.54
+        by smtp.gmail.com with ESMTPSA id o12sm40262711wrx.92.2019.04.11.03.17.00
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 11 Apr 2019 03:13:54 -0700 (PDT)
-Date:   Thu, 11 Apr 2019 12:13:53 +0200
+        Thu, 11 Apr 2019 03:17:00 -0700 (PDT)
+Date:   Thu, 11 Apr 2019 12:16:57 +0200
 From:   Thierry Reding <thierry.reding@gmail.com>
 To:     Vidya Sagar <vidyas@nvidia.com>
 Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
@@ -66,15 +66,15 @@ Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         devicetree@vger.kernel.org, linux-tegra@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V2 01/16] PCI: Add #defines for PCIe spec r4.0 features
-Message-ID: <20190411101353.GE4633@ulmo>
+Subject: Re: [PATCH V2 02/16] PCI/PME: Export pcie_pme_disable_msi() API
+Message-ID: <20190411101657.GF4633@ulmo>
 References: <1554407683-31580-1-git-send-email-vidyas@nvidia.com>
- <1554407683-31580-2-git-send-email-vidyas@nvidia.com>
+ <1554407683-31580-3-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="ZInfyf7laFu/Kiw7"
+        protocol="application/pgp-signature"; boundary="9ADF8FXzFeE7X4jE"
 Content-Disposition: inline
-In-Reply-To: <1554407683-31580-2-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1554407683-31580-3-git-send-email-vidyas@nvidia.com>
 User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -82,99 +82,83 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---ZInfyf7laFu/Kiw7
+--9ADF8FXzFeE7X4jE
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 05, 2019 at 01:24:28AM +0530, Vidya Sagar wrote:
-> Add #defines for the Data Link Feature and Physical Layer 16.0 GT/s
-> features.
+On Fri, Apr 05, 2019 at 01:24:29AM +0530, Vidya Sagar wrote:
+> Export pcie_pme_disable_msi() API to enable drivers using this API be abl=
+e to
+> build as loadable modules
 >=20
 > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 > ---
 > Changes from [v1]:
-> * None
+> * This is a new patch in v2 series
 >=20
->  include/uapi/linux/pci_regs.h | 22 +++++++++++++++++++++-
->  1 file changed, 21 insertions(+), 1 deletion(-)
+>  drivers/pci/pcie/pme.c     | 6 ++++++
+>  drivers/pci/pcie/portdrv.h | 5 +----
+>  2 files changed, 7 insertions(+), 4 deletions(-)
 >=20
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 5c98133f2c94..3e01b55d548d 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -705,7 +705,9 @@
->  #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
->  #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
->  #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
-> -#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PTM
-> +#define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
-> +#define PCI_EXT_CAP_ID_PL	0x26	/* Physical Layer 16.0 GT/s */
-> +#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index 54d593d10396..18e815c1e3c9 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -27,6 +27,12 @@
+>   */
+>  bool pcie_pme_msi_disabled;
 > =20
->  #define PCI_EXT_CAP_DSN_SIZEOF	12
->  #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
-> @@ -1045,4 +1047,22 @@
->  #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOL=
-D_Scale */
->  #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
-> =20
-> +/* Data Link Feature */
-> +#define PCI_DLF_CAP		0x04	/* Capabilities Register */
-> +#define  PCI_DLF_LOCAL_DLF_SUP_MASK	0x007fffff  /* Local Data Link Featu=
-re Supported */
-> +#define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchan=
-ge Enable */
-> +#define PCI_DLF_STS		0x08	/* Status Register */
-> +#define  PCI_DLF_REMOTE_DLF_SUP_MASK	0x007fffff  /* Remote Data Link Fea=
-ture Supported */
-> +#define  PCI_DLF_REMOTE_DLF_SUP_VALID	0x80000000  /* Remote Data Link Fe=
-ature Support Valid */
+> +void pcie_pme_disable_msi(void)
+> +{
+> +	pcie_pme_msi_disabled =3D true;
+> +}
+> +EXPORT_SYMBOL_GPL(pcie_pme_disable_msi);
 > +
-> +/* Physical Layer 16.0 GT/s */
-> +#define PCI_PL_16GT_CAP		0x04	/* Capabilities Register */
-> +#define PCI_PL_16GT_CTRL	0x08	/* Control Register */
-> +#define PCI_PL_16GT_STS		0x0c	/* Status Register */
-> +#define PCI_PL_16GT_LDPM_STS	0x10	/* Local Data Parity Mismatch Status R=
-egister */
-> +#define PCI_PL_16GT_FRDPM_STS	0x14	/* First Retimer Data Parity Mismatch=
- Status Register */
-> +#define PCI_PL_16GT_SRDPM_STS	0x18	/* Second Retimer Data Parity Mismatc=
-h Status Register */
-> +#define PCI_PL_16GT_RSVD	0x1C	/* Reserved */
-> +#define PCI_PL_16GT_LE_CTRL	0x20	/* Lane Equalization Control Register */
+>  static int __init pcie_pme_setup(char *str)
+>  {
+>  	if (!strncmp(str, "nomsi", 5))
+> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+> index 1d50dc58ac40..2be7b7e9a784 100644
+> --- a/drivers/pci/pcie/portdrv.h
+> +++ b/drivers/pci/pcie/portdrv.h
+> @@ -127,10 +127,7 @@ struct pci_dev;
+>  #ifdef CONFIG_PCIE_PME
+>  extern bool pcie_pme_msi_disabled;
+> =20
+> -static inline void pcie_pme_disable_msi(void)
+> -{
+> -	pcie_pme_msi_disabled =3D true;
+> -}
+> +void pcie_pme_disable_msi(void);
+> =20
+>  static inline bool pcie_pme_no_msi(void)
+>  {
 
-This looks correct comparing to the specification. However, this leaves
-out some definitions, so I'm wondering if perhaps this should include
-all field definitions. There are also extended capabilities between the
-current maximum 0x1F and 0x25. Perhaps those should be added as well. I
-guess this could always be done as a follow-up.
+Perhaps also export pcie_pme_no_msi()? That way you could get rid of the
+extern declaration of the pcie_pme_msi_disabled variable and make it
+static to drivers/pci/pcie/pme.c?
 
-Perhaps it'd be better to change the subject to more accurately reflect
-that you're only adding a couple of PCIe 4.0 features.
+Thierry
 
-Other than that:
-
-Reviewed-by: Thierry Reding <treding@nvidia.com>
-
---ZInfyf7laFu/Kiw7
+--9ADF8FXzFeE7X4jE
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlyvE14ACgkQ3SOs138+
-s6Ggng/+LPX1tyWJWnSyBg/qhlXoB8rVsvcfYiZxFfoQUU9ypVHSw3HF57mMi1hp
-mDEp6vuvrpBKQEl2BCLP4lAUsL0KapZQPW9Ox+94aKa+Y9V8Z3w7xOqQmWIC47To
-lhh3sH9dY0Bwc3Oi9frJx/mBDV5OgDTMxA5a5oo5jizm/gJsWXiJnB8CqIYWcAhs
-J5RsXBVT4Y5frrTW9M2zOFKW4b56hW8jieWjKZrbNfAh88CABo4VZMfGV95oJN0P
-ADPAS3Bz9UsUleL/WN+kslx9I6stKOMN8dZTFio+sGSTnOEZXy72mBcyRMwjCOxc
-G3JUtQE77u6I0h3h6Xomt/NBbAcfDxbJoQpUkt5MlfGZRXVaAixIS4UDjmJ895Vd
-UwmhagN2T1eoukMk5Fz+hJ3yHcIWIMKeFAybQn8v3TBZQJCaCm6xuuDcfYqlLSP+
-5TX2a+r5Z7hbRWo28pqgb0I3V2DZwLPwbTslm1ZJQO7nhbiaXAhZcWwsgGzwDX15
-hiu6uQquNVkE2DjuPoXxQhhF+fRlwpFRdTMpK4OLH2GM8eZ4Z3djOif4Bfgd6Qzd
-52ITNFL99A058QQ8Z1d8OaHe6fDOxufZhC7eR5kqrWl8/oWyzHsNgeqmYOVmm7lz
-axjfiVTvpjdtFjrYCIzba2USCqyzQjZWS96YmuQHgA4WLwBOAzc=
-=Wz/A
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlyvFBkACgkQ3SOs138+
+s6ELhQ//Vv9MKAZnJoNuinAuHN0VZpoVinl2xO7luTsHwQwXZxojinHPNU6svT8e
+JG9n142d4+64x9LrpwAo2uK9Eur5502ru55knuDPX4f6R1s4zXjVKOSzuk5mgT/C
+/tj/aBTsz5j1nONMk1JMDVdAmecEIMdxdqBu8ReXdDKWREn2e4X/1xMKC8lHkdTL
+ykZid+SgzYB2S7h3edM7yUdvNbejZj6FEPfSmYHoFz4FU5TFV44KQdyCWWnLag45
+eIfmeiiS5HUjC70a7hA+cEl5VzBaaVOnyb7upwk0+td4a27G5C1DjG9fimTa11ZE
+JER7uYR5uspou0eAIYjUWMk2+ZVb83IOb/C5rx3G63c7ZZe5RFIZ6JMMZ5Xk8/B/
+klY/NEDSZiTTFBbNKkaectjMYLbhZ958S3ysXBU8qTkJkApo7fzrWZMijyMliaXx
+S87vCklXMTKXtXoxBjsEgwBCQsirwrHHlkgRCbwTpkr2P37AdMMSTB/J2jsj7pBH
+ncmGzf4K61rsLlKvIu2OozM9u5zIGfI3t3NY3ZNG3vK9Do0R4HGCxhZWN/JxdXhm
+QLCow0erxVPGJNNUSssiiIUyikMbmcB/ap7aI78yYZgj4jTOUhDMDBcCaj8IdluB
+YRDVKLaRuwDb6vQ4i2u3y3z7Xg9/1zq0hSwpMeNry3AmsCA/EpY=
+=IySS
 -----END PGP SIGNATURE-----
 
---ZInfyf7laFu/Kiw7--
+--9ADF8FXzFeE7X4jE--
