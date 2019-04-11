@@ -7,36 +7,33 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8300BC10F14
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4813DC10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50DC320818
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15A212082E
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 17:05:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="F3ELa1ji"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="IAvDUlH/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726968AbfDKRF3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 13:05:29 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:7142 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726585AbfDKRF3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 13:05:29 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5caf73d60000>; Thu, 11 Apr 2019 10:05:26 -0700
+        id S1726691AbfDKRFd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 13:05:33 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:11745 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726655AbfDKRFd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Apr 2019 13:05:33 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5caf73e10000>; Thu, 11 Apr 2019 10:05:37 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Thu, 11 Apr 2019 10:05:28 -0700
+  Thu, 11 Apr 2019 10:05:32 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Thu, 11 Apr 2019 10:05:28 -0700
-Received: from HQMAIL112.nvidia.com (172.18.146.18) by HQMAIL106.nvidia.com
+        by hqpgpgate101.nvidia.com on Thu, 11 Apr 2019 10:05:32 -0700
+Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL106.nvidia.com
  (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
- 2019 17:05:28 +0000
-Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL112.nvidia.com
- (172.18.146.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 11 Apr
- 2019 17:05:28 +0000
+ 2019 17:05:32 +0000
 Received: from manikanta-bm2.nvidia.com (172.20.13.39) by HQMAIL.nvidia.com
  (172.20.187.11) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Thu, 11 Apr 2019 17:05:25 +0000
+ Transport; Thu, 11 Apr 2019 17:05:28 +0000
 From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -45,9 +42,9 @@ To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
 CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>,
         Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH 16/30] PCI: tegra: Program AFI_CACHE* registers only for Tegra20
-Date:   Thu, 11 Apr 2019 22:33:41 +0530
-Message-ID: <20190411170355.6882-17-mmaddireddy@nvidia.com>
+Subject: [PATCH 17/30] PCI: tegra: Use switch statements in tegra_pcie_isr()
+Date:   Thu, 11 Apr 2019 22:33:42 +0530
+Message-ID: <20190411170355.6882-18-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190411170355.6882-1-mmaddireddy@nvidia.com>
 References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
@@ -55,60 +52,89 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1555002326; bh=aCV3jISdvVgfuMdoLHQA8F7pI8usjEAzqgQaE1nKx7k=;
+        t=1555002337; bh=KUzqy8x/MZMoYmHpvgNJ2hVhlJQFIfFH9C+cROpYFr0=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=F3ELa1jiISVsw8UrQPMCR/Wa/nkK+1gh2HfZLCqTjEGCj2q5I07A8U3eKSC3vI3YH
-         fhwCZIYRTFbp5nkJekClneidt1M8AN7E5yR7bSAZFRmP9EZLxhlLLOCGou9cEUoUHf
-         76hH3hC231TExrd6DSd0ZImPDeBPYq6mZQUAXadnjw8YWuuG5NK8YmribnY/iGMgMJ
-         tYc/p/EHl9NC2Un7Yxtm9r0CaNfEfKyVaBwWQ+h51RtWpi3tRzFC6orcpOZef67B2k
-         8SJ63//3bGWnt4S7ysGyMTKJFgWOYgPAVO7XxOHYF2UAB9FjDEVf1OOp0iVqQxaw8W
-         nXDHY0VMsiXcA==
+        b=IAvDUlH/CR/DPUP8HmsRui1N0A3kHV+AkrIH0s8cNo8vvvCWzj9wE7+0obHi7AlBB
+         5QTwP15qcJd7ndOWK7hA0tWx+9zS0z1OQEmxuzuM5pnGi8OCVLWAIYslJcnwC+rsor
+         XLRFWreo17WGcUsHwUme3VZxrrpMV9QtxCPZ/ODNa9Zzzi3Oc+l0k7fX3U27W14R23
+         3NWbEw59esBDZ1sD8UcRGkhhNzZeLo7ws5MINdwZiWA2NFkknnuHs2sSsjcdGyCfe7
+         hUxRspMS53ph9EkIaTfe9MqMcPRxbcdOCPNZQmBRfLFSwPd4gKh98T7CGc1pxHN/vD
+         Llu7yaxfPPwpg==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-AFI_CACHE* registers are available only in Tegra20, program them only
-for Tegra20.
+Use switch statements in tegra_pcie_isr() for better code readability.
 
 Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 ---
- drivers/pci/controller/pci-tegra.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+ drivers/pci/controller/pci-tegra.c | 37 ++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 8e5fdc8ce3d6..cdaaf13a9fd7 100644
+index cdaaf13a9fd7..cf2715065a53 100644
 --- a/drivers/pci/controller/pci-tegra.c
 +++ b/drivers/pci/controller/pci-tegra.c
-@@ -887,6 +887,7 @@ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
-  */
- static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
- {
-+	struct device_node *np = pcie->dev->of_node;
- 	u32 fpci_bar, size, axi_address;
+@@ -842,36 +842,39 @@ static irqreturn_t tegra_pcie_isr(int irq, void *arg)
+ 	};
+ 	struct tegra_pcie *pcie = arg;
+ 	struct device *dev = pcie->dev;
+-	u32 code, signature;
++	u32 code, signature, fpci;
++	u64 address;
  
- 	/* Bar 0: type 1 extended configuration space */
-@@ -927,11 +928,13 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
- 	afi_writel(pcie, 0, AFI_AXI_BAR5_SZ);
- 	afi_writel(pcie, 0, AFI_FPCI_BAR5);
+ 	code = afi_readl(pcie, AFI_INTR_CODE) & AFI_INTR_CODE_MASK;
+ 	signature = afi_readl(pcie, AFI_INTR_SIGNATURE);
+ 	afi_writel(pcie, 0, AFI_INTR_CODE);
  
--	/* map all upstream transactions as uncached */
--	afi_writel(pcie, 0, AFI_CACHE_BAR0_ST);
--	afi_writel(pcie, 0, AFI_CACHE_BAR0_SZ);
--	afi_writel(pcie, 0, AFI_CACHE_BAR1_ST);
--	afi_writel(pcie, 0, AFI_CACHE_BAR1_SZ);
-+	if (of_device_is_compatible(np, "nvidia,tegra20-pcie")) {
-+		/* map all upstream transactions as uncached */
-+		afi_writel(pcie, 0, AFI_CACHE_BAR0_ST);
-+		afi_writel(pcie, 0, AFI_CACHE_BAR0_SZ);
-+		afi_writel(pcie, 0, AFI_CACHE_BAR1_ST);
-+		afi_writel(pcie, 0, AFI_CACHE_BAR1_SZ);
-+	}
+-	if (code == AFI_INTR_LEGACY)
+-		return IRQ_NONE;
+-
+ 	if (code >= ARRAY_SIZE(err_msg))
+-		code = 0;
++		return IRQ_NONE;
  
- 	/* MSI translations are setup only when needed */
- 	afi_writel(pcie, 0, AFI_MSI_FPCI_BAR_ST);
++	switch (code) {
++	case AFI_INTR_LEGACY:
++		return IRQ_NONE;
+ 	/*
+ 	 * do not pollute kernel log with master abort reports since they
+ 	 * happen a lot during enumeration
+ 	 */
+-	if (code == AFI_INTR_MASTER_ABORT)
++	case AFI_INTR_MASTER_ABORT:
+ 		dev_dbg(dev, "%s, signature: %08x\n", err_msg[code], signature);
+-	else
++		fpci = afi_readl(pcie, AFI_UPPER_FPCI_ADDRESS) & 0xff;
++		address = (u64)fpci << 32 | (signature & 0xfffffffc);
++		dev_dbg(dev, "  FPCI address: %10llx\n", address);
++		break;
++	case AFI_INTR_TARGET_ABORT:
++	case AFI_INTR_FPCI_DECODE_ERROR:
+ 		dev_err(dev, "%s, signature: %08x\n", err_msg[code], signature);
+-
+-	if (code == AFI_INTR_TARGET_ABORT || code == AFI_INTR_MASTER_ABORT ||
+-	    code == AFI_INTR_FPCI_DECODE_ERROR) {
+-		u32 fpci = afi_readl(pcie, AFI_UPPER_FPCI_ADDRESS) & 0xff;
+-		u64 address = (u64)fpci << 32 | (signature & 0xfffffffc);
+-
+-		if (code == AFI_INTR_MASTER_ABORT)
+-			dev_dbg(dev, "  FPCI address: %10llx\n", address);
+-		else
+-			dev_err(dev, "  FPCI address: %10llx\n", address);
++		fpci = afi_readl(pcie, AFI_UPPER_FPCI_ADDRESS) & 0xff;
++		address = (u64)fpci << 32 | (signature & 0xfffffffc);
++		dev_err(dev, "  FPCI address: %10llx\n", address);
++		break;
++	default:
++		dev_err(dev, "%s, signature: %08x\n", err_msg[code], signature);
++		break;
+ 	}
+ 
+ 	return IRQ_HANDLED;
 -- 
 2.17.1
 
