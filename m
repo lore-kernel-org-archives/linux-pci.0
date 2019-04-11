@@ -2,82 +2,100 @@ Return-Path: <SRS0=+gKf=SN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A18AC10F13
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 13:35:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B6DC10F13
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 13:59:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA391217F4
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 13:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAF1721850
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Apr 2019 13:59:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1554989752;
-	bh=JBPZekV6xsXIiOmQIOibJqZN6gsh8iq1CTESrbPngeY=;
+	s=default; t=1554991146;
+	bh=UIlNqxvk93zRDvNWk0ZBa+AvDSCtLAEelJmiigQdZdk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=CAv6d9VupiLk+fYaTEmqiPtqSZITrG3mPjTslv1KSEfi336JJZeX026J0SjVHcezw
-	 jW+/kTkzHwS7f4nenCXEETFjB56TOW9h93busaVgUrWvw9rWi2x+0FqxDTo7jErEH2
-	 4lWLZtSlQbj8Bvbp7r0M2P6OJoqhm87KgsjwaTp0=
+	b=ZV0Dzd12RL/NkFE+lvnKO1WZQ8Hr5gs0K4Og/npinfD7YZvU1JmE1NAihPMW2Ejo5
+	 f9IYkRkSRAi7W2qYk0BzCpysnuu0SFoWVyx2kE/TXaRiUQ3bKvokXAjiD3j04NO0zW
+	 PUoRgUpsCIxPivBtx+acIvu93rukKhdvSEz4Omnc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726753AbfDKNfq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Apr 2019 09:35:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41588 "EHLO mail.kernel.org"
+        id S1726588AbfDKN7G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Apr 2019 09:59:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50650 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726629AbfDKNfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 Apr 2019 09:35:45 -0400
+        id S1726106AbfDKN7G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 Apr 2019 09:59:06 -0400
 Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 828E7217F4;
-        Thu, 11 Apr 2019 13:35:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0C7E32077C;
+        Thu, 11 Apr 2019 13:59:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1554989744;
-        bh=JBPZekV6xsXIiOmQIOibJqZN6gsh8iq1CTESrbPngeY=;
+        s=default; t=1554991145;
+        bh=UIlNqxvk93zRDvNWk0ZBa+AvDSCtLAEelJmiigQdZdk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vqv2uCpL+0K7ukR+4iBS+e2BBX7x1IdwP64mN0NAzlQxelC3ajALgtxn19TXLGU7E
-         vMYp5rOWp9wZQPi1giCjb/i0+TeBwucWa88YPOECE2Op67/21fH7FXxSDU6MDwHGA3
-         9QrYyoIn+2SkrwVp1s8kSnZq34u9IaXveDH1Efd4=
-Date:   Thu, 11 Apr 2019 08:35:43 -0500
+        b=a0XS+UMn4sQvtSD6Nrtowp1/UIi5JMJwt0MrOwQcHtiqOL1mB02HqyB+LTL1TIDhL
+         zFJy4m/wty5P9kfcOHVvm3SvRW5iQM+EE8ypaaalQ/tAz7QB3F0jxHe3UmF+qykeTi
+         uVYA3/U/MX6RVKFzF2aB6TJnrIAXGbFzwa3TuWr8=
+Date:   Thu, 11 Apr 2019 08:59:03 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Ingo Molnar <mingo@kernel.org>, linux-pci@vger.kernel.org,
-        x86@kernel.org, linux-kernel@vger.kernel.org,
-        Keith Busch <keith.busch@intel.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCH 2/2] x86/pci: Clean up usage of X86_DEV_DMA_OPS
-Message-ID: <20190411133543.GO256045@google.com>
-References: <20190410080220.21705-1-hch@lst.de>
- <20190410080220.21705-3-hch@lst.de>
- <20190410081617.GA54229@gmail.com>
- <20190410214500.GK256045@google.com>
- <20190411051849.GA26205@lst.de>
+To:     Nikolai Kostrigin <nickel@altlinux.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Joerg Roedel <jroedel@suse.de>,
+        Alexander Deucher <Alexander.Deucher@amd.com>,
+        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+        Thomas Lendacky <Thomas.Lendacky@amd.com>,
+        Felix Kuehling <Felix.Kuehling@amd.com>,
+        Christian Koenig <Christian.Koenig@amd.com>
+Subject: Re: [PATCH RESEND 1/1] PCI: Add ATS-disable quirk for AMD Radeon R7
+ GPUs
+Message-ID: <20190411135903.GP256045@google.com>
+References: <20190408103725.30426-1-nickel@altlinux.org>
+ <20190408103725.30426-2-nickel@altlinux.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190411051849.GA26205@lst.de>
+In-Reply-To: <20190408103725.30426-2-nickel@altlinux.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 11, 2019 at 07:18:49AM +0200, Christoph Hellwig wrote:
-> On Wed, Apr 10, 2019 at 04:45:01PM -0500, Bjorn Helgaas wrote:
-> > [+cc Keith, Jonathan (VMD guys)]
-> > 
-> > I'm OK with this from a PCI perspective.  It would be nice if
-> > 
-> >   dma_domain_list
-> >   dma_domain_list_lock
-> >   add_dma_domain()
-> >   del_dma_domain()
-> >   set_dma_domain_ops()
-> > 
-> > could all be moved to vmd.c, since they're really only used there.
+[+cc Alex, Suravee, Thomas, Felix, Christian]
+
+On Mon, Apr 08, 2019 at 01:37:25PM +0300, Nikolai Kostrigin wrote:
+> ATS is broken on this hardware (at least for Stoney Ridge
+> based laptop) and causes IOMMU stalls and
+> system failure. Disable ATS on these devices to make them
+> usable again with IOMMU enabled
+> Thanks to Joerg Roedel <jroedel@suse.de> for help.
 > 
-> I have another patch to eventually kill that, but it will need a little
-> more prep work and thus be delayed to the next merge window.
+> https://bugzilla.kernel.org/show_bug.cgi?id=194521
+> 
+> Signed-off-by: Nikolai Kostrigin <nickel@altlinux.org>
 
-Awesome, thanks!  I really appreciate all the global cleanup work you do.
+I applied this to pci/virtualization for v5.2 with Joerg's ack, a stable
+tag, and a note about Alex's suspicion that this may be system-specific and
+may also affect other devices.
 
-Bjorn
+> ---
+>  drivers/pci/quirks.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 4700d24e5d55..abb2532e16bf 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4876,6 +4876,7 @@ static void quirk_no_ats(struct pci_dev *pdev)
+>  
+>  /* AMD Stoney platform GPU */
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_no_ats);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6900, quirk_no_ats);
+>  #endif /* CONFIG_PCI_ATS */
+>  
+>  /* Freescale PCIe doesn't support MSI in RC mode */
+> -- 
+> 2.21.0
+> 
