@@ -2,131 +2,177 @@ Return-Path: <SRS0=vi1x=SO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA16C10F0E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 14:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F29D2C10F0E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:00:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B1B782171F
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 14:50:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555080611;
-	bh=NjeUXI+qwF1Pjo3cVfe3d4dyz0qw8P3Szp4bFY/MBlw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=xJjKB1W1o5ifTQ5ENFcxLXu/uDnVS12TDMHNXqGEK5RKbDws85n3LKcpsxhht9IqR
-	 Y3VQ9RXzrCzulYG54WoKGsWJmkfOT9zyebJj04j0u848JqKoioTRSQVfDGcdK0u7Ka
-	 7/UBjuPsAKq9VVZCAUOF4V6xWg8QWPOXyvZLO4tQ=
+	by mail.kernel.org (Postfix) with ESMTP id CADA72083E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:00:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726752AbfDLOuL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Apr 2019 10:50:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57524 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726327AbfDLOuK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Apr 2019 10:50:10 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 67EDD20850;
-        Fri, 12 Apr 2019 14:50:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555080609;
-        bh=NjeUXI+qwF1Pjo3cVfe3d4dyz0qw8P3Szp4bFY/MBlw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=xc5AcMos1QUe3+YP+dK0Y3Tr+EIS6pE2T/sxxRBbaA7VQK0IYcogCNgFXb7uPDq5w
-         Cor5NpLrovCgXAxYwZ2bvS8Od9MMZnfcUqkoWJMXhOeTj2pJqANJcTNlbWgHHmdzrf
-         0eGEe6ZgwFpY+DJ/5bOrdwagN9DOG28tKbbF2HP4=
-Date:   Fri, 12 Apr 2019 09:50:04 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc:     thierry.reding@gmail.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
+        id S1726788AbfDLPAd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Apr 2019 11:00:33 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34466 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726714AbfDLPAc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Apr 2019 11:00:32 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 318BD15AB;
+        Fri, 12 Apr 2019 08:00:30 -0700 (PDT)
+Received: from [10.1.196.75] (e110467-lin.cambridge.arm.com [10.1.196.75])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 31FCC3F557;
+        Fri, 12 Apr 2019 08:00:28 -0700 (PDT)
+Subject: Re: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Vidya Sagar <vidyas@nvidia.com>
+Cc:     bhelgaas@google.com, treding@nvidia.com, swarren@nvidia.com,
+        mperttunen@nvidia.com, jonathanh@nvidia.com, dev@lynxeye.de,
         linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: Re: [PATCH 22/30] PCI: tegra: Access endpoint config only if PCIe
- link is up
-Message-ID: <20190412145003.GE141472@google.com>
-References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-23-mmaddireddy@nvidia.com>
- <20190411201535.GS256045@google.com>
- <e721e7f4-85c9-bee1-7131-12e0b7dfc0d1@nvidia.com>
+        kthota@nvidia.com, mmaddireddy@nvidia.com
+References: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
+ <20190411094024.GC6227@red-moon>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <ed7456f7-df3f-c812-d177-e95c9c5f6868@arm.com>
+Date:   Fri, 12 Apr 2019 16:00:26 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e721e7f4-85c9-bee1-7131-12e0b7dfc0d1@nvidia.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190411094024.GC6227@red-moon>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Jingoo, Gustavo (dwc maintainers), Ley (altera), Michal (xilinx)]
+On 11/04/2019 10:40, Lorenzo Pieralisi wrote:
+> [+Robin]
+> 
+> I would like Robin to have a look before merging this patch so
+> that we agree that's the expected approach.
 
-On Fri, Apr 12, 2019 at 12:30:22PM +0530, Manikanta Maddireddy wrote:
-> On 12-Apr-19 1:45 AM, Bjorn Helgaas wrote:
-> > On Thu, Apr 11, 2019 at 10:33:47PM +0530, Manikanta Maddireddy wrote:
-> >> Add PCIe link up check in config read and write callback functions
-> >> before accessing endpoint config registers.
+It's a bit crazy, but I guess it's not really any worse than the 
+existing implementation. As long the comments and commit message clearly 
+document that this is just trickery to reserve a 32-bit DMA address 
+(which AFAICS they more or less do) I don't think I have a significant 
+objection.
 
-> >>  static int tegra_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-> >>  				  int where, int size, u32 *value)
-> >>  {
-> >> +	struct tegra_pcie *pcie = bus->sysdata;
-> >> +	struct pci_dev *bridge;
-> >> +	struct tegra_pcie_port *port;
-> >> +
-> >>  	if (bus->number == 0)
-> >>  		return pci_generic_config_read32(bus, devfn, where, size,
-> >>  						 value);
-> >>  
-> >> +	bridge = pcie_find_root_port(bus->self);
-> >> +
-> >> +	list_for_each_entry(port, &pcie->ports, list)
-> >> +		if (port->index + 1 == PCI_SLOT(bridge->devfn))
-> >> +			break;
-> >> +
-> >> +	/* If there is no link, then there is no device */
-> >> +	if (!tegra_pcie_link_status(port)) {
-> >
-> > This is racy and you should avoid it if possible.  The link could go down
-> > between calling tegra_pcie_link_status() and issuing the config read/write.
-> >
-> > If your driver is to be reliable, it must be able to handle any bad
-> > consequence of issuing that config read/write anyway, so I think it's
-> > better if it doesn't even bother checking whether the link is up.
->
-> This change is made based on similar check present in dwc driver
-> dw_pcie_valid_device(), reasons for making this change in Tegra might
-> differ dwc.
+One suggestion I would make is using dma_alloc_attrs() with 
+DMA_ATTR_NO_KERNEL_MAPPING, to make it clear that this is being set 
+aside for 'special' device purposes and is not intended to be accessed 
+as a regular buffer (plus I believe this is non-coherent, so that should 
+also skip the small overhead of creating a non-cacheable remap).
 
-Yes, you won't be surprised to learn that I don't like the similar
-checks in dwc, altera, xilinx, and xilinx-nwl either :)  I raise this
-issue every time I see it, but I can't remember if I've mentioned dwc
-specifically.
+Ultimately, it might make sense to have an API in the PCI core which can 
+look at memblock/bridge windows/etc. to find a suitable non-overlapping 
+address for this kind of root-complex-integrated doorbell without having 
+to subvert the page allocator, as it seems to be a fairly common setup 
+in 'embedded' IPs.
 
-We need to either eradicate this pattern of checking for link up, or
-include a comment about why it is absolutely necessary.
+Robin.
 
-> Intention here is to reduce the number of AER errors when device is
-> falling off the bus or going through hot reset. So racy condition here is
-> OK
-
-I'm not convinced about this.  The issues you mention need to be
-solved in a generic way, not a tegra-specific way.
-
-We don't want to end up with code that silently avoids the config
-access 99.99% of the time, but once in a blue moon, we lose the race
-(the device stops responding after we've determined the link is up)
-and the access causes a mysterious AER error that we have no way to
-debug.
-
-> >> +		*value = 0xffffffff;
-> >> +		return PCIBIOS_DEVICE_NOT_FOUND;
-> >> +	}
-> >> +
-> >>  	return pci_generic_config_read(bus, devfn, where, size, value);
-> >>  }
+> 
+> Lorenzo
+> 
+> On Tue, Mar 19, 2019 at 07:32:01PM +0530, Vidya Sagar wrote:
+>> Since the upstream MSI memory writes are generated by downstream devices,
+>> it is logically correct to have MSI target memory coming from the DMA pool
+>> reserved for PCIe than from the general memory pool reserved for CPU
+>> access. This avoids PCIe DMA addresses coinciding with MSI target address
+>> thereby raising unwanted MSI interrupts. This patch also enforces to limit
+>> the MSI target address to 32-bits to make it work for PCIe endponits that
+>> support only 32-bit MSI target address and those endpoints that support
+>> 64-bit MSI target address anyway work with 32-bit MSI target address.
+>>
+>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+>> Reviewed-by: Thierry Reding <treding@nvidia.com>
+>> Acked-by: Thierry Reding <treding@nvidia.com>
+>> ---
+>> v2:
+>> * changed 'phys' type to 'dma_addr_t' from 'u64'
+>> * added a comment on why DMA mask is set to 32-bit
+>> * replaced 'dma' with 'DMA'
+>>
+>>   drivers/pci/controller/pci-tegra.c | 35 ++++++++++++++++++++++++++---------
+>>   1 file changed, 26 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+>> index f4f53d092e00..f8173a5e352d 100644
+>> --- a/drivers/pci/controller/pci-tegra.c
+>> +++ b/drivers/pci/controller/pci-tegra.c
+>> @@ -231,9 +231,9 @@ struct tegra_msi {
+>>   	struct msi_controller chip;
+>>   	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+>>   	struct irq_domain *domain;
+>> -	unsigned long pages;
+>>   	struct mutex lock;
+>> -	u64 phys;
+>> +	void *virt;
+>> +	dma_addr_t phys;
+>>   	int irq;
+>>   };
+>>   
+>> @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>>   	err = platform_get_irq_byname(pdev, "msi");
+>>   	if (err < 0) {
+>>   		dev_err(dev, "failed to get IRQ: %d\n", err);
+>> -		goto err;
+>> +		goto free_irq_domain;
+>>   	}
+>>   
+>>   	msi->irq = err;
+>> @@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
+>>   			  tegra_msi_irq_chip.name, pcie);
+>>   	if (err < 0) {
+>>   		dev_err(dev, "failed to request IRQ: %d\n", err);
+>> -		goto err;
+>> +		goto free_irq_domain;
+>> +	}
+>> +
+>> +	/* Though the PCIe controller can address >32-bit address space, to
+>> +	 * facilitate endpoints that support only 32-bit MSI target address,
+>> +	 * the mask is set to 32-bit to make sure that MSI target address is
+>> +	 * always a 32-bit address
+>> +	 */
+>> +	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
+>> +	if (err < 0) {
+>> +		dev_err(dev, "failed to set DMA coherent mask: %d\n", err);
+>> +		goto free_irq;
+>> +	}
+>> +
+>> +	msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
+>> +	if (!msi->virt) {
+>> +		dev_err(dev, "failed to allocate DMA memory for MSI\n");
+>> +		err = -ENOMEM;
+>> +		goto free_irq;
+>>   	}
+>>   
+>> -	/* setup AFI/FPCI range */
+>> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+>> -	msi->phys = virt_to_phys((void *)msi->pages);
+>>   	host->msi = &msi->chip;
+>>   
+>>   	return 0;
+>>   
+>> -err:
+>> +free_irq:
+>> +	free_irq(msi->irq, pcie);
+>> +free_irq_domain:
+>>   	irq_domain_remove(msi->domain);
+>>   	return err;
+>>   }
+>> @@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
+>>   	struct tegra_msi *msi = &pcie->msi;
+>>   	unsigned int i, irq;
+>>   
+>> -	free_pages(msi->pages, 0);
+>> +	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
+>>   
+>>   	if (msi->irq > 0)
+>>   		free_irq(msi->irq, pcie);
+>> -- 
+>> 2.7.4
+>>
