@@ -2,103 +2,113 @@ Return-Path: <SRS0=vi1x=SO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
 	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6817C10F0E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 13:55:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 164E9C10F0E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 14:00:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE9A520850
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 13:55:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Ny3JbFc0"
+	by mail.kernel.org (Postfix) with ESMTP id D2F962186A
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 14:00:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555077644;
+	bh=nijqsap55XUBbZCPEQ18QWXyKoM2eiWnVLRWc9vjpFA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=PLBUX2Uyg60wOqubE6VL6SKcN3dzfq5K4qAZ+BsbWFtjNXn+o4mQJPoT+ggfoyOkL
+	 NN2cZiwMKMq6Y9rtABAibcUlSag13wIXAoLbE3QohVw8qkI6LKfmFbwdwr/VPgKzKA
+	 GuNlI4ZNxB43S9p3xXsq0LPSbGBpQkrgc89mSCLg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726826AbfDLNzs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Apr 2019 09:55:48 -0400
-Received: from mail-it1-f194.google.com ([209.85.166.194]:50964 "EHLO
-        mail-it1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726780AbfDLNzr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2019 09:55:47 -0400
-Received: by mail-it1-f194.google.com with SMTP id q14so750458itk.0
-        for <linux-pci@vger.kernel.org>; Fri, 12 Apr 2019 06:55:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=gquYWNtyiDFD8zSco8VAHGlZ70+bwhOA4CR36IIQ6XU=;
-        b=Ny3JbFc0iF6R15kjcoljJv37xxY89PDlkGJPWRWwpNG5BfGJAQqaUoPdjiLcNdJPiv
-         sWrmj9FsJdyc3CnwBP12KUYfEq1fIQ8GqC6b5LeLr8U2hs5if/dXKPqQ3ZPsIUTd4t2s
-         wilS1pG9dqwExpJ/Qbjgp1NNHow28XojADA7SrG0WJeXMwabTD4/xUJDxd2YMhI2BOyo
-         rc0XlAmn6eab1RRzkMOxoSdXOJZgGdatxh4H3bkGDwuxMPQAvAVkMA2Vjm35qIpZI8FD
-         Nw3qnbFZ9Gz2L9TpFyoN5JWHG43ihtNAh3WIQee30P8UyyBrVh+ED3hiG7TlJjb5+V9u
-         dEOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=gquYWNtyiDFD8zSco8VAHGlZ70+bwhOA4CR36IIQ6XU=;
-        b=gx4UgTsXNoCPDulZqvYUZYcJ+W7JJjLS9okkAQbMgZ14xSiRIH389mJd4Iav3J305k
-         4TKFNVmh5VzfurxdrEI23JALqmMB/+vyJJ31f5mEA6Nx7n8ocWRQoDo3RPffG9JUzbNt
-         EWjP0VXtqywQtLWowD49elNKQzbz9ZD03Djud4VOLSP3rjDeGDbewFXDUqIFzRxBAp8q
-         yvU7QFzXNmvx26CKzS4r5BG1kohPPMIVaIAT5SiAHDlMcnSz2MqVEtbVCp7QtHSvrevc
-         3wbX2JUWuhcu8M+V6z5zuUjd3p+3Qxy/hm42oXpe6+pyL8xEgWTQoT8JuIcIr3o0HzSH
-         cU2g==
-X-Gm-Message-State: APjAAAVeG0WbCoIOTVEPmXGIzt7xVRdYMfBy5ni/brJHOXkqNidzbdmw
-        JL4Srltwz5RRvBfdjReiwWLyhg==
-X-Google-Smtp-Source: APXvYqw2iU65ywMDghRwip175i90q4YoX8jZtKU0ScVQEc5KOia1FNYfFqg47xxNM+NYtxdDXY0q5w==
-X-Received: by 2002:a02:a083:: with SMTP id g3mr41339053jah.44.1555077346987;
-        Fri, 12 Apr 2019 06:55:46 -0700 (PDT)
-Received: from ziepe.ca ([142.177.133.130])
-        by smtp.gmail.com with ESMTPSA id m132sm16587434ioa.53.2019.04.12.06.55.46
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 12 Apr 2019 06:55:46 -0700 (PDT)
-Received: from jgg by jggl.ziepe.ca with local (Exim 4.90_1)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1hEwee-0000zW-PD; Fri, 12 Apr 2019 10:55:44 -0300
-Date:   Fri, 12 Apr 2019 10:55:44 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     "Arumugam, Kamenee" <kamenee.arumugam@intel.com>
-Cc:     "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Ruhl, Michael J" <michael.j.ruhl@intel.com>,
-        "dledford@redhat.com" <dledford@redhat.com>
-Subject: Re: [PATCH for-next 2/2] IB/hfi1: Make Unsupported Request error
- non-fatal
-Message-ID: <20190412135544.GB3765@ziepe.ca>
-References: <20190410123253.26818.37261.stgit@scvm10.sc.intel.com>
- <20190410123455.26818.49424.stgit@scvm10.sc.intel.com>
- <20190410192948.GG256045@google.com>
- <14063C7AD467DE4B82DEDB5C278E8663BE6A1B14@FMSMSX108.amr.corp.intel.com>
- <A503C24F5B2FB844864C0DD400A8F742121C8525@ORSMSX108.amr.corp.intel.com>
- <20190411182938.GB14495@ziepe.ca>
- <A503C24F5B2FB844864C0DD400A8F742121C859F@ORSMSX108.amr.corp.intel.com>
+        id S1726785AbfDLOAo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Apr 2019 10:00:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48552 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726711AbfDLOAo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Apr 2019 10:00:44 -0400
+Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C3CBE206BA;
+        Fri, 12 Apr 2019 14:00:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1555077643;
+        bh=nijqsap55XUBbZCPEQ18QWXyKoM2eiWnVLRWc9vjpFA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=UTpFg69Irfxx+z7ULeCgkbr6LWenQJGbARB0olr18CwrekCJQTkNbkgrM3/gVXS0O
+         t08W0Tebf8ESHMEbYQx+PXtEKGxRpCaQ0haI4tzur+xvuG8lB3AeuxoPmaN7Q/XSPW
+         4QLetd+Vax7ZNZUfJ6CNMFEmjYhJnbMYoA8pmZnQ=
+Date:   Fri, 12 Apr 2019 09:00:41 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: Re: [PATCHv5 4/6] PCI: mobiveil: Add PCIe Gen4 RC driver for NXP
+ Layerscape SoCs
+Message-ID: <20190412140041.GA141472@google.com>
+References: <20190412095332.41370-1-Zhiqiang.Hou@nxp.com>
+ <20190412095332.41370-5-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <A503C24F5B2FB844864C0DD400A8F742121C859F@ORSMSX108.amr.corp.intel.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190412095332.41370-5-Zhiqiang.Hou@nxp.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 11, 2019 at 08:37:53PM +0000, Arumugam, Kamenee wrote:
+On Fri, Apr 12, 2019 at 09:52:50AM +0000, Z.q. Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> 
+> This PCIe controller is based on the Mobiveil GPEX IP, which is
+> compatible with the PCI Express™ Base Specification, Revision 4.0.
+> 
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+> ---
+> V5:
+>  - Corrected the subject.
+>  - Corrected 2 typos.
+>  - Updated the Copyright and driver description.
+>  - Changed to use BIT(x) to define verious functions of register's bits.
+>  - Unified the capitalization of error info.
+>  - Changed the IRQ handler name to ls_pcie_g4_isr().
+>  - Change 'irq' to 'IRQ' in error info.
+>  - Trimmed some functions without functionality change.
+> 
+>  drivers/pci/controller/mobiveil/Kconfig       |  10 +
+>  drivers/pci/controller/mobiveil/Makefile      |   1 +
 
-> On Thu, Apr 11, 2019 at 06:22:45PM +0000, Arumugam, Kamenee wrote:
-> 
-> > This is a device bug then. 
-> 
-> > A RDMA device must accept and respond to all TLPs that the CPU could create for the user accessible BAR pages.
-> 
-> > A user process must not be able to crash the CPU or make the device malfunction by accessing the exposed BAR page. This includes a broad range of topics, like mis-aligned acceses, SSE instructions, atomics, >etc.
-> 
-> > Is blocking AER even enough here? If the device isn't generating a reasonable reply I have a bad feeling worse will happen.
-> 
-> After blocking unsupported request error, we don't see any other issue including no system hang. 
+>  .../controller/mobiveil/pci-layerscape-gen4.c | 256 ++++++++++++++++++
 
-Are you specifically testing all the special TLPs the CPU can produce?
+I would probably name this "pcie-layerscape-gen4.c" ("pcie" instead of
+"pci"), since that's more typical and this really is PCIe-specific.
 
-Jason
+> +#define PCIE_PF_DBG			0x7fc
+> +#define PF_DBG_LTSSM_MASK		0x3f
+> +#define PF_DBG_WE			BIT(31)
+> +#define PF_DBG_PABR			BIT(27)
+> +
+> +#define LS_PCIE_G4_LTSSM_L0		0x2d /* L0 state */
+
+Maybe rename this and move it to make it obvious that it's related to
+PF_DBG_LTSSM_MASK?
+
+> +		dev_err(dev, "Poll PABRST&PABACT timeout.\n");
+
+No need for punctuation at end of messages.
