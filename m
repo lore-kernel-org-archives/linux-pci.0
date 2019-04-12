@@ -2,112 +2,84 @@ Return-Path: <SRS0=vi1x=SO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B835FC10F0E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 09:32:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD312C10F0E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 09:51:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 895B8205F4
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 09:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84C6020850
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 09:51:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726708AbfDLJct (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Apr 2019 05:32:49 -0400
-Received: from foss.arm.com ([217.140.101.70]:56220 "EHLO foss.arm.com"
+        id S1726755AbfDLJva (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Apr 2019 05:51:30 -0400
+Received: from foss.arm.com ([217.140.101.70]:56506 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726217AbfDLJct (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Apr 2019 05:32:49 -0400
+        id S1726739AbfDLJv3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Apr 2019 05:51:29 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 053F915AB;
-        Fri, 12 Apr 2019 02:32:49 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4DEAA15AB;
+        Fri, 12 Apr 2019 02:51:29 -0700 (PDT)
 Received: from red-moon (unknown [10.1.197.39])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E32ED3F59C;
-        Fri, 12 Apr 2019 02:32:46 -0700 (PDT)
-Date:   Fri, 12 Apr 2019 10:32:42 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id A1C833F59C;
+        Fri, 12 Apr 2019 02:51:27 -0700 (PDT)
+Date:   Fri, 12 Apr 2019 10:51:25 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>
-Cc:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Chris Healy <cphealy@gmail.com>,
-        Leonard Crestez <leonard.crestez@nxp.com>,
-        "A.s. Dong" <aisheng.dong@nxp.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 00/11] i.MX6, DesignWare PCI improvements
-Message-ID: <20190412093242.GA8113@red-moon>
-References: <20190401042547.14067-1-andrew.smirnov@gmail.com>
+To:     Colin King <colin.king@canonical.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: rockchip: fix bitwise operations on status and
+ ROCKCHIP_PCIE_EP_CMD_STATUS_IS
+Message-ID: <20190412095125.GB8113@red-moon>
+References: <20190330150910.9389-1-colin.king@canonical.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190401042547.14067-1-andrew.smirnov@gmail.com>
+In-Reply-To: <20190330150910.9389-1-colin.king@canonical.com>
 User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Mar 31, 2019 at 09:25:36PM -0700, Andrey Smirnov wrote:
-> Everyone:
+On Sat, Mar 30, 2019 at 03:09:10PM +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> This is the series containing various small improvements that I made
-> while reading the code and researching commit history of pci-imx6.c
-> and pcie-designware*.c files. All changes are optional, so commits
-> that don't seem like an improvement can be easily dropped. Hopefully
-> each patch is self-explanatory.
+> Currently the bitwise operations on the u16 variable 'status' with
+> the setting ROCKCHIP_PCIE_EP_CMD_STATUS_IS are incorrect because
+> ROCKCHIP_PCIE_EP_CMD_STATUS_IS is 1UL<<19 which is wider than the
+> u16 variable.  Fix this by making status a u32.  (Not tested).
 > 
-> I tested this series on i.MX6Q, i.MX7D and i.MX8MQ.
-> 
-> Feedback is welcome!
-> 
-> Thanks,
-> Andrey Smirnov
-> 
-> Changes since [v2]:
-> 
->     - All non i.MX6 patches dropped, since they were accepted as a
->       seprarte series
->       
->     - Series rebased on lates 'dwc-pci' branch of PCI tree
->     
->     - Patches "PCI: imx6: Use flags to indicate support for suspend"
->       and "PCI: imx6: Replace calls to udelay() with usleep_range()"
->       added to the series
-> 
-> Changes since [v1]:
-> 
->   - Dropped "PCI: imx6: Drop imx6_pcie_link_up()" due to the matter
->     already having been addressed by "PCI: imx6: Fix link training
->     status detection in link up check" from Trent Piepho
-> 
->   - Changed "designware" -> "dwc" for all subject lines
-> 
->   - Collected Acked-by's from Gustavo Pimentel
-> 
-> [v2] lkml.kernel.org/r/20190104174925.17153-1-andrew.smirnov@gmail.com
-> [v1] lkml.kernel.org/r/20181221072716.29017-1-andrew.smirnov@gmail.com
-> 
-> Andrey Smirnov (11):
->   PCI: imx6: Simplify imx7d_pcie_wait_for_phy_pll_lock()
->   PCI: imx6: Remove redundant debug tracing
->   PCI: imx6: Return -ETIMEOUT from imx6_pcie_wait_for_speed_change()
->   PCI: imx6: Remove PCIE_PL_PFLR_* constants
->   PCI: dwc: imx6: Share PHY debug register definitions
->   PCI: imx6: Make use of BIT() in constant definitions
->   PCI: imx6: Simplify bit operations in PHY functions
->   PCI: imx6: Simplify pcie_phy_poll_ack()
->   PCI: imx6: Restrict PHY register data to 16-bit
->   PCI: imx6: Use flags to indicate support for suspend
->   PCI: imx6: Replace calls to udelay() with usleep_range()
-> 
->  drivers/pci/controller/dwc/pci-imx6.c        | 119 ++++++++-----------
->  drivers/pci/controller/dwc/pcie-designware.c |  12 +-
->  drivers/pci/controller/dwc/pcie-designware.h |   3 +
->  3 files changed, 54 insertions(+), 80 deletions(-)
+> Fixes: cf590b078391 ("PCI: rockchip: Add EP driver for Rockchip PCIe controller")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/pci/controller/pcie-rockchip-ep.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-I am waiting for Lucas's review/ACKs to proceed with this
-series.
+Shawn,
 
-Thanks,
+I need your ACK on this patch, thanks.
+
 Lorenzo
+
+> diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
+> index a5d799e2dff2..d743b0a48988 100644
+> --- a/drivers/pci/controller/pcie-rockchip-ep.c
+> +++ b/drivers/pci/controller/pcie-rockchip-ep.c
+> @@ -350,7 +350,7 @@ static void rockchip_pcie_ep_assert_intx(struct rockchip_pcie_ep *ep, u8 fn,
+>  	struct rockchip_pcie *rockchip = &ep->rockchip;
+>  	u32 r = ep->max_regions - 1;
+>  	u32 offset;
+> -	u16 status;
+> +	u32 status;
+>  	u8 msg_code;
+>  
+>  	if (unlikely(ep->irq_pci_addr != ROCKCHIP_PCIE_EP_PCI_LEGACY_IRQ_ADDR ||
+> -- 
+> 2.20.1
+> 
