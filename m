@@ -6,25 +6,24 @@ X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE38C10F0E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA9EC10F0E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA87C20693
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:54:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 633E021872
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:54:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726963AbfDLPyT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Apr 2019 11:54:19 -0400
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:40741 "EHLO
+        id S1726755AbfDLPyt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Apr 2019 11:54:49 -0400
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:58955 "EHLO
         metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726808AbfDLPyT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2019 11:54:19 -0400
+        with ESMTP id S1726714AbfDLPyt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2019 11:54:49 -0400
 Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
         by metis.ext.pengutronix.de with esmtp (Exim 4.89)
         (envelope-from <l.stach@pengutronix.de>)
-        id 1hEyVN-0000u6-76; Fri, 12 Apr 2019 17:54:17 +0200
-Message-ID: <1555084456.11529.30.camel@pengutronix.de>
-Subject: Re: [PATCH v3 03/11] PCI: imx6: Return -ETIMEOUT from
- imx6_pcie_wait_for_speed_change()
+        id 1hEyVs-0000wy-7r; Fri, 12 Apr 2019 17:54:48 +0200
+Message-ID: <1555084487.11529.31.camel@pengutronix.de>
+Subject: Re: [PATCH v3 04/11] PCI: imx6: Remove PCIE_PL_PFLR_* constants
 From:   Lucas Stach <l.stach@pengutronix.de>
 To:     Andrey Smirnov <andrew.smirnov@gmail.com>,
         linux-pci@vger.kernel.org
@@ -36,10 +35,10 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         "A.s. Dong" <aisheng.dong@nxp.com>,
         Richard Zhu <hongxing.zhu@nxp.com>, linux-imx@nxp.com,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Date:   Fri, 12 Apr 2019 17:54:16 +0200
-In-Reply-To: <20190401042547.14067-4-andrew.smirnov@gmail.com>
+Date:   Fri, 12 Apr 2019 17:54:47 +0200
+In-Reply-To: <20190401042547.14067-5-andrew.smirnov@gmail.com>
 References: <20190401042547.14067-1-andrew.smirnov@gmail.com>
-         <20190401042547.14067-4-andrew.smirnov@gmail.com>
+         <20190401042547.14067-5-andrew.smirnov@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.22.6-1+deb9u1 
 Mime-Version: 1.0
@@ -54,9 +53,9 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 Am Sonntag, den 31.03.2019, 21:25 -0700 schrieb Andrey Smirnov:
-> Change error code from EINVAL to ETIMEDOUT in
-> imx6_pcie_wait_for_speed_change() since that error code seems more
-> appropriate.
+> Code using these constants was removed in commit a71280722eeb ("PCI:
+> imx6: Remove LTSSM disable workaround"). No functional change
+> intended.
 > 
 > > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 > > Cc: Bjorn Helgaas <bhelgaas@google.com>
@@ -75,19 +74,20 @@ Am Sonntag, den 31.03.2019, 21:25 -0700 schrieb Andrey Smirnov:
 Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
 > ---
->  drivers/pci/controller/dwc/pci-imx6.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/controller/dwc/pci-imx6.c | 3 ---
+>  1 file changed, 3 deletions(-)
 > 
 > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-> index 7582d0b2fbe7..3f4707072942 100644
+> index 3f4707072942..92c40c250a34 100644
 > --- a/drivers/pci/controller/dwc/pci-imx6.c
 > +++ b/drivers/pci/controller/dwc/pci-imx6.c
-> @@ -747,7 +747,7 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
-> >  	}
+> @@ -103,9 +103,6 @@ struct imx6_pcie {
 >  
-> >  	dev_err(dev, "Speed change timeout\n");
-> > -	return -EINVAL;
-> > +	return -ETIMEDOUT;
->  }
+>  /* PCIe Port Logic registers (memory-mapped) */
+>  #define PL_OFFSET 0x700
+> -#define PCIE_PL_PFLR (PL_OFFSET + 0x08)
+> > -#define PCIE_PL_PFLR_LINK_STATE_MASK		(0x3f << 16)
+> > -#define PCIE_PL_PFLR_FORCE_LINK			(1 << 15)
+>  #define PCIE_PHY_DEBUG_R0 (PL_OFFSET + 0x28)
+>  #define PCIE_PHY_DEBUG_R1 (PL_OFFSET + 0x2c)
 >  
->  static void imx6_pcie_ltssm_enable(struct device *dev)
