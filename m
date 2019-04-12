@@ -2,109 +2,162 @@ Return-Path: <SRS0=vi1x=SO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D071BC10F0E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 06:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEC23C10F0E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 06:44:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8CA432186A
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 06:43:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B686E2186A
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 06:44:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="tytv2ReG"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="QxZGNwQE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726061AbfDLGnJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Apr 2019 02:43:09 -0400
-Received: from mail-eopbgr760088.outbound.protection.outlook.com ([40.107.76.88]:6077
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725747AbfDLGnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Apr 2019 02:43:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=Synaptics.onmicrosoft.com; s=selector1-synaptics-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=H7h5OWJ4duiQOjh8a93rsttKVXj1YfNALGUKcdnTxmc=;
- b=tytv2ReGeWTr7rwNWvSlR8wnoznDTOU6qetCAiL5P64KXKYv2cpMBB1vTH7hd0umzJeMTXVz3dhmQMp2oVSuUH+9sEXxUc208k9hB4vBy1fdB0Ngmw81ZC5MIHeWwu6LSs363XWu2Zj7dW0Cjxstu8AegJu9Xmn0J814GLUxktA=
-Received: from DM6PR03MB4778.namprd03.prod.outlook.com (20.179.105.26) by
- DM6SPR01MB0045.namprd03.prod.outlook.com (20.176.120.140) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1792.15; Fri, 12 Apr 2019 06:43:06 +0000
-Received: from DM6PR03MB4778.namprd03.prod.outlook.com
- ([fe80::1d45:49e6:4baa:d7b0]) by DM6PR03MB4778.namprd03.prod.outlook.com
- ([fe80::1d45:49e6:4baa:d7b0%3]) with mapi id 15.20.1792.009; Fri, 12 Apr 2019
- 06:43:06 +0000
-From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rajat Jain <rajatja@google.com>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: Make pci_aer_init() when !CONFIG_PCIEAER void too
-Thread-Topic: [PATCH] PCI: Make pci_aer_init() when !CONFIG_PCIEAER void too
-Thread-Index: AQHU8Pr82Du5MALJTk6mD6X4N4ajEg==
-Date:   Fri, 12 Apr 2019 06:43:06 +0000
-Message-ID: <20190412143458.2120118b@xhacker.debian>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [124.74.246.114]
-x-clientproxiedby: TYAPR01CA0005.jpnprd01.prod.outlook.com (2603:1096:404::17)
- To DM6PR03MB4778.namprd03.prod.outlook.com (2603:10b6:5:184::26)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Jisheng.Zhang@synaptics.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 7ef761a1-2318-4f1c-b02f-08d6bf121e62
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(2017052603328)(7193020);SRVR:DM6SPR01MB0045;
-x-ms-traffictypediagnostic: DM6SPR01MB0045:
-x-microsoft-antispam-prvs: <DM6SPR01MB0045E0CA2F7C7404FE474AFBED280@DM6SPR01MB0045.namprd03.prod.outlook.com>
-x-forefront-prvs: 0005B05917
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(366004)(39860400002)(376002)(136003)(396003)(346002)(189003)(199004)(7736002)(6436002)(72206003)(1076003)(478600001)(9686003)(66066001)(97736004)(6512007)(52116002)(305945005)(8676002)(99286004)(68736007)(110136005)(316002)(54906003)(2906002)(86362001)(26005)(3846002)(8936002)(6116002)(6506007)(14444005)(256004)(186003)(386003)(6486002)(476003)(102836004)(81156014)(4744005)(5660300002)(81166006)(25786009)(486006)(50226002)(71200400001)(106356001)(14454004)(105586002)(4326008)(71190400001)(53936002)(39210200001);DIR:OUT;SFP:1101;SCL:1;SRVR:DM6SPR01MB0045;H:DM6PR03MB4778.namprd03.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:0;
-received-spf: None (protection.outlook.com: synaptics.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: PQzi43Dzs6B3Uw2kEjm/JQ/qMlF1Yk1e3hzyksVsIV4ys3xXI+9BfpKPl0i0Ss+AEPq4EKhQ+KLbf49xOljXdVdh2GjedEREjU3GisiMmJ5CfD/fmlIRquAf6cignNaYlowt+ZYZbvvskvl8Owp+BV0CwMbudr1splvY/dGbQSnMI1OwccpqEi7THPSePzS5KtrEGD2YFRE750kaWAeeoQ0KZFXfTwrDyJJCmR/nowctHSEvcjS9BCz47JuIh5ATBbPw/jnli4DQyVSOP6qGXV0GGSebcuGOes69PsrFbSzYzH7FGC23LI/l3WZ5uQIyZh8nMwwA22mJVP526nueVkRixE03+kvOwrzzahT+CdfNMuCHyY5/E7KalPvIjb5ELNS/2dVJLaaTXXtrFTIuv+NAT5z4815K6jCObBhs4tU=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <EF65E8110B0C7E4296F1A29653BB139B@namprd03.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+        id S1726678AbfDLGon (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Apr 2019 02:44:43 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:16081 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725747AbfDLGom (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Apr 2019 02:44:42 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cb033d60000>; Thu, 11 Apr 2019 23:44:38 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Thu, 11 Apr 2019 23:44:40 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Thu, 11 Apr 2019 23:44:40 -0700
+Received: from [10.24.70.250] (172.20.13.39) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 12 Apr
+ 2019 06:44:35 +0000
+Subject: Re: [PATCH 14/30] PCI: tegra: Set target speed as Gen1 before link up
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <thierry.reding@gmail.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
+        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
+ <20190411170355.6882-15-mmaddireddy@nvidia.com>
+ <20190411200437.GR256045@google.com>
+X-Nvconfidentiality: public
+From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <5bf9c119-5f1e-5f41-7c41-b4182cbba3c9@nvidia.com>
+Date:   Fri, 12 Apr 2019 12:14:20 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-X-OriginatorOrg: synaptics.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7ef761a1-2318-4f1c-b02f-08d6bf121e62
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Apr 2019 06:43:06.4457
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 335d1fbc-2124-4173-9863-17e7051a2a0e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6SPR01MB0045
+In-Reply-To: <20190411200437.GR256045@google.com>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL103.nvidia.com (172.20.187.11) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1555051478; bh=EX9d+T8+gSIqkgbPK3sqJAwHlTB8tqGkZvbl4nqrMXI=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=QxZGNwQEfqNItGtxet5WIlYEkief6PlIimhYZai7LxITdZiJ2j8b8uHi2+uQGK3oH
+         /sTWAMuHEh3+ZOhDPiM6hod84GFNmLgNLQn+w2OoEpHBo3mIcEJKTiYw67D2BENamf
+         rkJPl1oyj3x4wFUufG7Se6agEPWtVA75Mj+RVMbEfMJzYA7geWD5RkxME+MV7ab/n+
+         IueE4O+jotSXji6pss8uhxAJhVHoGW95+mW79l8mJ/fHS02ipF8vdH9dr1wXlXS4Q7
+         nbUUKKX8USBgIyeDTKXAgB9QRo6kPHeu2Tnvg+LD6Y8EteV4/xmnjKbyxmL+sV44pW
+         2T3IRz9vSqnNg==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Commit 60ed982a4e78 ("PCI/AER: Move internal declarations to
-drivers/pci/pci.h") makes pci_aer_init() void, but the version when
-!CONFIG_PCIEAER isn't modified accordingly, fix it.
 
-Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
----
- drivers/pci/pci.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 12-Apr-19 1:34 AM, Bjorn Helgaas wrote:
+> On Thu, Apr 11, 2019 at 10:33:39PM +0530, Manikanta Maddireddy wrote:
+>> Some of the legacy PCIe endpoints doesn't enumerate if root port adverti=
+ses
+>> both Gen-1 and Gen-2 speeds. Hence, the strategy followed here is to
+>> initially advertise only Gen-1 and after link is up, retrain link to Gen=
+-2
+>> speed.
+>>
+>> Following two cards display this behaviour,
+>>   - Fusion HDTV 5 Express card
+>>   - IOGear SIL - PCIE - SATA card
+> This sounds like a Tegra erratum.  If you think this is an issue with
+> the endpoints above, not with Tegra, we should see issues with these
+> cards in non-Tegra systems.
+>
+> If that's the case, we might need a more far-reaching solution that
+> would fix issues with these cards in all systems.
+>
+> If it really is a Tegra erratum, that's fine; just own up to it in the
+> commit log and comment so it's not misleading.
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d994839a3e24..9cb99380c61e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -597,7 +597,7 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev);
- void pci_aer_clear_device_status(struct pci_dev *dev);
- #else
- static inline void pci_no_aer(void) { }
--static inline int pci_aer_init(struct pci_dev *d) { return -ENODEV; }
-+static inline void pci_aer_init(struct pci_dev *d) { }
- static inline void pci_aer_exit(struct pci_dev *d) { }
- static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
- static inline void pci_aer_clear_device_status(struct pci_dev *dev) { }
---=20
-2.20.1
+Based on PCIe LA traces with x86 platform:
+=C2=A01) x86 initially advertises Gen1, Gen2 & Gen3 speeds. Link number neg=
+otiation does not happen
+=C2=A0as end point does not lock down to the advertised link number from RP=
+.
+=C2=A02) There are multiple entries to detect<->compliance from the both th=
+e sides.
+=C2=A03) After some time (or some counts of detect entry), x86 only adverti=
+ses Gen1 speed in TS1
+=C2=A04) This time end point responds to the link number in the TS1 and lin=
+k comes up
 
+Tegra PCIe IP fails after step-2, it doesn't retry with only Gen1. This is =
+the reason for
+
+setting link speed to Gen1 and then start LTSSM.
+
+I don't see anything mentioned about advertising lower link speed and retry=
+ing
+
+link up in "Configuration Substate Machine" figure in PCIe spec. I am not s=
+ure
+
+if it is mentioned anywhere in implementation notes or left for implementer=
+ to
+
+decide in PCIe spec.
+
+I will update this information in next version of this patch to justify why=
+ this is required
+
+only for Tegra.
+
+>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>  drivers/pci/controller/pci-tegra.c | 11 +++++++++++
+>>  1 file changed, 11 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller=
+/pci-tegra.c
+>> index 7dc728cc5f51..7e24eac12668 100644
+>> --- a/drivers/pci/controller/pci-tegra.c
+>> +++ b/drivers/pci/controller/pci-tegra.c
+>> @@ -670,6 +670,17 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_=
+pcie_port *port)
+>>  		value |=3D soc->update_fc_val;
+>>  		writel(value, port->base + RP_VEND_XP);
+>>  	}
+>> +
+>> +	/*
+>> +	 * PCIe link doesn't come up with few legacy PCIe endpoints
+>> +	 * if root port advertises both Gen-1 and Gen-2 speeds.
+>> +	 * Hence, the strategy followed here is to initially advertise
+>> +	 * only Gen-1 and after link is up, retrain link to Gen-2 speed
+>> +	 */
+>> +	value =3D readl(port->base + RP_LINK_CONTROL_STATUS_2);
+>> +	value &=3D ~PCI_EXP_LNKSTA_CLS;
+>> +	value |=3D PCI_EXP_LNKSTA_CLS_2_5GB;
+>> +	writel(value, port->base + RP_LINK_CONTROL_STATUS_2);
+>>  }
+>> =20
+>>  static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
+>> --=20
+>> 2.17.1
+>>
