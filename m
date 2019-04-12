@@ -2,177 +2,92 @@ Return-Path: <SRS0=vi1x=SO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_PASS,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F29D2C10F0E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:00:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8307C10F0E
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:38:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CADA72083E
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:00:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CD442171F
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Apr 2019 15:38:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555083521;
+	bh=v56LeXwr7t1ja6o1KqBeXKluPpjZCaLuijouKb5IvAo=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=nA3NA19UscP25mrAq8M+1hFmSUV4xbsFQcuWDbJeotNlDPY6GvJCOyPh46V7sm+zV
+	 exlCGR3hkrja0ErS0et0IE7SAlfvlbMKq2mXPHPFnpnWZvsPhqH5bbYBqD2ZKYUDMD
+	 MkXSM9WoVk3ZbWEl3tlN1J0WzD1dCFwfU83Navmk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726788AbfDLPAd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Apr 2019 11:00:33 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34466 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726714AbfDLPAc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 Apr 2019 11:00:32 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 318BD15AB;
-        Fri, 12 Apr 2019 08:00:30 -0700 (PDT)
-Received: from [10.1.196.75] (e110467-lin.cambridge.arm.com [10.1.196.75])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 31FCC3F557;
-        Fri, 12 Apr 2019 08:00:28 -0700 (PDT)
-Subject: Re: [PATCH V2] PCI: tegra: Use the DMA-API to get the MSI address
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Vidya Sagar <vidyas@nvidia.com>
-Cc:     bhelgaas@google.com, treding@nvidia.com, swarren@nvidia.com,
-        mperttunen@nvidia.com, jonathanh@nvidia.com, dev@lynxeye.de,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com
-References: <1553004121-24606-1-git-send-email-vidyas@nvidia.com>
- <20190411094024.GC6227@red-moon>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <ed7456f7-df3f-c812-d177-e95c9c5f6868@arm.com>
-Date:   Fri, 12 Apr 2019 16:00:26 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726785AbfDLPil (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Apr 2019 11:38:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58352 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726711AbfDLPil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 Apr 2019 11:38:41 -0400
+Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 358D82082E;
+        Fri, 12 Apr 2019 15:38:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1555083520;
+        bh=v56LeXwr7t1ja6o1KqBeXKluPpjZCaLuijouKb5IvAo=;
+        h=Date:From:To:Cc:Subject:From;
+        b=NNKs4SO6zl+yCoT6q9KpzemVDSE2woCeNiIQ5+cyRpR5PRxBXk3wdvX9vVL3x8iSU
+         DzP0seJF1f0re/LJGN9ZUu6OeyAcmywBk8+W4YX0FW1DQtgPdFlEy0E+sF0ZtOWYCJ
+         XayxeWYCIidFbaX5yvu11zudEy6ncRmZKvaWfAoA=
+Date:   Fri, 12 Apr 2019 10:38:38 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Micah Parrish <micah.parrish@hpe.com>,
+        Andre Przywara <andre.przywara@arm.com>
+Subject: [GIT PULL] PCI fixes for v5.1
+Message-ID: <20190412153838.GA126710@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20190411094024.GC6227@red-moon>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 11/04/2019 10:40, Lorenzo Pieralisi wrote:
-> [+Robin]
-> 
-> I would like Robin to have a look before merging this patch so
-> that we agree that's the expected approach.
+PCI fixes:
 
-It's a bit crazy, but I guess it's not really any worse than the 
-existing implementation. As long the comments and commit message clearly 
-document that this is just trickery to reserve a 32-bit DMA address 
-(which AFAICS they more or less do) I don't think I have a significant 
-objection.
+  - Add a DMA alias quirk for another Marvell SATA device (Andre Przywara)
 
-One suggestion I would make is using dma_alloc_attrs() with 
-DMA_ATTR_NO_KERNEL_MAPPING, to make it clear that this is being set 
-aside for 'special' device purposes and is not intended to be accessed 
-as a regular buffer (plus I believe this is non-coherent, so that should 
-also skip the small overhead of creating a non-cacheable remap).
+  - Fix a pciehp regression that broke safe removal of devices (Sergey
+    Miroshnichenko)
 
-Ultimately, it might make sense to have an API in the PCI core which can 
-look at memblock/bridge windows/etc. to find a suitable non-overlapping 
-address for this kind of root-complex-integrated doorbell without having 
-to subvert the page allocator, as it seems to be a fairly common setup 
-in 'embedded' IPs.
 
-Robin.
+The following changes since commit 0fa635aec9abd718bd18c0bda2261351a0811efc:
 
-> 
-> Lorenzo
-> 
-> On Tue, Mar 19, 2019 at 07:32:01PM +0530, Vidya Sagar wrote:
->> Since the upstream MSI memory writes are generated by downstream devices,
->> it is logically correct to have MSI target memory coming from the DMA pool
->> reserved for PCIe than from the general memory pool reserved for CPU
->> access. This avoids PCIe DMA addresses coinciding with MSI target address
->> thereby raising unwanted MSI interrupts. This patch also enforces to limit
->> the MSI target address to 32-bits to make it work for PCIe endponits that
->> support only 32-bit MSI target address and those endpoints that support
->> 64-bit MSI target address anyway work with 32-bit MSI target address.
->>
->> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->> Reviewed-by: Thierry Reding <treding@nvidia.com>
->> Acked-by: Thierry Reding <treding@nvidia.com>
->> ---
->> v2:
->> * changed 'phys' type to 'dma_addr_t' from 'u64'
->> * added a comment on why DMA mask is set to 32-bit
->> * replaced 'dma' with 'DMA'
->>
->>   drivers/pci/controller/pci-tegra.c | 35 ++++++++++++++++++++++++++---------
->>   1 file changed, 26 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
->> index f4f53d092e00..f8173a5e352d 100644
->> --- a/drivers/pci/controller/pci-tegra.c
->> +++ b/drivers/pci/controller/pci-tegra.c
->> @@ -231,9 +231,9 @@ struct tegra_msi {
->>   	struct msi_controller chip;
->>   	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
->>   	struct irq_domain *domain;
->> -	unsigned long pages;
->>   	struct mutex lock;
->> -	u64 phys;
->> +	void *virt;
->> +	dma_addr_t phys;
->>   	int irq;
->>   };
->>   
->> @@ -1536,7 +1536,7 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
->>   	err = platform_get_irq_byname(pdev, "msi");
->>   	if (err < 0) {
->>   		dev_err(dev, "failed to get IRQ: %d\n", err);
->> -		goto err;
->> +		goto free_irq_domain;
->>   	}
->>   
->>   	msi->irq = err;
->> @@ -1545,17 +1545,34 @@ static int tegra_pcie_msi_setup(struct tegra_pcie *pcie)
->>   			  tegra_msi_irq_chip.name, pcie);
->>   	if (err < 0) {
->>   		dev_err(dev, "failed to request IRQ: %d\n", err);
->> -		goto err;
->> +		goto free_irq_domain;
->> +	}
->> +
->> +	/* Though the PCIe controller can address >32-bit address space, to
->> +	 * facilitate endpoints that support only 32-bit MSI target address,
->> +	 * the mask is set to 32-bit to make sure that MSI target address is
->> +	 * always a 32-bit address
->> +	 */
->> +	err = dma_set_coherent_mask(dev, DMA_BIT_MASK(32));
->> +	if (err < 0) {
->> +		dev_err(dev, "failed to set DMA coherent mask: %d\n", err);
->> +		goto free_irq;
->> +	}
->> +
->> +	msi->virt = dma_alloc_coherent(dev, PAGE_SIZE, &msi->phys, GFP_KERNEL);
->> +	if (!msi->virt) {
->> +		dev_err(dev, "failed to allocate DMA memory for MSI\n");
->> +		err = -ENOMEM;
->> +		goto free_irq;
->>   	}
->>   
->> -	/* setup AFI/FPCI range */
->> -	msi->pages = __get_free_pages(GFP_KERNEL, 0);
->> -	msi->phys = virt_to_phys((void *)msi->pages);
->>   	host->msi = &msi->chip;
->>   
->>   	return 0;
->>   
->> -err:
->> +free_irq:
->> +	free_irq(msi->irq, pcie);
->> +free_irq_domain:
->>   	irq_domain_remove(msi->domain);
->>   	return err;
->>   }
->> @@ -1592,7 +1609,7 @@ static void tegra_pcie_msi_teardown(struct tegra_pcie *pcie)
->>   	struct tegra_msi *msi = &pcie->msi;
->>   	unsigned int i, irq;
->>   
->> -	free_pages(msi->pages, 0);
->> +	dma_free_coherent(pcie->dev, PAGE_SIZE, msi->virt, msi->phys);
->>   
->>   	if (msi->irq > 0)
->>   		free_irq(msi->irq, pcie);
->> -- 
->> 2.7.4
->>
+  PCI/LINK: Deduplicate bandwidth reports for multi-function devices (2019-03-25 17:59:07 -0500)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.1-fixes-2
+
+for you to fetch changes up to 3943af9d01e94330d0cfac6fccdbc829aad50c92:
+
+  PCI: pciehp: Ignore Link State Changes after powering off a slot (2019-04-10 16:06:43 -0500)
+
+----------------------------------------------------------------
+pci-v5.1-fixes-2
+
+----------------------------------------------------------------
+Andre Przywara (1):
+      PCI: Add function 1 DMA alias quirk for Marvell 9170 SATA controller
+
+Sergey Miroshnichenko (1):
+      PCI: pciehp: Ignore Link State Changes after powering off a slot
+
+ drivers/pci/hotplug/pciehp_ctrl.c | 4 ++++
+ drivers/pci/quirks.c              | 2 ++
+ 2 files changed, 6 insertions(+)
