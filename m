@@ -6,90 +6,113 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90BFCC10F11
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 16:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3425C10F11
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 16:56:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66E1F2084D
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 16:51:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6A6C2084D
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 16:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727256AbfDMQvA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 13 Apr 2019 12:51:00 -0400
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:2633 "EHLO
-        mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726998AbfDMQvA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 Apr 2019 12:51:00 -0400
-X-IronPort-AV: E=Sophos;i="5.60,346,1549926000"; 
-   d="scan'208";a="302789478"
-Received: from abo-75-106-68.mrs.modulonet.fr (HELO hadrien) ([85.68.106.75])
-  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Apr 2019 18:50:57 +0200
-Date:   Sat, 13 Apr 2019 18:50:57 +0200 (CEST)
-From:   Julia Lawall <julia.lawall@lip6.fr>
-X-X-Sender: jll@hadrien
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-cc:     kbuild-all@01.org, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
+        id S1727113AbfDMQ4m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 13 Apr 2019 12:56:42 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:45418 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727256AbfDMQ4l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 13 Apr 2019 12:56:41 -0400
+Received: from s0106602ad0811846.cg.shawcable.net ([68.147.191.165] helo=[192.168.0.12])
+        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.89)
+        (envelope-from <logang@deltatee.com>)
+        id 1hFLxI-00007e-70; Sat, 13 Apr 2019 10:56:41 -0600
+To:     Julia Lawall <julia.lawall@lip6.fr>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc:     kbuild-all@01.org, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
         Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, Kirill Smelkov <kirr@nexedi.com>
-Subject: [PATCH] pci/switchtec: fix stream_open.cocci warnings (fwd)
-Message-ID: <alpine.DEB.2.21.1904131849350.2536@hadrien>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+References: <alpine.DEB.2.21.1904131849350.2536@hadrien>
+From:   Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <306cc455-0506-6561-c4ad-95478e106161@deltatee.com>
+Date:   Sat, 13 Apr 2019 10:56:37 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <alpine.DEB.2.21.1904131849350.2536@hadrien>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 68.147.191.165
+X-SA-Exim-Rcpt-To: kirr@nexedi.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, helgaas@kernel.org, kurt.schwemmer@microsemi.com, kbuild-all@01.org, bigeasy@linutronix.de, julia.lawall@lip6.fr
+X-SA-Exim-Mail-From: logang@deltatee.com
+Subject: Re: [PATCH] pci/switchtec: fix stream_open.cocci warnings (fwd)
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
 
-Kirill will explain about this issue.
 
-julia
+On 2019-04-13 10:50 a.m., Julia Lawall wrote:
+> Hello,
+> 
+> Kirill will explain about this issue.
 
----------- Forwarded message ----------
-Date: Sat, 13 Apr 2019 11:22:51 +0800
-From: kbuild test robot <lkp@intel.com>
-To: kbuild@01.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] pci/switchtec: fix stream_open.cocci warnings
+I'm aware of this effort and Acked Kirill's original monolithic patch.
+So, for this patch:
 
-CC: kbuild-all@01.org
-TO: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-CC: Logan Gunthorpe <logang@deltatee.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
+Acked-by: Logan Gunthorpe <logang@deltatee.com.
 
-From: kbuild test robot <lkp@intel.com>
+Thanks,
 
-drivers/pci/switch/switchtec.c:395:1-17: ERROR: switchtec_fops: .read() can deadlock .write(); change nonseekable_open -> stream_open to fix.
+Logan
 
-Generated by: scripts/coccinelle/api/stream_open.cocci
 
-Fixes: 8a29a3bae2a2 ("pci/switchtec: Don't use completion's wait queue")
-Signed-off-by: kbuild test robot <lkp@intel.com>
----
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git linux-5.0.y-rt-rebase
-head:   794c294ae4483c240429c25a0d18e272e92c94de
-commit: 8a29a3bae2a2dfb0116cd8791d9700515d6e765e [154/311] pci/switchtec: Don't use completion's wait queue
-:::::: branch date: 7 hours ago
-:::::: commit date: 7 hours ago
-
-Please take the patch only if it's a positive warning. Thanks!
-
- switchtec.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -392,7 +392,7 @@ static int switchtec_dev_open(struct ino
- 		return PTR_ERR(stuser);
-
- 	filp->private_data = stuser;
--	nonseekable_open(inode, filp);
-+	stream_open(inode, filp);
-
- 	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
-
+> julia
+> 
+> ---------- Forwarded message ----------
+> Date: Sat, 13 Apr 2019 11:22:51 +0800
+> From: kbuild test robot <lkp@intel.com>
+> To: kbuild@01.org
+> Cc: Julia Lawall <julia.lawall@lip6.fr>
+> Subject: [PATCH] pci/switchtec: fix stream_open.cocci warnings
+> 
+> CC: kbuild-all@01.org
+> TO: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+> CC: Logan Gunthorpe <logang@deltatee.com>
+> CC: Bjorn Helgaas <helgaas@kernel.org>
+> CC: linux-pci@vger.kernel.org
+> CC: linux-kernel@vger.kernel.org
+> 
+> From: kbuild test robot <lkp@intel.com>
+> 
+> drivers/pci/switch/switchtec.c:395:1-17: ERROR: switchtec_fops: .read() can deadlock .write(); change nonseekable_open -> stream_open to fix.
+> 
+> Generated by: scripts/coccinelle/api/stream_open.cocci
+> 
+> Fixes: 8a29a3bae2a2 ("pci/switchtec: Don't use completion's wait queue")
+> Signed-off-by: kbuild test robot <lkp@intel.com>
+> ---
+> 
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git linux-5.0.y-rt-rebase
+> head:   794c294ae4483c240429c25a0d18e272e92c94de
+> commit: 8a29a3bae2a2dfb0116cd8791d9700515d6e765e [154/311] pci/switchtec: Don't use completion's wait queue
+> :::::: branch date: 7 hours ago
+> :::::: commit date: 7 hours ago
+> 
+> Please take the patch only if it's a positive warning. Thanks!
+> 
+>  switchtec.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -392,7 +392,7 @@ static int switchtec_dev_open(struct ino
+>  		return PTR_ERR(stuser);
+> 
+>  	filp->private_data = stuser;
+> -	nonseekable_open(inode, filp);
+> +	stream_open(inode, filp);
+> 
+>  	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
+> 
