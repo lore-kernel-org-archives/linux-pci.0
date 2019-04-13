@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4BE9C10F11
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:03:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B19EDC282CE
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5F92D2084D
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:03:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 79B3720848
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:07:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555164233;
-	bh=/XnQPVQ7P4NNg+6L/eD94JOU05B8Pskx4He02hAjuRU=;
+	s=default; t=1555164465;
+	bh=Jzll/Ep+ESB04XVkUgP/Ai2lVI2yqMTtW4oROxJvqsY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=W4wTgHzQ9aLB4Wb21iB5V6SRO1Yb53xsIUKInpmI5LgJrWx5sfxbIZ6tozyzgxYO2
-	 bTEvv2TT2GopKsceYbeskqAMzbrErswncmlDcaAczDWRIuJLLUWQK5q0vHzr7J/CHP
-	 G87HRy32OFD89zpPM9zDYQkPAEZksFiFK7KiVR1U=
+	b=wl1KCVXWkKTFMdth202Trzmblr8Wkrvq6LAr0K6kgwaTyRJoqNa7T2wg7fVoPqNYH
+	 Pd6GAQkM2Z3vyMfAKaimdngpmkIMW0YoHmNie9hpun/5twc8qVt1vtqJKA0EJyicTa
+	 JfewbVVb1Q6sc6Y0HXc0NPzqSV7x+GMd5+S89fY8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727138AbfDMODr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 13 Apr 2019 10:03:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33456 "EHLO mail.kernel.org"
+        id S1727066AbfDMOHj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 13 Apr 2019 10:07:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35330 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727085AbfDMODr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 13 Apr 2019 10:03:47 -0400
+        id S1726973AbfDMOHj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 13 Apr 2019 10:07:39 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BCC3320848;
-        Sat, 13 Apr 2019 14:03:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 38DC420848;
+        Sat, 13 Apr 2019 14:07:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555164225;
-        bh=/XnQPVQ7P4NNg+6L/eD94JOU05B8Pskx4He02hAjuRU=;
+        s=default; t=1555164457;
+        bh=Jzll/Ep+ESB04XVkUgP/Ai2lVI2yqMTtW4oROxJvqsY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pU2312vRRSOyaC9JCizJmnrBJ/pGSCkQayNM5yl2ynyRwrZaci8iW07PNwa3mNK+m
-         3gvZwuKfXCjjgWLjot4qMjPBi+bdePPhc1Q4QmRZz9SdEOuwVDuXP/ONbH1KCC/9R0
-         Av9RUxsF5hi3zVofUIuRJy6JsbTD8k0Xj8uBVjbU=
-Date:   Sat, 13 Apr 2019 09:03:43 -0500
+        b=VDuyDxl8LSmVIfQrMKEApcNHdOEFRD0hj1aGZXzaMUEGDdKuyfTpMWaGmaHmdA3De
+         5nP6vY1E8s/tCcIgdpLB0ivQA4kCdQK4+wjsyE3XnvIv32COFiyXIOnEaQBuZ0D5iq
+         pcyUfXuG0w0ZSb0Rmf5pdn1e/2lGqrXMDQ6rX6rY=
+Date:   Sat, 13 Apr 2019 09:07:36 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Kishon Vijay Abraham I <kishon@ti.com>
 Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -55,7 +55,7 @@ Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
         Jesper Nilsson <jesper.nilsson@axis.com>
 Subject: Re: [PATCH v3 02/26] PCI: keystone: Cleanup error_irq configuration
-Message-ID: <20190413140343.GC126710@google.com>
+Message-ID: <20190413140735.GD126710@google.com>
 References: <20190325093947.32633-1-kishon@ti.com>
  <20190325093947.32633-3-kishon@ti.com>
 MIME-Version: 1.0
@@ -68,21 +68,14 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Kishon,
-
 On Mon, Mar 25, 2019 at 03:09:23PM +0530, Kishon Vijay Abraham I wrote:
 > pci-keystone driver uses irq_of_parse_and_map to get irq number of
 > error_irq. Use platform_get_irq instead and move platform_get_irq()
 > and request_irq() of error_irq from ks_pcie_add_pcie_port to ks_pcie_probe
 > since error_irq is common to both RC mode and EP mode.
 
-Does this have any DT implications?
-
-It's not obvious that platform_get_irq() and irq_of_parse_and_map() work
-similarly or that they get the same result from DT.
-
-I'm sure they *do*, but it would be nice to have some hints in the commit
-log about why that's the case.
+Part of my confusion here is that there's no hint about why
+you need to use platform_get_irq() instead of irq_of_parse_and_map().
 
 > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
