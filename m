@@ -2,70 +2,97 @@ Return-Path: <SRS0=v2Vw=SP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3425C10F11
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 16:56:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F36DBC10F11
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 17:24:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6A6C2084D
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 16:56:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C19222054F
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 17:24:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=nexedi.com header.i=kirr@nexedi.com header.b="hb+JmiKv";
+	dkim=pass (1024-bit key) header.d=mandrillapp.com header.i=@mandrillapp.com header.b="WZEzwXqE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727113AbfDMQ4m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 13 Apr 2019 12:56:42 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:45418 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727256AbfDMQ4l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 13 Apr 2019 12:56:41 -0400
-Received: from s0106602ad0811846.cg.shawcable.net ([68.147.191.165] helo=[192.168.0.12])
-        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1hFLxI-00007e-70; Sat, 13 Apr 2019 10:56:41 -0600
-To:     Julia Lawall <julia.lawall@lip6.fr>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc:     kbuild-all@01.org, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Kirill Smelkov <kirr@nexedi.com>
-References: <alpine.DEB.2.21.1904131849350.2536@hadrien>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <306cc455-0506-6561-c4ad-95478e106161@deltatee.com>
-Date:   Sat, 13 Apr 2019 10:56:37 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.21.1904131849350.2536@hadrien>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 68.147.191.165
-X-SA-Exim-Rcpt-To: kirr@nexedi.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, helgaas@kernel.org, kurt.schwemmer@microsemi.com, kbuild-all@01.org, bigeasy@linutronix.de, julia.lawall@lip6.fr
-X-SA-Exim-Mail-From: logang@deltatee.com
+        id S1727580AbfDMRY6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 13 Apr 2019 13:24:58 -0400
+Received: from mail18.wdc04.mandrillapp.com ([205.201.139.18]:4245 "EHLO
+        mail18.wdc04.mandrillapp.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728634AbfDMRYw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 13 Apr 2019 13:24:52 -0400
+X-Greylist: delayed 907 seconds by postgrey-1.27 at vger.kernel.org; Sat, 13 Apr 2019 13:24:51 EDT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=mandrill; d=nexedi.com;
+ h=From:Subject:To:Cc:Message-Id:References:In-Reply-To:Date:MIME-Version:Content-Type:Content-Transfer-Encoding; i=kirr@nexedi.com;
+ bh=xGZrTYz6TLSvmvz29N6wq5H2asSjQwMgO6zBIVD6hNM=;
+ b=hb+JmiKv5KZdNWZL94U4wAxILt/fTaM377m4sX9X3b7bW+xc4OsCwQoIZR7AnlTr9bUPLu81PbWt
+   ZHqCypByVv/jN8iYCNh8WnMDWFVv2VSKL+oQxg8FwzfiDqjNqU/SkCfC2tR35lIVfPvDl09EmXce
+   /hIdClUvlBNLNQqK3Ak=
+Received: from pmta08.mandrill.prod.suw01.rsglab.com (127.0.0.1) by mail18.wdc04.mandrillapp.com id hm8dm61jvmgp for <linux-pci@vger.kernel.org>; Sat, 13 Apr 2019 17:01:00 +0000 (envelope-from <bounce-md_31050260.5cb215cc.v1-05bb9d3adb964dc7bea46112a3e30aad@mandrillapp.com>)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mandrillapp.com; 
+ i=@mandrillapp.com; q=dns/txt; s=mandrill; t=1555174860; h=From : 
+ Subject : To : Cc : Message-Id : References : In-Reply-To : Date : 
+ MIME-Version : Content-Type : Content-Transfer-Encoding : From : 
+ Subject : Date : X-Mandrill-User : List-Unsubscribe; 
+ bh=xGZrTYz6TLSvmvz29N6wq5H2asSjQwMgO6zBIVD6hNM=; 
+ b=WZEzwXqESmNCNoApFpwdNIxnRggE7oCWhQ9r3vxSLQisGqUWjOT55s5diX2Ylq6wNacauP
+ oINZ2dMCMLMy8movoHD0Ms4uOG0wWZG2viwsvAaHHI/Wo+K1mVW9+pErI1i6jDE5nTslQ73k
+ G+URIkvDVPa7/jc7ytyx1SEoqwj3E=
+From:   Kirill Smelkov <kirr@nexedi.com>
 Subject: Re: [PATCH] pci/switchtec: fix stream_open.cocci warnings (fwd)
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Received: from [87.98.221.171] by mandrillapp.com id 05bb9d3adb964dc7bea46112a3e30aad; Sat, 13 Apr 2019 17:01:00 +0000
+To:     Julia Lawall <julia.lawall@lip6.fr>
+Cc:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        <kbuild-all@01.org>, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-Id: <20190413170056.GA11293@deco.navytux.spb.ru>
+References: <alpine.DEB.2.21.1904131849350.2536@hadrien>
+In-Reply-To: <alpine.DEB.2.21.1904131849350.2536@hadrien>
+X-Report-Abuse: Please forward a copy of this message, including all headers, to abuse@mandrill.com
+X-Report-Abuse: You can also report abuse here: http://mandrillapp.com/contact/abuse?id=31050260.05bb9d3adb964dc7bea46112a3e30aad
+X-Mandrill-User: md_31050260
+Date:   Sat, 13 Apr 2019 17:01:00 +0000
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hello everyone,
 
-
-On 2019-04-13 10:50 a.m., Julia Lawall wrote:
+On Sat, Apr 13, 2019 at 06:50:57PM +0200, Julia Lawall wrote:
 > Hello,
 > 
 > Kirill will explain about this issue.
 
-I'm aware of this effort and Acked Kirill's original monolithic patch.
-So, for this patch:
+pci/switchtec switching to stream_open is already queued to merge
+window and it was acked by Logan Gunthorpe:
 
-Acked-by: Logan Gunthorpe <logang@deltatee.com.
+        https://lore.kernel.org/lkml/CAHk-=wgqgN5j1ZWnyVLqqoyU=CCWTYOko3MDyU8L_5e21KvHAg@mail.gmail.com/
+        https://lab.nexedi.com/kirr/linux/commit/edaeb4101860
 
-Thanks,
+( there are too many Cc's in that patch and email with it and reply-all to
+  it did not get into mailing list probably due to being considered as spam )
 
-Logan
+stream_open.cocci was issuing only warning for pci/switchtec, but after
+8a29a3bae2a2 ("pci/switchtec: Don't use completion's wait queue") they
+started to use wait_even_* inside read method and, since
+stream_open.cocci considers wait_event_* as blocking the warning became
+error. Previously it was completions there, but I added support for wait
+events only for simplicity.
 
+I can handle pci/switchtec switching via big nonseekable_open ->
+stream_open change at next merge window, or, alternatively please feel
+free to switch pci/switchtec now on its own. The change is correct - I
+was manually reviewing all changes that stream_open.cocci produces and
+pci/switchtec was there.
+
+Kirill
 
 > julia
 > 
@@ -115,4 +142,3 @@ Logan
 > +	stream_open(inode, filp);
 > 
 >  	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
-> 
