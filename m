@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B19EDC282CE
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD488C10F11
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:30:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79B3720848
-	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:07:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7079E2077C
+	for <linux-pci@archiver.kernel.org>; Sat, 13 Apr 2019 14:30:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555164465;
-	bh=Jzll/Ep+ESB04XVkUgP/Ai2lVI2yqMTtW4oROxJvqsY=;
+	s=default; t=1555165807;
+	bh=TX+7DG1vbXdb5EhlxAQmPXddgCAEBxPibp6kcITTDjI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=wl1KCVXWkKTFMdth202Trzmblr8Wkrvq6LAr0K6kgwaTyRJoqNa7T2wg7fVoPqNYH
-	 Pd6GAQkM2Z3vyMfAKaimdngpmkIMW0YoHmNie9hpun/5twc8qVt1vtqJKA0EJyicTa
-	 JfewbVVb1Q6sc6Y0HXc0NPzqSV7x+GMd5+S89fY8=
+	b=zOFXx0SaSG5QDXgxgH08DtRzTVDtd44hjt6Zg9mFIXc7Ft+c1kUBrTOOHiMrqXjSR
+	 vUC6FeXUeH1J4XnHY41ht2cEItR1zWNbnQiiVeDU0ojFCaye14jZwrPoYUOEi05Yn8
+	 F+q3NceCTlststPmvXjFF6NWlmC1cvX2k9iB6ZQQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727066AbfDMOHj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 13 Apr 2019 10:07:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35330 "EHLO mail.kernel.org"
+        id S1727025AbfDMOaF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 13 Apr 2019 10:30:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43152 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726973AbfDMOHj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 13 Apr 2019 10:07:39 -0400
+        id S1726833AbfDMOaF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 13 Apr 2019 10:30:05 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 38DC420848;
-        Sat, 13 Apr 2019 14:07:37 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7B6AD2077C;
+        Sat, 13 Apr 2019 14:30:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555164457;
-        bh=Jzll/Ep+ESB04XVkUgP/Ai2lVI2yqMTtW4oROxJvqsY=;
+        s=default; t=1555165803;
+        bh=TX+7DG1vbXdb5EhlxAQmPXddgCAEBxPibp6kcITTDjI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VDuyDxl8LSmVIfQrMKEApcNHdOEFRD0hj1aGZXzaMUEGDdKuyfTpMWaGmaHmdA3De
-         5nP6vY1E8s/tCcIgdpLB0ivQA4kCdQK4+wjsyE3XnvIv32COFiyXIOnEaQBuZ0D5iq
-         pcyUfXuG0w0ZSb0Rmf5pdn1e/2lGqrXMDQ6rX6rY=
-Date:   Sat, 13 Apr 2019 09:07:36 -0500
+        b=bklrcgo2lt8Wa3R+Ul/LqqbP40+832Y9Wq//QE7Z+tUF/kj69CP4LCraTCwtal+CQ
+         M/ykqHGjiOa7eN7kmZhXbmmJRa7L9aEmYY6THLUkAHqLWHABUMOWYpmFGx+QaW8m5s
+         ME2tutXIQ5ka0TuvdoLCGZcO/AEYvXNTGuuyj4AM=
+Date:   Sat, 13 Apr 2019 09:30:01 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Kishon Vijay Abraham I <kishon@ti.com>
 Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
@@ -50,134 +50,107 @@ Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-arm-kernel@axis.com,
-        Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: Re: [PATCH v3 02/26] PCI: keystone: Cleanup error_irq configuration
-Message-ID: <20190413140735.GD126710@google.com>
-References: <20190325093947.32633-1-kishon@ti.com>
- <20190325093947.32633-3-kishon@ti.com>
+        linux-arm-kernel@lists.infradead.org, linux-arm-kernel@axis.com
+Subject: Re: [PATCH v2 06/26] PCI: keystone: Move initializations to
+ appropriate places
+Message-ID: <20190413143001.GE126710@google.com>
+References: <20190325083501.8088-1-kishon@ti.com>
+ <20190325083501.8088-7-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20190325093947.32633-3-kishon@ti.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190325083501.8088-7-kishon@ti.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Mar 25, 2019 at 03:09:23PM +0530, Kishon Vijay Abraham I wrote:
-> pci-keystone driver uses irq_of_parse_and_map to get irq number of
-> error_irq. Use platform_get_irq instead and move platform_get_irq()
-> and request_irq() of error_irq from ks_pcie_add_pcie_port to ks_pcie_probe
-> since error_irq is common to both RC mode and EP mode.
+On Mon, Mar 25, 2019 at 02:04:41PM +0530, Kishon Vijay Abraham I wrote:
+> No functional change. Move host specific platform_get_resource to
+> ks_add_pcie_port and the common platform_get_resource (applicable
+> to both host and endpoint) to probe. This is in preparation for
+> adding endpoint support to pci-keystone driver.
 
-Part of my confusion here is that there's no hint about why
-you need to use platform_get_irq() instead of irq_of_parse_and_map().
+This seems to move platform_get_resource() *from* (not *to*)
+ks_add_pcie_port().
+
+You seem to be making a distinction in the commit log between (1) a
+resource that's only used for host mode, and (2) a common resource
+that's used for both host and endpoint mode.  But I don't see that
+distinction in the patch, so it's a little confusing to mention it in
+the commit log.
+
+It must make endpoint support easier, but I can't quite connect the
+dots yet.  Maybe endpoint will also use ks_pcie_add_pcie_port(), but
+will have a separate .probe() function that doesn't look up the
+resource that's specific to host mode?
 
 > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 > ---
->  drivers/pci/controller/dwc/pci-keystone.c | 43 +++++++++--------------
->  1 file changed, 17 insertions(+), 26 deletions(-)
+>  drivers/pci/controller/dwc/pci-keystone.c | 27 +++++++++++++----------
+>  1 file changed, 15 insertions(+), 12 deletions(-)
 > 
 > diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-> index 07f55b355d75..e50f8773e768 100644
+> index 5eebef9b9ada..95997885a05c 100644
 > --- a/drivers/pci/controller/dwc/pci-keystone.c
 > +++ b/drivers/pci/controller/dwc/pci-keystone.c
-> @@ -98,8 +98,6 @@ struct keystone_pcie {
->  	struct irq_domain	*legacy_irq_domain;
->  	struct device_node	*np;
->  
-> -	int error_irq;
-> -
->  	/* Application register space */
->  	void __iomem		*va_app_base;	/* DT 1st resource */
->  	struct resource		app;
-> @@ -743,12 +741,6 @@ static int ks_pcie_config_legacy_irq(struct keystone_pcie *ks_pcie)
->  	return ret;
->  }
->  
-> -static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
-> -{
-> -	if (ks_pcie->error_irq > 0)
-> -		ks_pcie_enable_error_irq(ks_pcie);
-> -}
-> -
->  /*
->   * When a PCI device does not exist during config cycles, keystone host gets a
->   * bus error instead of returning 0xffffffff. This handler always returns 0
-> @@ -810,7 +802,6 @@ static int __init ks_pcie_host_init(struct pcie_port *pp)
->  
->  	ks_pcie_stop_link(pci);
->  	ks_pcie_setup_rc_app_regs(ks_pcie);
-> -	ks_pcie_setup_interrupts(ks_pcie);
->  	writew(PCI_IO_RANGE_TYPE_32 | (PCI_IO_RANGE_TYPE_32 << 8),
->  			pci->dbi_base + PCI_IO_BASE);
->  
-> @@ -854,23 +845,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
->  	struct device *dev = &pdev->dev;
+> @@ -806,11 +806,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+>  	struct resource *res;
 >  	int ret;
 >  
-> -	/*
-> -	 * Index 0 is the platform interrupt for error interrupt
-> -	 * from RC.  This is optional.
-> -	 */
-> -	ks_pcie->error_irq = irq_of_parse_and_map(ks_pcie->np, 0);
-> -	if (ks_pcie->error_irq <= 0)
-> -		dev_info(dev, "no error IRQ defined\n");
-> -	else {
-> -		ret = request_irq(ks_pcie->error_irq, ks_pcie_err_irq_handler,
-> -				  IRQF_SHARED, "pcie-error-irq", ks_pcie);
-> -		if (ret < 0) {
-> -			dev_err(dev, "failed to request error IRQ %d\n",
-> -				ks_pcie->error_irq);
-> -			return ret;
-> -		}
-> -	}
+> -	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbics");
+> -	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
+> -	if (IS_ERR(pci->dbi_base))
+> -		return PTR_ERR(pci->dbi_base);
+> -
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+>  	pp->va_cfg0_base = devm_pci_remap_cfg_resource(dev, res);
+>  	if (IS_ERR(pp->va_cfg0_base))
+> @@ -818,13 +813,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+>  
+>  	pp->va_cfg1_base = pp->va_cfg0_base;
+>  
+> -	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "app");
+> -	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
+> -	if (IS_ERR(ks_pcie->va_app_base))
+> -		return PTR_ERR(ks_pcie->va_app_base);
+> -
+> -	ks_pcie->app = *res;
 > -
 >  	pp->ops = &ks_pcie_host_ops;
->  	ret = ks_pcie_dw_host_init(ks_pcie);
+>  	ret = dw_pcie_host_init(pp);
 >  	if (ret) {
-> @@ -946,6 +920,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+> @@ -895,6 +883,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+>  	struct dw_pcie *pci;
+>  	struct keystone_pcie *ks_pcie;
+>  	struct device_link **link;
+> +	struct resource *res;
+> +	void __iomem *base;
+>  	u32 num_viewport;
+>  	struct phy **phy;
 >  	u32 num_lanes;
->  	char name[10];
->  	int ret;
-> +	int irq;
->  	int i;
+> @@ -911,6 +901,19 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+>  	if (!pci)
+>  		return -ENOMEM;
 >  
->  	ks_pcie = devm_kzalloc(dev, sizeof(*ks_pcie), GFP_KERNEL);
-> @@ -965,6 +940,20 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->  		return ret;
->  	}
->  
-> +	irq = platform_get_irq(pdev, 0);
-> +	if (irq < 0) {
-> +		dev_err(dev, "missing IRQ resource: %d\n", irq);
-> +		return irq;
-> +	}
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "app");
+> +	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
+> +	if (IS_ERR(ks_pcie->va_app_base))
+> +		return PTR_ERR(ks_pcie->va_app_base);
 > +
-> +	ret = request_irq(irq, ks_pcie_err_irq_handler, IRQF_SHARED,
-> +			  "ks-pcie-error-irq", ks_pcie);
-> +	if (ret < 0) {
-> +		dev_err(dev, "failed to request error IRQ %d\n",
-> +			irq);
-> +		return ret;
-> +	}
+> +	ks_pcie->app = *res;
 > +
->  	ret = of_property_read_u32(np, "num-lanes", &num_lanes);
->  	if (ret)
->  		num_lanes = 1;
-> @@ -1020,6 +1009,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->  	if (ret < 0)
->  		goto err_get_sync;
->  
-> +	ks_pcie_enable_error_irq(ks_pcie);
+> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbics");
+> +	base = devm_pci_remap_cfg_resource(dev, res);
+> +	if (IS_ERR(base))
+> +		return PTR_ERR(base);
 > +
->  	return 0;
+> +	pci->dbi_base = base;
+>  	pci->dev = dev;
+>  	pci->ops = &ks_pcie_dw_pcie_ops;
 >  
->  err_get_sync:
 > -- 
 > 2.17.1
 > 
