@@ -2,145 +2,152 @@ Return-Path: <SRS0=uRTt=SQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77FE0C10F13
-	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 11:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B57BEC10F13
+	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 18:47:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39360218D3
-	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 11:17:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CC6C20850
+	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 18:47:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="o9hC+vxq"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kvqUnDX1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725829AbfDNLRC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 14 Apr 2019 07:17:02 -0400
-Received: from mail-eopbgr40084.outbound.protection.outlook.com ([40.107.4.84]:38784
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725681AbfDNLRC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 14 Apr 2019 07:17:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=kjybMDggbo1fJchh7LPQweBStiKq+yQvmgfjrZ9rPnQ=;
- b=o9hC+vxqTMlP6euvrdJJzoO/hMeZb6h52+og7QYMxy+xXOGfWlf0P8Ea/ihguEQ5+IEGWIWKNZoUy+W+wvOJzFO55nJKzOaUK0wrpM2GKp2Y/Rh27yD4PLlFpEuSh9yRdx/D1ydiY3v3kaJm+sBJhZVXgHymxAbhler2RFsC/KU=
-Received: from AM6PR04MB5781.eurprd04.prod.outlook.com (20.179.3.19) by
- AM6PR04MB4229.eurprd04.prod.outlook.com (52.135.168.143) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.1792.19; Sun, 14 Apr 2019 11:16:18 +0000
-Received: from AM6PR04MB5781.eurprd04.prod.outlook.com
- ([fe80::f9db:ed86:614e:460]) by AM6PR04MB5781.eurprd04.prod.outlook.com
- ([fe80::f9db:ed86:614e:460%4]) with mapi id 15.20.1792.018; Sun, 14 Apr 2019
- 11:16:18 +0000
-From:   "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: RE: [EXT] Re: [PATCHv5 4/6] PCI: mobiveil: Add PCIe Gen4 RC driver
- for NXP Layerscape SoCs
-Thread-Topic: [EXT] Re: [PATCHv5 4/6] PCI: mobiveil: Add PCIe Gen4 RC driver
- for NXP Layerscape SoCs
-Thread-Index: AQHU8RV9MHdz0yaFRUW6+R/81XqWJaY4jg+AgAL1kJA=
-Date:   Sun, 14 Apr 2019 11:16:18 +0000
-Message-ID: <AM6PR04MB57812C408E832313DADAB248842A0@AM6PR04MB5781.eurprd04.prod.outlook.com>
-References: <20190412095332.41370-1-Zhiqiang.Hou@nxp.com>
- <20190412095332.41370-5-Zhiqiang.Hou@nxp.com>
- <20190412140041.GA141472@google.com>
-In-Reply-To: <20190412140041.GA141472@google.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=zhiqiang.hou@nxp.com; 
-x-originating-ip: [119.31.174.69]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9bf33b54-26e3-4f55-6a16-08d6c0ca9e00
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600139)(711020)(4605104)(4618075)(2017052603328)(7193020);SRVR:AM6PR04MB4229;
-x-ms-traffictypediagnostic: AM6PR04MB4229:
-x-microsoft-antispam-prvs: <AM6PR04MB4229D7D1CF0B9122631C13B8842A0@AM6PR04MB4229.eurprd04.prod.outlook.com>
-x-forefront-prvs: 00073DB75F
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(6029001)(136003)(346002)(366004)(39860400002)(396003)(376002)(13464003)(189003)(199004)(2906002)(52536014)(476003)(7696005)(53546011)(71200400001)(6506007)(99286004)(54906003)(11346002)(446003)(26005)(71190400001)(6436002)(55016002)(6246003)(97736004)(4326008)(86362001)(486006)(9686003)(316002)(53936002)(229853002)(81166006)(81156014)(305945005)(5660300002)(105586002)(6916009)(8936002)(68736007)(33656002)(66066001)(25786009)(8676002)(76176011)(478600001)(102836004)(3846002)(5024004)(256004)(106356001)(7416002)(74316002)(14454004)(14444005)(6116002)(7736002)(186003);DIR:OUT;SFP:1101;SCL:1;SRVR:AM6PR04MB4229;H:AM6PR04MB5781.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: nxp.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 8OtIuvPQNd4oljiwRRYuz3S6dng6LgkMATP9ho+XMISdsoIvLZSHTazHTnCGt7ynh+37RMECA6bKPrXvpAwn2Juf5BdkKidAsqQ35cFRWvQrioQubi3MFr9/vkWgOl0MdQXo2o9ldKLpqda4kVHjAI3Pkn8dcaO1S3gRrjoS6sX480BmK2xYJ0VdQyE7smKCEO+wwj+71OVjHsCifvUW/JesE6ByxTtxweB4Q9ILU9KiGJV+v/xa1z5d4EYGgEiuhrU5ompXBSC1mor6xDpCWTpk8yUePcsWnC7WSEPJJT0F5KSIH0QvJ7aF9up29eZBeQbxV2cl/ohSgsYqSr7DW/JraFfL/Uqjvufakpz04Hq80NASwGNHJsoTwfDJVXq+Q1+8+KhoZgrK4ucaTPTr3zekouUUvtUuc4QmhxnL6WE=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S1726331AbfDNSrE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 14 Apr 2019 14:47:04 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:34956 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726313AbfDNSrE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Apr 2019 14:47:04 -0400
+Received: by mail-io1-f65.google.com with SMTP id p16so12792862iod.2;
+        Sun, 14 Apr 2019 11:47:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=dqu9krHIbKjaQcsq7mCVfA57RsiBKmmVtQ1eJQ+C2/A=;
+        b=kvqUnDX1m6tndAv9WJGkRpoRATLXO2N7D3ixbeyBi6T1RnVjpoNfkomsmv1XiWOpPb
+         O/321ft8sg9U/er1N4HCBfU/qHI4dkbhEOPQ25KFVbjSt7OGzypJImMpkNBrEnXVTaDP
+         8aHttjUsZv92ePzcRBAgfHhwqb+/ZW/Aa0K1oLE4+UxvIAterWudTRIyCQXFI8+CnUh3
+         fX5+39AWbbBfWdzHwm1UYGlMtRfW3PzCX2C+ieEmHVsn2BEUKq35f9Sj8UK6L+w8Dazq
+         snN2yPtpMO6NtjhH59rF+fnxA2QMtS0nMDqCLpa7FiHI+WVxCiWynAY6ijHrETIp188n
+         v7ag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=dqu9krHIbKjaQcsq7mCVfA57RsiBKmmVtQ1eJQ+C2/A=;
+        b=Umneg3It7t8/MB5J3vRfvpnaUPutCxvd6flzSo+G591X+yd8TWriebLobU5kakSRmv
+         F1iIfdNRGMAI/QeTR8L/93pOUBmnOu85M/TBO1TgFwmtsEAZkFR4riFrEtY1magXQVnj
+         oOJ6ojnJ9xwtTLsfoGs9d90Q1AR+eD9scMyNGI/k4f3t1kucOLcVSPoMcvFVQUV1YQXS
+         F4g/51+IWsP5tI51UNzcRgeARZzCJw9jJyJgnvwXNRBrMAzP25LaQwVJvSG1QER61jGZ
+         KUK+04thASAZKrGDLzMqb/6CZ77hdgKqhn42jIkJLvuu1my5mCm3iBPrx1EqPXlLX/Kv
+         qmvw==
+X-Gm-Message-State: APjAAAXwdXVL8nxTAcVrdGRG3AyB5fBFklNNDdhlpFi8JzyHeJw9wM35
+        +zAJpiluR2dvoIdZjilOkZbHA1eYAc9VlqKiXbs=
+X-Google-Smtp-Source: APXvYqysNHpvf+ZHwu/r0IkykU6Ay9gm7nAUK9mH1b/mvWD9RnfiY/KQsc0Fa+cyZm7w4osqrHaRUPk/QIH6HL4d8FI=
+X-Received: by 2002:a6b:c909:: with SMTP id z9mr44231920iof.244.1555267623624;
+ Sun, 14 Apr 2019 11:47:03 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9bf33b54-26e3-4f55-6a16-08d6c0ca9e00
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Apr 2019 11:16:18.5707
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM6PR04MB4229
+References: <20190401042547.14067-1-andrew.smirnov@gmail.com>
+ <20190401042547.14067-9-andrew.smirnov@gmail.com> <1555085573.11529.36.camel@pengutronix.de>
+In-Reply-To: <1555085573.11529.36.camel@pengutronix.de>
+From:   Andrey Smirnov <andrew.smirnov@gmail.com>
+Date:   Sun, 14 Apr 2019 11:46:52 -0700
+Message-ID: <CAHQ1cqGFkj8GcFc-A9u0EGT9Xc-D9r7p39jkvss4OMU8bW=-0Q@mail.gmail.com>
+Subject: Re: [PATCH v3 08/11] PCI: imx6: Simplify pcie_phy_poll_ack()
+To:     Lucas Stach <l.stach@pengutronix.de>
+Cc:     linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        Chris Healy <cphealy@gmail.com>,
+        Leonard Crestez <leonard.crestez@nxp.com>,
+        "A.s. Dong" <aisheng.dong@nxp.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE55bm0NOaciDEy5pelIDIyOjAxDQo+IFRvOiBaLnEu
-IEhvdSA8emhpcWlhbmcuaG91QG54cC5jb20+DQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGRldmljZXRyZWVA
-dmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiByb2JoK2R0
-QGtlcm5lbC5vcmc7IG1hcmsucnV0bGFuZEBhcm0uY29tOyBsLnN1YnJhaG1hbnlhQG1vYml2ZWls
-LmNvLmluOw0KPiBzaGF3bmd1b0BrZXJuZWwub3JnOyBMZW8gTGkgPGxlb3lhbmcubGlAbnhwLmNv
-bT47DQo+IGxvcmVuem8ucGllcmFsaXNpQGFybS5jb207IGNhdGFsaW4ubWFyaW5hc0Bhcm0uY29t
-Ow0KPiB3aWxsLmRlYWNvbkBhcm0uY29tOyBNaW5na2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+
-OyBNLmguIExpYW4NCj4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IFhpYW93ZWkgQmFvIDx4aWFv
-d2VpLmJhb0BueHAuY29tPg0KPiBTdWJqZWN0OiBbRVhUXSBSZTogW1BBVENIdjUgNC82XSBQQ0k6
-IG1vYml2ZWlsOiBBZGQgUENJZSBHZW40IFJDIGRyaXZlciBmb3INCj4gTlhQIExheWVyc2NhcGUg
-U29Dcw0KPiANCj4gV0FSTklORzogVGhpcyBlbWFpbCB3YXMgY3JlYXRlZCBvdXRzaWRlIG9mIE5Y
-UC4gRE8gTk9UIENMSUNLIGxpbmtzIG9yDQo+IGF0dGFjaG1lbnRzIHVubGVzcyB5b3UgcmVjb2du
-aXplIHRoZSBzZW5kZXIgYW5kIGtub3cgdGhlIGNvbnRlbnQgaXMgc2FmZS4NCj4gDQo+IA0KPiAN
-Cj4gT24gRnJpLCBBcHIgMTIsIDIwMTkgYXQgMDk6NTI6NTBBTSArMDAwMCwgWi5xLiBIb3Ugd3Jv
-dGU6DQo+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0K
-PiA+IFRoaXMgUENJZSBjb250cm9sbGVyIGlzIGJhc2VkIG9uIHRoZSBNb2JpdmVpbCBHUEVYIElQ
-LCB3aGljaCBpcw0KPiA+IGNvbXBhdGlibGUgd2l0aCB0aGUgUENJIEV4cHJlc3PihKIgQmFzZSBT
-cGVjaWZpY2F0aW9uLCBSZXZpc2lvbiA0LjAuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBIb3Ug
-WmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+IFJldmlld2VkLWJ5OiBNaW5naHVh
-biBMaWFuIDxNaW5naHVhbi5MaWFuQG54cC5jb20+DQo+ID4gLS0tDQo+ID4gVjU6DQo+ID4gIC0g
-Q29ycmVjdGVkIHRoZSBzdWJqZWN0Lg0KPiA+ICAtIENvcnJlY3RlZCAyIHR5cG9zLg0KPiA+ICAt
-IFVwZGF0ZWQgdGhlIENvcHlyaWdodCBhbmQgZHJpdmVyIGRlc2NyaXB0aW9uLg0KPiA+ICAtIENo
-YW5nZWQgdG8gdXNlIEJJVCh4KSB0byBkZWZpbmUgdmVyaW91cyBmdW5jdGlvbnMgb2YgcmVnaXN0
-ZXIncyBiaXRzLg0KPiA+ICAtIFVuaWZpZWQgdGhlIGNhcGl0YWxpemF0aW9uIG9mIGVycm9yIGlu
-Zm8uDQo+ID4gIC0gQ2hhbmdlZCB0aGUgSVJRIGhhbmRsZXIgbmFtZSB0byBsc19wY2llX2c0X2lz
-cigpLg0KPiA+ICAtIENoYW5nZSAnaXJxJyB0byAnSVJRJyBpbiBlcnJvciBpbmZvLg0KPiA+ICAt
-IFRyaW1tZWQgc29tZSBmdW5jdGlvbnMgd2l0aG91dCBmdW5jdGlvbmFsaXR5IGNoYW5nZS4NCj4g
-Pg0KPiA+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL0tjb25maWcgICAgICAgfCAg
-MTAgKw0KPiA+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL21vYml2ZWlsL01ha2VmaWxlICAgICAg
-fCAgIDEgKw0KPiANCj4gPiAgLi4uL2NvbnRyb2xsZXIvbW9iaXZlaWwvcGNpLWxheWVyc2NhcGUt
-Z2VuNC5jIHwgMjU2DQo+ID4gKysrKysrKysrKysrKysrKysrDQo+IA0KPiBJIHdvdWxkIHByb2Jh
-Ymx5IG5hbWUgdGhpcyAicGNpZS1sYXllcnNjYXBlLWdlbjQuYyIgKCJwY2llIiBpbnN0ZWFkIG9m
-ICJwY2kiKSwNCj4gc2luY2UgdGhhdCdzIG1vcmUgdHlwaWNhbCBhbmQgdGhpcyByZWFsbHkgaXMg
-UENJZS1zcGVjaWZpYy4NCg0KWWVzLCB0aGlzIGNhbiBiZSBhcnJhbmdlZCBpbiB2Ni4NCg0KPiAN
-Cj4gPiArI2RlZmluZSBQQ0lFX1BGX0RCRyAgICAgICAgICAgICAgICAgIDB4N2ZjDQo+ID4gKyNk
-ZWZpbmUgUEZfREJHX0xUU1NNX01BU0sgICAgICAgICAgICAweDNmDQo+ID4gKyNkZWZpbmUgUEZf
-REJHX1dFICAgICAgICAgICAgICAgICAgICBCSVQoMzEpDQo+ID4gKyNkZWZpbmUgUEZfREJHX1BB
-QlIgICAgICAgICAgICAgICAgICBCSVQoMjcpDQo+ID4gKw0KPiA+ICsjZGVmaW5lIExTX1BDSUVf
-RzRfTFRTU01fTDAgICAgICAgICAgMHgyZCAvKiBMMCBzdGF0ZSAqLw0KPiANCj4gTWF5YmUgcmVu
-YW1lIHRoaXMgYW5kIG1vdmUgaXQgdG8gbWFrZSBpdCBvYnZpb3VzIHRoYXQgaXQncyByZWxhdGVk
-IHRvDQo+IFBGX0RCR19MVFNTTV9NQVNLPw0KDQpZZXMsIHdpbGwgcmVuYW1lIGl0IGluIHY2Lg0K
-DQo+IA0KPiA+ICsgICAgICAgICAgICAgZGV2X2VycihkZXYsICJQb2xsIFBBQlJTVCZQQUJBQ1Qg
-dGltZW91dC5cbiIpOw0KPiANCj4gTm8gbmVlZCBmb3IgcHVuY3R1YXRpb24gYXQgZW5kIG9mIG1l
-c3NhZ2VzLg0KDQpXaWxsIHJlbW92ZSB0aGVtIGluIHY2Lg0KDQpUaGFua3MsDQpaaGlxaWFuZw0K
+On Fri, Apr 12, 2019 at 9:12 AM Lucas Stach <l.stach@pengutronix.de> wrote:
+>
+> Am Sonntag, den 31.03.2019, 21:25 -0700 schrieb Andrey Smirnov:
+> > Simplify pcie_phy_poll_ack() by incorporating shifting into constant
+> > definition and convert the code to use 'bool'. No functional change
+> > intended.
+> >
+> > > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Fabio Estevam <fabio.estevam@nxp.com>
+> > > Cc: Chris Healy <cphealy@gmail.com>
+> > > Cc: Lucas Stach <l.stach@pengutronix.de>
+> > > Cc: Leonard Crestez <leonard.crestez@nxp.com>
+> > > Cc: "A.s. Dong" <aisheng.dong@nxp.com>
+> > > Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> > Cc: linux-imx@nxp.com
+> > Cc: linux-arm-kernel@lists.infradead.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Cc: linux-pci@vger.kernel.org
+> > > Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> > ---
+> >  drivers/pci/controller/dwc/pci-imx6.c | 10 +++++-----
+> >  1 file changed, 5 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> > index a49e5e491e12..7c3ffb751002 100644
+> > --- a/drivers/pci/controller/dwc/pci-imx6.c
+> > +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> > @@ -112,7 +112,7 @@ struct imx6_pcie {
+> > >  #define PCIE_PHY_CTRL_RD           BIT(19)
+> >
+> >  #define PCIE_PHY_STAT (PL_OFFSET + 0x110)
+> > -#define PCIE_PHY_STAT_ACK_LOC 16
+> > > +#define PCIE_PHY_STAT_ACK          BIT(16)
+> >
+> > >  #define PCIE_LINK_WIDTH_SPEED_CONTROL      0x80C
+> >
+> > @@ -151,16 +151,16 @@ struct imx6_pcie {
+> > >  #define PHY_RX_OVRD_IN_LO_RX_DATA_EN               BIT(5)
+> > >  #define PHY_RX_OVRD_IN_LO_RX_PLL_EN                BIT(3)
+> >
+> > -static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, int exp_val)
+> > +static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, bool exp_val)
+>
+> This looks like only going half the way to me. The parameter type is
+> changed to bool, but the callers still use 0 and 1 directly. If we use
+> bool here the callers should be changed to true/false.
+>
+
+OK, will change in next version.
+
+> >  {
+> >       struct dw_pcie *pci = imx6_pcie->pci;
+> > -     u32 val;
+> > +     bool val;
+> >       u32 max_iterations = 10;
+> >       u32 wait_counter = 0;
+> >
+> >       do {
+> > -             val = dw_pcie_readl_dbi(pci, PCIE_PHY_STAT);
+> > -             val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
+> > +             val = dw_pcie_readl_dbi(pci, PCIE_PHY_STAT) &
+> > +                     PCIE_PHY_STAT_ACK;
+>
+> I think this needs to be
+> val = !!(dw_pcie_readl_dbi(pci, PCIE_PHY_STAT) & PCIE_PHY_STAT_ACK);
+> as the ACK bit isn't shifted down into bit position 0 anymore.
+>
+
+That should already be taken care of by conversion to bool/_Bool(see
+"Using bool" in Documentation/process/coding-style.rst) and was one of
+the reasons I converted "val" to that type.
+
+Thanks,
+Andrey Smirnov
