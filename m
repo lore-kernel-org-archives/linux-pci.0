@@ -2,99 +2,80 @@ Return-Path: <SRS0=uRTt=SQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_NEOMUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C33D9C10F13
-	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 19:36:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDF7CC10F13
+	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 22:24:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8EDEF2084D
-	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 19:36:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B05412082E
+	for <linux-pci@archiver.kernel.org>; Sun, 14 Apr 2019 22:24:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YV3aN9rw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726127AbfDNTgn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 14 Apr 2019 15:36:43 -0400
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:45815 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726126AbfDNTgn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Apr 2019 15:36:43 -0400
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id 75F613000034F;
-        Sun, 14 Apr 2019 21:36:41 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 3BEA2305022; Sun, 14 Apr 2019 21:36:41 +0200 (CEST)
-Date:   Sun, 14 Apr 2019 21:36:41 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Spencer Lingard <spencer@mellanox.com>
-Cc:     linux-pci@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH] PCI: pciehp: Fix false command timeouts on boot
-Message-ID: <20190414193641.xo7yf4uqh7ci7lci@wunner.de>
-References: <1554919668-24873-1-git-send-email-spencer@mellanox.com>
+        id S1726120AbfDNWYU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 14 Apr 2019 18:24:20 -0400
+Received: from mail-qk1-f178.google.com ([209.85.222.178]:39302 "EHLO
+        mail-qk1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725497AbfDNWYU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Apr 2019 18:24:20 -0400
+Received: by mail-qk1-f178.google.com with SMTP id c189so8777160qke.6
+        for <linux-pci@vger.kernel.org>; Sun, 14 Apr 2019 15:24:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=bdLYjr1QQzolj0ATyqTqCF6TC/Ans1oc6toXFLe+K4g=;
+        b=YV3aN9rwxRCj7WQUnxLuvmLw8YeZrh6DsynN9M6pogWVtKQO5fTpAzsPrvC2gIIgdP
+         eVHJiI8tZI02cmfERanNq66C5v+SYI2fx66G2oex688xDwvAeALj3xASivD96Z4f+Hzx
+         NGEr8oiy7KScf8djWd/GgerapQRuQFjPgA70c0HzBe8amFlLvPniV3fKJgU+KZA+pSQ0
+         SgJFTy2W+NlzYQ0R4h2UK9/yw4Oed4AThvYmvCxkjXbwMeuur4oxe44nE26ScKtd/ouL
+         y8joFcAZtfX3WsjAqVBDB8t+TMC1keKVnuMRtJMcE+0gdV46I+FcWf1P9C5h3wzqgSyd
+         w7xw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=bdLYjr1QQzolj0ATyqTqCF6TC/Ans1oc6toXFLe+K4g=;
+        b=eZzMpH8EgpLeI4Afxr6q8b1Kr4ipZdYr0DJQRfsDQ6k4+cPqaKHue+lk9gUfCOo2en
+         k4dFS7Y3I3D4jJn6b5Fy2CSZv4aqSlRZm1d5ealyFSi5NpGpALYuE7RKB469Q/lGA0Mg
+         9s8ER3Cv6mHZvLBlGWpt3QhKiAmped+p7tlL78B+/GtfyryHEHAkX5gME0hxndbL8ONT
+         1STs1zWES2oCuBOK7fttMHwwnb0EHiReGOeCAVBhxzdqCRdOkzxuS1YPx77Bogfa15Od
+         M6xiuW8HONG5YomzRUOyiWiKUforY6iLL4jSIKfFB6Gg6pYDibTeB+c9maL9oZj5cZEN
+         ArCw==
+X-Gm-Message-State: APjAAAXd33o/9NIYq66xZyuDCNvMNkz4UYeYhPckqMbcgiHIfd2fOw5x
+        TQluUXf+CSeZyt7pBdEvpNERMnw+qYDRDRHU2J0szSflXqc=
+X-Google-Smtp-Source: APXvYqyDgS2+bUnEKNrqWIHXNJ0/HMbkwc0EixMvdFO61gMmUWedNN0NfXpcqdmBT0LydLeFmRPwbRprAE+QfD5lBj4=
+X-Received: by 2002:a37:4bc1:: with SMTP id y184mr54849346qka.169.1555280659731;
+ Sun, 14 Apr 2019 15:24:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1554919668-24873-1-git-send-email-spencer@mellanox.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+References: <bug-203303-193951@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-203303-193951@https.bugzilla.kernel.org/>
+Reply-To: bjorn@helgaas.com
+From:   Bjorn Helgaas <bjorn.helgaas@gmail.com>
+Date:   Sun, 14 Apr 2019 17:24:08 -0500
+Message-ID: <CABhMZUWEvx62b-w5Wxf3xbjn9rFpZRMMWNvF3iBStgVnemJ5Aw@mail.gmail.com>
+Subject: Re: [Bug 203303] New: PCIe Bus Error
+To:     bugzilla-daemon@bugzilla.kernel.org
+Cc:     bugzilla.pci@gmail.com, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[cc += Mika, Sergey, Keith]
+> pcieport 0000:00:01.7: AER: Corrected error received: 0000:00:01.0
+> pcieport 0000:00:01.7: PCIe Bus Error: severity=Corrected, type=Data Link Layer, (Receiver ID)
+> pcieport 0000:00:01.7:   device [1022:15d3] error status/mask=00000040/00006000
+> pcieport 0000:00:01.7:    [ 6] BadTLP
 
-On Wed, Apr 10, 2019 at 02:07:48PM -0400, Spencer Lingard wrote:
-> During command writes, pcie_poll_cmd() is invoked if
-> Command Completed notifications are disabled. When polling,
-> if Command Completed is set, the bit is reset and success is returned,
-> but ctrl->cmd_busy is not set back to 0. The next command write
-> then attempts to wait on a command that has already been completed,
-> timing out after 2 seconds. This delay occurs more frequently at
-> boot time, since pcie_init() disables notifications when powering
-> down empty slots.
-> 
-> Clear cmd_busy upon successful command completion during
-> pcie_poll_cmd().
-> 
-> Signed-off-by: Spencer Lingard <spencer@mellanox.com>
+Can you please attach a complete dmesg log and complete "sudo lspci
+-vv" output for the whole system?  Is this reproducible?  Is it a
+regression?
 
-I suppose this can happen if a write to the Slot Control register is
-performed while HPIE and/or CCIE is disabled, the two notifications
-are subsequently enabled and another write to the Slot Control is
-performed.  That second write will then call wait_event_timeout()
-because of the stale ctrl->cmd_busy == 1, but the Command Complete
-notification has already happened and was cleared by pcie_poll_cmd(),
-hence it times out.
-
-Sounds reasonable, I'm a little suprised though that I've never seen
-this myself.  I guess we've been doing this wrong for years, so:
-
-Cc: stable@vger.kernel.org
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
-
-Thanks,
-
-Lukas
-
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 6a2365c..28c70cf 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -77,6 +77,7 @@ static int pcie_poll_cmd(struct controller *ctrl, int timeout)
->  		if (slot_status & PCI_EXP_SLTSTA_CC) {
->  			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
->  						   PCI_EXP_SLTSTA_CC);
-> +			ctrl->cmd_busy = 0;
->  			return 1;
->  		}
->  		if (timeout < 0)
-> -- 
-> 2.1.2
+Hardware should recover from PCIe correctable errors without software
+intervention.  They are reported only for logging purposes.  Does your
+system work correctly in spite of logging this error?  Is it possible
+the ath10k card is not seated correctly, has dirty contacts, etc?
