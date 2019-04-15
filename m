@@ -2,158 +2,268 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99CBAC282DA
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:54:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C053C10F0E
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:56:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E5B22075B
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:54:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA4CE21900
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:56:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oVnWCJa9"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="OMa781oU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726323AbfDOOyH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 10:54:07 -0400
-Received: from mail-wm1-f65.google.com ([209.85.128.65]:50649 "EHLO
-        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726102AbfDOOyH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:54:07 -0400
-Received: by mail-wm1-f65.google.com with SMTP id z11so21160626wmi.0;
-        Mon, 15 Apr 2019 07:54:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=ayVZXxmDfE7CKIQmWWZoQmCuxGLlioaha5h/hXjT9z0=;
-        b=oVnWCJa9H2wGFtHjM4efVKWOflYxL8xJ01hRJc+0DQWIlkGzU8AbIisM5M+WdkT5Hm
-         Z6STYoPNOeW9HMShkNJ58dW71csC+M9+oHb7Qu5yS2SiCsgvZFNF9BZXiMBnurBW++J1
-         WxtVM6evym2OiRJkwlh9HHLqj/ccQqx7rWRah6jTIv/CwqBfx4hfyd/U0QBkLcb0SG4F
-         nNyv5VDE4Vt2CL88BTAamuB5SBuCWqg1rZkgRLqgA3TuZC1CRYaieRH7g44TXiSySsjc
-         jhqQDfy6bj6ZJM0HZlQCLQiMJJNQqv1tuMDO4me586A5WhnFAHlXGblrqptHK+SRG0IK
-         p0bg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=ayVZXxmDfE7CKIQmWWZoQmCuxGLlioaha5h/hXjT9z0=;
-        b=brgsz88d7mln9C3Fegws9m3hTfQs9BYaPkCxLGZZuU/AK89Y1XO+xkgWGGNYek2G7b
-         50tO9/obAiK7Y2sVHXTw5XNkPhJDPQ8lnuWeOgqam1EGLszZXpApxF9sbVKOvgfaRiQk
-         0zQQx2GVBhTR6IUtHOTE2TR7OQ2ntwwXhFeWGBuXKLFIwLhcS/A9UMoxKOfz7F0dFD3u
-         pNJ9ycDJHog1Z++LH1UdQqmNPMV4I2a6U1vHcZwql3u0TuhGcK7E2G5YOP0w2OIeUOzO
-         o/Y1pNSRCE1T0iLojAZ5xTDY6IL54luRwZ7TgYncZlfvEJjwmBRTOLKaXssfKCFt5PtJ
-         9ARw==
-X-Gm-Message-State: APjAAAWLvSnaJzeIF17YD/7RvA1yaoLeGWxvEvgRpUe3H3/cfM3a8h+U
-        JV7cyzXu8WvQXAt4vsVaIdw=
-X-Google-Smtp-Source: APXvYqwa50kDHY1hgy7BL0arOAPNt2XIg8So3v6WgIr83tHXSi2YzHc1xlGmJ6vjWp9uEPY2DC7eVA==
-X-Received: by 2002:a1c:f413:: with SMTP id z19mr22995160wma.71.1555340044874;
-        Mon, 15 Apr 2019 07:54:04 -0700 (PDT)
-Received: from localhost (p2E5BE61D.dip0.t-ipconnect.de. [46.91.230.29])
-        by smtp.gmail.com with ESMTPSA id a4sm36765263wmf.45.2019.04.15.07.54.03
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 15 Apr 2019 07:54:03 -0700 (PDT)
-Date:   Mon, 15 Apr 2019 16:54:02 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Vidya Sagar <vidyas@nvidia.com>
-Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        jonathanh@nvidia.com, kishon@ti.com, catalin.marinas@arm.com,
-        will.deacon@arm.com, lorenzo.pieralisi@arm.com,
-        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        mperttunen@nvidia.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V2 07/16] dt-bindings: PCI: designware: Add binding for
- CDM register check
-Message-ID: <20190415145402.GF29254@ulmo>
-References: <1554407683-31580-1-git-send-email-vidyas@nvidia.com>
- <1554407683-31580-8-git-send-email-vidyas@nvidia.com>
+        id S1727622AbfDOO4K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 10:56:10 -0400
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:2463 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727304AbfDOO4J (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:56:09 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cb49b740001>; Mon, 15 Apr 2019 07:55:48 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 15 Apr 2019 07:56:07 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 15 Apr 2019 07:56:07 -0700
+Received: from [10.24.70.150] (172.20.13.39) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 15 Apr
+ 2019 14:56:03 +0000
+Subject: Re: [PATCH 06/30] PCI: tegra: Program UPHY electrical settings for
+ Tegra210
+To:     Thierry Reding <thierry.reding@gmail.com>
+CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
+        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
+ <20190411170355.6882-7-mmaddireddy@nvidia.com> <20190415112922.GG29254@ulmo>
+X-Nvconfidentiality: public
+From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <f8c52bea-4e78-0f50-54ee-d8b41ec1b3d1@nvidia.com>
+Date:   Mon, 15 Apr 2019 20:25:48 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="wtUqn8XWZYmnPFNh"
-Content-Disposition: inline
-In-Reply-To: <1554407683-31580-8-git-send-email-vidyas@nvidia.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+In-Reply-To: <20190415112922.GG29254@ulmo>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL103.nvidia.com (172.20.187.11) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1555340148; bh=tGZU2OCfp6oOW8ewCbBLrBN00Rn34ieezVLAskAShYo=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=OMa781oUp/gJR47m30YAoJaaYvoCMoD78rsvd247nqOZAmPWvqHSOem1z5sQSLh9p
+         n0aMQs5dvcc3CM5WghR9JBDaROuVpTTEMsG8dS0hsuHfvTBL+nRnWxEvDvsGxD0A4y
+         XxqbLl/PyK1AZygc/mNfDlRVbcRgRdDbY37dvOha5JLZTBmlMektIIMbLkFnOQXb9M
+         YcaF5VHnf89BONPtBG6TuyQHaIAShp5r9fY9/Kc8hnofFQOzO+qi7lfQ3yVO31sMDC
+         BtoEoZbie5O4c00yrBVJHOB0tpyg+Uq3d8OCzEUb/vSIwiysabxozLA7Oz/zvf1TK8
+         RpuIITXJzzJ5Q==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---wtUqn8XWZYmnPFNh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 05, 2019 at 01:24:34AM +0530, Vidya Sagar wrote:
-> Add support to enable CDM (Configuration Dependent Module) registers check
-> for any data corruption. CDM registers include standard PCIe configuration
-> space registers, Port Logic registers and iATU and DMA registers.
-> Refer Section S.4 of Synopsys DesignWare Cores PCI Express Controller Dat=
-abook
-> Version 4.90a
->=20
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
-> Changes since [v1]:
-> * This is a new patch in v2 series
->=20
->  Documentation/devicetree/bindings/pci/designware-pcie.txt | 4 ++++
->  1 file changed, 4 insertions(+)
->=20
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/=
-Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index c124f9bc11f3..728281b5bcd5 100644
-> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -31,6 +31,10 @@ Optional properties:
->  - clock-names: Must include the following entries:
->  	- "pcie"
->  	- "pcie_bus"
-> +- cdm-check: This is a boolean property and if present enables automatic
-> +   checking of CDM (Configuration Dependent Module) registers for data
-> +   corruption. CDM registers include configuration space registers and i=
-ATU
-> +   (internal Address Translation Unit) registers.
-
-By comparison the commit message also lists "Port Logic" and "DMA"
-registers as being part of the CDM registers. Shouldn't they be part of
-the bindings document as well?
-
-Perhaps it'd also be a good idea to rename this property to something
-more imperative, like "enable-cdm" or similar.
-
-Thierry
-
->  RC mode:
->  - num-viewport: number of view ports configured in hardware. If a platfo=
-rm
->    does not specify it, the driver assumes 2.
-> --=20
-> 2.7.4
->=20
-
---wtUqn8XWZYmnPFNh
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAly0mwYACgkQ3SOs138+
-s6FesxAApMVDuLHlIjYq7l6bKlBb4fa5bbXMIX7SnRy0GRIp585/YZ9j21gyDQhW
-IrO2pEeVogNhiTndF/QjSJ4SA0nkPeirMr2gYXjiFwGWDXx3L2UXHlbULgY0jCQY
-3mprsgNzpQvHQsr8nH+uqIOjXxW4xSQaaFZeVYwhK1FOqZY/VwBfBho1tCJynXNL
-izZjuM1ijRBFzqcTmzjOTyk6v7wSPXokmQPFwxBe4sk9Q3JJqa8rMFH9tTv7XaVI
-t9l2d0lsH6+zJGuolqj0zF42kyoWrdFp/H75pQ6oh5NxbZyarpbJM0labiC8Ja/K
-6+AprGEEqtg/Eu6LxeuLHBIaYoEQ7POtYI1oAufrxaQAt2PWsXqHMpKoTvfW24Q8
-iW+47ijSI2fJ3rygSW//MOXHR0Z+EjwUi1ZlluiO7tV35YNqUmBKGzNB13hlm6W7
-IRt/o9xbYbR4G+MHHBfKNCMbej5bmXFOvu7RxAhRAR2Tx9Hbo1I7guFcIk42Uvc/
-loRQHU5Xg3evxfsjj7Tz3ulKom5GQA6lo8gZgX7+60BZQSNnYBSpz1dY3DA/JIf6
-Inawqfn8FV9Q+35F2pjaoFKyFtQEDvmrOcbA6PrPafgXnlunGbGK6dEYL6RaLA6C
-TXWXOqbgoMuzqQXgObfEyWtEfJH7WkgJNlXK8yCyouItCvBWbco=
-=EtML
------END PGP SIGNATURE-----
-
---wtUqn8XWZYmnPFNh--
+On 15-Apr-19 4:59 PM, Thierry Reding wrote:
+> On Thu, Apr 11, 2019 at 10:33:31PM +0530, Manikanta Maddireddy wrote:
+>> UPHY electrical programming guidelines are documented in Tegra210 TRM.
+>> Program these electrical settings for proper eye diagram in Gen1 and Gen2
+>> link speeds.
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>  drivers/pci/controller/pci-tegra.c | 100 +++++++++++++++++++++++++++++
+>>  1 file changed, 100 insertions(+)
+>>
+>> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+>> index 9ff1a0e2797f..a377245d254d 100644
+>> --- a/drivers/pci/controller/pci-tegra.c
+>> +++ b/drivers/pci/controller/pci-tegra.c
+>> @@ -177,6 +177,32 @@
+>>  
+>>  #define AFI_PEXBIAS_CTRL_0		0x168
+>>  
+>> +#define RP_ECTL_2_R1	0x00000e84
+>> +#define  RP_ECTL_2_R1_RX_CTLE_1C_MASK		0xffff
+>> +
+>> +#define RP_ECTL_4_R1	0x00000e8c
+>> +#define  RP_ECTL_4_R1_RX_CDR_CTRL_1C_MASK	(0xffff << 16)
+>> +#define  RP_ECTL_4_R1_RX_CDR_CTRL_1C_SHIFT	16
+>> +
+>> +#define RP_ECTL_5_R1	0x00000e90
+>> +#define  RP_ECTL_5_R1_RX_EQ_CTRL_L_1C_MASK	0xffffffff
+>> +
+>> +#define RP_ECTL_6_R1	0x00000e94
+>> +#define  RP_ECTL_6_R1_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+>> +
+>> +#define RP_ECTL_2_R2	0x00000ea4
+>> +#define  RP_ECTL_2_R2_RX_CTLE_1C_MASK	0xffff
+>> +
+>> +#define RP_ECTL_4_R2	0x00000eac
+>> +#define  RP_ECTL_4_R2_RX_CDR_CTRL_1C_MASK	(0xffff << 16)
+>> +#define  RP_ECTL_4_R2_RX_CDR_CTRL_1C_SHIFT	16
+>> +
+>> +#define RP_ECTL_5_R2	0x00000eb0
+>> +#define  RP_ECTL_5_R2_RX_EQ_CTRL_L_1C_MASK	0xffffffff
+>> +
+>> +#define RP_ECTL_6_R2	0x00000eb4
+>> +#define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+>> +
+>>  #define RP_VEND_XP	0x00000f00
+>>  #define  RP_VEND_XP_DL_UP	(1 << 30)
+>>  
+>> @@ -265,6 +291,19 @@ struct tegra_pcie_soc {
+>>  	bool has_gen2;
+>>  	bool force_pca_enable;
+>>  	bool program_uphy;
+>> +	struct {
+>> +		struct {
+>> +			u32 rp_ectl_2_r1;
+>> +			u32 rp_ectl_4_r1;
+>> +			u32 rp_ectl_5_r1;
+>> +			u32 rp_ectl_6_r1;
+>> +			u32 rp_ectl_2_r2;
+>> +			u32 rp_ectl_4_r2;
+>> +			u32 rp_ectl_5_r2;
+>> +			u32 rp_ectl_6_r2;
+>> +		} regs;
+>> +		bool enable;
+>> +	} ectl;
+>>  };
+>>  
+>>  static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
+>> @@ -491,6 +530,52 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
+>>  	writel(value, port->base + RP_VEND_CTL1);
+>>  }
+>>  
+>> +static void tegra_pcie_program_ectl_settings(struct tegra_pcie_port *port)
+>> +{
+>> +	const struct tegra_pcie_soc *soc = port->pcie->soc;
+>> +	u32 val;
+> u32 value for consistency.
+I will take care of it in V2
+>
+>> +
+>> +	val = readl(port->base + RP_ECTL_2_R1);
+>> +	val &= ~RP_ECTL_2_R1_RX_CTLE_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_2_r1;
+>> +	writel(val, port->base + RP_ECTL_2_R1);
+>> +
+>> +	val = readl(port->base + RP_ECTL_4_R1);
+>> +	val &= ~RP_ECTL_4_R1_RX_CDR_CTRL_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_4_r1 << RP_ECTL_4_R1_RX_CDR_CTRL_1C_SHIFT;
+>> +	writel(val, port->base + RP_ECTL_4_R1);
+>> +
+>> +	val = readl(port->base + RP_ECTL_5_R1);
+>> +	val &= ~RP_ECTL_5_R1_RX_EQ_CTRL_L_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_5_r1;
+>> +	writel(val, port->base + RP_ECTL_5_R1);
+>> +
+>> +	val = readl(port->base + RP_ECTL_6_R1);
+>> +	val &= ~RP_ECTL_6_R1_RX_EQ_CTRL_H_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_6_r1;
+>> +	writel(val, port->base + RP_ECTL_6_R1);
+>> +
+>> +	val = readl(port->base + RP_ECTL_2_R2);
+>> +	val &= ~RP_ECTL_2_R2_RX_CTLE_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_2_r2;
+>> +	writel(val, port->base + RP_ECTL_2_R2);
+>> +
+>> +	val = readl(port->base + RP_ECTL_4_R2);
+>> +	val &= ~RP_ECTL_4_R2_RX_CDR_CTRL_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_4_r2 << RP_ECTL_4_R2_RX_CDR_CTRL_1C_SHIFT;
+>> +	writel(val, port->base + RP_ECTL_4_R2);
+>> +
+>> +	val = readl(port->base + RP_ECTL_5_R2);
+>> +	val &= ~RP_ECTL_5_R2_RX_EQ_CTRL_L_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_5_r2;
+>> +	writel(val, port->base + RP_ECTL_5_R2);
+>> +
+>> +	val = readl(port->base + RP_ECTL_6_R2);
+>> +	val &= ~RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK;
+>> +	val |= soc->ectl.regs.rp_ectl_6_r2;
+>> +	writel(val, port->base + RP_ECTL_6_R2);
+> There are nice macros that help with this nowadays. See the FIELD_*
+> macros in include/linux/bitfield.h. However, the above is consistent
+> with the rest of the driver, so feel free to leave this as-is.
+I will leave it as-is to be inline with rest of the driver.
+>> +}
+>> +
+>>  static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
+>>  {
+>>  	unsigned long ctrl = tegra_pcie_port_get_pex_ctrl(port);
+>> @@ -517,6 +602,8 @@ static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
+>>  	}
+>>  
+>>  	tegra_pcie_enable_rp_features(port);
+>> +	if (soc->ectl.enable)
+> An empty line above would help declutter this.
+I will take care of it in V2
+>
+>> +		tegra_pcie_program_ectl_settings(port);
+>>  }
+>>  
+>>  static void tegra_pcie_port_disable(struct tegra_pcie_port *port)
+>> @@ -2229,6 +2316,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>>  	.has_gen2 = false,
+>>  	.force_pca_enable = false,
+>>  	.program_uphy = true,
+>> +	.ectl.enable = false,
+>>  };
+>>  
+>>  static const struct tegra_pcie_port_soc tegra30_pcie_ports[] = {
+>> @@ -2252,6 +2340,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>>  	.has_gen2 = false,
+>>  	.force_pca_enable = false,
+>>  	.program_uphy = true,
+>> +	.ectl.enable = false,
+>>  };
+>>  
+>>  static const struct tegra_pcie_soc tegra124_pcie = {
+>> @@ -2268,6 +2357,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>>  	.has_gen2 = true,
+>>  	.force_pca_enable = false,
+>>  	.program_uphy = true,
+>> +	.ectl.enable = false,
+>>  };
+>>  
+>>  static const struct tegra_pcie_soc tegra210_pcie = {
+>> @@ -2284,6 +2374,15 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>>  	.has_gen2 = true,
+>>  	.force_pca_enable = true,
+>>  	.program_uphy = true,
+>> +	.ectl.regs.rp_ectl_2_r1 = 0x0000000f,
+>> +	.ectl.regs.rp_ectl_4_r1 = 0x00000067,
+>> +	.ectl.regs.rp_ectl_5_r1 = 0x55010000,
+>> +	.ectl.regs.rp_ectl_6_r1 = 0x00000001,
+>> +	.ectl.regs.rp_ectl_2_r2 = 0x0000008f,
+>> +	.ectl.regs.rp_ectl_4_r2 = 0x000000c7,
+>> +	.ectl.regs.rp_ectl_5_r2 = 0x55010000,
+>> +	.ectl.regs.rp_ectl_6_r2 = 0x00000001,
+>> +	.ectl.enable = true,
+> This should be:
+>
+> 	.ectl = {
+> 		.regs = {
+> 			...
+> 		}
+> 		.enable = true;
+> 	},
+>
+> Do these parameters never differ between board layouts? Are they really
+> fixed per SoC generation?
+>
+> Thierry
+Till now all Tegra210 platform have same UPHY settings. They can differ if
+some components like MUX are added in UPHY routing, but I haven't seen
+such platforms with Tegra210.
