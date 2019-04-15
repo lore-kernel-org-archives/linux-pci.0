@@ -2,154 +2,140 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A35FC10F0E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:21:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68638C10F0E
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:23:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3BA1120880
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:21:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3489420825
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:23:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="qSKo2SCR"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iWjqVPid"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726323AbfDOOVQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 10:21:16 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11616 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726185AbfDOOVQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:21:16 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cb493600000>; Mon, 15 Apr 2019 07:21:20 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 15 Apr 2019 07:21:15 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 15 Apr 2019 07:21:15 -0700
-Received: from [10.24.70.150] (172.20.13.39) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 15 Apr
- 2019 14:21:11 +0000
-Subject: Re: [PATCH 03/30] PCI: tegra: Move REFCLK pad settings out of
- phy_power_on()
-To:     Thierry Reding <thierry.reding@gmail.com>
-CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
-        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
-        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
+        id S1726516AbfDOOXm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 10:23:42 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:34067 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726094AbfDOOXm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:23:42 -0400
+Received: by mail-wr1-f66.google.com with SMTP id p10so22240815wrq.1;
+        Mon, 15 Apr 2019 07:23:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=mKu4N9tE5ZOwsSL4ZaRp20InNVM/Y2tuh+h2msOQNag=;
+        b=iWjqVPidNANuT7wjXUSQSvNxJ7nZ3x/x6fVAeLv4vmUGN4VxrKpFNrkfG3OLo36YJt
+         JRhjhXsQEz1wFkwCKBnW+g4QXXlP4M8FCVDakmGBrEGamMoYnie2qcUU8tu89myK3qGy
+         bA39zUb+TEvjqtRFcEBc5Qug+dScnV/ETwu+VbyWtnL16cVQv+rAZBpAK9OPBlhg6Xz9
+         ApjmQNwzzE9kiOQJjPomANnWYHcQNBU/H4xWKWLczDcKkMqtQYHzZe225p/Ec5j7kQu1
+         jjLbmp7KscHY2QX/WX5nUUf7CR7WNkkiWgaFOlJCuq8FfSyLrckjk74LIyu0vXplb+st
+         jdKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=mKu4N9tE5ZOwsSL4ZaRp20InNVM/Y2tuh+h2msOQNag=;
+        b=io5Pju5AuEeUZa7lWOfeZ/mHENWGPbvTyBsfcB6xSMK8v17DT39yyeqt/n9xyq2xv7
+         R/RuSVJ2wJoUU9yNpx5nRrrY2XQ2+sShO641caPRPN75WIxjIwH1YIvWkD/udnuJMIvk
+         wkTIJ8tow8B7hsvGA9+QKlloqdOBez4pDVWhmkg2VvCt2w75nF4fSiR6LQkBkLbU8942
+         r8wD34zHsUGskpLH1iefc137kb/3XUi0J36tYy846UtLpCJ9pyfrJKNSHgyQOEy4rQfC
+         4s2TrLT4ZRCBYarKghrzGeeXHfd9P6335/MYSHSmmfi2umkHrNUnTZbVV40ERFzY/huv
+         aByg==
+X-Gm-Message-State: APjAAAVeRmqdIpVW83VEksvNiItf6ezEbH2Fe52j6pmAwyQKRhR0CBmG
+        2goaTwt9r5nJyaOxe1011JGym/cP
+X-Google-Smtp-Source: APXvYqyaax8tOIBaxJHAFE92m8SVvYQQXG7tqtKX0Uw/jvwg82KRYPZ9+Wj9eODprdNxcKvDotEyNA==
+X-Received: by 2002:adf:b6a3:: with SMTP id j35mr45346993wre.25.1555338220213;
+        Mon, 15 Apr 2019 07:23:40 -0700 (PDT)
+Received: from localhost (p2E5BE61D.dip0.t-ipconnect.de. [46.91.230.29])
+        by smtp.gmail.com with ESMTPSA id o5sm16550249wmc.16.2019.04.15.07.23.38
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 15 Apr 2019 07:23:39 -0700 (PDT)
+Date:   Mon, 15 Apr 2019 16:23:38 +0200
+From:   Thierry Reding <thierry.reding@gmail.com>
+To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 30/30] PCI: tegra: Change link retry log level to INFO
+Message-ID: <20190415142338.GD29254@ulmo>
 References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-4-mmaddireddy@nvidia.com> <20190415110628.GD29254@ulmo>
-X-Nvconfidentiality: public
-From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <7eb69509-5a38-2fe4-5aef-9a38ad0accac@nvidia.com>
-Date:   Mon, 15 Apr 2019 19:50:56 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+ <20190411170355.6882-31-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20190415110628.GD29254@ulmo>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL103.nvidia.com (172.20.187.11) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1555338080; bh=EkMm8RGR6tXpn2mrDylmxAI+oiEVk26i50/QcPU456M=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:
-         Content-Transfer-Encoding:Content-Language;
-        b=qSKo2SCR+fIriUtiw2XOX6Ht/WVVhY3Y/E0DFAt9rDzeMh5SI0oR1+jk6jaG0bmCt
-         s66li6Jg1KKFYHhPhByPMy6h055fuO2gUB8Tq7Zpqjh617rfBnQ67umFby6T7s1jEO
-         h/2xVScWFLAsXVolhHdws0UXDOl5tpQ0fUFc6R+TO7j/2bYf81UZUx5OzebiSOjB2t
-         aeCYI+RU8AoTMv3MYfO3/MLnkQORejI8MsPoB7CjpPkLzCsur/DaD1aRrEjHNNvXc9
-         rhrl2I/we3Hm0/vqFI9LoIF30eRjm+gb2JyxM9dwRPUFBGfLi/BM0L47RZGY5Ohi/D
-         dalN4FeyljAMg==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="h+CsNYkJBPxpZ+B/"
+Content-Disposition: inline
+In-Reply-To: <20190411170355.6882-31-mmaddireddy@nvidia.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
-On 15-Apr-19 4:36 PM, Thierry Reding wrote:
-> On Thu, Apr 11, 2019 at 10:33:28PM +0530, Manikanta Maddireddy wrote:
->> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
->> in driver. REFCLK pad settings are independent of PHY and should be
->> programmed by driver. So move REFCLK pad settings out of phy_power_on().
->> These pad settings tune REFCLK peak to peak amplitude.
->>
->> Fixes: cf5d31801278 ("PCI: tegra: Program PADS_REFCLK_CFG* always, not
->> just on legacy SoCs")
->>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->>  drivers/pci/controller/pci-tegra.c | 20 +++++++++++++-------
->>  1 file changed, 13 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
->> index 0bf270bcea34..a61ce9d475b4 100644
->> --- a/drivers/pci/controller/pci-tegra.c
->> +++ b/drivers/pci/controller/pci-tegra.c
->> @@ -852,7 +852,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
->>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
->>  {
->>  	struct device *dev = pcie->dev;
->> -	const struct tegra_pcie_soc *soc = pcie->soc;
->>  	struct tegra_pcie_port *port;
->>  	int err;
->>  
->> @@ -878,12 +877,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
->>  		}
->>  	}
->>  
->> -	/* Configure the reference clock driver */
->> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
->> -
->> -	if (soc->num_ports > 2)
->> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
->> -
->>  	return 0;
->>  }
->>  
->> @@ -2092,11 +2085,24 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
->>  	return false;
->>  }
->>  
->> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
->> +{
->> +	const struct tegra_pcie_soc *soc = pcie->soc;
->> +
->> +	/* Configure the reference clock driver */
->> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
->> +
->> +	if (soc->num_ports > 2)
->> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
->> +}
->> +
->>  static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
->>  {
->>  	struct device *dev = pcie->dev;
->>  	struct tegra_pcie_port *port, *tmp;
->>  
->> +	tegra_pcie_apply_pad_settings(pcie);
->> +
->>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
->>  		dev_info(dev, "probing port %u, using %u lanes\n",
->>  			 port->index, port->lanes);
-> This also seems to move the programming of these registers to a
-> different point in time. Was that intentional? If so, please mention it
-> in the commit message and describe why that's necessary.
->
-> If that was not intentional, it seems like the right place to call this
-> would be right after the call to tegra_pcie_enable_controller() in
-> tegra_pcie_pm_resume().
->
-> Thierry
-PCIe pad registers access needs PEX clk and reset enabled, so I moved to
-tegra_pcie_enable_ports(). But looking at this carefully I see a pattern
-that only per port PCIe register programming is done, however PCIe
-pad register spec is for all controller. So the right place would be
-tegra_pcie_pm_resume() after enable PEX clk and reset. I will update
-in V2
+--h+CsNYkJBPxpZ+B/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, Apr 11, 2019 at 10:33:55PM +0530, Manikanta Maddireddy wrote:
+> Link retry log is info log not error, so change it to INFO log level.
+
+The wording here is confusing. The log is clearly error level right now.
+Perhaps you meant to say something like this:
+
+    Letting users know that a link is down and in the process of being
+    brought up again is informational, not an error condition.
+
+Thierry
+
+>=20
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+>  drivers/pci/controller/pci-tegra.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/=
+pci-tegra.c
+> index 75873e6627f9..55f8ff4f3e07 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -2461,7 +2461,7 @@ static bool tegra_pcie_port_check_link(struct tegra=
+_pcie_port *port)
+>  		} while (--timeout);
+> =20
+>  		if (!timeout) {
+> -			dev_err(dev, "link %u down, retrying\n", port->index);
+> +			dev_info(dev, "link %u down, retrying\n", port->index);
+>  			goto retry;
+>  		}
+> =20
+> --=20
+> 2.17.1
+>=20
+
+--h+CsNYkJBPxpZ+B/
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAly0k+oACgkQ3SOs138+
+s6HF4xAAhYxq+grGQlSr4fAbdgEZN6rFJZEAvpeu0/Gyo2tn2+yM84y+xhY7hR3+
+FVpqMRcxg8NqUaFHcWaMsCB9lWYc2QinMbnaL3W6CiyndL2Vth0pZ8jX4ibU2lzP
+MAlDg/349H0aIcbsnGadLfPgmDzxShM6dQtHcPBGRCoyGqWq9o+5e/4Z1vjW0/h8
+W8oisFJiNuytJrb0oPT8quvWqF9iI/B5JeorSQ67Lj5B+eZSqOu/y1XQCduVZyhj
+/dhPzBXpcP0bSHX3WtWX9f1WGFhiColFoQLc6fGKxC1HlDAMM7el84i5PhMHE30N
+AVhV1bpOXCanmQ34snvabWEVitpdfmodbdIoVZZ9MQPyW6d8Zei4hp0TqPX8nGTI
+lNvJgQ1LBtMapgDgg9+GTIyh+ShTNcbixyD1aA17+/cdU4Se1aTCh/QCBlAqUBez
+Dwbg0/fSf6EsPnwG5EFdXyP34AXXZ3JN728EeSwsotB+Ttwm75Syu7AKesWWD183
+XrrEIVcobUPbP8CibOyaeP2XVAYG8QRR3YaRvNyt/adx12axsD5cTjxWCYtQuxxg
+D+cK7QqJxd/iV5liWIKYx001cN9cUFdxZeQSDg0B0bp0LFOOwNnz3TUyClwhpkdP
+Gc0hVHATsjtOypnOqwSvC7TKTliUfvUyfC34tHkEACi/jkOFdFM=
+=yJ4g
+-----END PGP SIGNATURE-----
+
+--h+CsNYkJBPxpZ+B/--
