@@ -2,138 +2,158 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66CB8C10F0E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:49:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99CBAC282DA
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:54:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34BD72146E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:49:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E5B22075B
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:54:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="drwhkWOm"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oVnWCJa9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727328AbfDOOtq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 10:49:46 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:12625 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726147AbfDOOtq (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:49:46 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cb49a0e0000>; Mon, 15 Apr 2019 07:49:51 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Mon, 15 Apr 2019 07:49:45 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Mon, 15 Apr 2019 07:49:45 -0700
-Received: from [10.24.70.150] (10.124.1.5) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 15 Apr
- 2019 14:49:42 +0000
-Subject: Re: [PATCH 05/30] PCI: tegra: Advertise PCIe Advanced Error Reporting
- (AER) capability
-To:     Thierry Reding <thierry.reding@gmail.com>
-CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
-        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
-        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-6-mmaddireddy@nvidia.com> <20190415112321.GF29254@ulmo>
-X-Nvconfidentiality: public
-From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <be5b0ef9-ccb9-c850-12f8-96bb5eb9ed45@nvidia.com>
-Date:   Mon, 15 Apr 2019 20:19:27 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1726323AbfDOOyH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 10:54:07 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:50649 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726102AbfDOOyH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:54:07 -0400
+Received: by mail-wm1-f65.google.com with SMTP id z11so21160626wmi.0;
+        Mon, 15 Apr 2019 07:54:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=ayVZXxmDfE7CKIQmWWZoQmCuxGLlioaha5h/hXjT9z0=;
+        b=oVnWCJa9H2wGFtHjM4efVKWOflYxL8xJ01hRJc+0DQWIlkGzU8AbIisM5M+WdkT5Hm
+         Z6STYoPNOeW9HMShkNJ58dW71csC+M9+oHb7Qu5yS2SiCsgvZFNF9BZXiMBnurBW++J1
+         WxtVM6evym2OiRJkwlh9HHLqj/ccQqx7rWRah6jTIv/CwqBfx4hfyd/U0QBkLcb0SG4F
+         nNyv5VDE4Vt2CL88BTAamuB5SBuCWqg1rZkgRLqgA3TuZC1CRYaieRH7g44TXiSySsjc
+         jhqQDfy6bj6ZJM0HZlQCLQiMJJNQqv1tuMDO4me586A5WhnFAHlXGblrqptHK+SRG0IK
+         p0bg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=ayVZXxmDfE7CKIQmWWZoQmCuxGLlioaha5h/hXjT9z0=;
+        b=brgsz88d7mln9C3Fegws9m3hTfQs9BYaPkCxLGZZuU/AK89Y1XO+xkgWGGNYek2G7b
+         50tO9/obAiK7Y2sVHXTw5XNkPhJDPQ8lnuWeOgqam1EGLszZXpApxF9sbVKOvgfaRiQk
+         0zQQx2GVBhTR6IUtHOTE2TR7OQ2ntwwXhFeWGBuXKLFIwLhcS/A9UMoxKOfz7F0dFD3u
+         pNJ9ycDJHog1Z++LH1UdQqmNPMV4I2a6U1vHcZwql3u0TuhGcK7E2G5YOP0w2OIeUOzO
+         o/Y1pNSRCE1T0iLojAZ5xTDY6IL54luRwZ7TgYncZlfvEJjwmBRTOLKaXssfKCFt5PtJ
+         9ARw==
+X-Gm-Message-State: APjAAAWLvSnaJzeIF17YD/7RvA1yaoLeGWxvEvgRpUe3H3/cfM3a8h+U
+        JV7cyzXu8WvQXAt4vsVaIdw=
+X-Google-Smtp-Source: APXvYqwa50kDHY1hgy7BL0arOAPNt2XIg8So3v6WgIr83tHXSi2YzHc1xlGmJ6vjWp9uEPY2DC7eVA==
+X-Received: by 2002:a1c:f413:: with SMTP id z19mr22995160wma.71.1555340044874;
+        Mon, 15 Apr 2019 07:54:04 -0700 (PDT)
+Received: from localhost (p2E5BE61D.dip0.t-ipconnect.de. [46.91.230.29])
+        by smtp.gmail.com with ESMTPSA id a4sm36765263wmf.45.2019.04.15.07.54.03
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Mon, 15 Apr 2019 07:54:03 -0700 (PDT)
+Date:   Mon, 15 Apr 2019 16:54:02 +0200
+From:   Thierry Reding <thierry.reding@gmail.com>
+To:     Vidya Sagar <vidyas@nvidia.com>
+Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        jonathanh@nvidia.com, kishon@ti.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, lorenzo.pieralisi@arm.com,
+        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        mperttunen@nvidia.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com
+Subject: Re: [PATCH V2 07/16] dt-bindings: PCI: designware: Add binding for
+ CDM register check
+Message-ID: <20190415145402.GF29254@ulmo>
+References: <1554407683-31580-1-git-send-email-vidyas@nvidia.com>
+ <1554407683-31580-8-git-send-email-vidyas@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20190415112321.GF29254@ulmo>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1555339791; bh=5MfL8xU3gNo++B5CrJH9QeO3bikIAWWVHbG41iA/l4A=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:
-         Content-Transfer-Encoding:Content-Language;
-        b=drwhkWOm5MU1XVTMcjnr/JMKlJduWImSIYI2NJukay5q9p35jstcAHLLSB/yk3BPs
-         WqTgh5Wr5S4qtuJP0o0cjhrn4Dv4Wrn5WBBzCRY72sjdu1gPJ4fb6GEi5jFZ8khJ/8
-         e8VOpPv8Jn7r1EP87dewX98Xhb1wT4W9nC+MCKNWhl86RzyJadRB/YeeW0PeWsOiB/
-         aWsQzEtKt8CuG+rjClOnXcKGrAZ66u+kvRKt98CS5UCjnyIBN0xrGa/5UnfHASutlA
-         pLgv87t+oB81AQEXCNWEzaA90tFDmPtJp+Awac4jT/0FDqQmirvdiT2jyDVlTHndLa
-         sQTEjipzLwT8A==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="wtUqn8XWZYmnPFNh"
+Content-Disposition: inline
+In-Reply-To: <1554407683-31580-8-git-send-email-vidyas@nvidia.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
+--wtUqn8XWZYmnPFNh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 15-Apr-19 4:53 PM, Thierry Reding wrote:
-> On Thu, Apr 11, 2019 at 10:33:30PM +0530, Manikanta Maddireddy wrote:
->> Default root port setting hides AER capability. This patch enables the
->> advertisement of AER capability by root port.
->>
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->>  drivers/pci/controller/pci-tegra.c | 15 +++++++++++++++
->>  1 file changed, 15 insertions(+)
->>
->> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
->> index 6ccda82735f8..9ff1a0e2797f 100644
->> --- a/drivers/pci/controller/pci-tegra.c
->> +++ b/drivers/pci/controller/pci-tegra.c
->> @@ -180,6 +180,9 @@
->>  #define RP_VEND_XP	0x00000f00
->>  #define  RP_VEND_XP_DL_UP	(1 << 30)
->>  
->> +#define RP_VEND_CTL1	0x00000f48
->> +#define  RP_VEND_CTL1_ERPT	(1 << 13)
->> +
->>  #define RP_VEND_CTL2 0x00000fa8
->>  #define  RP_VEND_CTL2_PCA_ENABLE (1 << 7)
->>  
->> @@ -478,6 +481,16 @@ static void tegra_pcie_port_reset(struct tegra_pcie_port *port)
->>  	afi_writel(port->pcie, value, ctrl);
->>  }
->>  
->> +static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
-> Why not call this tegra_pcie_enable_aer()? Are you planning on adding a
-> lot more overrides to this function? If there aren't too many, you may
-> want to just have one small function per feature and drop the comment in
-> the function body.
->
-> If there's going to be a lot, the above seems okay.
->
-> Thierry
-Yes, I am going to add more overrides.
->> +{
->> +	u32 value;
->> +
->> +	/* Enable AER capability */
->> +	value = readl(port->base + RP_VEND_CTL1);
->> +	value |= RP_VEND_CTL1_ERPT;
->> +	writel(value, port->base + RP_VEND_CTL1);
->> +}
->> +
->>  static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
->>  {
->>  	unsigned long ctrl = tegra_pcie_port_get_pex_ctrl(port);
->> @@ -502,6 +515,8 @@ static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
->>  		value |= RP_VEND_CTL2_PCA_ENABLE;
->>  		writel(value, port->base + RP_VEND_CTL2);
->>  	}
->> +
->> +	tegra_pcie_enable_rp_features(port);
->>  }
->>  
->>  static void tegra_pcie_port_disable(struct tegra_pcie_port *port)
->> -- 
->> 2.17.1
->>
+On Fri, Apr 05, 2019 at 01:24:34AM +0530, Vidya Sagar wrote:
+> Add support to enable CDM (Configuration Dependent Module) registers check
+> for any data corruption. CDM registers include standard PCIe configuration
+> space registers, Port Logic registers and iATU and DMA registers.
+> Refer Section S.4 of Synopsys DesignWare Cores PCI Express Controller Dat=
+abook
+> Version 4.90a
+>=20
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+> Changes since [v1]:
+> * This is a new patch in v2 series
+>=20
+>  Documentation/devicetree/bindings/pci/designware-pcie.txt | 4 ++++
+>  1 file changed, 4 insertions(+)
+>=20
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/=
+Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index c124f9bc11f3..728281b5bcd5 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -31,6 +31,10 @@ Optional properties:
+>  - clock-names: Must include the following entries:
+>  	- "pcie"
+>  	- "pcie_bus"
+> +- cdm-check: This is a boolean property and if present enables automatic
+> +   checking of CDM (Configuration Dependent Module) registers for data
+> +   corruption. CDM registers include configuration space registers and i=
+ATU
+> +   (internal Address Translation Unit) registers.
 
+By comparison the commit message also lists "Port Logic" and "DMA"
+registers as being part of the CDM registers. Shouldn't they be part of
+the bindings document as well?
+
+Perhaps it'd also be a good idea to rename this property to something
+more imperative, like "enable-cdm" or similar.
+
+Thierry
+
+>  RC mode:
+>  - num-viewport: number of view ports configured in hardware. If a platfo=
+rm
+>    does not specify it, the driver assumes 2.
+> --=20
+> 2.7.4
+>=20
+
+--wtUqn8XWZYmnPFNh
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAly0mwYACgkQ3SOs138+
+s6FesxAApMVDuLHlIjYq7l6bKlBb4fa5bbXMIX7SnRy0GRIp585/YZ9j21gyDQhW
+IrO2pEeVogNhiTndF/QjSJ4SA0nkPeirMr2gYXjiFwGWDXx3L2UXHlbULgY0jCQY
+3mprsgNzpQvHQsr8nH+uqIOjXxW4xSQaaFZeVYwhK1FOqZY/VwBfBho1tCJynXNL
+izZjuM1ijRBFzqcTmzjOTyk6v7wSPXokmQPFwxBe4sk9Q3JJqa8rMFH9tTv7XaVI
+t9l2d0lsH6+zJGuolqj0zF42kyoWrdFp/H75pQ6oh5NxbZyarpbJM0labiC8Ja/K
+6+AprGEEqtg/Eu6LxeuLHBIaYoEQ7POtYI1oAufrxaQAt2PWsXqHMpKoTvfW24Q8
+iW+47ijSI2fJ3rygSW//MOXHR0Z+EjwUi1ZlluiO7tV35YNqUmBKGzNB13hlm6W7
+IRt/o9xbYbR4G+MHHBfKNCMbej5bmXFOvu7RxAhRAR2Tx9Hbo1I7guFcIk42Uvc/
+loRQHU5Xg3evxfsjj7Tz3ulKom5GQA6lo8gZgX7+60BZQSNnYBSpz1dY3DA/JIf6
+Inawqfn8FV9Q+35F2pjaoFKyFtQEDvmrOcbA6PrPafgXnlunGbGK6dEYL6RaLA6C
+TXWXOqbgoMuzqQXgObfEyWtEfJH7WkgJNlXK8yCyouItCvBWbco=
+=EtML
+-----END PGP SIGNATURE-----
+
+--wtUqn8XWZYmnPFNh--
