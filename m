@@ -2,205 +2,154 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 594EAC10F0E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:21:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A35FC10F0E
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:21:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29A5020880
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:21:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BA1120880
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:21:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EhEXZT/I"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="qSKo2SCR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726182AbfDOOVD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 10:21:03 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:52945 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbfDOOVD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:21:03 -0400
-Received: by mail-wm1-f68.google.com with SMTP id a184so20896107wma.2;
-        Mon, 15 Apr 2019 07:21:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=fNjFsUC8Qc6z+v4JL5PemqWEZShEuTE9d8yyNYAJWOk=;
-        b=EhEXZT/Izdas/MmF5xI+y/CqClskrE5zWDvZemwbOguwJ+WAnZGRZ0MTLKK3wHJV78
-         G7HWLLkpTVhhY34BRuVsptdL1lPBojfFj9AOWd/XKpdLQ1BqUJNxZ9IoOv+HkdN3XpAA
-         H8WBAnzpw3OK698seF/q5yfYpgxRYI+CrIA+hLzDuqC4m2E+BayYiaCovBj1KrFKgveE
-         MZiO/WvdxQg/T+woqxjR5bYWXaDNCmovUypzZ1QN+7TXRFGXAvCQk1dKsROTdSQGgM+y
-         xdfb/8W4QlxQ2UDb5RkUwXr+5VX+vw3Um/W0Jj626fuGH5d3OV2fs3uhvhbnNTLO4dM4
-         Hm5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=fNjFsUC8Qc6z+v4JL5PemqWEZShEuTE9d8yyNYAJWOk=;
-        b=ZKFmmY7aHhG3DQBmhiviMu//dH2WIolsZR67MU0rY4r+E9wPuAU3SmhyelWW1VOJC6
-         ox/1rTwnkts24Rg5iPDoOFvceONJhkLBLtgOZB9MxZMIeCwsXbk+2uwckuKfFR6Ad+5W
-         irDd6u42EyxCwpXVXein6BT2NHNilTBHTb+Wo7jvHn6+01cJ+EmwgQybyBGxCFdw6ehV
-         IO3BLD7+ZjxWeHF/MvGREYf97e7Qkzjw4ILQsR5/xuQP6Ny9PaF1FXSQ6sWsMXbEjcBG
-         XDYXUBzVPo0K+5XgfrxIF1bJLcx59j03azZfAroSNRcEJMKTAP9RTzsvAzGMXuwOpFJ6
-         6UeQ==
-X-Gm-Message-State: APjAAAX0Iy2NVV80+3W6eUjnXPYDkr7DFV9JM5MPYgtOad1LRyYDGnuc
-        zVfa67d0rvStfeLWgRYuSDE=
-X-Google-Smtp-Source: APXvYqyBDJ3sYzV5kZ0mZs/y/yCJdBQrYEnUKxPQa5KixWxtN0zL/8JMrjT1nhQ1BXZMcRdCrbE0Hg==
-X-Received: by 2002:a1c:f205:: with SMTP id s5mr23088467wmc.124.1555338060463;
-        Mon, 15 Apr 2019 07:21:00 -0700 (PDT)
-Received: from localhost (p2E5BE61D.dip0.t-ipconnect.de. [46.91.230.29])
-        by smtp.gmail.com with ESMTPSA id 204sm25855392wmc.1.2019.04.15.07.20.59
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 15 Apr 2019 07:20:59 -0700 (PDT)
-Date:   Mon, 15 Apr 2019 16:20:58 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 29/30] PCI: tegra: Add support for GPIO based PCIe reset
-Message-ID: <20190415142058.GC29254@ulmo>
+        id S1726323AbfDOOVQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 10:21:16 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:11616 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726185AbfDOOVQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:21:16 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cb493600000>; Mon, 15 Apr 2019 07:21:20 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 15 Apr 2019 07:21:15 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 15 Apr 2019 07:21:15 -0700
+Received: from [10.24.70.150] (172.20.13.39) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 15 Apr
+ 2019 14:21:11 +0000
+Subject: Re: [PATCH 03/30] PCI: tegra: Move REFCLK pad settings out of
+ phy_power_on()
+To:     Thierry Reding <thierry.reding@gmail.com>
+CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
+        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
 References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-30-mmaddireddy@nvidia.com>
+ <20190411170355.6882-4-mmaddireddy@nvidia.com> <20190415110628.GD29254@ulmo>
+X-Nvconfidentiality: public
+From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <7eb69509-5a38-2fe4-5aef-9a38ad0accac@nvidia.com>
+Date:   Mon, 15 Apr 2019 19:50:56 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="A1Iwnsx6rNfRhs6P"
-Content-Disposition: inline
-In-Reply-To: <20190411170355.6882-30-mmaddireddy@nvidia.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+In-Reply-To: <20190415110628.GD29254@ulmo>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL103.nvidia.com (172.20.187.11) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1555338080; bh=EkMm8RGR6tXpn2mrDylmxAI+oiEVk26i50/QcPU456M=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=qSKo2SCR+fIriUtiw2XOX6Ht/WVVhY3Y/E0DFAt9rDzeMh5SI0oR1+jk6jaG0bmCt
+         s66li6Jg1KKFYHhPhByPMy6h055fuO2gUB8Tq7Zpqjh617rfBnQ67umFby6T7s1jEO
+         h/2xVScWFLAsXVolhHdws0UXDOl5tpQ0fUFc6R+TO7j/2bYf81UZUx5OzebiSOjB2t
+         aeCYI+RU8AoTMv3MYfO3/MLnkQORejI8MsPoB7CjpPkLzCsur/DaD1aRrEjHNNvXc9
+         rhrl2I/we3Hm0/vqFI9LoIF30eRjm+gb2JyxM9dwRPUFBGfLi/BM0L47RZGY5Ohi/D
+         dalN4FeyljAMg==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---A1Iwnsx6rNfRhs6P
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Apr 11, 2019 at 10:33:54PM +0530, Manikanta Maddireddy wrote:
-> Add support for GPIO based PERST# instead of SFIO mode controller by AFI.
-> GPIO number comes from per port PCIe device tree node.
->=20
-> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> ---
->  drivers/pci/controller/pci-tegra.c | 37 +++++++++++++++++++++++++-----
->  1 file changed, 31 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/=
-pci-tegra.c
-> index 4a91c9fb3a9d..75873e6627f9 100644
-> --- a/drivers/pci/controller/pci-tegra.c
-> +++ b/drivers/pci/controller/pci-tegra.c
-> @@ -17,6 +17,7 @@
->  #include <linux/debugfs.h>
->  #include <linux/delay.h>
->  #include <linux/export.h>
-> +#include <linux/gpio.h>
->  #include <linux/interrupt.h>
->  #include <linux/iopoll.h>
->  #include <linux/irq.h>
-> @@ -26,6 +27,7 @@
->  #include <linux/module.h>
->  #include <linux/msi.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_gpio.h>
->  #include <linux/of_pci.h>
->  #include <linux/of_platform.h>
->  #include <linux/pci.h>
-> @@ -406,6 +408,7 @@ struct tegra_pcie_port {
-> =20
->  	int n_gpios;
->  	int *gpios;
-> +	int rst_gpio;
-
-This should be using GPIO descriptor APIs.
-
-Thierry
-
->  };
-> =20
->  struct tegra_pcie_bus {
-> @@ -589,15 +592,23 @@ static void tegra_pcie_port_reset(struct tegra_pcie=
-_port *port)
->  	unsigned long value;
-> =20
->  	/* pulse reset signal */
-> -	value =3D afi_readl(port->pcie, ctrl);
-> -	value &=3D ~AFI_PEX_CTRL_RST;
-> -	afi_writel(port->pcie, value, ctrl);
-> +	if (gpio_is_valid(port->rst_gpio)) {
-> +		gpio_set_value(port->rst_gpio, 0);
-> +	} else {
-> +		value =3D afi_readl(port->pcie, ctrl);
-> +		value &=3D ~AFI_PEX_CTRL_RST;
-> +		afi_writel(port->pcie, value, ctrl);
-> +	}
-> =20
->  	usleep_range(1000, 2000);
-> =20
-> -	value =3D afi_readl(port->pcie, ctrl);
-> -	value |=3D AFI_PEX_CTRL_RST;
-> -	afi_writel(port->pcie, value, ctrl);
-> +	if (gpio_is_valid(port->rst_gpio)) {
-> +		gpio_set_value(port->rst_gpio, 1);
-> +	} else {
-> +		value =3D afi_readl(port->pcie, ctrl);
-> +		value |=3D AFI_PEX_CTRL_RST;
-> +		afi_writel(port->pcie, value, ctrl);
-> +	}
->  }
-> =20
->  static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
-> @@ -2241,6 +2252,20 @@ static int tegra_pcie_parse_plat_dt(struct tegra_p=
-cie_port *port,
->  		}
->  	}
-> =20
-> +	port->rst_gpio =3D of_get_named_gpio(np, "nvidia,rst-gpio", 0);
-> +	if (gpio_is_valid(port->rst_gpio)) {
-> +		err =3D devm_gpio_request(dev, port->rst_gpio, "pex_rst_gpio");
-> +		if (err < 0) {
-> +			dev_err(dev, "rst_gpio request failed: %d\n", err);
-> +			return err;
-> +		}
-> +		err =3D gpio_direction_output(port->rst_gpio, 0);
-> +		if (err < 0) {
-> +			dev_err(dev, "rst_gpio set o/p failed: %d\n", err);
-> +			return err;
-> +		}
-> +	}
-> +
->  	return 0;
->  }
-> =20
-> --=20
-> 2.17.1
->=20
-
---A1Iwnsx6rNfRhs6P
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAly0k0oACgkQ3SOs138+
-s6EBqg/9HY0M/JN1fAO6sl66qb0NYQ5yNCjb3to4paOgMuRilUWaK6N3qaW6ABRX
-YlQjlnrUK46GfC8rZt2ZFe83K8FEnsLHDffzqLAoHK1VKnN4fB9+RbIi71D/+1L3
-Dun+2u4W07YkIzBZNbk7MSAx6cLDicOM3/MYGwOR+0VTi+1VNpQFgZrzu1NmNjMb
-+gxkEi/GBV01OStpuE/0NajZeQI9PVcZ7o7miYafKwSMLIcZOM8yAW+AwIsTD1q5
-ygFzMK8C9zuKMB3XqDNTcuIYkolRvEtVlAwhthNARFeJnuqRrDcpjfXxK4Xt9kP1
-ngyqZAzvf9AGdXGhh/nWiWDlRnXt/cJglXvfBEPpqRuEFC4JUCvBYnJ9ngvvdvwr
-JCeYlDugI3WAYyaKixuJdG9nzW5u+IYQ8wBOl1K11TIoffhYHL7662h4zNPAKFWx
-KZsMy0noPMZ/EjAuGabiWAUN2dSmfRk4rPeXWMCUJaDy6Vitjh6Z8ZKlpWsaJlgH
-IC3EqlRR39Ej7dTcs2C0IoRg9p0sfn/+DmWh6FwueoEP9yDGqZfFBRrRZkVnss9t
-wsDJSrp3L/HJsg//2vG/wkE4V2mYCGRcm5jNaqgWnrO4n0dShK24/GhjAwR4qOsb
-0VP/G9NnLSo+yn48nrnRV1ZwVUDemZs7SufyZw24XCmyWaEiTZA=
-=DO+r
------END PGP SIGNATURE-----
-
---A1Iwnsx6rNfRhs6P--
+On 15-Apr-19 4:36 PM, Thierry Reding wrote:
+> On Thu, Apr 11, 2019 at 10:33:28PM +0530, Manikanta Maddireddy wrote:
+>> In Tegra186 PHY programming is done by BPMP-FW, so PHY calls are skipped
+>> in driver. REFCLK pad settings are independent of PHY and should be
+>> programmed by driver. So move REFCLK pad settings out of phy_power_on().
+>> These pad settings tune REFCLK peak to peak amplitude.
+>>
+>> Fixes: cf5d31801278 ("PCI: tegra: Program PADS_REFCLK_CFG* always, not
+>> just on legacy SoCs")
+>>
+>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>> ---
+>>  drivers/pci/controller/pci-tegra.c | 20 +++++++++++++-------
+>>  1 file changed, 13 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+>> index 0bf270bcea34..a61ce9d475b4 100644
+>> --- a/drivers/pci/controller/pci-tegra.c
+>> +++ b/drivers/pci/controller/pci-tegra.c
+>> @@ -852,7 +852,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+>>  static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>>  {
+>>  	struct device *dev = pcie->dev;
+>> -	const struct tegra_pcie_soc *soc = pcie->soc;
+>>  	struct tegra_pcie_port *port;
+>>  	int err;
+>>  
+>> @@ -878,12 +877,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+>>  		}
+>>  	}
+>>  
+>> -	/* Configure the reference clock driver */
+>> -	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+>> -
+>> -	if (soc->num_ports > 2)
+>> -		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+>> -
+>>  	return 0;
+>>  }
+>>  
+>> @@ -2092,11 +2085,24 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
+>>  	return false;
+>>  }
+>>  
+>> +static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
+>> +{
+>> +	const struct tegra_pcie_soc *soc = pcie->soc;
+>> +
+>> +	/* Configure the reference clock driver */
+>> +	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
+>> +
+>> +	if (soc->num_ports > 2)
+>> +		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
+>> +}
+>> +
+>>  static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+>>  {
+>>  	struct device *dev = pcie->dev;
+>>  	struct tegra_pcie_port *port, *tmp;
+>>  
+>> +	tegra_pcie_apply_pad_settings(pcie);
+>> +
+>>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>>  		dev_info(dev, "probing port %u, using %u lanes\n",
+>>  			 port->index, port->lanes);
+> This also seems to move the programming of these registers to a
+> different point in time. Was that intentional? If so, please mention it
+> in the commit message and describe why that's necessary.
+>
+> If that was not intentional, it seems like the right place to call this
+> would be right after the call to tegra_pcie_enable_controller() in
+> tegra_pcie_pm_resume().
+>
+> Thierry
+PCIe pad registers access needs PEX clk and reset enabled, so I moved to
+tegra_pcie_enable_ports(). But looking at this carefully I see a pattern
+that only per port PCIe register programming is done, however PCIe
+pad register spec is for all controller. So the right place would be
+tegra_pcie_pm_resume() after enable PEX clk and reset. I will update
+in V2
