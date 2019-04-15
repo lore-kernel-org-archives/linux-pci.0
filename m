@@ -2,87 +2,164 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A9DCC10F12
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 11:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DBBC10F12
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 12:25:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 047092073F
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 11:56:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE7782077C
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 12:25:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727346AbfDOL4C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 07:56:02 -0400
-Received: from mout.kundenserver.de ([212.227.126.130]:34027 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726094AbfDOL4C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 07:56:02 -0400
-Received: from [192.168.1.110] ([95.115.91.41]) by mrelayeu.kundenserver.de
- (mreue009 [212.227.15.167]) with ESMTPSA (Nemesis) id
- 1N6bsM-1gmt3Y0p4w-017zxB; Mon, 15 Apr 2019 13:55:50 +0200
-Subject: Re: Device Description for FPGA Components on x86 system
-To:     Alan Tull <atull@kernel.org>, Federico Vaga <federico.vaga@cern.ch>
-Cc:     Eric Schwarz <eas@sw-optimization.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-fpga@vger.kernel.org, linux-pci@vger.kernel.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, linux-x86_64@vger.kernel.org,
-        linux-fpga-owner@vger.kernel.org
-References: <1629227.alSmCsHHUc@pcbe13614> <6563205.xRkLC0driV@pcbe13614>
- <dae0b7ba500cc03fab23956eac85ca79@sw-optimization.com>
- <31100498.IIhqzTXyFT@pcbe13614>
- <CANk1AXSQCFGE94R8ZxVSF2Gp+diCHJhFJPSVSx+iEyWp2URcpw@mail.gmail.com>
-From:   "Enrico Weigelt, metux IT consult" <lkml@metux.net>
-Organization: metux IT consult
-Message-ID: <08e60e79-8ae3-06ac-779e-d4d99e0ed846@metux.net>
-Date:   Mon, 15 Apr 2019 13:55:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux i686 on x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S1727399AbfDOMZQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 08:25:16 -0400
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:33706 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727244AbfDOMZQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Apr 2019 08:25:16 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4569680D;
+        Mon, 15 Apr 2019 05:25:15 -0700 (PDT)
+Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id DE2CC3F706;
+        Mon, 15 Apr 2019 05:25:12 -0700 (PDT)
+Date:   Mon, 15 Apr 2019 13:25:13 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-arm-kernel@axis.com
+Subject: Re: [PATCH v2 06/26] PCI: keystone: Move initializations to
+ appropriate places
+Message-ID: <20190415122513.GB12127@red-moon>
+References: <20190325083501.8088-1-kishon@ti.com>
+ <20190325083501.8088-7-kishon@ti.com>
+ <20190413143001.GE126710@google.com>
+ <9ab596e8-b012-7f4e-aa93-c5661827af95@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CANk1AXSQCFGE94R8ZxVSF2Gp+diCHJhFJPSVSx+iEyWp2URcpw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Provags-ID: V03:K1:bzbLUuB/S1gkl4iCuqnMSQ6iuv/Z3XXNhKYeb56yD4ogPlwH23o
- wwTrrOQNiLN7mZJmlsM51zu9ft8g2qwll2UVuiKMc6yCxRnBdLz0hLIocFxUcwdC07VIp/v
- s2mj9HuL6oNdc+xTU0F1hwb3RiNZZ+B+D+CS0++wKB6zQLKIhx7dlBRoBQ1+RkrxJAjGUGE
- j3CvRIyIahGNP+KZn6KgQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:FTH253luN0I=:nZ6l8jhyqfBShxUbfJkYD6
- wsFZIuNj8zb+T66yRVC9jwsrRPi34SibAE8cmakCVGvlY/bpNBiJDB6nHmD4repdmCNi8GBJl
- ScvmDxp0rOt6yR4ms/RruCx1ypmORECWAtbBG6f4uhRL7K6PHG4C7EugcfjSdPc0lF947zBf8
- Ts2n/tBLFO/lTl9yl5V/KKKY5c1kOngfaNfeuNJHHq7muDt8KGkioXgBHAK+KwbJstJWAblAC
- gnXQf/krdMpnxvSZgb2fCfNC9WieffpeV2OHuU3Bqdnyw4LKa9sxm6ZteQtUWNg2D+b/Y0F/n
- hGEF5vnXuTEeqJsxiZHhi18TKZTHP223VlhPaJrouq5vwNU1W8eJooneq2vIQHu3Pwg9UVxIh
- 2MPoy1K4xBZpy9Pr5VM7vMAvCLKlh6IifcuffUoEpbxdVvWiLLtatktm3L/fdvraEBsfA2zFy
- XOakwS8hT6FGEDFwq4h0UGUtim0cfePPrMykJWz88yleQm5F9VfiM7T4ryiT8uuFEQDSEeXS3
- bFrCcW3fwTU5+L8bdViMEe/xRrgYhMphHFWol5T4ddf5tQ9TzyIJQjUDaqAwhffXqDrbtYboq
- jgoTFYmzSea8D5BfjaOGm/pbz5wdVo4saIkN3W9KKQcShl7HBXTDtP9xz9PbvAQ7/L/aFXd8N
- 8T3R9Y85yCtbRc80bRTYhGU2QhpHiF7Qb3nRHpOjcXYbnZNJTcr28i0qSqpspmN2ktyX2TQ40
- SKyeEzU/u5tEvaI9Wdg6NVPr5xOQ1/c7elUBAyAfc4hdOs+Sc1LdEx2KB/s=
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9ab596e8-b012-7f4e-aa93-c5661827af95@ti.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10.04.19 16:21, Alan Tull wrote:
+On Mon, Apr 15, 2019 at 11:04:10AM +0530, Kishon Vijay Abraham I wrote:
+> Hi Bjorn,
+> 
+> On 13/04/19 8:00 PM, Bjorn Helgaas wrote:
+> > On Mon, Mar 25, 2019 at 02:04:41PM +0530, Kishon Vijay Abraham I wrote:
+> >> No functional change. Move host specific platform_get_resource to
+> >> ks_add_pcie_port and the common platform_get_resource (applicable
+> >> to both host and endpoint) to probe. This is in preparation for
+> >> adding endpoint support to pci-keystone driver.
+> > 
+> > This seems to move platform_get_resource() *from* (not *to*)
+> > ks_add_pcie_port().
+> 
+> Maybe I should have mentioned "Keep host specific platform_get_resource() in
+> ks_add_pcie_port() and move the common platform_get_resource() (applicable
+> to both host and endpoint) to probe()"
 
-> I wish I could point you to a complete solution, but there is a lot of> work to be done in this area.  Most of what is in the kernel is a low>
-level in-kernel API [4].  As you correctly state, the hardest part of>
-this is doing the enumerating if you are on x86 and aren't using>
-devicetree.
-ACK. I believe, introducing oftree the right way to go. I've got that
-on my 2do list, too, but yet too busy w/ other things. So, if you'd
-like to work on that, I'd highly appreciate that.
+Commit log updated, pushed out pci/keystone again.
 
-I'd like to also use oftree overlays for some platform drivers that
-essentially just initialize/wire up generic drivers to perform some
-board specific function (eg. drivers/platform/x86/pcengines-apuv2.c).
+Thanks,
+Lorenzo
 
-
---mtx
-
--- 
-Enrico Weigelt, metux IT consult
-Free software and Linux embedded engineering
-info@metux.net -- +49-151-27565287
+> > You seem to be making a distinction in the commit log between (1) a
+> > resource that's only used for host mode, and (2) a common resource
+> > that's used for both host and endpoint mode.  But I don't see that
+> > distinction in the patch, so it's a little confusing to mention it in
+> > the commit log.
+> > 
+> > It must make endpoint support easier, but I can't quite connect the
+> > dots yet.  Maybe endpoint will also use ks_pcie_add_pcie_port(), but
+> > will have a separate .probe() function that doesn't look up the
+> > resource that's specific to host mode?
+> 
+> No ks_pcie_add_pcie_port() is specific to host mode, so "config" resource is
+> kept there whereas "dbics" and "app" resources are common to both host mode and
+> device mode, so they are moved to probe().
+> 
+> Thanks
+> Kishon
+> 
+> > 
+> >> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> >> ---
+> >>  drivers/pci/controller/dwc/pci-keystone.c | 27 +++++++++++++----------
+> >>  1 file changed, 15 insertions(+), 12 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+> >> index 5eebef9b9ada..95997885a05c 100644
+> >> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> >> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+> >> @@ -806,11 +806,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+> >>  	struct resource *res;
+> >>  	int ret;
+> >>  
+> >> -	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbics");
+> >> -	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
+> >> -	if (IS_ERR(pci->dbi_base))
+> >> -		return PTR_ERR(pci->dbi_base);
+> >> -
+> >>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+> >>  	pp->va_cfg0_base = devm_pci_remap_cfg_resource(dev, res);
+> >>  	if (IS_ERR(pp->va_cfg0_base))
+> >> @@ -818,13 +813,6 @@ static int __init ks_pcie_add_pcie_port(struct keystone_pcie *ks_pcie,
+> >>  
+> >>  	pp->va_cfg1_base = pp->va_cfg0_base;
+> >>  
+> >> -	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "app");
+> >> -	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
+> >> -	if (IS_ERR(ks_pcie->va_app_base))
+> >> -		return PTR_ERR(ks_pcie->va_app_base);
+> >> -
+> >> -	ks_pcie->app = *res;
+> >> -
+> >>  	pp->ops = &ks_pcie_host_ops;
+> >>  	ret = dw_pcie_host_init(pp);
+> >>  	if (ret) {
+> >> @@ -895,6 +883,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+> >>  	struct dw_pcie *pci;
+> >>  	struct keystone_pcie *ks_pcie;
+> >>  	struct device_link **link;
+> >> +	struct resource *res;
+> >> +	void __iomem *base;
+> >>  	u32 num_viewport;
+> >>  	struct phy **phy;
+> >>  	u32 num_lanes;
+> >> @@ -911,6 +901,19 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+> >>  	if (!pci)
+> >>  		return -ENOMEM;
+> >>  
+> >> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "app");
+> >> +	ks_pcie->va_app_base = devm_ioremap_resource(dev, res);
+> >> +	if (IS_ERR(ks_pcie->va_app_base))
+> >> +		return PTR_ERR(ks_pcie->va_app_base);
+> >> +
+> >> +	ks_pcie->app = *res;
+> >> +
+> >> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbics");
+> >> +	base = devm_pci_remap_cfg_resource(dev, res);
+> >> +	if (IS_ERR(base))
+> >> +		return PTR_ERR(base);
+> >> +
+> >> +	pci->dbi_base = base;
+> >>  	pci->dev = dev;
+> >>  	pci->ops = &ks_pcie_dw_pcie_ops;
+> >>  
+> >> -- 
+> >> 2.17.1
+> >>
