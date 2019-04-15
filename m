@@ -2,69 +2,70 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F227DC10F13
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 00:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD713C10F14
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 00:47:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD87C20870
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 00:47:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9ADA620870
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 00:47:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DV7U3jVg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eqTlaS+i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727087AbfDOArn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 14 Apr 2019 20:47:43 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:45595 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727055AbfDOArl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Apr 2019 20:47:41 -0400
-Received: by mail-pg1-f196.google.com with SMTP id y3so7704218pgk.12;
-        Sun, 14 Apr 2019 17:47:41 -0700 (PDT)
+        id S1727065AbfDOArl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 14 Apr 2019 20:47:41 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:39593 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726829AbfDOArj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 14 Apr 2019 20:47:39 -0400
+Received: by mail-pl1-f193.google.com with SMTP id a96so7695580pla.6;
+        Sun, 14 Apr 2019 17:47:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=dxSuTYLON4k2Acu5zoiaFP6YKp7Q+JzqRTJrEqqzkK8=;
-        b=DV7U3jVgs5Pb9ApK85mkLkstDpuk2sd2BMLX/4gbOh5xshFzFH1QwI5OscPSVAdDIA
-         +cgmK+y0x5f8Hy/HsCK2gQgiRZr81FnwyxeQyUnP3Y2dw1CaRM3h69dBisVGb4kDKEX9
-         uC60FVOQJIlPLKCl7N7QCPKgrKg27tAdNZtaY0vLsmg4cWkwXocrvexEdQINy8KHOGQw
-         7yxVgwqL9akaugiSIwbWOtQ1qWyrN7qX0KrpyGCF0o9yljYYUAJC9ze0qrTf1r1NGRuy
-         Fwm710aRlLJr4+96VeEncc5PXUW+bITng4HpWbG8ykQj+3Cpt0njkpHbe9wOtflFt0Km
-         crww==
+        bh=FLKtt3LlDBDSGbMrQM4p98Qt+1OhZn2fyX94k9jG/fo=;
+        b=eqTlaS+iTu3DOILGraxqeMTT+Y7opvdJSYWxe3Rb5Eu9Vdrz+X7pBZAnlid4lMBD2/
+         TqVliGy/QVfufSWRcTllfua2s45RUoK/ELf7l/22gwMPyiiTJgfCOg7cfUzGiDWLE1AU
+         psS8bXHA1gc6moXOKq4GmDLfXx7m+hnQ7hrytYTIg3FhvXCDd6Da5ACWPcZL7ZGXafsQ
+         2VzVUbXQKZ+6DeEy1rhjcad/1SgPlZB56XzcFSZQLRqkMO/CixRLNAq726Ji77P9j9dt
+         lwIy34yISeAoXiOeUw2xB2kKvjdMYDt7urjQD1jLQHbrY/Lwgf0PAH2GL1AhVQBALA3p
+         PMHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=dxSuTYLON4k2Acu5zoiaFP6YKp7Q+JzqRTJrEqqzkK8=;
-        b=gtzV123hAi9uZgUw8Wavk7NGLDHnGa3Xa4nfInZ/I//koRN/FqlJSCynwEecfdF3Pq
-         UZECIrxqQHjq3Um75hnL4gUTnz1ZgD8dd41zg1mxUgbbn+XymHXwL+Gc6toz6dbYaVRt
-         8S+POSUXQRTAC9lA7lTjO4Zgw+JuIcFwJsfj9wBDklPwkkMeCZ3inSC59/91AMVHlpo1
-         aiEOwvpu+KAqeW9dwH4nWLvynAlUkF3/uvf+49s+5xb6931Gjanl//zH7r/C7ssNNN1F
-         EsTaGu+/gRImWkZzUCgYtLnqUALxxrm6muwNCApWEYsv00G27Kf9xg0t1JYkFDZ7C5aE
-         3PkQ==
-X-Gm-Message-State: APjAAAXS3KZxX9Im1YDmOC+VCJ9IjcnrNS+brQk7AlzZbZsmGOBv91PK
-        hzL8eGR3b4ktwWk/M86BCtjGnORU
-X-Google-Smtp-Source: APXvYqyM68Fi5qwDdQa8Pie5oUjJ3L+HG8WftuWSEtyoz46DzbGVfsG2irR1v4jjKcpHyYVW6H7wlA==
-X-Received: by 2002:a62:2687:: with SMTP id m129mr70980078pfm.204.1555289260421;
-        Sun, 14 Apr 2019 17:47:40 -0700 (PDT)
+        bh=FLKtt3LlDBDSGbMrQM4p98Qt+1OhZn2fyX94k9jG/fo=;
+        b=V0RU+b3kL2huuwtXhoqC9KRAwuJhumQDQZfIhzceFbUokpGxpDoS1lvvdyI5NCIeXj
+         UK1d9mbr81EaBffXzEW/xloHMCcpNmr/NyhA6olnZFPPMbWNEpHheSkzsXjioxNsLCYy
+         GMOebsm2omEraQ9F/4gad63XBCo8XlTu0iZWiweYSGQAqCxLcTE1EFWje8x++oASfUiz
+         N1ZfcGDpHSM8L8zV9GhOj7Ayr5vjM32viOgdLsvT47TuRzcr09t8ls6ZZmtL036g43ik
+         SFyFS6HA4fROMJCCmG6LYjGTJtdCIhyovxrR4vQqn23iEB3E4XfbXLMFX10XwF8G+nqP
+         59GQ==
+X-Gm-Message-State: APjAAAV8L6n+3Q+gnM1/FbtB0RTx1Z9f48dXYGSsgX7hT3NxXj/PopUI
+        blVDPJ0AYHQT+6VcVs9jKJTaZPW7
+X-Google-Smtp-Source: APXvYqwOQVgh2IXAFyjAaSUoUa40KDdm+pAp80DOXteQ5VevKXjpRZEzcpIAREThPLScqFfB2xbnfw==
+X-Received: by 2002:a17:902:e683:: with SMTP id cn3mr71254696plb.115.1555289257844;
+        Sun, 14 Apr 2019 17:47:37 -0700 (PDT)
 Received: from squirtle.lan (c-24-22-235-96.hsd1.wa.comcast.net. [24.22.235.96])
-        by smtp.gmail.com with ESMTPSA id u17sm66111981pfn.19.2019.04.14.17.47.39
+        by smtp.gmail.com with ESMTPSA id u17sm66111981pfn.19.2019.04.14.17.47.36
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Sun, 14 Apr 2019 17:47:39 -0700 (PDT)
+        Sun, 14 Apr 2019 17:47:36 -0700 (PDT)
 From:   Andrey Smirnov <andrew.smirnov@gmail.com>
 To:     linux-pci@vger.kernel.org
 Cc:     Andrey Smirnov <andrew.smirnov@gmail.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Chris Healy <cphealy@gmail.com>, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 10/11] PCI: imx6: Use flags to indicate support for suspend
-Date:   Sun, 14 Apr 2019 17:46:31 -0700
-Message-Id: <20190415004632.5907-11-andrew.smirnov@gmail.com>
+        Chris Healy <cphealy@gmail.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 08/11] PCI: imx6: Simplify pcie_phy_poll_ack()
+Date:   Sun, 14 Apr 2019 17:46:29 -0700
+Message-Id: <20190415004632.5907-9-andrew.smirnov@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190415004632.5907-1-andrew.smirnov@gmail.com>
 References: <20190415004632.5907-1-andrew.smirnov@gmail.com>
@@ -75,13 +76,11 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Now that driver data has flags variable that can be used to indicate
-quirks/features supported we can switch the code to use it instead of
-having a special function that does so based on variant alone. No
-functional change intended.
+Simplify pcie_phy_poll_ack() by incorporating shifting into constant
+definition and convert the code to use 'bool'. No functional change
+intended.
 
 Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Chris Healy <cphealy@gmail.com>
@@ -89,67 +88,114 @@ Cc: Lucas Stach <l.stach@pengutronix.de>
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 30e764b6cbcc..3e45f49b8a4f 100644
+index 669e01353026..3fd084357488 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -52,6 +52,7 @@ enum imx6_pcie_variants {
+@@ -112,7 +112,7 @@ struct imx6_pcie {
+ #define PCIE_PHY_CTRL_RD		BIT(19)
  
- #define IMX6_PCIE_FLAG_IMX6_PHY			BIT(0)
- #define IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE	BIT(1)
-+#define IMX6_PCIE_FLAG_SUPPORTS_SUSPEND		BIT(2)
+ #define PCIE_PHY_STAT (PL_OFFSET + 0x110)
+-#define PCIE_PHY_STAT_ACK_LOC 16
++#define PCIE_PHY_STAT_ACK		BIT(16)
  
- struct imx6_pcie_drvdata {
- 	enum imx6_pcie_variants variant;
-@@ -965,17 +966,11 @@ static void imx6_pcie_clk_disable(struct imx6_pcie *imx6_pcie)
- 	}
+ #define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
+ 
+@@ -151,16 +151,16 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN		BIT(5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN		BIT(3)
+ 
+-static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, int exp_val)
++static int pcie_phy_poll_ack(struct imx6_pcie *imx6_pcie, bool exp_val)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+-	u32 val;
++	bool val;
+ 	u32 max_iterations = 10;
+ 	u32 wait_counter = 0;
+ 
+ 	do {
+-		val = dw_pcie_readl_dbi(pci, PCIE_PHY_STAT);
+-		val = (val >> PCIE_PHY_STAT_ACK_LOC) & 0x1;
++		val = dw_pcie_readl_dbi(pci, PCIE_PHY_STAT) &
++			PCIE_PHY_STAT_ACK;
+ 		wait_counter++;
+ 
+ 		if (val == exp_val)
+@@ -184,14 +184,14 @@ static int pcie_phy_wait_ack(struct imx6_pcie *imx6_pcie, int addr)
+ 	val |= PCIE_PHY_CTRL_CAP_ADR;
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, val);
+ 
+-	ret = pcie_phy_poll_ack(imx6_pcie, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, true);
+ 	if (ret)
+ 		return ret;
+ 
+ 	val = PCIE_PHY_CTRL_DATA(addr);
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, val);
+ 
+-	return pcie_phy_poll_ack(imx6_pcie, 0);
++	return pcie_phy_poll_ack(imx6_pcie, false);
  }
  
--static inline bool imx6_pcie_supports_suspend(struct imx6_pcie *imx6_pcie)
--{
--	return (imx6_pcie->drvdata->variant == IMX7D ||
--		imx6_pcie->drvdata->variant == IMX6SX);
--}
--
- static int imx6_pcie_suspend_noirq(struct device *dev)
- {
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
+ /* Read from the 16-bit PCIe PHY control registers (not memory-mapped) */
+@@ -209,7 +209,7 @@ static int pcie_phy_read(struct imx6_pcie *imx6_pcie, int addr, int *data)
+ 	phy_ctl = PCIE_PHY_CTRL_RD;
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, phy_ctl);
  
--	if (!imx6_pcie_supports_suspend(imx6_pcie))
-+	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_SUPPORTS_SUSPEND))
- 		return 0;
+-	ret = pcie_phy_poll_ack(imx6_pcie, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, true);
+ 	if (ret)
+ 		return ret;
  
- 	imx6_pcie_pm_turnoff(imx6_pcie);
-@@ -991,7 +986,7 @@ static int imx6_pcie_resume_noirq(struct device *dev)
- 	struct imx6_pcie *imx6_pcie = dev_get_drvdata(dev);
- 	struct pcie_port *pp = &imx6_pcie->pci->pp;
+@@ -219,7 +219,7 @@ static int pcie_phy_read(struct imx6_pcie *imx6_pcie, int addr, int *data)
+ 	/* deassert Read signal */
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, 0x00);
  
--	if (!imx6_pcie_supports_suspend(imx6_pcie))
-+	if (!(imx6_pcie->drvdata->flags & IMX6_PCIE_FLAG_SUPPORTS_SUSPEND))
- 		return 0;
+-	return pcie_phy_poll_ack(imx6_pcie, 0);
++	return pcie_phy_poll_ack(imx6_pcie, false);
+ }
  
- 	imx6_pcie_assert_core_reset(imx6_pcie);
-@@ -1221,7 +1216,8 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 	[IMX6SX] = {
- 		.variant = IMX6SX,
- 		.flags = IMX6_PCIE_FLAG_IMX6_PHY |
--			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE,
-+			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE |
-+			 IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
- 	},
- 	[IMX6QP] = {
- 		.variant = IMX6QP,
-@@ -1230,6 +1226,7 @@ static const struct imx6_pcie_drvdata drvdata[] = {
- 	},
- 	[IMX7D] = {
- 		.variant = IMX7D,
-+		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
- 	},
- 	[IMX8MQ] = {
- 		.variant = IMX8MQ,
+ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+@@ -241,7 +241,7 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 	var |= PCIE_PHY_CTRL_CAP_DAT;
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, var);
+ 
+-	ret = pcie_phy_poll_ack(imx6_pcie, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, true);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -250,7 +250,7 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, var);
+ 
+ 	/* wait for ack de-assertion */
+-	ret = pcie_phy_poll_ack(imx6_pcie, 0);
++	ret = pcie_phy_poll_ack(imx6_pcie, false);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -259,7 +259,7 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, var);
+ 
+ 	/* wait for ack */
+-	ret = pcie_phy_poll_ack(imx6_pcie, 1);
++	ret = pcie_phy_poll_ack(imx6_pcie, true);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -268,7 +268,7 @@ static int pcie_phy_write(struct imx6_pcie *imx6_pcie, int addr, int data)
+ 	dw_pcie_writel_dbi(pci, PCIE_PHY_CTRL, var);
+ 
+ 	/* wait for ack de-assertion */
+-	ret = pcie_phy_poll_ack(imx6_pcie, 0);
++	ret = pcie_phy_poll_ack(imx6_pcie, false);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
 2.20.1
 
