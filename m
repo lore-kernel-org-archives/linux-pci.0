@@ -2,86 +2,113 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=DATE_IN_FUTURE_06_12,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D075C10F0E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 06:43:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28493C10F0E
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 08:36:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 164992073F
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 06:43:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3AA120651
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 08:36:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726277AbfDOGm4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 02:42:56 -0400
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:59107 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725796AbfDOGmx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 02:42:53 -0400
-X-IronPort-AV: E=Sophos;i="5.60,352,1549954800"; 
-   d="scan'208";a="31501915"
-Received: from unknown (HELO smtp.microsemi.com) ([208.19.99.222])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Apr 2019 23:42:52 -0700
-Received: from AUSMBX2.microsemi.net (10.201.34.32) by AUSMBX2.microsemi.net
- (10.201.34.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 15 Apr
- 2019 01:42:51 -0500
-Received: from server1.microsemi.net (10.188.116.154) by ausmbx2.microsemi.net
- (10.201.34.32) with Microsoft SMTP Server id 15.1.1713.5 via Frontend
- Transport; Mon, 15 Apr 2019 01:42:48 -0500
-From:   Wesley Sheng <wesley.sheng@microchip.com>
-To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <wesleyshenggit@sina.com>, <wesley.sheng@microchip.com>
-Subject: [PATCH v2 2/2] switchtec: Fix unintended mask of MRPC event
-Date:   Mon, 15 Apr 2019 22:41:42 +0800
-Message-ID: <1555339302-31829-3-git-send-email-wesley.sheng@microchip.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1555339302-31829-1-git-send-email-wesley.sheng@microchip.com>
-References: <1555339302-31829-1-git-send-email-wesley.sheng@microchip.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        id S1725796AbfDOIgz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 04:36:55 -0400
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:40555 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725794AbfDOIgz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 04:36:55 -0400
+Received: from kresse.hi.pengutronix.de ([2001:67c:670:100:1d::2a])
+        by metis.ext.pengutronix.de with esmtp (Exim 4.89)
+        (envelope-from <l.stach@pengutronix.de>)
+        id 1hFx6j-0004Dg-7j; Mon, 15 Apr 2019 10:36:53 +0200
+Message-ID: <1555317412.2983.0.camel@pengutronix.de>
+Subject: Re: [PATCH v4 02/11] PCI: imx6: Drop imx6_pcie_wait_for_link()
+From:   Lucas Stach <l.stach@pengutronix.de>
+To:     Andrey Smirnov <andrew.smirnov@gmail.com>,
+        linux-pci@vger.kernel.org
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Chris Healy <cphealy@gmail.com>, linux-kernel@vger.kernel.org
+Date:   Mon, 15 Apr 2019 10:36:52 +0200
+In-Reply-To: <20190415004632.5907-3-andrew.smirnov@gmail.com>
+References: <20190415004632.5907-1-andrew.smirnov@gmail.com>
+         <20190415004632.5907-3-andrew.smirnov@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.22.6-1+deb9u1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::2a
+X-SA-Exim-Mail-From: l.stach@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When running application tool switchtec-user's `firmware update` and
-`event wait` commands concurrently, sometimes the firmware update
-speed reduced evidently.
+Am Sonntag, den 14.04.2019, 17:46 -0700 schrieb Andrey Smirnov:
+> All calls to imx6_pcie_wait_for_link() share the same error path and
+> the state of PHY debug registers will already be printed there, so
+> there's no real reason we can't just use dw_pcie_wait_for_link(). Drop
+> imx6_pcie_wait_for_link() and replace it with dw_pcie_wait_for_link().
+> 
+> > Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> > Suggested-by: Lucas Stach <l.stach@pengutronix.de>
+> > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Chris Healy <cphealy@gmail.com>
+> > Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
 
-It is because when the MRPC event happened right after MRPC event
-occurrence check but before event mask loop reach to its header
-register in event ISR, the MRPC event would be masked unintentionally.
-Since there's no chance to enable it again except for a module reload,
-all the following MRPC execution completion check will be deferred to
-timeout.
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-Fix this bug by skipping the mask operation for MRPC event in event
-ISR, same as what we already do for LINK event.
-
-Fixes: 52eabba5bcdb ("switchtec: Add IOCTLs to the Switchtec driver")
-Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
----
- drivers/pci/switch/switchtec.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 7df9a69..30f6e08 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1177,7 +1177,8 @@ static int mask_event(struct switchtec_dev *stdev, int eid, int idx)
- 	if (!(hdr & SWITCHTEC_EVENT_OCCURRED && hdr & SWITCHTEC_EVENT_EN_IRQ))
- 		return 0;
- 
--	if (eid == SWITCHTEC_IOCTL_EVENT_LINK_STATE)
-+	if (eid == SWITCHTEC_IOCTL_EVENT_LINK_STATE ||
-+	    eid == SWITCHTEC_IOCTL_EVENT_MRPC_COMP)
- 		return 0;
- 
- 	dev_dbg(&stdev->dev, "%s: %d %d %x\n", __func__, eid, idx, hdr);
--- 
-2.7.4
-
+> ---
+>  drivers/pci/controller/dwc/pci-imx6.c | 19 ++-----------------
+>  1 file changed, 2 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index ea2617712a3b..bb3dcfdbf697 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+> @@ -723,21 +723,6 @@ static int imx6_setup_phy_mpll(struct imx6_pcie *imx6_pcie)
+> >  	return 0;
+>  }
+>  
+> -static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6_pcie)
+> -{
+> > -	struct dw_pcie *pci = imx6_pcie->pci;
+> > -	struct device *dev = pci->dev;
+> -
+> > -	/* check if the link is up or not */
+> > -	if (!dw_pcie_wait_for_link(pci))
+> > -		return 0;
+> -
+> > -	dev_dbg(dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+> > -		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R0),
+> > -		dw_pcie_readl_dbi(pci, PCIE_PHY_DEBUG_R1));
+> > -	return -ETIMEDOUT;
+> -}
+> -
+>  static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+>  {
+> >  	struct dw_pcie *pci = imx6_pcie->pci;
+> @@ -796,7 +781,7 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+> >  	/* Start LTSSM. */
+> >  	imx6_pcie_ltssm_enable(dev);
+>  
+> > -	ret = imx6_pcie_wait_for_link(imx6_pcie);
+> > +	ret = dw_pcie_wait_for_link(pci);
+> >  	if (ret)
+> >  		goto err_reset_phy;
+>  
+> @@ -834,7 +819,7 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+> >  		}
+>  
+> >  		/* Make sure link training is finished as well! */
+> > -		ret = imx6_pcie_wait_for_link(imx6_pcie);
+> > +		ret = dw_pcie_wait_for_link(pci);
+> >  		if (ret) {
+> >  			dev_err(dev, "Failed to bring link up!\n");
+> >  			goto err_reset_phy;
