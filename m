@@ -7,70 +7,70 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 095F9C10F0E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:17:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC45C10F0E
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:20:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1F4A20825
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:16:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AAED20880
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 14:20:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qoMP+d2x"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kdudHnVq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726340AbfDOOQ6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 10:16:58 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:37454 "EHLO
+        id S1726149AbfDOOUQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 10:20:16 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:37858 "EHLO
         mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726149AbfDOOQ6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:16:58 -0400
-Received: by mail-wm1-f67.google.com with SMTP id v14so20716690wmf.2;
-        Mon, 15 Apr 2019 07:16:56 -0700 (PDT)
+        with ESMTP id S1726147AbfDOOUQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 10:20:16 -0400
+Received: by mail-wm1-f67.google.com with SMTP id v14so20731593wmf.2;
+        Mon, 15 Apr 2019 07:20:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=9zfpoFlzNEXHsvpEewUzHSE9/nx70NMB9y9yUGz2VgA=;
-        b=qoMP+d2xlCCgIVpY+VWMPt9jzRSG49Nhe13PJNTlp6B4AQQ+Z12XeGAgeeEEKH/3ey
-         b/iPfNueZ7/iJEKPA7264LofxBqaBoFsWQSwEbAonPH4i5V3fipTDbfhMpi4XTx6fHOt
-         DAdMEY5zg4aO1NfW02FeNjaENgdPZKGoMm492OuIFk5Kl5tCQRUOwxGIE+2+oGmacBtW
-         IWjJW05ILVuxHRCQP9g53k8xkK163I0qVpCkmiPlsYiiGfyiJGnDlgX0IntZYIovcDcw
-         79qzL6UweXKFCl/UN0CRJi909JPq1B2eIxFP5vUiQY/XwOgKRWYOsFjuJkzC7I3cFhbO
-         eM8g==
+        bh=S3hgk8x8XLlZSOgO1hCE6ApryHJlORSTWgSoan5r5mQ=;
+        b=kdudHnVqg3gH/ds/L8NUhkCZ+MMP6bjUTs+DbLXfN8BYvDVYNmtwTSisdzwr4hrhZC
+         ucbZ8EiAYy6s1tq/zJA2nq7+Pbgj3vHSB+uND/37/qVk+ISdhMcBRUDaODB3VXR+QBGd
+         D/I8tz81qg+OI+o/TI9I0h1NwlRD02yvIxAOVFnWe5uC6aEM8hgbcqxd6UW3i5mS1cf5
+         2O/8SSXhvsAeSSk0SdiyfbwJ6ZL4fnvbCDl4eWHU3k1KsIoisCDnb/urh3Nb48Ql/t1b
+         D/m/Av7JBbvnWm92uCO8eMFFZCT05o0gL4qqz5JUVdIZvF5YZKlOCgVwjT0CtrfoWai4
+         7s2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=9zfpoFlzNEXHsvpEewUzHSE9/nx70NMB9y9yUGz2VgA=;
-        b=G+trt2DSxiczK6XkMSSxuZ5Y3tC7s7gkGlYZVWyUszdp7YcT9Stw0AXVod7fthm8Lc
-         FQK5WoPRBbJfAgDDDGVkUZWatWT++fhgDBNpH8HKqgFLO8zQD/tDLSmFdFMWgCcjPG5e
-         JIiif/MhTa9uDrMrtplmS5f3QY0m+JZ++EmOXu4FT3mcOnKwWjlcot2sz71JiASHtmtg
-         zejN2uwmsFcyPCpsUVZxJEtJEowHY7zLLbmdh/botwyV8gqCNSozenJJxjZ8xYuByGsF
-         20UBAL6M/z4WFpfhiYFd07xBf+lRny79nVROHMBQygca/iYn6b/dggkgyccTXXBVLlBA
-         M+jA==
-X-Gm-Message-State: APjAAAVQWzmU/JlE1F9Ju5CR21Qp6mpnIvQGVnH5d31Xtss+K+y6cfRR
-        h0Wt0Z3nj1zD4KpqXCjxemM7YEJY
-X-Google-Smtp-Source: APXvYqz/X7I/qgnR5FMIuLZL8vyN8RweB/DZi5W+YsNvemvU1kXV+RW28wQvjawhZCYoaYlA0fBvZg==
-X-Received: by 2002:a1c:ca06:: with SMTP id a6mr23146619wmg.14.1555337816237;
-        Mon, 15 Apr 2019 07:16:56 -0700 (PDT)
+        bh=S3hgk8x8XLlZSOgO1hCE6ApryHJlORSTWgSoan5r5mQ=;
+        b=eHMhm8Bf/Us8JbmfjEhlycCmJi4+6DISSIqyLncF0rWxJNHW6RXQooA7QdqPU+fuph
+         ZfjC5ojAOIbzegKWh6mVDE3Lghh1dFmopi2WZ7DB7NbpE4otkUT7pm1EvMkmRezemVfB
+         Ut7F0Z3kTGRaLwrmPntUeFAYT/7ysUs7jGHlCbIC4Unvr0S8NRkXnHvTgdUH2aTeP2ky
+         wFrt0hgMElGu9IUaPvthWJUhghT/bE6KgOOYHckeRfzZ7E3HaAnNIQZ4es6uOOQNDSto
+         ad4NIa0gO8nXMYv6O8jJA2VgZlBGBgmQaQfmnAo+x7722+qDaioFu/24cFuT8DxWpqNc
+         YAvQ==
+X-Gm-Message-State: APjAAAWNDCtd9hBZDAt1wD7dETAZKjHRrxC+xKZHUjG2byfUHD6TWlvW
+        qAh19Gh1vjmjokvDZun04o0=
+X-Google-Smtp-Source: APXvYqyuHKpiJxPjpk491QVQcs/Szs+I/PugycqCIOlSoCZoAa6ikYXACjO0qq3hAg12vB6g6Tgv3Q==
+X-Received: by 2002:a1c:62d4:: with SMTP id w203mr22364383wmb.54.1555338014341;
+        Mon, 15 Apr 2019 07:20:14 -0700 (PDT)
 Received: from localhost (p2E5BE61D.dip0.t-ipconnect.de. [46.91.230.29])
-        by smtp.gmail.com with ESMTPSA id v6sm64302932wrt.56.2019.04.15.07.16.54
+        by smtp.gmail.com with ESMTPSA id c16sm21615874wme.31.2019.04.15.07.20.13
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 15 Apr 2019 07:16:55 -0700 (PDT)
-Date:   Mon, 15 Apr 2019 16:16:54 +0200
+        Mon, 15 Apr 2019 07:20:13 -0700 (PDT)
+Date:   Mon, 15 Apr 2019 16:20:12 +0200
 From:   Thierry Reding <thierry.reding@gmail.com>
 To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
         linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org
-Subject: Re: [PATCH 26/30] dt-bindings: pci: tegra: Document
- nvidia,plat-gpios optional prop
-Message-ID: <20190415141654.GA29254@ulmo>
+Subject: Re: [PATCH 28/30] dt-bindings: pci: tegra: Document nvidia,rst-gpio
+ optional prop
+Message-ID: <20190415142012.GB29254@ulmo>
 References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-27-mmaddireddy@nvidia.com>
+ <20190411170355.6882-29-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="LG5jgFgJbJFFiAfj"
+        protocol="application/pgp-signature"; boundary="Qjo19A2vmS5T5MQB"
 Content-Disposition: inline
-In-Reply-To: <20190411170355.6882-27-mmaddireddy@nvidia.com>
+In-Reply-To: <20190411170355.6882-29-mmaddireddy@nvidia.com>
 User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -78,14 +78,14 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---LG5jgFgJbJFFiAfj
+--Qjo19A2vmS5T5MQB
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Apr 11, 2019 at 10:33:51PM +0530, Manikanta Maddireddy wrote:
-> Document "nvidia,plat-gpios" optional property which supports configuring
-> of platform specific gpios.
+On Thu, Apr 11, 2019 at 10:33:53PM +0530, Manikanta Maddireddy wrote:
+> Document "nvidia,rst-gpio" optional property which supports GPIO based
+> PERST# signal.
 >=20
 > Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 > ---
@@ -94,69 +94,61 @@ On Thu, Apr 11, 2019 at 10:33:51PM +0530, Manikanta Maddireddy wrote:
 >=20
 > diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.tx=
 t b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> index fbbd3bcb3435..dca8393b86d1 100644
+> index dca8393b86d1..23928fd59538 100644
 > --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
 > +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> @@ -73,6 +73,8 @@ Optional properties:
->    pinctrl phandle to allow driver to explicitly put PCIe IO in DPD state.
->  - pinctrl-1: PCIe IO(bias & REFCLK) deep power down(DPD) enable state.
+> @@ -75,6 +75,8 @@ Optional properties:
 >    Pass pinctrl phandle to allow driver bring PCIe IO out of DPD state.
-> +- nvidia,plat-gpios: A list of platform specific gpios which controls
-> +  endpoint's internal regulator or PCIe logic.
+>  - nvidia,plat-gpios: A list of platform specific gpios which controls
+>    endpoint's internal regulator or PCIe logic.
+> +- nvidia,rst-gpio: If GPIO is used as PERST# signal instead of available
+> +  SFIO, add this property with phandle to GPIO controller and GPIO numbe=
+r.
 
-We discussed this with Vidya during review of the Tegra194 PCIe device
-tree bindings and arrived at the conclusion that all of the GPIOs that
-need to be controlled for PCI to work can be modelled as proper device
-nodes (I think regulator and GPIO-controlled muxes were the only two
-use-cases for which we need this).
+GPIO properties are pretty much standardized, so this should really be
+called just "reset-gpio".
 
-Can the same be done for this PCI controller? What use-cases are we
-talking about?
-
->  Required properties on Tegra124 and later (deprecated):
->  - phys: Must contain an entry for each entry in phy-names.
-> @@ -567,6 +569,7 @@ Board DTS:
->  		pci@2,0 {
->  			phys =3D <&{/padctl@7009f000/pads/pcie/lanes/pcie-4}>;
->  			phy-names =3D "pcie-0";
-> +			nvidia,plat-gpios =3D <&gpio TEGRA_GPIO(X, 3) GPIO_ACTIVE_HIGH>;
->  			status =3D "okay";
->  		};
->  	};
-
-I recall this being the setup for Jetson Nano and the X.3 GPIO going to
-an Ethernet device. Let's find out what exactly this GPIO is used for
-and why we need it to be set up as part of the PCI controller driver
-rather than the Ethernet device.
-
-If it turns out we can't model this other than with a generic GPIO type
-of property we need a better explanation than the above, and the Jetson
-Nano use-case would provide that explanation.
-
-And if indeed we cannot model this more accurately, I think we should
-use something like the gpio-hog binding rather than some custom PCI
-controller property.
+Also it looks like this is documented in the wrong place. In the example
+below you set this property for the root port, that is inside a child
+node of the PCI controller, but if I understand correctly, and it's hard
+to say from the context, the above is documented as part of the
+properties of the host bridge node.
 
 Thierry
 
---LG5jgFgJbJFFiAfj
+> =20
+>  Required properties on Tegra124 and later (deprecated):
+>  - phys: Must contain an entry for each entry in phy-names.
+> @@ -671,6 +673,7 @@ Board DTS:
+> =20
+>  		pci@1,0 {
+>  			nvidia,num-lanes =3D <4>;
+> +			nvidia,rst-gpio =3D <&tegra_main_gpio TEGRA_MAIN_GPIO(A, 3) 0>;
+>  			status =3D "okay";
+>  		};
+> =20
+> --=20
+> 2.17.1
+>=20
+
+--Qjo19A2vmS5T5MQB
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAly0klYACgkQ3SOs138+
-s6GeFA//YHggGmb+XMBk1EzBWehSNnWJ7EmZJI5JkHfeKClYo3JbGGjzhwviUnkE
-DZ7bTeyzarxpODiYvcNRRVOdsv19adu2q9HFWbkVTWXHo9MyL8CRJaEfyopkzOUr
-RzI1qEFrV6E9JnPodIBCW1Rl3f0P8usYdg9AaZp7BYBv98Lfjsi9Tmr6rkg5Bccs
-xQ9CVtIUHvj7bc+hCe07ThxbRp9u9qSaqr92SpD4AIppm8pouOnWpDgRyBsuKeM6
-GUyh1AxOZnOPjtESB/A2/g5SV3ThkOlBlcEJoZMfi4G6UbvVk6JININlgk2XbZnz
-LQo/Yrz2RJDfvJj6F01IPldpi2RKMMr8cHz68P5b3871FoxPQbQTmaMrKsvPwIp4
-BNp1I4SGPmieyL1Nop++WDDxAVG73ECFGiB+dAcHPbQSl32OE3KnyaIOgp38MfO2
-uCH3/Q9rrNZL/sFrVn+nE4UEJ+EF9jbC+DH3mOsIRkkbFxRlapyP2Oy0szd41jca
-DQb2aOtveT8mhFPz+VFulVXwZEwWjMQNKm6Wn3vYI5gyBjBljI2PReIurLPHm/O5
-5SDVu3CoXpKWltDEwyGQQ88KiqlXh5DsllPhizpLUSDJC1+J5QUdJruppAI6Y0EI
-B3ArLtLr5YigIzCjonKJSbJCyuGXpL4mKlfLMIrEkOI+ARwYQZc=
-=GSCe
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAly0kxwACgkQ3SOs138+
+s6EOzw/5ATuYJ27momrmqb3VkwBwBsPFsX9ccnecMg59wUWTPByb7ZiyKgXVchoT
+GRNJEHdjrcyiMVwQa037+3T/6N9oEYzBSrK+48uqLgR+Y8rdkMqfNMpf2f+iGeXj
+v61oxrdwx3W2KQ9lJOoD2/PHoQ0vF7sJwGdQAeGl5RPgH8dCLxdCrxwM6drn/9zz
+BlA2ZklWcW0xDCus77vY/cQUGRqD4PtwvcOs2QmefsmXg45QO3ra6mVRbGn98Svp
+e8yb+nKlngE3GtmlpxS0PQJUte/LB+mkcvndU5frGwC8bzXeE6s+7H2AXysdK/O2
+gxAdmx2MUOWiG8J81uL5DYAi0OuP0ajBq7SV+CV8ce29viOEu4PqQ/3hfVOugI9X
+kN3AIOOEKKahENb+l9qqVMHEZuxbwP0xploOO/5NIR6wtTYBslqc4c0M3xmDnAdu
+2KPM7mikqqoO6VNX0FRSBBrV3IodDgKp0388AWK4GeupjhExOlOU53+2qhj6WZbU
+SDkcWC0zkVEl/PgYoiEApI+IxeKBjdevlqF7r3L5VNPbBr+FzR8zKZP59n3oK0ep
+J1P1PXSSb0LltIdMmtkZj/bczEGUpBTEutaQCFZaZEdEK2tidIlayAy8cQnjjSDO
+qxCTzeTMAtIsttvWAlgU13iLYGxGsevxOSYjmXQ82VXVWlw9P2M=
+=kTHp
 -----END PGP SIGNATURE-----
 
---LG5jgFgJbJFFiAfj--
+--Qjo19A2vmS5T5MQB--
