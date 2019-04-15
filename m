@@ -2,224 +2,360 @@ Return-Path: <SRS0=Mgic=SR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC8EC10F0E
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 18:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0612EC10F0E
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 18:15:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 095C4218D3
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 18:07:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C25BC2073F
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Apr 2019 18:15:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="nLCj02Nj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727937AbfDOSHX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Apr 2019 14:07:23 -0400
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:34938 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727909AbfDOSHX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 14:07:23 -0400
-Received: by mail-qk1-f193.google.com with SMTP id a71so10458103qkg.2
-        for <linux-pci@vger.kernel.org>; Mon, 15 Apr 2019 11:07:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:organization:user-agent:mime-version
-         :content-transfer-encoding;
-        bh=2+BlLzxkGTAuoyeo+4VN6BASdiWZbDXa6Iy34pUyHTw=;
-        b=keFnIbkF2wfzSEZYcfwKyy6tuPHN0ZFqIWbXDTsHJAaP0xstOg08Xwz8jddDYCU0Kc
-         UmJgKXPTHp6EkggjiNcI6pOBEpMBahDkRe1MnhpW7GmcqyiKbhregcywCJ7Ah3yOFSzc
-         YSsNXb7KdOmBLHH6mDEqebbkB3/CgZPtBIKlQKY0nU1latJu1BvwH3CEwHOW79bBl7O1
-         /lCMpG/MgwF3V42A+t/xivvtGco4Ll85xN7UfWsIKA6V9JqSGvFqS34Xb86RzRYRg2GP
-         gOMSdGDleN+fxTR3nyzQhombXP4rbm2aOGKb0OwbXKqUYUEW5KkEMeEN+O6B5w2ED/58
-         4/hQ==
-X-Gm-Message-State: APjAAAWxSB+fItk2jY3qSch5diiyJPBHGf+CKk9qctb1kYQEgz8nDmTw
-        xdEMhvcF89f507XLTYFlwmpxZg==
-X-Google-Smtp-Source: APXvYqzlh7vAj3vd/l11mRjB+VQebK4IPh2obUfBIrZGG5LPfOy4mR2/8leAu6S4j8599zueIpW4yw==
-X-Received: by 2002:ae9:f312:: with SMTP id p18mr17882445qkg.60.1555351641721;
-        Mon, 15 Apr 2019 11:07:21 -0700 (PDT)
-Received: from dhcp-10-20-1-11.bss.redhat.com ([144.121.20.162])
-        by smtp.gmail.com with ESMTPSA id g15sm33428120qta.31.2019.04.15.11.07.20
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 15 Apr 2019 11:07:21 -0700 (PDT)
-Message-ID: <3987ad435bfdb2d92e5e42648174634814b1646d.camel@redhat.com>
-Subject: Re: [PATCH] pci/quirks: Add quirk to reset nvgpu at boot for the
- Lenovo ThinkPad P50
-From:   Lyude Paul <lyude@redhat.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     David Ober <dober@lenovo.com>, linux-pci@vger.kernel.org,
-        nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        Karol Herbst <kherbst@redhat.com>,
-        Ben Skeggs <skeggsb@gmail.com>, stable@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Hans de Goede <hdegoede@redhat.com>
-Date:   Mon, 15 Apr 2019 14:07:18 -0400
-In-Reply-To: <20190404141724.GJ141706@google.com>
-References: <20190212220230.1568-1-lyude@redhat.com>
-         <20190215004329.GR96272@google.com>
-         <2fca9a9feafcd17b27bc71994a71ebc241a93e9a.camel@redhat.com>
-         <52b17f8cb24e179e9661d75548d193843ae87b4c.camel@redhat.com>
-         <20190321224819.GK251185@google.com> <20190322113015.GM251185@google.com>
-         <20190404141724.GJ141706@google.com>
-Organization: Red Hat
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        id S1727691AbfDOSPA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Apr 2019 14:15:00 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:5464 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726182AbfDOSPA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Apr 2019 14:15:00 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cb4ca270000>; Mon, 15 Apr 2019 11:15:03 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 15 Apr 2019 11:14:57 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 15 Apr 2019 11:14:57 -0700
+Received: from [10.24.70.150] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 15 Apr
+ 2019 18:14:47 +0000
+Subject: Re: [PATCH 02/30] PCI: tegra: Fix PCIe host power up sequence
+To:     Thierry Reding <thierry.reding@gmail.com>
+CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
+        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
+ <20190411170355.6882-3-mmaddireddy@nvidia.com> <20190415110136.GC29254@ulmo>
+ <63ed1e7e-6630-bdba-3acd-c4372e83b259@nvidia.com>
+ <20190415143019.GE29254@ulmo>
+X-Nvconfidentiality: public
+From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <33f945e1-ca97-b8ab-4687-62c5a0e4f45c@nvidia.com>
+Date:   Mon, 15 Apr 2019 23:44:16 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20190415143019.GE29254@ulmo>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1555352103; bh=kNfUEbKjmDluCbgFvipIbKiMIhjGf95yidzDEPe4nsY=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=nLCj02Njtu6FFio3BQiGo8mN+K8f7Ka0E3FKViQcMATK76Xp43VGEp2OVkmRQ5fSn
+         LVJSEtKJ9cv9kUZBbryXpCGHgiPwFPuCyqnPOBH2Zz5vSmso4Wk0ZhZSekSc0ReHwZ
+         PkX6+/t6XfSYWBhb46tc4f78KhVLRbqAHNtTrjw5SqcsxWELG5M3OS4lGq/pPM+LKk
+         EbBWAryYDTM5QT7CCdU1/diWoF5owzrUM8PL5CslRyeXt5zYTVcDTKTfiaVc7M5Jj7
+         phsBVWMy2gEwgnkjghukQOc+vt18LeAE1bL6vJ6qwrLMjMdJ3TNj2MtOCRMEvLw1H5
+         8wJp2n04T8Nig==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2019-04-04 at 09:17 -0500, Bjorn Helgaas wrote:
-> [+cc Hans, author of 0b2fe6594fa2 ("drm/nouveau: Queue hpd_work on (runtime)
-> resume")]
-> 
-> On Fri, Mar 22, 2019 at 06:30:15AM -0500, Bjorn Helgaas wrote:
-> > On Thu, Mar 21, 2019 at 05:48:19PM -0500, Bjorn Helgaas wrote:
-> > > On Wed, Mar 13, 2019 at 06:25:02PM -0400, Lyude Paul wrote:
-> > > > On Fri, 2019-02-15 at 16:17 -0500, Lyude Paul wrote:
-> > > > > On Thu, 2019-02-14 at 18:43 -0600, Bjorn Helgaas wrote:
-> > > > > > On Tue, Feb 12, 2019 at 05:02:30PM -0500, Lyude Paul wrote:
-> > > > > > > On a very specific subset of ThinkPad P50 SKUs, particularly
-> > > > > > > ones that come with a Quadro M1000M chip instead of the M2000M
-> > > > > > > variant, the BIOS seems to have a very nasty habit of not
-> > > > > > > always resetting the secondary Nvidia GPU between full reboots
-> > > > > > > if the laptop is configured in Hybrid Graphics mode. The
-> > > > > > > reason for this happening is unknown, but the following steps
-> > > > > > > and possibly a good bit of patience will reproduce the issue:
-> > > > > > > 
-> > > > > > > 1. Boot up the laptop normally in Hybrid graphics mode
-> > > > > > > 2. Make sure nouveau is loaded and that the GPU is awake
-> > > > > > > 2. Allow the nvidia GPU to runtime suspend itself after being
-> > > > > > > idle
-> > > > > > > 3. Reboot the machine, the more sudden the better (e.g sysrq-b
-> > > > > > > may help)
-> > > > > > > 4. If nouveau loads up properly, reboot the machine again and go
-> > > > > > > back to
-> > > > > > > step 2 until you reproduce the issue
-> > > > > > > 
-> > > > > > > This results in some very strange behavior: the GPU will quite
-> > > > > > > literally be left in exactly the same state it was in when the
-> > > > > > > previously booted kernel started the reboot. This has all
-> > > > > > > sorts of bad sideaffects: for starters, this completely breaks
-> > > > > > > nouveau starting with a mysterious EVO channel failure that
-> > > > > > > happens well before we've actually used the EVO channel for
-> > > > > > > anything:
-> > > 
-> > > Thanks for the hybrid tutorial (snipped from this response).  IIUC,
-> > > what you said was that in hybrid mode, the Intel GPU drives the
-> > > built-in display and the Nvidia GPU drives any external displays and
-> > > may be used for DRI PRIME rendering (whatever that is).  But since you
-> > > say the Nvidia device gets runtime suspended, I assume there's no
-> > > external display here and you're not using DRI PRIME.
-> > > 
-> > > I wonder if it's related to the fact that the Nvidia GPU has been
-> > > runtime suspended before you do the reboot.  Can you try turning of
-> > > runtime power management for the GPU by setting the runpm module
-> > > parameter to 0?  I *think* this would be booting with
-> > > "nouveau.runpm=0".
-> > 
-> > Sorry, I wasn't really thinking here.  You already *said* this is
-> > related to runtime suspend.  It only happens when the Nvidia GPU has
-> > been suspended.
-> > 
-> > I don't know that much about suspend, but ISTR seeing comments about
-> > resuming devices before we shutdown.  If we do that, maybe there's
-> > some kind of race between that resume and the reboot?
-> 
-> I think we do in fact resume PCI devices before shutdown.  Here's the
-> path I'm looking at:
-> 
->   device_shutdown
->     pm_runtime_get_noresume
->     pm_runtime_barrier
->     dev->bus->shutdown
->       pci_device_shutdown
->         pm_runtime_resume
->           __pm_runtime_resume(dev, 0)
->             rpm_resume(dev, 0)
->               __update_runtime_status(dev, RPM_RESUMING)
->               callback = RPM_GET_CALLBACK(dev, runtime_resume)
->               rpm_callback(callback, dev)
->                 __rpm_callback
->                   pci_pm_runtime_resume
->                     drv->pm->runtime_resume
->                       nouveau_pmops_runtime_resume
->                         nouveau_do_resume
->                         schedule_work(hpd_work)   # <---
->                         ...
->                         nouveau_display_hpd_work
->                           pm_runtime_get_sync
->                           drm_helper_hpd_irq_event
->                           pm_runtime_mark_last_busy
->                           pm_runtime_put_sync
-> 
-> I'm curious about that "schedule_work(hpd_work)" near the end because
-> no other drivers seem to use schedule_work() in the runtime_resume
-> path, and I don't know how that synchronizes with the shutdown
-> process.  I don't see anything that waits for
-> nouveau_display_hpd_work() to complete, so it seems like something
-> that could be a race.
-> 
-> I wonder this problem would be easier to reproduce if you added a
-> sleep in nouveau_display_hpd_work() as in the first hunk below, and I
-> wonder if the problem would then go away if you stopped scheduling
-> hpd_work as in the second hunk?  Obviously the second hunk isn't a
-> solution, it's just an attempt to figure out if I'm looking in the
-> right area.
-> 
 
-Hi, sorry it took me so long to get back to this - I've been busy with some
-other responsibilities at work that came up last moment.
 
-So I did try making it so that we cancel hpd_work from pci_driver->shutdown
-and wait for it to complete, however that didn't really mseem to make any
-difference. I did however try adding a workaround in the past that would shut
-down the GPU whenever the kernel was shutting down (basically calling
-nouveau_drm_remove() on shutdown) and that did actually fix the issue though,
-but I didn't go with it as a final solution because of the problems it would
-cause if we tried shutting down the card when it's in a bad state we could end
-up hanging the whole system.
-
-Do we want to have this discussion on the bz btw, or is this email thread
-fine?
-
-> Bjorn
-> 
-> 
-> diff --git a/drivers/gpu/drm/nouveau/nouveau_display.c
-> b/drivers/gpu/drm/nouveau/nouveau_display.c
-> index 55c0fa451163..e50806012d41 100644
-> --- a/drivers/gpu/drm/nouveau/nouveau_display.c
-> +++ b/drivers/gpu/drm/nouveau/nouveau_display.c
-> @@ -350,6 +350,7 @@ nouveau_display_hpd_work(struct work_struct *work)
->  
->  	pm_runtime_get_sync(drm->dev->dev);
->  
-> +	msleep(2000);
->  	drm_helper_hpd_irq_event(drm->dev);
->  
->  	pm_runtime_mark_last_busy(drm->dev->dev);
-> 
-> 
-> 
-> diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c
-> b/drivers/gpu/drm/nouveau/nouveau_drm.c
-> index 5020265bfbd9..48da72caa017 100644
-> --- a/drivers/gpu/drm/nouveau/nouveau_drm.c
-> +++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
-> @@ -946,9 +946,6 @@ nouveau_pmops_runtime_resume(struct device *dev)
->  	nvif_mask(&device->object, 0x088488, (1 << 25), (1 << 25));
->  	drm_dev->switch_power_state = DRM_SWITCH_POWER_ON;
->  
-> -	/* Monitors may have been connected / disconnected during suspend */
-> -	schedule_work(&nouveau_drm(drm_dev)->hpd_work);
-> -
->  	return ret;
->  }
->  
--- 
-Cheers,
-	Lyude Paul
+On 15-Apr-19 8:00 PM, Thierry Reding wrote:
+> On Mon, Apr 15, 2019 at 07:41:21PM +0530, Manikanta Maddireddy wrote:
+>> On 15-Apr-19 4:31 PM, Thierry Reding wrote:
+>>> On Thu, Apr 11, 2019 at 10:33:27PM +0530, Manikanta Maddireddy wrote:
+>>>> PCIe host power up sequence involves programming AFI(AXI to FPCI bridg=
+e)
+>>>> registers first and then PCIe registers. Otherwise AFI register settin=
+gs
+>>>> may not latch to PCIe IP.
+>>>>
+>>>> PCIe root port starts LTSSM as soon as PCIe xrst is deasserted.
+>>>> So deassert PCIe xrst after programming PCIe registers.
+>>>>
+>>>> Modify PCIe power up sequence as follows,
+>>>>   - Power ungate PCIe partition
+>>>>   - Enable AFI clock
+>>>>   - Deassert AFI reset
+>>>>   - Program AFI registers
+>>>>   - Enable PCIe clock
+>>>>   - Deassert PCIe reset
+>>>>   - Program PCIe registers
+>>>>   - Deassert PCIe xrst to start LTSSM
+>>>>
+>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>>>> ---
+>>>>  drivers/pci/controller/pci-tegra.c | 73 ++++++++++++++++++-----------=
+-
+>>>>  1 file changed, 43 insertions(+), 30 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controll=
+er/pci-tegra.c
+>>>> index f4f53d092e00..0bf270bcea34 100644
+>>>> --- a/drivers/pci/controller/pci-tegra.c
+>>>> +++ b/drivers/pci/controller/pci-tegra.c
+>>>> @@ -966,9 +966,6 @@ static int tegra_pcie_enable_controller(struct teg=
+ra_pcie *pcie)
+>>>>  		}
+>>>>  	}
+>>>> =20
+>>>> -	/* take the PCIe interface module out of reset */
+>>>> -	reset_control_deassert(pcie->pcie_xrst);
+>>>> -
+>>>>  	/* finally enable PCIe */
+>>>>  	value =3D afi_readl(pcie, AFI_CONFIGURATION);
+>>>>  	value |=3D AFI_CONFIGURATION_EN_FPCI;
+>>>> @@ -997,8 +994,6 @@ static void tegra_pcie_disable_controller(struct t=
+egra_pcie *pcie)
+>>>>  {
+>>>>  	int err;
+>>>> =20
+>>>> -	reset_control_assert(pcie->pcie_xrst);
+>>>> -
+>>>>  	if (pcie->soc->program_uphy) {
+>>>>  		err =3D tegra_pcie_phy_power_off(pcie);
+>>>>  		if (err < 0)
+>>>> @@ -1014,13 +1009,11 @@ static void tegra_pcie_power_off(struct tegra_=
+pcie *pcie)
+>>>>  	int err;
+>>>> =20
+>>>>  	reset_control_assert(pcie->afi_rst);
+>>>> -	reset_control_assert(pcie->pex_rst);
+>>>> =20
+>>>>  	clk_disable_unprepare(pcie->pll_e);
+>>>>  	if (soc->has_cml_clk)
+>>>>  		clk_disable_unprepare(pcie->cml_clk);
+>>>>  	clk_disable_unprepare(pcie->afi_clk);
+>>>> -	clk_disable_unprepare(pcie->pex_clk);
+>>>> =20
+>>>>  	if (!dev->pm_domain)
+>>>>  		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>>>> @@ -1036,58 +1029,59 @@ static int tegra_pcie_power_on(struct tegra_pc=
+ie *pcie)
+>>>>  	const struct tegra_pcie_soc *soc =3D pcie->soc;
+>>>>  	int err;
+>>>> =20
+>>>> -	reset_control_assert(pcie->pcie_xrst);
+>>>> -	reset_control_assert(pcie->afi_rst);
+>>>> -	reset_control_assert(pcie->pex_rst);
+>>>> -
+>>>> -	if (!dev->pm_domain)
+>>>> -		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>>>> -
+>>> This code was in place to ensure that PCIe was in a known good state
+>>> before following the power up sequence below. You mentioned elsewhere
+>>> that there's a regression on Cardhu after applying this series, so
+>>> perhaps Cardhu relies on the above hunk?
+>> No, Tegra30 and Tegra20 has legacy PHY which are dependent on PEX clk an=
+d rst.
+>> PHY power on is done in tegra_pcie_enable_controller(), but in this patc=
+h I am
+>> enabling PEX clk and rst after tegra_pcie_enable_controller(). This caus=
+ed
+>> regression on Cardhu.
+>> I realized that sanity test is failing on Cardhu after publishing this s=
+eries, I will
+>> fix the issue in V2.
+>> I believe you are talking about the bootloader(uboot) which can enable
+>> PCIe partition and reset. To bring the PCIe into good state then we
+>> have to take care of clocks as well. AFAIK clock_disable() is not added
+>> because it maintains the refcount and any mismatch in the count
+>> will thrown warning. I downstream kernel I see pmc driver itself taking
+>> care of initial state and there after maintaining the state with refcoun=
+t.
+>> Since bootloader may or may not enable PCIe, Can we get the state fixed
+>> in pmc driver instead of fixing it in PCIe driver?
+> I don't think we can do that. The PMC driver only knows about which
+> clocks and resets need to be controlled as part of which power partition
+> if we use power domains. We don't do that on all platforms, so there is
+> not enough information.
+>
+> Even if we had that information, we would still not be able to force the
+> clock off because of the reference counting.
+>
+> Generally, though, the clock don't matter all that much for getting the
+> hardware into a good state. All we really care about is that it is put
+> into reset so that when we take it out again we start from scratch.
+>
+> If we can verify that we don't need this anymore, I'm fine with taking
+> it out, though. Perhaps do it in a separate patch to make it easier to
+> revert if it turns out to be necessary on some platform after all.
+>
+> Thierry
+In one of the Nvidia internal bugs, HW team confirmed that clock matter bec=
+ause
+PCIe IP has non re-settable flops. They asked me to use following sequence,
+Power up case:
+=A0- Ungate PCIe partition
+=A0- Enable clock
+=A0- Deassert reset
+Power down case:
+=A0- Assert reset
+=A0- Disable clock
+=A0- Power gate PCIe partition.
+I agree that this clean up should be done in new patch. So when I make new =
+patch set for it,
+I will make sure that above sequence is followed to ensure that PCIe IP is =
+in good state.
+>
+>>>>  	/* enable regulators */
+>>>>  	err =3D regulator_bulk_enable(pcie->num_supplies, pcie->supplies);
+>>>>  	if (err < 0)
+>>>>  		dev_err(dev, "failed to enable regulators: %d\n", err);
+>>>> =20
+>>>> -	if (dev->pm_domain) {
+>>>> -		err =3D clk_prepare_enable(pcie->pex_clk);
+>>>> +	if (!dev->pm_domain) {
+>>>> +		err =3D tegra_powergate_power_on(TEGRA_POWERGATE_PCIE);
+>>>>  		if (err) {
+>>>> -			dev_err(dev, "failed to enable PEX clock: %d\n", err);
+>>>> -			return err;
+>>>> +			dev_err(dev, "power ungate failed: %d\n", err);
+>>>> +			goto regulator_disable;
+>>>>  		}
+>>>> -		reset_control_deassert(pcie->pex_rst);
+>>>> -	} else {
+>>>> -		err =3D tegra_powergate_sequence_power_up(TEGRA_POWERGATE_PCIE,
+>>>> -							pcie->pex_clk,
+>>>> -							pcie->pex_rst);
+>>>> +		err =3D tegra_powergate_remove_clamping(TEGRA_POWERGATE_PCIE);
+>>>>  		if (err) {
+>>>> -			dev_err(dev, "powerup sequence failed: %d\n", err);
+>>>> -			return err;
+>>>> +			dev_err(dev, "remove clamp failed: %d\n", err);
+>>>> +			goto powergate;
+>>>>  		}
+>>>>  	}
+>>>> =20
+>>>> -	reset_control_deassert(pcie->afi_rst);
+>>>> -
+>>>>  	err =3D clk_prepare_enable(pcie->afi_clk);
+>>>>  	if (err < 0) {
+>>>>  		dev_err(dev, "failed to enable AFI clock: %d\n", err);
+>>>> -		return err;
+>>>> +		goto powergate;
+>>>>  	}
+>>>> =20
+>>>>  	if (soc->has_cml_clk) {
+>>>>  		err =3D clk_prepare_enable(pcie->cml_clk);
+>>>>  		if (err < 0) {
+>>>>  			dev_err(dev, "failed to enable CML clock: %d\n", err);
+>>>> -			return err;
+>>>> +			goto afi_clk_disable;
+>>>>  		}
+>>>>  	}
+>>>> =20
+>>>>  	err =3D clk_prepare_enable(pcie->pll_e);
+>>>>  	if (err < 0) {
+>>>>  		dev_err(dev, "failed to enable PLLE clock: %d\n", err);
+>>>> -		return err;
+>>>> +		goto cml_clk_disable;
+>>>>  	}
+>>>> =20
+>>>> +	reset_control_deassert(pcie->afi_rst);
+>>>> +
+>>>>  	return 0;
+>>>> +
+>>>> +cml_clk_disable:
+>>>> +	if (soc->has_cml_clk)
+>>>> +		clk_disable_unprepare(pcie->cml_clk);
+>>>> +afi_clk_disable:
+>>>> +	clk_disable_unprepare(pcie->afi_clk);
+>>>> +powergate:
+>>>> +	if (!dev->pm_domain)
+>>>> +		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+>>>> +regulator_disable:
+>>>> +	regulator_bulk_disable(pcie->num_supplies, pcie->supplies);
+>>>> +	return err;
+>>>>  }
+>>>> =20
+>>>>  static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
+>>>> @@ -2108,7 +2102,12 @@ static void tegra_pcie_enable_ports(struct tegr=
+a_pcie *pcie)
+>>>>  			 port->index, port->lanes);
+>>>> =20
+>>>>  		tegra_pcie_port_enable(port);
+>>>> +	}
+>>>> +
+>>>> +	/* Start LTSSM from Tegra side */
+>>>> +	reset_control_deassert(pcie->pcie_xrst);
+>>>> =20
+>>>> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+>>>>  		if (tegra_pcie_port_check_link(port))
+>>>>  			continue;
+>>>> =20
+>>>> @@ -2123,6 +2122,8 @@ static void tegra_pcie_disable_ports(struct tegr=
+a_pcie *pcie)
+>>>>  {
+>>>>  	struct tegra_pcie_port *port, *tmp;
+>>>> =20
+>>>> +	reset_control_assert(pcie->pcie_xrst);
+>>>> +
+>>>>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+>>>>  		tegra_pcie_port_disable(port);
+>>>>  }
+>>>> @@ -2472,6 +2473,9 @@ static int __maybe_unused tegra_pcie_pm_suspend(=
+struct device *dev)
+>>>> =20
+>>>>  	tegra_pcie_disable_ports(pcie);
+>>>> =20
+>>>> +	reset_control_assert(pcie->pex_rst);
+>>>> +	clk_disable_unprepare(pcie->pex_clk);
+>>>> +
+>>>>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>>>>  		tegra_pcie_disable_msi(pcie);
+>>>> =20
+>>>> @@ -2501,10 +2505,19 @@ static int __maybe_unused tegra_pcie_pm_resume=
+(struct device *dev)
+>>>>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>>>>  		tegra_pcie_enable_msi(pcie);
+>>>> =20
+>>>> +	err =3D clk_prepare_enable(pcie->pex_clk);
+>>>> +	if (err) {
+>>>> +		dev_err(dev, "failed to enable PEX clock: %d\n", err);
+>>>> +		goto disable_controller;
+>>>> +	}
+>>>> +	reset_control_deassert(pcie->pex_rst);
+>>>> +
+>>>>  	tegra_pcie_enable_ports(pcie);
+>>>> =20
+>>>>  	return 0;
+>>>> =20
+>>>> +disable_controller:
+>>>> +	tegra_pcie_disable_controller(pcie);
+>>>>  poweroff:
+>>>>  	tegra_pcie_power_off(pcie);
+>>>> =20
+>>> There's quite a bit going on in this patch in general and I find it har=
+d
+>>> to review because not all the changes seem related to what you describe=
+d
+>>> in the commit message.
+>>>
+>>> Can you perhaps try to split out the error cleanup changes into a
+>>> separate patch where it makes sense? It seems to me like at least for
+>>> tegra_pcie_power_on() we're currently missing all of the cleanup code.
+>>> You could make that a preparatory patch that goes before this particula=
+r
+>>> patch, which will hopefully make this patch easier to review.
+>>>
+>>> Thierry
+>> Okay, I will prepare new patch for error handling and restrict this patc=
+h only for
+>> sequence correction
 
