@@ -2,68 +2,82 @@ Return-Path: <SRS0=aMvC=SS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EB23C10F13
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 18:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE46DC10F13
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 18:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 749642087C
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 18:15:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555438529;
-	bh=Oj9HxjX40cPbEgAsC3G0t2QRlyq856rzOsHMrs74fOc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=YaMk95L6Rsro1ctCR+5oaC0IW8wkQ8QePd2z2WkF6KTNNvIbKhRgwdBmxlQGovrvW
-	 0kwg43jCTPC7aEyYVJe6NDBXgfeMWugI3z5Arwz3hdZL17jvFPGng+94EgAF+ROCbL
-	 irjxSl3pooeH/0VNNNyyPcJWvI1iFI79r9MBBuDc=
+	by mail.kernel.org (Postfix) with ESMTP id 9CEA42075B
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 18:33:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727180AbfDPSP2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Apr 2019 14:15:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58102 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727067AbfDPSP2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Apr 2019 14:15:28 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CC43B20868;
-        Tue, 16 Apr 2019 18:15:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555438528;
-        bh=Oj9HxjX40cPbEgAsC3G0t2QRlyq856rzOsHMrs74fOc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vo/VlBgcddYzkezu+Wsk1rcnLlnw8xxamPqzTdwy/+2+9onXqj1ltvFz3QRtv1UHJ
-         HnXaYLaxXoOS8ShL1kqINStLh+rk1cqbisWhnqPOY6RCPiAtsql5g1J99CnQWuiTcx
-         FSwDDQCsjdIQ/QiSYuNLNB32wbjcqfCxvrurGIQE=
-Date:   Tue, 16 Apr 2019 13:15:25 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Aaron Sierra <asierra@xes-inc.com>
-Cc:     linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>
-Subject: Re: [PATCH v3] PCI/ACPI: Improve _OSC control request granularity
-Message-ID: <20190416181525.GO126710@google.com>
-References: <20190213213242.21920-1-asierra@xes-inc.com>
- <20190416175253.786-1-asierra@xes-inc.com>
+        id S1730173AbfDPSdG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Apr 2019 14:33:06 -0400
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:50227 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728373AbfDPSdG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2019 14:33:06 -0400
+Received: from Internal Mail-Server by MTLPINE1 (envelope-from spencer@mellanox.com)
+        with ESMTPS (AES256-SHA encrypted); 16 Apr 2019 21:32:59 +0300
+Received: from [10.15.7.186] ([10.15.7.186])
+        by mtbu-labmailer.labs.mlnx (8.14.4/8.14.4) with ESMTP id x3GIWtAt002772;
+        Tue, 16 Apr 2019 14:32:56 -0400
+Subject: Re: [PATCH] PCI: pciehp: Fix false command timeouts on boot
+To:     Lukas Wunner <lukas@wunner.de>
+Cc:     linux-pci@vger.kernel.org,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
+        Keith Busch <keith.busch@intel.com>
+References: <1554919668-24873-1-git-send-email-spencer@mellanox.com>
+ <20190414193641.xo7yf4uqh7ci7lci@wunner.de>
+ <20190415025908.bd45jqtp62eeuiuz@wunner.de>
+From:   Spencer Lingard <spencer@mellanox.com>
+Reply-To: spencer@mellanox.com
+Message-ID: <a24e3667-9aa6-1ee5-0746-c780523cc0bf@mellanox.com>
+Date:   Tue, 16 Apr 2019 14:32:55 -0400
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190416175253.786-1-asierra@xes-inc.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190415025908.bd45jqtp62eeuiuz@wunner.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 16, 2019 at 12:52:53PM -0500, Aaron Sierra wrote:
-> Bjorn,
-> 
-> Just checking if this is still on your radar. Has it been superseded or
-> complicated by other work?
+On 4/14/2019 10:59 PM, Lukas Wunner wrote:
+> On Sun, Apr 14, 2019 at 09:36:41PM +0200, Lukas Wunner wrote:
+>> I suppose this can happen if a write to the Slot Control register is
+>> performed while HPIE and/or CCIE is disabled, the two notifications
+>> are subsequently enabled and another write to the Slot Control is
+>> performed.  That second write will then call wait_event_timeout()
+>> because of the stale ctrl->cmd_busy == 1, but the Command Complete
+>> notification has already happened and was cleared by pcie_poll_cmd(),
+>> hence it times out.
+>>
+>> Sounds reasonable, I'm a little suprised though that I've never seen
+>> this myself.  I guess we've been doing this wrong for years, so:
+> On second thought, it's not surprising at all that I never saw this
+> because Thunderbolt sets NoCompl+, so doesn't use Command Complete
+> notifications.
+>
+> I suspect that even though we've been doing this wrong for a long time,
+> the bug was exposed by a recent change to pciehp.  Do you happen to
+> know since which kernel version or commit you've been witnessing the
+> timeouts?
 
-Still on my radar, sorry for the delay.  I use the patchwork instance at
-https://patchwork.ozlabs.org/project/linux-pci/list/, and as long as it's
-"New" there, I haven't forgotten about it.
+Hi Lukas, thank you for your time.
 
-Bjorn
+We started seeing these timeouts when we went to 4.20.5 from 4.14.61.
+
+In pcie_init(), there's a check that turns off a slot if it's powered on
+but unoccupied. Before 4e6a13356f1c ("PCI: pciehp: Deduplicate presence
+check on probe & resume"), that power check was at the end of
+pcie_probe(), after the IRQ is requested. I've investigated a little and
+found that the delays go away if the power check is moved back where it
+was before that commit.
+
+- Spencer
