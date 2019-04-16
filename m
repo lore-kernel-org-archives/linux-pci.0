@@ -2,136 +2,219 @@ Return-Path: <SRS0=aMvC=SS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84A9EC10F13
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C98C10F13
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:40:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B5AF21841
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:36:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48B0D20872
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:40:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="cvD0OXjs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727490AbfDPNgJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Apr 2019 09:36:09 -0400
-Received: from foss.arm.com ([217.140.101.70]:55074 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727180AbfDPNgJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Apr 2019 09:36:09 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9394CEBD;
-        Tue, 16 Apr 2019 06:36:08 -0700 (PDT)
-Received: from red-moon (unknown [10.1.197.39])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 35A6B3F59C;
-        Tue, 16 Apr 2019 06:36:06 -0700 (PDT)
-Date:   Tue, 16 Apr 2019 14:36:04 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-arm-kernel@axis.com
-Subject: Re: [PATCH v2 23/26] PCI: designware-ep: Configure RESBAR to
- advertise the smallest size
-Message-ID: <20190416133604.GA14705@red-moon>
-References: <20190325083501.8088-1-kishon@ti.com>
- <20190325083501.8088-24-kishon@ti.com>
- <20190413160053.GI126710@google.com>
+        id S1726946AbfDPNkD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Apr 2019 09:40:03 -0400
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:57056 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726751AbfDPNkD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2019 09:40:03 -0400
+Received: from mailhost.synopsys.com (dc8-mailhost1.synopsys.com [10.13.135.209])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay.synopsys.com (Postfix) with ESMTPS id AC6D824E20C2;
+        Tue, 16 Apr 2019 06:40:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1555422002; bh=5ucc2sU5hUHEUj0913fZv0b7Gspqyf7Gepvv+hv2vLQ=;
+        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
+        b=cvD0OXjsJxa0zRYVF9Qrn+ixY/+DOPlFwn0LLdUwwaTn8QRf4J09Ra2c8AV1dpcLu
+         ebN7JBT9HaSXm1pF+BPe8+EJsviXjyPfpQXY/3P2yHSDSuSVgCrio82vA5jBAaGDqf
+         FmgPuwNvDD29tY/jAeCRTKM6V3pWiq9ihj33hlbZ2MwIWuPoYb/wkSApmC6fCV0UwL
+         YJY3sENfQWdB1sXQYE+PEW/UOb/wL2Sd7cCtNrB1XkV76fjV/dlwcHsv/MKEYSa7zM
+         vbYp4BAxjmgrVK4jZPx4ypUF0YTSohVR1O57fHFNiRzymenLjvwLodSGRxc9iQxmXj
+         c4Rs0aQNaLcOA==
+Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
+        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mailhost.synopsys.com (Postfix) with ESMTPS id 8E35BA006A;
+        Tue, 16 Apr 2019 13:40:02 +0000 (UTC)
+Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
+ US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Tue, 16 Apr 2019 06:39:06 -0700
+Received: from DE02WEMBXA.internal.synopsys.com ([fe80::a014:7216:77d:d55c])
+ by DE02WEHTCB.internal.synopsys.com ([::1]) with mapi id 14.03.0415.000; Tue,
+ 16 Apr 2019 15:39:04 +0200
+From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+To:     Vidya Sagar <vidyas@nvidia.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "Jisheng.Zhang@synaptics.com" <Jisheng.Zhang@synaptics.com>,
+        "thierry.reding@gmail.com" <thierry.reding@gmail.com>
+CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "kthota@nvidia.com" <kthota@nvidia.com>,
+        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
+        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
+Subject: RE: [PATCH 1/2] PCI: dwc: Add API support to de-initialize host
+Thread-Topic: [PATCH 1/2] PCI: dwc: Add API support to de-initialize host
+Thread-Index: AQHU6uDRR4lSZpzHU0qiLOlhqj2OzKY+3UFg
+Date:   Tue, 16 Apr 2019 13:39:03 +0000
+Message-ID: <305100E33629484CBB767107E4246BBB0A22B657@de02wembxa.internal.synopsys.com>
+References: <1554380425-29215-1-git-send-email-vidyas@nvidia.com>
+ <1554380425-29215-2-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1554380425-29215-2-git-send-email-vidyas@nvidia.com>
+Accept-Language: pt-PT, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcZ3VzdGF2b1xh?=
+ =?us-ascii?Q?cHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJh?=
+ =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLWZlMzY4YzA2LTYwNGMtMTFlOS05ODdkLWY4OTRj?=
+ =?us-ascii?Q?MjczODA0MlxhbWUtdGVzdFxmZTM2OGMwOC02MDRjLTExZTktOTg3ZC1mODk0?=
+ =?us-ascii?Q?YzI3MzgwNDJib2R5LnR4dCIgc3o9IjIzMTUiIHQ9IjEzMTk5ODk1NTQyMDM5?=
+ =?us-ascii?Q?NDE0NyIgaD0iZ3RoOGs5NGdKNG5CaDVMZEhyZ09GeFFGQXRBPSIgaWQ9IiIg?=
+ =?us-ascii?Q?Ymw9IjAiIGJvPSIxIiBjaT0iY0FBQUFFUkhVMVJTUlVGTkNnVUFBQlFKQUFD?=
+ =?us-ascii?Q?aklvN0FXZlRVQWRmdHk1d2JPWUVxMSszTG5CczVnU29PQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUhBQUFBQ2tDQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUVBQVFBQkFBQUFGdGJCcHdBQUFBQUFBQUFBQUFBQUFKNEFBQUJtQUdrQWJn?=
+ =?us-ascii?Q?QmhBRzRBWXdCbEFGOEFjQUJzQUdFQWJnQnVBR2tBYmdCbkFGOEFkd0JoQUhR?=
+ =?us-ascii?Q?QVpRQnlBRzBBWVFCeUFHc0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?RUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFHWUFid0IxQUc0QVpBQnlBSGtBWHdC?=
+ =?us-ascii?Q?d0FHRUFjZ0IwQUc0QVpRQnlBSE1BWHdCbkFHWUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFDQUFB?=
+ =?us-ascii?Q?QUFBQ2VBQUFBWmdCdkFIVUFiZ0JrQUhJQWVRQmZBSEFBWVFCeUFIUUFiZ0Js?=
+ =?us-ascii?Q?QUhJQWN3QmZBSE1BWVFCdEFITUFkUUJ1QUdjQVh3QmpBRzhBYmdCbUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFBQm1BRzhB?=
+ =?us-ascii?Q?ZFFCdUFHUUFjZ0I1QUY4QWNBQmhBSElBZEFCdUFHVUFjZ0J6QUY4QWN3QmhB?=
+ =?us-ascii?Q?RzBBY3dCMUFHNEFad0JmQUhJQVpRQnpBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUdZQWJ3QjFBRzRBWkFCeUFIa0FY?=
+ =?us-ascii?Q?d0J3QUdFQWNnQjBBRzRBWlFCeUFITUFYd0J6QUcwQWFRQmpBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFBQUNB?=
+ =?us-ascii?Q?QUFBQUFDZUFBQUFaZ0J2QUhVQWJnQmtBSElBZVFCZkFIQUFZUUJ5QUhRQWJn?=
+ =?us-ascii?Q?QmxBSElBY3dCZkFITUFkQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCbUFH?=
+ =?us-ascii?Q?OEFkUUJ1QUdRQWNnQjVBRjhBY0FCaEFISUFkQUJ1QUdVQWNnQnpBRjhBZEFC?=
+ =?us-ascii?Q?ekFHMEFZd0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1lBYndCMUFHNEFaQUJ5QUhr?=
+ =?us-ascii?Q?QVh3QndBR0VBY2dCMEFHNEFaUUJ5QUhNQVh3QjFBRzBBWXdBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFB?=
+ =?us-ascii?Q?Q0FBQUFBQUNlQUFBQVp3QjBBSE1BWHdCd0FISUFid0JrQUhVQVl3QjBBRjhB?=
+ =?us-ascii?Q?ZEFCeUFHRUFhUUJ1QUdrQWJnQm5BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJ6?=
+ =?us-ascii?Q?QUdFQWJBQmxBSE1BWHdCaEFHTUFZd0J2QUhVQWJnQjBBRjhBY0FCc0FHRUFi?=
+ =?us-ascii?Q?Z0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFITUFZUUJzQUdVQWN3QmZB?=
+ =?us-ascii?Q?SEVBZFFCdkFIUUFaUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFB?=
+ =?us-ascii?Q?QUFDQUFBQUFBQ2VBQUFBY3dCdUFIQUFjd0JmQUd3QWFRQmpBR1VBYmdCekFH?=
+ =?us-ascii?Q?VUFYd0IwQUdVQWNnQnRBRjhBTVFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFB?=
+ =?us-ascii?Q?QnpBRzRBY0FCekFGOEFiQUJwQUdNQVpRQnVBSE1BWlFCZkFIUUFaUUJ5QUcw?=
+ =?us-ascii?Q?QVh3QnpBSFFBZFFCa0FHVUFiZ0IwQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUhZQVp3QmZBR3NBWlFC?=
+ =?us-ascii?Q?NUFIY0Fid0J5QUdRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFB?=
+ =?us-ascii?Q?QUFBQUNBQUFBQUFBPSIvPjwvbWV0YT4=3D?=
+x-originating-ip: [10.107.25.131]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190413160053.GI126710@google.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Apr 13, 2019 at 11:00:53AM -0500, Bjorn Helgaas wrote:
-> On Mon, Mar 25, 2019 at 02:04:58PM +0530, Kishon Vijay Abraham I wrote:
-> > Configure RESBAR capability to advertise the smallest size (1MB) for
-> > couple of reasons. A) Host side resource allocation of BAR fails for
-> > larger sizes. B) Endpoint function driver does not allocate memory
-> > for all supported sizes in RESBAR capability.
-> > If and when there is a usecase required to add more flexibility using
-> > RESBAR, this can be revisited.
-> 
-> The #define used in the code below is "REBAR"; maybe spell it out
-> once and then use REBAR instead of RESBAR?
+On Thu, Apr 4, 2019 at 13:20:23, Vidya Sagar <vidyas@nvidia.com> wrote:
 
-I think we should just name the capability as it is (Resizable BAR) the
-kernel defines are there already anyway. I will rewrite the log
-accordingly.
+> Add an API to group all the tasks to be done to de-initialize host which
+> can then be called by any Designware core based driver implementations
 
-Lorenzo
+s/Designware/DesignWare
 
-> > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> > ---
-> >  .../pci/controller/dwc/pcie-designware-ep.c   | 34 +++++++++++++++++++
-> >  1 file changed, 34 insertions(+)
-> > 
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > index 74477ad7467f..0c208b9bda43 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > @@ -504,10 +504,32 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
-> >  	pci_epc_mem_exit(epc);
-> >  }
-> >  
-> > +static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
-> > +{
-> > +	u32 header;
-> > +	int pos = PCI_CFG_SPACE_SIZE;
-> > +
-> > +	while (pos) {
-> > +		header = dw_pcie_readl_dbi(pci, pos);
-> > +		if (PCI_EXT_CAP_ID(header) == cap)
-> > +			return pos;
-> > +
-> > +		pos = PCI_EXT_CAP_NEXT(header);
-> > +		if (!pos)
-> > +			break;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  int dw_pcie_ep_init(struct dw_pcie_ep *ep)
-> >  {
-> > +	int i;
-> >  	int ret;
-> > +	u32 reg;
-> >  	void *addr;
-> > +	unsigned int nbars;
-> > +	unsigned int offset;
-> >  	struct pci_epc *epc;
-> >  	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> >  	struct device *dev = pci->dev;
-> > @@ -591,6 +613,18 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
-> >  
-> >  	ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
-> >  
-> > +	offset = dw_pcie_ep_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
-> > +	if (offset) {
-> > +		reg = dw_pcie_readl_dbi(pci, offset + PCI_REBAR_CTRL);
-> > +		nbars = (reg & PCI_REBAR_CTRL_NBAR_MASK) >>
-> > +			PCI_REBAR_CTRL_NBAR_SHIFT;
-> > +
-> > +		dw_pcie_dbi_ro_wr_en(pci);
-> > +		for (i = 0; i < nbars; i++, offset += PCI_REBAR_CTRL)
-> > +			dw_pcie_writel_dbi(pci, offset + PCI_REBAR_CAP, 0x0);
-> > +		dw_pcie_dbi_ro_wr_dis(pci);
-> > +	}
-> > +
-> >  	dw_pcie_setup(pci);
-> >  
-> >  	return 0;
-> > -- 
-> > 2.17.1
-> > 
+> while adding .remove() support in their respective drivers.
+>=20
+> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 7 +++++++
+>  drivers/pci/controller/dwc/pcie-designware.h      | 5 +++++
+>  2 files changed, 12 insertions(+)
+>=20
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
+pci/controller/dwc/pcie-designware-host.c
+> index 3e4169e738a5..d7881490282d 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -516,6 +516,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	return ret;
+>  }
+> =20
+> +void dw_pcie_host_deinit(struct pcie_port *pp)
+> +{
+> +	pci_stop_root_bus(pp->root_bus);
+> +	pci_remove_root_bus(pp->root_bus);
+> +	dw_pcie_free_msi(pp);
+> +}
+> +
+>  static int dw_pcie_access_other_conf(struct pcie_port *pp, struct pci_bu=
+s *bus,
+>  				     u32 devfn, int where, int size, u32 *val,
+>  				     bool write)
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/c=
+ontroller/dwc/pcie-designware.h
+> index adff0c713665..ea8d1caf11c5 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -343,6 +343,7 @@ void dw_pcie_msi_init(struct pcie_port *pp);
+>  void dw_pcie_free_msi(struct pcie_port *pp);
+>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>  int dw_pcie_host_init(struct pcie_port *pp);
+> +void dw_pcie_host_deinit(struct pcie_port *pp);
+>  int dw_pcie_allocate_domains(struct pcie_port *pp);
+>  #else
+>  static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+> @@ -367,6 +368,10 @@ static inline int dw_pcie_host_init(struct pcie_port=
+ *pp)
+>  	return 0;
+>  }
+> =20
+> +static inline void dw_pcie_host_deinit(struct pcie_port *pp)
+> +{
+> +}
+> +
+>  static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+>  {
+>  	return 0;
+> --=20
+> 2.7.4
+
