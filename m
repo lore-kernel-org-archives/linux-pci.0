@@ -2,259 +2,143 @@ Return-Path: <SRS0=aMvC=SS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.5 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84027C10F13
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 14:01:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F9DC10F13
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 14:02:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EB25223A7
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 14:01:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17765223B5
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 14:02:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=umn.edu header.i=@umn.edu header.b="pH4l246J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726641AbfDPOBq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Apr 2019 10:01:46 -0400
-Received: from foss.arm.com ([217.140.101.70]:55796 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726500AbfDPOBq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 16 Apr 2019 10:01:46 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A337CEBD;
-        Tue, 16 Apr 2019 07:01:45 -0700 (PDT)
-Received: from red-moon (unknown [10.1.197.39])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 255073F59C;
-        Tue, 16 Apr 2019 07:01:43 -0700 (PDT)
-Date:   Tue, 16 Apr 2019 15:01:44 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Jonathan Chocron <jonnyc@amazon.com>, bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        vaerov@amazon.com, dwmw@amazon.co.uk, benh@kernel.crashing.org,
-        alisaidi@amazon.com, zeev@amazon.com, ronenk@amazon.com,
-        barakw@amazon.com, talel@amazon.com, hanochu@amazon.com,
-        hhhawa@amazon.com
-Subject: Re: [PATCH v3] PCI: al: Add Amazon Annapurna Labs PCIe host
- controller driver
-Message-ID: <20190416140144.GB14705@red-moon>
-References: <20190326125508.GG24180@google.com>
- <1553774276-24675-1-git-send-email-jonnyc@amazon.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1553774276-24675-1-git-send-email-jonnyc@amazon.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+        id S1729464AbfDPOCB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Apr 2019 10:02:01 -0400
+Received: from mta-p7.oit.umn.edu ([134.84.196.207]:52500 "EHLO
+        mta-p7.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726500AbfDPOCB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2019 10:02:01 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p7.oit.umn.edu (Postfix) with ESMTP id BC126AEE
+        for <linux-pci@vger.kernel.org>; Tue, 16 Apr 2019 14:01:59 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p7.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p7.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id FK7Hj8DASzmK for <linux-pci@vger.kernel.org>;
+        Tue, 16 Apr 2019 09:01:59 -0500 (CDT)
+Received: from mail-io1-f71.google.com (mail-io1-f71.google.com [209.85.166.71])
+        (using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mta-p7.oit.umn.edu (Postfix) with ESMTPS id 83C6D86
+        for <linux-pci@vger.kernel.org>; Tue, 16 Apr 2019 09:01:59 -0500 (CDT)
+Received: by mail-io1-f71.google.com with SMTP id w11so16759147iom.20
+        for <linux-pci@vger.kernel.org>; Tue, 16 Apr 2019 07:01:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=umn.edu; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=iwjMijP3+qu6tm9Ocaym7EnWSSoP8/7s8H9M+zp/o04=;
+        b=pH4l246JQa7gqqHTnkvh/2qqqxnoKjbpdrSf7IcXCYV5RfBTK2/o/oB32m/e7Mhamb
+         RKzevpkRs+mKB11gq4VNFtfQNiteam507U6Q3vYPveE0301V5O4w79/fAWaXtEODsMcO
+         5G3s1FFyhWFoB9jz5w0iRBuGdL0JRT1kWxT4J8Tou53UmCR48Yj3bIjepRbmd6BuH0J6
+         QChDp0cYmzKyXeBOXk2magzcfnXeJIssCtUVgcMouF3iNUQgfqgTOM/bdg+uVqrkpUAy
+         dM3avtUc2iOWAhO2gm7nvmvmak+LG7gKt20kGd5qjxDynZsDorvoXg57dFzSNh8A4o2T
+         nyQg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=iwjMijP3+qu6tm9Ocaym7EnWSSoP8/7s8H9M+zp/o04=;
+        b=uiJ4aNGouUup5QrNb1WFSNnq85yWRZS8vNFDV/OhrXUflNoIgn9AtrLTzmOz6V94gC
+         76Kl0tILafZUl8XIV2d0ns0PkNZhvAgufzAsmff8+kEqYYyza7TG132Oa2J+DrYMsMss
+         02hSR1+oWvf0a0maR+o3hMpZYp/qubMtzMpI2tBNogtRbHoNU8M+M/Jvgnood6Aq9gAD
+         tWBJhYvVfYDDuUoIHVfKoCdyTjubelJElPOl1wsyenK2VlOVG2bfEPt0hiIG5N5JsMJe
+         0+66i73avV4iOnzDvIMLlNpiXMQYVJ+aefXzEoBWaN4UvKZde7tLqDyLQ1nRPNahkm1e
+         htVA==
+X-Gm-Message-State: APjAAAXihSZQfTUfPYP8AG0kTxOpjUDmAGcXWtguX4UkKgJ6/u6458g4
+        3GKmROOvtbA4NoapRLaC1670/duotY2AM5FSdWZE0K9oi6NVBEP639XxyADT+YnGCRAFChLk5ix
+        WgQ49BPLuc8CcYAeIc1ZAFsDX
+X-Received: by 2002:a24:d643:: with SMTP id o64mr29154510itg.148.1555423318397;
+        Tue, 16 Apr 2019 07:01:58 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqzuYxaJBOuetMqAT1zQQQN2fVktQuApd+U6kCX1zxVT/gLExusOiL5Rk0VleOFmxdlfUFooOA==
+X-Received: by 2002:a24:d643:: with SMTP id o64mr29154491itg.148.1555423318246;
+        Tue, 16 Apr 2019 07:01:58 -0700 (PDT)
+Received: from cs-u-cslp16.dtc.umn.edu (cs-u-cslp16.cs.umn.edu. [128.101.106.40])
+        by smtp.gmail.com with ESMTPSA id m6sm19496152ioj.36.2019.04.16.07.01.56
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 16 Apr 2019 07:01:57 -0700 (PDT)
+From:   Wenwen Wang <wang6495@umn.edu>
+To:     Wenwen Wang <wang6495@umn.edu>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)),
+        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+        linux-kernel@vger.kernel.org (open list:X86 ARCHITECTURE (32-BIT AND
+        64-BIT))
+Subject: [PATCH v2] x86/PCI: fix a memory leak bug
+Date:   Tue, 16 Apr 2019 09:01:38 -0500
+Message-Id: <1555423298-6677-1-git-send-email-wang6495@umn.edu>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 28, 2019 at 01:57:56PM +0200, Jonathan Chocron wrote:
-> Add support for Amazon's Annapurna Labs PCIe driver. The HW controller
-> is based on DesignWare's IP.
-> 
-> The HW doesn't support accessing the Root Port's config space via ECAM,
-> so we obtain its base address via an AMZN0001 device.
-> 
-> Furthermore, the DesignWare PCIe controller doesn't filter out config
-> transactions sent to devices 1 and up on its bus, so they are filtered
-> by the driver.
-> 
-> All subordinate buses do support ECAM access.
-> 
-> Implementing specific PCI config access functions involves:
->  - Adding an init function to obtain the Root Port's base address from
->    an AMZN0001 device.
->  - Adding a new entry in the MCFG quirk array
-> 
-> Co-developed-by: Vladimir Aerov <vaerov@amazon.com>
-> Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
-> Signed-off-by: Vladimir Aerov <vaerov@amazon.com>
-> Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
-> ---
-> 
-> --v2:
->   - Fix commit message comments (incl. using AMZN0001 instead of
->     PNP0C02)
->   - Use the usual multi-line comment style
-> 
-> --v3:
->   - Fix additional commit message comments
-> 
->  MAINTAINERS                          |  6 +++
->  drivers/acpi/pci_mcfg.c              | 12 +++++
->  drivers/pci/controller/dwc/Makefile  |  1 +
->  drivers/pci/controller/dwc/pcie-al.c | 93 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci-ecam.h             |  1 +
->  5 files changed, 113 insertions(+)
->  create mode 100644 drivers/pci/controller/dwc/pcie-al.c
+In pcibios_irq_init(), the PCI IRQ routing table 'pirq_table' is firstly
+found through pirq_find_routing_table(). If the table is not found and
+'CONFIG_PCI_BIOS' is defined, the table is then allocated in
+pcibios_get_irq_routing_table() using kmalloc(). In the following
+execution, if the I/O APIC is used, this table is actually not used.
+However, in that case, the allocated table is not freed, which can lead to
+a memory leak bug.
 
-I think Bjorn can take this if he is OK with it, it is not really
-necessary to queue it via the controller/dwc tree so:
+To fix this issue, this patch frees the allocated table if it is not used.
 
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Wenwen Wang <wang6495@umn.edu>
+---
+ arch/x86/pci/irq.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 32d444476a90..7a17017f9f82 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11769,6 +11769,12 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
->  S:	Supported
->  F:	drivers/pci/controller/
->  
-> +PCIE DRIVER FOR ANNAPURNA LABS
-> +M:	Jonathan Chocron <jonnyc@amazon.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/pci/controller/dwc/pcie-al.c
-> +
->  PCIE DRIVER FOR AMLOGIC MESON
->  M:	Yue Wang <yue.wang@Amlogic.com>
->  L:	linux-pci@vger.kernel.org
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index a4e8432fc2fb..b42be067fb83 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -52,6 +52,18 @@ struct mcfg_fixup {
->  static struct mcfg_fixup mcfg_quirks[] = {
->  /*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
->  
-> +#define AL_ECAM(table_id, rev, seg, ops) \
-> +	{ "AMAZON", table_id, rev, seg, MCFG_BUS_ANY, ops }
-> +
-> +	AL_ECAM("GRAVITON", 0, 0, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 1, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 2, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 3, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 4, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 5, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 6, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 7, &al_pcie_ops),
-> +
->  #define QCOM_ECAM32(seg) \
->  	{ "QCOM  ", "QDF2432 ", 1, seg, MCFG_BUS_ANY, &pci_32b_ops }
->  
-> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-> index 7bcdcdf5024e..1ea773c0070d 100644
-> --- a/drivers/pci/controller/dwc/Makefile
-> +++ b/drivers/pci/controller/dwc/Makefile
-> @@ -28,5 +28,6 @@ obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
->  # depending on whether ACPI, the DT driver, or both are enabled.
->  
->  ifdef CONFIG_PCI
-> +obj-$(CONFIG_ARM64) += pcie-al.o
->  obj-$(CONFIG_ARM64) += pcie-hisi.o
->  endif
-> diff --git a/drivers/pci/controller/dwc/pcie-al.c b/drivers/pci/controller/dwc/pcie-al.c
-> new file mode 100644
-> index 000000000000..65a9776c12be
-> --- /dev/null
-> +++ b/drivers/pci/controller/dwc/pcie-al.c
-> @@ -0,0 +1,93 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * PCIe host controller driver for Amazon's Annapurna Labs IP (used in chips
-> + * such as Graviton and Alpine)
-> + *
-> + * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-> + *
-> + * Author: Jonathan Chocron <jonnyc@amazon.com>
-> + */
-> +
-> +#include <linux/pci.h>
-> +#include <linux/pci-ecam.h>
-> +#include <linux/pci-acpi.h>
-> +#include "../../pci.h"
-> +
-> +#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-> +
-> +struct al_pcie_acpi  {
-> +	void __iomem *dbi_base;
-> +};
-> +
-> +static void __iomem *al_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> +				     int where)
-> +{
-> +	struct pci_config_window *cfg = bus->sysdata;
-> +	struct al_pcie_acpi *pcie = cfg->priv;
-> +	void __iomem *dbi_base = pcie->dbi_base;
-> +
-> +	if (bus->number == cfg->busr.start) {
-> +		/*
-> +		 * The DW PCIe core doesn't filter out transactions to other
-> +		 * devices/functions on the primary bus num, so we do this here.
-> +		 */
-> +		if (PCI_SLOT(devfn) > 0)
-> +			return NULL;
-> +		else
-> +			return dbi_base + where;
-> +	}
-> +
-> +	return pci_ecam_map_bus(bus, devfn, where);
-> +}
-> +
-> +static int al_pcie_init(struct pci_config_window *cfg)
-> +{
-> +	struct device *dev = cfg->parent;
-> +	struct acpi_device *adev = to_acpi_device(dev);
-> +	struct acpi_pci_root *root = acpi_driver_data(adev);
-> +	struct al_pcie_acpi *al_pcie;
-> +	struct resource *res;
-> +	int ret;
-> +
-> +	al_pcie = devm_kzalloc(dev, sizeof(*al_pcie), GFP_KERNEL);
-> +	if (!al_pcie)
-> +		return -ENOMEM;
-> +
-> +	res = devm_kzalloc(dev, sizeof(*res), GFP_KERNEL);
-> +	if (!res)
-> +		return -ENOMEM;
-> +
-> +	ret = acpi_get_rc_resources(dev, "AMZN0001", root->segment, res);
-> +	if (ret) {
-> +		dev_err(dev, "can't get rc dbi base address for SEG %d\n",
-> +			root->segment);
-> +		return ret;
-> +	}
-> +
-> +	dev_dbg(dev, "Root port dbi res: %pR\n", res);
-> +
-> +	al_pcie->dbi_base = devm_pci_remap_cfg_resource(dev, res);
-> +	if (IS_ERR(al_pcie->dbi_base)) {
-> +		long err = PTR_ERR(al_pcie->dbi_base);
-> +
-> +		dev_err(dev, "couldn't remap dbi base %pR (err:%ld)\n",
-> +			res, err);
-> +		return err;
-> +	}
-> +
-> +	cfg->priv = al_pcie;
-> +
-> +	return 0;
-> +}
-> +
-> +struct pci_ecam_ops al_pcie_ops = {
-> +	.bus_shift    = 20,
-> +	.init         =  al_pcie_init,
-> +	.pci_ops      = {
-> +		.map_bus    = al_pcie_map_bus,
-> +		.read       = pci_generic_config_read,
-> +		.write      = pci_generic_config_write,
-> +	}
-> +};
-> +
-> +#endif /* defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS) */
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> index 29efa09d686b..a73164c85e78 100644
-> --- a/include/linux/pci-ecam.h
-> +++ b/include/linux/pci-ecam.h
-> @@ -56,6 +56,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
->  extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
->  extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
->  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
-> +extern struct pci_ecam_ops al_pcie_ops; /* Amazon Annapurna Labs PCIe */
->  #endif
->  
->  #ifdef CONFIG_PCI_HOST_COMMON
-> -- 
-> 1.9.1
-> 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 52e5510..d3a73f9 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1119,6 +1119,8 @@ static const struct dmi_system_id pciirq_dmi_table[] __initconst = {
+ 
+ void __init pcibios_irq_init(void)
+ {
++	struct irq_routing_table *rtable = NULL;
++
+ 	DBG(KERN_DEBUG "PCI: IRQ init\n");
+ 
+ 	if (raw_pci_ops == NULL)
+@@ -1129,8 +1131,10 @@ void __init pcibios_irq_init(void)
+ 	pirq_table = pirq_find_routing_table();
+ 
+ #ifdef CONFIG_PCI_BIOS
+-	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN))
++	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN)) {
+ 		pirq_table = pcibios_get_irq_routing_table();
++		rtable = pirq_table;
++	}
+ #endif
+ 	if (pirq_table) {
+ 		pirq_peer_trick();
+@@ -1145,8 +1149,10 @@ void __init pcibios_irq_init(void)
+ 		 * If we're using the I/O APIC, avoid using the PCI IRQ
+ 		 * routing table
+ 		 */
+-		if (io_apic_assign_pci_irqs)
++		if (io_apic_assign_pci_irqs) {
++			kfree(rtable);
+ 			pirq_table = NULL;
++		}
+ 	}
+ 
+ 	x86_init.pci.fixup_irqs();
+-- 
+2.7.4
+
