@@ -4,47 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8C98C10F13
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:40:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E4FCC10F13
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:43:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 48B0D20872
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:40:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D977B20674
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Apr 2019 13:43:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="cvD0OXjs"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="LQnHvpDm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726946AbfDPNkD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Apr 2019 09:40:03 -0400
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:57056 "EHLO
+        id S1726641AbfDPNnJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Apr 2019 09:43:09 -0400
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:35592 "EHLO
         smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726751AbfDPNkD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2019 09:40:03 -0400
-Received: from mailhost.synopsys.com (dc8-mailhost1.synopsys.com [10.13.135.209])
+        with ESMTP id S1726070AbfDPNnJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Apr 2019 09:43:09 -0400
+Received: from mailhost.synopsys.com (badc-mailhost1.synopsys.com [10.192.0.17])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay.synopsys.com (Postfix) with ESMTPS id AC6D824E20C2;
-        Tue, 16 Apr 2019 06:40:02 -0700 (PDT)
+        by smtprelay.synopsys.com (Postfix) with ESMTPS id AFC7610C1019;
+        Tue, 16 Apr 2019 06:43:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1555422002; bh=5ucc2sU5hUHEUj0913fZv0b7Gspqyf7Gepvv+hv2vLQ=;
+        t=1555422188; bh=sTIsGtY/7jzWK4wBDoxPpuQVdSHqUfH/XUnutKB2l7M=;
         h=From:To:CC:Subject:Date:References:In-Reply-To:From;
-        b=cvD0OXjsJxa0zRYVF9Qrn+ixY/+DOPlFwn0LLdUwwaTn8QRf4J09Ra2c8AV1dpcLu
-         ebN7JBT9HaSXm1pF+BPe8+EJsviXjyPfpQXY/3P2yHSDSuSVgCrio82vA5jBAaGDqf
-         FmgPuwNvDD29tY/jAeCRTKM6V3pWiq9ihj33hlbZ2MwIWuPoYb/wkSApmC6fCV0UwL
-         YJY3sENfQWdB1sXQYE+PEW/UOb/wL2Sd7cCtNrB1XkV76fjV/dlwcHsv/MKEYSa7zM
-         vbYp4BAxjmgrVK4jZPx4ypUF0YTSohVR1O57fHFNiRzymenLjvwLodSGRxc9iQxmXj
-         c4Rs0aQNaLcOA==
-Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
+        b=LQnHvpDm4p+1yovxc0131GQ/CV8yvGX4adLVE56P+ylMvQL++FDo6CYkouucU994j
+         fkFu70tf+0eNpjpLCeywpVjXvjZICC8YsybtUlQFc5cEpAJjrcD0PiNorvWZirUvDX
+         ljwzPRb5rbG0alijeibzKQj34MxoieW5viCPuUmGn9XGROV4XZRqIcp2CpRHuFLQuN
+         vM4UoMk+92g2vzFER+jf8A8ZKVRmfF+6FXGIw/BxDnmgVDp9fKWCOR5HSHoUA2Ls6j
+         CvIWybO4i74dCDoV4x47wQhY8RAAV6cleI/WUlWAL0I97zLOwC+N1gcSw8s7g4FJUi
+         /7xiQ/kc/PuoA==
+Received: from US01WEHTC3.internal.synopsys.com (us01wehtc3.internal.synopsys.com [10.15.84.232])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 8E35BA006A;
-        Tue, 16 Apr 2019 13:40:02 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTPS id 732B6A005A;
+        Tue, 16 Apr 2019 13:43:08 +0000 (UTC)
 Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 16 Apr 2019 06:39:06 -0700
+ US01WEHTC3.internal.synopsys.com (10.15.84.232) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Tue, 16 Apr 2019 06:43:07 -0700
 Received: from DE02WEMBXA.internal.synopsys.com ([fe80::a014:7216:77d:d55c])
  by DE02WEHTCB.internal.synopsys.com ([::1]) with mapi id 14.03.0415.000; Tue,
- 16 Apr 2019 15:39:04 +0200
+ 16 Apr 2019 15:43:07 +0200
 From:   Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 To:     Vidya Sagar <vidyas@nvidia.com>,
         "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
@@ -58,26 +59,28 @@ CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "kthota@nvidia.com" <kthota@nvidia.com>,
         "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
         "sagar.tv@gmail.com" <sagar.tv@gmail.com>
-Subject: RE: [PATCH 1/2] PCI: dwc: Add API support to de-initialize host
-Thread-Topic: [PATCH 1/2] PCI: dwc: Add API support to de-initialize host
-Thread-Index: AQHU6uDRR4lSZpzHU0qiLOlhqj2OzKY+3UFg
-Date:   Tue, 16 Apr 2019 13:39:03 +0000
-Message-ID: <305100E33629484CBB767107E4246BBB0A22B657@de02wembxa.internal.synopsys.com>
+Subject: RE: [PATCH 2/2] PCI: dwc: Export APIs to support .remove()
+ implementation
+Thread-Topic: [PATCH 2/2] PCI: dwc: Export APIs to support .remove()
+ implementation
+Thread-Index: AQHU6uDUR7xXwQdAhE+dc4S79C4wm6Y+3dOQ
+Date:   Tue, 16 Apr 2019 13:43:06 +0000
+Message-ID: <305100E33629484CBB767107E4246BBB0A22B66D@de02wembxa.internal.synopsys.com>
 References: <1554380425-29215-1-git-send-email-vidyas@nvidia.com>
- <1554380425-29215-2-git-send-email-vidyas@nvidia.com>
-In-Reply-To: <1554380425-29215-2-git-send-email-vidyas@nvidia.com>
+ <1554380425-29215-3-git-send-email-vidyas@nvidia.com>
+In-Reply-To: <1554380425-29215-3-git-send-email-vidyas@nvidia.com>
 Accept-Language: pt-PT, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcZ3VzdGF2b1xh?=
  =?us-ascii?Q?cHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJh?=
- =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLWZlMzY4YzA2LTYwNGMtMTFlOS05ODdkLWY4OTRj?=
- =?us-ascii?Q?MjczODA0MlxhbWUtdGVzdFxmZTM2OGMwOC02MDRjLTExZTktOTg3ZC1mODk0?=
- =?us-ascii?Q?YzI3MzgwNDJib2R5LnR4dCIgc3o9IjIzMTUiIHQ9IjEzMTk5ODk1NTQyMDM5?=
- =?us-ascii?Q?NDE0NyIgaD0iZ3RoOGs5NGdKNG5CaDVMZEhyZ09GeFFGQXRBPSIgaWQ9IiIg?=
- =?us-ascii?Q?Ymw9IjAiIGJvPSIxIiBjaT0iY0FBQUFFUkhVMVJTUlVGTkNnVUFBQlFKQUFD?=
- =?us-ascii?Q?aklvN0FXZlRVQWRmdHk1d2JPWUVxMSszTG5CczVnU29PQUFBQUFBQUFBQUFB?=
+ =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLThlNzNhOGZhLTYwNGQtMTFlOS05ODdkLWY4OTRj?=
+ =?us-ascii?Q?MjczODA0MlxhbWUtdGVzdFw4ZTczYThmYy02MDRkLTExZTktOTg3ZC1mODk0?=
+ =?us-ascii?Q?YzI3MzgwNDJib2R5LnR4dCIgc3o9IjYyNDkiIHQ9IjEzMTk5ODk1Nzg0MDIw?=
+ =?us-ascii?Q?MzY0MiIgaD0iMmw2QkdQTXFDODljWGlUQkZOR2hxUHlza0dnPSIgaWQ9IiIg?=
+ =?us-ascii?Q?Ymw9IjAiIGJvPSIxIiBjaT0iY0FBQUFFUkhVMVJTUlVGTkNnVUFBQlFKQUFC?=
+ =?us-ascii?Q?NmY4bFFXdlRVQWZOdzIycGpjdkhSODNEYmFtTnk4ZEVPQUFBQUFBQUFBQUFB?=
  =?us-ascii?Q?QUFBQUFBQUFBQUFBQUhBQUFBQ2tDQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
  =?us-ascii?Q?QUVBQVFBQkFBQUFGdGJCcHdBQUFBQUFBQUFBQUFBQUFKNEFBQUJtQUdrQWJn?=
  =?us-ascii?Q?QmhBRzRBWXdCbEFGOEFjQUJzQUdFQWJnQnVBR2tBYmdCbkFGOEFkd0JoQUhR?=
@@ -155,66 +158,188 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 4, 2019 at 13:20:23, Vidya Sagar <vidyas@nvidia.com> wrote:
+On Thu, Apr 4, 2019 at 13:20:24, Vidya Sagar <vidyas@nvidia.com> wrote:
 
-> Add an API to group all the tasks to be done to de-initialize host which
-> can then be called by any Designware core based driver implementations
+> Export all configuration space access APIs and also other APIs to
+> support host controller drivers of Designware core based
 
 s/Designware/DesignWare
 
-> while adding .remove() support in their respective drivers.
+> implementations while adding support for .remove() hook to build their
+> respective drivers as modules
 >=20
 > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 > ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 7 +++++++
->  drivers/pci/controller/dwc/pcie-designware.h      | 5 +++++
->  2 files changed, 12 insertions(+)
+>  drivers/pci/controller/dwc/pcie-designware-host.c |  4 +++
+>  drivers/pci/controller/dwc/pcie-designware.c      | 38 +++++++++++++++++=
+++++++
+>  drivers/pci/controller/dwc/pcie-designware.h      | 35 ++++-------------=
+----
+>  3 files changed, 48 insertions(+), 29 deletions(-)
 >=20
 > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
 pci/controller/dwc/pcie-designware-host.c
-> index 3e4169e738a5..d7881490282d 100644
+> index d7881490282d..2a5332e5ccfa 100644
 > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
 > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -516,6 +516,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> @@ -333,6 +333,7 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+>  	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+>  			    upper_32_bits(msi_target));
+>  }
+> +EXPORT_SYMBOL_GPL(dw_pcie_msi_init);
+> =20
+>  int dw_pcie_host_init(struct pcie_port *pp)
+>  {
+> @@ -515,6 +516,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		dw_pcie_free_msi(pp);
 >  	return ret;
 >  }
+> +EXPORT_SYMBOL_GPL(dw_pcie_host_init);
 > =20
-> +void dw_pcie_host_deinit(struct pcie_port *pp)
-> +{
-> +	pci_stop_root_bus(pp->root_bus);
-> +	pci_remove_root_bus(pp->root_bus);
-> +	dw_pcie_free_msi(pp);
-> +}
-> +
+>  void dw_pcie_host_deinit(struct pcie_port *pp)
+>  {
+> @@ -522,6 +524,7 @@ void dw_pcie_host_deinit(struct pcie_port *pp)
+>  	pci_remove_root_bus(pp->root_bus);
+>  	dw_pcie_free_msi(pp);
+>  }
+> +EXPORT_SYMBOL_GPL(dw_pcie_host_deinit);
+> =20
 >  static int dw_pcie_access_other_conf(struct pcie_port *pp, struct pci_bu=
 s *bus,
 >  				     u32 devfn, int where, int size, u32 *val,
->  				     bool write)
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/c=
-ontroller/dwc/pcie-designware.h
-> index adff0c713665..ea8d1caf11c5 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -343,6 +343,7 @@ void dw_pcie_msi_init(struct pcie_port *pp);
->  void dw_pcie_free_msi(struct pcie_port *pp);
->  void dw_pcie_setup_rc(struct pcie_port *pp);
->  int dw_pcie_host_init(struct pcie_port *pp);
-> +void dw_pcie_host_deinit(struct pcie_port *pp);
->  int dw_pcie_allocate_domains(struct pcie_port *pp);
->  #else
->  static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
-> @@ -367,6 +368,10 @@ static inline int dw_pcie_host_init(struct pcie_port=
- *pp)
->  	return 0;
+> @@ -731,3 +734,4 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	val |=3D PORT_LOGIC_SPEED_CHANGE;
+>  	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+>  }
+> +EXPORT_SYMBOL_GPL(dw_pcie_setup_rc);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/c=
+ontroller/dwc/pcie-designware.c
+> index 31f6331ca46f..f98e2f284ae1 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -40,6 +40,7 @@ int dw_pcie_read(void __iomem *addr, int size, u32 *val=
+)
+> =20
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+> +EXPORT_SYMBOL_GPL(dw_pcie_read);
+> =20
+>  int dw_pcie_write(void __iomem *addr, int size, u32 val)
+>  {
+> @@ -57,6 +58,7 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val=
+)
+> =20
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+> +EXPORT_SYMBOL_GPL(dw_pcie_write);
+> =20
+>  u32 __dw_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+>  		       size_t size)
+> @@ -89,6 +91,42 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __i=
+omem *base, u32 reg,
+>  		dev_err(pci->dev, "Write DBI address failed\n");
 >  }
 > =20
-> +static inline void dw_pcie_host_deinit(struct pcie_port *pp)
+> +void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
 > +{
+> +	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x4, val);
 > +}
+> +EXPORT_SYMBOL_GPL(dw_pcie_writel_dbi);
 > +
->  static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+> +u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
+> +{
+> +	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x4);
+> +}
+> +EXPORT_SYMBOL_GPL(dw_pcie_readl_dbi);
+> +
+> +void dw_pcie_writew_dbi(struct dw_pcie *pci, u32 reg, u16 val)
+> +{
+> +	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x2, val);
+> +}
+> +EXPORT_SYMBOL_GPL(dw_pcie_writew_dbi);
+> +
+> +u16 dw_pcie_readw_dbi(struct dw_pcie *pci, u32 reg)
+> +{
+> +	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x2);
+> +}
+> +EXPORT_SYMBOL_GPL(dw_pcie_readw_dbi);
+> +
+> +void dw_pcie_writeb_dbi(struct dw_pcie *pci, u32 reg, u8 val)
+> +{
+> +	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x1, val);
+> +}
+> +EXPORT_SYMBOL_GPL(dw_pcie_writeb_dbi);
+> +
+> +u8 dw_pcie_readb_dbi(struct dw_pcie *pci, u32 reg)
+> +{
+> +	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x1);
+> +}
+> +EXPORT_SYMBOL_GPL(dw_pcie_readb_dbi);
+> +
+>  static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 r=
+eg)
 >  {
->  	return 0;
+>  	u32 offset =3D PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/c=
+ontroller/dwc/pcie-designware.h
+> index ea8d1caf11c5..86df36701a37 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -265,35 +265,12 @@ void dw_pcie_disable_atu(struct dw_pcie *pci, int i=
+ndex,
+>  			 enum dw_pcie_region_type type);
+>  void dw_pcie_setup(struct dw_pcie *pci);
+> =20
+> -static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 =
+val)
+> -{
+> -	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x4, val);
+> -}
+> -
+> -static inline u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
+> -{
+> -	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x4);
+> -}
+> -
+> -static inline void dw_pcie_writew_dbi(struct dw_pcie *pci, u32 reg, u16 =
+val)
+> -{
+> -	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x2, val);
+> -}
+> -
+> -static inline u16 dw_pcie_readw_dbi(struct dw_pcie *pci, u32 reg)
+> -{
+> -	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x2);
+> -}
+> -
+> -static inline void dw_pcie_writeb_dbi(struct dw_pcie *pci, u32 reg, u8 v=
+al)
+> -{
+> -	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x1, val);
+> -}
+> -
+> -static inline u8 dw_pcie_readb_dbi(struct dw_pcie *pci, u32 reg)
+> -{
+> -	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x1);
+> -}
+> +void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
+> +u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
+> +void dw_pcie_writew_dbi(struct dw_pcie *pci, u32 reg, u16 val);
+> +u16 dw_pcie_readw_dbi(struct dw_pcie *pci, u32 reg);
+> +void dw_pcie_writeb_dbi(struct dw_pcie *pci, u32 reg, u8 val);
+> +u8 dw_pcie_readb_dbi(struct dw_pcie *pci, u32 reg);
+> =20
+>  static inline void dw_pcie_writel_dbi2(struct dw_pcie *pci, u32 reg, u32=
+ val)
+>  {
 > --=20
 > 2.7.4
 
+Seems harmless. After word replacement, ack for the whole patch:
+
+Acked-by: Gustavo Pimentel=20
+<gustavo.pimentel@synopsys.com>
+
+Thanks
+Gustavo=20
+Pimentel
