@@ -2,134 +2,246 @@ Return-Path: <SRS0=SWM8=ST=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 951C3C282DA
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37315C282DA
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 22:49:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61E6321850
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:54:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F187F2184B
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 22:49:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555538064;
-	bh=72Y5yaN0OBfC9mUcvHjlGNLJip4pGYju/K0LqKwOLwc=;
+	s=default; t=1555541342;
+	bh=TP8skHcSw4kJ4SHsammlirpYr7t+TKp7R9s/GWQwwGU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=JCPhaJ5wBvJXlkyOJE3wOiQdlM9Txd01Ydv12qHpfLT4M24yb6vx/lml+icc10H9U
-	 edEk8mOgtXFDFrqGXmuiwGodBh1eyav34MZue0lBV3Uvi7hf8WeLffBTGq6mYaMrQ7
-	 nEHJLoVJ9p4U5MCo8V433BtqpFP6G0IQ2a5Sk7pE=
+	b=2WzKwBVRJ7SP0z0UszKNPwG5iZwwXeVx+SohYabbfjJPp1Oz+wXw8i4dHzTb9HT8d
+	 Z+J7TGIsY6boDQpZlnG7shkKXgUfeHUmNOs8BkqwM0y3mYi5LD+t9oUt5rc3WmSjbV
+	 0858FHilhnwZA9QpJRhtGlZk1hTiyepJwT7FHXxg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729500AbfDQVyX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 17:54:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60898 "EHLO mail.kernel.org"
+        id S1730361AbfDQWtB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Apr 2019 18:49:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35180 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727013AbfDQVyX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Apr 2019 17:54:23 -0400
+        id S1726931AbfDQWtB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Apr 2019 18:49:01 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 02D132183E;
-        Wed, 17 Apr 2019 21:54:21 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5CB20217D7;
+        Wed, 17 Apr 2019 22:48:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555538062;
-        bh=72Y5yaN0OBfC9mUcvHjlGNLJip4pGYju/K0LqKwOLwc=;
+        s=default; t=1555541339;
+        bh=TP8skHcSw4kJ4SHsammlirpYr7t+TKp7R9s/GWQwwGU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=DYyFEOoGarNIlIT1PXcglispXnZEI28ZJKPVL8PDwblSBxon5P0mdc8YFX8tDVIeE
-         ao3gUQRABJs/t6Px3rca2tptluOmgl2aizC1AX7DxR79MlaIzFdSNmrrsPl8YBp4QC
-         zRssT3BQEez1cOz0oqeFOWgKY3xNb+UyDDuaduWw=
-Date:   Wed, 17 Apr 2019 16:54:20 -0500
+        b=WavB5CuOYUBUZeydjMh1tvO2jcC+NH+pZgONNcAEnFaw5WAYypNeLuU55hNC3PIVi
+         P2mvx6B0sKx8Q+LFx5S9Yy8rdeeCPpaIV3prmkymWN345HqvH0xJiMwVu+oY29Ygz+
+         rmN+x9KIaKoMBV8DlrgQWiMBEB+T7ee6zkTsTPa8=
+Date:   Wed, 17 Apr 2019 17:48:58 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Julia Lawall <julia.lawall@lip6.fr>
-Cc:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        kbuild-all@01.org, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
+To:     Wesley Sheng <wesley.sheng@microchip.com>
+Cc:     kurt.schwemmer@microsemi.com, logang@deltatee.com,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kirill Smelkov <kirr@nexedi.com>
-Subject: Re: [PATCH] pci/switchtec: fix stream_open.cocci warnings (fwd)
-Message-ID: <20190417215420.GV126710@google.com>
-References: <alpine.DEB.2.21.1904131849350.2536@hadrien>
+        wesleyshenggit@sina.com
+Subject: Re: [PATCH v2 1/2] switchtec: Fix false maximum supported PCIe
+ function number issue
+Message-ID: <20190417224858.GW126710@google.com>
+References: <1555339302-31829-1-git-send-email-wesley.sheng@microchip.com>
+ <1555339302-31829-2-git-send-email-wesley.sheng@microchip.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.1904131849350.2536@hadrien>
+In-Reply-To: <1555339302-31829-2-git-send-email-wesley.sheng@microchip.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, Apr 13, 2019 at 06:50:57PM +0200, Julia Lawall wrote:
-> Hello,
-> 
-> Kirill will explain about this issue.
-> 
-> julia
-> 
-> ---------- Forwarded message ----------
-> Date: Sat, 13 Apr 2019 11:22:51 +0800
-> From: kbuild test robot <lkp@intel.com>
-> To: kbuild@01.org
-> Cc: Julia Lawall <julia.lawall@lip6.fr>
-> Subject: [PATCH] pci/switchtec: fix stream_open.cocci warnings
-> 
-> CC: kbuild-all@01.org
-> TO: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-> CC: Logan Gunthorpe <logang@deltatee.com>
-> CC: Bjorn Helgaas <helgaas@kernel.org>
-> CC: linux-pci@vger.kernel.org
-> CC: linux-kernel@vger.kernel.org
-> 
-> From: kbuild test robot <lkp@intel.com>
-> 
-> drivers/pci/switch/switchtec.c:395:1-17: ERROR: switchtec_fops: .read() can deadlock .write(); change nonseekable_open -> stream_open to fix.
-> 
-> Generated by: scripts/coccinelle/api/stream_open.cocci
-> 
-> Fixes: 8a29a3bae2a2 ("pci/switchtec: Don't use completion's wait queue")
-> Signed-off-by: kbuild test robot <lkp@intel.com>
+On Mon, Apr 15, 2019 at 10:41:41PM +0800, Wesley Sheng wrote:
+> The hardware supports up to 255 PFFs and the driver only supports 48, so
+> this patch updates the driver to support them all. To be backward
+> compatible, a new ioctl and corresponding data structure are created,
+> while keep the deprecated one.
 
-Based on Kirill's subsequent email saying this is already queued to
-the merge window, I assume I need to do nothing here.
+The commit log needs to include some kind of detail about what "PFF"
+is.  Logan provided the following, which looks like a good starting
+point:
 
-I think a signed-off-by from a robot, i.e., not from a real person, is
-meaningless, and I don't think I would personally accept it.  It's
-certainly OK to indicate that a patch was auto-generated, but I think
-a real person still needs to take responsibility for it.
+  PFF is really a concept internal to the Switchtec device. It stands
+  for PCIe Function Framework. Essentially, there is a bank of
+  registers for every PCIe Function (aka endpoint) in the switch. When
+  I originally wrote the driver, I assumed incorrectly there would
+  only ever be one PFF per port and the maximum number of ports for
+  Switchtec parts is 48. In fact, the hardware supports up to 255 and
+  there are typically two PFFs per upstream port (one for the port
+  itself and one for the management endpoint).
 
-Documentation/process/submitting-patches.rst says it must contain a
-real name (no pseudonyms or anonymous contributions), and I don't
-think a robot fits in the spirit of that.
-
-I see that
-https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git/commit/?id=8a29a3bae2a2
-(mentioned below) does have a good signed-off-by from Sebastian, but
-that's not *this* patch, so I don't know what's what.
-
-Bjorn
+I had a couple minor questions below that aren't exactly related to
+this patch.  If you did decide to address them (in a separate patch,
+of course), you could expand the commit log for this patch with the
+PFF info.  If the questions below don't need anything, I can
+incorporate something about PFF myself.
 
 > ---
+>  drivers/pci/switch/switchtec.c       | 39 +++++++++++++++++++++++++-----------
+>  include/linux/switchtec.h            |  2 +-
+>  include/uapi/linux/switchtec_ioctl.h | 13 +++++++++++-
+>  3 files changed, 40 insertions(+), 14 deletions(-)
 > 
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git linux-5.0.y-rt-rebase
-> head:   794c294ae4483c240429c25a0d18e272e92c94de
-> commit: 8a29a3bae2a2dfb0116cd8791d9700515d6e765e [154/311] pci/switchtec: Don't use completion's wait queue
-> :::::: branch date: 7 hours ago
-> :::::: commit date: 7 hours ago
-> 
-> Please take the patch only if it's a positive warning. Thanks!
-> 
->  switchtec.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
+> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+> index e22766c..7df9a69 100644
 > --- a/drivers/pci/switch/switchtec.c
 > +++ b/drivers/pci/switch/switchtec.c
-> @@ -392,7 +392,7 @@ static int switchtec_dev_open(struct ino
->  		return PTR_ERR(stuser);
-> 
->  	filp->private_data = stuser;
-> -	nonseekable_open(inode, filp);
-> +	stream_open(inode, filp);
-> 
->  	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
+> @@ -658,19 +658,25 @@ static int ioctl_flash_part_info(struct switchtec_dev *stdev,
+>  
+>  static int ioctl_event_summary(struct switchtec_dev *stdev,
+>  	struct switchtec_user *stuser,
+> -	struct switchtec_ioctl_event_summary __user *usum)
+> +	struct switchtec_ioctl_event_summary __user *usum,
+> +	size_t size)
+>  {
+> -	struct switchtec_ioctl_event_summary s = {0};
+> +	struct switchtec_ioctl_event_summary *s;
+>  	int i;
+>  	u32 reg;
+> +	int ret = 0;
+>  
+> -	s.global = ioread32(&stdev->mmio_sw_event->global_summary);
+> -	s.part_bitmap = ioread32(&stdev->mmio_sw_event->part_event_bitmap);
+> -	s.local_part = ioread32(&stdev->mmio_part_cfg->part_event_summary);
+> +	s = kzalloc(sizeof(*s), GFP_KERNEL);
+> +	if (!s)
+> +		return -ENOMEM;
+> +
+> +	s->global = ioread32(&stdev->mmio_sw_event->global_summary);
+> +	s->part_bitmap = ioread32(&stdev->mmio_sw_event->part_event_bitmap);
+> +	s->local_part = ioread32(&stdev->mmio_part_cfg->part_event_summary);
+>  
+>  	for (i = 0; i < stdev->partition_count; i++) {
+>  		reg = ioread32(&stdev->mmio_part_cfg_all[i].part_event_summary);
+> -		s.part[i] = reg;
+> +		s->part[i] = reg;
+>  	}
+>  
+>  	for (i = 0; i < SWITCHTEC_MAX_PFF_CSR; i++) {
+
+Should this be "i < stdev->pff_csr_count", as in
+check_link_state_events(), enable_link_state_events() and
+mask_all_events()?  If so, I assume the read and check of vendor_id
+would be unnecessary?
+
+The last loop in init_pff() currently checks against
+SWITCHTEC_MAX_PFF_CSR:
+
+        for (i = 0; i < ARRAY_SIZE(pcfg->dsp_pff_inst_id); i++) {
+                reg = ioread32(&pcfg->dsp_pff_inst_id[i]);
+                if (reg < SWITCHTEC_MAX_PFF_CSR)
+                        stdev->pff_local[reg] = 1;
+        }
+
+Should it check "reg < stdev->pff_csr_count" instead?  It looks like
+mask_all_events(), the only reader of pff_local[], only looks up to
+pff_csr_count anyway.
+
+> @@ -679,15 +685,19 @@ static int ioctl_event_summary(struct switchtec_dev *stdev,
+>  			break;
+>  
+>  		reg = ioread32(&stdev->mmio_pff_csr[i].pff_event_summary);
+> -		s.pff[i] = reg;
+> +		s->pff[i] = reg;
+>  	}
+>  
+> -	if (copy_to_user(usum, &s, sizeof(s)))
+> -		return -EFAULT;
+> +	if (copy_to_user(usum, s, size)) {
+> +		ret = -EFAULT;
+> +		goto error_case;
+> +	}
+>  
+>  	stuser->event_cnt = atomic_read(&stdev->event_cnt);
+>  
+> -	return 0;
+> +error_case:
+> +	kfree(s);
+> +	return ret;
+>  }
+>  
+>  static u32 __iomem *global_ev_reg(struct switchtec_dev *stdev,
+> @@ -977,8 +987,9 @@ static long switchtec_dev_ioctl(struct file *filp, unsigned int cmd,
+>  	case SWITCHTEC_IOCTL_FLASH_PART_INFO:
+>  		rc = ioctl_flash_part_info(stdev, argp);
+>  		break;
+> -	case SWITCHTEC_IOCTL_EVENT_SUMMARY:
+> -		rc = ioctl_event_summary(stdev, stuser, argp);
+> +	case SWITCHTEC_IOCTL_EVENT_SUMMARY_LEGACY:
+> +		rc = ioctl_event_summary(stdev, stuser, argp,
+> +					 sizeof(struct switchtec_ioctl_event_summary_legacy));
+>  		break;
+>  	case SWITCHTEC_IOCTL_EVENT_CTL:
+>  		rc = ioctl_event_ctl(stdev, argp);
+> @@ -989,6 +1000,10 @@ static long switchtec_dev_ioctl(struct file *filp, unsigned int cmd,
+>  	case SWITCHTEC_IOCTL_PORT_TO_PFF:
+>  		rc = ioctl_port_to_pff(stdev, argp);
+>  		break;
+> +	case SWITCHTEC_IOCTL_EVENT_SUMMARY:
+> +		rc = ioctl_event_summary(stdev, stuser, argp,
+> +					 sizeof(struct switchtec_ioctl_event_summary));
+> +		break;
+>  	default:
+>  		rc = -ENOTTY;
+>  		break;
+> diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+> index 52a079b..0cfc34a 100644
+> --- a/include/linux/switchtec.h
+> +++ b/include/linux/switchtec.h
+> @@ -20,7 +20,7 @@
+>  #include <linux/cdev.h>
+>  
+>  #define SWITCHTEC_MRPC_PAYLOAD_SIZE 1024
+> -#define SWITCHTEC_MAX_PFF_CSR 48
+> +#define SWITCHTEC_MAX_PFF_CSR 255
+>  
+>  #define SWITCHTEC_EVENT_OCCURRED BIT(0)
+>  #define SWITCHTEC_EVENT_CLEAR    BIT(0)
+> diff --git a/include/uapi/linux/switchtec_ioctl.h b/include/uapi/linux/switchtec_ioctl.h
+> index 4f4daf8..c912b5a 100644
+> --- a/include/uapi/linux/switchtec_ioctl.h
+> +++ b/include/uapi/linux/switchtec_ioctl.h
+> @@ -50,7 +50,7 @@ struct switchtec_ioctl_flash_part_info {
+>  	__u32 active;
+>  };
+>  
+> -struct switchtec_ioctl_event_summary {
+> +struct switchtec_ioctl_event_summary_legacy {
+>  	__u64 global;
+>  	__u64 part_bitmap;
+>  	__u32 local_part;
+> @@ -59,6 +59,15 @@ struct switchtec_ioctl_event_summary {
+>  	__u32 pff[48];
+>  };
+>  
+> +struct switchtec_ioctl_event_summary {
+> +	__u64 global;
+> +	__u64 part_bitmap;
+> +	__u32 local_part;
+> +	__u32 padding;
+> +	__u32 part[48];
+> +	__u32 pff[255];
+> +};
+> +
+>  #define SWITCHTEC_IOCTL_EVENT_STACK_ERROR		0
+>  #define SWITCHTEC_IOCTL_EVENT_PPU_ERROR			1
+>  #define SWITCHTEC_IOCTL_EVENT_ISP_ERROR			2
+> @@ -127,6 +136,8 @@ struct switchtec_ioctl_pff_port {
+>  	_IOWR('W', 0x41, struct switchtec_ioctl_flash_part_info)
+>  #define SWITCHTEC_IOCTL_EVENT_SUMMARY \
+>  	_IOR('W', 0x42, struct switchtec_ioctl_event_summary)
+> +#define SWITCHTEC_IOCTL_EVENT_SUMMARY_LEGACY \
+> +	_IOR('W', 0x42, struct switchtec_ioctl_event_summary_legacy)
+>  #define SWITCHTEC_IOCTL_EVENT_CTL \
+>  	_IOWR('W', 0x43, struct switchtec_ioctl_event_ctl)
+>  #define SWITCHTEC_IOCTL_PFF_TO_PORT \
+> -- 
+> 2.7.4
 > 
