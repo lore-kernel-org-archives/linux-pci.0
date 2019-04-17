@@ -2,194 +2,122 @@ Return-Path: <SRS0=SWM8=ST=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0620BC282DA
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 11:23:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83353C282DA
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 13:08:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD656206BA
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 11:23:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 539D321773
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 13:08:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="gwjLLxh3"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="uxQtU8on"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726695AbfDQLXG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 07:23:06 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:1352 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731520AbfDQLXG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2019 07:23:06 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cb70c9d0002>; Wed, 17 Apr 2019 04:23:10 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Wed, 17 Apr 2019 04:23:04 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Wed, 17 Apr 2019 04:23:04 -0700
-Received: from [10.24.192.63] (10.124.1.5) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 17 Apr
- 2019 11:23:01 +0000
-Subject: Re: [PATCH 26/30] dt-bindings: pci: tegra: Document nvidia,plat-gpios
- optional prop
-To:     Thierry Reding <thierry.reding@gmail.com>
-CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
-        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
-        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-27-mmaddireddy@nvidia.com> <20190415141654.GA29254@ulmo>
- <b575fd56-0d31-bbe2-deef-5a21d6e4b33e@nvidia.com>
- <20190416153443.GA30777@ulmo>
-X-Nvconfidentiality: public
-From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <51957dce-5e0b-647b-d6b8-0cc118ee95bc@nvidia.com>
-Date:   Wed, 17 Apr 2019 16:52:46 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+        id S1732181AbfDQNId (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Apr 2019 09:08:33 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:59154 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726800AbfDQNId (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2019 09:08:33 -0400
+Received: from fllv0035.itg.ti.com ([10.64.41.0])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x3HD8Dip100392;
+        Wed, 17 Apr 2019 08:08:13 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1555506493;
+        bh=r5kq205iU1iqPvi87w82BmwDqtQo9PeTN3yj5l/qvnE=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=uxQtU8on9l0t3MZwvxgE2v1h3I3s7JVm3jz/3NkCJk7PIP5Fbgv8hxA2ScdICLR5Q
+         /LDzUw7wLru42GNoT37BP7wmZ//tCTYpRInzKUa01SJg+3oVcHYbbxnS/FWCxkkEOv
+         0BrMrCQ/j5yAGDXx8uVeqhFt+yDvgW9qt81K7umQ=
+Received: from DLEE108.ent.ti.com (dlee108.ent.ti.com [157.170.170.38])
+        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x3HD8D4M021215
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 17 Apr 2019 08:08:13 -0500
+Received: from DLEE105.ent.ti.com (157.170.170.35) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Wed, 17
+ Apr 2019 08:08:12 -0500
+Received: from fllv0040.itg.ti.com (10.64.41.20) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
+ Frontend Transport; Wed, 17 Apr 2019 08:08:12 -0500
+Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id x3HD85C0075254;
+        Wed, 17 Apr 2019 08:08:07 -0500
+Subject: Re: [PATCH v3 14/26] PCI: keystone: Add support for PCIe RC in AM654x
+ Platforms
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+CC:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-arm-kernel@axis.com>, Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>
+References: <20190325093947.32633-1-kishon@ti.com>
+ <20190325093947.32633-15-kishon@ti.com> <20190413152633.GF126710@google.com>
+ <20190416141525.GD14705@red-moon>
+From:   Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <fd5c114b-5a67-cca9-d9fb-750557f14970@ti.com>
+Date:   Wed, 17 Apr 2019 18:36:58 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <20190416153443.GA30777@ulmo>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20190416141525.GD14705@red-moon>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1555500190; bh=CQ7OXXqdQN1dDu8pw6XeXwPRYA9hBut/CCt5omXXtFI=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:
-         Content-Transfer-Encoding:Content-Language;
-        b=gwjLLxh3Xt1sS6bSywoasbNAj3aIdsnMFq7bbk7A5Z9qZHNHyaLriCjTAN88WjKCN
-         KdVG0WlzQpNzv3vzxZ42w1IjCPzvpyf6OwV/QZ6GqFxHv0H9huRmDtqEjt40NCcR6i
-         JZN0P78FV6OL0liQi1QYhkrxW4ROPDnQPwHUJ4tIABTh3YZ+azcnLa/1FmjNaAsQ2h
-         JnbzJuGBmRtnSVFqlEREgNWouyK+iJ7z+OQUo9BeXnZDwRzcTnf4eOxHa1FMqfjFVc
-         sNgvn9um+x9T76HyM6O1fprQ+Dc+NuD4jt09rwUbOWCf2WQaDSfbApzTnU5LxFM3Sn
-         tPmTITYRp7y8w==
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Lorenzo,
 
-
-On 16-Apr-19 9:04 PM, Thierry Reding wrote:
-> On Mon, Apr 15, 2019 at 11:28:29PM +0530, Manikanta Maddireddy wrote:
+On 16/04/19 7:45 PM, Lorenzo Pieralisi wrote:
+> On Sat, Apr 13, 2019 at 10:26:33AM -0500, Bjorn Helgaas wrote:
+>> On Mon, Mar 25, 2019 at 03:09:35PM +0530, Kishon Vijay Abraham I wrote:
+>>> Add PCIe RC support for AM654x Platforms in pci-keystone.c
 >>
->> On 15-Apr-19 7:46 PM, Thierry Reding wrote:
->>> On Thu, Apr 11, 2019 at 10:33:51PM +0530, Manikanta Maddireddy wrote:
->>>> Document "nvidia,plat-gpios" optional property which supports configuring
->>>> of platform specific gpios.
->>>>
->>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->>>> ---
->>>>  Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt | 3 +++
->>>>  1 file changed, 3 insertions(+)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
->>>> index fbbd3bcb3435..dca8393b86d1 100644
->>>> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
->>>> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
->>>> @@ -73,6 +73,8 @@ Optional properties:
->>>>    pinctrl phandle to allow driver to explicitly put PCIe IO in DPD state.
->>>>  - pinctrl-1: PCIe IO(bias & REFCLK) deep power down(DPD) enable state.
->>>>    Pass pinctrl phandle to allow driver bring PCIe IO out of DPD state.
->>>> +- nvidia,plat-gpios: A list of platform specific gpios which controls
->>>> +  endpoint's internal regulator or PCIe logic.
->>> We discussed this with Vidya during review of the Tegra194 PCIe device
->>> tree bindings and arrived at the conclusion that all of the GPIOs that
->>> need to be controlled for PCI to work can be modelled as proper device
->>> nodes (I think regulator and GPIO-controlled muxes were the only two
->>> use-cases for which we need this).
->>>
->>> Can the same be done for this PCI controller? What use-cases are we
->>> talking about?
->> In Tegra194 case it is apt to use regulator framework because gpios are used
->> to control regulators. However I published this patch to control vendor defined
->> gpios in endpoints. For ex: isolate gpio in RTL8111. Since I am not sure if
->> regulator framework is apt, I published as gpio patch.
->>>>  Required properties on Tegra124 and later (deprecated):
->>>>  - phys: Must contain an entry for each entry in phy-names.
->>>> @@ -567,6 +569,7 @@ Board DTS:
->>>>  		pci@2,0 {
->>>>  			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-4}>;
->>>>  			phy-names = "pcie-0";
->>>> +			nvidia,plat-gpios = <&gpio TEGRA_GPIO(X, 3) GPIO_ACTIVE_HIGH>;
->>>>  			status = "okay";
->>>>  		};
->>>>  	};
->>> I recall this being the setup for Jetson Nano and the X.3 GPIO going to
->>> an Ethernet device. Let's find out what exactly this GPIO is used for
->>> and why we need it to be set up as part of the PCI controller driver
->>> rather than the Ethernet device.
->>>
->>> If it turns out we can't model this other than with a generic GPIO type
->>> of property we need a better explanation than the above, and the Jetson
->>> Nano use-case would provide that explanation.
->>>
->>> And if indeed we cannot model this more accurately, I think we should
->>> use something like the gpio-hog binding rather than some custom PCI
->>> controller property.
->>>
->>> Thierry
->> Yes, in Jetson Nano gpio x.3 is controlling isolate pin of RTL8111.
->> RTL8111 datasheet available online says that as long as isolate
->> pin is asserted it'll not sample RX lanes and doesn't drive TX lanes.
->> Since RTL8111 PCIe IP should be active when PCIe host driver is
->> attempting link up, this gpio can be controlled by host driver only.
+>>> +static int ks_pcie_am654_msi_host_init(struct pcie_port *pp)
+>>> +{
+>>> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>>> +	struct device *dev = pci->dev;
+>>> +
+>>> +	dev_vdbg(dev, "dummy function so that DW core doesn't configure MSI\n");
 >>
->> I didn't go for gpio-hog because this gpio should be asserted
->> during suspend, to enable wake on LAN.
-> I don't see code in gpiolib that would cause this to be deasserted
-> during suspend.
->
-> Is there ever a need to manipulate this GPIO at all? Or do we just
-> need to make sure that it's always asserted?
+>> Drive-by nit: this is the first occurrence of dev_vdbg() in
+>> drivers/pci, and while dev_vdbg() might be useful somewhere, I'm not
+>> sure this is the place.
+>>
+>> It took me 10 minutes of archaeology to figure out what it is and how
+>> to use it.  Apparently it does nothing at all unless you define
+>> VERBOSE_DEBUG, which can be set via Kconfig in a few cases:
+>>
+>>   drivers/dma/Makefile:subdir-ccflags-$(CONFIG_DMADEVICES_VDEBUG) += -DVERBOSE_DEBUG
+>>   drivers/usb/dwc2/Makefile:ccflags-$(CONFIG_USB_DWC2_VERBOSE)    += -DVERBOSE_DEBUG
+>>   drivers/usb/gadget/Makefile:subdir-ccflags-$(CONFIG_USB_GADGET_VERBOSE) += -DVERBOSE_DEBUG
+>>
+>> but is more commonly set by adding "#define VERBOSE_DEBUG" manually
+>> in a source file.  Neither one applies here, so I don't think this
+>> actually does anything.
+>>
+>> Anyway, I suspect this particular message would make a lot of sense as
+>> a *comment*, but maybe not as a mysterious dev_vdbg() that never
+>> actually does anything.
+> 
+> I agree. Kishon ? I would do what Bjorn suggests here, please let me
+> know.
 
-Following steps
-1) ISOLATEB gpio should be deasserted during boot to enable PCIe section
-of RTL8111
-2) PCIe host driver enumerates RTL8111
-3) When suspend is initiated, ISOLATEB gpio should be asserted after PCIe
-host controller suspend is completed to disable PCIe section of RTL8111
-and enable Wake on LAN
-4) During resume, first ISOLATE gpio should be deasserted to get PCIe link up
+Sure.
 
-> The problem with adding this to nvidia,plat-gpios in the PCI root port
-> node is that there's no context at all, so the PCI host driver can't
-> really do anything with this, other than perhaps exactly one fixed
-> operation, but then it's pretty much equivalent to a gpio-hog.
->
-> If we do need control over the pin, I think it might be worth looking at
-> adding support to gpiolib for initial pin configuration (so that it does
-> not hog the GPIO, but still configures it). That would allow us to take
-> the PCI device out of isolation initially and once the device has been
-> probed we can control the GPIO from the PCI device. That way the device
-> driver has the necessary context to assert and deassert the pin at the
-> appropriate time, while still giving us the possibility to make the
-> device appear on the PCI bus.
-
-ISOLATEB gpio disables the PCIe section in RTL8111(Rx is not sampled &
-doesn't drive Tx), if PCI client driver controls it, then it has
-to do it after host controller suspend_noirq callback is completed.
-Only suspend callback available after suspend_noirq is syscore_ops.
-I didn't go with it because it is take void arguments, so client
-driver has to maintain global pointers and I see only core drivers
-like irqchip, clk, etc are using it.
-
-Manikanta
-
->
-> As a side-note, I think it would've been better if the ISOLATEB signal
-> was wired up such that it would've been active by default. That would
-> mean that if the bootloader and/or OS were not aware of the ISOLATEB
-> signal, they would still be able to use the Ethernet device. I think
-> that would've been a more sensible default, especially if the bus that
-> the device is on requires the signal to be controlled without even
-> knowing that the device exists.
->
-> Thierry
-
+Thanks
+Kishon
