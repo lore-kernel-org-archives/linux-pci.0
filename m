@@ -4,122 +4,121 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6EE7C282DA
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 20:35:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58836C282DA
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:35:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 999A92183E
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 20:35:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E4B02183E
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555533317;
-	bh=Us4Mh7NyDCpZ8PIITSv+u78YLzC6mwrmxrBVkQ4WdS4=;
+	s=default; t=1555536946;
+	bh=SJZSA0fLSDTiWyoKeLOooKR6+2R8Vzq7qlRdn+v/hVU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Aj/Ze4JgbgxICxmmO1F/qkfgKYjY2LrQykLx/AVOMW6tH140Eb13V9SxiVimJNYt7
-	 ze2dPUZMZIOOqssysOSWIRVsdzES88GlcVpUR5V1r0Hd4pxK9UfPAx97/bZKX/3cot
-	 FAXEY3MT1QWFZlk6Fyh39oLficjCYI03vldALzPs=
+	b=nASerDTGqf5UGhEhdYeAWKtu42kpduyzyycAyRGXid/3XLqAc/lk1vouPTpmU/IuQ
+	 khnjlKgHY7uvOGRMDLxsUVzbfJ8+2VQh8nx21kUzPpd8tqcIVknLaNyCZ0kTbwhCWH
+	 8jJ9yjXjtMkrj8w0Ya8eTv4408vdkapxgflFzZtE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727147AbfDQUfQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 16:35:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46722 "EHLO mail.kernel.org"
+        id S1728237AbfDQVfp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Apr 2019 17:35:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48940 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727013AbfDQUfQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Apr 2019 16:35:16 -0400
+        id S1725848AbfDQVfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Apr 2019 17:35:45 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9B91B217F4;
-        Wed, 17 Apr 2019 20:35:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 61E57217FA;
+        Wed, 17 Apr 2019 21:35:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555533315;
-        bh=Us4Mh7NyDCpZ8PIITSv+u78YLzC6mwrmxrBVkQ4WdS4=;
+        s=default; t=1555536944;
+        bh=SJZSA0fLSDTiWyoKeLOooKR6+2R8Vzq7qlRdn+v/hVU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=02FwyfrZnnCqceCZcyg0aTSI1q6tBoMZKA6mviL57ryyHUJ/R29KCxM9DG5cgT3YE
-         aCZVqqTtqKfWH49R8b28XsXEH1pXOMwqeRXCRTbS1z9nMq4d2Xg5+4iku2MGJ4TqzV
-         kCLxr4oVKT2OU7Qs/8yvVmdrL6OOOXzGNnEScfvw=
-Date:   Wed, 17 Apr 2019 15:35:14 -0500
+        b=C0tAra3z17APRqg1cXBU+ZIs+qMG8GgkE5e83EhUPlx6bkF1brK8gUWDQxLtdNXJK
+         WmlGH8rdgP9A7vrtJYko1vKA7ETlkHXUDi9Mhtqzd4va7ImwmAMpm9aovmTuUetPX7
+         cXxIxus6lTn3u2gb97uQlXWTmJ1Fo6Urc3sqEXqk=
+Date:   Wed, 17 Apr 2019 16:35:42 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Wenwen Wang <wang6495@umn.edu>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" 
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4] x86/PCI: fix a memory leak bug
-Message-ID: <20190417203514.GT126710@google.com>
-References: <1555510730-9060-1-git-send-email-wang6495@umn.edu>
+To:     Mohan Kumar <mohankumar718@gmail.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: pci: This patch fix the following checkpatch
+ warning.
+Message-ID: <20190417213542.GU126710@google.com>
+References: <1555433020-3830-1-git-send-email-mohankumar718@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1555510730-9060-1-git-send-email-wang6495@umn.edu>
+In-Reply-To: <1555433020-3830-1-git-send-email-mohankumar718@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 17, 2019 at 09:18:50AM -0500, Wenwen Wang wrote:
-> In pcibios_irq_init(), the PCI IRQ routing table 'pirq_table' is firstly
-> found through pirq_find_routing_table(). If the table is not found and
-> 'CONFIG_PCI_BIOS' is defined, the table is then allocated in
-> pcibios_get_irq_routing_table() using kmalloc(). In the following
-> execution, if the I/O APIC is used, this table is actually not used.
-> However, in that case, the allocated table is not freed, which is a memory
-> leak bug.
-> 
-> To fix this issue, free the allocated table if it is not used.
-> 
-> Signed-off-by: Wenwen Wang <wang6495@umn.edu>
-> Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Hi Mohan,
 
-I added Ingo's reviewed-by (since the only change from v1 was to make the
-local variable name change he suggested) and applied this to pci/misc for
-v5.2, thanks!
+On Tue, Apr 16, 2019 at 07:43:40PM +0300, Mohan Kumar wrote:
+> Use pr_err instead of printk
 
+I don't mind taking patches like these, but they do tend to clutter
+the revision history if we're not careful.  So here are some hints:
+
+  - Make the subject line useful.  The one here really doesn't tell me
+    anything.  Run "git log --oneline drivers/pci/bus.c" and follow
+    the conventions there.  Something like:
+
+      PCI: Convert printk(KERN_*) to pr_*()
+
+  - Do all the similar changes at once.  I notice similar things in
+    these files:
+
+      drivers/pci/pci-acpi.c
+      drivers/pci/pci-stub.c
+      drivers/pci/pci-sysfs.c
+      drivers/pci/pci.c
+      drivers/pci/pcie/aspm.c
+      drivers/pci/quirks.c
+      drivers/pci/setup-bus.c
+      drivers/pci/slot.c
+
+    plus several in drivers/pci/hotplug/.  These could all be done in
+    a single patch.
+
+  - If there are several in a file that use the same prefix, add a
+    "#define pr_fmt()".  This should be a separate patch so each patch
+    does only one type of change, which makes them easier to review.
+
+  - There are several uses of "printk(KERN_DEBUG)",
+    "dev_printk(KERN_DEBUG)", and "pci_printk(KERN_DEBUG)".  The
+    obvious thing would be to convert those to pr_debug(), dev_dbg(),
+    and pci_dbg(), but I don't like that approach because pr_debug()
+    and friends do different things depending on how the kernel is
+    built.  The uses in PCI provide information that I want to appear
+    in the dmesg log *always*.  So they could be (a) left alone or (b)
+    converted from KERN_DEBUG to KERN_INFO (i.e., converted to
+    pr_info(), dev_info(), etc).
+
+> WARNING: Prefer [subsystem eg: netdev]_err([subsystem]dev, ...
+> then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+> 
+> Signed-off-by: Mohan Kumar <mohankumar718@gmail.com>
 > ---
->  arch/x86/pci/irq.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
+>  drivers/pci/bus.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-> index 52e5510..d3a73f9 100644
-> --- a/arch/x86/pci/irq.c
-> +++ b/arch/x86/pci/irq.c
-> @@ -1119,6 +1119,8 @@ static const struct dmi_system_id pciirq_dmi_table[] __initconst = {
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index 5cb40b2..2179a8b 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -23,7 +23,7 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
 >  
->  void __init pcibios_irq_init(void)
->  {
-> +	struct irq_routing_table *rtable = NULL;
-> +
->  	DBG(KERN_DEBUG "PCI: IRQ init\n");
->  
->  	if (raw_pci_ops == NULL)
-> @@ -1129,8 +1131,10 @@ void __init pcibios_irq_init(void)
->  	pirq_table = pirq_find_routing_table();
->  
->  #ifdef CONFIG_PCI_BIOS
-> -	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN))
-> +	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN)) {
->  		pirq_table = pcibios_get_irq_routing_table();
-> +		rtable = pirq_table;
-> +	}
->  #endif
->  	if (pirq_table) {
->  		pirq_peer_trick();
-> @@ -1145,8 +1149,10 @@ void __init pcibios_irq_init(void)
->  		 * If we're using the I/O APIC, avoid using the PCI IRQ
->  		 * routing table
->  		 */
-> -		if (io_apic_assign_pci_irqs)
-> +		if (io_apic_assign_pci_irqs) {
-> +			kfree(rtable);
->  			pirq_table = NULL;
-> +		}
+>  	entry = resource_list_create_entry(res, 0);
+>  	if (!entry) {
+> -		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
+> +		pr_err("PCI: can't add host bridge window %pR\n", res);
+>  		return;
 >  	}
 >  
->  	x86_init.pci.fixup_irqs();
 > -- 
 > 2.7.4
 > 
