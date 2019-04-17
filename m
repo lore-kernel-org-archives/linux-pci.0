@@ -2,125 +2,100 @@ Return-Path: <SRS0=SWM8=ST=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,MAILING_LIST_MULTI,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 836C1C10F12
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 05:58:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF0BC10F12
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 08:24:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B3AC20674
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 05:58:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555480714;
-	bh=FGzDg75IcPqb+pboIEH8WsNq3zUPeE1q5l6HdyGmHvg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Phg9h1Tho4HnrTWaKaMAWpBp0hdVG//q2JU0B3nXAqvoAKFelWCvHS/wi4XlQRrTb
-	 2pzEv6yISbgibgYQsiUHsBmcJZnjvSSdSPHil/sYB585mw7DM69S+3KqdVsk46/ygI
-	 xthAfoVEimc8/5x1SCCOmYrOUKRuJ5h4F7lLDkXk=
+	by mail.kernel.org (Postfix) with ESMTP id 03C4D2073F
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 08:24:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729099AbfDQF6d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 01:58:33 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:44124 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726273AbfDQF6d (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2019 01:58:33 -0400
-Received: by mail-wr1-f65.google.com with SMTP id w18so71159wrv.11;
-        Tue, 16 Apr 2019 22:58:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=ACtm8Eb0/4kspQ0EJJEAO4ZLa4UvATtz24+esrSLa6c=;
-        b=T4Bvl8+44+Ik4fiUHE8YnaYn3EQQs1bh27yZB2AVujXlA032CUMWA55vD7vM6RPZlk
-         DTGJrPg7SQV6a2xW4dtwgySp+9lv2XHzDugGovtBH4pCJ6eFOK4ht4SPRkuEBaeFGlDj
-         94DyBtGbKob2tlS5mps8nfPG3qgJb4kuAqGJKGQ6bRCl3WK1o52O1zxXckUDO38me61H
-         wtsyvB4St41C/LalU/72jTZ2fMMUPJ/n/9CmQhdLTkjO88h3p4C1mxRS/PCZ6WphqJDc
-         SSluFvXO0FwposYLVt7qtkf61El/tPmkWoZ66ZJUQEYlett8oMWRs9YcvB8jmtJYX+KX
-         +8Wg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=ACtm8Eb0/4kspQ0EJJEAO4ZLa4UvATtz24+esrSLa6c=;
-        b=XCDpTx64ULzpg323pHnC13xtLtIx5WEKb4cWcyy0gDzXSoJcLlKch11qy994sVPRTT
-         6oxe3yjwey1+rCTE91+44xYPA2JJWBsuf4/tBtwXn3aI0sghgFpWm6KvLpUYMI7R6mqO
-         tHdSw0cV84JDGlCvxCsr1Aiswbr4X8o1iV7lTX2uLLrD/W4+evBz8xLr54JL9aC2cTgn
-         Vhc5W7lJcEkU3hQmLhOTlpeHoUl86p7sT1slTpiocc3jRQdpKyklfEIU/bhYpZ6RXOT4
-         m9k3xENXOKxYaxuqbutej292KV5CfGD3/V1vxRXPR1f6ighso07nZxWL0KVJ9mxU6t/H
-         cK7g==
-X-Gm-Message-State: APjAAAUwQq3EfhcoOp3HBZFxi2GVgiy0vZdRwBVbkz7qmVSF9oY1vLQZ
-        NyTeNDeDdczPbn9WUm2qEGg=
-X-Google-Smtp-Source: APXvYqwcFTGq0d6tIEoP6/i15l2Bwr952RzDlZ7lOuCkX1JJcN97WBs95PUD0LnMdyFsX2K0KeA8AA==
-X-Received: by 2002:adf:dbce:: with SMTP id e14mr56661500wrj.249.1555480711352;
-        Tue, 16 Apr 2019 22:58:31 -0700 (PDT)
-Received: from gmail.com (2E8B0CD5.catv.pool.telekom.hu. [46.139.12.213])
-        by smtp.gmail.com with ESMTPSA id y133sm2330908wmd.2.2019.04.16.22.58.30
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 16 Apr 2019 22:58:30 -0700 (PDT)
-Date:   Wed, 17 Apr 2019 07:58:28 +0200
-From:   Ingo Molnar <mingo@kernel.org>
-To:     Wenwen Wang <wang6495@umn.edu>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        "open list:X86 ARCHITECTURE (32-BIT AND 64-BIT)" 
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] x86/PCI: fix a memory leak bug
-Message-ID: <20190417055828.GB95755@gmail.com>
-References: <1555423298-6677-1-git-send-email-wang6495@umn.edu>
- <alpine.DEB.2.21.1904162155430.1780@nanos.tec.linutronix.de>
- <CAAa=b7eAtZ+dd1kfpOAoFr9unrFv--jkFXTXmtcs0=Q-pPErMg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAAa=b7eAtZ+dd1kfpOAoFr9unrFv--jkFXTXmtcs0=Q-pPErMg@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1727087AbfDQIYF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Apr 2019 04:24:05 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37934 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726895AbfDQIYF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Apr 2019 04:24:05 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id BD87BAFED;
+        Wed, 17 Apr 2019 08:24:03 +0000 (UTC)
+From:   Johannes Thumshirn <jthumshirn@suse.de>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] PCI: Remove pci_request_region_exclusive()
+Date:   Wed, 17 Apr 2019 10:23:56 +0200
+Message-Id: <20190417082356.7054-1-jthumshirn@suse.de>
+X-Mailer: git-send-email 2.16.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+pci_request_region_exclusive() was introduced with commit e8de1481fd71
+("resource: allow MMIO exclusivity for device drivers") in 2.6.29 which
+was released 2008.
 
-* Wenwen Wang <wang6495@umn.edu> wrote:
+It never had an in tree user since then, so after 11 years later let's
+remove it.
 
-> On Tue, Apr 16, 2019 at 3:33 PM Thomas Gleixner <tglx@linutronix.de> wrote:
-> >
-> > On Tue, 16 Apr 2019, Wenwen Wang wrote:
-> >
-> > > In pcibios_irq_init(), the PCI IRQ routing table 'pirq_table' is firstly
-> > > found through pirq_find_routing_table(). If the table is not found and
-> > > 'CONFIG_PCI_BIOS' is defined, the table is then allocated in
-> > > pcibios_get_irq_routing_table() using kmalloc(). In the following
-> > > execution, if the I/O APIC is used, this table is actually not used.
-> > > However, in that case, the allocated table is not freed, which can lead to
-> > > a memory leak bug.
-> >
-> > s/which can lead to/which is/
-> >
-> > There is no 'can'. It simply is a memory leak.
-> >
-> > > To fix this issue, this patch frees the allocated table if it is not used.
-> >
-> > To fix this issue, free the allocated table if it is not used.
-> >
-> > 'this patch' is completely redundant information and discouraged in
-> > Documentation/process/....
-> >
-> 
-> Thanks for your suggestions, Thomas. I will revise the commit's message.
-> 
-> Wenwen
-> 
-> > Other than that:
-> >
-> > Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/pci/pci.c   | 25 -------------------------
+ include/linux/pci.h |  1 -
+ 2 files changed, 26 deletions(-)
 
-You didn't add Thomas's Acked-by to your commit ...
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7c1b362f599a..d185b49e105a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3706,31 +3706,6 @@ int pci_request_region(struct pci_dev *pdev, int bar, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_region);
+ 
+-/**
+- *	pci_request_region_exclusive - Reserved PCI I/O and memory resource
+- *	@pdev: PCI device whose resources are to be reserved
+- *	@bar: BAR to be reserved
+- *	@res_name: Name to be associated with resource.
+- *
+- *	Mark the PCI region associated with PCI device @pdev BR @bar as
+- *	being reserved by owner @res_name.  Do not access any
+- *	address inside the PCI regions unless this call returns
+- *	successfully.
+- *
+- *	Returns 0 on success, or %EBUSY on error.  A warning
+- *	message is also printed on failure.
+- *
+- *	The key difference that _exclusive makes it that userspace is
+- *	explicitly not allowed to map the resource via /dev/mem or
+- *	sysfs.
+- */
+-int pci_request_region_exclusive(struct pci_dev *pdev, int bar,
+-				 const char *res_name)
+-{
+-	return __pci_request_region(pdev, bar, res_name, IORESOURCE_EXCLUSIVE);
+-}
+-EXPORT_SYMBOL(pci_request_region_exclusive);
+-
+ /**
+  * pci_release_selected_regions - Release selected PCI I/O and memory resources
+  * @pdev: PCI device whose resources were previously reserved
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 77448215ef5b..5f32275358cf 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1233,7 +1233,6 @@ int __must_check pci_request_regions(struct pci_dev *, const char *);
+ int __must_check pci_request_regions_exclusive(struct pci_dev *, const char *);
+ void pci_release_regions(struct pci_dev *);
+ int __must_check pci_request_region(struct pci_dev *, int, const char *);
+-int __must_check pci_request_region_exclusive(struct pci_dev *, int, const char *);
+ void pci_release_region(struct pci_dev *, int);
+ int pci_request_selected_regions(struct pci_dev *, int, const char *);
+ int pci_request_selected_regions_exclusive(struct pci_dev *, int, const char *);
+-- 
+2.16.4
 
-Thanks,
-
-	Ingo
