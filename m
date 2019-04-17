@@ -2,220 +2,194 @@ Return-Path: <SRS0=SWM8=ST=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8E52C10F12
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 09:56:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0620BC282DA
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 11:23:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E5A821773
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 09:56:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD656206BA
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 11:23:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="TO3HQS+I"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="gwjLLxh3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728531AbfDQJ4h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 05:56:37 -0400
-Received: from dc2-smtprelay2.synopsys.com ([198.182.61.142]:50340 "EHLO
-        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727013AbfDQJ4h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2019 05:56:37 -0400
-Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 6FC9EC0AB9;
-        Wed, 17 Apr 2019 09:56:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1555494996; bh=6Zbp5BtzkyyeHc6qsBg6EXLVJRfzDZZ7gq/QFHkuLAU=;
-        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
-        b=TO3HQS+II4b5e7PMdy0MXybqxMu0xcgzVzOn0ia3zgOr4WVi7wHcd6gmGIh5JND7V
-         YXX6cXmuSyxor9COXLVQt1YWjbWTj7MjFB/IkwbA6Ak2UUhWq6PPkWiWXiJcPARhcX
-         5zGIV+l9N9j3XCTa7arTq9yyVC77EzEiBjRLmVrr334G2kglt5our2NEWAHxix7MG4
-         If3obezsdTT7Mcz0vw/88aryZKjBVh6rHnE2vHmroLueGP7YlcMEFB9c6sfr7jP6it
-         EW4fVbTIvFH4F9jt/iWnB+U189HhzbE+M5R0w7OIS4FyXKefGsYX8dcb6cs8GLhF7z
-         EI3cLXLX4O/0g==
-Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2.internal.synopsys.com [10.12.239.237])
-        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 5B8E4A0096;
-        Wed, 17 Apr 2019 09:56:36 +0000 (UTC)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WEHTC2.internal.synopsys.com (10.12.239.237) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 17 Apr 2019 02:56:36 -0700
-Received: from DE02WEMBXA.internal.synopsys.com ([fe80::a014:7216:77d:d55c])
- by DE02WEHTCB.internal.synopsys.com ([::1]) with mapi id 14.03.0415.000; Wed,
- 17 Apr 2019 11:56:34 +0200
-From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-To:     Vidya Sagar <vidyas@nvidia.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <Gustavo.Pimentel@synopsys.com>
-CC:     "mperttunen@nvidia.com" <mperttunen@nvidia.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
-Subject: RE: [PATCH V3 04/16] PCI: dwc: Perform dbi regs write lock towards
- the end
-Thread-Topic: [PATCH V3 04/16] PCI: dwc: Perform dbi regs write lock towards
- the end
-Thread-Index: AQHU9IqKd2QC8WkfMUGD8rhulPpCxqZAHDUQ
-Date:   Wed, 17 Apr 2019 09:56:33 +0000
-Message-ID: <305100E33629484CBB767107E4246BBB0A22C127@de02wembxa.internal.synopsys.com>
-References: <20190416192730.15681-1-vidyas@nvidia.com>
- <20190416192730.15681-5-vidyas@nvidia.com>
-In-Reply-To: <20190416192730.15681-5-vidyas@nvidia.com>
-Accept-Language: pt-PT, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcZ3VzdGF2b1xh?=
- =?us-ascii?Q?cHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJh?=
- =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLTEzNDc5ZDI4LTYwZjctMTFlOS05ODdkLWY4OTRj?=
- =?us-ascii?Q?MjczODA0MlxhbWUtdGVzdFwxMzQ3OWQyOS02MGY3LTExZTktOTg3ZC1mODk0?=
- =?us-ascii?Q?YzI3MzgwNDJib2R5LnR4dCIgc3o9IjE5MjYiIHQ9IjEzMTk5OTY4NTkyNDEx?=
- =?us-ascii?Q?NjIwMSIgaD0iU04zaCs3NmlYRVNlUTNYRmsvZk1WL1hnL0E4PSIgaWQ9IiIg?=
- =?us-ascii?Q?Ymw9IjAiIGJvPSIxIiBjaT0iY0FBQUFFUkhVMVJTUlVGTkNnVUFBQlFKQUFE?=
- =?us-ascii?Q?cFZ2alZBL1hVQVNRZnl6R2twanhZSkIvTE1hU21QRmdPQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUhBQUFBQ2tDQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUVBQVFBQkFBQUFGdGJCcHdBQUFBQUFBQUFBQUFBQUFKNEFBQUJtQUdrQWJn?=
- =?us-ascii?Q?QmhBRzRBWXdCbEFGOEFjQUJzQUdFQWJnQnVBR2tBYmdCbkFGOEFkd0JoQUhR?=
- =?us-ascii?Q?QVpRQnlBRzBBWVFCeUFHc0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?RUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFHWUFid0IxQUc0QVpBQnlBSGtBWHdC?=
- =?us-ascii?Q?d0FHRUFjZ0IwQUc0QVpRQnlBSE1BWHdCbkFHWUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFDQUFB?=
- =?us-ascii?Q?QUFBQ2VBQUFBWmdCdkFIVUFiZ0JrQUhJQWVRQmZBSEFBWVFCeUFIUUFiZ0Js?=
- =?us-ascii?Q?QUhJQWN3QmZBSE1BWVFCdEFITUFkUUJ1QUdjQVh3QmpBRzhBYmdCbUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFBQm1BRzhB?=
- =?us-ascii?Q?ZFFCdUFHUUFjZ0I1QUY4QWNBQmhBSElBZEFCdUFHVUFjZ0J6QUY4QWN3QmhB?=
- =?us-ascii?Q?RzBBY3dCMUFHNEFad0JmQUhJQVpRQnpBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUdZQWJ3QjFBRzRBWkFCeUFIa0FY?=
- =?us-ascii?Q?d0J3QUdFQWNnQjBBRzRBWlFCeUFITUFYd0J6QUcwQWFRQmpBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFBQUNB?=
- =?us-ascii?Q?QUFBQUFDZUFBQUFaZ0J2QUhVQWJnQmtBSElBZVFCZkFIQUFZUUJ5QUhRQWJn?=
- =?us-ascii?Q?QmxBSElBY3dCZkFITUFkQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCbUFH?=
- =?us-ascii?Q?OEFkUUJ1QUdRQWNnQjVBRjhBY0FCaEFISUFkQUJ1QUdVQWNnQnpBRjhBZEFC?=
- =?us-ascii?Q?ekFHMEFZd0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1lBYndCMUFHNEFaQUJ5QUhr?=
- =?us-ascii?Q?QVh3QndBR0VBY2dCMEFHNEFaUUJ5QUhNQVh3QjFBRzBBWXdBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFB?=
- =?us-ascii?Q?Q0FBQUFBQUNlQUFBQVp3QjBBSE1BWHdCd0FISUFid0JrQUhVQVl3QjBBRjhB?=
- =?us-ascii?Q?ZEFCeUFHRUFhUUJ1QUdrQWJnQm5BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJ6?=
- =?us-ascii?Q?QUdFQWJBQmxBSE1BWHdCaEFHTUFZd0J2QUhVQWJnQjBBRjhBY0FCc0FHRUFi?=
- =?us-ascii?Q?Z0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFITUFZUUJzQUdVQWN3QmZB?=
- =?us-ascii?Q?SEVBZFFCdkFIUUFaUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFB?=
- =?us-ascii?Q?QUFDQUFBQUFBQ2VBQUFBY3dCdUFIQUFjd0JmQUd3QWFRQmpBR1VBYmdCekFH?=
- =?us-ascii?Q?VUFYd0IwQUdVQWNnQnRBRjhBTVFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFB?=
- =?us-ascii?Q?QnpBRzRBY0FCekFGOEFiQUJwQUdNQVpRQnVBSE1BWlFCZkFIUUFaUUJ5QUcw?=
- =?us-ascii?Q?QVh3QnpBSFFBZFFCa0FHVUFiZ0IwQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUhZQVp3QmZBR3NBWlFC?=
- =?us-ascii?Q?NUFIY0Fid0J5QUdRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFB?=
- =?us-ascii?Q?QUFBQUNBQUFBQUFBPSIvPjwvbWV0YT4=3D?=
-x-originating-ip: [10.107.25.131]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726695AbfDQLXG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Apr 2019 07:23:06 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:1352 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731520AbfDQLXG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Apr 2019 07:23:06 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cb70c9d0002>; Wed, 17 Apr 2019 04:23:10 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Wed, 17 Apr 2019 04:23:04 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Wed, 17 Apr 2019 04:23:04 -0700
+Received: from [10.24.192.63] (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 17 Apr
+ 2019 11:23:01 +0000
+Subject: Re: [PATCH 26/30] dt-bindings: pci: tegra: Document nvidia,plat-gpios
+ optional prop
+To:     Thierry Reding <thierry.reding@gmail.com>
+CC:     <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
+        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
+        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
+ <20190411170355.6882-27-mmaddireddy@nvidia.com> <20190415141654.GA29254@ulmo>
+ <b575fd56-0d31-bbe2-deef-5a21d6e4b33e@nvidia.com>
+ <20190416153443.GA30777@ulmo>
+X-Nvconfidentiality: public
+From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Message-ID: <51957dce-5e0b-647b-d6b8-0cc118ee95bc@nvidia.com>
+Date:   Wed, 17 Apr 2019 16:52:46 +0530
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
+In-Reply-To: <20190416153443.GA30777@ulmo>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
+ HQMAIL101.nvidia.com (172.20.187.10)
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1555500190; bh=CQ7OXXqdQN1dDu8pw6XeXwPRYA9hBut/CCt5omXXtFI=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:
+         Content-Transfer-Encoding:Content-Language;
+        b=gwjLLxh3Xt1sS6bSywoasbNAj3aIdsnMFq7bbk7A5Z9qZHNHyaLriCjTAN88WjKCN
+         KdVG0WlzQpNzv3vzxZ42w1IjCPzvpyf6OwV/QZ6GqFxHv0H9huRmDtqEjt40NCcR6i
+         JZN0P78FV6OL0liQi1QYhkrxW4ROPDnQPwHUJ4tIABTh3YZ+azcnLa/1FmjNaAsQ2h
+         JnbzJuGBmRtnSVFqlEREgNWouyK+iJ7z+OQUo9BeXnZDwRzcTnf4eOxHa1FMqfjFVc
+         sNgvn9um+x9T76HyM6O1fprQ+Dc+NuD4jt09rwUbOWCf2WQaDSfbApzTnU5LxFM3Sn
+         tPmTITYRp7y8w==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 16, 2019 at 20:27:18, Vidya Sagar <vidyas@nvidia.com> wrote:
 
-> Remove multiple write enable and disable sequences of dbi registers as
-> Tegra194 implements writes to BAR-0 register (offset: 0x10) controlled by
-> DBI write-lock enable bit thereby not allowing any further writes to BAR-=
-0
-> register in config space to take place. Hence disabling write permission
-> only towards the end.
->=20
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> ---
-> Changes since [v2]:
-> * None
->=20
-> Changes since [v1]:
-> * None
->=20
->  drivers/pci/controller/dwc/pcie-designware-host.c | 3 ---
->  1 file changed, 3 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/=
-pci/controller/dwc/pcie-designware-host.c
-> index 2a5332e5ccfa..c0334c92c1a6 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -683,7 +683,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	val &=3D 0xffff00ff;
->  	val |=3D 0x00000100;
->  	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
-> -	dw_pcie_dbi_ro_wr_dis(pci);
-> =20
->  	/* Setup bus numbers */
->  	val =3D dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
-> @@ -723,8 +722,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
-> =20
->  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-> =20
-> -	/* Enable write permission for the DBI read-only register */
-> -	dw_pcie_dbi_ro_wr_en(pci);
->  	/* Program correct class for RC */
->  	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
->  	/* Better disable write permission right after the update */
-> --=20
-> 2.17.1
 
-This setup sequence was written by Jingoo Han, let's check if he did this=20
-by some particular reason.
-Jingoo do you remember why you wrote the code like this?
+On 16-Apr-19 9:04 PM, Thierry Reding wrote:
+> On Mon, Apr 15, 2019 at 11:28:29PM +0530, Manikanta Maddireddy wrote:
+>>
+>> On 15-Apr-19 7:46 PM, Thierry Reding wrote:
+>>> On Thu, Apr 11, 2019 at 10:33:51PM +0530, Manikanta Maddireddy wrote:
+>>>> Document "nvidia,plat-gpios" optional property which supports configuring
+>>>> of platform specific gpios.
+>>>>
+>>>> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+>>>> ---
+>>>>  Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt | 3 +++
+>>>>  1 file changed, 3 insertions(+)
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>>>> index fbbd3bcb3435..dca8393b86d1 100644
+>>>> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>>>> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>>>> @@ -73,6 +73,8 @@ Optional properties:
+>>>>    pinctrl phandle to allow driver to explicitly put PCIe IO in DPD state.
+>>>>  - pinctrl-1: PCIe IO(bias & REFCLK) deep power down(DPD) enable state.
+>>>>    Pass pinctrl phandle to allow driver bring PCIe IO out of DPD state.
+>>>> +- nvidia,plat-gpios: A list of platform specific gpios which controls
+>>>> +  endpoint's internal regulator or PCIe logic.
+>>> We discussed this with Vidya during review of the Tegra194 PCIe device
+>>> tree bindings and arrived at the conclusion that all of the GPIOs that
+>>> need to be controlled for PCI to work can be modelled as proper device
+>>> nodes (I think regulator and GPIO-controlled muxes were the only two
+>>> use-cases for which we need this).
+>>>
+>>> Can the same be done for this PCI controller? What use-cases are we
+>>> talking about?
+>> In Tegra194 case it is apt to use regulator framework because gpios are used
+>> to control regulators. However I published this patch to control vendor defined
+>> gpios in endpoints. For ex: isolate gpio in RTL8111. Since I am not sure if
+>> regulator framework is apt, I published as gpio patch.
+>>>>  Required properties on Tegra124 and later (deprecated):
+>>>>  - phys: Must contain an entry for each entry in phy-names.
+>>>> @@ -567,6 +569,7 @@ Board DTS:
+>>>>  		pci@2,0 {
+>>>>  			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-4}>;
+>>>>  			phy-names = "pcie-0";
+>>>> +			nvidia,plat-gpios = <&gpio TEGRA_GPIO(X, 3) GPIO_ACTIVE_HIGH>;
+>>>>  			status = "okay";
+>>>>  		};
+>>>>  	};
+>>> I recall this being the setup for Jetson Nano and the X.3 GPIO going to
+>>> an Ethernet device. Let's find out what exactly this GPIO is used for
+>>> and why we need it to be set up as part of the PCI controller driver
+>>> rather than the Ethernet device.
+>>>
+>>> If it turns out we can't model this other than with a generic GPIO type
+>>> of property we need a better explanation than the above, and the Jetson
+>>> Nano use-case would provide that explanation.
+>>>
+>>> And if indeed we cannot model this more accurately, I think we should
+>>> use something like the gpio-hog binding rather than some custom PCI
+>>> controller property.
+>>>
+>>> Thierry
+>> Yes, in Jetson Nano gpio x.3 is controlling isolate pin of RTL8111.
+>> RTL8111 datasheet available online says that as long as isolate
+>> pin is asserted it'll not sample RX lanes and doesn't drive TX lanes.
+>> Since RTL8111 PCIe IP should be active when PCIe host driver is
+>> attempting link up, this gpio can be controlled by host driver only.
+>>
+>> I didn't go for gpio-hog because this gpio should be asserted
+>> during suspend, to enable wake on LAN.
+> I don't see code in gpiolib that would cause this to be deasserted
+> during suspend.
+>
+> Is there ever a need to manipulate this GPIO at all? Or do we just
+> need to make sure that it's always asserted?
 
-Regards,
-Gustavo
+Following steps
+1) ISOLATEB gpio should be deasserted during boot to enable PCIe section
+of RTL8111
+2) PCIe host driver enumerates RTL8111
+3) When suspend is initiated, ISOLATEB gpio should be asserted after PCIe
+host controller suspend is completed to disable PCIe section of RTL8111
+and enable Wake on LAN
+4) During resume, first ISOLATE gpio should be deasserted to get PCIe link up
+
+> The problem with adding this to nvidia,plat-gpios in the PCI root port
+> node is that there's no context at all, so the PCI host driver can't
+> really do anything with this, other than perhaps exactly one fixed
+> operation, but then it's pretty much equivalent to a gpio-hog.
+>
+> If we do need control over the pin, I think it might be worth looking at
+> adding support to gpiolib for initial pin configuration (so that it does
+> not hog the GPIO, but still configures it). That would allow us to take
+> the PCI device out of isolation initially and once the device has been
+> probed we can control the GPIO from the PCI device. That way the device
+> driver has the necessary context to assert and deassert the pin at the
+> appropriate time, while still giving us the possibility to make the
+> device appear on the PCI bus.
+
+ISOLATEB gpio disables the PCIe section in RTL8111(Rx is not sampled &
+doesn't drive Tx), if PCI client driver controls it, then it has
+to do it after host controller suspend_noirq callback is completed.
+Only suspend callback available after suspend_noirq is syscore_ops.
+I didn't go with it because it is take void arguments, so client
+driver has to maintain global pointers and I see only core drivers
+like irqchip, clk, etc are using it.
+
+Manikanta
+
+>
+> As a side-note, I think it would've been better if the ISOLATEB signal
+> was wired up such that it would've been active by default. That would
+> mean that if the bootloader and/or OS were not aware of the ISOLATEB
+> signal, they would still be able to use the Ethernet device. I think
+> that would've been a more sensible default, especially if the bus that
+> the device is on requires the signal to be controlled without even
+> knowing that the device exists.
+>
+> Thierry
+
