@@ -6,33 +6,33 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E60AC282DA
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DB84C282DC
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:16:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5DD2A20872
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:16:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BCFE217F4
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:16:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731743AbfDQOQp convert rfc822-to-8bit (ORCPT
+        id S1732424AbfDQOQ4 convert rfc822-to-8bit (ORCPT
         <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 10:16:45 -0400
-Received: from mail-oln040092254067.outbound.protection.outlook.com ([40.92.254.67]:6246
-        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        Wed, 17 Apr 2019 10:16:56 -0400
+Received: from mail-oln040092255080.outbound.protection.outlook.com ([40.92.255.80]:6033
+        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729940AbfDQOQp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Apr 2019 10:16:45 -0400
+        id S1729356AbfDQOQ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Apr 2019 10:16:56 -0400
 Received: from HK2APC01FT008.eop-APC01.prod.protection.outlook.com
- (10.152.248.54) by HK2APC01HT081.eop-APC01.prod.protection.outlook.com
- (10.152.249.103) with Microsoft SMTP Server (version=TLS1_2,
+ (10.152.248.55) by HK2APC01HT066.eop-APC01.prod.protection.outlook.com
+ (10.152.249.164) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1771.16; Wed, 17 Apr
- 2019 14:16:37 +0000
+ 2019 14:16:50 +0000
 Received: from PS2P216MB0642.KORP216.PROD.OUTLOOK.COM (10.152.248.51) by
  HK2APC01FT008.mail.protection.outlook.com (10.152.248.117) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.1771.16 via Frontend Transport; Wed, 17 Apr 2019 14:16:37 +0000
+ 15.20.1771.16 via Frontend Transport; Wed, 17 Apr 2019 14:16:50 +0000
 Received: from PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
  ([fe80::adb3:4c16:60fd:65]) by PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
  ([fe80::adb3:4c16:60fd:65%5]) with mapi id 15.20.1813.011; Wed, 17 Apr 2019
- 14:16:36 +0000
+ 14:16:50 +0000
 From:   Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
 To:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -40,13 +40,13 @@ CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
         "corbet@lwn.net" <corbet@lwn.net>,
         Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-Subject: [PATCH v4 1/4] PCI: Consider alignment of hot-added bridges when
- distributing available resources
-Thread-Topic: [PATCH v4 1/4] PCI: Consider alignment of hot-added bridges when
- distributing available resources
-Thread-Index: AQHU9SgqbUtBpsrxd0a42SAnKLRCcA==
-Date:   Wed, 17 Apr 2019 14:16:36 +0000
-Message-ID: <PS2P216MB06425DC2C68794039FE4100380250@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
+Subject: [PATCH v4 2/4] PCI: Fix serious bug when sizing bridges with
+ additional size
+Thread-Topic: [PATCH v4 2/4] PCI: Fix serious bug when sizing bridges with
+ additional size
+Thread-Index: AQHU9SgyKeXkTr58j0ODKuisfKR/gw==
+Date:   Wed, 17 Apr 2019 14:16:50 +0000
+Message-ID: <PS2P216MB0642D39B45E16723F74569A480250@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 References: <20190417141610.6730-1-nicholas.johnson-opensource@outlook.com.au>
 In-Reply-To: <20190417141610.6730-1-nicholas.johnson-opensource@outlook.com.au>
 Accept-Language: en-AU, en-US
@@ -55,336 +55,126 @@ X-MS-Has-Attach:
 X-MS-TNEF-Correlator: 
 x-clientproxiedby: SG3P274CA0021.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:be::33)
  To PS2P216MB0642.KORP216.PROD.OUTLOOK.COM (2603:1096:300:1c::16)
-x-incomingtopheadermarker: OriginalChecksum:5B6907D8F14F475510672042BBAF26731CAE9A56A1FA2A74AFF979F78126BE91;UpperCasedChecksum:CF0B9C39EF634FEC6E9BF17A48579769EEDC51ACF3E15A4D9079199736343153;SizeAsReceived:7879;Count:50
+x-incomingtopheadermarker: OriginalChecksum:AEA2686BFC77E0B8295C2CC6D98F0AE82A025A56E0227523CAA8041E4157EB93;UpperCasedChecksum:DC62C1537FC1D240A6AE6EB47B63CD6B2E475442350B01E306E2B4D8D91CDBBB;SizeAsReceived:7824;Count:50
 x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.19.1
-x-tmn:  [Q9w0aIdL+vDwudcyen4z4n30BEbm760usbctHIYOci4=]
-x-microsoft-original-message-id: <20190417141610.6730-2-nicholas.johnson-opensource@outlook.com.au>
+x-tmn:  [WyzUIRclYih3miZ2HWiYHhAigWmNb9vBSp7hzbUALJ4=]
+x-microsoft-original-message-id: <20190417141610.6730-3-nicholas.johnson-opensource@outlook.com.au>
 x-ms-publictraffictype: Email
 x-incomingheadercount: 50
 x-eopattributedmessage: 0
-x-ms-exchange-slblob-mailprops: mBy7Mai7yE5GOp0BEGlYkd86SxW4/tB+2LBVXrR7HLG1C6V9GmgErHMxDbhllrBwVhI63NJzzL9zTn3rV/OwLgGU+kcvUM1iNw2vxiywHR74d//dmf0xFiS0giBvugiQ4pfwGv3dYddjAZ/62fW0Xess7SCjFz/IZe9FfKTTakjljbE09VapKLW4gjdEBfbgEJ/0P5aKH7n89gG8YBBmSpwrQBreLM3TwkUWtmxUWfXZD06alSy6/BGnHafOODP/4N6gmSFcoU9CudgN4+LtrGO2/zGuOSvhyX8s0Z8fvhCB6+4b1JlLdfQpOXKBSVffUuvR1YiM2bQktA77UpIJrvmsYo/mlCofVXQlZoviKZMvUEOxl+SJVaMbQV8Q1xeNAWV/j7f4bjoIeYpXu4rP5yfY6O9gCU8A/qpwuFUBkKv6A+pxwSWiGKWZcpSc7hj+rdclc5zFM2n0/VAchSpZ+qCKlbxmEDlTyw0COBi9FjyLvYGoBixlnu3IIWlW5xQzD8r1jZfxCjqqoUJhxr4mlVVF6b79j1bCB5V5C/NUP+uhjYFtgqPftGEd3sOvo3cbIL01P7y2elc0PK4f39vYT5UULSp24GkTdgG2zPf/y0XudQcNT9BhpTtZ3Dzx64y/yvXjiKZpqhoY3gnRtRwNUCtE78BdfE+TuFi2DaTlxN6CFPNnMrhU9vGdZIaykPGuPe6fXxRbqKDvebqR+A52zEWQkGK6m/g8
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(20181119110)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(201702181274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:HK2APC01HT081;
-x-ms-traffictypediagnostic: HK2APC01HT081:
-x-microsoft-antispam-message-info: SpqAEnNWyPiseWJhzKWBJDYeM+/Q2N2lM0yM/D81fkny3vBtK7hXggwe1P14SkQY/OrGESPbFtg+01eMCzKic+BisyJ8KmowkimOZu5OYexG3RKc0JWtoXWHuoJDU0K0bijX2DSzLfrUzc4tSrSerdfP/Yh7n42A2G2hpMduWw3OEpWI6c9MbJjP4H6dGhg7
+x-ms-exchange-slblob-mailprops: zswcL9HXbeUuq4/PM8OFiqKh1bfVgTnQaL38giUIfHvRrFg9RGhJH/9GZcdEQOUvQomBxZ4Lx77ji2xs6/KqRWvq0STsYSv6bWBVg5HQpf3S9lELODWH1q9+ICxfKAZeOOPi4saBLWthkrVyLJzILjnUU9lxD04Riuy63Bb8lWhYZL7F4G1AD0mgw3Jm+6MqpyCQpjyw1Su42hyBvvYrGvKV7auUjy1mVu1/xodf5rLw85HdUeRr+NXuQvU8hVtWB7EJyfAir+ocL5gYkcIH+X944XFaTzmTPcWHKS/V8sA6K1b3evNqRsSVLyGZknw14E/TE5/HsL+A3cXAt35JTJQ41kbqzBFpdHrhBbeWhJej/Aa2rd9yixSBaTi/p5MxZfoOSal9qeAmLBX/8ugqH2HosxUPj+xZ4NCSSGq/I2e7/Ea1bnNTP7v0yvanen6nX1qWB3hjmQCrTE2xFxTuWpZ+Mk9i5TjX/Dd6c0GzcVTzryAjshpwCGi8XJ4tZ3o6q7Iv1zpgmCxOXb+Or8+p7+ZNLM+WoOFmFMH4c/wMl6JUD8x+uQEcvus0Sn0ovyiZj3dyO07fGM8KDTaZSpNl5I4TmTtNn2sZTB0ADf55u9Vj9UKVzsqyUA/U9LeKyjEcwe9WEfiya4CrXsOmWEF2nptpQ4vmnHt9uWGirh+u1pBWQu7LsuIEkihcA32vKLLBDoOyBoXtU5QhF0K2CPvj0Fqn82SsyFV8WFrIxzQBp737N//udjFfTpUbhmqo2PP1
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(20181119110)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(201702181274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:HK2APC01HT066;
+x-ms-traffictypediagnostic: HK2APC01HT066:
+x-microsoft-antispam-message-info: 6rVJO04IiqI2phWER7OQBtVovgNJZPD74IS4pb/z/7e3j5LpQL3jiO9btM/yuMC4JZZ8NsFtchKB6llnR/hs40FoIAcsvZqbWR/1LZHAr/nTa3gOHYXO1ZTULNLoWTnsV8apHn8LQ5mAOSZTaaWNng11sAK60xRzqf3iKlEf9fyVZYfoa4toHT2QS5DmlhdA
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
 X-OriginatorOrg: outlook.com
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9787c701-c8b1-427f-1173-08d6c33f4d2e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9e9cabd2-e94b-4758-ce83-08d6c33f5526
 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Apr 2019 14:16:36.8507
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Apr 2019 14:16:50.2139
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Internet
 X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HK2APC01HT081
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: HK2APC01HT066
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rewrite pci_bus_distribute_available_resources to better handle bridges
-with different resource alignment requirements. Pass more details
-arguments recursively to track the resource start and end addresses
-relative to the initial hotplug bridge. This is especially useful for
-Thunderbolt with native PCI enumeration, enabling external graphics
-cards and other devices with bridge alignment higher than 0x100000
-bytes.
+Change find_free_bus_resource function to not skip assigned resources
+with non-null parent.
 
-Change extend_bridge_window to resize the actual resource, rather than
-using add_list and dev_res->add_size. If an additional resource entry
-exists for the given resource, zero out the add_size field to avoid it
-interfering. Because add_size is considered optional when allocating,
-using add_size could cause issues in some cases, because successful
-resource distribution requires sizes to be guaranteed. Such cases
-include hot-adding nested hotplug bridges in one enumeration, and
-potentially others which are yet to be encountered.
+Add checks in pbus_size_io and pbus_size_mem to return success if
+resource returned from find_free_bus_resource is already allocated.
+
+This avoids pbus_size_io and pbus_size_mem returning error code to
+__pci_bus_size_bridges when a resource has been successfully assigned in
+a previous pass. This fixes the existing behaviour where space for a
+resource could be reserved multiple times in different parent bridge
+windows. This also greatly reduces the number of failed BAR messages in
+dmesg when Linux assigns resources.
 
 Signed-off-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
 ---
- drivers/pci/setup-bus.c | 203 ++++++++++++++++++++++------------------
- 1 file changed, 110 insertions(+), 93 deletions(-)
+ drivers/pci/setup-bus.c | 28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ec44a0f3a..a1ca8a11f 100644
+index a1ca8a11f..5b9ee9945 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1815,34 +1815,48 @@ void __init pci_assign_unassigned_resources(void)
- }
- 
- static void extend_bridge_window(struct pci_dev *bridge, struct resource *res,
--			struct list_head *add_list, resource_size_t available)
-+			struct list_head *add_list, resource_size_t new_size)
- {
- 	struct pci_dev_resource *dev_res;
-+	resource_size_t add_size;
- 
- 	if (res->parent)
- 		return;
- 
--	if (resource_size(res) >= available)
--		return;
--
--	dev_res = res_to_dev_res(add_list, res);
--	if (!dev_res)
--		return;
-+	/*
-+	 * Resources requested using add_size in additional resource lists are
-+	 * considered optional when allocated. Guaranteed size of allocation
-+	 * is required to guarantee successful resource distribution. Hence,
-+	 * the size of the actual resource must be adjusted.
-+	 */
-+	if (new_size >= resource_size(res)) {
-+		add_size = new_size - resource_size(res);
-+		pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
-+			&add_size);
-+	} else {
-+		add_size = resource_size(res) - new_size;
-+		pci_dbg(bridge, "bridge window %pR shrunken by %pa\n", res,
-+			&add_size);
-+	}
- 
--	/* Is there room to extend the window? */
--	if (available - resource_size(res) <= dev_res->add_size)
--		return;
-+	res->end = res->start + new_size - 1;
- 
--	dev_res->add_size = available - resource_size(res);
--	pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
--		&dev_res->add_size);
-+	/*
-+	 * If a list entry exists, we need to remove any additional size
-+	 * requested because that could interfere with the alignment and
-+	 * sizing done when distributing resources, causing resources to
-+	 * fail to allocate later on.
-+	 */
-+	dev_res = res_to_dev_res(add_list, res);
-+	if (dev_res)
-+		dev_res->add_size = 0;
- }
- 
- static void pci_bus_distribute_available_resources(struct pci_bus *bus,
--	struct list_head *add_list, resource_size_t available_io,
--	resource_size_t available_mmio, resource_size_t available_mmio_pref)
-+	struct list_head *add_list, struct resource io,
-+	struct resource mmio, struct resource mmio_pref)
- {
--	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
-+	resource_size_t io_per_hp, mmio_per_hp, mmio_pref_per_hp, align;
- 	unsigned int normal_bridges = 0, hotplug_bridges = 0;
- 	struct resource *io_res, *mmio_res, *mmio_pref_res;
- 	struct pci_dev *dev, *bridge = bus->self;
-@@ -1852,25 +1866,32 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 	mmio_pref_res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
- 
- 	/*
--	 * Update additional resource list (add_list) to fill all the
--	 * extra resource space available for this port except the space
--	 * calculated in __pci_bus_size_bridges() which covers all the
--	 * devices currently connected to the port and below.
-+	 * The alignment of this bridge is yet to be considered, hence it must
-+	 * be done now before extending its bridge window. A single bridge
-+	 * might not be able to occupy the whole parent region if the alignment
-+	 * differs - for example, an external GPU at the end of a Thunderbolt
-+	 * daisy chain.
- 	 */
--	extend_bridge_window(bridge, io_res, add_list, available_io);
--	extend_bridge_window(bridge, mmio_res, add_list, available_mmio);
--	extend_bridge_window(bridge, mmio_pref_res, add_list,
--			     available_mmio_pref);
-+	align = pci_resource_alignment(bridge, io_res);
-+	if (!io_res->parent && align)
-+		io.start = ALIGN(io.start, align);
-+
-+	align = pci_resource_alignment(bridge, mmio_res);
-+	if (!mmio_res->parent && align)
-+		mmio.start = ALIGN(mmio.start, align);
-+
-+	align = pci_resource_alignment(bridge, mmio_pref_res);
-+	if (!mmio_pref_res->parent && align)
-+		mmio_pref.start = ALIGN(mmio_pref.start, align);
- 
- 	/*
--	 * Calculate the total amount of extra resource space we can
--	 * pass to bridges below this one. This is basically the
--	 * extra space reduced by the minimal required space for the
--	 * non-hotplug bridges.
-+	 * Update the resources to fill as much remaining resource space in the
-+	 * parent bridge as possible, while considering alignment.
- 	 */
--	remaining_io = available_io;
--	remaining_mmio = available_mmio;
--	remaining_mmio_pref = available_mmio_pref;
-+	extend_bridge_window(bridge, io_res, add_list, resource_size(&io));
-+	extend_bridge_window(bridge, mmio_res, add_list, resource_size(&mmio));
-+	extend_bridge_window(bridge, mmio_pref_res, add_list,
-+		resource_size(&mmio_pref));
- 
- 	/*
- 	 * Calculate how many hotplug bridges and normal bridges there
-@@ -1884,80 +1905,79 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
- 			normal_bridges++;
+@@ -752,11 +752,17 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
  	}
+ }
  
-+	/*
-+	 * There is only one bridge on the bus so it gets all possible
-+	 * resources which it can then distribute to the possible
-+	 * hotplug bridges below.
-+	 */
-+	if (hotplug_bridges + normal_bridges == 1) {
-+		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
-+		if (dev->subordinate)
-+			pci_bus_distribute_available_resources(dev->subordinate,
-+				add_list, io, mmio, mmio_pref);
+-/* Helper function for sizing routines: find first available
+-   bus resource of a given type. Note: we intentionally skip
+-   the bus resources which have already been assigned (that is,
+-   have non-NULL parent resource). */
+-static struct resource *find_free_bus_resource(struct pci_bus *bus,
++/*
++ * Helper function for sizing routines: find first bus resource of a given
++ * type. Note: we do not skip the bus resources which have already been
++ * assigned (r->parent != NULL). This is because a resource that is already
++ * assigned (nothing more to be done) will be indistinguishable from one that
++ * failed due to lack of space if we skip assigned resources. If the caller
++ * function cannot tell the difference then it might try to place the
++ * resources in a different window, doubling up on resources or causing
++ * unforeseeable issues.
++ */
++static struct resource *find_bus_resource_of_type(struct pci_bus *bus,
+ 			 unsigned long type_mask, unsigned long type)
+ {
+ 	int i;
+@@ -765,7 +771,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
+ 	pci_bus_for_each_resource(bus, r, i) {
+ 		if (r == &ioport_resource || r == &iomem_resource)
+ 			continue;
+-		if (r && (r->flags & type_mask) == type && !r->parent)
++		if (r && (r->flags & type_mask) == type)
+ 			return r;
+ 	}
+ 	return NULL;
+@@ -863,14 +869,16 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		resource_size_t add_size, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+-	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+-							IORESOURCE_IO);
++	struct resource *b_res = find_bus_resource_of_type(bus, IORESOURCE_IO,
++					IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+ 	resource_size_t children_add_size = 0;
+ 	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+ 		return;
++	if (b_res->parent)
 +		return;
-+	}
-+
-+	/*
-+	 * Reduce the available resource space by what the
-+	 * bridge and devices below it occupy.
-+	 */
- 	for_each_pci_bridge(dev, bus) {
--		const struct resource *res;
-+		struct resource *res;
-+		resource_size_t used_size;
  
- 		if (dev->is_hotplug_bridge)
- 			continue;
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+@@ -975,7 +983,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	resource_size_t min_align, align, size, size0, size1;
+ 	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
+ 	int order, max_order;
+-	struct resource *b_res = find_free_bus_resource(bus,
++	struct resource *b_res = find_bus_resource_of_type(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	resource_size_t children_add_size = 0;
+ 	resource_size_t children_add_align = 0;
+@@ -983,6 +991,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
  
--		/*
--		 * Reduce the available resource space by what the
--		 * bridge and devices below it occupy.
--		 */
- 		res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
--		if (!res->parent && available_io > resource_size(res))
--			remaining_io -= resource_size(res);
-+		align = pci_resource_alignment(dev, res);
-+		align = align ? ALIGN(io.start, align) - io.start : 0;
-+		used_size = align + resource_size(res);
-+		if (!res->parent && used_size <= resource_size(&io))
-+			io.start += used_size;
+ 	if (!b_res)
+ 		return -ENOSPC;
++	if (b_res->parent)
++		return 0;
  
- 		res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
--		if (!res->parent && available_mmio > resource_size(res))
--			remaining_mmio -= resource_size(res);
-+		align = pci_resource_alignment(dev, res);
-+		align = align ? ALIGN(mmio.start, align) - mmio.start : 0;
-+		used_size = align + resource_size(res);
-+		if (!res->parent && used_size <= resource_size(&mmio))
-+			mmio.start += used_size;
- 
- 		res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
--		if (!res->parent && available_mmio_pref > resource_size(res))
--			remaining_mmio_pref -= resource_size(res);
-+		align = pci_resource_alignment(dev, res);
-+		align = align ? ALIGN(mmio_pref.start, align) -
-+				mmio_pref.start : 0;
-+		used_size = align + resource_size(res);
-+		if (!res->parent && used_size <= resource_size(&mmio_pref))
-+			mmio_pref.start += used_size;
- 	}
- 
--	/*
--	 * There is only one bridge on the bus so it gets all available
--	 * resources which it can then distribute to the possible
--	 * hotplug bridges below.
--	 */
--	if (hotplug_bridges + normal_bridges == 1) {
--		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
--		if (dev->subordinate) {
--			pci_bus_distribute_available_resources(dev->subordinate,
--				add_list, available_io, available_mmio,
--				available_mmio_pref);
--		}
-+	if (!hotplug_bridges)
- 		return;
--	}
- 
- 	/*
--	 * Go over devices on this bus and distribute the remaining
--	 * resource space between hotplug bridges.
-+	 * Distribute any remaining resources equally between
-+	 * the hotplug-capable downstream ports.
- 	 */
--	for_each_pci_bridge(dev, bus) {
--		resource_size_t align, io, mmio, mmio_pref;
--		struct pci_bus *b;
-+	io_per_hp = div64_ul(resource_size(&io), hotplug_bridges);
-+	mmio_per_hp = div64_ul(resource_size(&mmio), hotplug_bridges);
-+	mmio_pref_per_hp = div64_ul(resource_size(&mmio_pref),
-+		hotplug_bridges);
- 
--		b = dev->subordinate;
--		if (!b || !dev->is_hotplug_bridge)
-+	for_each_pci_bridge(dev, bus) {
-+		if (!dev->subordinate || !dev->is_hotplug_bridge)
- 			continue;
- 
--		/*
--		 * Distribute available extra resources equally between
--		 * hotplug-capable downstream ports taking alignment into
--		 * account.
--		 *
--		 * Here hotplug_bridges is always != 0.
--		 */
--		align = pci_resource_alignment(bridge, io_res);
--		io = div64_ul(available_io, hotplug_bridges);
--		io = min(ALIGN(io, align), remaining_io);
--		remaining_io -= io;
--
--		align = pci_resource_alignment(bridge, mmio_res);
--		mmio = div64_ul(available_mmio, hotplug_bridges);
--		mmio = min(ALIGN(mmio, align), remaining_mmio);
--		remaining_mmio -= mmio;
-+		io.end = io.start + io_per_hp - 1;
-+		mmio.end = mmio.start + mmio_per_hp - 1;
-+		mmio_pref.end = mmio_pref.start + mmio_pref_per_hp - 1;
- 
--		align = pci_resource_alignment(bridge, mmio_pref_res);
--		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
--		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
--		remaining_mmio_pref -= mmio_pref;
-+		pci_bus_distribute_available_resources(dev->subordinate,
-+			add_list, io, mmio, mmio_pref);
- 
--		pci_bus_distribute_available_resources(b, add_list, io, mmio,
--						       mmio_pref);
-+		io.start = io.end + 1;
-+		mmio.start = mmio.end + 1;
-+		mmio_pref.start = mmio_pref.end + 1;
- 	}
- }
- 
-@@ -1965,22 +1985,19 @@ static void
- pci_bridge_distribute_available_resources(struct pci_dev *bridge,
- 					  struct list_head *add_list)
- {
--	resource_size_t available_io, available_mmio, available_mmio_pref;
--	const struct resource *res;
-+	struct resource io_res, mmio_res, mmio_pref_res;
- 
- 	if (!bridge->is_hotplug_bridge)
- 		return;
- 
-+	io_res = bridge->resource[PCI_BRIDGE_RESOURCES + 0];
-+	mmio_res = bridge->resource[PCI_BRIDGE_RESOURCES + 1];
-+	mmio_pref_res = bridge->resource[PCI_BRIDGE_RESOURCES + 2];
-+
- 	/* Take the initial extra resources from the hotplug port */
--	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
--	available_io = resource_size(res);
--	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
--	available_mmio = resource_size(res);
--	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
--	available_mmio_pref = resource_size(res);
- 
- 	pci_bus_distribute_available_resources(bridge->subordinate,
--		add_list, available_io, available_mmio, available_mmio_pref);
-+		add_list, io_res, mmio_res, mmio_pref_res);
- }
- 
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	memset(aligns, 0, sizeof(aligns));
+ 	max_order = 0;
 -- 
 2.20.1
 
