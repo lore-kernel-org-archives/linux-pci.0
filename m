@@ -2,123 +2,134 @@ Return-Path: <SRS0=SWM8=ST=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58836C282DA
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:35:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 951C3C282DA
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:54:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E4B02183E
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:35:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61E6321850
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 21:54:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555536946;
-	bh=SJZSA0fLSDTiWyoKeLOooKR6+2R8Vzq7qlRdn+v/hVU=;
+	s=default; t=1555538064;
+	bh=72Y5yaN0OBfC9mUcvHjlGNLJip4pGYju/K0LqKwOLwc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=nASerDTGqf5UGhEhdYeAWKtu42kpduyzyycAyRGXid/3XLqAc/lk1vouPTpmU/IuQ
-	 khnjlKgHY7uvOGRMDLxsUVzbfJ8+2VQh8nx21kUzPpd8tqcIVknLaNyCZ0kTbwhCWH
-	 8jJ9yjXjtMkrj8w0Ya8eTv4408vdkapxgflFzZtE=
+	b=JCPhaJ5wBvJXlkyOJE3wOiQdlM9Txd01Ydv12qHpfLT4M24yb6vx/lml+icc10H9U
+	 edEk8mOgtXFDFrqGXmuiwGodBh1eyav34MZue0lBV3Uvi7hf8WeLffBTGq6mYaMrQ7
+	 nEHJLoVJ9p4U5MCo8V433BtqpFP6G0IQ2a5Sk7pE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728237AbfDQVfp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 17:35:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48940 "EHLO mail.kernel.org"
+        id S1729500AbfDQVyX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Apr 2019 17:54:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60898 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725848AbfDQVfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Apr 2019 17:35:45 -0400
+        id S1727013AbfDQVyX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Apr 2019 17:54:23 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 61E57217FA;
-        Wed, 17 Apr 2019 21:35:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 02D132183E;
+        Wed, 17 Apr 2019 21:54:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555536944;
-        bh=SJZSA0fLSDTiWyoKeLOooKR6+2R8Vzq7qlRdn+v/hVU=;
+        s=default; t=1555538062;
+        bh=72Y5yaN0OBfC9mUcvHjlGNLJip4pGYju/K0LqKwOLwc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=C0tAra3z17APRqg1cXBU+ZIs+qMG8GgkE5e83EhUPlx6bkF1brK8gUWDQxLtdNXJK
-         WmlGH8rdgP9A7vrtJYko1vKA7ETlkHXUDi9Mhtqzd4va7ImwmAMpm9aovmTuUetPX7
-         cXxIxus6lTn3u2gb97uQlXWTmJ1Fo6Urc3sqEXqk=
-Date:   Wed, 17 Apr 2019 16:35:42 -0500
+        b=DYyFEOoGarNIlIT1PXcglispXnZEI28ZJKPVL8PDwblSBxon5P0mdc8YFX8tDVIeE
+         ao3gUQRABJs/t6Px3rca2tptluOmgl2aizC1AX7DxR79MlaIzFdSNmrrsPl8YBp4QC
+         zRssT3BQEez1cOz0oqeFOWgKY3xNb+UyDDuaduWw=
+Date:   Wed, 17 Apr 2019 16:54:20 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mohan Kumar <mohankumar718@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: pci: This patch fix the following checkpatch
- warning.
-Message-ID: <20190417213542.GU126710@google.com>
-References: <1555433020-3830-1-git-send-email-mohankumar718@gmail.com>
+To:     Julia Lawall <julia.lawall@lip6.fr>
+Cc:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        kbuild-all@01.org, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kirill Smelkov <kirr@nexedi.com>
+Subject: Re: [PATCH] pci/switchtec: fix stream_open.cocci warnings (fwd)
+Message-ID: <20190417215420.GV126710@google.com>
+References: <alpine.DEB.2.21.1904131849350.2536@hadrien>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1555433020-3830-1-git-send-email-mohankumar718@gmail.com>
+In-Reply-To: <alpine.DEB.2.21.1904131849350.2536@hadrien>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Mohan,
-
-On Tue, Apr 16, 2019 at 07:43:40PM +0300, Mohan Kumar wrote:
-> Use pr_err instead of printk
-
-I don't mind taking patches like these, but they do tend to clutter
-the revision history if we're not careful.  So here are some hints:
-
-  - Make the subject line useful.  The one here really doesn't tell me
-    anything.  Run "git log --oneline drivers/pci/bus.c" and follow
-    the conventions there.  Something like:
-
-      PCI: Convert printk(KERN_*) to pr_*()
-
-  - Do all the similar changes at once.  I notice similar things in
-    these files:
-
-      drivers/pci/pci-acpi.c
-      drivers/pci/pci-stub.c
-      drivers/pci/pci-sysfs.c
-      drivers/pci/pci.c
-      drivers/pci/pcie/aspm.c
-      drivers/pci/quirks.c
-      drivers/pci/setup-bus.c
-      drivers/pci/slot.c
-
-    plus several in drivers/pci/hotplug/.  These could all be done in
-    a single patch.
-
-  - If there are several in a file that use the same prefix, add a
-    "#define pr_fmt()".  This should be a separate patch so each patch
-    does only one type of change, which makes them easier to review.
-
-  - There are several uses of "printk(KERN_DEBUG)",
-    "dev_printk(KERN_DEBUG)", and "pci_printk(KERN_DEBUG)".  The
-    obvious thing would be to convert those to pr_debug(), dev_dbg(),
-    and pci_dbg(), but I don't like that approach because pr_debug()
-    and friends do different things depending on how the kernel is
-    built.  The uses in PCI provide information that I want to appear
-    in the dmesg log *always*.  So they could be (a) left alone or (b)
-    converted from KERN_DEBUG to KERN_INFO (i.e., converted to
-    pr_info(), dev_info(), etc).
-
-> WARNING: Prefer [subsystem eg: netdev]_err([subsystem]dev, ...
-> then dev_err(dev, ... then pr_err(...  to printk(KERN_ERR ...
+On Sat, Apr 13, 2019 at 06:50:57PM +0200, Julia Lawall wrote:
+> Hello,
 > 
-> Signed-off-by: Mohan Kumar <mohankumar718@gmail.com>
+> Kirill will explain about this issue.
+> 
+> julia
+> 
+> ---------- Forwarded message ----------
+> Date: Sat, 13 Apr 2019 11:22:51 +0800
+> From: kbuild test robot <lkp@intel.com>
+> To: kbuild@01.org
+> Cc: Julia Lawall <julia.lawall@lip6.fr>
+> Subject: [PATCH] pci/switchtec: fix stream_open.cocci warnings
+> 
+> CC: kbuild-all@01.org
+> TO: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+> CC: Logan Gunthorpe <logang@deltatee.com>
+> CC: Bjorn Helgaas <helgaas@kernel.org>
+> CC: linux-pci@vger.kernel.org
+> CC: linux-kernel@vger.kernel.org
+> 
+> From: kbuild test robot <lkp@intel.com>
+> 
+> drivers/pci/switch/switchtec.c:395:1-17: ERROR: switchtec_fops: .read() can deadlock .write(); change nonseekable_open -> stream_open to fix.
+> 
+> Generated by: scripts/coccinelle/api/stream_open.cocci
+> 
+> Fixes: 8a29a3bae2a2 ("pci/switchtec: Don't use completion's wait queue")
+> Signed-off-by: kbuild test robot <lkp@intel.com>
+
+Based on Kirill's subsequent email saying this is already queued to
+the merge window, I assume I need to do nothing here.
+
+I think a signed-off-by from a robot, i.e., not from a real person, is
+meaningless, and I don't think I would personally accept it.  It's
+certainly OK to indicate that a patch was auto-generated, but I think
+a real person still needs to take responsibility for it.
+
+Documentation/process/submitting-patches.rst says it must contain a
+real name (no pseudonyms or anonymous contributions), and I don't
+think a robot fits in the spirit of that.
+
+I see that
+https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git/commit/?id=8a29a3bae2a2
+(mentioned below) does have a good signed-off-by from Sebastian, but
+that's not *this* patch, so I don't know what's what.
+
+Bjorn
+
 > ---
->  drivers/pci/bus.c | 2 +-
+> 
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git linux-5.0.y-rt-rebase
+> head:   794c294ae4483c240429c25a0d18e272e92c94de
+> commit: 8a29a3bae2a2dfb0116cd8791d9700515d6e765e [154/311] pci/switchtec: Don't use completion's wait queue
+> :::::: branch date: 7 hours ago
+> :::::: commit date: 7 hours ago
+> 
+> Please take the patch only if it's a positive warning. Thanks!
+> 
+>  switchtec.c |    2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 5cb40b2..2179a8b 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -23,7 +23,7 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->  
->  	entry = resource_list_create_entry(res, 0);
->  	if (!entry) {
-> -		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
-> +		pr_err("PCI: can't add host bridge window %pR\n", res);
->  		return;
->  	}
->  
-> -- 
-> 2.7.4
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -392,7 +392,7 @@ static int switchtec_dev_open(struct ino
+>  		return PTR_ERR(stuser);
+> 
+>  	filp->private_data = stuser;
+> -	nonseekable_open(inode, filp);
+> +	stream_open(inode, filp);
+> 
+>  	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
 > 
