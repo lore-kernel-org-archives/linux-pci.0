@@ -4,35 +4,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25433C282DD
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:17:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE46C282DC
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:17:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E31192177B
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:17:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 734E920872
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Apr 2019 14:17:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732560AbfDQORK convert rfc822-to-8bit (ORCPT
+        id S1731565AbfDQORT convert rfc822-to-8bit (ORCPT
         <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 17 Apr 2019 10:17:10 -0400
-Received: from mail-oln040092254050.outbound.protection.outlook.com ([40.92.254.50]:46084
-        "EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+        Wed, 17 Apr 2019 10:17:19 -0400
+Received: from mail-oln040092253097.outbound.protection.outlook.com ([40.92.253.97]:60537
+        "EHLO APC01-SG2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732105AbfDQORJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 Apr 2019 10:17:09 -0400
+        id S1732105AbfDQORS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 Apr 2019 10:17:18 -0400
 Received: from HK2APC01FT008.eop-APC01.prod.protection.outlook.com
- (10.152.248.58) by HK2APC01HT018.eop-APC01.prod.protection.outlook.com
- (10.152.249.29) with Microsoft SMTP Server (version=TLS1_2,
+ (10.152.248.55) by HK2APC01HT094.eop-APC01.prod.protection.outlook.com
+ (10.152.249.179) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1771.16; Wed, 17 Apr
- 2019 14:16:59 +0000
+ 2019 14:17:10 +0000
 Received: from PS2P216MB0642.KORP216.PROD.OUTLOOK.COM (10.152.248.51) by
  HK2APC01FT008.mail.protection.outlook.com (10.152.248.117) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.1771.16 via Frontend Transport; Wed, 17 Apr 2019 14:16:59 +0000
+ 15.20.1771.16 via Frontend Transport; Wed, 17 Apr 2019 14:17:10 +0000
 Received: from PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
  ([fe80::adb3:4c16:60fd:65]) by PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
  ([fe80::adb3:4c16:60fd:65%5]) with mapi id 15.20.1813.011; Wed, 17 Apr 2019
- 14:16:59 +0000
+ 14:17:09 +0000
 From:   Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
 To:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -40,199 +40,573 @@ CC:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
         "corbet@lwn.net" <corbet@lwn.net>,
         Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-Subject: [PATCH v4 3/4] PCI: Modify kernel parameters to differentiate between
- MMIO and MMIO_PREF sizes
-Thread-Topic: [PATCH v4 3/4] PCI: Modify kernel parameters to differentiate
- between MMIO and MMIO_PREF sizes
-Thread-Index: AQHU9Sg4dNe5cRl7SUmHebwitGRZzQ==
-Date:   Wed, 17 Apr 2019 14:16:59 +0000
-Message-ID: <PS2P216MB0642A4E43D8528D0B65C077780250@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
+Subject: [PATCH v4 4/4] PCI: Cleanup block comments in setup-bus.c to meet
+ kernel style guidelines
+Thread-Topic: [PATCH v4 4/4] PCI: Cleanup block comments in setup-bus.c to
+ meet kernel style guidelines
+Thread-Index: AQHU9Sg+INEXLr8ppU+ajd8aRQrPqg==
+Date:   Wed, 17 Apr 2019 14:17:09 +0000
+Message-ID: <PS2P216MB06427E290A68CDB921FB4B2980250@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 References: <20190417141610.6730-1-nicholas.johnson-opensource@outlook.com.au>
 In-Reply-To: <20190417141610.6730-1-nicholas.johnson-opensource@outlook.com.au>
 Accept-Language: en-AU, en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-x-clientproxiedby: SG3P274CA0019.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:be::31)
- To PS2P216MB0642.KORP216.PROD.OUTLOOK.COM (2603:1096:300:1c::16)
-x-incomingtopheadermarker: OriginalChecksum:BDCAEE2EF4B706058053BC38E37A9EDB211DD91E61FD09508EE4EA67F07AB586;UpperCasedChecksum:A8FEFFB4C2548FDD63E9A61AE5CE476704F75D9EB0F87AD07B279B563A162598;SizeAsReceived:7858;Count:50
+x-clientproxiedby: KL1P15301CA0033.APCP153.PROD.OUTLOOK.COM
+ (2603:1096:820:6::21) To PS2P216MB0642.KORP216.PROD.OUTLOOK.COM
+ (2603:1096:300:1c::16)
+x-incomingtopheadermarker: OriginalChecksum:F3F93308707DA45DD479142441C8B39436D7FC0A3F23BC0C7022AEBD755E1C78;UpperCasedChecksum:602F7F0F0AC5D7FF5353D3089C66D037A8230DA3C34650D825F9760C30AA9D30;SizeAsReceived:7880;Count:50
 x-ms-exchange-messagesentrepresentingtype: 1
 x-mailer: git-send-email 2.19.1
-x-tmn:  [ygJSEG027QihQTG8bBhSsyUg15RgdZo0ws/oXi9Nz1g=]
-x-microsoft-original-message-id: <20190417141610.6730-4-nicholas.johnson-opensource@outlook.com.au>
+x-tmn:  [GjZVMZDNpe3L9UvQODQzBX0udACu4yxjpCDDjkEiVlA=]
+x-microsoft-original-message-id: <20190417141610.6730-5-nicholas.johnson-opensource@outlook.com.au>
 x-ms-publictraffictype: Email
 x-incomingheadercount: 50
 x-eopattributedmessage: 0
-x-ms-exchange-slblob-mailprops: LtmIgUwM0qSIxq0Ww8akoyXrG9MYRnDXLdSVOZ79FhyfWge6A2//beqkGOzJQDemaxWTcOwRCOK6rDufCsOL/XwjBvb0UWGos+L5U5Iwuq9CyB01uaRaA4HRDMJ1nW500MHetE7raJ/aEV/oBnfwBeWvFyRXhDGJyjRXdGtD6nSIKpyvUcCMAIOAVJcBbBcdYnzXzwywWP3ou5W6RNDM8UDCLxkp37qcXL+ybZQ27god/fQ7s2qmeK048rpn0+QZd/gO2EHemjsz6miAc8lzgajJxLdBAmL+cqzangEZXeXw35weIW+DvLUd1B2B9GO48aOqq5P8n7KNFrR/mzo5fkvlYBGSPygz13ePzEmSKwUd5477zVr+k9X6GdzyT5O/AxYhTHH2f8UhORrvf4YDttvCjsW7ezJbHmOzSWoPDpDEPp0G9khKy/Cm976zbp2MPmiQCWOlqLhzAw+sBBtMVLWQmZs5daSw+0LenJ9CaRa9j53Oq4S+a4VxA2Svg3cCTwft7ZZgRv0R+LWQGmq5iOkSCiz74ExbVXkdgBBO4bz7ICGfuDjep8/i8UBeyBFkbbtue8hz9EGpzCK9oMfIXctIQRfUPv+cVowgZwY9bq7KMj06QihrZEAYpcBV6NvjmbP02fdh0pNJoVd/3+hZvpmpa9tvRCKT98zuW18OZDvXgyI/ex/2cwJJxmGu7xnQgYcHsDhLdJEdQbrJ5GeP3R6UbEr3HGpeHnY7zi08NyrCO3svm24Xr2HL6mae8rlNUGlJh2bS33hfZGzrCXtyNg==
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(20181119110)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(201702181274)(2017031323274)(2017031324274)(2017031322404)(1603101475)(1601125500)(1701031045);SRVR:HK2APC01HT018;
-x-ms-traffictypediagnostic: HK2APC01HT018:
-x-microsoft-antispam-message-info: yU3JNF0fHRsnSidHdcu3xkZUX/YS8Wdr+HWS0Jev2IbMnrPGaPPH7nt0qK/WwJgY4XzBRcPtYAFS1lBhNO6qa2EfaQpMYzoq0YQ5wEUSuGFUalgeo6xi5EbZt4LdGYcxYaZ9Vns7J9PROvR1wqdn8NG8ZcMmPuclAy4qfe7JVM2hT3IH7lz0Yu/w3jqGR1Y7
+x-ms-exchange-slblob-mailprops: zswcL9HXbeUuq4/PM8OFiqKh1bfVgTnQcxNA7XQMNmolt6XJwBEcYVaRjMv00VMBA5n/nZsEkZIuM+duM9Q835Ek9FyCLKqkCDwfu+VIuXG4TqxasaWmZBz7MdYq2zGUQUU1s07j7khtLQIk00vWFhZBFnJirr+RIHjaygGCQfkCdFa4FVtoBjHWMetQDCVnpV4xShUUkDjtLf0Rm4olQqCNmeqca8jHQW6Oc68OALAkk6w2EbLaHBKa1v1xrRzd+zaH6uSuwQc3O5KgLDpJ9hh1M6tfs/sBF7nA7RZetSPzcfeCHgruFbJwcygtjR+ViSS6E5tyPtfRGyEcTx/Wua9EOPdb8Lvksj42DDB0xwnvhlhm9T0SBoKt8AjEKKIjuR5r/exkQHXSNAn/5IsL6efxWYJRPkN6LUUhJuwo668vk5Un90pIpHm4ic8OvRS9+4+XIDBpXaafIgdD3eCdUWDopNDqjVcnulsMh7LEyYzCiPiDncBs3cA8kp2ZekGmLve5tyHfKVl/BLgN1H9ST2Oix/R3NE6awCjxryWU4KUA51+WttmLd9OzKQ7NFeKRtjAYYeYbGQHfYHAhdZUT49pW+li5kp+wicy/6EGJZhyXgP7rUSddv7oziLcVtIXl0q7ZKBW7Nfrk26kl1LO3sHF1xDRxX/IMr9tlnaKie2wPji2ZIme3V2DZKJDsrikVDzwsxvk4YFZvyNUBlUBALBOofi1lOL1wMLIFzxYkN2O7NdSHwoNIutQF6W40gdJ6
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(20181119110)(201702061078)(5061506573)(5061507331)(1603103135)(2017031320274)(201702181274)(2017031323274)(2017031324274)(2017031322404)(1601125500)(1603101475)(1701031045);SRVR:HK2APC01HT094;
+x-ms-traffictypediagnostic: HK2APC01HT094:
+x-microsoft-antispam-message-info: ct1AQtHFN6YFvJHV1PpK513lYfULFnAcoH2KcQ3wUeYAY7uvp4elFcxKeGB0THGECZNvBdsyCvBYaJNBFVwYZEmfeocDGoJNVIZRP/Lyhv+XomLoYjciwC9ZKa4GnwsUcCLYCFMwmdvo9P4M+CZqzno0kWZfaJyONJO96Z6OjjJl0B81N2tL9GKg2B2BaIw7
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
 X-OriginatorOrg: outlook.com
 X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8188ac88-02da-4fb4-76bc-08d6c33f5a91
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33deca55-f4cd-40b4-13cc-08d6c33f60d2
 X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Apr 2019 14:16:59.2765
+X-MS-Exchange-CrossTenant-originalarrivaltime: 17 Apr 2019 14:17:09.8043
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Internet
 X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: HK2APC01HT018
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: HK2APC01HT094
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add kernel parameter pci=hpmemprefsize=nn[KMG] to control MMIO_PREF
-size for PCI hotplug bridges.
+Change block comments to accepted style with asterisks on each line.
 
-Change behaviour of pci=hpmemsize=nn[KMG] to only control MMIO size,
-rather than controlling both MMIO and MMIO_PREF sizes.
-
-Update kernel-parameters documentation to reflect the above changes.
+Justify block comments to 80-character limit to reduce the number of
+lines where possible.
 
 Signed-off-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
 ---
- .../admin-guide/kernel-parameters.txt         |  5 +++-
- drivers/pci/pci.c                             | 12 ++++++---
- drivers/pci/setup-bus.c                       | 25 +++++++++++--------
- include/linux/pci.h                           |  3 ++-
- 4 files changed, 29 insertions(+), 16 deletions(-)
+ drivers/pci/setup-bus.c | 248 +++++++++++++++++++---------------------
+ 1 file changed, 120 insertions(+), 128 deletions(-)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 2b8ee90bb..f33b590c2 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -3361,7 +3361,10 @@
- 				reserved for hotplug bridge's IO window.
- 				Default size is 256 bytes.
- 		hpmemsize=nn[KMG]	The fixed amount of bus space which is
--				reserved for hotplug bridge's memory window.
-+				reserved for hotplug bridge's MMIO window.
-+				Default size is 2 megabytes.
-+		hpmemprefsize=nn[KMG]	The fixed amount of bus space which is
-+				reserved for hotplug bridge's MMIO_PREF window.
- 				Default size is 2 megabytes.
- 		hpbussize=nn	The minimum amount of additional bus numbers
- 				reserved for buses below a hotplug bridge.
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7c1b362f5..e0502831f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -85,10 +85,12 @@ unsigned long pci_cardbus_io_size = DEFAULT_CARDBUS_IO_SIZE;
- unsigned long pci_cardbus_mem_size = DEFAULT_CARDBUS_MEM_SIZE;
- 
- #define DEFAULT_HOTPLUG_IO_SIZE		(256)
--#define DEFAULT_HOTPLUG_MEM_SIZE	(2*1024*1024)
-+#define DEFAULT_HOTPLUG_MMIO_SIZE	(2*1024*1024)
-+#define DEFAULT_HOTPLUG_MMIO_PREF_SIZE	(2*1024*1024)
- /* pci=hpmemsize=nnM,hpiosize=nn can override this */
- unsigned long pci_hotplug_io_size  = DEFAULT_HOTPLUG_IO_SIZE;
--unsigned long pci_hotplug_mem_size = DEFAULT_HOTPLUG_MEM_SIZE;
-+unsigned long pci_hotplug_mmio_size = DEFAULT_HOTPLUG_MMIO_SIZE;
-+unsigned long pci_hotplug_mmio_pref_size = DEFAULT_HOTPLUG_MMIO_PREF_SIZE;
- 
- #define DEFAULT_HOTPLUG_BUS_SIZE	1
- unsigned long pci_hotplug_bus_size = DEFAULT_HOTPLUG_BUS_SIZE;
-@@ -6245,7 +6247,11 @@ static int __init pci_setup(char *str)
- 			} else if (!strncmp(str, "hpiosize=", 9)) {
- 				pci_hotplug_io_size = memparse(str + 9, &str);
- 			} else if (!strncmp(str, "hpmemsize=", 10)) {
--				pci_hotplug_mem_size = memparse(str + 10, &str);
-+				pci_hotplug_mmio_size =
-+					memparse(str + 10, &str);
-+			} else if (!strncmp(str, "hpmemprefsize=", 14)) {
-+				pci_hotplug_mmio_pref_size =
-+					memparse(str + 14, &str);
- 			} else if (!strncmp(str, "hpbussize=", 10)) {
- 				pci_hotplug_bus_size =
- 					simple_strtoul(str + 10, &str, 0);
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5b9ee9945..95149165a 100644
+index 95149165a..bdce5b734 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1187,7 +1187,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t additional_io_size = 0, additional_mmio_size = 0,
-+		additional_mmio_pref_size = 0;
- 	struct resource *b_res;
- 	int ret;
+@@ -51,11 +51,9 @@ static void free_list(struct list_head *head)
+ /**
+  * add_to_list() - add a new resource tracker to the list
+  * @head:	Head of the list
+- * @dev:	device corresponding to which the resource
+- *		belongs
++ * @dev:	device corresponding to which the resource belongs
+  * @res:	The resource to be tracked
+- * @add_size:	additional size to be optionally added
+- *              to the resource
++ * @add_size:	additional size to be optionally added to the resource
+  */
+ static int add_to_list(struct list_head *head,
+ 		 struct pci_dev *dev, struct resource *res,
+@@ -158,7 +156,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		tmp->res = r;
+ 		tmp->dev = dev;
  
-@@ -1221,7 +1222,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			additional_mmio_size = pci_hotplug_mmio_size;
-+			additional_mmio_pref_size = pci_hotplug_mmio_pref_size;
+-		/* fallback is smallest one or list is empty*/
++		/* fallback is smallest one or list is empty */
+ 		n = head;
+ 		list_for_each_entry(dev_res, head, list) {
+ 			resource_size_t align;
+@@ -171,7 +169,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 				break;
+ 			}
  		}
- 		/* Fall through */
- 	default:
-@@ -1239,9 +1241,9 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		if (b_res[2].flags & IORESOURCE_MEM_64) {
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
--				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				prefmask, prefmask,
-+				realloc_head ? 0 : additional_mmio_pref_size,
-+				additional_mmio_pref_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1263,9 +1265,9 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		if (!type2) {
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
--					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+				prefmask, prefmask,
-+				realloc_head ? 0 : additional_mmio_pref_size,
-+				additional_mmio_pref_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1274,7 +1276,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				additional_mmio_size +=
-+					additional_mmio_pref_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1295,8 +1298,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+			realloc_head ? 0 : additional_mmio_size,
-+			additional_mmio_size, realloc_head);
- 		break;
+-		/* Insert it just before n*/
++		/* Insert it just before n */
+ 		list_add_tail(&tmp->list, n);
  	}
  }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 77448215e..7ab8f5b88 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1964,7 +1964,8 @@ extern u8 pci_dfl_cache_line_size;
- extern u8 pci_cache_line_size;
+@@ -181,7 +179,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ {
+ 	u16 class = dev->class >> 8;
  
- extern unsigned long pci_hotplug_io_size;
--extern unsigned long pci_hotplug_mem_size;
-+extern unsigned long pci_hotplug_mmio_size;
-+extern unsigned long pci_hotplug_mmio_pref_size;
- extern unsigned long pci_hotplug_bus_size;
+-	/* Don't touch classless devices or host bridges or ioapics.  */
++	/* Don't touch classless devices or host bridges or ioapics */
+ 	if (class == PCI_CLASS_NOT_DEFINED || class == PCI_CLASS_BRIDGE_HOST)
+ 		return;
  
- /* Architecture-specific versions may override these (weak) */
+@@ -208,12 +206,10 @@ static inline void reset_resource(struct resource *res)
+  *
+  * @realloc_head : head of the list tracking requests requiring additional
+  *             resources
+- * @head     : head of the list tracking requests with allocated
+- *             resources
++ * @head     : head of the list tracking requests with allocated resources
+  *
+- * Walk through each element of the realloc_head and try to procure
+- * additional resources for the element, provided the element
+- * is in the head list.
++ * Walk through each element of the realloc_head and try to procure additional
++ * resources for the element, provided the element is in the head list.
+  */
+ static void reassign_resources_sorted(struct list_head *realloc_head,
+ 		struct list_head *head)
+@@ -315,10 +311,9 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
+ 		mask |= fail_res->flags;
+ 
+ 	/*
+-	 * one pref failed resource will set IORESOURCE_MEM,
+-	 * as we can allocate pref in non-pref range.
+-	 * Will release all assigned non-pref sibling resources
+-	 * according to that bit.
++	 * one pref failed resource will set IORESOURCE_MEM, as we can allocate
++	 * pref in non-pref range. Will release all assigned non-pref sibling
++	 * resources according to that bit.
+ 	 */
+ 	return mask & (IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH);
+ }
+@@ -351,25 +346,24 @@ static void __assign_resources_sorted(struct list_head *head,
+ 				 struct list_head *fail_head)
+ {
+ 	/*
+-	 * Should not assign requested resources at first.
+-	 *   they could be adjacent, so later reassign can not reallocate
+-	 *   them one by one in parent resource window.
+-	 * Try to assign requested + add_size at beginning
+-	 *  if could do that, could get out early.
+-	 *  if could not do that, we still try to assign requested at first,
+-	 *    then try to reassign add_size for some resources.
++	 * Should not assign requested resources at first. They could be
++	 * adjacent, so later reassign can not reallocate them one by one in
++	 * parent resource window.
++	 *
++	 * Try to assign requested + add_size at beginning. If could do that,
++	 * could get out early. If could not do that, we still try to assign
++	 * requested at first, then try to reassign add_size for some resources.
+ 	 *
+ 	 * Separate three resource type checking if we need to release
+ 	 * assigned resource after requested + add_size try.
+-	 *	1. if there is io port assign fail, will release assigned
+-	 *	   io port.
+-	 *	2. if there is pref mmio assign fail, release assigned
+-	 *	   pref mmio.
+-	 *	   if assigned pref mmio's parent is non-pref mmio and there
+-	 *	   is non-pref mmio assign fail, will release that assigned
+-	 *	   pref mmio.
+-	 *	3. if there is non-pref mmio assign fail or pref mmio
+-	 *	   assigned fail, will release assigned non-pref mmio.
++	 *	1. if there is io port assign fail, will release assigned io
++	 *	   port.
++	 *	2. if there is pref mmio assign fail, release assigned pref
++	 *	   mmio. If assigned pref mmio's parent is non-pref mmio
++	 *	   and there is non-pref mmio assign fail, will release that
++	 *	   assigned pref mmio.
++	 *	3. if there is non-pref mmio assign fail or pref mmio assigned
++	 *	   fail, will release assigned non-pref mmio.
+ 	 */
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+@@ -398,7 +392,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+ 		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
++		 * 2. SR-IOV resource  -- IORESOURCE_SIZEALIGN
+ 		 * Here just fix the additional alignment for bridge
+ 		 */
+ 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+@@ -477,8 +471,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
+ 
+-	/* Try to satisfy any additional optional resource
+-		requests */
++	/* Try to satisfy any additional optional resource requests */
+ 	if (realloc_head)
+ 		reassign_resources_sorted(realloc_head, head);
+ 	free_list(head);
+@@ -563,17 +556,19 @@ void pci_setup_cardbus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_setup_cardbus);
+ 
+-/* Initialize bridges with base/limit values we have collected.
+-   PCI-to-PCI Bridge Architecture Specification rev. 1.1 (1998)
+-   requires that if there is no I/O ports or memory behind the
+-   bridge, corresponding range must be turned off by writing base
+-   value greater than limit to the bridge's base/limit registers.
+-
+-   Note: care must be taken when updating I/O base/limit registers
+-   of bridges which support 32-bit I/O. This update requires two
+-   config space writes, so it's quite possible that an I/O window of
+-   the bridge will have some undesirable address (e.g. 0) after the
+-   first write. Ditto 64-bit prefetchable MMIO.  */
++/*
++ * Initialize bridges with base/limit values we have collected. PCI-to-PCI
++ * Bridge Architecture Specification rev. 1.1 (1998) requires that if there is
++ * no I/O ports or memory behind the bridge, corresponding range must be turned
++ * off by writing base value greater than limit to the bridge's base/limit
++ * registers.
++ *
++ * Note: care must be taken when updating I/O base/limit registers of bridges
++ * which support 32-bit I/O. This update requires two config space writes, so
++ * it's quite possible that an I/O window of the bridge will have some
++ * undesirable address (e.g. 0) after the first write. Ditto 64-bit prefetchable
++ *  MMIO.
++ */
+ static void pci_setup_bridge_io(struct pci_dev *bridge)
+ {
+ 	struct resource *res;
+@@ -636,9 +631,11 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
+ 	struct pci_bus_region region;
+ 	u32 l, bu, lu;
+ 
+-	/* Clear out the upper 32 bits of PREF limit.
+-	   If PCI_PREF_BASE_UPPER32 was non-zero, this temporarily
+-	   disables PREF range, which is ok. */
++	/*
++	 * Clear out the upper 32 bits of PREF limit.
++	 * If PCI_PREF_BASE_UPPER32 was non-zero, this temporarily
++	 * disables PREF range, which is ok.
++	 */
+ 	pci_write_config_dword(bridge, PCI_PREF_LIMIT_UPPER32, 0);
+ 
+ 	/* Set up PREF base/limit. */
+@@ -730,9 +727,11 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
+ 
+-/* Check whether the bridge supports optional I/O and
+-   prefetchable memory ranges. If not, the respective
+-   base/limit registers must be read-only and read as 0. */
++/*
++ * Check whether the bridge supports optional I/O and prefetchable memory
++ * ranges. If not, the respective base/limit registers must be read-only and
++ * read as 0.
++ */
+ static void pci_bridge_check_ranges(struct pci_bus *bus)
+ {
+ 	struct pci_dev *bridge = bus->self;
+@@ -789,8 +788,10 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA flag in the
++	 * struct pci_bus.
++	 */
+ #if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+ 	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+ #endif
+@@ -839,8 +840,8 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 		align = PCI_P2P_DEFAULT_MEM_ALIGN;
+ 	else if (type & IORESOURCE_IO) {
+ 		/*
+-		 * Per spec, I/O windows are 4K-aligned, but some
+-		 * bridges have an extension to support 1K alignment.
++		 * Per spec, I/O windows are 4K-aligned, but some bridges have
++		 * an extension to support 1K alignment.
+ 		 */
+ 		if (bus->self->io_window_1k)
+ 			align = PCI_P2P_DEFAULT_IO_ALIGN_1K;
+@@ -860,10 +861,9 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  * @add_size : additional optional io window
+  * @realloc_head : track the additional io window on this list
+  *
+- * Sizing the IO windows of the PCI-PCI bridge is trivial,
+- * since these windows have 1K or 4K granularity and the IO ranges
+- * of non-bridge PCI devices are limited to 256 bytes.
+- * We must be careful with the ISA aliasing though.
++ * Sizing the IO windows of the PCI-PCI bridge is trivial, since these windows
++ * have 1K or 4K granularity and the IO ranges of non-bridge PCI devices are
++ * limited to 256 bytes. We must be careful with the ISA aliasing though.
+  */
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		resource_size_t add_size, struct list_head *realloc_head)
+@@ -966,12 +966,12 @@ static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+  * @add_size : additional optional memory window
+  * @realloc_head : track the additional memory window on this list
+  *
+- * Calculate the size of the bus and minimal alignment which
+- * guarantees that all child resources fit in this size.
++ * Calculate the size of the bus and minimal alignment which guarantees that all
++ * child resources fit in this size.
+  *
+  * Returns -ENOSPC if there's no available bus resource of the desired type.
+- * Otherwise, sets the bus resource start/end to indicate the required
+- * size, adds things to realloc_head (if supplied), and returns 0.
++ * Otherwise, sets the bus resource start/end to indicate the required size,
++ * adds things to realloc_head (if supplied), and returns 0.
+  */
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 unsigned long type, unsigned long type2,
+@@ -981,7 +981,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
++	resource_size_t aligns[18]; /* Alignments from 1Mb to 128Gb */
+ 	int order, max_order;
+ 	struct resource *b_res = find_bus_resource_of_type(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+@@ -1023,10 +1023,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			}
+ #endif
+ 			/*
+-			 * aligns[0] is for 1MB (since bridge memory
+-			 * windows are always at least 1MB aligned), so
+-			 * keep "order" from being negative for smaller
+-			 * resources.
++			 * aligns[0] is for 1MB (since bridge memory windows are
++			 * always at least 1MB aligned), so keep "order" from
++			 * being negative for smaller resources.
+ 			 */
+ 			align = pci_resource_alignment(dev, r);
+ 			order = __ffs(align) - 20;
+@@ -1039,8 +1038,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				continue;
+ 			}
+ 			size += max(r_size, align);
+-			/* Exclude ranges with size > align from
+-			   calculation of the alignment. */
++			/*
++			 * Exclude ranges with size > align from calculation of
++			 * the alignment.
++			 */
+ 			if (r_size <= align)
+ 				aligns[order] += align;
+ 			if (order > max_order)
+@@ -1101,8 +1102,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	if (b_res[0].parent)
+ 		goto handle_b_res_1;
+ 	/*
+-	 * Reserve some resources for CardBus.  We reserve
+-	 * a fixed amount of bus space for CardBus bridges.
++	 * Reserve some resources for CardBus.  We reserve a fixed amount of bus
++	 * space for CardBus bridges.
+ 	 */
+ 	b_res[0].start = pci_cardbus_io_size;
+ 	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
+@@ -1134,10 +1135,7 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 		pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+ 	}
+ 
+-	/*
+-	 * Check whether prefetchable memory is supported
+-	 * by this bridge.
+-	 */
++	/* Check whether prefetchable memory is supported by this bridge. */
+ 	pci_read_config_word(bridge, PCI_CB_BRIDGE_CONTROL, &ctrl);
+ 	if (!(ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0)) {
+ 		ctrl |= PCI_CB_BRIDGE_CTL_PREFETCH_MEM0;
+@@ -1148,9 +1146,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	if (b_res[2].parent)
+ 		goto handle_b_res_3;
+ 	/*
+-	 * If we have prefetchable memory support, allocate
+-	 * two regions.  Otherwise, allocate one region of
+-	 * twice the size.
++	 * If we have prefetchable memory support, allocate two regions.
++	 * Otherwise, allocate one region of twice the size.
+ 	 */
+ 	if (ctrl & PCI_CB_BRIDGE_CTL_PREFETCH_MEM0) {
+ 		b_res[2].start = pci_cardbus_mem_size;
+@@ -1231,9 +1228,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			     additional_io_size, realloc_head);
+ 
+ 		/*
+-		 * If there's a 64-bit prefetchable MMIO window, compute
+-		 * the size required to put all 64-bit prefetchable
+-		 * resources in it.
++		 * If there's a 64-bit prefetchable MMIO window, compute the
++		 * size required to put all 64-bit prefetchable resources in it.
+ 		 */
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+@@ -1246,9 +1242,9 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 				additional_mmio_pref_size, realloc_head);
+ 
+ 			/*
+-			 * If successful, all non-prefetchable resources
+-			 * and any 32-bit prefetchable resources will go in
+-			 * the non-prefetchable window.
++			 * If successful, all non-prefetchable resources and any
++			 * 32-bit prefetchable resources will go in the
++			 * non-prefetchable window.
+ 			 */
+ 			if (ret == 0) {
+ 				mask = prefmask;
+@@ -1284,18 +1280,17 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 
+ 		/*
+ 		 * Compute the size required to put everything else in the
+-		 * non-prefetchable window.  This includes:
++		 * non-prefetchable window. This includes:
+ 		 *
+ 		 *   - all non-prefetchable resources
+ 		 *   - 32-bit prefetchable resources if there's a 64-bit
+ 		 *     prefetchable window or no prefetchable window at all
+-		 *   - 64-bit prefetchable resources if there's no
+-		 *     prefetchable window at all
++		 *   - 64-bit prefetchable resources if there's no prefetchable
++		 *     window at all
+ 		 *
+-		 * Note that the strategy in __pci_assign_resource() must
+-		 * match that used here.  Specifically, we cannot put a
+-		 * 32-bit prefetchable resource in a 64-bit prefetchable
+-		 * window.
++		 * Note that the strategy in __pci_assign_resource() must match
++		 * that used here. Specifically, we cannot put a 32-bit
++		 * prefetchable resource in a 64-bit prefetchable window.
+ 		 */
+ 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+ 			realloc_head ? 0 : additional_mmio_size,
+@@ -1328,8 +1323,8 @@ static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
+ }
+ 
+ /*
+- * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they
+- * are skipped by pbus_assign_resources_sorted().
++ * Try to assign any resources marked as IORESOURCE_PCI_FIXED, as they are
++ * skipped by pbus_assign_resources_sorted().
+  */
+ static void pdev_assign_fixed_resources(struct pci_dev *dev)
+ {
+@@ -1440,10 +1435,9 @@ static void pci_bus_allocate_resources(struct pci_bus *b)
+ 	struct pci_bus *child;
+ 
+ 	/*
+-	 * Carry out a depth-first search on the PCI bus
+-	 * tree to allocate bridge apertures. Read the
+-	 * programmed bridge bases and recursively claim
+-	 * the respective bridge resources.
++	 * Carry out a depth-first search on the PCI bus tree to allocate bridge
++	 * apertures. Read the programmed bridge bases and recursively claim the
++	 * respective bridge resources.
+ 	 */
+ 	if (b->self) {
+ 		pci_read_bridge_bases(b);
+@@ -1508,16 +1502,15 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
+ 
+ 	/*
+-	 *     1. if there is io port assign fail, will release bridge
+-	 *	  io port.
+-	 *     2. if there is non pref mmio assign fail, release bridge
+-	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
+-	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
+-	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
+-	 *	  assigned, release bridge nonpref mmio.
++	 * 1. if there is io port assign fail, will release bridge io port.
++	 * 2. if there is non pref mmio assign fail, release bridge nonpref
++	 *    mmio.
++	 * 3. if there is 64bit pref mmio assign fail, and bridge pref is 64bit,
++	 *    release bridge pref mmio.
++	 * 4. if there is pref mmio assign fail, and bridge pref is 32bit mmio,
++	 *    release bridge pref mmio
++	 * 5. if there is pref mmio assign fail, and bridge pref is not
++	 *    assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+@@ -1537,10 +1530,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	if (!r->parent)
+ 		return;
+ 
+-	/*
+-	 * if there are children under that, we should release them
+-	 *  all
+-	 */
++	/* if there are children under that, we should release them all */
+ 	release_child_resources(r);
+ 	if (!release_resource(r)) {
+ 		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
+@@ -1565,8 +1555,8 @@ enum release_type {
+ 	whole_subtree,
+ };
+ /*
+- * try to release pci bridge resources that is from leaf bridge,
+- * so we can allocate big new one later
++ * try to release pci bridge resources that is from leaf bridge, so we can
++ * allocate big new one later
+  */
+ static void pci_bus_release_bridge_resources(struct pci_bus *bus,
+ 					     unsigned long type,
+@@ -1727,8 +1717,8 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+  */
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ {
+-	LIST_HEAD(realloc_head); /* list of resources that
+-					want additional resources */
++	LIST_HEAD(realloc_head);
++	/* list of resources that want additional resources */
+ 	struct list_head *add_list = NULL;
+ 	int tried_times = 0;
+ 	enum release_type rel_type = leaf_only;
+@@ -1750,13 +1740,14 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 
+ again:
+ 	/*
+-	 * last try will use add_list, otherwise will try good to have as
+-	 * must have, so can realloc parent bridge resource
++	 * last try will use add_list, otherwise will try good to have as must
++	 * have, so can realloc parent bridge resource
+ 	 */
+ 	if (tried_times + 1 == pci_try_num)
+ 		add_list = &realloc_head;
+-	/* Depth first, calculate sizes and alignments of all
+-	   subordinate buses. */
++	/*
++	 * Depth first, calculate sizes and alignments of all subordinate buses.
++	 */
+ 	__pci_bus_size_bridges(bus, add_list);
+ 
+ 	/* Depth last, allocate resources and update the hardware. */
+@@ -2016,8 +2007,9 @@ pci_bridge_distribute_available_resources(struct pci_dev *bridge,
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
+-	LIST_HEAD(add_list); /* list of resources that
+-					want additional resources */
++	/* list of resources that want additional resources */
++	LIST_HEAD(add_list);
++
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+@@ -2027,9 +2019,9 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 
+ 	/*
+-	 * Distribute remaining resources (if any) equally between
+-	 * hotplug bridges below. This makes it possible to extend the
+-	 * hierarchy later without running out of resources.
++	 * Distribute remaining resources (if any) equally between hotplug
++	 * bridges below. This makes it possible to extend the hierarchy
++	 * later without running out of resources.
+ 	 */
+ 	pci_bridge_distribute_available_resources(bridge, &add_list);
+ 
+@@ -2181,8 +2173,8 @@ int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+-	LIST_HEAD(add_list); /* list of resources that
+-					want additional resources */
++	/* list of resources that want additional resources */
++	LIST_HEAD(add_list);
+ 
+ 	down_read(&pci_bus_sem);
+ 	for_each_pci_bridge(dev, bus)
 -- 
 2.20.1
 
