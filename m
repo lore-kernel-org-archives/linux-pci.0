@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA9AC10F0E
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 22:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1142C10F0E
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:17:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A05A21479
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 22:56:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E23E217FA
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:17:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555628195;
-	bh=jwShYleCV5i5RKIjcQ9iqMlWCmfob/OykEZiJ7IT3Zk=;
+	s=default; t=1555629428;
+	bh=Z6C9UqrhJQ85tkkdKAI3DqslSUOVOJNtpbq7V9arSwU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=0668frUtOSAHw/oIJINNMty+76oxnv0u/tGzD75T3P2yEDKGkznJ5LhJuAnmbQinV
-	 D0APifq0kQK+sx3YiQ20cwuQuOXH2PMXIaAOVsq6pHxZuk32fN5U1snfV/fOJlMEZX
-	 tuYk3AyZERFEx5vE2PBWKqMb22TTKjyp5SFrP1W8=
+	b=kSc2Cxafyv7SAKRDi/RmJPdmiC178MsEcm2ZzONVX3h125tZ5gOtKFlzy20Bs4VSR
+	 gsr6B4Lh9p3B1XV7WyDgltQoVUv8RtH54/ZM0qndH/rmU9Cmbb5f6ztQHkbDlJVPlB
+	 d3uSGzIPReSnnQ2fyhhKC0syiR3OcDnGKNLWFf0g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725874AbfDRW4e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Apr 2019 18:56:34 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47922 "EHLO mail.kernel.org"
+        id S1725887AbfDRXRH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Apr 2019 19:17:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56212 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725855AbfDRW4e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Apr 2019 18:56:34 -0400
+        id S1725855AbfDRXRH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Apr 2019 19:17:07 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id ED4D320869;
-        Thu, 18 Apr 2019 22:56:31 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0F9C321479;
+        Thu, 18 Apr 2019 23:17:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555628192;
-        bh=jwShYleCV5i5RKIjcQ9iqMlWCmfob/OykEZiJ7IT3Zk=;
+        s=default; t=1555629426;
+        bh=Z6C9UqrhJQ85tkkdKAI3DqslSUOVOJNtpbq7V9arSwU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=0Rne/mAw/zl9wXT5DM4Y61AuEBOQFJWqkSFWZ85DCXvUoACO/cUt0gtV31unRjIJ8
-         LVcqZMuGIrguqjE3zXaYfwsllMwsdUQoYqcD4I8A3aFVo/TqyzKoBnyZyvw8KulW3/
-         0Mw9l6qhslKX/8DYA76odIt2uL42saIsIah0Fdec=
-Date:   Thu, 18 Apr 2019 17:56:27 -0500
+        b=Kf+H+8l0pk7iF9I6szYOpjDcdOpnwnOJ/CB8Tg8UtxB08mnDO+mnKBRuxhV09J+u/
+         0J6JtG0y2ZQEe/FeX2oCB1hJukoUBIF7GhiMT6TPU/CpK6LV6zlTMQhpsWvI/M+jJc
+         4VyU75oQfpKedaS+qPXFrOHCqb7a/iVFeQGIE/kw=
+Date:   Thu, 18 Apr 2019 18:17:04 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Thierry Reding <thierry.reding@gmail.com>
 Cc:     Nicolas Chauvet <kwizart@gmail.com>,
@@ -47,7 +47,7 @@ Cc:     Nicolas Chauvet <kwizart@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
 Subject: Re: [PATCH] PCI: disable nv_msi_ht_cap_quirk_leaf quirk on arm/arm64
-Message-ID: <20190418225627.GC126710@google.com>
+Message-ID: <20190418231704.GD126710@google.com>
 References: <20180730094213.11973-1-kwizart@gmail.com>
  <20190415092537.14305-1-kwizart@gmail.com>
  <20190415134813.GA111421@google.com>
@@ -129,46 +129,14 @@ On Tue, Apr 16, 2019 at 01:35:04PM +0200, Thierry Reding wrote:
 > The following patch tries to address this and gets rid of the warning on
 > Tegra systems.
 
-One thing I still don't understand here is whether this quirk is
-actually for a defect in Nvidia and ALi endpoints, or if it's related
-to an issue in certain host bridges, or if it's just a generic
-HT-related thing that's correctly implemented in hardware but Linux
-doesn't know how to deal with.
+Also interesting that Nicolas' original patch took this quirk
+completely out of the picture for ARM/ARM64, while your patch actively
+disables HT MSI mapping if there's no HT host bridge.
 
-Having this quirk run forever and ever on every Nvidia and ALI
-endpoint just seems like massive overkill.
-
-We assume a host bridge must be xxxx:00:00.0, which I don't think is
-true in HT.  __nv_msi_ht_cap_quirk() doesn't look at the topology at
-all, so it apparently assumes any device in domain xxxx with an HT MSI
-capability must be part of the xxxx:00:00.0 HT hierarchy.  I don't
-think that's true either.
-
-It seems like what we really want to do is look for HT_CAPTYPE_SLAVE
-in generic code for every device we enumerate and set an "ht_tree" bit
-in its pci_dev if we find it.  Then inherit that for all children, and
-use that to enable/disable HT MSI mapping.
-
-I bet there's no actual hardware defect here that we're working
-around.  I suspect this could all be done in generic code as above.
-Maybe we think we only need this for Nvidia/ALi because of differences
-in how BIOS leaves things set up.  And that probably depends mostly on
-the host bridge, not the endpoints that the quirks apply to.
-
-Sigh.  I suppose it's probably not worth trying to unravel all this at
-this stage of the game.  The commits below have lots of interesting
-information if anybody *were* to dig into this:
-
-  de7453065d5d ("PCI: don't enable too much HT MSI mapping")
-  1dec6b054dd1 ("PCI: don't enable too many HT MSI mappings")
-  439a7733e8fc ("PCI: enable nv_msi_ht_cap_quirk for ALi bridges")
-  9dc625e72309 ("PCI: quirks: set 'En' bit of MSI Mapping for devices onHT-based nvidia platform")
-  6bae1d96c6d7 ("PCI: quirk: enable MSI Mapping on HT1000")
-  1d84b5424efb ("PCI: Add MSI quirk for ServerWorks HT1000 PCIX bridge.")
-  e3008dedff4b ("PCI: disable MSI by default on systems with Serverworks HT1000 chips")
-  6397c75cbc4d ("MSI: Blacklist PCI-E chipsets depending on Hypertransport MSI capability")
-
-Bjorn
+If HT MSI Mapping Capability is enabled, the device is supposed to map
+MSIs into HyperTransport interrupt messages (HyperTransport I/O Link
+spec r3.10e, sec 7.12).  I don't know what that even means if the
+device is on a PCIe link instead of an HT chain.
 
 > --- >8 ---
 > From 69fb3b269cc852964385436694d79765d5c1cab3 Mon Sep 17 00:00:00 2001
