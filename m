@@ -2,98 +2,133 @@ Return-Path: <SRS0=Hy4z=SU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F096C10F0B
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 04:59:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48BFFC10F0B
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 05:31:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D264A2083D
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 04:59:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555563569;
-	bh=aBWFqnOszc1YlYn/I/d3ekW+xuK8MYtaiTOKWIDKDFk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=0kSiUZlOoNjheWhDmqB/xCQqQjcp8TipA+UwExKhXaoJFX7EOlk6eov7OhqLK7LA8
-	 rWcDRMHRFhY0TSLAPgTTjl4JDmyEkfB0iqN6sGb6Jedj7BLIcoH507mxH5FDtiEUIR
-	 rvdHLn3yhDxo8ugjA//pqpe419In5D7xfuN6HYRg=
+	by mail.kernel.org (Postfix) with ESMTP id 21722217F9
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 05:31:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726586AbfDRE7Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Apr 2019 00:59:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57896 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725888AbfDRE7Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Apr 2019 00:59:25 -0400
-Received: from localhost (unknown [171.61.90.205])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A13DF2083D;
-        Thu, 18 Apr 2019 04:59:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555563564;
-        bh=aBWFqnOszc1YlYn/I/d3ekW+xuK8MYtaiTOKWIDKDFk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=fRgAUtrpIn5sAPLWjJQuUN+LOPNMSqZwFMALxc8RnO6hGiGSzPSDm3aL05tT/k/GY
-         2KBdWOQfJvZqwZLzkI7BQZCglgmZKXW5Wya4afgtj68QiGQJuTgok4HKfFSc1dXaBB
-         HSyfQOPTzCEG0kSGXknGLwqAbdENCse5iGv+Lhfo=
-Date:   Thu, 18 Apr 2019 10:29:18 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        David Brown <david.brown@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-clk@vger.kernel.org
-Subject: Re: [PATCH v2 3/7] phy: qcom: Add Qualcomm PCIe2 PHY driver
-Message-ID: <20190418045918.GV28103@vkoul-mobl>
-References: <20190219060407.15263-1-bjorn.andersson@linaro.org>
- <20190219060407.15263-4-bjorn.andersson@linaro.org>
+        id S1730258AbfDRFbF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Apr 2019 01:31:05 -0400
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:28905 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725864AbfDRFbF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Apr 2019 01:31:05 -0400
+X-IronPort-AV: E=Sophos;i="5.60,364,1549926000"; 
+   d="scan'208";a="379127868"
+Received: from abo-75-106-68.mrs.modulonet.fr (HELO hadrien) ([85.68.106.75])
+  by mail2-relais-roc.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 18 Apr 2019 07:31:02 +0200
+Date:   Thu, 18 Apr 2019 07:31:02 +0200 (CEST)
+From:   Julia Lawall <julia.lawall@lip6.fr>
+X-X-Sender: jll@hadrien
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        kbuild-all@01.org, Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kirill Smelkov <kirr@nexedi.com>
+Subject: Re: [PATCH] pci/switchtec: fix stream_open.cocci warnings (fwd)
+In-Reply-To: <20190417215420.GV126710@google.com>
+Message-ID: <alpine.DEB.2.21.1904180728420.8144@hadrien>
+References: <alpine.DEB.2.21.1904131849350.2536@hadrien> <20190417215420.GV126710@google.com>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190219060407.15263-4-bjorn.andersson@linaro.org>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 18-02-19, 22:04, Bjorn Andersson wrote:
 
-> +static int qcom_pcie2_phy_power_on(struct phy *phy)
-> +{
-> +	struct qcom_phy *qphy = phy_get_drvdata(phy);
-> +	int ret;
-> +	u32 val;
-> +
-> +	/* Program REF_CLK source */
-> +	val = readl(qphy->base + PCIE20_PARF_PHY_REFCLK_CTRL2);
-> +	val &= ~BIT(1);
-> +	writel(val, qphy->base + PCIE20_PARF_PHY_REFCLK_CTRL2);
-> +
-> +	usleep_range(1000, 2000);
-> +
-> +	/* Don't use PAD for refclock */
-> +	val = readl(qphy->base + PCIE20_PARF_PHY_REFCLK_CTRL2);
-> +	val &= ~BIT(0);
-> +	writel(val, qphy->base + PCIE20_PARF_PHY_REFCLK_CTRL2);
-> +
-> +	/* Program SSP ENABLE */
-> +	val = readl(qphy->base + PCIE20_PARF_PHY_REFCLK_CTRL3);
-> +	val |= BIT(0);
-> +	writel(val, qphy->base + PCIE20_PARF_PHY_REFCLK_CTRL3);
 
-we have this readl, modify and writel pattern in the file. I guess it
-makes sense to add a modifyl() with mask and value as args..
+On Wed, 17 Apr 2019, Bjorn Helgaas wrote:
 
--- 
-~Vinod
+> On Sat, Apr 13, 2019 at 06:50:57PM +0200, Julia Lawall wrote:
+> > Hello,
+> >
+> > Kirill will explain about this issue.
+> >
+> > julia
+> >
+> > ---------- Forwarded message ----------
+> > Date: Sat, 13 Apr 2019 11:22:51 +0800
+> > From: kbuild test robot <lkp@intel.com>
+> > To: kbuild@01.org
+> > Cc: Julia Lawall <julia.lawall@lip6.fr>
+> > Subject: [PATCH] pci/switchtec: fix stream_open.cocci warnings
+> >
+> > CC: kbuild-all@01.org
+> > TO: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> > CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+> > CC: Logan Gunthorpe <logang@deltatee.com>
+> > CC: Bjorn Helgaas <helgaas@kernel.org>
+> > CC: linux-pci@vger.kernel.org
+> > CC: linux-kernel@vger.kernel.org
+> >
+> > From: kbuild test robot <lkp@intel.com>
+> >
+> > drivers/pci/switch/switchtec.c:395:1-17: ERROR: switchtec_fops: .read() can deadlock .write(); change nonseekable_open -> stream_open to fix.
+> >
+> > Generated by: scripts/coccinelle/api/stream_open.cocci
+> >
+> > Fixes: 8a29a3bae2a2 ("pci/switchtec: Don't use completion's wait queue")
+> > Signed-off-by: kbuild test robot <lkp@intel.com>
+>
+> Based on Kirill's subsequent email saying this is already queued to
+> the merge window, I assume I need to do nothing here.
+>
+> I think a signed-off-by from a robot, i.e., not from a real person, is
+> meaningless, and I don't think I would personally accept it.  It's
+> certainly OK to indicate that a patch was auto-generated, but I think
+> a real person still needs to take responsibility for it.
+>
+> Documentation/process/submitting-patches.rst says it must contain a
+> real name (no pseudonyms or anonymous contributions), and I don't
+> think a robot fits in the spirit of that.
+>
+> I see that
+> https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git/commit/?id=8a29a3bae2a2
+> (mentioned below) does have a good signed-off-by from Sebastian, but
+> that's not *this* patch, so I don't know what's what.
+
+Normally, for these robot generated patches, when I approve them, I put my
+own sign off, but under the robot one, since the robot has put a From
+line.  In this case, I handed the problem off to Kirill, so I didn't do
+that.  I agree that it would be good for Kirill to sign off on it.
+
+julia
+
+
+
+>
+> Bjorn
+>
+> > ---
+> >
+> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/rt/linux-rt-devel.git linux-5.0.y-rt-rebase
+> > head:   794c294ae4483c240429c25a0d18e272e92c94de
+> > commit: 8a29a3bae2a2dfb0116cd8791d9700515d6e765e [154/311] pci/switchtec: Don't use completion's wait queue
+> > :::::: branch date: 7 hours ago
+> > :::::: commit date: 7 hours ago
+> >
+> > Please take the patch only if it's a positive warning. Thanks!
+> >
+> >  switchtec.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > --- a/drivers/pci/switch/switchtec.c
+> > +++ b/drivers/pci/switch/switchtec.c
+> > @@ -392,7 +392,7 @@ static int switchtec_dev_open(struct ino
+> >  		return PTR_ERR(stuser);
+> >
+> >  	filp->private_data = stuser;
+> > -	nonseekable_open(inode, filp);
+> > +	stream_open(inode, filp);
+> >
+> >  	dev_dbg(&stdev->dev, "%s: %p\n", __func__, stuser);
+> >
+>
