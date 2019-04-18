@@ -2,110 +2,139 @@ Return-Path: <SRS0=Hy4z=SU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81038C10F0E
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:24:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EEC3C10F0E
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:42:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 505B1205F4
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:24:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FE6A2171F
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:42:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555629855;
-	bh=UaxLoQRiyIUjwAaSUqcbVoPYd5elynGr16cbbgYMoZY=;
+	s=default; t=1555630965;
+	bh=JEAOgYJlOvZdMdVyDXHifM67i+2PUhKtJ1YzNTJp9lo=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=hO/a5QUEgUJk3wjz/oEPgMsuTsOrEL/YJY9rGL5tE0sUqZnfOlqM/UHDrFqMCbg8M
-	 TP/Xt/8d35rC8zrBJ/v+wY/PHPlXtFkLH3WfBGX1H9paQuPwzfO7deRfQbjCA7QabO
-	 ThKNibryLfSHmH8VreleiO272kHxY/OYZ68GnDGE=
+	b=amqtD8RGbkbduoDbcdgkLs3QwqSEISRJ8JnLsCSlROT18XeByJQuYnoaMjLPTgRHt
+	 obNkgW9u1Zy103pcJj3rb7xZkbjyH1Z2Y9J4wwk4C0DR58WEvbTOCOmSdN9XZiKApo
+	 s3RF+k/u11wkjAUAWvKziMrh8BW5/mROIC/RtzMw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726080AbfDRXYO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Apr 2019 19:24:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57914 "EHLO mail.kernel.org"
+        id S1725939AbfDRXmo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Apr 2019 19:42:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34446 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726063AbfDRXYO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Apr 2019 19:24:14 -0400
+        id S1725855AbfDRXmo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Apr 2019 19:42:44 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8425221479;
-        Thu, 18 Apr 2019 23:24:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 4953920675;
+        Thu, 18 Apr 2019 23:42:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555629853;
-        bh=UaxLoQRiyIUjwAaSUqcbVoPYd5elynGr16cbbgYMoZY=;
+        s=default; t=1555630963;
+        bh=JEAOgYJlOvZdMdVyDXHifM67i+2PUhKtJ1YzNTJp9lo=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=r+d3cvkw7x0ioaFf+YbMgUQg4NQtDk4JIWyGEQHPXoYJgez24i12BHzineXGoI2LG
-         TDr+kQOrKqNqNS1MakdfOdgr3skGvgGiLK2jjG6fz/hUVYJsO9DHvz9IS86tLCm4zN
-         lJ00rPHuPACB7jN7erefiLF0i3jWEZxKssVRxl8E=
-Date:   Thu, 18 Apr 2019 18:24:11 -0500
+        b=E/qBST9ORsR60kh4OyKwZYSNPLU1KtkPCKOL2msKqvW3FvPnRVcysWhpIFE8F4jnK
+         Bcc1w4IWiGv3jVOdq+RBcREQuURZ/9F+kvZtdPtL8nCOrd5kkKoTpYUdzS2ZZgkRyq
+         Og5o5Esmo8zurb+diXzEdBOfP6V4B5PxeOi4MEZs=
+Date:   Thu, 18 Apr 2019 18:42:41 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Imre Deak <imre.deak@intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/LINK: Disable bandwidth notification interrupt
- during suspend
-Message-ID: <20190418232411.GE126710@google.com>
-References: <20190415084142.30897-1-mika.westerberg@linux.intel.com>
+To:     Srinath Mannam <srinath.mannam@broadcom.com>
+Cc:     Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 0/3] PCIe Host request to reserve IOVA
+Message-ID: <20190418234241.GF126710@google.com>
+References: <1555038815-31916-1-git-send-email-srinath.mannam@broadcom.com>
+ <20190412223409.GB126710@google.com>
+ <CABe79T7h9t_Obmo3+B0MHgLZ4ff9GxpBBBLGtSf0C=zmLrWVBQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190415084142.30897-1-mika.westerberg@linux.intel.com>
+In-Reply-To: <CABe79T7h9t_Obmo3+B0MHgLZ4ff9GxpBBBLGtSf0C=zmLrWVBQ@mail.gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 15, 2019 at 11:41:42AM +0300, Mika Westerberg wrote:
-> If the bandwidth notification interrupt is left unmasked when entering
-> suspend to idle it triggers immediately bringing the system back to
-> working state.
-> 
-> To keep that from happening, disable the interrupt when entering system
-> sleep and enable it again during resume.
-> 
-> Reported-by: Imre Deak <imre.deak@intel.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+On Tue, Apr 16, 2019 at 05:28:36PM +0530, Srinath Mannam wrote:
+> On Sat, Apr 13, 2019 at 4:04 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Fri, Apr 12, 2019 at 08:43:32AM +0530, Srinath Mannam wrote:
+> > > Few SOCs have limitation that their PCIe host can't allow few inbound
+> > > address ranges. Allowed inbound address ranges are listed in dma-ranges
+> > > DT property and this address ranges are required to do IOVA mapping.
+> > > Remaining address ranges have to be reserved in IOVA mapping.
+>
+> > If I understand correctly, devices below these PCIe host bridges can
+> > DMA only to the listed address ranges, and you prevent devices from
+> > doing DMA to the holes between the listed ranges by reserving the
+> > holes in dma-iommu.
+>
+> Yes, devices below these PCIe host bridges can DMA only to the listed
+> address ranges,
+> and this patch prevents to allocate DMA(IOVA) addresses in the holes
+> of listed ranges.
+>
+> > Apparently there's something that makes sure driver dma_map_*() always
+> > goes through dma-iommu?  I traced as far as seeing that dma-iommu
+> > depends on CONFIG_IOMMU_DMA, and that arm64 selects CONFIG_IOMMU_DMA
+> > if CONFIG_IOMMU_SUPPORT, but then the trail got cold.  I didn't see
+> > what selects CONFIG_IOMMU_SUPPORT.
+>
+> IOMMU_SUPPORT depends on MMU.
 
-Applied to pci/portdrv for v5.2, thanks, Mika.
+Yes, I see that IOMMU_SUPPORT depends on MMU (in
+drivers/iommu/Kconfig).  But that doesn't *select* IOMMU_SUPPORT; it
+only means you *can't* select it unless MMU has already been selected.
 
-> ---
->  drivers/pci/pcie/bw_notification.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
+I think you only get dma-iommu if you choose to select IOMMU_SUPPORT
+via menuconfig or whatever, and the current config rules allow you to
+turn that off.  Maybe that's OK, I dunno.  If you do turn it off, I
+guess we'll ignore the holes in "dma-ranges" and devices will be able
+to DMA to the holes.
+
+> > This does look like what Robin suggested, as far as I can tell.
+> > Hopefully he'll take a look and give his reviewed-by.  Thanks for
+> > persevering!
+> Thank you.
 > 
-> diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
-> index 4fa9e3523ee1..77e685771487 100644
-> --- a/drivers/pci/pcie/bw_notification.c
-> +++ b/drivers/pci/pcie/bw_notification.c
-> @@ -107,11 +107,25 @@ static void pcie_bandwidth_notification_remove(struct pcie_device *srv)
->  	free_irq(srv->irq, srv);
->  }
->  
-> +static int pcie_bandwidth_notification_suspend(struct pcie_device *srv)
-> +{
-> +	pcie_disable_link_bandwidth_notification(srv->port);
-> +	return 0;
-> +}
-> +
-> +static int pcie_bandwidth_notification_resume(struct pcie_device *srv)
-> +{
-> +	pcie_enable_link_bandwidth_notification(srv->port);
-> +	return 0;
-> +}
-> +
->  static struct pcie_port_service_driver pcie_bandwidth_notification_driver = {
->  	.name		= "pcie_bw_notification",
->  	.port_type	= PCIE_ANY_PORT,
->  	.service	= PCIE_PORT_SERVICE_BWNOTIF,
->  	.probe		= pcie_bandwidth_notification_probe,
-> +	.suspend	= pcie_bandwidth_notification_suspend,
-> +	.resume		= pcie_bandwidth_notification_resume,
->  	.remove		= pcie_bandwidth_notification_remove,
->  };
->  
-> -- 
-> 2.20.1
-> 
+> Regards,
+> Srinath.
+> >
+> > > PCIe Host driver of those SOCs has to list resource entries of allowed
+> > > address ranges given in dma-ranges DT property in sorted order. This
+> > > sorted list of resources will be processed and reserve IOVA address for
+> > > inaccessible address holes while initializing IOMMU domain.
+> > >
+> > > This patch set is based on Linux-5.0-rc2.
+> > >
+> > > Changes from v3:
+> > >   - Addressed Robin Murphy review comments.
+> > >     - pcie-iproc: parse dma-ranges and make sorted resource list.
+> > >     - dma-iommu: process list and reserve gaps between entries
+> > >
+> > > Changes from v2:
+> > >   - Patch set rebased to Linux-5.0-rc2
+> > >
+> > > Changes from v1:
+> > >   - Addressed Oza review comments.
+> > >
+> > > Srinath Mannam (3):
+> > >   PCI: Add dma_ranges window list
+> > >   iommu/dma: Reserve IOVA for PCIe inaccessible DMA address
+> > >   PCI: iproc: Add sorted dma ranges resource entries to host bridge
+> > >
+> > >  drivers/iommu/dma-iommu.c           | 19 ++++++++++++++++
+> > >  drivers/pci/controller/pcie-iproc.c | 44 ++++++++++++++++++++++++++++++++++++-
+> > >  drivers/pci/probe.c                 |  3 +++
+> > >  include/linux/pci.h                 |  1 +
+> > >  4 files changed, 66 insertions(+), 1 deletion(-)
+> > >
+> > > --
+> > > 2.7.4
+> > >
