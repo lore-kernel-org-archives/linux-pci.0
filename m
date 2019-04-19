@@ -1,127 +1,107 @@
-Return-Path: <SRS0=Hy4z=SU=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=PPlZ=SV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40DD2C10F14
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7468CC10F14
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 00:01:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09F5B2171F
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Apr 2019 23:49:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B10D217F9
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 00:01:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555631366;
-	bh=RdRuENMt2N8EcFqmuOVsp9lgB312z9UdqMSFIAs3IrE=;
+	s=default; t=1555632112;
+	bh=hTN7M7Y1E1YPJUtKMld7Nl0B/oVdA/JfFzEhI+Kjz1A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=WUUVClYy19wXsSI+poyQEo2IcBwHxAVSX2KXlWYSZ+EN50VUj4OfDUEqeamqJ9Jj2
-	 ibD5Ea2JEinb9tp5GK7PcoPkCULMjZnJMa+KsqNYuIHV7H1ef1IW8dmSuXc4XndCGH
-	 qZuAzniDJrf/+EaGfigka1GXiz6szEtB+MEKUVl8=
+	b=S73xGcvyaEbLeBpWF2uEHVJVWwaH5DbmqkYxStjX46uYKwkdzZSarpKiYHzuT//ME
+	 k/WZ6yWi5IKqB9bFIFlknCmPxMEZGLIXgXTiCW3RzaV1YuoRZKhtJx7vrj2OeUoVfx
+	 O4aRf7ODdu65E5bmuTI2ZzfbDvaaNI/mZEnNifBI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725917AbfDRXtZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Apr 2019 19:49:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36768 "EHLO mail.kernel.org"
+        id S1725894AbfDSABv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Apr 2019 20:01:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41506 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725894AbfDRXtZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Apr 2019 19:49:25 -0400
+        id S1725890AbfDSABv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Apr 2019 20:01:51 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 361A3206B6;
-        Thu, 18 Apr 2019 23:49:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8442E21736;
+        Fri, 19 Apr 2019 00:01:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555631364;
-        bh=RdRuENMt2N8EcFqmuOVsp9lgB312z9UdqMSFIAs3IrE=;
+        s=default; t=1555632110;
+        bh=hTN7M7Y1E1YPJUtKMld7Nl0B/oVdA/JfFzEhI+Kjz1A=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=0kIFHrENnmKj3GeqVyaIoay2R1vKfYATSAZLzKR0ppVo0/VxojkAn3vYVQt21g5sF
-         k52nBSe4aX+ThkElxPakCGtR+U1n15XomqC9njay/plcUFjJZY+Xn9+4ChSmHwVlU9
-         U2MZXTBlq0eWeoWWS8uqQMH7GLqpiHcx2T9mr7Q0=
-Date:   Thu, 18 Apr 2019 18:49:23 -0500
+        b=HME7ocyxkErS7mgvftHHMoRkTV/G+PTrS9uSZx5Rv399UR7P5u3UJI1VUc3+/hzHm
+         1nHlOhxjlC05PDnWNmh+c/k6BdLgRQFO/pPf4hKrNC7CXp285iA3LtX00ORA2g8uIK
+         PxxL0kS4jcwhAud54bNhT3qnlJTTw//3s6RXvmX0=
+Date:   Thu, 18 Apr 2019 19:01:49 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] PCI: Add dma_ranges window list
-Message-ID: <20190418234922.GH126710@google.com>
-References: <1555038815-31916-1-git-send-email-srinath.mannam@broadcom.com>
- <1555038815-31916-2-git-send-email-srinath.mannam@broadcom.com>
+To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC v2 0/4] PCI: pciehp: Do not turn off slot if presence
+ comes up after link
+Message-ID: <20190419000148.GI126710@google.com>
+References: <20190220012031.10741-1-mr.nuke.me@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1555038815-31916-2-git-send-email-srinath.mannam@broadcom.com>
+In-Reply-To: <20190220012031.10741-1-mr.nuke.me@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Apr 12, 2019 at 08:43:33AM +0530, Srinath Mannam wrote:
-> Add a dma_ranges field in PCI host bridge structure to hold resource
-> entries list of memory regions in sorted order given through dma-ranges
-> DT property.
+Hi Alex,
+
+This has languished a long time (sorry about that), and there were
+several review comments.  I know you wanted my opinion on strategy,
+but would you mind posting a fresh version with the fixes you've
+already done and rebased to v5.1-rc1?
+
+On Tue, Feb 19, 2019 at 07:20:26PM -0600, Alexandru Gagniuc wrote:
+> If the presence detect state (PDS) becomes active after the link
+> comes up (DLLLA), the hotplug code removes the device and then
+> re-loads the driver. For most devices, this is a mere inconvenience,
+> and for PCIe storage devices that are part of a RAID set which started
+> rebuilding, it can get fun.
 > 
-> While initializing IOMMU domain of PCI EPs connected to that host bridge
-> This list of resources will be processed and IOVAs for the address holes
-> will be reserved.
-
-s/bridge This list/bridge, this list/
-
-> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> Based-on-patch-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/pci/probe.c | 3 +++
->  include/linux/pci.h | 1 +
->  2 files changed, 4 insertions(+)
+> Ideally, we wouldn't remove perfectly good devices. According to
+> the old PCIe spec PDS would always have to come up at or before DLLLA.
+> Since not everyone followed this (looking at you Dell and HPE!!!!),
+> this now got standardized in PCIe 4.0. (*).
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 257b9f6..ce5505f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -544,6 +544,7 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
->  		return NULL;
->  
->  	INIT_LIST_HEAD(&bridge->windows);
-> +	INIT_LIST_HEAD(&bridge->dma_ranges);
->  	bridge->dev.release = pci_release_host_bridge_dev;
->  
->  	/*
-> @@ -572,6 +573,7 @@ struct pci_host_bridge *devm_pci_alloc_host_bridge(struct device *dev,
->  		return NULL;
->  
->  	INIT_LIST_HEAD(&bridge->windows);
-> +	INIT_LIST_HEAD(&bridge->dma_ranges);
->  	bridge->dev.release = devm_pci_release_host_bridge_dev;
->  
->  	return bridge;
-> @@ -581,6 +583,7 @@ EXPORT_SYMBOL(devm_pci_alloc_host_bridge);
->  void pci_free_host_bridge(struct pci_host_bridge *bridge)
->  {
->  	pci_free_resource_list(&bridge->windows);
-> +	pci_free_resource_list(&bridge->dma_ranges);
->  
->  	kfree(bridge);
->  }
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 65f1d8c..016a044 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -487,6 +487,7 @@ struct pci_host_bridge {
->  	void		*sysdata;
->  	int		busnr;
->  	struct list_head windows;	/* resource_entry */
-> +	struct list_head dma_ranges;	/* dma ranges resource list */
->  	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* Platform IRQ swizzler */
->  	int (*map_irq)(const struct pci_dev *, u8, u8);
->  	void (*release_fn)(struct pci_host_bridge *);
+> This series has two solutions for this problem, and is intended to
+> serve as a bikeshedding point for which is better:
+>  1. Try to wait for PDS _before_ loading the driver
+>  2. Load as usual, and recognize the delayed PDS event as such
+> 
+> I think (2) is more generic and elegant, but a lot of people seem to
+> like something similar to (1).
+> 
+> (*) ECN was approved in Nov 2018, and is normative spec text. A lot of
+> the leaked PCIe 4.0 specs do not have this change.
+> 
+> 
+> 
+> Alexandru Gagniuc (4):
+>   PCI: hotplug: Add support for disabling in-band presence
+>   PCI: pciehp: Do not turn off slot if presence comes up after link
+>   PCI: hotplug: Wait for PDS when in-band presence is disabled
+>   PCI: hotplug: Add quirk For Dell nvme pcie switches
+> 
+>  drivers/pci/hotplug/pciehp.h      |  1 +
+>  drivers/pci/hotplug/pciehp_ctrl.c | 24 ++++++++++++++
+>  drivers/pci/hotplug/pciehp_hpc.c  | 54 ++++++++++++++++++++++++++++++-
+>  include/linux/pci.h               |  1 +
+>  include/uapi/linux/pci_regs.h     |  2 ++
+>  5 files changed, 81 insertions(+), 1 deletion(-)
+> 
 > -- 
-> 2.7.4
+> 2.19.2
 > 
