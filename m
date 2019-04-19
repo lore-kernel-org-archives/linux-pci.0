@@ -2,147 +2,110 @@ Return-Path: <SRS0=PPlZ=SV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6A8C282DF
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEEB6C282DA
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:32:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0BD920449
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:31:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rKL89JIg"
+	by mail.kernel.org (Postfix) with ESMTP id 8E25C20449
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:32:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555698722;
+	bh=upGy2TdU16HfkEriubkDgSX3+ftl0DPDey0K7makTLU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=IebJ0yQjv0rFSOkNK8HZhIa2YPSsuxUmU7itdGCUhj+wwy/iMLqn7VnLu5eotKl2V
+	 eyq+NpJl/ZdbWGfr7n64vRtMSaWp0JfHZ3/7v7BAxK/TOG0ipsiyJlFAWHTirycZXM
+	 0RRxWZW1dQfPt4xf+x63Tn59tUt2kz3zBKsqsjWk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728167AbfDSSbs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Apr 2019 14:31:48 -0400
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:42887 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727636AbfDSSbs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2019 14:31:48 -0400
-Received: by mail-oi1-f195.google.com with SMTP id w139so4541803oie.9;
-        Fri, 19 Apr 2019 11:31:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=c3d5eGGJw4R7UGVxkj3FtbNAvPKDTO3ueR90+T5iRs0=;
-        b=rKL89JIglaL3N3+3WtwQBikjppTKoCm6pWZF9gcdn8r/7HI8bh2nxRjgTUsbCP465G
-         ULsIXGPj4suAbAt7YGp5aSF1U2GAj9gyJrV4gSreRD/Nk8CXHwgb7uA0e9qBtG9X9u7l
-         h4Qm/tdz961Gi/QiOqkoha/y7eRYXBZA7dMQGjEow/znK4REaZ5YJdkxhRcVR6Gk/5pD
-         VcmPllvYoJWSVeq/0RDrkRa1xBy2R6dnwLwoqXWKHsUc3SurGJZqWcGa2Ghhj+UUr/Jx
-         Np+mLq3Kf7QZbNRHVgBIUspN2d45OP3FiPEymaa3RGmUHbuy4cKxtVieHxpNhWBxswKs
-         9siw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=c3d5eGGJw4R7UGVxkj3FtbNAvPKDTO3ueR90+T5iRs0=;
-        b=UuUXVnPwzBNMzs3LjKuwSE6Firlue0IaeWAcKLAileSKMDSTcr99WFAaWlu3X4aHQv
-         GJZ9RPuVmcNQ+5sYK1YyAvvv3nYY9Zsrwf7cVtRpwVxnFwDX1drmrB6wm8MMZYvATIxx
-         uRchRJ4ZkAB2PmCdcaRw2OyDW12Qy+6HeRBnI9IaLpwdppNOh1+GdMt8yWmSyKkFcyFU
-         M+ayIqAnSahxRrYm2/SQuMU88EvP7BdlKQWLLYWYkYCfCCcXypVElIKlsiZ0ZGqVJJx0
-         utH04S0B/aCXaSkowkYJkNX88DWyjbAbNdBLt4JUm667RViezjFjW3r+E3qTdsFf9KD0
-         1pfg==
-X-Gm-Message-State: APjAAAUYr5TG91Yr9JDdqxn/uY8PXWX/3COFmGI5XInTvbglrMGhNtvX
-        2UH2Gpju6Npv5MPaM0JTT16GJn3Yv5M=
-X-Google-Smtp-Source: APXvYqxcZRdGYykEJapShXtif+/DvI+vwSpOeJfLFlYzqtajt3JHmKM8cVn1YTqHX4A07b7HAa7ZCA==
-X-Received: by 2002:aca:5904:: with SMTP id n4mr2086084oib.122.1555687412714;
-        Fri, 19 Apr 2019 08:23:32 -0700 (PDT)
-Received: from nuclearis2-1.lan (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
-        by smtp.gmail.com with ESMTPSA id y9sm1981723otk.20.2019.04.19.08.23.31
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 19 Apr 2019 08:23:32 -0700 (PDT)
-From:   Alexandru Gagniuc <mr.nuke.me@gmail.com>
-To:     bhelgaas@google.com
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 4/4] PCI: hotplug: Add quirk For Dell nvme pcie switches
-Date:   Fri, 19 Apr 2019 10:22:26 -0500
-Message-Id: <20190419152238.12251-5-mr.nuke.me@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190419152238.12251-1-mr.nuke.me@gmail.com>
-References: <20190419000148.GI126710@google.com>
- <20190419152238.12251-1-mr.nuke.me@gmail.com>
+        id S1727922AbfDSS3R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Apr 2019 14:29:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53922 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727786AbfDSS3R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Apr 2019 14:29:17 -0400
+Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 37C4C222AC;
+        Fri, 19 Apr 2019 13:31:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1555680699;
+        bh=upGy2TdU16HfkEriubkDgSX3+ftl0DPDey0K7makTLU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NPLllMydalscHfKsEer+OOlgBCBr2KI+tRfCkJfRJFzHQ8HrpePbqAza5CWOm7gZk
+         jwd292GC7MOXqdorMm5ph/CoyWi0cWvS26hR4Jwy57dsH1Ot3K+cV7WoC4TQpm1zz+
+         J8ACXLKHMcgbUM0on89dSwSg4d8gqM54JpaiUSro=
+Date:   Fri, 19 Apr 2019 08:31:38 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Yue Haibing <yuehaibing@huawei.com>
+Cc:     lorenzo.pieralisi@arm.com, kishon@ti.com, robh@kernel.org,
+        l.stach@pengutronix.de, andrew.smirnov@gmail.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: keystone: Fix build error while only
+ CONFIG_PCI_KEYSTONE is set
+Message-ID: <20190419133137.GA173520@google.com>
+References: <20190419025855.40760-1-yuehaibing@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190419025855.40760-1-yuehaibing@huawei.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-These switches are used to fornicate the motherboard's x16 PCIe ports
-into four x4 ports for NVMe drives. In conjunction with the storage
-backplane, the PDS bit reports only the out-of-band presence. The fact
-that inband presence is disabled is not reported in the slot
-capabilities 2 (SLTCAP2) register.
+On Fri, Apr 19, 2019 at 10:58:55AM +0800, Yue Haibing wrote:
+> From: YueHaibing <yuehaibing@huawei.com>
+> 
+> During randconfig builds, I occasionally run into an invalid configuration
+> 
+> drivers/pci/controller/dwc/pci-keystone.o: In function `ks_pcie_link_up':
+> pci-keystone.c:(.text+0x90): undefined reference to `__dw_pcie_read_dbi'
+> pci-keystone.c:(.text+0x90): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `__dw_pcie_read_dbi'
+> drivers/pci/controller/dwc/pci-keystone.o: In function `ks_pcie_v3_65_scan_bus':
+> pci-keystone.c:(.text+0x4f0): undefined reference to `__dw_pcie_write_dbi'
+> pci-keystone.c:(.text+0x4f0): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `__dw_pcie_write_dbi'
+> 
+> while CONFIG_PCI_KEYSTONE is selected but CONFIG_PCIE_DW
+> is not set, the building failed like this. This patch
+> selects PCIE_DW to fix it.
+> 
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Fixes: 5709114f0a97 ("PCI: keystone: Add support for PCIe EP in AM654x Platforms")
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>  drivers/pci/controller/dwc/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index b450ad2..641fa0f 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -105,6 +105,7 @@ config PCIE_SPEAR13XX
+>  config PCI_KEYSTONE
+>  	bool "TI Keystone PCIe controller"
+>  	depends on ARCH_KEYSTONE || ARCH_K3 || ((ARM || ARM64) && COMPILE_TEST)
+> +	select PCIE_DW
 
-Because this does not conform to the PCIe spec, add a quirk to let
-hotplug code know to expect and handle this.
+What version are you building?  In v5.0, PCI_KEYSTONE already selects
+PCIE_DW_HOST:
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
----
- drivers/pci/hotplug/pciehp_hpc.c | 21 +++++++++++++++++++++
- include/linux/pci.h              |  1 +
- 2 files changed, 22 insertions(+)
+$ git grep -A4 PCI_KEYSTONE v5.0:drivers/pci/controller/dwc/Kconfig | cat
+v5.0:drivers/pci/controller/dwc/Kconfig:config PCI_KEYSTONE
+v5.0:drivers/pci/controller/dwc/Kconfig-	bool "TI Keystone PCIe controller"
+v5.0:drivers/pci/controller/dwc/Kconfig-	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
+v5.0:drivers/pci/controller/dwc/Kconfig-	depends on PCI_MSI_IRQ_DOMAIN
+v5.0:drivers/pci/controller/dwc/Kconfig-	select PCIE_DW_HOST
+08:30:42 ~/history (master)$
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 6cd2c4fb4edb..681043f59fa5 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -881,6 +881,9 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (pdev->is_thunderbolt)
- 		slot_cap |= PCI_EXP_SLTCAP_NCCS;
- 
-+	if (pdev->no_in_band_presence)
-+		ctrl->inband_presence_disabled = 1;
-+
- 	ctrl->slot_cap = slot_cap;
- 	mutex_init(&ctrl->ctrl_lock);
- 	mutex_init(&ctrl->state_lock);
-@@ -964,3 +967,21 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_QCOM, 0x0401,
- 			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
- DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_HXT, 0x0401,
- 			      PCI_CLASS_BRIDGE_PCI, 8, quirk_cmd_compl);
-+
-+static void fixup_dell_nvme_backplane_switches(struct pci_dev *pdev)
-+{
-+	if (!pci_is_pcie(pdev))
-+		return;
-+
-+	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM)
-+		return;
-+
-+	if (pdev->subsystem_vendor != PCI_VENDOR_ID_DELL ||
-+	    pdev->subsystem_device != 0x1fc7)
-+		return;
-+
-+	pdev->no_in_band_presence = 1;
-+}
-+DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_PLX, 0x9733,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      fixup_dell_nvme_backplane_switches);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 77448215ef5b..9594a313064d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -416,6 +416,7 @@ struct pci_dev {
- 	unsigned int	non_compliant_bars:1;	/* Broken BARs; ignore them */
- 	unsigned int	is_probed:1;		/* Device probing in progress */
- 	unsigned int	link_active_reporting:1;/* Device capable of reporting link active */
-+	unsigned int	no_in_band_presence:1;	/* Device does not report in-band presence */
- 	unsigned int	no_vf_scan:1;		/* Don't scan for VFs after IOV enablement */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
--- 
-2.20.1
-
+>  	help
+>  	  Say Y here if you want to enable PCI controller support on Keystone
+>  	  SoCs. The PCI controller on Keystone is based on DesignWare hardware
+> -- 
+> 2.7.4
+> 
+> 
