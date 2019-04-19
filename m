@@ -2,111 +2,102 @@ Return-Path: <SRS0=PPlZ=SV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56C92C282E0
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 21:32:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 192ADC282E0
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 22:02:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2953A21736
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 21:32:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5317217F9
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 22:02:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555711347;
+	bh=PS8LjbJMCIT6Rk/Q4T0ozZ5oTgL2MhQCPvR+ZMlOi5E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=YK/k3h6QaC5PmnsJu8GbUxeSU2IgbQi2Sug5wWFJlWwTgOZbWArigJ360isUva0ZX
+	 C44vCZdRhmyQZSaUF1VynvGNGoqtIfG4woWMFSIgXuo8iDNLnnvi2YXceRro0Oj39K
+	 v3uYU1i/+C/zZwKG8JXe1AKpiGnCdfMcv1U+eSm8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726795AbfDSVcU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Apr 2019 17:32:20 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6664 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726000AbfDSVcU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Apr 2019 17:32:20 -0400
-Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id B4B438779134A61EA796;
-        Fri, 19 Apr 2019 21:46:45 +0800 (CST)
-Received: from [127.0.0.1] (10.177.31.96) by DGGEMS411-HUB.china.huawei.com
- (10.3.19.211) with Microsoft SMTP Server id 14.3.408.0; Fri, 19 Apr 2019
- 21:46:41 +0800
-Subject: Re: [PATCH] PCI: keystone: Fix build error while only
- CONFIG_PCI_KEYSTONE is set
-To:     Bjorn Helgaas <helgaas@kernel.org>
-References: <20190419025855.40760-1-yuehaibing@huawei.com>
- <20190419133137.GA173520@google.com>
-CC:     <lorenzo.pieralisi@arm.com>, <kishon@ti.com>, <robh@kernel.org>,
-        <l.stach@pengutronix.de>, <andrew.smirnov@gmail.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From:   YueHaibing <yuehaibing@huawei.com>
-Message-ID: <35486240-8c29-410d-e0f4-c87dc42fb668@huawei.com>
-Date:   Fri, 19 Apr 2019 21:46:39 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+        id S1726599AbfDSWCX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Apr 2019 18:02:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38040 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726126AbfDSWCX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Apr 2019 18:02:23 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2365E217F9;
+        Fri, 19 Apr 2019 22:02:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1555711342;
+        bh=PS8LjbJMCIT6Rk/Q4T0ozZ5oTgL2MhQCPvR+ZMlOi5E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ZHRVVIkABdhs1cTCwNWWkHiCLHvqx/xUXWpDOJBurkmmqslnPD7aFroMGOm5TrysD
+         iOJNNPOkRYG1xlhlqO3FI6conmai1R6HYV2iN8wA2+T/TJBIH3Gvpm4+ErYgveN+OR
+         qTo6zXhUvSP21hb/gwavuQR72XBLAWkMKPDT2z3M=
+Date:   Fri, 19 Apr 2019 17:02:20 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Alexandru Gagniuc <mr.nuke.me@gmail.com>
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 2/3] PCI / ACPI: Remove the need for 'struct
+ hotplug_params'
+Message-ID: <20190419220220.GI173520@google.com>
+References: <20190208162414.3996-1-mr.nuke.me@gmail.com>
+ <20190208162414.3996-3-mr.nuke.me@gmail.com>
+ <20190419200745.GH173520@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20190419133137.GA173520@google.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.177.31.96]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190419200745.GH173520@google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 2019/4/19 21:31, Bjorn Helgaas wrote:
-> On Fri, Apr 19, 2019 at 10:58:55AM +0800, Yue Haibing wrote:
->> From: YueHaibing <yuehaibing@huawei.com>
->>
->> During randconfig builds, I occasionally run into an invalid configuration
->>
->> drivers/pci/controller/dwc/pci-keystone.o: In function `ks_pcie_link_up':
->> pci-keystone.c:(.text+0x90): undefined reference to `__dw_pcie_read_dbi'
->> pci-keystone.c:(.text+0x90): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `__dw_pcie_read_dbi'
->> drivers/pci/controller/dwc/pci-keystone.o: In function `ks_pcie_v3_65_scan_bus':
->> pci-keystone.c:(.text+0x4f0): undefined reference to `__dw_pcie_write_dbi'
->> pci-keystone.c:(.text+0x4f0): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `__dw_pcie_write_dbi'
->>
->> while CONFIG_PCI_KEYSTONE is selected but CONFIG_PCIE_DW
->> is not set, the building failed like this. This patch
->> selects PCIE_DW to fix it.
->>
->> Reported-by: Hulk Robot <hulkci@huawei.com>
->> Fixes: 5709114f0a97 ("PCI: keystone: Add support for PCIe EP in AM654x Platforms")
->> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
->> ---
->>  drivers/pci/controller/dwc/Kconfig | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
->> index b450ad2..641fa0f 100644
->> --- a/drivers/pci/controller/dwc/Kconfig
->> +++ b/drivers/pci/controller/dwc/Kconfig
->> @@ -105,6 +105,7 @@ config PCIE_SPEAR13XX
->>  config PCI_KEYSTONE
->>  	bool "TI Keystone PCIe controller"
->>  	depends on ARCH_KEYSTONE || ARCH_K3 || ((ARM || ARM64) && COMPILE_TEST)
->> +	select PCIE_DW
+On Fri, Apr 19, 2019 at 03:07:45PM -0500, Bjorn Helgaas wrote:
+> On Fri, Feb 08, 2019 at 10:24:12AM -0600, Alexandru Gagniuc wrote:
+> > We used to first parse all the _HPP and _HPX tables before using the
+> > information to program registers of PCIe devices. Up until HPX type 2,
+> > there was only one structure of each type, so we could cheat and store
+> > it on the stack.
+> > 
+> > With HPX type 3 we get an arbitrary number of entries, so the above
+> > model doesn't scale that well. Instead of parsing all tables at once,
+> > parse and program each entry separately. For _HPP and _HPX 0 thru 2,
+> > this is functionally equivalent. The change enables the upcoming _HPX3
+> > to integrate more easily.
 > 
-> What version are you building?  In v5.0, PCI_KEYSTONE already selects
-> PCIE_DW_HOST:
-> 
-> $ git grep -A4 PCI_KEYSTONE v5.0:drivers/pci/controller/dwc/Kconfig | cat
-> v5.0:drivers/pci/controller/dwc/Kconfig:config PCI_KEYSTONE
-> v5.0:drivers/pci/controller/dwc/Kconfig-	bool "TI Keystone PCIe controller"
-> v5.0:drivers/pci/controller/dwc/Kconfig-	depends on ARCH_KEYSTONE || (ARM && COMPILE_TEST)
-> v5.0:drivers/pci/controller/dwc/Kconfig-	depends on PCI_MSI_IRQ_DOMAIN
-> v5.0:drivers/pci/controller/dwc/Kconfig-	select PCIE_DW_HOST
-> 08:30:42 ~/history (master)$
+> I think this is tremendous!  It's going to simplify this code
+> dramatically.  Two comments below.
 
-This patch based on linux-next:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?id=5709114f0a97
-
+> >  static void pci_configure_device(struct pci_dev *dev)
+> >  {
+> > -	struct hotplug_params hpp;
+> > -	int ret;
+> > +	static const struct hotplug_program_ops hp_ops = {
+> > +		.program_type0 = program_hpp_type0,
+> > +		.program_type1 = program_hpp_type1,
+> > +		.program_type2 = program_hpp_type2,
+> > +	};
 > 
->>  	help
->>  	  Say Y here if you want to enable PCI controller support on Keystone
->>  	  SoCs. The PCI controller on Keystone is based on DesignWare hardware
->> -- 
->> 2.7.4
->>
->>
-> 
-> .
-> 
+> What if we just moved program_hpp_type0(), etc from probe.c to
+> pci-acpi.c?  The only reason I see to have it in probe.c is for
+> pci_default_type0, and I think that is a pretty obtuse way of doing
+> default configuration.  I would have no problem at all just hardcoding
+> those defaults in probe.c and then potentially having them overwritten
+> by _HPP/_HPX.
 
+Actually, never mind about this.  This would be a perfect project for
+mentoring a Linux newbie.
+
+I'll merge this series as-is and any restructuring/cleanup can happen
+later, since it's not related to this series anyway.
+
+Bjorn
