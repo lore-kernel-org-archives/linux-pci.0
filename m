@@ -2,203 +2,113 @@ Return-Path: <SRS0=PPlZ=SV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F039C282DA
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:35:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 417CCC282DA
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E4F0204EC
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:35:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D30E20643
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 18:47:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555698956;
-	bh=SiuPTE3En5u1w/lZsTCxrVqfP1Q4Z6SlF0KC8CUicUg=;
+	s=default; t=1555699672;
+	bh=exErL+htx5Go3GECaErHR65rZU6Dinuf8zQnf3uO8Hg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=FkLEmA5I/0fxHCBeo5okiBUfYONvnV/HItv8+wy4sSlLZnemuN3dYvCq5zsd+ls1s
-	 5CJoFF+wNSs71R7yb9HSFpMn6htxptdfoLKnmX+xsZ4ItfG1w6pzd7LDFbU2wwd9Lg
-	 5FyotjDER/K/aq7JBZGnrKWGPFc4DAWNQKfpnnOc=
+	b=NOQVrPEyQEfYLJ51d4nogvQ6/ZEXmFB19f7Prcfzd747iKlmgRST59aod0gRluESU
+	 0RZAvd6xDExfKCEO/XF5PBEqnaotmy2ayLIZhgNopRRx4qgZZdJD9pluueaJBHAsPY
+	 tbHEZ/OkWUHKnaXSxzBECvhRrU6m3+kyypLEftog=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727514AbfDSSfZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Apr 2019 14:35:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53876 "EHLO mail.kernel.org"
+        id S1727431AbfDSSrv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Apr 2019 14:47:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48424 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726072AbfDSS3P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Apr 2019 14:29:15 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
+        id S1725870AbfDSSrv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Apr 2019 14:47:51 -0400
+Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C553C222A4;
-        Fri, 19 Apr 2019 13:20:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 09544205F4;
+        Fri, 19 Apr 2019 18:47:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555680035;
-        bh=SiuPTE3En5u1w/lZsTCxrVqfP1Q4Z6SlF0KC8CUicUg=;
+        s=default; t=1555699670;
+        bh=exErL+htx5Go3GECaErHR65rZU6Dinuf8zQnf3uO8Hg=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Er+k3T7kzDwb/lKTbO0U8uQu9Tq4vDPTZNu+ysHHivtNT3LIj5bPdwkK9NOIcy7BN
-         9ZJ8sdarZJdFePXM670gXXw4Bdcl9fvVikIwIxOzeY9fijWampOINeZm980Vv87Lb0
-         gUn+RPoqQUjy6PPYV3q2BGQFgubODPdkMcoRMOKc=
-Date:   Fri, 19 Apr 2019 08:20:33 -0500
+        b=hdv/d7dVnyqGoBj4xmCZ/RdqHlcS3+GsnjOqsSK2XfYpc8TdqjXUPqwn1aCkiLBQr
+         Jhpp0iAQttZbGmYLlFKnRudTVhsHkt3g9uCa71WPcRI7Gof9qk996HqERdmfzfqcno
+         XiD3DjWKk+KDFUW2fscjroCPFr+3yjkLNqYCsw98=
+Date:   Fri, 19 Apr 2019 13:47:48 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mohan Kumar <mohankumar718@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Frederick Lawler <fred@fredlawl.com>
-Subject: Re: [PATCH] drivers: pci: Define pr_fmt() and use pr_*() instead of
- printk()
-Message-ID: <20190419132033.GJ126710@google.com>
-References: <1555612864-4059-1-git-send-email-mohankumar718@gmail.com>
+To:     "Koenig, Christian" <Christian.Koenig@amd.com>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        "rdunlap@infradead.org" <rdunlap@infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] PCI/P2PDMA: start with a whitelist for root complexes
+Message-ID: <20190419184748.GF173520@google.com>
+References: <20190418115859.2394-1-christian.koenig@amd.com>
+ <20190418163347.GA213349@google.com>
+ <22b686f0-572b-d083-915f-5c46c89dfbc3@deltatee.com>
+ <20190418172426.GB213349@google.com>
+ <ef5839af-4ddb-2e68-ebf3-f11fa01b0403@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <1555612864-4059-1-git-send-email-mohankumar718@gmail.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ef5839af-4ddb-2e68-ebf3-f11fa01b0403@amd.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Frederick because I think he's also doing some printk changes.
-I don't think they will overlap, so it's just FYI]
-
-Hi Mohan,
-
-This subject line is better, but still doesn't match the convention.
-Here's what it would look like if I applied it:
-
-  $ git log --oneline --no-merges drivers/pci/quirks.c | head -5
-  7b1068d23f9d drivers: pci: Define pr_fmt() and use pr_*() instead of printk()
-  f57a98e1b713 PCI: Work around Synopsys duplicate Device ID (HAPS USB3, NXP i.MX)
-  01926f6b321b PCI: Add ACS quirk for HXT SD4800
-  1d09d57728fe PCI: Mark expected switch fall-through
-  03e6742584af PCI: Override Synopsys USB 3.x HAPS device class
-
-I want it to start with "PCI: " so your patch matches the previous
-ones.
-
-On Thu, Apr 18, 2019 at 09:41:04PM +0300, Mohan Kumar wrote:
-> Define a pr_fmt() macro that convert all of the explicit printk() calls
-> into corresponding pr_*().
-
-  - Ignore drivers/pci/hotplug/ for now.  Many of those drivers define
-    their own logging macros that make things messier.
-
-  - Convert these in one patch for all of drivers/pci/ (except
-    drivers/pci/hotplug/).  This is pure cleanup and doesn't change
-    any behavior, so shouldn't be very controversial:
-
-      printk(KERN_WARN) to pr_warn()
-      printk(KERN_ERR)  to pr_err()
-
-  - In a second patch, add "#define pr_fmt()" where useful.  This
-    should be a separate patch to make it easier to review.  But this
-    also shouldn't change any behavior, so should be pretty
-    straightforward.
-
-  - Convert these in a third patch.  This is separate because it
-    involves a behavior change and may require some discussion and
-    tweaking of individual situations:
-
-      pci_printk(KERN_DEBUG) to pci_info()
-      dev_printk(KERN_DEBUG) to dev_info()
-      printk(KERN_DEBUG)     to pr_info()
-
-Thanks for your work on this!  Your changes will definitely make the
-PCI core more consistent, which makes it more pleasant to work in.
-
-Bjorn
-
-> Signed-off-by: Mohan Kumar <mohankumar718@gmail.com>
-> ---
->  drivers/pci/pci-stub.c | 11 +++++------
->  drivers/pci/quirks.c   | 10 +++++-----
->  2 files changed, 10 insertions(+), 11 deletions(-)
+On Fri, Apr 19, 2019 at 02:24:18PM +0000, Koenig, Christian wrote:
+> Am 18.04.19 um 19:24 schrieb Bjorn Helgaas:
+> > On Thu, Apr 18, 2019 at 10:58:55AM -0600, Logan Gunthorpe wrote:
+> >> On 2019-04-18 10:33 a.m., Bjorn Helgaas wrote:
+> >>> On Thu, Apr 18, 2019 at 01:58:59PM +0200, Christian König wrote:
+> >>>> A lot of root complexes can still do P2P even when PCI devices
+> >>>> don't share a common upstream bridge.
+> >>>>
+> >>>> Start adding a whitelist and allow P2P if both participants are
+> >>>> attached to known good root complex.
+> >>> Is there a plan for addressing this in a generic way that doesn't
+> >>> require an OS modification for every new "known good root complex",
+> >>> e.g., some PCIe or ACPI spec update that allows the OS to discover
+> >>> this?
+> >> I'm aware of work going on in the PCI SIG to address this [1].
+> >>
+> >> But I expect it's going to be a long time before actual hardware advertises
+> >> this capability to indicate support. So in the interim we either need to not
+> >> use p2pdma on root complexes or create a white list. I'm in favour of the
+> >> white list approach.
+> > I agree we need a whitelist; I just want to make sure we also make
+> > progress on some way to limit the amount of time we need to update it.
 > 
-> diff --git a/drivers/pci/pci-stub.c b/drivers/pci/pci-stub.c
-> index 66f8a59..f946bf9 100644
-> --- a/drivers/pci/pci-stub.c
-> +++ b/drivers/pci/pci-stub.c
-> @@ -16,6 +16,8 @@
->   * .../0000:00:19.0/driver -> ../../../bus/pci/drivers/pci-stub
->   */
->  
-> +#define pr_fmt(fmt) "pci-stub: " fmt
-> +
->  #include <linux/module.h>
->  #include <linux/pci.h>
->  
-> @@ -66,20 +68,17 @@ static int __init pci_stub_init(void)
->  				&class, &class_mask);
->  
->  		if (fields < 2) {
-> -			printk(KERN_WARNING
-> -			       "pci-stub: invalid id string \"%s\"\n", id);
-> +			pr_warn("invalid id string \"%s\"\n", id);
->  			continue;
->  		}
->  
-> -		printk(KERN_INFO
-> -		       "pci-stub: add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
-> +		pr_info("add %04X:%04X sub=%04X:%04X cls=%08X/%08X\n",
->  		       vendor, device, subvendor, subdevice, class, class_mask);
->  
->  		rc = pci_add_dynid(&stub_driver, vendor, device,
->  				   subvendor, subdevice, class, class_mask, 0);
->  		if (rc)
-> -			printk(KERN_WARNING
-> -			       "pci-stub: failed to add dynamic id (%d)\n", rc);
-> +			pr_warn("failed to add dynamic id (%d)\n", rc);
->  	}
->  
->  	return 0;
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index f9cd4d4..3b367b7 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -11,6 +11,7 @@
->   * Init/reset quirks for USB host controllers should be in the USB quirks
->   * file, where their drivers can use them.
->   */
-> +#define pr_fmt(fmt) "PCI: " fmt
->  
->  #include <linux/types.h>
->  #include <linux/kernel.h>
-> @@ -159,8 +160,7 @@ static int __init pci_apply_final_quirks(void)
->  	u8 tmp;
->  
->  	if (pci_cache_line_size)
-> -		printk(KERN_DEBUG "PCI: CLS %u bytes\n",
-> -		       pci_cache_line_size << 2);
-> +		pr_debug("CLS %u bytes\n", pci_cache_line_size << 2);
->  
->  	pci_apply_fixup_final_quirks = true;
->  	for_each_pci_dev(dev) {
-> @@ -177,7 +177,7 @@ static int __init pci_apply_final_quirks(void)
->  			if (!tmp || cls == tmp)
->  				continue;
->  
-> -			printk(KERN_DEBUG "PCI: CLS mismatch (%u != %u), using %u bytes\n",
-> +			pr_debug("CLS mismatch (%u != %u), using %u bytes\n",
->  			       cls << 2, tmp << 2,
->  			       pci_dfl_cache_line_size << 2);
->  			pci_cache_line_size = pci_dfl_cache_line_size;
-> @@ -185,7 +185,7 @@ static int __init pci_apply_final_quirks(void)
->  	}
->  
->  	if (!pci_cache_line_size) {
-> -		printk(KERN_DEBUG "PCI: CLS %u bytes, default %u\n",
-> +		pr_debug("CLS %u bytes, default %u\n",
->  		       cls << 2, pci_dfl_cache_line_size << 2);
->  		pci_cache_line_size = cls ? cls : pci_dfl_cache_line_size;
->  	}
-> @@ -2613,7 +2613,7 @@ static void nvbridge_check_legacy_irq_routing(struct pci_dev *dev)
->  	pci_read_config_dword(dev, 0x74, &cfg);
->  
->  	if (cfg & ((1 << 2) | (1 << 15))) {
-> -		printk(KERN_INFO "Rewriting IRQ routing register on MCP55\n");
-> +		pr_info("Rewriting IRQ routing register on MCP55\n");
->  		cfg &= ~((1 << 2) | (1 << 15));
->  		pci_write_config_dword(dev, 0x74, cfg);
->  	}
-> -- 
-> 2.7.4
+> Well as far as I know at least for AMD there is also a vendor specific 
+> way to figure out if a chipset does P2P routing or not. So you don't 
+> need every possible combination listed.
 > 
+> It's perfectly possible that Intel, ARM and PowerPC have something 
+> similar and with all those on board you have pretty much every 
+> interesting case covered.
+> 
+> I will try to dig something up into that direction.
+> 
+> Another problem is also that some root complexes have very very strange 
+> limitations on the routing which are hard to handle. For example some 
+> old chipsets can do P2P, but only for writes and not reads!
+> 
+> Anyway at least for my current use case a simple whitelist with 
+> vendor/device should be sufficient, so I'm fine with maintaining that 
+> for now. But on the other hand I also understand that in 10+ years we 
+> don't want a list with 200 entries here....
+
+Right.  And it's not just *you*; maintaining a list like that is also
+a burden for me and every distro maintainer who has to backport
+updates.
+
+And the fact that it's not covered by any spec also means we're open
+to all kinds of quirks about how it interacts with things that *are*
+in the spec: ACS, ATS, the read/write thing you mentioned, ...
+
+> >> [1] https://lore.kernel.org/linux-pci/20181210115653.0000615a@huawei.com/
