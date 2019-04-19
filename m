@@ -2,177 +2,105 @@ Return-Path: <SRS0=PPlZ=SV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23BB8C282DA
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 19:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA2B5C282DA
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 19:41:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E001620854
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 19:19:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1555701557;
-	bh=N4uSEXgkJLE08820e9yGWuIVOHsRT3XZtzmn5IYRXSA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=DNegmb2rps4ogbA2FB6ESLLODfawkGUtsRJ4F1anCizCp6ue+Ao5ScqmlQLjPucuD
-	 0p3Kn7qs995OdD5u184DfQSDuhv3aN5JqMHTuChZQksXcJxaziTkV7gtYcTMdaoNQX
-	 a2Up8/21DnGkOrDz2eklegT3DlqyVv5a8h2J6VWQ=
+	by mail.kernel.org (Postfix) with ESMTP id 71A2E21736
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Apr 2019 19:41:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="t2OXgmVF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727304AbfDSTTQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Apr 2019 15:19:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45772 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726150AbfDSTTQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Apr 2019 15:19:16 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3AD0520693;
-        Fri, 19 Apr 2019 19:19:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555701554;
-        bh=N4uSEXgkJLE08820e9yGWuIVOHsRT3XZtzmn5IYRXSA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=eHQtWlhRr1TSoErmOR6uoqNYh8WV+aW/LwovWGqhBSDUUkgV2tJqHHzwtmmeonevJ
-         joPHbutik3QYnWhbKsfCaXD1BhG3Cczp9ECGsGGjjeiFfhkhwyQvfcQs2IFwarJY6d
-         +Qmvl7G1RQtdrBpJ46WybJNibzQ970XCR0/pT0Ew=
-Date:   Fri, 19 Apr 2019 14:19:12 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Christian =?iso-8859-1?Q?K=F6nig?= 
-        <ckoenig.leichtzumerken@gmail.com>
-Cc:     logang@deltatee.com, rdunlap@infradead.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/P2PDMA: start with a whitelist for root complexes
-Message-ID: <20190419191912.GG173520@google.com>
-References: <20190418115859.2394-1-christian.koenig@amd.com>
+        id S1728079AbfDSTlG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Apr 2019 15:41:06 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:38817 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727041AbfDSTlF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 Apr 2019 15:41:05 -0400
+Received: by mail-wm1-f66.google.com with SMTP id w15so7353689wmc.3;
+        Fri, 19 Apr 2019 12:41:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:from:to:references:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=vWfV/uLxHlKTCY8jgaOm/hsQsubaADZJKJWfjxs7Npo=;
+        b=t2OXgmVFbBh0Y1EuHpno5rs+bEy8/NT4sQpbVkXbZhdnpPL/4pORRl5gKSQRYp9b/3
+         MwlvwiYNq5i8tzwMESnUoWDyGhieiBMCgAjvdc/xib8LXe0Qsnr3fbRIngnj3MnX6aHX
+         lesDND0C91IxOV5V1xS+v80lVbRg1v4bC/eOM77xPR7ryoBGX0HCDQ2IEpfFKaVSg6nG
+         VXaWkQW4XYmD6J5+jSOL0nROlNk0yY16JUMV/hSjFF0ceIpBWKFfhYf4HRQ3AXdM6dHI
+         H6hGwnPPfK80HboSTaxyXdnO6F75SmPI8NAYFkGFM41FBxlHliS05FOrdoPWxTXOzItm
+         cjyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:from:to:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=vWfV/uLxHlKTCY8jgaOm/hsQsubaADZJKJWfjxs7Npo=;
+        b=DQGodinMqGQMQC3YHVb24g/UVnChsx1MAsWCcvNdblgf85sDgob2gmtrPgDmtyrD+1
+         oW2KKO8eZqKok8Awnft91wqtOXNodZTQQcInpb0GUlofnZjcqJk4ugNh0QhgJ+MRbdvw
+         tBXam02j0Dy2pxVqsr8fXltJpN2DroQY/pWl20WSUAsueUZJ6KOZDy9dmvIAUIuLX83m
+         8T4HbrtExZm364F/Bzx+aHIoFzRmOszF42nJsJbB8bYWPvK9aeYmN8cEsm4xmMB5DfWF
+         VJpwk/VR2teNAwgCzMuuZcX8RFRkKn+JEul78sFe4SezA9D/dZ+GPkRQnbqHwoqMABR6
+         PNrw==
+X-Gm-Message-State: APjAAAX2OzpvW2CTOKn15l+5PukYXmh4CP0QSlMmGbZgO/vDcIgPJAph
+        aL3OMC1gdrNm0s3iSYVvtJG0mrri
+X-Google-Smtp-Source: APXvYqwJj5NC0zkNsl/Atrn2tJbWzRyFSf+v3WICQ6F0yeHaqLbcujdUsIG2uFo7AHDnntcbzaPbBQ==
+X-Received: by 2002:a05:600c:2189:: with SMTP id e9mr2289251wme.4.1555672231669;
+        Fri, 19 Apr 2019 04:10:31 -0700 (PDT)
+Received: from ?IPv6:2003:ea:8bd4:5700:584:3262:bfe6:7518? (p200300EA8BD4570005843262BFE67518.dip0.t-ipconnect.de. [2003:ea:8bd4:5700:584:3262:bfe6:7518])
+        by smtp.googlemail.com with ESMTPSA id b134sm7324314wmd.26.2019.04.19.04.10.30
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 19 Apr 2019 04:10:31 -0700 (PDT)
+Subject: [PATCH 1/3] PCI: add helper pci_dev_id
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+References: <b352964f-a9a4-c8eb-520c-19b4dca4fba1@gmail.com>
+Message-ID: <8e0ebcd1-e448-67a1-d4e8-bc955d895feb@gmail.com>
+Date:   Fri, 19 Apr 2019 13:08:52 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190418115859.2394-1-christian.koenig@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <b352964f-a9a4-c8eb-520c-19b4dca4fba1@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 18, 2019 at 01:58:59PM +0200, Christian König wrote:
-> A lot of root complexes can still do P2P even when PCI devices
-> don't share a common upstream bridge.
-> 
-> Start adding a whitelist and allow P2P if both participants are
-> attached to known good root complex.
-> 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> ---
->  drivers/pci/p2pdma.c | 38 +++++++++++++++++++++++++++++++++++---
->  1 file changed, 35 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index c52298d76e64..212baaa7f93b 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -274,6 +274,31 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
->  	seq_buf_printf(buf, "%s;", pci_name(pdev));
->  }
->  
-> +/*
-> + * If we can't find a common upstream bridge take a look at the root complex and
-> + * compare it to a whitelist of known good hardware.
-> + */
-> +static bool root_complex_whitelist(struct pci_dev *dev)
-> +{
-> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-> +	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
+In several places in the kernel we find PCI_DEVID used like this:
+PCI_DEVID(dev->bus->number, dev->devfn) Therefore create a helper
+for it.
 
-The fact that 00.0 is a host bridge and that its vendor/device ID
-tells us whether peer-to-peer is supported between two *other* devices
-(provider and client) is all totally vendor-specific.  There's nothing
-in the PCI specs that says the host bridge even has to exist as a PCI
-device.
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ include/linux/pci.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Is there any chance you could identify it by the Root Port
-vendor/device instead of groping around for the 00:0 device?  That
-would have been simpler, so I suppose that doesn't work for some
-reason.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2c056a7a7..28d0313a3 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -598,6 +598,11 @@ struct pci_bus {
+ 
+ #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
+ 
++static inline u16 pci_dev_id(struct pci_dev *dev)
++{
++	return PCI_DEVID(dev->bus->number, dev->devfn);
++}
++
+ /*
+  * Returns true if the PCI bus is root (behind host-PCI bridge),
+  * false otherwise
+-- 
+2.21.0
 
-I'm surprised that you don't need both the provider and the client to
-figure this out.  Wouldn't it would be possible to have two Root Ports
-under host bridge A that could do peer-to-peer to each other, but not
-to a Root Port under host bridge B?  E.g., I'd think you would need
-something like this:
 
-  if (pci_find_host_bridge(a->bus) == pci_find_host_bridge(b->bus) &&
-      a->vendor == PCI_VENDOR_ID_AMD &&
-      b->vendor == PCI_VENDOR_ID_AMD &&
-      a->device == X &&
-      b->device == X)
-        return true;
-
-  return false;
-
-But I guess that still implicitly relies on the notion that everything
-under one PNP0A03 device is potentially connected via P2P, and I don't
-think there's anything the PCI or ACPI specs that would support that.
-
-Maybe we should add a pci_dev.p2p_group and make it so "a.p2p_group ==
-b.p2p_group" means that P2P is possible between them.  You'd have to
-have a quirk for the root ports to initialize p2p_group using whatever
-vendor-specific information you need, then everything under them could
-inherit from the parent.
-
-> +	unsigned short vendor, device;
-> +
-> +	if (!root)
-> +		return false;
-> +
-> +	vendor = root->vendor;
-> +	device = root->device;
-> +	pci_dev_put(root);
-> +
-> +	/* AMD ZEN host bridges can do peer to peer */
-> +	if (vendor == PCI_VENDOR_ID_AMD && device == 0x1450)
-> +		return true;
-> +
-> +	/* TODO: Extend that to a proper whitelist */
-> +	return false;
-> +}
-> +
->  /*
->   * Find the distance through the nearest common upstream bridge between
->   * two PCI devices.
-> @@ -317,13 +342,13 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
->   * In this case, a list of all infringing bridge addresses will be
->   * populated in acs_list (assuming it's non-null) for printk purposes.
->   */
-> -static int upstream_bridge_distance(struct pci_dev *a,
-> -				    struct pci_dev *b,
-> +static int upstream_bridge_distance(struct pci_dev *provider,
-> +				    struct pci_dev *client,
->  				    struct seq_buf *acs_list)
->  {
-> +	struct pci_dev *a = provider, *b = client, *bb;
->  	int dist_a = 0;
->  	int dist_b = 0;
-> -	struct pci_dev *bb = NULL;
->  	int acs_cnt = 0;
->  
->  	/*
-> @@ -354,6 +379,13 @@ static int upstream_bridge_distance(struct pci_dev *a,
->  		dist_a++;
->  	}
->  
-> +	/* Allow the connection if both devices are on a whitelisted root
-> +	 * complex, but add an arbitary large value to the distance.
-> +	 */
-> +	if (root_complex_whitelist(provider) &&
-> +	    root_complex_whitelist(client))
-> +		return 0x1000 + dist_a + dist_b;
-> +
->  	return -1;
->  
->  check_b_path_acs:
-> -- 
-> 2.17.1
-> 
