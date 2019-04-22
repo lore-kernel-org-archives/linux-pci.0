@@ -2,98 +2,137 @@ Return-Path: <SRS0=L200=SY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E3C0C10F11
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34656C10F11
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:50:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1959620674
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:45:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B6pYsKUP"
+	by mail.kernel.org (Postfix) with ESMTP id F3E592073F
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:50:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730757AbfDVXpb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Apr 2019 19:45:31 -0400
-Received: from mail-it1-f196.google.com ([209.85.166.196]:54268 "EHLO
-        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728831AbfDVXpb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2019 19:45:31 -0400
-Received: by mail-it1-f196.google.com with SMTP id y204so20555782itf.3;
-        Mon, 22 Apr 2019 16:45:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=DqDA/Qes9q8m3B2HqjXGZEMMl+zuf4YvngpRBo4X+PI=;
-        b=B6pYsKUPqRTCn2zgRgKWbuADyrY7nrtHY2IYO1Y7Plin/gkWg7LDyPesnH4Ou2/Ipy
-         IP58jpnCkgXqKiPXpoh3/WOEgcv8+w4QUYglhBFASkrrH1w6BcLtpVG9oS4OgNGwiwGE
-         E4x5pD6sNKAMBWhER2nHbOFpRn8ItFc0vPxBR3+LXmuO8LBhv6EHMwAARu5hYbMRwW3G
-         LO0fhMIkjJOA47nuMBtG6L1ekVkJlLrcNZQZvB62HySo0sUGD1L+Z7NRYgw5dN0DYEDA
-         Eip18/SxxtHIa/pbPoN7Xmp4RV4YTi0dzU26vemRzMitua2Vr+/vbnOSspK1UQKPVMg0
-         IUWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=DqDA/Qes9q8m3B2HqjXGZEMMl+zuf4YvngpRBo4X+PI=;
-        b=m0C5sm/3Ne7G54Z2YyrT4JJxsL2TBEPyD5YNlSUUKWP7js9WRlX8nrW2jsNej1F7iQ
-         Uu73fZHMWgKIgfzfMjITGJgDe4gv7sr5ffB+69bLj6+kc+axwA4vLtFbt0ihl9Ltnn9T
-         E3rulXz6mg3J67/XsGNciyBsTohm4atYg2cp4PN/+atQ0OEa/GgY8hUshfrN4a13+vFj
-         1YvrVBCe0laZR00Kfn1Ebuo1vgIhVLlhk1tJdhRdNbzB1g8NCH3iEOQmkeyJvyhPked9
-         jKm1wA3Y2cwzGL2GuTjh7pqqsEJdNl1yyST/3ucTv+KFqv/9Mig7DzmKtyJO+a5gYOsd
-         VDlw==
-X-Gm-Message-State: APjAAAXIZa+rroC2BJndILakUcA7GX7DlEcRt0tabJwbKQYoHipLK0qY
-        j7j2Wtei++K8TqFAFm1q9JUiDr5z
-X-Google-Smtp-Source: APXvYqwJ4j9w2Jj7DwgcnfiaSt1xw23s8MhVaZm+HFdK/i3btrmwL8mRvU9HD8NWxp3Nz//dcXfcMA==
-X-Received: by 2002:a05:660c:209:: with SMTP id y9mr661675itj.31.1555976729838;
-        Mon, 22 Apr 2019 16:45:29 -0700 (PDT)
-Received: from nukespec.gtech ([2601:2c1:8501:182d::6fe])
-        by smtp.gmail.com with ESMTPSA id t2sm6887344itb.37.2019.04.22.16.45.27
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Mon, 22 Apr 2019 16:45:29 -0700 (PDT)
-Subject: Re: [PATCH v1 1/3] PCI / ACPI: Do not export pci_get_hp_params()
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        okaya@kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20190208162414.3996-1-mr.nuke.me@gmail.com>
- <20190208162414.3996-2-mr.nuke.me@gmail.com>
- <20190422205845.GM173520@google.com>
-From:   Alex G <mr.nuke.me@gmail.com>
-Message-ID: <0b2b2396-b60b-ad25-d4ab-e3633fd93d0c@gmail.com>
-Date:   Mon, 22 Apr 2019 18:45:27 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        id S1730536AbfDVXu5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Apr 2019 19:50:57 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:44470 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728831AbfDVXu4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Apr 2019 19:50:56 -0400
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hIii7-00071L-6A; Mon, 22 Apr 2019 17:50:56 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hIii6-0004C3-RU; Mon, 22 Apr 2019 17:50:54 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Kit Chow <kchow@gigaio.com>, Yinghai Lu <yinghai@kernel.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Mon, 22 Apr 2019 17:50:53 -0600
+Message-Id: <20190422235053.16073-3-logang@deltatee.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190422235053.16073-1-logang@deltatee.com>
+References: <20190422235053.16073-1-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <20190422205845.GM173520@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, kchow@gigaio.com, yinghai@kernel.org, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v2 2/2] PCI: Fix disabling of bridge BARs when assigning bus resources
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 4/22/19 3:58 PM, Bjorn Helgaas wrote:
-> On Fri, Feb 08, 2019 at 10:24:11AM -0600, Alexandru Gagniuc wrote:
->> This is only used within drivers/pci, and there is no reason to make
->> it available outside of the PCI core.
->>
->> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> 
-> Applied the whole series to pci/hotplug for v5.2, thanks!
-> 
-> I dropped the "list" member from struct hpx_type3 because it didn't
-> seem to be used.
+One odd quirk of PLX switches is that their upstream bridge port has
+256K of space allocated behind its BAR0 (most other bridge
+implementations do not report any BAR space). The lspci for such  device
+looks like:
 
-That's a good call. That was a vestigial appendage from when I first 
-intended to store a list of registers in memory. I'm glad we didn't end 
-up needing a list.
+  04:00.0 PCI bridge: PLX Technology, Inc. PEX 8724 24-Lane, 6-Port PCI
+            Express Gen 3 (8 GT/s) Switch, 19 x 19mm FCBGA (rev ca)
+	    (prog-if 00 [Normal decode])
+      Physical Slot: 1
+      Flags: bus master, fast devsel, latency 0, IRQ 30, NUMA node 0
+      Memory at 90a00000 (32-bit, non-prefetchable) [size=256K]
+      Bus: primary=04, secondary=05, subordinate=0a, sec-latency=0
+      I/O behind bridge: 00002000-00003fff
+      Memory behind bridge: 90000000-909fffff
+      Prefetchable memory behind bridge: 0000380000800000-0000380000bfffff
+      Kernel driver in use: pcieport
 
-Alex
+It's not clear what the purpose of the memory at 0x90a00000 is, and
+currently the kernel never actually uses it for anything. In most cases,
+it's safely ignored and does not cause a problem.
+
+However, when the kernel assigns the resource addresses (with the
+pci=realloc command line parameter, for example) it can inadvertently
+disable the struct resource corresponding to the bar. When this happens,
+lspci will report this memory as ignored:
+
+   Region 0: Memory at <ignored> (32-bit, non-prefetchable) [size=256K]
+
+This is because the kernel reports a zero start address and zero flags
+in the corresponding sysfs resource file and in /proc/bus/pci/devices.
+Investigation with 'lspci -x', however shows the bios-assigned address
+will still be programmed in the device's BAR registers.
+
+In many cases, this still isn't a problem. Nothing uses the memory,
+so nothing is affected. However, a big problem shows up when an IOMMU
+is in use: the IOMMU will not reserve this space in the IOVA because the
+kernel no longer thinks the range is valid. (See
+dmar_init_reserved_ranges() for the Intel implementation of this.)
+
+Without the proper reserved range, we have a situation where a DMA
+mapping may occasionally allocate an IOVA which the PCI bus will actually
+route to a BAR in the PLX switch. This will result in some random DMA
+writes not actually writing to the RAM they are supposed to, or random
+DMA reads returning all FFs from the PLX BAR when it's supposed to have
+read from RAM.
+
+The problem is caused in pci_assign_unassigned_root_bus_resources().
+When any resource from a bridge device fails to get assigned, the code
+sets the resource's flags to zero. This makes sense for bridge resources,
+as they will be re-enabled later, but for regular BARs, it disables them
+permanently. To fix the problem, we only set the flags to zero for
+bridge resources and treat any other resources like non-bridge devices.
+
+Reported-by: Kit Chow <kchow@gigaio.com>
+Fixes: da7822e5ad71 ("PCI: update bridge resources to get more big ranges when allocating space (again)")
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 0eb40924169b..7adbd4bedd16 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1784,11 +1784,16 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	/* restore size and flags */
+ 	list_for_each_entry(fail_res, &fail_head, list) {
+ 		struct resource *res = fail_res->res;
++		int idx;
+ 
+ 		res->start = fail_res->start;
+ 		res->end = fail_res->end;
+ 		res->flags = fail_res->flags;
+-		if (fail_res->dev->subordinate)
++
++		idx = res - &fail_res->dev->resource[0];
++		if (fail_res->dev->subordinate &&
++		    idx >= PCI_BRIDGE_RESOURCES &&
++		    idx <= PCI_BRIDGE_RESOURCE_END)
+ 			res->flags = 0;
+ 	}
+ 	free_list(&fail_head);
+-- 
+2.20.1
+
