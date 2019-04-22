@@ -2,307 +2,245 @@ Return-Path: <SRS0=L200=SY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1B74C10F11
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 21:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8BBEC10F11
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 21:12:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 764EE2175B
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 21:06:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7783320896
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 21:12:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729202AbfDVVFh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Apr 2019 17:05:37 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:42902 "EHLO ale.deltatee.com"
+        id S1729211AbfDVVMC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Apr 2019 17:12:02 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:50788 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729104AbfDVVFh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Apr 2019 17:05:37 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hIg85-0004iZ-S1; Mon, 22 Apr 2019 15:05:34 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hIg82-0003zV-ID; Mon, 22 Apr 2019 15:05:30 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-kselftest@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Joerg Roedel <joro@8bytes.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Eric Pilmore <epilmore@gigaio.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Mon, 22 Apr 2019 15:05:19 -0600
-Message-Id: <20190422210528.15289-2-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190422210528.15289-1-logang@deltatee.com>
-References: <20190422210528.15289-1-logang@deltatee.com>
+        id S1728796AbfDVVMC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Apr 2019 17:12:02 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6CD34308FEDE;
+        Mon, 22 Apr 2019 21:12:01 +0000 (UTC)
+Received: from x1.home (ovpn-116-122.phx2.redhat.com [10.3.116.122])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 24F1C60C64;
+        Mon, 22 Apr 2019 21:12:00 +0000 (UTC)
+Date:   Mon, 22 Apr 2019 15:11:59 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Alexandru Gagniuc <mr.nuke.me@gmail.com>, austin_bolen@dell.com,
+        alex_gagniuc@dellteam.com, keith.busch@intel.com,
+        Shyam_Iyer@Dell.com, lukas@wunner.de, okaya@kernel.org,
+        torvalds@linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI/LINK: bw_notification: Do not leave interrupt
+ handler NULL
+Message-ID: <20190422151159.1452501b@x1.home>
+In-Reply-To: <20190419150827.5040897e@x1.home>
+References: <20190320193504.GC251185@google.com>
+        <20190323003700.7294-1-mr.nuke.me@gmail.com>
+        <20190325222502.GC24180@google.com>
+        <20190419150827.5040897e@x1.home>
+Organization: Red Hat
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-ntb@googlegroups.com, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, jdmason@kudzu.us, joro@8bytes.org, bhelgaas@google.com, dave.jiang@intel.com, allenbh@gmail.com, fancer.lancer@gmail.com, epilmore@gigaio.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v4 01/10] PCI/MSI: Support allocating virtual MSI interrupts
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.49]); Mon, 22 Apr 2019 21:12:01 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-For NTB devices, we want to be able to trigger MSI interrupts
-through a memory window. In these cases we may want to use
-more interrupts than the NTB PCI device has available in its MSI-X
-table.
+On Fri, 19 Apr 2019 15:08:27 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-We allow for this by creating a new 'virtual' interrupt. These
-interrupts are allocated as usual but are not programmed into the
-MSI-X table (as there may not be space for them).
+> On Mon, 25 Mar 2019 17:25:02 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
+> 
+> > On Fri, Mar 22, 2019 at 07:36:51PM -0500, Alexandru Gagniuc wrote:  
+> > > A threaded IRQ with a NULL handler does not work with level-triggered
+> > > interrupts. request_threaded_irq() will return an error:
+> > > 
+> > >   genirq: Threaded irq requested with handler=NULL and !ONESHOT for irq 16
+> > >   pcie_bw_notification: probe of 0000:00:1b.0:pcie010 failed with error -22
+> > > 
+> > > For level interrupts we need to silence the interrupt before exiting
+> > > the IRQ handler, so just clear the PCI_EXP_LNKSTA_LBMS bit there.
+> > > 
+> > > Fixes: e8303bb7a75c ("PCI/LINK: Report degraded links via link bandwidth notification")
+> > > Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> > > Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>    
+> > 
+> > Applied with the following subject line to for-linus for v5.1, thanks!
+> > 
+> >   PCI/LINK: Supply IRQ handler so level-triggered IRQs are acked  
+> 
+> That made it a little tricky to track down this thread.  I get a
+> regression bisected back to this when trying to do vfio device
+> assignment.  I haven't dug further than the bisection, but I assume bus
+> resets are triggering this link bandwidth notifier code and nobody
+> thinks it's their interrupt:
 
-The MSI address and data will then handled through an NTB MSI library
-introduced later in this series.
+I'm not sure what to do with this, I think it bisects back to commit
+3e82a7f9031f simply because the interrupt was failing to register prior
+to that, so the bandwidth notifier code was never activated (how was
+this tested?).  When I assign a GPU to a VM, the VM is manipulating the
+device to change the link speed, I would have thought this would
+trigger the autonomous bandwidth notification, but I can clearly see
+BWMgmt+ ABWMgmt- in lspci.  The root port shows:
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c   | 54 +++++++++++++++++++++++++++++++++++++--------
- include/linux/msi.h |  8 +++++++
- include/linux/pci.h |  9 ++++++++
- 3 files changed, 62 insertions(+), 9 deletions(-)
+  Interrupt: pin A routed to IRQ 25
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 73986825d221..668bc16ef4d1 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -192,6 +192,9 @@ static void msi_mask_irq(struct msi_desc *desc, u32 mask, u32 flag)
- 
- static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
- {
-+	if (desc->msi_attrib.is_virtual)
-+		return NULL;
-+
- 	return desc->mask_base +
- 		desc->msi_attrib.entry_nr * PCI_MSIX_ENTRY_SIZE;
- }
-@@ -206,14 +209,19 @@ static void __iomem *pci_msix_desc_addr(struct msi_desc *desc)
- u32 __pci_msix_desc_mask_irq(struct msi_desc *desc, u32 flag)
- {
- 	u32 mask_bits = desc->masked;
-+	void __iomem *desc_addr;
- 
- 	if (pci_msi_ignore_mask)
- 		return 0;
-+	desc_addr = pci_msix_desc_addr(desc);
-+	if (!desc_addr)
-+		return 0;
- 
- 	mask_bits &= ~PCI_MSIX_ENTRY_CTRL_MASKBIT;
- 	if (flag)
- 		mask_bits |= PCI_MSIX_ENTRY_CTRL_MASKBIT;
--	writel(mask_bits, pci_msix_desc_addr(desc) + PCI_MSIX_ENTRY_VECTOR_CTRL);
-+
-+	writel(mask_bits, desc_addr + PCI_MSIX_ENTRY_VECTOR_CTRL);
- 
- 	return mask_bits;
- }
-@@ -273,6 +281,11 @@ void __pci_read_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	if (entry->msi_attrib.is_msix) {
- 		void __iomem *base = pci_msix_desc_addr(entry);
- 
-+		if (!base) {
-+			WARN_ON(1);
-+			return;
-+		}
-+
- 		msg->address_lo = readl(base + PCI_MSIX_ENTRY_LOWER_ADDR);
- 		msg->address_hi = readl(base + PCI_MSIX_ENTRY_UPPER_ADDR);
- 		msg->data = readl(base + PCI_MSIX_ENTRY_DATA);
-@@ -303,6 +316,9 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 	} else if (entry->msi_attrib.is_msix) {
- 		void __iomem *base = pci_msix_desc_addr(entry);
- 
-+		if (!base)
-+			goto skip;
-+
- 		writel(msg->address_lo, base + PCI_MSIX_ENTRY_LOWER_ADDR);
- 		writel(msg->address_hi, base + PCI_MSIX_ENTRY_UPPER_ADDR);
- 		writel(msg->data, base + PCI_MSIX_ENTRY_DATA);
-@@ -327,7 +343,13 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
- 					      msg->data);
- 		}
- 	}
-+
-+skip:
- 	entry->msg = *msg;
-+
-+	if (entry->write_msi_msg)
-+		entry->write_msi_msg(entry, entry->write_msi_msg_data);
-+
- }
- 
- void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg)
-@@ -550,6 +572,7 @@ msi_setup_entry(struct pci_dev *dev, int nvec, struct irq_affinity *affd)
- 
- 	entry->msi_attrib.is_msix	= 0;
- 	entry->msi_attrib.is_64		= !!(control & PCI_MSI_FLAGS_64BIT);
-+	entry->msi_attrib.is_virtual    = 0;
- 	entry->msi_attrib.entry_nr	= 0;
- 	entry->msi_attrib.maskbit	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	entry->msi_attrib.default_irq	= dev->irq;	/* Save IOAPIC IRQ */
-@@ -674,6 +697,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 	struct irq_affinity_desc *curmsk, *masks = NULL;
- 	struct msi_desc *entry;
- 	int ret, i;
-+	int vec_count = pci_msix_vec_count(dev);
- 
- 	if (affd)
- 		masks = irq_create_affinity_masks(nvec, affd);
-@@ -696,6 +720,10 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 			entry->msi_attrib.entry_nr = entries[i].entry;
- 		else
- 			entry->msi_attrib.entry_nr = i;
-+
-+		entry->msi_attrib.is_virtual =
-+			entry->msi_attrib.entry_nr >= vec_count;
-+
- 		entry->msi_attrib.default_irq	= dev->irq;
- 		entry->mask_base		= base;
- 
-@@ -714,12 +742,19 @@ static void msix_program_entries(struct pci_dev *dev,
- {
- 	struct msi_desc *entry;
- 	int i = 0;
-+	void __iomem *desc_addr;
- 
- 	for_each_pci_msi_entry(entry, dev) {
- 		if (entries)
- 			entries[i++].vector = entry->irq;
--		entry->masked = readl(pci_msix_desc_addr(entry) +
--				PCI_MSIX_ENTRY_VECTOR_CTRL);
-+
-+		desc_addr = pci_msix_desc_addr(entry);
-+		if (desc_addr)
-+			entry->masked = readl(desc_addr +
-+					      PCI_MSIX_ENTRY_VECTOR_CTRL);
-+		else
-+			entry->masked = 0;
-+
- 		msix_mask_irq(entry, 1);
- 	}
- }
-@@ -932,7 +967,7 @@ int pci_msix_vec_count(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_msix_vec_count);
- 
- static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
--			     int nvec, struct irq_affinity *affd)
-+			     int nvec, struct irq_affinity *affd, int flags)
- {
- 	int nr_entries;
- 	int i, j;
-@@ -943,7 +978,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
- 	nr_entries = pci_msix_vec_count(dev);
- 	if (nr_entries < 0)
- 		return nr_entries;
--	if (nvec > nr_entries)
-+	if (nvec > nr_entries && !(flags & PCI_IRQ_VIRTUAL))
- 		return nr_entries;
- 
- 	if (entries) {
-@@ -1079,7 +1114,8 @@ EXPORT_SYMBOL(pci_enable_msi);
- 
- static int __pci_enable_msix_range(struct pci_dev *dev,
- 				   struct msix_entry *entries, int minvec,
--				   int maxvec, struct irq_affinity *affd)
-+				   int maxvec, struct irq_affinity *affd,
-+				   int flags)
- {
- 	int rc, nvec = maxvec;
- 
-@@ -1096,7 +1132,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 				return -ENOSPC;
- 		}
- 
--		rc = __pci_enable_msix(dev, entries, nvec, affd);
-+		rc = __pci_enable_msix(dev, entries, nvec, affd, flags);
- 		if (rc == 0)
- 			return nvec;
- 
-@@ -1127,7 +1163,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
- 		int minvec, int maxvec)
- {
--	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL);
-+	return __pci_enable_msix_range(dev, entries, minvec, maxvec, NULL, 0);
- }
- EXPORT_SYMBOL(pci_enable_msix_range);
- 
-@@ -1167,7 +1203,7 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 
- 	if (flags & PCI_IRQ_MSIX) {
- 		msix_vecs = __pci_enable_msix_range(dev, NULL, min_vecs,
--						    max_vecs, affd);
-+						    max_vecs, affd, flags);
- 		if (msix_vecs > 0)
- 			return msix_vecs;
- 	}
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 7e9b81c3b50d..c278ae8760df 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -56,6 +56,10 @@ struct fsl_mc_msi_desc {
-  * @msg:	The last set MSI message cached for reuse
-  * @affinity:	Optional pointer to a cpu affinity mask for this descriptor
-  *
-+ * @write_msi_msg:	Callback that may be called when the MSI message
-+ *			address or data changes
-+ * @write_msi_msg_data:	Data parameter for the callback.
-+ *
-  * @masked:	[PCI MSI/X] Mask bits
-  * @is_msix:	[PCI MSI/X] True if MSI-X
-  * @multiple:	[PCI MSI/X] log2 num of messages allocated
-@@ -78,6 +82,9 @@ struct msi_desc {
- 	struct msi_msg			msg;
- 	struct irq_affinity_desc	*affinity;
- 
-+	void (*write_msi_msg)(struct msi_desc *entry, void *data);
-+	void *write_msi_msg_data;
-+
- 	union {
- 		/* PCI MSI/X specific data */
- 		struct {
-@@ -88,6 +95,7 @@ struct msi_desc {
- 				u8	multi_cap	: 3;
- 				u8	maskbit		: 1;
- 				u8	is_64		: 1;
-+				u8	is_virtual	: 1;
- 				u16	entry_nr;
- 				unsigned default_irq;
- 			} msi_attrib;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 77448215ef5b..c482aaa8e970 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1355,6 +1355,15 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- #define PCI_IRQ_MSI		(1 << 1) /* Allow MSI interrupts */
- #define PCI_IRQ_MSIX		(1 << 2) /* Allow MSI-X interrupts */
- #define PCI_IRQ_AFFINITY	(1 << 3) /* Auto-assign affinity */
-+
-+/*
-+ * Virtual interrupts allow for more interrupts to be allocated
-+ * than the device has interrupts for. These are not programmed
-+ * into the device's MSI-X table and must be handled by some
-+ * other driver means.
-+ */
-+#define PCI_IRQ_VIRTUAL		(1 << 4)
-+
- #define PCI_IRQ_ALL_TYPES \
- 	(PCI_IRQ_LEGACY | PCI_IRQ_MSI | PCI_IRQ_MSIX)
- 
--- 
-2.20.1
+And the BW notifier interrupt is registered here:
+
+25: 0 ... 0 IR-IO-APIC    8-fasteoi   PCIe BW notif
+
+There's no interrupt count for any CPU on this vector.  For all I know,
+this IRQ routing has never been exercised and could be broken in the
+BIOS, resulting in the a random spurious IRQ victim.  There seems to be
+no good way to disable this driver other than manually unbinding root
+ports via sysfs.  That's not a great solution.  The system is an Intel
+X79 based workstation.  Suggestions for further debugging? Thanks,
+
+Alex
+
+> [  119.910738] irq 16: nobody cared (try booting with the "irqpoll" option)
+> [  119.917455] CPU: 18 PID: 0 Comm: swapper/18 Not tainted 5.1.0-rc1+ #29
+> [  119.923998] Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.69 03/25/2014
+> [  119.932715] Call Trace:
+> [  119.935169]  <IRQ>
+> [  119.937200]  dump_stack+0x46/0x60
+> [  119.940534]  __report_bad_irq+0x37/0xae
+> [  119.944380]  note_interrupt.cold.9+0xa/0x69
+> [  119.948580]  handle_irq_event_percpu+0x6a/0x80
+> [  119.953037]  handle_irq_event+0x3d/0x5a
+> [  119.956887]  handle_fasteoi_irq+0x8b/0x140
+> [  119.961003]  handle_irq+0xbf/0x100
+> [  119.964420]  do_IRQ+0x49/0xd0
+> [  119.967398]  common_interrupt+0xf/0xf
+> [  119.971074]  </IRQ>
+> [  119.973190] RIP: 0010:cpuidle_enter_state+0xb4/0x460
+> [  119.978167] Code: 24 0f 1f 44 00 00 31 ff e8 69 bf a3 ff 80 7c 24 13 00 74 12 9c 58 f6 c4 02 0f 85 7d 03 00 00 31 ff e8 60 cf a9 ff fb 45 85 e4 <0f> 88 ae 02 00 00 49 63 cc 4c 8b 3c 24 4c 2b 7c 24 08 48 8d 04 49
+> [  119.996967] RSP: 0018:ffffb6740330fe98 EFLAGS: 00000202 ORIG_RAX: ffffffffffffffda
+> [  120.004549] RAX: ffff9dbfc19a1d80 RBX: ffffffff82d2c940 RCX: 000000000000001f
+> [  120.011700] RDX: 0000001beb3c9b05 RSI: 00000000315975dc RDI: 0000000000000000
+> [  120.018845] RBP: ffff9dbfc19acc00 R08: 0000000000000002 R09: 0000000000021640
+> [  120.025990] R10: 0000027ae2689456 R11: ffff9dbfc19a0e64 R12: 0000000000000004
+> [  120.033146] R13: ffffffff82d2cad8 R14: 0000000000000004 R15: 0000000000000000
+> [  120.040303]  ? cpuidle_enter_state+0x97/0x460
+> [  120.044679]  do_idle+0x1f1/0x230
+> [  120.047918]  cpu_startup_entry+0x19/0x20
+> [  120.051856]  start_secondary+0x172/0x1c0
+> [  120.055796]  secondary_startup_64+0xb6/0xc0
+> [  120.059993] handlers:
+> [  120.062283] [<0000000054c59383>] usb_hcd_irq
+> [  120.066563] Disabling IRQ #16
+> [  122.885627] irq 16: nobody cared (try booting with the "irqpoll" option)
+> [  122.892326] CPU: 18 PID: 0 Comm: swapper/18 Not tainted 5.1.0-rc1+ #29
+> [  122.898847] Hardware name: Hewlett-Packard HP Z820 Workstation/158B, BIOS J63 v03.69 03/25/2014
+> [  122.907532] Call Trace:
+> [  122.909985]  <IRQ>
+> [  122.912009]  dump_stack+0x46/0x60
+> [  122.915325]  __report_bad_irq+0x37/0xae
+> [  122.919159]  note_interrupt.cold.9+0xa/0x69
+> [  122.923338]  handle_irq_event_percpu+0x6a/0x80
+> [  122.927781]  handle_irq_event+0x3d/0x5a
+> [  122.931630]  handle_fasteoi_irq+0x8b/0x140
+> [  122.935730]  handle_irq+0xbf/0x100
+> [  122.939137]  do_IRQ+0x49/0xd0
+> [  122.942108]  common_interrupt+0xf/0xf
+> [  122.945772]  </IRQ>
+> [  122.947881] RIP: 0010:cpuidle_enter_state+0xb4/0x460
+> [  122.952845] Code: 24 0f 1f 44 00 00 31 ff e8 69 bf a3 ff 80 7c 24 13 00 74 12 9c 58 f6 c4 02 0f 85 7d 03 00 00 31 ff e8 60 cf a9 ff fb 45 85 e4 <0f> 88 ae 02 00 00 49 63 cc 4c 8b 3c 24 4c 2b 7c 24 08 48 8d 04 49
+> [  122.971629] RSP: 0018:ffffb6740330fe98 EFLAGS: 00000202 ORIG_RAX: ffffffffffffffda
+> [  122.979212] RAX: ffff9dbfc19a1d80 RBX: ffffffff82d2c940 RCX: 000000000000001f
+> [  122.986361] RDX: 0000001c9c8daa6e RSI: 00000000315975dc RDI: 0000000000000000
+> [  122.993517] RBP: ffff9dbfc19acc00 R08: 0000000000000002 R09: 0000000000021640
+> [  123.000655] R10: 0000027cae52b176 R11: ffff9dbfc19a0e64 R12: 0000000000000004
+> [  123.007777] R13: ffffffff82d2cad8 R14: 0000000000000004 R15: 0000000000000000
+> [  123.014906]  ? cpuidle_enter_state+0x97/0x460
+> [  123.019270]  do_idle+0x1f1/0x230
+> [  123.022502]  cpu_startup_entry+0x19/0x20
+> [  123.026426]  start_secondary+0x172/0x1c0
+> [  123.030352]  secondary_startup_64+0xb6/0xc0
+> [  123.034536] handlers:
+> [  123.036821] [<0000000054c59383>] usb_hcd_irq
+> [  123.041106] [<000000006da712f0>] vfio_intx_handler [vfio_pci]
+> [  123.046847] [<000000006da712f0>] vfio_intx_handler [vfio_pci]
+> [  123.052592] [<000000006da712f0>] vfio_intx_handler [vfio_pci]
+> [  123.058336] [<000000006da712f0>] vfio_intx_handler [vfio_pci]
+> [  123.064090] [<000000006da712f0>] vfio_intx_handler [vfio_pci]
+> [  123.069843] Disabling IRQ #16
+> 
+> Thanks,
+> Alex
+>  
+> > > ---
+> > > Changes since v1:
+> > >  - move pcie_update_link_speed() to irq to prevent duplicate read of link_status
+> > >  - Add Fixes: to commit message
+> > >  
+> > >  drivers/pci/pcie/bw_notification.c | 19 ++++++++++++++-----
+> > >  1 file changed, 14 insertions(+), 5 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/pcie/bw_notification.c b/drivers/pci/pcie/bw_notification.c
+> > > index d2eae3b7cc0f..c48746f1cf3c 100644
+> > > --- a/drivers/pci/pcie/bw_notification.c
+> > > +++ b/drivers/pci/pcie/bw_notification.c
+> > > @@ -44,11 +44,10 @@ static void pcie_disable_link_bandwidth_notification(struct pci_dev *dev)
+> > >  	pcie_capability_write_word(dev, PCI_EXP_LNKCTL, lnk_ctl);
+> > >  }
+> > >  
+> > > -static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> > > +static irqreturn_t pcie_bw_notification_irq(int irq, void *context)
+> > >  {
+> > >  	struct pcie_device *srv = context;
+> > >  	struct pci_dev *port = srv->port;
+> > > -	struct pci_dev *dev;
+> > >  	u16 link_status, events;
+> > >  	int ret;
+> > >  
+> > > @@ -58,6 +57,17 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> > >  	if (ret != PCIBIOS_SUCCESSFUL || !events)
+> > >  		return IRQ_NONE;
+> > >  
+> > > +	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
+> > > +	pcie_update_link_speed(port->subordinate, link_status);
+> > > +	return IRQ_WAKE_THREAD;
+> > > +}
+> > > +
+> > > +static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> > > +{
+> > > +	struct pcie_device *srv = context;
+> > > +	struct pci_dev *port = srv->port;
+> > > +	struct pci_dev *dev;
+> > > +
+> > >  	/*
+> > >  	 * Print status from downstream devices, not this root port or
+> > >  	 * downstream switch port.
+> > > @@ -67,8 +77,6 @@ static irqreturn_t pcie_bw_notification_handler(int irq, void *context)
+> > >  		__pcie_print_link_status(dev, false);
+> > >  	up_read(&pci_bus_sem);
+> > >  
+> > > -	pcie_update_link_speed(port->subordinate, link_status);
+> > > -	pcie_capability_write_word(port, PCI_EXP_LNKSTA, events);
+> > >  	return IRQ_HANDLED;
+> > >  }
+> > >  
+> > > @@ -80,7 +88,8 @@ static int pcie_bandwidth_notification_probe(struct pcie_device *srv)
+> > >  	if (!pcie_link_bandwidth_notification_supported(srv->port))
+> > >  		return -ENODEV;
+> > >  
+> > > -	ret = request_threaded_irq(srv->irq, NULL, pcie_bw_notification_handler,
+> > > +	ret = request_threaded_irq(srv->irq, pcie_bw_notification_irq,
+> > > +				   pcie_bw_notification_handler,
+> > >  				   IRQF_SHARED, "PCIe BW notif", srv);
+> > >  	if (ret)
+> > >  		return ret;
+> > > -- 
+> > > 2.19.2
+> > >     
+> 
 
