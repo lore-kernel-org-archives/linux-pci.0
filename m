@@ -2,99 +2,84 @@ Return-Path: <SRS0=L200=SY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	TVD_PH_BODY_ACCOUNTS_PRE autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48F52C10F11
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 22:43:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A40B1C10F11
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:03:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20C2F20811
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 22:43:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7353C20859
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:03:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1555974239;
+	bh=N7th4S9j1WjwNCgF21IL2GaQQP8ZSm2WompJXYc9sQ4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=JtLKHMAyovfKAdpE7oWgY3X2q2+fiZ1i69J8BOyWIUy8hSuQy7mXn9ERjIDSsyLT4
+	 +WPG73oHcXQ35ZAG8xrSNlcKVEgv2D8nwMpmhd1l/HEODJ0+C10pq8OBkhAmFvreVI
+	 A33gq+qtcqzqz2qTFbORDOvPuXzcFGpZoUPN88FM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729963AbfDVWne (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Apr 2019 18:43:34 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51068 "EHLO mx1.redhat.com"
+        id S1730580AbfDVXD6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Apr 2019 19:03:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45382 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728965AbfDVWne (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Apr 2019 18:43:34 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1730574AbfDVXD6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Apr 2019 19:03:58 -0400
+Received: from localhost (unknown [146.7.4.75])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2E5B23091786;
-        Mon, 22 Apr 2019 22:43:34 +0000 (UTC)
-Received: from gimli.home (ovpn-116-122.phx2.redhat.com [10.3.116.122])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0D3095C28D;
-        Mon, 22 Apr 2019 22:43:30 +0000 (UTC)
-Subject: [PATCH] PCI/LINK: Account for BW notification in vector calculation
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     bhelgaas@google.com, helgaas@kernel.org, mr.nuke.me@gmail.com,
+        by mail.kernel.org (Postfix) with ESMTPSA id 4B9AB20811;
+        Mon, 22 Apr 2019 23:03:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1555974237;
+        bh=N7th4S9j1WjwNCgF21IL2GaQQP8ZSm2WompJXYc9sQ4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=yT0jkpbpH5PtFOqWZqDdxFepC24p8kvBk8LmAyRXmDE4lXpis1ioLIfN2paejhna7
+         l867dh/CLQLCKNvwytEJEJOW9Y+1YoJk62EFt0OVEtPSIFgi/EUrt2ObSXXFO/3/7b
+         e5h7p0q3M5bbzCTK8IF9xwq2SFm64Zc/xBO1zYnc=
+Date:   Mon, 22 Apr 2019 18:03:55 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     kbuild test robot <lkp@intel.com>
+Cc:     Alexandru Gagniuc <mr.nuke.me@gmail.com>, kbuild-all@01.org,
         linux-pci@vger.kernel.org
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        okaya@kernel.org, torvalds@linux-foundation.org,
-        linux-kernel@vger.kernel.org
-Date:   Mon, 22 Apr 2019 16:43:30 -0600
-Message-ID: <155597243666.19387.1205950870601742062.stgit@gimli.home>
-User-Agent: StGit/0.19-dirty
+Subject: Re: [pci:pci/hotplug 4/5] include/linux/pci_hotplug.h:145:1: error:
+ expected identifier or '(' before '{' token
+Message-ID: <20190422230355.GN173520@google.com>
+References: <201904230541.l1Tz6i3p%lkp@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Mon, 22 Apr 2019 22:43:34 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <201904230541.l1Tz6i3p%lkp@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On systems that don't support any PCIe services other than bandwidth
-notification, pcie_message_numbers() can return zero vectors, causing
-the vector reallocation in pcie_port_enable_irq_vec() to retry with
-zero, which fails, resulting in fallback to INTx (which might be
-broken) for the bandwidth notification service.  This can resolve
-spurious interrupt faults due to this service on some systems.
+On Tue, Apr 23, 2019 at 05:19:48AM +0800, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/hotplug
+> head:   d98ba96a72ca1a1dd9d2f3a321e64bac3d94bd39
+> commit: 93395b9ebeb0cfee5e5c617ec44d249d19439126 [4/5] PCI / ACPI: Remove the need for 'struct hotplug_params'
+> config: xtensa-common_defconfig (attached as .config)
+> compiler: xtensa-linux-gcc (GCC) 8.1.0
+> reproduce:
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         git checkout 93395b9ebeb0cfee5e5c617ec44d249d19439126
+>         # save the attached .config to linux build tree
+>         GCC_VERSION=8.1.0 make.cross ARCH=xtensa 
+> 
+> If you fix the issue, kindly add following tag
+> Reported-by: kbuild test robot <lkp@intel.com>
+> 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    In file included from drivers/pci/pci.c:30:
+> >> include/linux/pci_hotplug.h:145:1: error: expected identifier or '(' before '{' token
+>     {
+>     ^
 
-Fixes: e8303bb7a75c ("PCI/LINK: Report degraded links via link bandwidth notification")
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+I fixed this and updated the pci/hotplug branch.
 
-However, the system is still susceptible to random spew in dmesg
-depending on how the root port handles downstream device managed link
-speed changes.  For example, GPUs like to scale their link speed for
-power management when idle.  A GPU assigned to a VM through vfio-pci
-can generate link bandwidth notification every time the link is
-scaled down, ex:
-
-[  329.725607] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
-limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
-GT/s x16 link)
-[  708.151488] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
-limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
-GT/s x16 link)
-[  718.262959] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
-limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
-GT/s x16 link)
-[ 1138.124932] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
-limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
-GT/s x16 link)
-
-What is the value of this nagging?
-
- drivers/pci/pcie/portdrv_core.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 7d04f9d087a6..1b330129089f 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -55,7 +55,8 @@ static int pcie_message_numbers(struct pci_dev *dev, int mask,
- 	 * 7.8.2, 7.10.10, 7.31.2.
- 	 */
- 
--	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
-+	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP |
-+		    PCIE_PORT_SERVICE_BWNOTIF)) {
- 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
- 		*pme = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
- 		nvec = *pme + 1;
-
+Bjorn
