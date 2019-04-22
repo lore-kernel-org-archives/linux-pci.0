@@ -4,35 +4,36 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.0 required=3.0 tests=DATE_IN_FUTURE_06_12,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE490C282E1
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 06:44:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62376C282E1
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 06:44:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A42F420811
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 06:44:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33CD820811
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 06:44:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726718AbfDVGoK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Apr 2019 02:44:10 -0400
-Received: from esa1.microchip.iphmx.com ([68.232.147.91]:37746 "EHLO
-        esa1.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726190AbfDVGoK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2019 02:44:10 -0400
+        id S1726874AbfDVGoZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Apr 2019 02:44:25 -0400
+Received: from esa2.microchip.iphmx.com ([68.232.149.84]:3655 "EHLO
+        esa2.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726190AbfDVGoZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2019 02:44:25 -0400
 X-IronPort-AV: E=Sophos;i="5.60,380,1549954800"; 
-   d="scan'208";a="31972701"
+   d="scan'208";a="30574995"
 Received: from unknown (HELO smtp.microsemi.com) ([208.19.99.222])
-  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 21 Apr 2019 23:44:08 -0700
-Received: from AUSMBX3.microsemi.net (10.201.34.33) by AUSMBX2.microsemi.net
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 21 Apr 2019 23:44:12 -0700
+Received: from AUSMBX1.microsemi.net (10.201.34.31) by AUSMBX2.microsemi.net
  (10.201.34.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 22 Apr
- 2019 01:44:07 -0500
-Received: from AUSMBX3.microsemi.net (10.201.34.33) by AUSMBX3.microsemi.net
- (10.201.34.33) with Microsoft SMTP Server (version=TLS1_2,
+ 2019 01:44:11 -0500
+Received: from AUSMBX3.microsemi.net (10.201.34.33) by AUSMBX1.microsemi.net
+ (10.201.34.31) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 22 Apr
- 2019 01:44:06 -0500
+ 2019 01:44:10 -0500
 Received: from server1.microsemi.net (10.188.116.203) by ausmbx3.microsemi.net
  (10.201.34.33) with Microsoft SMTP Server id 15.1.1713.5 via Frontend
- Transport; Mon, 22 Apr 2019 01:44:03 -0500
+ Transport; Mon, 22 Apr 2019 01:44:07 -0500
 From:   Wesley Sheng <wesley.sheng@microchip.com>
 To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
         <jdmason@kudzu.us>, <dave.jiang@intel.com>, <allenbh@gmail.com>,
@@ -40,9 +41,9 @@ To:     <kurt.schwemmer@microsemi.com>, <logang@deltatee.com>,
         <linux-kernel@vger.kernel.org>
 CC:     <wesleyshenggit@sina.com>, <wesley.sheng@microchip.com>,
         <kelvin.cao@microchip.com>
-Subject: [PATCH 2/3] ntb_hw_switchtec: Skip unnecessary re-setup of shared memory window for crosslink case
-Date:   Mon, 22 Apr 2019 22:42:57 +0800
-Message-ID: <1555944178-1957-3-git-send-email-wesley.sheng@microchip.com>
+Subject: [PATCH 3/3] ntb_hw_switchtec: Fix setup MW with failure bug
+Date:   Mon, 22 Apr 2019 22:42:58 +0800
+Message-ID: <1555944178-1957-4-git-send-email-wesley.sheng@microchip.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1555944178-1957-1-git-send-email-wesley.sheng@microchip.com>
 References: <1555944178-1957-1-git-send-email-wesley.sheng@microchip.com>
@@ -53,30 +54,145 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In case of NTB crosslink topology, the setting of shared memory window in
-the virtual partition doesn't reset on peer's reboot. So skip the
-unnecessary re-setup of shared memory window for that case.
+From: Joey Zhang <joey.zhang@microchip.com>
 
+Switchtec does not support setting multiple MWs simultaneously. The 
+driver takes a hardware lock to ensure that two peers are not doing this
+simultaneously and it fails if someone else takes the lock. In most
+cases, this is fine as clients only setup the MWs once on one side of
+the link.
+
+However, there's a race condition when a re-initialization is caused by
+a link event. The driver will re-setup the shared memory window
+asynchronously and this races with the client setting up it's memory
+windows on the link up event.
+
+To fix this we ensure do the entire initialization in a work queue and
+signal the client once it's done.
+
+Signed-off-by: Joey Zhang <joey.zhang@microchip.com>
 Signed-off-by: Wesley Sheng <wesley.sheng@microchip.com>
 Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 66 ++++++++++++++++++++--------------
+ 1 file changed, 39 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-index 947ed0b..6cf15c18 100644
+index 6cf15c18..fffff9a 100644
 --- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
 +++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -1459,6 +1459,9 @@ static int switchtec_ntb_reinit_peer(struct switchtec_ntb *sndev)
- {
- 	int rc;
+@@ -95,7 +95,8 @@ struct switchtec_ntb {
+ 	bool link_is_up;
+ 	enum ntb_speed link_speed;
+ 	enum ntb_width link_width;
+-	struct work_struct link_reinit_work;
++	struct work_struct check_link_status_work;
++	bool link_force_down;
+ };
  
-+	if (crosslink_is_enabled(sndev))
-+		return 0;
+ static struct switchtec_ntb *ntb_sndev(struct ntb_dev *ntb)
+@@ -494,33 +495,11 @@ enum switchtec_msg {
+ 
+ static int switchtec_ntb_reinit_peer(struct switchtec_ntb *sndev);
+ 
+-static void link_reinit_work(struct work_struct *work)
+-{
+-	struct switchtec_ntb *sndev;
+-
+-	sndev = container_of(work, struct switchtec_ntb, link_reinit_work);
+-
+-	switchtec_ntb_reinit_peer(sndev);
+-}
+-
+-static void switchtec_ntb_check_link(struct switchtec_ntb *sndev,
+-				     enum switchtec_msg msg)
++static void switchtec_ntb_link_status_update(struct switchtec_ntb *sndev)
+ {
+ 	int link_sta;
+ 	int old = sndev->link_is_up;
+ 
+-	if (msg == MSG_LINK_FORCE_DOWN) {
+-		schedule_work(&sndev->link_reinit_work);
+-
+-		if (sndev->link_is_up) {
+-			sndev->link_is_up = 0;
+-			ntb_link_event(&sndev->ntb);
+-			dev_info(&sndev->stdev->dev, "ntb link forced down\n");
+-		}
+-
+-		return;
+-	}
+-
+ 	link_sta = sndev->self_shared->link_sta;
+ 	if (link_sta) {
+ 		u64 peer = ioread64(&sndev->peer_shared->magic);
+@@ -545,6 +524,38 @@ static void switchtec_ntb_check_link(struct switchtec_ntb *sndev,
+ 	}
+ }
+ 
++static void check_link_status_work(struct work_struct *work)
++{
++	struct switchtec_ntb *sndev;
 +
- 	dev_info(&sndev->stdev->dev, "reinitialize shared memory window\n");
- 	rc = config_rsvd_lut_win(sndev, sndev->mmio_peer_ctrl, 0,
- 				 sndev->self_partition,
++	sndev = container_of(work, struct switchtec_ntb,
++			     check_link_status_work);
++
++	if (sndev->link_force_down) {
++		sndev->link_force_down = false;
++		switchtec_ntb_reinit_peer(sndev);
++
++		if (sndev->link_is_up) {
++			sndev->link_is_up = 0;
++			ntb_link_event(&sndev->ntb);
++			dev_info(&sndev->stdev->dev, "ntb link forced down\n");
++		}
++
++		return;
++	}
++
++	switchtec_ntb_link_status_update(sndev);
++}
++
++static void switchtec_ntb_check_link(struct switchtec_ntb *sndev,
++				      enum switchtec_msg msg)
++{
++	if (msg == MSG_LINK_FORCE_DOWN)
++		sndev->link_force_down = true;
++
++	schedule_work(&sndev->check_link_status_work);
++}
++
+ static void switchtec_ntb_link_notification(struct switchtec_dev *stdev)
+ {
+ 	struct switchtec_ntb *sndev = stdev->sndev;
+@@ -577,7 +588,7 @@ static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
+ 	sndev->self_shared->link_sta = 1;
+ 	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_UP);
+ 
+-	switchtec_ntb_check_link(sndev, MSG_CHECK_LINK);
++	switchtec_ntb_link_status_update(sndev);
+ 
+ 	return 0;
+ }
+@@ -591,7 +602,7 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
+ 	sndev->self_shared->link_sta = 0;
+ 	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_DOWN);
+ 
+-	switchtec_ntb_check_link(sndev, MSG_CHECK_LINK);
++	switchtec_ntb_link_status_update(sndev);
+ 
+ 	return 0;
+ }
+@@ -844,7 +855,8 @@ static int switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
+ 	sndev->ntb.topo = NTB_TOPO_SWITCH;
+ 	sndev->ntb.ops = &switchtec_ntb_ops;
+ 
+-	INIT_WORK(&sndev->link_reinit_work, link_reinit_work);
++	INIT_WORK(&sndev->check_link_status_work, check_link_status_work);
++	sndev->link_force_down = false;
+ 
+ 	sndev->self_partition = sndev->stdev->partition;
+ 
 -- 
 2.7.4
 
