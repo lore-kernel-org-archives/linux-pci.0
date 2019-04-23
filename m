@@ -5,55 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E734CC282DD
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12FAFC10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5EE42183E
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9D98218FC
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ePlgw5d0"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cOTOFFA0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728822AbfDWQbP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 12:31:15 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:33682 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728760AbfDWQbO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:31:14 -0400
-Received: by mail-pg1-f196.google.com with SMTP id k19so7877781pgh.0;
-        Tue, 23 Apr 2019 09:31:13 -0700 (PDT)
+        id S1728544AbfDWQas (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 12:30:48 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:41300 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728457AbfDWQas (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:30:48 -0400
+Received: by mail-pl1-f195.google.com with SMTP id d9so1859820pls.8;
+        Tue, 23 Apr 2019 09:30:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=1xerTm3VfTwwIXo29rsoW7SuRTHKgFB7tOjiZbttFTM=;
-        b=ePlgw5d0ij796SpuWMMljIQPe26ujwx2u69aSihHH34H9VNxTBqVqC9JDzOSQffBIf
-         FK4fsGn0sv9sj6O4u15d+SBUhQ0ZzlZ/62j4MJtxUv7Ac6cznKZZqSQs/BkQMSGFBTEF
-         CVPh4ng3NKkBPO69n5bg/t2NynDmmA1JD/A68xSTqP6w4XGee0EA5M4jUOBClrFKnHru
-         bdO+l5eMVhI9w+jSq35mvVzBXGqTAldf6XIvu7FmD6oqKDdmr8Aew2mUCk7p3SmVaJwY
-         dRH7tDJlpCEM5qzlwEz/HWdy3izqSy4m/Ft6gXs3fZiHWVOn/kFY9r7+v5UDHssqPnPW
-         AC+w==
+        bh=ncWoEeVc7E3SQTuKBjvA5OE9SZ5yGvMgjp5vCjVSzLU=;
+        b=cOTOFFA03ZaJ7loM/zufuZcw4ULz2+ZzcBcEEGAsJSuHeVL3nkDHGi/Mwgt1sx4Hj5
+         oj1j63mOIU2uCIDUus3DGqjLKDy8uoim6olEJYeSJG2Zb4yW9PpVk1pT47ItP4UCePBs
+         idFm6pWQU6pMZy0+FLT8ybyml6ks80umWn1mk2lT1ay3yzVIHjAu4IOZhNtoTshNqpRp
+         lN2qPKT7NnbrwaajUkcqF0qPsHLv7EO8yeIeg5E9K8A3aHQbYAlDoi4Gy6Nu1HIm8GB+
+         sQmRYo9NwkrxzuZakmvv0wZe/VPQRjx/4PaRrGPvM9jQzbYo5tBgGt9+KpWVZyvPoQCz
+         4ONw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1xerTm3VfTwwIXo29rsoW7SuRTHKgFB7tOjiZbttFTM=;
-        b=occ9iuGYiyb9Ap/uxTjYK6sRJlv2YRaGhol7F6FcQ6d4tvdrH1yG9URNtbuMJM0MrO
-         PnnWDMYOOS1N+bWQSmXlj9JtE9bKNXXFTvnLGkn9VxZ5fT+M13ygd/xMNy+DdSHUaaAq
-         AFYbpjNJik133QNgoUVUhsXCoRJvYI3pH803pyBbU+HxFK71ffhuJxhZXRlJHLaeqPnp
-         /O84Y6FdY2i3TOUuaOUFxvHH5ac8sQ3iG6KFno7i4u9Y7PkZ8wnyk1UZ/QU2XMN8XLMu
-         Lcrv4FdsiYaadpSmqAchQglZ4GxHFXvw6Jt3+c6UvKYfTL+FQUuQqiv24V40MarfhM/q
-         TvqA==
-X-Gm-Message-State: APjAAAWaSviBKETT8HqYHp2OYAuJpGuulrSEcRrAGn3hNVhV3qyE7ZE1
-        3HTY0K+J9MrxHTkg96B5c5g=
-X-Google-Smtp-Source: APXvYqwZa4hivcq2EcEi39jhEWFSWP8AO8b2FQnBlBbgzRJPRFxT5c1A/tYw9BEJSG5Utah0fO9DGA==
-X-Received: by 2002:a63:5d45:: with SMTP id o5mr13634575pgm.0.1556037073332;
-        Tue, 23 Apr 2019 09:31:13 -0700 (PDT)
+        bh=ncWoEeVc7E3SQTuKBjvA5OE9SZ5yGvMgjp5vCjVSzLU=;
+        b=TOQQhdita8zQXrtDm6lo8by07EHNn+fX/UGR6JbidpxIGzNQMXyExr6c5HqeviXaW6
+         IEmWZjQ37TS60J5kTreGzT9ggMu4JRwTNyTjyNhLq5rB/9PQqeTONpM4PLDB0Cyhfvy6
+         mJ0ZPeNHPmP/1Y2AklzmKJ7txXk6Bb+naYksKRQ8bU+SHOhWpkAa/Vjf3Yp3CHNb2ZAd
+         0EkPg7e54hPjNJDFe4052Fa2Nf5NfwDcYWexBR+/Z+8QKoEgEmzp6yghUV+i3mldKpJ/
+         N7oa/FhtIOvj4pbkzXb9aJo/nA1EFnz3zx3zv11BpoA5UtZdNmlj4pGaZxqAthfCweIl
+         NpeQ==
+X-Gm-Message-State: APjAAAUJXhPYDcB+wwVuLChgvsGnUYRsJv19XZ1uW83v8xbtyyr1aehk
+        inhDAykqNoIc/4KSIkcOugw=
+X-Google-Smtp-Source: APXvYqylW0MM40iUb34DEC75H9bN9P6vFlInL6meiInFdGGAJpEMeDqMPIYRE4xYR0wbJmv+Ovngsg==
+X-Received: by 2002:a17:902:61:: with SMTP id 88mr26747008pla.166.1556037046375;
+        Tue, 23 Apr 2019 09:30:46 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.31.06
+        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.30.37
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Apr 2019 09:31:12 -0700 (PDT)
+        Tue, 23 Apr 2019 09:30:45 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Jonathan Corbet <corbet@lwn.net>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
@@ -63,9 +64,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
         linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
         linux-gpio@vger.kernel.org, mchehab+samsung@kernel.org,
         Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v4 06/63] Documentation: ACPI: move scan_handlers.txt to driver-api/acpi and convert to reST
-Date:   Wed, 24 Apr 2019 00:28:35 +0800
-Message-Id: <20190423162932.21428-7-changbin.du@gmail.com>
+Subject: [PATCH v4 02/63] Documentation: ACPI: move namespace.txt to firmware-guide/acpi and convert to reST
+Date:   Wed, 24 Apr 2019 00:28:31 +0800
+Message-Id: <20190423162932.21428-3-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423162932.21428-1-changbin.du@gmail.com>
 References: <20190423162932.21428-1-changbin.du@gmail.com>
@@ -81,65 +82,385 @@ add it to Sphinx TOC tree. No essential content change.
 
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 ---
- Documentation/driver-api/acpi/index.rst       |  1 +
- .../acpi/scan_handlers.rst}                   | 24 ++++++++++++-------
- 2 files changed, 16 insertions(+), 9 deletions(-)
- rename Documentation/{acpi/scan_handlers.txt => driver-api/acpi/scan_handlers.rst} (90%)
+ Documentation/firmware-guide/acpi/index.rst   |   1 +
+ .../acpi/namespace.rst}                       | 310 +++++++++---------
+ 2 files changed, 161 insertions(+), 150 deletions(-)
+ rename Documentation/{acpi/namespace.txt => firmware-guide/acpi/namespace.rst} (54%)
 
-diff --git a/Documentation/driver-api/acpi/index.rst b/Documentation/driver-api/acpi/index.rst
-index 12649947b19b..ace0008e54c2 100644
---- a/Documentation/driver-api/acpi/index.rst
-+++ b/Documentation/driver-api/acpi/index.rst
-@@ -6,3 +6,4 @@ ACPI Support
-    :maxdepth: 2
+diff --git a/Documentation/firmware-guide/acpi/index.rst b/Documentation/firmware-guide/acpi/index.rst
+index 0ec7d072ba22..210ad8acd6df 100644
+--- a/Documentation/firmware-guide/acpi/index.rst
++++ b/Documentation/firmware-guide/acpi/index.rst
+@@ -7,3 +7,4 @@ ACPI Support
+ .. toctree::
+    :maxdepth: 1
  
-    linuxized-acpica
-+   scan_handlers
-diff --git a/Documentation/acpi/scan_handlers.txt b/Documentation/driver-api/acpi/scan_handlers.rst
-similarity index 90%
-rename from Documentation/acpi/scan_handlers.txt
-rename to Documentation/driver-api/acpi/scan_handlers.rst
-index 3246ccf15992..7a197b3a33fc 100644
---- a/Documentation/acpi/scan_handlers.txt
-+++ b/Documentation/driver-api/acpi/scan_handlers.rst
-@@ -1,7 +1,13 @@
++   namespace
+diff --git a/Documentation/acpi/namespace.txt b/Documentation/firmware-guide/acpi/namespace.rst
+similarity index 54%
+rename from Documentation/acpi/namespace.txt
+rename to Documentation/firmware-guide/acpi/namespace.rst
+index 1860cb3865c6..443f0e5d0617 100644
+--- a/Documentation/acpi/namespace.txt
++++ b/Documentation/firmware-guide/acpi/namespace.rst
+@@ -1,85 +1,88 @@
 +.. SPDX-License-Identifier: GPL-2.0
 +.. include:: <isonum.txt>
 +
-+==================
- ACPI Scan Handlers
-+==================
++===================================================
+ ACPI Device Tree - Representation of ACPI Namespace
++===================================================
 +
-+:Copyright: |copy| 2012, Intel Corporation
++:Copyright: |copy| 2013, Intel Corporation
++
++:Author: Lv Zheng <lv.zheng@intel.com>
++
++:Abstract: The Linux ACPI subsystem converts ACPI namespace objects into a Linux
++           device tree under the /sys/devices/LNXSYSTEM:00 and updates it upon
++           receiving ACPI hotplug notification events.  For each device object
++           in this hierarchy there is a corresponding symbolic link in the
++           /sys/bus/acpi/devices.
++           This document illustrates the structure of the ACPI device tree.
++
++:Credit:   Thanks for the help from Zhang Rui <rui.zhang@intel.com> and
++           Rafael J.Wysocki <rafael.j.wysocki@intel.com>.
++
++
++ACPI Definition Blocks
++======================
++
++The ACPI firmware sets up RSDP (Root System Description Pointer) in the
++system memory address space pointing to the XSDT (Extended System
++Description Table).  The XSDT always points to the FADT (Fixed ACPI
++Description Table) using its first entry, the data within the FADT
++includes various fixed-length entries that describe fixed ACPI features
++of the hardware.  The FADT contains a pointer to the DSDT
++(Differentiated System Descripition Table).  The XSDT also contains
++entries pointing to possibly multiple SSDTs (Secondary System
++Description Table).
++
++The DSDT and SSDT data is organized in data structures called definition
++blocks that contain definitions of various objects, including ACPI
++control methods, encoded in AML (ACPI Machine Language).  The data block
++of the DSDT along with the contents of SSDTs represents a hierarchical
++data structure called the ACPI namespace whose topology reflects the
++structure of the underlying hardware platform.
++
++The relationships between ACPI System Definition Tables described above
++are illustrated in the following diagram::
++
++   +---------+    +-------+    +--------+    +------------------------+
++   |  RSDP   | +->| XSDT  | +->|  FADT  |    |  +-------------------+ |
++   +---------+ |  +-------+ |  +--------+  +-|->|       DSDT        | |
++   | Pointer | |  | Entry |-+  | ...... |  | |  +-------------------+ |
++   +---------+ |  +-------+    | X_DSDT |--+ |  | Definition Blocks | |
++   | Pointer |-+  | ..... |    | ...... |    |  +-------------------+ |
++   +---------+    +-------+    +--------+    |  +-------------------+ |
++                  | Entry |------------------|->|       SSDT        | |
++                  +- - - -+                  |  +-------------------| |
++                  | Entry | - - - - - - - -+ |  | Definition Blocks | |
++                  +- - - -+                | |  +-------------------+ |
++                                          | |  +- - - - - - - - - -+ |
++                                          +-|->|       SSDT        | |
++                                             |  +-------------------+ |
++                                             |  | Definition Blocks | |
++                                             |  +- - - - - - - - - -+ |
++                                             +------------------------+
++                                                         |
++                                             OSPM Loading |
++                                                         \|/
++                                                   +----------------+
++                                                   | ACPI Namespace |
++                                                   +----------------+
++
++                  Figure 1. ACPI Definition Blocks
++
++.. note:: RSDP can also contain a pointer to the RSDT (Root System
++   Description Table).  Platforms provide RSDT to enable
++   compatibility with ACPI 1.0 operating systems.  The OS is expected
++   to use XSDT, if present.
++
++
++Example ACPI Namespace
++======================
++
++All definition blocks are loaded into a single namespace.  The namespace
++is a hierarchy of objects identified by names and paths.
++The following naming conventions apply to object names in the ACPI
++namespace:
  
--Copyright (C) 2012, Intel Corporation
--Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-+:Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+-Copyright (C) 2013, Intel Corporation
+-Author: Lv Zheng <lv.zheng@intel.com>
+-
+-
+-Abstract:
+-
+-The Linux ACPI subsystem converts ACPI namespace objects into a Linux
+-device tree under the /sys/devices/LNXSYSTEM:00 and updates it upon
+-receiving ACPI hotplug notification events.  For each device object in this
+-hierarchy there is a corresponding symbolic link in the
+-/sys/bus/acpi/devices.
+-This document illustrates the structure of the ACPI device tree.
+-
+-
+-Credit:
+-
+-Thanks for the help from Zhang Rui <rui.zhang@intel.com> and Rafael J.
+-Wysocki <rafael.j.wysocki@intel.com>.
+-
+-
+-1. ACPI Definition Blocks
+-
+-   The ACPI firmware sets up RSDP (Root System Description Pointer) in the
+-   system memory address space pointing to the XSDT (Extended System
+-   Description Table).  The XSDT always points to the FADT (Fixed ACPI
+-   Description Table) using its first entry, the data within the FADT
+-   includes various fixed-length entries that describe fixed ACPI features
+-   of the hardware.  The FADT contains a pointer to the DSDT
+-   (Differentiated System Descripition Table).  The XSDT also contains
+-   entries pointing to possibly multiple SSDTs (Secondary System
+-   Description Table).
+-
+-   The DSDT and SSDT data is organized in data structures called definition
+-   blocks that contain definitions of various objects, including ACPI
+-   control methods, encoded in AML (ACPI Machine Language).  The data block
+-   of the DSDT along with the contents of SSDTs represents a hierarchical
+-   data structure called the ACPI namespace whose topology reflects the
+-   structure of the underlying hardware platform.
+-
+-   The relationships between ACPI System Definition Tables described above
+-   are illustrated in the following diagram.
+-
+-     +---------+    +-------+    +--------+    +------------------------+
+-     |  RSDP   | +->| XSDT  | +->|  FADT  |    |  +-------------------+ |
+-     +---------+ |  +-------+ |  +--------+  +-|->|       DSDT        | |
+-     | Pointer | |  | Entry |-+  | ...... |  | |  +-------------------+ |
+-     +---------+ |  +-------+    | X_DSDT |--+ |  | Definition Blocks | |
+-     | Pointer |-+  | ..... |    | ...... |    |  +-------------------+ |
+-     +---------+    +-------+    +--------+    |  +-------------------+ |
+-                    | Entry |------------------|->|       SSDT        | |
+-                    +- - - -+                  |  +-------------------| |
+-                    | Entry | - - - - - - - -+ |  | Definition Blocks | |
+-                    +- - - -+                | |  +-------------------+ |
+-                                             | |  +- - - - - - - - - -+ |
+-                                             +-|->|       SSDT        | |
+-                                               |  +-------------------+ |
+-                                               |  | Definition Blocks | |
+-                                               |  +- - - - - - - - - -+ |
+-                                               +------------------------+
+-                                                           |
+-                                              OSPM Loading |
+-                                                          \|/
+-                                                    +----------------+
+-                                                    | ACPI Namespace |
+-                                                    +----------------+
+-
+-                     Figure 1. ACPI Definition Blocks
+-
+-   NOTE: RSDP can also contain a pointer to the RSDT (Root System
+-         Description Table).  Platforms provide RSDT to enable
+-         compatibility with ACPI 1.0 operating systems.  The OS is expected
+-         to use XSDT, if present.
+-
+-
+-2. Example ACPI Namespace
+-
+-   All definition blocks are loaded into a single namespace.  The namespace
+-   is a hierarchy of objects identified by names and paths.
+-   The following naming conventions apply to object names in the ACPI
+-   namespace:
+    1. All names are 32 bits long.
+    2. The first byte of a name must be one of 'A' - 'Z', '_'.
+    3. Each of the remaining bytes of a name must be one of 'A' - 'Z', '0'
+@@ -91,7 +94,7 @@ Wysocki <rafael.j.wysocki@intel.com>.
+       (i.e. names prepended with '^' are relative to the parent of the
+       current namespace node).
  
- During system initialization and ACPI-based device hot-add, the ACPI namespace
- is scanned in search of device objects that generally represent various pieces
-@@ -30,14 +36,14 @@ to configure that link so that the kernel can use it.
- Those additional configuration tasks usually depend on the type of the hardware
- component represented by the given device node which can be determined on the
- basis of the device node's hardware ID (HID).  They are performed by objects
--called ACPI scan handlers represented by the following structure:
-+called ACPI scan handlers represented by the following structure::
+-   The figure below shows an example ACPI namespace.
++The figure below shows an example ACPI namespace::
  
--struct acpi_scan_handler {
--	const struct acpi_device_id *ids;
--	struct list_head list_node;
--	int (*attach)(struct acpi_device *dev, const struct acpi_device_id *id);
--	void (*detach)(struct acpi_device *dev);
--};
-+	struct acpi_scan_handler {
-+		const struct acpi_device_id *ids;
-+		struct list_head list_node;
-+		int (*attach)(struct acpi_device *dev, const struct acpi_device_id *id);
-+		void (*detach)(struct acpi_device *dev);
-+	};
+    +------+
+    | \    |                     Root
+@@ -184,19 +187,20 @@ Wysocki <rafael.j.wysocki@intel.com>.
+                      Figure 2. Example ACPI Namespace
  
- where ids is the list of IDs of device nodes the given handler is supposed to
- take care of, list_node is the hook to the global list of ACPI scan handlers
+ 
+-3. Linux ACPI Device Objects
++Linux ACPI Device Objects
++=========================
+ 
+-   The Linux kernel's core ACPI subsystem creates struct acpi_device
+-   objects for ACPI namespace objects representing devices, power resources
+-   processors, thermal zones.  Those objects are exported to user space via
+-   sysfs as directories in the subtree under /sys/devices/LNXSYSTM:00.  The
+-   format of their names is <bus_id:instance>, where 'bus_id' refers to the
+-   ACPI namespace representation of the given object and 'instance' is used
+-   for distinguishing different object of the same 'bus_id' (it is
+-   two-digit decimal representation of an unsigned integer).
++The Linux kernel's core ACPI subsystem creates struct acpi_device
++objects for ACPI namespace objects representing devices, power resources
++processors, thermal zones.  Those objects are exported to user space via
++sysfs as directories in the subtree under /sys/devices/LNXSYSTM:00.  The
++format of their names is <bus_id:instance>, where 'bus_id' refers to the
++ACPI namespace representation of the given object and 'instance' is used
++for distinguishing different object of the same 'bus_id' (it is
++two-digit decimal representation of an unsigned integer).
+ 
+-   The value of 'bus_id' depends on the type of the object whose name it is
+-   part of as listed in the table below.
++The value of 'bus_id' depends on the type of the object whose name it is
++part of as listed in the table below::
+ 
+                 +---+-----------------+-------+----------+
+                 |   | Object/Feature  | Table | bus_id   |
+@@ -226,10 +230,11 @@ Wysocki <rafael.j.wysocki@intel.com>.
+ 
+                  Table 1. ACPI Namespace Objects Mapping
+ 
+-   The following rules apply when creating struct acpi_device objects on
+-   the basis of the contents of ACPI System Description Tables (as
+-   indicated by the letter in the first column and the notation in the
+-   second column of the table above):
++The following rules apply when creating struct acpi_device objects on
++the basis of the contents of ACPI System Description Tables (as
++indicated by the letter in the first column and the notation in the
++second column of the table above):
++
+    N:
+       The object's source is an ACPI namespace node (as indicated by the
+       named object's type in the second column).  In that case the object's
+@@ -249,13 +254,14 @@ Wysocki <rafael.j.wysocki@intel.com>.
+       struct acpi_device object with LNXVIDEO 'bus_id' will be created for
+       it.
+ 
+-   The third column of the above table indicates which ACPI System
+-   Description Tables contain information used for the creation of the
+-   struct acpi_device objects represented by the given row (xSDT means DSDT
+-   or SSDT).
++The third column of the above table indicates which ACPI System
++Description Tables contain information used for the creation of the
++struct acpi_device objects represented by the given row (xSDT means DSDT
++or SSDT).
++
++The forth column of the above table indicates the 'bus_id' generation
++rule of the struct acpi_device object:
+ 
+-   The forth column of the above table indicates the 'bus_id' generation
+-   rule of the struct acpi_device object:
+    _HID:
+       _HID in the last column of the table means that the object's bus_id
+       is derived from the _HID/_CID identification objects present under
+@@ -275,45 +281,47 @@ Wysocki <rafael.j.wysocki@intel.com>.
+       object's bus_id.
+ 
+ 
+-4. Linux ACPI Physical Device Glue
+-
+-   ACPI device (i.e. struct acpi_device) objects may be linked to other
+-   objects in the Linux' device hierarchy that represent "physical" devices
+-   (for example, devices on the PCI bus).  If that happens, it means that
+-   the ACPI device object is a "companion" of a device otherwise
+-   represented in a different way and is used (1) to provide configuration
+-   information on that device which cannot be obtained by other means and
+-   (2) to do specific things to the device with the help of its ACPI
+-   control methods.  One ACPI device object may be linked this way to
+-   multiple "physical" devices.
+-
+-   If an ACPI device object is linked to a "physical" device, its sysfs
+-   directory contains the "physical_node" symbolic link to the sysfs
+-   directory of the target device object.  In turn, the target device's
+-   sysfs directory will then contain the "firmware_node" symbolic link to
+-   the sysfs directory of the companion ACPI device object.
+-   The linking mechanism relies on device identification provided by the
+-   ACPI namespace.  For example, if there's an ACPI namespace object
+-   representing a PCI device (i.e. a device object under an ACPI namespace
+-   object representing a PCI bridge) whose _ADR returns 0x00020000 and the
+-   bus number of the parent PCI bridge is 0, the sysfs directory
+-   representing the struct acpi_device object created for that ACPI
+-   namespace object will contain the 'physical_node' symbolic link to the
+-   /sys/devices/pci0000:00/0000:00:02:0/ sysfs directory of the
+-   corresponding PCI device.
+-
+-   The linking mechanism is generally bus-specific.  The core of its
+-   implementation is located in the drivers/acpi/glue.c file, but there are
+-   complementary parts depending on the bus types in question located
+-   elsewhere.  For example, the PCI-specific part of it is located in
+-   drivers/pci/pci-acpi.c.
+-
+-
+-5. Example Linux ACPI Device Tree
+-
+-   The sysfs hierarchy of struct acpi_device objects corresponding to the
+-   example ACPI namespace illustrated in Figure 2 with the addition of
+-   fixed PWR_BUTTON/SLP_BUTTON devices is shown below.
++Linux ACPI Physical Device Glue
++===============================
++
++ACPI device (i.e. struct acpi_device) objects may be linked to other
++objects in the Linux' device hierarchy that represent "physical" devices
++(for example, devices on the PCI bus).  If that happens, it means that
++the ACPI device object is a "companion" of a device otherwise
++represented in a different way and is used (1) to provide configuration
++information on that device which cannot be obtained by other means and
++(2) to do specific things to the device with the help of its ACPI
++control methods.  One ACPI device object may be linked this way to
++multiple "physical" devices.
++
++If an ACPI device object is linked to a "physical" device, its sysfs
++directory contains the "physical_node" symbolic link to the sysfs
++directory of the target device object.  In turn, the target device's
++sysfs directory will then contain the "firmware_node" symbolic link to
++the sysfs directory of the companion ACPI device object.
++The linking mechanism relies on device identification provided by the
++ACPI namespace.  For example, if there's an ACPI namespace object
++representing a PCI device (i.e. a device object under an ACPI namespace
++object representing a PCI bridge) whose _ADR returns 0x00020000 and the
++bus number of the parent PCI bridge is 0, the sysfs directory
++representing the struct acpi_device object created for that ACPI
++namespace object will contain the 'physical_node' symbolic link to the
++/sys/devices/pci0000:00/0000:00:02:0/ sysfs directory of the
++corresponding PCI device.
++
++The linking mechanism is generally bus-specific.  The core of its
++implementation is located in the drivers/acpi/glue.c file, but there are
++complementary parts depending on the bus types in question located
++elsewhere.  For example, the PCI-specific part of it is located in
++drivers/pci/pci-acpi.c.
++
++
++Example Linux ACPI Device Tree
++=================================
++
++The sysfs hierarchy of struct acpi_device objects corresponding to the
++example ACPI namespace illustrated in Figure 2 with the addition of
++fixed PWR_BUTTON/SLP_BUTTON devices is shown below::
+ 
+    +--------------+---+-----------------+
+    | LNXSYSTEM:00 | \ | acpi:LNXSYSTEM: |
+@@ -377,12 +385,14 @@ Wysocki <rafael.j.wysocki@intel.com>.
+ 
+                   Figure 3. Example Linux ACPI Device Tree
+ 
+-   NOTE: Each node is represented as "object/path/modalias", where:
+-         1. 'object' is the name of the object's directory in sysfs.
+-         2. 'path' is the ACPI namespace path of the corresponding
+-            ACPI namespace object, as returned by the object's 'path'
+-            sysfs attribute.
+-         3. 'modalias' is the value of the object's 'modalias' sysfs
+-            attribute (as described earlier in this document).
+-   NOTE: N/A indicates the device object does not have the 'path' or the
+-         'modalias' attribute.
++.. note:: Each node is represented as "object/path/modalias", where:
++
++   1. 'object' is the name of the object's directory in sysfs.
++   2. 'path' is the ACPI namespace path of the corresponding
++      ACPI namespace object, as returned by the object's 'path'
++      sysfs attribute.
++   3. 'modalias' is the value of the object's 'modalias' sysfs
++      attribute (as described earlier in this document).
++
++.. note:: N/A indicates the device object does not have the 'path' or the
++   'modalias' attribute.
 -- 
 2.20.1
 
