@@ -2,250 +2,155 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0542C10F14
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:40:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D5E8C10F14
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:43:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 684F72077C
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:40:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="feE6Top6"
+	by mail.kernel.org (Postfix) with ESMTP id 66D94206BA
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:43:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726557AbfDWJkp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 05:40:45 -0400
-Received: from dc2-smtprelay2.synopsys.com ([198.182.61.142]:38544 "EHLO
-        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726150AbfDWJkp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 05:40:45 -0400
-Received: from mailhost.synopsys.com (dc8-mailhost1.synopsys.com [10.13.135.209])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 72797C0BC4;
-        Tue, 23 Apr 2019 09:40:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1556012443; bh=vJf+uCmQ3bDlomWBy7U6o54Al9qgyrVgjSYKjkNsMFE=;
-        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
-        b=feE6Top6f73FBYXzgs1UKqd0goIeZHHsOPWXNmOd1XKxCj617JuZcEyRKK6sHx8Wj
-         2PpFg7E71+Gl+y/WqH8C6Ou90N2qTd10ZbJRle4pg/M71EQ4pYbQAMUS6HUFmaRBEO
-         vqHcx+Dm/n06RcJUSqM+W99y9bhOKGaZwbMyy9VLfFMDGWqTo7BqoHEyBQli0soE4z
-         KxAMqAd+JooPqJKMlDojNuXdASsQm0Q9u0d/vhZHssKHrdrTh1v4Px3xfz3LCBB+lo
-         vvXzgKBDBVwbYwkDNDl0EUD92OE64nYnjgeAaJBPGgyukyVqoyj/FLEmNjJIZVOblI
-         dBIqNui0TFbWg==
-Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2.internal.synopsys.com [10.12.239.237])
-        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id ADC11A005D;
-        Tue, 23 Apr 2019 09:40:43 +0000 (UTC)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WEHTC2.internal.synopsys.com (10.12.239.237) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Tue, 23 Apr 2019 02:40:43 -0700
-Received: from DE02WEMBXA.internal.synopsys.com ([fe80::a014:7216:77d:d55c])
- by DE02WEHTCB.internal.synopsys.com ([::1]) with mapi id 14.03.0415.000; Tue,
- 23 Apr 2019 11:40:41 +0200
-From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-To:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-CC:     Vidya Sagar <vidyas@nvidia.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mperttunen@nvidia.com" <mperttunen@nvidia.com>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
-Subject: RE: [PATCH V3 04/16] PCI: dwc: Perform dbi regs write lock towards
- the end
-Thread-Topic: [PATCH V3 04/16] PCI: dwc: Perform dbi regs write lock towards
- the end
-Thread-Index: AQHU9IqKd2QC8WkfMUGD8rhulPpCxqZAHDUQgAeabACAAc8x0A==
-Date:   Tue, 23 Apr 2019 09:40:40 +0000
-Message-ID: <305100E33629484CBB767107E4246BBB0A22FA36@de02wembxa.internal.synopsys.com>
-References: <20190416192730.15681-1-vidyas@nvidia.com>
-        <20190416192730.15681-5-vidyas@nvidia.com>
-        <305100E33629484CBB767107E4246BBB0A22C127@de02wembxa.internal.synopsys.com>
- <20190422154608.6e6f8ae3@xhacker.debian>
-In-Reply-To: <20190422154608.6e6f8ae3@xhacker.debian>
-Accept-Language: pt-PT, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcZ3VzdGF2b1xh?=
- =?us-ascii?Q?cHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJh?=
- =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLWQ5OWM0NzJmLTY1YWItMTFlOS05ODdkLWY4OTRj?=
- =?us-ascii?Q?MjczODA0MlxhbWUtdGVzdFxkOTljNDczMC02NWFiLTExZTktOTg3ZC1mODk0?=
- =?us-ascii?Q?YzI3MzgwNDJib2R5LnR4dCIgc3o9IjI4MzEiIHQ9IjEzMjAwNDg2MDM5MzM2?=
- =?us-ascii?Q?NzIzNiIgaD0iSWViTDBma08wUGZWVDV2dWMwbUJycDM0Rm1nPSIgaWQ9IiIg?=
- =?us-ascii?Q?Ymw9IjAiIGJvPSIxIiBjaT0iY0FBQUFFUkhVMVJTUlVGTkNnVUFBQlFKQUFE?=
- =?us-ascii?Q?RUpsK2N1UG5VQVh5ZVFremY5emZSZko1Q1ROLzNOOUVPQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUhBQUFBQ2tDQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUVBQVFBQkFBQUFGdGJCcHdBQUFBQUFBQUFBQUFBQUFKNEFBQUJtQUdrQWJn?=
- =?us-ascii?Q?QmhBRzRBWXdCbEFGOEFjQUJzQUdFQWJnQnVBR2tBYmdCbkFGOEFkd0JoQUhR?=
- =?us-ascii?Q?QVpRQnlBRzBBWVFCeUFHc0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?RUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFHWUFid0IxQUc0QVpBQnlBSGtBWHdC?=
- =?us-ascii?Q?d0FHRUFjZ0IwQUc0QVpRQnlBSE1BWHdCbkFHWUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFDQUFB?=
- =?us-ascii?Q?QUFBQ2VBQUFBWmdCdkFIVUFiZ0JrQUhJQWVRQmZBSEFBWVFCeUFIUUFiZ0Js?=
- =?us-ascii?Q?QUhJQWN3QmZBSE1BWVFCdEFITUFkUUJ1QUdjQVh3QmpBRzhBYmdCbUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFBQm1BRzhB?=
- =?us-ascii?Q?ZFFCdUFHUUFjZ0I1QUY4QWNBQmhBSElBZEFCdUFHVUFjZ0J6QUY4QWN3QmhB?=
- =?us-ascii?Q?RzBBY3dCMUFHNEFad0JmQUhJQVpRQnpBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUdZQWJ3QjFBRzRBWkFCeUFIa0FY?=
- =?us-ascii?Q?d0J3QUdFQWNnQjBBRzRBWlFCeUFITUFYd0J6QUcwQWFRQmpBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFBQUNB?=
- =?us-ascii?Q?QUFBQUFDZUFBQUFaZ0J2QUhVQWJnQmtBSElBZVFCZkFIQUFZUUJ5QUhRQWJn?=
- =?us-ascii?Q?QmxBSElBY3dCZkFITUFkQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCbUFH?=
- =?us-ascii?Q?OEFkUUJ1QUdRQWNnQjVBRjhBY0FCaEFISUFkQUJ1QUdVQWNnQnpBRjhBZEFC?=
- =?us-ascii?Q?ekFHMEFZd0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1lBYndCMUFHNEFaQUJ5QUhr?=
- =?us-ascii?Q?QVh3QndBR0VBY2dCMEFHNEFaUUJ5QUhNQVh3QjFBRzBBWXdBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFB?=
- =?us-ascii?Q?Q0FBQUFBQUNlQUFBQVp3QjBBSE1BWHdCd0FISUFid0JrQUhVQVl3QjBBRjhB?=
- =?us-ascii?Q?ZEFCeUFHRUFhUUJ1QUdrQWJnQm5BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJ6?=
- =?us-ascii?Q?QUdFQWJBQmxBSE1BWHdCaEFHTUFZd0J2QUhVQWJnQjBBRjhBY0FCc0FHRUFi?=
- =?us-ascii?Q?Z0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFITUFZUUJzQUdVQWN3QmZB?=
- =?us-ascii?Q?SEVBZFFCdkFIUUFaUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFB?=
- =?us-ascii?Q?QUFDQUFBQUFBQ2VBQUFBY3dCdUFIQUFjd0JmQUd3QWFRQmpBR1VBYmdCekFH?=
- =?us-ascii?Q?VUFYd0IwQUdVQWNnQnRBRjhBTVFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFB?=
- =?us-ascii?Q?QnpBRzRBY0FCekFGOEFiQUJwQUdNQVpRQnVBSE1BWlFCZkFIUUFaUUJ5QUcw?=
- =?us-ascii?Q?QVh3QnpBSFFBZFFCa0FHVUFiZ0IwQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUhZQVp3QmZBR3NBWlFC?=
- =?us-ascii?Q?NUFIY0Fid0J5QUdRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFB?=
- =?us-ascii?Q?QUFBQUNBQUFBQUFBPSIvPjwvbWV0YT4=3D?=
-x-originating-ip: [10.107.25.131]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726304AbfDWJnd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 05:43:33 -0400
+Received: from foss.arm.com ([217.140.101.70]:52730 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726204AbfDWJnd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Apr 2019 05:43:33 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A5D25374;
+        Tue, 23 Apr 2019 02:43:32 -0700 (PDT)
+Received: from red-moon (red-moon.cambridge.arm.com [10.1.197.39])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2934D3F557;
+        Tue, 23 Apr 2019 02:43:31 -0700 (PDT)
+Date:   Tue, 23 Apr 2019 10:43:37 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        YueHaibing <yuehaibing@huawei.com>, robh@kernel.org,
+        l.stach@pengutronix.de, andrew.smirnov@gmail.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: keystone: Fix build error while only
+ CONFIG_PCI_KEYSTONE is set
+Message-ID: <20190423094337.GC25738@red-moon>
+References: <20190419025855.40760-1-yuehaibing@huawei.com>
+ <20190419133137.GA173520@google.com>
+ <35486240-8c29-410d-e0f4-c87dc42fb668@huawei.com>
+ <20190419174735.GE173520@google.com>
+ <9e674a96-5d19-47f6-41a4-9a4313652b5b@ti.com>
+ <20190422132617.GL173520@google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190422132617.GL173520@google.com>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Apr 22, 2019 at 8:54:32, Jisheng Zhang=20
-<Jisheng.Zhang@synaptics.com> wrote:
+On Mon, Apr 22, 2019 at 08:26:17AM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 22, 2019 at 01:19:53PM +0530, Kishon Vijay Abraham I wrote:
+> > Hi Bjorn,
+> > ...
+> 
+> > Sometime back Niklas had fixed this for DRA7xx in
+> > 
+> > commit b052835c63857e13d9ada3ebc57a8f9e1d124f3a
+> > Author: Niklas Cassel <niklas.cassel@axis.com>
+> > Date:   Wed Dec 20 00:29:28 2017 +0100
+> > 
+> >     PCI: dwc: dra7xx: Refactor Kconfig and Makefile handling for host/ep mode
+> > 
+> >     Refactor the Kconfig and Makefile handling for host/ep mode, since
+> >     the previous handling was a bit unorthodox and would have been a bit
+> >     bloated once more DWC based controllers added support for ep mode.
+> > 
+> >     Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> >     Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >     Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> > 
+> > Something similar is applicable for Keystone too as you mentioned without
+> > selecting PCI_KEYSTONE_HOST or PCI_KEYSTONE_EP, compiling pci-keystone.c
+> > doesn't make sense.
+> > 
+> > Please see if below looks okay to you. This can be merged with "PCI:
+> > keystone:Add support for PCIe EP in AM654x Platforms"). Let me know if I have
+> > to send it separately with Fixes tag.
+> 
+> Lorenzo merged that commit, so I assume he'll take care of this.
 
-> On Wed, 17 Apr 2019 09:56:33 +0000 Gustavo Pimentel wrote:
->=20
-> >=20
-> > On Tue, Apr 16, 2019 at 20:27:18, Vidya Sagar <vidyas@nvidia.com> wrote=
-:
-> >=20
-> > > Remove multiple write enable and disable sequences of dbi registers a=
-s
-> > > Tegra194 implements writes to BAR-0 register (offset: 0x10) controlle=
-d by
-> > > DBI write-lock enable bit thereby not allowing any further writes to =
-BAR-0
-> > > register in config space to take place. Hence disabling write permiss=
-ion
-> > > only towards the end.
-> > >
-> > > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> > > ---
-> > > Changes since [v2]:
-> > > * None
-> > >
-> > > Changes since [v1]:
-> > > * None
-> > >
-> > >  drivers/pci/controller/dwc/pcie-designware-host.c | 3 ---
-> > >  1 file changed, 3 deletions(-)
-> > >
-> > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/driv=
-ers/pci/controller/dwc/pcie-designware-host.c
-> > > index 2a5332e5ccfa..c0334c92c1a6 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> > > @@ -683,7 +683,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
-> > >       val &=3D 0xffff00ff;
-> > >       val |=3D 0x00000100;
-> > >       dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
-> > > -     dw_pcie_dbi_ro_wr_dis(pci);
-> > >
-> > >       /* Setup bus numbers */
-> > >       val =3D dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
-> > > @@ -723,8 +722,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
-> > >
-> > >       dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-> > >
-> > > -     /* Enable write permission for the DBI read-only register */
-> > > -     dw_pcie_dbi_ro_wr_en(pci);
-> > >       /* Program correct class for RC */
-> > >       dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_P=
-CI);
-> > >       /* Better disable write permission right after the update */
-> > > --
-> > > 2.17.1 =20
-> >=20
-> > This setup sequence was written by Jingoo Han, let's check if he did th=
-is
-> > by some particular reason.
-> > Jingoo do you remember why you wrote the code like this?
->=20
-> FWICT, enabling RO writeable in the setup sequence is introduced in
-> commit d91dfe5054d4 ("PCI: dwc: Enable write permission for Class Code,=20
-> Interrupt Pin updates"). The Reason why not towards the end maybe
-> only enable the RO writeable when necessary.
+I will squash it in and rebuild the branch, thanks.
 
-I also share that belief, in any case, I just want to confirm with the=20
-original developer if this was coded like this for some good reason,=20
-maybe to force some additional protection. Otherwise, I think the=20
-presented patch is harmless.
+Lorenzo
 
-Gustavo
-
->=20
-> thanks
-
-
+> > 8<---------------------------------------------------------
+> > From 8fba36048112cf72c49996fc47fd808534bf9689 Mon Sep 17 00:00:00 2001
+> > From: Kishon Vijay Abraham I <kishon@ti.com>
+> > Date: Mon, 22 Apr 2019 11:42:32 +0530
+> > Subject: [PATCH] PCI: keystone: Refactor Kconfig for RC/EP mode
+> > 
+> > Do not allow PCI_KEYSTONE to be visible to user and let user visible
+> > CONFIG symbols PCI_KEYSTONE_HOST and PCI_KEYSTONE_EP select
+> > PCI_KEYSTONE. This will let pci-keystone.c to be compiled only when
+> > either PCI_KEYSTONE_HOST or PCI_KEYSTONE_EP is selected.
+> > 
+> > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> > ---
+> >  drivers/pci/controller/dwc/Kconfig | 24 +++++++++++-------------
+> >  1 file changed, 11 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/Kconfig
+> > b/drivers/pci/controller/dwc/Kconfig
+> > index b450ad2823a5..90618233d15b 100644
+> > --- a/drivers/pci/controller/dwc/Kconfig
+> > +++ b/drivers/pci/controller/dwc/Kconfig
+> > @@ -103,34 +103,32 @@ config PCIE_SPEAR13XX
+> >  	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+> > 
+> >  config PCI_KEYSTONE
+> > -	bool "TI Keystone PCIe controller"
+> > -	depends on ARCH_KEYSTONE || ARCH_K3 || ((ARM || ARM64) && COMPILE_TEST)
+> > -	help
+> > -	  Say Y here if you want to enable PCI controller support on Keystone
+> > -	  SoCs. The PCI controller on Keystone is based on DesignWare hardware
+> > -	  and therefore the driver re-uses the DesignWare core functions to
+> > -	  implement the driver.
+> > -
+> > -if PCI_KEYSTONE
+> > +	bool
+> > 
+> >  config PCI_KEYSTONE_HOST
+> >  	bool "PCI Keystone Host Mode"
+> > +	depends on ARCH_KEYSTONE || ARCH_K3 || ((ARM || ARM64) && COMPILE_TEST)
+> >  	depends on PCI_MSI_IRQ_DOMAIN
+> >  	select PCIE_DW_HOST
+> > +	select PCI_KEYSTONE
+> >  	default y
+> >  	help
+> >  	 Enables support for the PCIe controller in the Keystone SoC to work in
+> > -	 host mode.
+> > +	 host mode. The PCI controller on Keystone is based on DesignWare hardware
+> > +	 and therefore the driver re-uses the DesignWare core functions to
+> > +	 implement the driver.
+> > 
+> >  config PCI_KEYSTONE_EP
+> >  	bool "PCI Keystone Endpoint Mode"
+> > +	depends on ARCH_KEYSTONE || ARCH_K3 || ((ARM || ARM64) && COMPILE_TEST)
+> >  	depends on PCI_ENDPOINT
+> >  	select PCIE_DW_EP
+> > +	select PCI_KEYSTONE
+> >  	help
+> >  	 Enables support for the PCIe controller in the Keystone SoC to work in
+> > -	 endpoint mode.
+> > -
+> > -endif
+> > +	 endpoint mode. The PCI controller on Keystone is based on DesignWare hardware
+> > +	 and therefore the driver re-uses the DesignWare core functions to
+> > +	 implement the driver.
+> > 
+> >  config PCI_LAYERSCAPE
+> >  	bool "Freescale Layerscape PCIe controller"
+> > -- 
+> > 2.17.1
