@@ -2,113 +2,101 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3394C10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:11:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF5AAC10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:20:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FF1A217D9
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:11:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556057497;
-	bh=6uaIDqhlQe789sFXRkyJVF8NsVndwaJW3RinM5iteNE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=beaX2jm+6gYTin9PwNaslI4r1M6u/12XRkW40HaWUCQ/8zVgVGC/9NxQAkpw0+UdV
-	 sLsS4lBz8/odIEEMEb9uCg8leLBv+oISxdjnCSkMlwKOEFZIGxjS/N5vLYXqD+dFzt
-	 LpMiPJCs39r4P8yb+HAsAfxc6oVt3Mr+GZ4VYJsk=
+	by mail.kernel.org (Postfix) with ESMTP id A41ED217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727918AbfDWWLg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 18:11:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58814 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726325AbfDWWLg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Apr 2019 18:11:36 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AB5FD21738;
-        Tue, 23 Apr 2019 22:11:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556057496;
-        bh=6uaIDqhlQe789sFXRkyJVF8NsVndwaJW3RinM5iteNE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tQl6VeFTzcdo2gVP1ZdPp8m7WgIVsiolfKFmY1PC9/qgjcPMGQDCkj5xbv6PT593t
-         R2k7ne6t2oXNpbphqANwgxGyxRELMdIspps1SSjnO5QB78pTVLwJLTN0SgcZgLtD0Q
-         kmJOkzl2ZhgIUvUzGEaMPEu7vKQx/2Cw3CY8B7GE=
-Date:   Tue, 23 Apr 2019 17:11:34 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc:     "Raj, Ashok" <ashok.raj@intel.com>, corbet@lwn.net,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-        alex.williamson@redhat.com
-Subject: Re: [PATCH v1 1/5] PCI/IOV: Add support to verify PF/VF spec
- compliance
-Message-ID: <20190423221134.GI14616@google.com>
-References: <cover.1551909341.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <317aaed09820db65c21452663bed33468f874d3a.1551909341.git.sathyanarayanan.kuppuswamy@linux.intel.com>
- <20190419135918.GC173520@google.com>
- <20190419173728.GE46517@otc-nc-03>
- <22ad30c0-fc7e-b5ac-a224-c1a247c33359@linux.intel.com>
+        id S1726325AbfDWWUW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 18:20:22 -0400
+Received: from relay10.mail.gandi.net ([217.70.178.230]:44379 "EHLO
+        relay10.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726075AbfDWWUV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 18:20:21 -0400
+Received: from localhost (unknown [88.190.179.123])
+        (Authenticated sender: repk@triplefau.lt)
+        by relay10.mail.gandi.net (Postfix) with ESMTPSA id 7133724000A;
+        Tue, 23 Apr 2019 22:20:18 +0000 (UTC)
+Date:   Wed, 24 Apr 2019 00:29:18 +0200
+From:   Remi Pommarel <repk@triplefau.lt>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH] pci: aardvark: Wait for endpoint to be ready before
+ training link
+Message-ID: <20190423222917.GN2754@voidbox.localdomain>
+References: <20190313213752.1246-1-repk@triplefau.lt>
+ <20190423163215.GB26523@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <22ad30c0-fc7e-b5ac-a224-c1a247c33359@linux.intel.com>
+In-Reply-To: <20190423163215.GB26523@red-moon>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Apr 19, 2019 at 11:41:31AM -0700, sathyanarayanan kuppuswamy wrote:
-> On 4/19/19 10:37 AM, Raj, Ashok wrote:
-> > On Fri, Apr 19, 2019 at 08:59:18AM -0500, Bjorn Helgaas wrote:
-> > > On Wed, Mar 06, 2019 at 02:11:14PM -0800, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
-> > > > From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-> > > > 
-> > > > PF/VF implementation must comply with PCIe specification as
-> > > > defined in r4.0, sec 9.3.4, 9.3.5, 9.3.6 and 9.3.7. And if
-> > > > it does not comply, return error and skip PF/VF device
-> > > > creation.
-> > > As far as I can tell, this patch basically looks for excuses not to
-> > > enable SR-IOV.  Does this actually solve a problem?  Are there
-> > > non-compliant devices out there that blow up if we enable SR-IOV?
-> > We ran into one case with a future product for INTx value on VF's. We do have
-> > a quirk for it upstream now. We thought it might be good to just run through
-> > some of the basic requirements and see if any device violates it, that would allow
-> > us to catch them early.
+Hi,
+
+On Tue, Apr 23, 2019 at 05:32:15PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Mar 13, 2019 at 10:37:52PM +0100, Remi Pommarel wrote:
+> > When configuring pcie reset pin from gpio (e.g. initially set by
+> > u-boot) to pcie function this pin goes low for a brief moment
+> > asserting the PERST# signal. Thus connected device enters fundamental
+> > reset process and link configuration can only begin after a minimal
+> > 100ms delay (see [1]).
 > > 
-> > We are looking into other things like PASID and End-2-End prefix capability for instance.
-> > There is another subtle thing like number of eetlp_prefix_supported. Which i don't
-> > pci core checks today, and we might need to do that to be compliant or find devices
-> > that break that contract.
+> > This makes sure that link is configured after at least 100ms from
+> > beginning of probe() callback (shortly after the reset pin function
+> > configuration switch through pinctrl subsytem).
 > > 
-> > Real intend is to be find such breaks early, it also helps the product guys :-)
+> > [1] "PCI Express Base Specification", REV. 2.1
+> >         PCI Express, March 4 2009, 6.6.1 Conventional Reset
 > > 
-> > With upcoming vIOMMU effort, we need to ensure that capabilities are exported properly
-> > depending on if its a SRIOV-PF/VF or a Scalable device.
+> > Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> > ---
+> >  drivers/pci/controller/pci-aardvark.c | 17 ++++++++++++++---
+> >  1 file changed, 14 insertions(+), 3 deletions(-)
 > > 
-> > Cheers,
-> > Ashok
+> > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> > index a30ae7cf8e7e..70a1023d0ef1 100644
+> > --- a/drivers/pci/controller/pci-aardvark.c
+> > +++ b/drivers/pci/controller/pci-aardvark.c
+> > @@ -177,6 +177,9 @@
+> >  
+> >  #define PIO_TIMEOUT_MS			1
+> >  
+> > +/* Endpoint can take up to 100ms to be ready after a reset */
+> > +#define ENDPOINT_RST_MS			100
+> > +
+> >  #define LINK_WAIT_MAX_RETRIES		10
+> >  #define LINK_WAIT_USLEEP_MIN		90000
+> >  #define LINK_WAIT_USLEEP_MAX		100000
+> > @@ -242,8 +245,10 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
+> >  	return -ETIMEDOUT;
+> >  }
+> >  
+> > -static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+> > +static void
+> > +advk_pcie_setup_hw(struct advk_pcie *pcie, unsigned long ep_rdy_time)
 > 
-> I agree with Ashok's comments. It helps us find SRIOV related features
-> enable/disable issues easily.
+> Nit: I prefer the prototype to be in one line, I wrap it for you.
 > 
-> Also, there is some of level of spec compliance checks in enabling
-> PASID/PRI/ATS already in our existing code.
+> I am wondering why you need to pass in ep_rdy_time parameter when you
+> can easily compute it in the function itself.
 > 
-> I am just grouping them together in one place and expanded it for other IOV
-> related features.
 
-My $0.02:
+The only reason for that is because the sooner I get the jiffies the
+lower the delay has to be. I was trying to reduce the impact of this
+delay to a minimum, but maybe the improvement is not worth it.
 
-  - If there's a problem that actually prevents Linux from using a feature,
-    check for the problem close to the point where we use the feature.
-
-  - If you want to check for spec compliance, most of that can be done more
-    easily in user-space by examining lspci output.
-
-Bjorn
+-- 
+Remi
