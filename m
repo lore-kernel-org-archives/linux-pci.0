@@ -2,74 +2,143 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,TVD_PH_BODY_ACCOUNTS_PRE autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74B95C282DD
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:37:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF208C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:37:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 444FD217D9
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:37:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E4CF217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:37:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I0mzGnYK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728847AbfDWQhU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 12:37:20 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:38726 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728906AbfDWQhS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Apr 2019 12:37:18 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A7C223D970;
-        Tue, 23 Apr 2019 16:37:18 +0000 (UTC)
-Received: from x1.home (ovpn-116-122.phx2.redhat.com [10.3.116.122])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C702E1001E71;
-        Tue, 23 Apr 2019 16:37:15 +0000 (UTC)
-Date:   Tue, 23 Apr 2019 10:37:15 -0600
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     Alex G <mr.nuke.me@gmail.com>
-Cc:     bhelgaas@google.com, helgaas@kernel.org, linux-pci@vger.kernel.org,
-        austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        okaya@kernel.org, torvalds@linux-foundation.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/LINK: Account for BW notification in vector
- calculation
-Message-ID: <20190423103715.044aab13@x1.home>
-In-Reply-To: <e992aad4-a80d-53e1-deb7-8e4523b5027c@gmail.com>
-References: <155597243666.19387.1205950870601742062.stgit@gimli.home>
-        <d1126250-14e0-192c-f219-f143f62c9cdd@gmail.com>
-        <20190422183347.51ba522c@x1.home>
-        <84300da7-9bbd-4f32-c7fa-23724db60b88@gmail.com>
-        <20190423093408.16b07efc@x1.home>
-        <88bd2962-bce4-8259-c38f-1a7e9fdde300@gmail.com>
-        <20190423102253.4fd9a019@x1.home>
-        <e992aad4-a80d-53e1-deb7-8e4523b5027c@gmail.com>
-Organization: Red Hat
+        id S1729306AbfDWQhY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 12:37:24 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:33899 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729222AbfDWQhW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:37:22 -0400
+Received: by mail-pg1-f196.google.com with SMTP id v12so7894186pgq.1;
+        Tue, 23 Apr 2019 09:37:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Qw8iXfD3ItYngoQYik6Jp498D9sHvHA3oeNnrYYHbk4=;
+        b=I0mzGnYKH8rT9JVDTiND3OLdyKZBv8Wdt4EI9qxW9p4RmNVGlwhHctrXvjjdh7vpSg
+         mxRmxyTOefmI5byVYQSORXjqYmy/dP2/AiAyynRK8RgjPe/SsH0GkbJEZUYIqB6Nxtg4
+         eaoA3j3f1g5JCf4I/9F3AlAgg7VRFG8j/NAL8RJ/HJ6py57skbUfhYPfn+UompLjczhM
+         fiuL+TQ52EJ425WPZ4RjlBSK2EH9gB8dUiVSRycPlnfMgJM0bewVsE3sRxa46lerinRr
+         HLNDs6WKdbp3hXlP+RJUOXswPNCkCkXIMMOWgKOWsJpvEEsX9b0B6uA3ENhiLIt6txDw
+         SGXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Qw8iXfD3ItYngoQYik6Jp498D9sHvHA3oeNnrYYHbk4=;
+        b=edQOuW6tTd7z7b8mARLZyYnBakhQP9s25d56UWC7CCMjlvPIVESMoy7QysCSEei6xv
+         kv4xGWvLfqnxCWtDkfIezOkDuH6dvCSYlOtjO7UqB4cnGIHmsorfP2x/H2cpDNrpExow
+         Ec4r1FLf6LQIcQruoZ173bNDpF7xqAEJnmU50mkUf8G8gInHBurh4ZLXGk2Hn+92Brn1
+         DEWV/XTXEbvD8/exrYh7whz1sdx/OGkcTHGTFIbfjwbWXRByz+j1wtd19memWH3U0DNC
+         D2jU0/dY4tCPL3KziVr6YOWVpoFUPHdbTWSG32y/gflSLP7LlWILAt+J2qt8BfltoWt8
+         DYDA==
+X-Gm-Message-State: APjAAAVTp9n9F8YBXWHfnxrIrKTMBiFh7lJnvdieCBfxi76ooSqY1Rka
+        fEFhlL7w0wjPD06wVISrTkE=
+X-Google-Smtp-Source: APXvYqwMh0JsS2uPmSx2KWOP6gETkX6Ztmx6E9bUYBSzg7+XUwAhQ6rE754sDxfOfr+zeMKTKywcyg==
+X-Received: by 2002:a63:5020:: with SMTP id e32mr12883649pgb.215.1556037441246;
+        Tue, 23 Apr 2019 09:37:21 -0700 (PDT)
+Received: from localhost.localdomain ([104.238.181.70])
+        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.37.11
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 23 Apr 2019 09:37:20 -0700 (PDT)
+From:   Changbin Du <changbin.du@gmail.com>
+To:     Jonathan Corbet <corbet@lwn.net>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        x86@kernel.org, fenghua.yu@intel.com,
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
+        linux-gpio@vger.kernel.org, mchehab+samsung@kernel.org,
+        Changbin Du <changbin.du@gmail.com>
+Subject: [PATCH v4 42/63] Documentation: x86: convert entry_64.txt to reST
+Date:   Wed, 24 Apr 2019 00:29:11 +0800
+Message-Id: <20190423162932.21428-43-changbin.du@gmail.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190423162932.21428-1-changbin.du@gmail.com>
+References: <20190423162932.21428-1-changbin.du@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Tue, 23 Apr 2019 16:37:18 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 23 Apr 2019 11:27:39 -0500
-Alex G <mr.nuke.me@gmail.com> wrote:
+This converts the plain text documentation to reStructuredText format and
+add it to Sphinx TOC tree. No essential content change.
 
-> On 4/23/19 11:22 AM, Alex Williamson wrote:
-> > Nor should pci-core decide what link speed changes are intended or
-> > errors.  Minimally we should be enabling drivers to receive this
-> > feedback.  Thanks,  
-> 
-> Not errors. pci core reports that a link speed change event has occured. 
-> Period.
+Signed-off-by: Changbin Du <changbin.du@gmail.com>
+---
+ Documentation/x86/{entry_64.txt => entry_64.rst} | 12 +++++++++---
+ Documentation/x86/index.rst                      |  1 +
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+ rename Documentation/x86/{entry_64.txt => entry_64.rst} (95%)
 
-And it shows up in dmesg, and what do users (and developers) think when
-things are repeatedly reported in dmesg?  Whether this is "information"
-or "error", it's spamming dmesg, irrelevant, and confusing.  Thanks,
+diff --git a/Documentation/x86/entry_64.txt b/Documentation/x86/entry_64.rst
+similarity index 95%
+rename from Documentation/x86/entry_64.txt
+rename to Documentation/x86/entry_64.rst
+index c1df8eba9dfd..a48b3f6ebbe8 100644
+--- a/Documentation/x86/entry_64.txt
++++ b/Documentation/x86/entry_64.rst
+@@ -1,3 +1,9 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++==============
++Kernel Entries
++==============
++
+ This file documents some of the kernel entries in
+ arch/x86/entry/entry_64.S.  A lot of this explanation is adapted from
+ an email from Ingo Molnar:
+@@ -59,7 +65,7 @@ Now, there's a secondary complication: there's a cheap way to test
+ which mode the CPU is in and an expensive way.
+ 
+ The cheap way is to pick this info off the entry frame on the kernel
+-stack, from the CS of the ptregs area of the kernel stack:
++stack, from the CS of the ptregs area of the kernel stack::
+ 
+ 	xorl %ebx,%ebx
+ 	testl $3,CS+8(%rsp)
+@@ -67,7 +73,7 @@ stack, from the CS of the ptregs area of the kernel stack:
+ 	SWAPGS
+ 
+ The expensive (paranoid) way is to read back the MSR_GS_BASE value
+-(which is what SWAPGS modifies):
++(which is what SWAPGS modifies)::
+ 
+ 	movl $1,%ebx
+ 	movl $MSR_GS_BASE,%ecx
+@@ -76,7 +82,7 @@ The expensive (paranoid) way is to read back the MSR_GS_BASE value
+ 	js 1f   /* negative -> in kernel */
+ 	SWAPGS
+ 	xorl %ebx,%ebx
+-1:	ret
++  1:	ret
+ 
+ If we are at an interrupt or user-trap/gate-alike boundary then we can
+ use the faster check: the stack will be a reliable indicator of
+diff --git a/Documentation/x86/index.rst b/Documentation/x86/index.rst
+index 489f4f4179c4..8a666c5abc85 100644
+--- a/Documentation/x86/index.rst
++++ b/Documentation/x86/index.rst
+@@ -12,3 +12,4 @@ Linux x86 Support
+    topology
+    exception-tables
+    kernel-stacks
++   entry_64
+-- 
+2.20.1
 
-Alex
