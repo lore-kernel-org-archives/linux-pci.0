@@ -2,86 +2,164 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F84C282DD
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:18:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7DA5C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:24:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6E9C21850
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:18:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=mbuki-mvuki-org.20150623.gappssmtp.com header.i=@mbuki-mvuki-org.20150623.gappssmtp.com header.b="Gr2YwS3q"
+	by mail.kernel.org (Postfix) with ESMTP id 6C172218B0
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:24:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1556051047;
+	bh=Q/HUG19XUhmRW8zDHq1HEpSxjHz08PXUPZgh1Ew3nx4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=dXWKdYt0WCCeSmLeHr/CiZXGXKpoRv/8e51RfhY+Qs/OOddaACl5c/ac+4lE2I+ch
+	 f0D+jsUFlLY0gkz5ENCQy0POaXrcpvgj16IwVwRzJqfdTO2BS/nrrhyeABQTBULD6A
+	 /U+vANvmHEjL2BMM81HduVilgZTR6P+8EDkuarYA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727194AbfDWUSx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 16:18:53 -0400
-Received: from mail-wm1-f52.google.com ([209.85.128.52]:53700 "EHLO
-        mail-wm1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725945AbfDWUSx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 16:18:53 -0400
-Received: by mail-wm1-f52.google.com with SMTP id q16so1654179wmj.3
-        for <linux-pci@vger.kernel.org>; Tue, 23 Apr 2019 13:18:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mbuki-mvuki-org.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ASdjcawRrrgqD5NQTFWWrPiiL1LVNSOCmnViIVcvQ6Y=;
-        b=Gr2YwS3qU7+5fjpkMPPgO5j7LWl8WnaQDSn+E87hOzPVDtV7IJFviPAHW4Nwsmpl9E
-         zNpD+1L95k15UwdQmn64KWeDIpMPHU1kIda0298HbUTMCmYFL9aE6kgR5bXePIJ4jMfw
-         /BfGBzbGhz3vxGcTWiQera/+BY3vR805TiVK4oGa2pswGKlOjUYoMmpO6fYNLmYSy1HG
-         hVSKjM6DLe+XUzOiFuAIMYbAzW0vdPpgjsAwDve03WdaUk2NjAVUg72k1YZDZMFgE9fa
-         5ATsXw8pTKCxvgl/DQFaiO4O1GSdectA6/Hb1wmH+DLEvUu56E50do6dHudL9+CEGB9a
-         wF8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ASdjcawRrrgqD5NQTFWWrPiiL1LVNSOCmnViIVcvQ6Y=;
-        b=ptLDRoaLWA2eP8uHmw2CmTWw1hicnzgWt9o2Uu1MtxSX943+ni4hVxQCmhuaEGYoIp
-         MAtbJgiQjsKILqlclSDfqezvruQFcxsaMO8B94ZAf4SA6mWYsf6atNqT4Ol7Qjg824nU
-         ppeSkeempDyJMWyvkihUcoF1/GGvP+jfEZ9mhspBfUKAO7zsYR1FP++dWV/Wgs1n4zpN
-         MEvhne49Gu5HFAztdsylC6YrxtlQXHVnWoKhZB3oNo6lyKXnzDynSjNOugRmDFB7vULo
-         rE+m9bRmmgTTz388S5VhecmRs4D4oGRacMetsPq0xpsFvOQBP78qB69dd4fYdNeLZUQS
-         pOgA==
-X-Gm-Message-State: APjAAAWIe/KWBfSBGkl0xmY4OeMKz+xNCo3Cj9e7z+d29JhVVivDNpww
-        BIrVJCqkrbXHHmnhPjGhs5exzED+VtTO4obBXIG3DQ==
-X-Google-Smtp-Source: APXvYqz0c74W3/SXXAurawT7D62mo7DC7HpYucHH34+Gj20/qv8EnEvmc2KbfzlCiAGiiZUZopMUy698V0IClWXvKn0=
-X-Received: by 2002:a1c:96d5:: with SMTP id y204mr3682109wmd.22.1556050731126;
- Tue, 23 Apr 2019 13:18:51 -0700 (PDT)
+        id S1727119AbfDWUYG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 16:24:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43476 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726029AbfDWUYG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Apr 2019 16:24:06 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A4984208E4;
+        Tue, 23 Apr 2019 20:24:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1556051044;
+        bh=Q/HUG19XUhmRW8zDHq1HEpSxjHz08PXUPZgh1Ew3nx4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ffkJw0SdYj4PZhOrlzW+8r5zWMfvUmzoZyRrWs//WkvmTA9mTLdFZBJKwQcvBEVv/
+         YTKfqNUcwkPAF6Lm+7432vc9ZOyf4UpPLKaoIjAcfjzcVYCp3uYPYweuOV5fMqq/Jx
+         Hk44XYCKpSvzGMRCsiqToLUIw6Mi1wfHbXChcSvI=
+Date:   Tue, 23 Apr 2019 15:24:03 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc:     thierry.reding@gmail.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Ley Foon Tan <lftan@altera.com>,
+        Michal Simek <michal.simek@xilinx.com>
+Subject: Re: [PATCH 22/30] PCI: tegra: Access endpoint config only if PCIe
+ link is up
+Message-ID: <20190423202403.GA61751@google.com>
+References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
+ <20190411170355.6882-23-mmaddireddy@nvidia.com>
+ <20190411201535.GS256045@google.com>
+ <e721e7f4-85c9-bee1-7131-12e0b7dfc0d1@nvidia.com>
+ <20190412145003.GE141472@google.com>
+ <1039fbf2-24ad-c31c-93d9-663aab74a26a@nvidia.com>
+ <20190415140430.GK126710@google.com>
+ <ecbf2331-fdb5-fe6c-f1de-6da0d7f88afb@nvidia.com>
 MIME-Version: 1.0
-References: <CANSNSoVpnK6fyfFct7cLNRJAvdLWh0ac=isnPOkOAp4LV+WoSw@mail.gmail.com>
- <Pine.LNX.4.44L0.1904161054060.1605-100000@iolanthe.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1904161054060.1605-100000@iolanthe.rowland.org>
-From:   Jesse Hathaway <jesse@mbuki-mvuki.org>
-Date:   Tue, 23 Apr 2019 15:18:40 -0500
-Message-ID: <CANSNSoXHZf6kb2W1yJ81HztSkc-3BAjxghL6NchTLLyv362mQw@mail.gmail.com>
-Subject: Re: Regression causes a hang on boot with a Comtrol PCI card
-To:     Alan Stern <stern@rowland.harvard.edu>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ecbf2331-fdb5-fe6c-f1de-6da0d7f88afb@nvidia.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 16, 2019 at 10:00 AM Alan Stern <stern@rowland.harvard.edu> wrote:
-> Whatever the source of the problem, I don't think you're going to find
-> it by looking at the USB code.  Perhaps the early initialization of the
-> functions that _are_ present on the Comtrol card somehow messes up
-> other parts of the system.
+Sorry, somehow I forgot to respond to this.
 
-Thanks for all you help Alan,
+On Mon, Apr 15, 2019 at 09:13:29PM +0530, Manikanta Maddireddy wrote:
+> On 15-Apr-19 7:34 PM, Bjorn Helgaas wrote:
+> > On Mon, Apr 15, 2019 at 05:06:10PM +0530, Manikanta Maddireddy wrote:
+> >> On 12-Apr-19 8:20 PM, Bjorn Helgaas wrote:
+> >>> On Fri, Apr 12, 2019 at 12:30:22PM +0530, Manikanta Maddireddy wrote:
+> >>>> On 12-Apr-19 1:45 AM, Bjorn Helgaas wrote:
+> >>>>> On Thu, Apr 11, 2019 at 10:33:47PM +0530, Manikanta Maddireddy wrote:
+> >>>>>> Add PCIe link up check in config read and write callback functions
+> >>>>>> before accessing endpoint config registers.
+> >>>>>>  static int tegra_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> >>>>>>  				  int where, int size, u32 *value)
+> >>>>>>  {
+> >>>>>> +	struct tegra_pcie *pcie = bus->sysdata;
+> >>>>>> +	struct pci_dev *bridge;
+> >>>>>> +	struct tegra_pcie_port *port;
+> >>>>>> +
+> >>>>>>  	if (bus->number == 0)
+> >>>>>>  		return pci_generic_config_read32(bus, devfn, where, size,
+> >>>>>>  						 value);
+> >>>>>>  
+> >>>>>> +	bridge = pcie_find_root_port(bus->self);
+> >>>>>> +
+> >>>>>> +	list_for_each_entry(port, &pcie->ports, list)
+> >>>>>> +		if (port->index + 1 == PCI_SLOT(bridge->devfn))
+> >>>>>> +			break;
+> >>>>>> +
+> >>>>>> +	/* If there is no link, then there is no device */
+> >>>>>> +	if (!tegra_pcie_link_status(port)) {
+> >>>>> This is racy and you should avoid it if possible.  The link could go down
+> >>>>> between calling tegra_pcie_link_status() and issuing the config read/write.
+> >>>>>
+> >>>>> If your driver is to be reliable, it must be able to handle any bad
+> >>>>> consequence of issuing that config read/write anyway, so I think it's
+> >>>>> better if it doesn't even bother checking whether the link is up.
+> >>>> This change is made based on similar check present in dwc driver
+> >>>> dw_pcie_valid_device(), reasons for making this change in Tegra might
+> >>>> differ dwc.
+> >>> Yes, you won't be surprised to learn that I don't like the similar
+> >>> checks in dwc, altera, xilinx, and xilinx-nwl either :)  I raise this
+> >>> issue every time I see it, but I can't remember if I've mentioned dwc
+> >>> specifically.
+> >>>
+> >>> We need to either eradicate this pattern of checking for link up, or
+> >>> include a comment about why it is absolutely necessary.
+> >> This patch is created to address below scenario in our downstream kernel,
+> >> 1) Our platform has WiFi on one slot and GPU in another.
+> >> 2) During WiFi OFF, link is put in L2 and it goes through hot reset
+> >> when turning ON WiFi (since Tegra doesn't support hot-plug).
+> >> 3) Whenever x11 server is started it scans the PCIe bus for video devices.
+> >> Here PCIe configuration registers of all devices are read to find out
+> >> all available video devices.
+> >> 4) If "x11 server" started with WiFi OFF, then we are seeing "response
+> >> decoding error"(Tegra AFI module specific error).
+> > Probably happens with lspci too.  I guess this is when you try to read
+> > the WiFi device config space?
+> Yes, happens with lspci when trying to read WiFi device config space.
+> >> Best solution we came up with is to have link up check in config access
+> >> callback functions.
+> > Can you check for "response decoding error" in the config accessor and
+> > return 0xffffffff if you see it?
+> "Response decoding error" is informed by an
+> interrupt(tegra_pcie_isr()), we have to add polling logic in config
+> accessor to check if config access caused "response decoding error"
+> or not. This will increase config access time.
 
-I think at this point my Linux kernel debugging knowledge has run
-aground. I would
-love to crack this nut, but I doubt that will be possible with my
-current knowledge base.
-For now I am going to run the patched kernel even if I don't
-understand precisely why
-they prevent the box from hanging on boot when the Comtrol card is present.
+Config access is never in a performance path, so the access time
+doesn't matter.
+
+> Also sometimes BAR access can also cause "Response decoding error", so
+> matching "Response decoding error" to a particular config access is
+> going to be difficult.
+
+I'm surprised your hardware can't distinguish a failed config access
+from an unclaimed MMIO access.
+
+> >>>> Intention here is to reduce the number of AER errors when device is
+> >>>> falling off the bus or going through hot reset. So racy condition here is
+> >>>> OK
+> >>> I'm not convinced about this.  The issues you mention need to be
+> >>> solved in a generic way, not a tegra-specific way.
+> >>>
+> >>> We don't want to end up with code that silently avoids the config
+> >>> access 99.99% of the time, but once in a blue moon, we lose the race
+> >>> (the device stops responding after we've determined the link is up)
+> >>> and the access causes a mysterious AER error that we have no way to
+> >>> debug.
+> >>>
+> >>>>>> +		*value = 0xffffffff;
+> >>>>>> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> >>>>>> +	}
+> >>>>>> +
+> >>>>>>  	return pci_generic_config_read(bus, devfn, where, size, value);
+> >>>>>>  }
