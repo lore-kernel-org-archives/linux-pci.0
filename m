@@ -2,58 +2,59 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-13.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 449C8C10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9771C282DD
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 00BA621773
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CE0021773
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HVqMbB2w"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o3W2yuDf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728725AbfDWQaw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 12:30:52 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:38250 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728722AbfDWQaw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:30:52 -0400
-Received: by mail-pg1-f195.google.com with SMTP id j26so7870131pgl.5;
-        Tue, 23 Apr 2019 09:30:51 -0700 (PDT)
+        id S1728636AbfDWQbI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 12:31:08 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:39554 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728760AbfDWQbH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:31:07 -0400
+Received: by mail-pf1-f196.google.com with SMTP id i17so7756698pfo.6;
+        Tue, 23 Apr 2019 09:31:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=GXwNDsM80k4IEB0Ng6ukgFcoV0AqNNQpqjo9iDP6zLc=;
-        b=HVqMbB2ww5ppYHKODXICijHchwCZdQ2a6NTlAHIXu77P80W5+f8WA500jCJk2d8zIF
-         XFAfHeUUO5oGkx6whZSzA16ydOpoXmK2tOThgLdHBdjLRh0AQB++bz0Gv1jCfV+Zu472
-         lXgpouyXakG4Sza6luxZjRX2dZjYkG7u0k2rw5MOej8yI8+BQFoICtiLb6lFbtG1iEr5
-         85WVy8SVdwT3iZPBI+SmXcyAdOQ+scLFRYNfM2ciEAweTmpHU9svJlE02o9S/e+tr9uP
-         cK6do/2ShQRZ4Y0sriJlsIEdSLrH5hlHK/X1aikB1GU/xRy1y3f10tEnY99Sj28hRZOW
-         oaAg==
+        bh=wdLelaXabUTskOyM5jBlptNNQEyo5U0PY94WF2JNz94=;
+        b=o3W2yuDfUVPHC9Q4404vLJ5TZXyLVM7U2ZN8jA+rcARlAAbZgv0ZgWfnh2cBGGLvX0
+         Z625qvNjE4HDGwBWSg++yC7k0eBG6I9ed/QgM/hw4FL2tjISaiEpuBrKUYpELZ/+umwD
+         21seVLOrZ+BNw9C1cAXc6sEVH1D29Jd5BcWRN4uynWLEFsQDVRBaLWChO2nDzjMurl2g
+         qQo6pFYzL0iLqT/oQrDgk9bs5MFp5tyO9w9L4pPeX7D/5EHaR46u257UzZqTZ4uV5lCE
+         JWousjwLUHr+eCHFd0ZHxShxKS6KyXdgoSANU5QglACRN+tVMLMsqeUQyr8krQQTNy/s
+         UalA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=GXwNDsM80k4IEB0Ng6ukgFcoV0AqNNQpqjo9iDP6zLc=;
-        b=GhJzmltG6b+9M/0ZpAL5WBtlEZu6OKC3haKfcU6F/ivwcBp3a354pany7xCJLahnfl
-         GlJmrJduYdRteukHBy9PV2BuzP1XlsUauda1l8S6P+hdS+KRrN7DaxkvOmMPRhOoTu1F
-         /EKBshOZVw8xp9kdjR8OqPXPPVeEk+GT0Yn5PawwlsMYytciub7a01a/3YgVyp40Me9x
-         SFnAlPJSlFEeJp5LRdSmitQnek+oZXT+37mY67/8ONvYujYclRBX3r2uRBqeBTb4NMaY
-         XgEn0pWB+nhV7UcO5EeOf+D0NEnE+G/6KQwTTNGtn+4Q2O6jv1zNnQtjlGi6PqY3jrkR
-         11uQ==
-X-Gm-Message-State: APjAAAVekcQ8glkQOqM3VlscSf3DqyTuy+jKNrCWEeaph1F+ikzpwZB1
-        Dq88cTry9Wja2kysxe3HPdA=
-X-Google-Smtp-Source: APXvYqzIbfHIwZaRpdgpHs1s6wuM8xCIGtkY4nUI/q4jdzM7ZX7GG6yGWwm4iDOwPGVcjafMYAxzmQ==
-X-Received: by 2002:a63:744b:: with SMTP id e11mr25626873pgn.327.1556037051235;
-        Tue, 23 Apr 2019 09:30:51 -0700 (PDT)
+        bh=wdLelaXabUTskOyM5jBlptNNQEyo5U0PY94WF2JNz94=;
+        b=WrATirfjS8xhyFIHHam54Xpc9B45VfSUOzfBwHdMSzcWOT5Y/g/aLExOTotyX3HvnP
+         /QXqaCRsc86qHw7uQIJ56tXERJLnkrjCyxS3x9GUcUDKTUFoN0diBalzqxNWrZqxVEI7
+         3BA9g4INftEypBe40q9fWPCebjieFGEHhcKW2LFhRtDrZ3vlADEP4T0a/2Rupmff17kh
+         /cO3HJI0J8+QRX6Ab2AM1ih4fur5mhhhezTjWbcA0l/UHQdP6vnx/9xVTHs1v1vqZXpv
+         /49RNRv7G1MqUHboyeQkMenctU0yV2lO5T/ROKsssCsh/jnlu6yK7oTdgKe4S6g0QTP9
+         CQ8Q==
+X-Gm-Message-State: APjAAAV/9UcaqMUrqZOVsuR4SCo0no6W7db2VQsWAwCaGqNbbCI9xEYt
+        lS7UXDGfRCMiaFtGd4jOvhM=
+X-Google-Smtp-Source: APXvYqymlmKcsUBQFE+5wB1zQHWACudeKutUoj5DKanapW3TDicunMj7V4FfYesQb4shpI/mQ9j63A==
+X-Received: by 2002:a63:5953:: with SMTP id j19mr25372600pgm.260.1556037066364;
+        Tue, 23 Apr 2019 09:31:06 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.30.46
+        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.30.58
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Apr 2019 09:30:50 -0700 (PDT)
+        Tue, 23 Apr 2019 09:31:05 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Jonathan Corbet <corbet@lwn.net>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
@@ -63,9 +64,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
         linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
         linux-gpio@vger.kernel.org, mchehab+samsung@kernel.org,
         Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v4 03/63] Documentation: ACPI: move enumeration.txt to firmware-guide/acpi and convert to reST
-Date:   Wed, 24 Apr 2019 00:28:32 +0800
-Message-Id: <20190423162932.21428-4-changbin.du@gmail.com>
+Subject: [PATCH v4 05/63] Documentation: ACPI: move linuxized-acpica.txt to driver-api/acpi and convert to  reST
+Date:   Wed, 24 Apr 2019 00:28:34 +0800
+Message-Id: <20190423162932.21428-6-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423162932.21428-1-changbin.du@gmail.com>
 References: <20190423162932.21428-1-changbin.du@gmail.com>
@@ -81,316 +82,235 @@ add it to Sphinx TOC tree. No essential content change.
 
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 ---
- .../acpi/enumeration.rst}                     | 135 ++++++++++--------
- Documentation/firmware-guide/acpi/index.rst   |   1 +
- 2 files changed, 74 insertions(+), 62 deletions(-)
- rename Documentation/{acpi/enumeration.txt => firmware-guide/acpi/enumeration.rst} (87%)
+ Documentation/driver-api/acpi/index.rst       |   1 +
+ .../acpi/linuxized-acpica.rst}                | 115 ++++++++++--------
+ 2 files changed, 66 insertions(+), 50 deletions(-)
+ rename Documentation/{acpi/linuxized-acpica.txt => driver-api/acpi/linuxized-acpica.rst} (78%)
 
-diff --git a/Documentation/acpi/enumeration.txt b/Documentation/firmware-guide/acpi/enumeration.rst
-similarity index 87%
-rename from Documentation/acpi/enumeration.txt
-rename to Documentation/firmware-guide/acpi/enumeration.rst
-index 7bcf9c3d9fbe..ce755e963714 100644
---- a/Documentation/acpi/enumeration.txt
-+++ b/Documentation/firmware-guide/acpi/enumeration.rst
-@@ -1,5 +1,9 @@
--ACPI based device enumeration
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+diff --git a/Documentation/driver-api/acpi/index.rst b/Documentation/driver-api/acpi/index.rst
+index 898b0c60671a..12649947b19b 100644
+--- a/Documentation/driver-api/acpi/index.rst
++++ b/Documentation/driver-api/acpi/index.rst
+@@ -5,3 +5,4 @@ ACPI Support
+ .. toctree::
+    :maxdepth: 2
+ 
++   linuxized-acpica
+diff --git a/Documentation/acpi/linuxized-acpica.txt b/Documentation/driver-api/acpi/linuxized-acpica.rst
+similarity index 78%
+rename from Documentation/acpi/linuxized-acpica.txt
+rename to Documentation/driver-api/acpi/linuxized-acpica.rst
+index 3ad7b0dfb083..f8aaea668e41 100644
+--- a/Documentation/acpi/linuxized-acpica.txt
++++ b/Documentation/driver-api/acpi/linuxized-acpica.rst
+@@ -1,31 +1,35 @@
+-Linuxized ACPICA - Introduction to ACPICA Release Automation
 +.. SPDX-License-Identifier: GPL-2.0
++.. include:: <isonum.txt>
+ 
+-Copyright (C) 2013-2016, Intel Corporation
+-Author: Lv Zheng <lv.zheng@intel.com>
++============================================================
++Linuxized ACPICA - Introduction to ACPICA Release Automation
++============================================================
+ 
++:Copyright: |copy| 2013-2016, Intel Corporation
+ 
+-Abstract:
++:Author: Lv Zheng <lv.zheng@intel.com>
+ 
+-This document describes the ACPICA project and the relationship between
+-ACPICA and Linux.  It also describes how ACPICA code in drivers/acpi/acpica,
+-include/acpi and tools/power/acpi is automatically updated to follow the
+-upstream.
++:Abstract: This document describes the ACPICA project and the relationship
++           between ACPICA and Linux.  It also describes how ACPICA code in
++           drivers/acpi/acpica, include/acpi and tools/power/acpi is
++           automatically updated to follow the upstream.
+ 
+ 
+-1. ACPICA Project
++ACPICA Project
++==============
+ 
+-   The ACPI Component Architecture (ACPICA) project provides an operating
+-   system (OS)-independent reference implementation of the Advanced
+-   Configuration and Power Interface Specification (ACPI).  It has been
+-   adapted by various host OSes.  By directly integrating ACPICA, Linux can
+-   also benefit from the application experiences of ACPICA from other host
+-   OSes.
++The ACPI Component Architecture (ACPICA) project provides an operating
++system (OS)-independent reference implementation of the Advanced
++Configuration and Power Interface Specification (ACPI).  It has been
++adapted by various host OSes.  By directly integrating ACPICA, Linux can
++also benefit from the application experiences of ACPICA from other host
++OSes.
+ 
+-   The homepage of ACPICA project is: www.acpica.org, it is maintained and
+-   supported by Intel Corporation.
++The homepage of ACPICA project is: www.acpica.org, it is maintained and
++supported by Intel Corporation.
+ 
+-   The following figure depicts the Linux ACPI subsystem where the ACPICA
+-   adaptation is included:
++The following figure depicts the Linux ACPI subsystem where the ACPICA
++adaptation is included::
+ 
+       +---------------------------------------------------------+
+       |                                                         |
+@@ -71,21 +75,27 @@ upstream.
+ 
+                  Figure 1. Linux ACPI Software Components
+ 
+-   NOTE:
++.. note::
+     A. OS Service Layer - Provided by Linux to offer OS dependent
+        implementation of the predefined ACPICA interfaces (acpi_os_*).
++       ::
 +
-+=============================
-+ACPI Based Device Enumeration
-+=============================
+          include/acpi/acpiosxf.h
+          drivers/acpi/osl.c
+          include/acpi/platform
+          include/asm/acenv.h
+     B. ACPICA Functionality - Released from ACPICA code base to offer
+        OS independent implementation of the ACPICA interfaces (acpi_*).
++       ::
 +
- ACPI 5 introduced a set of new resources (UartTSerialBus, I2cSerialBus,
- SpiSerialBus, GpioIo and GpioInt) which can be used in enumerating slave
- devices behind serial bus controllers.
-@@ -11,12 +15,12 @@ that are accessed through memory-mapped registers.
- In order to support this and re-use the existing drivers as much as
- possible we decided to do following:
- 
--	o Devices that have no bus connector resource are represented as
--	  platform devices.
-+  - Devices that have no bus connector resource are represented as
-+    platform devices.
- 
--	o Devices behind real busses where there is a connector resource
--	  are represented as struct spi_device or struct i2c_device
--	  (standard UARTs are not busses so there is no struct uart_device).
-+  - Devices behind real busses where there is a connector resource
-+    are represented as struct spi_device or struct i2c_device
-+    (standard UARTs are not busses so there is no struct uart_device).
- 
- As both ACPI and Device Tree represent a tree of devices (and their
- resources) this implementation follows the Device Tree way as much as
-@@ -31,7 +35,8 @@ enumerated from ACPI namespace. This handle can be used to extract other
- device-specific configuration. There is an example of this below.
- 
- Platform bus support
--~~~~~~~~~~~~~~~~~~~~
-+====================
+          drivers/acpi/acpica
+          include/acpi/ac*.h
+          tools/power/acpi
+     C. Linux/ACPI Functionality - Providing Linux specific ACPI
+        functionality to the other Linux kernel subsystems and user space
+        programs.
++       ::
 +
- Since we are using platform devices to represent devices that are not
- connected to any physical bus we only need to implement a platform driver
- for the device and add supported ACPI IDs. If this same IP-block is used on
-@@ -39,7 +44,7 @@ some other non-ACPI platform, the driver might work out of the box or needs
- some minor changes.
- 
- Adding ACPI support for an existing driver should be pretty
--straightforward. Here is the simplest example:
-+straightforward. Here is the simplest example::
- 
- 	#ifdef CONFIG_ACPI
- 	static const struct acpi_device_id mydrv_acpi_match[] = {
-@@ -61,12 +66,13 @@ configuring GPIOs it can get its ACPI handle and extract this information
- from ACPI tables.
- 
- DMA support
--~~~~~~~~~~~
-+===========
+          drivers/acpi
+          include/linux/acpi.h
+          include/linux/acpi*.h
+@@ -95,24 +105,27 @@ upstream.
+        ACPI subsystem to offer architecture specific implementation of the
+        ACPI interfaces.  They are Linux specific components and are out of
+        the scope of this document.
++       ::
 +
- DMA controllers enumerated via ACPI should be registered in the system to
- provide generic access to their resources. For example, a driver that would
- like to be accessible to slave devices via generic API call
- dma_request_slave_channel() must register itself at the end of the probe
--function like this:
-+function like this::
+          include/asm/acpi.h
+          include/asm/acpi*.h
+          arch/*/acpi
  
- 	err = devm_acpi_dma_controller_register(dev, xlate_func, dw);
- 	/* Handle the error if it's not a case of !CONFIG_ACPI */
-@@ -74,7 +80,7 @@ function like this:
- and implement custom xlate function if needed (usually acpi_dma_simple_xlate()
- is enough) which converts the FixedDMA resource provided by struct
- acpi_dma_spec into the corresponding DMA channel. A piece of code for that case
--could look like:
-+could look like::
+-2. ACPICA Release
++ACPICA Release
++==============
  
- 	#ifdef CONFIG_ACPI
- 	struct filter_args {
-@@ -114,7 +120,7 @@ provided by struct acpi_dma.
- Clients must call dma_request_slave_channel() with the string parameter that
- corresponds to a specific FixedDMA resource. By default "tx" means the first
- entry of the FixedDMA resource array, "rx" means the second entry. The table
--below shows a layout:
-+below shows a layout::
+-   The ACPICA project maintains its code base at the following repository URL:
+-   https://github.com/acpica/acpica.git. As a rule, a release is made every
+-   month.
++The ACPICA project maintains its code base at the following repository URL:
++https://github.com/acpica/acpica.git. As a rule, a release is made every
++month.
  
- 	Device (I2C0)
- 	{
-@@ -138,12 +144,13 @@ acpi_dma_request_slave_chan_by_index() directly and therefore choose the
- specific FixedDMA resource by its index.
+-   As the coding style adopted by the ACPICA project is not acceptable by
+-   Linux, there is a release process to convert the ACPICA git commits into
+-   Linux patches.  The patches generated by this process are referred to as
+-   "linuxized ACPICA patches".  The release process is carried out on a local
+-   copy the ACPICA git repository.  Each commit in the monthly release is
+-   converted into a linuxized ACPICA patch.  Together, they form the monthly
+-   ACPICA release patchset for the Linux ACPI community.  This process is
+-   illustrated in the following figure:
++As the coding style adopted by the ACPICA project is not acceptable by
++Linux, there is a release process to convert the ACPICA git commits into
++Linux patches.  The patches generated by this process are referred to as
++"linuxized ACPICA patches".  The release process is carried out on a local
++copy the ACPICA git repository.  Each commit in the monthly release is
++converted into a linuxized ACPICA patch.  Together, they form the monthly
++ACPICA release patchset for the Linux ACPI community.  This process is
++illustrated in the following figure::
  
- SPI serial bus support
--~~~~~~~~~~~~~~~~~~~~~~
-+======================
-+
- Slave devices behind SPI bus have SpiSerialBus resource attached to them.
- This is extracted automatically by the SPI core and the slave devices are
- enumerated once spi_register_master() is called by the bus driver.
+     +-----------------------------+
+     | acpica / master (-) commits |
+@@ -153,7 +166,7 @@ upstream.
  
--Here is what the ACPI namespace for a SPI slave might look like:
-+Here is what the ACPI namespace for a SPI slave might look like::
+                 Figure 2. ACPICA -> Linux Upstream Process
  
- 	Device (EEP0)
- 	{
-@@ -163,7 +170,7 @@ Here is what the ACPI namespace for a SPI slave might look like:
+-   NOTE:
++.. note::
+     A. Linuxize Utilities - Provided by the ACPICA repository, including a
+        utility located in source/tools/acpisrc folder and a number of
+        scripts located in generate/linux folder.
+@@ -170,19 +183,20 @@ upstream.
+    following kernel configuration options:
+    CONFIG_ACPI/CONFIG_ACPI_DEBUG/CONFIG_ACPI_DEBUGGER
  
- The SPI device drivers only need to add ACPI IDs in a similar way than with
- the platform device drivers. Below is an example where we add ACPI support
--to at25 SPI eeprom driver (this is meant for the above ACPI snippet):
-+to at25 SPI eeprom driver (this is meant for the above ACPI snippet)::
+-3. ACPICA Divergences
++ACPICA Divergences
++==================
  
- 	#ifdef CONFIG_ACPI
- 	static const struct acpi_device_id at25_acpi_match[] = {
-@@ -182,7 +189,7 @@ to at25 SPI eeprom driver (this is meant for the above ACPI snippet):
+-   Ideally, all of the ACPICA commits should be converted into Linux patches
+-   automatically without manual modifications, the "linux / master" tree should
+-   contain the ACPICA code that exactly corresponds to the ACPICA code
+-   contained in "new linuxized acpica" tree and it should be possible to run
+-   the release process fully automatically.
++Ideally, all of the ACPICA commits should be converted into Linux patches
++automatically without manual modifications, the "linux / master" tree should
++contain the ACPICA code that exactly corresponds to the ACPICA code
++contained in "new linuxized acpica" tree and it should be possible to run
++the release process fully automatically.
  
- Note that this driver actually needs more information like page size of the
- eeprom etc. but at the time writing this there is no standard way of
--passing those. One idea is to return this in _DSM method like:
-+passing those. One idea is to return this in _DSM method like::
+-   As a matter of fact, however, there are source code differences between
+-   the ACPICA code in Linux and the upstream ACPICA code, referred to as
+-   "ACPICA Divergences".
++As a matter of fact, however, there are source code differences between
++the ACPICA code in Linux and the upstream ACPICA code, referred to as
++"ACPICA Divergences".
  
- 	Device (EEP0)
- 	{
-@@ -202,7 +209,7 @@ passing those. One idea is to return this in _DSM method like:
- 		}
+-   The various sources of ACPICA divergences include:
++The various sources of ACPICA divergences include:
+    1. Legacy divergences - Before the current ACPICA release process was
+       established, there already had been divergences between Linux and
+       ACPICA. Over the past several years those divergences have been greatly
+@@ -213,11 +227,12 @@ upstream.
+       rebased on the ACPICA side in order to offer better solutions, new ACPICA
+       divergences are generated.
  
- Then the at25 SPI driver can get this configuration by calling _DSM on its
--ACPI handle like:
-+ACPI handle like::
+-4. ACPICA Development
++ACPICA Development
++==================
  
- 	struct acpi_buffer output = { ACPI_ALLOCATE_BUFFER, NULL };
- 	struct acpi_object_list input;
-@@ -220,14 +227,15 @@ ACPI handle like:
- 	kfree(output.pointer);
+-   This paragraph guides Linux developers to use the ACPICA upstream release
+-   utilities to obtain Linux patches corresponding to upstream ACPICA commits
+-   before they become available from the ACPICA release process.
++This paragraph guides Linux developers to use the ACPICA upstream release
++utilities to obtain Linux patches corresponding to upstream ACPICA commits
++before they become available from the ACPICA release process.
  
- I2C serial bus support
--~~~~~~~~~~~~~~~~~~~~~~
-+======================
-+
- The slaves behind I2C bus controller only need to add the ACPI IDs like
- with the platform and SPI drivers. The I2C core automatically enumerates
- any slave devices behind the controller device once the adapter is
- registered.
+    1. Cherry-pick an ACPICA commit
  
- Below is an example of how to add ACPI support to the existing mpu3050
--input driver:
-+input driver::
+@@ -225,7 +240,7 @@ upstream.
+    you want to cherry pick must be committed into the local repository.
  
- 	#ifdef CONFIG_ACPI
- 	static const struct acpi_device_id mpu3050_acpi_match[] = {
-@@ -251,56 +259,57 @@ input driver:
- 	};
+    Then the gen-patch.sh command can help to cherry-pick an ACPICA commit
+-   from the ACPICA local repository:
++   from the ACPICA local repository::
  
- GPIO support
--~~~~~~~~~~~~
-+============
-+
- ACPI 5 introduced two new resources to describe GPIO connections: GpioIo
- and GpioInt. These resources can be used to pass GPIO numbers used by
- the device to the driver. ACPI 5.1 extended this with _DSD (Device
- Specific Data) which made it possible to name the GPIOs among other things.
+    $ git clone https://github.com/acpica/acpica
+    $ cd acpica
+@@ -240,7 +255,7 @@ upstream.
+    changes that haven't been applied to Linux yet.
  
--For example:
-+For example::
+    You can generate the ACPICA release series yourself and rebase your code on
+-   top of the generated ACPICA release patches:
++   top of the generated ACPICA release patches::
  
--Device (DEV)
--{
--	Method (_CRS, 0, NotSerialized)
-+	Device (DEV)
- 	{
--		Name (SBUF, ResourceTemplate()
-+		Method (_CRS, 0, NotSerialized)
- 		{
--			...
--			// Used to power on/off the device
--			GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
--				IoRestrictionOutputOnly, "\\_SB.PCI0.GPI0",
--				0x00, ResourceConsumer,,)
-+			Name (SBUF, ResourceTemplate()
- 			{
--				// Pin List
--				0x0055
--			}
-+				...
-+				// Used to power on/off the device
-+				GpioIo (Exclusive, PullDefault, 0x0000, 0x0000,
-+					IoRestrictionOutputOnly, "\\_SB.PCI0.GPI0",
-+					0x00, ResourceConsumer,,)
-+				{
-+					// Pin List
-+					0x0055
-+				}
-+
-+				// Interrupt for the device
-+				GpioInt (Edge, ActiveHigh, ExclusiveAndWake, PullNone,
-+					0x0000, "\\_SB.PCI0.GPI0", 0x00, ResourceConsumer,,)
-+				{
-+					// Pin list
-+					0x0058
-+				}
-+
-+				...
+    $ git clone https://github.com/acpica/acpica
+    $ cd acpica
+@@ -254,7 +269,7 @@ upstream.
+    3. Inspect the current divergences
  
--			// Interrupt for the device
--			GpioInt (Edge, ActiveHigh, ExclusiveAndWake, PullNone,
--				 0x0000, "\\_SB.PCI0.GPI0", 0x00, ResourceConsumer,,)
--			{
--				// Pin list
--				0x0058
- 			}
+    If you have local copies of both Linux and upstream ACPICA, you can generate
+-   a diff file indicating the state of the current divergences:
++   a diff file indicating the state of the current divergences::
  
--			...
--
-+			Return (SBUF)
- 		}
- 
--		Return (SBUF)
--	}
--
--	// ACPI 5.1 _DSD used for naming the GPIOs
--	Name (_DSD, Package ()
--	{
--		ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
--		Package ()
-+		// ACPI 5.1 _DSD used for naming the GPIOs
-+		Name (_DSD, Package ()
- 		{
--			Package () {"power-gpios", Package() {^DEV, 0, 0, 0 }},
--			Package () {"irq-gpios", Package() {^DEV, 1, 0, 0 }},
--		}
--	})
--	...
-+			ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-+			Package ()
-+			{
-+				Package () {"power-gpios", Package() {^DEV, 0, 0, 0 }},
-+				Package () {"irq-gpios", Package() {^DEV, 1, 0, 0 }},
-+			}
-+		})
-+		...
- 
- These GPIO numbers are controller relative and path "\\_SB.PCI0.GPI0"
- specifies the path to the controller. In order to use these GPIOs in Linux
-@@ -310,7 +319,7 @@ There is a standard GPIO API for that and is documented in
- Documentation/gpio/.
- 
- In the above example we can get the corresponding two GPIO descriptors with
--a code like this:
-+a code like this::
- 
- 	#include <linux/gpio/consumer.h>
- 	...
-@@ -334,21 +343,22 @@ See Documentation/acpi/gpio-properties.txt for more information about the
- _DSD binding related to GPIOs.
- 
- MFD devices
--~~~~~~~~~~~
-+===========
-+
- The MFD devices register their children as platform devices. For the child
- devices there needs to be an ACPI handle that they can use to reference
- parts of the ACPI namespace that relate to them. In the Linux MFD subsystem
- we provide two ways:
- 
--	o The children share the parent ACPI handle.
--	o The MFD cell can specify the ACPI id of the device.
-+  - The children share the parent ACPI handle.
-+  - The MFD cell can specify the ACPI id of the device.
- 
- For the first case, the MFD drivers do not need to do anything. The
- resulting child platform device will have its ACPI_COMPANION() set to point
- to the parent device.
- 
- If the ACPI namespace has a device that we can match using an ACPI id or ACPI
--adr, the cell should be set like:
-+adr, the cell should be set like::
- 
- 	static struct mfd_cell_acpi_match my_subdevice_cell_acpi_match = {
- 		.pnpid = "XYZ0001",
-@@ -366,7 +376,8 @@ the MFD device and if found, that ACPI companion device is bound to the
- resulting child platform device.
- 
- Device Tree namespace link device ID
--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+====================================
-+
- The Device Tree protocol uses device identification based on the "compatible"
- property whose value is a string or an array of strings recognized as device
- identifiers by drivers and the driver core.  The set of all those strings may be
-@@ -423,4 +434,4 @@ the _DSD of the device object itself or the _DSD of its ancestor in the
- Otherwise, the _DSD itself is regarded as invalid and therefore the "compatible"
- property returned by it is meaningless.
- 
--Refer to DSD-properties-rules.txt for more information.
-+Refer to :doc:`DSD-properties-rules` for more information.
-diff --git a/Documentation/firmware-guide/acpi/index.rst b/Documentation/firmware-guide/acpi/index.rst
-index 210ad8acd6df..99677c73f1fb 100644
---- a/Documentation/firmware-guide/acpi/index.rst
-+++ b/Documentation/firmware-guide/acpi/index.rst
-@@ -8,3 +8,4 @@ ACPI Support
-    :maxdepth: 1
- 
-    namespace
-+   enumeration
+    # git clone https://github.com/acpica/acpica
+    # git clone http://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 -- 
 2.20.1
 
