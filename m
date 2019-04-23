@@ -2,164 +2,153 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7DA5C10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A329C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:24:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C172218B0
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:24:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07CA0218DA
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 20:24:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556051047;
-	bh=Q/HUG19XUhmRW8zDHq1HEpSxjHz08PXUPZgh1Ew3nx4=;
+	s=default; t=1556051074;
+	bh=XEToIq7gDbo949uGoYxnka5I2vLA4SDQmZ0wSfORE1A=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=dXWKdYt0WCCeSmLeHr/CiZXGXKpoRv/8e51RfhY+Qs/OOddaACl5c/ac+4lE2I+ch
-	 f0D+jsUFlLY0gkz5ENCQy0POaXrcpvgj16IwVwRzJqfdTO2BS/nrrhyeABQTBULD6A
-	 /U+vANvmHEjL2BMM81HduVilgZTR6P+8EDkuarYA=
+	b=fpDCYrnTrYNGw0upr1ezM0IC+vhuItOfK5fo6R1Tw4zxnSXbW5nNniIZ8OIfeK3z4
+	 S3rwhfSWZoxJRjweoSetpYuzR1IHOF7jTAdB0/sY1SEhRH1ozbXLnbSI/NZtRZVQ8b
+	 MystmMTW5ex+EeXJRljyC8wzLbBdps2wx0nfjAag=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727119AbfDWUYG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 16:24:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43476 "EHLO mail.kernel.org"
+        id S1727262AbfDWUYd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 16:24:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43686 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726029AbfDWUYG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Apr 2019 16:24:06 -0400
+        id S1726029AbfDWUYd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Apr 2019 16:24:33 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A4984208E4;
-        Tue, 23 Apr 2019 20:24:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 05792208E4;
+        Tue, 23 Apr 2019 20:24:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556051044;
-        bh=Q/HUG19XUhmRW8zDHq1HEpSxjHz08PXUPZgh1Ew3nx4=;
+        s=default; t=1556051072;
+        bh=XEToIq7gDbo949uGoYxnka5I2vLA4SDQmZ0wSfORE1A=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=ffkJw0SdYj4PZhOrlzW+8r5zWMfvUmzoZyRrWs//WkvmTA9mTLdFZBJKwQcvBEVv/
-         YTKfqNUcwkPAF6Lm+7432vc9ZOyf4UpPLKaoIjAcfjzcVYCp3uYPYweuOV5fMqq/Jx
-         Hk44XYCKpSvzGMRCsiqToLUIw6Mi1wfHbXChcSvI=
-Date:   Tue, 23 Apr 2019 15:24:03 -0500
+        b=0ysnQrsgHh7/zNc1vd4ltWLxdhFBAbBqT81iu09Uto1GTylidUPvx2X8wvm1M7cRQ
+         dbbAhNyF5unnt0Go89sPvr9mFC01XZ4zMabDDaObCUrHz1BQJX/Uy8ONnhhZj0RGPp
+         iqEvrJ/ioXDIwZHRKKPyZc1MxjOp72k+i4niirjY=
+Date:   Tue, 23 Apr 2019 15:24:30 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Cc:     thierry.reding@gmail.com, robh+dt@kernel.org, mark.rutland@arm.com,
         jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
         linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Ley Foon Tan <lftan@altera.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: Re: [PATCH 22/30] PCI: tegra: Access endpoint config only if PCIe
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH V2 22/28] PCI: tegra: Access endpoint config only if PCIe
  link is up
-Message-ID: <20190423202403.GA61751@google.com>
-References: <20190411170355.6882-1-mmaddireddy@nvidia.com>
- <20190411170355.6882-23-mmaddireddy@nvidia.com>
- <20190411201535.GS256045@google.com>
- <e721e7f4-85c9-bee1-7131-12e0b7dfc0d1@nvidia.com>
- <20190412145003.GE141472@google.com>
- <1039fbf2-24ad-c31c-93d9-663aab74a26a@nvidia.com>
- <20190415140430.GK126710@google.com>
- <ecbf2331-fdb5-fe6c-f1de-6da0d7f88afb@nvidia.com>
+Message-ID: <20190423202430.GC14616@google.com>
+References: <20190423092825.759-1-mmaddireddy@nvidia.com>
+ <20190423092825.759-23-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ecbf2331-fdb5-fe6c-f1de-6da0d7f88afb@nvidia.com>
+In-Reply-To: <20190423092825.759-23-mmaddireddy@nvidia.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Sorry, somehow I forgot to respond to this.
+On Tue, Apr 23, 2019 at 02:58:19PM +0530, Manikanta Maddireddy wrote:
+> Add PCIe link up check in config read and write callback functions
+> before accessing endpoint config registers.
 
-On Mon, Apr 15, 2019 at 09:13:29PM +0530, Manikanta Maddireddy wrote:
-> On 15-Apr-19 7:34 PM, Bjorn Helgaas wrote:
-> > On Mon, Apr 15, 2019 at 05:06:10PM +0530, Manikanta Maddireddy wrote:
-> >> On 12-Apr-19 8:20 PM, Bjorn Helgaas wrote:
-> >>> On Fri, Apr 12, 2019 at 12:30:22PM +0530, Manikanta Maddireddy wrote:
-> >>>> On 12-Apr-19 1:45 AM, Bjorn Helgaas wrote:
-> >>>>> On Thu, Apr 11, 2019 at 10:33:47PM +0530, Manikanta Maddireddy wrote:
-> >>>>>> Add PCIe link up check in config read and write callback functions
-> >>>>>> before accessing endpoint config registers.
-> >>>>>>  static int tegra_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-> >>>>>>  				  int where, int size, u32 *value)
-> >>>>>>  {
-> >>>>>> +	struct tegra_pcie *pcie = bus->sysdata;
-> >>>>>> +	struct pci_dev *bridge;
-> >>>>>> +	struct tegra_pcie_port *port;
-> >>>>>> +
-> >>>>>>  	if (bus->number == 0)
-> >>>>>>  		return pci_generic_config_read32(bus, devfn, where, size,
-> >>>>>>  						 value);
-> >>>>>>  
-> >>>>>> +	bridge = pcie_find_root_port(bus->self);
-> >>>>>> +
-> >>>>>> +	list_for_each_entry(port, &pcie->ports, list)
-> >>>>>> +		if (port->index + 1 == PCI_SLOT(bridge->devfn))
-> >>>>>> +			break;
-> >>>>>> +
-> >>>>>> +	/* If there is no link, then there is no device */
-> >>>>>> +	if (!tegra_pcie_link_status(port)) {
-> >>>>> This is racy and you should avoid it if possible.  The link could go down
-> >>>>> between calling tegra_pcie_link_status() and issuing the config read/write.
-> >>>>>
-> >>>>> If your driver is to be reliable, it must be able to handle any bad
-> >>>>> consequence of issuing that config read/write anyway, so I think it's
-> >>>>> better if it doesn't even bother checking whether the link is up.
-> >>>> This change is made based on similar check present in dwc driver
-> >>>> dw_pcie_valid_device(), reasons for making this change in Tegra might
-> >>>> differ dwc.
-> >>> Yes, you won't be surprised to learn that I don't like the similar
-> >>> checks in dwc, altera, xilinx, and xilinx-nwl either :)  I raise this
-> >>> issue every time I see it, but I can't remember if I've mentioned dwc
-> >>> specifically.
-> >>>
-> >>> We need to either eradicate this pattern of checking for link up, or
-> >>> include a comment about why it is absolutely necessary.
-> >> This patch is created to address below scenario in our downstream kernel,
-> >> 1) Our platform has WiFi on one slot and GPU in another.
-> >> 2) During WiFi OFF, link is put in L2 and it goes through hot reset
-> >> when turning ON WiFi (since Tegra doesn't support hot-plug).
-> >> 3) Whenever x11 server is started it scans the PCIe bus for video devices.
-> >> Here PCIe configuration registers of all devices are read to find out
-> >> all available video devices.
-> >> 4) If "x11 server" started with WiFi OFF, then we are seeing "response
-> >> decoding error"(Tegra AFI module specific error).
-> > Probably happens with lspci too.  I guess this is when you try to read
-> > the WiFi device config space?
-> Yes, happens with lspci when trying to read WiFi device config space.
-> >> Best solution we came up with is to have link up check in config access
-> >> callback functions.
-> > Can you check for "response decoding error" in the config accessor and
-> > return 0xffffffff if you see it?
-> "Response decoding error" is informed by an
-> interrupt(tegra_pcie_isr()), we have to add polling logic in config
-> accessor to check if config access caused "response decoding error"
-> or not. This will increase config access time.
+I mentioned before:
 
-Config access is never in a performance path, so the access time
-doesn't matter.
+  We need to either eradicate this pattern of checking for link up, or
+  include a comment about why it is absolutely necessary.
 
-> Also sometimes BAR access can also cause "Response decoding error", so
-> matching "Response decoding error" to a particular config access is
-> going to be difficult.
+I still think this check should be unnecessary, but if you really
+think you need it, at least add the comment.
 
-I'm surprised your hardware can't distinguish a failed config access
-from an unclaimed MMIO access.
-
-> >>>> Intention here is to reduce the number of AER errors when device is
-> >>>> falling off the bus or going through hot reset. So racy condition here is
-> >>>> OK
-> >>> I'm not convinced about this.  The issues you mention need to be
-> >>> solved in a generic way, not a tegra-specific way.
-> >>>
-> >>> We don't want to end up with code that silently avoids the config
-> >>> access 99.99% of the time, but once in a blue moon, we lose the race
-> >>> (the device stops responding after we've determined the link is up)
-> >>> and the access causes a mysterious AER error that we have no way to
-> >>> debug.
-> >>>
-> >>>>>> +		*value = 0xffffffff;
-> >>>>>> +		return PCIBIOS_DEVICE_NOT_FOUND;
-> >>>>>> +	}
-> >>>>>> +
-> >>>>>>  	return pci_generic_config_read(bus, devfn, where, size, value);
-> >>>>>>  }
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> ---
+> V2: Change tegra_pcie_link_status() to tegra_pcie_link_up()
+> 
+>  drivers/pci/controller/pci-tegra.c | 38 ++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index 8ba71e314b1b..05586672a221 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -428,6 +428,14 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
+>  	return readl(pcie->pads + offset);
+>  }
+>  
+> +static bool tegra_pcie_link_up(struct tegra_pcie_port *port)
+> +{
+> +	u32 value;
+> +
+> +	value = readl(port->base + RP_LINK_CONTROL_STATUS);
+> +	return !!(value & RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE);
+> +}
+> +
+>  /*
+>   * The configuration space mapping on Tegra is somewhat similar to the ECAM
+>   * defined by PCIe. However it deviates a bit in how the 4 bits for extended
+> @@ -493,20 +501,50 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
+>  static int tegra_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+>  				  int where, int size, u32 *value)
+>  {
+> +	struct tegra_pcie *pcie = bus->sysdata;
+> +	struct pci_dev *bridge;
+> +	struct tegra_pcie_port *port;
+> +
+>  	if (bus->number == 0)
+>  		return pci_generic_config_read32(bus, devfn, where, size,
+>  						 value);
+>  
+> +	bridge = pcie_find_root_port(bus->self);
+> +
+> +	list_for_each_entry(port, &pcie->ports, list)
+> +		if (port->index + 1 == PCI_SLOT(bridge->devfn))
+> +			break;
+> +
+> +	/* If there is no link, then there is no device */
+> +	if (!tegra_pcie_link_up(port)) {
+> +		*value = 0xffffffff;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	}
+> +
+>  	return pci_generic_config_read(bus, devfn, where, size, value);
+>  }
+>  
+>  static int tegra_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
+>  				   int where, int size, u32 value)
+>  {
+> +	struct tegra_pcie *pcie = bus->sysdata;
+> +	struct tegra_pcie_port *port;
+> +	struct pci_dev *bridge;
+> +
+>  	if (bus->number == 0)
+>  		return pci_generic_config_write32(bus, devfn, where, size,
+>  						  value);
+>  
+> +	bridge = pcie_find_root_port(bus->self);
+> +
+> +	list_for_each_entry(port, &pcie->ports, list)
+> +		if (port->index + 1 == PCI_SLOT(bridge->devfn))
+> +			break;
+> +
+> +	/* If there is no link, then there is no device */
+> +	if (!tegra_pcie_link_up(port))
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+>  	return pci_generic_config_write(bus, devfn, where, size, value);
+>  }
+>  
+> -- 
+> 2.17.1
+> 
