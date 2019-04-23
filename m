@@ -2,40 +2,40 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 592D1C10F14
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:29:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE70EC10F14
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:29:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A24420843
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:29:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB87621773
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:29:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="J4QWw+fV"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="esoqlMdN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727152AbfDWI2z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 04:28:55 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:6696 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727105AbfDWI2z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 04:28:55 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cbeccad0001>; Tue, 23 Apr 2019 01:28:29 -0700
+        id S1726004AbfDWI3M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 04:29:12 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:3483 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725888AbfDWI3I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 04:29:08 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cbeccd90000>; Tue, 23 Apr 2019 01:29:13 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 23 Apr 2019 01:28:54 -0700
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Tue, 23 Apr 2019 01:29:07 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 23 Apr 2019 01:28:54 -0700
-Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
- 2019 08:28:54 +0000
-Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Tue, 23 Apr 2019 08:28:53 +0000
+        by hqpgpgate102.nvidia.com on Tue, 23 Apr 2019 01:29:07 -0700
+Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
+ 2019 08:29:07 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 23 Apr 2019 08:29:07 +0000
 Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5cbeccc00004>; Tue, 23 Apr 2019 01:28:53 -0700
+        id <B5cbecccd0002>; Tue, 23 Apr 2019 01:29:06 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -47,9 +47,9 @@ CC:     <mperttunen@nvidia.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V4 11/16] dt-bindings: PHY: P2U: Add Tegra 194 P2U block
-Date:   Tue, 23 Apr 2019 13:57:25 +0530
-Message-ID: <20190423082730.370-12-vidyas@nvidia.com>
+Subject: [PATCH V4 13/16] arm64: tegra: Enable PCIe slots in P2972-0000 board
+Date:   Tue, 23 Apr 2019 13:57:27 +0530
+Message-ID: <20190423082730.370-14-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190423082730.370-1-vidyas@nvidia.com>
 References: <20190423082730.370-1-vidyas@nvidia.com>
@@ -57,73 +57,107 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1556008110; bh=e4y3GVwYyoc5tTHi1u0vhFYjXSAjhOmxVmDxHjTavBk=;
+        t=1556008153; bh=HO+CfHRDX3D2EKPklJ3dnykEtUZOrzqUHmJ7IKHaSXI=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=J4QWw+fV0RvnybZU6GbmU1AMWq1RkubFo89y3LcGoDtoNnxn2ywPZMcRwjQtxPtxl
-         GwGPzUJQOK7LicSAoj3Nv961zzlqqxpdt2VOiaA6CWGjpNuVhRjf99+frOwwXoCd4z
-         83RAej1WJUgA449HBWHDPVHHh/lSh19FuFGxw9TthidoCC/BRGbzXRhbVqi0Ed1evR
-         wpNfCqikiSSbYDbaO7pvFPte6ejYz5r6D95Kx1tOjeVA7RssiyQwD9mAPIkQVa3/8I
-         6qPHFlUc/XpMjZo+9aK9sBA5HOJ1mjOCukvg3ZCoJW+jutDAL6RollZyTGMv6dagWq
-         4rFlPS7vB3FpA==
+        b=esoqlMdNymdhAca60WbO+Q92TXtxd6qKdGj6uxXfPLZXSjXHFD8aN5nU3ka0vtkBI
+         SVyl8f2NUIL+hUuwIcCiNcJr9qHrOWcp85Eez5Sb339DSrEVISOsSIAAOxyO8rahoA
+         X3HwiUKoq5bEW3TWJl0bbFZw7vNpSPPFQFsZ/tMHmlkcmpc9u8VQMSFUSMO4NBXtHA
+         Wxy0Ytm5KEnVhIgFpmR/aUG4eORYE4OS0ASD3t3EdcPYRkHID6DC0pVNqG7zJJSC/5
+         Mr4hXHGzdavy2cCB5Dt/ohWuKG6VPrzLP1ydmOoPJaMmIq8uIiwU024o4BukmRDgP1
+         5Ggs+XAiTLS0A==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for Tegra194 P2U (PIPE to UPHY) module block which is a glue
-module instantiated one for each PCIe lane between Synopsys Designware core
-based PCIe IP and Universal PHY block.
+Enable PCIe controller nodes to enable respective PCIe slots on
+P2972-0000 board. Following is the ownership of slots by different
+PCIe controllers.
+Controller-0 : M.2 Key-M slot
+Controller-1 : On-board Marvell eSATA controller
+Controller-3 : M.2 Key-E slot
+
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
 Changes since [v3]:
 * None
 
 Changes since [v2]:
-* Changed node label to reflect new format that includes either 'hsio' or
-  'nvhs' in its name to reflect which UPHY brick they belong to
+* Changed P2U label names to reflect new format that includes 'hsio'/'nvhs'
+  strings to reflect UPHY brick they belong to
 
 Changes since [v1]:
-* This is a new patch in v2 series
+* Dropped 'pcie-' from phy-names property strings
 
- .../bindings/phy/phy-tegra194-p2u.txt         | 28 +++++++++++++++++++
- 1 file changed, 28 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
+ .../arm64/boot/dts/nvidia/tegra194-p2888.dtsi |  2 +-
+ .../boot/dts/nvidia/tegra194-p2972-0000.dts   | 41 +++++++++++++++++++
+ 2 files changed, 42 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt b/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
-new file mode 100644
-index 000000000000..8b543cba483b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
-@@ -0,0 +1,28 @@
-+NVIDIA Tegra194 P2U binding
+diff --git a/arch/arm64/boot/dts/nvidia/tegra194-p2888.dtsi b/arch/arm64/boot/dts/nvidia/tegra194-p2888.dtsi
+index 0fd5bd29fbf9..30a83d4c5b69 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra194-p2888.dtsi
++++ b/arch/arm64/boot/dts/nvidia/tegra194-p2888.dtsi
+@@ -191,7 +191,7 @@
+ 						regulator-boot-on;
+ 					};
+ 
+-					sd3 {
++					vdd_1v8ao: sd3 {
+ 						regulator-name = "VDD_1V8AO";
+ 						regulator-min-microvolt = <1800000>;
+ 						regulator-max-microvolt = <1800000>;
+diff --git a/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts b/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts
+index b62e96945846..7411c64e24a6 100644
+--- a/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts
++++ b/arch/arm64/boot/dts/nvidia/tegra194-p2972-0000.dts
+@@ -169,4 +169,45 @@
+ 			};
+ 		};
+ 	};
 +
-+Tegra194 has two PHY bricks namely HSIO (High Speed IO) and NVHS (NVIDIA High
-+Speed) each interfacing with 12 and 8 P2U instances respectively.
-+A P2U instance is a glue logic between Synopsys DesignWare Core PCIe IP's PIPE
-+interface and PHY of HSIO/NVHS bricks. Each P2U instance represents one PCIe
-+lane.
++	pcie@14180000 {
++		status = "okay";
 +
-+Required properties:
-+- compatible: For Tegra19x, must contain "nvidia,tegra194-p2u".
-+- reg: Should be the physical address space and length of respective each P2U
-+       instance.
-+- reg-names: Must include the entry "ctl".
++		vddio-pex-ctl-supply = <&vdd_1v8ao>;
 +
-+Required properties for PHY port node:
-+- #phy-cells: Defined by generic PHY bindings.  Must be 0.
++		phys = <&p2u_hsio_2>, <&p2u_hsio_3>, <&p2u_hsio_4>,
++		       <&p2u_hsio_5>;
++		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3";
++	};
 +
-+Refer to phy/phy-bindings.txt for the generic PHY binding properties.
++	pcie@14100000 {
++		status = "okay";
 +
-+Example:
++		vddio-pex-ctl-supply = <&vdd_1v8ao>;
 +
-+p2u_hsio_0: p2u@3e10000 {
-+	compatible = "nvidia,tegra194-p2u";
-+	reg = <0x03e10000 0x10000>;
-+	reg-names = "ctl";
++		phys = <&p2u_hsio_0>;
++		phy-names = "p2u-0";
++	};
 +
-+	#phy-cells = <0>;
-+};
++	pcie@14140000 {
++		status = "okay";
++
++		vddio-pex-ctl-supply = <&vdd_1v8ao>;
++
++		phys = <&p2u_hsio_7>;
++		phy-names = "p2u-0";
++	};
++
++	pcie@141a0000 {
++		status = "disabled";
++
++		vddio-pex-ctl-supply = <&vdd_1v8ao>;
++
++		phys = <&p2u_nvhs_0>, <&p2u_nvhs_1>, <&p2u_nvhs_2>,
++		       <&p2u_nvhs_3>, <&p2u_nvhs_4>, <&p2u_nvhs_5>,
++		       <&p2u_nvhs_6>, <&p2u_nvhs_7>;
++
++		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3", "p2u-4",
++			    "p2u-5", "p2u-6", "p2u-7";
++	};
+ };
 -- 
 2.17.1
 
