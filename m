@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E50DCC282DD
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A04C282DD
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96E3B217D9
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3871720645
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E1kqdUxF"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mCe0oiHw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729610AbfDWQjD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 12:39:03 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:46490 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729338AbfDWQjC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:39:02 -0400
-Received: by mail-pl1-f194.google.com with SMTP id o7so5549331pll.13;
-        Tue, 23 Apr 2019 09:39:01 -0700 (PDT)
+        id S1729570AbfDWQix (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 12:38:53 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:45753 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729310AbfDWQiw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:38:52 -0400
+Received: by mail-pf1-f195.google.com with SMTP id e24so7747148pfi.12;
+        Tue, 23 Apr 2019 09:38:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=YL9MZWZDZYnkOSCAkp7+lovV2zvMecuCiBhLyXGLTW0=;
-        b=E1kqdUxFrt/sf9q/wkILoqdhmIoIolcbJ79LCYvvHAQuO5AGZHb0vRALoc9M9G58I7
-         RZsAi/tvoNephEnk1cyamETOrYjl9IdNM5N+s8l7hsVXbECsgOhr4Zw0PkZzQgewECff
-         LSovDnA/uv3b4sqNfwR9Xs7f//hvPo2zMBt36cut5gzR0Z83WGIiMLNrGOUasWXIdJu6
-         zvZoO5QQDw+qvVhZRLKKKFG113N+MyyePQmdeNxIMrw2XQdLY9TeZ/LRVfks39W9SUup
-         XQCUqws4Z9gY6HtXF26CIR615CzV7gXYY0IHVL1qZ8i0J/QklLnF72ymtBQdVLuyr5of
-         xCBQ==
+        bh=zmGBxlAivULm4XlZsdpR6aYayK771q/kqR/omJYUzjI=;
+        b=mCe0oiHwKxhEh3dOPBnFH7B2YMQH624HXWOg3WS4SYT228ravsOG4kdefiDcw06Bww
+         mWExi3MGTvXjQ1oMRLeGM/rpp6bPtBAV0AWRNcP9R1daopobnTmyxxAsGdmrdd1uYz/q
+         ZJ4vya8etI4pCFsuvoDNDLiz30L5L2HcrkKcQpPTlkzzrqcT7VRrPc6YL9xvX+2EIXwK
+         hkNnasDuhveTxd1DhnsROHP4nQ4M5IhN68dM7VXQGxgcxoMY96ruxWTrpI23V/YaCmD7
+         6UsB8sa1/mMNPB0qppVxuZdEcYucL1iW6e4cqjI1g+PbYlmd0YdwbJHQZVGJGglyTffr
+         M4Zw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=YL9MZWZDZYnkOSCAkp7+lovV2zvMecuCiBhLyXGLTW0=;
-        b=phy7YpGMiY3M00sMlYp+r04+ZhVOdgTCfZmJalg4yw6umjKdkmpjpuucR/dZSBhx/N
-         lsGi8orSPegyyjM/Ca0Vw+14jDXm+I4oWQCqHdlYcpTiXdTB6PXuGCwDt6iA8486kxjN
-         pAfo2bM0yufLsdnNHJBXuMU4PCzFljl3ByW6CpMAx9u9zDzH+IvQ/GatjgGd90rIULgV
-         pMK/erT5ZFobboSubEiiTUBlDFb2Aa6xC/lY7DXSmQFIMZR2r4WVUEY2eu27ip3hsb7z
-         LVVHUTQq9cqdD5R6jDcK+nFpdOCbnRbY8f07o8lfm8OND6iIT28JTfr1DrUegSrAL5OW
-         DVow==
-X-Gm-Message-State: APjAAAWgis6bMUdyvEqQOCbcXP5c+xhmaLwQgWePC3Z9MA6ZFoRHf8rL
-        pTzJa7ma4kjOCbfLeCFE6Fg=
-X-Google-Smtp-Source: APXvYqxuowct3CVjegd0jr+hTcdmwhSGyPNTKsCwQ62s5TXQee5u+zF/jQ1TlA81KGtxYXsPqAi6Dg==
-X-Received: by 2002:a17:902:61:: with SMTP id 88mr26789303pla.166.1556037541299;
-        Tue, 23 Apr 2019 09:39:01 -0700 (PDT)
+        bh=zmGBxlAivULm4XlZsdpR6aYayK771q/kqR/omJYUzjI=;
+        b=HQRvq0aS2+kugaC7pc0aPnTYsikz85TeTulIt/abjvldsGf4nxf2OyzIKw4t4sF2Yw
+         +kOnSSLqCF+eyrqSZ1bI1ixkJq9Y7ZQByjMTqHItA/I8aGmdcS7MG39P5A1Su9+R4hJ1
+         lUeqrQwqab/omYxyGqmvLwAVj/n391GRY+D64aNo/BkFPwMl6/FKm6+2MUDh37amefhf
+         SPnwn/snDIJkA+NTIJ+WQwz5mHMQ1EH4e4gEKgUsj56kthFHOR6++iQ8020vgWWr+g3q
+         G/frBdwGlHu2u6dd0qpuAsN4shR+0tkvqEX4A6EaGHz2V43a7usuFD+mnCkt4qYC+/Dm
+         qzsg==
+X-Gm-Message-State: APjAAAWrFRZU0MNl6c9cf43GcZROw9NGdz/ediAZTPSwcJcaElvYf9dB
+        hQ4AV8Fzhi8tXJswgpJW7dU=
+X-Google-Smtp-Source: APXvYqygS7nHAGGgr9qbBX5/RsdlRDuONtq+7dzPulhJ+lbYGuYjqXiHn4OQrIMyOAhHDiyfGp/TiQ==
+X-Received: by 2002:a65:625a:: with SMTP id q26mr26032064pgv.68.1556037531584;
+        Tue, 23 Apr 2019 09:38:51 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.38.56
+        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.38.46
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Apr 2019 09:39:00 -0700 (PDT)
+        Tue, 23 Apr 2019 09:38:50 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Jonathan Corbet <corbet@lwn.net>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
@@ -63,9 +63,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
         linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
         linux-gpio@vger.kernel.org, mchehab+samsung@kernel.org,
         Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v4 59/63] Documentation: x86: convert x86_64/mm.txt to reST
-Date:   Wed, 24 Apr 2019 00:29:28 +0800
-Message-Id: <20190423162932.21428-60-changbin.du@gmail.com>
+Subject: [PATCH v4 57/63] Documentation: x86: convert x86_64/boot-options.txt to reST
+Date:   Wed, 24 Apr 2019 00:29:26 +0800
+Message-Id: <20190423162932.21428-58-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423162932.21428-1-changbin.du@gmail.com>
 References: <20190423162932.21428-1-changbin.du@gmail.com>
@@ -81,348 +81,657 @@ add it to Sphinx TOC tree. No essential content change.
 
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 ---
- Documentation/x86/x86_64/index.rst |   1 +
- Documentation/x86/x86_64/mm.rst    | 161 +++++++++++++++++++++++++++++
- Documentation/x86/x86_64/mm.txt    | 153 ---------------------------
- 3 files changed, 162 insertions(+), 153 deletions(-)
- create mode 100644 Documentation/x86/x86_64/mm.rst
- delete mode 100644 Documentation/x86/x86_64/mm.txt
+ Documentation/x86/index.rst               |   1 +
+ Documentation/x86/x86_64/boot-options.rst | 327 ++++++++++++++++++++++
+ Documentation/x86/x86_64/boot-options.txt | 278 ------------------
+ Documentation/x86/x86_64/index.rst        |  10 +
+ 4 files changed, 338 insertions(+), 278 deletions(-)
+ create mode 100644 Documentation/x86/x86_64/boot-options.rst
+ delete mode 100644 Documentation/x86/x86_64/boot-options.txt
+ create mode 100644 Documentation/x86/x86_64/index.rst
 
-diff --git a/Documentation/x86/x86_64/index.rst b/Documentation/x86/x86_64/index.rst
-index ddfa1f9d4193..4b65d29ef459 100644
---- a/Documentation/x86/x86_64/index.rst
-+++ b/Documentation/x86/x86_64/index.rst
-@@ -9,3 +9,4 @@ x86_64 Support
- 
-    boot-options
-    uefi
-+   mm
-diff --git a/Documentation/x86/x86_64/mm.rst b/Documentation/x86/x86_64/mm.rst
+diff --git a/Documentation/x86/index.rst b/Documentation/x86/index.rst
+index 19323c5b89ce..e7becb146c30 100644
+--- a/Documentation/x86/index.rst
++++ b/Documentation/x86/index.rst
+@@ -27,3 +27,4 @@ Linux x86 Support
+    resctrl_ui
+    usb-legacy-support
+    i386/index
++   x86_64/index
+diff --git a/Documentation/x86/x86_64/boot-options.rst b/Documentation/x86/x86_64/boot-options.rst
 new file mode 100644
-index 000000000000..4a29441c9e25
+index 000000000000..44aa8b878b16
 --- /dev/null
-+++ b/Documentation/x86/x86_64/mm.rst
-@@ -0,0 +1,161 @@
++++ b/Documentation/x86/x86_64/boot-options.rst
+@@ -0,0 +1,327 @@
 +.. SPDX-License-Identifier: GPL-2.0
 +
-+================
-+Memory Managment
-+================
++===========================
++AMD64 Specific Boot Options
++===========================
 +
-+Complete virtual memory map with 4-level page tables
-+====================================================
++There are many others (usually documented in driver documentation), but
++only the AMD64 specific ones are listed here.
 +
-+.. note::
++Machine check
++=============
++Please see Documentation/x86/x86_64/machinecheck for sysfs runtime tunables.
 +
-+ - Negative addresses such as "-23 TB" are absolute addresses in bytes, counted down
-+   from the top of the 64-bit address space. It's easier to understand the layout
-+   when seen both in absolute addresses and in distance-from-top notation.
++   mce=off
++		Disable machine check
++   mce=no_cmci
++		Disable CMCI(Corrected Machine Check Interrupt) that
++		Intel processor supports.  Usually this disablement is
++		not recommended, but it might be handy if your hardware
++		is misbehaving.
++		Note that you'll get more problems without CMCI than with
++		due to the shared banks, i.e. you might get duplicated
++		error logs.
++   mce=dont_log_ce
++		Don't make logs for corrected errors.  All events reported
++		as corrected are silently cleared by OS.
++		This option will be useful if you have no interest in any
++		of corrected errors.
++   mce=ignore_ce
++		Disable features for corrected errors, e.g. polling timer
++		and CMCI.  All events reported as corrected are not cleared
++		by OS and remained in its error banks.
++		Usually this disablement is not recommended, however if
++		there is an agent checking/clearing corrected errors
++		(e.g. BIOS or hardware monitoring applications), conflicting
++		with OS's error handling, and you cannot deactivate the agent,
++		then this option will be a help.
++   mce=no_lmce
++		Do not opt-in to Local MCE delivery. Use legacy method
++		to broadcast MCEs.
++   mce=bootlog
++		Enable logging of machine checks left over from booting.
++		Disabled by default on AMD Fam10h and older because some BIOS
++		leave bogus ones.
++		If your BIOS doesn't do that it's a good idea to enable though
++		to make sure you log even machine check events that result
++		in a reboot. On Intel systems it is enabled by default.
++   mce=nobootlog
++		Disable boot machine check logging.
++   mce=tolerancelevel[,monarchtimeout] (number,number)
++		tolerance levels:
++		0: always panic on uncorrected errors, log corrected errors
++		1: panic or SIGBUS on uncorrected errors, log corrected errors
++		2: SIGBUS or log uncorrected errors, log corrected errors
++		3: never panic or SIGBUS, log all errors (for testing only)
++		Default is 1
++		Can be also set using sysfs which is preferable.
++		monarchtimeout:
++		Sets the time in us to wait for other CPUs on machine checks. 0
++		to disable.
++   mce=bios_cmci_threshold
++		Don't overwrite the bios-set CMCI threshold. This boot option
++		prevents Linux from overwriting the CMCI threshold set by the
++		bios. Without this option, Linux always sets the CMCI
++		threshold to 1. Enabling this may make memory predictive failure
++		analysis less effective if the bios sets thresholds for memory
++		errors since we will not see details for all errors.
++   mce=recovery
++		Force-enable recoverable machine check code paths
 +
-+   For example 0xffffe90000000000 == -23 TB, it's 23 TB lower than the top of the
-+   64-bit address space (ffffffffffffffff).
++   nomce (for compatibility with i386)
++    same as mce=off
 +
-+   Note that as we get closer to the top of the address space, the notation changes
-+   from TB to GB and then MB/KB.
++   Everything else is in sysfs now.
 +
-+ - "16M TB" might look weird at first sight, but it's an easier to visualize size
-+   notation than "16 EB", which few will recognize at first sight as 16 exabytes.
-+   It also shows it nicely how incredibly large 64-bit address space is.
++APICs
++=====
++
++   apic
++     Use IO-APIC. Default
++
++   noapic
++     Don't use the IO-APIC.
++
++   disableapic
++     Don't use the local APIC
++
++   nolapic
++     Don't use the local APIC (alias for i386 compatibility)
++
++   pirq=...
++     See Documentation/x86/i386/IO-APIC.txt
++
++   noapictimer
++   	 Don't set up the APIC timer
++
++   no_timer_check
++		 Don't check the IO-APIC timer. This can work around
++		 problems with incorrect timer initialization on some boards.
++
++   apicpmtimer
++		 Do APIC timer calibration using the pmtimer. Implies
++		 apicmaintimer. Useful when your PIT timer is totally
++		 broken.
++
++Timing
++======
++
++  notsc
++    Deprecated, use tsc=unstable instead.
++
++  nohpet
++    Don't use the HPET timer.
++
++Idle loop
++=========
++
++  idle=poll
++    Don't do power saving in the idle loop using HLT, but poll for rescheduling
++    event. This will make the CPUs eat a lot more power, but may be useful
++    to get slightly better performance in multiprocessor benchmarks. It also
++    makes some profiling using performance counters more accurate.
++    Please note that on systems with MONITOR/MWAIT support (like Intel EM64T
++    CPUs) this option has no performance advantage over the normal idle loop.
++    It may also interact badly with hyperthreading.
++
++Rebooting
++=========
++
++   reboot=b[ios] | t[riple] | k[bd] | a[cpi] | e[fi] [, [w]arm | [c]old]
++    * bios - Use the CPU reboot vector for warm reset
++    * warm - Don't set the cold reboot flag
++    * cold - Set the cold reboot flag
++    * triple - Force a triple fault (init)
++    * kbd  - Use the keyboard controller. cold reset (default)
++    * acpi - Use the ACPI RESET_REG in the FADT. If ACPI is not configured or
++      the ACPI reset does not work, the reboot path attempts the reset
++      using the keyboard controller.
++    * efi - Use efi reset_system runtime service. If EFI is not configured or
++      the EFI reset does not work, the reboot path attempts the reset using
++      the keyboard controller.
++
++   Using warm reset will be much faster especially on big memory
++   systems because the BIOS will not go through the memory check.
++   Disadvantage is that not all hardware will be completely reinitialized
++   on reboot so there may be boot problems on some systems.
++
++   reboot=force
++     Don't stop other CPUs on reboot. This can make reboot more reliable
++     in some cases.
++
++Non Executable Mappings
++=======================
++
++  noexec=on|off
++    * on  - Enable(default)
++    * off - Disable
++
++NUMA
++====
++
++  numa=off
++    Only set up a single NUMA node spanning all memory.
++
++  numa=noacpi
++    Don't parse the SRAT table for NUMA setup
++
++  numa=fake=<size>[MG]
++    If given as a memory unit, fills all system RAM with nodes of
++    size interleaved over physical nodes.
++
++  numa=fake=<N>
++    If given as an integer, fills all system RAM with N fake nodes
++    interleaved over physical nodes.
++
++  numa=fake=<N>U
++    If given as an integer followed by 'U', it will divide each
++    physical node into N emulated nodes.
++
++ACPI
++====
++
++  acpi=off
++    Don't enable ACPI
++  acpi=ht
++    Use ACPI boot table parsing, but don't enable ACPI interpreter
++  acpi=force
++    Force ACPI on (currently not needed)
++  acpi=strict
++    Disable out of spec ACPI workarounds.
++  acpi_sci={edge,level,high,low}
++    Set up ACPI SCI interrupt.
++  acpi=noirq
++    Don't route interrupts
++  acpi=nocmcff
++    Disable firmware first mode for corrected errors. This
++    disables parsing the HEST CMC error source to check if
++    firmware has set the FF flag. This may result in
++    duplicate corrected error reports.
++
++PCI
++===
++
++  pci=off
++    Don't use PCI
++  pci=conf1
++    Use conf1 access.
++  pci=conf2
++    Use conf2 access.
++  pci=rom
++    Assign ROMs.
++  pci=assign-busses
++    Assign busses
++  pci=irqmask=MASK
++    Set PCI interrupt mask to MASK
++  pci=lastbus=NUMBER
++    Scan up to NUMBER busses, no matter what the mptable says.
++  pci=noacpi
++    Don't use ACPI to set up PCI interrupt routing.
++
++IOMMU (input/output memory management unit)
++===========================================
++Multiple x86-64 PCI-DMA mapping implementations exist, for example:
++
++   1. <lib/dma-direct.c>: use no hardware/software IOMMU at all
++      (e.g. because you have < 3 GB memory).
++      Kernel boot message: "PCI-DMA: Disabling IOMMU"
++
++   2. <arch/x86/kernel/amd_gart_64.c>: AMD GART based hardware IOMMU.
++      Kernel boot message: "PCI-DMA: using GART IOMMU"
++
++   3. <arch/x86_64/kernel/pci-swiotlb.c> : Software IOMMU implementation. Used
++      e.g. if there is no hardware IOMMU in the system and it is need because
++      you have >3GB memory or told the kernel to us it (iommu=soft))
++      Kernel boot message: "PCI-DMA: Using software bounce buffering
++      for IO (SWIOTLB)"
++
++   4. <arch/x86_64/pci-calgary.c> : IBM Calgary hardware IOMMU. Used in IBM
++      pSeries and xSeries servers. This hardware IOMMU supports DMA address
++      mapping with memory protection, etc.
++      Kernel boot message: "PCI-DMA: Using Calgary IOMMU"
 +
 +::
 +
-+  ========================================================================================================================
-+      Start addr    |   Offset   |     End addr     |  Size   | VM area description
-+  ========================================================================================================================
-+                    |            |                  |         |
-+  0000000000000000 |    0       | 00007fffffffffff |  128 TB | user-space virtual memory, different per mm
-+  __________________|____________|__________________|_________|___________________________________________________________
-+                    |            |                  |         |
-+  0000800000000000 | +128    TB | ffff7fffffffffff | ~16M TB | ... huge, almost 64 bits wide hole of non-canonical
-+                    |            |                  |         |     virtual memory addresses up to the -128 TB
-+                    |            |                  |         |     starting offset of kernel mappings.
-+  __________________|____________|__________________|_________|___________________________________________________________
-+                                                              |
-+                                                              | Kernel-space virtual memory, shared between all processes:
-+  ____________________________________________________________|___________________________________________________________
-+                    |            |                  |         |
-+  ffff800000000000 | -128    TB | ffff87ffffffffff |    8 TB | ... guard hole, also reserved for hypervisor
-+  ffff880000000000 | -120    TB | ffff887fffffffff |  0.5 TB | LDT remap for PTI
-+  ffff888000000000 | -119.5  TB | ffffc87fffffffff |   64 TB | direct mapping of all physical memory (page_offset_base)
-+  ffffc88000000000 |  -55.5  TB | ffffc8ffffffffff |  0.5 TB | ... unused hole
-+  ffffc90000000000 |  -55    TB | ffffe8ffffffffff |   32 TB | vmalloc/ioremap space (vmalloc_base)
-+  ffffe90000000000 |  -23    TB | ffffe9ffffffffff |    1 TB | ... unused hole
-+  ffffea0000000000 |  -22    TB | ffffeaffffffffff |    1 TB | virtual memory map (vmemmap_base)
-+  ffffeb0000000000 |  -21    TB | ffffebffffffffff |    1 TB | ... unused hole
-+  ffffec0000000000 |  -20    TB | fffffbffffffffff |   16 TB | KASAN shadow memory
-+  __________________|____________|__________________|_________|____________________________________________________________
-+                                                              |
-+                                                              | Identical layout to the 56-bit one from here on:
-+  ____________________________________________________________|____________________________________________________________
-+                    |            |                  |         |
-+  fffffc0000000000 |   -4    TB | fffffdffffffffff |    2 TB | ... unused hole
-+                    |            |                  |         | vaddr_end for KASLR
-+  fffffe0000000000 |   -2    TB | fffffe7fffffffff |  0.5 TB | cpu_entry_area mapping
-+  fffffe8000000000 |   -1.5  TB | fffffeffffffffff |  0.5 TB | ... unused hole
-+  ffffff0000000000 |   -1    TB | ffffff7fffffffff |  0.5 TB | %esp fixup stacks
-+  ffffff8000000000 | -512    GB | ffffffeeffffffff |  444 GB | ... unused hole
-+  ffffffef00000000 |  -68    GB | fffffffeffffffff |   64 GB | EFI region mapping space
-+  ffffffff00000000 |   -4    GB | ffffffff7fffffff |    2 GB | ... unused hole
-+  ffffffff80000000 |   -2    GB | ffffffff9fffffff |  512 MB | kernel text mapping, mapped to physical address 0
-+  ffffffff80000000 |-2048    MB |                  |         |
-+  ffffffffa0000000 |-1536    MB | fffffffffeffffff | 1520 MB | module mapping space
-+  ffffffffff000000 |  -16    MB |                  |         |
-+      FIXADDR_START | ~-11    MB | ffffffffff5fffff | ~0.5 MB | kernel-internal fixmap range, variable size and offset
-+  ffffffffff600000 |  -10    MB | ffffffffff600fff |    4 kB | legacy vsyscall ABI
-+  ffffffffffe00000 |   -2    MB | ffffffffffffffff |    2 MB | ... unused hole
-+  __________________|____________|__________________|_________|___________________________________________________________
++  iommu=[<size>][,noagp][,off][,force][,noforce]
++  [,memaper[=<order>]][,merge][,fullflush][,nomerge]
++  [,noaperture][,calgary]
++
++General iommu options:
++
++    off
++      Don't initialize and use any kind of IOMMU.
++    noforce
++      Don't force hardware IOMMU usage when it is not needed. (default).
++    force
++      Force the use of the hardware IOMMU even when it is
++      not actually needed (e.g. because < 3 GB memory).
++    soft
++      Use software bounce buffering (SWIOTLB) (default for
++      Intel machines). This can be used to prevent the usage
++      of an available hardware IOMMU.
++
++iommu options only relevant to the AMD GART hardware IOMMU:
++
++    <size>
++      Set the size of the remapping area in bytes.
++    allowed
++      Overwrite iommu off workarounds for specific chipsets.
++    fullflush
++      Flush IOMMU on each allocation (default).
++    nofullflush
++      Don't use IOMMU fullflush.
++    memaper[=<order>]
++      Allocate an own aperture over RAM with size 32MB<<order.
++      (default: order=1, i.e. 64MB)
++    merge
++      Do scatter-gather (SG) merging. Implies "force" (experimental).
++    nomerge
++      Don't do scatter-gather (SG) merging.
++    noaperture
++      Ask the IOMMU not to touch the aperture for AGP.
++    noagp
++      Don't initialize the AGP driver and use full aperture.
++    panic
++      Always panic when IOMMU overflows.
++    calgary
++      Use the Calgary IOMMU if it is available
++
++iommu options only relevant to the software bounce buffering (SWIOTLB) IOMMU
++implementation:
++
++    swiotlb=<pages>[,force]
++      <pages>
++        Prereserve that many 128K pages for the software IO bounce buffering.
++      force
++        Force all IO through the software TLB.
++
++Settings for the IBM Calgary hardware IOMMU currently found in IBM
++pSeries and xSeries machines
++
++    calgary=[64k,128k,256k,512k,1M,2M,4M,8M]
++      Set the size of each PCI slot's translation table when using the
++      Calgary IOMMU. This is the size of the translation table itself
++      in main memory. The smallest table, 64k, covers an IO space of
++      32MB; the largest, 8MB table, can cover an IO space of 4GB.
++      Normally the kernel will make the right choice by itself.
++    calgary=[translate_empty_slots]
++      Enable translation even on slots that have no devices attached to
++      them, in case a device will be hotplugged in the future.
++    calgary=[disable=<PCI bus number>]
++      Disable translation on a given PHB. For
++      example, the built-in graphics adapter resides on the first bridge
++      (PCI bus number 0); if translation (isolation) is enabled on this
++      bridge, X servers that access the hardware directly from user
++      space might stop working. Use this option if you have devices that
++      are accessed from userspace directly on some PCI host bridge.
++    panic
++      Always panic when IOMMU overflows
 +
 +
-+Complete virtual memory map with 5-level page tables
-+====================================================
++Miscellaneous
++=============
 +
-+.. note::
-+
-+ - With 56-bit addresses, user-space memory gets expanded by a factor of 512x,
-+   from 0.125 PB to 64 PB. All kernel mappings shift down to the -64 PT starting
-+   offset and many of the regions expand to support the much larger physical
-+   memory supported.
-+
-+::
-+
-+  ========================================================================================================================
-+      Start addr    |   Offset   |     End addr     |  Size   | VM area description
-+  ========================================================================================================================
-+                    |            |                  |         |
-+  0000000000000000 |    0       | 00ffffffffffffff |   64 PB | user-space virtual memory, different per mm
-+  __________________|____________|__________________|_________|___________________________________________________________
-+                    |            |                  |         |
-+  0000800000000000 |  +64    PB | ffff7fffffffffff | ~16K PB | ... huge, still almost 64 bits wide hole of non-canonical
-+                    |            |                  |         |     virtual memory addresses up to the -64 PB
-+                    |            |                  |         |     starting offset of kernel mappings.
-+  __________________|____________|__________________|_________|___________________________________________________________
-+                                                              |
-+                                                              | Kernel-space virtual memory, shared between all processes:
-+  ____________________________________________________________|___________________________________________________________
-+                    |            |                  |         |
-+  ff00000000000000 |  -64    PB | ff0fffffffffffff |    4 PB | ... guard hole, also reserved for hypervisor
-+  ff10000000000000 |  -60    PB | ff10ffffffffffff | 0.25 PB | LDT remap for PTI
-+  ff11000000000000 |  -59.75 PB | ff90ffffffffffff |   32 PB | direct mapping of all physical memory (page_offset_base)
-+  ff91000000000000 |  -27.75 PB | ff9fffffffffffff | 3.75 PB | ... unused hole
-+  ffa0000000000000 |  -24    PB | ffd1ffffffffffff | 12.5 PB | vmalloc/ioremap space (vmalloc_base)
-+  ffd2000000000000 |  -11.5  PB | ffd3ffffffffffff |  0.5 PB | ... unused hole
-+  ffd4000000000000 |  -11    PB | ffd5ffffffffffff |  0.5 PB | virtual memory map (vmemmap_base)
-+  ffd6000000000000 |  -10.5  PB | ffdeffffffffffff | 2.25 PB | ... unused hole
-+  ffdf000000000000 |   -8.25 PB | fffffdffffffffff |   ~8 PB | KASAN shadow memory
-+  __________________|____________|__________________|_________|____________________________________________________________
-+                                                              |
-+                                                              | Identical layout to the 47-bit one from here on:
-+  ____________________________________________________________|____________________________________________________________
-+                    |            |                  |         |
-+  fffffc0000000000 |   -4    TB | fffffdffffffffff |    2 TB | ... unused hole
-+                    |            |                  |         | vaddr_end for KASLR
-+  fffffe0000000000 |   -2    TB | fffffe7fffffffff |  0.5 TB | cpu_entry_area mapping
-+  fffffe8000000000 |   -1.5  TB | fffffeffffffffff |  0.5 TB | ... unused hole
-+  ffffff0000000000 |   -1    TB | ffffff7fffffffff |  0.5 TB | %esp fixup stacks
-+  ffffff8000000000 | -512    GB | ffffffeeffffffff |  444 GB | ... unused hole
-+  ffffffef00000000 |  -68    GB | fffffffeffffffff |   64 GB | EFI region mapping space
-+  ffffffff00000000 |   -4    GB | ffffffff7fffffff |    2 GB | ... unused hole
-+  ffffffff80000000 |   -2    GB | ffffffff9fffffff |  512 MB | kernel text mapping, mapped to physical address 0
-+  ffffffff80000000 |-2048    MB |                  |         |
-+  ffffffffa0000000 |-1536    MB | fffffffffeffffff | 1520 MB | module mapping space
-+  ffffffffff000000 |  -16    MB |                  |         |
-+      FIXADDR_START | ~-11    MB | ffffffffff5fffff | ~0.5 MB | kernel-internal fixmap range, variable size and offset
-+  ffffffffff600000 |  -10    MB | ffffffffff600fff |    4 kB | legacy vsyscall ABI
-+  ffffffffffe00000 |   -2    MB | ffffffffffffffff |    2 MB | ... unused hole
-+  __________________|____________|__________________|_________|___________________________________________________________
-+
-+Architecture defines a 64-bit virtual address. Implementations can support
-+less. Currently supported are 48- and 57-bit virtual addresses. Bits 63
-+through to the most-significant implemented bit are sign extended.
-+This causes hole between user space and kernel addresses if you interpret them
-+as unsigned.
-+
-+The direct mapping covers all memory in the system up to the highest
-+memory address (this means in some cases it can also include PCI memory
-+holes).
-+
-+vmalloc space is lazily synchronized into the different PML4/PML5 pages of
-+the processes using the page fault handler, with init_top_pgt as
-+reference.
-+
-+We map EFI runtime services in the 'efi_pgd' PGD in a 64Gb large virtual
-+memory window (this size is arbitrary, it can be raised later if needed).
-+The mappings are not part of any other kernel PGD and are only available
-+during EFI runtime calls.
-+
-+Note that if CONFIG_RANDOMIZE_MEMORY is enabled, the direct mapping of all
-+physical memory, vmalloc/ioremap space and virtual memory map are randomized.
-+Their order is preserved but their base will be offset early at boot time.
-+
-+Be very careful vs. KASLR when changing anything here. The KASLR address
-+range must not overlap with anything except the KASAN shadow area, which is
-+correct as KASAN disables KASLR.
-+
-+For both 4- and 5-level layouts, the STACKLEAK_POISON value in the last 2MB
-+hole: ffffffffffff4111
-diff --git a/Documentation/x86/x86_64/mm.txt b/Documentation/x86/x86_64/mm.txt
++	nogbpages
++		Do not use GB pages for kernel direct mappings.
++	gbpages
++		Use GB pages for kernel direct mappings.
+diff --git a/Documentation/x86/x86_64/boot-options.txt b/Documentation/x86/x86_64/boot-options.txt
 deleted file mode 100644
-index 804f9426ed17..000000000000
---- a/Documentation/x86/x86_64/mm.txt
+index abc53886655e..000000000000
+--- a/Documentation/x86/x86_64/boot-options.txt
 +++ /dev/null
-@@ -1,153 +0,0 @@
--====================================================
--Complete virtual memory map with 4-level page tables
--====================================================
+@@ -1,278 +0,0 @@
+-AMD64 specific boot options
 -
--Notes:
+-There are many others (usually documented in driver documentation), but
+-only the AMD64 specific ones are listed here.
 -
-- - Negative addresses such as "-23 TB" are absolute addresses in bytes, counted down
--   from the top of the 64-bit address space. It's easier to understand the layout
--   when seen both in absolute addresses and in distance-from-top notation.
+-Machine check
 -
--   For example 0xffffe90000000000 == -23 TB, it's 23 TB lower than the top of the
--   64-bit address space (ffffffffffffffff).
+-   Please see Documentation/x86/x86_64/machinecheck for sysfs runtime tunables.
 -
--   Note that as we get closer to the top of the address space, the notation changes
--   from TB to GB and then MB/KB.
+-   mce=off
+-		Disable machine check
+-   mce=no_cmci
+-		Disable CMCI(Corrected Machine Check Interrupt) that
+-		Intel processor supports.  Usually this disablement is
+-		not recommended, but it might be handy if your hardware
+-		is misbehaving.
+-		Note that you'll get more problems without CMCI than with
+-		due to the shared banks, i.e. you might get duplicated
+-		error logs.
+-   mce=dont_log_ce
+-		Don't make logs for corrected errors.  All events reported
+-		as corrected are silently cleared by OS.
+-		This option will be useful if you have no interest in any
+-		of corrected errors.
+-   mce=ignore_ce
+-		Disable features for corrected errors, e.g. polling timer
+-		and CMCI.  All events reported as corrected are not cleared
+-		by OS and remained in its error banks.
+-		Usually this disablement is not recommended, however if
+-		there is an agent checking/clearing corrected errors
+-		(e.g. BIOS or hardware monitoring applications), conflicting
+-		with OS's error handling, and you cannot deactivate the agent,
+-		then this option will be a help.
+-   mce=no_lmce
+-		Do not opt-in to Local MCE delivery. Use legacy method
+-		to broadcast MCEs.
+-   mce=bootlog
+-		Enable logging of machine checks left over from booting.
+-		Disabled by default on AMD Fam10h and older because some BIOS
+-		leave bogus ones.
+-		If your BIOS doesn't do that it's a good idea to enable though
+-		to make sure you log even machine check events that result
+-		in a reboot. On Intel systems it is enabled by default.
+-   mce=nobootlog
+-		Disable boot machine check logging.
+-   mce=tolerancelevel[,monarchtimeout] (number,number)
+-		tolerance levels:
+-		0: always panic on uncorrected errors, log corrected errors
+-		1: panic or SIGBUS on uncorrected errors, log corrected errors
+-		2: SIGBUS or log uncorrected errors, log corrected errors
+-		3: never panic or SIGBUS, log all errors (for testing only)
+-		Default is 1
+-		Can be also set using sysfs which is preferable.
+-		monarchtimeout:
+-		Sets the time in us to wait for other CPUs on machine checks. 0
+-		to disable.
+-   mce=bios_cmci_threshold
+-		Don't overwrite the bios-set CMCI threshold. This boot option
+-		prevents Linux from overwriting the CMCI threshold set by the
+-		bios. Without this option, Linux always sets the CMCI
+-		threshold to 1. Enabling this may make memory predictive failure
+-		analysis less effective if the bios sets thresholds for memory
+-		errors since we will not see details for all errors.
+-   mce=recovery
+-		Force-enable recoverable machine check code paths
 -
-- - "16M TB" might look weird at first sight, but it's an easier to visualize size
--   notation than "16 EB", which few will recognize at first sight as 16 exabytes.
--   It also shows it nicely how incredibly large 64-bit address space is.
+-   nomce (for compatibility with i386): same as mce=off
 -
--========================================================================================================================
--    Start addr    |   Offset   |     End addr     |  Size   | VM area description
--========================================================================================================================
--                  |            |                  |         |
-- 0000000000000000 |    0       | 00007fffffffffff |  128 TB | user-space virtual memory, different per mm
--__________________|____________|__________________|_________|___________________________________________________________
--                  |            |                  |         |
-- 0000800000000000 | +128    TB | ffff7fffffffffff | ~16M TB | ... huge, almost 64 bits wide hole of non-canonical
--                  |            |                  |         |     virtual memory addresses up to the -128 TB
--                  |            |                  |         |     starting offset of kernel mappings.
--__________________|____________|__________________|_________|___________________________________________________________
--                                                            |
--                                                            | Kernel-space virtual memory, shared between all processes:
--____________________________________________________________|___________________________________________________________
--                  |            |                  |         |
-- ffff800000000000 | -128    TB | ffff87ffffffffff |    8 TB | ... guard hole, also reserved for hypervisor
-- ffff880000000000 | -120    TB | ffff887fffffffff |  0.5 TB | LDT remap for PTI
-- ffff888000000000 | -119.5  TB | ffffc87fffffffff |   64 TB | direct mapping of all physical memory (page_offset_base)
-- ffffc88000000000 |  -55.5  TB | ffffc8ffffffffff |  0.5 TB | ... unused hole
-- ffffc90000000000 |  -55    TB | ffffe8ffffffffff |   32 TB | vmalloc/ioremap space (vmalloc_base)
-- ffffe90000000000 |  -23    TB | ffffe9ffffffffff |    1 TB | ... unused hole
-- ffffea0000000000 |  -22    TB | ffffeaffffffffff |    1 TB | virtual memory map (vmemmap_base)
-- ffffeb0000000000 |  -21    TB | ffffebffffffffff |    1 TB | ... unused hole
-- ffffec0000000000 |  -20    TB | fffffbffffffffff |   16 TB | KASAN shadow memory
--__________________|____________|__________________|_________|____________________________________________________________
--                                                            |
--                                                            | Identical layout to the 56-bit one from here on:
--____________________________________________________________|____________________________________________________________
--                  |            |                  |         |
-- fffffc0000000000 |   -4    TB | fffffdffffffffff |    2 TB | ... unused hole
--                  |            |                  |         | vaddr_end for KASLR
-- fffffe0000000000 |   -2    TB | fffffe7fffffffff |  0.5 TB | cpu_entry_area mapping
-- fffffe8000000000 |   -1.5  TB | fffffeffffffffff |  0.5 TB | ... unused hole
-- ffffff0000000000 |   -1    TB | ffffff7fffffffff |  0.5 TB | %esp fixup stacks
-- ffffff8000000000 | -512    GB | ffffffeeffffffff |  444 GB | ... unused hole
-- ffffffef00000000 |  -68    GB | fffffffeffffffff |   64 GB | EFI region mapping space
-- ffffffff00000000 |   -4    GB | ffffffff7fffffff |    2 GB | ... unused hole
-- ffffffff80000000 |   -2    GB | ffffffff9fffffff |  512 MB | kernel text mapping, mapped to physical address 0
-- ffffffff80000000 |-2048    MB |                  |         |
-- ffffffffa0000000 |-1536    MB | fffffffffeffffff | 1520 MB | module mapping space
-- ffffffffff000000 |  -16    MB |                  |         |
--    FIXADDR_START | ~-11    MB | ffffffffff5fffff | ~0.5 MB | kernel-internal fixmap range, variable size and offset
-- ffffffffff600000 |  -10    MB | ffffffffff600fff |    4 kB | legacy vsyscall ABI
-- ffffffffffe00000 |   -2    MB | ffffffffffffffff |    2 MB | ... unused hole
--__________________|____________|__________________|_________|___________________________________________________________
+-   Everything else is in sysfs now.
 -
+-APICs
 -
--====================================================
--Complete virtual memory map with 5-level page tables
--====================================================
+-   apic		 Use IO-APIC. Default
 -
--Notes:
+-   noapic	 Don't use the IO-APIC.
 -
-- - With 56-bit addresses, user-space memory gets expanded by a factor of 512x,
--   from 0.125 PB to 64 PB. All kernel mappings shift down to the -64 PT starting
--   offset and many of the regions expand to support the much larger physical
--   memory supported.
+-   disableapic	 Don't use the local APIC
 -
--========================================================================================================================
--    Start addr    |   Offset   |     End addr     |  Size   | VM area description
--========================================================================================================================
--                  |            |                  |         |
-- 0000000000000000 |    0       | 00ffffffffffffff |   64 PB | user-space virtual memory, different per mm
--__________________|____________|__________________|_________|___________________________________________________________
--                  |            |                  |         |
-- 0000800000000000 |  +64    PB | ffff7fffffffffff | ~16K PB | ... huge, still almost 64 bits wide hole of non-canonical
--                  |            |                  |         |     virtual memory addresses up to the -64 PB
--                  |            |                  |         |     starting offset of kernel mappings.
--__________________|____________|__________________|_________|___________________________________________________________
--                                                            |
--                                                            | Kernel-space virtual memory, shared between all processes:
--____________________________________________________________|___________________________________________________________
--                  |            |                  |         |
-- ff00000000000000 |  -64    PB | ff0fffffffffffff |    4 PB | ... guard hole, also reserved for hypervisor
-- ff10000000000000 |  -60    PB | ff10ffffffffffff | 0.25 PB | LDT remap for PTI
-- ff11000000000000 |  -59.75 PB | ff90ffffffffffff |   32 PB | direct mapping of all physical memory (page_offset_base)
-- ff91000000000000 |  -27.75 PB | ff9fffffffffffff | 3.75 PB | ... unused hole
-- ffa0000000000000 |  -24    PB | ffd1ffffffffffff | 12.5 PB | vmalloc/ioremap space (vmalloc_base)
-- ffd2000000000000 |  -11.5  PB | ffd3ffffffffffff |  0.5 PB | ... unused hole
-- ffd4000000000000 |  -11    PB | ffd5ffffffffffff |  0.5 PB | virtual memory map (vmemmap_base)
-- ffd6000000000000 |  -10.5  PB | ffdeffffffffffff | 2.25 PB | ... unused hole
-- ffdf000000000000 |   -8.25 PB | fffffdffffffffff |   ~8 PB | KASAN shadow memory
--__________________|____________|__________________|_________|____________________________________________________________
--                                                            |
--                                                            | Identical layout to the 47-bit one from here on:
--____________________________________________________________|____________________________________________________________
--                  |            |                  |         |
-- fffffc0000000000 |   -4    TB | fffffdffffffffff |    2 TB | ... unused hole
--                  |            |                  |         | vaddr_end for KASLR
-- fffffe0000000000 |   -2    TB | fffffe7fffffffff |  0.5 TB | cpu_entry_area mapping
-- fffffe8000000000 |   -1.5  TB | fffffeffffffffff |  0.5 TB | ... unused hole
-- ffffff0000000000 |   -1    TB | ffffff7fffffffff |  0.5 TB | %esp fixup stacks
-- ffffff8000000000 | -512    GB | ffffffeeffffffff |  444 GB | ... unused hole
-- ffffffef00000000 |  -68    GB | fffffffeffffffff |   64 GB | EFI region mapping space
-- ffffffff00000000 |   -4    GB | ffffffff7fffffff |    2 GB | ... unused hole
-- ffffffff80000000 |   -2    GB | ffffffff9fffffff |  512 MB | kernel text mapping, mapped to physical address 0
-- ffffffff80000000 |-2048    MB |                  |         |
-- ffffffffa0000000 |-1536    MB | fffffffffeffffff | 1520 MB | module mapping space
-- ffffffffff000000 |  -16    MB |                  |         |
--    FIXADDR_START | ~-11    MB | ffffffffff5fffff | ~0.5 MB | kernel-internal fixmap range, variable size and offset
-- ffffffffff600000 |  -10    MB | ffffffffff600fff |    4 kB | legacy vsyscall ABI
-- ffffffffffe00000 |   -2    MB | ffffffffffffffff |    2 MB | ... unused hole
--__________________|____________|__________________|_________|___________________________________________________________
+-   nolapic	 Don't use the local APIC (alias for i386 compatibility)
 -
--Architecture defines a 64-bit virtual address. Implementations can support
--less. Currently supported are 48- and 57-bit virtual addresses. Bits 63
--through to the most-significant implemented bit are sign extended.
--This causes hole between user space and kernel addresses if you interpret them
--as unsigned.
+-   pirq=...	 See Documentation/x86/i386/IO-APIC.txt
 -
--The direct mapping covers all memory in the system up to the highest
--memory address (this means in some cases it can also include PCI memory
--holes).
+-   noapictimer	 Don't set up the APIC timer
 -
--vmalloc space is lazily synchronized into the different PML4/PML5 pages of
--the processes using the page fault handler, with init_top_pgt as
--reference.
+-   no_timer_check Don't check the IO-APIC timer. This can work around
+-		 problems with incorrect timer initialization on some boards.
+-   apicpmtimer
+-		 Do APIC timer calibration using the pmtimer. Implies
+-		 apicmaintimer. Useful when your PIT timer is totally
+-		 broken.
 -
--We map EFI runtime services in the 'efi_pgd' PGD in a 64Gb large virtual
--memory window (this size is arbitrary, it can be raised later if needed).
--The mappings are not part of any other kernel PGD and are only available
--during EFI runtime calls.
+-Timing
 -
--Note that if CONFIG_RANDOMIZE_MEMORY is enabled, the direct mapping of all
--physical memory, vmalloc/ioremap space and virtual memory map are randomized.
--Their order is preserved but their base will be offset early at boot time.
+-  notsc
+-  Deprecated, use tsc=unstable instead.
 -
--Be very careful vs. KASLR when changing anything here. The KASLR address
--range must not overlap with anything except the KASAN shadow area, which is
--correct as KASAN disables KASLR.
+-  nohpet
+-  Don't use the HPET timer.
 -
--For both 4- and 5-level layouts, the STACKLEAK_POISON value in the last 2MB
--hole: ffffffffffff4111
+-Idle loop
+-
+-  idle=poll
+-  Don't do power saving in the idle loop using HLT, but poll for rescheduling
+-  event. This will make the CPUs eat a lot more power, but may be useful
+-  to get slightly better performance in multiprocessor benchmarks. It also
+-  makes some profiling using performance counters more accurate.
+-  Please note that on systems with MONITOR/MWAIT support (like Intel EM64T
+-  CPUs) this option has no performance advantage over the normal idle loop.
+-  It may also interact badly with hyperthreading.
+-
+-Rebooting
+-
+-   reboot=b[ios] | t[riple] | k[bd] | a[cpi] | e[fi] [, [w]arm | [c]old]
+-   bios	  Use the CPU reboot vector for warm reset
+-   warm   Don't set the cold reboot flag
+-   cold   Set the cold reboot flag
+-   triple Force a triple fault (init)
+-   kbd    Use the keyboard controller. cold reset (default)
+-   acpi   Use the ACPI RESET_REG in the FADT. If ACPI is not configured or the
+-          ACPI reset does not work, the reboot path attempts the reset using
+-          the keyboard controller.
+-   efi    Use efi reset_system runtime service. If EFI is not configured or the
+-          EFI reset does not work, the reboot path attempts the reset using
+-          the keyboard controller.
+-
+-   Using warm reset will be much faster especially on big memory
+-   systems because the BIOS will not go through the memory check.
+-   Disadvantage is that not all hardware will be completely reinitialized
+-   on reboot so there may be boot problems on some systems.
+-
+-   reboot=force
+-
+-   Don't stop other CPUs on reboot. This can make reboot more reliable
+-   in some cases.
+-
+-Non Executable Mappings
+-
+-  noexec=on|off
+-
+-  on      Enable(default)
+-  off     Disable
+-
+-NUMA
+-
+-  numa=off	Only set up a single NUMA node spanning all memory.
+-
+-  numa=noacpi   Don't parse the SRAT table for NUMA setup
+-
+-  numa=fake=<size>[MG]
+-		If given as a memory unit, fills all system RAM with nodes of
+-		size interleaved over physical nodes.
+-
+-  numa=fake=<N>
+-		If given as an integer, fills all system RAM with N fake nodes
+-		interleaved over physical nodes.
+-
+-  numa=fake=<N>U
+-		If given as an integer followed by 'U', it will divide each
+-		physical node into N emulated nodes.
+-
+-ACPI
+-
+-  acpi=off	Don't enable ACPI
+-  acpi=ht	Use ACPI boot table parsing, but don't enable ACPI
+-		interpreter
+-  acpi=force	Force ACPI on (currently not needed)
+-
+-  acpi=strict   Disable out of spec ACPI workarounds.
+-
+-  acpi_sci={edge,level,high,low}  Set up ACPI SCI interrupt.
+-
+-  acpi=noirq	Don't route interrupts
+-
+-  acpi=nocmcff	Disable firmware first mode for corrected errors. This
+-		disables parsing the HEST CMC error source to check if
+-		firmware has set the FF flag. This may result in
+-		duplicate corrected error reports.
+-
+-PCI
+-
+-  pci=off		Don't use PCI
+-  pci=conf1		Use conf1 access.
+-  pci=conf2		Use conf2 access.
+-  pci=rom		Assign ROMs.
+-  pci=assign-busses	Assign busses
+-  pci=irqmask=MASK	Set PCI interrupt mask to MASK
+-  pci=lastbus=NUMBER	Scan up to NUMBER busses, no matter what the mptable says.
+-  pci=noacpi		Don't use ACPI to set up PCI interrupt routing.
+-
+-IOMMU (input/output memory management unit)
+-
+- Multiple x86-64 PCI-DMA mapping implementations exist, for example:
+-
+-   1. <lib/dma-direct.c>: use no hardware/software IOMMU at all
+-      (e.g. because you have < 3 GB memory).
+-      Kernel boot message: "PCI-DMA: Disabling IOMMU"
+-
+-   2. <arch/x86/kernel/amd_gart_64.c>: AMD GART based hardware IOMMU.
+-      Kernel boot message: "PCI-DMA: using GART IOMMU"
+-
+-   3. <arch/x86_64/kernel/pci-swiotlb.c> : Software IOMMU implementation. Used
+-      e.g. if there is no hardware IOMMU in the system and it is need because
+-      you have >3GB memory or told the kernel to us it (iommu=soft))
+-      Kernel boot message: "PCI-DMA: Using software bounce buffering
+-      for IO (SWIOTLB)"
+-
+-   4. <arch/x86_64/pci-calgary.c> : IBM Calgary hardware IOMMU. Used in IBM
+-      pSeries and xSeries servers. This hardware IOMMU supports DMA address
+-      mapping with memory protection, etc.
+-      Kernel boot message: "PCI-DMA: Using Calgary IOMMU"
+-
+- iommu=[<size>][,noagp][,off][,force][,noforce]
+-	[,memaper[=<order>]][,merge][,fullflush][,nomerge]
+-	[,noaperture][,calgary]
+-
+-  General iommu options:
+-    off                Don't initialize and use any kind of IOMMU.
+-    noforce            Don't force hardware IOMMU usage when it is not needed.
+-                       (default).
+-    force              Force the use of the hardware IOMMU even when it is
+-                       not actually needed (e.g. because < 3 GB memory).
+-    soft               Use software bounce buffering (SWIOTLB) (default for
+-                       Intel machines). This can be used to prevent the usage
+-                       of an available hardware IOMMU.
+-
+-  iommu options only relevant to the AMD GART hardware IOMMU:
+-    <size>             Set the size of the remapping area in bytes.
+-    allowed            Overwrite iommu off workarounds for specific chipsets.
+-    fullflush          Flush IOMMU on each allocation (default).
+-    nofullflush        Don't use IOMMU fullflush.
+-    memaper[=<order>]  Allocate an own aperture over RAM with size 32MB<<order.
+-                       (default: order=1, i.e. 64MB)
+-    merge              Do scatter-gather (SG) merging. Implies "force"
+-                       (experimental).
+-    nomerge            Don't do scatter-gather (SG) merging.
+-    noaperture         Ask the IOMMU not to touch the aperture for AGP.
+-    noagp              Don't initialize the AGP driver and use full aperture.
+-    panic              Always panic when IOMMU overflows.
+-    calgary            Use the Calgary IOMMU if it is available
+-
+-  iommu options only relevant to the software bounce buffering (SWIOTLB) IOMMU
+-  implementation:
+-    swiotlb=<pages>[,force]
+-    <pages>            Prereserve that many 128K pages for the software IO
+-                       bounce buffering.
+-    force              Force all IO through the software TLB.
+-
+-  Settings for the IBM Calgary hardware IOMMU currently found in IBM
+-  pSeries and xSeries machines:
+-
+-    calgary=[64k,128k,256k,512k,1M,2M,4M,8M]
+-    calgary=[translate_empty_slots]
+-    calgary=[disable=<PCI bus number>]
+-    panic              Always panic when IOMMU overflows
+-
+-    64k,...,8M - Set the size of each PCI slot's translation table
+-    when using the Calgary IOMMU. This is the size of the translation
+-    table itself in main memory. The smallest table, 64k, covers an IO
+-    space of 32MB; the largest, 8MB table, can cover an IO space of
+-    4GB. Normally the kernel will make the right choice by itself.
+-
+-    translate_empty_slots - Enable translation even on slots that have
+-    no devices attached to them, in case a device will be hotplugged
+-    in the future.
+-
+-    disable=<PCI bus number> - Disable translation on a given PHB. For
+-    example, the built-in graphics adapter resides on the first bridge
+-    (PCI bus number 0); if translation (isolation) is enabled on this
+-    bridge, X servers that access the hardware directly from user
+-    space might stop working. Use this option if you have devices that
+-    are accessed from userspace directly on some PCI host bridge.
+-
+-Miscellaneous
+-
+-	nogbpages
+-		Do not use GB pages for kernel direct mappings.
+-	gbpages
+-		Use GB pages for kernel direct mappings.
+diff --git a/Documentation/x86/x86_64/index.rst b/Documentation/x86/x86_64/index.rst
+new file mode 100644
+index 000000000000..a8cf7713cac9
+--- /dev/null
++++ b/Documentation/x86/x86_64/index.rst
+@@ -0,0 +1,10 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++==============
++x86_64 Support
++==============
++
++.. toctree::
++   :maxdepth: 2
++
++   boot-options
 -- 
 2.20.1
 
