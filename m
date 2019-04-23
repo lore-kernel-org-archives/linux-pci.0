@@ -2,68 +2,108 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,
+	TVD_PH_BODY_ACCOUNTS_PRE autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B65E0C282DD
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 11:21:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2B14C10F14
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 14:33:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FE11204EC
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 11:21:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F7BA21738
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 14:33:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ql1sS65D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727458AbfDWLVn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 07:21:43 -0400
-Received: from foss.arm.com ([217.140.101.70]:54756 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726150AbfDWLVn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Apr 2019 07:21:43 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 1E91D374;
-        Tue, 23 Apr 2019 04:21:43 -0700 (PDT)
-Received: from fuggles.cambridge.arm.com (usa-sjc-imap-foss1.foss.arm.com [10.72.51.249])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 710193F557;
-        Tue, 23 Apr 2019 04:21:40 -0700 (PDT)
-Date:   Tue, 23 Apr 2019 12:21:38 +0100
-From:   Will Deacon <will.deacon@arm.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-        robin.murphy@arm.com, joro@8bytes.org, hanjun.guo@linaro.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        okaya@kernel.org, zhongmiao@hisilicon.com, eric.auger@redhat.com,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3 0/9] Add PCI ATS support to Arm SMMUv3
-Message-ID: <20190423112138.GC3439@fuggles.cambridge.arm.com>
-References: <20190417182448.12382-1-jean-philippe.brucker@arm.com>
+        id S1727305AbfDWOd5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 10:33:57 -0400
+Received: from mail-it1-f196.google.com ([209.85.166.196]:50656 "EHLO
+        mail-it1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726421AbfDWOd4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 10:33:56 -0400
+Received: by mail-it1-f196.google.com with SMTP id q14so508112itk.0;
+        Tue, 23 Apr 2019 07:33:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=3At1fI9N1eg8Et4ARVC2n3zebSL8yuqB5lEKY2h0dSk=;
+        b=ql1sS65DR0KntPdZVz6uwIbO8SrThBVzgrNvMccR91gAW9Wh9zacS3KuFhHSkxNjpv
+         yFyRonqcql2Yb4l+iDD9KqRsYNmH9Ug/yQSQPoEJz7BmNKSBTYCyqDZ8ZeMGJqzq7RC0
+         RI6h2OdUi9Yk5r+21jMF5BoZQndbkj5jMZUUy294IdbNZYm/HMb1ToyhAbUU5TjAaMF5
+         0obT1HeDVMmdKA/0XTvTLlTw7lwhl5whPUctPfPPGvm/kKYxrLTXlhcqBMg4aQqMgKEk
+         2DDAZjdfYZnF7YiKGXXA1G/FoWJ8XYAKt5XLE+yMN3bik1mz+qT4vV3bhWSRsaDbDgeO
+         X/fA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3At1fI9N1eg8Et4ARVC2n3zebSL8yuqB5lEKY2h0dSk=;
+        b=GEkZoEzctwEKbTBx5HjyDYWT7abQRtTP7MlIvtzRgDADBu4R4ibfB239kyOKy3FKjn
+         SDVLUhf5zZaQphQH1WME2HjUGO2ZJkF/eg0fqmzALIejnffQiW/joDMk98LJ9qu5evKK
+         WZBLrS9ghf1fMMNGYOAP+qkACXxekWD9+XXlJeEcpjgGnLVpxBoy+6hN3eTz3/4XVq5U
+         XysxcsL3nCfKoxnj0uXHjGqqpnMrhChhN0v/GcMFQgfNappVBliNLWES6e4qoMOzVs7U
+         qUJvziEEGISGpnAIuRq3QuZxqaD75EWQVNYE30A9t1O/JKyraPOoSua7WsY1j8oJEtWw
+         cpUg==
+X-Gm-Message-State: APjAAAV9Yk7V4Vnch5smXc++shtHgfTynBDVPr7n0kQavoDeaPCobKn8
+        0JklX12yT4ffx7TgLKhkHNVg13HaAEU=
+X-Google-Smtp-Source: APXvYqwUgbHS3oYuC72vkff/txi9Q60U44fdAkw5t90f34rtlCcE6LxJoyFL3uNLtonRujktTxd1Cw==
+X-Received: by 2002:a24:51:: with SMTP id 78mr2506373ita.20.1556030035724;
+        Tue, 23 Apr 2019 07:33:55 -0700 (PDT)
+Received: from nukespec.gtech ([2601:2c1:8501:182d::6fe])
+        by smtp.gmail.com with ESMTPSA id g1sm5374656ion.2.2019.04.23.07.33.54
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Tue, 23 Apr 2019 07:33:55 -0700 (PDT)
+Subject: Re: [PATCH] PCI/LINK: Account for BW notification in vector
+ calculation
+To:     Alex Williamson <alex.williamson@redhat.com>
+Cc:     bhelgaas@google.com, helgaas@kernel.org, linux-pci@vger.kernel.org,
+        austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, torvalds@linux-foundation.org,
+        linux-kernel@vger.kernel.org
+References: <155597243666.19387.1205950870601742062.stgit@gimli.home>
+ <d1126250-14e0-192c-f219-f143f62c9cdd@gmail.com>
+ <20190422183347.51ba522c@x1.home>
+From:   Alex G <mr.nuke.me@gmail.com>
+Message-ID: <84300da7-9bbd-4f32-c7fa-23724db60b88@gmail.com>
+Date:   Tue, 23 Apr 2019 09:33:53 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190417182448.12382-1-jean-philippe.brucker@arm.com>
-User-Agent: Mutt/1.11.1+86 (6f28e57d73f2) ()
+In-Reply-To: <20190422183347.51ba522c@x1.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 17, 2019 at 07:24:39PM +0100, Jean-Philippe Brucker wrote:
-> This series enables PCI ATS in SMMUv3. Changes since v2 [1]:
+On 4/22/19 7:33 PM, Alex Williamson wrote:
+> On Mon, 22 Apr 2019 19:05:57 -0500
+> Alex G <mr.nuke.me@gmail.com> wrote:
+>> echo 0000:07:00.0:pcie010 |
+>> sudo tee /sys/bus/pci_express/drivers/pcie_bw_notification/unbind
 > 
-> * Fix build failure when building arm-smmu-v3 without CONFIG_PCI
->   Patches 1 and 2 are new.
-> 
-> * Only enable ATS if the root complex supports it. For the moment, only
->   IORT provides this information. I have patches for devicetree but
->   they are less mature and I'd rather make it a separate series.
-> 
-> * Tried to address most comments. I'll see if I can improve the firmware
->   code when adding devicetree support (see [2]).
-> 
-> Note that there is a small conflict with the SVA API. This series
-> applies on top of Joerg's api-features branch for v5.2.
+> That's a bad solution for users, this is meaningless tracking of a
+> device whose driver is actively managing the link bandwidth for power
+> purposes. 
 
-I'll pick this up via the SMMU queue, since the conflict with api-features
-is trivial to resolve.
+0.5W savings on a 100+W GPU? I agree it's meaningless.
 
-Will
+> There is nothing wrong happening here that needs to fill
+> logs.  I thought maybe if I enabled notification of autonomous
+> bandwidth changes that it might categorize these as something we could
+> ignore, but it doesn't.
+> How can we identify only cases where this is
+> an erroneous/noteworthy situation?  Thanks,
+
+You don't. Ethernet doesn't. USB doesn't. This logging behavior is 
+consistent with every other subsystem that deals with multi-speed links. 
+I realize some people are very resistant to change (and use very ancient 
+kernels). I do not, however, agree that this is a sufficient argument to 
+dis-unify behavior.
+
+Alex
