@@ -5,55 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC63BC10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15B83C282DD
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 841D520645
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DACD4218B0
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:39:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="p7Yjj+rO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HC1WPwmI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729546AbfDWQis (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 12:38:48 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:45017 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729310AbfDWQir (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:38:47 -0400
-Received: by mail-pf1-f195.google.com with SMTP id y13so7758716pfm.11;
-        Tue, 23 Apr 2019 09:38:46 -0700 (PDT)
+        id S1729533AbfDWQin (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 12:38:43 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43450 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728972AbfDWQim (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:38:42 -0400
+Received: by mail-pl1-f195.google.com with SMTP id n8so7783943plp.10;
+        Tue, 23 Apr 2019 09:38:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=ao1k2Uh8U/LRDASbEEQCfw1kgyOffPMSmdg/Hjoj9fg=;
-        b=p7Yjj+rOXVZGFWvMUaVBew0BcKpKYzGxWGxAjoMNQchM4vBSSDw0vnGvsNPJirEyiL
-         n5NbfqUb1RHTlUYN7aNfVAvu8HVoayJaH73W71SNPRGB/Ukv3tEKp86Znk7nmNGSilS4
-         F3biF+V/vfvt89RhOGk8Idar006gMT+0lLhnKFZ7k/u7JZSpL1DEq1dJZBDCBCIhZ6iq
-         DjPP+6C7E+6X6dFNPVS9v6dStjwduRZuU20qBMTH8spbk/5qo26idQmGBV62ntVPqL3m
-         Hr4J7tzztWwD6M31l5RVMUwUH5QHCBiqaTgXuWs/7UcVgIfBkZwHS+g9U9ZB2k5VV5UI
-         YXZA==
+        bh=M9skjzp96cygvVz+1JSKV6lvwc3vgk2hHizbPglWd7s=;
+        b=HC1WPwmIlG+hlyxRIZOH4CnRvVGwgWVa8brKz231nxL34WdA7oIv1fV5i09oVTPQZf
+         HGb7skRKqQOEDwz7Nvih8QFEy8wtKy8dT/lu8CJ+eSB/mCx/vsNdhZQ2eHhSD6QHo2YG
+         TuxotwAoJX08deAs0U38LEGdW6TiWo/Jj7iSaEcRvY0nmp38CIEY4/H5B890tE45wqyF
+         HsZfKjucwW1hqfafZ6YstpPJ0y6Xkfaf/2btpDk3ncRlqLjR57n6TQR8GhbrVGm1cAKR
+         +jB4LseocMLJWC88f3+dQQ1dTw4PG93BGi+/ScqkZy+AW2l/SYsh6i6jGWQXmL68+cHS
+         nokQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ao1k2Uh8U/LRDASbEEQCfw1kgyOffPMSmdg/Hjoj9fg=;
-        b=cpL+YnYfYWa1rCzhDWvjfkFluhZ1akMjwD+ws6qaJ910qcZMQqwbhCSY7CzdmpaRqg
-         wyZjlQdK5dQULgeUimR+Lpo/Wo0lyjDqkoRZtxcv+W7ajIZFx7owQ5relxaXNtXXS9y8
-         Fi1YI+SH0vyBRLTKmmANstf5rw4s9xa5s1R5pJK2PS1pApHf3xSr9sw5nO6RM1nnzCye
-         Sdv8P+Yc0TQh/aBDJvEpn3m1Zy0pmB50/ncuSHfqXcp5ziZf0s5K8gwVqAcNKtj/3fXW
-         KJfLu3pPhec14LqnsHPGKSOpy0ZGR+pRtsIbrBixGksoF22aF6bQYB3i33YjCQGzHvcV
-         Wheg==
-X-Gm-Message-State: APjAAAXnM7zoYmrYpi0IrTKCwf8BTndT3uY94qL9WvB0GZjQwSpyMw2O
-        H5nOqIuVHUTWL7UQXgsfWP8=
-X-Google-Smtp-Source: APXvYqwQKECWplBd06QikSOEoBIjyKNxrFMfDtXDax+6IVYtQkG78RIWG7Sym4OfvZvjqbcyGWsdZg==
-X-Received: by 2002:aa7:8ac8:: with SMTP id b8mr27568786pfd.234.1556037526611;
-        Tue, 23 Apr 2019 09:38:46 -0700 (PDT)
+        bh=M9skjzp96cygvVz+1JSKV6lvwc3vgk2hHizbPglWd7s=;
+        b=ZntfUqjY5ovX0HBYhkkHjGONwIKqFLp/6CK/48mPsBMVEijUbw98cFpKCEDvbQFcsP
+         EJZG2BcCY+5NyWM4mB/D3ROgWYXmbw+ITik0l4dAJKrlzKIQ6bwhanxUqaLspbbwH3N8
+         eo55gC9mRziK232IUYLn6o0riqNcgmsv5LSsN0Jqnk0rA0LJ91U8luJjY4NQHS16rXJG
+         0Lyg822tj4gN+1Y5BwUdVL3FhjZvAscIGY4Xr4/c6gfoHs34qO7vV9ROgcy0D7jdczRG
+         8CuchkriIBhraGGBn66Ro4+kWns68yekYDaxs5zBkicjxSki+eP4Rd1X5atX1XQ4MeRI
+         zrHA==
+X-Gm-Message-State: APjAAAXZYRQU2RUbTElcSJgUTRbB+2ridZ3VUtETT+wu3Jt6c8URR5UA
+        STEz+t95C0nH9vievEsf3sU=
+X-Google-Smtp-Source: APXvYqxW4QBYEj4LOBC2F/7Xh+EtfVt86Gw4890OAPE41pEAwNvEos7lM78G5yOaeekXq29BA133cQ==
+X-Received: by 2002:a17:902:6949:: with SMTP id k9mr26582784plt.59.1556037521465;
+        Tue, 23 Apr 2019 09:38:41 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.38.41
+        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.38.36
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Apr 2019 09:38:45 -0700 (PDT)
+        Tue, 23 Apr 2019 09:38:40 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Jonathan Corbet <corbet@lwn.net>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
@@ -63,9 +64,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
         linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
         linux-gpio@vger.kernel.org, mchehab+samsung@kernel.org,
         Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v4 56/63] Documentation: x86: convert i386/IO-APIC.txt to reST
-Date:   Wed, 24 Apr 2019 00:29:25 +0800
-Message-Id: <20190423162932.21428-57-changbin.du@gmail.com>
+Subject: [PATCH v4 55/63] Documentation: x86: convert usb-legacy-support.txt to reST
+Date:   Wed, 24 Apr 2019 00:29:24 +0800
+Message-Id: <20190423162932.21428-56-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423162932.21428-1-changbin.du@gmail.com>
 References: <20190423162932.21428-1-changbin.du@gmail.com>
@@ -81,130 +82,41 @@ add it to Sphinx TOC tree. No essential content change.
 
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 ---
- .../x86/i386/{IO-APIC.txt => IO-APIC.rst}     | 26 ++++++++++++-------
- Documentation/x86/i386/index.rst              | 10 +++++++
- Documentation/x86/index.rst                   |  1 +
- 3 files changed, 27 insertions(+), 10 deletions(-)
- rename Documentation/x86/i386/{IO-APIC.txt => IO-APIC.rst} (93%)
- create mode 100644 Documentation/x86/i386/index.rst
+ Documentation/x86/index.rst                               | 1 +
+ .../{usb-legacy-support.txt => usb-legacy-support.rst}    | 8 ++++++--
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+ rename Documentation/x86/{usb-legacy-support.txt => usb-legacy-support.rst} (92%)
 
-diff --git a/Documentation/x86/i386/IO-APIC.txt b/Documentation/x86/i386/IO-APIC.rst
-similarity index 93%
-rename from Documentation/x86/i386/IO-APIC.txt
-rename to Documentation/x86/i386/IO-APIC.rst
-index 15f5baf7e1b6..aec98f742763 100644
---- a/Documentation/x86/i386/IO-APIC.txt
-+++ b/Documentation/x86/i386/IO-APIC.rst
-@@ -1,3 +1,11 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+=======
-+IO-APIC
-+=======
-+
-+:Author: Ingo Molnar <mingo@kernel.org>
-+
- Most (all) Intel-MP compliant SMP boards have the so-called 'IO-APIC',
- which is an enhanced interrupt controller. It enables us to route
- hardware interrupts to multiple CPUs, or to CPU groups. Without an
-@@ -13,7 +21,7 @@ usually worked around by the kernel. If your MP-compliant SMP board does
- not boot Linux, then consult the linux-smp mailing list archives first.
- 
- If your box boots fine with enabled IO-APIC IRQs, then your
--/proc/interrupts will look like this one:
-+/proc/interrupts will look like this one::
- 
-    ---------------------------->
-   hell:~> cat /proc/interrupts
-@@ -37,14 +45,14 @@ none of those IRQ sources is performance-critical.
- In the unlikely case that your board does not create a working mp-table,
- you can use the pirq= boot parameter to 'hand-construct' IRQ entries. This
- is non-trivial though and cannot be automated. One sample /etc/lilo.conf
--entry:
-+entry::
- 
- 	append="pirq=15,11,10"
- 
- The actual numbers depend on your system, on your PCI cards and on their
- PCI slot position. Usually PCI slots are 'daisy chained' before they are
- connected to the PCI chipset IRQ routing facility (the incoming PIRQ1-4
--lines):
-+lines)::
- 
-                ,-.        ,-.        ,-.        ,-.        ,-.
-      PIRQ4 ----| |-.    ,-| |-.    ,-| |-.    ,-| |--------| |
-@@ -56,7 +64,7 @@ lines):
-      PIRQ1 ----| |-  `----| |-  `----| |-  `----| |--------| |
-                `-'        `-'        `-'        `-'        `-'
- 
--Every PCI card emits a PCI IRQ, which can be INTA, INTB, INTC or INTD:
-+Every PCI card emits a PCI IRQ, which can be INTA, INTB, INTC or INTD::
- 
-                                ,-.
-                          INTD--| |
-@@ -78,19 +86,19 @@ to have non shared interrupts). Slot5 should be used for videocards, they
- do not use interrupts normally, thus they are not daisy chained either.
- 
- so if you have your SCSI card (IRQ11) in Slot1, Tulip card (IRQ9) in
--Slot2, then you'll have to specify this pirq= line:
-+Slot2, then you'll have to specify this pirq= line::
- 
- 	append="pirq=11,9"
- 
- the following script tries to figure out such a default pirq= line from
--your PCI configuration:
-+your PCI configuration::
- 
- 	echo -n pirq=; echo `scanpci | grep T_L | cut -c56-` | sed 's/ /,/g'
- 
- note that this script won't work if you have skipped a few slots or if your
- board does not do default daisy-chaining. (or the IO-APIC has the PIRQ pins
- connected in some strange way). E.g. if in the above case you have your SCSI
--card (IRQ11) in Slot3, and have Slot1 empty:
-+card (IRQ11) in Slot3, and have Slot1 empty::
- 
- 	append="pirq=0,9,11"
- 
-@@ -105,7 +113,7 @@ won't function properly (e.g. if it's inserted as a module).
- If you have 2 PCI buses, then you can use up to 8 pirq values, although such
- boards tend to have a good configuration.
- 
--Be prepared that it might happen that you need some strange pirq line:
-+Be prepared that it might happen that you need some strange pirq line::
- 
- 	append="pirq=0,0,0,0,0,0,9,11"
- 
-@@ -115,5 +123,3 @@ Good luck and mail to linux-smp@vger.kernel.org or
- linux-kernel@vger.kernel.org if you have any problems that are not covered
- by this document.
- 
---- mingo
--
-diff --git a/Documentation/x86/i386/index.rst b/Documentation/x86/i386/index.rst
-new file mode 100644
-index 000000000000..8747cf5bbd49
---- /dev/null
-+++ b/Documentation/x86/i386/index.rst
-@@ -0,0 +1,10 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+============
-+i386 Support
-+============
-+
-+.. toctree::
-+   :maxdepth: 2
-+
-+   IO-APIC
 diff --git a/Documentation/x86/index.rst b/Documentation/x86/index.rst
-index 526f7a008b8e..19323c5b89ce 100644
+index c41c17906b6d..526f7a008b8e 100644
 --- a/Documentation/x86/index.rst
 +++ b/Documentation/x86/index.rst
-@@ -26,3 +26,4 @@ Linux x86 Support
+@@ -25,3 +25,4 @@ Linux x86 Support
+    pti
     microcode
     resctrl_ui
-    usb-legacy-support
-+   i386/index
++   usb-legacy-support
+diff --git a/Documentation/x86/usb-legacy-support.txt b/Documentation/x86/usb-legacy-support.rst
+similarity index 92%
+rename from Documentation/x86/usb-legacy-support.txt
+rename to Documentation/x86/usb-legacy-support.rst
+index 1894cdfc69d9..19abead7f1a8 100644
+--- a/Documentation/x86/usb-legacy-support.txt
++++ b/Documentation/x86/usb-legacy-support.rst
+@@ -1,7 +1,11 @@
++
++.. SPDX-License-Identifier: GPL-2.0
++
++==================
+ USB Legacy support
+-~~~~~~~~~~~~~~~~~~
++==================
+ 
+-Vojtech Pavlik <vojtech@suse.cz>, January 2004
++:Author: Vojtech Pavlik <vojtech@suse.cz>, January 2004
+ 
+ 
+ Also known as "USB Keyboard" or "USB Mouse support" in the BIOS Setup is a
 -- 
 2.20.1
 
