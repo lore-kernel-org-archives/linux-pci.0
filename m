@@ -2,141 +2,118 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4219C282DD
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAD30C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:57:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA264218DA
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:42:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B312B206BA
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 22:57:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726325AbfDWWme (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 18:42:34 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:32862 "EHLO mx1.redhat.com"
+        id S1727838AbfDWW5o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 18:57:44 -0400
+Received: from mga01.intel.com ([192.55.52.88]:32897 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726075AbfDWWme (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Apr 2019 18:42:34 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4790E3022FAF;
-        Tue, 23 Apr 2019 22:42:33 +0000 (UTC)
-Received: from gimli.home (ovpn-116-122.phx2.redhat.com [10.3.116.122])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 37894600C2;
-        Tue, 23 Apr 2019 22:42:29 +0000 (UTC)
-Subject: [PATCH] PCI: Add link_change error handler and vfio-pci user
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     bhelgaas@google.com, helgaas@kernel.org, mr.nuke.me@gmail.com,
-        linux-pci@vger.kernel.org
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        okaya@kernel.org, torvalds@linux-foundation.org,
-        linux-kernel@vger.kernel.org
-Date:   Tue, 23 Apr 2019 16:42:28 -0600
-Message-ID: <155605909349.3575.13433421148215616375.stgit@gimli.home>
-User-Agent: StGit/0.19-dirty
+        id S1726325AbfDWW5o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Apr 2019 18:57:44 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Apr 2019 15:57:43 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,387,1549958400"; 
+   d="scan'208";a="164442021"
+Received: from otc-nc-03.jf.intel.com (HELO otc-nc-03) ([10.54.39.145])
+  by fmsmga004.fm.intel.com with ESMTP; 23 Apr 2019 15:57:43 -0700
+Date:   Tue, 23 Apr 2019 15:57:43 -0700
+From:   "Raj, Ashok" <ashok.raj@intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     sathyanarayanan kuppuswamy 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>, corbet@lwn.net,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+        alex.williamson@redhat.com, Ashok Raj <ashok.raj@intel.com>
+Subject: Re: [PATCH v1 1/5] PCI/IOV: Add support to verify PF/VF spec
+ compliance
+Message-ID: <20190423225743.GA19171@otc-nc-03>
+References: <cover.1551909341.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <317aaed09820db65c21452663bed33468f874d3a.1551909341.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20190419135918.GC173520@google.com>
+ <20190419173728.GE46517@otc-nc-03>
+ <22ad30c0-fc7e-b5ac-a224-c1a247c33359@linux.intel.com>
+ <20190423221134.GI14616@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Tue, 23 Apr 2019 22:42:33 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190423221134.GI14616@google.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCIe bandwidth notification service generates logging any time a
-link changes speed or width to a state that is considered downgraded.
-Unfortunately, it cannot differentiate signal integrity related link
-changes from those intentionally initiated by an endpoint driver,
-including drivers that may live in userspace or VMs when making use
-of vfio-pci.  Therefore, allow the driver to have a say in whether
-the link is indeed downgraded and worth noting in the log, or if the
-change is perhaps intentional.
+On Tue, Apr 23, 2019 at 05:11:34PM -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 19, 2019 at 11:41:31AM -0700, sathyanarayanan kuppuswamy wrote:
+> > On 4/19/19 10:37 AM, Raj, Ashok wrote:
+> > > On Fri, Apr 19, 2019 at 08:59:18AM -0500, Bjorn Helgaas wrote:
+> > > > On Wed, Mar 06, 2019 at 02:11:14PM -0800, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
+> > > > > From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> > > > > 
+> > > > > PF/VF implementation must comply with PCIe specification as
+> > > > > defined in r4.0, sec 9.3.4, 9.3.5, 9.3.6 and 9.3.7. And if
+> > > > > it does not comply, return error and skip PF/VF device
+> > > > > creation.
+> > > > As far as I can tell, this patch basically looks for excuses not to
+> > > > enable SR-IOV.  Does this actually solve a problem?  Are there
+> > > > non-compliant devices out there that blow up if we enable SR-IOV?
+> > > We ran into one case with a future product for INTx value on VF's. We do have
+> > > a quirk for it upstream now. We thought it might be good to just run through
+> > > some of the basic requirements and see if any device violates it, that would allow
+> > > us to catch them early.
+> > > 
+> > > We are looking into other things like PASID and End-2-End prefix capability for instance.
+> > > There is another subtle thing like number of eetlp_prefix_supported. Which i don't
+> > > pci core checks today, and we might need to do that to be compliant or find devices
+> > > that break that contract.
+> > > 
+> > > Real intend is to be find such breaks early, it also helps the product guys :-)
+> > > 
+> > > With upcoming vIOMMU effort, we need to ensure that capabilities are exported properly
+> > > depending on if its a SRIOV-PF/VF or a Scalable device.
+> > > 
+> > > Cheers,
+> > > Ashok
+> > 
+> > I agree with Ashok's comments. It helps us find SRIOV related features
+> > enable/disable issues easily.
+> > 
+> > Also, there is some of level of spec compliance checks in enabling
+> > PASID/PRI/ATS already in our existing code.
+> > 
+> > I am just grouping them together in one place and expanded it for other IOV
+> > related features.
+> 
+> My $0.02:
+> 
+>   - If there's a problem that actually prevents Linux from using a feature,
+>     check for the problem close to the point where we use the feature.
+> 
+>   - If you want to check for spec compliance, most of that can be done more
+>     easily in user-space by examining lspci output.
 
-For vfio-pci, we don't know the intentions of the user/guest driver
-either, but we do know that GPU drivers in guests actively manage
-the link state and therefore trigger the bandwidth notification for
-what appear to be entirely intentional link changes.
+Certainly we could turn this into a user space tool, but its hard to enforce to find
+problems early. Being part of the kernel there is no free pass for not being spec
+compliant and you find problems early during bringup.
 
-Fixes: e8303bb7a75c PCI/LINK: Report degraded links via link bandwidth notification
-Link: https://lore.kernel.org/linux-pci/155597243666.19387.1205950870601742062.stgit@gimli.home/T/#u
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+I'll think about it more and see if we could move these to places before use
+as you suggest rather than a big fat catchall as it currently is.
 
-Changing to pci_dbg() logging is not super usable, so let's try the
-previous idea of letting the driver handle link change events as they
-see fit.  Ideally this might be two patches, but for easier handling,
-folding the pci and vfio-pci bits together.  Comments?  Thanks,
+Cheers,
+Ashok
 
-Alex
 
- drivers/pci/probe.c         |   13 +++++++++++++
- drivers/vfio/pci/vfio_pci.c |   10 ++++++++++
- include/linux/pci.h         |    3 +++
- 3 files changed, 26 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7e12d0163863..233cd4b5b6e8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2403,6 +2403,19 @@ void pcie_report_downtraining(struct pci_dev *dev)
- 	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
- 		return;
- 
-+	/*
-+	 * If driver handles link_change event, defer to driver.  PCIe drivers
-+	 * can call pcie_print_link_status() to print current link info.
-+	 */
-+	device_lock(&dev->dev);
-+	if (dev->driver && dev->driver->err_handler &&
-+	    dev->driver->err_handler->link_change) {
-+		dev->driver->err_handler->link_change(dev);
-+		device_unlock(&dev->dev);
-+		return;
-+	}
-+	device_unlock(&dev->dev);
-+
- 	/* Print link status only if the device is constrained by the fabric */
- 	__pcie_print_link_status(dev, false);
- }
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index cab71da46f4a..c9ffc0ccabb3 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -1418,8 +1418,18 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
- 	return PCI_ERS_RESULT_CAN_RECOVER;
- }
- 
-+/*
-+ * Ignore link change notification, we can't differentiate signal related
-+ * link changes from user driver power management type operations, so do
-+ * nothing.  Potentially this could be routed out to the user.
-+ */
-+static void vfio_pci_link_change(struct pci_dev *pdev)
-+{
-+}
-+
- static const struct pci_error_handlers vfio_err_handlers = {
- 	.error_detected = vfio_pci_aer_err_detected,
-+	.link_change = vfio_pci_link_change,
- };
- 
- static struct pci_driver vfio_pci_driver = {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 27854731afc4..e9194bc03f9e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -763,6 +763,9 @@ struct pci_error_handlers {
- 
- 	/* Device driver may resume normal operations */
- 	void (*resume)(struct pci_dev *dev);
-+
-+	/* PCIe link change notification */
-+	void (*link_change)(struct pci_dev *dev);
- };
- 
- 
-
+> 
+> Bjorn
