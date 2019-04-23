@@ -1,189 +1,122 @@
-Return-Path: <SRS0=L200=SY=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	TVD_PH_BODY_ACCOUNTS_PRE autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03BCBC10F11
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD5F1C10F11
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 00:06:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B7E8120811
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Apr 2019 23:51:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81EBD20685
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 00:06:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="m3givbMc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728831AbfDVXvF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Apr 2019 19:51:05 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:44484 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730807AbfDVXu7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Apr 2019 19:50:59 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hIii7-00071J-6A; Mon, 22 Apr 2019 17:50:58 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hIii6-0004C1-NF; Mon, 22 Apr 2019 17:50:54 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Kit Chow <kchow@gigaio.com>, Yinghai Lu <yinghai@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Mon, 22 Apr 2019 17:50:52 -0600
-Message-Id: <20190422235053.16073-2-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190422235053.16073-1-logang@deltatee.com>
-References: <20190422235053.16073-1-logang@deltatee.com>
+        id S1730097AbfDWAGB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Apr 2019 20:06:01 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:44897 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729892AbfDWAGB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 Apr 2019 20:06:01 -0400
+Received: by mail-ot1-f68.google.com with SMTP id d24so8479507otl.11;
+        Mon, 22 Apr 2019 17:06:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=PINKDV7/Qi7ml3Vv+IO0r6F67wCGpztVZmzZuYfO/mc=;
+        b=m3givbMczweIf3I3tP6Lf/htRkwCR83LIWVOGymEhE+3Ackz9qa5d7ZvPP+3LLvubW
+         PLMdjJPYQraSCsGGGr7QDsUt63vjgV+SYI7XQsY2nUEVYIKK0lxjEvtgnxvnjRe13Jbs
+         ChUKa52Tu5cwnvlLdJdKLlwZ7ZfYqMVNyFsJikpk5Wqma09ooWnAjgr9xKXBZ/Y6Tmu8
+         Xp0/4L+DZQ/MGTnbLWAuksWiFHBi1akwWSAYN70k3i/501de3eJVLtp3+OnIXVnfcIqI
+         CBsGSVWHsGONBFXhsJ1i30Mp0dTZt0lmnacQEq9jbcVg8ki6MwH5pXvvwrd+0+BD1QCg
+         JiCg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=PINKDV7/Qi7ml3Vv+IO0r6F67wCGpztVZmzZuYfO/mc=;
+        b=DpUq6xYgYWEVpXHmvR9i5c0xCxG21TAJWIdI04VK/IqmF68eeB3g81wl6UxsQ4QAen
+         emdNlYyHqNGVCFCUX3OWYHm8/1ruT0fDEByTpl4mTWQ/5F/kXeiUizQQJLK7ASX6dIbr
+         4HEC/aeqY2H9ItihqAA0g5T1GbY+LGpp2BS35SlMixVCMN/YX7A6aAcYa8I1acKVyrFL
+         o9OqBU1zkTChUhjTkFIaNROeuH9U4yXFccd+pnMxj5c4TZ7C3bBs29wEE+t6vjfSSsmJ
+         wbwPddjkocoJiYPLHqoNsxbgQdMmPcD4rb/x5AAWFADAT+LuZOn5KRUqc7PcxNpuAu4k
+         kPvg==
+X-Gm-Message-State: APjAAAX2lyLEXq+o+/zAcu9hre0agy3FxyGyeKe7kz1Av7xDf/pjkTvH
+        cNzlprUWlErYN9Hecgjy3+0SIYrcWFo=
+X-Google-Smtp-Source: APXvYqyvhiO42OSS+LzzznuXR0HWsaLa3TlPpc9rpXT0n+4LjWetdLFwgMgkWNfghNUfC3/jiCWMrA==
+X-Received: by 2002:a9d:5d03:: with SMTP id b3mr12774321oti.268.1555977960054;
+        Mon, 22 Apr 2019 17:06:00 -0700 (PDT)
+Received: from nukespec.gtech ([2601:2c1:8501:182d::6fe])
+        by smtp.gmail.com with ESMTPSA id u22sm5712272otk.49.2019.04.22.17.05.58
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 22 Apr 2019 17:05:59 -0700 (PDT)
+Subject: Re: [PATCH] PCI/LINK: Account for BW notification in vector
+ calculation
+To:     Alex Williamson <alex.williamson@redhat.com>, bhelgaas@google.com,
+        helgaas@kernel.org, linux-pci@vger.kernel.org
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, torvalds@linux-foundation.org,
+        linux-kernel@vger.kernel.org
+References: <155597243666.19387.1205950870601742062.stgit@gimli.home>
+From:   Alex G <mr.nuke.me@gmail.com>
+Message-ID: <d1126250-14e0-192c-f219-f143f62c9cdd@gmail.com>
+Date:   Mon, 22 Apr 2019 19:05:57 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, kchow@gigaio.com, yinghai@kernel.org, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 1/2] PCI: Prevent 64-bit resources from being counted in 32-bit bridge region
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+In-Reply-To: <155597243666.19387.1205950870601742062.stgit@gimli.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In some situations (described below), hierarchies of 32-bit resources can
-fail to be assigned when the kernel has to attempt to assign a large
-64-bit resource. When this happens, lspci will report
-some PCI BAR resources as 'ignored' and some PCI Bridge windows
-being left unset. Sample lspci lines may look like:
+On 4/22/19 5:43 PM, Alex Williamson wrote:
+> [  329.725607] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
+> limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
+> GT/s x16 link)
+> [  708.151488] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
+> limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
+> GT/s x16 link)
+> [  718.262959] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
+> limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
+> GT/s x16 link)
+> [ 1138.124932] vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth,
+> limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5
+> GT/s x16 link)
+> 
+> What is the value of this nagging?
 
-  Memory behind bridge: fff00000-000fffff
+Good! The bandwidth notification service is working as intended. If this 
+bothers you, you can unbind the device from the bandwidth notification 
+driver:
 
-or
+echo 0000:07:00.0:pcie010 |
+sudo tee /sys/bus/pci_express/drivers/pcie_bw_notification/unbind
 
-  Region 0: Memory at <ignored> (32-bit, non-prefetchable) [size=256K]
 
-lspci reports a BAR as 'ignored' when the kernel does not populate
-the struct resource and the corresponding entry in either
-/proc/bus/pci/devices or /sys/bus/pci/devices/.../resource are all zero.
-Any device driver that depends on one of these BARs are likely to fail
-initializing and the device will not be usable. Typically when this
-happens, the underlying Base Address Registers in the configuration
-space are still set to whatever the firmware set them to, it's only
-the kernel's view of this that is wrong.
 
-The possible situations where this can happen will be a bit varied and
-depend highly on the exact hierarchy, what the firmware has assigned
-and what the kernel must do to properly re-assign resources. In the
-setup that first hit this bug, it failed only with the 'pci=realloc'
-command line parameter. The bug has also been hackily reproduced with
-QEMU[1] without the realloc parameter.
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index 7d04f9d087a6..1b330129089f 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -55,7 +55,8 @@ static int pcie_message_numbers(struct pci_dev *dev, int mask,
+>   	 * 7.8.2, 7.10.10, 7.31.2.
+>   	 */
+>   
+> -	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP)) {
+> +	if (mask & (PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP |
+> +		    PCIE_PORT_SERVICE_BWNOTIF)) {
+>   		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+>   		*pme = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+>   		nvec = *pme + 1;
 
-The following things are required to hit this bug:
-
-1) A large 64-bit prefetchable BAR that can't be assigned in any
-   pass of pci_assign_unassigned_bridge_resources(). The resource must
-   be large enough that it will not be able to fit with-in the 32-bit
-   region. This resource may or may not be assignable into the 64-bit
-   prefetchable region after additional passes.
-
-2) A victim 32-bit non-prefetchable BAR that is a neighbor of the
-   large BAR (so typically it will have to be behind a switch). When
-   the bug is hit, this BAR's struct resource will not be assign and
-   lspci will report it as ignored.
-
-3) There must exist a 64-bit prefetchable window for the original large
-   BAR to fit in. Which generally implies there is no 32-bit
-   prefetchable window.
-
-4) The kernel has to have a reason to re-assign the heirarchy that
-   contains both BARs.
-
-The cause of this bug is in __pci_bus_size_bridges() which tries to
-calculate the total resource space required for each of the bridge windows
-(typically IO, 64-bit, and 32-bit / non-prefetchable). The code, as
-written, tries to allocate all the 64-bit prefetchable resources
-followed by all the remaining resources. It uses three calls to
-pbus_size_mem() for this:
-
-  1) If bridge has a 64-bit prefetchable window, find the size of all
-     64-bit prefetchable resources below the bridge
-
-  2) If bridge has no 64-bit prefetchable window, find the size
-     of all prefetchable resources below the bridge
-
-  3) Find the size of everything else (non-prefetchable resources plus
-     any prefetchable ones that couldn't be accommodated above)
-
-By the requirement (3) above, the system has a 64-bit prefetchable
-window, so the large 64-bit BAR *should* be assigned to the 64-bit
-prefetchable region. However, if the 64-bit bus resource has already
-been assigned, then this call to pbus_size_mem() will fail. (See
-the find_free_bus_resource() helper). When the first call fails, it falls
-to the second call but, by requirement (3) above, there is no 32-bit
-prefetchable window so this call also fails. Thus, it falls to the last
-call which tries to fit all the resources into the 32-bit
-catch-all window. However, because of requirement (1), the large
-BAR will overfill this region and cause the victim 32-bit BAR to not
-be assignable.
-
-Looking at the first call to pbus_size_mem(): there are only two reasons
-for it to fail: if there is no 64-bit/prefetchable bridge window, or if that
-window is already assigned. We know the former case can't be true because,
-in __pci_bus_size_bridges(), its existence is checked before making the call.
-So if the pbus_size_mem() call in question fails, the window must already
-be assigned, and in this case, the code should not try to assign
-64-bit resources into the 32-bit catch-all window.
-
-Thus, the fix for the bug is to ensure mask, type2 and type3 are set in
-cases where a 64-bit resource exists even if pbus_size_mem() fails. Once
-we do this, the large BAR resource will never be attempted to be
-assigned to the 32-bit catch-all window and the victim BAR will still
-be correctly assigned.
-
-[1] https://lore.kernel.org/lkml/de3e34d8-2ac3-e89b-30f1-a18826ce5d7d@deltatee.com/T/#u
-
-Reported-by: Kit Chow <kchow@gigaio.com>
-Fixes: 5b28541552ef ("PCI: Restrict 64-bit prefetchable bridge windows to 64-bit resources")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ec44a0f3a7ac..0eb40924169b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1228,21 +1228,20 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
- 		if (b_res[2].flags & IORESOURCE_MEM_64) {
- 			prefmask |= IORESOURCE_MEM_64;
--			ret = pbus_size_mem(bus, prefmask, prefmask,
-+			pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
- 				  realloc_head ? 0 : additional_mem_size,
- 				  additional_mem_size, realloc_head);
- 
- 			/*
--			 * If successful, all non-prefetchable resources
--			 * and any 32-bit prefetchable resources will go in
--			 * the non-prefetchable window.
-+			 * Given the existence of a 64-bit resource for this
-+			 * bus, all non-prefetchable resources and any 32-bit
-+			 * prefetchable resources will go in the
-+			 * non-prefetchable window.
- 			 */
--			if (ret == 0) {
--				mask = prefmask;
--				type2 = prefmask & ~IORESOURCE_MEM_64;
--				type3 = prefmask & ~IORESOURCE_PREFETCH;
--			}
-+			mask = prefmask;
-+			type2 = prefmask & ~IORESOURCE_MEM_64;
-+			type3 = prefmask & ~IORESOURCE_PREFETCH;
- 		}
- 
- 		/*
--- 
-2.20.1
-
+Good catch!
