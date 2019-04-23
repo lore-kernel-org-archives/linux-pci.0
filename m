@@ -7,634 +7,415 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9A8C282E1
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 18:30:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45F2CC282E3
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 18:30:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6C83218B0
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 18:30:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17144217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 18:30:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="QfOH0hp5"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="J86d5Q+D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726171AbfDWSa0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 14:30:26 -0400
-Received: from dc2-smtprelay2.synopsys.com ([198.182.61.142]:60396 "EHLO
+        id S1726088AbfDWSa1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 14:30:27 -0400
+Received: from dc2-smtprelay2.synopsys.com ([198.182.61.142]:60386 "EHLO
         smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725945AbfDWSa0 (ORCPT
+        by vger.kernel.org with ESMTP id S1726124AbfDWSa0 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 14:30:26 -0400
 Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 98F69C0B13;
-        Tue, 23 Apr 2019 18:30:24 +0000 (UTC)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 1577FC0B16;
+        Tue, 23 Apr 2019 18:30:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1556044224; bh=PSW/FpZAoG+OWi8n6kUAfXfTRLy3SuizaQ3wj3cD0PQ=;
+        t=1556044225; bh=RmUDVbuamu6fton8ZT3BKpmeH38c4wATuViqRZL99Jo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
          References:From;
-        b=QfOH0hp5zCyhWu1eKkXizab3MpLrVGm3u9svrJh9xNPIXmd0zICKFzprswc3N2Ce9
-         YkNUEUA+aAZCy7aII2MbqwW0KKUuQUS/2N1zBdnRUl2JdTZ1heAIW47jlhUscIk7zU
-         0DYFl7JYT/3+JYRPGj9yI8R/JkNJqL/LjZ0naOeLaHK0d9O76MhmDo9uNZbNxKordE
-         DA7SIScmJ1JEC7zGU8VV00vFecakVggZrgdHX2Xnm4Zv5SyqkqLrYwnWoIZuxX1pNc
-         pVxi93Lk5pgoYArUazjbejw3bE1kyd5AATz1vi1IEdmqcXk8tFINY61eBNlnEqns1e
-         5TFL3N4OAdHSg==
+        b=J86d5Q+DGIYMO2bkyaoNDS6f+dljEv0BEE+/+3zA4sWjl7BYcFAocUyjL3rFAamkE
+         klbE5U2kPmdMnFVQUQoEZNPHaN2adlqtoQXkEr889RUj8+gfOuhUVwR+XJa9Imavj1
+         Sn1O1uphHQ0SZsJa5rx0de7sBxBP7Ldhg+F1TRsKrKQP3fzdflolDZuSQH1pK45Oi+
+         efja3+L/wkOIcbc3MIPz6q0sdu+BMBYf14KWWczPRIbwdnzN0tBsUVtshOHIFdkYlE
+         28Re/SbUmNWo+/iGn/x6AecgBk7E+Yb8UzvsgRgjoMmczflrIxuxtvBH8vwVZEpoD+
+         hjLUTVp6U8PQA==
 Received: from de02.synopsys.com (de02.internal.synopsys.com [10.225.17.21])
-        by mailhost.synopsys.com (Postfix) with ESMTP id D3836A009F;
-        Tue, 23 Apr 2019 18:30:24 +0000 (UTC)
+        by mailhost.synopsys.com (Postfix) with ESMTP id CA5E9A009B;
+        Tue, 23 Apr 2019 18:30:25 +0000 (UTC)
 Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
-        by de02.synopsys.com (Postfix) with ESMTP id CA5C73F82B;
-        Tue, 23 Apr 2019 20:30:23 +0200 (CEST)
+        by de02.synopsys.com (Postfix) with ESMTP id 043123F831;
+        Tue, 23 Apr 2019 20:30:24 +0200 (CEST)
 From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
 To:     linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
 Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
         Vinod Koul <vkoul@kernel.org>,
         Dan Williams <dan.j.williams@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Russell King <rmk+kernel@armlinux.org.uk>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [RFC v6 3/6] dmaengine: Add Synopsys eDMA IP version 0 debugfs support
-Date:   Tue, 23 Apr 2019 20:30:10 +0200
-Message-Id: <ba56a34f11c4bb699079946ca51bb11244ac713e.1556043127.git.gustavo.pimentel@synopsys.com>
+Subject: [RFC v6 5/6] dmaengine: Add Synopsys eDMA IP PCIe glue-logic
+Date:   Tue, 23 Apr 2019 20:30:12 +0200
+Message-Id: <7db737e11950c6eced69f68f75584fa1b7b37982.1556043127.git.gustavo.pimentel@synopsys.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
 References: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
 In-Reply-To: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
 References: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Synopsys eDMA IP version 0 debugfs support to assist any debug
-in the future.
+Synopsys eDMA IP is normally distributed along with Synopsys PCIe
+EndPoint IP (depends of the use and licensing agreement).
 
-Creates a file system structure composed by folders and files that mimic
-the IP register map (this files are read only) to ease any debug.
+This IP requires some basic configurations, such as:
+ - eDMA registers BAR
+ - eDMA registers offset
+ - eDMA registers size
+ - eDMA linked list memory BAR
+ - eDMA linked list memory offset
+ - eDMA linked list memory size
+ - eDMA data memory BAR
+ - eDMA data memory offset
+ - eDMA data memory size
+ - eDMA version
+ - eDMA mode
+ - IRQs available for eDMA
 
-To enable this feature is necessary to select DEBUG_FS option on kernel
-configuration.
+As a working example, PCIe glue-logic will attach to a Synopsys PCIe
+EndPoint IP prototype kit (Vendor ID = 0x16c3, Device ID = 0xedda),
+which has built-in an eDMA IP with this default configuration:
+ - eDMA registers BAR = 0
+ - eDMA registers offset = 0x00001000 (4 Kbytes)
+ - eDMA registers size = 0x00002000 (8 Kbytes)
+ - eDMA linked list memory BAR = 2
+ - eDMA linked list memory offset = 0x00000000 (0 Kbytes)
+ - eDMA linked list memory size = 0x00800000 (8 Mbytes)
+ - eDMA data memory BAR = 2
+ - eDMA data memory offset = 0x00800000 (8 Mbytes)
+ - eDMA data memory size = 0x03800000 (56 Mbytes)
+ - eDMA version = 0
+ - eDMA mode = EDMA_MODE_UNROLL
+ - IRQs = 1
 
-Small output example:
+This driver can be compile as built-in or external module in kernel.
 
-(eDMA IP version 0, unroll, 1 write + 1 read channels)
-
-% mount -t debugfs none /sys/kernel/debug/
-% tree /sys/kernel/debug/dw-edma-core:0/
-dw-edma/
-├── version
-├── mode
-├── wr_ch_cnt
-├── rd_ch_cnt
-└── registers
-    ├── ctrl_data_arb_prior
-    ├── ctrl
-    ├── write
-    │   ├── engine_en
-    │   ├── doorbell
-    │   ├── ch_arb_weight_low
-    │   ├── ch_arb_weight_high
-    │   ├── int_status
-    │   ├── int_mask
-    │   ├── int_clear
-    │   ├── err_status
-    │   ├── done_imwr_low
-    │   ├── done_imwr_high
-    │   ├── abort_imwr_low
-    │   ├── abort_imwr_high
-    │   ├── ch01_imwr_data
-    │   ├── ch23_imwr_data
-    │   ├── ch45_imwr_data
-    │   ├── ch67_imwr_data
-    │   ├── linked_list_err_en
-    │   ├── engine_chgroup
-    │   ├── engine_hshake_cnt_low
-    │   ├── engine_hshake_cnt_high
-    │   ├── ch0_pwr_en
-    │   ├── ch1_pwr_en
-    │   ├── ch2_pwr_en
-    │   ├── ch3_pwr_en
-    │   ├── ch4_pwr_en
-    │   ├── ch5_pwr_en
-    │   ├── ch6_pwr_en
-    │   ├── ch7_pwr_en
-    │   └── channel:0
-    │       ├── ch_control1
-    │       ├── ch_control2
-    │       ├── transfer_size
-    │       ├── sar_low
-    │       ├── sar_high
-    │       ├── dar_high
-    │       ├── llp_low
-    │       └── llp_high
-    └── read
-        ├── engine_en
-        ├── doorbell
-        ├── ch_arb_weight_low
-        ├── ch_arb_weight_high
-        ├── int_status
-        ├── int_mask
-        ├── int_clear
-        ├── err_status_low
-        ├── err_status_high
-        ├── done_imwr_low
-        ├── done_imwr_high
-        ├── abort_imwr_low
-        ├── abort_imwr_high
-        ├── ch01_imwr_data
-        ├── ch23_imwr_data
-        ├── ch45_imwr_data
-        ├── ch67_imwr_data
-        ├── linked_list_err_en
-        ├── engine_chgroup
-        ├── engine_hshake_cnt_low
-        ├── engine_hshake_cnt_high
-        ├── ch0_pwr_en
-        ├── ch1_pwr_en
-        ├── ch2_pwr_en
-        ├── ch3_pwr_en
-        ├── ch4_pwr_en
-        ├── ch5_pwr_en
-        ├── ch6_pwr_en
-        ├── ch7_pwr_en
-        └── channel:0
-            ├── ch_control1
-            ├── ch_control2
-            ├── transfer_size
-            ├── sar_low
-            ├── sar_high
-            ├── dar_high
-            ├── llp_low
-            └── llp_high
+To enable this driver just select DW_EDMA_PCIE option in kernel
+configuration, however it requires and selects automatically DW_EDMA
+option too.
 
 Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Cc: Vinod Koul <vkoul@kernel.org>
 Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Cc: Russell King <rmk+kernel@armlinux.org.uk>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Joao Pinto <jpinto@synopsys.com>
 ---
 Changes:
 RFC v1->RFC v2:
  - Replace comments // (C99 style) by /**/
+ - Merge two pcim_iomap_regions() calls into just one call
+ - Remove pci_try_set_mwi() call
+ - Replace some dev_info() by dev_dbg() to reduce *noise*
+ - Remove pci_name(pdev) call after being call dw_edma_remove()
+ - Remove all power management support
  - Fix the headers of the .c and .h files according to the most recent
    convention
  - Fix errors and checks pointed out by checkpatch with --strict option
  - Replace patch small description tag from dma by dmaengine
 RFC v2->RFC v3:
- - Code rewrite to use FIELD_PREP() and FIELD_GET()
- - Add define to magic numbers
+ - Fix printk variable of phys_addr_t type
+ - Fix missing variable initialization (chan->configured)
+ - Change linked list size to 512 Kbytes
+ - Add data memory information
+ - Add register size information
+ - Add comments or improve existing ones
+ - Add possibility to work with multiple IRQs feature
+ - Replace MSI and MSI-X enable condition by pci_dev_msi_enabled()
+ - Replace code to acquire MSI(-X) address and data by
+   get_cached_msi_msg()
  - Rebase to v5.0-rc1
 RFC v3->RFC v4:
- - Replaced number of entries of a struct calculation by a helper macro
- - Reorder variables declaration in reverse tree order on several
-   functions
- - Fix inline function declarations when CONFIG_DEBUG_FS is not defined
+ - Replace enum dw_edma_pcie and use by enum pci_barno
+ - Remove unnecessary dev_info() calls
+ - Remove unnecessary pointer null validation
+ - Reorder variables declaration in reverse tree order in
+   dw_edma_pcie_probe()
+ - Remove pdata validation
+ - Remove disable_msix parameter
  - Fix license header
- - Add missing cast
+ - Move get_cached_msi_msg() to dw-edma-core file
 RFC v4->RFC v5:
  - Patch resended, forgot to replace of '___' by '---' and to remove
  duplicate signed-off
 RFC v5->RFC v6:
  - Add author on file header
 
- drivers/dma/dw-edma/Makefile             |   3 +-
- drivers/dma/dw-edma/dw-edma-v0-core.c    |   3 +-
- drivers/dma/dw-edma/dw-edma-v0-debugfs.c | 361 +++++++++++++++++++++++++++++++
- drivers/dma/dw-edma/dw-edma-v0-debugfs.h |  28 +++
- 4 files changed, 393 insertions(+), 2 deletions(-)
- create mode 100644 drivers/dma/dw-edma/dw-edma-v0-debugfs.c
- create mode 100644 drivers/dma/dw-edma/dw-edma-v0-debugfs.h
+ drivers/dma/dw-edma/Kconfig        |   9 ++
+ drivers/dma/dw-edma/Makefile       |   1 +
+ drivers/dma/dw-edma/dw-edma-pcie.c | 229 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 239 insertions(+)
+ create mode 100644 drivers/dma/dw-edma/dw-edma-pcie.c
 
+diff --git a/drivers/dma/dw-edma/Kconfig b/drivers/dma/dw-edma/Kconfig
+index 3016bed..c0838ce 100644
+--- a/drivers/dma/dw-edma/Kconfig
++++ b/drivers/dma/dw-edma/Kconfig
+@@ -7,3 +7,12 @@ config DW_EDMA
+ 	help
+ 	  Support the Synopsys DesignWare eDMA controller, normally
+ 	  implemented on endpoints SoCs.
++
++config DW_EDMA_PCIE
++	tristate "Synopsys DesignWare eDMA PCIe driver"
++	depends on PCI && PCI_MSI
++	select DW_EDMA
++	help
++	  Provides a glue-logic between the Synopsys DesignWare
++	  eDMA controller and an endpoint PCIe device. This also serves
++	  as a reference design to whom desires to use this IP.
 diff --git a/drivers/dma/dw-edma/Makefile b/drivers/dma/dw-edma/Makefile
-index 01c7c63..0c53033 100644
+index 0c53033..8d45c0d 100644
 --- a/drivers/dma/dw-edma/Makefile
 +++ b/drivers/dma/dw-edma/Makefile
-@@ -1,5 +1,6 @@
- # SPDX-License-Identifier: GPL-2.0
- 
- obj-$(CONFIG_DW_EDMA)		+= dw-edma.o
-+dw-edma-$(CONFIG_DEBUG_FS)	:= dw-edma-v0-debugfs.o
+@@ -4,3 +4,4 @@ obj-$(CONFIG_DW_EDMA)		+= dw-edma.o
+ dw-edma-$(CONFIG_DEBUG_FS)	:= dw-edma-v0-debugfs.o
  dw-edma-objs			:= dw-edma-core.o \
--					dw-edma-v0-core.o
-+					dw-edma-v0-core.o $(dw-edma-y)
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-core.c b/drivers/dma/dw-edma/dw-edma-v0-core.c
-index aa5d3f7..2fde20c 100644
---- a/drivers/dma/dw-edma/dw-edma-v0-core.c
-+++ b/drivers/dma/dw-edma/dw-edma-v0-core.c
-@@ -339,9 +339,10 @@ int dw_edma_v0_core_device_config(struct dw_edma_chan *chan)
- /* eDMA debugfs callbacks */
- int dw_edma_v0_core_debugfs_on(struct dw_edma_chip *chip)
- {
--	return 0;
-+	return dw_edma_v0_debugfs_on(chip);
- }
- 
- void dw_edma_v0_core_debugfs_off(void)
- {
-+	dw_edma_v0_debugfs_off();
- }
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.c b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
+ 					dw-edma-v0-core.o $(dw-edma-y)
++obj-$(CONFIG_DW_EDMA_PCIE)	+= dw-edma-pcie.o
+diff --git a/drivers/dma/dw-edma/dw-edma-pcie.c b/drivers/dma/dw-edma/dw-edma-pcie.c
 new file mode 100644
-index 0000000..d25497f
+index 0000000..4c96e1c
 --- /dev/null
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.c
-@@ -0,0 +1,361 @@
++++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+@@ -0,0 +1,229 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (c) 2018-2019 Synopsys, Inc. and/or its affiliates.
-+ * Synopsys DesignWare eDMA v0 core
++ * Synopsys DesignWare eDMA PCIe driver
 + *
 + * Author: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 + */
 +
-+#include <linux/debugfs.h>
-+#include <linux/bitfield.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/device.h>
++#include <linux/dma/edma.h>
++#include <linux/pci-epf.h>
++#include <linux/msi.h>
 +
-+#include "dw-edma-v0-debugfs.h"
-+#include "dw-edma-v0-regs.h"
 +#include "dw-edma-core.h"
 +
-+#define RD_PERM					0444
-+
-+#define REGS_ADDR(name) \
-+	((dma_addr_t *)&regs->name)
-+#define REGISTER(name) \
-+	{ #name, REGS_ADDR(name) }
-+
-+#define WR_REGISTER(name) \
-+	{ #name, REGS_ADDR(wr_##name) }
-+#define RD_REGISTER(name) \
-+	{ #name, REGS_ADDR(rd_##name) }
-+
-+#define WR_REGISTER_LEGACY(name) \
-+	{ #name, REGS_ADDR(type.legacy.wr_##name) }
-+#define RD_REGISTER_LEGACY(name) \
-+	{ #name, REGS_ADDR(type.legacy.rd_##name) }
-+
-+#define WR_REGISTER_UNROLL(name) \
-+	{ #name, REGS_ADDR(type.unroll.wr_##name) }
-+#define RD_REGISTER_UNROLL(name) \
-+	{ #name, REGS_ADDR(type.unroll.rd_##name) }
-+
-+#define WRITE_STR				"write"
-+#define READ_STR				"read"
-+#define CHANNEL_STR				"channel"
-+#define REGISTERS_STR				"registers"
-+
-+static struct dentry				*base_dir;
-+static struct dw_edma				*dw;
-+static struct dw_edma_v0_regs			*regs;
-+
-+static struct {
-+	void					*start;
-+	void					*end;
-+} lim[2][EDMA_V0_MAX_NR_CH];
-+
-+struct debugfs_entries {
-+	char					name[24];
-+	dma_addr_t				*reg;
++struct dw_edma_pcie_data {
++	/* eDMA registers location */
++	enum pci_barno			rg_bar;
++	off_t				rg_off;
++	size_t				rg_sz;
++	/* eDMA memory linked list location */
++	enum pci_barno			ll_bar;
++	off_t				ll_off;
++	size_t				ll_sz;
++	/* eDMA memory data location */
++	enum pci_barno			dt_bar;
++	off_t				dt_off;
++	size_t				dt_sz;
++	/* Other */
++	u32				version;
++	enum dw_edma_mode		mode;
++	u8				irqs;
 +};
 +
-+static int dw_edma_debugfs_u32_get(void *data, u64 *val)
++static const struct dw_edma_pcie_data snps_edda_data = {
++	/* eDMA registers location */
++	.rg_bar				= BAR_0,
++	.rg_off				= 0x00001000,	/*  4 Kbytes */
++	.rg_sz				= 0x00002000,	/*  8 Kbytes */
++	/* eDMA memory linked list location */
++	.ll_bar				= BAR_2,
++	.ll_off				= 0x00000000,	/*  0 Kbytes */
++	.ll_sz				= 0x00800000,	/*  8 Mbytes */
++	/* eDMA memory data location */
++	.dt_bar				= BAR_2,
++	.dt_off				= 0x00800000,	/*  8 Mbytes */
++	.dt_sz				= 0x03800000,	/* 56 Mbytes */
++	/* Other */
++	.version			= 0,
++	.mode				= EDMA_MODE_UNROLL,
++	.irqs				= 1,
++};
++
++static int dw_edma_pcie_probe(struct pci_dev *pdev,
++			      const struct pci_device_id *pid)
 +{
-+	if (dw->mode == EDMA_MODE_LEGACY &&
-+	    data >= (void *)&regs->type.legacy.ch) {
-+		void *ptr = (void *)&regs->type.legacy.ch;
-+		u32 viewport_sel = 0;
-+		unsigned long flags;
-+		u16 ch;
++	const struct dw_edma_pcie_data *pdata = (void *)pid->driver_data;
++	struct device *dev = &pdev->dev;
++	struct dw_edma_chip *chip;
++	int err, nr_irqs;
++	struct dw_edma *dw;
 +
-+		for (ch = 0; ch < dw->wr_ch_cnt; ch++)
-+			if (lim[0][ch].start >= data && data < lim[0][ch].end) {
-+				ptr += (data - lim[0][ch].start);
-+				goto legacy_sel_wr;
-+			}
++	/* Enable PCI device */
++	err = pcim_enable_device(pdev);
++	if (err) {
++		pci_err(pdev, "enabling device failed\n");
++		return err;
++	}
 +
-+		for (ch = 0; ch < dw->rd_ch_cnt; ch++)
-+			if (lim[1][ch].start >= data && data < lim[1][ch].end) {
-+				ptr += (data - lim[1][ch].start);
-+				goto legacy_sel_rd;
-+			}
++	/* Mapping PCI BAR regions */
++	err = pcim_iomap_regions(pdev, BIT(pdata->rg_bar) |
++				       BIT(pdata->ll_bar) |
++				       BIT(pdata->dt_bar),
++				 pci_name(pdev));
++	if (err) {
++		pci_err(pdev, "eDMA BAR I/O remapping failed\n");
++		return err;
++	}
 +
-+		return 0;
-+legacy_sel_rd:
-+		viewport_sel = BIT(31);
-+legacy_sel_wr:
-+		viewport_sel |= FIELD_PREP(EDMA_V0_VIEWPORT_MASK, ch);
++	pci_set_master(pdev);
 +
-+		raw_spin_lock_irqsave(&dw->lock, flags);
-+
-+		writel(viewport_sel, &regs->type.legacy.viewport_sel);
-+		*val = readl((u32 *)ptr);
-+
-+		raw_spin_unlock_irqrestore(&dw->lock, flags);
++	/* DMA configuration */
++	err = pci_set_dma_mask(pdev, DMA_BIT_MASK(64));
++	if (!err) {
++		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64));
++		if (err) {
++			pci_err(pdev, "consistent DMA mask 64 set failed\n");
++			return err;
++		}
 +	} else {
-+		*val = readl((u32 *)data);
++		pci_err(pdev, "DMA mask 64 set failed\n");
++
++		err = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (err) {
++			pci_err(pdev, "DMA mask 32 set failed\n");
++			return err;
++		}
++
++		err = pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32));
++		if (err) {
++			pci_err(pdev, "consistent DMA mask 32 set failed\n");
++			return err;
++		}
 +	}
 +
-+	return 0;
-+}
-+DEFINE_DEBUGFS_ATTRIBUTE(fops_x32, dw_edma_debugfs_u32_get, NULL, "0x%08llx\n");
++	/* Data structure allocation */
++	chip = devm_kzalloc(dev, sizeof(*chip), GFP_KERNEL);
++	if (!chip)
++		return -ENOMEM;
 +
-+static int dw_edma_debugfs_create_x32(const struct debugfs_entries entries[],
-+				      int nr_entries, struct dentry *dir)
-+{
-+	struct dentry *entry;
-+	int i;
++	dw = devm_kzalloc(dev, sizeof(*dw), GFP_KERNEL);
++	if (!dw)
++		return -ENOMEM;
 +
-+	for (i = 0; i < nr_entries; i++) {
-+		entry = debugfs_create_file_unsafe(entries[i].name, RD_PERM,
-+						   dir, entries[i].reg,
-+						   &fops_x32);
-+		if (!entry)
-+			return -EPERM;
-+	}
-+
-+	return 0;
-+}
-+
-+static int dw_edma_debugfs_regs_ch(struct dw_edma_v0_ch_regs *regs,
-+				   struct dentry *dir)
-+{
-+	int nr_entries;
-+	const struct debugfs_entries debugfs_regs[] = {
-+		REGISTER(ch_control1),
-+		REGISTER(ch_control2),
-+		REGISTER(transfer_size),
-+		REGISTER(sar_low),
-+		REGISTER(sar_high),
-+		REGISTER(dar_low),
-+		REGISTER(dar_high),
-+		REGISTER(llp_low),
-+		REGISTER(llp_high),
-+	};
-+
-+	nr_entries = ARRAY_SIZE(debugfs_regs);
-+	return dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, dir);
-+}
-+
-+static int dw_edma_debugfs_regs_wr(struct dentry *dir)
-+{
-+	const struct debugfs_entries debugfs_regs[] = {
-+		/* eDMA global registers */
-+		WR_REGISTER(engine_en),
-+		WR_REGISTER(doorbell),
-+		WR_REGISTER(ch_arb_weight_low),
-+		WR_REGISTER(ch_arb_weight_high),
-+		/* eDMA interrupts registers */
-+		WR_REGISTER(int_status),
-+		WR_REGISTER(int_mask),
-+		WR_REGISTER(int_clear),
-+		WR_REGISTER(err_status),
-+		WR_REGISTER(done_imwr_low),
-+		WR_REGISTER(done_imwr_high),
-+		WR_REGISTER(abort_imwr_low),
-+		WR_REGISTER(abort_imwr_high),
-+		WR_REGISTER(ch01_imwr_data),
-+		WR_REGISTER(ch23_imwr_data),
-+		WR_REGISTER(ch45_imwr_data),
-+		WR_REGISTER(ch67_imwr_data),
-+		WR_REGISTER(linked_list_err_en),
-+	};
-+	const struct debugfs_entries debugfs_unroll_regs[] = {
-+		/* eDMA channel context grouping */
-+		WR_REGISTER_UNROLL(engine_chgroup),
-+		WR_REGISTER_UNROLL(engine_hshake_cnt_low),
-+		WR_REGISTER_UNROLL(engine_hshake_cnt_high),
-+		WR_REGISTER_UNROLL(ch0_pwr_en),
-+		WR_REGISTER_UNROLL(ch1_pwr_en),
-+		WR_REGISTER_UNROLL(ch2_pwr_en),
-+		WR_REGISTER_UNROLL(ch3_pwr_en),
-+		WR_REGISTER_UNROLL(ch4_pwr_en),
-+		WR_REGISTER_UNROLL(ch5_pwr_en),
-+		WR_REGISTER_UNROLL(ch6_pwr_en),
-+		WR_REGISTER_UNROLL(ch7_pwr_en),
-+	};
-+	struct dentry *regs_dir, *ch_dir;
-+	int nr_entries, i, err;
-+	char name[16];
-+
-+	regs_dir = debugfs_create_dir(WRITE_STR, dir);
-+	if (!regs_dir)
++	/* IRQs allocation */
++	nr_irqs = pci_alloc_irq_vectors(pdev, 1, pdata->irqs,
++					PCI_IRQ_MSI | PCI_IRQ_MSIX);
++	if (nr_irqs < 1) {
++		pci_err(pdev, "fail to alloc IRQ vector (number of IRQs=%u)\n",
++			nr_irqs);
 +		return -EPERM;
-+
-+	nr_entries = ARRAY_SIZE(debugfs_regs);
-+	err = dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
-+	if (err)
-+		return err;
-+
-+	if (dw->mode == EDMA_MODE_UNROLL) {
-+		nr_entries = ARRAY_SIZE(debugfs_unroll_regs);
-+		err = dw_edma_debugfs_create_x32(debugfs_unroll_regs,
-+						 nr_entries, regs_dir);
-+		if (err)
-+			return err;
 +	}
 +
-+	for (i = 0; i < dw->wr_ch_cnt; i++) {
-+		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
++	/* Data structure initialization */
++	chip->dw = dw;
++	chip->dev = dev;
++	chip->id = pdev->devfn;
++	chip->irq = pdev->irq;
 +
-+		ch_dir = debugfs_create_dir(name, regs_dir);
-+		if (!ch_dir)
-+			return -EPERM;
++	dw->rg_region.vaddr = (dma_addr_t)pcim_iomap_table(pdev)[pdata->rg_bar];
++	dw->rg_region.vaddr += pdata->rg_off;
++	dw->rg_region.paddr = pdev->resource[pdata->rg_bar].start;
++	dw->rg_region.paddr += pdata->rg_off;
++	dw->rg_region.sz = pdata->rg_sz;
 +
-+		err = dw_edma_debugfs_regs_ch(&regs->type.unroll.ch[i].wr,
-+					      ch_dir);
-+		if (err)
-+			return err;
++	dw->ll_region.vaddr = (dma_addr_t)pcim_iomap_table(pdev)[pdata->ll_bar];
++	dw->ll_region.vaddr += pdata->ll_off;
++	dw->ll_region.paddr = pdev->resource[pdata->ll_bar].start;
++	dw->ll_region.paddr += pdata->ll_off;
++	dw->ll_region.sz = pdata->ll_sz;
 +
-+		lim[0][i].start = &regs->type.unroll.ch[i].wr;
-+		lim[0][i].end = &regs->type.unroll.ch[i].padding_1[0];
-+	}
++	dw->dt_region.vaddr = (dma_addr_t)pcim_iomap_table(pdev)[pdata->dt_bar];
++	dw->dt_region.vaddr += pdata->dt_off;
++	dw->dt_region.paddr = pdev->resource[pdata->dt_bar].start;
++	dw->dt_region.paddr += pdata->dt_off;
++	dw->dt_region.sz = pdata->dt_sz;
 +
-+	return 0;
-+}
++	dw->version = pdata->version;
++	dw->mode = pdata->mode;
++	dw->nr_irqs = nr_irqs;
 +
-+static int dw_edma_debugfs_regs_rd(struct dentry *dir)
-+{
-+	const struct debugfs_entries debugfs_regs[] = {
-+		/* eDMA global registers */
-+		RD_REGISTER(engine_en),
-+		RD_REGISTER(doorbell),
-+		RD_REGISTER(ch_arb_weight_low),
-+		RD_REGISTER(ch_arb_weight_high),
-+		/* eDMA interrupts registers */
-+		RD_REGISTER(int_status),
-+		RD_REGISTER(int_mask),
-+		RD_REGISTER(int_clear),
-+		RD_REGISTER(err_status_low),
-+		RD_REGISTER(err_status_high),
-+		RD_REGISTER(linked_list_err_en),
-+		RD_REGISTER(done_imwr_low),
-+		RD_REGISTER(done_imwr_high),
-+		RD_REGISTER(abort_imwr_low),
-+		RD_REGISTER(abort_imwr_high),
-+		RD_REGISTER(ch01_imwr_data),
-+		RD_REGISTER(ch23_imwr_data),
-+		RD_REGISTER(ch45_imwr_data),
-+		RD_REGISTER(ch67_imwr_data),
-+	};
-+	const struct debugfs_entries debugfs_unroll_regs[] = {
-+		/* eDMA channel context grouping */
-+		RD_REGISTER_UNROLL(engine_chgroup),
-+		RD_REGISTER_UNROLL(engine_hshake_cnt_low),
-+		RD_REGISTER_UNROLL(engine_hshake_cnt_high),
-+		RD_REGISTER_UNROLL(ch0_pwr_en),
-+		RD_REGISTER_UNROLL(ch1_pwr_en),
-+		RD_REGISTER_UNROLL(ch2_pwr_en),
-+		RD_REGISTER_UNROLL(ch3_pwr_en),
-+		RD_REGISTER_UNROLL(ch4_pwr_en),
-+		RD_REGISTER_UNROLL(ch5_pwr_en),
-+		RD_REGISTER_UNROLL(ch6_pwr_en),
-+		RD_REGISTER_UNROLL(ch7_pwr_en),
-+	};
-+	struct dentry *regs_dir, *ch_dir;
-+	int nr_entries, i, err;
-+	char name[16];
++	/* Debug info */
++	pci_dbg(pdev, "Version:\t%u\n", dw->version);
 +
-+	regs_dir = debugfs_create_dir(READ_STR, dir);
-+	if (!regs_dir)
++	pci_dbg(pdev, "Mode:\t%s\n",
++		dw->mode == EDMA_MODE_LEGACY ? "Legacy" : "Unroll");
++
++	pci_dbg(pdev, "Registers:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%pa, p=%pa)\n",
++		pdata->rg_bar, pdata->rg_off, pdata->rg_sz,
++		&dw->rg_region.vaddr, &dw->rg_region.paddr);
++
++	pci_dbg(pdev, "L. List:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%pa, p=%pa)\n",
++		pdata->ll_bar, pdata->ll_off, pdata->ll_sz,
++		&dw->ll_region.vaddr, &dw->ll_region.paddr);
++
++	pci_dbg(pdev, "Data:\tBAR=%u, off=0x%.8lx, sz=0x%zx bytes, addr(v=%pa, p=%pa)\n",
++		pdata->dt_bar, pdata->dt_off, pdata->dt_sz,
++		&dw->dt_region.vaddr, &dw->dt_region.paddr);
++
++	pci_dbg(pdev, "Nr. IRQs:\t%u\n", dw->nr_irqs);
++
++	/* Validating if PCI interrupts were enabled */
++	if (!pci_dev_msi_enabled(pdev)) {
++		pci_err(pdev, "enable interrupt failed\n");
 +		return -EPERM;
++	}
 +
-+	nr_entries = ARRAY_SIZE(debugfs_regs);
-+	err = dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
-+	if (err)
++	dw->irq = devm_kcalloc(dev, nr_irqs, sizeof(*dw->irq), GFP_KERNEL);
++	if (!dw->irq)
++		return -ENOMEM;
++
++	/* Starting eDMA driver */
++	err = dw_edma_probe(chip);
++	if (err) {
++		pci_err(pdev, "eDMA probe failed\n");
 +		return err;
-+
-+	if (dw->mode == EDMA_MODE_UNROLL) {
-+		nr_entries = ARRAY_SIZE(debugfs_unroll_regs);
-+		err = dw_edma_debugfs_create_x32(debugfs_unroll_regs,
-+						 nr_entries, regs_dir);
-+		if (err)
-+			return err;
 +	}
 +
-+	for (i = 0; i < dw->rd_ch_cnt; i++) {
-+		snprintf(name, sizeof(name), "%s:%d", CHANNEL_STR, i);
-+
-+		ch_dir = debugfs_create_dir(name, regs_dir);
-+		if (!ch_dir)
-+			return -EPERM;
-+
-+		err = dw_edma_debugfs_regs_ch(&regs->type.unroll.ch[i].rd,
-+					      ch_dir);
-+		if (err)
-+			return err;
-+
-+		lim[1][i].start = &regs->type.unroll.ch[i].rd;
-+		lim[1][i].end = &regs->type.unroll.ch[i].padding_2[0];
-+	}
++	/* Saving data structure reference */
++	pci_set_drvdata(pdev, chip);
 +
 +	return 0;
 +}
 +
-+static int dw_edma_debugfs_regs(void)
++static void dw_edma_pcie_remove(struct pci_dev *pdev)
 +{
-+	const struct debugfs_entries debugfs_regs[] = {
-+		REGISTER(ctrl_data_arb_prior),
-+		REGISTER(ctrl),
-+	};
-+	struct dentry *regs_dir;
-+	int nr_entries, err;
-+
-+	regs_dir = debugfs_create_dir(REGISTERS_STR, base_dir);
-+	if (!regs_dir)
-+		return -EPERM;
-+
-+	nr_entries = ARRAY_SIZE(debugfs_regs);
-+	err = dw_edma_debugfs_create_x32(debugfs_regs, nr_entries, regs_dir);
-+	if (err)
-+		return err;
-+
-+	err = dw_edma_debugfs_regs_wr(regs_dir);
-+	if (err)
-+		return err;
-+
-+	err = dw_edma_debugfs_regs_rd(regs_dir);
-+	if (err)
-+		return err;
-+
-+	return 0;
-+}
-+
-+int dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
-+{
-+	struct dentry *entry;
++	struct dw_edma_chip *chip = pci_get_drvdata(pdev);
 +	int err;
 +
-+	dw = chip->dw;
-+	if (!dw)
-+		return -EPERM;
++	/* Stopping eDMA driver */
++	err = dw_edma_remove(chip);
++	if (err)
++		pci_warn(pdev, "can't remove device properly: %d\n", err);
 +
-+	regs = (struct dw_edma_v0_regs *)dw->rg_region.vaddr;
-+	if (!regs)
-+		return -EPERM;
-+
-+	base_dir = debugfs_create_dir(dw->name, 0);
-+	if (!base_dir)
-+		return -EPERM;
-+
-+	entry = debugfs_create_u32("version", RD_PERM, base_dir, &dw->version);
-+	if (!entry)
-+		return -EPERM;
-+
-+	entry = debugfs_create_u32("mode", RD_PERM, base_dir, &dw->mode);
-+	if (!entry)
-+		return -EPERM;
-+
-+	entry = debugfs_create_u16("wr_ch_cnt", RD_PERM, base_dir,
-+				   &dw->wr_ch_cnt);
-+	if (!entry)
-+		return -EPERM;
-+
-+	entry = debugfs_create_u16("rd_ch_cnt", RD_PERM, base_dir,
-+				   &dw->rd_ch_cnt);
-+	if (!entry)
-+		return -EPERM;
-+
-+	err = dw_edma_debugfs_regs();
-+	return err;
++	/* Freeing IRQs */
++	pci_free_irq_vectors(pdev);
 +}
 +
-+void dw_edma_v0_debugfs_off(void)
-+{
-+	debugfs_remove_recursive(base_dir);
-+}
-diff --git a/drivers/dma/dw-edma/dw-edma-v0-debugfs.h b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-new file mode 100644
-index 0000000..cf17820
---- /dev/null
-+++ b/drivers/dma/dw-edma/dw-edma-v0-debugfs.h
-@@ -0,0 +1,28 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (c) 2018-2019 Synopsys, Inc. and/or its affiliates.
-+ * Synopsys DesignWare eDMA v0 core
-+ *
-+ * Author: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-+ */
++static const struct pci_device_id dw_edma_pcie_id_table[] = {
++	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, &snps_edda_data) },
++	{ }
++};
++MODULE_DEVICE_TABLE(pci, dw_edma_pcie_id_table);
 +
-+#ifndef _DW_EDMA_V0_DEBUG_FS_H
-+#define _DW_EDMA_V0_DEBUG_FS_H
++static struct pci_driver dw_edma_pcie_driver = {
++	.name		= "dw-edma-pcie",
++	.id_table	= dw_edma_pcie_id_table,
++	.probe		= dw_edma_pcie_probe,
++	.remove		= dw_edma_pcie_remove,
++};
 +
-+#include <linux/dma/edma.h>
++module_pci_driver(dw_edma_pcie_driver);
 +
-+#ifdef CONFIG_DEBUG_FS
-+int dw_edma_v0_debugfs_on(struct dw_edma_chip *chip);
-+void dw_edma_v0_debugfs_off(void);
-+#else
-+static inline int dw_edma_v0_debugfs_on(struct dw_edma_chip *chip)
-+{
-+	return 0;
-+}
-+
-+static inline void dw_edma_v0_debugfs_off(void)
-+{
-+}
-+#endif /* CONFIG_DEBUG_FS */
-+
-+#endif /* _DW_EDMA_V0_DEBUG_FS_H */
++MODULE_LICENSE("GPL v2");
++MODULE_DESCRIPTION("Synopsys DesignWare eDMA PCIe driver");
++MODULE_AUTHOR("Gustavo Pimentel <gustavo.pimentel@synopsys.com>");
 -- 
 2.7.4
 
