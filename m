@@ -2,99 +2,120 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	TVD_PH_BODY_ACCOUNTS_PRE autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18949C10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 17:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0243C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 18:30:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF46420685
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 17:59:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE3E7218FD
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 18:30:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sf+ltzFK"
+	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="Eb9p287W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728333AbfDWR7a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 13:59:30 -0400
-Received: from mail-it1-f193.google.com ([209.85.166.193]:52960 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727656AbfDWR7a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 13:59:30 -0400
-Received: by mail-it1-f193.google.com with SMTP id x132so1686790itf.2;
-        Tue, 23 Apr 2019 10:59:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=gQfSvY288NvX5Y1XwWDqYoDWYQc1hyp+10tUEc7SHn8=;
-        b=Sf+ltzFKPRmsGLVlqfmp10ivBVhDNycl1H4gfMc53WqLP/fgmiAV6WRJmyPBaYBFFQ
-         5tfJhgEnQ5+tUrIYokenTj5bFH4SGmAx/WpXA2+rlquEE3xgID/ZToZWSiYfvexJRUrZ
-         sdB0ML8Ke93LzjGmT8uHWdZVxHdYQ9QqkC78kohsgwH6Wm/mcc9BcvGdcK87X3BlDrYz
-         7W8hsHt6cUPQfhIOEtgp+AbXW3NTKwoDYy5zRFoYmtzeGEebRsmn8MysMUYiHDbNH/Q3
-         OZk9gkUKA6QLkYFCGZO9SFHgxCJGDt/O1vo/lnCMyvjDgVP8RHiYX3wxoAqsD73iWtLJ
-         gP5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=gQfSvY288NvX5Y1XwWDqYoDWYQc1hyp+10tUEc7SHn8=;
-        b=gXS9KDdIr4EeQ4nHKSpvJ8kwWZnOKA0ntDugF90Q8aBli6ihDGmZLAH924lgcFtvWh
-         sqCuL1WqozPD8o1A4xwX5oVTEgiE5WIO7QGWCv5KaPApPatRvqD5R+pC8uHSz4AJNwus
-         wk95Xl7F4Os2PfbuMB1jCO2D6IFjE3rw4noe+fO0D8cuLAGItknPehqP73KIfHWjhsgX
-         LUkundtf6PGxVb1Brka9k1WUfhKaF53DjCdB5k+EwjP1S8S7RTtAll8oysMyXgVtlvNY
-         gMhLZYT+4IZQ9tJgq13W2QkxTgmMDOhJqGCv7SrFSPULFulAAZ/kEPm0oEISszOiF5EM
-         wNIg==
-X-Gm-Message-State: APjAAAXEynQvbMD9LrJE7SgJxE3Cij4KCdp5Jgo3lGUWW0q/EG+ZJ7gd
-        f/OX1kY2pHZV7pENInYcUfqdfXEUE88=
-X-Google-Smtp-Source: APXvYqz14/dOj17RXKWR3kLpXR/jkR8ILqigTNpOw1PPnJFbHypFLf63qysZ59TE4avYogBMn9GFRQ==
-X-Received: by 2002:a24:7350:: with SMTP id y77mr2693321itb.52.1556042368981;
-        Tue, 23 Apr 2019 10:59:28 -0700 (PDT)
-Received: from nukespec.gtech ([2601:2c1:8501:182d::6fe])
-        by smtp.gmail.com with ESMTPSA id k11sm7398516itk.25.2019.04.23.10.59.27
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Apr 2019 10:59:28 -0700 (PDT)
-Subject: Re: [PATCH] PCI/LINK: Account for BW notification in vector
- calculation
-To:     Alex Williamson <alex.williamson@redhat.com>, bhelgaas@google.com,
-        helgaas@kernel.org, linux-pci@vger.kernel.org
-Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        okaya@kernel.org, torvalds@linux-foundation.org,
-        linux-kernel@vger.kernel.org
-References: <155597243666.19387.1205950870601742062.stgit@gimli.home>
-From:   Alex G <mr.nuke.me@gmail.com>
-Message-ID: <abe311e9-85e6-27a6-e6ad-d7e8e103578f@gmail.com>
-Date:   Tue, 23 Apr 2019 12:59:26 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <155597243666.19387.1205950870601742062.stgit@gimli.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726075AbfDWSaZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 14:30:25 -0400
+Received: from smtprelay-out1.synopsys.com ([198.182.61.142]:60364 "EHLO
+        smtprelay-out1.synopsys.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725945AbfDWSaZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 14:30:25 -0400
+Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 2A17EC0B0D;
+        Tue, 23 Apr 2019 18:30:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
+        t=1556044224; bh=50CWiIlnfqP3gzk/lakYJkAsP60XpEenB/h1ngbItYI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:In-Reply-To:
+         References:From;
+        b=Eb9p287WgE1aV15Nk+VSB8QmaetmkIXcxVqkx5O/rdzTb0NEG981TKC6To7k7rctK
+         wtTXtnNmuXxtpqECGWFImISOJVNV88JGrPmqU8DAGuzMH53fDao4+9jDXFebaFgZ9d
+         enVnxGEQZsN4vVeQwwAHQGLWlJQ4hE4Pp4Or10tcmtZuo+UP32bKMPxOF2cso0vjHi
+         zGU/3XxZVf6lqTqdbyhrIGyLnzXF/31gMIexH7qn/+N5yts9TdAp5/LVHV15edawpC
+         s3jIBaiD+1fPY2+ddWzd/46SBwWo4hsakXVfSfc/dc8OeiP0IP8K+4EziThb2Gy8EJ
+         SJESk11AiK7zA==
+Received: from de02.synopsys.com (de02.internal.synopsys.com [10.225.17.21])
+        by mailhost.synopsys.com (Postfix) with ESMTP id AE0ABA00A0;
+        Tue, 23 Apr 2019 18:30:24 +0000 (UTC)
+Received: from de02dwia024.internal.synopsys.com (de02dwia024.internal.synopsys.com [10.225.19.81])
+        by de02.synopsys.com (Postfix) with ESMTP id E48C73F82E;
+        Tue, 23 Apr 2019 20:30:23 +0200 (CEST)
+From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
+To:     linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
+Cc:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC v6 4/6] PCI: Add Synopsys endpoint EDDA Device ID
+Date:   Tue, 23 Apr 2019 20:30:11 +0200
+Message-Id: <687ccde83fd386f9f8af074c666f5a3c96485826.1556043127.git.gustavo.pimentel@synopsys.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
+References: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
+References: <cover.1556043127.git.gustavo.pimentel@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Create and add Synopsys Endpoint EDDA Device ID to PCI ID list, since
+this ID is now being use on two different drivers (pci_endpoint_test.ko
+and dw-edma-pcie.ko).
 
+Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Joao Pinto <jpinto@synopsys.com>
+---
+Changes:
+RFC v1->RFC v2:
+ - Reword subject line patch
+ - Reorder patch order on the series
+RFC v2->RFC v3:
+ - Rebase to v5.0-rc1
+RFC v3->RFC v4:
+ - Replace id by ID on title and description
+RFC v4->RFC v5:
+ - Patch resended, forgot to replace of '___' by '---' and to remove
+ duplicate signed-off
+RFC v5->RFC v6:
+ - Following patch version
 
-On 4/22/19 5:43 PM, Alex Williamson wrote:
-> On systems that don't support any PCIe services other than bandwidth
-> notification, pcie_message_numbers() can return zero vectors, causing
-> the vector reallocation in pcie_port_enable_irq_vec() to retry with
-> zero, which fails, resulting in fallback to INTx (which might be
-> broken) for the bandwidth notification service.  This can resolve
-> spurious interrupt faults due to this service on some systems.
-> 
-> Fixes: e8303bb7a75c ("PCI/LINK: Report degraded links via link bandwidth notification")
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
+ drivers/misc/pci_endpoint_test.c | 2 +-
+ include/linux/pci_ids.h          | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-+1
-Tested on some Dell servers. Everything works as expected. I don't have 
-a system with a device that only supports bandwidth notification.
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 29582fe..f65a882 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -789,7 +789,7 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_SYNOPSYS, 0xedda) },
++	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 70e8614..4aad69f 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2366,6 +2366,7 @@
+ #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3		0xabcd
+ #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB3_AXI	0xabce
+ #define PCI_DEVICE_ID_SYNOPSYS_HAPSUSB31	0xabcf
++#define PCI_DEVICE_ID_SYNOPSYS_EDDA	0xedda
+ 
+ #define PCI_VENDOR_ID_USR		0x16ec
+ 
+-- 
+2.7.4
 
-Alex
