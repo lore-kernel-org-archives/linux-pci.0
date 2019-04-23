@@ -2,99 +2,99 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
+	TVD_PH_BODY_ACCOUNTS_PRE autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB866C10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 17:57:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18949C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 17:59:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B09AC217D9
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 17:57:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556042250;
-	bh=i+ev8JPjUW7MLW+XuORY0kfNzW74fTPiN/jD9asD+Qc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=zMOdxj8yuz7FrBCH4AF9KuOfsYSvhl7QPZFUYrIzmMx6V8y/KJfm5Z0nN0cnGBSDj
-	 TInrsjKF7MXkZi+t1TDEUwEECNR/JIkG/HN1AEKa5csTCTmMsn+2msoaeLWtMGNm6a
-	 rN9CzIBNF53ve+fPL8UphFpcyixHO6qe4R23Y4tI=
+	by mail.kernel.org (Postfix) with ESMTP id DF46420685
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 17:59:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sf+ltzFK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727745AbfDWR5a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 13:57:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40406 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726655AbfDWR5a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Apr 2019 13:57:30 -0400
-Received: from localhost (odyssey.drury.edu [64.22.249.253])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E97B920835;
-        Tue, 23 Apr 2019 17:57:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556042249;
-        bh=i+ev8JPjUW7MLW+XuORY0kfNzW74fTPiN/jD9asD+Qc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Jjz1Ulx6Au6gfXpzS5rhCkm5+6LjjWS9osUn7wiSeQp7K7Ny1RvnSBIyu8TMq7qKs
-         r8PgwKZFjoA8/Trx0q48FnoYr/+KFG1uy1zy6eobDnkqC/2X/7bw9Y6ZQjFJpJHKz2
-         ZteOHCu/dQ7PSM33OVRPnbcuahpU4JizL9T6zssU=
-Date:   Tue, 23 Apr 2019 12:57:28 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     kbuild test robot <lkp@intel.com>
-Cc:     Alexandru Gagniuc <mr.nuke.me@gmail.com>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [pci:pci/hotplug 4/5] (.text+0x3454): multiple definition of
- `pci_acpi_program_hp_params'
-Message-ID: <20190423175728.GB14616@google.com>
-References: <201904230807.LpFL2omo%lkp@intel.com>
+        id S1728333AbfDWR7a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 13:59:30 -0400
+Received: from mail-it1-f193.google.com ([209.85.166.193]:52960 "EHLO
+        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727656AbfDWR7a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 13:59:30 -0400
+Received: by mail-it1-f193.google.com with SMTP id x132so1686790itf.2;
+        Tue, 23 Apr 2019 10:59:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=gQfSvY288NvX5Y1XwWDqYoDWYQc1hyp+10tUEc7SHn8=;
+        b=Sf+ltzFKPRmsGLVlqfmp10ivBVhDNycl1H4gfMc53WqLP/fgmiAV6WRJmyPBaYBFFQ
+         5tfJhgEnQ5+tUrIYokenTj5bFH4SGmAx/WpXA2+rlquEE3xgID/ZToZWSiYfvexJRUrZ
+         sdB0ML8Ke93LzjGmT8uHWdZVxHdYQ9QqkC78kohsgwH6Wm/mcc9BcvGdcK87X3BlDrYz
+         7W8hsHt6cUPQfhIOEtgp+AbXW3NTKwoDYy5zRFoYmtzeGEebRsmn8MysMUYiHDbNH/Q3
+         OZk9gkUKA6QLkYFCGZO9SFHgxCJGDt/O1vo/lnCMyvjDgVP8RHiYX3wxoAqsD73iWtLJ
+         gP5Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=gQfSvY288NvX5Y1XwWDqYoDWYQc1hyp+10tUEc7SHn8=;
+        b=gXS9KDdIr4EeQ4nHKSpvJ8kwWZnOKA0ntDugF90Q8aBli6ihDGmZLAH924lgcFtvWh
+         sqCuL1WqozPD8o1A4xwX5oVTEgiE5WIO7QGWCv5KaPApPatRvqD5R+pC8uHSz4AJNwus
+         wk95Xl7F4Os2PfbuMB1jCO2D6IFjE3rw4noe+fO0D8cuLAGItknPehqP73KIfHWjhsgX
+         LUkundtf6PGxVb1Brka9k1WUfhKaF53DjCdB5k+EwjP1S8S7RTtAll8oysMyXgVtlvNY
+         gMhLZYT+4IZQ9tJgq13W2QkxTgmMDOhJqGCv7SrFSPULFulAAZ/kEPm0oEISszOiF5EM
+         wNIg==
+X-Gm-Message-State: APjAAAXEynQvbMD9LrJE7SgJxE3Cij4KCdp5Jgo3lGUWW0q/EG+ZJ7gd
+        f/OX1kY2pHZV7pENInYcUfqdfXEUE88=
+X-Google-Smtp-Source: APXvYqz14/dOj17RXKWR3kLpXR/jkR8ILqigTNpOw1PPnJFbHypFLf63qysZ59TE4avYogBMn9GFRQ==
+X-Received: by 2002:a24:7350:: with SMTP id y77mr2693321itb.52.1556042368981;
+        Tue, 23 Apr 2019 10:59:28 -0700 (PDT)
+Received: from nukespec.gtech ([2601:2c1:8501:182d::6fe])
+        by smtp.gmail.com with ESMTPSA id k11sm7398516itk.25.2019.04.23.10.59.27
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 23 Apr 2019 10:59:28 -0700 (PDT)
+Subject: Re: [PATCH] PCI/LINK: Account for BW notification in vector
+ calculation
+To:     Alex Williamson <alex.williamson@redhat.com>, bhelgaas@google.com,
+        helgaas@kernel.org, linux-pci@vger.kernel.org
+Cc:     austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, torvalds@linux-foundation.org,
+        linux-kernel@vger.kernel.org
+References: <155597243666.19387.1205950870601742062.stgit@gimli.home>
+From:   Alex G <mr.nuke.me@gmail.com>
+Message-ID: <abe311e9-85e6-27a6-e6ad-d7e8e103578f@gmail.com>
+Date:   Tue, 23 Apr 2019 12:59:26 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <201904230807.LpFL2omo%lkp@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <155597243666.19387.1205950870601742062.stgit@gimli.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 23, 2019 at 08:09:08AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/hotplug
-> head:   c098676c4df695cc8f430bfa5fa803f41c8584f4
-> commit: 8c76b06f58183e15f31d6660c9bd049cbba9e4f6 [4/5] PCI / ACPI: Remove the need for 'struct hotplug_params'
-> config: riscv-allyesconfig (attached as .config)
-> compiler: riscv64-linux-gcc (GCC) 8.1.0
-> reproduce:
->         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout 8c76b06f58183e15f31d6660c9bd049cbba9e4f6
->         # save the attached .config to linux build tree
->         GCC_VERSION=8.1.0 make.cross ARCH=riscv 
-> 
-> If you fix the issue, kindly add following tag
-> Reported-by: kbuild test robot <lkp@intel.com>
-> 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    drivers/pci/pci.o: In function `pci_acpi_program_hp_params':
-> >> (.text+0x3454): multiple definition of `pci_acpi_program_hp_params'
->    drivers/pci/probe.o:(.text+0x864): first defined here
 
-I fixed this by making the non-ACPI stub of
-pci_acpi_program_hp_params() a "static inline" function:
 
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index 352c5169c256..f694eb2ca978 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -188,8 +188,8 @@ bool shpchp_is_native(struct pci_dev *bridge);
- int acpi_pci_check_ejectable(struct pci_bus *pbus, acpi_handle handle);
- int acpi_pci_detect_ejectable(acpi_handle handle);
- #else
--int pci_acpi_program_hp_params(struct pci_dev *dev,
--			       const struct hotplug_program_ops *hp_ops)
-+static inline int pci_acpi_program_hp_params(struct pci_dev *dev,
-+				    const struct hotplug_program_ops *hp_ops)
- {
- 	return -ENODEV;
- }
+On 4/22/19 5:43 PM, Alex Williamson wrote:
+> On systems that don't support any PCIe services other than bandwidth
+> notification, pcie_message_numbers() can return zero vectors, causing
+> the vector reallocation in pcie_port_enable_irq_vec() to retry with
+> zero, which fails, resulting in fallback to INTx (which might be
+> broken) for the bandwidth notification service.  This can resolve
+> spurious interrupt faults due to this service on some systems.
+> 
+> Fixes: e8303bb7a75c ("PCI/LINK: Report degraded links via link bandwidth notification")
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+
++1
+Tested on some Dell servers. Everything works as expected. I don't have 
+a system with a device that only supports bandwidth notification.
+
+Alex
