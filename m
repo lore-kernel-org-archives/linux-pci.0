@@ -2,141 +2,340 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08816C282E1
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:32:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39FBAC10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:32:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D625B2183E
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:32:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB2C62183E
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:32:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oeyeCJ2W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728760AbfDWQcN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 12:32:13 -0400
-Received: from foss.arm.com ([217.140.101.70]:59450 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728005AbfDWQcL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Apr 2019 12:32:11 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7FA2780D;
-        Tue, 23 Apr 2019 09:32:10 -0700 (PDT)
-Received: from red-moon (unknown [10.1.197.39])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1A3C13F557;
-        Tue, 23 Apr 2019 09:32:08 -0700 (PDT)
-Date:   Tue, 23 Apr 2019 17:32:15 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Remi Pommarel <repk@triplefau.lt>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: Re: [PATCH] pci: aardvark: Wait for endpoint to be ready before
- training link
-Message-ID: <20190423163215.GB26523@red-moon>
-References: <20190313213752.1246-1-repk@triplefau.lt>
+        id S1728731AbfDWQce (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 12:32:34 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:45847 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728673AbfDWQce (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:32:34 -0400
+Received: by mail-pl1-f195.google.com with SMTP id o5so3458593pls.12;
+        Tue, 23 Apr 2019 09:32:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=mEABvAJPuUKquiCQJQEbI9ERMbYdpL4Xy2gvmbdj4l4=;
+        b=oeyeCJ2WsgE03nhOk/9sEgMBw+MMM5dqzZNVlTdRKjDIDDSfXCpu8cnVzwgZoSEEsM
+         UBFq9Ug8QZBwNqZ71huTudilNRhSnnAs0/jdnoTynCoYApSqwZXgmott85RLcv3/zu/Q
+         CACb0WKUhKa3gmM6BEyL+4rcO4HLTzngtZLqhEYxKciJmonuEayWOriADt0wmaA6dDjB
+         OAHQcwoSnkaOEZsnMRtxO0ozUeSMfmXqEaRETr/lQ+vw4vC9bogbt3WQBY5jqDnP6wQl
+         OI30M95rG6AHPwlPGl2yKJo29PLncri7j1dgbqz6xytZoStMqA8O2DWVe+yFzpxlFSaw
+         vVkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=mEABvAJPuUKquiCQJQEbI9ERMbYdpL4Xy2gvmbdj4l4=;
+        b=sQnz1wJTuliocUSheKSA4JHS3xW1HIZ8UFTm6LvrFJQHIY/fZyAibRgKXftKJYNynz
+         kYXzRceymVz3ZLgvmEorQlcHPjj3bPHaIt65avK/5/jHjlA8Ucu39I2u0A+uRJ9Wdl98
+         P8fLHdsM4860mK50Ox5dnWA4Og+WeJ0+l1sBBknzZIFnrbShrjyuP4FCCtAbqedqvfjJ
+         PZonnEgFkksY4CJWZBeX4swk7FSyk3cz0PnGocKiBqcQQsuEmLojZhrjhEySUEXI0aQb
+         8OelfSmUaxRM7QiD2cxEW2V42XFUXjgRg/TSH/MEBHvjW+URcDnM/LZi7/7SZl/pJ5zs
+         1ovw==
+X-Gm-Message-State: APjAAAVX+Z+PNoJN+HGoOqKRlz0Busg+8GVkl9cL407fUjApgP0B1b7z
+        8VrWTqu+BKKa4gW9Po1dpAE=
+X-Google-Smtp-Source: APXvYqzifftwRoxPGFIrdRfAi1DPVbNnGqyi/pSYebaGrRw/87tc84tBZ4WF7JaHYuXhzDHfKfeHVg==
+X-Received: by 2002:a17:902:1105:: with SMTP id d5mr27497218pla.311.1556037153036;
+        Tue, 23 Apr 2019 09:32:33 -0700 (PDT)
+Received: from localhost.localdomain ([104.238.181.70])
+        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.32.22
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 23 Apr 2019 09:32:32 -0700 (PDT)
+From:   Changbin Du <changbin.du@gmail.com>
+To:     Jonathan Corbet <corbet@lwn.net>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        x86@kernel.org, fenghua.yu@intel.com,
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
+        linux-gpio@vger.kernel.org, mchehab+samsung@kernel.org,
+        Changbin Du <changbin.du@gmail.com>
+Subject: [PATCH v4 14/63] Documentation: ACPI: move dsd/graph.txt to firmware-guide/acpi and convert to reST
+Date:   Wed, 24 Apr 2019 00:28:43 +0800
+Message-Id: <20190423162932.21428-15-changbin.du@gmail.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190423162932.21428-1-changbin.du@gmail.com>
+References: <20190423162932.21428-1-changbin.du@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190313213752.1246-1-repk@triplefau.lt>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Mar 13, 2019 at 10:37:52PM +0100, Remi Pommarel wrote:
-> When configuring pcie reset pin from gpio (e.g. initially set by
-> u-boot) to pcie function this pin goes low for a brief moment
-> asserting the PERST# signal. Thus connected device enters fundamental
-> reset process and link configuration can only begin after a minimal
-> 100ms delay (see [1]).
-> 
-> This makes sure that link is configured after at least 100ms from
-> beginning of probe() callback (shortly after the reset pin function
-> configuration switch through pinctrl subsytem).
-> 
-> [1] "PCI Express Base Specification", REV. 2.1
->         PCI Express, March 4 2009, 6.6.1 Conventional Reset
-> 
-> Signed-off-by: Remi Pommarel <repk@triplefau.lt>
-> ---
->  drivers/pci/controller/pci-aardvark.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> index a30ae7cf8e7e..70a1023d0ef1 100644
-> --- a/drivers/pci/controller/pci-aardvark.c
-> +++ b/drivers/pci/controller/pci-aardvark.c
-> @@ -177,6 +177,9 @@
->  
->  #define PIO_TIMEOUT_MS			1
->  
-> +/* Endpoint can take up to 100ms to be ready after a reset */
-> +#define ENDPOINT_RST_MS			100
-> +
->  #define LINK_WAIT_MAX_RETRIES		10
->  #define LINK_WAIT_USLEEP_MIN		90000
->  #define LINK_WAIT_USLEEP_MAX		100000
-> @@ -242,8 +245,10 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
->  	return -ETIMEDOUT;
->  }
->  
-> -static void advk_pcie_setup_hw(struct advk_pcie *pcie)
-> +static void
-> +advk_pcie_setup_hw(struct advk_pcie *pcie, unsigned long ep_rdy_time)
+This converts the plain text documentation to reStructuredText format and
+add it to Sphinx TOC tree. No essential content change.
 
-Nit: I prefer the prototype to be in one line, I wrap it for you.
+Signed-off-by: Changbin Du <changbin.du@gmail.com>
+---
+ .../acpi/dsd/graph.rst}                       | 157 +++++++++---------
+ Documentation/firmware-guide/acpi/index.rst   |   1 +
+ 2 files changed, 81 insertions(+), 77 deletions(-)
+ rename Documentation/{acpi/dsd/graph.txt => firmware-guide/acpi/dsd/graph.rst} (56%)
 
-I am wondering why you need to pass in ep_rdy_time parameter when you
-can easily compute it in the function itself.
+diff --git a/Documentation/acpi/dsd/graph.txt b/Documentation/firmware-guide/acpi/dsd/graph.rst
+similarity index 56%
+rename from Documentation/acpi/dsd/graph.txt
+rename to Documentation/firmware-guide/acpi/dsd/graph.rst
+index b9ce910781dc..e0baed35b037 100644
+--- a/Documentation/acpi/dsd/graph.txt
++++ b/Documentation/firmware-guide/acpi/dsd/graph.rst
+@@ -1,8 +1,11 @@
+-Graphs
++.. SPDX-License-Identifier: GPL-2.0
+ 
++======
++Graphs
++======
+ 
+ _DSD
+-----
++====
+ 
+ _DSD (Device Specific Data) [7] is a predefined ACPI device
+ configuration object that can be used to convey information on
+@@ -30,7 +33,7 @@ hierarchical data extension array on each depth.
+ 
+ 
+ Ports and endpoints
+--------------------
++===================
+ 
+ The port and endpoint concepts are very similar to those in Devicetree
+ [3]. A port represents an interface in a device, and an endpoint
+@@ -38,9 +41,9 @@ represents a connection to that interface.
+ 
+ All port nodes are located under the device's "_DSD" node in the hierarchical
+ data extension tree. The data extension related to each port node must begin
+-with "port" and must be followed by the "@" character and the number of the port
+-as its key. The target object it refers to should be called "PRTX", where "X" is
+-the number of the port. An example of such a package would be:
++with "port" and must be followed by the "@" character and the number of the
++port as its key. The target object it refers to should be called "PRTX", where
++"X" is the number of the port. An example of such a package would be::
+ 
+     Package() { "port@4", PRT4 }
+ 
+@@ -49,7 +52,7 @@ data extension key of the endpoint nodes must begin with
+ "endpoint" and must be followed by the "@" character and the number of the
+ endpoint. The object it refers to should be called "EPXY", where "X" is the
+ number of the port and "Y" is the number of the endpoint. An example of such a
+-package would be:
++package would be::
+ 
+     Package() { "endpoint@0", EP40 }
+ 
+@@ -62,85 +65,85 @@ of that port shall be zero. Similarly, if a port may only have a single
+ endpoint, the number of that endpoint shall be zero.
+ 
+ The endpoint reference uses property extension with "remote-endpoint" property
+-name followed by a reference in the same package. Such references consist of the
++name followed by a reference in the same package. Such references consist of
+ the remote device reference, the first package entry of the port data extension
+ reference under the device and finally the first package entry of the endpoint
+-data extension reference under the port. Individual references thus appear as:
++data extension reference under the port. Individual references thus appear as::
+ 
+     Package() { device, "port@X", "endpoint@Y" }
+ 
+-In the above example, "X" is the number of the port and "Y" is the number of the
+-endpoint.
++In the above example, "X" is the number of the port and "Y" is the number of
++the endpoint.
+ 
+ The references to endpoints must be always done both ways, to the
+ remote endpoint and back from the referred remote endpoint node.
+ 
+-A simple example of this is show below:
++A simple example of this is show below::
+ 
+     Scope (\_SB.PCI0.I2C2)
+     {
+-	Device (CAM0)
+-	{
+-	    Name (_DSD, Package () {
+-		ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+-		Package () {
+-		    Package () { "compatible", Package () { "nokia,smia" } },
+-		},
+-		ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
+-		Package () {
+-		    Package () { "port@0", PRT0 },
+-		}
+-	    })
+-	    Name (PRT0, Package() {
+-		ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+-		Package () {
+-		    Package () { "reg", 0 },
+-		},
+-		ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
+-		Package () {
+-		    Package () { "endpoint@0", EP00 },
+-		}
+-	    })
+-	    Name (EP00, Package() {
+-		ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+-		Package () {
+-		    Package () { "reg", 0 },
+-		    Package () { "remote-endpoint", Package() { \_SB.PCI0.ISP, "port@4", "endpoint@0" } },
+-		}
+-	    })
+-	}
++        Device (CAM0)
++        {
++            Name (_DSD, Package () {
++                ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
++                Package () {
++                    Package () { "compatible", Package () { "nokia,smia" } },
++                },
++                ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
++                Package () {
++                    Package () { "port@0", PRT0 },
++                }
++            })
++            Name (PRT0, Package() {
++                ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
++                Package () {
++                    Package () { "reg", 0 },
++                },
++                ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
++                Package () {
++                    Package () { "endpoint@0", EP00 },
++                }
++            })
++            Name (EP00, Package() {
++                ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
++                Package () {
++                    Package () { "reg", 0 },
++                    Package () { "remote-endpoint", Package() { \_SB.PCI0.ISP, "port@4", "endpoint@0" } },
++                }
++            })
++        }
+     }
+ 
+     Scope (\_SB.PCI0)
+     {
+-	Device (ISP)
+-	{
+-	    Name (_DSD, Package () {
+-		ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
+-		Package () {
+-		    Package () { "port@4", PRT4 },
+-		}
+-	    })
+-
+-	    Name (PRT4, Package() {
+-		ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+-		Package () {
+-		    Package () { "reg", 4 }, /* CSI-2 port number */
+-		},
+-		ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
+-		Package () {
+-		    Package () { "endpoint@0", EP40 },
+-		}
+-	    })
+-
+-	    Name (EP40, Package() {
+-		ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+-		Package () {
+-		    Package () { "reg", 0 },
+-		    Package () { "remote-endpoint", Package () { \_SB.PCI0.I2C2.CAM0, "port@0", "endpoint@0" } },
+-		}
+-	    })
+-	}
++        Device (ISP)
++        {
++            Name (_DSD, Package () {
++                ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
++                Package () {
++                    Package () { "port@4", PRT4 },
++                }
++            })
++
++            Name (PRT4, Package() {
++                ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
++                Package () {
++                    Package () { "reg", 4 }, /* CSI-2 port number */
++                },
++                ToUUID("dbb8e3e6-5886-4ba6-8795-1319f52a966b"),
++                Package () {
++                    Package () { "endpoint@0", EP40 },
++                }
++            })
++
++            Name (EP40, Package() {
++                ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
++                Package () {
++                    Package () { "reg", 0 },
++                    Package () { "remote-endpoint", Package () { \_SB.PCI0.I2C2.CAM0, "port@0", "endpoint@0" } },
++                }
++            })
++        }
+     }
+ 
+ Here, the port 0 of the "CAM0" device is connected to the port 4 of
+@@ -148,27 +151,27 @@ the "ISP" device and vice versa.
+ 
+ 
+ References
+-----------
++==========
+ 
+ [1] _DSD (Device Specific Data) Implementation Guide.
+-    <URL:http://www.uefi.org/sites/default/files/resources/_DSD-implementation-guide-toplevel-1_1.htm>,
++    http://www.uefi.org/sites/default/files/resources/_DSD-implementation-guide-toplevel-1_1.htm,
+     referenced 2016-10-03.
+ 
+-[2] Devicetree. <URL:http://www.devicetree.org>, referenced 2016-10-03.
++[2] Devicetree. http://www.devicetree.org, referenced 2016-10-03.
+ 
+ [3] Documentation/devicetree/bindings/graph.txt
+ 
+ [4] Device Properties UUID For _DSD.
+-    <URL:http://www.uefi.org/sites/default/files/resources/_DSD-device-properties-UUID.pdf>,
++    http://www.uefi.org/sites/default/files/resources/_DSD-device-properties-UUID.pdf,
+     referenced 2016-10-04.
+ 
+ [5] Hierarchical Data Extension UUID For _DSD.
+-    <URL:http://www.uefi.org/sites/default/files/resources/_DSD-hierarchical-data-extension-UUID-v1.1.pdf>,
++    http://www.uefi.org/sites/default/files/resources/_DSD-hierarchical-data-extension-UUID-v1.1.pdf,
+     referenced 2016-10-04.
+ 
+ [6] Advanced Configuration and Power Interface Specification.
+-    <URL:http://www.uefi.org/sites/default/files/resources/ACPI_6_1.pdf>,
++    http://www.uefi.org/sites/default/files/resources/ACPI_6_1.pdf,
+     referenced 2016-10-04.
+ 
+ [7] _DSD Device Properties Usage Rules.
+-    Documentation/acpi/DSD-properties-rules.txt
++    :doc:`../DSD-properties-rules`
+diff --git a/Documentation/firmware-guide/acpi/index.rst b/Documentation/firmware-guide/acpi/index.rst
+index bedcb0b242a2..f81cfbcb6878 100644
+--- a/Documentation/firmware-guide/acpi/index.rst
++++ b/Documentation/firmware-guide/acpi/index.rst
+@@ -8,6 +8,7 @@ ACPI Support
+    :maxdepth: 1
+ 
+    namespace
++   dsd/graph
+    enumeration
+    osi
+    method-customizing
+-- 
+2.20.1
 
-Regardless, I need Thomas's ACK to proceed, I can make these changes
-myself.
-
-Thanks,
-Lorenzo
-
->  {
-> +	unsigned long now;
->  	u32 reg;
->  
->  	/* Set to Direct mode */
-> @@ -327,9 +332,12 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
->  	reg |= PIO_CTRL_ADDR_WIN_DISABLE;
->  	advk_writel(pcie, reg, PIO_CTRL);
->  
-> -	/* Start link training */
-> +	/* Wait for endpoint to exit reset state and start link training */
->  	reg = advk_readl(pcie, PCIE_CORE_LINK_CTRL_STAT_REG);
->  	reg |= PCIE_CORE_LINK_TRAINING;
-> +	now = jiffies;
-> +	if (time_before(now, ep_rdy_time))
-> +		msleep(jiffies_to_msecs(ep_rdy_time - now));
->  	advk_writel(pcie, reg, PCIE_CORE_LINK_CTRL_STAT_REG);
->  
->  	advk_pcie_wait_for_link(pcie);
-> @@ -993,8 +1001,11 @@ static int advk_pcie_probe(struct platform_device *pdev)
->  	struct advk_pcie *pcie;
->  	struct resource *res;
->  	struct pci_host_bridge *bridge;
-> +	unsigned long ep_rdy_time;
->  	int ret, irq;
->  
-> +	ep_rdy_time = jiffies + msecs_to_jiffies(ENDPOINT_RST_MS);
-> +
->  	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct advk_pcie));
->  	if (!bridge)
->  		return -ENOMEM;
-> @@ -1022,7 +1033,7 @@ static int advk_pcie_probe(struct platform_device *pdev)
->  		return ret;
->  	}
->  
-> -	advk_pcie_setup_hw(pcie);
-> +	advk_pcie_setup_hw(pcie, ep_rdy_time);
->  
->  	advk_sw_pci_bridge_init(pcie);
->  
-> -- 
-> 2.20.1
-> 
