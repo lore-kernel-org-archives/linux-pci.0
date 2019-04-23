@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 073B4C10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 21:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1842C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 21:21:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C72EB218DA
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 21:18:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70FB0218DA
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 21:21:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556054280;
-	bh=qvRd8Nl3TIAzoHhiFzNJ66CX33GFlTP4bNq1FH6JfJ4=;
+	s=default; t=1556054495;
+	bh=7iwwZaqXJGbDOxRVgD2k/0uthX8g5TgrYRxw9sA3PJ0=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=aqCIhknHVYI3osojTDDvkqEaTAAeNXU3/Dwn/d0ieTD62IV7j7VC8wVrZCxgMmcIk
-	 HxFH6imauHEnxeLU6269/XSi2eXJAMS9U9pYlFdy3WeovGuRLvJWNobCmsUV7xtGdP
-	 t26KMZoztEAXAe1PZ+Pl8FCV93THx5XKLGMPjuRE=
+	b=NXXqORzkuUVoMhV/wV83EiClacauuWIZcPmrJhgD58E3tU1lYvhDNPMj5BLdbrvL2
+	 nzE4JPxl5p3EB9u6TVI41HeDo5YM3LeshwnZcKeSo8r0ujC/gouQZhsSWOzrZw41Tc
+	 /m9XcjkPvgt2DMI5YOZvliF2SXkQWuxUyK0RXdFw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726075AbfDWVSA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 17:18:00 -0400
-Received: from casper.infradead.org ([85.118.1.10]:39474 "EHLO
+        id S1726342AbfDWVVT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 17:21:19 -0400
+Received: from casper.infradead.org ([85.118.1.10]:39752 "EHLO
         casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726029AbfDWVR7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 17:17:59 -0400
+        with ESMTP id S1726029AbfDWVVT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 17:21:19 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
         MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
         :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
         Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=T365wM+ApFniAEvB/kS7+BPv3Xz4P9xukBDPnNOUtnE=; b=bSapy78htwDmK7t0oq5X0GtaYK
-        kX70ytKnAE5IBJPkUlOr1xhA7M3Ykm5uO/C7cGsOlpC5BKO+exrdnzNMWF8WpMYH4XmEWzF9Hdixy
-        3NJ6KGUiuvCcXET/CdlrprXtBVTxVhvkUIPob+fDeaExeiELxzzo9qGPGFB+/oud8gjYWCOK1ciKR
-        tBh4Nzgr6jOfIRy+A6ssFHpI2D2dKziDQ8tkvBL9wOo70jNzqCnwG6+m2yZycB5YMhfYwovKWOywU
-        BjUF0qYxIRwjR1GaPHJivmo75oKPTLCoUcI5qmeOK/z1d/dDEZqBWwtOgYsrmQhK05mGukidTO5GO
-        0qYjx9Uw==;
+        bh=7bm/7cx8935u5WpEqvYAR3JJzpYWOGucTqy7o1fPnE8=; b=LZzBbka75a6LUuL7IXg4Qvs2zU
+        WoOc3jHTTu4Eh+W39e++gI7j8fInLn2O62kwolUQfhjCNYo67NSSIOSmvUISBxTAXk265Djyf3r/Q
+        tqNT93E8kFpx/S/4ZpU7MRTzmPNjsBp7B4IDCnYaTIdxIJ8uNfMG570kSya3Wk4QbSQTXXrXOEVFg
+        22d3e1ZT0a4I/m3X9zKMHb5DhGS6pe4yvVKDX6ktAziodE3FtZ+66vmsI6rhJN0WZpp2Dfjj7n9gR
+        Pz0CXJNPEZKnCUu6spF1ahFccAwHgubWnYLJHMmRmp0w3nXY++crW65iKO8vygb9sIkBCtAkwZ8n4
+        iO7jByqg==;
 Received: from 177.17.136.231.dynamic.adsl.gvt.net.br ([177.17.136.231] helo=coco.lan)
         by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hJ2nb-00047N-1a; Tue, 23 Apr 2019 21:17:55 +0000
-Date:   Tue, 23 Apr 2019 18:17:48 -0300
+        id 1hJ2qo-0004Dc-Sx; Tue, 23 Apr 2019 21:21:15 +0000
+Date:   Tue, 23 Apr 2019 18:21:08 -0300
 From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
 To:     Changbin Du <changbin.du@gmail.com>
 Cc:     Jonathan Corbet <corbet@lwn.net>,
@@ -50,12 +50,12 @@ Cc:     Jonathan Corbet <corbet@lwn.net>,
         x86@kernel.org, fenghua.yu@intel.com,
         linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
         linux-gpio@vger.kernel.org
-Subject: Re: [PATCH v4 15/63] Documentation: ACPI: move
- dsd/data-node-references.txt to firmware-guide/acpi and convert to reST
-Message-ID: <20190423181748.24f8aed2@coco.lan>
-In-Reply-To: <20190423162932.21428-16-changbin.du@gmail.com>
+Subject: Re: [PATCH v4 16/63] Documentation: ACPI: move debug.txt to
+ firmware-guide/acpi and convert to reST
+Message-ID: <20190423182108.2bf06960@coco.lan>
+In-Reply-To: <20190423162932.21428-17-changbin.du@gmail.com>
 References: <20190423162932.21428-1-changbin.du@gmail.com>
-        <20190423162932.21428-16-changbin.du@gmail.com>
+        <20190423162932.21428-17-changbin.du@gmail.com>
 X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -65,7 +65,7 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Em Wed, 24 Apr 2019 00:28:44 +0800
+Em Wed, 24 Apr 2019 00:28:45 +0800
 Changbin Du <changbin.du@gmail.com> escreveu:
 
 > This converts the plain text documentation to reStructuredText format and
@@ -73,86 +73,151 @@ Changbin Du <changbin.du@gmail.com> escreveu:
 > 
 > Signed-off-by: Changbin Du <changbin.du@gmail.com>
 > ---
->  .../acpi/dsd/data-node-references.rst}        | 28 +++++++++++--------
->  Documentation/firmware-guide/acpi/index.rst   |  1 +
->  2 files changed, 17 insertions(+), 12 deletions(-)
->  rename Documentation/{acpi/dsd/data-node-references.txt => firmware-guide/acpi/dsd/data-node-references.rst} (79%)
+>  .../acpi/debug.rst}                           | 31 ++++++++++---------
+>  Documentation/firmware-guide/acpi/index.rst   |  3 +-
+>  2 files changed, 19 insertions(+), 15 deletions(-)
+>  rename Documentation/{acpi/debug.txt => firmware-guide/acpi/debug.rst} (91%)
 > 
-> diff --git a/Documentation/acpi/dsd/data-node-references.txt b/Documentation/firmware-guide/acpi/dsd/data-node-references.rst
-> similarity index 79%
-> rename from Documentation/acpi/dsd/data-node-references.txt
-> rename to Documentation/firmware-guide/acpi/dsd/data-node-references.rst
-> index c3871565c8cf..79c5368eaecf 100644
-> --- a/Documentation/acpi/dsd/data-node-references.txt
-> +++ b/Documentation/firmware-guide/acpi/dsd/data-node-references.rst
-> @@ -1,9 +1,12 @@
-> -Copyright (C) 2018 Intel Corporation
-> -Author: Sakari Ailus <sakari.ailus@linux.intel.com>
-> -
+> diff --git a/Documentation/acpi/debug.txt b/Documentation/firmware-guide/acpi/debug.rst
+> similarity index 91%
+> rename from Documentation/acpi/debug.txt
+> rename to Documentation/firmware-guide/acpi/debug.rst
+> index 65bf47c46b6d..1a152dd1d765 100644
+> --- a/Documentation/acpi/debug.txt
+> +++ b/Documentation/firmware-guide/acpi/debug.rst
+> @@ -1,18 +1,21 @@
+> -			ACPI Debug Output
 > +.. SPDX-License-Identifier: GPL-2.0
-> +.. include:: <isonum.txt>
 >  
-> +===================================
->  Referencing hierarchical data nodes
-> ------------------------------------
-> +===================================
-> +
-> +:Copyright: |copy| 2018 Intel Corporation
-> +:Author: Sakari Ailus <sakari.ailus@linux.intel.com>
+> +=================
+> +ACPI Debug Output
+> +=================
 >  
->  ACPI in general allows referring to device objects in the tree only.
->  Hierarchical data extension nodes may not be referred to directly, hence this
-> @@ -28,13 +31,14 @@ extension key.
+>  The ACPI CA, the Linux ACPI core, and some ACPI drivers can generate debug
+>  output.  This document describes how to use this facility.
 >  
+>  Compile-time configuration
+> ---------------------------
+> +==========================
 >  
->  Example
-> --------
-> +=======
+>  ACPI debug output is globally enabled by CONFIG_ACPI_DEBUG.  If this config
+>  option is turned off, the debug messages are not even built into the
+>  kernel.
 >  
-> -	In the ASL snippet below, the "reference" _DSD property [2] contains a
-> -	device object reference to DEV0 and under that device object, a
-> -	hierarchical data extension key "node@1" referring to the NOD1 object
-> -	and lastly, a hierarchical data extension key "anothernode" referring to
-> -	the ANOD object which is also the final target node of the reference.
-> +In the ASL snippet below, the "reference" _DSD property [2] contains a
-> +device object reference to DEV0 and under that device object, a
-> +hierarchical data extension key "node@1" referring to the NOD1 object
-> +and lastly, a hierarchical data extension key "anothernode" referring to
-> +the ANOD object which is also the final target node of the reference.
-> +::
+>  Boot- and run-time configuration
+> ---------------------------------
+> +================================
 >  
->  	Device (DEV0)
->  	{
-> @@ -75,10 +79,10 @@ Example
->  	    })
->  	}
+>  When CONFIG_ACPI_DEBUG=y, you can select the component and level of messages
+>  you're interested in.  At boot-time, use the acpi.debug_layer and
+> @@ -21,7 +24,7 @@ debug_layer and debug_level files in /sys/module/acpi/parameters/ to control
+>  the debug messages.
 >  
-> -Please also see a graph example in graph.txt .
-> +Please also see a graph example in :doc:`graph`.
+>  debug_layer (component)
+> ------------------------
+> +=======================
 >  
->  References
-> -----------
-> +==========
+>  The "debug_layer" is a mask that selects components of interest, e.g., a
+>  specific driver or part of the ACPI interpreter.  To build the debug_layer
+> @@ -33,7 +36,7 @@ to /sys/module/acpi/parameters/debug_layer.
 >  
->  [1] Hierarchical Data Extension UUID For _DSD.
->      <URL:http://www.uefi.org/sites/default/files/resources/_DSD-hierarchical-data-extension-UUID-v1.1.pdf>,
+>  The possible components are defined in include/acpi/acoutput.h and
+>  include/acpi/acpi_drivers.h.  Reading /sys/module/acpi/parameters/debug_layer
+> -shows the supported mask values, currently these:
+> +shows the supported mask values, currently these::
+>  
+>      ACPI_UTILITIES                  0x00000001
+>      ACPI_HARDWARE                   0x00000002
+> @@ -65,7 +68,7 @@ shows the supported mask values, currently these:
+>      ACPI_PROCESSOR_COMPONENT        0x20000000
 
-Hmm... on the previous patch, you replaced <URL:some_url> by some_url,
-with makes sense. Please do the same here and on other patches on
-this series with a similar way to describe URLs.
+This is one way of doing. The other one, with would likely produce a
+better visual, would be to use tables, e. g.:
 
+     ==============                  ==========
+     ACPI_UTILITIES                  0x00000001
+     ACPI_HARDWARE                   0x00000002
+     ==============                  ==========
+
+Of course, if you use tables here, you need to be consistent along
+similar cases inside the document.
+
+while both works, I prefer using tables on such cases.
+
+Either way:
+
+Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+
+>  
+>  debug_level
+> ------------
+> +===========
+>  
+>  The "debug_level" is a mask that selects different types of messages, e.g.,
+>  those related to initialization, method execution, informational messages, etc.
+> @@ -81,7 +84,7 @@ to /sys/module/acpi/parameters/debug_level.
+>  
+>  The possible levels are defined in include/acpi/acoutput.h.  Reading
+>  /sys/module/acpi/parameters/debug_level shows the supported mask values,
+> -currently these:
+> +currently these::
+>  
+>      ACPI_LV_INIT                    0x00000001
+>      ACPI_LV_DEBUG_OBJECT            0x00000002
+> @@ -113,9 +116,9 @@ currently these:
+>      ACPI_LV_EVENTS                  0x80000000
+>  
+>  Examples
+> ---------
+> +========
+>  
+> -For example, drivers/acpi/bus.c contains this:
+> +For example, drivers/acpi/bus.c contains this::
+>  
+>      #define _COMPONENT              ACPI_BUS_COMPONENT
+>      ...
+> @@ -127,22 +130,22 @@ statement uses ACPI_DB_INFO, which is macro based on the ACPI_LV_INFO
+>  definition.)
+>  
+>  Enable all AML "Debug" output (stores to the Debug object while interpreting
+> -AML) during boot:
+> +AML) during boot::
+>  
+>      acpi.debug_layer=0xffffffff acpi.debug_level=0x2
+>  
+> -Enable PCI and PCI interrupt routing debug messages:
+> +Enable PCI and PCI interrupt routing debug messages::
+>  
+>      acpi.debug_layer=0x400000 acpi.debug_level=0x4
+>  
+> -Enable all ACPI hardware-related messages:
+> +Enable all ACPI hardware-related messages::
+>  
+>      acpi.debug_layer=0x2 acpi.debug_level=0xffffffff
+>  
+> -Enable all ACPI_DB_INFO messages after boot:
+> +Enable all ACPI_DB_INFO messages after boot::
+>  
+>      # echo 0x4 > /sys/module/acpi/parameters/debug_level
+>  
+> -Show all valid component values:
+> +Show all valid component values::
+>   
+>      # cat /sys/module/acpi/parameters/debug_layer
 > diff --git a/Documentation/firmware-guide/acpi/index.rst b/Documentation/firmware-guide/acpi/index.rst
-> index f81cfbcb6878..6d4e0df4f063 100644
+> index 6d4e0df4f063..a45fea11f998 100644
 > --- a/Documentation/firmware-guide/acpi/index.rst
 > +++ b/Documentation/firmware-guide/acpi/index.rst
-> @@ -9,6 +9,7 @@ ACPI Support
->  
->     namespace
->     dsd/graph
-> +   dsd/data-node-references
->     enumeration
+> @@ -14,6 +14,7 @@ ACPI Support
 >     osi
 >     method-customizing
+>     DSD-properties-rules
+> +   debug
+>     gpio-properties
+>     i2c-muxes
+> -   acpi-lid
+> \ No newline at end of file
+> +   acpi-lid
 
 
 
