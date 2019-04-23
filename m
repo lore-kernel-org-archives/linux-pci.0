@@ -4,38 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BCC9C10F14
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A80F8C10F14
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A73420843
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6912D217D4
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="ijr2xiiX"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="ABZj8Q6W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726691AbfDWI1v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 04:27:51 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:3364 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726643AbfDWI1r (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 04:27:47 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cbecc880000>; Tue, 23 Apr 2019 01:27:52 -0700
+        id S1726893AbfDWI2P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 04:28:15 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:2650 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726821AbfDWI2O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 04:28:14 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cbecc9a0002>; Tue, 23 Apr 2019 01:28:10 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 23 Apr 2019 01:27:46 -0700
+  Tue, 23 Apr 2019 01:28:14 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 23 Apr 2019 01:27:46 -0700
-Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL106.nvidia.com
+        by hqpgpgate102.nvidia.com on Tue, 23 Apr 2019 01:28:14 -0700
+Received: from HQMAIL112.nvidia.com (172.18.146.18) by HQMAIL106.nvidia.com
  (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
- 2019 08:27:46 +0000
-Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Tue, 23 Apr 2019 08:27:46 +0000
+ 2019 08:28:13 +0000
+Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL112.nvidia.com
+ (172.18.146.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
+ 2019 08:28:13 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL103.nvidia.com
+ (172.20.187.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 23 Apr 2019 08:28:13 +0000
 Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5cbecc7d0001>; Tue, 23 Apr 2019 01:27:46 -0700
+        id <B5cbecc980003>; Tue, 23 Apr 2019 01:28:13 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -47,9 +50,9 @@ CC:     <mperttunen@nvidia.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V4 01/16] PCI: Add #defines for some of PCIe spec r4.0 features
-Date:   Tue, 23 Apr 2019 13:57:15 +0530
-Message-ID: <20190423082730.370-2-vidyas@nvidia.com>
+Subject: [PATCH V4 05/16] PCI: dwc: Move config space capability search API
+Date:   Tue, 23 Apr 2019 13:57:19 +0530
+Message-ID: <20190423082730.370-6-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190423082730.370-1-vidyas@nvidia.com>
 References: <20190423082730.370-1-vidyas@nvidia.com>
@@ -57,78 +60,98 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1556008072; bh=pUc1fJRqMUa03aAVQRybNUeZjwwLlAm0x58deBCyr6U=;
+        t=1556008091; bh=GKdi95t5IVrmlblKc5/Uv+CvvQtd8a50ZpNkbBcFscM=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=ijr2xiiXqWWiH8ZlSU/5+TfSsDIcMxznI5GQOwtrdF6Hgz4IL6yQ1bkoq9RfNsFKr
-         myQcDFsTmbr5fvwL1FjGKbdCC2L4MfVuDbVpabYnFQD6WP5Svo51SRTyx1Gi12ABNH
-         +HJ6fNElSkOUPA0fTpFiGt0sA9DZKaJgXFIUPkPpXUPJ3/T4P995f3CPM5nn/HMZtC
-         Gr5AzPkITc9qInbKGH2bxTBYNJk1gPCgj+HDBsp2FRDQ7M30rtxaADoLf77cqHr3dz
-         ugoth6LOkAsuGaYGqrl12fHnW3KL+yuxIwPYPWrLKZsIUjvAnARUqUHqHqtZJjVVrr
-         mM2d0Dq5+lSOw==
+        b=ABZj8Q6WOZHJDR9YG0tMx3mGq1LnCxo0PWI3Os1neISrfN9yk7G+8x0b2nZV11gtE
+         G+mklMly8yzJvHkr8F+QjG8FLG+FsTVW8uMC85AliUNZ4cI6jZChhhQTme1lmTyDg+
+         fD3F7qAW5EfFarlWHwdZlfo0lzUUJ0TwljqB9Ng/ZTA8ObIy/S51oa1ANT4Pnl7G7C
+         QIKXaMlkTdDdwDiYxGCPWwzcE/IhCpDqVAPwsPv4gVW6i16v9NV97JeL7YHKfLK3zW
+         dUkQpBZCr2YU/Tf2sdpjILl2q8aVxmwJ3FoERn96CJZ+HJjeuWa7JWTe8IOxduiFvJ
+         BSl89jv2PdykA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add #defines only for the Data Link Feature and Physical Layer 16.0 GT/s
-features.
+Move PCIe config space capability search API to common DesignWare file
+as this can be used by both host and ep mode codes.
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Reviewed-by: Thierry Reding <treding@nvidia.com>
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 ---
 Changes from [v3]:
-* None
+* Rebased to linux-next top of the tree
 
 Changes from [v2]:
-* Updated commit message and description to explicitly mention that defines are
-  added only for some of the features and not all.
-
-Changes from [v1]:
 * None
 
- include/uapi/linux/pci_regs.h | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+Changes from [v1]:
+* Removed dw_pcie_find_next_ext_capability() API from here and made a
+  separate patch for that
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index f7d3e7831fa8..4da04b1faab3 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -703,7 +703,9 @@
- #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
- #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
- #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
--#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PTM
-+#define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
-+#define PCI_EXT_CAP_ID_PL	0x26	/* Physical Layer 16.0 GT/s */
-+#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL
+ drivers/pci/controller/dwc/pcie-designware.c | 33 ++++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h |  2 ++
+ 2 files changed, 35 insertions(+)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 8e0081ccf83b..6a98135244d6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -20,6 +20,39 @@
+ #define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
+ #define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
  
- #define PCI_EXT_CAP_DSN_SIZEOF	12
- #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
-@@ -1043,4 +1045,22 @@
- #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
- #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
++static u8 __dw_pcie_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
++				  u8 cap)
++{
++	u8 cap_id, next_cap_ptr;
++	u16 reg;
++
++	reg = dw_pcie_readw_dbi(pci, cap_ptr);
++	next_cap_ptr = (reg & 0xff00) >> 8;
++	cap_id = (reg & 0x00ff);
++
++	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
++		return 0;
++
++	if (cap_id == cap)
++		return cap_ptr;
++
++	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
++}
++
++u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap)
++{
++	u8 next_cap_ptr;
++	u16 reg;
++
++	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
++	next_cap_ptr = (reg & 0x00ff);
++
++	if (!next_cap_ptr)
++		return 0;
++
++	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
++}
++
+ int dw_pcie_read(void __iomem *addr, int size, u32 *val)
+ {
+ 	if (!IS_ALIGNED((uintptr_t)addr, size)) {
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 9ee98ced1ef6..35160b4ce929 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -248,6 +248,8 @@ struct dw_pcie {
+ #define to_dw_pcie_from_ep(endpoint)   \
+ 		container_of((endpoint), struct dw_pcie, ep)
  
-+/* Data Link Feature */
-+#define PCI_DLF_CAP		0x04	/* Capabilities Register */
-+#define  PCI_DLF_LOCAL_DLF_SUP_MASK	0x007fffff  /* Local Data Link Feature Supported */
-+#define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
-+#define PCI_DLF_STS		0x08	/* Status Register */
-+#define  PCI_DLF_REMOTE_DLF_SUP_MASK	0x007fffff  /* Remote Data Link Feature Supported */
-+#define  PCI_DLF_REMOTE_DLF_SUP_VALID	0x80000000  /* Remote Data Link Feature Support Valid */
++u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap);
 +
-+/* Physical Layer 16.0 GT/s */
-+#define PCI_PL_16GT_CAP		0x04	/* Capabilities Register */
-+#define PCI_PL_16GT_CTRL	0x08	/* Control Register */
-+#define PCI_PL_16GT_STS		0x0c	/* Status Register */
-+#define PCI_PL_16GT_LDPM_STS	0x10	/* Local Data Parity Mismatch Status Register */
-+#define PCI_PL_16GT_FRDPM_STS	0x14	/* First Retimer Data Parity Mismatch Status Register */
-+#define PCI_PL_16GT_SRDPM_STS	0x18	/* Second Retimer Data Parity Mismatch Status Register */
-+#define PCI_PL_16GT_RSVD	0x1C	/* Reserved */
-+#define PCI_PL_16GT_LE_CTRL	0x20	/* Lane Equalization Control Register */
-+
- #endif /* LINUX_PCI_REGS_H */
+ int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_write(void __iomem *addr, int size, u32 val);
+ 
 -- 
 2.17.1
 
