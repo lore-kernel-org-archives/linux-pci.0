@@ -2,155 +2,165 @@ Return-Path: <SRS0=Emu/=SZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A536C10F14
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 06:11:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6097BC282E1
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:27:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54BC620843
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 06:11:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24F2320645
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:27:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="pdy2y4kb"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="nFjTYhwg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725937AbfDWGL3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 02:11:29 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:15200 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbfDWGL3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 02:11:29 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cbeac950000>; Mon, 22 Apr 2019 23:11:33 -0700
+        id S1726648AbfDWI1r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 04:27:47 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:2593 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725888AbfDWI1q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 04:27:46 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cbecc780000>; Tue, 23 Apr 2019 01:27:41 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 22 Apr 2019 23:11:27 -0700
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Tue, 23 Apr 2019 01:27:44 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 22 Apr 2019 23:11:27 -0700
-Received: from [10.25.75.193] (10.124.1.5) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
- 2019 06:11:21 +0000
-Subject: Re: [PATCH V3 04/16] PCI: dwc: Perform dbi regs write lock towards
- the end
-To:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-CC:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mperttunen@nvidia.com" <mperttunen@nvidia.com>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
-References: <20190416192730.15681-1-vidyas@nvidia.com>
- <20190416192730.15681-5-vidyas@nvidia.com>
- <305100E33629484CBB767107E4246BBB0A22C127@de02wembxa.internal.synopsys.com>
- <20190422154608.6e6f8ae3@xhacker.debian>
-X-Nvconfidentiality: public
+        by hqpgpgate102.nvidia.com on Tue, 23 Apr 2019 01:27:44 -0700
+Received: from HQMAIL102.nvidia.com (172.18.146.10) by HQMAIL106.nvidia.com
+ (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
+ 2019 08:27:39 +0000
+Received: from HQMAIL106.nvidia.com (172.18.146.12) by HQMAIL102.nvidia.com
+ (172.18.146.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
+ 2019 08:27:39 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL106.nvidia.com
+ (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 23 Apr 2019 08:27:39 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5cbecc760000>; Tue, 23 Apr 2019 01:27:39 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
-Message-ID: <f0b5973a-b7a5-ac59-06d6-fdce71fda03d@nvidia.com>
-Date:   Tue, 23 Apr 2019 11:41:18 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <kishon@ti.com>, <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>
+CC:     <mperttunen@nvidia.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
+Subject: [PATCH V4 00/16] Add Tegra194 PCIe support
+Date:   Tue, 23 Apr 2019 13:57:14 +0530
+Message-ID: <20190423082730.370-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+X-NVConfidentiality: public
 MIME-Version: 1.0
-In-Reply-To: <20190422154608.6e6f8ae3@xhacker.debian>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1555999893; bh=DXlOvuZYSdUB+yHdA5IR4gKX5pBtQSwNt7fKtc0Xups=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=pdy2y4kbl2u46CjtnSmDv3q9OwtcfmZ6aH1MdXfIPuA6AzWXhc6KE3cy0R426sN23
-         K8x8OOsPwF6RRxOgSMLveqGfLEfD1T9IdKP/zIxPSUK8tEhs8YdYhLay3bEtwByvNR
-         Yb/EJuQuIM6LBQwYNhEOTq0CPJ54vAb6eVrolFd6+fodnZGC1oTwIs79OPyHhjqhWV
-         fL3qGpgWpxhspS/DTiDtuTTmB2Bf1ub1z4mfMa45vPfow/y0FYeTiqrOKjI7sh1Nh/
-         lwQH0fUPA/T1GsSEnKdm6ka3brJ8gDyq2ShYW+IX1UKK7qdNTfIm4Ixx7b3200jpBD
-         mXHHEb5ndo0Bw==
+        t=1556008061; bh=xg3a8AcV41vMwKWJau5Vw54knQ21BjqYa5n6Qjnm1/g=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=nFjTYhwg2l07J9I1NYRMCDOI4Mhuej4DWil6JHGI0vUWJxw7dPxf1Gjg25KrH2WDx
+         Sg1tmbbue730OZGx9ruQtafI7joX9HxdBrSQ5iRJ/JKdvbjEHhdz0XcqNeIFnjDllV
+         h5ie4ch23dLNRv/KCGMWpVUR5Vmq+Qapp0MbhRREtil0KjvoMei97yIrP3aPEdcndH
+         960Hvdd13e/2NvOvEWYkTBWxomIGH89zdx5OOBwuqIVggWOh2wFYYdX/lFC0GD4HkG
+         HQ4MwCgs/klqFUvXo0/8FFkdzK0dWyHBZe7ZRqUZrsjp1qaFJPO+zvvi6byAHAAMt9
+         YkxMd8kDJ20rw==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 4/22/2019 1:24 PM, Jisheng Zhang wrote:
-> On Wed, 17 Apr 2019 09:56:33 +0000 Gustavo Pimentel wrote:
-> 
->>
->> On Tue, Apr 16, 2019 at 20:27:18, Vidya Sagar <vidyas@nvidia.com> wrote:
->>
->>> Remove multiple write enable and disable sequences of dbi registers as
->>> Tegra194 implements writes to BAR-0 register (offset: 0x10) controlled by
->>> DBI write-lock enable bit thereby not allowing any further writes to BAR-0
->>> register in config space to take place. Hence disabling write permission
->>> only towards the end.
->>>
->>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>> ---
->>> Changes since [v2]:
->>> * None
->>>
->>> Changes since [v1]:
->>> * None
->>>
->>>   drivers/pci/controller/dwc/pcie-designware-host.c | 3 ---
->>>   1 file changed, 3 deletions(-)
->>>
->>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
->>> index 2a5332e5ccfa..c0334c92c1a6 100644
->>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->>> @@ -683,7 +683,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>>        val &= 0xffff00ff;
->>>        val |= 0x00000100;
->>>        dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
->>> -     dw_pcie_dbi_ro_wr_dis(pci);
->>>
->>>        /* Setup bus numbers */
->>>        val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
->>> @@ -723,8 +722,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->>>
->>>        dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
->>>
->>> -     /* Enable write permission for the DBI read-only register */
->>> -     dw_pcie_dbi_ro_wr_en(pci);
->>>        /* Program correct class for RC */
->>>        dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
->>>        /* Better disable write permission right after the update */
->>> --
->>> 2.17.1
->>
->> This setup sequence was written by Jingoo Han, let's check if he did this
->> by some particular reason.
->> Jingoo do you remember why you wrote the code like this?
-> 
-> FWICT, enabling RO writeable in the setup sequence is introduced in
-> commit d91dfe5054d4 ("PCI: dwc: Enable write permission for Class Code,
-> Interrupt Pin updates"). The Reason why not towards the end maybe
-> only enable the RO writeable when necessary.
-In that case, my patch shouldn't cause any issue and if any it would avoid
-few writes to speed up the process. So, in my opinion, it is a good to go change.
-Please let me know if you have disagree with me on this.
+Tegra194 has six PCIe controllers based on Synopsys DesignWare core.
+There are two Universal PHY (UPHY) blocks with each supporting 12(HSIO:
+Hisg Speed IO) and 8(NVHS: NVIDIA High Speed) lanes respectively.
+Controllers:0~4 use UPHY lanes from HSIO brick whereas Controller:5 uses
+UPHY lanes from NVHS brick. Lane mapping in HSIO UPHY brick to each PCIe
+controller (0~4) is controlled in XBAR module by BPMP-FW. Since PCIe
+core has PIPE interface, a glue module called PIPE-to-UPHY (P2U) is used
+to connect each UPHY lane (applicable to both HSIO and NVHS UPHY bricks)
+to PCIe controller
+This patch series
+- Adds support for P2U PHY driver
+- Adds support for PCIe host controller
+- Adds device tree nodes each PCIe controllers
+- Enables nodes applicable to p2972-0000 platform
+- Adds helper APIs in Designware core driver to get capability regs offset
+- Adds defines for new feature registers of PCIe spec revision 4
+- Makes changes in DesignWare core driver to get Tegra194 PCIe working
 
-> 
-> thanks
-> 
+Testing done on P2972-0000 platform
+- Able to get PCIe link up with on-board Marvel eSATA controller
+- Able to get PCIe link up with NVMe cards connected to M.2 Key-M slot
+- Able to do data transfers with both SATA drives and NVMe cards
+
+Note
+- Enabling x8 slot on P2972-0000 platform requires pinmux driver for Tegra194.
+  It is being worked on currently and hence Controller:5 (i.e. x8 slot) is
+  disabled in this patch series. A future patch series would enable this.
+- This series is based on top of the following series
+  Jisheng's patches to add support to .remove() in Designware sub-system
+  https://patchwork.kernel.org/project/linux-pci/list/?series=98559
+  (Jisheng's patches are now accepted and applied for v5.2)
+  My patches made on top of Jisheng's patches to export various symbols
+  https://patchwork.kernel.org/project/linux-pci/list/?series=101259
+
+Changes since [v3]:
+* Rebased on top of linux-next top of the tree
+* Addressed Gustavo's comments and added his Ack for some of the changes.
+
+Changes since [v2]:
+* Addressed review comments from Thierry
+
+Changes since [v1]:
+* Addressed review comments from Bjorn, Thierry, Jonathan, Rob & Kishon
+* Added more patches in v2 series
+
+Vidya Sagar (16):
+  PCI: Add #defines for some of PCIe spec r4.0 features
+  PCI/PME: Export pcie_pme_disable_msi() & pcie_pme_no_msi() APIs
+  PCI: Export pcie_bus_config symbol
+  PCI: dwc: Perform dbi regs write lock towards the end
+  PCI: dwc: Move config space capability search API
+  PCI: dwc: Add ext config space capability search API
+  dt-bindings: PCI: designware: Add binding for CDM register check
+  PCI: dwc: Add support to enable CDM register check
+  Documentation/devicetree: Add PCIe supports-clkreq property
+  dt-bindings: PCI: tegra: Add device tree support for T194
+  dt-bindings: PHY: P2U: Add Tegra 194 P2U block
+  arm64: tegra: Add P2U and PCIe controller nodes to Tegra194 DT
+  arm64: tegra: Enable PCIe slots in P2972-0000 board
+  phy: tegra: Add PCIe PIPE2UPHY support
+  PCI: tegra: Add Tegra194 PCIe support
+  arm64: Add Tegra194 PCIe driver to defconfig
+
+ .../bindings/pci/designware-pcie.txt          |    5 +
+ .../bindings/pci/nvidia,tegra194-pcie.txt     |  187 ++
+ Documentation/devicetree/bindings/pci/pci.txt |    5 +
+ .../bindings/phy/phy-tegra194-p2u.txt         |   28 +
+ .../arm64/boot/dts/nvidia/tegra194-p2888.dtsi |    2 +-
+ .../boot/dts/nvidia/tegra194-p2972-0000.dts   |   41 +
+ arch/arm64/boot/dts/nvidia/tegra194.dtsi      |  449 +++++
+ arch/arm64/configs/defconfig                  |    1 +
+ drivers/pci/controller/dwc/Kconfig            |   11 +
+ drivers/pci/controller/dwc/Makefile           |    1 +
+ .../pci/controller/dwc/pcie-designware-host.c |    3 -
+ drivers/pci/controller/dwc/pcie-designware.c  |   81 +
+ drivers/pci/controller/dwc/pcie-designware.h  |   12 +
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 1760 +++++++++++++++++
+ drivers/pci/pci.c                             |    1 +
+ drivers/pci/pcie/pme.c                        |   14 +-
+ drivers/pci/pcie/portdrv.h                    |   16 +-
+ drivers/phy/tegra/Kconfig                     |    7 +
+ drivers/phy/tegra/Makefile                    |    1 +
+ drivers/phy/tegra/pcie-p2u-tegra194.c         |  120 ++
+ include/uapi/linux/pci_regs.h                 |   22 +-
+ 21 files changed, 2748 insertions(+), 19 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
+ create mode 100644 drivers/pci/controller/dwc/pcie-tegra194.c
+ create mode 100644 drivers/phy/tegra/pcie-p2u-tegra194.c
+
+-- 
+2.17.1
 
