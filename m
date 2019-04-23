@@ -7,33 +7,36 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37C25C10F14
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3815DC282DD
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:29:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0878720843
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:29:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09917218C3
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 09:29:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="gpommPvK"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="bSgkP1ZB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727185AbfDWJ3Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 05:29:16 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:7541 "EHLO
+        id S1727033AbfDWJ3V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 05:29:21 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:7561 "EHLO
         hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726555AbfDWJ3P (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 05:29:15 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cbedae70000>; Tue, 23 Apr 2019 02:29:11 -0700
+        with ESMTP id S1727239AbfDWJ3U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 05:29:20 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cbedaec0001>; Tue, 23 Apr 2019 02:29:16 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 23 Apr 2019 02:29:15 -0700
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 23 Apr 2019 02:29:19 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 23 Apr 2019 02:29:15 -0700
-Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
- 2019 09:29:14 +0000
+        by hqpgpgate101.nvidia.com on Tue, 23 Apr 2019 02:29:19 -0700
+Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL108.nvidia.com
+ (172.18.146.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
+ 2019 09:29:19 +0000
+Received: from HQMAIL103.nvidia.com (172.20.187.11) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
+ 2019 09:29:18 +0000
 Received: from manikanta-bm2.nvidia.com (172.20.13.39) by HQMAIL.nvidia.com
  (172.20.187.11) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Tue, 23 Apr 2019 09:29:11 +0000
+ Transport; Tue, 23 Apr 2019 09:29:15 +0000
 From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -42,9 +45,9 @@ To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
 CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>,
         Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V2 09/28] PCI: tegra: Enable opportunistic UpdateFC and ACK
-Date:   Tue, 23 Apr 2019 14:58:06 +0530
-Message-ID: <20190423092825.759-10-mmaddireddy@nvidia.com>
+Subject: [PATCH V2 10/28] PCI: tegra: Disable AFI dynamic clock gating
+Date:   Tue, 23 Apr 2019 14:58:07 +0530
+Message-ID: <20190423092825.759-11-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190423092825.759-1-mmaddireddy@nvidia.com>
 References: <20190423092825.759-1-mmaddireddy@nvidia.com>
@@ -52,62 +55,71 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1556011752; bh=I8Ziq1AwsBuIrQBTrz2GgcOP5GDx14K+MrSW/kMdNfw=;
+        t=1556011756; bh=1pKY2NV5Xr7swRqtf6Z3I4n+g5XLMsSUKbX1HnTz05I=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=gpommPvKTPF6UeZkKkfsZHmguhQnEgtbKtmOk4mbtE0ylG1ehjNVDhaL83wdfct5+
-         qgELwJwz3ku3GGIYrUw+G+YNnS0XAfSpePDx45/Xj9tg0Z5YcF01NSg4moVi0gHXdU
-         NWo7yp3zincOb2829NPA7gxkNW3PR0VODL7fBm+cGqp9VywsYht9UU2J/1lMjDAzYs
-         0plAg7I24VUvqTN605NlIr5qqczljX302M/AZj5dZz0OR6AEHGzOs6xukAFA1cl7NL
-         UumIFZz0xDYqR6cUD4hHrMgWcoGpK6HxxgP/1wCLYsaOC9SkdzY9yFT3dqJAQjCMNj
-         P5TphZCcMr2yQ==
+        b=bSgkP1ZBxRODTywB2TRWysJ/eckLR73JdhxWUDsymz1Jvcg+T4flxYitSW7fcNMbY
+         bKKf3TlmYmr2iUJR9OJiklYKlpXQDdnXznYToKQK6Zt18sFokQh0fa87FIEWLF9Cas
+         71As9V5BCD8fg7oQsstHIRNAUHcTUy5wxJXANuoMFEODomVnmpUqFesrE9tBnmZ+au
+         9TFh44whiqnd4LPES1Zwo5Mnd66FWCl1MzZYQ0BNLzQBUagST/MadlgNZ5syR2t1XV
+         KNXCjmDVtiS4k8Ocn+3YOemCquS0QIlGcCa7cLIE6NQeIalEIxnOoHHyXObC3XEnE3
+         qFKWfbOs3iz0Q==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Enable opportunistic UpdateFC and ACK to allow data link layer send
-pending ACKs and UpdateFC packets when link is idle instead of waiting
-for timers to expire. This improves the PCIe performance due to better
-utilization of PCIe bandwidth.
+Outstanding write counter in AFI is used to generate idle signal to
+dynamically gate the AFI clock. When there are 32 outstanding writes
+from AFI to memory, the outstanding write counter overflows and
+indicates that there are "0" outstanding write transactions.
+
+When memory controller is under heavy load, write completions to AFI
+gets delayed and AFI write counter overflows. This causes AFI clock gating
+even when there are outstanding transactions towards memory controller
+resulting in system hang.
+
+Disable dynamic clock gating of AFI clock to avoid system hang.
+
+CLKEN_OVERRIDE bit is not defined in Tegra20 and Tegra30, however
+programming this bit doesn't cause any side effects. Program this
+bit for all Tegra SoCs to avoid conditional check.
 
 Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Acked-by: Thierry Reding <treding@nvidia.com>
 ---
 V2: No change
 
- drivers/pci/controller/pci-tegra.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pci-tegra.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index ecb69633febb..c16a87d32bf4 100644
+index c16a87d32bf4..8b62559f5777 100644
 --- a/drivers/pci/controller/pci-tegra.c
 +++ b/drivers/pci/controller/pci-tegra.c
-@@ -204,7 +204,9 @@
- #define  RP_ECTL_6_R2_RX_EQ_CTRL_H_1C_MASK	0xffffffff
+@@ -95,7 +95,8 @@
+ #define AFI_MSI_EN_VEC7		0xa8
  
- #define RP_VEND_XP	0x00000f00
--#define  RP_VEND_XP_DL_UP	(1 << 30)
-+#define  RP_VEND_XP_DL_UP			(1 << 30)
-+#define  RP_VEND_XP_OPPORTUNISTIC_ACK		(1 << 27)
-+#define  RP_VEND_XP_OPPORTUNISTIC_UPDATEFC	(1 << 28)
+ #define AFI_CONFIGURATION		0xac
+-#define  AFI_CONFIGURATION_EN_FPCI	(1 << 0)
++#define  AFI_CONFIGURATION_EN_FPCI		(1 << 0)
++#define  AFI_CONFIGURATION_CLKEN_OVERRIDE	(1 << 31)
  
- #define RP_VEND_CTL1	0x00000f48
- #define  RP_VEND_CTL1_ERPT	(1 << 13)
-@@ -529,6 +531,12 @@ static void tegra_pcie_enable_rp_features(struct tegra_pcie_port *port)
- 	value = readl(port->base + RP_VEND_CTL1);
- 	value |= RP_VEND_CTL1_ERPT;
- 	writel(value, port->base + RP_VEND_CTL1);
-+
-+	/* Optimal settings to enhance bandwidth */
-+	value = readl(port->base + RP_VEND_XP);
-+	value |= RP_VEND_XP_OPPORTUNISTIC_ACK;
-+	value |= RP_VEND_XP_OPPORTUNISTIC_UPDATEFC;
-+	writel(value, port->base + RP_VEND_XP);
- }
+ #define AFI_FPCI_ERROR_MASKS	0xb0
  
- static void tegra_pcie_program_ectl_settings(struct tegra_pcie_port *port)
+@@ -1065,9 +1066,10 @@ static void tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 		afi_writel(pcie, value, AFI_FUSE);
+ 	}
+ 
+-	/* finally enable PCIe */
++	/* Disable AFI dynamic clock gating and enable PCIe */
+ 	value = afi_readl(pcie, AFI_CONFIGURATION);
+ 	value |= AFI_CONFIGURATION_EN_FPCI;
++	value |= AFI_CONFIGURATION_CLKEN_OVERRIDE;
+ 	afi_writel(pcie, value, AFI_CONFIGURATION);
+ 
+ 	value = AFI_INTR_EN_INI_SLVERR | AFI_INTR_EN_INI_DECERR |
 -- 
 2.17.1
 
