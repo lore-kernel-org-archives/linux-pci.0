@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 961A8C10F03
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:30:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DCC9C10F03
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E6192183E
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:30:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E121121773
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 16:31:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oztcbau6"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FsCwwjDO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728622AbfDWQai (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 12:30:38 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:39489 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728426AbfDWQai (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:30:38 -0400
-Received: by mail-pl1-f194.google.com with SMTP id e92so5998573plb.6;
-        Tue, 23 Apr 2019 09:30:37 -0700 (PDT)
+        id S1728770AbfDWQa6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 12:30:58 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43892 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728760AbfDWQa6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 12:30:58 -0400
+Received: by mail-pl1-f195.google.com with SMTP id n8so7774195plp.10;
+        Tue, 23 Apr 2019 09:30:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hv6IafG6PXUChLf829/adbyNwFbqlej4B8eSgkihCvw=;
-        b=oztcbau6apuY+tQ1gv1wXtWycyIG1ePkZ3TZUcqYNBtAZPzIrXG3UMDXYog4F5hGGk
-         BolSUGeA6YcqjLxwNUjXSaLlg3nR+XvhzJ2Xwb5xtUmA52GMxmCtLtvcI8gBdJpEMWoc
-         nsQZl3IAyQ3gKNFd0auG067WG1SBmyGwysYH35NoQufYctcjyjajOzGsaqG8awtI1atB
-         LKmodt+SHo4/FGrsKwvNNH9vW4bZ898+CueZ5DnzjhcklwM3QPe+V7vQMT8wu9JhttLw
-         T/Qvif5GWKyfvn8ezlf/rKdJDqFE1esdWWloa7yOSR0MMqwQWgDwSvIIW+ACD6lRlrQC
-         qyiA==
+        bh=JpgKz65tnvrvCC0pB/gLUr3SLlay4vQrqcACci7Mjag=;
+        b=FsCwwjDOS13uczkYHr8q+k54kXRaMFjtsB6Y9cCG4xVMZyJX7U3Vzjhmizdic/L7GR
+         qzDoWVzz8oz+OL0+IKeX+U/qlF/n5fS9NRWGXnMAoIceKd20H6BvlXZSXdi9ITWrHJQv
+         mfO8SYrGmAfn/mRhYgq7gDsPX0DIBH5r4hqpiek0kbNM5dfIf0kURfdJsMyKs24EcEO/
+         M259lF6PAfo1Gnv2XEy5KZW0E5/MMKk5KNoWsq7h7cr4cy6Eq44jKZPkCZCHDFzHryfQ
+         o6u6TtiqGP+SFttfB2EfBX1HG7MtadVH1sSlPY4mFe4+aNHI343KdzzdkBaI2p5NRtC4
+         sF9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=hv6IafG6PXUChLf829/adbyNwFbqlej4B8eSgkihCvw=;
-        b=E/Ybr37b7F6NGNrpodPI/bavaWevh3PtY5jzyRpzMBEjLyAryZYCddchCmad/N3MvQ
-         9jFefnoV5iGSEzmp+d537Hr8Tl2zpf0r0FuzBycqbv/i3rjIbf2c5GM73/ZJst05us/Q
-         ChxwkxAz+aYdpXQ4XDSh53goZjLoTnCTnaVjCZMYvbL4CxZDE+TV3iim1G8L24CLb1zA
-         V8wBKZr4Fr88V2iMBXCsuDNNPU2J8oH3EF6iKsGeopekyrGj4T0vDv+Gx68BlM/vOmJi
-         arlJB07htJjWRWKEGIcCCdK9MDAi4EEvwfg0tXppyRKFnclB896rTaqoRs0FhqocwqnT
-         9Gxg==
-X-Gm-Message-State: APjAAAXzHVJO9NivTp0h8EifsRkHaC6bjuuD2hP/ukBBXpa1TEre5r5n
-        cWVkEJRRwEIb+dsdjJfG/qw=
-X-Google-Smtp-Source: APXvYqyRcQ1bWn1RSbUodd0gmW7wNKgBdvn2k41su9mqh6NFMD3ZM9hb6237tdxgyB260tU9VnKz6w==
-X-Received: by 2002:a17:902:c1:: with SMTP id a59mr26218800pla.176.1556037036874;
-        Tue, 23 Apr 2019 09:30:36 -0700 (PDT)
+        bh=JpgKz65tnvrvCC0pB/gLUr3SLlay4vQrqcACci7Mjag=;
+        b=e21yJZJ9JOxfYJ9YkdWeX5ByyIMi7BAqbp458HyZZK58C8Szm3sYj3P3PyLu5HfBgA
+         qF1i4FD+4UNQD2VZ6priNTcp8Uf7zMXlCuLE+Cn1KAh4VFC5oG2OiRJ6MNaHIcSlHbNK
+         TZmo+Jm24D+2w38cNhnOvMFE09b5A8jKkklJTEui/OHTboZAzoIeOkpwT17w1O2xdE0g
+         8MENcm9fZExnfzHBLsy9ETvaNVGgW9fr/fse9U/13XU8j9253JbbDLrBjoWqVmTgyOJW
+         g9K5DzUXvT8XWwV1HITl7HpN/rBS5wHi9B80922dA1nqaeeNkI15aN/A/6bUn5n6SIMM
+         FUJQ==
+X-Gm-Message-State: APjAAAWwro+Ped4ybANqul4bXUxoEIu0IGQQEA4Xy1hJE0aEY6Wixalt
+        2vTBnoBeQ0fv2ZQ1fAW8a4c=
+X-Google-Smtp-Source: APXvYqxgZcMw50wq7kSvu4ZdtxkeQXfjcgqKPAKY+rBTcispmYC66UrPxhCrk0Pqd0dOrqaRQbOpaQ==
+X-Received: by 2002:a17:902:9004:: with SMTP id a4mr17741244plp.223.1556037057322;
+        Tue, 23 Apr 2019 09:30:57 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.30.27
+        by smtp.gmail.com with ESMTPSA id v1sm24364801pff.81.2019.04.23.09.30.51
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Apr 2019 09:30:36 -0700 (PDT)
+        Tue, 23 Apr 2019 09:30:56 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     Jonathan Corbet <corbet@lwn.net>
 Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
@@ -63,9 +63,9 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
         linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
         linux-gpio@vger.kernel.org, mchehab+samsung@kernel.org,
         Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v4 01/63] Documentation: add Linux ACPI to Sphinx TOC tree
-Date:   Wed, 24 Apr 2019 00:28:30 +0800
-Message-Id: <20190423162932.21428-2-changbin.du@gmail.com>
+Subject: [PATCH v4 04/63] Documentation: ACPI: move osi.txt to firmware-guide/acpi and convert to reST
+Date:   Wed, 24 Apr 2019 00:28:33 +0800
+Message-Id: <20190423162932.21428-5-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190423162932.21428-1-changbin.du@gmail.com>
 References: <20190423162932.21428-1-changbin.du@gmail.com>
@@ -76,134 +76,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add below index.rst files for ACPI subsystem. More docs will be added later.
-  o admin-guide/acpi/index.rst
-  o driver-api/acpi/index.rst
-  o firmware-guide/index.rst
+This converts the plain text documentation to reStructuredText format and
+add it to Sphinx TOC tree. No essential content change.
 
 Signed-off-by: Changbin Du <changbin.du@gmail.com>
 ---
- Documentation/admin-guide/acpi/index.rst    | 10 ++++++++++
- Documentation/admin-guide/index.rst         |  1 +
- Documentation/driver-api/acpi/index.rst     |  7 +++++++
- Documentation/driver-api/index.rst          |  1 +
- Documentation/firmware-guide/acpi/index.rst |  9 +++++++++
- Documentation/firmware-guide/index.rst      | 13 +++++++++++++
- Documentation/index.rst                     | 10 ++++++++++
- 7 files changed, 51 insertions(+)
- create mode 100644 Documentation/admin-guide/acpi/index.rst
- create mode 100644 Documentation/driver-api/acpi/index.rst
- create mode 100644 Documentation/firmware-guide/acpi/index.rst
- create mode 100644 Documentation/firmware-guide/index.rst
+ Documentation/firmware-guide/acpi/index.rst       |  1 +
+ .../{acpi/osi.txt => firmware-guide/acpi/osi.rst} | 15 +++++++++------
+ 2 files changed, 10 insertions(+), 6 deletions(-)
+ rename Documentation/{acpi/osi.txt => firmware-guide/acpi/osi.rst} (97%)
 
-diff --git a/Documentation/admin-guide/acpi/index.rst b/Documentation/admin-guide/acpi/index.rst
-new file mode 100644
-index 000000000000..3e041206089d
---- /dev/null
-+++ b/Documentation/admin-guide/acpi/index.rst
-@@ -0,0 +1,10 @@
-+============
-+ACPI Support
-+============
-+
-+Here we document in detail how to interact with various mechanisms in
-+the Linux ACPI support.
-+
-+.. toctree::
-+   :maxdepth: 1
-+
-diff --git a/Documentation/admin-guide/index.rst b/Documentation/admin-guide/index.rst
-index 0a491676685e..5b8286fdd91b 100644
---- a/Documentation/admin-guide/index.rst
-+++ b/Documentation/admin-guide/index.rst
-@@ -77,6 +77,7 @@ configure specific aspects of kernel behavior to your liking.
-    LSM/index
-    mm/index
-    perf-security
-+   acpi/index
- 
- .. only::  subproject and html
- 
-diff --git a/Documentation/driver-api/acpi/index.rst b/Documentation/driver-api/acpi/index.rst
-new file mode 100644
-index 000000000000..898b0c60671a
---- /dev/null
-+++ b/Documentation/driver-api/acpi/index.rst
-@@ -0,0 +1,7 @@
-+============
-+ACPI Support
-+============
-+
-+.. toctree::
-+   :maxdepth: 2
-+
-diff --git a/Documentation/driver-api/index.rst b/Documentation/driver-api/index.rst
-index c0b600ed9961..aa87075c7846 100644
---- a/Documentation/driver-api/index.rst
-+++ b/Documentation/driver-api/index.rst
-@@ -56,6 +56,7 @@ available subsections can be seen below.
-    slimbus
-    soundwire/index
-    fpga/index
-+   acpi/index
- 
- .. only::  subproject and html
- 
 diff --git a/Documentation/firmware-guide/acpi/index.rst b/Documentation/firmware-guide/acpi/index.rst
-new file mode 100644
-index 000000000000..0ec7d072ba22
---- /dev/null
+index 99677c73f1fb..868bd25a3398 100644
+--- a/Documentation/firmware-guide/acpi/index.rst
 +++ b/Documentation/firmware-guide/acpi/index.rst
-@@ -0,0 +1,9 @@
+@@ -9,3 +9,4 @@ ACPI Support
+ 
+    namespace
+    enumeration
++   osi
+diff --git a/Documentation/acpi/osi.txt b/Documentation/firmware-guide/acpi/osi.rst
+similarity index 97%
+rename from Documentation/acpi/osi.txt
+rename to Documentation/firmware-guide/acpi/osi.rst
+index 50cde0ceb9b0..29e9ef79ebc0 100644
+--- a/Documentation/acpi/osi.txt
++++ b/Documentation/firmware-guide/acpi/osi.rst
+@@ -1,5 +1,8 @@
 +.. SPDX-License-Identifier: GPL-2.0
 +
-+============
-+ACPI Support
-+============
-+
-+.. toctree::
-+   :maxdepth: 1
-+
-diff --git a/Documentation/firmware-guide/index.rst b/Documentation/firmware-guide/index.rst
-new file mode 100644
-index 000000000000..5355784ca0a2
---- /dev/null
-+++ b/Documentation/firmware-guide/index.rst
-@@ -0,0 +1,13 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+===============================
-+The Linux kernel firmware guide
-+===============================
-+
-+This section describes the ACPI subsystem in Linux from firmware perspective.
-+
-+.. toctree::
-+   :maxdepth: 1
-+
-+   acpi/index
-+
-diff --git a/Documentation/index.rst b/Documentation/index.rst
-index 80a421cb935e..fdfa85c56a50 100644
---- a/Documentation/index.rst
-+++ b/Documentation/index.rst
-@@ -35,6 +35,16 @@ trying to get it to work optimally on a given system.
++==========================
+ ACPI _OSI and _REV methods
+---------------------------
++==========================
  
-    admin-guide/index
+ An ACPI BIOS can use the "Operating System Interfaces" method (_OSI)
+ to find out what the operating system supports. Eg. If BIOS
+@@ -14,7 +17,7 @@ This document explains how and why the BIOS and Linux should use these methods.
+ It also explains how and why they are widely misused.
  
-+Firmware-related documentation
-+------------------------------
-+The following holds information on the kernel's expectations regarding the
-+platform firmwares.
-+
-+.. toctree::
-+   :maxdepth: 2
-+
-+   firmware-guide/index
-+
- Application-developer documentation
- -----------------------------------
+ How to use _OSI
+----------------
++===============
  
+ Linux runs on two groups of machines -- those that are tested by the OEM
+ to be compatible with Linux, and those that were never tested with Linux,
+@@ -62,7 +65,7 @@ the string when that support is added to the kernel.
+ That was easy.  Read on, to find out how to do it wrong.
+ 
+ Before _OSI, there was _OS
+---------------------------
++==========================
+ 
+ ACPI 1.0 specified "_OS" as an
+ "object that evaluates to a string that identifies the operating system."
+@@ -96,7 +99,7 @@ That is the *only* viable strategy, as that is what modern Windows does,
+ and so doing otherwise could steer the BIOS down an untested path.
+ 
+ _OSI is born, and immediately misused
+---------------------------------------
++=====================================
+ 
+ With _OSI, the *BIOS* provides the string describing an interface,
+ and asks the OS: "YES/NO, are you compatible with this interface?"
+@@ -144,7 +147,7 @@ catastrophic failure resulting from the BIOS taking paths that
+ were never validated under *any* OS.
+ 
+ Do not use _REV
+----------------
++===============
+ 
+ Since _OSI("Linux") went away, some BIOS writers used _REV
+ to support Linux and Windows differences in the same BIOS.
+@@ -164,7 +167,7 @@ from mid-2015 onward.  The ACPI specification will also be updated
+ to reflect that _REV is deprecated, and always returns 2.
+ 
+ Apple Mac and _OSI("Darwin")
+-----------------------------
++============================
+ 
+ On Apple's Mac platforms, the ACPI BIOS invokes _OSI("Darwin")
+ to determine if the machine is running Apple OSX.
 -- 
 2.20.1
 
