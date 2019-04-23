@@ -4,41 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E82FDC10F14
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BCC9C10F14
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AFF5B20645
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A73420843
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Apr 2019 08:28:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="mvGl3OdQ"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="ijr2xiiX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726847AbfDWI2I (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 04:28:08 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:2633 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726821AbfDWI2H (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 04:28:07 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cbecc930001>; Tue, 23 Apr 2019 01:28:03 -0700
+        id S1726691AbfDWI1v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Apr 2019 04:27:51 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:3364 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726643AbfDWI1r (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 04:27:47 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cbecc880000>; Tue, 23 Apr 2019 01:27:52 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 23 Apr 2019 01:28:06 -0700
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Tue, 23 Apr 2019 01:27:46 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 23 Apr 2019 01:28:06 -0700
-Received: from HQMAIL112.nvidia.com (172.18.146.18) by HQMAIL108.nvidia.com
- (172.18.146.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
- 2019 08:28:06 +0000
-Received: from HQMAIL104.nvidia.com (172.18.146.11) by HQMAIL112.nvidia.com
- (172.18.146.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
- 2019 08:28:06 +0000
-Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL104.nvidia.com
- (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Tue, 23 Apr 2019 08:28:06 +0000
+        by hqpgpgate102.nvidia.com on Tue, 23 Apr 2019 01:27:46 -0700
+Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL106.nvidia.com
+ (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 23 Apr
+ 2019 08:27:46 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 23 Apr 2019 08:27:46 +0000
 Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5cbecc910001>; Tue, 23 Apr 2019 01:28:05 -0700
+        id <B5cbecc7d0001>; Tue, 23 Apr 2019 01:27:46 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -50,9 +47,9 @@ CC:     <mperttunen@nvidia.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V4 04/16] PCI: dwc: Perform dbi regs write lock towards the end
-Date:   Tue, 23 Apr 2019 13:57:18 +0530
-Message-ID: <20190423082730.370-5-vidyas@nvidia.com>
+Subject: [PATCH V4 01/16] PCI: Add #defines for some of PCIe spec r4.0 features
+Date:   Tue, 23 Apr 2019 13:57:15 +0530
+Message-ID: <20190423082730.370-2-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190423082730.370-1-vidyas@nvidia.com>
 References: <20190423082730.370-1-vidyas@nvidia.com>
@@ -60,62 +57,78 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1556008083; bh=KVElxKnY+pn1TE5FHBtkN0ZmcjQmHEyPBQbhjnXGwKw=;
+        t=1556008072; bh=pUc1fJRqMUa03aAVQRybNUeZjwwLlAm0x58deBCyr6U=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=mvGl3OdQiLLGXUs9+TLbNxpD2ftykBn3uU8KXiEhOBJ6XPjcz8FiQv/4CCuKo6F0W
-         NprJzNj8yxJcMphHtnua+WY6zjJjeEpuiTSN7FRhd7s7TTPrWcGzM+xQPOYtOeetBc
-         V8nyhnaF+o8HKphUiJ1jUN42EPyZzkGzQ2SLMsCQKlD3myFjSg9ZCguAmcc3Xk20tc
-         VykbRdWxI8nf0oyGeRF2xVVnGb3AhAzK/XzJg9Rv38pQP3sXPj4/ctlr602Y23fRJ4
-         sXvn+gfhBrULTZlvRroNyB/7xtekhQBFgaCpHH5m86Mge+I0TQO2PYpYfIk3Shwub1
-         2fOYItc3daXVA==
+        b=ijr2xiiXqWWiH8ZlSU/5+TfSsDIcMxznI5GQOwtrdF6Hgz4IL6yQ1bkoq9RfNsFKr
+         myQcDFsTmbr5fvwL1FjGKbdCC2L4MfVuDbVpabYnFQD6WP5Svo51SRTyx1Gi12ABNH
+         +HJ6fNElSkOUPA0fTpFiGt0sA9DZKaJgXFIUPkPpXUPJ3/T4P995f3CPM5nn/HMZtC
+         Gr5AzPkITc9qInbKGH2bxTBYNJk1gPCgj+HDBsp2FRDQ7M30rtxaADoLf77cqHr3dz
+         ugoth6LOkAsuGaYGqrl12fHnW3KL+yuxIwPYPWrLKZsIUjvAnARUqUHqHqtZJjVVrr
+         mM2d0Dq5+lSOw==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove multiple write enable and disable sequences of dbi registers as
-Tegra194 implements writes to BAR-0 register (offset: 0x10) controlled by
-DBI write-lock enable bit thereby not allowing any further writes to BAR-0
-register in config space to take place. Hence disabling write permission
-only towards the end.
+Add #defines only for the Data Link Feature and Physical Layer 16.0 GT/s
+features.
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Reviewed-by: Thierry Reding <treding@nvidia.com>
 ---
-Changes since [v3]:
+Changes from [v3]:
 * None
 
-Changes since [v2]:
+Changes from [v2]:
+* Updated commit message and description to explicitly mention that defines are
+  added only for some of the features and not all.
+
+Changes from [v1]:
 * None
 
-Changes since [v1]:
-* None
+ include/uapi/linux/pci_regs.h | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
- drivers/pci/controller/dwc/pcie-designware-host.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 36fd3f5b48f6..e5e3571dd2fe 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -654,7 +654,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	val &= 0xffff00ff;
- 	val |= 0x00000100;
- 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
--	dw_pcie_dbi_ro_wr_dis(pci);
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f7d3e7831fa8..4da04b1faab3 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -703,7 +703,9 @@
+ #define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
+ #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
+ #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
+-#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PTM
++#define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
++#define PCI_EXT_CAP_ID_PL	0x26	/* Physical Layer 16.0 GT/s */
++#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL
  
- 	/* Setup bus numbers */
- 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
-@@ -686,8 +685,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ #define PCI_EXT_CAP_DSN_SIZEOF	12
+ #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
+@@ -1043,4 +1045,22 @@
+ #define  PCI_L1SS_CTL1_LTR_L12_TH_SCALE	0xe0000000  /* LTR_L1.2_THRESHOLD_Scale */
+ #define PCI_L1SS_CTL2		0x0c	/* Control 2 Register */
  
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
--	/* Enable write permission for the DBI read-only register */
--	dw_pcie_dbi_ro_wr_en(pci);
- 	/* Program correct class for RC */
- 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
- 	/* Better disable write permission right after the update */
++/* Data Link Feature */
++#define PCI_DLF_CAP		0x04	/* Capabilities Register */
++#define  PCI_DLF_LOCAL_DLF_SUP_MASK	0x007fffff  /* Local Data Link Feature Supported */
++#define  PCI_DLF_EXCHANGE_ENABLE	0x80000000  /* Data Link Feature Exchange Enable */
++#define PCI_DLF_STS		0x08	/* Status Register */
++#define  PCI_DLF_REMOTE_DLF_SUP_MASK	0x007fffff  /* Remote Data Link Feature Supported */
++#define  PCI_DLF_REMOTE_DLF_SUP_VALID	0x80000000  /* Remote Data Link Feature Support Valid */
++
++/* Physical Layer 16.0 GT/s */
++#define PCI_PL_16GT_CAP		0x04	/* Capabilities Register */
++#define PCI_PL_16GT_CTRL	0x08	/* Control Register */
++#define PCI_PL_16GT_STS		0x0c	/* Status Register */
++#define PCI_PL_16GT_LDPM_STS	0x10	/* Local Data Parity Mismatch Status Register */
++#define PCI_PL_16GT_FRDPM_STS	0x14	/* First Retimer Data Parity Mismatch Status Register */
++#define PCI_PL_16GT_SRDPM_STS	0x18	/* Second Retimer Data Parity Mismatch Status Register */
++#define PCI_PL_16GT_RSVD	0x1C	/* Reserved */
++#define PCI_PL_16GT_LE_CTRL	0x20	/* Lane Equalization Control Register */
++
+ #endif /* LINUX_PCI_REGS_H */
 -- 
 2.17.1
 
