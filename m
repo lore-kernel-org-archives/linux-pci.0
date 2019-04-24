@@ -2,116 +2,171 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFD5AC10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 17:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE07C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 17:58:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0C412175B
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 17:54:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E7FA20685
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 17:58:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556128447;
-	bh=2INTD9CWzqr4fjUIP/9/Otv0PhQ1zMWgSjDTU1U8cEI=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=iBNVRduvtufwahrmnTizXK3rqc+QUKed59aT0O+LH3WeTwqf5QZ/583ZAJYVs4OhJ
-	 BDOz8EHRPnIc0uOetLHGUJPz82DQYTMeULAUxddLMrvth5aw/3Fdge2ES92FK40tEH
-	 QsPbsL8/ct2OZcbERntYgWCE46d96IL+1z4fKMx0=
+	s=default; t=1556128689;
+	bh=18qPWvhttbQRftXd+LJB8F2ybIqr5XFHfXjCmiU1uRg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=H6blZ8XyIOp9s4q94EdafknuOeSNyu4gDkmdmN6M3XzS5pWRw1HM3T8wZ18u2iN6o
+	 J1sDqf/csGxeOGP2FKUfFQSJFdaz2g3z5IglXRH80V6h5soNQgM6G52ATuwSeNHmSc
+	 oto63frsMx8JOR0Jx/WclcVxPw/tUo5mfr61JlaI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390847AbfDXRyA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 13:54:00 -0400
-Received: from casper.infradead.org ([85.118.1.10]:46170 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390252AbfDXRx7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 13:53:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=B4WEGbnCyfW0Q3Xttpd8TsmO+qZt8FAt27+U8RemGZY=; b=Y8nxckKtP/K4PlyahScpltMG7l
-        +mEFwN711HmK/Gaw8WY/PvSMElTYdfrb3bYool6kSS5bMv7B/2CAWM1F+Lhd6FGfzAqPkG94taHjT
-        g0I3j8sjV49VSGPRWSZof+iKL9ajYk9yCFEHbiz2scV9DQjsMexUowd+vD1QhgDjJ+kLH0gYqivPo
-        5P69F7ffYMR+3mmzLHz+yr92ujdYHOnjG91H8ITHr6JXhrOggoQ/V8G6mVsRFVOQscGf3JRvoNCLe
-        A3JpC0ZAWesWhGt+x+ZlctOKT8vtO6/Iqz7ZtF6yLXRfOwjqTTNVRSlcjND/SrAxvStsV9JX2IZ0t
-        H3sf8hMw==;
-Received: from 177.17.136.231.dynamic.adsl.gvt.net.br ([177.17.136.231] helo=coco.lan)
-        by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hJM5j-0000Pd-7c; Wed, 24 Apr 2019 17:53:55 +0000
-Date:   Wed, 24 Apr 2019 14:53:48 -0300
-From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To:     Changbin Du <changbin.du@gmail.com>
-Cc:     Jonathan Corbet <corbet@lwn.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com,
-        x86@kernel.org, fenghua.yu@intel.com,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        linux-gpio@vger.kernel.org
-Subject: Re: [PATCH v4 09/63] Documentation: ACPI: move
- method-customizing.txt to firmware-guide/acpi and convert to reST
-Message-ID: <20190424145348.0631c8a1@coco.lan>
-In-Reply-To: <20190424162850.g5ripuixdkvvzsjm@mail.google.com>
-References: <20190423162932.21428-1-changbin.du@gmail.com>
-        <20190423162932.21428-10-changbin.du@gmail.com>
-        <20190423180316.7f042bc4@coco.lan>
-        <20190424162850.g5ripuixdkvvzsjm@mail.google.com>
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+        id S2391458AbfDXR6D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 13:58:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51064 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2391378AbfDXR6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Apr 2019 13:58:02 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DF11721773;
+        Wed, 24 Apr 2019 17:58:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1556128681;
+        bh=18qPWvhttbQRftXd+LJB8F2ybIqr5XFHfXjCmiU1uRg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=1KFHAw71HRB9lwWr6eZPfFX42j1Ffqgrk1FLUuN0GWJtiagiU8YetdmSIrWTPhabX
+         0CZJ6t14Xnp3qU9LLgZ+Chfl7x6p+pyHnOhnwZ1N2DC2lrK+WzEGMz6IgYMeyG1lzW
+         Xjdz7b7WngQNDdLZAu6vvTpZOPZtjxOpuwRWpeZE=
+Date:   Wed, 24 Apr 2019 12:57:58 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Alex Williamson <alex.williamson@redhat.com>
+Cc:     mr.nuke.me@gmail.com, linux-pci@vger.kernel.org,
+        austin_bolen@dell.com, alex_gagniuc@dellteam.com,
+        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
+        okaya@kernel.org, torvalds@linux-foundation.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add link_change error handler and vfio-pci user
+Message-ID: <20190424175758.GC244134@google.com>
+References: <155605909349.3575.13433421148215616375.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155605909349.3575.13433421148215616375.stgit@gimli.home>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Em Thu, 25 Apr 2019 00:28:52 +0800
-Changbin Du <changbin.du@gmail.com> escreveu:
+On Tue, Apr 23, 2019 at 04:42:28PM -0600, Alex Williamson wrote:
+> The PCIe bandwidth notification service generates logging any time a
+> link changes speed or width to a state that is considered downgraded.
+> Unfortunately, it cannot differentiate signal integrity related link
+> changes from those intentionally initiated by an endpoint driver,
+> including drivers that may live in userspace or VMs when making use
+> of vfio-pci.  Therefore, allow the driver to have a say in whether
+> the link is indeed downgraded and worth noting in the log, or if the
+> change is perhaps intentional.
+> 
+> For vfio-pci, we don't know the intentions of the user/guest driver
+> either, but we do know that GPU drivers in guests actively manage
+> the link state and therefore trigger the bandwidth notification for
+> what appear to be entirely intentional link changes.
+> 
+> Fixes: e8303bb7a75c PCI/LINK: Report degraded links via link bandwidth notification
+> Link: https://lore.kernel.org/linux-pci/155597243666.19387.1205950870601742062.stgit@gimli.home/T/#u
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+> 
+> Changing to pci_dbg() logging is not super usable, so let's try the
+> previous idea of letting the driver handle link change events as they
+> see fit.  Ideally this might be two patches, but for easier handling,
+> folding the pci and vfio-pci bits together.  Comments?  Thanks,
 
-> On Tue, Apr 23, 2019 at 06:03:16PM -0300, Mauro Carvalho Chehab wrote:
-> > Em Wed, 24 Apr 2019 00:28:38 +0800
-> > Changbin Du <changbin.du@gmail.com> escreveu:
-> >   
+I'm a little uneasy about the bandwidth notification logging as a
+whole.  Messages in dmesg don't seem like a solid base for building
+management tools.
 
-> > > +.. note:: Only ACPI METHOD can be overridden, any other object types like
-> > > +   "Device", "OperationRegion", are not recognized. Methods
-> > > +   declared inside scope operators are also not supported.
-> > > +.. note:: The same ACPI control method can be overridden for many times,
-> > > +   and it's always the latest one that used by Linux/kernel.
-> > > +.. note:: To get the ACPI debug object output (Store (AAAA, Debug)),
-> > > +   please run "echo 1 > /sys/module/acpi/parameters/aml_debug_output".  
-> > 
-> > Hmm... this may work (not sure if Sphinx would warn or not), but it
-> > is visually bad on text mode. I would code it, instead, with something 
-> > like:
-> > 
-> > .. note::
-> > 
-> >     - Only ACPI METHOD can be overridden, any other object types like
-> >       "Device", "OperationRegion", are not recognized. Methods
-> >       declared inside scope operators are also not supported.
-> > 
-> >     - The same ACPI control method can be overridden for many times,
-> >       and it's always the latest one that used by Linux/kernel.
-> > 
-> >     - To get the ACPI debug object output (Store (AAAA, Debug)),
-> >       please run::
-> > 
-> > 		echo 1 > /sys/module/acpi/parameters/aml_debug_output
-> > 
-> > As this would make it visually better on both text and html formats.
-> >  
-> No warnings given.
+I assume the eventual goal would be some sort of digested notification
+along the lines of "hey mr/ms administrator, the link to device X
+unexpectedly became slower, you might want to check that out."
 
-Interesting. I'm now wondering if it did the right thing or if it produced
-some weird output... Maybe the answer depends on the Sphinx version one
-would be using.
+If I were building that, I don't think I would use dmesg.  I might
+write a daemon that polls /sys/.../current_link_{speed,width}, or
+maybe use some sort of netlink event.  Maybe it would be useful to
+have the admin designate devices of interest.
 
-> Your suggested style is better so applied it. Thanks!
+I'm hesitant about adding a .link_change() handler.  If there's
+something useful a driver could do with it, that's one thing.  But
+using it merely to suppress a message doesn't really seem worth the
+trouble, and it seems unfriendly to ask drivers to add it when they
+didn't ask for it and get no benefit from it.
 
-Thank you!
-
-Thanks,
-Mauro
+>  drivers/pci/probe.c         |   13 +++++++++++++
+>  drivers/vfio/pci/vfio_pci.c |   10 ++++++++++
+>  include/linux/pci.h         |    3 +++
+>  3 files changed, 26 insertions(+)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 7e12d0163863..233cd4b5b6e8 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -2403,6 +2403,19 @@ void pcie_report_downtraining(struct pci_dev *dev)
+>  	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
+>  		return;
+>  
+> +	/*
+> +	 * If driver handles link_change event, defer to driver.  PCIe drivers
+> +	 * can call pcie_print_link_status() to print current link info.
+> +	 */
+> +	device_lock(&dev->dev);
+> +	if (dev->driver && dev->driver->err_handler &&
+> +	    dev->driver->err_handler->link_change) {
+> +		dev->driver->err_handler->link_change(dev);
+> +		device_unlock(&dev->dev);
+> +		return;
+> +	}
+> +	device_unlock(&dev->dev);
+> +
+>  	/* Print link status only if the device is constrained by the fabric */
+>  	__pcie_print_link_status(dev, false);
+>  }
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index cab71da46f4a..c9ffc0ccabb3 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -1418,8 +1418,18 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
+>  	return PCI_ERS_RESULT_CAN_RECOVER;
+>  }
+>  
+> +/*
+> + * Ignore link change notification, we can't differentiate signal related
+> + * link changes from user driver power management type operations, so do
+> + * nothing.  Potentially this could be routed out to the user.
+> + */
+> +static void vfio_pci_link_change(struct pci_dev *pdev)
+> +{
+> +}
+> +
+>  static const struct pci_error_handlers vfio_err_handlers = {
+>  	.error_detected = vfio_pci_aer_err_detected,
+> +	.link_change = vfio_pci_link_change,
+>  };
+>  
+>  static struct pci_driver vfio_pci_driver = {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 27854731afc4..e9194bc03f9e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -763,6 +763,9 @@ struct pci_error_handlers {
+>  
+>  	/* Device driver may resume normal operations */
+>  	void (*resume)(struct pci_dev *dev);
+> +
+> +	/* PCIe link change notification */
+> +	void (*link_change)(struct pci_dev *dev);
+>  };
+>  
+>  
+> 
