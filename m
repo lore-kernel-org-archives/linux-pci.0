@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AD97C282CE
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB660C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D05D8205ED
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A143205ED
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mWGOnKfd"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AIXRJwuB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389533AbfDXTSC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 15:18:02 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:39229 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389451AbfDXTSB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 15:18:01 -0400
-Received: by mail-wm1-f67.google.com with SMTP id n25so6647929wmk.4;
-        Wed, 24 Apr 2019 12:17:59 -0700 (PDT)
+        id S2389612AbfDXTSJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 15:18:09 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:36051 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388804AbfDXTR7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 15:17:59 -0400
+Received: by mail-wm1-f65.google.com with SMTP id h18so6654785wml.1;
+        Wed, 24 Apr 2019 12:17:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=HyUIjv1ZcTz3BJRhp2dFVjFVc8FZkCvFMerRUJk35rs=;
-        b=mWGOnKfdu64PXdK4VkEsSESr1A3fAGLATh3SgnROHhCWvMZgDNu3SbfVQoPybvG9pK
-         eigLrw6HkNx5eSa60OFNw6I6AzBlh0qp0v52mQi8APrNqu/ZnNdmaA+iKPOVsqt2sCoO
-         UOUnXM4kOp9PKJ9lKXwfABww/PaNtFz+94XxKPe2LJODsi37G30Gy73vot5PxxNWqeiU
-         hxNThydhzbWKbCUtL5M5CZw60KzQgBVKTQSh5IWajOiiGVoJwP0oDJwDu0qP8ZACVfS0
-         vA0rmAJ6uWd6gloEFSDqu1PVRiB4HPHDDZoCDdJeh3wY72Eu3UBBlWTKHV+DIA2o1TxV
-         vjqA==
+        bh=SAbbSQG37YeApBp0oyHaMCbtBHNMxP+2zNJpk+CsD/M=;
+        b=AIXRJwuB+H8CUQQMeS5qlpm0mA9MRtCpnvd55esAPnP4ZWf8RvpdvE922lJmqnVIpB
+         3WTSTa1p1xLB/UPdSXHtSdMm3TwK0Ijnw5bZfpyK0oWvEVW3C09vKa1Q2aYpH2hWevRC
+         LzFsybDvUKqNfYk+TG/LaBrmNyzjfxLPOoWGgrjG+moMF94/PiKjNMdt7AGAj8dA59K4
+         1/Eg3DgVYvKL5GLVCx68IVgAiK56Pb2bmSAxMnuMtfO32YoCnamKsq6gqu71j44UcOgv
+         4GZRg98MJRc10wCTTm84P0cCLZbrQhwuPU/OgImeBXnr5lQkDyGgHFjzV90i9GpJdHs7
+         kLQw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=HyUIjv1ZcTz3BJRhp2dFVjFVc8FZkCvFMerRUJk35rs=;
-        b=hVlyt6uN5BHkc3rEd9vxUFsgBManGqjIwPTxo9vzIT6quJrgDk3AvwcVtBAVDespnY
-         oTks6jiyODo4xLdiFgd8j/6OUXV3e1TtWXyyq2pJsnOezyTaPYvKyreuDlySNaZKyWXz
-         glRJ8Vn4gQ0pAp3FofVKaGAAu5MSV8Wl97ZJ2TcrmweXncV1Ks/ewtnh1WTdCAFQmVT/
-         v1vCPdS21SI0DoixXLaXxEUjsiGUPxc+6CJzPDzTxkbbNTBeJJiov0rhnKLypnFsB+Nt
-         rn46awZAmo1JsJg0e65KxoNsM9agrGgGy0+ULTPJW5BjNTWGlLX9hlwcmAM2w+F1IbPS
-         V7JA==
-X-Gm-Message-State: APjAAAXOahAPzrFw3MKpZCtI58yvx/J90G3Xe6kfaWF/tgCZkBSh9Mek
-        8sf9//q+/FJYsYs7Hjprt7KI2t2oWN4=
-X-Google-Smtp-Source: APXvYqwh3CNfCKJTs9MOTu4bXqWdzGeM/Qp5h/VOnaJHwwOVsZkGf5/cSOBP+OP8er+qIAMJlFmteg==
-X-Received: by 2002:a1c:9c03:: with SMTP id f3mr478703wme.67.1556133478847;
-        Wed, 24 Apr 2019 12:17:58 -0700 (PDT)
+        bh=SAbbSQG37YeApBp0oyHaMCbtBHNMxP+2zNJpk+CsD/M=;
+        b=DDTZKeDF/eTYhcOoYP/VjKb02JZ9ltmbd3Nyz5Oy9csIuO2NTDKajR8Ua3CwQ1pefd
+         T5mEcH63MjRlShUjwgtDJPHMs3/+z8XGb4FP3SBNrwKtloOsJpIJEF2Z8lGVDMyQh1kO
+         SuaPMfivj3SXLIK9PyDZ0FJdBiUfEzDF/bFpoxCw9xcv/2b+6F4ZeZLwK9MGnCzMeZJL
+         Pdvt4h8M8uA/1pnSCHy48cfNTmw2n244z2jsJSE0bSoVG7PKsYuQXgmNQZj+QnBJ6cB/
+         Rrp87Zcu8mu3P1JMX49I/DiwDq6yxr3/jR5OsO/bL+kiBUngHNdkHTiP6SAapobsH6Bg
+         27DQ==
+X-Gm-Message-State: APjAAAXv+IRqaFMpGzbEN1CyLTe0b1fBNBoCsQ1koP3HwHyGVFXGYpNe
+        hQm8jH5LYttibDYjkLwXoTOkSdg2+vg=
+X-Google-Smtp-Source: APXvYqz1FxREHsjxcSzzKYBRZR1hyc+jklGgIQJ7OMGK1qrzBngr1H8WAm880vG55Y8yYFtfRLfERA==
+X-Received: by 2002:a1c:f50a:: with SMTP id t10mr473319wmh.86.1556133476436;
+        Wed, 24 Apr 2019 12:17:56 -0700 (PDT)
 Received: from ?IPv6:2003:ea:8bd4:5700:c498:ee8f:ff0a:13e5? (p200300EA8BD45700C498EE8FFF0A13E5.dip0.t-ipconnect.de. [2003:ea:8bd4:5700:c498:ee8f:ff0a:13e5])
-        by smtp.googlemail.com with ESMTPSA id t17sm17033907wrr.26.2019.04.24.12.17.57
+        by smtp.googlemail.com with ESMTPSA id q202sm4917605wme.9.2019.04.24.12.17.54
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 24 Apr 2019 12:17:58 -0700 (PDT)
-Subject: [PATCH v2 9/9] platform/chrome: chromeos_laptop: use helper
- pci_dev_id
+        Wed, 24 Apr 2019 12:17:55 -0700 (PDT)
+Subject: [PATCH v2 8/9] stmmac: pci: use helper pci_dev_id
 From:   Heiner Kallweit <hkallweit1@gmail.com>
 To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Michael Ellerman <mpe@ellerman.id.au>,
@@ -92,8 +91,8 @@ Cc:     open list <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
 References: <2e1f9a57-6d08-d017-24da-3e6b97fa2449@gmail.com>
-Message-ID: <e882f58b-0808-952e-d293-5e8cc3f04c97@gmail.com>
-Date:   Wed, 24 Apr 2019 21:17:19 +0200
+Message-ID: <82febf42-5f1e-a5d1-5c38-40dcaefdf700@gmail.com>
+Date:   Wed, 24 Apr 2019 21:16:41 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
@@ -110,22 +109,22 @@ Use new helper pci_dev_id() to simplify the code.
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- drivers/platform/chrome/chromeos_laptop.c | 2 +-
+ drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/platform/chrome/chromeos_laptop.c b/drivers/platform/chrome/chromeos_laptop.c
-index 24326eecd..7abbb6167 100644
---- a/drivers/platform/chrome/chromeos_laptop.c
-+++ b/drivers/platform/chrome/chromeos_laptop.c
-@@ -125,7 +125,7 @@ static bool chromeos_laptop_match_adapter_devid(struct device *dev, u32 devid)
- 		return false;
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c
+index cc1e887e4..0e87a9596 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c
+@@ -208,7 +208,7 @@ static int quark_default_data(struct pci_dev *pdev,
+ 		ret = 1;
+ 	}
  
- 	pdev = to_pci_dev(dev);
--	return devid == PCI_DEVID(pdev->bus->number, pdev->devfn);
-+	return devid == pci_dev_id(pdev);
- }
+-	plat->bus_id = PCI_DEVID(pdev->bus->number, pdev->devfn);
++	plat->bus_id = pci_dev_id(pdev);
+ 	plat->phy_addr = ret;
+ 	plat->interface = PHY_INTERFACE_MODE_RMII;
  
- static void chromeos_laptop_check_adapter(struct i2c_adapter *adapter)
 -- 
 2.21.0
 
