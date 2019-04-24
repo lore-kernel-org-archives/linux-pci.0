@@ -2,227 +2,128 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_NEOMUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F8A8C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 08:51:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8761C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 10:01:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4675F218D3
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 08:51:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1072218FE
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 10:01:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J/PnvXUM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uXJxsY53"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727474AbfDXIvu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 04:51:50 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:41932 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726990AbfDXIvu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 04:51:50 -0400
-Received: by mail-wr1-f66.google.com with SMTP id c12so17791690wrt.8
-        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2019 01:51:48 -0700 (PDT)
+        id S1727585AbfDXKBH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 06:01:07 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:45899 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726167AbfDXKBH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 06:01:07 -0400
+Received: by mail-lf1-f67.google.com with SMTP id t11so14148410lfl.12;
+        Wed, 24 Apr 2019 03:01:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=reply-to:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=hZNoGRQTub6pVmcM1SXiUK94HQnf2OGBhpWLncOSjkE=;
-        b=J/PnvXUMu/DzcdipNQStsqJQ8iEsjYj7SS0en4wi2AuFo944jYfpCBcLnfan+bC00f
-         mwi1QVg+0KK57yNetf3skShORndHfZGhh30N1+Z4A9kEAAAkwy89XQhY4guYAIRQiYJW
-         xKT0eD2ko9XAaKbnYXTpSlQ6ocqKq4u65xO8ynPjUK4st6qlnhUaUnVQjZR0NJhGQF2C
-         Wu9VEco4rwyczrhg3vuG5382B2O1VEYdaKlt5DOiFdN1fYqVory3CF+W4VRs3EbeRSIg
-         oYc1t3baqe/nb/Zz/5kAPtnIr8KbW2af8W34icg2b9y0QtY/HY7X/SBwj68a4bOr4GTw
-         CBXw==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Ui5QahMrKAtg0E0dOy4iSCZ6lLklrJQXdi1/50ZN5Bg=;
+        b=uXJxsY53uayUxx7GSUur7VU87d7JSrz7DyRw5OMwER96JA5dW1UQ585vsA1yUJ/giU
+         uHalNqZI6vMtO0xthDePx3Bl8qGGRPX0kqFyl9tcwJDe8Sc5GALe0EsMleJtSsoK5tzJ
+         Lz+rR9WYUl21Cekv+CERaudlHDSid9qVzTU9cXX9twEtzLsoHig5Zld68Xy9vDTZ20bf
+         YJGgFXmlcxlPRswJfvnnuS4ITBXslFJ8IFCtEiHml8Q+GtwlMmhawTuiSBQ8AOTF/1mo
+         8C44z+bN9YIaZJFyEE+7nLgkNskzNAgBwDCB9WIwEcnnIpRZbLRN3m6jl6rl/N3/T+XY
+         kJNg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:reply-to:subject:to:cc:references:from
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-transfer-encoding:content-language;
-        bh=hZNoGRQTub6pVmcM1SXiUK94HQnf2OGBhpWLncOSjkE=;
-        b=IDxosb1a/cjXok0fA7o/dfRd83S/eL+koJmwL1nAPlGGxlSELOm2BejSZ3ros9pwvH
-         ZnKkpr2UQytbPiApg/Hb/8o3mJETGEexjKAFwP/wC9QjgzHsp22i2znuMpEJ9dRlOyR/
-         L5XPKT89Qe8JDQHZP7g932Dio9Vym4tSzDg5uUpXWpo+acxbb/MIf+PFPxOkwq9V4Ymc
-         M9vBrOlLPF2erzxxJKomOFaBdV4UaC8idNhJdr5p0PRlHg2+mtYxAAZhJBhSX8xpl24b
-         t1MPcM4IYXJV6AzwJ/V5TrMP+2G3zZxHHyrJ7k3kf12dTWTgmNCBsu/RuaDfNmMp9HGG
-         RwNA==
-X-Gm-Message-State: APjAAAUfO22V8Grh86zC3T8PmfNIWaWWd/JMu6hixhgmD4gS7xl2FB2q
-        6iIiWGobxlNtRD36f1SUK9m07lMM
-X-Google-Smtp-Source: APXvYqxiG6APhwi0tgC7dC3FnTvpAP2mJPn7pWmdyjdB1bhE5CMbUHbB+NiyXfpuZ1O+yJEX8RoSow==
-X-Received: by 2002:adf:dbce:: with SMTP id e14mr20188426wrj.249.1556095907963;
-        Wed, 24 Apr 2019 01:51:47 -0700 (PDT)
-Received: from ?IPv6:2a02:908:1252:fb60:be8a:bd56:1f94:86e7? ([2a02:908:1252:fb60:be8a:bd56:1f94:86e7])
-        by smtp.gmail.com with ESMTPSA id y197sm19279845wmd.34.2019.04.24.01.51.47
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 24 Apr 2019 01:51:47 -0700 (PDT)
-Reply-To: christian.koenig@amd.com
-Subject: Re: [PATCH] PCI/P2PDMA: start with a whitelist for root complexes
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=Ui5QahMrKAtg0E0dOy4iSCZ6lLklrJQXdi1/50ZN5Bg=;
+        b=JsTkKQA/KIU5BctDuFBTzTAhZFeLFu2aDkE8XeUivFs0GDhQrgb+Y063niy7cdLG9V
+         Q//X0ieOlaTcKxPUlZPbyzK2ehql0K9VkGCO5zN7dJs5hLUWGQ9D7uXqcddNCEc9N58q
+         eB359PkoqewZWeammcMt3+7EPlCHRemdnJDZgkNBJLkR+Nc8Tw8M4ULX0i/GMnMvOezk
+         KnMSuNepOTjWMo+Lw2Ovue2fv3GV+l1NUoAk+m/aHyyXWB0VnCu+SjrTHRvhSNdT3qCU
+         XoJ2Tq47OGIk7FzGTHBuAcUN752nM1O1jvsPs5pvzXWLg3TwRGuvydZLNZ6yTh5F2Pe6
+         dQ3w==
+X-Gm-Message-State: APjAAAUHPruu0CLmjIpa4kRJJKGH5E+7U3rIeoOVKYVN0YiNTrlwUvXn
+        rFoGZYuCJ1M0Qn9BWGe+BKX3+bT15Ckfxg==
+X-Google-Smtp-Source: APXvYqxOvvtiQucYRgGSRJF1axAaDuhWBXieImvotqCdCNHRCv4Ue9uOwoq5NAiJWRV6Ja3niP/BNw==
+X-Received: by 2002:ac2:4850:: with SMTP id 16mr17797446lfy.18.1556100065536;
+        Wed, 24 Apr 2019 03:01:05 -0700 (PDT)
+Received: from localhost ([89.207.88.249])
+        by smtp.gmail.com with ESMTPSA id f25sm4264582lfc.46.2019.04.24.03.01.03
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 24 Apr 2019 03:01:03 -0700 (PDT)
+Date:   Wed, 24 Apr 2019 13:01:02 +0300
+From:   Alexander Fomichev <fomichev.ru@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     logang@deltatee.com, rdunlap@infradead.org,
-        linux-pci@vger.kernel.org
-References: <20190418115859.2394-1-christian.koenig@amd.com>
- <20190419191912.GG173520@google.com>
-From:   =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
-Message-ID: <0d9e862a-1e83-731e-5e02-5de9103664ec@gmail.com>
-Date:   Wed, 24 Apr 2019 10:51:46 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+Cc:     linux-pci@vger.kernel.org, linux@yadro.com,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH RESEND] PCI: disable runtime PM for PLX switches
+Message-ID: <20190424100102.iyxogbsa4l7dyusb@yadro.com>
+References: <20190415135903.wiyw34faiezdnbbs@yadro.com>
+ <20190415141554.GL126710@google.com>
+ <20190423215340.GH14616@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20190419191912.GG173520@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190423215340.GH14616@google.com>
+User-Agent: NeoMutt/20180716
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am 19.04.19 um 21:19 schrieb Bjorn Helgaas:
-> On Thu, Apr 18, 2019 at 01:58:59PM +0200, Christian König wrote:
->> A lot of root complexes can still do P2P even when PCI devices
->> don't share a common upstream bridge.
->>
->> Start adding a whitelist and allow P2P if both participants are
->> attached to known good root complex.
->>
->> Signed-off-by: Christian König <christian.koenig@amd.com>
->> ---
->>   drivers/pci/p2pdma.c | 38 +++++++++++++++++++++++++++++++++++---
->>   1 file changed, 35 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
->> index c52298d76e64..212baaa7f93b 100644
->> --- a/drivers/pci/p2pdma.c
->> +++ b/drivers/pci/p2pdma.c
->> @@ -274,6 +274,31 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
->>   	seq_buf_printf(buf, "%s;", pci_name(pdev));
->>   }
->>   
->> +/*
->> + * If we can't find a common upstream bridge take a look at the root complex and
->> + * compare it to a whitelist of known good hardware.
->> + */
->> +static bool root_complex_whitelist(struct pci_dev *dev)
->> +{
->> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
->> +	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
-> The fact that 00.0 is a host bridge and that its vendor/device ID
-> tells us whether peer-to-peer is supported between two *other* devices
-> (provider and client) is all totally vendor-specific.  There's nothing
-> in the PCI specs that says the host bridge even has to exist as a PCI
-> device.
+On Tue, Apr 23, 2019 at 04:53:40PM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 15, 2019 at 09:15:54AM -0500, Bjorn Helgaas wrote:
+> > This says it's a resend, but I don't see a previous posting; maybe it was
+> > HTML and rejected by the mailing list?
+> > 
+The first post was niether rejected nor accepted in ML. So I added
+"resend" tag in case it appears in the archive finally.
 
-Crap, I hoped that at least the notion that the root complex is always 
-00.0 is standardized somewhere.
+> > On Mon, Apr 15, 2019 at 04:59:03PM +0300, Alexander Fomichev wrote:
+> > > PLX switches have an issue that their internal registers become inaccessible
+> > > when runtime PM is enabled. Therefore PLX service tools can't communicate
+> > > with the hardware. A kernel option "pcie_port_pm=off" can be used as a
+> > > workaround. But it affects all the devices.
+> > > So this solution is to add PLX switch devices to the quirk list for
+> > > disabling runtime PM only for them.
+> > 
+> > I assume the problem is actually that the config space registers are
+> > inaccessible when the device is in D3hot?
+> 
+> Reading this again, I realize you said "internal registers".  I don't
+> know whether that actually means config space registers (which
+> *should* work even when the device is in D3hot (see the PCIe reference
+> below and PCI Power Management Spec r1.2, sec 5.4.1)), or MMIO
+> registers (which are not expected to work while in D3hot).
+> 
+> If the service tools read MMIO registers, presumably that goes through
+> some driver that should be able to manage runtime PM.  Or, if there's
+> no driver, I think your service tool could prevent runtime power
+> management by changing /sys/devices/.../power/control to "on" (see
+> Documentation/power/runtime_pm.txt).
+> 
+You're right. Config space registers are accessible. The driver can't
+read/write MMIO registers (Device-Specific Registers as they're called
+by Broadcom).
 
-> Is there any chance you could identify it by the Root Port
-> vendor/device instead of groping around for the 00:0 device?  That
-> would have been simpler, so I suppose that doesn't work for some
-> reason.
-
-I can give that a try. The main issue is that you got more different 
-root ports than root complexes, so our list is going to get longer this way.
-
-> I'm surprised that you don't need both the provider and the client to
-> figure this out.  Wouldn't it would be possible to have two Root Ports
-> under host bridge A that could do peer-to-peer to each other, but not
-> to a Root Port under host bridge B?  E.g., I'd think you would need
-> something like this:
-
-At least for our hardware it's actually more likely that when devices 
-are connected to different host bridges that they can talk directly to 
-each other.
-
-In other words when you have devices connected to the same host bridge 
-you need to have P2P support inside that host bridge.
-
-But when you have different host bridges P2P accesses look to the host 
-bridge just like accesses coming from one of the CPU cores.
+> Please repost this with more details.
+> 
+> > I think config space access is supposed to work when a device is in D3hot
+> > (see PCIe r4.0, sec 5.3.1.4).
+> > 
+> > If it doesn't work, wouldn't that mean that we couldn't even bring the
+> > device *out* of D3hot, since that requires a config write?
+> > 
+> > If this is really the problem, it'd be nice to identify this specifically
+> > instead of piggy-backing on the "is_hotplug_bridge" thing, which might be
+> > coincidentally related, but also carries other meanings.
+> > 
+The proposed patch was a sort of workaround. If this approach is not
+acceptable then it needs more research how to change PLX driver that it
+can play with PM to access MMIO registers.
 
 Regards,
-Christian.
-
->
->    if (pci_find_host_bridge(a->bus) == pci_find_host_bridge(b->bus) &&
->        a->vendor == PCI_VENDOR_ID_AMD &&
->        b->vendor == PCI_VENDOR_ID_AMD &&
->        a->device == X &&
->        b->device == X)
->          return true;
->
->    return false;
->
-> But I guess that still implicitly relies on the notion that everything
-> under one PNP0A03 device is potentially connected via P2P, and I don't
-> think there's anything the PCI or ACPI specs that would support that.
->
-> Maybe we should add a pci_dev.p2p_group and make it so "a.p2p_group ==
-> b.p2p_group" means that P2P is possible between them.  You'd have to
-> have a quirk for the root ports to initialize p2p_group using whatever
-> vendor-specific information you need, then everything under them could
-> inherit from the parent.
-
-Well exactly that's not going to work.
-
-E.g. it can be that devices A can talk to devices B and C, but on the 
-other hand B and C can't talk directly to each other.
-
-Regards,
-Christian.
-
->
->> +	unsigned short vendor, device;
->> +
->> +	if (!root)
->> +		return false;
->> +
->> +	vendor = root->vendor;
->> +	device = root->device;
->> +	pci_dev_put(root);
->> +
->> +	/* AMD ZEN host bridges can do peer to peer */
->> +	if (vendor == PCI_VENDOR_ID_AMD && device == 0x1450)
->> +		return true;
->> +
->> +	/* TODO: Extend that to a proper whitelist */
->> +	return false;
->> +}
->> +
->>   /*
->>    * Find the distance through the nearest common upstream bridge between
->>    * two PCI devices.
->> @@ -317,13 +342,13 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
->>    * In this case, a list of all infringing bridge addresses will be
->>    * populated in acs_list (assuming it's non-null) for printk purposes.
->>    */
->> -static int upstream_bridge_distance(struct pci_dev *a,
->> -				    struct pci_dev *b,
->> +static int upstream_bridge_distance(struct pci_dev *provider,
->> +				    struct pci_dev *client,
->>   				    struct seq_buf *acs_list)
->>   {
->> +	struct pci_dev *a = provider, *b = client, *bb;
->>   	int dist_a = 0;
->>   	int dist_b = 0;
->> -	struct pci_dev *bb = NULL;
->>   	int acs_cnt = 0;
->>   
->>   	/*
->> @@ -354,6 +379,13 @@ static int upstream_bridge_distance(struct pci_dev *a,
->>   		dist_a++;
->>   	}
->>   
->> +	/* Allow the connection if both devices are on a whitelisted root
->> +	 * complex, but add an arbitary large value to the distance.
->> +	 */
->> +	if (root_complex_whitelist(provider) &&
->> +	    root_complex_whitelist(client))
->> +		return 0x1000 + dist_a + dist_b;
->> +
->>   	return -1;
->>   
->>   check_b_path_acs:
->> -- 
->> 2.17.1
->>
-
+  Alexander
