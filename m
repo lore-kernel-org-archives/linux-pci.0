@@ -2,42 +2,42 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B176C282E1
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AA84C282CE
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:59:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42E5D2089F
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:28:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B045206BA
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:59:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556130508;
-	bh=ppHcFL6zapxMV7/RB/euSIWPcUPX3BPdSNKeNM1Qi+Q=;
+	s=default; t=1556132382;
+	bh=C50HptKC58Jf/zZXUpG3ld6bN5bDbFzS70IId4+tthM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=VEiureo2D+7AHQleIobpe+AyBgjt+O+4unvZUz5vVpFKwdcaXWpoLqic+9eJ1mLgG
-	 zcrf/2k5R62AwSFf0SmzdbVD+LSYL3OowlxtQf8zQZprX+GTEgxtv0sRFIWNf/Hpkk
-	 qohf14Ml/jRUiWv7Y7cs1EVcYO45EnQ2ZY7ngY8w=
+	b=JJ2NUO+1Uf9QuKDG69Pwt80X7uakaXH44xq3YaG1svFKiQfbqy0UI1GpuoBW4newV
+	 z5WKMzhfxGv2WeJue1eieBNWO1UJUU2fgKPl/1AYIOGzffc5R1Ri+5uz4kLEK3BL9w
+	 gOumDlyNXZ4jP0yguMsR4ECMNRD25Fj7rWTUdEq0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387574AbfDXS21 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 14:28:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37648 "EHLO mail.kernel.org"
+        id S1731119AbfDXS7l (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 14:59:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47726 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733047AbfDXS21 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Apr 2019 14:28:27 -0400
+        id S1727749AbfDXS7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Apr 2019 14:59:40 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3F5E7206A3;
-        Wed, 24 Apr 2019 18:28:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 90A00206BA;
+        Wed, 24 Apr 2019 18:59:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556130506;
-        bh=ppHcFL6zapxMV7/RB/euSIWPcUPX3BPdSNKeNM1Qi+Q=;
+        s=default; t=1556132379;
+        bh=C50HptKC58Jf/zZXUpG3ld6bN5bDbFzS70IId4+tthM=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=l9P+oABbet1Nb/DtFG1cdsxlFvzX1ZXE2rbHyYMACJpZeVnTSjdsQXjnsUh8Gh6BB
-         07RTXoUztbg0pumo9SdBCc6LL/wRy4P1Cy8S5On2vRNwSgPzHce5bB+x0GDG5x45w7
-         hL5mL2qrsdeWq7Eqh/3kSAB3dmpqbL5Cjh6OT8TI=
-Date:   Wed, 24 Apr 2019 13:28:24 -0500
+        b=w0Zw1R447tSnNTFAC70hasgxwE5fImCDhJWqP8J1lH9rligAXcFr8QMDBfRjcXg2I
+         VfEuaBC7vS0Ef49Sfr4+3gIpIaJSCmBqobS74nzaRC0nmmGUg5NbqJk6/f4pJ426LW
+         RrHaIzeiBilHi5MzR4sJ5OTYsspeThpXAXuxVlf0=
+Date:   Wed, 24 Apr 2019 13:59:37 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Lyude Paul <lyude@redhat.com>
 Cc:     David Ober <dober@lenovo.com>, linux-pci@vger.kernel.org,
@@ -49,7 +49,7 @@ Cc:     David Ober <dober@lenovo.com>, linux-pci@vger.kernel.org,
         Hans de Goede <hdegoede@redhat.com>
 Subject: Re: [PATCH] pci/quirks: Add quirk to reset nvgpu at boot for the
  Lenovo ThinkPad P50
-Message-ID: <20190424182824.GA11428@google.com>
+Message-ID: <20190424185937.GB11428@google.com>
 References: <20190212220230.1568-1-lyude@redhat.com>
  <20190215004329.GR96272@google.com>
  <2fca9a9feafcd17b27bc71994a71ebc241a93e9a.camel@redhat.com>
@@ -57,26 +57,180 @@ References: <20190212220230.1568-1-lyude@redhat.com>
  <20190321224819.GK251185@google.com>
  <20190322113015.GM251185@google.com>
  <20190404141724.GJ141706@google.com>
- <389c7b3117168209fb4760537d908a477446d013.camel@redhat.com>
+ <3987ad435bfdb2d92e5e42648174634814b1646d.camel@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <389c7b3117168209fb4760537d908a477446d013.camel@redhat.com>
+In-Reply-To: <3987ad435bfdb2d92e5e42648174634814b1646d.camel@redhat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 24, 2019 at 01:31:09PM -0400, Lyude Paul wrote:
-> Any update on this? This has been waiting for a while now
-
-Oh, sorry, I guess we were both waiting for the other.  Let me respond to
-the email with context.
-
+On Mon, Apr 15, 2019 at 02:07:18PM -0400, Lyude Paul wrote:
 > On Thu, 2019-04-04 at 09:17 -0500, Bjorn Helgaas wrote:
 > > [+cc Hans, author of 0b2fe6594fa2 ("drm/nouveau: Queue hpd_work on (runtime)
 > > resume")]
+> > 
+> > On Fri, Mar 22, 2019 at 06:30:15AM -0500, Bjorn Helgaas wrote:
+> > > On Thu, Mar 21, 2019 at 05:48:19PM -0500, Bjorn Helgaas wrote:
+> > > > On Wed, Mar 13, 2019 at 06:25:02PM -0400, Lyude Paul wrote:
+> > > > > On Fri, 2019-02-15 at 16:17 -0500, Lyude Paul wrote:
+> > > > > > On Thu, 2019-02-14 at 18:43 -0600, Bjorn Helgaas wrote:
+> > > > > > > On Tue, Feb 12, 2019 at 05:02:30PM -0500, Lyude Paul wrote:
+> > > > > > > > On a very specific subset of ThinkPad P50 SKUs, particularly
+> > > > > > > > ones that come with a Quadro M1000M chip instead of the M2000M
+> > > > > > > > variant, the BIOS seems to have a very nasty habit of not
+> > > > > > > > always resetting the secondary Nvidia GPU between full reboots
+> > > > > > > > if the laptop is configured in Hybrid Graphics mode. The
+> > > > > > > > reason for this happening is unknown, but the following steps
+> > > > > > > > and possibly a good bit of patience will reproduce the issue:
+> > > > > > > > 
+> > > > > > > > 1. Boot up the laptop normally in Hybrid graphics mode
+> > > > > > > > 2. Make sure nouveau is loaded and that the GPU is awake
+> > > > > > > > 2. Allow the nvidia GPU to runtime suspend itself after being
+> > > > > > > > idle
+> > > > > > > > 3. Reboot the machine, the more sudden the better (e.g sysrq-b
+> > > > > > > > may help)
+> > > > > > > > 4. If nouveau loads up properly, reboot the machine again and go
+> > > > > > > > back to
+> > > > > > > > step 2 until you reproduce the issue
+> > > > > > > > 
+> > > > > > > > This results in some very strange behavior: the GPU will quite
+> > > > > > > > literally be left in exactly the same state it was in when the
+> > > > > > > > previously booted kernel started the reboot. This has all
+> > > > > > > > sorts of bad sideaffects: for starters, this completely breaks
+> > > > > > > > nouveau starting with a mysterious EVO channel failure that
+> > > > > > > > happens well before we've actually used the EVO channel for
+> > > > > > > > anything:
+> > > > 
+> > > > Thanks for the hybrid tutorial (snipped from this response).  IIUC,
+> > > > what you said was that in hybrid mode, the Intel GPU drives the
+> > > > built-in display and the Nvidia GPU drives any external displays and
+> > > > may be used for DRI PRIME rendering (whatever that is).  But since you
+> > > > say the Nvidia device gets runtime suspended, I assume there's no
+> > > > external display here and you're not using DRI PRIME.
+> > > > 
+> > > > I wonder if it's related to the fact that the Nvidia GPU has been
+> > > > runtime suspended before you do the reboot.  Can you try turning of
+> > > > runtime power management for the GPU by setting the runpm module
+> > > > parameter to 0?  I *think* this would be booting with
+> > > > "nouveau.runpm=0".
+> > > 
+> > > Sorry, I wasn't really thinking here.  You already *said* this is
+> > > related to runtime suspend.  It only happens when the Nvidia GPU has
+> > > been suspended.
+> > > 
+> > > I don't know that much about suspend, but ISTR seeing comments about
+> > > resuming devices before we shutdown.  If we do that, maybe there's
+> > > some kind of race between that resume and the reboot?
+> > 
+> > I think we do in fact resume PCI devices before shutdown.  Here's the
+> > path I'm looking at:
+> > 
+> >   device_shutdown
+> >     pm_runtime_get_noresume
+> >     pm_runtime_barrier
+> >     dev->bus->shutdown
+> >       pci_device_shutdown
+> >         pm_runtime_resume
+> >           __pm_runtime_resume(dev, 0)
+> >             rpm_resume(dev, 0)
+> >               __update_runtime_status(dev, RPM_RESUMING)
+> >               callback = RPM_GET_CALLBACK(dev, runtime_resume)
+> >               rpm_callback(callback, dev)
+> >                 __rpm_callback
+> >                   pci_pm_runtime_resume
+> >                     drv->pm->runtime_resume
+> >                       nouveau_pmops_runtime_resume
+> >                         nouveau_do_resume
+> >                         schedule_work(hpd_work)   # <---
+> >                         ...
+> >                         nouveau_display_hpd_work
+> >                           pm_runtime_get_sync
+> >                           drm_helper_hpd_irq_event
+> >                           pm_runtime_mark_last_busy
+> >                           pm_runtime_put_sync
+> > 
+> > I'm curious about that "schedule_work(hpd_work)" near the end because
+> > no other drivers seem to use schedule_work() in the runtime_resume
+> > path, and I don't know how that synchronizes with the shutdown
+> > process.  I don't see anything that waits for
+> > nouveau_display_hpd_work() to complete, so it seems like something
+> > that could be a race.
+> > 
+> > I wonder this problem would be easier to reproduce if you added a
+> > sleep in nouveau_display_hpd_work() as in the first hunk below, and I
+> > wonder if the problem would then go away if you stopped scheduling
+> > hpd_work as in the second hunk?  Obviously the second hunk isn't a
+> > solution, it's just an attempt to figure out if I'm looking in the
+> > right area.
+> 
+> So I did try making it so that we cancel hpd_work from
+> pci_driver->shutdown and wait for it to complete, however that
+> didn't really seem to make any difference. 
+
+Not being a scheduled work expert, I was unsure if this experiment was
+equivalent to what I proposed.
+
+I'm always suspicious of singleton solutions like this (using
+schedule_work() in runtime_resume()) because usually they seem to be
+solving a generic problem that should happen on many kinds of
+hardware.  The 0b2fe6594fa2 ("drm/nouveau: Queue hpd_work on (runtime)
+resume") commit log says:
+
+  We need to call drm_helper_hpd_irq_event() on resume to properly
+  detect monitor connection / disconnection on some laptops, use
+  hpd_work for this to avoid deadlocks.
+
+The situation of a monitor being connected or disconnected during
+suspend can happen to *any* GPU, but the commit only changes nouveau,
+which of course raises the question of how we deal with that in other
+drivers.  If the Nvidia GPU has some unique behavior related to
+monitor connection, that would explain special-case code there, but
+the commit doesn't mention anything like that.
+
+It should be simple to revert 0b2fe6594fa2 and see whether it changes
+the behavior at all (well, simple except for the fact that this
+problem isn't 100% reproducible in the first place).
+
+> Do we want to have this discussion on the bz btw, or is this email
+> thread fine?
+
+Email is fine.
+
+> > diff --git a/drivers/gpu/drm/nouveau/nouveau_display.c
+> > b/drivers/gpu/drm/nouveau/nouveau_display.c
+> > index 55c0fa451163..e50806012d41 100644
+> > --- a/drivers/gpu/drm/nouveau/nouveau_display.c
+> > +++ b/drivers/gpu/drm/nouveau/nouveau_display.c
+> > @@ -350,6 +350,7 @@ nouveau_display_hpd_work(struct work_struct *work)
+> >  
+> >  	pm_runtime_get_sync(drm->dev->dev);
+> >  
+> > +	msleep(2000);
+> >  	drm_helper_hpd_irq_event(drm->dev);
+> >  
+> >  	pm_runtime_mark_last_busy(drm->dev->dev);
+> > 
+> > 
+> > 
+> > diff --git a/drivers/gpu/drm/nouveau/nouveau_drm.c
+> > b/drivers/gpu/drm/nouveau/nouveau_drm.c
+> > index 5020265bfbd9..48da72caa017 100644
+> > --- a/drivers/gpu/drm/nouveau/nouveau_drm.c
+> > +++ b/drivers/gpu/drm/nouveau/nouveau_drm.c
+> > @@ -946,9 +946,6 @@ nouveau_pmops_runtime_resume(struct device *dev)
+> >  	nvif_mask(&device->object, 0x088488, (1 << 25), (1 << 25));
+> >  	drm_dev->switch_power_state = DRM_SWITCH_POWER_ON;
+> >  
+> > -	/* Monitors may have been connected / disconnected during suspend */
+> > -	schedule_work(&nouveau_drm(drm_dev)->hpd_work);
+> > -
+> >  	return ret;
+> >  }
+> >  
 > -- 
 > Cheers,
 > 	Lyude Paul
