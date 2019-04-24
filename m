@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04784C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CEC9C282E3
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C7343218B0
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30C53205ED
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TUzhCOH2"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IBX0KuQh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729372AbfDXTSV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 15:18:21 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:39216 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727357AbfDXTRx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 15:17:53 -0400
-Received: by mail-wm1-f67.google.com with SMTP id n25so6647378wmk.4;
-        Wed, 24 Apr 2019 12:17:52 -0700 (PDT)
+        id S2388720AbfDXTRt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 15:17:49 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:32927 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727357AbfDXTRt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 15:17:49 -0400
+Received: by mail-wr1-f67.google.com with SMTP id s18so1864155wrp.0;
+        Wed, 24 Apr 2019 12:17:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=IeRjLmIo3+zL+ngn2z6PfEn9LxaA8z9ME0E/GMbJl4A=;
-        b=TUzhCOH2F7RvxialpvgaUFfNbsBpgDv13m50OH+yCHXNzbKgkQ3+3J9fmVotTjHhZ+
-         nT72Tzc880/U6F/39r2rOLBXumQ/j5RU5NezTirLrIrK8HKif6onpzxPkeL9+3b1vQq2
-         1DjaR7ZH62jNLmGYqQQPFRrk8RastcZUjByEctXZYR9dDWVH50TBAdTissGRPJJFAaku
-         yTmszbRe7C6g/MQlgrFC4qFKTUqOyA0NfxLlCq1xXJvcaq0cajMvWvopZxIRGurM8C5w
-         Ky8/X9fshxb+9fnIfYrOG+f4N+cBIWfqByuQioMYFAZ1K6Xx48p3R+XHvkUnajpJttNi
-         B/0A==
+        bh=hab7qAz6lzS7ZRowBkQ/f/HEdXNfdhNCdKWF0/BVKmE=;
+        b=IBX0KuQhIHPofugi8VbvuAnaDQlqeZ9svo7oPOlRq9Nl+c4hfx7GC4G6FUzkUJubse
+         wiLJj/sOBCAdP1NhfNYrPK8BsSVeCk2cAA9eP+HTjzeXBPDI3xwU9YjRDKxu7BUkh9Qy
+         ARW/rPtI4IpoC3x2CibtLLT839KW5Gqd98nS+2DFcQq+T+/e7v1mCfxpxSvQXhLRtDMs
+         OI5Y+gnOsn5tFiln6JJbcNGlizY5/JYmaoqck6PjX5tjV488YO+0nhW8BLltqBNP29iS
+         aIYrY8Al7ib3uqnETxszQ99kc8ZoQ/z7edNx0J2Z7OwrxHfOrSpfu23Pmg27nR0v1NZi
+         ReGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=IeRjLmIo3+zL+ngn2z6PfEn9LxaA8z9ME0E/GMbJl4A=;
-        b=gBYh9EKknFeDZ6vp7h5UEhlflKVpCvgQvVX4iKsPWfvndOlLQd348fhy2z3KpJYAU2
-         Ah58yrVJCtspu92pIUhzmuJQri6cgp7oFw85sg7D8PlvqJ6W3zJO3vLkyORIo38+wnh5
-         Rc/ph9wAB87ydOw+YtzSuo5n+2AiDLw111Z0ubvu4DAOSea4xsO/Tfl/tYrU40rYcO3W
-         GhHGuuRBEAYKX3fCrPKGf6TERadRhrJLqrGXBq1sELuOjbwhU8TdIrvgya02mIZXeWuN
-         2WJZcN+3PPhln+inFvDEBRRk9p9lXXP3HKPCJh37C0pGs3wa7m4NTEAXC8xypSRrNws/
-         dx/Q==
-X-Gm-Message-State: APjAAAUgGxP/DcyzzPy0GoGmSCiZzeLoemI2cLTO80xULyOJekOMME/7
-        7JiHKHxlqVidk4cGBZUhC7cHzXpMYHNKMA==
-X-Google-Smtp-Source: APXvYqwLwnDZWORI7BhpqSdPQhydSnH4TJiDh5p2OFwPcJ1S0/zRXEp6j1rg2GAjg1ue7Rb470bFqw==
-X-Received: by 2002:a1c:4c1a:: with SMTP id z26mr474306wmf.73.1556133471446;
-        Wed, 24 Apr 2019 12:17:51 -0700 (PDT)
+        bh=hab7qAz6lzS7ZRowBkQ/f/HEdXNfdhNCdKWF0/BVKmE=;
+        b=BFIapN65kxIY0ClHfmgQS2uDgvP0PZV+eufxw+YiOZw1KiSM0/+WV64GKDBB1gG4Fg
+         9ZDBEgj8HY6EyCSPtcEBklZ0eObBQChS4uojGhEXHPebASa3ChwbFADgGq70wiG0lZA6
+         aWNT5cPUPP3OgzYxXDP8rMXtnEfq1Gx/e6JVuRBf4ypHEi+KvR9oqb6KwcnDXVr29sSM
+         juoP0nj7fNRwfERs1+xduhI0tnBMnW/KHv6zHZZLa2d1tethd+x6RoSJArEYeB+763Nv
+         tIRhFZv779BiE58j9SD/ENzzKuyYftXo527Mx3QHS4qlL8/19WgTzg3aNiPYuIVvUUgr
+         p4ew==
+X-Gm-Message-State: APjAAAV/cQlAF7CSZM/z4exK1c+P5QZmvuGp3l7Zy7XEqk5x/H5ZxeZR
+        OG6vZ10XNHwyzcbl2m7xF/rgki1sqBGw0Q==
+X-Google-Smtp-Source: APXvYqy3cqzUuKRDBnCN6u4ytA6IsqF8dbo/CC+cpZ/NjBgj06qGIEA9zqzusRK5xh+DIv6B8gl90A==
+X-Received: by 2002:a5d:4b4e:: with SMTP id w14mr18245461wrs.15.1556133466411;
+        Wed, 24 Apr 2019 12:17:46 -0700 (PDT)
 Received: from ?IPv6:2003:ea:8bd4:5700:c498:ee8f:ff0a:13e5? (p200300EA8BD45700C498EE8FFF0A13E5.dip0.t-ipconnect.de. [2003:ea:8bd4:5700:c498:ee8f:ff0a:13e5])
-        by smtp.googlemail.com with ESMTPSA id a11sm16605685wrx.5.2019.04.24.12.17.49
+        by smtp.googlemail.com with ESMTPSA id p6sm18060129wrs.6.2019.04.24.12.17.44
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 24 Apr 2019 12:17:50 -0700 (PDT)
-Subject: [PATCH v2 6/9] iommu/amd: use helper pci_dev_id
+        Wed, 24 Apr 2019 12:17:45 -0700 (PDT)
+Subject: [PATCH v2 4/9] powerpc/powernv/npu: use helper pci_dev_id
 From:   Heiner Kallweit <hkallweit1@gmail.com>
 To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Michael Ellerman <mpe@ellerman.id.au>,
@@ -91,8 +91,8 @@ Cc:     open list <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>,
         "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
 References: <2e1f9a57-6d08-d017-24da-3e6b97fa2449@gmail.com>
-Message-ID: <f673e8ac-cc9a-75a6-09b8-35b94bfc868b@gmail.com>
-Date:   Wed, 24 Apr 2019 21:15:25 +0200
+Message-ID: <8ed5b4ee-3226-6786-eb96-886826e180cd@gmail.com>
+Date:   Wed, 24 Apr 2019 21:14:25 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
@@ -109,22 +109,55 @@ Use new helper pci_dev_id() to simplify the code.
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- drivers/iommu/amd_iommu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/powerpc/platforms/powernv/npu-dma.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index f467cc4b4..5cb201422 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -165,7 +165,7 @@ static inline u16 get_pci_device_id(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
+diff --git a/arch/powerpc/platforms/powernv/npu-dma.c b/arch/powerpc/platforms/powernv/npu-dma.c
+index dc23d9d2a..495550432 100644
+--- a/arch/powerpc/platforms/powernv/npu-dma.c
++++ b/arch/powerpc/platforms/powernv/npu-dma.c
+@@ -1213,9 +1213,8 @@ int pnv_npu2_map_lpar_dev(struct pci_dev *gpdev, unsigned int lparid,
+ 	 * Currently we only support radix and non-zero LPCR only makes sense
+ 	 * for hash tables so skiboot expects the LPCR parameter to be a zero.
+ 	 */
+-	ret = opal_npu_map_lpar(nphb->opal_id,
+-			PCI_DEVID(gpdev->bus->number, gpdev->devfn), lparid,
+-			0 /* LPCR bits */);
++	ret = opal_npu_map_lpar(nphb->opal_id, pci_dev_id(gpdev), lparid,
++				0 /* LPCR bits */);
+ 	if (ret) {
+ 		dev_err(&gpdev->dev, "Error %d mapping device to LPAR\n", ret);
+ 		return ret;
+@@ -1224,7 +1223,7 @@ int pnv_npu2_map_lpar_dev(struct pci_dev *gpdev, unsigned int lparid,
+ 	dev_dbg(&gpdev->dev, "init context opalid=%llu msr=%lx\n",
+ 			nphb->opal_id, msr);
+ 	ret = opal_npu_init_context(nphb->opal_id, 0/*__unused*/, msr,
+-			PCI_DEVID(gpdev->bus->number, gpdev->devfn));
++				    pci_dev_id(gpdev));
+ 	if (ret < 0)
+ 		dev_err(&gpdev->dev, "Failed to init context: %d\n", ret);
+ 	else
+@@ -1258,7 +1257,7 @@ int pnv_npu2_unmap_lpar_dev(struct pci_dev *gpdev)
+ 	dev_dbg(&gpdev->dev, "destroy context opalid=%llu\n",
+ 			nphb->opal_id);
+ 	ret = opal_npu_destroy_context(nphb->opal_id, 0/*__unused*/,
+-			PCI_DEVID(gpdev->bus->number, gpdev->devfn));
++				       pci_dev_id(gpdev));
+ 	if (ret < 0) {
+ 		dev_err(&gpdev->dev, "Failed to destroy context: %d\n", ret);
+ 		return ret;
+@@ -1266,9 +1265,8 @@ int pnv_npu2_unmap_lpar_dev(struct pci_dev *gpdev)
  
--	return PCI_DEVID(pdev->bus->number, pdev->devfn);
-+	return pci_dev_id(pdev);
- }
+ 	/* Set LPID to 0 anyway, just to be safe */
+ 	dev_dbg(&gpdev->dev, "Map LPAR opalid=%llu lparid=0\n", nphb->opal_id);
+-	ret = opal_npu_map_lpar(nphb->opal_id,
+-			PCI_DEVID(gpdev->bus->number, gpdev->devfn), 0 /*LPID*/,
+-			0 /* LPCR bits */);
++	ret = opal_npu_map_lpar(nphb->opal_id, pci_dev_id(gpdev), 0 /*LPID*/,
++				0 /* LPCR bits */);
+ 	if (ret)
+ 		dev_err(&gpdev->dev, "Error %d mapping device to LPAR\n", ret);
  
- static inline int get_acpihid_device_id(struct device *dev,
 -- 
 2.21.0
 
