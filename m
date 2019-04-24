@@ -2,186 +2,106 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B7E6C282E1
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD515C282CE
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 21:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6701C2183E
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 19:18:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CTBInYBe"
+	by mail.kernel.org (Postfix) with ESMTP id AC29F21903
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 21:10:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1556140206;
+	bh=1HfAWhkUSRfDoIYYUAY8UYL0l5qRdg2MjFaWGR9ogmo=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=hQ5K5MXaVTXClnQk4nUwWO7UYEZhpVFBi7EHIaRkoPubVUNNkC805ZE3DJo6A8nDU
+	 lxwKDpAbXFKAqYVSdmDGjfWJupViUVuCqu2ygbc+uwuRE2xgE2ufHnC4Id7XOlUb6C
+	 xmcKRa3uWs0qdLMQMtAydHAnk8JBXK+l+IDZoIXA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732395AbfDXTRp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 15:17:45 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:51536 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727357AbfDXTRo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 15:17:44 -0400
-Received: by mail-wm1-f66.google.com with SMTP id 4so6035691wmf.1;
-        Wed, 24 Apr 2019 12:17:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=kB/xsYXQ3pDchMWCMlizuJaQAcde2gxIfDs80kGqcvg=;
-        b=CTBInYBeuOjwDz9xKf2KWhzfLNI5mxAnUPPI4BWhAfkSOE+IcGDVUG/LTdlVKn0Ey3
-         kXb11SNQiqB+f2tzvApgE3K75ekW4vp4F4rKo2tfq2976kcwUhHVdM3czRnkLPBeL6j5
-         fdW4sKALm8HMDXeA4HSw9r/5mjk7UzIUoGIP/nv52R1glLBQr7mNguwP52EfgA+EyV2y
-         UwEmJLPtOAif4lWOA8h/nDGbj6w+XyJdLKMvrB4c3zYVVXyhWbkJC4hJRXUZS/KfsJKR
-         V6GztvWZ9hBzwOPVfQYlkGM8eQYmznplt3VVqTmyEvx37Zhusc47WL3zc9FIPbwplUOL
-         lGcw==
+        id S1731020AbfDXVKF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 17:10:05 -0400
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:35034 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729032AbfDXVKE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 17:10:04 -0400
+Received: by mail-ot1-f65.google.com with SMTP id m10so17491695otp.2;
+        Wed, 24 Apr 2019 14:10:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=kB/xsYXQ3pDchMWCMlizuJaQAcde2gxIfDs80kGqcvg=;
-        b=mPMvEe1RPpdvI10lVXGGChKzE9uz/wwMshyKA3OTItk+CQwrJIlXzfsxk1DWK62IHo
-         ujMU2kFhMhozFDP3ECLB3McXpfVR8lhI7iGbecI9VCw/ASJbnawmGQftEq0KU1cPfoFS
-         WyLxSVCrHu9FoMkuMGg9J8ImFeL69+x2qra9P4LtCFvVIGzuFcFfniQWrEM5/5krXp6r
-         xybAnSZFHwTuy5ai4VBVPsQaplqRst7iuTkDYClWpljNu7AKRko6ulm9MQJlhSPZ6uhs
-         UzYzpzxW5+FDQRhVEL5Kd/ZObHW3HZoaG76Nls+2Hl4N10IxKakDdO9NpMvI0Toz54IB
-         mgOw==
-X-Gm-Message-State: APjAAAUacWiwai63TNH9NH198QDqo4tO+Y0GB5KmGTxxCMlr9NpcwrZg
-        ozmJmqsito5xqXTy8QPJBa3YZ7c9IF1qKw==
-X-Google-Smtp-Source: APXvYqwLnC7/zIBsNJ0PEohfeeMVDSaWpOxoU/IBtJ5vk+4XlNCYrRJFKHauDYKLq545t4gZsrwWgA==
-X-Received: by 2002:a1c:2087:: with SMTP id g129mr517222wmg.114.1556133461454;
-        Wed, 24 Apr 2019 12:17:41 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8bd4:5700:c498:ee8f:ff0a:13e5? (p200300EA8BD45700C498EE8FFF0A13E5.dip0.t-ipconnect.de. [2003:ea:8bd4:5700:c498:ee8f:ff0a:13e5])
-        by smtp.googlemail.com with ESMTPSA id x192sm30686484wmf.48.2019.04.24.12.17.39
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 24 Apr 2019 12:17:40 -0700 (PDT)
-Subject: [PATCH v2 2/9] PCI: use helper pci_dev_id
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Oded Gabbay <oded.gabbay@gmail.com>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        "David (ChunMing) Zhou" <David1.Zhou@amd.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Joerg Roedel <joro@8bytes.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Alexandre Torgue <alexandre.torgue@st.com>,
-        Jose Abreu <joabreu@synopsys.com>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benson Leung <bleung@chromium.org>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Paul Mackerras <paulus@samba.org>
-Cc:     open list <linux-kernel@vger.kernel.org>,
-        "open list:AMD KFD" <dri-devel@lists.freedesktop.org>,
-        "open list:RADEON and AMDGPU DRM DRIVERS" 
-        <amd-gfx@lists.freedesktop.org>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        "open list:8169 10/100/1000 GIGABIT ETHERNET DRIVER" 
-        <netdev@vger.kernel.org>,
-        "moderated list:ARM/STM32 ARCHITECTURE" 
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        "moderated list:ARM/STM32 ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-References: <2e1f9a57-6d08-d017-24da-3e6b97fa2449@gmail.com>
-Message-ID: <9cc03738-f664-3896-d8eb-48146772a655@gmail.com>
-Date:   Wed, 24 Apr 2019 21:12:45 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=arah7RRivOS0kCg7Wmlyz9/ttbkVAueiG8dKQQlbvpU=;
+        b=GGS11Vjm7RCc9fUxy7hwblkAbiySNweRBiqBWzYpgYGJZOwFB4PyXwcf1xF+iAbRTu
+         J8PvWvTZvA7aaqyxtijRShwoWUdhioAGYFYQSiLnpKBdaMMMEB01LBveblBqdxKjqev5
+         jyVtUS3B8kGNg8omkMHickNU+v9nL4raJBkP0rQjpQ1NvoqREclXTUoEKFznvx1qLYc6
+         2o5n8lMtDs6DN/eHN5QW/jgNgkf39cLqwcY4UX3C8cSTjsspod6gIJpY7ymfq+4kO0xt
+         2JMhY1zfZcKbZLqHq1aK7MS2PJ2X5XO+dTYph+cHQxTjJ0YqbssyQR35Ijvw5P78xpIL
+         nNAw==
+X-Gm-Message-State: APjAAAVQOMM+N5lYN2cMN3To4H77soBLeNG5iezcGk3OTP/qvnmDj9bw
+        e+cTUnHLeaC0HqUYrxYrJwj/fK0UVx4ocM89+0A=
+X-Google-Smtp-Source: APXvYqyi63/b0iI+WZF0q8LbvggDqR+hib6TSKMHTXd26kCZj1BJZ/dmpU34zhrPcRjtARcQbhLlX9I8lYWh8+wUuak=
+X-Received: by 2002:a9d:648f:: with SMTP id g15mr20316403otl.220.1556140203897;
+ Wed, 24 Apr 2019 14:10:03 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <2e1f9a57-6d08-d017-24da-3e6b97fa2449@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190415135903.wiyw34faiezdnbbs@yadro.com> <20190415141554.GL126710@google.com>
+ <20190423215340.GH14616@google.com> <20190424100102.iyxogbsa4l7dyusb@yadro.com>
+ <20190424141148.GA244134@google.com> <20190424145819.GL2654@lahna.fi.intel.com>
+ <20190424172151.GB244134@google.com>
+In-Reply-To: <20190424172151.GB244134@google.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Wed, 24 Apr 2019 23:09:52 +0200
+Message-ID: <CAJZ5v0gZhgMy+oQMpEGM8bsU_57w7i3iCP1nb9PcOHxENfnwAw@mail.gmail.com>
+Subject: Re: [PATCH RESEND] PCI: disable runtime PM for PLX switches
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Alexander Fomichev <fomichev.ru@gmail.com>,
+        Linux PCI <linux-pci@vger.kernel.org>, linux@yadro.com,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Logan Gunthorpe <logang@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Use new helper pci_dev_id() to simplify the code.
+On Wed, Apr 24, 2019 at 8:01 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> On Wed, Apr 24, 2019 at 05:58:19PM +0300, Mika Westerberg wrote:
+> > On Wed, Apr 24, 2019 at 09:11:48AM -0500, Bjorn Helgaas wrote:
+> > >   - Maybe the PCI sysfs accessors (pci_mmap_resource(), etc) should
+> > >     turn off runtime PM?  If we allow mmap of a BAR and then put the
+> > >     device in D3hot, that seems like a bug that could affect lots of
+> > >     things.  But maybe that's already done magically elsewhere?
+> >
+> > IIRC there is no PM magic happening for MMIO userspace accesses.
+> >
+> > What you suggest above sounds like a good way to fix it. We already do
+> > similar for config space access from userspace (if the device is in
+> > D3cold) so definitely makes sense to do the same for MMIO. However, I
+> > don't think we need to disable runtime PM - it should be enough to
+> > increase the reference count (pm_runtime_get_sync() and friends) during
+> > the time the MMIO resource is mmapped.
+>
+> OK, so if I understand correctly this would be basically adding
+> pm_runtime_get_sync(dev) in pci_mmap_resource().  I don't know what
+> the unmap path is, but there would have to be a matching
+> pm_runtime_put() somewhere.
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/pci/msi.c    |  6 +++---
- drivers/pci/search.c | 10 +++-------
- 2 files changed, 6 insertions(+), 10 deletions(-)
+Right.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 73986825d..e039b740f 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1338,7 +1338,7 @@ irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc)
- {
- 	return (irq_hw_number_t)desc->msi_attrib.entry_nr |
--		PCI_DEVID(dev->bus->number, dev->devfn) << 11 |
-+		pci_dev_id(dev) << 11 |
- 		(pci_domain_nr(dev->bus) & 0xFFFFFFFF) << 27;
- }
- 
-@@ -1508,7 +1508,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
- u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
- {
- 	struct device_node *of_node;
--	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
-+	u32 rid = pci_dev_id(pdev);
- 
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
- 
-@@ -1531,7 +1531,7 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
- struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
- {
- 	struct irq_domain *dom;
--	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
-+	u32 rid = pci_dev_id(pdev);
- 
- 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
- 	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 2b5f72086..5c7922612 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -33,7 +33,7 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	struct pci_bus *bus;
- 	int ret;
- 
--	ret = fn(pdev, PCI_DEVID(pdev->bus->number, pdev->devfn), data);
-+	ret = fn(pdev, pci_dev_id(pdev), data);
- 	if (ret)
- 		return ret;
- 
-@@ -88,9 +88,7 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 					return ret;
- 				continue;
- 			case PCI_EXP_TYPE_PCIE_BRIDGE:
--				ret = fn(tmp,
--					 PCI_DEVID(tmp->bus->number,
--						   tmp->devfn), data);
-+				ret = fn(tmp, pci_dev_id(tmp), data);
- 				if (ret)
- 					return ret;
- 				continue;
-@@ -101,9 +99,7 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 					 PCI_DEVID(tmp->subordinate->number,
- 						   PCI_DEVFN(0, 0)), data);
- 			else
--				ret = fn(tmp,
--					 PCI_DEVID(tmp->bus->number,
--						   tmp->devfn), data);
-+				ret = fn(tmp, pci_dev_id(tmp), data);
- 			if (ret)
- 				return ret;
- 		}
--- 
-2.21.0
+> And a similar change in the read/write path for /sys/.../resource<N>;
+> I think this must be related to the sysfs_create_bin_file() call in
+> pci_create_attr(), but I don't see the path where the actual
+> read/write to the device is done.
+>
+> And probably something similar should be done in pci_resource_io(),
+> pci_map_rom(), and pci_unmap_rom().
 
+In general, every path in which there is a memory or IO address space
+access requires pm_runtime_get_sync()/pm_runtime_put() around it as
+these accesses are only guaranteed to work in D0.
 
-
-
+Cheers,
+Rafael
