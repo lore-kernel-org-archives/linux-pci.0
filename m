@@ -2,44 +2,40 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 960E4C282CE
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 05:23:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A0C7C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 05:23:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 511ED218D3
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 05:23:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C7C6218D3
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 05:23:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="DrYCziJP"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="JR31pHjM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726778AbfDXFXW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 01:23:22 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:18545 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726002AbfDXFXW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 01:23:22 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cbff2c00002>; Tue, 23 Apr 2019 22:23:12 -0700
+        id S1729258AbfDXFXf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 01:23:35 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:5786 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726442AbfDXFXf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 01:23:35 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5cbff2dc0000>; Tue, 23 Apr 2019 22:23:40 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 23 Apr 2019 22:23:15 -0700
+  Tue, 23 Apr 2019 22:23:33 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 23 Apr 2019 22:23:15 -0700
-Received: from HQMAIL110.nvidia.com (172.18.146.15) by HQMAIL106.nvidia.com
+        by hqpgpgate101.nvidia.com on Tue, 23 Apr 2019 22:23:33 -0700
+Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL106.nvidia.com
  (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 24 Apr
- 2019 05:23:15 +0000
-Received: from HQMAIL107.nvidia.com (172.20.187.13) by hqmail110.nvidia.com
- (172.18.146.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 24 Apr
- 2019 05:23:13 +0000
+ 2019 05:23:33 +0000
 Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL107.nvidia.com
  (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Wed, 24 Apr 2019 05:23:13 +0000
+ Transport; Wed, 24 Apr 2019 05:23:33 +0000
 Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5cbff2bb0002>; Tue, 23 Apr 2019 22:23:12 -0700
+        id <B5cbff2cf0000>; Tue, 23 Apr 2019 22:23:32 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -51,9 +47,9 @@ CC:     <mperttunen@nvidia.com>, <linux-pci@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V5 12/16] arm64: tegra: Add P2U and PCIe controller nodes to Tegra194 DT
-Date:   Wed, 24 Apr 2019 10:50:00 +0530
-Message-ID: <20190424052004.6270-13-vidyas@nvidia.com>
+Subject: [PATCH V5 14/16] phy: tegra: Add PCIe PIPE2UPHY support
+Date:   Wed, 24 Apr 2019 10:50:02 +0530
+Message-ID: <20190424052004.6270-15-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190424052004.6270-1-vidyas@nvidia.com>
 References: <20190424052004.6270-1-vidyas@nvidia.com>
@@ -61,25 +57,26 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1556083392; bh=4oWEXvanuNS/p58sBJNgYAUihUa4QoGC7Wjqz32dqDQ=;
+        t=1556083420; bh=3ZNH3IPSjzjGq2ydYKnzCNeBiI503IFIEfuOslXSMgc=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=DrYCziJP4ONW2kxxQLFfhdOfGrenh9rgc6O5isu7SRo95wRnz4Ms0ZW2cVOo/oedc
-         N33B1nyVUcy90creD1g7MywHVdiHKgZIPOcF1+NW3yjco+VRLfkm0vtS9HXtLa4aoP
-         wkPZ505VlZZTarLPDBcd48O3cS2Pi3KG+SmFaXXVXa3+E2SMOCworot+0c7IcHvzRn
-         JpdHlN09o50RlVAD6ncdXiFBXO0BjGwKYfcLxxFSAgdzip1QkTP6p27bNQCup2t1Eb
-         ZjKYHhlJYirrwbbuQ/HLYW/XxGPqH3rCSPfD0A+ZSs3tRem3oreaiIVpJBDCoFzFZ2
-         BlIboPPVzpATg==
+        b=JR31pHjM+uJM+CQPhy/6lCnwyWyBt+vUzv8sigeXlZl4b+3zCRGn4IiN0IhPFcojf
+         CfC5HRJkuHujsZgbuhwwmEsPCxMZ2bIQIzMdYPQZOeUd2Yqzt3xor2/HM1y3jrx2mZ
+         jJN+n4z16zUmQaDqaMez/XNLkbstDkGOit903wggDbqSsOoV7akFzyFktCWnx1B/42
+         I/1j/Qc9rwVDnm+5sJxWL7nWgAxqNHMc7JBdjW77yfIgsGA7lG9PS3GFeW9nOF8ZZO
+         bYGtQu8hMgu4jaYz2Jsz6AsXi6uUeRdwXHstjfmemF4cfxuW3MzZ2eCCBDdWtu0KJJ
+         sMBQhGeGiRE+Q==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add P2U (PIPE to UPHY) and PCIe controller nodes to device tree.
-The Tegra194 SoC contains six PCIe controllers and twenty P2U instances
-grouped into two different PHY bricks namely High-Speed IO (HSIO-12 P2Us)
-and NVIDIA High Speed (NVHS-8 P2Us) respectively.
+Synopsys DesignWare core based PCIe controllers in Tegra 194 SoC interface
+with Universal PHY (UPHY) module through a PIPE2UPHY (P2U) module.
+For each PCIe lane of a controller, there is a P2U unit instantiated at
+hardware level. This driver provides support for the programming required
+for each P2U that is going to be used for a PCIe controller.
 
 Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 ---
@@ -87,487 +84,173 @@ Changes since [v4]:
 * None
 
 Changes since [v3]:
-* None
+* Rebased on top of linux-next top of the tree
 
 Changes since [v2]:
-* Included 'hsio' or 'nvhs' in P2U node's label names to reflect which brick
-  they belong to
-* Removed leading zeros in unit address
+* Replaced spaces with tabs in Kconfig file
+* Sorted header file inclusion alphabetically
 
 Changes since [v1]:
-* Flattened all P2U nodes by removing 'hsio-p2u' and 'nvhs-p2u' super nodes
-* Changed P2U nodes compatible string from 'nvidia,tegra194-phy-p2u' to 'nvidia,tegra194-p2u'
-* Changed reg-name from 'base' to 'ctl'
-* Updated all PCIe nodes according to the changes made to DT documentation file
+* Added COMPILE_TEST in Kconfig
+* Removed empty phy_ops implementations
+* Modified code according to DT documentation file modifications
 
- arch/arm64/boot/dts/nvidia/tegra194.dtsi | 449 +++++++++++++++++++++++
- 1 file changed, 449 insertions(+)
+ drivers/phy/tegra/Kconfig             |   7 ++
+ drivers/phy/tegra/Makefile            |   1 +
+ drivers/phy/tegra/pcie-p2u-tegra194.c | 120 ++++++++++++++++++++++++++
+ 3 files changed, 128 insertions(+)
+ create mode 100644 drivers/phy/tegra/pcie-p2u-tegra194.c
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra194.dtsi b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-index c77ca211fa8f..dc433b446ff5 100644
---- a/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra194.dtsi
-@@ -884,6 +884,166 @@
- 				nvidia,interface = <3>;
- 			};
- 		};
-+
-+		p2u_hsio_0: p2u@3e10000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e10000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_1: p2u@3e20000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e20000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_2: p2u@3e30000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e30000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_3: p2u@3e40000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e40000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_4: p2u@3e50000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e50000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_5: p2u@3e60000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e60000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_6: p2u@3e70000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e70000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_7: p2u@3e80000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e80000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_8: p2u@3e90000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03e90000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_9: p2u@3ea0000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03ea0000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_0: p2u@3eb0000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03eb0000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_1: p2u@3ec0000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03ec0000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_2: p2u@3ed0000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03ed0000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_3: p2u@3ee0000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03ee0000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_4: p2u@3ef0000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03ef0000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_5: p2u@3f00000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03f00000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_6: p2u@3f10000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03f10000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_nvhs_7: p2u@3f20000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03f20000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_10: p2u@3f30000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03f30000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
-+
-+		p2u_hsio_11: p2u@3f40000 {
-+			compatible = "nvidia,tegra194-p2u";
-+			reg = <0x03f40000 0x10000>;
-+			reg-names = "ctl";
-+
-+			#phy-cells = <0>;
-+		};
- 	};
+diff --git a/drivers/phy/tegra/Kconfig b/drivers/phy/tegra/Kconfig
+index a3b1de953fb7..06d423fa85b4 100644
+--- a/drivers/phy/tegra/Kconfig
++++ b/drivers/phy/tegra/Kconfig
+@@ -6,3 +6,10 @@ config PHY_TEGRA_XUSB
  
- 	sysram@40000000 {
-@@ -1054,4 +1214,293 @@
- 				(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>;
- 		interrupt-parent = <&gic>;
- 	};
+ 	  To compile this driver as a module, choose M here: the module will
+ 	  be called phy-tegra-xusb.
 +
-+	pcie@14180000 {
-+		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
-+		reg = <0x00 0x14180000 0x0 0x00020000   /* appl registers (128K)      */
-+		       0x00 0x38000000 0x0 0x00040000   /* configuration space (256K) */
-+		       0x00 0x38040000 0x0 0x00040000   /* iATU_DMA reg space (256K)  */
-+		       0x00 0x38080000 0x0 0x00040000>; /* DBI reg space (256K)       */
-+		reg-names = "appl", "config", "atu_dma", "dbi";
++config PHY_TEGRA194_PCIE_P2U
++	tristate "NVIDIA Tegra P2U PHY Driver"
++	depends on ARCH_TEGRA || COMPILE_TEST
++	select GENERIC_PHY
++	help
++	  Enable this to support the P2U (PIPE to UPHY) that is part of Tegra 19x SOCs.
+diff --git a/drivers/phy/tegra/Makefile b/drivers/phy/tegra/Makefile
+index a93cd9a499b2..1aaca794f40c 100644
+--- a/drivers/phy/tegra/Makefile
++++ b/drivers/phy/tegra/Makefile
+@@ -5,3 +5,4 @@ phy-tegra-xusb-$(CONFIG_ARCH_TEGRA_124_SOC) += xusb-tegra124.o
+ phy-tegra-xusb-$(CONFIG_ARCH_TEGRA_132_SOC) += xusb-tegra124.o
+ phy-tegra-xusb-$(CONFIG_ARCH_TEGRA_210_SOC) += xusb-tegra210.o
+ phy-tegra-xusb-$(CONFIG_ARCH_TEGRA_186_SOC) += xusb-tegra186.o
++obj-$(CONFIG_PHY_TEGRA194_PCIE_P2U) += pcie-p2u-tegra194.o
+diff --git a/drivers/phy/tegra/pcie-p2u-tegra194.c b/drivers/phy/tegra/pcie-p2u-tegra194.c
+new file mode 100644
+index 000000000000..a5d85e411088
+--- /dev/null
++++ b/drivers/phy/tegra/pcie-p2u-tegra194.c
+@@ -0,0 +1,120 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * P2U (PIPE to UPHY) driver for Tegra T194 SoC
++ *
++ * Copyright (C) 2019 NVIDIA Corporation.
++ *
++ * Author: Vidya Sagar <vidyas@nvidia.com>
++ */
 +
-+		status = "disabled";
++#include <linux/delay.h>
++#include <linux/err.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_platform.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <soc/tegra/bpmp-abi.h>
 +
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		num-lanes = <8>;
-+		num-viewport = <8>;
-+		linux,pci-domain = <0>;
++#define P2U_PERIODIC_EQ_CTRL_GEN3	0xc0
++#define P2U_PERIODIC_EQ_CTRL_GEN3_PERIODIC_EQ_EN		BIT(0)
++#define P2U_PERIODIC_EQ_CTRL_GEN3_INIT_PRESET_EQ_TRAIN_EN	BIT(1)
++#define P2U_PERIODIC_EQ_CTRL_GEN4	0xc4
++#define P2U_PERIODIC_EQ_CTRL_GEN4_INIT_PRESET_EQ_TRAIN_EN	BIT(1)
 +
-+		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_0>;
-+		clock-names = "core";
++#define P2U_RX_DEBOUNCE_TIME				0xa4
++#define P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_MASK	0xffff
++#define P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_VAL		160
 +
-+		resets = <&bpmp TEGRA194_RESET_PEX0_CORE_0_APB>,
-+			 <&bpmp TEGRA194_RESET_PEX0_CORE_0>;
-+		reset-names = "core_apb", "core";
++struct tegra_p2u {
++	void __iomem *base;
++};
 +
-+		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
-+			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
-+		interrupt-names = "intr", "msi";
++static int tegra_p2u_power_on(struct phy *x)
++{
++	struct tegra_p2u *phy = phy_get_drvdata(x);
++	u32 val;
 +
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 72 0x04>;
++	val = readl(phy->base + P2U_PERIODIC_EQ_CTRL_GEN3);
++	val &= ~P2U_PERIODIC_EQ_CTRL_GEN3_PERIODIC_EQ_EN;
++	val |= P2U_PERIODIC_EQ_CTRL_GEN3_INIT_PRESET_EQ_TRAIN_EN;
++	writel(val, phy->base + P2U_PERIODIC_EQ_CTRL_GEN3);
 +
-+		nvidia,bpmp = <&bpmp>;
++	val = readl(phy->base + P2U_PERIODIC_EQ_CTRL_GEN4);
++	val |= P2U_PERIODIC_EQ_CTRL_GEN4_INIT_PRESET_EQ_TRAIN_EN;
++	writel(val, phy->base + P2U_PERIODIC_EQ_CTRL_GEN4);
 +
-+		supports-clkreq;
-+		nvidia,disable-aspm-states = <0xf>;
-+		nvidia,controller-id = <0>;
-+		nvidia,aspm-cmrt-us = <60>;
-+		nvidia,aspm-pwr-on-t-us = <20>;
-+		nvidia,aspm-l0s-entrance-latency-us = <3>;
++	val = readl(phy->base + P2U_RX_DEBOUNCE_TIME);
++	val &= ~P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_MASK;
++	val |= P2U_RX_DEBOUNCE_TIME_DEBOUNCE_TIMER_VAL;
++	writel(val, phy->base + P2U_RX_DEBOUNCE_TIME);
 +
-+		bus-range = <0x0 0xff>;
-+		ranges = <0x81000000 0x0 0x38100000 0x0 0x38100000 0x0 0x00100000    /* downstream I/O (1MB) */
-+			  0xc2000000 0x18 0x00000000 0x18 0x00000000 0x3 0x40000000  /* prefetchable memory (13GB) */
-+			  0x82000000 0x0 0x40000000 0x1B 0x40000000 0x0 0xC0000000>; /* non-prefetchable memory (3GB) */
-+	};
++	return 0;
++}
 +
-+	pcie@14100000 {
-+		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
-+		reg = <0x00 0x14100000 0x0 0x00020000   /* appl registers (128K)      */
-+		       0x00 0x30000000 0x0 0x00040000   /* configuration space (256K) */
-+		       0x00 0x30040000 0x0 0x00040000   /* iATU_DMA reg space (256K)  */
-+		       0x00 0x30080000 0x0 0x00040000>; /* DBI reg space (256K)       */
-+		reg-names = "appl", "config", "atu_dma", "dbi";
++static const struct phy_ops ops = {
++	.power_on	= tegra_p2u_power_on,
++	.owner		= THIS_MODULE,
++};
 +
-+		status = "disabled";
++static int tegra_p2u_probe(struct platform_device *pdev)
++{
++	struct phy_provider *phy_provider;
++	struct device *dev = &pdev->dev;
++	struct phy *generic_phy;
++	struct tegra_p2u *phy;
++	struct resource *res;
 +
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		num-lanes = <1>;
-+		num-viewport = <8>;
-+		linux,pci-domain = <1>;
++	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
++	if (!phy)
++		return -ENOMEM;
 +
-+		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_1>;
-+		clock-names = "core";
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctl");
++	phy->base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(phy->base))
++		return PTR_ERR_OR_ZERO(phy->base);
 +
-+		resets = <&bpmp TEGRA194_RESET_PEX0_CORE_1_APB>,
-+			 <&bpmp TEGRA194_RESET_PEX0_CORE_1>;
-+		reset-names = "core_apb", "core";
++	platform_set_drvdata(pdev, phy);
 +
-+		interrupts = <GIC_SPI 45 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
-+			     <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
-+		interrupt-names = "intr", "msi";
++	generic_phy = devm_phy_create(dev, NULL, &ops);
++	if (IS_ERR(generic_phy))
++		return PTR_ERR_OR_ZERO(generic_phy);
 +
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 45 0x04>;
++	phy_set_drvdata(generic_phy, phy);
 +
-+		nvidia,bpmp = <&bpmp>;
++	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
++	if (IS_ERR(phy_provider))
++		return PTR_ERR_OR_ZERO(phy_provider);
 +
-+		supports-clkreq;
-+		nvidia,disable-aspm-states = <0xf>;
-+		nvidia,controller-id = <1>;
-+		nvidia,aspm-cmrt-us = <60>;
-+		nvidia,aspm-pwr-on-t-us = <20>;
-+		nvidia,aspm-l0s-entrance-latency-us = <3>;
++	return 0;
++}
 +
-+		bus-range = <0x0 0xff>;
-+		ranges = <0x81000000 0x0 0x30100000 0x0 0x30100000 0x0 0x00100000    /* downstream I/O (1MB) */
-+			  0xc2000000 0x12 0x00000000 0x12 0x00000000 0x0 0x30000000  /* prefetchable memory (768MB) */
-+			  0x82000000 0x0 0x40000000 0x12 0x30000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
-+	};
++static int tegra_p2u_remove(struct platform_device *pdev)
++{
++	return 0;
++}
 +
-+	pcie@14120000 {
-+		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
-+		reg = <0x00 0x14120000 0x0 0x00020000   /* appl registers (128K)      */
-+		       0x00 0x32000000 0x0 0x00040000   /* configuration space (256K) */
-+		       0x00 0x32040000 0x0 0x00040000   /* iATU_DMA reg space (256K)  */
-+		       0x00 0x32080000 0x0 0x00040000>; /* DBI reg space (256K)       */
-+		reg-names = "appl", "config", "atu_dma", "dbi";
++static const struct of_device_id tegra_p2u_id_table[] = {
++	{
++		.compatible = "nvidia,tegra194-p2u",
++	},
++	{}
++};
++MODULE_DEVICE_TABLE(of, tegra_p2u_id_table);
 +
-+		status = "disabled";
++static struct platform_driver tegra_p2u_driver = {
++	.probe		= tegra_p2u_probe,
++	.remove		= tegra_p2u_remove,
++	.driver		= {
++		.name	= "tegra194-p2u",
++		.of_match_table = tegra_p2u_id_table,
++	},
++};
 +
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		num-lanes = <1>;
-+		num-viewport = <8>;
-+		linux,pci-domain = <2>;
++module_platform_driver(tegra_p2u_driver);
 +
-+		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_2>;
-+		clock-names = "core";
-+
-+		resets = <&bpmp TEGRA194_RESET_PEX0_CORE_2_APB>,
-+			 <&bpmp TEGRA194_RESET_PEX0_CORE_2>;
-+		reset-names = "core_apb", "core";
-+
-+		interrupts = <GIC_SPI 47 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
-+			     <GIC_SPI 48 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 47 0x04>;
-+
-+		nvidia,bpmp = <&bpmp>;
-+
-+		supports-clkreq;
-+		nvidia,disable-aspm-states = <0xf>;
-+		nvidia,controller-id = <2>;
-+		nvidia,aspm-cmrt-us = <60>;
-+		nvidia,aspm-pwr-on-t-us = <20>;
-+		nvidia,aspm-l0s-entrance-latency-us = <3>;
-+
-+		bus-range = <0x0 0xff>;
-+		ranges = <0x81000000 0x0 0x32100000 0x0 0x32100000 0x0 0x00100000    /* downstream I/O (1MB) */
-+			  0xc2000000 0x12 0x40000000 0x12 0x40000000 0x0 0x30000000  /* prefetchable memory (768MB) */
-+			  0x82000000 0x0 0x40000000 0x12 0x70000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
-+	};
-+
-+	pcie@14140000 {
-+		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX1A>;
-+		reg = <0x00 0x14140000 0x0 0x00020000   /* appl registers (128K)      */
-+		       0x00 0x34000000 0x0 0x00040000   /* configuration space (256K) */
-+		       0x00 0x34040000 0x0 0x00040000   /* iATU_DMA reg space (256K)  */
-+		       0x00 0x34080000 0x0 0x00040000>; /* DBI reg space (256K)       */
-+		reg-names = "appl", "config", "atu_dma", "dbi";
-+
-+		status = "disabled";
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		num-lanes = <1>;
-+		num-viewport = <8>;
-+		linux,pci-domain = <3>;
-+
-+		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_3>;
-+		clock-names = "core";
-+
-+		resets = <&bpmp TEGRA194_RESET_PEX0_CORE_3_APB>,
-+			 <&bpmp TEGRA194_RESET_PEX0_CORE_3>;
-+		reset-names = "core_apb", "core";
-+
-+		interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
-+			     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 49 0x04>;
-+
-+		nvidia,bpmp = <&bpmp>;
-+
-+		supports-clkreq;
-+		nvidia,disable-aspm-states = <0xf>;
-+		nvidia,controller-id = <3>;
-+		nvidia,aspm-cmrt-us = <60>;
-+		nvidia,aspm-pwr-on-t-us = <20>;
-+		nvidia,aspm-l0s-entrance-latency-us = <3>;
-+
-+		bus-range = <0x0 0xff>;
-+		ranges = <0x81000000 0x0 0x34100000 0x0 0x34100000 0x0 0x00100000    /* downstream I/O (1MB) */
-+			  0xc2000000 0x12 0x80000000 0x12 0x80000000 0x0 0x30000000  /* prefetchable memory (768MB) */
-+			  0x82000000 0x0 0x40000000 0x12 0xB0000000 0x0 0x10000000>; /* non-prefetchable memory (256MB) */
-+	};
-+
-+	pcie@14160000 {
-+		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX4A>;
-+		reg = <0x00 0x14160000 0x0 0x00020000   /* appl registers (128K)      */
-+		       0x00 0x36000000 0x0 0x00040000   /* configuration space (256K) */
-+		       0x00 0x36040000 0x0 0x00040000   /* iATU_DMA reg space (256K)  */
-+		       0x00 0x36080000 0x0 0x00040000>; /* DBI reg space (256K)       */
-+		reg-names = "appl", "config", "atu_dma", "dbi";
-+
-+		status = "disabled";
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		num-lanes = <4>;
-+		num-viewport = <8>;
-+		linux,pci-domain = <4>;
-+
-+		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_4>;
-+		clock-names = "core";
-+
-+		resets = <&bpmp TEGRA194_RESET_PEX0_CORE_4_APB>,
-+			 <&bpmp TEGRA194_RESET_PEX0_CORE_4>;
-+		reset-names = "core_apb", "core";
-+
-+		interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
-+			     <GIC_SPI 52 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 51 0x04>;
-+
-+		nvidia,bpmp = <&bpmp>;
-+
-+		supports-clkreq;
-+		nvidia,disable-aspm-states = <0xf>;
-+		nvidia,controller-id = <4>;
-+		nvidia,aspm-cmrt-us = <60>;
-+		nvidia,aspm-pwr-on-t-us = <20>;
-+		nvidia,aspm-l0s-entrance-latency-us = <3>;
-+
-+		bus-range = <0x0 0xff>;
-+		ranges = <0x81000000 0x0 0x36100000 0x0 0x36100000 0x0 0x00100000    /* downstream I/O (1MB) */
-+			  0xc2000000 0x14 0x00000000 0x14 0x00000000 0x3 0x40000000  /* prefetchable memory (13GB) */
-+			  0x82000000 0x0 0x40000000 0x17 0x40000000 0x0 0xC0000000>; /* non-prefetchable memory (3GB) */
-+	};
-+
-+	pcie@141a0000 {
-+		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-+		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8A>;
-+		reg = <0x00 0x141a0000 0x0 0x00020000   /* appl registers (128K)      */
-+		       0x00 0x3a000000 0x0 0x00040000   /* configuration space (256K) */
-+		       0x00 0x3a040000 0x0 0x00040000   /* iATU_DMA reg space (256K)  */
-+		       0x00 0x3a080000 0x0 0x00040000>; /* DBI reg space (256K)       */
-+		reg-names = "appl", "config", "atu_dma", "dbi";
-+
-+		status = "disabled";
-+
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		num-lanes = <8>;
-+		num-viewport = <8>;
-+		linux,pci-domain = <5>;
-+
-+		clocks = <&bpmp TEGRA194_CLK_PEX1_CORE_5>,
-+			<&bpmp TEGRA194_CLK_PEX1_CORE_5M>;
-+		clock-names = "core", "core_m";
-+
-+		resets = <&bpmp TEGRA194_RESET_PEX1_CORE_5_APB>,
-+			 <&bpmp TEGRA194_RESET_PEX1_CORE_5>;
-+		reset-names = "core_apb", "core";
-+
-+		interrupts = <GIC_SPI 53 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
-+			     <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		nvidia,bpmp = <&bpmp>;
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 53 0x04>;
-+
-+		supports-clkreq;
-+		nvidia,disable-aspm-states = <0xf>;
-+		nvidia,controller-id = <5>;
-+		nvidia,aspm-cmrt-us = <60>;
-+		nvidia,aspm-pwr-on-t-us = <20>;
-+		nvidia,aspm-l0s-entrance-latency-us = <3>;
-+
-+		bus-range = <0x0 0xff>;
-+		ranges = <0x81000000 0x0 0x3a100000 0x0 0x3a100000 0x0 0x00100000    /* downstream I/O (1MB) */
-+			  0xc2000000 0x1c 0x00000000 0x1c 0x00000000 0x3 0x40000000  /* prefetchable memory (13GB) */
-+			  0x82000000 0x0 0x40000000 0x1f 0x40000000 0x0 0xC0000000>; /* non-prefetchable memory (3GB) */
-+	};
- };
++MODULE_AUTHOR("Vidya Sagar <vidyas@nvidia.com>");
++MODULE_DESCRIPTION("NVIDIA Tegra PIPE2UPHY PHY driver");
++MODULE_LICENSE("GPL v2");
 -- 
 2.17.1
 
