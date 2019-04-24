@@ -2,192 +2,197 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73B7DC282CE
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:03:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A79A0C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:04:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CF7120685
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:03:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A29A20652
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:04:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1556129088;
+	bh=EDtUZor5aMJF3wM9lw3Z+oHRA5Y9c0u2gD1aMiaw6lY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=t094NmQZ/EaAbCJsGYxyXtKHWppnp+zx/FH4akx3mSjkKUYd+tXqjt+64tNRYyhjn
+	 NuxAY+th45JxjaGAPWfbeOdH588cYYvJwyNSfKaanF3q1jI6gLZnsZQrTfIIcMV2fp
+	 u6Dungsk6Cc57p8yzUEUv///sKN5yFgjgfWsoQU8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388884AbfDXSDr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 14:03:47 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:50952 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389062AbfDXRTq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Apr 2019 13:19:46 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5585EC0B2C45;
-        Wed, 24 Apr 2019 17:19:45 +0000 (UTC)
-Received: from x1.home (ovpn-116-122.phx2.redhat.com [10.3.116.122])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 254CF5D705;
-        Wed, 24 Apr 2019 17:19:44 +0000 (UTC)
-Date:   Wed, 24 Apr 2019 11:19:43 -0600
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     <Alex_Gagniuc@Dellteam.com>
-Cc:     <bhelgaas@google.com>, <helgaas@kernel.org>,
-        <mr.nuke.me@gmail.com>, <linux-pci@vger.kernel.org>,
-        <Austin.Bolen@dell.com>, <keith.busch@intel.com>,
-        <Shyam.Iyer@dell.com>, <lukas@wunner.de>, <okaya@kernel.org>,
-        <torvalds@linux-foundation.org>, <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Add link_change error handler and vfio-pci user
-Message-ID: <20190424111943.376d7d24@x1.home>
-In-Reply-To: <44c43b8c1739488181930c074bb6eddb@ausx13mps321.AMER.DELL.COM>
-References: <155605909349.3575.13433421148215616375.stgit@gimli.home>
-        <44c43b8c1739488181930c074bb6eddb@ausx13mps321.AMER.DELL.COM>
-Organization: Red Hat
+        id S2388726AbfDXSEl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 14:04:41 -0400
+Received: from casper.infradead.org ([85.118.1.10]:48034 "EHLO
+        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389233AbfDXSEk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 14:04:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=QQxjRBbmdgAM9Bh3kBDiayTByaZ8rOIgL5n86+QEto4=; b=eHPgs9VBSJ+I8+KqGmbMTju2lr
+        c0xcIJhkO2M5DD563NVO7255UOmAOc+vpo2IvNPVwyqe69ZqXkx9iioAWr9eJ4b2LMu+rhf8rYyUo
+        mtQXyGjUMNv/lFhjz4jaEpC7/Tp0UkNaMIXXlAM2xteretCYdUOIlYuRI08ZjgbyPhkjYAtk47b7m
+        OA0nNjLt5UlGU5fFoI53mMacP+QpIDgHjTG4uSifigHWhQfA2mF9d0P2n0WuaAsakliiGpFMUgQjo
+        rvB17MoDNgV16L/zRs1kMRB1oFucBzRHljfN9aiZfld7RN8Wcr4XEM55inxhU1IiOVWlqKJ5tLTjt
+        pHQcNoMQ==;
+Received: from 177.17.136.231.dynamic.adsl.gvt.net.br ([177.17.136.231] helo=coco.lan)
+        by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hJMG2-0001jj-TS; Wed, 24 Apr 2019 18:04:35 +0000
+Date:   Wed, 24 Apr 2019 15:04:28 -0300
+From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+To:     Changbin Du <changbin.du@gmail.com>
+Cc:     Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        x86@kernel.org, fenghua.yu@intel.com,
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
+        linux-gpio@vger.kernel.org
+Subject: Re: [PATCH v4 21/63] Documentation: ACPI: move cppc_sysfs.txt to
+ admin-guide/acpi and convert to reST
+Message-ID: <20190424150428.7eb70014@coco.lan>
+In-Reply-To: <20190424172232.qtzogm6sweaa4gva@mail.google.com>
+References: <20190423162932.21428-1-changbin.du@gmail.com>
+        <20190423162932.21428-22-changbin.du@gmail.com>
+        <20190424114844.5de4cfa5@coco.lan>
+        <20190424172232.qtzogm6sweaa4gva@mail.google.com>
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Wed, 24 Apr 2019 17:19:45 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 24 Apr 2019 16:45:45 +0000
-<Alex_Gagniuc@Dellteam.com> wrote:
+Em Thu, 25 Apr 2019 01:22:34 +0800
+Changbin Du <changbin.du@gmail.com> escreveu:
 
-> On 4/23/2019 5:42 PM, Alex Williamson wrote:
-> > The PCIe bandwidth notification service generates logging any time a
-> > link changes speed or width to a state that is considered downgraded.
-> > Unfortunately, it cannot differentiate signal integrity related link
-> > changes from those intentionally initiated by an endpoint driver,
-> > including drivers that may live in userspace or VMs when making use
-> > of vfio-pci.  Therefore, allow the driver to have a say in whether
-> > the link is indeed downgraded and worth noting in the log, or if the
-> > change is perhaps intentional.
-> > 
-> > For vfio-pci, we don't know the intentions of the user/guest driver
-> > either, but we do know that GPU drivers in guests actively manage
-> > the link state and therefore trigger the bandwidth notification for
-> > what appear to be entirely intentional link changes.
-> > 
-> > Fixes: e8303bb7a75c PCI/LINK: Report degraded links via link bandwidth notification
-> > Link: https://lore.kernel.org/linux-pci/155597243666.19387.1205950870601742062.stgit@gimli.home/T/#u
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > ---
-> > 
-> > Changing to pci_dbg() logging is not super usable, so let's try the
-> > previous idea of letting the driver handle link change events as they
-> > see fit.  Ideally this might be two patches, but for easier handling,
-> > folding the pci and vfio-pci bits together.  Comments?  Thanks,  
-> 
-> I think this callback opens up a can of worms where drivers can ad-hoc 
-> kill a number what otherwise can be indicators of problems. But I don't 
-> have to like it to review it :).
-> 
-> >   drivers/pci/probe.c         |   13 +++++++++++++
-> >   drivers/vfio/pci/vfio_pci.c |   10 ++++++++++
-> >   include/linux/pci.h         |    3 +++
-> >   3 files changed, 26 insertions(+)
-> > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 7e12d0163863..233cd4b5b6e8 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -2403,6 +2403,19 @@ void pcie_report_downtraining(struct pci_dev *dev)  
-> 
-> I don't think you want to change pcie_report_downtraining(). You're 
-> advertising to "report" something, by nomenclature, but then go around 
-> and also call a notification callback. This is also used during probe, 
-> and you've now just killed your chance to notice you've booted with a 
-> degraded link.
-> If what you want to do is silence the bandwidth notification, you want 
-> to modify the threaded interrupt that calls this.
-
-During probe, ie. discovery, a device wouldn't have a driver attached,
-so we'd fall through to simply printing the link status.  Nothing
-lost afaict.  The "report" verb doesn't have a subject here, report to
-whom?  Therefore I thought it reasonable that a driver ask that it be
-reported to them via a callback.  I don't see that as such a stretch of
-the interface.
- 
-> >   	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
-> >   		return;
+> On Wed, Apr 24, 2019 at 11:48:44AM -0300, Mauro Carvalho Chehab wrote:
+> > Em Wed, 24 Apr 2019 00:28:50 +0800
+> > Changbin Du <changbin.du@gmail.com> escreveu:
 > >   
-> > +	/*
-> > +	 * If driver handles link_change event, defer to driver.  PCIe drivers
-> > +	 * can call pcie_print_link_status() to print current link info.
-> > +	 */
-> > +	device_lock(&dev->dev);
-> > +	if (dev->driver && dev->driver->err_handler &&
-> > +	    dev->driver->err_handler->link_change) {
-> > +		dev->driver->err_handler->link_change(dev);
-> > +		device_unlock(&dev->dev);
-> > +		return;
-> > +	}
-> > +	device_unlock(&dev->dev);  
+> > > This converts the plain text documentation to reStructuredText format and
+> > > add it to Sphinx TOC tree. No essential content change.
+> > > 
+> > > Signed-off-by: Changbin Du <changbin.du@gmail.com>
+> > > ---
+> > >  .../acpi/cppc_sysfs.rst}                      | 71 ++++++++++---------
+> > >  Documentation/admin-guide/acpi/index.rst      |  1 +
+> > >  2 files changed, 40 insertions(+), 32 deletions(-)
+> > >  rename Documentation/{acpi/cppc_sysfs.txt => admin-guide/acpi/cppc_sysfs.rst} (51%)
+> > > 
+> > > diff --git a/Documentation/acpi/cppc_sysfs.txt b/Documentation/admin-guide/acpi/cppc_sysfs.rst
+> > > similarity index 51%
+> > > rename from Documentation/acpi/cppc_sysfs.txt
+> > > rename to Documentation/admin-guide/acpi/cppc_sysfs.rst
+> > > index f20fb445135d..a4b99afbe331 100644
+> > > --- a/Documentation/acpi/cppc_sysfs.txt
+> > > +++ b/Documentation/admin-guide/acpi/cppc_sysfs.rst
+> > > @@ -1,5 +1,11 @@
+> > > +.. SPDX-License-Identifier: GPL-2.0
+> > >  
+> > > -	Collaborative Processor Performance Control (CPPC)
+> > > +==================================================
+> > > +Collaborative Processor Performance Control (CPPC)
+> > > +==================================================
+> > > +
+> > > +CPPC
+> > > +====
+> > >  
+> > >  CPPC defined in the ACPI spec describes a mechanism for the OS to manage the
+> > >  performance of a logical processor on a contigious and abstract performance
+> > > @@ -10,31 +16,28 @@ For more details on CPPC please refer to the ACPI specification at:
+> > >  
+> > >  http://uefi.org/specifications
+> > >  
+> > > -Some of the CPPC registers are exposed via sysfs under:
+> > > -
+> > > -/sys/devices/system/cpu/cpuX/acpi_cppc/
+> > > -  
+> > 
+> >   
+> > > -for each cpu X  
+> > 
+> > Hmm... removed by mistake?
+> >  
+> I comfirmed that no content removed.
+
+At this patch, it looks that you removed the line: "for each cpu X"
+(or am I reading it wrong?)
+
 > 
-> Can we write this such that there is a single lock()/unlock() pair?
+> > > +Some of the CPPC registers are exposed via sysfs under::
+> > >  
+> > > ---------------------------------------------------------------------------------
+> > > +  /sys/devices/system/cpu/cpuX/acpi_cppc/  
+> > 
+> > Did you parse this with Sphinx? It doesn't sound a valid ReST construction
+> > to my eyes, as:
+> > 
+> > 1) I've seen some versions of Sphinx to abort with severe errors when 
+> >    there's no blank line after the horizontal bar markup;
+> > 
+> > 2) It will very likely ignore the "::" (I didn't test it myself), as you're
+> >    not indenting the horizontal bar. End of indentation will mean the end
+> >    of an (empty) literal block.
+> > 
+> > So, I would stick with:
+> > 
+> > 
+> > 	Some of the CPPC registers are exposed via sysfs under:
+> > 
+> > 	  /sys/devices/system/cpu/cpuX/acpi_cppc/
+> > 
+> > 	---------------------------------------------------------------------------------
+> > 
+> > 	for each cpu X::
+> > 
+> > 
+> > or:
+> > 
+> > 	Some of the CPPC registers are exposed via sysfs under:
+> > 
+> > 		/sys/devices/system/cpu/cpuX/acpi_cppc/
+> > 
+> > 	for each cpu X
+> > 
+> > 	--------------------------------------------------------------------------------
+> > 
+> > 	::
+> > 
+> > (with is closer to the original author's intent)
+> > 
+> > Same applies to the other similar changes on this document.
+> >  
+> I didn't seen any warning here and the generated html is good. So I think it is
+> ok.
 
-Not without introducing a tracking variable, ex.
+Basically, what you're doing is:
 
-bool handled = false;
+<rst>
 
-lock()
-if (stuff) {
-  link_change()
-  handled = true;
-}
-unlock()
+::
 
-if (!handled)
-  dmesg spew
+foo
+   literal-block bar
 
-That's not markedly better imo, but if it's preferred I can send a v2.
+</rst>
+
+(where "foo" is the horizontal bar markup)
+
+I would avoid such pattern for two reasons:
+
+1) it sounds a violation of ReST syntax to format an in
+   indented paragraph some non-blank lines after a non-indented
+   line. As such, I won't doubt that different versions of Sphinx
+   would handle it differently. I'm even tempted to open a BZ
+   to Sphinx in order for them to provide a fix for that, if the
+   latest version of Sphinx accepts such crazy markup.
+
+2) It is very confusing for any human reading it.
+
 Thanks,
-
-Alex
- 
-> > +
-> >   	/* Print link status only if the device is constrained by the fabric */
-> >   	__pcie_print_link_status(dev, false);
-> >   }
-> > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> > index cab71da46f4a..c9ffc0ccabb3 100644
-> > --- a/drivers/vfio/pci/vfio_pci.c
-> > +++ b/drivers/vfio/pci/vfio_pci.c
-> > @@ -1418,8 +1418,18 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
-> >   	return PCI_ERS_RESULT_CAN_RECOVER;
-> >   }
-> >   
-> > +/*
-> > + * Ignore link change notification, we can't differentiate signal related
-> > + * link changes from user driver power management type operations, so do
-> > + * nothing.  Potentially this could be routed out to the user.
-> > + */
-> > +static void vfio_pci_link_change(struct pci_dev *pdev)
-> > +{
-> > +}
-> > +
-> >   static const struct pci_error_handlers vfio_err_handlers = {
-> >   	.error_detected = vfio_pci_aer_err_detected,
-> > +	.link_change = vfio_pci_link_change,
-> >   };
-> >   
-> >   static struct pci_driver vfio_pci_driver = {
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 27854731afc4..e9194bc03f9e 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -763,6 +763,9 @@ struct pci_error_handlers {
-> >   
-> >   	/* Device driver may resume normal operations */
-> >   	void (*resume)(struct pci_dev *dev);
-> > +
-> > +	/* PCIe link change notification */
-> > +	void (*link_change)(struct pci_dev *dev);
-> >   };
-> >   
-> >   
-> > 
-> >   
-> 
-> 
-
+Mauro
