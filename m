@@ -2,174 +2,138 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14D83C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 03:51:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11BD5C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 04:57:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C77032148D
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 03:51:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="jrK/qVwa"
+	by mail.kernel.org (Postfix) with ESMTP id E14EF218DA
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 04:57:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726904AbfDXDv1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Apr 2019 23:51:27 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:2740 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726474AbfDXDv1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 Apr 2019 23:51:27 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cbfdd240000>; Tue, 23 Apr 2019 20:51:00 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 23 Apr 2019 20:51:25 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 23 Apr 2019 20:51:25 -0700
-Received: from [10.24.192.71] (172.20.13.39) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 24 Apr
- 2019 03:51:22 +0000
-Subject: Re: [PATCH V2 22/28] PCI: tegra: Access endpoint config only if PCIe
- link is up
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <thierry.reding@gmail.com>, <robh+dt@kernel.org>,
-        <mark.rutland@arm.com>, <jonathanh@nvidia.com>,
-        <lorenzo.pieralisi@arm.com>, <vidyas@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-References: <20190423092825.759-1-mmaddireddy@nvidia.com>
- <20190423092825.759-23-mmaddireddy@nvidia.com>
- <20190423202430.GC14616@google.com>
-X-Nvconfidentiality: public
-From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Message-ID: <5043c67a-1d21-efcd-63ca-7feb270f9fb0@nvidia.com>
-Date:   Wed, 24 Apr 2019 09:21:07 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <20190423202430.GC14616@google.com>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL106.nvidia.com (172.18.146.12) To
- HQMAIL101.nvidia.com (172.20.187.10)
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1556077861; bh=v9UhaADVrB75zyky5hzko6RyxR5voXXu4xBkZ6xzJY4=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:
-         Content-Transfer-Encoding:Content-Language;
-        b=jrK/qVwaITn/aJf2MRsFtFRoxwl0KfOIAdNpULS6wVR2uWR21581xU0M/yD2iKYWj
-         uTp+xxFGyK9V+WpmKg+NnTHZ5joa5++C39lEIGTL2FgPDujTc5M7f6Zn39OoVJbeII
-         4qbf4zW61J6cZHRMBNmzJqnH2S9f9LnwKHtpJiZIGKHdLZwvDqvugTurXYJeFIiHZF
-         z+K0zZ6eohVNZxVCIN3Fxqp4LNhnIvXRMNXxeyQzsG5cXlezCK6VCcGzw9cmzGz84u
-         I+/TTOe8uCMIJxKYiNL6/TBU1AgEPn7e5iwIdfaC+4stc9+KwgH0jjBBErFWKUPFvm
-         H/Vnkj+KLDYuQ==
+        id S1728704AbfDXE5V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 00:57:21 -0400
+Received: from mga05.intel.com ([192.55.52.43]:50503 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726442AbfDXE5U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Apr 2019 00:57:20 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Apr 2019 21:57:20 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,388,1549958400"; 
+   d="scan'208";a="340242633"
+Received: from lftan-mobl.gar.corp.intel.com (HELO ubuntu) ([10.226.248.116])
+  by fmsmga005.fm.intel.com with SMTP; 23 Apr 2019 21:57:17 -0700
+Received: by ubuntu (sSMTP sendmail emulation); Wed, 24 Apr 2019 12:57:16 +0800
+From:   Ley Foon Tan <ley.foon.tan@intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, lftan.linux@gmail.com,
+        Ley Foon Tan <ley.foon.tan@intel.com>
+Subject: [PATCH] PCI: altera: Allow building as module
+Date:   Wed, 24 Apr 2019 12:57:14 +0800
+Message-Id: <1556081835-12921-1-git-send-email-ley.foon.tan@intel.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Altera PCIe Rootport IP is a soft IP and is only available after
+FPGA image is programmed.
 
+Make driver modulable to support use case FPGA image is programmed
+after kernel is booted. User proram FPGA image in kernel then only load
+PCIe driver module.
 
-On 24-Apr-19 1:54 AM, Bjorn Helgaas wrote:
-> On Tue, Apr 23, 2019 at 02:58:19PM +0530, Manikanta Maddireddy wrote:
->> Add PCIe link up check in config read and write callback functions
->> before accessing endpoint config registers.
-> I mentioned before:
->
->   We need to either eradicate this pattern of checking for link up, or
->   include a comment about why it is absolutely necessary.
->
-> I still think this check should be unnecessary, but if you really
-> think you need it, at least add the comment.
-Sorry, I missed to add comment in V2. I will take care of it in V3.
+Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
+---
+ drivers/pci/controller/Kconfig       |  2 +-
+ drivers/pci/controller/pcie-altera.c | 28 ++++++++++++++++++++++++++--
+ 2 files changed, 27 insertions(+), 3 deletions(-)
 
-
-Manikanta
-
->
->> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
->> ---
->> V2: Change tegra_pcie_link_status() to tegra_pcie_link_up()
->>
->>  drivers/pci/controller/pci-tegra.c | 38 ++++++++++++++++++++++++++++++
->>  1 file changed, 38 insertions(+)
->>
->> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
->> index 8ba71e314b1b..05586672a221 100644
->> --- a/drivers/pci/controller/pci-tegra.c
->> +++ b/drivers/pci/controller/pci-tegra.c
->> @@ -428,6 +428,14 @@ static inline u32 pads_readl(struct tegra_pcie *pcie, unsigned long offset)
->>  	return readl(pcie->pads + offset);
->>  }
->>  
->> +static bool tegra_pcie_link_up(struct tegra_pcie_port *port)
->> +{
->> +	u32 value;
->> +
->> +	value = readl(port->base + RP_LINK_CONTROL_STATUS);
->> +	return !!(value & RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE);
->> +}
->> +
->>  /*
->>   * The configuration space mapping on Tegra is somewhat similar to the ECAM
->>   * defined by PCIe. However it deviates a bit in how the 4 bits for extended
->> @@ -493,20 +501,50 @@ static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
->>  static int tegra_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
->>  				  int where, int size, u32 *value)
->>  {
->> +	struct tegra_pcie *pcie = bus->sysdata;
->> +	struct pci_dev *bridge;
->> +	struct tegra_pcie_port *port;
->> +
->>  	if (bus->number == 0)
->>  		return pci_generic_config_read32(bus, devfn, where, size,
->>  						 value);
->>  
->> +	bridge = pcie_find_root_port(bus->self);
->> +
->> +	list_for_each_entry(port, &pcie->ports, list)
->> +		if (port->index + 1 == PCI_SLOT(bridge->devfn))
->> +			break;
->> +
->> +	/* If there is no link, then there is no device */
->> +	if (!tegra_pcie_link_up(port)) {
->> +		*value = 0xffffffff;
->> +		return PCIBIOS_DEVICE_NOT_FOUND;
->> +	}
->> +
->>  	return pci_generic_config_read(bus, devfn, where, size, value);
->>  }
->>  
->>  static int tegra_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
->>  				   int where, int size, u32 value)
->>  {
->> +	struct tegra_pcie *pcie = bus->sysdata;
->> +	struct tegra_pcie_port *port;
->> +	struct pci_dev *bridge;
->> +
->>  	if (bus->number == 0)
->>  		return pci_generic_config_write32(bus, devfn, where, size,
->>  						  value);
->>  
->> +	bridge = pcie_find_root_port(bus->self);
->> +
->> +	list_for_each_entry(port, &pcie->ports, list)
->> +		if (port->index + 1 == PCI_SLOT(bridge->devfn))
->> +			break;
->> +
->> +	/* If there is no link, then there is no device */
->> +	if (!tegra_pcie_link_up(port))
->> +		return PCIBIOS_DEVICE_NOT_FOUND;
->> +
->>  	return pci_generic_config_write(bus, devfn, where, size, value);
->>  }
->>  
->> -- 
->> 2.17.1
->>
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index 6012f3059acd..4b550f9cdd56 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -174,7 +174,7 @@ config PCIE_IPROC_MSI
+ 	  PCIe controller
+ 
+ config PCIE_ALTERA
+-	bool "Altera PCIe controller"
++	tristate "Altera PCIe controller"
+ 	depends on ARM || NIOS2 || ARM64 || COMPILE_TEST
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on Altera
+diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+index 27edcebd1726..6c86bc69ace8 100644
+--- a/drivers/pci/controller/pcie-altera.c
++++ b/drivers/pci/controller/pcie-altera.c
+@@ -10,6 +10,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/init.h>
++#include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
+ #include <linux/of_irq.h>
+@@ -705,6 +706,13 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+ 	return 0;
+ }
+ 
++static int altera_pcie_irq_teardown(struct altera_pcie *pcie)
++{
++	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
++	irq_domain_remove(pcie->irq_domain);
++	irq_dispose_mapping(pcie->irq);
++}
++
+ static int altera_pcie_parse_dt(struct altera_pcie *pcie)
+ {
+ 	struct device *dev = &pcie->pdev->dev;
+@@ -798,6 +806,7 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie = pci_host_bridge_priv(bridge);
+ 	pcie->pdev = pdev;
++	platform_set_drvdata(pdev, pcie);
+ 
+ 	match = of_match_device(altera_pcie_of_match, &pdev->dev);
+ 	if (!match)
+@@ -855,13 +864,28 @@ static int altera_pcie_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
++static int altera_pcie_remove(struct platform_device *pdev)
++{
++	struct altera_pcie *pcie = platform_get_drvdata(pdev);
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(pcie);
++
++	pci_stop_root_bus(bridge->bus);
++	pci_remove_root_bus(bridge->bus);
++	pci_free_resource_list(&pcie->resources);
++	altera_pcie_irq_teardown(pcie);
++
++	return 0;
++}
++
+ static struct platform_driver altera_pcie_driver = {
+ 	.probe		= altera_pcie_probe,
++	.remove		= altera_pcie_remove,
+ 	.driver = {
+ 		.name	= "altera-pcie",
+ 		.of_match_table = altera_pcie_of_match,
+-		.suppress_bind_attrs = true,
+ 	},
+ };
+ 
+-builtin_platform_driver(altera_pcie_driver);
++MODULE_DEVICE_TABLE(of, altera_pcie_of_match);
++module_platform_driver(altera_pcie_driver);
++MODULE_LICENSE("GPL v2");
+-- 
+2.19.0
 
