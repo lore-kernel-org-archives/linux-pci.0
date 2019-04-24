@@ -2,171 +2,271 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,USER_AGENT_NEOMUTT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE07C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 17:58:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92E5DC10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:00:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E7FA20685
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 17:58:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556128689;
-	bh=18qPWvhttbQRftXd+LJB8F2ybIqr5XFHfXjCmiU1uRg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=H6blZ8XyIOp9s4q94EdafknuOeSNyu4gDkmdmN6M3XzS5pWRw1HM3T8wZ18u2iN6o
-	 J1sDqf/csGxeOGP2FKUfFQSJFdaz2g3z5IglXRH80V6h5soNQgM6G52ATuwSeNHmSc
-	 oto63frsMx8JOR0Jx/WclcVxPw/tUo5mfr61JlaI=
+	by mail.kernel.org (Postfix) with ESMTP id 579AB20652
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 18:00:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IGVjJDZl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391458AbfDXR6D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 13:58:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51064 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391378AbfDXR6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Apr 2019 13:58:02 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DF11721773;
-        Wed, 24 Apr 2019 17:58:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556128681;
-        bh=18qPWvhttbQRftXd+LJB8F2ybIqr5XFHfXjCmiU1uRg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=1KFHAw71HRB9lwWr6eZPfFX42j1Ffqgrk1FLUuN0GWJtiagiU8YetdmSIrWTPhabX
-         0CZJ6t14Xnp3qU9LLgZ+Chfl7x6p+pyHnOhnwZ1N2DC2lrK+WzEGMz6IgYMeyG1lzW
-         Xjdz7b7WngQNDdLZAu6vvTpZOPZtjxOpuwRWpeZE=
-Date:   Wed, 24 Apr 2019 12:57:58 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Alex Williamson <alex.williamson@redhat.com>
-Cc:     mr.nuke.me@gmail.com, linux-pci@vger.kernel.org,
-        austin_bolen@dell.com, alex_gagniuc@dellteam.com,
-        keith.busch@intel.com, Shyam_Iyer@Dell.com, lukas@wunner.de,
-        okaya@kernel.org, torvalds@linux-foundation.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add link_change error handler and vfio-pci user
-Message-ID: <20190424175758.GC244134@google.com>
-References: <155605909349.3575.13433421148215616375.stgit@gimli.home>
+        id S2390113AbfDXSAr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 14:00:47 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:40859 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388988AbfDXRWu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 13:22:50 -0400
+Received: by mail-pg1-f194.google.com with SMTP id d31so9702860pgl.7;
+        Wed, 24 Apr 2019 10:22:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=eoZsO429e0b+dEVgO5JVsEp5EuD0o0GJNOTorofbhd0=;
+        b=IGVjJDZlidZsAbiJUsDRZQzrGzGEcQwGdZDVp5GgTF8izs4Vfi6ynWeO+Pdqcyi+/N
+         C7/9w3RS5D3LT9p5Bd3/Gms2bf7xmwBF95Tak2vcxsJgUeHVyljIAu5lhZInoKy20Tfi
+         tfv10j13D5Fl+eADMH/7ndD940/cTKSs4Btehx3aLQ61iMG7ja8ULyTgmz72zYj0la51
+         wiSuVuegknSR+8upONyWx+hfrWEK+XqlYEEpGDN1y5ZrbQiaLJhuG9d6NghjuVP4iO7J
+         uTuS6Zm2zpu1Ft9ivA/7L+6EMmHpGo/FiRodlzxadw31ea2yqgUnbbVEeFQemGI7dnYN
+         r28Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=eoZsO429e0b+dEVgO5JVsEp5EuD0o0GJNOTorofbhd0=;
+        b=MnVbQ0s4xxbQbetAV9e9s4qQE/Bg8lmqx2g8ZA1vKOoC9HmsM9HCRRI6hiJilHPYTc
+         Mkk7ssLpRYLwjwZ8iGis6vwIIpytkK9e2BlNODNqBfHoqAksxML3Uhn9onpeeVub44Y6
+         ajU4hPs8EcaT1EHTDPerOgDDdw3pC7b8YEQ8QduBwcc0fulPqDTZzdLYfABEDBSA+yhS
+         GdZYLrJ4sI/8Yc/VFI8JYNJV2xBa70PCp6Wf7mr/9UOOmKz+xZ5cT/Voil6XImVnLveX
+         dHDD6Ss+xGOOUVO3BQXGVK2acZPklhe2UtIVpiRaGfLm9hxIStoFm8a/CLqDHe0KxA/R
+         tUSQ==
+X-Gm-Message-State: APjAAAUDmAJkJiO0JnWcQnXrb8crS1aflbB+reGa89CBrd9cq6Ih4jUW
+        FW9xE+wesj3XBBmvO7eRifU=
+X-Google-Smtp-Source: APXvYqxnpPk8YPTttYq6iD6geRJxmT/PnYrWdlm9nnsCYFTFBiRuuLfHN3ESOhDwzhPiAzWPNf7byQ==
+X-Received: by 2002:a65:4302:: with SMTP id j2mr31468636pgq.291.1556126569766;
+        Wed, 24 Apr 2019 10:22:49 -0700 (PDT)
+Received: from mail.google.com ([104.238.181.70])
+        by smtp.gmail.com with ESMTPSA id w190sm2410231pfb.101.2019.04.24.10.22.40
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 24 Apr 2019 10:22:49 -0700 (PDT)
+Date:   Thu, 25 Apr 2019 01:22:34 +0800
+From:   Changbin Du <changbin.du@gmail.com>
+To:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc:     Changbin Du <changbin.du@gmail.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, rjw@rjwysocki.net,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com,
+        x86@kernel.org, fenghua.yu@intel.com,
+        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
+        linux-gpio@vger.kernel.org
+Subject: Re: [PATCH v4 21/63] Documentation: ACPI: move cppc_sysfs.txt to
+ admin-guide/acpi and convert to reST
+Message-ID: <20190424172232.qtzogm6sweaa4gva@mail.google.com>
+References: <20190423162932.21428-1-changbin.du@gmail.com>
+ <20190423162932.21428-22-changbin.du@gmail.com>
+ <20190424114844.5de4cfa5@coco.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <155605909349.3575.13433421148215616375.stgit@gimli.home>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190424114844.5de4cfa5@coco.lan>
+User-Agent: NeoMutt/20180716
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 23, 2019 at 04:42:28PM -0600, Alex Williamson wrote:
-> The PCIe bandwidth notification service generates logging any time a
-> link changes speed or width to a state that is considered downgraded.
-> Unfortunately, it cannot differentiate signal integrity related link
-> changes from those intentionally initiated by an endpoint driver,
-> including drivers that may live in userspace or VMs when making use
-> of vfio-pci.  Therefore, allow the driver to have a say in whether
-> the link is indeed downgraded and worth noting in the log, or if the
-> change is perhaps intentional.
+On Wed, Apr 24, 2019 at 11:48:44AM -0300, Mauro Carvalho Chehab wrote:
+> Em Wed, 24 Apr 2019 00:28:50 +0800
+> Changbin Du <changbin.du@gmail.com> escreveu:
 > 
-> For vfio-pci, we don't know the intentions of the user/guest driver
-> either, but we do know that GPU drivers in guests actively manage
-> the link state and therefore trigger the bandwidth notification for
-> what appear to be entirely intentional link changes.
+> > This converts the plain text documentation to reStructuredText format and
+> > add it to Sphinx TOC tree. No essential content change.
+> > 
+> > Signed-off-by: Changbin Du <changbin.du@gmail.com>
+> > ---
+> >  .../acpi/cppc_sysfs.rst}                      | 71 ++++++++++---------
+> >  Documentation/admin-guide/acpi/index.rst      |  1 +
+> >  2 files changed, 40 insertions(+), 32 deletions(-)
+> >  rename Documentation/{acpi/cppc_sysfs.txt => admin-guide/acpi/cppc_sysfs.rst} (51%)
+> > 
+> > diff --git a/Documentation/acpi/cppc_sysfs.txt b/Documentation/admin-guide/acpi/cppc_sysfs.rst
+> > similarity index 51%
+> > rename from Documentation/acpi/cppc_sysfs.txt
+> > rename to Documentation/admin-guide/acpi/cppc_sysfs.rst
+> > index f20fb445135d..a4b99afbe331 100644
+> > --- a/Documentation/acpi/cppc_sysfs.txt
+> > +++ b/Documentation/admin-guide/acpi/cppc_sysfs.rst
+> > @@ -1,5 +1,11 @@
+> > +.. SPDX-License-Identifier: GPL-2.0
+> >  
+> > -	Collaborative Processor Performance Control (CPPC)
+> > +==================================================
+> > +Collaborative Processor Performance Control (CPPC)
+> > +==================================================
+> > +
+> > +CPPC
+> > +====
+> >  
+> >  CPPC defined in the ACPI spec describes a mechanism for the OS to manage the
+> >  performance of a logical processor on a contigious and abstract performance
+> > @@ -10,31 +16,28 @@ For more details on CPPC please refer to the ACPI specification at:
+> >  
+> >  http://uefi.org/specifications
+> >  
+> > -Some of the CPPC registers are exposed via sysfs under:
+> > -
+> > -/sys/devices/system/cpu/cpuX/acpi_cppc/
+> > -
 > 
-> Fixes: e8303bb7a75c PCI/LINK: Report degraded links via link bandwidth notification
-> Link: https://lore.kernel.org/linux-pci/155597243666.19387.1205950870601742062.stgit@gimli.home/T/#u
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
 > 
-> Changing to pci_dbg() logging is not super usable, so let's try the
-> previous idea of letting the driver handle link change events as they
-> see fit.  Ideally this might be two patches, but for easier handling,
-> folding the pci and vfio-pci bits together.  Comments?  Thanks,
-
-I'm a little uneasy about the bandwidth notification logging as a
-whole.  Messages in dmesg don't seem like a solid base for building
-management tools.
-
-I assume the eventual goal would be some sort of digested notification
-along the lines of "hey mr/ms administrator, the link to device X
-unexpectedly became slower, you might want to check that out."
-
-If I were building that, I don't think I would use dmesg.  I might
-write a daemon that polls /sys/.../current_link_{speed,width}, or
-maybe use some sort of netlink event.  Maybe it would be useful to
-have the admin designate devices of interest.
-
-I'm hesitant about adding a .link_change() handler.  If there's
-something useful a driver could do with it, that's one thing.  But
-using it merely to suppress a message doesn't really seem worth the
-trouble, and it seems unfriendly to ask drivers to add it when they
-didn't ask for it and get no benefit from it.
-
->  drivers/pci/probe.c         |   13 +++++++++++++
->  drivers/vfio/pci/vfio_pci.c |   10 ++++++++++
->  include/linux/pci.h         |    3 +++
->  3 files changed, 26 insertions(+)
+> > -for each cpu X
 > 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 7e12d0163863..233cd4b5b6e8 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2403,6 +2403,19 @@ void pcie_report_downtraining(struct pci_dev *dev)
->  	if (PCI_FUNC(dev->devfn) != 0 || dev->is_virtfn)
->  		return;
->  
-> +	/*
-> +	 * If driver handles link_change event, defer to driver.  PCIe drivers
-> +	 * can call pcie_print_link_status() to print current link info.
-> +	 */
-> +	device_lock(&dev->dev);
-> +	if (dev->driver && dev->driver->err_handler &&
-> +	    dev->driver->err_handler->link_change) {
-> +		dev->driver->err_handler->link_change(dev);
-> +		device_unlock(&dev->dev);
-> +		return;
-> +	}
-> +	device_unlock(&dev->dev);
-> +
->  	/* Print link status only if the device is constrained by the fabric */
->  	__pcie_print_link_status(dev, false);
->  }
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index cab71da46f4a..c9ffc0ccabb3 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -1418,8 +1418,18 @@ static pci_ers_result_t vfio_pci_aer_err_detected(struct pci_dev *pdev,
->  	return PCI_ERS_RESULT_CAN_RECOVER;
->  }
->  
-> +/*
-> + * Ignore link change notification, we can't differentiate signal related
-> + * link changes from user driver power management type operations, so do
-> + * nothing.  Potentially this could be routed out to the user.
-> + */
-> +static void vfio_pci_link_change(struct pci_dev *pdev)
-> +{
-> +}
-> +
->  static const struct pci_error_handlers vfio_err_handlers = {
->  	.error_detected = vfio_pci_aer_err_detected,
-> +	.link_change = vfio_pci_link_change,
->  };
->  
->  static struct pci_driver vfio_pci_driver = {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 27854731afc4..e9194bc03f9e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -763,6 +763,9 @@ struct pci_error_handlers {
->  
->  	/* Device driver may resume normal operations */
->  	void (*resume)(struct pci_dev *dev);
-> +
-> +	/* PCIe link change notification */
-> +	void (*link_change)(struct pci_dev *dev);
->  };
->  
->  
+> Hmm... removed by mistake?
+>
+I comfirmed that no content removed.
+
+> > +Some of the CPPC registers are exposed via sysfs under::
+> >  
+> > ---------------------------------------------------------------------------------
+> > +  /sys/devices/system/cpu/cpuX/acpi_cppc/
 > 
+> Did you parse this with Sphinx? It doesn't sound a valid ReST construction
+> to my eyes, as:
+> 
+> 1) I've seen some versions of Sphinx to abort with severe errors when 
+>    there's no blank line after the horizontal bar markup;
+> 
+> 2) It will very likely ignore the "::" (I didn't test it myself), as you're
+>    not indenting the horizontal bar. End of indentation will mean the end
+>    of an (empty) literal block.
+> 
+> So, I would stick with:
+> 
+> 
+> 	Some of the CPPC registers are exposed via sysfs under:
+> 
+> 	  /sys/devices/system/cpu/cpuX/acpi_cppc/
+> 
+> 	---------------------------------------------------------------------------------
+> 
+> 	for each cpu X::
+> 
+> 
+> or:
+> 
+> 	Some of the CPPC registers are exposed via sysfs under:
+> 
+> 		/sys/devices/system/cpu/cpuX/acpi_cppc/
+> 
+> 	for each cpu X
+> 
+> 	--------------------------------------------------------------------------------
+> 
+> 	::
+> 
+> (with is closer to the original author's intent)
+> 
+> Same applies to the other similar changes on this document.
+>
+I didn't seen any warning here and the generated html is good. So I think it is
+ok.
+
+> >  
+> > -$ ls -lR  /sys/devices/system/cpu/cpu0/acpi_cppc/
+> > -/sys/devices/system/cpu/cpu0/acpi_cppc/:
+> > -total 0
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 feedback_ctrs
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 highest_perf
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 lowest_freq
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 lowest_nonlinear_perf
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 lowest_perf
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 nominal_freq
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 nominal_perf
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 reference_perf
+> > --r--r--r-- 1 root root 65536 Mar  5 19:38 wraparound_time
+> > +for each cpu X::
+> >  
+> > ---------------------------------------------------------------------------------
+> > +  $ ls -lR  /sys/devices/system/cpu/cpu0/acpi_cppc/
+> > +  /sys/devices/system/cpu/cpu0/acpi_cppc/:
+> > +  total 0
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 feedback_ctrs
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 highest_perf
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 lowest_freq
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 lowest_nonlinear_perf
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 lowest_perf
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 nominal_freq
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 nominal_perf
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 reference_perf
+> > +  -r--r--r-- 1 root root 65536 Mar  5 19:38 wraparound_time
+> >  
+> >  * highest_perf : Highest performance of this processor (abstract scale).
+> > -* nominal_perf : Highest sustained performance of this processor (abstract scale).
+> > +* nominal_perf : Highest sustained performance of this processor
+> > +  (abstract scale).
+> >  * lowest_nonlinear_perf : Lowest performance of this processor with nonlinear
+> >    power savings (abstract scale).
+> >  * lowest_perf : Lowest performance of this processor (abstract scale).
+> > @@ -48,22 +51,26 @@ total 0
+> >  * feedback_ctrs : Includes both Reference and delivered performance counter.
+> >    Reference counter ticks up proportional to processor's reference performance.
+> >    Delivered counter ticks up proportional to processor's delivered performance.
+> > -* wraparound_time: Minimum time for the feedback counters to wraparound (seconds).
+> > +* wraparound_time: Minimum time for the feedback counters to wraparound
+> > +  (seconds).
+> >  * reference_perf : Performance level at which reference performance counter
+> >    accumulates (abstract scale).
+> >  
+> > ---------------------------------------------------------------------------------
+> >  
+> > -		Computing Average Delivered Performance
+> > +Computing Average Delivered Performance
+> > +=======================================
+> > +
+> > +Below describes the steps to compute the average performance delivered by
+> > +taking two different snapshots of feedback counters at time T1 and T2.
+> > +
+> > +  T1: Read feedback_ctrs as fbc_t1
+> > +      Wait or run some workload
+> >  
+> > -Below describes the steps to compute the average performance delivered by taking
+> > -two different snapshots of feedback counters at time T1 and T2.
+> > +  T2: Read feedback_ctrs as fbc_t2
+> >  
+> > -T1: Read feedback_ctrs as fbc_t1
+> > -    Wait or run some workload
+> > -T2: Read feedback_ctrs as fbc_t2
+> > +::
+> >  
+> > -delivered_counter_delta = fbc_t2[del] - fbc_t1[del]
+> > -reference_counter_delta = fbc_t2[ref] - fbc_t1[ref]
+> > +  delivered_counter_delta = fbc_t2[del] - fbc_t1[del]
+> > +  reference_counter_delta = fbc_t2[ref] - fbc_t1[ref]
+> >  
+> > -delivered_perf = (refernce_perf x delivered_counter_delta) / reference_counter_delta
+> > +  delivered_perf = (refernce_perf x delivered_counter_delta) / reference_counter_delta
+> > diff --git a/Documentation/admin-guide/acpi/index.rst b/Documentation/admin-guide/acpi/index.rst
+> > index d68e9914c5ff..9049a7b9f065 100644
+> > --- a/Documentation/admin-guide/acpi/index.rst
+> > +++ b/Documentation/admin-guide/acpi/index.rst
+> > @@ -10,3 +10,4 @@ the Linux ACPI support.
+> >  
+> >     initrd_table_override
+> >     dsdt-override
+> > +   cppc_sysfs
+> 
+> 
+> 
+> Thanks,
+> Mauro
+
+-- 
+Cheers,
+Changbin Du
