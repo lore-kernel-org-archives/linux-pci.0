@@ -2,269 +2,227 @@ Return-Path: <SRS0=9smm=S2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60197C10F11
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 08:20:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F8A8C10F11
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 08:51:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1CDAA218FE
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 08:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4675F218D3
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Apr 2019 08:51:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=synopsys.com header.i=@synopsys.com header.b="Dae8FBa9"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J/PnvXUM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727800AbfDXIUh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Apr 2019 04:20:37 -0400
-Received: from smtprelay-out1.synopsys.com ([198.182.47.102]:59762 "EHLO
-        smtprelay-out1.synopsys.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727361AbfDXIUh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 04:20:37 -0400
-X-Greylist: delayed 594 seconds by postgrey-1.27 at vger.kernel.org; Wed, 24 Apr 2019 04:20:36 EDT
-Received: from mailhost.synopsys.com (dc2-mailhost2.synopsys.com [10.12.135.162])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
-        (No client certificate requested)
-        by smtprelay-out1.synopsys.com (Postfix) with ESMTPS id 71A03C0AE1;
-        Wed, 24 Apr 2019 08:10:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=synopsys.com; s=mail;
-        t=1556093443; bh=zgqe5QFb/nyADjudnrLf9sfX09Q+4PBQMHZigRASaiA=;
-        h=From:To:CC:Subject:Date:References:In-Reply-To:From;
-        b=Dae8FBa9Ihtd/cFx0J1nb644e/19l0YsqGmH7iJ8r3nmCGhOYgZh6bF3Q+Gbtt8Hh
-         +Qfz2C4BtCY5z1+syMFkQzXHY14aH0C9cW5s1bxs+tn+IEdfgTBaePCZCQs1v1Y5ur
-         Yrwzp79sgPZZKSzmK6yAevJYS6mswiVkqvUUi40MPcJCtdK61o3aHaKzfx+BbEffFD
-         cYDl5/iY22K8NRpaZdIWaLNAWAc1+22uQmrd9SSJqoUjGp7Psgz+/z94B7HZqOj8FE
-         BnpXxyQmRLTdxex5eciD/CVmqPey8+ShcW91g7uY+mnQko6GA6YcqbgOvx+2TzL/+E
-         VlL298dMXftJg==
-Received: from US01WXQAHTC1.internal.synopsys.com (us01wxqahtc1.internal.synopsys.com [10.12.238.230])
-        (using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mailhost.synopsys.com (Postfix) with ESMTPS id 42736A009D;
-        Wed, 24 Apr 2019 08:10:39 +0000 (UTC)
-Received: from DE02WEHTCB.internal.synopsys.com (10.225.19.94) by
- US01WXQAHTC1.internal.synopsys.com (10.12.238.230) with Microsoft SMTP Server
- (TLS) id 14.3.408.0; Wed, 24 Apr 2019 01:10:20 -0700
-Received: from DE02WEMBXA.internal.synopsys.com ([fe80::a014:7216:77d:d55c])
- by DE02WEHTCB.internal.synopsys.com ([::1]) with mapi id 14.03.0415.000; Wed,
- 24 Apr 2019 10:10:19 +0200
-From:   Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>, Vidya Sagar <vidyas@nvidia.com>
-CC:     "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "thierry.reding@gmail.com" <thierry.reding@gmail.com>,
-        "jonathanh@nvidia.com" <jonathanh@nvidia.com>,
-        "kishon@ti.com" <kishon@ti.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <Gustavo.Pimentel@synopsys.com>,
-        "mperttunen@nvidia.com" <mperttunen@nvidia.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "kthota@nvidia.com" <kthota@nvidia.com>,
-        "mmaddireddy@nvidia.com" <mmaddireddy@nvidia.com>,
-        "sagar.tv@gmail.com" <sagar.tv@gmail.com>
-Subject: RE: [PATCH V4 05/16] PCI: dwc: Move config space capability search
- API
-Thread-Topic: [PATCH V4 05/16] PCI: dwc: Move config space capability search
- API
-Thread-Index: AQHU+a6CvEZAQf+NCUafu6E1lCfth6ZKEoQAgADjv3A=
-Date:   Wed, 24 Apr 2019 08:10:19 +0000
-Message-ID: <305100E33629484CBB767107E4246BBB0A23062F@de02wembxa.internal.synopsys.com>
-References: <20190423082730.370-1-vidyas@nvidia.com>
- <20190423082730.370-6-vidyas@nvidia.com> <20190423203244.GD14616@google.com>
-In-Reply-To: <20190423203244.GD14616@google.com>
-Accept-Language: pt-PT, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-dg-ref: =?us-ascii?Q?PG1ldGE+PGF0IG5tPSJib2R5LnR4dCIgcD0iYzpcdXNlcnNcZ3VzdGF2b1xh?=
- =?us-ascii?Q?cHBkYXRhXHJvYW1pbmdcMDlkODQ5YjYtMzJkMy00YTQwLTg1ZWUtNmI4NGJh?=
- =?us-ascii?Q?MjllMzViXG1zZ3NcbXNnLTY0OGY0ZTI4LTY2NjgtMTFlOS05ODdkLWY4OTRj?=
- =?us-ascii?Q?MjczODA0MlxhbWUtdGVzdFw2NDhmNGUyYS02NjY4LTExZTktOTg3ZC1mODk0?=
- =?us-ascii?Q?YzI3MzgwNDJib2R5LnR4dCIgc3o9IjMzNDAiIHQ9IjEzMjAwNTY3MDE3MTQx?=
- =?us-ascii?Q?NTU3MSIgaD0iaFNqZElybmVPZjNWZW0vMGVYbURHUlNHZmJ3PSIgaWQ9IiIg?=
- =?us-ascii?Q?Ymw9IjAiIGJvPSIxIiBjaT0iY0FBQUFFUkhVMVJTUlVGTkNnVUFBQlFKQUFB?=
- =?us-ascii?Q?VGxPY21kZnJVQVp6cmI4VnM2T3dsbk90dnhXem83Q1VPQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUhBQUFBQ2tDQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUVBQVFBQkFBQUFGdGJCcHdBQUFBQUFBQUFBQUFBQUFKNEFBQUJtQUdrQWJn?=
- =?us-ascii?Q?QmhBRzRBWXdCbEFGOEFjQUJzQUdFQWJnQnVBR2tBYmdCbkFGOEFkd0JoQUhR?=
- =?us-ascii?Q?QVpRQnlBRzBBWVFCeUFHc0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?RUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFHWUFid0IxQUc0QVpBQnlBSGtBWHdC?=
- =?us-ascii?Q?d0FHRUFjZ0IwQUc0QVpRQnlBSE1BWHdCbkFHWUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFBQUFDQUFB?=
- =?us-ascii?Q?QUFBQ2VBQUFBWmdCdkFIVUFiZ0JrQUhJQWVRQmZBSEFBWVFCeUFIUUFiZ0Js?=
- =?us-ascii?Q?QUhJQWN3QmZBSE1BWVFCdEFITUFkUUJ1QUdjQVh3QmpBRzhBYmdCbUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFBQm1BRzhB?=
- =?us-ascii?Q?ZFFCdUFHUUFjZ0I1QUY4QWNBQmhBSElBZEFCdUFHVUFjZ0J6QUY4QWN3QmhB?=
- =?us-ascii?Q?RzBBY3dCMUFHNEFad0JmQUhJQVpRQnpBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUdZQWJ3QjFBRzRBWkFCeUFIa0FY?=
- =?us-ascii?Q?d0J3QUdFQWNnQjBBRzRBWlFCeUFITUFYd0J6QUcwQWFRQmpBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFBQUFBQUNB?=
- =?us-ascii?Q?QUFBQUFDZUFBQUFaZ0J2QUhVQWJnQmtBSElBZVFCZkFIQUFZUUJ5QUhRQWJn?=
- =?us-ascii?Q?QmxBSElBY3dCZkFITUFkQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQkFBQUFBQUFBQUFJQUFBQUFBSjRBQUFCbUFH?=
- =?us-ascii?Q?OEFkUUJ1QUdRQWNnQjVBRjhBY0FCaEFISUFkQUJ1QUdVQWNnQnpBRjhBZEFC?=
- =?us-ascii?Q?ekFHMEFZd0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUVBQUFBQUFBQUFBZ0FBQUFBQW5nQUFBR1lBYndCMUFHNEFaQUJ5QUhr?=
- =?us-ascii?Q?QVh3QndBR0VBY2dCMEFHNEFaUUJ5QUhNQVh3QjFBRzBBWXdBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFRQUFBQUFBQUFB?=
- =?us-ascii?Q?Q0FBQUFBQUNlQUFBQVp3QjBBSE1BWHdCd0FISUFid0JrQUhVQVl3QjBBRjhB?=
- =?us-ascii?Q?ZEFCeUFHRUFhUUJ1QUdrQWJnQm5BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFCQUFBQUFBQUFBQUlBQUFBQUFKNEFBQUJ6?=
- =?us-ascii?Q?QUdFQWJBQmxBSE1BWHdCaEFHTUFZd0J2QUhVQWJnQjBBRjhBY0FCc0FHRUFi?=
- =?us-ascii?Q?Z0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBRUFBQUFBQUFBQUFnQUFBQUFBbmdBQUFITUFZUUJzQUdVQWN3QmZB?=
- =?us-ascii?Q?SEVBZFFCdkFIUUFaUUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQVFBQUFBQUFB?=
- =?us-ascii?Q?QUFDQUFBQUFBQ2VBQUFBY3dCdUFIQUFjd0JmQUd3QWFRQmpBR1VBYmdCekFH?=
- =?us-ascii?Q?VUFYd0IwQUdVQWNnQnRBRjhBTVFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUJBQUFBQUFBQUFBSUFBQUFBQUo0QUFB?=
- =?us-ascii?Q?QnpBRzRBY0FCekFGOEFiQUJwQUdNQVpRQnVBSE1BWlFCZkFIUUFaUUJ5QUcw?=
- =?us-ascii?Q?QVh3QnpBSFFBZFFCa0FHVUFiZ0IwQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFFQUFBQUFBQUFBQWdBQUFBQUFuZ0FBQUhZQVp3QmZBR3NBWlFC?=
- =?us-ascii?Q?NUFIY0Fid0J5QUdRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFB?=
- =?us-ascii?Q?QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBUUFBQUFB?=
- =?us-ascii?Q?QUFBQUNBQUFBQUFBPSIvPjwvbWV0YT4=3D?=
-x-originating-ip: [10.107.25.131]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1727474AbfDXIvu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Apr 2019 04:51:50 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:41932 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726990AbfDXIvu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Apr 2019 04:51:50 -0400
+Received: by mail-wr1-f66.google.com with SMTP id c12so17791690wrt.8
+        for <linux-pci@vger.kernel.org>; Wed, 24 Apr 2019 01:51:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=reply-to:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=hZNoGRQTub6pVmcM1SXiUK94HQnf2OGBhpWLncOSjkE=;
+        b=J/PnvXUMu/DzcdipNQStsqJQ8iEsjYj7SS0en4wi2AuFo944jYfpCBcLnfan+bC00f
+         mwi1QVg+0KK57yNetf3skShORndHfZGhh30N1+Z4A9kEAAAkwy89XQhY4guYAIRQiYJW
+         xKT0eD2ko9XAaKbnYXTpSlQ6ocqKq4u65xO8ynPjUK4st6qlnhUaUnVQjZR0NJhGQF2C
+         Wu9VEco4rwyczrhg3vuG5382B2O1VEYdaKlt5DOiFdN1fYqVory3CF+W4VRs3EbeRSIg
+         oYc1t3baqe/nb/Zz/5kAPtnIr8KbW2af8W34icg2b9y0QtY/HY7X/SBwj68a4bOr4GTw
+         CBXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:reply-to:subject:to:cc:references:from
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-transfer-encoding:content-language;
+        bh=hZNoGRQTub6pVmcM1SXiUK94HQnf2OGBhpWLncOSjkE=;
+        b=IDxosb1a/cjXok0fA7o/dfRd83S/eL+koJmwL1nAPlGGxlSELOm2BejSZ3ros9pwvH
+         ZnKkpr2UQytbPiApg/Hb/8o3mJETGEexjKAFwP/wC9QjgzHsp22i2znuMpEJ9dRlOyR/
+         L5XPKT89Qe8JDQHZP7g932Dio9Vym4tSzDg5uUpXWpo+acxbb/MIf+PFPxOkwq9V4Ymc
+         M9vBrOlLPF2erzxxJKomOFaBdV4UaC8idNhJdr5p0PRlHg2+mtYxAAZhJBhSX8xpl24b
+         t1MPcM4IYXJV6AzwJ/V5TrMP+2G3zZxHHyrJ7k3kf12dTWTgmNCBsu/RuaDfNmMp9HGG
+         RwNA==
+X-Gm-Message-State: APjAAAUfO22V8Grh86zC3T8PmfNIWaWWd/JMu6hixhgmD4gS7xl2FB2q
+        6iIiWGobxlNtRD36f1SUK9m07lMM
+X-Google-Smtp-Source: APXvYqxiG6APhwi0tgC7dC3FnTvpAP2mJPn7pWmdyjdB1bhE5CMbUHbB+NiyXfpuZ1O+yJEX8RoSow==
+X-Received: by 2002:adf:dbce:: with SMTP id e14mr20188426wrj.249.1556095907963;
+        Wed, 24 Apr 2019 01:51:47 -0700 (PDT)
+Received: from ?IPv6:2a02:908:1252:fb60:be8a:bd56:1f94:86e7? ([2a02:908:1252:fb60:be8a:bd56:1f94:86e7])
+        by smtp.gmail.com with ESMTPSA id y197sm19279845wmd.34.2019.04.24.01.51.47
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 24 Apr 2019 01:51:47 -0700 (PDT)
+Reply-To: christian.koenig@amd.com
+Subject: Re: [PATCH] PCI/P2PDMA: start with a whitelist for root complexes
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     logang@deltatee.com, rdunlap@infradead.org,
+        linux-pci@vger.kernel.org
+References: <20190418115859.2394-1-christian.koenig@amd.com>
+ <20190419191912.GG173520@google.com>
+From:   =?UTF-8?Q?Christian_K=c3=b6nig?= <ckoenig.leichtzumerken@gmail.com>
+Message-ID: <0d9e862a-1e83-731e-5e02-5de9103664ec@gmail.com>
+Date:   Wed, 24 Apr 2019 10:51:46 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
+In-Reply-To: <20190419191912.GG173520@google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 23, 2019 at 21:32:44, Bjorn Helgaas <helgaas@kernel.org>=20
-wrote:
+Am 19.04.19 um 21:19 schrieb Bjorn Helgaas:
+> On Thu, Apr 18, 2019 at 01:58:59PM +0200, Christian König wrote:
+>> A lot of root complexes can still do P2P even when PCI devices
+>> don't share a common upstream bridge.
+>>
+>> Start adding a whitelist and allow P2P if both participants are
+>> attached to known good root complex.
+>>
+>> Signed-off-by: Christian König <christian.koenig@amd.com>
+>> ---
+>>   drivers/pci/p2pdma.c | 38 +++++++++++++++++++++++++++++++++++---
+>>   1 file changed, 35 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+>> index c52298d76e64..212baaa7f93b 100644
+>> --- a/drivers/pci/p2pdma.c
+>> +++ b/drivers/pci/p2pdma.c
+>> @@ -274,6 +274,31 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
+>>   	seq_buf_printf(buf, "%s;", pci_name(pdev));
+>>   }
+>>   
+>> +/*
+>> + * If we can't find a common upstream bridge take a look at the root complex and
+>> + * compare it to a whitelist of known good hardware.
+>> + */
+>> +static bool root_complex_whitelist(struct pci_dev *dev)
+>> +{
+>> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+>> +	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
+> The fact that 00.0 is a host bridge and that its vendor/device ID
+> tells us whether peer-to-peer is supported between two *other* devices
+> (provider and client) is all totally vendor-specific.  There's nothing
+> in the PCI specs that says the host bridge even has to exist as a PCI
+> device.
 
-> On Tue, Apr 23, 2019 at 01:57:19PM +0530, Vidya Sagar wrote:
-> > Move PCIe config space capability search API to common DesignWare file
-> > as this can be used by both host and ep mode codes.
-> >=20
-> > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-> > Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-> > ---
-> > Changes from [v3]:
-> > * Rebased to linux-next top of the tree
-> >=20
-> > Changes from [v2]:
-> > * None
-> >=20
-> > Changes from [v1]:
-> > * Removed dw_pcie_find_next_ext_capability() API from here and made a
-> >   separate patch for that
-> >=20
-> >  drivers/pci/controller/dwc/pcie-designware.c | 33 ++++++++++++++++++++
-> >  drivers/pci/controller/dwc/pcie-designware.h |  2 ++
->=20
-> You claim this is a "move", but I only see adds.  Where did it move
-> *from*?
+Crap, I hoped that at least the notion that the root complex is always 
+00.0 is standardized somewhere.
 
-I'm guessing something was lost during the rebase. On v3 version, the=20
-removal  was there.
+> Is there any chance you could identify it by the Root Port
+> vendor/device instead of groping around for the 00:0 device?  That
+> would have been simpler, so I suppose that doesn't work for some
+> reason.
 
->=20
-> While you're at it, can you add a comment in the code about why we
-> can't use the regular pci_find_capability() interface?  It's really a
-> shame to have to reimplement that.
->=20
-> >  2 files changed, 35 insertions(+)
-> >=20
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci=
-/controller/dwc/pcie-designware.c
-> > index 8e0081ccf83b..6a98135244d6 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> > @@ -20,6 +20,39 @@
-> >  #define PCIE_PHY_DEBUG_R1_LINK_UP	(0x1 << 4)
-> >  #define PCIE_PHY_DEBUG_R1_LINK_IN_TRAINING	(0x1 << 29)
-> > =20
-> > +static u8 __dw_pcie_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
-> > +				  u8 cap)
-> > +{
-> > +	u8 cap_id, next_cap_ptr;
-> > +	u16 reg;
-> > +
-> > +	reg =3D dw_pcie_readw_dbi(pci, cap_ptr);
-> > +	next_cap_ptr =3D (reg & 0xff00) >> 8;
-> > +	cap_id =3D (reg & 0x00ff);
-> > +
-> > +	if (!next_cap_ptr || cap_id > PCI_CAP_ID_MAX)
-> > +		return 0;
-> > +
-> > +	if (cap_id =3D=3D cap)
-> > +		return cap_ptr;
-> > +
-> > +	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
-> > +}
-> > +
-> > +u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap)
-> > +{
-> > +	u8 next_cap_ptr;
-> > +	u16 reg;
-> > +
-> > +	reg =3D dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
-> > +	next_cap_ptr =3D (reg & 0x00ff);
-> > +
-> > +	if (!next_cap_ptr)
-> > +		return 0;
-> > +
-> > +	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
-> > +}
-> > +
-> >  int dw_pcie_read(void __iomem *addr, int size, u32 *val)
-> >  {
-> >  	if (!IS_ALIGNED((uintptr_t)addr, size)) {
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci=
-/controller/dwc/pcie-designware.h
-> > index 9ee98ced1ef6..35160b4ce929 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware.h
-> > +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> > @@ -248,6 +248,8 @@ struct dw_pcie {
-> >  #define to_dw_pcie_from_ep(endpoint)   \
-> >  		container_of((endpoint), struct dw_pcie, ep)
-> > =20
-> > +u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap);
-> > +
-> >  int dw_pcie_read(void __iomem *addr, int size, u32 *val);
-> >  int dw_pcie_write(void __iomem *addr, int size, u32 val);
-> > =20
-> > --=20
-> > 2.17.1
-> >=20
+I can give that a try. The main issue is that you got more different 
+root ports than root complexes, so our list is going to get longer this way.
 
+> I'm surprised that you don't need both the provider and the client to
+> figure this out.  Wouldn't it would be possible to have two Root Ports
+> under host bridge A that could do peer-to-peer to each other, but not
+> to a Root Port under host bridge B?  E.g., I'd think you would need
+> something like this:
+
+At least for our hardware it's actually more likely that when devices 
+are connected to different host bridges that they can talk directly to 
+each other.
+
+In other words when you have devices connected to the same host bridge 
+you need to have P2P support inside that host bridge.
+
+But when you have different host bridges P2P accesses look to the host 
+bridge just like accesses coming from one of the CPU cores.
+
+Regards,
+Christian.
+
+>
+>    if (pci_find_host_bridge(a->bus) == pci_find_host_bridge(b->bus) &&
+>        a->vendor == PCI_VENDOR_ID_AMD &&
+>        b->vendor == PCI_VENDOR_ID_AMD &&
+>        a->device == X &&
+>        b->device == X)
+>          return true;
+>
+>    return false;
+>
+> But I guess that still implicitly relies on the notion that everything
+> under one PNP0A03 device is potentially connected via P2P, and I don't
+> think there's anything the PCI or ACPI specs that would support that.
+>
+> Maybe we should add a pci_dev.p2p_group and make it so "a.p2p_group ==
+> b.p2p_group" means that P2P is possible between them.  You'd have to
+> have a quirk for the root ports to initialize p2p_group using whatever
+> vendor-specific information you need, then everything under them could
+> inherit from the parent.
+
+Well exactly that's not going to work.
+
+E.g. it can be that devices A can talk to devices B and C, but on the 
+other hand B and C can't talk directly to each other.
+
+Regards,
+Christian.
+
+>
+>> +	unsigned short vendor, device;
+>> +
+>> +	if (!root)
+>> +		return false;
+>> +
+>> +	vendor = root->vendor;
+>> +	device = root->device;
+>> +	pci_dev_put(root);
+>> +
+>> +	/* AMD ZEN host bridges can do peer to peer */
+>> +	if (vendor == PCI_VENDOR_ID_AMD && device == 0x1450)
+>> +		return true;
+>> +
+>> +	/* TODO: Extend that to a proper whitelist */
+>> +	return false;
+>> +}
+>> +
+>>   /*
+>>    * Find the distance through the nearest common upstream bridge between
+>>    * two PCI devices.
+>> @@ -317,13 +342,13 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
+>>    * In this case, a list of all infringing bridge addresses will be
+>>    * populated in acs_list (assuming it's non-null) for printk purposes.
+>>    */
+>> -static int upstream_bridge_distance(struct pci_dev *a,
+>> -				    struct pci_dev *b,
+>> +static int upstream_bridge_distance(struct pci_dev *provider,
+>> +				    struct pci_dev *client,
+>>   				    struct seq_buf *acs_list)
+>>   {
+>> +	struct pci_dev *a = provider, *b = client, *bb;
+>>   	int dist_a = 0;
+>>   	int dist_b = 0;
+>> -	struct pci_dev *bb = NULL;
+>>   	int acs_cnt = 0;
+>>   
+>>   	/*
+>> @@ -354,6 +379,13 @@ static int upstream_bridge_distance(struct pci_dev *a,
+>>   		dist_a++;
+>>   	}
+>>   
+>> +	/* Allow the connection if both devices are on a whitelisted root
+>> +	 * complex, but add an arbitary large value to the distance.
+>> +	 */
+>> +	if (root_complex_whitelist(provider) &&
+>> +	    root_complex_whitelist(client))
+>> +		return 0x1000 + dist_a + dist_b;
+>> +
+>>   	return -1;
+>>   
+>>   check_b_path_acs:
+>> -- 
+>> 2.17.1
+>>
 
