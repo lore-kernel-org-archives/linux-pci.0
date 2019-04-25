@@ -2,151 +2,257 @@ Return-Path: <SRS0=AiiY=S3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1397C43219
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 20:59:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7037EC43218
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 21:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED1C7206BF
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 20:59:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AB5B206BF
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 21:04:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1556226289;
+	bh=+798x25nfFegpVgkyNNWYBMNUd9McM8+pfP/W5fD3AQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=c20CJt8OsCG+R6hc+NY6WDDC9Ddv09TZKcm/J2zXUgeQ1KfIa3H/0Zc10h+wnmjK3
+	 JPz43/sKuXx84oohprxUx9/pvAWT4WXBmQ3WjxhlG/GWFoLbMwawRUxX1EIQRg8w0f
+	 xqREojCrTGZiPmFXT92Aw2L5weLpUTQuHbTNz2F4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726076AbfDYU7g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Apr 2019 16:59:36 -0400
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:43485 "EHLO
-        relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726282AbfDYU7f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 16:59:35 -0400
-X-Originating-IP: 88.190.179.123
-Received: from localhost (unknown [88.190.179.123])
-        (Authenticated sender: repk@triplefau.lt)
-        by relay3-d.mail.gandi.net (Postfix) with ESMTPSA id DF5A16000B;
-        Thu, 25 Apr 2019 20:59:31 +0000 (UTC)
-Date:   Thu, 25 Apr 2019 23:08:27 +0200
-From:   Remi Pommarel <repk@triplefau.lt>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+        id S1726317AbfDYVEm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Apr 2019 17:04:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37264 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726429AbfDYVEm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Apr 2019 17:04:42 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D261F2077C;
+        Thu, 25 Apr 2019 21:04:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1556226281;
+        bh=+798x25nfFegpVgkyNNWYBMNUd9McM8+pfP/W5fD3AQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=0x8K9RLsy0je4RtZsbgNHGjcOThZ3rNmcxD1ogs32W6PH112kT7l4oUxBhddOsnJi
+         GSisxoIyoOzUVKBM8TvJajdC7/Ga0tokSl0TaEzhjBYJHnQ4zaa+IYhqYUlHvPiKln
+         O30mMvqnW+OZ1BUp/nlDzLdR4FvaCXBqww4vDQsk=
+Date:   Thu, 25 Apr 2019 16:04:39 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Remi Pommarel <repk@triplefau.lt>
 Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: Re: [PATCH] pci: aardvark: Wait for endpoint to be ready before
- training link
-Message-ID: <20190425210826.GQ2754@voidbox.localdomain>
-References: <20190313213752.1246-1-repk@triplefau.lt>
- <20190423163215.GB26523@red-moon>
- <20190423222917.GN2754@voidbox.localdomain>
- <20190424165002.GA26089@e121166-lin.cambridge.arm.com>
+        Ellie Reeves <ellierevves@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: aardvark: Use LTSSM state to build link training
+ flag
+Message-ID: <20190425210439.GG11428@google.com>
+References: <20190316161243.29517-1-repk@triplefau.lt>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190424165002.GA26089@e121166-lin.cambridge.arm.com>
+In-Reply-To: <20190316161243.29517-1-repk@triplefau.lt>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 24, 2019 at 05:50:02PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Apr 24, 2019 at 12:29:18AM +0200, Remi Pommarel wrote:
-> > Hi,
-> > 
-> > On Tue, Apr 23, 2019 at 05:32:15PM +0100, Lorenzo Pieralisi wrote:
-> > > On Wed, Mar 13, 2019 at 10:37:52PM +0100, Remi Pommarel wrote:
-> > > > When configuring pcie reset pin from gpio (e.g. initially set by
-> > > > u-boot) to pcie function this pin goes low for a brief moment
-> > > > asserting the PERST# signal. Thus connected device enters fundamental
-> > > > reset process and link configuration can only begin after a minimal
-> > > > 100ms delay (see [1]).
-> > > > 
-> > > > This makes sure that link is configured after at least 100ms from
-> > > > beginning of probe() callback (shortly after the reset pin function
-> > > > configuration switch through pinctrl subsytem).
+Hi Remi,
+
+On Sat, Mar 16, 2019 at 05:12:43PM +0100, Remi Pommarel wrote:
+> The PCI_EXP_LNKSTA_LT flag in the emulated root device's PCI_EXP_LNKSTA
+> config register does not reflect the actual link training state and is
+> always cleared. The Link Training and Status State Machine (LTSSM) flag
+> in LMI config register could be used as a link training indicator.
+
+LMI?  I assume this is an Aardvark-specific register?  Maybe "Aardvark
+LMI register", since the other things here are generic PCIe registers?
+
+Is this a hardware erratum?  I know advk does some software emulation,
+but it looks like the Aardvark PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKSTA
+register is awfully close to being exactly the PCIe-defined
+PCI_EXP_LNKSTA, so the difference seems like a mistake.
+
+> Indeed if the LTSSM is in L0 or upper state then link training has
+> completed (see [1]).
 > 
-> I am a bit lost, what's the connection between the probe() callback
-> and the reset pin function configuration ?
+> Unfortunately because setting the PCI_EXP_LINCTL_RL flag does not
+
+s/PCI_EXP_LINCTL_RL/PCI_EXP_LNKCTL_RL/
+
+> instantly imply a LTSSM state change (e.g. L0s to recovery state
+> transition takes some time), LTSSM can be in L0 but link training has
+> not finished yet. Thus a lower L0 LTSSM state followed by a L0 or upper
+> state sequence has to be seen to be sure that link training has been
+> done.
 > 
-> Please elaborate.
+> Because one may not call a pcie conf register read on LNKSTA after
+> doing a retrain link or may miss the link down state due to timing, a
+> 20ms timeout is used. Passing this timeout link is considered retrained.
+
+It sounds like reading and/or writing some registers during a retrain
+causes some sort of EL1 error?  Is this a separate erratum?  Is there
+a list of the registers and operations (read/write) that are affected?
+The backtrace below suggests that it's actually a read of LNKCAP or
+LNKCTL (not LNKSTA) that caused the error.
+
+It sounds like there are really two problems:
+
+  1) Reading PCI_EXP_LNKSTA (or the Aardvark equivalent) doesn't give
+     valid data for PCI_EXP_LNKSTA_LT.
+
+  2) Sometimes config reads cause EL1 errors.
+
+If that's the case and if it's possible, can you split this into a
+patch for each issue?
+
+> This fixes boot hang or kernel panic with the following callstack due to
+> ASPM setup doing a link re-train and polling for PCI_EXP_LNKSTA_LT flag
+> to be cleared before using it.
 > 
+> -------------------- 8< -------------------
+> 	[    0.915389]  dump_backtrace+0x0/0x140
+> 	[    0.915391]  show_stack+0x14/0x20
+> 	[    0.915393]  dump_stack+0x90/0xb4
+> 	[    0.915394]  panic+0x134/0x2c0
+> 	[    0.915396]  nmi_panic+0x6c/0x70
+> 	[    0.915398]  arm64_serror_panic+0x74/0x80
+> 	[    0.915400]  is_valid_bugaddr+0x0/0x8
+> 	[    0.915402]  el1_error+0x7c/0xe4
+> 	[    0.915404]  advk_pcie_rd_conf+0x4c/0x250
+> 	[    0.915406]  pci_bus_read_config_word+0x7c/0xd0
+> 	[    0.915408]  pcie_capability_read_word+0x90/0xc8
+> 	[    0.915410]  pcie_get_aspm_reg+0x68/0x118
+> 	[    0.915412]  pcie_aspm_init_link_state+0x460/0xa98
 
-So currently u-boot configures the reset pin as a GPIO set to high. The
-espressobin devicetree defines a default pinctrl to configure this pin
-as a PCIe reset function.
+This backtrace doesn't make sense to me as being related to this
+issue.  You said above that the bug was that PCI_EXP_LNKSTA_LT is not
+updated.  But apparently even *reading* a register at the wrong time
+causes this EL1 error.  And pcie_get_aspm_reg() doesn't even read
+LNKSTA; it only reads LNKCAP and LNKCTL.
 
-As you can see in drivers/base/dd.c, driver_probe_device() calls
-really_probe() which first calls pinctrl_bind_pins() then shortly after
-drv->probe() callback. The pinctrl_bind_pins() function applies the
-default state. So here, just before drv->probe() gets called our reset
-pin goes from GPIO function to PCIe reset one making it going low for a
-short time during this transition.
+BTW, if you're including a backtrace in a commit log, you can strip
+out the timestamps and the "cut" lines because they don't contribute
+information that's relevant in this context.
 
-Because the pin goes low then gets back to high, PERST# signal is
-asserted then deasserted and device enters fundamental reset process
-just before drv->probe() is called. So in order to reduce the waiting
-time to a minimum I sample jiffies at the very beginning of the probe
-function, which is the closer spot from where PERST# is deasserted.
-
-To sum up:
-
-driver_probe_device() {
-	...
-	really_probe() {
-		...
-		pinctrl_bind_pins(); /* Here PERST# is asserted because pin configuration changes */
-		...
-		drv->probe();
-		...
-	}
-	...
-}
-
-> > > > 
-> > > > [1] "PCI Express Base Specification", REV. 2.1
-> > > >         PCI Express, March 4 2009, 6.6.1 Conventional Reset
-> > > > 
-> > > > Signed-off-by: Remi Pommarel <repk@triplefau.lt>
-> > > > ---
-> > > >  drivers/pci/controller/pci-aardvark.c | 17 ++++++++++++++---
-> > > >  1 file changed, 14 insertions(+), 3 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> > > > index a30ae7cf8e7e..70a1023d0ef1 100644
-> > > > --- a/drivers/pci/controller/pci-aardvark.c
-> > > > +++ b/drivers/pci/controller/pci-aardvark.c
-> > > > @@ -177,6 +177,9 @@
-> > > >  
-> > > >  #define PIO_TIMEOUT_MS			1
-> > > >  
-> > > > +/* Endpoint can take up to 100ms to be ready after a reset */
-> > > > +#define ENDPOINT_RST_MS			100
-> > > > +
-> > > >  #define LINK_WAIT_MAX_RETRIES		10
-> > > >  #define LINK_WAIT_USLEEP_MIN		90000
-> > > >  #define LINK_WAIT_USLEEP_MAX		100000
-> > > > @@ -242,8 +245,10 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
-> > > >  	return -ETIMEDOUT;
-> > > >  }
-> > > >  
-> > > > -static void advk_pcie_setup_hw(struct advk_pcie *pcie)
-> > > > +static void
-> > > > +advk_pcie_setup_hw(struct advk_pcie *pcie, unsigned long ep_rdy_time)
-> > > 
-> > > Nit: I prefer the prototype to be in one line, I wrap it for you.
-> > > 
-> > > I am wondering why you need to pass in ep_rdy_time parameter when you
-> > > can easily compute it in the function itself.
-> > > 
-> > 
-> > The only reason for that is because the sooner I get the jiffies the
-> > lower the delay has to be. I was trying to reduce the impact of this
-> > delay to a minimum, but maybe the improvement is not worth it.
+> 	[    0.915414]  pci_scan_slot+0xe8/0x100
+> 	[    0.915416]  pci_scan_child_bus_extend+0x50/0x288
+> 	[    0.915418]  pci_scan_bridge_extend+0x348/0x4f0
+> 	[    0.915420]  pci_scan_child_bus_extend+0x1dc/0x288
+> 	[    0.915423]  pci_scan_root_bus_bridge+0xc4/0xe0
+> 	[    0.915424]  pci_host_probe+0x14/0xa8
+> 	[    0.915426]  advk_pcie_probe+0x838/0x910
+> 	[...]
+> -------------------- 8< -------------------
 > 
-> That should just be (roughly) some microseconds unless there is
-> something I am missing. Try to measure it :)
+> [1] "PCI Express Base Specification", REV. 2.1
+>     PCI Express, March 4 2009, Table 4-7
+> 
+> Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> ---
+> Changes since v1:
+>   - Rename retraining flag field
+>   - Fix DEVCTL register writing
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 33 ++++++++++++++++++++++++++-
+>  1 file changed, 32 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index eb58dfdaba1b..47b707b5fc2c 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -180,6 +180,7 @@
+>  #define LINK_WAIT_MAX_RETRIES		10
+>  #define LINK_WAIT_USLEEP_MIN		90000
+>  #define LINK_WAIT_USLEEP_MAX		100000
+> +#define LINK_RETRAIN_DELAY_MAX		(20 * HZ / 1000) /* 20 ms */
+>  
+>  #define MSI_IRQ_NUM			32
+>  
+> @@ -199,6 +200,8 @@ struct advk_pcie {
+>  	u16 msi_msg;
+>  	int root_bus_nr;
+>  	struct pci_bridge_emul bridge;
+> +	unsigned long rl_deadline; /* Retrain link jiffies deadline */
+> +	u8 rl_asked; /* Retraining has been asked and is in transition */
+>  };
+>  
+>  static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
+> @@ -400,6 +403,19 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
+>  	return -ETIMEDOUT;
+>  }
+>  
+> +static int advk_pcie_link_retraining(struct advk_pcie *pcie)
+> +{
+> +	if (!advk_pcie_link_up(pcie)) {
+> +		pcie->rl_asked = 0;
+> +		return 1;
+> +	}
+> +
+> +	if (pcie->rl_asked && time_before(jiffies, pcie->rl_deadline))
+> +		return 1;
+> +
+> +	pcie->rl_asked = 0;
+> +	return 0;
+> +}
+>  
+>  static pci_bridge_emul_read_status_t
+>  advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+> @@ -426,11 +442,19 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+>  		return PCI_BRIDGE_EMUL_HANDLED;
+>  	}
+>  
+> +	case PCI_EXP_LNKCTL: {
 
-So doing that I do a msleep() of around 75-80ms instead of 100ms. So,
-yes, are 20ms enough to justify that, or should we just go with a plain
-msleep(100) to improve legibility.
+Don't you mean PCI_EXP_LNKSTA here?
 
--- 
-Remi
+> +		u32 val = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg) &
+> +			~(PCI_EXP_LNKSTA_LT << 16);
+> +		if (advk_pcie_link_retraining(pcie))
+> +			val |= (PCI_EXP_LNKSTA_LT << 16);
+> +		*value = val;
+> +		return PCI_BRIDGE_EMUL_HANDLED;
+> +	}
+> +
+>  	case PCI_CAP_LIST_ID:
+>  	case PCI_EXP_DEVCAP:
+>  	case PCI_EXP_DEVCTL:
+>  	case PCI_EXP_LNKCAP:
+> -	case PCI_EXP_LNKCTL:
+
+If you did mean PCI_EXP_LNKSTA above, I suppose you would leave
+PCI_EXP_LNKCTL here?
+
+>  		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
+>  		return PCI_BRIDGE_EMUL_HANDLED;
+>  	default:
+> @@ -447,8 +471,15 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+>  
+>  	switch (reg) {
+>  	case PCI_EXP_DEVCTL:
+> +		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+> +		break;
+
+What's the purpose of this DEVCTL change?  Could it be a separate patch?
+I can't tell that it's related to the PCI_EXP_LNKSTA_LT issue.
+
+>  	case PCI_EXP_LNKCTL:
+>  		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+> +		if (new & PCI_EXP_LNKCTL_RL) {
+> +			pcie->rl_asked = 1;
+> +			pcie->rl_deadline = jiffies + LINK_RETRAIN_DELAY_MAX;
+> +		}
+>  		break;
+>  
+>  	case PCI_EXP_RTCTL:
+> -- 
+> 2.20.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
