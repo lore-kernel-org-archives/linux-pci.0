@@ -6,185 +6,377 @@ X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AB49C10F03
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 13:01:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E668CC43219
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 13:29:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2310220678
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 13:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82898216C4
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 13:28:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556197288;
-	bh=Z5o13u5SEfOqQI+GfkO/KziMTykmSD5QTd6/HiylPqo=;
+	s=default; t=1556198909;
+	bh=Jx//LPAa80U2+re/jhjB0zehgO9+hTKvJM89I88XWRk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=t87qxf7q4KdhSOVE0Hv1WU2v2GxQQ6OWyBp0EyLdd0LrUy9bparRiSTIsd8131/xe
-	 2aCcYsIu6q3x7TtCaNf6VM2i6RqXtdoKSs6+lHGoROYTEk3rZYnyVdHrkmEZV5LaGt
-	 ZXfPGkbpzQrtqj1aUyo2lZ/Sq+TpLUlUNZOlPzso=
+	b=wWAwD/waFoAY/uny7hqKnZ4k8meoJFDqH0lDmqfVxhnb6gkXjAb6PLGhSBRj22iKS
+	 K2N3nMoCtvx9qulfPiwgaew4Ypq4Zj98J78EUyg+Z1aUUDJ+CZ4kGOVZp6msCNzuSY
+	 p76Bd3N/cgnbeTwxLEo1CJtbkzd6zkFUxfPKefQ8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728045AbfDYNB2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Apr 2019 09:01:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59928 "EHLO mail.kernel.org"
+        id S1727295AbfDYN23 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Apr 2019 09:28:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40318 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726571AbfDYNB1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Apr 2019 09:01:27 -0400
+        id S1727407AbfDYN22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Apr 2019 09:28:28 -0400
 Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 905F620678;
-        Thu, 25 Apr 2019 13:01:25 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BC1C3216B7;
+        Thu, 25 Apr 2019 13:28:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556197285;
-        bh=Z5o13u5SEfOqQI+GfkO/KziMTykmSD5QTd6/HiylPqo=;
+        s=default; t=1556198907;
+        bh=Jx//LPAa80U2+re/jhjB0zehgO9+hTKvJM89I88XWRk=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=j4WQyPfQWLosEaE+QW+8v1JRCsa3nDXl4G42rs61dn+meBuulauy67PxnFVQC2FWi
-         WHScWmscUqdM3tJWue4LDA+sOociIPABQPfo3rJtyXh+cuG7KVNqsUM47du1ql0o9t
-         c5NmdmVcxkz3uj+4ujed8aex8R/FS2cHVBGNDBUU=
-Date:   Thu, 25 Apr 2019 08:01:24 -0500
+        b=EZXins0D+9ugKmiza/46LNM/++tXR2EgHiycohSh9CQ/dKupUhFfQGzbdhYP5AjiK
+         +mDUR4Yp8SrtltVeY1BZH+WfjNLHmsObjLSuuV9Jzs+UEwo/kbXsVhhPbQAtXDzMhE
+         pSEzQMr5bksU41f8rOSRoPCES+3oxtMfRFCfNya0=
+Date:   Thu, 25 Apr 2019 08:28:25 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Lyude Paul <lyude@redhat.com>
-Cc:     linux-pci@vger.kernel.org, nouveau@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, Karol Herbst <kherbst@redhat.com>,
-        Ben Skeggs <skeggsb@gmail.com>, stable@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci/quirks: Add quirk to reset nvgpu at boot for the
- Lenovo ThinkPad P50
-Message-ID: <20190425130124.GD11428@google.com>
-References: <20190212220230.1568-1-lyude@redhat.com>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+        "corbet@lwn.net" <corbet@lwn.net>
+Subject: Re: [PATCH v4 1/4] PCI: Consider alignment of hot-added bridges when
+ distributing available resources
+Message-ID: <20190425132825.GA214428@google.com>
+References: <20190417141610.6730-1-nicholas.johnson-opensource@outlook.com.au>
+ <PS2P216MB06425DC2C68794039FE4100380250@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190212220230.1568-1-lyude@redhat.com>
+In-Reply-To: <PS2P216MB06425DC2C68794039FE4100380250@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Feb 12, 2019 at 05:02:30PM -0500, Lyude Paul wrote:
-> On a very specific subset of ThinkPad P50 SKUs, particularly ones that
-> come with a Quadro M1000M chip instead of the M2000M variant, the BIOS
-> seems to have a very nasty habit of not always resetting the secondary
-> Nvidia GPU between full reboots if the laptop is configured in Hybrid
-> Graphics mode. The reason for this happening is unknown, but the
-> following steps and possibly a good bit of patience will reproduce the
-> issue:
-> 
-> 1. Boot up the laptop normally in Hybrid graphics mode
-> 2. Make sure nouveau is loaded and that the GPU is awake
-> 2. Allow the nvidia GPU to runtime suspend itself after being idle
-> 3. Reboot the machine, the more sudden the better (e.g sysrq-b may help)
-> 4. If nouveau loads up properly, reboot the machine again and go back to
-> step 2 until you reproduce the issue
-> 
-> This results in some very strange behavior: the GPU will
-> quite literally be left in exactly the same state it was in when the
-> previously booted kernel started the reboot. This has all sorts of bad
-> sideaffects: for starters, this completely breaks nouveau starting with a
-> mysterious EVO channel failure that happens well before we've actually
-> used the EVO channel for anything:
-> 
-> nouveau 0000:01:00.0: disp: chid 0 mthd 0000 data 00000400 00001000
-> 00000002
-> ...
+On Wed, Apr 17, 2019 at 02:16:36PM +0000, Nicholas Johnson wrote:
+> Rewrite pci_bus_distribute_available_resources to better handle bridges
+> with different resource alignment requirements. Pass more details
+> arguments recursively to track the resource start and end addresses
+> relative to the initial hotplug bridge. This is especially useful for
+> Thunderbolt with native PCI enumeration, enabling external graphics
+> cards and other devices with bridge alignment higher than 0x100000
+> bytes.
 
-> So to do this, we add a new pci quirk using
-> DECLARE_PCI_FIXUP_CLASS_FINAL that will be invoked before the PCI probe
-> at boot finishes. From there, we check to make sure that this is indeed
-> the specific P50 variant of this GPU. We also make sure that the GPU PCI
-> device is advertising NoReset- in order to prevent us from trying to
-> reset the GPU when the machine is in Dedicated graphics mode (where the
-> GPU being initialized by the BIOS is normal and expected). Finally, we
-> try mapping the MMIO space for the GPU which should only work if the GPU
-> is actually active in D0 mode. We can then read the magic 0x2240c
-> register on the GPU, which will have bit 1 set if the GPU's firmware has
-> already been posted during a previous boot. Once we've confirmed all of
-> this, we reset the PCI device and re-disable it - bringing the GPU back
-> into a healthy state.
-> 
-> Signed-off-by: Lyude Paul <lyude@redhat.com>
-> Cc: nouveau@lists.freedesktop.org
-> Cc: dri-devel@lists.freedesktop.org
-> Cc: Karol Herbst <kherbst@redhat.com>
-> Cc: Ben Skeggs <skeggsb@gmail.com>
-> Cc: stable@vger.kernel.org
+It would be nice to have a concrete example including the actual
+hotplug bridge windows and the resources required by a hot-added
+device.  That would help show exactly what the current code is doing
+wrong and how your patch fixes it.
 
-Applied to pci/misc for v5.2, thanks!
+> Change extend_bridge_window to resize the actual resource, rather than
+> using add_list and dev_res->add_size. If an additional resource entry
+> exists for the given resource, zero out the add_size field to avoid it
+> interfering. Because add_size is considered optional when allocating,
+> using add_size could cause issues in some cases, because successful
+> resource distribution requires sizes to be guaranteed.
 
+Could this be a separate patch, or is it impossible to separate from
+the pci_bus_distribute_available_resources() changes?  If it could be
+split, it would make it easier to review, backport, isolate problems,
+etc.
+
+> Such cases
+> include hot-adding nested hotplug bridges in one enumeration, and
+> potentially others which are yet to be encountered.
+
+Obviously hot-adding nested bridges may require more resources, but
+the connection to extend_bridge_window() and add_size is not obvious
+to me.
+
+> Signed-off-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
 > ---
->  drivers/pci/quirks.c | 65 ++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 65 insertions(+)
+>  drivers/pci/setup-bus.c | 203 ++++++++++++++++++++++------------------
+>  1 file changed, 110 insertions(+), 93 deletions(-)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index b0a413f3f7ca..948492fda8bf 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -5117,3 +5117,68 @@ SWITCHTEC_QUIRK(0x8573);  /* PFXI 48XG3 */
->  SWITCHTEC_QUIRK(0x8574);  /* PFXI 64XG3 */
->  SWITCHTEC_QUIRK(0x8575);  /* PFXI 80XG3 */
->  SWITCHTEC_QUIRK(0x8576);  /* PFXI 96XG3 */
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index ec44a0f3a..a1ca8a11f 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1815,34 +1815,48 @@ void __init pci_assign_unassigned_resources(void)
+>  }
+>  
+>  static void extend_bridge_window(struct pci_dev *bridge, struct resource *res,
+> -			struct list_head *add_list, resource_size_t available)
+> +			struct list_head *add_list, resource_size_t new_size)
+>  {
+>  	struct pci_dev_resource *dev_res;
+> +	resource_size_t add_size;
+>  
+>  	if (res->parent)
+>  		return;
+>  
+> -	if (resource_size(res) >= available)
+> -		return;
+> -
+> -	dev_res = res_to_dev_res(add_list, res);
+> -	if (!dev_res)
+> -		return;
+> +	/*
+> +	 * Resources requested using add_size in additional resource lists are
+> +	 * considered optional when allocated. Guaranteed size of allocation
+> +	 * is required to guarantee successful resource distribution. Hence,
+> +	 * the size of the actual resource must be adjusted.
+> +	 */
+> +	if (new_size >= resource_size(res)) {
+> +		add_size = new_size - resource_size(res);
+> +		pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
+> +			&add_size);
+> +	} else {
+> +		add_size = resource_size(res) - new_size;
+> +		pci_dbg(bridge, "bridge window %pR shrunken by %pa\n", res,
+> +			&add_size);
+> +	}
+>  
+> -	/* Is there room to extend the window? */
+> -	if (available - resource_size(res) <= dev_res->add_size)
+> -		return;
+> +	res->end = res->start + new_size - 1;
+>  
+> -	dev_res->add_size = available - resource_size(res);
+> -	pci_dbg(bridge, "bridge window %pR extended by %pa\n", res,
+> -		&dev_res->add_size);
+> +	/*
+> +	 * If a list entry exists, we need to remove any additional size
+> +	 * requested because that could interfere with the alignment and
+> +	 * sizing done when distributing resources, causing resources to
+> +	 * fail to allocate later on.
+> +	 */
+> +	dev_res = res_to_dev_res(add_list, res);
+> +	if (dev_res)
+> +		dev_res->add_size = 0;
+>  }
+>  
+>  static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+> -	struct list_head *add_list, resource_size_t available_io,
+> -	resource_size_t available_mmio, resource_size_t available_mmio_pref)
+> +	struct list_head *add_list, struct resource io,
+> +	struct resource mmio, struct resource mmio_pref)
+>  {
+> -	resource_size_t remaining_io, remaining_mmio, remaining_mmio_pref;
+> +	resource_size_t io_per_hp, mmio_per_hp, mmio_pref_per_hp, align;
+>  	unsigned int normal_bridges = 0, hotplug_bridges = 0;
+>  	struct resource *io_res, *mmio_res, *mmio_pref_res;
+>  	struct pci_dev *dev, *bridge = bus->self;
+> @@ -1852,25 +1866,32 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  	mmio_pref_res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
+>  
+>  	/*
+> -	 * Update additional resource list (add_list) to fill all the
+> -	 * extra resource space available for this port except the space
+> -	 * calculated in __pci_bus_size_bridges() which covers all the
+> -	 * devices currently connected to the port and below.
+> +	 * The alignment of this bridge is yet to be considered, hence it must
+> +	 * be done now before extending its bridge window. A single bridge
+> +	 * might not be able to occupy the whole parent region if the alignment
+> +	 * differs - for example, an external GPU at the end of a Thunderbolt
+> +	 * daisy chain.
+>  	 */
+> -	extend_bridge_window(bridge, io_res, add_list, available_io);
+> -	extend_bridge_window(bridge, mmio_res, add_list, available_mmio);
+> -	extend_bridge_window(bridge, mmio_pref_res, add_list,
+> -			     available_mmio_pref);
+> +	align = pci_resource_alignment(bridge, io_res);
+> +	if (!io_res->parent && align)
+> +		io.start = ALIGN(io.start, align);
 > +
-> +/*
-> + * On certain Lenovo Thinkpad P50 SKUs, specifically those with a Nvidia
-> + * Quadro M1000M, the BIOS will occasionally make the mistake of not resetting
-> + * the nvidia GPU between reboots if the system is configured to use hybrid
-> + * graphics mode. This results in the GPU being left in whatever state it was
-> + * in during the previous boot which causes spurious interrupts from the GPU,
-> + * which in turn cause us to disable the wrong IRQs and end up breaking the
-> + * touchpad. Unsurprisingly, this also completely breaks nouveau.
-> + *
-> + * Luckily, it seems a simple reset of the PCI device for the nvidia GPU
-> + * manages to bring the GPU back into a clean state and fix all of these
-> + * issues. Additionally since the GPU will report NoReset+ when the machine is
-> + * configured in Dedicated display mode, we don't need to worry about
-> + * accidentally resetting the GPU when it's supposed to already be
-> + * initialized.
-> + */
-> +static void
-> +quirk_lenovo_thinkpad_p50_nvgpu_survives_reboot(struct pci_dev *pdev)
-> +{
-> +	void __iomem *map;
-> +	int ret;
+> +	align = pci_resource_alignment(bridge, mmio_res);
+> +	if (!mmio_res->parent && align)
+> +		mmio.start = ALIGN(mmio.start, align);
 > +
-> +	if (pdev->subsystem_vendor != PCI_VENDOR_ID_LENOVO ||
-> +	    pdev->subsystem_device != 0x222e ||
-> +	    !pdev->reset_fn)
+> +	align = pci_resource_alignment(bridge, mmio_pref_res);
+> +	if (!mmio_pref_res->parent && align)
+> +		mmio_pref.start = ALIGN(mmio_pref.start, align);
+>  
+>  	/*
+> -	 * Calculate the total amount of extra resource space we can
+> -	 * pass to bridges below this one. This is basically the
+> -	 * extra space reduced by the minimal required space for the
+> -	 * non-hotplug bridges.
+> +	 * Update the resources to fill as much remaining resource space in the
+> +	 * parent bridge as possible, while considering alignment.
+>  	 */
+> -	remaining_io = available_io;
+> -	remaining_mmio = available_mmio;
+> -	remaining_mmio_pref = available_mmio_pref;
+> +	extend_bridge_window(bridge, io_res, add_list, resource_size(&io));
+> +	extend_bridge_window(bridge, mmio_res, add_list, resource_size(&mmio));
+> +	extend_bridge_window(bridge, mmio_pref_res, add_list,
+> +		resource_size(&mmio_pref));
+>  
+>  	/*
+>  	 * Calculate how many hotplug bridges and normal bridges there
+> @@ -1884,80 +1905,79 @@ static void pci_bus_distribute_available_resources(struct pci_bus *bus,
+>  			normal_bridges++;
+>  	}
+>  
+> +	/*
+> +	 * There is only one bridge on the bus so it gets all possible
+> +	 * resources which it can then distribute to the possible
+> +	 * hotplug bridges below.
+> +	 */
+> +	if (hotplug_bridges + normal_bridges == 1) {
+> +		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
+> +		if (dev->subordinate)
+> +			pci_bus_distribute_available_resources(dev->subordinate,
+> +				add_list, io, mmio, mmio_pref);
 > +		return;
+> +	}
 > +
 > +	/*
-> +	 * If we can't enable the device's mmio space, it's probably not even
-> +	 * initialized. This is fine, and means we can just skip the quirk
-> +	 * entirely.
+> +	 * Reduce the available resource space by what the
+> +	 * bridge and devices below it occupy.
 > +	 */
-> +	if (pci_enable_device_mem(pdev)) {
-> +		pci_dbg(pdev, "Can't enable device mem, no reset needed\n");
-> +		return;
-> +	}
+>  	for_each_pci_bridge(dev, bus) {
+> -		const struct resource *res;
+> +		struct resource *res;
+> +		resource_size_t used_size;
+>  
+>  		if (dev->is_hotplug_bridge)
+>  			continue;
+>  
+> -		/*
+> -		 * Reduce the available resource space by what the
+> -		 * bridge and devices below it occupy.
+> -		 */
+>  		res = &dev->resource[PCI_BRIDGE_RESOURCES + 0];
+> -		if (!res->parent && available_io > resource_size(res))
+> -			remaining_io -= resource_size(res);
+> +		align = pci_resource_alignment(dev, res);
+> +		align = align ? ALIGN(io.start, align) - io.start : 0;
+> +		used_size = align + resource_size(res);
+> +		if (!res->parent && used_size <= resource_size(&io))
+> +			io.start += used_size;
+>  
+>  		res = &dev->resource[PCI_BRIDGE_RESOURCES + 1];
+> -		if (!res->parent && available_mmio > resource_size(res))
+> -			remaining_mmio -= resource_size(res);
+> +		align = pci_resource_alignment(dev, res);
+> +		align = align ? ALIGN(mmio.start, align) - mmio.start : 0;
+> +		used_size = align + resource_size(res);
+> +		if (!res->parent && used_size <= resource_size(&mmio))
+> +			mmio.start += used_size;
+>  
+>  		res = &dev->resource[PCI_BRIDGE_RESOURCES + 2];
+> -		if (!res->parent && available_mmio_pref > resource_size(res))
+> -			remaining_mmio_pref -= resource_size(res);
+> +		align = pci_resource_alignment(dev, res);
+> +		align = align ? ALIGN(mmio_pref.start, align) -
+> +				mmio_pref.start : 0;
+> +		used_size = align + resource_size(res);
+> +		if (!res->parent && used_size <= resource_size(&mmio_pref))
+> +			mmio_pref.start += used_size;
+>  	}
+>  
+> -	/*
+> -	 * There is only one bridge on the bus so it gets all available
+> -	 * resources which it can then distribute to the possible
+> -	 * hotplug bridges below.
+> -	 */
+> -	if (hotplug_bridges + normal_bridges == 1) {
+> -		dev = list_first_entry(&bus->devices, struct pci_dev, bus_list);
+> -		if (dev->subordinate) {
+> -			pci_bus_distribute_available_resources(dev->subordinate,
+> -				add_list, available_io, available_mmio,
+> -				available_mmio_pref);
+> -		}
+> +	if (!hotplug_bridges)
+>  		return;
+> -	}
+>  
+>  	/*
+> -	 * Go over devices on this bus and distribute the remaining
+> -	 * resource space between hotplug bridges.
+> +	 * Distribute any remaining resources equally between
+> +	 * the hotplug-capable downstream ports.
+>  	 */
+> -	for_each_pci_bridge(dev, bus) {
+> -		resource_size_t align, io, mmio, mmio_pref;
+> -		struct pci_bus *b;
+> +	io_per_hp = div64_ul(resource_size(&io), hotplug_bridges);
+> +	mmio_per_hp = div64_ul(resource_size(&mmio), hotplug_bridges);
+> +	mmio_pref_per_hp = div64_ul(resource_size(&mmio_pref),
+> +		hotplug_bridges);
+>  
+> -		b = dev->subordinate;
+> -		if (!b || !dev->is_hotplug_bridge)
+> +	for_each_pci_bridge(dev, bus) {
+> +		if (!dev->subordinate || !dev->is_hotplug_bridge)
+>  			continue;
+>  
+> -		/*
+> -		 * Distribute available extra resources equally between
+> -		 * hotplug-capable downstream ports taking alignment into
+> -		 * account.
+> -		 *
+> -		 * Here hotplug_bridges is always != 0.
+> -		 */
+> -		align = pci_resource_alignment(bridge, io_res);
+> -		io = div64_ul(available_io, hotplug_bridges);
+> -		io = min(ALIGN(io, align), remaining_io);
+> -		remaining_io -= io;
+> -
+> -		align = pci_resource_alignment(bridge, mmio_res);
+> -		mmio = div64_ul(available_mmio, hotplug_bridges);
+> -		mmio = min(ALIGN(mmio, align), remaining_mmio);
+> -		remaining_mmio -= mmio;
+> +		io.end = io.start + io_per_hp - 1;
+> +		mmio.end = mmio.start + mmio_per_hp - 1;
+> +		mmio_pref.end = mmio_pref.start + mmio_pref_per_hp - 1;
+>  
+> -		align = pci_resource_alignment(bridge, mmio_pref_res);
+> -		mmio_pref = div64_ul(available_mmio_pref, hotplug_bridges);
+> -		mmio_pref = min(ALIGN(mmio_pref, align), remaining_mmio_pref);
+> -		remaining_mmio_pref -= mmio_pref;
+> +		pci_bus_distribute_available_resources(dev->subordinate,
+> +			add_list, io, mmio, mmio_pref);
+>  
+> -		pci_bus_distribute_available_resources(b, add_list, io, mmio,
+> -						       mmio_pref);
+> +		io.start = io.end + 1;
+> +		mmio.start = mmio.end + 1;
+> +		mmio_pref.start = mmio_pref.end + 1;
+>  	}
+>  }
+>  
+> @@ -1965,22 +1985,19 @@ static void
+>  pci_bridge_distribute_available_resources(struct pci_dev *bridge,
+>  					  struct list_head *add_list)
+>  {
+> -	resource_size_t available_io, available_mmio, available_mmio_pref;
+> -	const struct resource *res;
+> +	struct resource io_res, mmio_res, mmio_pref_res;
+>  
+>  	if (!bridge->is_hotplug_bridge)
+>  		return;
+>  
+> +	io_res = bridge->resource[PCI_BRIDGE_RESOURCES + 0];
+> +	mmio_res = bridge->resource[PCI_BRIDGE_RESOURCES + 1];
+> +	mmio_pref_res = bridge->resource[PCI_BRIDGE_RESOURCES + 2];
 > +
-> +	/* Taken from drivers/gpu/drm/nouveau/engine/device/base.c */
-> +	map = ioremap(pci_resource_start(pdev, 0), 0x102000);
-> +	if (!map) {
-> +		pci_err(pdev, "Can't map MMIO space, this is probably very bad\n");
-> +		goto out_disable;
-> +	}
-> +
-> +	/*
-> +	 * Be extra careful, and make sure that the GPU firmware is posted
-> +	 * before trying a reset
-> +	 */
-> +	if (ioread32(map + 0x2240c) & 0x2) {
-> +		pci_info(pdev,
-> +			 FW_BUG "GPU left initialized by EFI, resetting\n");
-> +		ret = pci_reset_function(pdev);
-> +		if (ret < 0)
-> +			pci_err(pdev, "Failed to reset GPU: %d\n", ret);
-> +	}
-> +
-> +	iounmap(map);
-> +out_disable:
-> +	pci_disable_device(pdev);
-> +}
-> +
-> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_NVIDIA, 0x13b1,
-> +			      PCI_CLASS_DISPLAY_VGA, 8,
-> +			      quirk_lenovo_thinkpad_p50_nvgpu_survives_reboot);
+>  	/* Take the initial extra resources from the hotplug port */
+> -	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
+> -	available_io = resource_size(res);
+> -	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
+> -	available_mmio = resource_size(res);
+> -	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
+> -	available_mmio_pref = resource_size(res);
+>  
+>  	pci_bus_distribute_available_resources(bridge->subordinate,
+> -		add_list, available_io, available_mmio, available_mmio_pref);
+> +		add_list, io_res, mmio_res, mmio_pref_res);
+>  }
+>  
+>  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
 > -- 
 > 2.20.1
 > 
