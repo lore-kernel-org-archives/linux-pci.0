@@ -2,176 +2,151 @@ Return-Path: <SRS0=AiiY=S3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.0 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB2D3C43219
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 18:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1397C43219
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 20:59:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6BD892084F
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 18:21:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="iaApaGFc"
+	by mail.kernel.org (Postfix) with ESMTP id ED1C7206BF
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 20:59:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730428AbfDYSVb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Apr 2019 14:21:31 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:33760 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727120AbfDYSVa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 14:21:30 -0400
-Received: by mail-pl1-f194.google.com with SMTP id t16so211453plo.0
-        for <linux-pci@vger.kernel.org>; Thu, 25 Apr 2019 11:21:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=DbfVxgdfCkhec35GU1HQ4GzG8kpZ8WlM4OxO53B8PaE=;
-        b=iaApaGFcj6uU2U94JYwH+aiYpAs7mH4qgTvb/UfwCTNP1OssqnPAGZHW7IpbqdtiYp
-         PyIuw9vaPpUD6RIQXKUtWGkSMvCzm3i5yCj4lH+X4560EZv9zmEXdNBAESbJ9v6+aOSV
-         X++1ZxWBxs4iDNmx5gM00p77NUpD85HuuGe1GibMkOsENpkcOtmd35qt73CJhLIM2Cxh
-         a+YNZry3+A1b2YcezOlSUbKGZ40TC2qUo3zcSW0L78XJYGbf9QzXqwIe3rG3oTfp9RuT
-         k/Xqvp8/Oqyzg8Z9HdPmDsNmRNrhpxw6FrYQDR5AVepA2k3Jr9F8F8rwF1ZGAqfF04q/
-         AXYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=DbfVxgdfCkhec35GU1HQ4GzG8kpZ8WlM4OxO53B8PaE=;
-        b=MqD24R+aFZwYWq5vMrKt9mP8NWjX7dRAnKur/WZeyAHMYEMLxAcnQNo9W85mzhAXyX
-         CrApvjvJ7Xjh9WWBB0geqq5qGqQAWiubLAPOSgdmKDjsx8OiFT5JBe3OY6Wv+5THzQOX
-         +RfOkO64pklpYwYAhFy6h48vpbP44B5MNk/Lclru0LSY1RXsjz0OPSaiOqhI/to5caCY
-         hiUicYQVbyKebLeUYg7FWX+21VLXaDnpGr685XPzz+k9JO75Y+JdI/LXoBr8Hle+eM9C
-         LQRL+fWs9LzxCBppZUCt3qE3tp3EllVGQHBL7PQ6GD+10mYqoTjXVGqeWvOgoPtHvZjv
-         J3tw==
-X-Gm-Message-State: APjAAAUPSOrY9Z6TOypHxDMP84c1E+MxRoiPLtXoNQJOrBMZgyqFAAss
-        5PYSB+OH77rDZDgGJ679pTVjCA==
-X-Google-Smtp-Source: APXvYqx49q90L/wWwW5GuHsq/Eb9SbYDthv2PbvdhVaz1WB1tjR5W5Iz+vYFKxKh8VhUnwu/NtNifA==
-X-Received: by 2002:a17:902:b617:: with SMTP id b23mr38726843pls.73.1556216488899;
-        Thu, 25 Apr 2019 11:21:28 -0700 (PDT)
-Received: from google.com ([2620:15c:202:201:bc61:d85d:eb16:9036])
-        by smtp.gmail.com with ESMTPSA id a18sm12011087pfg.177.2019.04.25.11.21.26
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 25 Apr 2019 11:21:26 -0700 (PDT)
-Date:   Thu, 25 Apr 2019 11:21:21 -0700
-From:   Benson Leung <bleung@google.com>
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Oded Gabbay <oded.gabbay@gmail.com>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        "David (ChunMing) Zhou" <David1.Zhou@amd.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Joerg Roedel <joro@8bytes.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Alexandre Torgue <alexandre.torgue@st.com>,
-        Jose Abreu <joabreu@synopsys.com>,
-        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Benson Leung <bleung@chromium.org>,
-        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Paul Mackerras <paulus@samba.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:AMD KFD" <dri-devel@lists.freedesktop.org>,
-        "open list:RADEON and AMDGPU DRM DRIVERS" 
-        <amd-gfx@lists.freedesktop.org>,
-        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-        "open list:8169 10/100/1000 GIGABIT ETHERNET DRIVER" 
-        <netdev@vger.kernel.org>,
-        "moderated list:ARM/STM32 ARCHITECTURE" 
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        "moderated list:ARM/STM32 ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 9/9] platform/chrome: chromeos_laptop: use helper
- pci_dev_id
-Message-ID: <20190425182121.GA175682@google.com>
-References: <2e1f9a57-6d08-d017-24da-3e6b97fa2449@gmail.com>
- <e882f58b-0808-952e-d293-5e8cc3f04c97@gmail.com>
+        id S1726076AbfDYU7g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Apr 2019 16:59:36 -0400
+Received: from relay3-d.mail.gandi.net ([217.70.183.195]:43485 "EHLO
+        relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726282AbfDYU7f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 16:59:35 -0400
+X-Originating-IP: 88.190.179.123
+Received: from localhost (unknown [88.190.179.123])
+        (Authenticated sender: repk@triplefau.lt)
+        by relay3-d.mail.gandi.net (Postfix) with ESMTPSA id DF5A16000B;
+        Thu, 25 Apr 2019 20:59:31 +0000 (UTC)
+Date:   Thu, 25 Apr 2019 23:08:27 +0200
+From:   Remi Pommarel <repk@triplefau.lt>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH] pci: aardvark: Wait for endpoint to be ready before
+ training link
+Message-ID: <20190425210826.GQ2754@voidbox.localdomain>
+References: <20190313213752.1246-1-repk@triplefau.lt>
+ <20190423163215.GB26523@red-moon>
+ <20190423222917.GN2754@voidbox.localdomain>
+ <20190424165002.GA26089@e121166-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="nFreZHaLTZJo0R7j"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e882f58b-0808-952e-d293-5e8cc3f04c97@gmail.com>
+In-Reply-To: <20190424165002.GA26089@e121166-lin.cambridge.arm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Wed, Apr 24, 2019 at 05:50:02PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Apr 24, 2019 at 12:29:18AM +0200, Remi Pommarel wrote:
+> > Hi,
+> > 
+> > On Tue, Apr 23, 2019 at 05:32:15PM +0100, Lorenzo Pieralisi wrote:
+> > > On Wed, Mar 13, 2019 at 10:37:52PM +0100, Remi Pommarel wrote:
+> > > > When configuring pcie reset pin from gpio (e.g. initially set by
+> > > > u-boot) to pcie function this pin goes low for a brief moment
+> > > > asserting the PERST# signal. Thus connected device enters fundamental
+> > > > reset process and link configuration can only begin after a minimal
+> > > > 100ms delay (see [1]).
+> > > > 
+> > > > This makes sure that link is configured after at least 100ms from
+> > > > beginning of probe() callback (shortly after the reset pin function
+> > > > configuration switch through pinctrl subsytem).
+> 
+> I am a bit lost, what's the connection between the probe() callback
+> and the reset pin function configuration ?
+> 
+> Please elaborate.
+> 
 
---nFreZHaLTZJo0R7j
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+So currently u-boot configures the reset pin as a GPIO set to high. The
+espressobin devicetree defines a default pinctrl to configure this pin
+as a PCIe reset function.
 
-Hi Heiner,
+As you can see in drivers/base/dd.c, driver_probe_device() calls
+really_probe() which first calls pinctrl_bind_pins() then shortly after
+drv->probe() callback. The pinctrl_bind_pins() function applies the
+default state. So here, just before drv->probe() gets called our reset
+pin goes from GPIO function to PCIe reset one making it going low for a
+short time during this transition.
 
-On Wed, Apr 24, 2019 at 09:17:19PM +0200, Heiner Kallweit wrote:
-> Use new helper pci_dev_id() to simplify the code.
->=20
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Because the pin goes low then gets back to high, PERST# signal is
+asserted then deasserted and device enters fundamental reset process
+just before drv->probe() is called. So in order to reduce the waiting
+time to a minimum I sample jiffies at the very beginning of the probe
+function, which is the closer spot from where PERST# is deasserted.
 
-Acked-By: Benson Leung <bleung@chromium.org>
+To sum up:
 
-> ---
->  drivers/platform/chrome/chromeos_laptop.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/platform/chrome/chromeos_laptop.c b/drivers/platform=
-/chrome/chromeos_laptop.c
-> index 24326eecd..7abbb6167 100644
-> --- a/drivers/platform/chrome/chromeos_laptop.c
-> +++ b/drivers/platform/chrome/chromeos_laptop.c
-> @@ -125,7 +125,7 @@ static bool chromeos_laptop_match_adapter_devid(struc=
-t device *dev, u32 devid)
->  		return false;
-> =20
->  	pdev =3D to_pci_dev(dev);
-> -	return devid =3D=3D PCI_DEVID(pdev->bus->number, pdev->devfn);
-> +	return devid =3D=3D pci_dev_id(pdev);
->  }
-> =20
->  static void chromeos_laptop_check_adapter(struct i2c_adapter *adapter)
-> --=20
-> 2.21.0
->=20
->=20
+driver_probe_device() {
+	...
+	really_probe() {
+		...
+		pinctrl_bind_pins(); /* Here PERST# is asserted because pin configuration changes */
+		...
+		drv->probe();
+		...
+	}
+	...
+}
 
---=20
-Benson Leung
-Staff Software Engineer
-Chrome OS Kernel
-Google Inc.
-bleung@google.com
-Chromium OS Project
-bleung@chromium.org
+> > > > 
+> > > > [1] "PCI Express Base Specification", REV. 2.1
+> > > >         PCI Express, March 4 2009, 6.6.1 Conventional Reset
+> > > > 
+> > > > Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> > > > ---
+> > > >  drivers/pci/controller/pci-aardvark.c | 17 ++++++++++++++---
+> > > >  1 file changed, 14 insertions(+), 3 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> > > > index a30ae7cf8e7e..70a1023d0ef1 100644
+> > > > --- a/drivers/pci/controller/pci-aardvark.c
+> > > > +++ b/drivers/pci/controller/pci-aardvark.c
+> > > > @@ -177,6 +177,9 @@
+> > > >  
+> > > >  #define PIO_TIMEOUT_MS			1
+> > > >  
+> > > > +/* Endpoint can take up to 100ms to be ready after a reset */
+> > > > +#define ENDPOINT_RST_MS			100
+> > > > +
+> > > >  #define LINK_WAIT_MAX_RETRIES		10
+> > > >  #define LINK_WAIT_USLEEP_MIN		90000
+> > > >  #define LINK_WAIT_USLEEP_MAX		100000
+> > > > @@ -242,8 +245,10 @@ static int advk_pcie_wait_for_link(struct advk_pcie *pcie)
+> > > >  	return -ETIMEDOUT;
+> > > >  }
+> > > >  
+> > > > -static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+> > > > +static void
+> > > > +advk_pcie_setup_hw(struct advk_pcie *pcie, unsigned long ep_rdy_time)
+> > > 
+> > > Nit: I prefer the prototype to be in one line, I wrap it for you.
+> > > 
+> > > I am wondering why you need to pass in ep_rdy_time parameter when you
+> > > can easily compute it in the function itself.
+> > > 
+> > 
+> > The only reason for that is because the sooner I get the jiffies the
+> > lower the delay has to be. I was trying to reduce the impact of this
+> > delay to a minimum, but maybe the improvement is not worth it.
+> 
+> That should just be (roughly) some microseconds unless there is
+> something I am missing. Try to measure it :)
 
---nFreZHaLTZJo0R7j
-Content-Type: application/pgp-signature; name="signature.asc"
+So doing that I do a msleep() of around 75-80ms instead of 100ms. So,
+yes, are 20ms enough to justify that, or should we just go with a plain
+msleep(100) to improve legibility.
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEE6gYDF28Li+nEiKLaHwn1ewov5lgFAlzB+qEACgkQHwn1ewov
-5lip2g//eS1J0w28ODQxNNXn6vFg16ufHWY3pS3fpqOzY2iOnxmiL4V9a8qXXgs6
-Nb7+tl1LTqFgN10TKr4KcYiPShVug0uz3SX9Gx6sI8d0C8Cy74QrQf4wQp48cg6I
-0J0BgM0Icd6QdpdrNYZrcRmFJc7FY16i30SMAuINtfcnqgw4oU6hSG3qNXjqNrFG
-2VUUjZHpvbAwWso0xToWjfK0TNPQXSslFKi+ROjvWlL+y0TGUBbcMbxviAp1H35X
-CuT5Ijknh8FdG+NaMFnGXf6JvzGORNgXlAon15XEbKDf25/K/JyyDh9nJuPesOwG
-MmYEiWj29dwg3/8rKvuWpuJVqWplC4x+ZCFvvEaDFeoxZuoLVc5QkVMRkupxwoA7
-Ux1/Q9A7YS7OjOPhN2DikJIn2hEJnEyCBU2PdKEZToCUJ/C2gA+WqHyNXcflOldD
-PBJSisoYM4LcuV1hhhfXUU/n/BgVPbmYWfvyQpHEbDpnlnDxMb+LheCgDlBn9mAh
-QBD82gS5LcMo20071hVEqReV4zBzOc+S+h/4OxYW2HCNyn3qwztqYOge2oM/ezQ8
-CV98H+KfIw+dYK8Vi40O9C05+NRkcAY/RaZzjQMyDJG2KxcO1mZhdhhbzCBRuS0o
-pj3CU8ScPFa+s0qe7xk/Pac8fR6hmcse8jaJKX7in5MDKQNQ2CY=
-=Oshd
------END PGP SIGNATURE-----
-
---nFreZHaLTZJo0R7j--
+-- 
+Remi
