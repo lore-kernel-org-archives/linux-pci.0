@@ -2,271 +2,253 @@ Return-Path: <SRS0=AiiY=S3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86342C43218
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 14:08:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8B2C43218
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 14:15:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75219206BF
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 14:08:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556201318;
-	bh=BRoiHrfZJQwVrBvHJdZ6WzMeL+mNQ6h9J2jqC9rvkAg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=LDBe3Z/KTF6jMQp8JH7z/zRMDYnP9q2UigOXwaPLXVaOM2/xwweNnzwb5p6oc9FjM
-	 btOuvVp0Phgy8LSVlCJ3Adbe++XnFdn63WOPzDCz7MkdU4J6w+bXAsc32pxdOvSwCL
-	 QeFGUAYVkgPBdXEw4RzEqQgB+X9yQelV4k3gN5YI=
+	by mail.kernel.org (Postfix) with ESMTP id 979D920717
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 14:15:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725970AbfDYOIh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Apr 2019 10:08:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55512 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725965AbfDYOIh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 Apr 2019 10:08:37 -0400
-Received: from localhost (173-25-63-173.client.mchsi.com [173.25.63.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1137F20644;
-        Thu, 25 Apr 2019 14:08:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556201316;
-        bh=BRoiHrfZJQwVrBvHJdZ6WzMeL+mNQ6h9J2jqC9rvkAg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ui1wS1a+UnJck+++sWj4+SZ5Vn6cvHLAKckQqvCZUsFJVP+kAFKRXUsLglmsHFYck
-         iv4eSuCRGUGsZLuZmQc55X4Ki29FmcxsaBa97gmciVwAJ3ZZi2+TtB27XLwVWWrRb4
-         MbuY9pWeOSSwXCAwXu3kphj6H/S7Gkpif3idmZHE=
-Date:   Thu, 25 Apr 2019 09:08:34 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jonathan Chocron <jonnyc@amazon.com>
-Cc:     linux-pci@vger.kernel.org, lorenzo.pieralisi@arm.com,
-        linux-kernel@vger.kernel.org, vaerov@amazon.com, dwmw@amazon.co.uk,
-        benh@kernel.crashing.org, alisaidi@amazon.com, zeev@amazon.com,
-        ronenk@amazon.com, barakw@amazon.com, talel@amazon.com,
-        hanochu@amazon.com, hhhawa@amazon.com
-Subject: Re: [PATCH v3] PCI: al: Add Amazon Annapurna Labs PCIe host
- controller driver
-Message-ID: <20190425140834.GE11428@google.com>
-References: <20190326125508.GG24180@google.com>
- <1553774276-24675-1-git-send-email-jonnyc@amazon.com>
+        id S1726957AbfDYOPB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Apr 2019 10:15:01 -0400
+Received: from relay9-d.mail.gandi.net ([217.70.183.199]:49353 "EHLO
+        relay9-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726120AbfDYOPB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 10:15:01 -0400
+X-Originating-IP: 88.190.179.123
+Received: from localhost (unknown [88.190.179.123])
+        (Authenticated sender: repk@triplefau.lt)
+        by relay9-d.mail.gandi.net (Postfix) with ESMTPSA id 7A4D9FF80F;
+        Thu, 25 Apr 2019 14:14:57 +0000 (UTC)
+Date:   Thu, 25 Apr 2019 16:23:53 +0200
+From:   Remi Pommarel <repk@triplefau.lt>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: aardvark: Use LTSSM state to build link training
+ flag
+Message-ID: <20190425142353.GO2754@voidbox.localdomain>
+References: <20190316161243.29517-1-repk@triplefau.lt>
+ <20190425110830.GC10833@e121166-lin.cambridge.arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1553774276-24675-1-git-send-email-jonnyc@amazon.com>
+In-Reply-To: <20190425110830.GC10833@e121166-lin.cambridge.arm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Mar 28, 2019 at 01:57:56PM +0200, Jonathan Chocron wrote:
-> Add support for Amazon's Annapurna Labs PCIe driver. The HW controller
-> is based on DesignWare's IP.
-> 
-> The HW doesn't support accessing the Root Port's config space via ECAM,
-> so we obtain its base address via an AMZN0001 device.
-> 
-> Furthermore, the DesignWare PCIe controller doesn't filter out config
-> transactions sent to devices 1 and up on its bus, so they are filtered
-> by the driver.
-> 
-> All subordinate buses do support ECAM access.
-> 
-> Implementing specific PCI config access functions involves:
->  - Adding an init function to obtain the Root Port's base address from
->    an AMZN0001 device.
->  - Adding a new entry in the MCFG quirk array
-> 
-> Co-developed-by: Vladimir Aerov <vaerov@amazon.com>
-> Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
-> Signed-off-by: Vladimir Aerov <vaerov@amazon.com>
-> Reviewed-by: David Woodhouse <dwmw@amazon.co.uk>
+Hi Lorenzo,
 
-Applied with Ben's reviewed-by and Lorenzo's ack to pci/host/al for v5.2,
-thanks!
+On Thu, Apr 25, 2019 at 12:08:30PM +0100, Lorenzo Pieralisi wrote:
+> On Sat, Mar 16, 2019 at 05:12:43PM +0100, Remi Pommarel wrote:
+> > The PCI_EXP_LNKSTA_LT flag in the emulated root device's PCI_EXP_LNKSTA
+> > config register does not reflect the actual link training state and is
+> > always cleared. The Link Training and Status State Machine (LTSSM) flag
+> > in LMI config register could be used as a link training indicator.
+> > Indeed if the LTSSM is in L0 or upper state then link training has
+> > completed (see [1]).
+> > 
+> > Unfortunately because setting the PCI_EXP_LINCTL_RL flag does not
+> > instantly imply a LTSSM state change (e.g. L0s to recovery state
+> > transition takes some time), LTSSM can be in L0 but link training has
+> > not finished yet. Thus a lower L0 LTSSM state followed by a L0 or upper
+> > state sequence has to be seen to be sure that link training has been
+> > done.
+> 
+> Hi Remi,
+> 
+> I am a bit confused, so you are saying that the LTSSM flag in the
+> LMI config register can't be used to detect when training is completed ?
 
-> ---
+Not exactly, I am saying that PCI_EXP_LNKSTA_LT from PCI_EXP_LNKSTA
+register can't be used with this hardware, but can be emulated with
+LTSSM flag.
+
 > 
-> --v2:
->   - Fix commit message comments (incl. using AMZN0001 instead of
->     PNP0C02)
->   - Use the usual multi-line comment style
+> Certainly it can't be used by ASPM core that relies on:
 > 
-> --v3:
->   - Fix additional commit message comments
+> PCI_EXP_LNKSTA_LT flag
 > 
->  MAINTAINERS                          |  6 +++
->  drivers/acpi/pci_mcfg.c              | 12 +++++
->  drivers/pci/controller/dwc/Makefile  |  1 +
->  drivers/pci/controller/dwc/pcie-al.c | 93 ++++++++++++++++++++++++++++++++++++
->  include/linux/pci-ecam.h             |  1 +
->  5 files changed, 113 insertions(+)
->  create mode 100644 drivers/pci/controller/dwc/pcie-al.c
+> in the PCI_EXP_LNKSTA register, and that's what you are setting through
+> this timeout mechanism IIUC.
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 32d444476a90..7a17017f9f82 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -11769,6 +11769,12 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
->  S:	Supported
->  F:	drivers/pci/controller/
->  
-> +PCIE DRIVER FOR ANNAPURNA LABS
-> +M:	Jonathan Chocron <jonnyc@amazon.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	drivers/pci/controller/dwc/pcie-al.c
-> +
->  PCIE DRIVER FOR AMLOGIC MESON
->  M:	Yue Wang <yue.wang@Amlogic.com>
->  L:	linux-pci@vger.kernel.org
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index a4e8432fc2fb..b42be067fb83 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -52,6 +52,18 @@ struct mcfg_fixup {
->  static struct mcfg_fixup mcfg_quirks[] = {
->  /*	{ OEM_ID, OEM_TABLE_ID, REV, SEGMENT, BUS_RANGE, ops, cfgres }, */
->  
-> +#define AL_ECAM(table_id, rev, seg, ops) \
-> +	{ "AMAZON", table_id, rev, seg, MCFG_BUS_ANY, ops }
-> +
-> +	AL_ECAM("GRAVITON", 0, 0, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 1, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 2, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 3, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 4, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 5, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 6, &al_pcie_ops),
-> +	AL_ECAM("GRAVITON", 0, 7, &al_pcie_ops),
-> +
->  #define QCOM_ECAM32(seg) \
->  	{ "QCOM  ", "QDF2432 ", 1, seg, MCFG_BUS_ANY, &pci_32b_ops }
->  
-> diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-> index 7bcdcdf5024e..1ea773c0070d 100644
-> --- a/drivers/pci/controller/dwc/Makefile
-> +++ b/drivers/pci/controller/dwc/Makefile
-> @@ -28,5 +28,6 @@ obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
->  # depending on whether ACPI, the DT driver, or both are enabled.
->  
->  ifdef CONFIG_PCI
-> +obj-$(CONFIG_ARM64) += pcie-al.o
->  obj-$(CONFIG_ARM64) += pcie-hisi.o
->  endif
-> diff --git a/drivers/pci/controller/dwc/pcie-al.c b/drivers/pci/controller/dwc/pcie-al.c
-> new file mode 100644
-> index 000000000000..65a9776c12be
-> --- /dev/null
-> +++ b/drivers/pci/controller/dwc/pcie-al.c
-> @@ -0,0 +1,93 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * PCIe host controller driver for Amazon's Annapurna Labs IP (used in chips
-> + * such as Graviton and Alpine)
-> + *
-> + * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-> + *
-> + * Author: Jonathan Chocron <jonnyc@amazon.com>
-> + */
-> +
-> +#include <linux/pci.h>
-> +#include <linux/pci-ecam.h>
-> +#include <linux/pci-acpi.h>
-> +#include "../../pci.h"
-> +
-> +#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
-> +
-> +struct al_pcie_acpi  {
-> +	void __iomem *dbi_base;
-> +};
-> +
-> +static void __iomem *al_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
-> +				     int where)
-> +{
-> +	struct pci_config_window *cfg = bus->sysdata;
-> +	struct al_pcie_acpi *pcie = cfg->priv;
-> +	void __iomem *dbi_base = pcie->dbi_base;
-> +
-> +	if (bus->number == cfg->busr.start) {
-> +		/*
-> +		 * The DW PCIe core doesn't filter out transactions to other
-> +		 * devices/functions on the primary bus num, so we do this here.
-> +		 */
-> +		if (PCI_SLOT(devfn) > 0)
-> +			return NULL;
-> +		else
-> +			return dbi_base + where;
-> +	}
-> +
-> +	return pci_ecam_map_bus(bus, devfn, where);
-> +}
-> +
-> +static int al_pcie_init(struct pci_config_window *cfg)
-> +{
-> +	struct device *dev = cfg->parent;
-> +	struct acpi_device *adev = to_acpi_device(dev);
-> +	struct acpi_pci_root *root = acpi_driver_data(adev);
-> +	struct al_pcie_acpi *al_pcie;
-> +	struct resource *res;
-> +	int ret;
-> +
-> +	al_pcie = devm_kzalloc(dev, sizeof(*al_pcie), GFP_KERNEL);
-> +	if (!al_pcie)
-> +		return -ENOMEM;
-> +
-> +	res = devm_kzalloc(dev, sizeof(*res), GFP_KERNEL);
-> +	if (!res)
-> +		return -ENOMEM;
-> +
-> +	ret = acpi_get_rc_resources(dev, "AMZN0001", root->segment, res);
-> +	if (ret) {
-> +		dev_err(dev, "can't get rc dbi base address for SEG %d\n",
-> +			root->segment);
-> +		return ret;
-> +	}
-> +
-> +	dev_dbg(dev, "Root port dbi res: %pR\n", res);
-> +
-> +	al_pcie->dbi_base = devm_pci_remap_cfg_resource(dev, res);
-> +	if (IS_ERR(al_pcie->dbi_base)) {
-> +		long err = PTR_ERR(al_pcie->dbi_base);
-> +
-> +		dev_err(dev, "couldn't remap dbi base %pR (err:%ld)\n",
-> +			res, err);
-> +		return err;
-> +	}
-> +
-> +	cfg->priv = al_pcie;
-> +
-> +	return 0;
-> +}
-> +
-> +struct pci_ecam_ops al_pcie_ops = {
-> +	.bus_shift    = 20,
-> +	.init         =  al_pcie_init,
-> +	.pci_ops      = {
-> +		.map_bus    = al_pcie_map_bus,
-> +		.read       = pci_generic_config_read,
-> +		.write      = pci_generic_config_write,
-> +	}
-> +};
-> +
-> +#endif /* defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS) */
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> index 29efa09d686b..a73164c85e78 100644
-> --- a/include/linux/pci-ecam.h
-> +++ b/include/linux/pci-ecam.h
-> @@ -56,6 +56,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
->  extern struct pci_ecam_ops pci_thunder_ecam_ops; /* Cavium ThunderX 1.x */
->  extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
->  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
-> +extern struct pci_ecam_ops al_pcie_ops; /* Amazon Annapurna Labs PCIe */
->  #endif
->  
->  #ifdef CONFIG_PCI_HOST_COMMON
-> -- 
-> 1.9.1
+> Please elaborate on that.
+
+The problem here is that the hardware does not change PCI_EXP_LNKSTA_LT
+at all. So in order to support link re-training feature we need to
+emulate this flag. To do so LTSSM flag can be used.
+
+Indeed we can set the emulated PCI_EXP_LNKSTA_LT as soon as re-training
+is asked and wait for LTSSM flag to be back to a configured state
+(e.g. L0, L0s) before clearing it.
+
+The problem with that is that LTSSM flag does not change instantly after
+link re-training has been asked, and will stay in configured state for a
+small amount of time. So the idea is to poll the LTSSM flag and wait for
+it to enter a recovery state then waiting for it to be back in
+configured state.
+
+The timeout is only here as a fallback in the unlikely event that we
+missed the LTSSM flag entering recovery state.
+
 > 
+> I am picking Bjorn's brain on this patch since what you are doing
+> seems quite arbitrary and honestly it is a bit of a hack.
+
+Yes, sorry, it is a bit of a hack because I try to workaround a
+hardware issue.
+
+Please note that vendor has been contacted about this in the meantime
+and answered the following:
+
+"FW can poll LTSSM state equals any of the following values: 0xB or 0xD
+or 0xC or 0xE. After that, polls for LTSSM equals 0x10. For your
+information, LTSSM will transit from 0x10 -> 0xB -> 0xD -> 0xC or 0xE
+........... -> 0x10".
+
+It is basically what this patch does, I've just added a timeout fallback
+to not poll LTSSM state forever if its transition to 0xB, 0xD, 0xC or
+0xE has been missed.
+
+-- 
+Remi
+
+> 
+> I wonder whether it is not better to avoid advertising ASPM support.
+> 
+> Lorenzo
+> 
+> > Because one may not call a pcie conf register read on LNKSTA after
+> > doing a retrain link or may miss the link down state due to timing, a
+> > 20ms timeout is used. Passing this timeout link is considered retrained.
+> > 
+> > This fixes boot hang or kernel panic with the following callstack due to
+> > ASPM setup doing a link re-train and polling for PCI_EXP_LNKSTA_LT flag
+> > to be cleared before using it.
+> > 
+> > -------------------- 8< -------------------
+> > 	[    0.915389]  dump_backtrace+0x0/0x140
+> > 	[    0.915391]  show_stack+0x14/0x20
+> > 	[    0.915393]  dump_stack+0x90/0xb4
+> > 	[    0.915394]  panic+0x134/0x2c0
+> > 	[    0.915396]  nmi_panic+0x6c/0x70
+> > 	[    0.915398]  arm64_serror_panic+0x74/0x80
+> > 	[    0.915400]  is_valid_bugaddr+0x0/0x8
+> > 	[    0.915402]  el1_error+0x7c/0xe4
+> > 	[    0.915404]  advk_pcie_rd_conf+0x4c/0x250
+> > 	[    0.915406]  pci_bus_read_config_word+0x7c/0xd0
+> > 	[    0.915408]  pcie_capability_read_word+0x90/0xc8
+> > 	[    0.915410]  pcie_get_aspm_reg+0x68/0x118
+> > 	[    0.915412]  pcie_aspm_init_link_state+0x460/0xa98
+> > 	[    0.915414]  pci_scan_slot+0xe8/0x100
+> > 	[    0.915416]  pci_scan_child_bus_extend+0x50/0x288
+> > 	[    0.915418]  pci_scan_bridge_extend+0x348/0x4f0
+> > 	[    0.915420]  pci_scan_child_bus_extend+0x1dc/0x288
+> > 	[    0.915423]  pci_scan_root_bus_bridge+0xc4/0xe0
+> > 	[    0.915424]  pci_host_probe+0x14/0xa8
+> > 	[    0.915426]  advk_pcie_probe+0x838/0x910
+> > 	[...]
+> > -------------------- 8< -------------------
+> > 
+> > [1] "PCI Express Base Specification", REV. 2.1
+> >     PCI Express, March 4 2009, Table 4-7
+> > 
+> > Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> > ---
+> > Changes since v1:
+> >   - Rename retraining flag field
+> >   - Fix DEVCTL register writing
+> > ---
+> >  drivers/pci/controller/pci-aardvark.c | 33 ++++++++++++++++++++++++++-
+> >  1 file changed, 32 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> > index eb58dfdaba1b..47b707b5fc2c 100644
+> > --- a/drivers/pci/controller/pci-aardvark.c
+> > +++ b/drivers/pci/controller/pci-aardvark.c
+> > @@ -180,6 +180,7 @@
+> >  #define LINK_WAIT_MAX_RETRIES		10
+> >  #define LINK_WAIT_USLEEP_MIN		90000
+> >  #define LINK_WAIT_USLEEP_MAX		100000
+> > +#define LINK_RETRAIN_DELAY_MAX		(20 * HZ / 1000) /* 20 ms */
+> >  
+> >  #define MSI_IRQ_NUM			32
+> >  
+> > @@ -199,6 +200,8 @@ struct advk_pcie {
+> >  	u16 msi_msg;
+> >  	int root_bus_nr;
+> >  	struct pci_bridge_emul bridge;
+> > +	unsigned long rl_deadline; /* Retrain link jiffies deadline */
+> > +	u8 rl_asked; /* Retraining has been asked and is in transition */
+> >  };
+> >  
+> >  static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
+> > @@ -400,6 +403,19 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
+> >  	return -ETIMEDOUT;
+> >  }
+> >  
+> > +static int advk_pcie_link_retraining(struct advk_pcie *pcie)
+> > +{
+> > +	if (!advk_pcie_link_up(pcie)) {
+> > +		pcie->rl_asked = 0;
+> > +		return 1;
+> > +	}
+> > +
+> > +	if (pcie->rl_asked && time_before(jiffies, pcie->rl_deadline))
+> > +		return 1;
+> > +
+> > +	pcie->rl_asked = 0;
+> > +	return 0;
+> > +}
+> >  
+> >  static pci_bridge_emul_read_status_t
+> >  advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+> > @@ -426,11 +442,19 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+> >  		return PCI_BRIDGE_EMUL_HANDLED;
+> >  	}
+> >  
+> > +	case PCI_EXP_LNKCTL: {
+> > +		u32 val = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg) &
+> > +			~(PCI_EXP_LNKSTA_LT << 16);
+> > +		if (advk_pcie_link_retraining(pcie))
+> > +			val |= (PCI_EXP_LNKSTA_LT << 16);
+> > +		*value = val;
+> > +		return PCI_BRIDGE_EMUL_HANDLED;
+> > +	}
+> > +
+> >  	case PCI_CAP_LIST_ID:
+> >  	case PCI_EXP_DEVCAP:
+> >  	case PCI_EXP_DEVCTL:
+> >  	case PCI_EXP_LNKCAP:
+> > -	case PCI_EXP_LNKCTL:
+> >  		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
+> >  		return PCI_BRIDGE_EMUL_HANDLED;
+> >  	default:
+> > @@ -447,8 +471,15 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+> >  
+> >  	switch (reg) {
+> >  	case PCI_EXP_DEVCTL:
+> > +		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+> > +		break;
+> > +
+> >  	case PCI_EXP_LNKCTL:
+> >  		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+> > +		if (new & PCI_EXP_LNKCTL_RL) {
+> > +			pcie->rl_asked = 1;
+> > +			pcie->rl_deadline = jiffies + LINK_RETRAIN_DELAY_MAX;
+> > +		}
+> >  		break;
+> >  
+> >  	case PCI_EXP_RTCTL:
+> > -- 
+> > 2.20.1
+> > 
