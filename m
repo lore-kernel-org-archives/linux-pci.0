@@ -2,108 +2,291 @@ Return-Path: <SRS0=AiiY=S3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10879C43219
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 21:27:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2411C43219
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 22:19:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25F0C206BA
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 21:27:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4105206BA
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 22:19:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387991AbfDYV1O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Apr 2019 17:27:14 -0400
-Received: from s3.sipsolutions.net ([144.76.43.62]:40516 "EHLO
-        sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726586AbfDYV1N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 17:27:13 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1hJlsJ-0000g8-4C; Thu, 25 Apr 2019 23:25:47 +0200
-Message-ID: <5511420228cb38d08a67c0f6a614b7671d7d23d4.camel@sipsolutions.net>
-Subject: Re: [PATCH v3 12/26] compat_ioctl: move more drivers to
- compat_ptr_ioctl
-From:   Johannes Berg <johannes@sipsolutions.net>
-To:     Arnd Bergmann <arnd@arndb.de>, Al Viro <viro@zeniv.linux.org.uk>
-Cc:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        y2038 Mailman List <y2038@lists.linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Sterba <dsterba@suse.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        driverdevel <devel@driverdev.osuosl.org>, qat-linux@intel.com,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        linux-iio@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Platform Driver <platform-driver-x86@vger.kernel.org>,
-        linux-remoteproc@vger.kernel.org,
-        sparclinux <sparclinux@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        ceph-devel <ceph-devel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>, Sean Young <sean@mess.org>
-Date:   Thu, 25 Apr 2019 23:25:43 +0200
-In-Reply-To: <CAK8P3a2HmiYQJ2FV2FgLiFsD8M9UKteC9Jetx7ja06PQVZWYfA@mail.gmail.com> (sfid-20190425_175600_668610_93FA972E)
-References: <20190416202013.4034148-1-arnd@arndb.de>
-         <20190416202701.127745-1-arnd@arndb.de> <20190425122153.450fc094@coco.lan>
-         <20190425153534.GS2217@ZenIV.linux.org.uk>
-         <CAK8P3a2HmiYQJ2FV2FgLiFsD8M9UKteC9Jetx7ja06PQVZWYfA@mail.gmail.com>
-         (sfid-20190425_175600_668610_93FA972E)
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-2.fc28) 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1727397AbfDYWTF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Apr 2019 18:19:05 -0400
+Received: from relay3-d.mail.gandi.net ([217.70.183.195]:33315 "EHLO
+        relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726933AbfDYWTE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 18:19:04 -0400
+X-Originating-IP: 88.190.179.123
+Received: from localhost (unknown [88.190.179.123])
+        (Authenticated sender: repk@triplefau.lt)
+        by relay3-d.mail.gandi.net (Postfix) with ESMTPSA id 41CE26000A;
+        Thu, 25 Apr 2019 22:19:01 +0000 (UTC)
+Date:   Fri, 26 Apr 2019 00:27:57 +0200
+From:   Remi Pommarel <repk@triplefau.lt>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: aardvark: Use LTSSM state to build link training
+ flag
+Message-ID: <20190425222756.GR2754@voidbox.localdomain>
+References: <20190316161243.29517-1-repk@triplefau.lt>
+ <20190425210439.GG11428@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190425210439.GG11428@google.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2019-04-25 at 17:55 +0200, Arnd Bergmann wrote:
-> On Thu, Apr 25, 2019 at 5:35 PM Al Viro <viro@zeniv.linux.org.uk> wrote:
-> > 
-> > On Thu, Apr 25, 2019 at 12:21:53PM -0300, Mauro Carvalho Chehab wrote:
-> > 
-> > > If I understand your patch description well, using compat_ptr_ioctl
-> > > only works if the driver is not for s390, right?
-> > 
-> > No; s390 is where "oh, just set ->compat_ioctl same as ->unlocked_ioctl
-> > and be done with that; compat_ptr() is a no-op anyway" breaks.  IOW,
-> > s390 is the reason for having compat_ptr_ioctl() in the first place;
-> > that thing works on all biarch architectures, as long as all stuff
-> > handled by ->ioctl() takes pointer to arch-independent object as
-> > argument.  IOW,
-> >         argument ignored => OK
-> >         any arithmetical type => no go, compat_ptr() would bugger it
-> >         pointer to int => OK
-> >         pointer to string => OK
-> >         pointer to u64 => OK
-> >         pointer to struct {u64 addr; char s[11];} => OK
+Hi Bjorn,
+
+On Thu, Apr 25, 2019 at 04:04:39PM -0500, Bjorn Helgaas wrote:
+> Hi Remi,
 > 
-> To be extra pedantic, the 'struct {u64 addr; char s[11];} '
-> case is also broken on x86, because sizeof (obj) is smaller
-> on i386, even though the location of the members are
-> the same. i.e. you can copy_from_user() this
+> On Sat, Mar 16, 2019 at 05:12:43PM +0100, Remi Pommarel wrote:
+> > The PCI_EXP_LNKSTA_LT flag in the emulated root device's PCI_EXP_LNKSTA
+> > config register does not reflect the actual link training state and is
+> > always cleared. The Link Training and Status State Machine (LTSSM) flag
+> > in LMI config register could be used as a link training indicator.
+> 
+> LMI?  I assume this is an Aardvark-specific register?  Maybe "Aardvark
+> LMI register", since the other things here are generic PCIe registers?
 
-Actually, you can't even do that because the struct might sit at the end
-of a page and then you'd erroneously fault in this case.
+Yes this is an Aardvark specific register, I would have said that LMI
+stands for LTSSM management interface, but this is only guessing as I
+don't have access to a datasheet.
 
-We had this a while ago with struct ifreq, see commit 98406133dd and its
-parents.
+> Is this a hardware erratum?  I know advk does some software emulation,
+> but it looks like the Aardvark PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKSTA
+> register is awfully close to being exactly the PCIe-defined
+> PCI_EXP_LNKSTA, so the difference seems like a mistake.
 
-johannes
+Vendor says that PCI_EXP_LNKSTA_LT bit in PCI_EXP_LNKSTA is marked as
+"reserved" and is not implemented. It does look like a mistake to me.
 
+> 
+> > Indeed if the LTSSM is in L0 or upper state then link training has
+> > completed (see [1]).
+> > 
+> > Unfortunately because setting the PCI_EXP_LINCTL_RL flag does not
+> 
+> s/PCI_EXP_LINCTL_RL/PCI_EXP_LNKCTL_RL/
+> 
+> > instantly imply a LTSSM state change (e.g. L0s to recovery state
+> > transition takes some time), LTSSM can be in L0 but link training has
+> > not finished yet. Thus a lower L0 LTSSM state followed by a L0 or upper
+> > state sequence has to be seen to be sure that link training has been
+> > done.
+> > 
+> > Because one may not call a pcie conf register read on LNKSTA after
+> > doing a retrain link or may miss the link down state due to timing, a
+> > 20ms timeout is used. Passing this timeout link is considered retrained.
+> 
+> It sounds like reading and/or writing some registers during a retrain
+> causes some sort of EL1 error?  Is this a separate erratum?  Is there
+> a list of the registers and operations (read/write) that are affected?
+> The backtrace below suggests that it's actually a read of LNKCAP or
+> LNKCTL (not LNKSTA) that caused the error.
+
+IIUC, the backtrace below produces an EL1 error when doing a PIO
+transfer while the link is still retraining. See my comment below for
+more about that. But accessing any root complex's register seems fine.
+> 
+> It sounds like there are really two problems:
+> 
+>   1) Reading PCI_EXP_LNKSTA (or the Aardvark equivalent) doesn't give
+>      valid data for PCI_EXP_LNKSTA_LT.
+
+The 1) is correct.
+
+> 
+>   2) Sometimes config reads cause EL1 errors.
+
+Actually EL1 error happens when we try to access device's register with
+a PIO transfer, which is when we try to use the link while it is being
+retrained.
+
+IMHO, 1) and 2) are linked. ASPM core tries to use the link too early
+because it has read invalid data for PCI_EXP_LNKSTA_LT.
+
+> 
+> If that's the case and if it's possible, can you split this into a
+> patch for each issue?
+> 
+> > This fixes boot hang or kernel panic with the following callstack due to
+> > ASPM setup doing a link re-train and polling for PCI_EXP_LNKSTA_LT flag
+> > to be cleared before using it.
+> > 
+> > -------------------- 8< -------------------
+> > 	[    0.915389]  dump_backtrace+0x0/0x140
+> > 	[    0.915391]  show_stack+0x14/0x20
+> > 	[    0.915393]  dump_stack+0x90/0xb4
+> > 	[    0.915394]  panic+0x134/0x2c0
+> > 	[    0.915396]  nmi_panic+0x6c/0x70
+> > 	[    0.915398]  arm64_serror_panic+0x74/0x80
+> > 	[    0.915400]  is_valid_bugaddr+0x0/0x8
+> > 	[    0.915402]  el1_error+0x7c/0xe4
+> > 	[    0.915404]  advk_pcie_rd_conf+0x4c/0x250
+> > 	[    0.915406]  pci_bus_read_config_word+0x7c/0xd0
+> > 	[    0.915408]  pcie_capability_read_word+0x90/0xc8
+> > 	[    0.915410]  pcie_get_aspm_reg+0x68/0x118
+> > 	[    0.915412]  pcie_aspm_init_link_state+0x460/0xa98
+> 
+> This backtrace doesn't make sense to me as being related to this
+> issue.  You said above that the bug was that PCI_EXP_LNKSTA_LT is not
+> updated.  But apparently even *reading* a register at the wrong time
+> causes this EL1 error.  And pcie_get_aspm_reg() doesn't even read
+> LNKSTA; it only reads LNKCAP and LNKCTL.
+
+In fact here, advk_pcie_rd_conf+0x4c seems to be this line:
+	advk_writel(pcie, 0, PIO_START);
+
+So EL1 error seems not to happen while accessing root complex registery
+but while doing a PIO transfer using the link.
+
+> 
+> BTW, if you're including a backtrace in a commit log, you can strip
+> out the timestamps and the "cut" lines because they don't contribute
+> information that's relevant in this context.
+> 
+> > 	[    0.915414]  pci_scan_slot+0xe8/0x100
+> > 	[    0.915416]  pci_scan_child_bus_extend+0x50/0x288
+> > 	[    0.915418]  pci_scan_bridge_extend+0x348/0x4f0
+> > 	[    0.915420]  pci_scan_child_bus_extend+0x1dc/0x288
+> > 	[    0.915423]  pci_scan_root_bus_bridge+0xc4/0xe0
+> > 	[    0.915424]  pci_host_probe+0x14/0xa8
+> > 	[    0.915426]  advk_pcie_probe+0x838/0x910
+> > 	[...]
+> > -------------------- 8< -------------------
+> > 
+> > [1] "PCI Express Base Specification", REV. 2.1
+> >     PCI Express, March 4 2009, Table 4-7
+> > 
+> > Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> > ---
+> > Changes since v1:
+> >   - Rename retraining flag field
+> >   - Fix DEVCTL register writing
+> > ---
+> >  drivers/pci/controller/pci-aardvark.c | 33 ++++++++++++++++++++++++++-
+> >  1 file changed, 32 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> > index eb58dfdaba1b..47b707b5fc2c 100644
+> > --- a/drivers/pci/controller/pci-aardvark.c
+> > +++ b/drivers/pci/controller/pci-aardvark.c
+> > @@ -180,6 +180,7 @@
+> >  #define LINK_WAIT_MAX_RETRIES		10
+> >  #define LINK_WAIT_USLEEP_MIN		90000
+> >  #define LINK_WAIT_USLEEP_MAX		100000
+> > +#define LINK_RETRAIN_DELAY_MAX		(20 * HZ / 1000) /* 20 ms */
+> >  
+> >  #define MSI_IRQ_NUM			32
+> >  
+> > @@ -199,6 +200,8 @@ struct advk_pcie {
+> >  	u16 msi_msg;
+> >  	int root_bus_nr;
+> >  	struct pci_bridge_emul bridge;
+> > +	unsigned long rl_deadline; /* Retrain link jiffies deadline */
+> > +	u8 rl_asked; /* Retraining has been asked and is in transition */
+> >  };
+> >  
+> >  static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
+> > @@ -400,6 +403,19 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
+> >  	return -ETIMEDOUT;
+> >  }
+> >  
+> > +static int advk_pcie_link_retraining(struct advk_pcie *pcie)
+> > +{
+> > +	if (!advk_pcie_link_up(pcie)) {
+> > +		pcie->rl_asked = 0;
+> > +		return 1;
+> > +	}
+> > +
+> > +	if (pcie->rl_asked && time_before(jiffies, pcie->rl_deadline))
+> > +		return 1;
+> > +
+> > +	pcie->rl_asked = 0;
+> > +	return 0;
+> > +}
+> >  
+> >  static pci_bridge_emul_read_status_t
+> >  advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+> > @@ -426,11 +442,19 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+> >  		return PCI_BRIDGE_EMUL_HANDLED;
+> >  	}
+> >  
+> > +	case PCI_EXP_LNKCTL: {
+> 
+> Don't you mean PCI_EXP_LNKSTA here?
+
+No, PCI_EXP_LNKSTA and PCI_EXP_LNKCTL are consecutive 16bit registers
+but bridge emulation accesses those registers by 32bit chunk. So when
+one wants to read PCI_EXP_LNKSTA register, pci bridge reads 32bit data
+from PCI_EXP_LNKCTL and 16 bit shift the result to the right.
+
+This is why I use (PCI_EXP_LNKSTA_LT << 16) below.
+
+> 
+> > +		u32 val = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg) &
+> > +			~(PCI_EXP_LNKSTA_LT << 16);
+> > +		if (advk_pcie_link_retraining(pcie))
+> > +			val |= (PCI_EXP_LNKSTA_LT << 16);
+> > +		*value = val;
+> > +		return PCI_BRIDGE_EMUL_HANDLED;
+> > +	}
+> > +
+> >  	case PCI_CAP_LIST_ID:
+> >  	case PCI_EXP_DEVCAP:
+> >  	case PCI_EXP_DEVCTL:
+> >  	case PCI_EXP_LNKCAP:
+> > -	case PCI_EXP_LNKCTL:
+> 
+> If you did mean PCI_EXP_LNKSTA above, I suppose you would leave
+> PCI_EXP_LNKCTL here?
+> 
+> >  		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
+> >  		return PCI_BRIDGE_EMUL_HANDLED;
+> >  	default:
+> > @@ -447,8 +471,15 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+> >  
+> >  	switch (reg) {
+> >  	case PCI_EXP_DEVCTL:
+> > +		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+> > +		break;
+> 
+> What's the purpose of this DEVCTL change?  Could it be a separate patch?
+> I can't tell that it's related to the PCI_EXP_LNKSTA_LT issue.
+
+In fact that is the computed diff that is a bit weird here. DEVCTL does
+not really change, the advk_writel() stays the same as it was before
+the change.
+
+I have actually just modified the PCI_EXP_LNKCTL case.
+
+> 
+> >  	case PCI_EXP_LNKCTL:
+> >  		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+> > +		if (new & PCI_EXP_LNKCTL_RL) {
+> > +			pcie->rl_asked = 1;
+> > +			pcie->rl_deadline = jiffies + LINK_RETRAIN_DELAY_MAX;
+> > +		}
+> >  		break;
+> >  
+> >  	case PCI_EXP_RTCTL:
+> > -- 
+> > 2.20.1
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
