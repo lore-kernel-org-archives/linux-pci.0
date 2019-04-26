@@ -1,292 +1,249 @@
-Return-Path: <SRS0=AiiY=S3=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=ROz5=S4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2411C43219
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 22:19:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8290CC43219
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 03:44:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E4105206BA
-	for <linux-pci@archiver.kernel.org>; Thu, 25 Apr 2019 22:19:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 386CB206C1
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 03:44:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ozlabs-ru.20150623.gappssmtp.com header.i=@ozlabs-ru.20150623.gappssmtp.com header.b="kUmRjVP7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727397AbfDYWTF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 25 Apr 2019 18:19:05 -0400
-Received: from relay3-d.mail.gandi.net ([217.70.183.195]:33315 "EHLO
-        relay3-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726933AbfDYWTE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 18:19:04 -0400
-X-Originating-IP: 88.190.179.123
-Received: from localhost (unknown [88.190.179.123])
-        (Authenticated sender: repk@triplefau.lt)
-        by relay3-d.mail.gandi.net (Postfix) with ESMTPSA id 41CE26000A;
-        Thu, 25 Apr 2019 22:19:01 +0000 (UTC)
-Date:   Fri, 26 Apr 2019 00:27:57 +0200
-From:   Remi Pommarel <repk@triplefau.lt>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Ellie Reeves <ellierevves@gmail.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v2] PCI: aardvark: Use LTSSM state to build link training
- flag
-Message-ID: <20190425222756.GR2754@voidbox.localdomain>
-References: <20190316161243.29517-1-repk@triplefau.lt>
- <20190425210439.GG11428@google.com>
+        id S1726795AbfDZDos (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Apr 2019 23:44:48 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:42779 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726638AbfDZDos (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 Apr 2019 23:44:48 -0400
+Received: by mail-pg1-f196.google.com with SMTP id p6so888798pgh.9
+        for <linux-pci@vger.kernel.org>; Thu, 25 Apr 2019 20:44:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ozlabs-ru.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:openpgp:autocrypt:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=fckgf0V9VNeNANjF5MDVD0OpMM0gwYIj2heYO9wtBdU=;
+        b=kUmRjVP75njz0okqBUTA/u6anuZ/BmiiUiYlwNKYvqOuMDcGhrdDGY3SQQ5fauX7aL
+         DTVR76WXEa3Y0AfjYgDt4l9DagHGXTqX3iH+/XPXkMWJ8DNRBjuDHNqrWMqFlgMLDnxU
+         SDY/uIQKd8G/hZJNPw827hQNmSikY2wcHvePxfK6rB+xtPmwzbZH0nZynJNfW0dB3WW8
+         MuBURSPWe2dUcPo38L+etSnXz5o26ic0mqhRL7I9y5zm1Ene+zQg357NiRQuMijQMWTW
+         CU36QOeZ2qrgffZmTQ2J87mGcvIMCr/KAF0wjb1yLirAzNJJk4vsumks+O1emj8YVk5W
+         kPzQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:openpgp:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=fckgf0V9VNeNANjF5MDVD0OpMM0gwYIj2heYO9wtBdU=;
+        b=FQrgd17fMP4ci+f69+oawa91Dnxi0rLPGL8RN8++OlDEE/TTX3dl+JamdXatLLbdPB
+         +5tF1CPDKuOE9uuEXQeCVp0/pU9P37m2hoHMCCLuhpqQ8mvhCe331iOpSLPmO9g53I1S
+         syMvXfUkBZbCXSdW50qTZ2pfMdfFcgUAR5hVW2EwbJvTMAgkVoMYn+l97pTlxhsj273D
+         tVWSlqZqASrFj3gcfTefM/S/DT+ta0gpcmeXmskepmmztTux8SyH1nWzFMd5XfcUZQMH
+         sTyzQ/uiVd7n9/sf9Er7xA1xYXPgdya0pym9gnswwPYocDNQ9yg32zR7OKmY3gSz7NL4
+         66cg==
+X-Gm-Message-State: APjAAAWMeSvne1iT1xajOTLJ0FNZBAXY7iZ6JW+VE5xOM+qzNa/cf0VJ
+        LfPoZJ+capbUPgf9JD/bE4NoOxW1zcCTjg==
+X-Google-Smtp-Source: APXvYqxVWqMY5ViPXxdKDU/75fLW5qWakzcxg6PEZQYYWBwJTKjYL6aLJIZm25iqESWNygp76ggWMg==
+X-Received: by 2002:a63:2b4c:: with SMTP id r73mr42317568pgr.181.1556250286796;
+        Thu, 25 Apr 2019 20:44:46 -0700 (PDT)
+Received: from [10.61.2.175] ([122.99.82.10])
+        by smtp.gmail.com with ESMTPSA id f22sm33704859pgv.45.2019.04.25.20.44.37
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 25 Apr 2019 20:44:45 -0700 (PDT)
+Subject: Re: [PATCH v2 4/9] powerpc/powernv/npu: use helper pci_dev_id
+To:     Heiner Kallweit <hkallweit1@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Oded Gabbay <oded.gabbay@gmail.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        "David (ChunMing) Zhou" <David1.Zhou@amd.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Joerg Roedel <joro@8bytes.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Realtek linux nic maintainers <nic_swsd@realtek.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Jose Abreu <joabreu@synopsys.com>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benson Leung <bleung@chromium.org>,
+        Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Paul Mackerras <paulus@samba.org>
+Cc:     open list <linux-kernel@vger.kernel.org>,
+        "open list:AMD KFD" <dri-devel@lists.freedesktop.org>,
+        "open list:RADEON and AMDGPU DRM DRIVERS" 
+        <amd-gfx@lists.freedesktop.org>,
+        "open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+        "open list:8169 10/100/1000 GIGABIT ETHERNET DRIVER" 
+        <netdev@vger.kernel.org>,
+        "moderated list:ARM/STM32 ARCHITECTURE" 
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        "moderated list:ARM/STM32 ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
+References: <2e1f9a57-6d08-d017-24da-3e6b97fa2449@gmail.com>
+ <8ed5b4ee-3226-6786-eb96-886826e180cd@gmail.com>
+From:   Alexey Kardashevskiy <aik@ozlabs.ru>
+Openpgp: preference=signencrypt
+Autocrypt: addr=aik@ozlabs.ru; keydata=
+ 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
+Message-ID: <e0ca28bd-dfd8-cf73-dfce-a11557ecd346@ozlabs.ru>
+Date:   Fri, 26 Apr 2019 13:44:35 +1000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190425210439.GG11428@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <8ed5b4ee-3226-6786-eb96-886826e180cd@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
 
-On Thu, Apr 25, 2019 at 04:04:39PM -0500, Bjorn Helgaas wrote:
-> Hi Remi,
-> 
-> On Sat, Mar 16, 2019 at 05:12:43PM +0100, Remi Pommarel wrote:
-> > The PCI_EXP_LNKSTA_LT flag in the emulated root device's PCI_EXP_LNKSTA
-> > config register does not reflect the actual link training state and is
-> > always cleared. The Link Training and Status State Machine (LTSSM) flag
-> > in LMI config register could be used as a link training indicator.
-> 
-> LMI?  I assume this is an Aardvark-specific register?  Maybe "Aardvark
-> LMI register", since the other things here are generic PCIe registers?
 
-Yes this is an Aardvark specific register, I would have said that LMI
-stands for LTSSM management interface, but this is only guessing as I
-don't have access to a datasheet.
-
-> Is this a hardware erratum?  I know advk does some software emulation,
-> but it looks like the Aardvark PCIE_CORE_PCIEXP_CAP + PCI_EXP_LNKSTA
-> register is awfully close to being exactly the PCIe-defined
-> PCI_EXP_LNKSTA, so the difference seems like a mistake.
-
-Vendor says that PCI_EXP_LNKSTA_LT bit in PCI_EXP_LNKSTA is marked as
-"reserved" and is not implemented. It does look like a mistake to me.
-
+On 25/04/2019 05:14, Heiner Kallweit wrote:
+> Use new helper pci_dev_id() to simplify the code.
 > 
-> > Indeed if the LTSSM is in L0 or upper state then link training has
-> > completed (see [1]).
-> > 
-> > Unfortunately because setting the PCI_EXP_LINCTL_RL flag does not
-> 
-> s/PCI_EXP_LINCTL_RL/PCI_EXP_LNKCTL_RL/
-> 
-> > instantly imply a LTSSM state change (e.g. L0s to recovery state
-> > transition takes some time), LTSSM can be in L0 but link training has
-> > not finished yet. Thus a lower L0 LTSSM state followed by a L0 or upper
-> > state sequence has to be seen to be sure that link training has been
-> > done.
-> > 
-> > Because one may not call a pcie conf register read on LNKSTA after
-> > doing a retrain link or may miss the link down state due to timing, a
-> > 20ms timeout is used. Passing this timeout link is considered retrained.
-> 
-> It sounds like reading and/or writing some registers during a retrain
-> causes some sort of EL1 error?  Is this a separate erratum?  Is there
-> a list of the registers and operations (read/write) that are affected?
-> The backtrace below suggests that it's actually a read of LNKCAP or
-> LNKCTL (not LNKSTA) that caused the error.
+> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 
-IIUC, the backtrace below produces an EL1 error when doing a PIO
-transfer while the link is still retraining. See my comment below for
-more about that. But accessing any root complex's register seems fine.
-> 
-> It sounds like there are really two problems:
-> 
->   1) Reading PCI_EXP_LNKSTA (or the Aardvark equivalent) doesn't give
->      valid data for PCI_EXP_LNKSTA_LT.
 
-The 1) is correct.
 
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+
+
+> ---
+>  arch/powerpc/platforms/powernv/npu-dma.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
 > 
->   2) Sometimes config reads cause EL1 errors.
-
-Actually EL1 error happens when we try to access device's register with
-a PIO transfer, which is when we try to use the link while it is being
-retrained.
-
-IMHO, 1) and 2) are linked. ASPM core tries to use the link too early
-because it has read invalid data for PCI_EXP_LNKSTA_LT.
-
+> diff --git a/arch/powerpc/platforms/powernv/npu-dma.c b/arch/powerpc/platforms/powernv/npu-dma.c
+> index dc23d9d2a..495550432 100644
+> --- a/arch/powerpc/platforms/powernv/npu-dma.c
+> +++ b/arch/powerpc/platforms/powernv/npu-dma.c
+> @@ -1213,9 +1213,8 @@ int pnv_npu2_map_lpar_dev(struct pci_dev *gpdev, unsigned int lparid,
+>  	 * Currently we only support radix and non-zero LPCR only makes sense
+>  	 * for hash tables so skiboot expects the LPCR parameter to be a zero.
+>  	 */
+> -	ret = opal_npu_map_lpar(nphb->opal_id,
+> -			PCI_DEVID(gpdev->bus->number, gpdev->devfn), lparid,
+> -			0 /* LPCR bits */);
+> +	ret = opal_npu_map_lpar(nphb->opal_id, pci_dev_id(gpdev), lparid,
+> +				0 /* LPCR bits */);
+>  	if (ret) {
+>  		dev_err(&gpdev->dev, "Error %d mapping device to LPAR\n", ret);
+>  		return ret;
+> @@ -1224,7 +1223,7 @@ int pnv_npu2_map_lpar_dev(struct pci_dev *gpdev, unsigned int lparid,
+>  	dev_dbg(&gpdev->dev, "init context opalid=%llu msr=%lx\n",
+>  			nphb->opal_id, msr);
+>  	ret = opal_npu_init_context(nphb->opal_id, 0/*__unused*/, msr,
+> -			PCI_DEVID(gpdev->bus->number, gpdev->devfn));
+> +				    pci_dev_id(gpdev));
+>  	if (ret < 0)
+>  		dev_err(&gpdev->dev, "Failed to init context: %d\n", ret);
+>  	else
+> @@ -1258,7 +1257,7 @@ int pnv_npu2_unmap_lpar_dev(struct pci_dev *gpdev)
+>  	dev_dbg(&gpdev->dev, "destroy context opalid=%llu\n",
+>  			nphb->opal_id);
+>  	ret = opal_npu_destroy_context(nphb->opal_id, 0/*__unused*/,
+> -			PCI_DEVID(gpdev->bus->number, gpdev->devfn));
+> +				       pci_dev_id(gpdev));
+>  	if (ret < 0) {
+>  		dev_err(&gpdev->dev, "Failed to destroy context: %d\n", ret);
+>  		return ret;
+> @@ -1266,9 +1265,8 @@ int pnv_npu2_unmap_lpar_dev(struct pci_dev *gpdev)
+>  
+>  	/* Set LPID to 0 anyway, just to be safe */
+>  	dev_dbg(&gpdev->dev, "Map LPAR opalid=%llu lparid=0\n", nphb->opal_id);
+> -	ret = opal_npu_map_lpar(nphb->opal_id,
+> -			PCI_DEVID(gpdev->bus->number, gpdev->devfn), 0 /*LPID*/,
+> -			0 /* LPCR bits */);
+> +	ret = opal_npu_map_lpar(nphb->opal_id, pci_dev_id(gpdev), 0 /*LPID*/,
+> +				0 /* LPCR bits */);
+>  	if (ret)
+>  		dev_err(&gpdev->dev, "Error %d mapping device to LPAR\n", ret);
+>  
 > 
-> If that's the case and if it's possible, can you split this into a
-> patch for each issue?
-> 
-> > This fixes boot hang or kernel panic with the following callstack due to
-> > ASPM setup doing a link re-train and polling for PCI_EXP_LNKSTA_LT flag
-> > to be cleared before using it.
-> > 
-> > -------------------- 8< -------------------
-> > 	[    0.915389]  dump_backtrace+0x0/0x140
-> > 	[    0.915391]  show_stack+0x14/0x20
-> > 	[    0.915393]  dump_stack+0x90/0xb4
-> > 	[    0.915394]  panic+0x134/0x2c0
-> > 	[    0.915396]  nmi_panic+0x6c/0x70
-> > 	[    0.915398]  arm64_serror_panic+0x74/0x80
-> > 	[    0.915400]  is_valid_bugaddr+0x0/0x8
-> > 	[    0.915402]  el1_error+0x7c/0xe4
-> > 	[    0.915404]  advk_pcie_rd_conf+0x4c/0x250
-> > 	[    0.915406]  pci_bus_read_config_word+0x7c/0xd0
-> > 	[    0.915408]  pcie_capability_read_word+0x90/0xc8
-> > 	[    0.915410]  pcie_get_aspm_reg+0x68/0x118
-> > 	[    0.915412]  pcie_aspm_init_link_state+0x460/0xa98
-> 
-> This backtrace doesn't make sense to me as being related to this
-> issue.  You said above that the bug was that PCI_EXP_LNKSTA_LT is not
-> updated.  But apparently even *reading* a register at the wrong time
-> causes this EL1 error.  And pcie_get_aspm_reg() doesn't even read
-> LNKSTA; it only reads LNKCAP and LNKCTL.
 
-In fact here, advk_pcie_rd_conf+0x4c seems to be this line:
-	advk_writel(pcie, 0, PIO_START);
-
-So EL1 error seems not to happen while accessing root complex registery
-but while doing a PIO transfer using the link.
-
-> 
-> BTW, if you're including a backtrace in a commit log, you can strip
-> out the timestamps and the "cut" lines because they don't contribute
-> information that's relevant in this context.
-> 
-> > 	[    0.915414]  pci_scan_slot+0xe8/0x100
-> > 	[    0.915416]  pci_scan_child_bus_extend+0x50/0x288
-> > 	[    0.915418]  pci_scan_bridge_extend+0x348/0x4f0
-> > 	[    0.915420]  pci_scan_child_bus_extend+0x1dc/0x288
-> > 	[    0.915423]  pci_scan_root_bus_bridge+0xc4/0xe0
-> > 	[    0.915424]  pci_host_probe+0x14/0xa8
-> > 	[    0.915426]  advk_pcie_probe+0x838/0x910
-> > 	[...]
-> > -------------------- 8< -------------------
-> > 
-> > [1] "PCI Express Base Specification", REV. 2.1
-> >     PCI Express, March 4 2009, Table 4-7
-> > 
-> > Signed-off-by: Remi Pommarel <repk@triplefau.lt>
-> > ---
-> > Changes since v1:
-> >   - Rename retraining flag field
-> >   - Fix DEVCTL register writing
-> > ---
-> >  drivers/pci/controller/pci-aardvark.c | 33 ++++++++++++++++++++++++++-
-> >  1 file changed, 32 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-> > index eb58dfdaba1b..47b707b5fc2c 100644
-> > --- a/drivers/pci/controller/pci-aardvark.c
-> > +++ b/drivers/pci/controller/pci-aardvark.c
-> > @@ -180,6 +180,7 @@
-> >  #define LINK_WAIT_MAX_RETRIES		10
-> >  #define LINK_WAIT_USLEEP_MIN		90000
-> >  #define LINK_WAIT_USLEEP_MAX		100000
-> > +#define LINK_RETRAIN_DELAY_MAX		(20 * HZ / 1000) /* 20 ms */
-> >  
-> >  #define MSI_IRQ_NUM			32
-> >  
-> > @@ -199,6 +200,8 @@ struct advk_pcie {
-> >  	u16 msi_msg;
-> >  	int root_bus_nr;
-> >  	struct pci_bridge_emul bridge;
-> > +	unsigned long rl_deadline; /* Retrain link jiffies deadline */
-> > +	u8 rl_asked; /* Retraining has been asked and is in transition */
-> >  };
-> >  
-> >  static inline void advk_writel(struct advk_pcie *pcie, u32 val, u64 reg)
-> > @@ -400,6 +403,19 @@ static int advk_pcie_wait_pio(struct advk_pcie *pcie)
-> >  	return -ETIMEDOUT;
-> >  }
-> >  
-> > +static int advk_pcie_link_retraining(struct advk_pcie *pcie)
-> > +{
-> > +	if (!advk_pcie_link_up(pcie)) {
-> > +		pcie->rl_asked = 0;
-> > +		return 1;
-> > +	}
-> > +
-> > +	if (pcie->rl_asked && time_before(jiffies, pcie->rl_deadline))
-> > +		return 1;
-> > +
-> > +	pcie->rl_asked = 0;
-> > +	return 0;
-> > +}
-> >  
-> >  static pci_bridge_emul_read_status_t
-> >  advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
-> > @@ -426,11 +442,19 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
-> >  		return PCI_BRIDGE_EMUL_HANDLED;
-> >  	}
-> >  
-> > +	case PCI_EXP_LNKCTL: {
-> 
-> Don't you mean PCI_EXP_LNKSTA here?
-
-No, PCI_EXP_LNKSTA and PCI_EXP_LNKCTL are consecutive 16bit registers
-but bridge emulation accesses those registers by 32bit chunk. So when
-one wants to read PCI_EXP_LNKSTA register, pci bridge reads 32bit data
-from PCI_EXP_LNKCTL and 16 bit shift the result to the right.
-
-This is why I use (PCI_EXP_LNKSTA_LT << 16) below.
-
-> 
-> > +		u32 val = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg) &
-> > +			~(PCI_EXP_LNKSTA_LT << 16);
-> > +		if (advk_pcie_link_retraining(pcie))
-> > +			val |= (PCI_EXP_LNKSTA_LT << 16);
-> > +		*value = val;
-> > +		return PCI_BRIDGE_EMUL_HANDLED;
-> > +	}
-> > +
-> >  	case PCI_CAP_LIST_ID:
-> >  	case PCI_EXP_DEVCAP:
-> >  	case PCI_EXP_DEVCTL:
-> >  	case PCI_EXP_LNKCAP:
-> > -	case PCI_EXP_LNKCTL:
-> 
-> If you did mean PCI_EXP_LNKSTA above, I suppose you would leave
-> PCI_EXP_LNKCTL here?
-> 
-> >  		*value = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + reg);
-> >  		return PCI_BRIDGE_EMUL_HANDLED;
-> >  	default:
-> > @@ -447,8 +471,15 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
-> >  
-> >  	switch (reg) {
-> >  	case PCI_EXP_DEVCTL:
-> > +		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
-> > +		break;
-> 
-> What's the purpose of this DEVCTL change?  Could it be a separate patch?
-> I can't tell that it's related to the PCI_EXP_LNKSTA_LT issue.
-
-In fact that is the computed diff that is a bit weird here. DEVCTL does
-not really change, the advk_writel() stays the same as it was before
-the change.
-
-I have actually just modified the PCI_EXP_LNKCTL case.
-
-> 
-> >  	case PCI_EXP_LNKCTL:
-> >  		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
-> > +		if (new & PCI_EXP_LNKCTL_RL) {
-> > +			pcie->rl_asked = 1;
-> > +			pcie->rl_deadline = jiffies + LINK_RETRAIN_DELAY_MAX;
-> > +		}
-> >  		break;
-> >  
-> >  	case PCI_EXP_RTCTL:
-> > -- 
-> > 2.20.1
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Alexey
