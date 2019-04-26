@@ -2,129 +2,162 @@ Return-Path: <SRS0=ROz5=S4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72906C43219
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 07:46:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CDA7C43219
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 08:12:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 509AE206E0
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 07:46:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8977206DD
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 08:12:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726197AbfDZHqc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Apr 2019 03:46:32 -0400
-Received: from mail-qt1-f193.google.com ([209.85.160.193]:38494 "EHLO
-        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725944AbfDZHqc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 03:46:32 -0400
-Received: by mail-qt1-f193.google.com with SMTP id d13so3099026qth.5;
-        Fri, 26 Apr 2019 00:46:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Ai+vP/B94Ve42WDYthMy68WDqGtKeGDhz8vwsuWoKYY=;
-        b=FG7fOj59wwyOPVaYrKZUOZkuiWAvC9akOixlTflJRlZBaD5Nk1Q5lt4sNCVKQ0Ymoj
-         52Mw/cEb5bga48QDfZ25/IosOd7f4DVtReblKt78Tddb6JbvCOKlsnW4ZPHxwbqCcDWl
-         AQM/p3uZiav0jkbogyOgR/4xxAbV+hxPuEvbksaoHrj3hkC5yYwUQGGxb0feSPNshzXf
-         S+dmruYGKTPfi7MC8NPxeUYIYDBmFZwedMocX20dgkFMvHU+dhbQkTwmaEk2O8qXcQ6g
-         uJAGfAJII+Qyt2ArmRK2SZ3h6YsW8oPqMVHZ/GGnoBbS0uiS7s2iVgur4G88lQugZgI8
-         33hw==
-X-Gm-Message-State: APjAAAVBrPBraidJkoagVa/Iqi808354m7O7uJIVMSDvP510mK1VadoD
-        QO8l3m/Yer2pZRboxgbgjpAGH2eZtedEhQ8mJXg=
-X-Google-Smtp-Source: APXvYqzr09tBTeb1FTaqfVBhYsMoMqeG81qMW2qxny43/8KyQQnSkk725v7OZs6m0g32Hp/ZRVlDu6HuZidDEo5Nyhc=
-X-Received: by 2002:ac8:276b:: with SMTP id h40mr35193967qth.319.1556264790155;
- Fri, 26 Apr 2019 00:46:30 -0700 (PDT)
+        id S1725942AbfDZIMU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Apr 2019 04:12:20 -0400
+Received: from p-mail-ext.rd.orange.com ([161.106.1.9]:48304 "EHLO
+        p-mail-ext.rd.orange.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725854AbfDZIMT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 04:12:19 -0400
+Received: from p-mail-ext.rd.orange.com (localhost [127.0.0.1])
+        by localhost (Postfix) with SMTP id E5CD45616B8;
+        Fri, 26 Apr 2019 10:12:01 +0200 (CEST)
+Received: from p-mail-int.rd.francetelecom.fr (p-mail-int.rd.francetelecom.fr [10.192.117.12])
+        by p-mail-ext.rd.orange.com (Postfix) with ESMTP id DA50F5616A9;
+        Fri, 26 Apr 2019 10:11:53 +0200 (CEST)
+Received: from p-mail-int.rd.francetelecom.fr (localhost.localdomain [127.0.0.1])
+        by localhost (Postfix) with SMTP id E230018169F;
+        Fri, 26 Apr 2019 10:11:54 +0200 (CEST)
+Received: from [10.193.71.88] (yd-CZC9059FTQ.rd.francetelecom.fr [10.193.71.88])
+        by p-mail-int.rd.francetelecom.fr (Postfix) with ESMTP id 8EC9718152B;
+        Fri, 26 Apr 2019 10:11:54 +0200 (CEST)
+Subject: Re: [PATCH] PCI/IOV: update num_VFs earlier
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20190329080058.21736-1-pierre.cregut@orange.com>
+ <20190405223300.GD159318@google.com>
+From:   CREGUT Pierre IMT/OLN <pierre.cregut@orange.com>
+Message-ID: <744273fd-8045-7527-ad29-fa19adf6d015@orange.com>
+Date:   Fri, 26 Apr 2019 10:11:54 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-References: <20190416202013.4034148-1-arnd@arndb.de> <20190416202701.127745-1-arnd@arndb.de>
- <20190425122153.450fc094@coco.lan> <20190425153534.GS2217@ZenIV.linux.org.uk>
- <CAK8P3a2HmiYQJ2FV2FgLiFsD8M9UKteC9Jetx7ja06PQVZWYfA@mail.gmail.com> <5511420228cb38d08a67c0f6a614b7671d7d23d4.camel@sipsolutions.net>
-In-Reply-To: <5511420228cb38d08a67c0f6a614b7671d7d23d4.camel@sipsolutions.net>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Fri, 26 Apr 2019 09:46:13 +0200
-Message-ID: <CAK8P3a3CzKLvpUiVV_k__kkaZ=wg2fqnFEzWYL9qNwBfxMKZ9w@mail.gmail.com>
-Subject: Re: [PATCH v3 12/26] compat_ioctl: move more drivers to compat_ptr_ioctl
-To:     Johannes Berg <johannes@sipsolutions.net>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        y2038 Mailman List <y2038@lists.linaro.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Sterba <dsterba@suse.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        driverdevel <devel@driverdev.osuosl.org>, qat-linux@intel.com,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        linux-iio@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>,
-        linux-nvdimm@lists.01.org, linux-nvme@lists.infradead.org,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Platform Driver <platform-driver-x86@vger.kernel.org>,
-        linux-remoteproc@vger.kernel.org,
-        sparclinux <sparclinux@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-btrfs <linux-btrfs@vger.kernel.org>,
-        ceph-devel <ceph-devel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Networking <netdev@vger.kernel.org>, Sean Young <sean@mess.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20190405223300.GD159318@google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-PMX-Version: 6.4.6.2792898, Antispam-Engine: 2.7.2.2107409, Antispam-Data: 2019.4.26.80616, AntiVirus-Engine: 5.60.0, AntiVirus-Data: 2019.4.26.5600000
+X-PMX-Spam: Gauge=IIIIIIII, Probability=8%, Report='
+ MULTIPLE_RCPTS 0.1, HTML_00_01 0.05, HTML_00_10 0.05, BODY_SIZE_4000_4999 0, BODY_SIZE_5000_LESS 0, BODY_SIZE_7000_LESS 0, FROM_NAME_PHRASE 0, IN_REP_TO 0, LEGITIMATE_SIGNS 0, MSG_THREAD 0, MULTIPLE_REAL_RCPTS 0, REFERENCES 0, SINGLE_URI_IN_BODY 0, URI_WITH_PATH_ONLY 0, __ANY_URI 0, __BOUNCE_CHALLENGE_SUBJ 0, __BOUNCE_NDR_SUBJ_EXEMPT 0, __CP_URI_IN_BODY 0, __CT 0, __CTE 0, __CT_TEXT_PLAIN 0, __DQ_NEG_HEUR 0, __DQ_NEG_IP 0, __FORWARDED_MSG 0, __FRAUD_MONEY_CURRENCY 0, __FRAUD_MONEY_CURRENCY_DOLLAR 0, __HAS_CC_HDR 0, __HAS_FROM 0, __HAS_MSGID 0, __HAS_REFERENCES 0, __HTTPS_URI 0, __IN_REP_TO 0, __MIME_TEXT_ONLY 0, __MIME_TEXT_P 0, __MIME_TEXT_P1 0, __MIME_VERSION 0, __MOZILLA_USER_AGENT 0, __MULTIPLE_RCPTS_CC_X2 0, __NO_HTML_TAG_RAW 0, __PHISH_SPEAR_SUBJ_PREDICATE 0, __REFERENCES 0, __SANE_MSGID 0, __SINGLE_URI_TEXT 0, __SUBJ_ALPHA_END 0, __SUBJ_ALPHA_NEGATE 0, __SUBJ_REPLY 0,
+ __TO_MALFORMED_2 0, __TO_NAME 0, __TO_NAME_DIFF_FROM_ACC 0, __TO_REAL_NAMES 0, __URI_IN_BODY 0, __URI_NOT_IMG 0, __URI_NO_WWW 0, __URI_NS , __URI_WITH_PATH 0, __USER_AGENT 0'
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 25, 2019 at 11:25 PM Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2019-04-25 at 17:55 +0200, Arnd Bergmann wrote:
-> > On Thu, Apr 25, 2019 at 5:35 PM Al Viro <viro@zeniv.linux.org.uk> wrote:
-> > >
-> > > On Thu, Apr 25, 2019 at 12:21:53PM -0300, Mauro Carvalho Chehab wrote:
-> > >
-> > > > If I understand your patch description well, using compat_ptr_ioctl
-> > > > only works if the driver is not for s390, right?
-> > >
-> > > No; s390 is where "oh, just set ->compat_ioctl same as ->unlocked_ioctl
-> > > and be done with that; compat_ptr() is a no-op anyway" breaks.  IOW,
-> > > s390 is the reason for having compat_ptr_ioctl() in the first place;
-> > > that thing works on all biarch architectures, as long as all stuff
-> > > handled by ->ioctl() takes pointer to arch-independent object as
-> > > argument.  IOW,
-> > >         argument ignored => OK
-> > >         any arithmetical type => no go, compat_ptr() would bugger it
-> > >         pointer to int => OK
-> > >         pointer to string => OK
-> > >         pointer to u64 => OK
-> > >         pointer to struct {u64 addr; char s[11];} => OK
-> >
-> > To be extra pedantic, the 'struct {u64 addr; char s[11];} '
-> > case is also broken on x86, because sizeof (obj) is smaller
-> > on i386, even though the location of the members are
-> > the same. i.e. you can copy_from_user() this
+I also initially thought that kobject_uevent generated the netlink event
+but this is not the case. This is generated by the specific driver in use.
+For the Intel i40e driver, this is the call to i40e_do_reset_safe in
+i40e_pci_sriov_configure that sends the event.
+It is followed by i40e_pci_sriov_enable that calls i40e_alloc_vfs that
+finally calls the generic pci_enable_sriov function.
+
+So the proposed patch works well for the i40e driver (x710 cards) because
+the update to num_VFs is fast enough to be committed before the event is
+received. It may not work with other cards. The same is true for the zero
+value and there is no guarantee for other cards.
+
+The clean solution would be to lock the device in sriov_numvfs_show.
+I guess that there are good reasons why locks have been avoided
+in sysfs getter functions so let us explore other approaches.
+
+We can either return a "not settled" value (-1) or (probably better)
+do not return a value but an error (-EAGAIN returned by the show
+function).
+
+To distinguish this "not settled" situation we can either:
+* overload the meaning of num_VFs (eg make it negative)
+   but it is an unsigned short.
+* add a bool to pci_sriov struct (rather simple but modifies a well
+   established structure).
+* use the fact that not_settled => device is locked and use
+   mutex_is_locked as an over approximation.
+
+The later is not perfect but requires minimal changes to
+sriov_numvfs_show:
+
+      if (mutex_is_locked(&dev->mutex))
+          return -EAGAIN;
+
+In all cases, the device could be locked or the boolean set just
+after the test. But I don't think there is a case where causality
+would be violated.Thank you in advance for your recommendations.  
+I will update the patch according to your instructions.
+
+Le 06/04/2019 à 00:33, Bjorn Helgaas a écrit :
+> On Fri, Mar 29, 2019 at 09:00:58AM +0100, Pierre Crégut wrote:
+>> Ensure that iov->num_VFs is set before a netlink message is sent
+>> when the number of VFs is changed. Only the path for num_VFs > 0
+>> is affected. The path for num_VFs = 0 is already correct.
+>>
+>> Monitoring programs can relie on netlink messages to track interface
+>> change and query their state in /sys. But when sriov_numvfs is set to a
+>> positive value, the netlink message is sent before the value is available
+>> in sysfs. The value read after the message is received is always zero.
+> Thanks, Pierre!  Can you clue me in on where exactly the connection
+> from sriov_enable() to netlink is?
 >
-> Actually, you can't even do that because the struct might sit at the end
-> of a page and then you'd erroneously fault in this case.
+> I see one side of the race is with sriov_numvfs_show(), but I don't
+> know where the netlink message is sent.  Is that connected with the
+> kobject_uevent(KOBJ_CHANGE)?
 >
-> We had this a while ago with struct ifreq, see commit 98406133dd and its
-> parents.
-
-Yes, you are right. Very rare to hit with real-life code, but easily
-reproduced by intentionally hitting it and clearly a bug.
-
-As the saying goes
-
-  | the difference between "always works" and "almost always works"
-  | is called data corruption
-
-here the difference is an -EFAULT.
-
-      Arnd
+> One thing this would help with is figuring out exactly how *much*
+> earlier we need to set iov->num_VFs.  It looks like the current patch
+> sets it before we actually enable the VFs, so a user could read
+> /sys/.../sriov_numvfs and get the wrong value.  Of course, that's
+> unavoidable; the question is whether it's OK to get the new value
+> *before* it actually takes effect, or whether we want to return a
+> stale value until after it takes effect.
+>
+>> Link: https://bugzilla.kernel.org/show_bug.cgi?id=202991
+>> Signed-off-by: Pierre Crégut <pierre.cregut@orange.com>
+>> ---
+>> note: the behaviour can be tested with the following shell script also
+>> available on the bugzilla (d being the phy device name):
+>>
+>> ip monitor dev $d | grep --line-buffered "^[0-9]*:" | \
+>> while read line; do cat /sys/class/net/$d/device/sriov_numvfs; done
+>>
+>>   drivers/pci/iov.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 3aa115ed3a65..a9655c10e87f 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -351,6 +351,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>   		goto err_pcibios;
+>>   	}
+>>   
+>> +	iov->num_VFs = nr_virtfn;
+>>   	pci_iov_set_numvfs(dev, nr_virtfn);
+>>   	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
+>>   	pci_cfg_access_lock(dev);
+>> @@ -363,7 +364,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>   		goto err_pcibios;
+>>   
+>>   	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
+>> -	iov->num_VFs = nr_virtfn;
+>>   
+>>   	return 0;
+>>   
+>> @@ -379,6 +379,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>>   	if (iov->link != dev->devfn)
+>>   		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>>   
+>> +	iov->num_VFs = 0;
+>>   	pci_iov_set_numvfs(dev, 0);
+>>   	return rc;
+>>   }
+>> -- 
+>> 2.17.1
+>>
