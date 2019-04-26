@@ -2,131 +2,167 @@ Return-Path: <SRS0=ROz5=S4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F726C43218
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 13:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 797BEC43218
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 13:22:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40A8A2077B
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 13:21:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 489D7206C1
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 13:22:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nGmzSrbl"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oE2B6YFz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726138AbfDZNVa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Apr 2019 09:21:30 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:41926 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726069AbfDZNVa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 09:21:30 -0400
-Received: by mail-io1-f66.google.com with SMTP id r10so2902140ioc.8;
-        Fri, 26 Apr 2019 06:21:30 -0700 (PDT)
+        id S1726206AbfDZNWZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Apr 2019 09:22:25 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:35492 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726065AbfDZNWZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 09:22:25 -0400
+Received: by mail-wr1-f68.google.com with SMTP id f7so4460699wrs.2;
+        Fri, 26 Apr 2019 06:22:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=ZNOtvepFevmzmMtAUynEOqUF3jb2beeDOj9721fg26s=;
-        b=nGmzSrblxYDMUcPBuYBgpHf4YKWS/UFdqu0FexfPA3zAWdOyUVLwBKg1uVOt74zMKh
-         E1K3XPO75+jzOWsDlU0ITQKjqiMg3Y6yVbQ59SxeZEgIVX5xiCwd7XdLg6gX+b6kMOv/
-         OZdQu7sRGRQZUcWiTszrqjKZuDtqE+VBlpAA1hkzbv1w8Sd3mF9jb0ufhlsUZVEUc8TE
-         HYa7e2ev3V/drC5fUHUvPvvmb+MVnW63mDbdb1EtI6z5S2bJgH98iL+aixU8vebQauDt
-         sL0IWTKcj/kv+OSMno76VEqiiByouh5QLaVwHymzzUqtUYqKqjy3a2I2h0eWHYmnSPOx
-         xveQ==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=TIAj3o8zfFXQ7i9AcKA4c22ULiJK3bQpWrZbS8lfSJY=;
+        b=oE2B6YFzTMkmAx+1z2qBzTzcFlVhLNOAF5qQbt2ORM3GRiu3DlE+p1JiY0j2Tgfj/S
+         Pri8k3Yd4i35KmAsZXUh7xXawFvXpCj8KEXiuyDzU0LUoZwtI/HVE50Nd1OgSY3A5Ipe
+         obmbttoKw8iEIA+zHy3SmTBe0D/ACu/LaXTlH+gr7PYvD6G+i5cxR8WlTNq+1LAbGKa6
+         uZJKIt3++lvvPrDA+LkdZdhc0zaTwoj2OXqvX0apqAghOv+l9Vp4RNa5GdR+FkcSKMZh
+         p/WD6BaqVxdzwBN2+Y86h6MLGRYHfAuFtuLZrExuXsSXeYKJ41/GDEG6KR3eZhKiUAxB
+         c/Vw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=ZNOtvepFevmzmMtAUynEOqUF3jb2beeDOj9721fg26s=;
-        b=g90JshFAKaCYP0bPZan3zSqPixvNaC3GkS5znZMVvkfKliOyJMMB7IVjyXinSvrrsp
-         IcliKUMdJ5OMpgvMrYIdc60xL9w691UfJajGS7jW1dXKrwkHOmIqRGSKPzzlpAO+ilEA
-         cedVAlMf1Ucrl6OChKnodaXhAkrTmFeG88caC/3GAU5c1oyz3jZZHXYhkmpRhM0cU9mH
-         o610IYbV8ZFi4o8jIwy8ib/9lMuFUQVJYRO/ExWJUYyNQCpFTP25SJcmuowW0KI9bee6
-         8JWQ4676shK4VDhv+nIoI+vjatFPav9ywweTJ6dhg4EMiVKAB6HhTV0Wn2d9gk6McwOR
-         UQLw==
-X-Gm-Message-State: APjAAAW8gDlWp/xGceMjWlE1wmk4NrB5birME9Mo/f8BYlRQN1ryk2Lw
-        bbzjJh5VIuryFXDMpp12dYAxRFFFavI+7b9orhdjBLWL
-X-Google-Smtp-Source: APXvYqx2FjAOr6/Bc+db7gR/r8ORgt4vjRbHsXytKCPPhiKbZhc0s15k4d/98Qv0NV/Fy09ma4NEwe8unOTfutFrn88=
-X-Received: by 2002:a05:6602:20d6:: with SMTP id 22mr24484648ioz.163.1556284889287;
- Fri, 26 Apr 2019 06:21:29 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=TIAj3o8zfFXQ7i9AcKA4c22ULiJK3bQpWrZbS8lfSJY=;
+        b=lr3c2dRznL7FQYqnAQwHSsMWOux7IpTp31Wt+13nanRmASNxL/V9+Bf9lqno4d2zPi
+         slm/hd4CXys8lf+dEnak8+wG7D0CEQ41tY9S1AWUq6acLKPh2yAypN0isXH27PvpHz3W
+         PdkDJstBWHwdmeuti7ovo0ZpieXtedIuFndELoQQVYd0Vy8wHOD3b0+Tvd35tT7eEi3V
+         hUBw96oY7P2KcTpjukC0MJlcYiTxMjPGezc5wgONVmhpiYxmlhEmiCmi/BVTzD2GBIZt
+         P4xXQdD0X9/3dQBQX8d8GJE4thAIOldzUft2UTgatpGo3UzhXJoM6BibYPW2bYKA09bh
+         QnOw==
+X-Gm-Message-State: APjAAAVfIxh2g8HJNfks38RGu9md4oFC+Io2NtX2wINmizuB9RLzBHsz
+        BFEIa2gp5bbwHsaI2ktwvG8=
+X-Google-Smtp-Source: APXvYqwmYn/JS2uRKmyvnyALE6EgO5folnEZ+LBghaKICk+Fcpkqu0t6PN5bVp6GmrIFKcQoy4WpcA==
+X-Received: by 2002:a05:6000:1152:: with SMTP id d18mr5225803wrx.32.1556284942301;
+        Fri, 26 Apr 2019 06:22:22 -0700 (PDT)
+Received: from localhost (p2E5BEF36.dip0.t-ipconnect.de. [46.91.239.54])
+        by smtp.gmail.com with ESMTPSA id 4sm24174575wmi.14.2019.04.26.06.22.20
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Fri, 26 Apr 2019 06:22:20 -0700 (PDT)
+Date:   Fri, 26 Apr 2019 15:22:19 +0200
+From:   Thierry Reding <thierry.reding@gmail.com>
+To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH V2 00/28] Enable Tegra PCIe root port features
+Message-ID: <20190426132219.GE16228@ulmo>
+References: <20190423092825.759-1-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-References: <bug-203435-193951@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-203435-193951@https.bugzilla.kernel.org/>
-Reply-To: bjorn@helgaas.com
-From:   Bjorn Helgaas <bjorn.helgaas@gmail.com>
-Date:   Fri, 26 Apr 2019 08:21:18 -0500
-Message-ID: <CABhMZUV2bSHUeZErR8=AQrBvuJHeKEMfQJbGTVRgcxZcXp6i2g@mail.gmail.com>
-Subject: Re: [Bug 203435] New: Xilinx pcie endpoint DMA not functional for
- ZynqMP PS AXI-PXI DMA endpoint
-To:     linux-pci@vger.kernel.org
-Cc:     dtyree@newagemicro.com, Michal Simek <michal.simek@xilinx.com>,
-        Vinod Koul <vkoul@kernel.org>, dmaengine@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="PGNNI9BzQDUtgA2J"
+Content-Disposition: inline
+In-Reply-To: <20190423092825.759-1-mmaddireddy@nvidia.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc linux-pci, Xilinx and DMA engine folks]
 
-I'm not sure what to do with this report.  It mentions "vivado" and
-xilinx_ps_pcie_platform.c, neither of which seems to be in mainline or
-linux-next.  A Google search suggests that Vivado is a Xilinx product;
-maybe this bug report should be directed there?
+--PGNNI9BzQDUtgA2J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 26, 2019 at 7:09 AM <bugzilla-daemon@bugzilla.kernel.org> wrote:
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=203435
->
->             Bug ID: 203435
->            Summary: Xilinx pcie endpoint DMA not functional for ZynqMP PS
->                     AXI-PXI DMA endpoint
->            Product: Drivers
->            Version: 2.5
->     Kernel Version: 4.14.0
->           Hardware: Other
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: PCI
->           Assignee: drivers_pci@kernel-bugs.osdl.org
->           Reporter: dtyree@newagemicro.com
->         Regression: No
->
-> The ps_pcie_dma-1.00.a driver does not work as an endpoint. I'd be happy to
-> help fix/enable/test this out, but I do not understand what the intent was.
->
-> The rootdma option is the only one allowed / documented through device-tree and
-> kernel docs. It does not cover the epdma branches in the code that require that
-> drivers/dma/xilinx/xilinx_ps_pcie_platform.c:18:#define PLATFORM_DRIVER_NAME
->           "ps_pcie_pform_dma"
->
-> be available. I am not sure if this was intended to be the endpoint.
->
-> The vivado build for the pcie endpoint will not enable the endpoint DMA
-> channels. I would expect that to be done through device-tree/PCIe BAR
-> configuration reads (for sizes) to set up the channels, but I can't find
-> anything that may other than the mystery of epdma with PLATFORM_DRIVER_NAME.
->
-> Because the fsbl does not enable the AXI-DMA the rootdma channel enable check
-> fails on line xilinx_ps_pcie_platform.c:1832
->         channel->chan_base =
->         (struct DMA_ENGINE_REGISTERS *)((__force char *)(xdev->reg_base) +
->                                  (channel_number * DMA_CHANNEL_REGS_SIZE));
->
->         if (((channel->chan_base->dma_channel_status) &
->                                 DMA_STATUS_DMA_PRES_BIT) == 0) {
->                 dev_err(&platform_dev->dev,
->                         "Hardware reports channel not present\n");
->                 return -ENOTSUPP;
->         }
->
-> Is there a different way to access use the PS AXI-PCIe DMA?
->
-> Can anyone offer some advice? Have I misunderstood the dis-functionality of the
-> epdma -vs- rootdma branching?
->
-> Thanks
+On Tue, Apr 23, 2019 at 02:57:57PM +0530, Manikanta Maddireddy wrote:
+> This series of patches adds,
+> - Tegra root port features like Gen2, AER, etc
+> - Power and perf optimizations
+> - Fixes like "power up sequence", "dev_err prints", etc
+>=20
+> This series of patches are tested on Tegra186 based Jetson-TX2, Tegra210
+> based Jetson-TX1 and T124 based Jetson-TK1 platforms.
+>=20
+> TODO: I don't have T20 and T30 platforms to verify this series.
+> Thierry has kindly agreed to verify this series on T20 and T30.
+
+I tested this on TrimSlice and Beaver. next-20190426 boots via NFS on
+both of those boards. Applying this series on top of next-20190426 works
+on Beaver but does not work on TrimSlice. I'll see if I can bisect which
+exact commit breaks this, but it seems like PCI accesses do work, since
+I see the RTL8169 device being detected. But when the kernel tries to
+send out DHCP requests, the packet transmission is never completed using
+an interrupt, so maybe something interrupt related is broken.
+
+Thierry
+
+> V2 takes care of comments from Bjorn and Thierry.
+>=20
+> Manikanta Maddireddy (28):
+>   soc/tegra: pmc: Export tegra_powergate_power_on()
+>   PCI: tegra: Handle failure cases in tegra_pcie_power_on()
+>   PCI: tegra: Rearrange Tegra PCIe driver functions
+>   PCI: tegra: Disable PCIe interrupts in runtime suspend
+>   PCI: tegra: Fix PCIe host power up sequence
+>   PCI: tegra: Add PCIe Gen2 link speed support
+>   PCI: tegra: Advertise PCIe Advanced Error Reporting (AER) capability
+>   PCI: tegra: Program UPHY electrical settings for Tegra210
+>   PCI: tegra: Enable opportunistic UpdateFC and ACK
+>   PCI: tegra: Disable AFI dynamic clock gating
+>   PCI: tegra: Process pending DLL transactions before entering L1 or L2
+>   PCI: tegra: Enable PCIe xclk clock clamping
+>   PCI: tegra: Increase the deskew retry time
+>   PCI: tegra: Add SW fixup for RAW violations
+>   PCI: tegra: Update flow control timer frequency in Tegra210
+>   PCI: tegra: Set target speed as Gen1 before starting LTSSM
+>   PCI: tegra: Fix PLLE power down issue due to CLKREQ# signal
+>   PCI: tegra: Program AFI_CACHE* registers only for Tegra20
+>   PCI: tegra: Change PRSNT_SENSE irq log to debug
+>   PCI: tegra: Use legacy irq for port service drivers
+>   PCI: tegra: Add AFI_PEX2_CTRL reg offset as part of soc struct
+>   PCI: tegra: Access endpoint config only if PCIe link is up
+>   dt-bindings: pci: tegra: Document PCIe DPD pinctrl optional prop
+>   arm64: tegra: Add PEX DPD states as pinctrl properties
+>   PCI: tegra: Put PEX CLK & BIAS pads in DPD mode
+>   dt-bindings: pci: tegra: Document reset-gpio optional prop
+>   PCI: tegra: Add support for GPIO based PCIe reset
+>   PCI: tegra: Change link retry log level to info
+>=20
+>  .../bindings/pci/nvidia,tegra20-pcie.txt      |  13 +
+>  arch/arm64/boot/dts/nvidia/tegra210.dtsi      |  19 +
+>  drivers/pci/controller/pci-tegra.c            | 605 +++++++++++++++---
+>  drivers/soc/tegra/pmc.c                       |   1 +
+>  4 files changed, 558 insertions(+), 80 deletions(-)
+>=20
+> --=20
+> 2.17.1
+>=20
+
+--PGNNI9BzQDUtgA2J
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlzDBgsACgkQ3SOs138+
+s6FcLA//eitwlqBKygxV35jOjECLnGd/ds+9r6ilxxsLjfNnp2KJ8OKijsgxXHI+
+FeU4FLr2RjIcjzf8q0IljJpGuHRBlGcNuwQwL21C/GliC52R5OyhPwM1yTl6TpLv
+7tByFrB3N+gnSLo/o2NWDszHwOwd7DDQJmAFEwXU121WiRcaDZDSEgbeNZq29uCH
+rBfuRxeSqO8+X9hZEtw+qKsVtLlrM2PlNtjdKCvR3wKRaIiSDWe+qcf8EBfDsoz5
+SoGh5wiUWgZh4QuBpEvCyt+z4KsI0566JlgiyVE3wpmxLZQkBhhZS89iZ2YJhqX7
+9AnPSe4SkP6tQcByWO1dqO9dm+oHKVXuroE6zkgcAMm2Sph3OLCvp0CS43DMep4S
+x4YQX1LLCYl2E5ZhiqSNG137QsCGIi2rFIB2vsaR5HPxZiV+K5sD8cDuCtxFPrE8
+w5hKIJs05eH9RtSXnQzBo+W1JcGC74hDgT5+rey44sMhhLSVjVbI2ld3j77X99FU
+WTxTx49FqXiiiU8DSimvIxFJ7xzZAJlsq5MVmTbPVz4Gel+yNIKSOaOroaDgL6HI
+91tGYEb2HtOh9NpsOAXYAw4X4R3npbgReO5vc42yRVEM8EtHdEFUqyrh5aP49W8w
+mhhnQckKGoQhN0iF/e73ydOv0O3a75JFyiFcbQfEfN756LSrV/c=
+=cYVY
+-----END PGP SIGNATURE-----
+
+--PGNNI9BzQDUtgA2J--
