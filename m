@@ -2,162 +2,98 @@ Return-Path: <SRS0=ROz5=S4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CDA7C43219
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 08:12:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12020C43218
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 09:20:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8977206DD
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 08:12:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D693720679
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 09:20:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Hur+nkXI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725942AbfDZIMU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Apr 2019 04:12:20 -0400
-Received: from p-mail-ext.rd.orange.com ([161.106.1.9]:48304 "EHLO
-        p-mail-ext.rd.orange.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725854AbfDZIMT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 04:12:19 -0400
-Received: from p-mail-ext.rd.orange.com (localhost [127.0.0.1])
-        by localhost (Postfix) with SMTP id E5CD45616B8;
-        Fri, 26 Apr 2019 10:12:01 +0200 (CEST)
-Received: from p-mail-int.rd.francetelecom.fr (p-mail-int.rd.francetelecom.fr [10.192.117.12])
-        by p-mail-ext.rd.orange.com (Postfix) with ESMTP id DA50F5616A9;
-        Fri, 26 Apr 2019 10:11:53 +0200 (CEST)
-Received: from p-mail-int.rd.francetelecom.fr (localhost.localdomain [127.0.0.1])
-        by localhost (Postfix) with SMTP id E230018169F;
-        Fri, 26 Apr 2019 10:11:54 +0200 (CEST)
-Received: from [10.193.71.88] (yd-CZC9059FTQ.rd.francetelecom.fr [10.193.71.88])
-        by p-mail-int.rd.francetelecom.fr (Postfix) with ESMTP id 8EC9718152B;
-        Fri, 26 Apr 2019 10:11:54 +0200 (CEST)
-Subject: Re: [PATCH] PCI/IOV: update num_VFs earlier
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20190329080058.21736-1-pierre.cregut@orange.com>
- <20190405223300.GD159318@google.com>
-From:   CREGUT Pierre IMT/OLN <pierre.cregut@orange.com>
-Message-ID: <744273fd-8045-7527-ad29-fa19adf6d015@orange.com>
-Date:   Fri, 26 Apr 2019 10:11:54 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <20190405223300.GD159318@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-PMX-Version: 6.4.6.2792898, Antispam-Engine: 2.7.2.2107409, Antispam-Data: 2019.4.26.80616, AntiVirus-Engine: 5.60.0, AntiVirus-Data: 2019.4.26.5600000
-X-PMX-Spam: Gauge=IIIIIIII, Probability=8%, Report='
- MULTIPLE_RCPTS 0.1, HTML_00_01 0.05, HTML_00_10 0.05, BODY_SIZE_4000_4999 0, BODY_SIZE_5000_LESS 0, BODY_SIZE_7000_LESS 0, FROM_NAME_PHRASE 0, IN_REP_TO 0, LEGITIMATE_SIGNS 0, MSG_THREAD 0, MULTIPLE_REAL_RCPTS 0, REFERENCES 0, SINGLE_URI_IN_BODY 0, URI_WITH_PATH_ONLY 0, __ANY_URI 0, __BOUNCE_CHALLENGE_SUBJ 0, __BOUNCE_NDR_SUBJ_EXEMPT 0, __CP_URI_IN_BODY 0, __CT 0, __CTE 0, __CT_TEXT_PLAIN 0, __DQ_NEG_HEUR 0, __DQ_NEG_IP 0, __FORWARDED_MSG 0, __FRAUD_MONEY_CURRENCY 0, __FRAUD_MONEY_CURRENCY_DOLLAR 0, __HAS_CC_HDR 0, __HAS_FROM 0, __HAS_MSGID 0, __HAS_REFERENCES 0, __HTTPS_URI 0, __IN_REP_TO 0, __MIME_TEXT_ONLY 0, __MIME_TEXT_P 0, __MIME_TEXT_P1 0, __MIME_VERSION 0, __MOZILLA_USER_AGENT 0, __MULTIPLE_RCPTS_CC_X2 0, __NO_HTML_TAG_RAW 0, __PHISH_SPEAR_SUBJ_PREDICATE 0, __REFERENCES 0, __SANE_MSGID 0, __SINGLE_URI_TEXT 0, __SUBJ_ALPHA_END 0, __SUBJ_ALPHA_NEGATE 0, __SUBJ_REPLY 0,
- __TO_MALFORMED_2 0, __TO_NAME 0, __TO_NAME_DIFF_FROM_ACC 0, __TO_REAL_NAMES 0, __URI_IN_BODY 0, __URI_NOT_IMG 0, __URI_NO_WWW 0, __URI_NS , __URI_WITH_PATH 0, __USER_AGENT 0'
+        id S1726039AbfDZJU3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Apr 2019 05:20:29 -0400
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:38544 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725800AbfDZJU2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 05:20:28 -0400
+Received: by mail-ed1-f65.google.com with SMTP id c1so2564883edk.5
+        for <linux-pci@vger.kernel.org>; Fri, 26 Apr 2019 02:20:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=iOChsIoVZwQ6wbP1aoL1H3vmoIYH+SqIfEtaHUVB5Zs=;
+        b=Hur+nkXIiAnfpFrFXwZJjM+pTeGDpKeorzUOu1Jsd7GTcRfPpBNCI0YZMecTSj/62N
+         UB1pE8i3IalTUWPIbXwTeP/BgEp02Buw+HCEX1kRkSnpZgUW4OgPpFuBLcDoFt7/Vhvm
+         RMJXFOPJMvpKLfFTSdYUkktvY2Se8CKpDUffw=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=iOChsIoVZwQ6wbP1aoL1H3vmoIYH+SqIfEtaHUVB5Zs=;
+        b=aAKIt72ErWd+rcbZrhtEHH4uFDBRtip57sCl1mz7MZLxcsOkQk5rgTxwEcOw0wXWXE
+         kIcJO7zib5O6DNNZUdDFnoe+x/KnXbwbg1RRFNKGLL8y8plfwgIss1PK8vOiMMI2YPMt
+         t+0VhstfmWRPB+xwgEUv8da1H+La1i5IrTvTDviwEjjfygwWmcRckG/lnnoaGmHP8Ysu
+         txWh5J9Yv4HoUkikaI6kwgFl3J3EebHcQAw8M7aSWZcchDNsVj5elYG21FMetDjV1xJ0
+         cCWduwEe8kccTK+RifdfvF+1+sh5+HnrAsH0jGRVlDp7BFzNw9gzzpBMq+8atAvv9lt2
+         J/Jw==
+X-Gm-Message-State: APjAAAWjG/Wol0uZ0QRO5CJ8tI9miJqi3pPjgaoh7AyMu7GXhReZzZNe
+        2rFQyNVQwbqXOKIMAP9wtwDPzA==
+X-Google-Smtp-Source: APXvYqxOH6WsYMbGtuBl3y4UHtVCwaBTSvgCoREz7K0RmoRnvC83oOHpmYaCpuqrDlbQ90Llu6PMqA==
+X-Received: by 2002:a17:906:515a:: with SMTP id s26mr3270533ejl.34.1556270424179;
+        Fri, 26 Apr 2019 02:20:24 -0700 (PDT)
+Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d59sm2403694edc.34.2019.04.26.02.20.19
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 26 Apr 2019 02:20:23 -0700 (PDT)
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>
+Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [PATCH] PCI: iproc: Enable iProc config read for PAXBv2
+Date:   Fri, 26 Apr 2019 14:50:04 +0530
+Message-Id: <1556270404-27058-1-git-send-email-srinath.mannam@broadcom.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-I also initially thought that kobject_uevent generated the netlink event
-but this is not the case. This is generated by the specific driver in use.
-For the Intel i40e driver, this is the call to i40e_do_reset_safe in
-i40e_pci_sriov_configure that sends the event.
-It is followed by i40e_pci_sriov_enable that calls i40e_alloc_vfs that
-finally calls the generic pci_enable_sriov function.
+iProc config read flag has to enable for PAXBv2 instead of PAXB.
 
-So the proposed patch works well for the i40e driver (x710 cards) because
-the update to num_VFs is fast enough to be committed before the event is
-received. It may not work with other cards. The same is true for the zero
-value and there is no guarantee for other cards.
+Fixes: f78e60a29d4ff ("PCI: iproc: Reject unconfigured physical functions from PAXC")
+Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+---
+ drivers/pci/controller/pcie-iproc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The clean solution would be to lock the device in sriov_numvfs_show.
-I guess that there are good reasons why locks have been avoided
-in sysfs getter functions so let us explore other approaches.
+diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
+index c20fd6b..9d5cbc7 100644
+--- a/drivers/pci/controller/pcie-iproc.c
++++ b/drivers/pci/controller/pcie-iproc.c
+@@ -1347,7 +1347,6 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 		break;
+ 	case IPROC_PCIE_PAXB:
+ 		regs = iproc_pcie_reg_paxb;
+-		pcie->iproc_cfg_read = true;
+ 		pcie->has_apb_err_disable = true;
+ 		if (pcie->need_ob_cfg) {
+ 			pcie->ob_map = paxb_ob_map;
+@@ -1356,6 +1355,7 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
+ 		break;
+ 	case IPROC_PCIE_PAXB_V2:
+ 		regs = iproc_pcie_reg_paxb_v2;
++		pcie->iproc_cfg_read = true;
+ 		pcie->has_apb_err_disable = true;
+ 		if (pcie->need_ob_cfg) {
+ 			pcie->ob_map = paxb_v2_ob_map;
+-- 
+2.7.4
 
-We can either return a "not settled" value (-1) or (probably better)
-do not return a value but an error (-EAGAIN returned by the show
-function).
-
-To distinguish this "not settled" situation we can either:
-* overload the meaning of num_VFs (eg make it negative)
-   but it is an unsigned short.
-* add a bool to pci_sriov struct (rather simple but modifies a well
-   established structure).
-* use the fact that not_settled => device is locked and use
-   mutex_is_locked as an over approximation.
-
-The later is not perfect but requires minimal changes to
-sriov_numvfs_show:
-
-      if (mutex_is_locked(&dev->mutex))
-          return -EAGAIN;
-
-In all cases, the device could be locked or the boolean set just
-after the test. But I don't think there is a case where causality
-would be violated.Thank you in advance for your recommendations.  
-I will update the patch according to your instructions.
-
-Le 06/04/2019 à 00:33, Bjorn Helgaas a écrit :
-> On Fri, Mar 29, 2019 at 09:00:58AM +0100, Pierre Crégut wrote:
->> Ensure that iov->num_VFs is set before a netlink message is sent
->> when the number of VFs is changed. Only the path for num_VFs > 0
->> is affected. The path for num_VFs = 0 is already correct.
->>
->> Monitoring programs can relie on netlink messages to track interface
->> change and query their state in /sys. But when sriov_numvfs is set to a
->> positive value, the netlink message is sent before the value is available
->> in sysfs. The value read after the message is received is always zero.
-> Thanks, Pierre!  Can you clue me in on where exactly the connection
-> from sriov_enable() to netlink is?
->
-> I see one side of the race is with sriov_numvfs_show(), but I don't
-> know where the netlink message is sent.  Is that connected with the
-> kobject_uevent(KOBJ_CHANGE)?
->
-> One thing this would help with is figuring out exactly how *much*
-> earlier we need to set iov->num_VFs.  It looks like the current patch
-> sets it before we actually enable the VFs, so a user could read
-> /sys/.../sriov_numvfs and get the wrong value.  Of course, that's
-> unavoidable; the question is whether it's OK to get the new value
-> *before* it actually takes effect, or whether we want to return a
-> stale value until after it takes effect.
->
->> Link: https://bugzilla.kernel.org/show_bug.cgi?id=202991
->> Signed-off-by: Pierre Crégut <pierre.cregut@orange.com>
->> ---
->> note: the behaviour can be tested with the following shell script also
->> available on the bugzilla (d being the phy device name):
->>
->> ip monitor dev $d | grep --line-buffered "^[0-9]*:" | \
->> while read line; do cat /sys/class/net/$d/device/sriov_numvfs; done
->>
->>   drivers/pci/iov.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->> index 3aa115ed3a65..a9655c10e87f 100644
->> --- a/drivers/pci/iov.c
->> +++ b/drivers/pci/iov.c
->> @@ -351,6 +351,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>   		goto err_pcibios;
->>   	}
->>   
->> +	iov->num_VFs = nr_virtfn;
->>   	pci_iov_set_numvfs(dev, nr_virtfn);
->>   	iov->ctrl |= PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE;
->>   	pci_cfg_access_lock(dev);
->> @@ -363,7 +364,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>   		goto err_pcibios;
->>   
->>   	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
->> -	iov->num_VFs = nr_virtfn;
->>   
->>   	return 0;
->>   
->> @@ -379,6 +379,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->>   	if (iov->link != dev->devfn)
->>   		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->>   
->> +	iov->num_VFs = 0;
->>   	pci_iov_set_numvfs(dev, 0);
->>   	return rc;
->>   }
->> -- 
->> 2.17.1
->>
