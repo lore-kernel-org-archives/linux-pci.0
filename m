@@ -2,53 +2,52 @@ Return-Path: <SRS0=ROz5=S4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ADAEC43218
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 15:43:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2127C43218
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 15:45:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B71FB208CA
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 15:43:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 84CB6208CB
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 15:45:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556293390;
-	bh=GQH0fFnLhM5Nl3bDJ644yyf+EIplez0VCT2htHQkUWM=;
+	s=default; t=1556293522;
+	bh=/WIF5ZsOAHRvnXvFaRIh8SPxwDKNHT15GaB4L4qzTMQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=qqqsVvTKLHKRJjlqpewVgjMPxhDVcwhjtEnqn6buBaAporZuJoogWCk28vNr05mt/
-	 fR736AINz9BSUG4Ogfl7NCN3u7BaIlq30iDYlN2GXki/xD6luvrqn9sePyJKFU1x+M
-	 Yg/OSUpZGLFwNWTpnOhcoa0N9q3o3np26tkZjt4c=
+	b=1y+S6GhXnomYILrel4yj/4V0tpgST/ASt2Q/5pOdDIQhio1nLb6MxSIyX2zFILVau
+	 ZP2rROPYQenXiLMh+wmLhL8+UjkmhMvx3qTTziZEPWxdfjmsNF4lORRG0LtgewOXfi
+	 2bkFsRnWNMXvFno9aM0UUR8jcdvtssJKnXspn3b4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726224AbfDZPnK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Apr 2019 11:43:10 -0400
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:34889 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726191AbfDZPnJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 11:43:09 -0400
-Received: by mail-oi1-f195.google.com with SMTP id w197so3301932oia.2;
-        Fri, 26 Apr 2019 08:43:08 -0700 (PDT)
+        id S1726310AbfDZPpV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Apr 2019 11:45:21 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:37684 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726295AbfDZPpV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 11:45:21 -0400
+Received: by mail-ot1-f68.google.com with SMTP id r20so1894933otg.4;
+        Fri, 26 Apr 2019 08:45:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=+x6/GlN8qFq06uElyVmK6pHCAN3gyTaPHeXovoJYgHU=;
-        b=reF1VJhH3UbEZtPJrVgplJfUBZUooq71OJs/dZwAiT+Xe3wCA5gBgipsZzWdtjNzWG
-         p3U7ou/L3aK0oDcG3Jr+kbuy6XdGjwd+s18CxXJxA4vKhoJpHhxlqIGHdPPBZAEwYjcZ
-         WPf5yCnb0lbVnb7/gelWiQPL/yyeGNJspe6BHRZ7XAfKmKBMC1xatKYues1bCUgzIB/d
-         AuBcMw/Q7nGHE3/s7tt5mC3WBlSX5ziTlhAUqUHXWJnXwo6bBIhfKINxLpDj0ia2pg3K
-         u31vXfFJvptHvvWbuXhaH5e+v3Enfv9q+Avr0s43b3x7x5JI7HNjh9+M3N4+LRLqXMa7
-         Skqw==
-X-Gm-Message-State: APjAAAXijYPJb9RnkR2rTFaDVcCPmlSTG/w7VP3SHxFfR9kP4KuXuabP
-        SQce+KzZ4s0uUMPAT7bCaw==
-X-Google-Smtp-Source: APXvYqxZcPIQSXpa4AE48dzmYvBKsHorKJIRX8wOM6QDUppgdZmhFxpKCcgamV+GfG96cG0tdJHKyw==
-X-Received: by 2002:aca:bac2:: with SMTP id k185mr7808889oif.85.1556293387719;
-        Fri, 26 Apr 2019 08:43:07 -0700 (PDT)
+        bh=tNTtEvqJlRv85tDYzGzLiqv1W7Qq1L++Q9HTzcYFWas=;
+        b=YFIGJMegua31zthlWraeSdaBdZaN/02jIq/mQ4ikamPjFC51ade/csm61Yfo9ort7W
+         Y79v9IGjgfEQiJeBuI650Pp6JuNszSOictQJcJwAhnn49k/PfM3SWgIq1C0TGCONSQh/
+         hwAYpz7l5oJO3VJEMpKbn9pa1TdBcZBECiKaYJ59mgDw/q69LoWnxm3uGEE5ANHwyrLn
+         oJ0HkSM9unT0pv0xkDBGZgmtm+IbzjwMeGTtyzUJo7AafQxFFSOPFMg6gI/JsrSCG7Kr
+         Nj4KIt9H/NKMZbJrkXquM+Vpu+NT8LOSAEpob2pAT8J7OZXTBZCUW1bTvN8EYzDr/PBt
+         1XOQ==
+X-Gm-Message-State: APjAAAWZ1NPaqytmrDPvhm1aT/To/D6Wguofz2V14qQZqlHUwOZd7nNP
+        tHlZgMhNFg6wr3nZ2z9NIQ==
+X-Google-Smtp-Source: APXvYqyCQ+DYlEX56dmy2H5QMZOm1oDfwASMFMM2tkO7QWRhHh28uNpJzEJ8wq9qkHjZomKtAnI9SQ==
+X-Received: by 2002:a9d:7ad9:: with SMTP id m25mr28870711otn.75.1556293520461;
+        Fri, 26 Apr 2019 08:45:20 -0700 (PDT)
 Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id y11sm4214486oiy.1.2019.04.26.08.43.06
+        by smtp.gmail.com with ESMTPSA id a34sm11760507otc.46.2019.04.26.08.45.19
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 26 Apr 2019 08:43:06 -0700 (PDT)
-Date:   Fri, 26 Apr 2019 10:43:06 -0500
+        Fri, 26 Apr 2019 08:45:19 -0700 (PDT)
+Date:   Fri, 26 Apr 2019 10:45:19 -0500
 From:   Rob Herring <robh@kernel.org>
 To:     Vidya Sagar <vidyas@nvidia.com>
 Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
@@ -60,26 +59,27 @@ Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
         linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, kthota@nvidia.com,
         mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V5 10/16] dt-bindings: PCI: tegra: Add device tree
- support for T194
-Message-ID: <20190426154306.GA16455@bogus>
+Subject: Re: [PATCH V5 11/16] dt-bindings: PHY: P2U: Add Tegra 194 P2U block
+Message-ID: <20190426154519.GA19329@bogus>
 References: <20190424052004.6270-1-vidyas@nvidia.com>
- <20190424052004.6270-11-vidyas@nvidia.com>
+ <20190424052004.6270-12-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190424052004.6270-11-vidyas@nvidia.com>
+In-Reply-To: <20190424052004.6270-12-vidyas@nvidia.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Apr 24, 2019 at 10:49:58AM +0530, Vidya Sagar wrote:
-> Add support for Tegra194 PCIe controllers. These controllers are based
-> on Synopsys DesignWare core IP.
-> 
-> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+On Wed, Apr 24, 2019 at 10:49:59AM +0530, Vidya Sagar wrote:
+> Add support for Tegra194 P2U (PIPE to UPHY) module block which is a glue
+> module instantiated one for each PCIe lane between Synopsys Designware core
+> based PCIe IP and Universal PHY block.
+
+Missing Sob.
+
 > ---
 > Changes since [v4]:
 > * None
@@ -88,262 +88,56 @@ On Wed, Apr 24, 2019 at 10:49:58AM +0530, Vidya Sagar wrote:
 > * None
 > 
 > Changes since [v2]:
-> * Using only 'Cx' (x-being controller number) format to represent a controller
-> * Changed to 'value: description' format where applicable
-> * Changed 'nvidia,init-speed' to 'nvidia,init-link-speed'
-> * Provided more documentation for 'nvidia,init-link-speed' property
-> * Changed 'nvidia,pex-wake' to 'nvidia,wake-gpios'
+> * Changed node label to reflect new format that includes either 'hsio' or
+>   'nvhs' in its name to reflect which UPHY brick they belong to
 > 
 > Changes since [v1]:
-> * Added documentation for 'power-domains' property
-> * Removed 'window1' and 'window2' properties
-> * Removed '_clk' and '_rst' from clock and reset names
-> * Dropped 'pcie' from phy-names
-> * Added entry for BPMP-FW handle
-> * Removed offsets for some of the registers and added them in code and would be pickedup based on
->   controller ID
-> * Changed 'nvidia,max-speed' to 'max-link-speed' and is made as an optional
-> * Changed 'nvidia,disable-clock-request' to 'supports-clkreq' with inverted operation
-> * Added more documentation for 'nvidia,update-fc-fixup' property
-> * Removed 'nvidia,enable-power-down' and 'nvidia,plat-gpios' properties
-> * Added '-us' to all properties that represent time in microseconds
-> * Moved P2U documentation to a separate file
+> * This is a new patch in v2 series
 > 
->  .../bindings/pci/nvidia,tegra194-pcie.txt     | 187 ++++++++++++++++++
->  1 file changed, 187 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+>  .../bindings/phy/phy-tegra194-p2u.txt         | 28 +++++++++++++++++++
+>  1 file changed, 28 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+> diff --git a/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt b/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
 > new file mode 100644
-> index 000000000000..208dff126108
+> index 000000000000..8b543cba483b
 > --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-> @@ -0,0 +1,187 @@
-> +NVIDIA Tegra PCIe controller (Synopsys DesignWare Core based)
+> +++ b/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
+> @@ -0,0 +1,28 @@
+> +NVIDIA Tegra194 P2U binding
 > +
-> +This PCIe host controller is based on the Synopsis Designware PCIe IP
-> +and thus inherits all the common properties defined in designware-pcie.txt.
+> +Tegra194 has two PHY bricks namely HSIO (High Speed IO) and NVHS (NVIDIA High
+> +Speed) each interfacing with 12 and 8 P2U instances respectively.
+> +A P2U instance is a glue logic between Synopsys DesignWare Core PCIe IP's PIPE
+> +interface and PHY of HSIO/NVHS bricks. Each P2U instance represents one PCIe
+> +lane.
 > +
 > +Required properties:
-> +- compatible: For Tegra19x, must contain "nvidia,tegra194-pcie".
-> +- device_type: Must be "pci"
-> +- power-domains: A phandle to the node that controls power to the respective
-> +  PCIe controller and a specifier name for the PCIe controller. Following are
-> +  the specifiers for the different PCIe controllers
-> +    TEGRA194_POWER_DOMAIN_PCIEX8B: C0
-> +    TEGRA194_POWER_DOMAIN_PCIEX1A: C1
-> +    TEGRA194_POWER_DOMAIN_PCIEX1A: C2
-> +    TEGRA194_POWER_DOMAIN_PCIEX1A: C3
-> +    TEGRA194_POWER_DOMAIN_PCIEX4A: C4
-> +    TEGRA194_POWER_DOMAIN_PCIEX8A: C5
-> +  these specifiers are defined in
-> +  "include/dt-bindings/power/tegra194-powergate.h" file.
-> +- reg: A list of physical base address and length for each set of controller
-> +  registers. Must contain an entry for each entry in the reg-names property.
-> +- reg-names: Must include the following entries:
-> +  "appl": Controller's application logic registers
-> +  "config": As per the definition in designware-pcie.txt
-> +  "atu_dma": iATU and DMA registers. This is where the iATU (internal Address
-> +             Translation Unit) registers of the PCIe core are made available
-> +             fow SW access.
-> +  "dbi": The aperture where root port's own configuration registers are
-> +         available
-> +- interrupts: A list of interrupt outputs of the controller. Must contain an
-> +  entry for each entry in the interrupt-names property.
-> +- interrupt-names: Must include the following entries:
-> +  "intr": The Tegra interrupt that is asserted for controller interrupts
-> +  "msi": The Tegra interrupt that is asserted when an MSI is received
-> +- bus-range: Range of bus numbers associated with this controller
-> +- #address-cells: Address representation for root ports (must be 3)
-> +  - cell 0 specifies the bus and device numbers of the root port:
-> +    [23:16]: bus number
-> +    [15:11]: device number
-> +  - cell 1 denotes the upper 32 address bits and should be 0
-> +  - cell 2 contains the lower 32 address bits and is used to translate to the
-> +    CPU address space
-> +- #size-cells: Size representation for root ports (must be 2)
-> +- ranges: Describes the translation of addresses for root ports and standard
-> +  PCI regions. The entries must be 7 cells each, where the first three cells
-> +  correspond to the address as described for the #address-cells property
-> +  above, the fourth and fifth cells are for the physical CPU address to
-> +  translate to and the sixth and seventh cells are as described for the
-> +  #size-cells property above.
-> +  - Entries setup the mapping for the standard I/O, memory and
-> +    prefetchable PCI regions. The first cell determines the type of region
-> +    that is setup:
-> +    - 0x81000000: I/O memory region
-> +    - 0x82000000: non-prefetchable memory region
-> +    - 0xc2000000: prefetchable memory region
-> +  Please refer to the standard PCI bus binding document for a more detailed
-> +  explanation.
-> +- #interrupt-cells: Size representation for interrupts (must be 1)
-> +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
-> +  Please refer to the standard PCI bus binding document for a more detailed
-> +  explanation.
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +  See ../clocks/clock-bindings.txt for details.
-> +- clock-names: Must include the following entries:
-> +  - core
-> +- resets: Must contain an entry for each entry in reset-names.
-> +  See ../reset/reset.txt for details.
-> +- reset-names: Must include the following entries:
-> +  - core_apb
-> +  - core
-> +- phys: Must contain a phandle to P2U PHY for each entry in phy-names.
-> +- phy-names: Must include an entry for each active lane.
-> +  "p2u-N": where N ranges from 0 to one less than the total number of lanes
-> +- nvidia,bpmp: Must contain a phandle to BPMP controller node.
-> +- nvidia,controller-id : Controller specific ID
-> +    0: C0
-> +    1: C1
-> +    2: C2
-> +    3: C3
-> +    4: C4
-> +    5: C5
+> +- compatible: For Tegra19x, must contain "nvidia,tegra194-p2u".
+> +- reg: Should be the physical address space and length of respective each P2U
+> +       instance.
+> +- reg-names: Must include the entry "ctl".
 
-We don't normal put device indexes into DT. Why do you need this. 
-Perhaps for accessing the BPMP? If so, make nvidia,bpmp a phandle+cell.
-
-> +- vddio-pex-ctl-supply: Regulator supply for PCIe side band signals
-> +
-> +Optional properties:
-> +- max-link-speed: Limits controllers max speed to this value. For more info,
-> +    please refer to Documentation/devicetree/bindings/pci/pci.txt file.
-
-No need to define the property again. Just reference the definition and 
-define any constraints not in the base def. For example, what's the max 
-value?
-
-> +- nvidia,init-link-speed: Limits controllers init speed to this value. It means
-> +    that link is brought up to the speed specified by this property initially by
-> +    hardware (provided connected end point also supports that). Since the
-> +    controller continues to advertise maximum supported link speed set up
-> +    through max-link-speed property (Gen-4 if max-link-speed is not present) in
-> +    its configuration space, software can take link the desired speed at a later
-> +    point of time by spec defined speed change mechanism.
-> +    1: Gen-1 (2.5 GT/s)
-> +    2: Gen-2 (5 GT/s)
-> +    3: Gen-3 (8 GT/s)
-> +    4: Gen-4 (16 GT/s)
-
-Why not just set things to the max? Power savingss? If so, you're going 
-to want to change speeds at run-time and I don't see how boot-time 
-setting really matters.
-
-If we do need this, then I think it should be common.
-
-> +- nvidia,disable-aspm-states: Controls advertisement of ASPM states
-> +    bit-0 to '1': Disables advertisement of ASPM-L0s
-> +    bit-1 to '1': Disables advertisement of ASPM-L1. This also disables
-> +                   advertisement of ASPM-L1.1 and ASPM-L1.2
-> +    bit-2 to '1': Disables advertisement of ASPM-L1.1
-> +    bit-3 to '1': Disables advertisement of ASPM-L1.2
-
-Can't this cover what 'supports-clkreq' does?
-
-I think this should be common property. We already have a Rockchip 
-property to disable L0s.
-
-Also, just use 0x1, 0x2, 0x4 instead of "bit-N to '1'"
-
-> +- supports-clkreq: Refer to Documentation/devicetree/bindings/pci/pci.txt
-> +- nvidia,update-fc-fixup: This is a boolean property and needs to be present to
-> +    improve perf when a platform is designed in such a way that it satisfies at
-> +    least one of the following conditions thereby enabling root port to
-> +    exchange optimum number of FC (Flow Control) credits with downstream devices
-> +    1. If C0/C4/C5 run at x1/x2 link widths (irrespective of speed and MPS)
-> +    2. If C0/C1/C2/C3/C4/C5 operate at their respective max link widths and
-> +       a) speed is Gen-2 and MPS is 256B
-> +       b) speed is >= Gen-3 with any MPS
-> +- "nvidia,wake-gpios": Add PEX_WAKE GPIO pin. It contains phandle to GPIO
-> +    controller followed by GPIO specifier.
-
-Seems like the same issue as this discussion:
-
-https://lkml.org/lkml/2019/2/24/69
-
-I'd drop this until this is solved in a common way.
-
-> +    Refer ../gpio/nvidia,tegra186-gpio.txt for more info.
-> +- "nvidia,aspm-cmrt-us": Common Mode Restore time for proper operation of ASPM
-> +   to be specified in microseconds
-> +- "nvidia,aspm-pwr-on-t-us": Power On time for proper operation of ASPM to be
-> +   specified in microseconds
-> +- "nvidia,aspm-l0s-entrance-latency-us": ASPM L0s entrance latency to be
-> +   specified in microseconds
-> +
-> +Examples:
-> +=========
-> +
-> +Tegra194:
-> +--------
-> +
-> +SoC DTSI:
-> +
-> +	pcie@14180000 {
-> +		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
-> +		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
-> +		reg = <0x00 0x14180000 0x0 0x00020000   /* appl registers (128K)      */
-> +		       0x00 0x38000000 0x0 0x00040000   /* configuration space (256K) */
-> +		       0x00 0x38040000 0x0 0x00040000>; /* iATU_DMA reg space (256K)  */
-> +		reg-names = "appl", "config", "atu_dma";
-> +
-> +		status = "disabled";
-
-Don't show status in examples.
+-names is pointless when there is only 1.
 
 > +
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		num-lanes = <8>;
-> +		linux,pci-domain = <0>;
+> +Required properties for PHY port node:
+> +- #phy-cells: Defined by generic PHY bindings.  Must be 0.
 > +
-> +		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_0>;
-> +		clock-names = "core";
+> +Refer to phy/phy-bindings.txt for the generic PHY binding properties.
 > +
-> +		resets = <&bpmp TEGRA194_RESET_PEX0_CORE_0_APB>,
-> +			 <&bpmp TEGRA194_RESET_PEX0_CORE_0>;
-> +		reset-names = "core_apb", "core";
+> +Example:
 > +
-> +		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
-> +			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
-> +		interrupt-names = "intr", "msi";
-> +
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0 0 0 0>;
-> +		interrupt-map = <0 0 0 0 &gic 0 72 0x04>;
-> +
-> +		nvidia,bpmp = <&bpmp>;
-> +
-> +		supports-clkreq;
-> +		nvidia,disable-aspm-states = <0xf>;
-> +		nvidia,controller-id = <0>;
-> +		nvidia,aspm-cmrt-us = <60>;
-> +		nvidia,aspm-pwr-on-t-us = <20>;
-> +		nvidia,aspm-l0s-entrance-latency-us = <3>;
-> +
-> +		bus-range = <0x0 0xff>;
-> +		ranges = <0x81000000 0x0 0x38100000 0x0 0x38100000 0x0 0x00100000      /* downstream I/O (1MB) */
-> +			  0x82000000 0x0 0x38200000 0x0 0x38200000 0x0 0x01E00000      /* non-prefetchable memory (30MB) */
-> +			  0xc2000000 0x18 0x00000000 0x18 0x00000000 0x4 0x00000000>;  /* prefetchable memory (16GB) */
-> +	};
-> +
-> +Board DTS:
+> +p2u_hsio_0: p2u@3e10000 {
 
-Just make the example a single node. This split is convention, but not 
-part of the binding definition.
+phy@...
 
+> +	compatible = "nvidia,tegra194-p2u";
+> +	reg = <0x03e10000 0x10000>;
+> +	reg-names = "ctl";
 > +
-> +	pcie@14180000 {
-> +		status = "okay";
-> +
-> +		vddio-pex-ctl-supply = <&vdd_1v8ao>;
-> +
-> +		phys = <&p2u_hsio_2>, <&p2u_hsio_3>, <&p2u_hsio_4>,
-> +		       <&p2u_hsio_5>;
-> +		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3";
-> +	};
+> +	#phy-cells = <0>;
+> +};
 > -- 
 > 2.17.1
 > 
