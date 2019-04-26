@@ -2,139 +2,124 @@ Return-Path: <SRS0=ROz5=S4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 580C6C43218
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 09:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF1AC43219
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 12:14:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26635206BA
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 09:46:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556272005;
-	bh=9RT8xA5jMBv6EzT8N9JRPoEns1coQhC9bYDVc6PmTws=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=qx5VfBaeRlTeNqtIyl2bbCMZVszzsYv0gkwFm0fV/J2yj2zLt6B8VSx0HvRKVbn0Y
-	 ngRdNyFWPTPh+N21X1n/HrY9k+cK9dpqUyq1WhanFvDfK4ZnGGJ7P3jlC9lJziXKaz
-	 ftvKviGd9u0HW7+RG1ldss6P3sBxritLFUdkOXes=
+	by mail.kernel.org (Postfix) with ESMTP id C89392084F
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 12:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726381AbfDZJqf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Apr 2019 05:46:35 -0400
-Received: from casper.infradead.org ([85.118.1.10]:52042 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725985AbfDZJqf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 05:46:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=gTBjYHF7PdfcMS747oVD2PM5dGAfiuGzrLBbmiynnAI=; b=ThiRHSVnK8igKQlUt70ItUpgfn
-        ahvUpV2Rj5VYX6v2qdgqkJ5YDlrjlEHjCiqciVId/LoW/vvbKtqqhjBZvImCJFrk4tTc96+SgQTMt
-        3OwLruS8ajlGs/wQ20K30ls643aeeOVpb/B7MjXylL0emp1dw6nykZEPhyzyfDfgrbPNaH7y3BxV8
-        0/Pf9E/MtLsN+dZ02jvg38Neh4bT8CtGsUuBDGhhjAjqMii4uRKfUZed6iZ/INQKwoT8UUu5T/2j8
-        o0WOHq5yMZ0fJgkLpfKIpMcsztztvKqpYFW56Aq/Y4OzodfEabMJl4Dq9mXtvOf21R/5AYdWX7Hzf
-        niiIxfrA==;
-Received: from [179.95.39.209] (helo=coco.lan)
-        by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hJxQz-000573-Hl; Fri, 26 Apr 2019 09:46:22 +0000
-Date:   Fri, 26 Apr 2019 06:46:09 -0300
-From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To:     Mark Brown <broonie@kernel.org>
-Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Sebastian Reichel <sre@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Harry Wei <harryxiyou@gmail.com>,
-        Alex Shi <alex.shi@linux.alibaba.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 25/79] docs: convert docs to ReST and rename to *.rst
-Message-ID: <20190426064609.7f00e013@coco.lan>
-In-Reply-To: <20190425180758.GC23183@sirena.org.uk>
-References: <cover.1555938375.git.mchehab+samsung@kernel.org>
-        <7adf9035ae06ecc6c7e46b51cb677f0a8f61d19a.1555938376.git.mchehab+samsung@kernel.org>
-        <20190425180758.GC23183@sirena.org.uk>
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+        id S1726410AbfDZMOY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Apr 2019 08:14:24 -0400
+Received: from mga17.intel.com ([192.55.52.151]:47835 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725993AbfDZMOY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Apr 2019 08:14:24 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Apr 2019 05:14:23 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.60,397,1549958400"; 
+   d="scan'208";a="294756163"
+Received: from mylly.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
+  by orsmga004.jf.intel.com with ESMTP; 26 Apr 2019 05:14:20 -0700
+Subject: Re: [Bug 203297] Synaptics touchpad TM-3127 functionality broken by
+ PCI runtime power management patch on 4.20.2
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Keijo Vaara <ferdasyn@rocketmail.com>,
+        Jean Delvare <jdelvare@suse.de>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-input@vger.kernel.org
+References: <20190422130814.GJ173520@google.com>
+From:   Jarkko Nikula <jarkko.nikula@linux.intel.com>
+Message-ID: <3a1139ef-10ed-6923-73c5-30fbf0c065c3@linux.intel.com>
+Date:   Fri, 26 Apr 2019 15:12:42 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20190422130814.GJ173520@google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Mark,
-
-Em Thu, 25 Apr 2019 19:07:58 +0100
-Mark Brown <broonie@kernel.org> escreveu:
-
-> On Mon, Apr 22, 2019 at 10:27:14AM -0300, Mauro Carvalho Chehab wrote:
-> > Convert the PM documents to ReST, in order to allow them to
-> > build with Sphinx.  
+On 4/22/19 4:08 PM, Bjorn Helgaas wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=203297
 > 
-> This is massively CCed covering a large range of subsystems and is patch
-> 25 of a 79 patch series so I've no context for what's going on here or
-> why...  
+> Regression, suspected but as yet unconfirmed cause:
+> 
+>    c5eb1190074c ("PCI / PM: Allow runtime PM without callback functions")
+> 
+> backported to 4.20 stable as 39e1be324c2f.
+> 
+With help of Keijo it was confirmed above patch broke the Synaptics 
+touchpad. Not bisected but touchpad works again by forcing the i2c-i801 
+SMBus controller always on:
+"echo on >/sys/bus/pci/devices/0000\:00\:1f.3/power/control"
 
-There are two goals of this series:
+Above patch is a generalized fix that fixed the runtime PM regression on 
+i2c-i801 and re-allow the controller go to runtime suspend when idle. So 
+most probably Synaptics touchpad was broken by i2c-i801 runtime PM also 
+before but got unnoticed. Which is easy since on many platforms SMBus 
+controller doesn't necessarily have the PCI PM capabilities.
 
-1) to prepare for placing the new *.rst files under Documentation/ into an
-   index file, being part of one of the books. Most of the stuff covered
-   on this series either fit at the system admin guide or at the
-   Kernel API documentation book;
+I would like to ask help from input subsystem experts what kind of SMBus 
+power state dependency Synaptics RMI4 SMBus devices have since it cease 
+to work if SMBus controllers idles between transfers and how this is 
+best to fix?
 
-2) to ensure that, if some edition on a file would cause warnings at
-   Sphinx build, someone will notice and submit a followup patch.
+Instead of revert I think we'd need to have some method to force SMBus 
+controller on whenever the touchpad is active, like when there is a 
+userspace listening.
 
-You can see more details at patch 00/79:
-	https://lore.kernel.org/lkml/20190422115110.26443b44@coco.lan/
+I'm not expert in this area so as quick proof of concept I had a 
+following hack which forces the I2C/SMBus adapter, and eventually the 
+parent PCI device of it on when the RMI4 SMBus device is probed and let 
+the SMBus controller to idle when removed.
 
-In order to do that, this series has one patch per Documentation/*
-sub-directory. This specific one is for the documents under
-Documentation/power/ [1].
+According to Keijo it fixes the issue but I like to hear input experts 
+for better place to put these.
 
-[1] btw, the title of this specific patch should be, instead:
-	docs: power: convert docs to ReST and rename to *.rst
+diff --git a/drivers/input/rmi4/rmi_smbus.c b/drivers/input/rmi4/rmi_smbus.c
+index b6ccf39c6a7b..2b11d69be313 100644
+--- a/drivers/input/rmi4/rmi_smbus.c
++++ b/drivers/input/rmi4/rmi_smbus.c
+@@ -16,6 +16,7 @@
+  #include <linux/lockdep.h>
+  #include <linux/module.h>
+  #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+  #include <linux/rmi.h>
+  #include <linux/slab.h>
+  #include "rmi_driver.h"
+@@ -332,6 +333,9 @@ static int rmi_smb_probe(struct i2c_client *client,
 
-The series is long because I'm trying to cover a significant part
-of the documentation files. In any case, except if an eventual
-conflict might rise on some file, this patch is independent from
-all other files, and should be safe to apply directly via the
-subsystem git tree.
+  	dev_info(&client->dev, "registering SMbus-connected sensor\n");
 
-I'm working on a follow-up patch series that should be adding the
-power/index.rst file into another index file - probably at
-Documentation/index.rst[1]. As such patch will be adding a lot of other
-index files, the best would be to merge it via the docs tree, in
-order to avoid conflicts.
++	/* Force SMBus adapter on while RMI4 device is connected */
++	pm_runtime_get(&client->adapter->dev);
++
+  	error = rmi_register_transport_device(&rmi_smb->xport);
+  	if (error) {
+  		dev_err(&client->dev, "failed to register sensor: %d\n", error);
+@@ -346,6 +350,7 @@ static int rmi_smb_remove(struct i2c_client *client)
+  	struct rmi_smb_xport *rmi_smb = i2c_get_clientdata(client);
 
+  	rmi_unregister_transport_device(&rmi_smb->xport);
++	pm_runtime_put(&client->adapter->dev);
 
-[1] such patch will be removing the ":orphan:" meta-tag from it
-(that basically tells the build system to not produce warnings if
-the file is not directly or indirectly referenced by the main
-index file).
+  	return 0;
+  }
 
-Thanks,
-Mauro
+-- 
+Jarkko
