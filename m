@@ -1,151 +1,154 @@
-Return-Path: <SRS0=ROz5=S4=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=VK9V=S5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D18F7C43218
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 18:05:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAFC0C43218
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Apr 2019 17:26:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC123212F5
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Apr 2019 18:05:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70110206A3
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Apr 2019 17:26:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556301912;
-	bh=/qeIedzmGoBcI7iCSVmfVLzqCIkqkXp0y0G3BeOY+Ic=;
+	s=default; t=1556386014;
+	bh=mPXNrjAqa3h4G2p0T35cAlP+V4XUwk7RmI8qTwTGgbI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=0/bCo68MnB2IFGEnhaO05lqOwkY3CK68/DKoIeJIqfmagjCXyQGhfvdOf/kLr8KHT
-	 7em5M3KcmGbJVvy6+mVePt8p6EuO71UpOLyWcjX22rSy2parDMMZ/wBb4HWCa9/nXP
-	 ZB3BgBh8hGEbA2p7C7ryTqmzmJLp4Ho31XXiXumo=
+	b=i+nwOGFvvqFPwOR9LVkidpe14RUBSa3oTqW8qpJNAF4k5KdWgLwd4RO6+OWunKI0O
+	 lCNfnv5siQ2mSJ9T//V/YWNAtygz6Gn9VS3rm+cLYCG5JWCLecY/sSGPEMaZDVyXg6
+	 DQPmVJLBDM77NYeAUIS3OzcFDoZZ/dnQnPo6aMno=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726272AbfDZSFM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Apr 2019 14:05:12 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:37130 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726005AbfDZSFM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 Apr 2019 14:05:12 -0400
-Received: by mail-ot1-f68.google.com with SMTP id r20so2275701otg.4;
-        Fri, 26 Apr 2019 11:05:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=zQtkRNUgw/vFCvnSqmhPpYcrqE3+8B2y1PZeuVMpevc=;
-        b=REwI/7H0AexLx0QjbTsszKOH5jYC4FViNjwjj2OLuXhNtNP2UehbVAEqKhrojRH2e2
-         DYl76yqTlINdH3wMrHJ5P7WaSS/cJEiRQ78BmWIpSZTkej9Ylu9Sd023rjzXScWDjKyo
-         +dtJ0Rz3GpHJ555al7eg+YaKDNtjriMbP3nCna0/edeiij2hMwPWwbL+Atz74g2lNqrp
-         CFRzdlqGreonyIZierMLaJkYX/r65J/DmwpS0rKP5nJuZ92uCHSFY3ezNu2MUcYtU91O
-         PhBqnNJEOZQEegCTUvCaBffHwX76IkIiyTQLoXlba7nU8rPaLPm+jw+XB+IQT6ty5wgN
-         4KdA==
-X-Gm-Message-State: APjAAAUseDPvaxoEjCFySvrgFM0j2ReRa7J+6zD4weTsUUem3JZygOU4
-        YtzzgnDp7r8QO3ECOupIZw==
-X-Google-Smtp-Source: APXvYqxln9A5A7iSmPQpWDOcLJGBeq023K/7OjLJn8/Ia0ahcazPhqgaXSBOoVduHyvzKGxpC/ItjQ==
-X-Received: by 2002:a05:6830:1051:: with SMTP id b17mr1064827otp.341.1556301910679;
-        Fri, 26 Apr 2019 11:05:10 -0700 (PDT)
-Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id c3sm1061276otb.13.2019.04.26.11.05.09
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 26 Apr 2019 11:05:09 -0700 (PDT)
-Date:   Fri, 26 Apr 2019 13:05:09 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Thierry Reding <thierry.reding@gmail.com>
-Cc:     Vidya Sagar <vidyas@nvidia.com>, lorenzo.pieralisi@arm.com,
-        bhelgaas@google.com, mark.rutland@arm.com, jonathanh@nvidia.com,
-        kishon@ti.com, catalin.marinas@arm.com, will.deacon@arm.com,
-        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        mperttunen@nvidia.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V5 11/16] dt-bindings: PHY: P2U: Add Tegra 194 P2U block
-Message-ID: <20190426180509.GB19329@bogus>
-References: <20190424052004.6270-1-vidyas@nvidia.com>
- <20190424052004.6270-12-vidyas@nvidia.com>
- <20190426154519.GA19329@bogus>
- <20190426160723.GB3204@ulmo>
+        id S1726030AbfD0R0x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Apr 2019 13:26:53 -0400
+Received: from heliosphere.sirena.org.uk ([172.104.155.198]:55110 "EHLO
+        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725983AbfD0R0x (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2019 13:26:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sirena.org.uk; s=20170815-heliosphere; h=In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=a3tmI0KUyLppW1kwBwL7lvA+SJm0kVYzuouVBoWkDwk=; b=tJcvGeRygaFThXfFvSb4czEha
+        Q5l0BBPMyQjbuhkvhGj+D9qIDc+mqjrUmNh/2f1KkzZeznjETqI6tRGFOuLYdbX4u0UmWO5/aM/bL
+        QKfDzTQ4ngEZdrqg0jSElj1AgoBqipYR5vhUgvD49iINDsZgUcMSjJzurhnVuy25KuTl0=;
+Received: from [211.55.52.15] (helo=finisterre.ee.mobilebroadband)
+        by heliosphere.sirena.org.uk with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <broonie@sirena.org.uk>)
+        id 1hKR5G-0004ci-TI; Sat, 27 Apr 2019 17:25:55 +0000
+Received: by finisterre.ee.mobilebroadband (Postfix, from userid 1000)
+        id 48FE5441D3B; Sat, 27 Apr 2019 18:25:51 +0100 (BST)
+Date:   Sun, 28 Apr 2019 02:25:51 +0900
+From:   Mark Brown <broonie@kernel.org>
+To:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Harry Wei <harryxiyou@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v2 25/79] docs: convert docs to ReST and rename to *.rst
+Message-ID: <20190427172551.GI14916@sirena.org.uk>
+Mail-Followup-To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Sebastian Reichel <sre@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+        Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Harry Wei <harryxiyou@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, linux-pm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <cover.1555938375.git.mchehab+samsung@kernel.org>
+ <7adf9035ae06ecc6c7e46b51cb677f0a8f61d19a.1555938376.git.mchehab+samsung@kernel.org>
+ <20190425180758.GC23183@sirena.org.uk>
+ <20190426064609.7f00e013@coco.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="WR+jf/RUebEcofwt"
 Content-Disposition: inline
-In-Reply-To: <20190426160723.GB3204@ulmo>
+In-Reply-To: <20190426064609.7f00e013@coco.lan>
+X-Cookie: -- I have seen the FUN --
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Apr 26, 2019 at 06:07:23PM +0200, Thierry Reding wrote:
-> On Fri, Apr 26, 2019 at 10:45:19AM -0500, Rob Herring wrote:
-> > On Wed, Apr 24, 2019 at 10:49:59AM +0530, Vidya Sagar wrote:
-> > > Add support for Tegra194 P2U (PIPE to UPHY) module block which is a glue
-> > > module instantiated one for each PCIe lane between Synopsys Designware core
-> > > based PCIe IP and Universal PHY block.
-> > 
-> > Missing Sob.
-> > 
-> > > ---
-> > > Changes since [v4]:
-> > > * None
-> > > 
-> > > Changes since [v3]:
-> > > * None
-> > > 
-> > > Changes since [v2]:
-> > > * Changed node label to reflect new format that includes either 'hsio' or
-> > >   'nvhs' in its name to reflect which UPHY brick they belong to
-> > > 
-> > > Changes since [v1]:
-> > > * This is a new patch in v2 series
-> > > 
-> > >  .../bindings/phy/phy-tegra194-p2u.txt         | 28 +++++++++++++++++++
-> > >  1 file changed, 28 insertions(+)
-> > >  create mode 100644 Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
-> > > 
-> > > diff --git a/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt b/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
-> > > new file mode 100644
-> > > index 000000000000..8b543cba483b
-> > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/phy/phy-tegra194-p2u.txt
-> > > @@ -0,0 +1,28 @@
-> > > +NVIDIA Tegra194 P2U binding
-> > > +
-> > > +Tegra194 has two PHY bricks namely HSIO (High Speed IO) and NVHS (NVIDIA High
-> > > +Speed) each interfacing with 12 and 8 P2U instances respectively.
-> > > +A P2U instance is a glue logic between Synopsys DesignWare Core PCIe IP's PIPE
-> > > +interface and PHY of HSIO/NVHS bricks. Each P2U instance represents one PCIe
-> > > +lane.
-> > > +
-> > > +Required properties:
-> > > +- compatible: For Tegra19x, must contain "nvidia,tegra194-p2u".
-> > > +- reg: Should be the physical address space and length of respective each P2U
-> > > +       instance.
-> > > +- reg-names: Must include the entry "ctl".
-> > 
-> > -names is pointless when there is only 1.
-> 
-> We've occasionally done this in the past for other types of resources.
-> When we did it was to preempt having to verbosely describe exactly what
-> order -names entries need to be in if ever a new entry was required.
-> 
-> For example, if we document only one clock for a module and leave out
-> the clock-names property, then if ever we need to add another clock, it
-> means that clock-names must be documented in such a way that the "main"
-> clock (the one that was always documented) would need to be first in the
-> list of clock-names, so that it's matching entry in the clocks property
-> is at index 0, because that's effectively what the ABI is.
 
-The original clock at index 0 is part of the ABI with or without names 
-as long as that clock is always required.
+--WR+jf/RUebEcofwt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The purpose of '*-names' was to handle cases with multiple combinations 
-of optional entries. That's the exception though and shouldn't be 
-necessary too often. Clocks was an exception because the kernel's 
-clock api required clock names (though only for more than 1). For the 
-rest, everyone loves making up names and bloating their DT. (The last 
-Plumbers had a discussion about replacing DT strings with numbers to 
-shrink them, so it's not a non-issue for some.)
+On Fri, Apr 26, 2019 at 06:46:09AM -0300, Mauro Carvalho Chehab wrote:
+> Mark Brown <broonie@kernel.org> escreveu:
 
-In any case, I only point this out if I have other comments and you all 
-can keep it if you want. I'm just not a fan.
+> > This is massively CCed covering a large range of subsystems and is patch
+> > 25 of a 79 patch series so I've no context for what's going on here or
+> > why... =20
 
-Rob
+> You can see more details at patch 00/79:
+> 	https://lore.kernel.org/lkml/20190422115110.26443b44@coco.lan/
+
+OK, it would've helped to CC people on that.  Anyway
+
+Acked-by: Mark Brown <broonie@kernel.org>
+
+--WR+jf/RUebEcofwt
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAlzEkJ4ACgkQJNaLcl1U
+h9CLPQf/egnMPfy5Djt33xwT726spS5SVTG7kuJqe4sKQ3OXBoMa44iGLw9gz/+M
+FmO/XFmO150AIxC3d1OJKSoimebzY1IPIiJFOOQC7SJDtKoOMVm4MTP5w+B8jdvC
+o51B7dkua7q/hKAbj78Q023V/jvpOU+353/om9x82lB7jvoxnN+pGEcEDqQEBtk6
+dSbAla2qU+BoMPdyoOGiCu9mjLpTSGWbU+lz4IKiIQHK5zWx9xFrBCgB1zyjoDEm
+H69kzCVDwYkkiaGriSEV5ksQThpov8Ka2zvrJPZ8HOTaX4GSW3W2Ailr6FJ8cLbo
+mPFwHR0sNRuPgcZtXvdaivvevBYKMw==
+=wBS3
+-----END PGP SIGNATURE-----
+
+--WR+jf/RUebEcofwt--
