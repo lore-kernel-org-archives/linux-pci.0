@@ -2,115 +2,100 @@ Return-Path: <SRS0=VK9V=S5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA1A8C43219
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Apr 2019 18:14:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAB3CC43218
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Apr 2019 19:13:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5E6E2077B
-	for <linux-pci@archiver.kernel.org>; Sat, 27 Apr 2019 18:14:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556388850;
-	bh=jtA+Qr5Sowzpth0Px0TxHmGmrJLWsmOZkndaKShROJk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=ttnEuPFZxShkr7ICKOf2YYnjd9M8efoE3ENyDAMA6KKgdfFJzcBJzi23UKFUlXj4u
-	 Ff/awiFPs1GSc0DTmQmVm8QILyMt42AKar4ALdzYvo/vBEMZw3fZEJ40zFEakVitrV
-	 h9exTWbouQratr3669UiB4ouSJEQUFMyvdPpPJLg=
+	by mail.kernel.org (Postfix) with ESMTP id A13A0212F5
+	for <linux-pci@archiver.kernel.org>; Sat, 27 Apr 2019 19:13:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=fredlawl-com.20150623.gappssmtp.com header.i=@fredlawl-com.20150623.gappssmtp.com header.b="PoiIWk5y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726066AbfD0SOD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 27 Apr 2019 14:14:03 -0400
-Received: from casper.infradead.org ([85.118.1.10]:51200 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725950AbfD0SOC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2019 14:14:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=qGs9gyd+8mbF58d9iNV6zlbIYiLoTBxs09/Lf+hRxz0=; b=AT03D5WhhdhSSqw5qyiTpKUV6a
-        3eE4Wdu+1gVtasvrfougGt3ALT56zCvhZOn8KRHD7zUcFq3NeWJljEDtUKx1hHacFligCR1atNkYB
-        7lixNeZeySWOMWwi7WjOC45YXLKKDC59/5LNIBW7wyRlyBJp/tCbSfs6pH30pSY5C2ArC+VSUUrZ3
-        rv8R1F2vx5kXk1Akz0sAdpy+EXsdmSBFQvse1djp6fjsv1screwgGOVlsuUflM0CYFlWVTm1oiPcq
-        uUZukeInFjffVcJMf83lAOtsqJuBv6F5ZEqcQz2+0bRES908WOMXDwi5JKQoivn+ja5POC6NbVNPZ
-        7E3O+/Bw==;
-Received: from 177.17.250.151.dynamic.adsl.gvt.net.br ([177.17.250.151] helo=coco.lan)
-        by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hKRpd-000420-Hf; Sat, 27 Apr 2019 18:13:49 +0000
-Date:   Sat, 27 Apr 2019 15:13:37 -0300
-From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-To:     Mark Brown <broonie@kernel.org>
-Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
-        Sebastian Reichel <sre@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-        Nishanth Menon <nm@ti.com>, Stephen Boyd <sboyd@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Harry Wei <harryxiyou@gmail.com>,
-        Alex Shi <alex.shi@linux.alibaba.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, linux-pm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v2 25/79] docs: convert docs to ReST and rename to *.rst
-Message-ID: <20190427151337.2fb0ed5f@coco.lan>
-In-Reply-To: <20190427172551.GI14916@sirena.org.uk>
-References: <cover.1555938375.git.mchehab+samsung@kernel.org>
-        <7adf9035ae06ecc6c7e46b51cb677f0a8f61d19a.1555938376.git.mchehab+samsung@kernel.org>
-        <20190425180758.GC23183@sirena.org.uk>
-        <20190426064609.7f00e013@coco.lan>
-        <20190427172551.GI14916@sirena.org.uk>
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        id S1726066AbfD0TNN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 27 Apr 2019 15:13:13 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:41752 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725947AbfD0TNN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 27 Apr 2019 15:13:13 -0400
+Received: by mail-oi1-f193.google.com with SMTP id v23so5346769oif.8
+        for <linux-pci@vger.kernel.org>; Sat, 27 Apr 2019 12:13:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fredlawl-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id;
+        bh=eTIIevnGbywDzoALYamaP3HztM1TpmwOzPz93oeTM94=;
+        b=PoiIWk5yvC8UYzKgx1IxEQG+tSHY7eBX3jYAT5n3LYbNcKn3Mx5JAyguk9L6OlaJE+
+         /n84tyUGmg8H810IxGQqeLwE2+r6EP9ga7XKx5582tpopEzy/1X/8jplC5+Nhg4cMekv
+         WODd+SlO5UyjnCy5FRf1KJ+cUKAkcNAhb8t2/DvzKvBUviZQj9Iq+cI4sg3OPMDt/CLs
+         HoOGEOB6j2L+ZyzDi/7GibkxmOLrb3v21xQoAQEq+sVrVohLWAkFdZ395QjccAt3kpeb
+         zUi9SvC+Je7hP/3OMsgHUZ26UCiZ80Umfkpeksk6LFxmYC+ysNkTWVkURzoBdANrtMeD
+         vGOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=eTIIevnGbywDzoALYamaP3HztM1TpmwOzPz93oeTM94=;
+        b=suzkwdHfCc5xfEG99H6nLRd74z7alK8/p//JkryDFzW4AKAF5YixhXdrO/M3bTaVLM
+         fv6rVF99UDYc1SWWuug+zn7gLBuGiyajNRbMLsZBD22GHPdM8V0rGjhwYfnQ+scBabaE
+         FfPDTfbvqtHgA62hPurnA02Cpt1GuOdyW1RbUD1gVegS3KNIlqB+vp/l5WlKc7+PQazI
+         6hEaaeEVQJMXCcP7Lb5Ch+t7Ln2OLVvfBkbT4uI4Rkt3Kx+DQfYYqOqH44u17+WLnVYe
+         SUM+GZRI3AbP5cFiYxirtIKcXlrOnWJ9mkrIyV8HWSMp2lCNlFwpHFmBAmto+TSWbf4k
+         4jDg==
+X-Gm-Message-State: APjAAAVHQbYo1Rdunyh32hXiUAWOuaxubI0r6dNs1AQaQcQMiChTr6Ks
+        EVRIlJ91IggWiw69Vtlv1zkD6A==
+X-Google-Smtp-Source: APXvYqyDzpCDVOm0Dg6UA+JdPS37uvTTrbHu3Iw/0UvX/maTUQvPFAEJU0sMFdKHonMvdY5HWQpU0Q==
+X-Received: by 2002:aca:efc6:: with SMTP id n189mr11741429oih.34.1556392392697;
+        Sat, 27 Apr 2019 12:13:12 -0700 (PDT)
+Received: from linux.fredlawl.com ([2600:1700:18a0:11d0:3d43:9acc:6ecc:a72c])
+        by smtp.gmail.com with ESMTPSA id b133sm5768473oia.0.2019.04.27.12.13.11
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sat, 27 Apr 2019 12:13:11 -0700 (PDT)
+From:   fred@fredlawl.com
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        mika.westerberg@linux.intel.com, lukas@wunner.de,
+        andriy.shevchenko@linux.intel.com, keith.busch@intel.com,
+        mr.nuke.me@gmail.com, liudongdong3@huawei.com, thesven73@gmail.com,
+        Frederick Lawler <fred@fredlawl.com>
+Subject: [PATCH 0/4] PCI: Use PCIe service name in dmesg logs
+Date:   Sat, 27 Apr 2019 14:13:00 -0500
+Message-Id: <20190427191304.32502-1-fred@fredlawl.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Em Sun, 28 Apr 2019 02:25:51 +0900
-Mark Brown <broonie@kernel.org> escreveu:
+From: Frederick Lawler <fred@fredlawl.com>
 
-> On Fri, Apr 26, 2019 at 06:46:09AM -0300, Mauro Carvalho Chehab wrote:
-> > Mark Brown <broonie@kernel.org> escreveu:  
-> 
-> > > This is massively CCed covering a large range of subsystems and is patch
-> > > 25 of a 79 patch series so I've no context for what's going on here or
-> > > why...    
-> 
-> > You can see more details at patch 00/79:
-> > 	https://lore.kernel.org/lkml/20190422115110.26443b44@coco.lan/  
-> 
-> OK, it would've helped to CC people on that. 
+In referrence to [1], PCIe services did not have unifrom logging via pci_*()
+printk wrappers. This patch series first replaces left over dev_*() calls
+for port services. Then, replaces all hotplug ctrl_*() calls with pci_*() to
+bring hotplug in line with the other services, and removes the custom
+ctrl_*() definitions. Lastly, to satisfy [1], add in dev_fmt()'s to each of
+the services.
 
-I know, but, due to bad experiences in the past, I had to actually
-remove people from it, because several servers reject e-mails with 
-more than ~30 destination addresses, as they consider it to be spam.
+1. https://lore.kernel.org/linux-pci/20190308180149.GD214730@google.com/
 
-> Anyway
-> 
-> Acked-by: Mark Brown <broonie@kernel.org>
+Frederick Lawler (4):
+  PCI: Replace dev_*() printk wrappers with pci_*() printk wrappers
+  PCI: pciehp: Replace ctrl_*() with pci_*()
+  PCI: pciehp: Remove unused macro definitions
+  PCI/portdrv: Add dev_fmt() to port drivers
 
-Thanks!
+ drivers/pci/hotplug/pciehp.h       |  27 -----
+ drivers/pci/hotplug/pciehp_core.c  |  25 +++--
+ drivers/pci/hotplug/pciehp_ctrl.c  |  88 +++++++++--------
+ drivers/pci/hotplug/pciehp_hpc.c   | 154 ++++++++++++++++-------------
+ drivers/pci/hotplug/pciehp_pci.c   |  12 ++-
+ drivers/pci/pcie/aer.c             |  16 +--
+ drivers/pci/pcie/aer_inject.c      |   6 +-
+ drivers/pci/pcie/bw_notification.c |   2 +
+ drivers/pci/pcie/dpc.c             |  29 +++---
+ drivers/pci/pcie/pme.c             |   2 +
+ 10 files changed, 187 insertions(+), 174 deletions(-)
 
-Thanks,
-Mauro
+--
+2.17.1
+
