@@ -2,53 +2,46 @@ Return-Path: <SRS0=ph/K=S7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FD01C43219
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Apr 2019 07:04:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8ABC43219
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Apr 2019 07:45:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F1972147A
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Apr 2019 07:04:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556521468;
-	bh=oTFo+X/n5Dd/OvXlvP7dbo0CidB3qMCRTetmpdUAJBM=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=i6JcmlIgYLrOjEu0uz6mFu7ELDZ6t/3fuoAlIwjf5q0/5IaQP5Qauuye9xd97x1Rf
-	 IEYkMKtp1sfTRhqfnguEG0YqcHM8AI8jIGdMV4gEY0dPHVEvVO+OAB0coplq+oRwaq
-	 R/qnNODT0BxMIlVZvlIPMCkzh1B2xWqRWgSRtE8U=
+	by mail.kernel.org (Postfix) with ESMTP id 1D7192075E
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Apr 2019 07:45:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727430AbfD2HEW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Apr 2019 03:04:22 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:34249 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726589AbfD2HEW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Apr 2019 03:04:22 -0400
-Received: by mail-ot1-f68.google.com with SMTP id n15so1646565ota.1;
-        Mon, 29 Apr 2019 00:04:21 -0700 (PDT)
+        id S1727409AbfD2Hpy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Apr 2019 03:45:54 -0400
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:36642 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726846AbfD2Hpy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Apr 2019 03:45:54 -0400
+Received: by mail-qt1-f194.google.com with SMTP id c35so10893623qtk.3
+        for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2019 00:45:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=LM+MBIKe0mwYMMv3jF2FrcYhobpKYmKEZS9fGWMXsAs=;
-        b=RiRDYysgBtrNzUx05AHYN94xYVKDSZZs3pqR8Au4vT170hy1bzqVdLZhV6krZ9BZ4n
-         ZQT4DMARuTy/zYKNBucbHofZURDodgoksp7zXGixLCry1v6J1Q536bJ24pVhdWoLL7wv
-         ihXSQHyEu6TLXB5RYJIMXqry4mYhv3HKZ8If9ImTF09189Hgp8T7qbp/goVmi+/zHZuV
-         Uuy4UNkPqGIMbYuvwLdRy0mAbhTbgWxwP4gEcEKj3edWswOusX/QLRAbB5PFr49ObPF3
-         Cd8DENwLIav6Xki4JaCUncfnI7qxBQRp7gaDSF/iOX/5pFtTrEGLeLWlik6+EO3BsCDB
-         qaKQ==
-X-Gm-Message-State: APjAAAXAqqiBngXOwGqWzABNHlE6oUIcrjLlXyWvz6rILV3oS5noEK+x
-        9tqOFy/hn/Ptemed2iK3jXkJsIv2CGlM8KypYCM=
-X-Google-Smtp-Source: APXvYqxoflu2iMl6ng4hw0hdU2IsyyvzMMl7dWgy9CvBZMqAYkD2iMKEE/xN+MH94AAnqnTINhCz2UpmysA/PF6SXlQ=
-X-Received: by 2002:a9d:6e17:: with SMTP id e23mr7268147otr.65.1556521461471;
- Mon, 29 Apr 2019 00:04:21 -0700 (PDT)
+        bh=G1fYVX4Wl40jdZ8+GWZHzYu+3eRKXOD4apXXEPaZ4Wc=;
+        b=MjHc6pDkNCmYh89BVE3eam3YDGNYG7AfWUFgQ3i87npC1NPSm7uNA//kjaJcQvIv1k
+         J/pOJlN/cMX8xvz6EgTVTNZT7UYlBeiwWj6eQqKWTRDY8PhOiLGD7pXisTEA8bUDmZAA
+         wkbycXX6jy3vJwR/7j8KIb6pDxylK+w9e+XSRk8Rn8Pnr2MQG71f0V/qs5t/XREg+uZS
+         k4H2/nxou1+iuenZ8Q1SO46tpw7KF/pywtWVVw1CP3qbFdAVoUF4bx+LFw3/ktz5Pgdj
+         W0b/IAj4f9S2PbedGYlJXNVaYCgWDoAZKMEyCVu+00hf1SLDD6qhJz02pKzzMOvahoZ+
+         G7aw==
+X-Gm-Message-State: APjAAAV7Z7v7u1oZY3pLo7zQTMiFa4A4g107H2GFrxoCdTkW/rbFp69E
+        U3KkwUunoM7WvqQeG+xKyQEhfW+rF0J82KrfcOCVQg==
+X-Google-Smtp-Source: APXvYqypk8m0KUmH/pdaKn2c6dXVHzcwhT3MS6/t9LfLWL9Bs64Cy4DoGt4GK6iloNtlI/ZK+yiFhuwRgID1pkwlfBw=
+X-Received: by 2002:a0c:e5d0:: with SMTP id u16mr18985451qvm.48.1556523953508;
+ Mon, 29 Apr 2019 00:45:53 -0700 (PDT)
 MIME-Version: 1.0
 References: <20190422130814.GJ173520@google.com> <3a1139ef-10ed-6923-73c5-30fbf0c065c3@linux.intel.com>
 In-Reply-To: <3a1139ef-10ed-6923-73c5-30fbf0c065c3@linux.intel.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Mon, 29 Apr 2019 09:04:05 +0200
-Message-ID: <CAJZ5v0iYYJBR77R51y1hVKsBQDmUpv5_dtSqMMiCoEZgC5cX=g@mail.gmail.com>
+From:   Benjamin Tissoires <benjamin.tissoires@redhat.com>
+Date:   Mon, 29 Apr 2019 09:45:42 +0200
+Message-ID: <CAO-hwJKvXO6L7m0g1D6wycFP=Wu_qLDyLXTtmm0TkpxT5Z8ygw@mail.gmail.com>
 Subject: Re: [Bug 203297] Synaptics touchpad TM-3127 functionality broken by
  PCI runtime power management patch on 4.20.2
 To:     Jarkko Nikula <jarkko.nikula@linux.intel.com>
@@ -56,12 +49,10 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>,
         Keijo Vaara <ferdasyn@rocketmail.com>,
         Jean Delvare <jdelvare@suse.de>,
         "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
         Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-input@vger.kernel.org
+        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
+        lkml <linux-kernel@vger.kernel.org>,
+        "open list:HID CORE LAYER" <linux-input@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
@@ -95,6 +86,23 @@ On Fri, Apr 26, 2019 at 2:14 PM Jarkko Nikula
 > power state dependency Synaptics RMI4 SMBus devices have since it cease
 > to work if SMBus controllers idles between transfers and how this is
 > best to fix?
+
+Hmm, I am not sure there is such an existing architecture you could
+use in a simple patch.
+
+rmi-driver.c does indeed create an input device we could use to toggle
+on/off the PM state, but those callbacks are not wired to the
+transport driver (rmi_smbus.c), so it would required a little bit of
+extra work. And then, there are other RMI4 functions (firmware
+upgrade) that would not be happy if PM is in suspend while there is no
+open input node.
+
+So I think this "hack" (with Mika's comments addressed) should go in
+until someone starts propagating the PM states correctly.
+
+Cheers,
+Benjamin
+
 >
 > Instead of revert I think we'd need to have some method to force SMBus
 > controller on whenever the touchpad is active, like when there is a
@@ -126,12 +134,6 @@ On Fri, Apr 26, 2019 at 2:14 PM Jarkko Nikula
 >
 > +       /* Force SMBus adapter on while RMI4 device is connected */
 > +       pm_runtime_get(&client->adapter->dev);
-
-That should be pm_runtime_get_sync() IMO.
-
-Otherwise, the rmi_register_transport_device() may be called before
-completing the PM transition.
-
 > +
 >         error = rmi_register_transport_device(&rmi_smb->xport);
 >         if (error) {
