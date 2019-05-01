@@ -2,122 +2,110 @@ Return-Path: <SRS0=CmBN=TB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D725C43219
-	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 17:00:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D909AC43219
+	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 17:37:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 760C520835
-	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 17:00:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A00572089E
+	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 17:37:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CEjb4MdJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726645AbfEARA1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 May 2019 13:00:27 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:40212 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726452AbfEARA1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 May 2019 13:00:27 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 519AADBD73;
-        Wed,  1 May 2019 17:00:27 +0000 (UTC)
-Received: from gimli.home (ovpn-117-92.phx2.redhat.com [10.3.117.92])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 07B52752BE;
-        Wed,  1 May 2019 17:00:16 +0000 (UTC)
-Subject: [PATCH] PCI: Return error if cannot probe VF
-From:   Alex Williamson <alex.williamson@redhat.com>
-To:     linux-pci@vger.kernel.org
-Cc:     bhelgaas@google.com, linux-kernel@vger.kernel.org,
-        myron.stowe@redhat.com, bodong@mellanox.com, eli@mellanox.com,
-        laine@redhat.com
-Date:   Wed, 01 May 2019 11:00:16 -0600
-Message-ID: <155672991496.20698.4279330795743262888.stgit@gimli.home>
-User-Agent: StGit/0.19-dirty
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Wed, 01 May 2019 17:00:27 +0000 (UTC)
+        id S1726096AbfEARg7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 May 2019 13:36:59 -0400
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:37401 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726077AbfEARg7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 May 2019 13:36:59 -0400
+Received: by mail-ed1-f66.google.com with SMTP id w37so15504111edw.4
+        for <linux-pci@vger.kernel.org>; Wed, 01 May 2019 10:36:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=WQh6+iJ1c5LV37hewjiOUJ2VVaJB8K0iqnjk0rOcMbE=;
+        b=CEjb4MdJxi08K/sHDaK0eh5tzCmNnbKo8l7lks3hzoghFBcg/r6yFxaG++ZgfgWdOW
+         yhDjocgFxXdRp2TXI0xdQdK5/myMxON+Mu0JLn+NQ1dTx8bFetH/46D3fX3SPvCsbFnq
+         MJg+fKzdyXBskAw+hqszBABaL0ctbb+ffQuas=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=WQh6+iJ1c5LV37hewjiOUJ2VVaJB8K0iqnjk0rOcMbE=;
+        b=WFZK2RSNsBlh79GsSjdsqPuzyvOt3PvoOVu0QwlVRoLqJZuyzgd2t/EidQJwy3nQHj
+         urVdVtb0Ct4IAnu9hH8OgCI/DNtwTRXB89vkZ0IbJ7yJBftKSZOsivS1QBMCxQGrMt3e
+         ruD7y4HxR/506b7VsbctGLB0gvJ6sclRsoNYCND/h80dKh2jDosnn7WR653aOnMAhrwg
+         7iPK5v6Y2S75hnx+fFRpCSElndSxBAnEWaHIhKLBKRXfoU7FjXYeWo0wimZ72G4FNAGO
+         YJGko28qHDj29wtM2jQbWxeAaTY3pJeUvvV4fEtDxL9R3FDeqpfPlE/a0p9bLC4HEaAb
+         +goQ==
+X-Gm-Message-State: APjAAAXZ+dWIoVx1suT8OyrJho4H4YFDbIL8EvQpdZO+5aktQgaPDx7M
+        Fb6pLAIgEWrsHCe1gF9cZ3dPUA==
+X-Google-Smtp-Source: APXvYqyT8CYAd7eurrFrFI8PfzHJPMcWdZ7fq9QHDpPRgQBgROfDRCybBxqF9//b4tm21qJoRt4Byg==
+X-Received: by 2002:a17:906:e10e:: with SMTP id gj14mr15158656ejb.285.1556732217818;
+        Wed, 01 May 2019 10:36:57 -0700 (PDT)
+Received: from mannams-OptiPlex-7010.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id s6sm2462671eji.13.2019.05.01.10.36.51
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 01 May 2019 10:36:56 -0700 (PDT)
+From:   Srinath Mannam <srinath.mannam@broadcom.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        poza@codeaurora.org, Ray Jui <rjui@broadcom.com>
+Cc:     bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [PATCH v5 0/3] PCIe Host request to reserve IOVA
+Date:   Wed,  1 May 2019 23:06:23 +0530
+Message-Id: <1556732186-21630-1-git-send-email-srinath.mannam@broadcom.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Commit 0e7df22401a3 ("PCI: Add sysfs sriov_drivers_autoprobe to control
-VF driver binding") allows the user to specify that drivers for VFs of
-a PF should not be probed, but it actually causes pci_device_probe() to
-return success back to the driver core in this case.  Therefore by all
-sysfs appearances the device is bound to a driver, the driver link from
-the device exists as does the device link back from the driver, yet the
-driver's probe function is never called on the device.  We also fail to
-do any sort of cleanup when we're prohibited from probing the device,
-the irq setup remains in place and we even hold a device reference.
+Few SOCs have limitation that their PCIe host can't allow few inbound
+address ranges. Allowed inbound address ranges are listed in dma-ranges
+DT property and this address ranges are required to do IOVA mapping.
+Remaining address ranges have to be reserved in IOVA mapping.
 
-Instead, abort with errno before any setup or references are taken when
-pci_device_can_probe() prevents us from trying to probe the device.
+PCIe Host driver of those SOCs has to list resource entries of allowed
+address ranges given in dma-ranges DT property in sorted order. This
+sorted list of resources will be processed and reserve IOVA address for
+inaccessible address holes while initializing IOMMU domain.
 
-Fixes: 0e7df22401a3 ("PCI: Add sysfs sriov_drivers_autoprobe to control VF driver binding")
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
+This patch set is based on Linux-5.1-rc3.
 
-This issue is easily tested by disabling sriov_drivers_autoprobe and
-creating VFs:
+Changes from v4:
+  - Addressed Bjorn, Robin Murphy and Auger Eric review comments.
+    - Commit message modification.
+    - Change DMA_BIT_MASK to "~(dma_addr_t)0".
 
-# echo 0 > sriov_drivers_autoprobe
-# echo 3 > sriov_numvfs
-# readlink -f virtfn*/driver
-/sys/bus/pci/drivers/iavf
-/sys/bus/pci/drivers/iavf
-/sys/bus/pci/drivers/iavf
-(yet no netdevs exist for these VFs)
+Changes from v3:
+  - Addressed Robin Murphy review comments.
+    - pcie-iproc: parse dma-ranges and make sorted resource list.
+    - dma-iommu: process list and reserve gaps between entries
 
-The semantics of this autoprobe disabling are a bit strange for the
-user as well, I suppose it works if we force a bind through a driver's
-bind attribute, but tools like libvirt and driverctl expect to bind
-devices by setting the driver_override and then pushing the device
-through driver_probe on the bus.  Is the intention of disabling
-"autoprobe" that a driver_override should still work?  Otherwise the
-user needs to set the driver_override for each VF, re-enable
-sriov_drivers_autoprobe on the PF, and then probe the VFs.  Thus maybe
-pci_device_can_probe() should allow probes of the driver_override
-driver?  Thanks,
+Changes from v2:
+  - Patch set rebased to Linux-5.0-rc2
 
-Alex
+Changes from v1:
+  - Addressed Oza review comments.
 
- drivers/pci/pci-driver.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+Srinath Mannam (3):
+  PCI: Add dma_ranges window list
+  iommu/dma: Reserve IOVA for PCIe inaccessible DMA address
+  PCI: iproc: Add sorted dma ranges resource entries to host bridge
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 71853befd435..da7b82e56c83 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -414,6 +414,9 @@ static int pci_device_probe(struct device *dev)
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	struct pci_driver *drv = to_pci_driver(dev->driver);
- 
-+	if (!pci_device_can_probe(pci_dev))
-+		return -ENODEV;
-+
- 	pci_assign_irq(pci_dev);
- 
- 	error = pcibios_alloc_irq(pci_dev);
-@@ -421,12 +424,10 @@ static int pci_device_probe(struct device *dev)
- 		return error;
- 
- 	pci_dev_get(pci_dev);
--	if (pci_device_can_probe(pci_dev)) {
--		error = __pci_device_probe(drv, pci_dev);
--		if (error) {
--			pcibios_free_irq(pci_dev);
--			pci_dev_put(pci_dev);
--		}
-+	error = __pci_device_probe(drv, pci_dev);
-+	if (error) {
-+		pcibios_free_irq(pci_dev);
-+		pci_dev_put(pci_dev);
- 	}
- 
- 	return error;
+ drivers/iommu/dma-iommu.c           | 19 ++++++++++++++++
+ drivers/pci/controller/pcie-iproc.c | 44 ++++++++++++++++++++++++++++++++++++-
+ drivers/pci/probe.c                 |  3 +++
+ include/linux/pci.h                 |  1 +
+ 4 files changed, 66 insertions(+), 1 deletion(-)
+
+-- 
+2.7.4
 
