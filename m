@@ -2,91 +2,116 @@ Return-Path: <SRS0=CmBN=TB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 682E1C43219
-	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 13:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC87C43219
+	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 13:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 370092177B
-	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 13:22:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556716930;
-	bh=0JyGM5+DOr1DenIgK+6iZu8HEZ1tzW8kT2w+HTyRdfo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=BBgy9pAkcA7z4/C4CijQd4Z9fZ8jLft6XAw24HS+4+C07q/wRwdHNzBdqbhF+tMY4
-	 ZL3e8uavJtNBh62XdX8qzF0TjXM4L/fJ31mzmcTjNO9mGxNNwwOUTenzyIpvQEn/HE
-	 Q0y2lhlt8HHzSWkbzlLcnIpatKYbKPgcknF7hA+A=
+	by mail.kernel.org (Postfix) with ESMTP id 01CCC21670
+	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 13:28:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726513AbfEANWE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 May 2019 09:22:04 -0400
-Received: from mga06.intel.com ([134.134.136.31]:25692 "EHLO mga06.intel.com"
+        id S1726083AbfEAN2i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 May 2019 09:28:38 -0400
+Received: from mga01.intel.com ([192.55.52.88]:43245 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725993AbfEANWD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 May 2019 09:22:03 -0400
-X-Amp-Result: UNSCANNABLE
+        id S1726010AbfEAN2i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 May 2019 09:28:38 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 May 2019 06:22:02 -0700
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 May 2019 06:28:37 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.60,417,1549958400"; 
-   d="scan'208";a="135945711"
-Received: from unknown (HELO localhost.localdomain) ([10.232.112.69])
-  by orsmga007.jf.intel.com with ESMTP; 01 May 2019 06:22:01 -0700
-Date:   Wed, 1 May 2019 07:16:15 -0600
-From:   Keith Busch <kbusch@kernel.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Alex G <mr.nuke.me@gmail.com>, Lukas Wunner <lukas@wunner.de>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Austin Bolen <austin_bolen@dell.com>,
+Received: from unknown (HELO localhost.lm.intel.com) ([10.232.112.69])
+  by orsmga002.jf.intel.com with ESMTP; 01 May 2019 06:28:37 -0700
+From:   Keith Busch <keith.busch@intel.com>
+To:     --to=Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc:     Alex Williamson <alex.williamson@redhat.com>,
         Alexandru Gagniuc <alex_gagniuc@dellteam.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Shyam Iyer <Shyam_Iyer@dell.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Revert "PCI/LINK: Report degraded links via link
- bandwidth notification"
-Message-ID: <20190501131614.GA26831@localhost.localdomain>
-References: <20190429185611.121751-1-helgaas@kernel.org>
- <20190429185611.121751-2-helgaas@kernel.org>
- <d902522e-f788-5e12-6b63-18ac5d5fa955@gmail.com>
- <20190430161151.GB145057@google.com>
- <20190430180508.GB25654@localhost.localdomain>
- <20190430181813.GC25654@localhost.localdomain>
- <20190501021249.GD145057@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190501021249.GD145057@google.com>
-User-Agent: Mutt/1.9.1 (2017-09-22)
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH] PCI/LINK: Add Kconfig option (default off)
+Date:   Wed,  1 May 2019 07:22:48 -0600
+Message-Id: <20190501132248.26842-1-keith.busch@intel.com>
+X-Mailer: git-send-email 2.13.6
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Apr 30, 2019 at 09:12:49PM -0500, Bjorn Helgaas wrote:
-> On Tue, Apr 30, 2019 at 12:18:13PM -0600, Keith Busch wrote:
-> > On Tue, Apr 30, 2019 at 12:05:09PM -0600, Keith Busch wrote:
-> > > On Tue, Apr 30, 2019 at 11:11:51AM -0500, Bjorn Helgaas wrote:
-> > > > > I'm not convinced a revert is the best call.
-> > > > 
-> > > > I have very limited options at this stage of the release, but I'd be
-> > > > glad to hear suggestions.  My concern is that if we release v5.1
-> > > > as-is, we'll spend a lot of energy on those false positives.
-> > > 
-> > > May be too late now if the revert is queued up, but I think this feature
-> > > should have been a default 'false' Kconfig bool rather than always on.
-> 
-> Since this feature currently just adds a message in dmesg, which we
-> don't really consider a stable API, I think a Kconfig switch is a
-> reasonable option.
-> 
-> If you send me a signed-off-by for the following patch, I can apply it:
+e8303bb7a75c ("PCI/LINK: Report degraded links via link bandwidth
+notification") added dmesg logging whenever a link changes speed or width
+to a state that is considered degraded.  Unfortunately, it cannot
+differentiate signal integrity-related link changes from those
+intentionally initiated by an endpoint driver, including drivers that may
+live in userspace or VMs when making use of vfio-pci.  Some GPU drivers
+actively manage the link state to save power, which generates a stream of
+messages like this:
 
-Sounds good, I'll need to resend though since I messed up the Makefile:
+  vfio-pci 0000:07:00.0: 32.000 Gb/s available PCIe bandwidth, limited by 2.5 GT/s x16 link at 0000:00:02.0 (capable of 64.000 Gb/s with 5 GT/s x16 link)
 
-> +obj-$(CONFIG_PCIE_BW)		:= bw_notification.o
+Since we can't distinguish the intentional changes from the signal
+integrity issues, leave the reporting turned off by default.  Add a Kconfig
+option to turn it on if desired.
 
-    s/:=/+=
+Fixes: e8303bb7a75c ("PCI/LINK: Report degraded links via link bandwidth notification")
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/Kconfig   | 9 +++++++++
+ drivers/pci/pcie/Makefile  | 2 +-
+ drivers/pci/pcie/portdrv.h | 4 ++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+index 5cbdbca904ac..7f480685df93 100644
+--- a/drivers/pci/pcie/Kconfig
++++ b/drivers/pci/pcie/Kconfig
+@@ -142,3 +142,12 @@ config PCIE_PTM
+ 
+ 	  This is only useful if you have devices that support PTM, but it
+ 	  is safe to enable even if you don't.
++
++config PCIE_BW
++	bool "PCI Express Bandwidth Change Notification"
++	default n
++	depends on PCIEPORTBUS
++	help
++	  This enables PCI Express Bandwidth Change Notification. If
++	  you know link width or rate changes occur only to correct
++	  unreliable links, you may answer Y.
+diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+index f1d7bc1e5efa..efb9d2e71e9e 100644
+--- a/drivers/pci/pcie/Makefile
++++ b/drivers/pci/pcie/Makefile
+@@ -3,7 +3,6 @@
+ # Makefile for PCI Express features and port driver
+ 
+ pcieportdrv-y			:= portdrv_core.o portdrv_pci.o err.o
+-pcieportdrv-y			+= bw_notification.o
+ 
+ obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
+ 
+@@ -13,3 +12,4 @@ obj-$(CONFIG_PCIEAER_INJECT)	+= aer_inject.o
+ obj-$(CONFIG_PCIE_PME)		+= pme.o
+ obj-$(CONFIG_PCIE_DPC)		+= dpc.o
+ obj-$(CONFIG_PCIE_PTM)		+= ptm.o
++obj-$(CONFIG_PCIE_BW)		+= bw_notification.o
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 1d50dc58ac40..944827a8c7d3 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -49,7 +49,11 @@ int pcie_dpc_init(void);
+ static inline int pcie_dpc_init(void) { return 0; }
+ #endif
+ 
++#ifdef CONFIG_PCIE_BW
+ int pcie_bandwidth_notification_init(void);
++#else
++static inline int pcie_bandwidth_notification_init(void) { return 0; }
++#endif
+ 
+ /* Port Type */
+ #define PCIE_ANY_PORT			(~0)
+-- 
+2.14.4
+
