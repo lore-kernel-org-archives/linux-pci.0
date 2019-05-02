@@ -2,152 +2,85 @@ Return-Path: <SRS0=2y5r=TC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BB37C04AAA
-	for <linux-pci@archiver.kernel.org>; Thu,  2 May 2019 00:20:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA0F6C43219
+	for <linux-pci@archiver.kernel.org>; Thu,  2 May 2019 00:20:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 016E42089E
-	for <linux-pci@archiver.kernel.org>; Thu,  2 May 2019 00:20:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8287E2081C
+	for <linux-pci@archiver.kernel.org>; Thu,  2 May 2019 00:20:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zEpyg9pb"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dc8l3OQy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726126AbfEBAUO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 May 2019 20:20:14 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:43293 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726324AbfEBAUC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 May 2019 20:20:02 -0400
-Received: by mail-pg1-f196.google.com with SMTP id t22so200636pgi.10
-        for <linux-pci@vger.kernel.org>; Wed, 01 May 2019 17:20:02 -0700 (PDT)
+        id S1726225AbfEBAUA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 May 2019 20:20:00 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:33936 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726183AbfEBAT7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 May 2019 20:19:59 -0400
+Received: by mail-pf1-f193.google.com with SMTP id b3so233824pfd.1
+        for <linux-pci@vger.kernel.org>; Wed, 01 May 2019 17:19:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=E3Sj1qJb0z4ITNAEehqfID3UnkAx5s/XXWNjkKffQfU=;
-        b=zEpyg9pbCcfkvwFW2lmkHaYw4yyiwzQL+VAJlGltUoQXTJpPE5AFN2bRZntv/Ka7l8
-         5MvCCEp1tfaTmDKpy5J+tD2ONsTTPuJ5qVu9DeGAZ+wDBBXfKyBpMwsFcVNVuzTgdOOz
-         yJ9d/A2FJ6gyMgXOKKfMjmNcBz7LFRiEL+wUpDVX7KPqMl0EDqZjjiAxG012mulIwjVs
-         82yBANyzLl1OSZdyQv9TXoSJVXXu8+n8nhYdEpCPDo/08voTOwWgNb1RE668luqwxHVz
-         aXH9ZeBXmWnvTB3wVZTkI0VtEqkxe82nPd4IjwwXOpg0AsHZ1CgH5ihCzjWaxBfsGsuz
-         KLiA==
+        h=from:to:cc:subject:date:message-id;
+        bh=M72UrqeRuyBcXD8fVbPV6qhuJNerzMcfy2w0Aus0l5Q=;
+        b=dc8l3OQySRYWLVNn/lNNOOqt83xbVy2XhNg7RGbydOcYn7Om65TwQj0KBdKZMDrL0N
+         QqLJN/xHpF1BlRPF2e/fy4TVOYZBVG11d9Ab/42A5XK13rpLDsIC3zjvo1ffygZ/C5Yg
+         XWyrSHlchanQGOSqzmw4lBXzj8FfHQEV456idxvVHcL8ijw6OxX9bSIr+zwj51m2UMXJ
+         mG+Y8DbpZ2DrqV7pDIFDRXwChZ25J68IQGDf6qJCwMWd24vxvAxyWEvCwMlo8q3KXjAe
+         aaB1Q2K/fug4A2EyfYbJ+BBpFhIcXTz8oeszUfHkaE6a7heBF57cRX+ILLqRe15Swt7A
+         pd3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=E3Sj1qJb0z4ITNAEehqfID3UnkAx5s/XXWNjkKffQfU=;
-        b=OjAFlQ8Bl1FcgcqBPUIHfMTCWpKoC4cSnCmxzQ/DnuqE8Ba6c+6NtqE0LsFlmN2Xu0
-         77aXIBLhCJWp5F5LFHLxlKUoCAtah5um5nGPJjXuTpBQOjICwNeK/gBEhnrxmdQprOEZ
-         9KcBCn1pcWCGEQA6+erdeO4j4LKbSG4NfJZFoCrlsVR86WligAei2k681Xrxrylt3KLa
-         EghLU/L3ae7E76z7KjjmgBXceH1bbebux6cXgRNpa4tYQBfGvYmgk4hOVQ2Fv45NuJDm
-         iMFhrES14bBgWjIFT+Fh049eJjYRuZ58JZa5GnSNQ6u8Bj2ZtIRiBmJ+v7KddsjyOyjt
-         i48w==
-X-Gm-Message-State: APjAAAUJOXAFh9npqQ3iqy98cW9hVxJRjADGfT2yaHot7IgwqHxA2tZY
-        1DyqPapQUPfnxs4v5F+qFKmiC4AeZD4=
-X-Google-Smtp-Source: APXvYqyuKZju222vPHwWFWzBfL0wmEdkJgGIUuUpI5WGtfe21pDlwonXurw15SfiKQKXw3bnYyb5Gg==
-X-Received: by 2002:a63:ed10:: with SMTP id d16mr816767pgi.75.1556756401822;
-        Wed, 01 May 2019 17:20:01 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=M72UrqeRuyBcXD8fVbPV6qhuJNerzMcfy2w0Aus0l5Q=;
+        b=q0u4EX/7RbTIqmvGPalnwM8OcBbF65B6ntrttiot81HhB4EbLmWCJM/b74Pd6jMAZV
+         rXl5w9hgVNisJZl//MMm+QSLrleBPL6bIldQYHnTGCkEqK2P+Fu5JoG3se6W8mhJINIq
+         T77u2ihj5nXU5IRSiy+NjFXmlK8KWnh89s9jLjTn5PGBiFpBEugY6WqMYV6wctyZK5K7
+         EHrG80az1433pQx0yWISzZbLJI6oJH0mSVSTmnst6PjLT00o5nRkPWi7Fg3KY6VZctTx
+         zeS6i+fELlej+eidM8nbd5leshKeT8MGvuLUFZkIWBhZESBtowxES4sNXe6BLfj2Wh4L
+         L3ZA==
+X-Gm-Message-State: APjAAAUEpUekjDS3r/JAAf1YtHNgt/PvuovyR0G6QXqjLJkBeVHlyScL
+        wvhg0GiZAjOQE6E9poT3kXdKkQ==
+X-Google-Smtp-Source: APXvYqwEsMTw7jtqbIuD2dAeIQqOvPTqQfWtFxK+h2Zk/KCJ6frEkbIqUzDedlB2IbgR1ONZECfytA==
+X-Received: by 2002:a63:e042:: with SMTP id n2mr828742pgj.45.1556756399042;
+        Wed, 01 May 2019 17:19:59 -0700 (PDT)
 Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
-        by smtp.gmail.com with ESMTPSA id s198sm36927534pfs.34.2019.05.01.17.20.00
+        by smtp.gmail.com with ESMTPSA id s198sm36927534pfs.34.2019.05.01.17.19.57
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 01 May 2019 17:20:01 -0700 (PDT)
+        Wed, 01 May 2019 17:19:58 -0700 (PDT)
 From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
         Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 2/3] dt-bindings: PCI: qcom: Add QCS404 to the binding
-Date:   Wed,  1 May 2019 17:19:54 -0700
-Message-Id: <20190502001955.10575-3-bjorn.andersson@linaro.org>
+Subject: [PATCH v3 0/3] Qualcomm QCS404 PCIe support
+Date:   Wed,  1 May 2019 17:19:52 -0700
+Message-Id: <20190502001955.10575-1-bjorn.andersson@linaro.org>
 X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20190502001955.10575-1-bjorn.andersson@linaro.org>
-References: <20190502001955.10575-1-bjorn.andersson@linaro.org>
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The Qualcomm QCS404 platform contains a PCIe controller, add this to the
-Qualcomm PCI binding document. The controller is the same version as the
-one used in IPQ4019, but the PHY part is described separately, hence the
-difference in clocks and resets.
+This series adds support for the PCIe controller in the Qualcomm QCS404
+platform.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
+Bjorn Andersson (3):
+  PCI: qcom: Use clk_bulk API for 2.4.0 controllers
+  dt-bindings: PCI: qcom: Add QCS404 to the binding
+  PCI: qcom: Add QCS404 PCIe controller support
 
-Changes since v2:
-- None
+ .../devicetree/bindings/pci/qcom,pcie.txt     |  25 +++-
+ drivers/pci/controller/dwc/pcie-qcom.c        | 109 ++++++++----------
+ 2 files changed, 73 insertions(+), 61 deletions(-)
 
- .../devicetree/bindings/pci/qcom,pcie.txt     | 25 +++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 1fd703bd73e0..ada80b01bf0c 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -10,6 +10,7 @@
- 			- "qcom,pcie-msm8996" for msm8996 or apq8096
- 			- "qcom,pcie-ipq4019" for ipq4019
- 			- "qcom,pcie-ipq8074" for ipq8074
-+			- "qcom,pcie-qcs404" for qcs404
- 
- - reg:
- 	Usage: required
-@@ -116,6 +117,15 @@
- 			- "ahb"		AHB clock
- 			- "aux"		Auxiliary clock
- 
-+- clock-names:
-+	Usage: required for qcs404
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "iface"	AHB clock
-+			- "aux"		Auxiliary clock
-+			- "master_bus"	AXI Master clock
-+			- "slave_bus"	AXI Slave clock
-+
- - resets:
- 	Usage: required
- 	Value type: <prop-encoded-array>
-@@ -167,6 +177,17 @@
- 			- "ahb"			AHB Reset
- 			- "axi_m_sticky"	AXI Master Sticky reset
- 
-+- reset-names:
-+	Usage: required for qcs404
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "axi_m"		AXI Master reset
-+			- "axi_s"		AXI Slave reset
-+			- "axi_m_sticky"	AXI Master Sticky reset
-+			- "pipe_sticky"		PIPE sticky reset
-+			- "pwr"			PWR reset
-+			- "ahb"			AHB reset
-+
- - power-domains:
- 	Usage: required for apq8084 and msm8996/apq8096
- 	Value type: <prop-encoded-array>
-@@ -195,12 +216,12 @@
- 	Definition: A phandle to the PCIe endpoint power supply
- 
- - phys:
--	Usage: required for apq8084
-+	Usage: required for apq8084 and qcs404
- 	Value type: <phandle>
- 	Definition: List of phandle(s) as listed in phy-names property
- 
- - phy-names:
--	Usage: required for apq8084
-+	Usage: required for apq8084 and qcs404
- 	Value type: <stringlist>
- 	Definition: Should contain "pciephy"
- 
 -- 
 2.18.0
 
