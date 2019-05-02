@@ -1,149 +1,185 @@
-Return-Path: <SRS0=CmBN=TB=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=2y5r=TC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79815C43219
-	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 21:58:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0251CC43219
+	for <linux-pci@archiver.kernel.org>; Thu,  2 May 2019 00:20:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 430142089E
-	for <linux-pci@archiver.kernel.org>; Wed,  1 May 2019 21:58:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1556747887;
-	bh=xZjoieoiaF6KMd/n1aT6l4cYdvV3M1MHn1xME2jfOoc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=uUinZZ3m3IhkRZq1lUadYvR5JGveafZqMYPzr5/5kEIFIP9UjBJ6DeQD+4IG9GCqM
-	 +yUHUy0vyceer5620gRsM3j5xTpvF+jz9nYl9MgKiT3qV+hFXJBqrXfD9ZtalTTr9j
-	 YL68X6PCc5QcItpHglQxIk31EkbDsIN9Ak0ya7aI=
+	by mail.kernel.org (Postfix) with ESMTP id C47DF2089E
+	for <linux-pci@archiver.kernel.org>; Thu,  2 May 2019 00:20:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zGUZGCHC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726183AbfEAV6G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 1 May 2019 17:58:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37162 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726144AbfEAV6G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 May 2019 17:58:06 -0400
-Received: from localhost (odyssey.drury.edu [64.22.249.253])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1EC612085A;
-        Wed,  1 May 2019 21:58:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1556747885;
-        bh=xZjoieoiaF6KMd/n1aT6l4cYdvV3M1MHn1xME2jfOoc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=w840NWaiT9V+Tg8eNh8PI/Krg+/JhPyr669Tjr9cdgijUyk0rXp3PUtNGWeCzLvEh
-         I6vzSRigNygg46LeXGo256EnPx1/4K2M4d8yWNuoVRMmxybHdr6X0l7HyoYuhlNmbn
-         aMaq7YHh1EvHOdPyHjW2SLB5is4cpUV2nzGwCPO0=
-Date:   Wed, 1 May 2019 16:58:04 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Christian =?iso-8859-1?Q?K=F6nig?= 
-        <ckoenig.leichtzumerken@gmail.com>
-Cc:     logang@deltatee.com, rdunlap@infradead.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/P2PDMA: start with a whitelist for root complexes
-Message-ID: <20190501215804.GA11579@google.com>
-References: <20190418115859.2394-1-christian.koenig@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190418115859.2394-1-christian.koenig@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1726360AbfEBAUC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 1 May 2019 20:20:02 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:41881 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726308AbfEBAUB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 May 2019 20:20:01 -0400
+Received: by mail-pg1-f195.google.com with SMTP id f6so204813pgs.8
+        for <linux-pci@vger.kernel.org>; Wed, 01 May 2019 17:20:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=/psW1srJduDZnTK6cT7esw1bLk3kuN/B2zGTRQYrIZU=;
+        b=zGUZGCHCANIrHMyTiRT/yYY3cXjKLd59llaczWZVdmNLgUJvSL8lXkZMF/9XG4+qYS
+         LOErogw0yIHk9SKCJZAFXcLtN5mE0CQPulZczyplyY/zAyy04lCL69NQ/DhqBnprextG
+         g+O6hgZdYWhqp3Gxy33J8pVBYuRgWE9Bvuh3s2p54BO1BruuoUrNdeZCK8KWrpB7j+L1
+         fWjj/cgAmogCkZvpt4MYyH26nyRpImpgVpun/rb77RvlORsKaPcJIqT832QzXqeteE3H
+         lHOL3aCJVJGk5jtCXXjO71TfsOFjCQU9+FaV9ZFBVRmKZOWa7F2H9oqiM5VIbzMfvXao
+         FO7Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=/psW1srJduDZnTK6cT7esw1bLk3kuN/B2zGTRQYrIZU=;
+        b=f+bL7T9Y2xdqzQfxBBr6yh5RgeGvB2MtgUuKfR4/67SVU1Hz8FmE5owXRJ8eSOidJQ
+         fSz9FTItirgd90lqa9sXLow1FfedlZfOkJ4tRtGV6XjEyOmBJ3ycwJKJkdb7AAh53TU7
+         zAJDyw6EuJHutZpI0PSjrrn1I/o0C4GP3aF+y5Z7j9kLsFA/QIYsoSBocXGuqRVyoNFk
+         pnGIMr7w+zjuuYPnprsHg+W80+KWxDXW/1bXBcC7cUZoUlXGfIjnk5ihoqIYGsjG4lIb
+         gZyWGpFOAIp67xkrr/vzGu5wyOQUlw5ZXdzEDFuw2nGyPzelw+G2ms8RbYC9q1x59O7g
+         AOig==
+X-Gm-Message-State: APjAAAWOtOPYhxOXL4w1Ppq2CJSLFYY9TZb7vm2Ic03EKQ6iiLd+Ho6I
+        kWn+4uMSpy4rG+erPmbHgcJjlQ==
+X-Google-Smtp-Source: APXvYqxa1ZKUWnI/qCHjV9dxzxTsV8RrtihOubt8KXD+l5y6/8t+jzp+oZdQf6kAYFxnkKuc5vZULA==
+X-Received: by 2002:a63:1b11:: with SMTP id b17mr822754pgb.207.1556756400430;
+        Wed, 01 May 2019 17:20:00 -0700 (PDT)
+Received: from localhost.localdomain (104-188-17-28.lightspeed.sndgca.sbcglobal.net. [104.188.17.28])
+        by smtp.gmail.com with ESMTPSA id s198sm36927534pfs.34.2019.05.01.17.19.59
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 01 May 2019 17:19:59 -0700 (PDT)
+From:   Bjorn Andersson <bjorn.andersson@linaro.org>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/3] PCI: qcom: Use clk_bulk API for 2.4.0 controllers
+Date:   Wed,  1 May 2019 17:19:53 -0700
+Message-Id: <20190502001955.10575-2-bjorn.andersson@linaro.org>
+X-Mailer: git-send-email 2.18.0
+In-Reply-To: <20190502001955.10575-1-bjorn.andersson@linaro.org>
+References: <20190502001955.10575-1-bjorn.andersson@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Apr 18, 2019 at 01:58:59PM +0200, Christian König wrote:
-> A lot of root complexes can still do P2P even when PCI devices
-> don't share a common upstream bridge.
-> 
-> Start adding a whitelist and allow P2P if both participants are
-> attached to known good root complex.
-> 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
+Before introducing the QCS404 platform, which uses the same PCIe
+controller as IPQ4019, migrate this to use the bulk clock API, in order
+to make the error paths slighly cleaner.
 
-I applied this with Logan's reviewed-by to pci/peer-to-peer for v5.2,
-thanks!
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+Reviewed-by: Niklas Cassel <niklas.cassel@linaro.org>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
 
-This should be easy to build on in the future as we discover new
-hardware that supports this and as we find out any quirks in the way
-they do it.
+Changes since v2:
+- Defined QCOM_PCIE_2_4_0_MAX_CLOCKS
 
-> ---
->  drivers/pci/p2pdma.c | 38 +++++++++++++++++++++++++++++++++++---
->  1 file changed, 35 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index c52298d76e64..212baaa7f93b 100644
-> --- a/drivers/pci/p2pdma.c
-> +++ b/drivers/pci/p2pdma.c
-> @@ -274,6 +274,31 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
->  	seq_buf_printf(buf, "%s;", pci_name(pdev));
->  }
->  
-> +/*
-> + * If we can't find a common upstream bridge take a look at the root complex and
-> + * compare it to a whitelist of known good hardware.
-> + */
-> +static bool root_complex_whitelist(struct pci_dev *dev)
-> +{
-> +	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
-> +	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
-> +	unsigned short vendor, device;
-> +
-> +	if (!root)
-> +		return false;
-> +
-> +	vendor = root->vendor;
-> +	device = root->device;
-> +	pci_dev_put(root);
-> +
-> +	/* AMD ZEN host bridges can do peer to peer */
-> +	if (vendor == PCI_VENDOR_ID_AMD && device == 0x1450)
-> +		return true;
-> +
-> +	/* TODO: Extend that to a proper whitelist */
-> +	return false;
-> +}
-> +
->  /*
->   * Find the distance through the nearest common upstream bridge between
->   * two PCI devices.
-> @@ -317,13 +342,13 @@ static void seq_buf_print_bus_devfn(struct seq_buf *buf, struct pci_dev *pdev)
->   * In this case, a list of all infringing bridge addresses will be
->   * populated in acs_list (assuming it's non-null) for printk purposes.
->   */
-> -static int upstream_bridge_distance(struct pci_dev *a,
-> -				    struct pci_dev *b,
-> +static int upstream_bridge_distance(struct pci_dev *provider,
-> +				    struct pci_dev *client,
->  				    struct seq_buf *acs_list)
->  {
-> +	struct pci_dev *a = provider, *b = client, *bb;
->  	int dist_a = 0;
->  	int dist_b = 0;
-> -	struct pci_dev *bb = NULL;
->  	int acs_cnt = 0;
->  
->  	/*
-> @@ -354,6 +379,13 @@ static int upstream_bridge_distance(struct pci_dev *a,
->  		dist_a++;
->  	}
->  
-> +	/* Allow the connection if both devices are on a whitelisted root
-> +	 * complex, but add an arbitary large value to the distance.
-> +	 */
-> +	if (root_complex_whitelist(provider) &&
-> +	    root_complex_whitelist(client))
-> +		return 0x1000 + dist_a + dist_b;
-> +
->  	return -1;
->  
->  check_b_path_acs:
-> -- 
-> 2.17.1
-> 
+ drivers/pci/controller/dwc/pcie-qcom.c | 49 ++++++++------------------
+ 1 file changed, 14 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 0ed235d560e3..d740cbe0e56d 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -112,10 +112,10 @@ struct qcom_pcie_resources_2_3_2 {
+ 	struct regulator_bulk_data supplies[QCOM_PCIE_2_3_2_MAX_SUPPLY];
+ };
+ 
++#define QCOM_PCIE_2_4_0_MAX_CLOCKS	3
+ struct qcom_pcie_resources_2_4_0 {
+-	struct clk *aux_clk;
+-	struct clk *master_clk;
+-	struct clk *slave_clk;
++	struct clk_bulk_data clks[QCOM_PCIE_2_4_0_MAX_CLOCKS];
++	int num_clks;
+ 	struct reset_control *axi_m_reset;
+ 	struct reset_control *axi_s_reset;
+ 	struct reset_control *pipe_reset;
+@@ -638,18 +638,17 @@ static int qcom_pcie_get_resources_2_4_0(struct qcom_pcie *pcie)
+ 	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
++	int ret;
+ 
+-	res->aux_clk = devm_clk_get(dev, "aux");
+-	if (IS_ERR(res->aux_clk))
+-		return PTR_ERR(res->aux_clk);
++	res->clks[0].id = "aux";
++	res->clks[1].id = "master_bus";
++	res->clks[2].id = "slave_bus";
+ 
+-	res->master_clk = devm_clk_get(dev, "master_bus");
+-	if (IS_ERR(res->master_clk))
+-		return PTR_ERR(res->master_clk);
++	res->num_clks = 3;
+ 
+-	res->slave_clk = devm_clk_get(dev, "slave_bus");
+-	if (IS_ERR(res->slave_clk))
+-		return PTR_ERR(res->slave_clk);
++	ret = devm_clk_bulk_get(dev, res->num_clks, res->clks);
++	if (ret < 0)
++		return ret;
+ 
+ 	res->axi_m_reset = devm_reset_control_get_exclusive(dev, "axi_m");
+ 	if (IS_ERR(res->axi_m_reset))
+@@ -719,9 +718,7 @@ static void qcom_pcie_deinit_2_4_0(struct qcom_pcie *pcie)
+ 	reset_control_assert(res->axi_m_sticky_reset);
+ 	reset_control_assert(res->pwr_reset);
+ 	reset_control_assert(res->ahb_reset);
+-	clk_disable_unprepare(res->aux_clk);
+-	clk_disable_unprepare(res->master_clk);
+-	clk_disable_unprepare(res->slave_clk);
++	clk_bulk_disable_unprepare(res->num_clks, res->clks);
+ }
+ 
+ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+@@ -850,23 +847,9 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+ 
+ 	usleep_range(10000, 12000);
+ 
+-	ret = clk_prepare_enable(res->aux_clk);
+-	if (ret) {
+-		dev_err(dev, "cannot prepare/enable iface clock\n");
++	ret = clk_bulk_prepare_enable(res->num_clks, res->clks);
++	if (ret)
+ 		goto err_clk_aux;
+-	}
+-
+-	ret = clk_prepare_enable(res->master_clk);
+-	if (ret) {
+-		dev_err(dev, "cannot prepare/enable core clock\n");
+-		goto err_clk_axi_m;
+-	}
+-
+-	ret = clk_prepare_enable(res->slave_clk);
+-	if (ret) {
+-		dev_err(dev, "cannot prepare/enable phy clock\n");
+-		goto err_clk_axi_s;
+-	}
+ 
+ 	/* enable PCIe clocks and resets */
+ 	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
+@@ -891,10 +874,6 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+ 
+ 	return 0;
+ 
+-err_clk_axi_s:
+-	clk_disable_unprepare(res->master_clk);
+-err_clk_axi_m:
+-	clk_disable_unprepare(res->aux_clk);
+ err_clk_aux:
+ 	reset_control_assert(res->ahb_reset);
+ err_rst_ahb:
+-- 
+2.18.0
+
