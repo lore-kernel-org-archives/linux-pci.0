@@ -6,52 +6,52 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1DDAC04AAA
-	for <linux-pci@archiver.kernel.org>; Fri,  3 May 2019 04:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A100BC43219
+	for <linux-pci@archiver.kernel.org>; Fri,  3 May 2019 04:01:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D72320C01
-	for <linux-pci@archiver.kernel.org>; Fri,  3 May 2019 04:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B4772070B
+	for <linux-pci@archiver.kernel.org>; Fri,  3 May 2019 04:01:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=fredlawl-com.20150623.gappssmtp.com header.i=@fredlawl-com.20150623.gappssmtp.com header.b="XPNLyukT"
+	dkim=pass (2048-bit key) header.d=fredlawl-com.20150623.gappssmtp.com header.i=@fredlawl-com.20150623.gappssmtp.com header.b="ZI/oDJAD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726449AbfECEAa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 May 2019 00:00:30 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:40206 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726407AbfECEA0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 May 2019 00:00:26 -0400
-Received: by mail-ot1-f67.google.com with SMTP id w6so4153241otl.7
-        for <linux-pci@vger.kernel.org>; Thu, 02 May 2019 21:00:26 -0700 (PDT)
+        id S1725816AbfECEAR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 3 May 2019 00:00:17 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:38682 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725379AbfECEAQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 May 2019 00:00:16 -0400
+Received: by mail-oi1-f196.google.com with SMTP id t70so3472038oif.5
+        for <linux-pci@vger.kernel.org>; Thu, 02 May 2019 21:00:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=fredlawl-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=/LOTiXEeUAfPkAgUbsTAKp8w078GVOXeJxP9ge1byF8=;
-        b=XPNLyukTjtUR1G5C31oqERX/VOGrqG8DcQcBrRJG6f6svZDbARMyBVLoY2RQ7XP3H5
-         dn+CQGhJ4qPQN1fAjcc/EyONtUj1g8bzZaN8cN62JG5g9IQX78lsdB4xMOwy9XibQLw/
-         +rQYpwujO4bNYWWQmTEu5eVnpiY5ke3Jmea8tb2GUAtkoi6mXPkn3FNdI89YvYXAGIuF
-         kbQiT6+N3f2g8PzPkUubXXunxMBm5o0c8fivT6YdrmSGedvrsRqqX7NQSgmC8jIzgW+B
-         O71qBgrr7hSvt7jUpbjUiq0u0ladrZoTcPSKKhPVYw/5WmrXslxysNtoBneQIPVL08TP
-         xoTA==
+        bh=rUTSw74gexjNwzq9ZLmaaBHpeJsduJxpcMlGupfmHG4=;
+        b=ZI/oDJADO4rOIoCDUnEV0PbQiau5ydorvrx+xZUz6wqYvpFKXYpKjD09gcXjvLJpdH
+         2cQCCQkAcf+0n06uPKjdHDUPcXEiKHbg9eHm4XK5AKX46KEiyP+pPzgBnYQefV/+vyFh
+         cKwAIAGh1P4P5VUSJXf4iQx4iVu1ouPvCqcGu2oL9SU61i14VDndeWAEL2v38AtIDuwz
+         NfC49wl8dxQpI9tFDfxwSsZT0qZQ84eYQLUd8B2wLOvZph01gOCgwANcJvzZ1M9yJi2X
+         QFstesEHaDZOYE2n1xzsV0Y0VgXBrnuSBUuBnbB9Zukz/1DEfi6xPsaduTPskGLbajRv
+         KE2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=/LOTiXEeUAfPkAgUbsTAKp8w078GVOXeJxP9ge1byF8=;
-        b=k7WiMZaZwaoCmhKSZvMumJ9o8UZSgHPRrAXxlUwMHvCnByHaFxUDyiaNaKxHccNhCy
-         NKQUq2RkALmEFCmlE6ylf6X8SA3FBBr5YTrxKZHj5D6hc8DJ3+Zu6TFGJzuqSsKjq+9B
-         LrzgdvVo+9DRZrlx5CnqRLYlrTJsP+fquoH23bsLCaQvJErRKUufym9gKcIAtZVOJRLd
-         CtXExz7DTShlO1WbvqbVENmNi25zLZ/FDCyJXDaGVG1s+YSh2nMPZgp6s11aGNyZyJcK
-         DZX1ieHdReW/2MVDz1/kaZKh9Pvu28rvBiAofVccxuX3hlBD8CNcD5imM/rt6venTf9C
-         Ju+w==
-X-Gm-Message-State: APjAAAU9Z6rqu3tsKQjZgrdDxgnPodUcyVGXSFQoRDa0DMpgywxuLrmN
-        pxh4NNLaCjj1gQnB5ptyIYLv/w==
-X-Google-Smtp-Source: APXvYqyfPPmFNQcODBf5kR720aUXI7NwjTYQBV3YUQ7HVat65zmo8DoiqA8XMNbvn2APOVCm0w4sJg==
-X-Received: by 2002:a05:6830:1251:: with SMTP id s17mr1398446otp.186.1556856026086;
-        Thu, 02 May 2019 21:00:26 -0700 (PDT)
+        bh=rUTSw74gexjNwzq9ZLmaaBHpeJsduJxpcMlGupfmHG4=;
+        b=jXUc4VQKGuHGr/DTpfoDzFOldCuLPZJVi47uhGsQr7ApzfcRnCrbJonBGb4gpnlve3
+         x4yMxjZ9pNMCHC5g+Fdos8dUUvKpfTEdgMIvdqTQ96CnPGRjk6P6rmprDVLCnpNy5qV9
+         IxEQ/3QcxsHlFdPTgP8nwhGrjosbPeFuZGXASD/xDMEt0kyVOdS+RVe0ogFovtFdkBHC
+         aN7mKVoUiHgHHHqDl/6YfCXqY+ou0rDpcTSiEO8ja9gmckpNGtwllQpSYF32FTvPOVMD
+         sicH/hlNNiGgU+ag2812beSMEgdE924qV6B5y1NjLUp8xC85o3R3SkDOgHSxtjea+hN5
+         yMOQ==
+X-Gm-Message-State: APjAAAVc+Gu8sUwMQjEOImz0USFqBDjJoE+vsYy32kUQIGIUzf0wnLyZ
+        glM6D8cr6xBBU0lkVyhP5IVfZg==
+X-Google-Smtp-Source: APXvYqytlEstswINkPkyIA6Dj4cZY6kaWgFkfd4RiLPYDmMNxSqqtMj7RyWp3JbDg58d1b+iaPcNAA==
+X-Received: by 2002:aca:5b85:: with SMTP id p127mr4620755oib.90.1556856015507;
+        Thu, 02 May 2019 21:00:15 -0700 (PDT)
 Received: from linux.fredlawl.com ([2600:1700:18a0:11d0:5518:38b8:ef25:393a])
-        by smtp.gmail.com with ESMTPSA id f17sm430149oto.5.2019.05.02.21.00.25
+        by smtp.gmail.com with ESMTPSA id 20sm622436oty.58.2019.05.02.21.00.14
         (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Thu, 02 May 2019 21:00:25 -0700 (PDT)
+        Thu, 02 May 2019 21:00:14 -0700 (PDT)
 From:   Frederick Lawler <fred@fredlawl.com>
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -59,9 +59,9 @@ Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         andriy.shevchenko@linux.intel.com, keith.busch@intel.com,
         mr.nuke.me@gmail.com, liudongdong3@huawei.com, thesven73@gmail.com,
         Frederick Lawler <fred@fredlawl.com>
-Subject: [PATCH v2 5/9] PCI/AER: Prefix dmesg logs with PCIe service name
-Date:   Thu,  2 May 2019 22:59:42 -0500
-Message-Id: <20190503035946.23608-6-fred@fredlawl.com>
+Subject: [PATCH v2 1/9] PCI/AER: Cleanup dmesg logs
+Date:   Thu,  2 May 2019 22:59:38 -0500
+Message-Id: <20190503035946.23608-2-fred@fredlawl.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190503035946.23608-1-fred@fredlawl.com>
 References: <20190503035946.23608-1-fred@fredlawl.com>
@@ -70,85 +70,56 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Prefix dmesg logs with PCIe service name.
+Cleanup dmesg logs.
 
 Signed-off-by: Frederick Lawler <fred@fredlawl.com>
 ---
- drivers/pci/pcie/aer.c        | 10 +++++++---
- drivers/pci/pcie/aer_inject.c |  6 ++++--
- 2 files changed, 11 insertions(+), 5 deletions(-)
+ drivers/pci/pcie/aer.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 82eb45335b6f..e603084b8fc1 100644
+index f8fc2114ad39..82eb45335b6f 100644
 --- a/drivers/pci/pcie/aer.c
 +++ b/drivers/pci/pcie/aer.c
-@@ -12,6 +12,9 @@
-  *    Andrew Patterson <andrew.patterson@hp.com>
-  */
+@@ -964,8 +964,8 @@ static bool find_source_device(struct pci_dev *parent,
+ 	pci_walk_bus(parent->subordinate, find_device_iter, e_info);
  
-+#define pr_fmt(fmt) "AER: " fmt
-+#define dev_fmt pr_fmt
-+
- #include <linux/cper.h>
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
-@@ -1377,24 +1380,25 @@ static int aer_probe(struct pcie_device *dev)
- 	int status;
- 	struct aer_rpc *rpc;
- 	struct device *device = &dev->device;
-+	struct pci_dev *port = dev->port;
+ 	if (!e_info->error_dev_num) {
+-		pci_printk(KERN_DEBUG, parent, "can't find device of ID%04x\n",
+-			   e_info->id);
++		pci_info(parent, "can't find device of ID%04x\n",
++			 e_info->id);
+ 		return false;
+ 	}
+ 	return true;
+@@ -1380,7 +1380,6 @@ static int aer_probe(struct pcie_device *dev)
  
  	rpc = devm_kzalloc(device, sizeof(struct aer_rpc), GFP_KERNEL);
  	if (!rpc) {
+-		dev_printk(KERN_DEBUG, device, "alloc AER rpc failed\n");
  		return -ENOMEM;
  	}
--	rpc->rpd = dev->port;
-+	rpc->rpd = port;
- 	set_service_data(dev, rpc);
- 
+ 	rpc->rpd = dev->port;
+@@ -1389,8 +1388,8 @@ static int aer_probe(struct pcie_device *dev)
  	status = devm_request_threaded_irq(device, dev->irq, aer_irq, aer_isr,
  					   IRQF_SHARED, "aerdrv", dev);
  	if (status) {
--		dev_err(device, "request AER IRQ %d failed\n",
-+		pci_err(port, "request AER IRQ %d failed\n",
- 			dev->irq);
+-		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
+-			   dev->irq);
++		dev_err(device, "request AER IRQ %d failed\n",
++			dev->irq);
  		return status;
  	}
  
- 	aer_enable_rootport(rpc);
--	dev_info(device, "AER enabled with IRQ %d\n", dev->irq);
-+	pci_info(port, "AER enabled with IRQ %d\n", dev->irq);
- 	return 0;
- }
+@@ -1419,7 +1418,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
  
-diff --git a/drivers/pci/pcie/aer_inject.c b/drivers/pci/pcie/aer_inject.c
-index 95d4759664b3..d4f6d49acd0c 100644
---- a/drivers/pci/pcie/aer_inject.c
-+++ b/drivers/pci/pcie/aer_inject.c
-@@ -12,6 +12,8 @@
-  *     Huang Ying <ying.huang@intel.com>
-  */
+ 	rc = pci_bus_error_reset(dev);
+-	pci_printk(KERN_DEBUG, dev, "Root Port link has been reset\n");
++	pci_info(dev, "Root Port link has been reset\n");
  
-+#define dev_fmt(fmt) "AER: " fmt
-+
- #include <linux/module.h>
- #include <linux/init.h>
- #include <linux/irq.h>
-@@ -460,12 +462,12 @@ static int aer_inject(struct aer_error_inj *einj)
- 	if (device) {
- 		edev = to_pcie_device(device);
- 		if (!get_service_data(edev)) {
--			dev_warn(&edev->device,
-+			pci_warn(edev->port,
- 				 "aer_inject: AER service is not initialized\n");
- 			ret = -EPROTONOSUPPORT;
- 			goto out_put;
- 		}
--		dev_info(&edev->device,
-+		pci_info(edev->port,
- 			 "aer_inject: Injecting errors %08x/%08x into device %s\n",
- 			 einj->cor_status, einj->uncor_status, pci_name(dev));
- 		local_irq_disable();
+ 	/* Clear Root Error Status */
+ 	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
 -- 
 2.17.1
 
