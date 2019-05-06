@@ -2,127 +2,97 @@ Return-Path: <SRS0=GEr7=TG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_MUTT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D96BC04A6B
-	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 21:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B384C04A6B
+	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 22:15:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2FADA20830
-	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 21:12:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF4C32054F
+	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 22:15:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557177132;
-	bh=H60Z5JzAVob3LUpzvsBUSRMR0trBUI8gbEMi3qxwp30=;
+	s=default; t=1557180912;
+	bh=yuPWiAOPAeQgK77uMgxcqRZ+hzITam4zxTNrLmBr2rU=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=n5dJrXEKNDnnxFuPD5eFS2ZfPB8249ven6fsv1lEiHtq+MeDJyWZ7bqFBrTDo4G6b
-	 U7StsKrNRKh0/vgmZ1ODM3ZJz8sXQHrv70th+pOUEbSYl6PCloyXcvJJT8STL/930I
-	 OMJor93wVOdPgNdgNYwPdFfIl3L7d2shVa67i1P4=
+	b=vCGNC8TFX6/ETfacelSDOoXKAuYD5avy54WrTrjbAGuAsvqqt4XJGNJ0TwEyT/isE
+	 lIbW/1A+Zzy5NlpcCzjj44J0i6d+83Gc7k4exQFpkwqAQeuM5giRghBlD/d9kptSYl
+	 1yOrT3KTzYfsihjj42oYt7vGw9hx+k4HHM1nPed4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726349AbfEFVML (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 6 May 2019 17:12:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60668 "EHLO mail.kernel.org"
+        id S1726282AbfEFWPM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 6 May 2019 18:15:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48982 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726118AbfEFVML (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 May 2019 17:12:11 -0400
+        id S1726276AbfEFWPM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 May 2019 18:15:12 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8E5A9206BF;
-        Mon,  6 May 2019 21:12:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 38DFC2054F;
+        Mon,  6 May 2019 22:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557177129;
-        bh=H60Z5JzAVob3LUpzvsBUSRMR0trBUI8gbEMi3qxwp30=;
+        s=default; t=1557180911;
+        bh=yuPWiAOPAeQgK77uMgxcqRZ+hzITam4zxTNrLmBr2rU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Z+otEGFalj9eUa8HjkWOq3eWomRR0iv//fLaRm9B3yuPSfOBCIZvDJKe0Fq8mIlDK
-         c07TwmQDq5yc63UxbnrMEy0nGxTs/9VZOCUoEk7CUeMS5LlepJ5a1GrjR2nxDYHN9X
-         jAi8+NP3yU9tXbm+wfK6Muzjk5drQDrBn7+4gdB4=
-Date:   Mon, 6 May 2019 16:12:08 -0500
+        b=OurK6XfDgrjObW/fEeTV1l7G5JppX674nAJ7WXtNeCvXW7mb+IoqxPTyh/1wL8RHK
+         VHpBZjVnflpMkXXARBL9ECX2qK5WkQaOo/EcBtP+7HlA1PXDXLzC/x9zTLX+4wcu+o
+         hzB3bI0v3qDoXoWtHHPihtDIXF6qXUkerhHV3tGI=
+Date:   Mon, 6 May 2019 17:15:09 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Srinath Mannam <srinath.mannam@broadcom.com>
-Cc:     Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Eric Auger <eric.auger@redhat.com>, poza@codeaurora.org,
-        Ray Jui <rjui@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v6 3/3] PCI: iproc: Add sorted dma ranges resource
- entries to host bridge
-Message-ID: <20190506211208.GA156478@google.com>
-References: <1556892334-16270-1-git-send-email-srinath.mannam@broadcom.com>
- <1556892334-16270-4-git-send-email-srinath.mannam@broadcom.com>
+To:     Heiner Kallweit <hkallweit1@gmail.com>
+Cc:     Frederick Lawler <fred@fredlawl.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH RFC 3/3] PCI/ASPM: add sysfs attribute for controlling
+ ASPM
+Message-ID: <20190506221509.GB156478@google.com>
+References: <e63cec92-cfb1-d0c4-f21e-350b4b289849@gmail.com>
+ <a0a39450-1f23-f5a0-d669-3d722e5b71dd@gmail.com>
+ <20190430175304.GC145057@google.com>
+ <1cdf51f0-653a-f0e8-83dc-88b9d023a269@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1556892334-16270-4-git-send-email-srinath.mannam@broadcom.com>
+In-Reply-To: <1cdf51f0-653a-f0e8-83dc-88b9d023a269@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, May 03, 2019 at 07:35:34PM +0530, Srinath Mannam wrote:
-> The IPROC host controller allows only a subset of physical address space
-> as target of inbound PCI memory transactions addresses.
-> 
-> PCIe devices memory transactions targeting memory regions that
-> are not allowed for inbound transactions in the host controller
-> are rejected by the host controller and cannot reach the upstream
-> buses.
-> 
-> Firmware device tree description defines the DMA ranges that are
-> addressable by devices DMA transactions; parse the device tree
-> dma-ranges property and add its ranges to the PCI host bridge dma_ranges
-> list; the iova_reserve_pci_windows() call in the driver will reserve the
-> IOVA address ranges that are not addressable (ie memory holes in the
-> dma-ranges set) so that they are not allocated to PCI devices for DMA
-> transfers.
-> 
-> All allowed address ranges are listed in dma-ranges DT parameter.
-> 
-> Example:
-> 
-> dma-ranges = < \
->   0x43000000 0x00 0x80000000 0x00 0x80000000 0x00 0x80000000 \
->   0x43000000 0x08 0x00000000 0x08 0x00000000 0x08 0x00000000 \
->   0x43000000 0x80 0x00000000 0x80 0x00000000 0x40 0x00000000>
-> 
-> In the above example of dma-ranges, memory address from
-> 
-> 0x0 - 0x80000000,
-> 0x100000000 - 0x800000000,
-> 0x1000000000 - 0x8000000000 and
-> 0x10000000000 - 0xffffffffffffffff.
-> 
-> are not allowed to be used as inbound addresses.
-> 
-> Based-on-patch-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> [lorenzo.pieralisi@arm.com: updated commit log]
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reviewed-by: Oza Pawandeep <poza@codeaurora.org>
-> Reviewed-by: Eric Auger <eric.auger@redhat.com>
-> ---
->  drivers/pci/controller/pcie-iproc.c | 44 ++++++++++++++++++++++++++++++++++++-
->  1 file changed, 43 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-iproc.c b/drivers/pci/controller/pcie-iproc.c
-> index c20fd6b..94ba5c0 100644
-> --- a/drivers/pci/controller/pcie-iproc.c
-> +++ b/drivers/pci/controller/pcie-iproc.c
-> @@ -1146,11 +1146,43 @@ static int iproc_pcie_setup_ib(struct iproc_pcie *pcie,
->  	return ret;
->  }
->  
-> +static int
-> +iproc_pcie_add_dma_range(struct device *dev, struct list_head *resources,
-> +			 struct of_pci_range *range)
+On Sat, May 04, 2019 at 05:31:04PM +0200, Heiner Kallweit wrote:
+> On 30.04.2019 19:53, Bjorn Helgaas wrote:
+> > On Sat, Apr 13, 2019 at 11:12:41AM +0200, Heiner Kallweit wrote:
 
-Just FYI, I cherry-picked these commits from Lorenzo's branch to fix
-the formatting of this prototype to match the rest of the file, e.g.:
+> > I like the idea of exposing these sysfs control files all the time,
+> > instead of only when CONFIG_PCIEASPM_DEBUG=y, but I think when we do
+> > that, we should put the files at the downstream end of the link (e.g.,
+> > an endpoint) instead of at the upstream end (e.g., a root port or
+> > switch downstream port).  We had some conversation about this here:
+> > 
+> > https://lore.kernel.org/lkml/20180727202619.GD173328@bhelgaas-glaptop.roam.corp.google.com
+> > 
+> > Doing it at the downstream end would require more changes, of course,
+> > and probably raises some locking issues, but I think we have a small
+> 
+> This isn't obvious to me as I'm not that familiar with the PCIe subsystem.
+> - Why do we need more changes on the downstream end?
 
->  static int iproc_pcie_map_dma_ranges(struct iproc_pcie *pcie)
-> ...
->  static int iproce_pcie_get_msi(struct iproc_pcie *pcie,
+I just meant that it might be a little more complicated because the
+existing PCIEASPM_DEBUG code works at the upstream end so you can't
+use it directly.
+
+> - Which locking is affected?
+
+Normally if we operate on device X, we only touch registers in device
+X.  Here we need to also touch things in the bridge upstream from X,
+so it's outside the usual model.  We've had locking issues in the
+device enable path where we sometimes have to enable the upstream
+bridge before enabling the device itself.  I don't know if there are
+similar issues here or not, so I mentioned it as a possibility.
+
+> > window of opportunity here where we can tweak the sysfs structure
+> > before we're committed to supporting something forever.
+> > 
+> > Bjorn
+> > 
+> Heiner
