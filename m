@@ -2,29 +2,29 @@ Return-Path: <SRS0=GEr7=TG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D391C04A6B
-	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 17:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 526FEC04A6B
+	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 17:22:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DD7EC20B7C
-	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 17:22:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3013E20830
+	for <linux-pci@archiver.kernel.org>; Mon,  6 May 2019 17:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726792AbfEFRWS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726571AbfEFRWS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 6 May 2019 13:22:18 -0400
-Received: from mga07.intel.com ([134.134.136.100]:31140 "EHLO mga07.intel.com"
+Received: from mga07.intel.com ([134.134.136.100]:31139 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726747AbfEFRWR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 May 2019 13:22:17 -0400
+        id S1726393AbfEFRWS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 May 2019 13:22:18 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga001.jf.intel.com ([10.7.209.18])
   by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 May 2019 10:22:16 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.60,438,1549958400"; 
-   d="scan'208";a="230014473"
+   d="scan'208";a="230014470"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
   by orsmga001.jf.intel.com with ESMTP; 06 May 2019 10:22:15 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
@@ -32,12 +32,10 @@ To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v2 3/5] PCI/ATS: Skip VF ATS initialization if PF does not implement it
-Date:   Mon,  6 May 2019 10:20:05 -0700
-Message-Id: <21d93b3312418c1e28aeec238ef855c72efeb96a.1557162861.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v2 0/5] Fix PF/VF dependency issues
+Date:   Mon,  6 May 2019 10:20:02 -0700
+Message-Id: <cover.1557162861.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <cover.1557162861.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1557162861.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -47,50 +45,26 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-If PF does not implement ATS and VF implements/uses it, it might lead to
-runtime issues. Also, as per spec r4.0, sec 9.3.7.8, PF should implement
-ATS if VF implements it. So add additional check to confirm given device
-aligns with the spec.
+Current implementation of ATS, PASID, PRI does not handle VF dependencies
+correctly. Following patches addresses this issue.
 
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Suggested-by: Ashok Raj <ashok.raj@intel.com>
-Reviewed-by: Keith Busch <keith.busch@intel.com>
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/ats.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Changes since v1:
+ * Added more details about the patches in commit log.
+ * Removed bulk spec check patch.
+ * Addressed comments from Bjorn Helgaas.
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index e7a904e347c3..718e6f414680 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -19,6 +19,7 @@
- void pci_ats_init(struct pci_dev *dev)
- {
- 	int pos;
-+	struct pci_dev *pdev;
- 
- 	if (pci_ats_disabled())
- 		return;
-@@ -27,6 +28,17 @@ void pci_ats_init(struct pci_dev *dev)
- 	if (!pos)
- 		return;
- 
-+	/*
-+	 * Per PCIe r4.0, sec 9.3.7.8, if VF implements Address Translation
-+	 * Services (ATS) Extended Capability then corresponding PF should
-+	 * also implement it.
-+	 */
-+	if (dev->is_virtfn) {
-+		pdev = pci_physfn(dev);
-+		if (!pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ATS))
-+			return;
-+	}
-+
- 	dev->ats_cap = pos;
- }
- 
+Kuppuswamy Sathyanarayanan (5):
+  PCI/ATS: Add PRI support for PCIe VF devices
+  PCI/ATS: Add PASID support for PCIe VF devices
+  PCI/ATS: Skip VF ATS initialization if PF does not implement it
+  PCI/ATS: Disable PF/VF ATS service independently
+  PCI: Skip Enhanced Allocation (EA) initalization for VF device
+
+ drivers/pci/ats.c   | 131 +++++++++++++++++++++++++++++++++++++++-----
+ drivers/pci/pci.c   |   7 +++
+ include/linux/pci.h |   3 +-
+ 3 files changed, 126 insertions(+), 15 deletions(-)
+
 -- 
 2.20.1
 
