@@ -2,157 +2,100 @@ Return-Path: <SRS0=vOG0=TH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	T_DKIMWL_WL_HIGH,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62C0DC004C9
-	for <linux-pci@archiver.kernel.org>; Tue,  7 May 2019 22:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7BF4C004C9
+	for <linux-pci@archiver.kernel.org>; Tue,  7 May 2019 23:32:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2421C21019
-	for <linux-pci@archiver.kernel.org>; Tue,  7 May 2019 22:58:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76C99204FD
+	for <linux-pci@archiver.kernel.org>; Tue,  7 May 2019 23:32:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557269939;
-	bh=Tj5Q0Ke18ZiAG809phpWz1PZjfv+/GavCDBL/qrjEP8=;
+	s=default; t=1557271940;
+	bh=L7g4Lilcm1/YGr3V/gsofl8sG/YJE+vd1ca/w3DLfsA=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=pd2clQsZ1cXMiv8lgYX3lYjw5dnP47H0mEtUQ0M9o0h46qLC+GVwmD31qTELSxT3F
-	 WO1w2QyBgklIcVw3JE8p37PYPlVawIISsNNOL6Az86qAF55F+gOyd/CKs35cmJTreV
-	 3KDkiPGxSMrR3r7wE26bRtGGJY9rDM04l9CBWDoY=
+	b=SCsFtD32snjVvk0I5+eftotT6ab4IqfXaE2e5+osqLG72UXTrg4Ql4ITMxrucwHdq
+	 OyyO4fgfqGyZURqKF/tWlAFCqdoGOn06ofjMdAru/4FMmE/otW1kXlo7n83ZC2zql/
+	 OfQ14QeYMbwsqifiv6BLahYWFP2U3YolEnn+WgA0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726256AbfEGW66 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 May 2019 18:58:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47344 "EHLO mail.kernel.org"
+        id S1726404AbfEGXcP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 May 2019 19:32:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59802 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726091AbfEGW66 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 May 2019 18:58:58 -0400
+        id S1726091AbfEGXcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 May 2019 19:32:13 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 92BFF20C01;
-        Tue,  7 May 2019 22:58:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D3DE7204FD;
+        Tue,  7 May 2019 23:32:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557269937;
-        bh=Tj5Q0Ke18ZiAG809phpWz1PZjfv+/GavCDBL/qrjEP8=;
+        s=default; t=1557271932;
+        bh=L7g4Lilcm1/YGr3V/gsofl8sG/YJE+vd1ca/w3DLfsA=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JJd7XCKRajBZyjxoZQQgJ+8JkJQO4CN0JGNgd8h1XwWX0I+hdjJXyH1Z7n/ImocX/
-         +TwR8dtgikiJhuLezT9O+4Sv/iKTu24sWL9Awt4ira9hSdRSbYA6KQCQfT83pY/y3s
-         Uio7qKjJ2DJ7MdzvEOjCHGNNyyBEm8/3haVdb47U=
-Date:   Tue, 7 May 2019 17:58:50 -0500
+        b=Go474YudmVWHyYGAo8j2S+CHmWKPwqetHfQcqT4vGQxdvo/V7AcNmkkHB3WKMMoxN
+         Xmg90IGH7g7triujtfpHN4mVOMKd8QzGWdmXXGJFFbm0ArcsdcO7R2ghNxAoRyqoOZ
+         TVlZ25/iEL2nE/mVlRM3GWrTB/lb4JJVKOX7NCx0=
+Date:   Tue, 7 May 2019 18:32:10 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mohan Kumar <mohankumar718@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/3] PCI: Define pr_fmt() and use pr_*() instead of
- printk()
-Message-ID: <20190507225850.GG156478@google.com>
-References: <1555733130-19804-1-git-send-email-mohankumar718@gmail.com>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
+        "corbet@lwn.net" <corbet@lwn.net>
+Subject: Re: [PATCH v5 0/5] PCI: Patch series to support Thunderbolt without
+ any BIOS support
+Message-ID: <20190507233209.GH156478@google.com>
+References: <PS2P216MB064229018EE9B0CE03EE274380370@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1555733130-19804-1-git-send-email-mohankumar718@gmail.com>
+In-Reply-To: <PS2P216MB064229018EE9B0CE03EE274380370@PS2P216MB0642.KORP216.PROD.OUTLOOK.COM>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Mohan,
-
-On Sat, Apr 20, 2019 at 07:05:30AM +0300, Mohan Kumar wrote:
-> Define a pr_fmt() macro that convert all of the explicit printk() calls
-> into corresponding pr_*().
-
-I dropped the pr_fmt() parts of this because there's really no
-benefit: we move the prefix from the actual printk() to the pr_fmt
-definition, which is a little bit harder to understand for the reader,
-and it makes the string harder to find, e.g., if you see "PCI: can't
-add host bridge window" in the dmesg log and search for it in the
-kernel source, you'll no longer find it.
-
-I think pr_fmt does make sense if the prefix is used many times, but
-for these cases, where it's only used once or twice, it doesn't seem
-worthwhile.
-
-> Signed-off-by: Mohan Kumar <mohankumar718@gmail.com>
-> ---
->  drivers/pci/bus.c       |  5 ++++-
->  drivers/pci/pci-stub.c  | 11 +++++------
->  drivers/pci/pci-sysfs.c |  3 ++-
->  drivers/pci/pci.c       |  5 +++--
->  drivers/pci/quirks.c    |  9 +++++----
->  drivers/pci/setup-bus.c |  5 +++--
->  drivers/pci/slot.c      |  4 +++-
->  7 files changed, 25 insertions(+), 17 deletions(-)
+On Sun, May 05, 2019 at 02:40:20PM +0000, Nicholas Johnson wrote:
+> Since PATCH v4:
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 5cb40b2..a742ef5 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -6,6 +6,9 @@
->   *	David Miller (davem@redhat.com)
->   *	Ivan Kokshaysky (ink@jurassic.park.msu.ru)
->   */
-> +
-> +#define pr_fmt(fmt) "PCI: " fmt
-> +
->  #include <linux/module.h>
->  #include <linux/kernel.h>
->  #include <linux/pci.h>
-> @@ -23,7 +26,7 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->  
->  	entry = resource_list_create_entry(res, 0);
->  	if (!entry) {
-> -		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
-> +		pr_err("can't add host bridge window %pR\n", res);
+> I have added some of the evidence and bug reports into the applicable
+> patches.
+> 
+> Users of pci=hpmemsize should not notice any changes in functionality
+> with this patch series when upgrading the kernel. I realised I could
+> make the variable to achieve this reside in pci_setup, rather than
+> globally.
+> 
+> Please let me know if anything else needs changing.
+> 
+> Nicholas Johnson (5):
+>   PCI: Consider alignment of hot-added bridges when distributing
+>     resources
+>   PCI: Modify extend_bridge_window() to set resource size directly
+>   PCI: Fix bug resulting in double hpmemsize being assigned to MMIO
+>     window
+>   PCI: Add pci=hpmemprefsize parameter to set MMIO_PREF size
+>     independently
 
-This is an example of doing two changes at once:
+I didn't have time to go through the actual important stuff above,
 
-  1) Converting "printk(KERN_ERR)" to "pr_err()"
-  2) Factoring out the "PCI: " prefix with pr_fmt()
+>   PCI: Cleanup block comments in setup-bus.c to match kernel style
 
-The first change is worthwhile and I pulled that out and squashed it
-into your first patch.
+but I applied this one to pci/trivial for v5.2 to get it out of the
+way for the next cycle.
 
-This patch (if we were going to do it) should contain *only* the
-pr_fmt() factoring.  So the first patch would look like this:
+I also have patches from Logan and Mika in the same area, so I'll have
+to look at all of these together.
 
-  - printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
-  + pr_err("PCI: can't add host bridge window %pR\n", res);
-
-and the second patch would look like this:
-
-  +#define pr_fmt(fmt) "PCI: " fmt
-  - pr_err("PCI: can't add host bridge window %pR\n", res);
-  + pr_err("can't add host bridge window %pR\n", res);
-
-> @@ -159,8 +161,7 @@ static int __init pci_apply_final_quirks(void)
->  	u8 tmp;
->  
->  	if (pci_cache_line_size)
-> -		printk(KERN_DEBUG "PCI: CLS %u bytes\n",
-> -		       pci_cache_line_size << 2);
-> +		pr_info("CLS %u bytes\n", pci_cache_line_size << 2);
->  
->  	pci_apply_fixup_final_quirks = true;
->  	for_each_pci_dev(dev) {
-> @@ -177,7 +178,7 @@ static int __init pci_apply_final_quirks(void)
->  			if (!tmp || cls == tmp)
->  				continue;
->  
-> -			printk(KERN_DEBUG "PCI: CLS mismatch (%u != %u), using %u bytes\n",
-> +			pr_info("CLS mismatch (%u != %u), using %u bytes\n",
->  			       cls << 2, tmp << 2,
->  			       pci_dfl_cache_line_size << 2);
-
-Here's a case where we should actually be using pci_printk() since
-this message is related to a specific device.
-
-I added a new patch before your first patch to do this:
-
-  - printk(KERN_DEBUG "PCI: CLS mismatch ..."
-  + pci_printk(KERN_DEBUG, dev, "CLS mismatch ..."
-
-There's a similar case in pci_create_legacy_files(), so the new patch
-converts both of those.
-
-Bjorn
+>  .../admin-guide/kernel-parameters.txt         |   7 +-
+>  drivers/pci/pci.c                             |  18 +-
+>  drivers/pci/setup-bus.c                       | 568 +++++++++---------
+>  include/linux/pci.h                           |   3 +-
+>  4 files changed, 317 insertions(+), 279 deletions(-)
+> 
+> -- 
+> 2.19.1
+> 
