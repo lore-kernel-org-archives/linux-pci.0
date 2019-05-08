@@ -2,125 +2,150 @@ Return-Path: <SRS0=rPcf=TI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C24F3C04A6B
-	for <linux-pci@archiver.kernel.org>; Wed,  8 May 2019 08:31:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DCAEC04AAB
+	for <linux-pci@archiver.kernel.org>; Wed,  8 May 2019 11:29:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92DE32053B
-	for <linux-pci@archiver.kernel.org>; Wed,  8 May 2019 08:31:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2D7F216C4
+	for <linux-pci@archiver.kernel.org>; Wed,  8 May 2019 11:29:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dgAXJ4H5"
+	dkim=pass (1024-bit key) header.d=analog.onmicrosoft.com header.i=@analog.onmicrosoft.com header.b="WJZTSX1a"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726670AbfEHIbs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 8 May 2019 04:31:48 -0400
-Received: from mail-it1-f193.google.com ([209.85.166.193]:50773 "EHLO
-        mail-it1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726487AbfEHIbs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 May 2019 04:31:48 -0400
-Received: by mail-it1-f193.google.com with SMTP id r17so222180ita.0
-        for <linux-pci@vger.kernel.org>; Wed, 08 May 2019 01:31:47 -0700 (PDT)
+        id S1727588AbfEHL3c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 8 May 2019 07:29:32 -0400
+Received: from mail-eopbgr800085.outbound.protection.outlook.com ([40.107.80.85]:27120
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725778AbfEHL3a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 May 2019 07:29:30 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=PO7Ld+9ooRoIQAYoKOrZVC1JwjL/3MhjUy/68sJWDzc=;
-        b=dgAXJ4H5fYqcpWefDSpkR8brhpgeH8EGQD6EGIbbnY3tOeRnRgH6MtH2SD50HglgjM
-         C8MTpn1amkNLRrxHM6qA55Ht58gLlXK6p3kl4wTpq8ywtrShMhw9mstLE8FHFglB1z4Y
-         msn2Se/ma+H+updh7Nt0NgeVRHC71PhiW3IPjNRgTRRe7BuDZ0bB53dqkDuwhb0ZJ7fE
-         WVCPs8Ep+aeVqzmBFQ5o1osVqvNXP5Duwsj+RGFHazLeC34D6yqTQll99yNHf8WfNFX5
-         zmOP86PTZgEXYFeM4yzxRXPaJVmGbgNf3woxes093w7ogx4aDXX79dwStGhZ/95sMVMC
-         aPGw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=PO7Ld+9ooRoIQAYoKOrZVC1JwjL/3MhjUy/68sJWDzc=;
-        b=J6c+Fg5rVb69FZbygK0sy4eInrWWQgPgvgF/14W2TxMu5p6dFckCLGe5mEJqvtanW4
-         NSfqu6/JTs9tnvoX0BvxenZ0sxQYYE2Sx/9mcg6nR6/hLHGbGafwI149VBPMWQ9tOPuz
-         YOEvFGdBM7g2sDdhLM12MPOggcuknA6XGfoNEp/Srm4WdWhMTj9fqJIiqDXSM0XZGZTj
-         Lkja/9/H+9TwJYGo4WhG9kfbkg5/hnP3+MdGXLuQDmT5hZ0ylpkcLWXMBsFgvqHyNMnA
-         Vn0UYCqT9tluPiODgq1Tlhi4TPnVXvPMMjeIWXeNOPk44eHPp2OVkn717wkFHEE4Ti0u
-         C9rw==
-X-Gm-Message-State: APjAAAXitNfux8TVR90xcd1IwGWczyjX/CvaL/ZT3ZepKHDbc8zfVq2S
-        1teRid58xcSg5PbHvdh+mCAmZ5y+p56t3YTkva0fVsd4
-X-Google-Smtp-Source: APXvYqyVhxGTxDQK62hA3S1W7PdxKy+jy1WNJI1aFBZTZyw7XlicBvrMhnP0CrQH61e5Ev80+H4iIVQAHVzdS9MUW3I=
-X-Received: by 2002:a24:d45:: with SMTP id 66mr2653222itx.9.1557304307372;
- Wed, 08 May 2019 01:31:47 -0700 (PDT)
+ d=analog.onmicrosoft.com; s=selector1-analog-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Kj953YF77LM2a2dlESbeNeZmoXGMTjr2NXsCZOuqlCs=;
+ b=WJZTSX1adtoqETj2TRceeLRWIxGQHvR1dID/kkYqIH0ExRMXx3PLDqNgFViju8AN0Sz4+kTjFvxDA6O1mxZkwUmRmezZRNZAXeQ+vpJItNYiEeDHKz8yRyy/Sh9wqu8SJNX7ewmBgovN1EDi11UgAewByNzm7zb+uYfUd6bPxPY=
+Received: from CY1PR03CA0035.namprd03.prod.outlook.com (2603:10b6:600::45) by
+ BY2PR03MB555.namprd03.prod.outlook.com (2a01:111:e400:2c37::27) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1856.10; Wed, 8 May
+ 2019 11:29:22 +0000
+Received: from BL2NAM02FT016.eop-nam02.prod.protection.outlook.com
+ (2a01:111:f400:7e46::205) by CY1PR03CA0035.outlook.office365.com
+ (2603:10b6:600::45) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.20.1856.10 via Frontend
+ Transport; Wed, 8 May 2019 11:29:21 +0000
+Authentication-Results: spf=pass (sender IP is 137.71.25.57)
+ smtp.mailfrom=analog.com; lists.freedesktop.org; dkim=none (message not
+ signed) header.d=none;lists.freedesktop.org; dmarc=bestguesspass action=none
+ header.from=analog.com;
+Received-SPF: Pass (protection.outlook.com: domain of analog.com designates
+ 137.71.25.57 as permitted sender) receiver=protection.outlook.com;
+ client-ip=137.71.25.57; helo=nwd2mta2.analog.com;
+Received: from nwd2mta2.analog.com (137.71.25.57) by
+ BL2NAM02FT016.mail.protection.outlook.com (10.152.77.171) with Microsoft SMTP
+ Server (version=TLS1_0, cipher=TLS_RSA_WITH_AES_256_CBC_SHA) id 15.20.1856.11
+ via Frontend Transport; Wed, 8 May 2019 11:29:21 +0000
+Received: from NWD2HUBCAS7.ad.analog.com (nwd2hubcas7.ad.analog.com [10.64.69.107])
+        by nwd2mta2.analog.com (8.13.8/8.13.8) with ESMTP id x48BTLLf016976
+        (version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=OK);
+        Wed, 8 May 2019 04:29:21 -0700
+Received: from saturn.analog.com (10.50.1.244) by NWD2HUBCAS7.ad.analog.com
+ (10.64.69.107) with Microsoft SMTP Server id 14.3.408.0; Wed, 8 May 2019
+ 07:29:20 -0400
+From:   Alexandru Ardelean <alexandru.ardelean@analog.com>
+To:     <linuxppc-dev@lists.ozlabs.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-clk@vger.kernel.org>,
+        <linux-rpi-kernel@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-rockchip@lists.infradead.org>, <linux-pm@vger.kernel.org>,
+        <linux-gpio@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
+        <intel-gfx@lists.freedesktop.org>, <linux-omap@vger.kernel.org>,
+        <linux-mmc@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <linux-usb@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <linux-fbdev@vger.kernel.org>, <linux-mtd@lists.infradead.org>,
+        <cgroups@vger.kernel.org>, <linux-mm@kvack.org>,
+        <linux-security-module@vger.kernel.org>,
+        <linux-integrity@vger.kernel.org>, <alsa-devel@alsa-project.org>
+CC:     <gregkh@linuxfoundation.org>, <andriy.shevchenko@linux.intel.com>,
+        Alexandru Ardelean <alexandru.ardelean@analog.com>
+Subject: [PATCH 01/16] lib: fix match_string() helper on -1 array size
+Date:   Wed, 8 May 2019 14:28:26 +0300
+Message-ID: <20190508112842.11654-2-alexandru.ardelean@analog.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190508112842.11654-1-alexandru.ardelean@analog.com>
+References: <20190508112842.11654-1-alexandru.ardelean@analog.com>
 MIME-Version: 1.0
-References: <20190410074455.26964-1-oohall@gmail.com> <20190507194037.GE156478@google.com>
-In-Reply-To: <20190507194037.GE156478@google.com>
-From:   Oliver <oohall@gmail.com>
-Date:   Wed, 8 May 2019 18:31:35 +1000
-Message-ID: <CAOSf1CGe3yqfV154gPm2nUL3qA=3Ab462wNvGgayVr_n3runkw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add a comment for the is_physfn field
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-ADIRoutedOnPrem: True
+X-EOPAttributedMessage: 0
+X-MS-Office365-Filtering-HT: Tenant
+X-Forefront-Antispam-Report: CIP:137.71.25.57;IPV:NLI;CTRY:US;EFV:NLI;SFV:NSPM;SFS:(10009020)(1496009)(376002)(136003)(346002)(396003)(39860400002)(2980300002)(189003)(199004)(316002)(50466002)(110136005)(106002)(76176011)(36756003)(70206006)(70586007)(86362001)(7696005)(2201001)(14444005)(51416003)(478600001)(7416002)(47776003)(5660300002)(54906003)(2906002)(48376002)(2441003)(16586007)(186003)(446003)(1076003)(77096007)(26005)(356004)(44832011)(486006)(11346002)(126002)(476003)(2616005)(8676002)(107886003)(50226002)(246002)(4326008)(8936002)(53416004)(336012)(426003)(305945005)(7636002)(921003)(83996005)(1121003)(2101003);DIR:OUT;SFP:1101;SCL:1;SRVR:BY2PR03MB555;H:nwd2mta2.analog.com;FPR:;SPF:Pass;LANG:en;PTR:nwd2mail11.analog.com;MX:1;A:1;
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 70d6917f-f215-4387-ffab-08d6d3a86a83
+X-Microsoft-Antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600141)(711020)(4605104)(4709054)(2017052603328);SRVR:BY2PR03MB555;
+X-MS-TrafficTypeDiagnostic: BY2PR03MB555:
+X-Microsoft-Antispam-PRVS: <BY2PR03MB55532426C65B1246DCD69A2F9320@BY2PR03MB555.namprd03.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-Forefront-PRVS: 0031A0FFAF
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam-Message-Info: EkinRue+oHsKHGU9xDPLwqOdJf0rruOZsQl/MCUDoHLxNCdgn+nCd693zRNYU/ul1uHwi/NkPHY62bVRycjk68l9ukT0lp/PIvbvAeGJuTyMBkoJ3LpwJP8AA+6sLGnOa8vypJGw5A8ov1fhv+lnNuk1SC4UW2SeilXkocHeKVTMVkRDO7wzTR6RAbvOq3Phku6T4Mqk2uNO2cTYTiWtoVqA5zyZilUa02oDdwvX2fN0a6JKWMc78cXM7mRR6ztmm/mvcHmERSY8EOpP5AiLIlza+si/G6jqjYxnnCbUx4RESiHtbIqq5bHx5HK13JjNtN5Ds4dH99JuuG6yIO7bb3t3mX15z/334BxveeoKGCgniaZZ1TMVBIT/ECNdU5U8sORBD+6hB+zyeFXFq3pz2/N8I/LejN9R3O2T8knNZfU=
+X-OriginatorOrg: analog.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 May 2019 11:29:21.3354
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 70d6917f-f215-4387-ffab-08d6d3a86a83
+X-MS-Exchange-CrossTenant-Id: eaa689b4-8f87-40e0-9c6f-7228de4d754a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=eaa689b4-8f87-40e0-9c6f-7228de4d754a;Ip=[137.71.25.57];Helo=[nwd2mta2.analog.com]
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY2PR03MB555
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, May 8, 2019 at 5:40 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> Hi Oliver,
->
-> On Wed, Apr 10, 2019 at 05:44:55PM +1000, Oliver O'Halloran wrote:
-> > The meaning of is_physfn and how it's different to is_virtfn really
-> > isn't clear unless you do a bit of digging. Add a comment to help out
-> > the unaware.
-> >
-> > Signed-off-by: Oliver O'Halloran <oohall@gmail.com>
-> > ---
-> >  include/linux/pci.h | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> >
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 77448215ef5b..88bf71bfa757 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -393,6 +393,10 @@ struct pci_dev {
-> >       unsigned int    is_managed:1;
-> >       unsigned int    needs_freset:1;         /* Requires fundamental reset */
-> >       unsigned int    state_saved:1;
-> > +     /*
-> > +      * is_physfn indicates that the function can be used to host VFs.
-> > +      * It is only set when both the kernel and the device support IOV.
-> > +      */
->
-> The comment is certainly accurate, no question there, but it sounds
-> like the reason for adding it is because you stumbled over something
-> in the confusing SR-IOV/PF/VF infrastructure.  If we can, I'd really
-> like to improve that infrastructure so it's less confusing in the
-> first place.
->
-> It seems like part of the problem is that "is_physfn" is telling us
-> more than one thing: "CONFIG_PCI_IOV=y" and "pdev has an SR-IOV
-> capability" and "pdev is a PF".
->
-> Many of the uses of "is_physfn" are in powerpc code that tests
-> "!pdev->is_physfn", and the negation of those multiple things makes it
-> a little confusing to figure out what the real purpose it.
->
-> Maybe we should cache the PCI_EXT_CAP_ID_SRIOV location in the
-> pci_dev.  That would simplify some drivers slightly, and if we had
-> "pdev->sriov_cap" and "pdev->is_virtfn", I think we could drop
-> "is_physfn".  But I don't understand the powerpc uses well enough to
-> know whether that would make things easier or harder.
+The documentation the `_match_string()` helper mentions that `n`
+should be:
+ * @n: number of strings in the array or -1 for NULL terminated arrays
 
-The powerpc bits were what I was looking at. Some parts use !is_virtfn
-and other parts use !is_physfn which threw me a bit. Caching the
-SR-IOV cap offset would be an improvement since all the is_physfn
-usages are just tests to determine if any platform specific SR-IOV
-setup needs to be done for the device.
+The behavior of the function is different, in the sense that it exits on
+the first NULL element in the array, regardless of whether `n` is -1 or a
+positive number.
 
-> >       unsigned int    is_physfn:1;
-> >       unsigned int    is_virtfn:1;
-> >       unsigned int    reset_fn:1;
-> > --
-> > 2.20.1
-> >
+This patch changes the behavior, to exit the loop when a NULL element is
+found and n == -1. Essentially, this aligns the behavior with the
+doc-string.
+
+There are currently many users of `match_string()`, and so, in order to go
+through them, the next patches in the series will focus on doing some
+cosmetic changes, which are aimed at grouping the users of
+`match_string()`.
+
+Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
+---
+ lib/string.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/lib/string.c b/lib/string.c
+index 3ab861c1a857..76edb7bf76cb 100644
+--- a/lib/string.c
++++ b/lib/string.c
+@@ -648,8 +648,11 @@ int match_string(const char * const *array, size_t n, const char *string)
+ 
+ 	for (index = 0; index < n; index++) {
+ 		item = array[index];
+-		if (!item)
++		if (!item) {
++			if (n != (size_t)-1)
++				continue;
+ 			break;
++		}
+ 		if (!strcmp(item, string))
+ 			return index;
+ 	}
+-- 
+2.17.1
+
