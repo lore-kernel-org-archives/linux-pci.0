@@ -2,62 +2,38 @@ Return-Path: <SRS0=zNOM=TJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD6DAC04AB1
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 17:49:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23120C04AB1
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 18:31:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A00A520675
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 17:49:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IoD45aM0"
+	by mail.kernel.org (Postfix) with ESMTP id 005B6217F4
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 18:31:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726739AbfEIRtV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 May 2019 13:49:21 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:38362 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726576AbfEIRtU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2019 13:49:20 -0400
-Received: by mail-pl1-f195.google.com with SMTP id a59so1496394pla.5;
-        Thu, 09 May 2019 10:49:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xGNclB3X4zp+TTPFI7JduJSlyKXyeMQXRwODcYbvWDE=;
-        b=IoD45aM0LJOyM3f/3ASR5vZeOg/rb/POXAq5u+jOo8ovy4hzE7SPXnSRhTMoL21dpJ
-         Ygex/67fx3Y9W1X2Hu6FLi8Z5GQY0Pd3i2YoON7RhKaw/vZcirt+oeX92L4eLrPwqA83
-         wMURjlG6AvHtzS7PT7+YDBZIr0NeWIuxTicCEvLxF2I3R0hyIDE3/xjOp4T0ffDuUu+Z
-         uI7DZ9KYIr82UZuWR1fBisYQURkY39ZEN4bWEnwiBPnoCnjLL97d0Pxz3F3n5xMRFoT0
-         uEzdo1Foyi0Mv/PVV5k2+JgekMlGydJhb7QLXs93pLPjwPhc2VWLQypdDUBj4Yca5bBs
-         29oQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=xGNclB3X4zp+TTPFI7JduJSlyKXyeMQXRwODcYbvWDE=;
-        b=so1vf06NuJlX943U4ncH3GyPvGbwM5wdaZju4NEebL+L+0v0LeITTkdF0Nk79GLAXF
-         GwV6kJmztI5s6CTAsTEUMgtjID8wx6YxNvL9iEKijO5zgGUEXRIYDSG51AkKm5kt8ZRo
-         HCj394DMc8ME2b1BmJJV7ZPlmW7se3XvMUvnVdXJ+RNjQIoQjjCT/EhnoYUnDaHbS0Zo
-         xYNFab8v1eMpRyPLPb3MbvOdb8wXFvDLyDnf97iArvO9eoQtSu4my+jyZPUdg7JvaygX
-         3mblQppzOcggy3euTj3awoAQRyhH4qz0ze0NEWL1S4cztdQWNHYK6KaPnMYo82M3yuAC
-         J8Zg==
-X-Gm-Message-State: APjAAAWxEM37ZT6MT6e7PN4Nhba3h1UF59nez0/GFeWFancy5P3kTD3Y
-        Az7N/+SeL8yY7Hm0w8NQNHl8OQtLWVvJNoQawKo=
-X-Google-Smtp-Source: APXvYqyy2yBnIkSugLtMCw3gCEWa4fuULEZiSXDEDQlFwBQjm3MPLyj9xEy327TMz96GSIxiypKwPP4cN7CYBrmpFcY=
-X-Received: by 2002:a17:902:aa45:: with SMTP id c5mr6857755plr.144.1557424159804;
- Thu, 09 May 2019 10:49:19 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190509141456.223614-1-helgaas@kernel.org>
-In-Reply-To: <20190509141456.223614-1-helgaas@kernel.org>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Thu, 9 May 2019 20:49:08 +0300
-Message-ID: <CAHp75VdrQgu3Tis1V1j1AgjS=Uvw-7tz5ke4kSxRWM=0DrSjhw@mail.gmail.com>
-Subject: Re: [PATCH v4 00/10] PCI: Log with pci_dev, not pcie_device
-To:     Bjorn Helgaas <helgaas@kernel.org>
+        id S1726666AbfEISbl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 May 2019 14:31:41 -0400
+Received: from smtprelay0050.hostedemail.com ([216.40.44.50]:48919 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726632AbfEISbl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2019 14:31:41 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay04.hostedemail.com (Postfix) with ESMTP id 6492A180A8136;
+        Thu,  9 May 2019 18:31:39 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: cable42_65347f630c056
+X-Filterd-Recvd-Size: 2443
+Received: from XPS-9350 (unknown [172.58.22.140])
+        (Authenticated sender: joe@perches.com)
+        by omf02.hostedemail.com (Postfix) with ESMTPA;
+        Thu,  9 May 2019 18:31:35 +0000 (UTC)
+Message-ID: <69ff0a66d8c68f9e1adc8308847541e9566fe23e.camel@perches.com>
+Subject: Re: [PATCH 02/10] PCI/PME: Replace dev_printk(KERN_DEBUG) with
+ dev_info()
+From:   Joe Perches <joe@perches.com>
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
 Cc:     Frederick Lawler <fred@fredlawl.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Lukas Wunner <lukas@wunner.de>,
@@ -68,59 +44,42 @@ Cc:     Frederick Lawler <fred@fredlawl.com>,
         linux-pci@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Date:   Thu, 09 May 2019 11:31:04 -0700
+In-Reply-To: <CAHp75Ve9-659N5N=f7pPb-9amvbGbi+zWxL9p-BnYocvXJPwZg@mail.gmail.com>
+References: <20190509141456.223614-1-helgaas@kernel.org>
+         <20190509141456.223614-3-helgaas@kernel.org>
+         <CAHp75Ve9-659N5N=f7pPb-9amvbGbi+zWxL9p-BnYocvXJPwZg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.30.1-1build1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, May 9, 2019 at 5:18 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> From: Bjorn Helgaas <bhelgaas@google.com>
->
-> This is a collection of updates to Fred's v2 patches from:
->
->   https://lore.kernel.org/lkml/20190503035946.23608-1-fred@fredlawl.com
->
-> and some follow-on discussion.
->
+On Thu, 2019-05-09 at 20:35 +0300, Andy Shevchenko wrote:
+> On Thu, May 9, 2019 at 5:18 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > Replace dev_printk(KERN_DEBUG) with dev_info() or dev_err() to be more
+> > consistent with other logging.
+> > 
+> > These could be converted to dev_dbg(), but that depends on
+> > CONFIG_DYNAMIC_DEBUG and DEBUG, and we want most of these messages to
+> > *always* be in the dmesg log.
+> > 
+> > Also, use dev_fmt() to add the service name.  Example output change:
+> > 
+> >   - pcieport 0000:80:10.0: Signaling PME with IRQ ...
+> >   + pcieport 0000:80:10.0: PME: Signaling with IRQ ...
+> > +               pci_info(port, "interrupt generated for non-existent device %02x:%02x.%d\n",
+> 
+> Can we be slightly more consistent here, i.e. start from Capital letter?
+> 
+> > +                        busnr, PCI_SLOT(devfn), PCI_FUNC(devfn));
+> > +               pci_info(port, "Spurious native interrupt!\n");
+> > +       pci_info(port, "Signaling with IRQ %d\n", srv->irq);
 
-For non-commented patches,
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-
-For the commented ones, I hope you will address them, and then my tag
-applies for them as well.
-
-> Bjorn Helgaas (3):
->   PCI: pciehp: Remove pciehp_debug uses
->   PCI: pciehp: Remove pointless PCIE_MODULE_NAME definition
->   PCI: pciehp: Remove pointless MY_NAME definition
->
-> Frederick Lawler (7):
->   PCI/AER: Replace dev_printk(KERN_DEBUG) with dev_info()
->   PCI/PME: Replace dev_printk(KERN_DEBUG) with dev_info()
->   PCI/DPC: Log messages with pci_dev, not pcie_device
->   PCI/AER: Log messages with pci_dev, not pcie_device
->   PCI: pciehp: Replace pciehp_debug module param with dyndbg
->   PCI: pciehp: Log messages with pci_dev, not pcie_device
->   PCI: pciehp: Remove unused dbg/err/info/warn() wrappers
->
->  drivers/pci/hotplug/pciehp.h      | 31 +++++++-------------------
->  drivers/pci/hotplug/pciehp_core.c | 18 +++++++--------
->  drivers/pci/hotplug/pciehp_ctrl.c |  2 ++
->  drivers/pci/hotplug/pciehp_hpc.c  | 17 +++++++-------
->  drivers/pci/hotplug/pciehp_pci.c  |  2 ++
->  drivers/pci/pcie/aer.c            | 32 ++++++++++++++------------
->  drivers/pci/pcie/aer_inject.c     | 22 +++++++++---------
->  drivers/pci/pcie/dpc.c            | 37 +++++++++++++++----------------
->  drivers/pci/pcie/pme.c            | 10 +++++----
->  9 files changed, 82 insertions(+), 89 deletions(-)
->
-> --
-> 2.21.0.1020.gf2820cf01a-goog
->
+Why change the logging level?
+Why not use #define DEBUG and use pci_dbg ?
 
 
--- 
-With Best Regards,
-Andy Shevchenko
