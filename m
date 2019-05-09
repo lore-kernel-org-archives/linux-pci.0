@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	T_DKIMWL_WL_HIGH,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D654BC46470
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:15:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94598C04AB1
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AAC0F2085A
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:15:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6008D21773
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:15:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557411354;
-	bh=JUIHOpOWl8G/bzkBQeOThiXiw1eqS3UO5cr6p0ZvWOA=;
+	s=default; t=1557411359;
+	bh=u6q0Pg2OL3Py+IxHhJLbr82hQI5NOVhVXSbkc/oe1uQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0hITt/wKxQwuQ4EGBqCKGq5lGFMK+vjOoRCNbzirFHRwnul9ngjee+IVj3xEorko/
-	 F13DfKJ8LXbvkZkeTVSKaLNdFQIak1kfnTSa3NHCkGT0tZqFQPF/7hPV2jIKg8T+9p
-	 6Qt3KLfFMIlA9k1PMcGteZ7Eom+t8H1Z7JoqA/YA=
+	b=ciO+PfRaIjREXs0+W4eXPWZ9Eu6igC/CzmnDodRGcflAi01VkdUQ44t9y6xmay2Eh
+	 kUXwvZBIceoLhWlMyJJEzFrElA9ME8Oysf2e+s/x435/QYp8vKDdFGjv4YPuNsnbmm
+	 PE09anxoawuFIXIpqfKJMzzWJ+1ErRFGCNnNSrV0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727006AbfEIOPS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 May 2019 10:15:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50236 "EHLO mail.kernel.org"
+        id S1726411AbfEIOPy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 May 2019 10:15:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50330 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726986AbfEIOPN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 May 2019 10:15:13 -0400
+        id S1726791AbfEIOPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 May 2019 10:15:17 -0400
 Received: from localhost (50-81-63-4.client.mchsi.com [50.81.63.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F082D21479;
-        Thu,  9 May 2019 14:15:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 09C102177B;
+        Thu,  9 May 2019 14:15:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557411313;
-        bh=JUIHOpOWl8G/bzkBQeOThiXiw1eqS3UO5cr6p0ZvWOA=;
+        s=default; t=1557411316;
+        bh=u6q0Pg2OL3Py+IxHhJLbr82hQI5NOVhVXSbkc/oe1uQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mAK2mXWhGbuXKAzGUcsm0Cz7EXtcRGQ7bPsZOHrkInSXztIU+eb8JT5WRdL8/uhN7
-         9MEL0mVRPvBnPT+ILschTnOaBZXEdUEGJHEt2Qtw4DkcXL9cv3zpqZOoTEOnVIsxXL
-         +HzrSwWF7+f3OSohZiwUO1oCJcFII6lTyyp3d86g=
+        b=bYFroVDZauLesCkfkIsha6zyux2eyZYbGxVIXnMwELns5SdAWkCVxkDKrxn8eCL6/
+         S+t/QFge7JZwaEFlETzcbRt1FBYXKpdsbEbWymOAZDetqU9VNYOHpLbeUym+GIhkZ2
+         HbdDPcKfpqlF9EUYBnPrlqJpSvBMMa8wV9kK1P1s=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Frederick Lawler <fred@fredlawl.com>
 Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
@@ -48,9 +48,9 @@ Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
         Sven Van Asbroeck <thesven73@gmail.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 05/10] PCI: pciehp: Remove pciehp_debug uses
-Date:   Thu,  9 May 2019 09:14:51 -0500
-Message-Id: <20190509141456.223614-6-helgaas@kernel.org>
+Subject: [PATCH 07/10] PCI: pciehp: Log messages with pci_dev, not pcie_device
+Date:   Thu,  9 May 2019 09:14:53 -0500
+Message-Id: <20190509141456.223614-8-helgaas@kernel.org>
 X-Mailer: git-send-email 2.21.0.1020.gf2820cf01a-goog
 In-Reply-To: <20190509141456.223614-1-helgaas@kernel.org>
 References: <20190509141456.223614-1-helgaas@kernel.org>
@@ -61,52 +61,132 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Frederick Lawler <fred@fredlawl.com>
 
-We're about to convert pciehp to the dyndbg mechanism, which means we can
-eventually remove pciehp_debug.
+Log messages with pci_dev, not pcie_device.  Factor out common message
+prefixes with dev_fmt().
 
-Replace uses of pciehp_debug with dbg() and ctrl_dbg(), which check
-pciehp_debug internally.
+Example output change:
 
+  - pciehp 0000:00:06.0:pcie004: Slot(0) Powering on due to button press
+  + pcieport 0000:00:06.0: pciehp: Slot(0) Powering on due to button press
+
+Link: https://lore.kernel.org/lkml/20190503035946.23608-7-fred@fredlawl.com
+Signed-off-by: Frederick Lawler <fred@fredlawl.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ drivers/pci/hotplug/pciehp.h      | 16 ++++++++--------
+ drivers/pci/hotplug/pciehp_core.c |  7 +++++--
+ drivers/pci/hotplug/pciehp_ctrl.c |  2 ++
+ drivers/pci/hotplug/pciehp_hpc.c  |  2 ++
+ drivers/pci/hotplug/pciehp_pci.c  |  2 ++
+ 5 files changed, 19 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index af5d9f92e6d5..2f0295b48d5d 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -35,22 +35,22 @@ extern int pciehp_poll_time;
+  * enable debug messages.
+  */
+ #define dbg(format, arg...)						\
+-	pr_debug("%s: " format, MY_NAME, ## arg);
++	pr_debug(format, ## arg);
+ #define err(format, arg...)						\
+-	printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
++	pr_err(format, ## arg)
+ #define info(format, arg...)						\
+-	printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
++	pr_info(format, ## arg)
+ #define warn(format, arg...)						\
+-	printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
++	pr_warn(format, ## arg)
+ 
+ #define ctrl_dbg(ctrl, format, arg...)					\
+-	dev_dbg(&ctrl->pcie->device, format, ## arg)
++	pci_dbg(ctrl->pcie->port, format, ## arg)
+ #define ctrl_err(ctrl, format, arg...)					\
+-	dev_err(&ctrl->pcie->device, format, ## arg)
++	pci_err(ctrl->pcie->port, format, ## arg)
+ #define ctrl_info(ctrl, format, arg...)					\
+-	dev_info(&ctrl->pcie->device, format, ## arg)
++	pci_info(ctrl->pcie->port, format, ## arg)
+ #define ctrl_warn(ctrl, format, arg...)					\
+-	dev_warn(&ctrl->pcie->device, format, ## arg)
++	pci_warn(ctrl->pcie->port, format, ## arg)
+ 
+ #define SLOT_NAME_SIZE 10
+ 
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index 6ff204c435bf..b85b22880c50 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -17,6 +17,9 @@
+  *   Dely Sy <dely.l.sy@intel.com>"
+  */
+ 
++#define pr_fmt(fmt) "pciehp: " fmt
++#define dev_fmt pr_fmt
++
+ #include <linux/moduleparam.h>
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+@@ -179,14 +182,14 @@ static int pciehp_probe(struct pcie_device *dev)
+ 
+ 	if (!dev->port->subordinate) {
+ 		/* Can happen if we run out of bus numbers during probe */
+-		dev_err(&dev->device,
++		pci_err(dev->port,
+ 			"Hotplug bridge without secondary bus, ignoring\n");
+ 		return -ENODEV;
+ 	}
+ 
+ 	ctrl = pcie_init(dev);
+ 	if (!ctrl) {
+-		dev_err(&dev->device, "Controller initialization failed\n");
++		pci_err(dev->port, "Controller initialization failed\n");
+ 		return -ENODEV;
+ 	}
+ 	set_service_data(dev, ctrl);
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 3f3df4c29f6e..bf81f977a751 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -13,6 +13,8 @@
+  *
+  */
+ 
++#define dev_fmt(fmt) "pciehp: " fmt
++
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/pm_runtime.h>
 diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 6a2365cd794e..e121f1c06c21 100644
+index e121f1c06c21..913c7e66504f 100644
 --- a/drivers/pci/hotplug/pciehp_hpc.c
 +++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -232,8 +232,8 @@ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
- 		delay -= step;
- 	} while (delay > 0);
+@@ -12,6 +12,8 @@
+  * Send feedback to <greg@kroah.com>,<kristen.c.accardi@intel.com>
+  */
  
--	if (count > 1 && pciehp_debug)
--		printk(KERN_DEBUG "pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms to get %08x\n",
-+	if (count > 1)
-+		dbg("pci %04x:%02x:%02x.%d id reading try %d times with interval %d ms to get %08x\n",
- 			pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
- 			PCI_FUNC(devfn), count, step, l);
++#define dev_fmt(fmt) "pciehp: " fmt
++
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/jiffies.h>
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index b9c1396db6fe..d17f3bf36f70 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -13,6 +13,8 @@
+  *
+  */
  
-@@ -822,14 +822,11 @@ static inline void dbg_ctrl(struct controller *ctrl)
- 	struct pci_dev *pdev = ctrl->pcie->port;
- 	u16 reg16;
- 
--	if (!pciehp_debug)
--		return;
--
--	ctrl_info(ctrl, "Slot Capabilities      : 0x%08x\n", ctrl->slot_cap);
-+	ctrl_dbg(ctrl, "Slot Capabilities      : 0x%08x\n", ctrl->slot_cap);
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &reg16);
--	ctrl_info(ctrl, "Slot Status            : 0x%04x\n", reg16);
-+	ctrl_dbg(ctrl, "Slot Status            : 0x%04x\n", reg16);
- 	pcie_capability_read_word(pdev, PCI_EXP_SLTCTL, &reg16);
--	ctrl_info(ctrl, "Slot Control           : 0x%04x\n", reg16);
-+	ctrl_dbg(ctrl, "Slot Control           : 0x%04x\n", reg16);
- }
- 
- #define FLAG(x, y)	(((x) & (y)) ? '+' : '-')
++#define dev_fmt(fmt) "pciehp: " fmt
++
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/pci.h>
 -- 
 2.21.0.1020.gf2820cf01a-goog
 
