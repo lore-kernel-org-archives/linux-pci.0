@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94598C04AB1
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:15:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDE1C04AB2
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:16:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6008D21773
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:15:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 003C72177E
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:16:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557411359;
-	bh=u6q0Pg2OL3Py+IxHhJLbr82hQI5NOVhVXSbkc/oe1uQ=;
+	s=default; t=1557411365;
+	bh=4nwEVs4HpuVLEW1H4P+gCJQ+1ahy8T18SlcqTYAoWCs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ciO+PfRaIjREXs0+W4eXPWZ9Eu6igC/CzmnDodRGcflAi01VkdUQ44t9y6xmay2Eh
-	 kUXwvZBIceoLhWlMyJJEzFrElA9ME8Oysf2e+s/x435/QYp8vKDdFGjv4YPuNsnbmm
-	 PE09anxoawuFIXIpqfKJMzzWJ+1ErRFGCNnNSrV0=
+	b=yGKSnSJ0ZdAT0L8T9FGndyquzjUakaO4JZV6IeV+DMVeM3eysrUM20E4qw4l0ak2A
+	 zkEu3MKXP54jwiGAnQwCyVvY7KMu20rwzg/Btn1BZC1UOtrL/EM4q/6+ZZdR4rm/91
+	 4E9PPhuEL6Ty/M09dUmVRbV/63HmcJjuhx7X/6O4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726411AbfEIOPy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 May 2019 10:15:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50330 "EHLO mail.kernel.org"
+        id S1726791AbfEIOQA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 May 2019 10:16:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50214 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726791AbfEIOPR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 May 2019 10:15:17 -0400
+        id S1726839AbfEIOPN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 May 2019 10:15:13 -0400
 Received: from localhost (50-81-63-4.client.mchsi.com [50.81.63.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 09C102177B;
-        Thu,  9 May 2019 14:15:15 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8626F2173C;
+        Thu,  9 May 2019 14:15:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557411316;
-        bh=u6q0Pg2OL3Py+IxHhJLbr82hQI5NOVhVXSbkc/oe1uQ=;
+        s=default; t=1557411311;
+        bh=4nwEVs4HpuVLEW1H4P+gCJQ+1ahy8T18SlcqTYAoWCs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bYFroVDZauLesCkfkIsha6zyux2eyZYbGxVIXnMwELns5SdAWkCVxkDKrxn8eCL6/
-         S+t/QFge7JZwaEFlETzcbRt1FBYXKpdsbEbWymOAZDetqU9VNYOHpLbeUym+GIhkZ2
-         HbdDPcKfpqlF9EUYBnPrlqJpSvBMMa8wV9kK1P1s=
+        b=JZdD4UIYnD6o9Sirz5PyUvkIA8NXrvBTCSDcy5QOKPBYh8Q3s2jyBGTir8WnCJhKF
+         eYLZajPH3OSzDDq+XqjQwMHAaI9X91lvqm8aZzd7BpoCSkpXHRUXlEBOk6YchvJGcP
+         X0DMHjLJ9Isvk3fgtZl9kS52eWXHcchCiiKYHGg8=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Frederick Lawler <fred@fredlawl.com>
 Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
@@ -48,9 +48,9 @@ Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
         Sven Van Asbroeck <thesven73@gmail.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 07/10] PCI: pciehp: Log messages with pci_dev, not pcie_device
-Date:   Thu,  9 May 2019 09:14:53 -0500
-Message-Id: <20190509141456.223614-8-helgaas@kernel.org>
+Subject: [PATCH 04/10] PCI/AER: Log messages with pci_dev, not pcie_device
+Date:   Thu,  9 May 2019 09:14:50 -0500
+Message-Id: <20190509141456.223614-5-helgaas@kernel.org>
 X-Mailer: git-send-email 2.21.0.1020.gf2820cf01a-goog
 In-Reply-To: <20190509141456.223614-1-helgaas@kernel.org>
 References: <20190509141456.223614-1-helgaas@kernel.org>
@@ -68,125 +68,157 @@ prefixes with dev_fmt().
 
 Example output change:
 
-  - pciehp 0000:00:06.0:pcie004: Slot(0) Powering on due to button press
-  + pcieport 0000:00:06.0: pciehp: Slot(0) Powering on due to button press
+  - aer 0000:00:00.0:pci002: AER enabled with IRQ ...
+  + pcieport 0000:00:00.0: AER: enabled with IRQ ...
 
-Link: https://lore.kernel.org/lkml/20190503035946.23608-7-fred@fredlawl.com
+Link: https://lore.kernel.org/lkml/20190503035946.23608-6-fred@fredlawl.com
 Signed-off-by: Frederick Lawler <fred@fredlawl.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/hotplug/pciehp.h      | 16 ++++++++--------
- drivers/pci/hotplug/pciehp_core.c |  7 +++++--
- drivers/pci/hotplug/pciehp_ctrl.c |  2 ++
- drivers/pci/hotplug/pciehp_hpc.c  |  2 ++
- drivers/pci/hotplug/pciehp_pci.c  |  2 ++
- 5 files changed, 19 insertions(+), 10 deletions(-)
+ drivers/pci/pcie/aer.c        | 19 ++++++++++++-------
+ drivers/pci/pcie/aer_inject.c | 22 ++++++++++++----------
+ 2 files changed, 24 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index af5d9f92e6d5..2f0295b48d5d 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -35,22 +35,22 @@ extern int pciehp_poll_time;
-  * enable debug messages.
-  */
- #define dbg(format, arg...)						\
--	pr_debug("%s: " format, MY_NAME, ## arg);
-+	pr_debug(format, ## arg);
- #define err(format, arg...)						\
--	printk(KERN_ERR "%s: " format, MY_NAME, ## arg)
-+	pr_err(format, ## arg)
- #define info(format, arg...)						\
--	printk(KERN_INFO "%s: " format, MY_NAME, ## arg)
-+	pr_info(format, ## arg)
- #define warn(format, arg...)						\
--	printk(KERN_WARNING "%s: " format, MY_NAME, ## arg)
-+	pr_warn(format, ## arg)
- 
- #define ctrl_dbg(ctrl, format, arg...)					\
--	dev_dbg(&ctrl->pcie->device, format, ## arg)
-+	pci_dbg(ctrl->pcie->port, format, ## arg)
- #define ctrl_err(ctrl, format, arg...)					\
--	dev_err(&ctrl->pcie->device, format, ## arg)
-+	pci_err(ctrl->pcie->port, format, ## arg)
- #define ctrl_info(ctrl, format, arg...)					\
--	dev_info(&ctrl->pcie->device, format, ## arg)
-+	pci_info(ctrl->pcie->port, format, ## arg)
- #define ctrl_warn(ctrl, format, arg...)					\
--	dev_warn(&ctrl->pcie->device, format, ## arg)
-+	pci_warn(ctrl->pcie->port, format, ## arg)
- 
- #define SLOT_NAME_SIZE 10
- 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 6ff204c435bf..b85b22880c50 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -17,6 +17,9 @@
-  *   Dely Sy <dely.l.sy@intel.com>"
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 74f872e4e0cc..20a68e8546cc 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -12,6 +12,9 @@
+  *    Andrew Patterson <andrew.patterson@hp.com>
   */
  
-+#define pr_fmt(fmt) "pciehp: " fmt
++#define pr_fmt(fmt) "AER: " fmt
 +#define dev_fmt pr_fmt
 +
- #include <linux/moduleparam.h>
- #include <linux/kernel.h>
- #include <linux/slab.h>
-@@ -179,14 +182,14 @@ static int pciehp_probe(struct pcie_device *dev)
- 
- 	if (!dev->port->subordinate) {
- 		/* Can happen if we run out of bus numbers during probe */
--		dev_err(&dev->device,
-+		pci_err(dev->port,
- 			"Hotplug bridge without secondary bus, ignoring\n");
- 		return -ENODEV;
- 	}
- 
- 	ctrl = pcie_init(dev);
- 	if (!ctrl) {
--		dev_err(&dev->device, "Controller initialization failed\n");
-+		pci_err(dev->port, "Controller initialization failed\n");
- 		return -ENODEV;
- 	}
- 	set_service_data(dev, ctrl);
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 3f3df4c29f6e..bf81f977a751 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -13,6 +13,8 @@
-  *
-  */
- 
-+#define dev_fmt(fmt) "pciehp: " fmt
-+
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/pm_runtime.h>
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index e121f1c06c21..913c7e66504f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -12,6 +12,8 @@
-  * Send feedback to <greg@kroah.com>,<kristen.c.accardi@intel.com>
-  */
- 
-+#define dev_fmt(fmt) "pciehp: " fmt
-+
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/jiffies.h>
-diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-index b9c1396db6fe..d17f3bf36f70 100644
---- a/drivers/pci/hotplug/pciehp_pci.c
-+++ b/drivers/pci/hotplug/pciehp_pci.c
-@@ -13,6 +13,8 @@
-  *
-  */
- 
-+#define dev_fmt(fmt) "pciehp: " fmt
-+
- #include <linux/kernel.h>
- #include <linux/types.h>
+ #include <linux/cper.h>
  #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
+@@ -779,10 +782,11 @@ static void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
+ 	u8 bus = info->id >> 8;
+ 	u8 devfn = info->id & 0xff;
+ 
+-	pci_info(dev, "AER: %s%s error received: %04x:%02x:%02x.%d\n",
+-		info->multi_error_valid ? "Multiple " : "",
+-		aer_error_severity_string[info->severity],
+-		pci_domain_nr(dev->bus), bus, PCI_SLOT(devfn), PCI_FUNC(devfn));
++	pci_info(dev, "%s%s error received: %04x:%02x:%02x.%d\n",
++		 info->multi_error_valid ? "Multiple " : "",
++		 aer_error_severity_string[info->severity],
++		 pci_domain_nr(dev->bus), bus, PCI_SLOT(devfn),
++		 PCI_FUNC(devfn));
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -1377,24 +1381,25 @@ static int aer_probe(struct pcie_device *dev)
+ 	int status;
+ 	struct aer_rpc *rpc;
+ 	struct device *device = &dev->device;
++	struct pci_dev *port = dev->port;
+ 
+ 	rpc = devm_kzalloc(device, sizeof(struct aer_rpc), GFP_KERNEL);
+ 	if (!rpc)
+ 		return -ENOMEM;
+ 
+-	rpc->rpd = dev->port;
++	rpc->rpd = port;
+ 	set_service_data(dev, rpc);
+ 
+ 	status = devm_request_threaded_irq(device, dev->irq, aer_irq, aer_isr,
+ 					   IRQF_SHARED, "aerdrv", dev);
+ 	if (status) {
+-		dev_err(device, "request AER IRQ %d failed\n",
++		pci_err(port, "request AER IRQ %d failed\n",
+ 			dev->irq);
+ 		return status;
+ 	}
+ 
+ 	aer_enable_rootport(rpc);
+-	dev_info(device, "AER enabled with IRQ %d\n", dev->irq);
++	pci_info(port, "enabled with IRQ %d\n", dev->irq);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/pcie/aer_inject.c b/drivers/pci/pcie/aer_inject.c
+index 95d4759664b3..b05f0d728be8 100644
+--- a/drivers/pci/pcie/aer_inject.c
++++ b/drivers/pci/pcie/aer_inject.c
+@@ -12,6 +12,8 @@
+  *     Huang Ying <ying.huang@intel.com>
+  */
+ 
++#define dev_fmt(fmt) "aer_inject: " fmt
++
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/irq.h>
+@@ -332,14 +334,14 @@ static int aer_inject(struct aer_error_inj *einj)
+ 		return -ENODEV;
+ 	rpdev = pcie_find_root_port(dev);
+ 	if (!rpdev) {
+-		pci_err(dev, "aer_inject: Root port not found\n");
++		pci_err(dev, "Root port not found\n");
+ 		ret = -ENODEV;
+ 		goto out_put;
+ 	}
+ 
+ 	pos_cap_err = dev->aer_cap;
+ 	if (!pos_cap_err) {
+-		pci_err(dev, "aer_inject: Device doesn't support AER\n");
++		pci_err(dev, "Device doesn't support AER\n");
+ 		ret = -EPROTONOSUPPORT;
+ 		goto out_put;
+ 	}
+@@ -350,7 +352,7 @@ static int aer_inject(struct aer_error_inj *einj)
+ 
+ 	rp_pos_cap_err = rpdev->aer_cap;
+ 	if (!rp_pos_cap_err) {
+-		pci_err(rpdev, "aer_inject: Root port doesn't support AER\n");
++		pci_err(rpdev, "Root port doesn't support AER\n");
+ 		ret = -EPROTONOSUPPORT;
+ 		goto out_put;
+ 	}
+@@ -398,14 +400,14 @@ static int aer_inject(struct aer_error_inj *einj)
+ 	if (!aer_mask_override && einj->cor_status &&
+ 	    !(einj->cor_status & ~cor_mask)) {
+ 		ret = -EINVAL;
+-		pci_warn(dev, "aer_inject: The correctable error(s) is masked by device\n");
++		pci_warn(dev, "The correctable error(s) is masked by device\n");
+ 		spin_unlock_irqrestore(&inject_lock, flags);
+ 		goto out_put;
+ 	}
+ 	if (!aer_mask_override && einj->uncor_status &&
+ 	    !(einj->uncor_status & ~uncor_mask)) {
+ 		ret = -EINVAL;
+-		pci_warn(dev, "aer_inject: The uncorrectable error(s) is masked by device\n");
++		pci_warn(dev, "The uncorrectable error(s) is masked by device\n");
+ 		spin_unlock_irqrestore(&inject_lock, flags);
+ 		goto out_put;
+ 	}
+@@ -460,19 +462,19 @@ static int aer_inject(struct aer_error_inj *einj)
+ 	if (device) {
+ 		edev = to_pcie_device(device);
+ 		if (!get_service_data(edev)) {
+-			dev_warn(&edev->device,
+-				 "aer_inject: AER service is not initialized\n");
++			pci_warn(edev->port,
++				 "AER service is not initialized\n");
+ 			ret = -EPROTONOSUPPORT;
+ 			goto out_put;
+ 		}
+-		dev_info(&edev->device,
+-			 "aer_inject: Injecting errors %08x/%08x into device %s\n",
++		pci_info(edev->port,
++			 "Injecting errors %08x/%08x into device %s\n",
+ 			 einj->cor_status, einj->uncor_status, pci_name(dev));
+ 		local_irq_disable();
+ 		generic_handle_irq(edev->irq);
+ 		local_irq_enable();
+ 	} else {
+-		pci_err(rpdev, "aer_inject: AER device not found\n");
++		pci_err(rpdev, "AER device not found\n");
+ 		ret = -ENODEV;
+ 	}
+ out_put:
 -- 
 2.21.0.1020.gf2820cf01a-goog
 
