@@ -2,130 +2,137 @@ Return-Path: <SRS0=zNOM=TJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1B0C04AB1
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:16:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03646C04AB1
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:17:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C3462175B
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:16:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557411368;
-	bh=PPIcD3rVSMrCxILX0QXCxh8mpXZl7+htbG5v2DOUouk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=R1/7lqjaki3kwu4DPbUqpvGGEm4pulXyp09LEKS4A0ULLha3FfdCGZfSpfd/z9Kt/
-	 vQlyoORuFU19ARB8Dk5lNLf0oaCEDJDICyO83ZCPOmEe6PZCvF3x+Npg6xKzqvuwNM
-	 /H5L0MPQMVC4jJQU1a5J+yRSkusK4uWS9gyIGnAU=
+	by mail.kernel.org (Postfix) with ESMTP id C1DB120989
+	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 14:17:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EMkvNpue"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726864AbfEIOPI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 May 2019 10:15:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50030 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726560AbfEIOPH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 May 2019 10:15:07 -0400
-Received: from localhost (50-81-63-4.client.mchsi.com [50.81.63.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 36A8521479;
-        Thu,  9 May 2019 14:15:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557411307;
-        bh=PPIcD3rVSMrCxILX0QXCxh8mpXZl7+htbG5v2DOUouk=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CBuO2pWfE37aHz4k6BXlZTHC7TFgiqac06CBdtDdysbbSuGbAXgvYe3qErfrAYSjm
-         QfAq7Y1TbbjmSOQClwJ21JcXTy+XYbr2ituIniayDYKfH6jAhQh5Kd17oTrpW6kbaC
-         PzTqHcdI61NnwPTT/kRY5M2+EUCaPoTqGJ1t4WDo=
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Frederick Lawler <fred@fredlawl.com>
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Sven Van Asbroeck <thesven73@gmail.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 01/10] PCI/AER: Replace dev_printk(KERN_DEBUG) with dev_info()
-Date:   Thu,  9 May 2019 09:14:47 -0500
-Message-Id: <20190509141456.223614-2-helgaas@kernel.org>
-X-Mailer: git-send-email 2.21.0.1020.gf2820cf01a-goog
-In-Reply-To: <20190509141456.223614-1-helgaas@kernel.org>
-References: <20190509141456.223614-1-helgaas@kernel.org>
+        id S1726661AbfEIOR0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 May 2019 10:17:26 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:35355 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbfEIOR0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2019 10:17:26 -0400
+Received: by mail-wm1-f66.google.com with SMTP id y197so3440819wmd.0;
+        Thu, 09 May 2019 07:17:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=IB8c2IxHAzOoI/TggpVaeKg+6XQl0SXGEOFq4gJZkJM=;
+        b=EMkvNpueC0vjL1DOxfTBaYKAgM4kjl237nrQiWXCFS/LdfDCl2rF05TmgYGKGPqxU5
+         UeD/ah43NnXCkFNxovEyoWRwh5V0DkIQkntGm7kjvIxz1l71fyZlBZw/qUzRFnZHxXIz
+         Cj1Kd4KrpC0rGY9VrF9uOSOpCK1SlRGvLNqzrkLpZJPZqanTKho24Gb4QHCUuRco8BZz
+         +dOS/gnfmr35PqwCvjS6ctcLTN0fWCK6SheAmQnLl58ewpCh38a7WuQj4fQ4MW6CHcU6
+         wsEC42OR9tNLPGfOisnC1qScGQGwXevmfh9MYWKM8Q3DXSLNs25w8B9ECtCgpePG4BmH
+         R5xA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=IB8c2IxHAzOoI/TggpVaeKg+6XQl0SXGEOFq4gJZkJM=;
+        b=J1UJczH/8+G2lJTTO3K4rcGrsnuP+dtqE7h9SGgU9xbKY2YAT9FK1gm7D6rcU/V0w4
+         r9/rA3AqolS63FIymt1Bsz+yBQsSnUKPmwYhAH2jJJTZB9ezteY623P1csngc8amETBM
+         9MqSpxSMhAurzFc2rYD31NSkRd3l3ezsRLjoD7hk20vjkeVHRlabC/OUAt8uEzJHqzRC
+         GxwumWzy0rj2C9BFoukS2Z8CBapOSB687Bk+h2gZjK79eCAGSj1pr9KZAsakxO3RpSrI
+         BDkt52xyF+J3KEOepQtpOnZ1nwsuIq2qIv6jDsTU+tDYyRBXWo30EORPK/RdVnZ5y8Wx
+         hong==
+X-Gm-Message-State: APjAAAWb2jeLdXgNF68EIh0mxw1GKhyoDmDZ8qSnN7xfxNKrRgS8gJ8t
+        Vdu8q6FYpx3eDVsthZXTz8w=
+X-Google-Smtp-Source: APXvYqwWTXb841riFLEL1FoB0N6emHqvseBwTqw45u6r0y4OAoG4p+CS2OyOm2YzcsBY7kdgR183Ig==
+X-Received: by 2002:a1c:a406:: with SMTP id n6mr3078420wme.126.1557411443942;
+        Thu, 09 May 2019 07:17:23 -0700 (PDT)
+Received: from localhost (p2E5BEF36.dip0.t-ipconnect.de. [46.91.239.54])
+        by smtp.gmail.com with ESMTPSA id y7sm7416403wrg.45.2019.05.09.07.17.21
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Thu, 09 May 2019 07:17:22 -0700 (PDT)
+Date:   Thu, 9 May 2019 16:17:20 +0200
+From:   Thierry Reding <thierry.reding@gmail.com>
+To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH V2 06/28] PCI: tegra: Add PCIe Gen2 link speed support
+Message-ID: <20190509141720.GF8907@ulmo>
+References: <20190423092825.759-1-mmaddireddy@nvidia.com>
+ <20190423092825.759-7-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="Mjqg7Yu+0hL22rav"
+Content-Disposition: inline
+In-Reply-To: <20190423092825.759-7-mmaddireddy@nvidia.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Frederick Lawler <fred@fredlawl.com>
 
-Replace dev_printk(KERN_DEBUG) with dev_info() or dev_err() to be more
-consistent with other logging.
+--Mjqg7Yu+0hL22rav
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-These could be converted to dev_dbg(), but that depends on
-CONFIG_DYNAMIC_DEBUG and DEBUG, and we want most of these messages to
-*always* be in the dmesg log.
+On Tue, Apr 23, 2019 at 02:58:03PM +0530, Manikanta Maddireddy wrote:
+[...]
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+[...]
+> +		while (ktime_before(ktime_get(), deadline)) {
+> +			value = readl(port->base + RP_LINK_CONTROL_STATUS);
+> +			if ((value & PCI_EXP_LNKSTA_LT) == 0)
+> +				break;
+> +
+> +			usleep_range(2000, 3000);
+> +		}
+> +		if (value & PCI_EXP_LNKSTA_LT)
+> +			dev_warn(dev, "PCIe port %u link is in recovery\n",
+> +				 port->index);
 
-Also remove a redundant kzalloc() failure message.
+Blank line between "}" and "if (...)" for readability.
 
-Link: https://lore.kernel.org/lkml/20190503035946.23608-2-fred@fredlawl.com
-Signed-off-by: Frederick Lawler <fred@fredlawl.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pcie/aer.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+> +		while (ktime_before(ktime_get(), deadline)) {
+> +			value = readl(port->base + RP_LINK_CONTROL_STATUS);
+> +			if ((value & PCI_EXP_LNKSTA_LT) == 0)
+> +				break;
+> +
+> +			usleep_range(2000, 3000);
+> +		}
+> +		if (value & PCI_EXP_LNKSTA_LT)
+> +			dev_err(dev, "failed to retrain link of port %u\n",
+> +				port->index);
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index f8fc2114ad39..74f872e4e0cc 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -964,8 +964,8 @@ static bool find_source_device(struct pci_dev *parent,
- 	pci_walk_bus(parent->subordinate, find_device_iter, e_info);
- 
- 	if (!e_info->error_dev_num) {
--		pci_printk(KERN_DEBUG, parent, "can't find device of ID%04x\n",
--			   e_info->id);
-+		pci_info(parent, "can't find device of ID%04x\n",
-+			 e_info->id);
- 		return false;
- 	}
- 	return true;
-@@ -1379,18 +1379,17 @@ static int aer_probe(struct pcie_device *dev)
- 	struct device *device = &dev->device;
- 
- 	rpc = devm_kzalloc(device, sizeof(struct aer_rpc), GFP_KERNEL);
--	if (!rpc) {
--		dev_printk(KERN_DEBUG, device, "alloc AER rpc failed\n");
-+	if (!rpc)
- 		return -ENOMEM;
--	}
-+
- 	rpc->rpd = dev->port;
- 	set_service_data(dev, rpc);
- 
- 	status = devm_request_threaded_irq(device, dev->irq, aer_irq, aer_isr,
- 					   IRQF_SHARED, "aerdrv", dev);
- 	if (status) {
--		dev_printk(KERN_DEBUG, device, "request AER IRQ %d failed\n",
--			   dev->irq);
-+		dev_err(device, "request AER IRQ %d failed\n",
-+			dev->irq);
- 		return status;
- 	}
- 
-@@ -1419,7 +1418,7 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- 	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, reg32);
- 
- 	rc = pci_bus_error_reset(dev);
--	pci_printk(KERN_DEBUG, dev, "Root Port link has been reset\n");
-+	pci_info(dev, "Root Port link has been reset\n");
- 
- 	/* Clear Root Error Status */
- 	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
--- 
-2.21.0.1020.gf2820cf01a-goog
+Same here.
 
+With that:
+
+Acked-by: Thierry Reding <treding@nvidia.com>
+
+--Mjqg7Yu+0hL22rav
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlzUNnAACgkQ3SOs138+
+s6HNAA//TZ0zt5Q7wT9uwqxfIJUZaByyIy/zrcbeh/psahyWwxWLZyvAKQSfpYyi
+0Q6jvS7g0EfuH1H1HGYQs6DN4UK8rQs+OWiICQBAKpkYjaAEWQ3HIKpbF/8cwjSX
+cZ85Q08bihPmmhL9+fd6HnEkoQxRs2zBljM00jmXIs/SmYnT7uuTVxL49LJGdT2L
+NlGN+2psY0Zcc8LOtZR7a3zq2S++DIWjtSa1GXTUcDwq1uSd0vD2LTJqWr0gTU4Z
+gixIT3jFr0L4kuFVG5DJNyBYY8hW9scSVTfehhoSWf3eDj6NhdLCo6vO00v9ddZ5
+9u2/k48CX6eMec6JKJ92YANXlUypir6fwnKTyv1Mch0zTpMJ8LT7ITKeCb5bofUd
+Z4EBCgUWFZSLp3cfQOMUpulWBLSgn0l031P1yD3TRJGFy9Ej0vvS4WiBH35s6UkT
+xgUH0KLcTJozkMx4nb8TiZXdTaiNfHLX1K8Hii4EV19WxIjBReQoPQI+VjGeX+8l
+xc+B7VMt73J6655833TiKQzqZknQhvqldXpyxsQrIkiiauZU7VXbrxkNwzQohDNu
+LygF3wmSpxNuY265beBcpwAoWlpUrqgGjUbh8Ic+M/75NAvhw0rlirtO4n+cTpxO
+xCA2VC3VpLNYQoZaTz+2xii32VJcP1P0ElVZJDeRaLE/UabBPmI=
+=rwdL
+-----END PGP SIGNATURE-----
+
+--Mjqg7Yu+0hL22rav--
