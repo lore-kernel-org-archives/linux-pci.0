@@ -1,46 +1,39 @@
-Return-Path: <SRS0=zNOM=TJ=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=k4L0=TK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_MUTT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02EB1C04AB1
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 21:49:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C261C04AB1
+	for <linux-pci@archiver.kernel.org>; Fri, 10 May 2019 02:22:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D2E1217F4
-	for <linux-pci@archiver.kernel.org>; Thu,  9 May 2019 21:49:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1557438589;
-	bh=DNYF0XAZHikO5naLw8zwpVh5tp2jK6gYi5MIZybDugA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=FBIvfJNaEPoXZKlRkhbBhd+WVHF06nOVltEj+vJJ1w2Wt1fJsU9CJ8d75Oyu0z9Hp
-	 ySxIz9sHTluF0PtQYHmoYHoVesXkIJNP6baUjlcr6pXHUVk5RJ/SEMtjKCbRZ4La5s
-	 NlZCdohTXktsJoQjTaVnn7xDLDgUrfRfYMkUuUXs=
+	by mail.kernel.org (Postfix) with ESMTP id 77C992183F
+	for <linux-pci@archiver.kernel.org>; Fri, 10 May 2019 02:22:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726698AbfEIVts (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 9 May 2019 17:49:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57678 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726219AbfEIVts (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 May 2019 17:49:48 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C8827217D7;
-        Thu,  9 May 2019 21:49:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1557438588;
-        bh=DNYF0XAZHikO5naLw8zwpVh5tp2jK6gYi5MIZybDugA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PCmZHR/425O6CqVM+hAgxbLbc9oj7WysMXnOT9UbzwK5lyeHnNhoKzIBvyh64D6up
-         1q1t6fR2sbOVmI72yt8AguPy79F1J0s74LhXOlF/+GAMQ9gRE3Bq9nAuXSAyxdqV0G
-         50JDm/jVCaVu+dpBP++a992tsT0k27FR3xyBwHH8=
-Date:   Thu, 9 May 2019 16:49:46 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc:     Frederick Lawler <fred@fredlawl.com>,
+        id S1726842AbfEJCWW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 9 May 2019 22:22:22 -0400
+Received: from smtprelay0074.hostedemail.com ([216.40.44.74]:35196 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726835AbfEJCWW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 May 2019 22:22:22 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay05.hostedemail.com (Postfix) with ESMTP id F0A9C1802912A;
+        Fri, 10 May 2019 02:22:20 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: death90_88875195d6303
+X-Filterd-Recvd-Size: 2829
+Received: from XPS-9350 (cpe-23-242-196-136.socal.res.rr.com [23.242.196.136])
+        (Authenticated sender: joe@perches.com)
+        by omf14.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 10 May 2019 02:22:18 +0000 (UTC)
+Message-ID: <ec920830acb6145f9fa57d6adb36a448ffb1918c.camel@perches.com>
+Subject: Re: [PATCH 02/10] PCI/PME: Replace dev_printk(KERN_DEBUG) with
+ dev_info()
+From:   Joe Perches <joe@perches.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Frederick Lawler <fred@fredlawl.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Lukas Wunner <lukas@wunner.de>,
         Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
@@ -49,46 +42,51 @@ Cc:     Frederick Lawler <fred@fredlawl.com>,
         Sven Van Asbroeck <thesven73@gmail.com>,
         linux-pci@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 00/10] PCI: Log with pci_dev, not pcie_device
-Message-ID: <20190509214946.GF235064@google.com>
+Date:   Thu, 09 May 2019 19:22:16 -0700
+In-Reply-To: <20190509211226.GC235064@google.com>
 References: <20190509141456.223614-1-helgaas@kernel.org>
- <CAHp75VdrQgu3Tis1V1j1AgjS=Uvw-7tz5ke4kSxRWM=0DrSjhw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHp75VdrQgu3Tis1V1j1AgjS=Uvw-7tz5ke4kSxRWM=0DrSjhw@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+         <20190509141456.223614-3-helgaas@kernel.org>
+         <CAHp75Ve9-659N5N=f7pPb-9amvbGbi+zWxL9p-BnYocvXJPwZg@mail.gmail.com>
+         <69ff0a66d8c68f9e1adc8308847541e9566fe23e.camel@perches.com>
+         <20190509211226.GC235064@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.30.1-1build1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, May 09, 2019 at 08:49:08PM +0300, Andy Shevchenko wrote:
-> On Thu, May 9, 2019 at 5:18 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >
-> > From: Bjorn Helgaas <bhelgaas@google.com>
-> >
-> > This is a collection of updates to Fred's v2 patches from:
-> >
-> >   https://lore.kernel.org/lkml/20190503035946.23608-1-fred@fredlawl.com
-> >
-> > and some follow-on discussion.
-> >
+On Thu, 2019-05-09 at 16:12 -0500, Bjorn Helgaas wrote:
+> On Thu, May 09, 2019 at 11:31:04AM -0700, Joe Perches wrote:
+> > On Thu, 2019-05-09 at 20:35 +0300, Andy Shevchenko wrote:
+> > > On Thu, May 9, 2019 at 5:18 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > Replace dev_printk(KERN_DEBUG) with dev_info() or dev_err() to be more
+> > > > consistent with other logging.
+> > > > 
+> > > > These could be converted to dev_dbg(), but that depends on
+> > > > CONFIG_DYNAMIC_DEBUG and DEBUG, and we want most of these messages to
+> > > > *always* be in the dmesg log.
+> > > > 
+> > > > Also, use dev_fmt() to add the service name.  Example output change:
+> > > > 
+> > > >   - pcieport 0000:80:10.0: Signaling PME with IRQ ...
+> > > >   + pcieport 0000:80:10.0: PME: Signaling with IRQ ...
+> > > > +               pci_info(port, "interrupt generated for non-existent device %02x:%02x.%d\n",
+> > > > +                        busnr, PCI_SLOT(devfn), PCI_FUNC(devfn));
+> > > > +               pci_info(port, "Spurious native interrupt!\n");
+> > > > +       pci_info(port, "Signaling with IRQ %d\n", srv->irq);
+> > 
+> > Why change the logging level?
+> > Why not use #define DEBUG and use pci_dbg ?
 > 
-> For non-commented patches,
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> 
-> For the commented ones, I hope you will address them, and then my tag
-> applies for them as well.
+> What would the benefit of using DEBUG be?
 
-Thanks, Andy and Keith, I really appreciate you taking a look.  Andy,
-I added your tag to all except these:
+It makes the <foo>_dbg output unconditional or
+possible to be disabled via dynamic_debug
 
-> >   PCI/PME: Replace dev_printk(KERN_DEBUG) with dev_info()
-> >   PCI/DPC: Log messages with pci_dev, not pcie_device
+> I don't want these
+> particular messages to be conditional.
 
-because I didn't make the capitalization and other message changes you
-pointed out.  I'd totally be fine with those changes, but I don't
-think we have time to do a complete job of it for this cycle.
 
-Bjorn
