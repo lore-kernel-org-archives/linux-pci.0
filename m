@@ -5,218 +5,110 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B134EC04AB4
-	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:45:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F344DC04AB7
+	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:47:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 790FD2084E
-	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:45:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFD392084E
+	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:47:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uFs9wWBU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Oium+gMm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725901AbfENOpA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 May 2019 10:45:00 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:35840 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725854AbfENOpA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2019 10:45:00 -0400
-Received: by mail-pg1-f195.google.com with SMTP id a3so8757449pgb.3;
-        Tue, 14 May 2019 07:45:00 -0700 (PDT)
+        id S1726425AbfENOrs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 May 2019 10:47:48 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:38353 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725901AbfENOrr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2019 10:47:47 -0400
+Received: by mail-pl1-f193.google.com with SMTP id f97so3285392plb.5;
+        Tue, 14 May 2019 07:47:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=M5gD5bOk+ivXRl6ir7PdHTTwAW2YSmsqQ0Eg23Ei5OU=;
-        b=uFs9wWBU7EuqOsDKvz+cVP5WgvZBLERAglZL1D1EkqgHFgsJFcJNyXUC4W/qD+DUa3
-         8wFk9QcPgy/7h0uKjPtKVTNXdaXwmBvISl6mRaVEvHW5ncRYa8bYA0efya5vogZZwjbv
-         ZZRfTT3sEw+11xOiYQgrMVJGZTnGUAR9nA2Oo6SyWt/RcHjjZjVImXlPL1/GTCpYKl+7
-         L4Y1bYP3a6NGTaOnfB2l0+o1sgCKRuDIpw0WMivnlUpPI75zzCsw/Lxv0C8FAiZSoJP1
-         KNPUcCAFyCXlofgYR6a3aCUoUI0ptZW0NEwo1L4oFkfpkqQhM/wr56mneob9Q1UemtAG
-         iDTQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Ea7nruMQN3xltZvYgCBaDR2hEGB3xQK7d3rHkYgLjnc=;
+        b=Oium+gMmzkDR2We5B/z0hKCVKAbrqYaoB2WQHc90qg5fZMruPur14tFK1aYiKwh326
+         wZQi8IV4btKhQzL6gy780H8W7QGX6ybhOWSKPyQS1uxe4TN1G3p01nUp3Bv4rWmj+Uge
+         7np8BdbQU30JSMcZ3W8wlG5sGn30mjYp5HMxKUq/a2D9+xXDgZd22HxT6GCcTLxU9TQD
+         geB/Tv8lPW7LKgzc+lwfHtJkNxF9y+F+5N2hEbFedTmGNq4haxY3F5e9TIc3XRg51nwp
+         ty0HzzSTjq9w1vbN1EncyBeRKnNQHrvNjUwUY8stTOGsshCXKGkbt8n62yBlRTRbLE2h
+         Vr8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=M5gD5bOk+ivXRl6ir7PdHTTwAW2YSmsqQ0Eg23Ei5OU=;
-        b=ldN8rdtaLYyR4j8+pXLvpnPRXnvwVsgi2H01IHWYqbZy2XBMTFb+psjvPtNLYsy7vK
-         uSSqyqdykp7JMLmlPPNVxa9yZR4QuWLbu3c9sVdUO6FEJLdujiiOj0fpLQ8ulroFdIml
-         MEK9BGIjlBRzD2nZIL5Viq0cFOlE/KU8oP8P1frZDvnmk4owlTd/0PRfW/5K+KLVQqlQ
-         8xb6Xa+PcKyJ3XU3593HXTgfL3ABi514ChWVDqMvOLceUdYi9AICsSroAaU3S125RwmJ
-         VIWYn1PefmmCIw7meiK04eNAMHsOMmY8+ejyzWHDsGQOVCUDjqAydOVYOKOpTTVxuxg8
-         ZMtQ==
-X-Gm-Message-State: APjAAAVjWN/eCsfbGa2A4PtnOa0cwf2CzDeYzbV8o6/vxSKeIEMjLHwm
-        JEnrX3dq7FMYCz3t9ZqhhsXNPecQBdM=
-X-Google-Smtp-Source: APXvYqyszJva4EMMR5heKptgP1XLXDlVskpU1wnd/h+BaPS711IH58DJGKfAXnRBxzL0lGTgN6E4rg==
-X-Received: by 2002:a63:465b:: with SMTP id v27mr38671882pgk.38.1557845099636;
-        Tue, 14 May 2019 07:44:59 -0700 (PDT)
-Received: from mail.google.com ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id u12sm2119425pfl.159.2019.05.14.07.44.56
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Ea7nruMQN3xltZvYgCBaDR2hEGB3xQK7d3rHkYgLjnc=;
+        b=JRhzYSNR05CXFGBCxkU02HptEoWn5az95TyUJjL5PO5WW8Y/OR3iqaN91AT/D2y3Sr
+         fS/9yglJcYdMoRcHn7ChNcSOvZdpJRJqppeghKxtsHQIjnfRW5aL9U+rk5/bhJj7t2G0
+         6GWHo8AVtTu2BikGleDvjVmapOfDBM9zvwfgD/FbCEm3gscBf+PJI7rLZh+Yd/MLYMuw
+         GigIhTImvWx/b27D6k9kfZVwQMwqklEYxGregW3GXjC2Pf04cmqXMvuECdi8tPwK8R7W
+         LUbNBT8BTnfQp10wgKaCxIpzW6UHjE+J5PpH5GqP/svyE1m//kALFWyytodz3tPduHh2
+         K0rA==
+X-Gm-Message-State: APjAAAUuIqrZyAKyXzz4sPrae4rlBIuxhezHQFzUCtY6VR7fT3V0EjfK
+        orPeOUvjXCv2B3i3oxhHl2s=
+X-Google-Smtp-Source: APXvYqweRDojunBB0G6d++cMRFo3OyV9PMyL2KaeV6iPXwT3zUaeE0u5LciqR46V9uEau19WAMrRPg==
+X-Received: by 2002:a17:902:6b8b:: with SMTP id p11mr37393091plk.225.1557845266955;
+        Tue, 14 May 2019 07:47:46 -0700 (PDT)
+Received: from localhost.localdomain ([104.238.181.70])
+        by smtp.gmail.com with ESMTPSA id j12sm20461415pff.148.2019.05.14.07.47.43
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 14 May 2019 07:44:59 -0700 (PDT)
-Date:   Tue, 14 May 2019 22:44:53 +0800
+        Tue, 14 May 2019 07:47:46 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
-To:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Cc:     Changbin Du <changbin.du@gmail.com>, bhelgaas@google.com,
-        corbet@lwn.net, linux-pci@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 11/12] Documentation: PCI: convert
- endpoint/pci-test-function.txt to reST
-Message-ID: <20190514144451.uxa4bkipmltllv5k@mail.google.com>
-References: <20190513142000.3524-1-changbin.du@gmail.com>
- <20190513142000.3524-12-changbin.du@gmail.com>
- <20190513120423.159b971f@coco.lan>
+To:     bhelgaas@google.com, corbet@lwn.net
+Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mchehab+samsung@kernel.org,
+        Changbin Du <changbin.du@gmail.com>
+Subject: [PATCH v6 01/12] Documentation: add Linux PCI to Sphinx TOC tree
+Date:   Tue, 14 May 2019 22:47:23 +0800
+Message-Id: <20190514144734.19760-2-changbin.du@gmail.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190514144734.19760-1-changbin.du@gmail.com>
+References: <20190514144734.19760-1-changbin.du@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190513120423.159b971f@coco.lan>
-User-Agent: NeoMutt/20180716
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, May 13, 2019 at 12:04:23PM -0300, Mauro Carvalho Chehab wrote:
-> Em Mon, 13 May 2019 22:19:59 +0800
-> Changbin Du <changbin.du@gmail.com> escreveu:
-> 
-> > This converts the plain text documentation to reStructuredText format and
-> > add it to Sphinx TOC tree. No essential content change.
-> > 
-> > Signed-off-by: Changbin Du <changbin.du@gmail.com>
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  Documentation/PCI/endpoint/index.rst          |  1 +
-> >  ...est-function.txt => pci-test-function.rst} | 34 ++++++++++++-------
-> >  2 files changed, 22 insertions(+), 13 deletions(-)
-> >  rename Documentation/PCI/endpoint/{pci-test-function.txt => pci-test-function.rst} (84%)
-> > 
-> > diff --git a/Documentation/PCI/endpoint/index.rst b/Documentation/PCI/endpoint/index.rst
-> > index 3951de9f923c..b680a3fc4fec 100644
-> > --- a/Documentation/PCI/endpoint/index.rst
-> > +++ b/Documentation/PCI/endpoint/index.rst
-> > @@ -9,3 +9,4 @@ PCI Endpoint Framework
-> >  
-> >     pci-endpoint
-> >     pci-endpoint-cfs
-> > +   pci-test-function
-> > diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.rst
-> > similarity index 84%
-> > rename from Documentation/PCI/endpoint/pci-test-function.txt
-> > rename to Documentation/PCI/endpoint/pci-test-function.rst
-> > index 5916f1f592bb..63148df97232 100644
-> > --- a/Documentation/PCI/endpoint/pci-test-function.txt
-> > +++ b/Documentation/PCI/endpoint/pci-test-function.rst
-> > @@ -1,5 +1,10 @@
-> > -				PCI TEST
-> > -		    Kishon Vijay Abraham I <kishon@ti.com>
-> > +.. SPDX-License-Identifier: GPL-2.0
-> > +
-> > +=================
-> > +PCI Test Function
-> > +=================
-> > +
-> > +:Author: Kishon Vijay Abraham I <kishon@ti.com>
-> >  
-> >  Traditionally PCI RC has always been validated by using standard
-> >  PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
-> > @@ -23,30 +28,31 @@ The PCI endpoint test device has the following registers:
-> >  	8) PCI_ENDPOINT_TEST_IRQ_TYPE
-> >  	9) PCI_ENDPOINT_TEST_IRQ_NUMBER
-> >  
-> > -*) PCI_ENDPOINT_TEST_MAGIC
-> > +* PCI_ENDPOINT_TEST_MAGIC
-> >  
-> >  This register will be used to test BAR0. A known pattern will be written
-> >  and read back from MAGIC register to verify BAR0.
-> >  
-> > -*) PCI_ENDPOINT_TEST_COMMAND:
-> > +* PCI_ENDPOINT_TEST_COMMAND
-> >  
-> >  This register will be used by the host driver to indicate the function
-> >  that the endpoint device must perform.
-> >  
-> > -Bitfield Description:
-> > +Bitfield Description::
-> > +
-> >    Bit 0		: raise legacy IRQ
-> >    Bit 1		: raise MSI IRQ
-> >    Bit 2		: raise MSI-X IRQ
-> >    Bit 3		: read command (read data from RC buffer)
-> >    Bit 4		: write command (write data to RC buffer)
-> > -  Bit 5		: copy command (copy data from one RC buffer to another
-> > -		  RC buffer)
-> > +  Bit 5		: copy command (copy data from one RC buffer to another RC buffer)
-> 
-> Why not use a table instead?
->
-hmm, table looks better.
-> >  
-> > -*) PCI_ENDPOINT_TEST_STATUS
-> > +* PCI_ENDPOINT_TEST_STATUS
-> >  
-> >  This register reflects the status of the PCI endpoint device.
-> >  
-> > -Bitfield Description:
-> > +Bitfield Description::
-> > +
-> >    Bit 0		: read success
-> >    Bit 1		: read fail
-> >    Bit 2		: write success
-> > @@ -57,31 +63,33 @@ Bitfield Description:
-> >    Bit 7		: source address is invalid
-> >    Bit 8		: destination address is invalid
-> 
-> Same here.
-> 
-> If you replace the two bitfield descriptions to table:
-> 	Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-> 
-sure.
+Add a index.rst for PCI subsystem. More docs will be added later.
 
-> >  
-> > -*) PCI_ENDPOINT_TEST_SRC_ADDR
-> > +* PCI_ENDPOINT_TEST_SRC_ADDR
-> >  
-> >  This register contains the source address (RC buffer address) for the
-> >  COPY/READ command.
-> >  
-> > -*) PCI_ENDPOINT_TEST_DST_ADDR
-> > +* PCI_ENDPOINT_TEST_DST_ADDR
-> >  
-> >  This register contains the destination address (RC buffer address) for
-> >  the COPY/WRITE command.
-> >  
-> > -*) PCI_ENDPOINT_TEST_IRQ_TYPE
-> > +* PCI_ENDPOINT_TEST_IRQ_TYPE
-> >  
-> >  This register contains the interrupt type (Legacy/MSI) triggered
-> >  for the READ/WRITE/COPY and raise IRQ (Legacy/MSI) commands.
-> >  
-> >  Possible types:
-> > +
-> >   - Legacy	: 0
-> >   - MSI		: 1
-> >   - MSI-X	: 2
-> >
-Also take this as table.
+Signed-off-by: Changbin Du <changbin.du@gmail.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/PCI/index.rst | 9 +++++++++
+ Documentation/index.rst     | 1 +
+ 2 files changed, 10 insertions(+)
+ create mode 100644 Documentation/PCI/index.rst
 
-> > -*) PCI_ENDPOINT_TEST_IRQ_NUMBER
-> > +* PCI_ENDPOINT_TEST_IRQ_NUMBER
-> >  
-> >  This register contains the triggered ID interrupt.
-> >  
-> >  Admissible values:
-> > +
-> >   - Legacy	: 0
-> >   - MSI		: [1 .. 32]
-> >   - MSI-X	: [1 .. 2048]
-> 
-> 
-> 
-> Thanks,
-> Mauro
-
+diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
+new file mode 100644
+index 000000000000..c2f8728d11cf
+--- /dev/null
++++ b/Documentation/PCI/index.rst
+@@ -0,0 +1,9 @@
++.. SPDX-License-Identifier: GPL-2.0
++
++=======================
++Linux PCI Bus Subsystem
++=======================
++
++.. toctree::
++   :maxdepth: 2
++   :numbered:
+diff --git a/Documentation/index.rst b/Documentation/index.rst
+index 9e01aace4f48..fb6477a692b8 100644
+--- a/Documentation/index.rst
++++ b/Documentation/index.rst
+@@ -101,6 +101,7 @@ needed).
+    filesystems/index
+    vm/index
+    bpf/index
++   PCI/index
+    misc-devices/index
+ 
+ Architecture-specific documentation
 -- 
-Cheers,
-Changbin Du
+2.20.1
+
