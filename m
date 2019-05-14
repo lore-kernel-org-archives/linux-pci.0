@@ -2,69 +2,67 @@ Return-Path: <SRS0=pnCm=TO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0049AC04AB4
-	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:49:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C7F3C04AB7
+	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:49:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD3462084E
-	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:49:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F9DE2085A
+	for <linux-pci@archiver.kernel.org>; Tue, 14 May 2019 14:49:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GlKv+McG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nY5b8E42"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726599AbfENOr6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 May 2019 10:47:58 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:42305 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726515AbfENOr4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2019 10:47:56 -0400
-Received: by mail-pg1-f193.google.com with SMTP id 145so8750948pgg.9;
-        Tue, 14 May 2019 07:47:55 -0700 (PDT)
+        id S1726195AbfENOro (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 May 2019 10:47:44 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:40421 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725901AbfENOrn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 May 2019 10:47:43 -0400
+Received: by mail-pf1-f195.google.com with SMTP id u17so9258134pfn.7;
+        Tue, 14 May 2019 07:47:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=UMocYiHoXzFjp5PQ5tvpk4obbHczcNC3ztzkGrlxw3Q=;
-        b=GlKv+McGJ9klwFXe6iXXk+N8t0LMAyWUzxv1Bmhk6SmuStI9b/PwEQgMYxQ/FC/BiB
-         ZnCn42C12xG64h3xHk2h48Kr6foy+h8QQYtXXzCFzGPVkpLvvnacaQnQRqSSy+aWYuTb
-         Yt3npNTfD/gGydkT1zBuFgVzLLr5EH+HPlHIlXshGpAAyzBsGMVW3DwwxktLQk/nh+oC
-         2ZbO+/FTKE2fZF1xIxjsz1d/FN8PtOM/MQT+GfWa4W8urirfLZmiXfsnL3L/Ly1UQwck
-         614dQCjBjGTKN24nHTGBUm9So4QvueUmtiHC8cg+UneVx27o8tL9bBh0Scbdh1lpKFuc
-         Vu/g==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=uvTVVtDZuqjWYWGv3wOfnHFg54NPDwz8Y09qcxgYGas=;
+        b=nY5b8E423/ei9n51fU7pz6LahDlN6P5pg7XmmvVpW6Kt8YIjvLAynVKwrR9dt6zoQ9
+         m3aGr/5i+rm5H+AK8kB15ksxlQkL0HwO7gXjqsbCAc/GqVqlEEc62Vs4/2kszSTpc+ob
+         475tVx7XeBFl2S5Z9P0fSgUweqKyIkz/5kL78YHdR0u3sZ2ujXt6TnthKWIYJiL6qkSW
+         7otrl7Wyzb1B52ATfbepn22cxAlW2Qx0hYN0Ylza4uHgwlRc6PEaXdkxXnRP4M/J+aAn
+         HGzqA5gj7T0H7xBNE2gMAUk1tBracDKTOyJW4d6jPbHgRwnDDFJ84CBcjbfudmfVfBOB
+         Vzkg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=UMocYiHoXzFjp5PQ5tvpk4obbHczcNC3ztzkGrlxw3Q=;
-        b=psIMDMPeS6ZkV3g8Elz1lc1lhyyAC4J9k4IxK9vk8DdALCfVsXeCSbIFpGnR7ldp26
-         lOsFfLazQbgwLAfiMIOruXicNXZOg9s/VqTxNRpH989fVCLyJ7cIsWSzMtBBbTxF2RWY
-         rhrAc0q4R0Uy+vUUEDIiJgV/KuRuIrWBLKAM+CE9kn0++cjxt+nW0XcppAjUCmpF7K8T
-         jb95t5H5nJjMdu57Cmlf0Ko0ViNmXX8DQCTUd/7OfkWraejru9tLUe1agLFwkR5KH90V
-         Vkv5XxFt6JZNIRN6fUOpYEqmf8UyrYTrtxizGPx1Pw6S5E+nxZ2SiofpXPLuILUfOT6F
-         rQfA==
-X-Gm-Message-State: APjAAAUvzVGr7mdEQCmWAJm2ciSE+fpb6rGkW8CnMDcVjY4mmpucpv1J
-        mBe3/EqFUCm/iETBFI4mK5w=
-X-Google-Smtp-Source: APXvYqwKSARFrkvgiilZYaPu2/CMcOu6vq/GFSzaTxpScQv54XWvJDPG2oR2ofJhghfjqy7G2sLkEQ==
-X-Received: by 2002:a63:8342:: with SMTP id h63mr39364524pge.251.1557845275107;
-        Tue, 14 May 2019 07:47:55 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=uvTVVtDZuqjWYWGv3wOfnHFg54NPDwz8Y09qcxgYGas=;
+        b=j51rctbgbVUp6Zh7fB5xJPtR8+77lfxTs4JK2f2V1D1oH9IpAtMaqPrIQIVOYdoJn+
+         9XZlPIjSGWZuH2KQ6DCHMOJd+s1lhQml1YWkqHwf/AHItEtOPRfFPUS/PvdO9MIcaFcl
+         I3hLVhrFEyBqluEe4QkE3W3uZbLS/PEWXNdmLQBU9m45hE/XtrtpycPnY254e675K97r
+         4Nu0+kNBR4nfL3icOI5jnsrw2mZt7usmZrG+KKGBIEPOORa6gsj3LQfNx2BK471/95Z8
+         rzvaMkrJJQRg7XswDOW4u7g0NDHtLJ/JbQlRw+76LVm/PehfpK2wq75lZYCCOi6cVE/7
+         tRcA==
+X-Gm-Message-State: APjAAAXb/9OIVhIFuM6q57x+PSmaO10wPCeCDQbgZmO+dPfDuVBnCR8l
+        KQwvNJZtmaXaKKIASfv7AF4=
+X-Google-Smtp-Source: APXvYqywCPxowiffZWYrYtb+FnI/R/I4J4jSzp35jr3GmLi09Z8qkPcaSnJjmtz7YBgG2C88CIHrgg==
+X-Received: by 2002:aa7:83d4:: with SMTP id j20mr19823511pfn.90.1557845262955;
+        Tue, 14 May 2019 07:47:42 -0700 (PDT)
 Received: from localhost.localdomain ([104.238.181.70])
-        by smtp.gmail.com with ESMTPSA id j12sm20461415pff.148.2019.05.14.07.47.51
+        by smtp.gmail.com with ESMTPSA id j12sm20461415pff.148.2019.05.14.07.47.39
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 14 May 2019 07:47:54 -0700 (PDT)
+        Tue, 14 May 2019 07:47:42 -0700 (PDT)
 From:   Changbin Du <changbin.du@gmail.com>
 To:     bhelgaas@google.com, corbet@lwn.net
 Cc:     linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, mchehab+samsung@kernel.org,
         Changbin Du <changbin.du@gmail.com>
-Subject: [PATCH v6 03/12] Documentation: PCI: convert PCIEBUS-HOWTO.txt to reST
-Date:   Tue, 14 May 2019 22:47:25 +0800
-Message-Id: <20190514144734.19760-4-changbin.du@gmail.com>
+Subject: [PATCH v6 00/12] Include linux PCI docs into Sphinx TOC tree
+Date:   Tue, 14 May 2019 22:47:22 +0800
+Message-Id: <20190514144734.19760-1-changbin.du@gmail.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190514144734.19760-1-changbin.du@gmail.com>
-References: <20190514144734.19760-1-changbin.du@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -72,265 +70,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This converts the plain text documentation to reStructuredText format and
-add it to Sphinx TOC tree. No essential content change.
+Hi all,
 
-Signed-off-by: Changbin Du <changbin.du@gmail.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
----
- Documentation/PCI/index.rst                   |   1 +
- .../{PCIEBUS-HOWTO.txt => picebus-howto.rst}  | 140 ++++++++++--------
- 2 files changed, 82 insertions(+), 59 deletions(-)
+The kernel now uses Sphinx to generate intelligent and beautiful documentation
+from reStructuredText files. I converted most of the Linux PCI docs to rst
+format in this serias.
+
+For you to preview, please visit below url:
+http://www.bytemem.com:8080/kernel-doc/PCI/index.html
+
+Thank you!
+
+v2: trivial style update.
+v3: update titles. (Bjorn Helgaas)
+v4: fix comments from Mauro Carvalho Chehab
+v5: update MAINTAINERS (Joe Perches)
+v6: fix comments.
+
+Changbin Du (12):
+  Documentation: add Linux PCI to Sphinx TOC tree
+  Documentation: PCI: convert pci.txt to reST
+  Documentation: PCI: convert PCIEBUS-HOWTO.txt to reST
+  Documentation: PCI: convert pci-iov-howto.txt to reST
+  Documentation: PCI: convert MSI-HOWTO.txt to reST
+  Documentation: PCI: convert acpi-info.txt to reST
+  Documentation: PCI: convert pci-error-recovery.txt to reST
+  Documentation: PCI: convert pcieaer-howto.txt to reST
+  Documentation: PCI: convert endpoint/pci-endpoint.txt to reST
+  Documentation: PCI: convert endpoint/pci-endpoint-cfs.txt to reST
+  Documentation: PCI: convert endpoint/pci-test-function.txt to reST
+  Documentation: PCI: convert endpoint/pci-test-howto.txt to reST
+
+ .../PCI/{acpi-info.txt => acpi-info.rst}      |  15 +-
+ Documentation/PCI/endpoint/index.rst          |  13 +
+ ...-endpoint-cfs.txt => pci-endpoint-cfs.rst} |  99 ++---
+ .../{pci-endpoint.txt => pci-endpoint.rst}    |  92 +++--
+ ...est-function.txt => pci-test-function.rst} |  84 +++--
+ ...{pci-test-howto.txt => pci-test-howto.rst} |  81 ++--
+ Documentation/PCI/index.rst                   |  18 +
+ .../PCI/{MSI-HOWTO.txt => msi-howto.rst}      |  85 +++--
+ ...or-recovery.txt => pci-error-recovery.rst} | 287 +++++++-------
+ .../{pci-iov-howto.txt => pci-iov-howto.rst}  | 161 ++++----
+ Documentation/PCI/{pci.txt => pci.rst}        | 356 ++++++++----------
+ .../{pcieaer-howto.txt => pcieaer-howto.rst}  | 156 +++++---
+ .../{PCIEBUS-HOWTO.txt => picebus-howto.rst}  | 140 ++++---
+ Documentation/index.rst                       |   1 +
+ MAINTAINERS                                   |   4 +-
+ include/linux/mod_devicetable.h               |  19 +
+ include/linux/pci.h                           |  37 ++
+ 17 files changed, 938 insertions(+), 710 deletions(-)
+ rename Documentation/PCI/{acpi-info.txt => acpi-info.rst} (96%)
+ create mode 100644 Documentation/PCI/endpoint/index.rst
+ rename Documentation/PCI/endpoint/{pci-endpoint-cfs.txt => pci-endpoint-cfs.rst} (64%)
+ rename Documentation/PCI/endpoint/{pci-endpoint.txt => pci-endpoint.rst} (83%)
+ rename Documentation/PCI/endpoint/{pci-test-function.txt => pci-test-function.rst} (55%)
+ rename Documentation/PCI/endpoint/{pci-test-howto.txt => pci-test-howto.rst} (78%)
+ create mode 100644 Documentation/PCI/index.rst
+ rename Documentation/PCI/{MSI-HOWTO.txt => msi-howto.rst} (88%)
+ rename Documentation/PCI/{pci-error-recovery.txt => pci-error-recovery.rst} (67%)
+ rename Documentation/PCI/{pci-iov-howto.txt => pci-iov-howto.rst} (63%)
+ rename Documentation/PCI/{pci.txt => pci.rst} (68%)
+ rename Documentation/PCI/{pcieaer-howto.txt => pcieaer-howto.rst} (72%)
  rename Documentation/PCI/{PCIEBUS-HOWTO.txt => picebus-howto.rst} (70%)
 
-diff --git a/Documentation/PCI/index.rst b/Documentation/PCI/index.rst
-index 7babf43709b0..79d6d75bbf28 100644
---- a/Documentation/PCI/index.rst
-+++ b/Documentation/PCI/index.rst
-@@ -9,3 +9,4 @@ Linux PCI Bus Subsystem
-    :numbered:
- 
-    pci
-+   picebus-howto
-diff --git a/Documentation/PCI/PCIEBUS-HOWTO.txt b/Documentation/PCI/picebus-howto.rst
-similarity index 70%
-rename from Documentation/PCI/PCIEBUS-HOWTO.txt
-rename to Documentation/PCI/picebus-howto.rst
-index 15f0bb3b5045..f882ff62c51f 100644
---- a/Documentation/PCI/PCIEBUS-HOWTO.txt
-+++ b/Documentation/PCI/picebus-howto.rst
-@@ -1,16 +1,23 @@
--		The PCI Express Port Bus Driver Guide HOWTO
--	Tom L Nguyen tom.l.nguyen@intel.com
--			11/03/2004
-+.. SPDX-License-Identifier: GPL-2.0
-+.. include:: <isonum.txt>
- 
--1. About this guide
-+===========================================
-+The PCI Express Port Bus Driver Guide HOWTO
-+===========================================
-+
-+:Author: Tom L Nguyen tom.l.nguyen@intel.com 11/03/2004
-+:Copyright: |copy| 2004 Intel Corporation
-+
-+About this guide
-+================
- 
- This guide describes the basics of the PCI Express Port Bus driver
- and provides information on how to enable the service drivers to
- register/unregister with the PCI Express Port Bus Driver.
- 
--2. Copyright 2004 Intel Corporation
- 
--3. What is the PCI Express Port Bus Driver
-+What is the PCI Express Port Bus Driver
-+=======================================
- 
- A PCI Express Port is a logical PCI-PCI Bridge structure. There
- are two types of PCI Express Port: the Root Port and the Switch
-@@ -30,7 +37,8 @@ support (AER), and virtual channel support (VC). These services may
- be handled by a single complex driver or be individually distributed
- and handled by corresponding service drivers.
- 
--4. Why use the PCI Express Port Bus Driver?
-+Why use the PCI Express Port Bus Driver?
-+========================================
- 
- In existing Linux kernels, the Linux Device Driver Model allows a
- physical device to be handled by only a single driver. The PCI
-@@ -51,28 +59,31 @@ PCI Express Ports and distributes all provided service requests
- to the corresponding service drivers as required. Some key
- advantages of using the PCI Express Port Bus driver are listed below:
- 
--	- Allow multiple service drivers to run simultaneously on
--	  a PCI-PCI Bridge Port device.
-+  - Allow multiple service drivers to run simultaneously on
-+    a PCI-PCI Bridge Port device.
- 
--	- Allow service drivers implemented in an independent
--	  staged approach.
-+  - Allow service drivers implemented in an independent
-+    staged approach.
- 
--	- Allow one service driver to run on multiple PCI-PCI Bridge
--	  Port devices.
-+  - Allow one service driver to run on multiple PCI-PCI Bridge
-+    Port devices.
- 
--	- Manage and distribute resources of a PCI-PCI Bridge Port
--	  device to requested service drivers.
-+  - Manage and distribute resources of a PCI-PCI Bridge Port
-+    device to requested service drivers.
- 
--5. Configuring the PCI Express Port Bus Driver vs. Service Drivers
-+Configuring the PCI Express Port Bus Driver vs. Service Drivers
-+===============================================================
- 
--5.1 Including the PCI Express Port Bus Driver Support into the Kernel
-+Including the PCI Express Port Bus Driver Support into the Kernel
-+-----------------------------------------------------------------
- 
- Including the PCI Express Port Bus driver depends on whether the PCI
- Express support is included in the kernel config. The kernel will
- automatically include the PCI Express Port Bus driver as a kernel
- driver when the PCI Express support is enabled in the kernel.
- 
--5.2 Enabling Service Driver Support
-+Enabling Service Driver Support
-+-------------------------------
- 
- PCI device drivers are implemented based on Linux Device Driver Model.
- All service drivers are PCI device drivers. As discussed above, it is
-@@ -89,9 +100,11 @@ header file /include/linux/pcieport_if.h, before calling these APIs.
- Failure to do so will result an identity mismatch, which prevents
- the PCI Express Port Bus driver from loading a service driver.
- 
--5.2.1 pcie_port_service_register
-+pcie_port_service_register
-+~~~~~~~~~~~~~~~~~~~~~~~~~~
-+::
- 
--int pcie_port_service_register(struct pcie_port_service_driver *new)
-+  int pcie_port_service_register(struct pcie_port_service_driver *new)
- 
- This API replaces the Linux Driver Model's pci_register_driver API. A
- service driver should always calls pcie_port_service_register at
-@@ -99,69 +112,76 @@ module init. Note that after service driver being loaded, calls
- such as pci_enable_device(dev) and pci_set_master(dev) are no longer
- necessary since these calls are executed by the PCI Port Bus driver.
- 
--5.2.2 pcie_port_service_unregister
-+pcie_port_service_unregister
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+::
- 
--void pcie_port_service_unregister(struct pcie_port_service_driver *new)
-+  void pcie_port_service_unregister(struct pcie_port_service_driver *new)
- 
- pcie_port_service_unregister replaces the Linux Driver Model's
- pci_unregister_driver. It's always called by service driver when a
- module exits.
- 
--5.2.3 Sample Code
-+Sample Code
-+~~~~~~~~~~~
- 
- Below is sample service driver code to initialize the port service
- driver data structure.
-+::
- 
--static struct pcie_port_service_id service_id[] = { {
--	.vendor = PCI_ANY_ID,
--	.device = PCI_ANY_ID,
--	.port_type = PCIE_RC_PORT,
--	.service_type = PCIE_PORT_SERVICE_AER,
--	}, { /* end: all zeroes */ }
--};
-+  static struct pcie_port_service_id service_id[] = { {
-+    .vendor = PCI_ANY_ID,
-+    .device = PCI_ANY_ID,
-+    .port_type = PCIE_RC_PORT,
-+    .service_type = PCIE_PORT_SERVICE_AER,
-+    }, { /* end: all zeroes */ }
-+  };
- 
--static struct pcie_port_service_driver root_aerdrv = {
--	.name		= (char *)device_name,
--	.id_table	= &service_id[0],
-+  static struct pcie_port_service_driver root_aerdrv = {
-+    .name		= (char *)device_name,
-+    .id_table	= &service_id[0],
- 
--	.probe		= aerdrv_load,
--	.remove		= aerdrv_unload,
-+    .probe		= aerdrv_load,
-+    .remove		= aerdrv_unload,
- 
--	.suspend	= aerdrv_suspend,
--	.resume		= aerdrv_resume,
--};
-+    .suspend	= aerdrv_suspend,
-+    .resume		= aerdrv_resume,
-+  };
- 
- Below is a sample code for registering/unregistering a service
- driver.
-+::
- 
--static int __init aerdrv_service_init(void)
--{
--	int retval = 0;
-+  static int __init aerdrv_service_init(void)
-+  {
-+    int retval = 0;
- 
--	retval = pcie_port_service_register(&root_aerdrv);
--	if (!retval) {
--		/*
--		 * FIX ME
--		 */
--	}
--	return retval;
--}
-+    retval = pcie_port_service_register(&root_aerdrv);
-+    if (!retval) {
-+      /*
-+      * FIX ME
-+      */
-+    }
-+    return retval;
-+  }
- 
--static void __exit aerdrv_service_exit(void)
--{
--	pcie_port_service_unregister(&root_aerdrv);
--}
-+  static void __exit aerdrv_service_exit(void)
-+  {
-+    pcie_port_service_unregister(&root_aerdrv);
-+  }
- 
--module_init(aerdrv_service_init);
--module_exit(aerdrv_service_exit);
-+  module_init(aerdrv_service_init);
-+  module_exit(aerdrv_service_exit);
- 
--6. Possible Resource Conflicts
-+Possible Resource Conflicts
-+===========================
- 
- Since all service drivers of a PCI-PCI Bridge Port device are
- allowed to run simultaneously, below lists a few of possible resource
- conflicts with proposed solutions.
- 
--6.1 MSI and MSI-X Vector Resource
-+MSI and MSI-X Vector Resource
-+-----------------------------
- 
- Once MSI or MSI-X interrupts are enabled on a device, it stays in this
- mode until they are disabled again.  Since service drivers of the same
-@@ -179,7 +199,8 @@ driver. Service drivers should use (struct pcie_device*)dev->irq to
- call request_irq/free_irq. In addition, the interrupt mode is stored
- in the field interrupt_mode of struct pcie_device.
- 
--6.3 PCI Memory/IO Mapped Regions
-+PCI Memory/IO Mapped Regions
-+----------------------------
- 
- Service drivers for PCI Express Power Management (PME), Advanced
- Error Reporting (AER), Hot-Plug (HP) and Virtual Channel (VC) access
-@@ -188,7 +209,8 @@ registers accessed are independent of each other. This patch assumes
- that all service drivers will be well behaved and not overwrite
- other service driver's configuration settings.
- 
--6.4 PCI Config Registers
-+PCI Config Registers
-+--------------------
- 
- Each service driver runs its PCI config operations on its own
- capability structure except the PCI Express capability structure, in
 -- 
 2.20.1
 
