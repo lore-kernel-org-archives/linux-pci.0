@@ -2,32 +2,31 @@ Return-Path: <SRS0=LDMk=TP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFBEBC04E53
-	for <linux-pci@archiver.kernel.org>; Wed, 15 May 2019 07:36:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AEE3C04E53
+	for <linux-pci@archiver.kernel.org>; Wed, 15 May 2019 07:36:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C18102089E
-	for <linux-pci@archiver.kernel.org>; Wed, 15 May 2019 07:36:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39BD92089E
+	for <linux-pci@archiver.kernel.org>; Wed, 15 May 2019 07:36:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726547AbfEOHgL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 May 2019 03:36:11 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:47454 "EHLO inva020.nxp.com"
+        id S1725974AbfEOHgG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 May 2019 03:36:06 -0400
+Received: from inva021.nxp.com ([92.121.34.21]:42292 "EHLO inva021.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726503AbfEOHgK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 May 2019 03:36:10 -0400
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 1007C1A00A1;
-        Wed, 15 May 2019 09:36:08 +0200 (CEST)
+        id S1725876AbfEOHgG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 May 2019 03:36:06 -0400
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 239552000D3;
+        Wed, 15 May 2019 09:36:04 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 40EAB1A00D9;
-        Wed, 15 May 2019 09:35:59 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 58F12200012;
+        Wed, 15 May 2019 09:35:55 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 3EDBE4030C;
-        Wed, 15 May 2019 15:35:48 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 500AB4029A;
+        Wed, 15 May 2019 15:35:44 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
@@ -39,52 +38,35 @@ To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linuxppc-dev@lists.ozlabs.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH 3/3] PCI: layerscape: Add LS1028a support
-Date:   Wed, 15 May 2019 15:27:47 +0800
-Message-Id: <20190515072747.39941-3-xiaowei.bao@nxp.com>
+Subject: [PATCH 1/3] dt-bindings: pci: layerscape-pci: add compatible strings "fsl,ls1028a-pcie"
+Date:   Wed, 15 May 2019 15:27:45 +0800
+Message-Id: <20190515072747.39941-1-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.14.1
-In-Reply-To: <20190515072747.39941-1-xiaowei.bao@nxp.com>
-References: <20190515072747.39941-1-xiaowei.bao@nxp.com>
 X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for the LS1028a PCIe controller.
+Add the PCIe compatible string for LS1028A
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 ---
- drivers/pci/controller/dwc/pci-layerscape.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ .../devicetree/bindings/pci/layerscape-pci.txt     |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-index 3a5fa26..8c556e1 100644
---- a/drivers/pci/controller/dwc/pci-layerscape.c
-+++ b/drivers/pci/controller/dwc/pci-layerscape.c
-@@ -236,6 +236,14 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp)
- 	.dw_pcie_ops = &dw_ls_pcie_ops,
- };
- 
-+static const struct ls_pcie_drvdata ls1028a_drvdata = {
-+	.lut_offset = 0x80000,
-+	.ltssm_shift = 0,
-+	.lut_dbg = 0x407fc,
-+	.ops = &ls_pcie_host_ops,
-+	.dw_pcie_ops = &dw_ls_pcie_ops,
-+};
-+
- static const struct ls_pcie_drvdata ls1046_drvdata = {
- 	.lut_offset = 0x80000,
- 	.ltssm_shift = 24,
-@@ -263,6 +271,7 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp)
- static const struct of_device_id ls_pcie_of_match[] = {
- 	{ .compatible = "fsl,ls1012a-pcie", .data = &ls1046_drvdata },
- 	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
-+	{ .compatible = "fsl,ls1028a-pcie", .data = &ls1028a_drvdata },
- 	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
- 	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
- 	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
+diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+index e20ceaa..99a386e 100644
+--- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
++++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+@@ -21,6 +21,7 @@ Required properties:
+         "fsl,ls1046a-pcie"
+         "fsl,ls1043a-pcie"
+         "fsl,ls1012a-pcie"
++        "fsl,ls1028a-pcie"
+   EP mode:
+ 	"fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep"
+ - reg: base addresses and lengths of the PCIe controller register blocks.
 -- 
 1.7.1
 
