@@ -2,92 +2,117 @@ Return-Path: <SRS0=j3vk=TQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E7F4C04AAF
-	for <linux-pci@archiver.kernel.org>; Thu, 16 May 2019 10:42:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D6DC46470
+	for <linux-pci@archiver.kernel.org>; Thu, 16 May 2019 11:46:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F50C2087B
-	for <linux-pci@archiver.kernel.org>; Thu, 16 May 2019 10:42:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B79CF20833
+	for <linux-pci@archiver.kernel.org>; Thu, 16 May 2019 11:46:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1558007169;
+	bh=r7nnwI+HvDXg+ImLSt4ZAXpJMRrhBsAaw98ka5+lgnw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=14P5gy6KtpBlMe0y8aTIcoXw5m/wZ28KEM3MWg1J/K+6KScKTUSksJAbl5xl0x+sQ
+	 rKgEl28h1lYAgmnAM2e2opFf7S7/zMPxs9IK6Lk7pFzSAZPsVGUemvteEWXENvbSf8
+	 c26GTerqjdcvZ7xFUhCL4SthYX3afVKf/7OxAV+A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726902AbfEPKmX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 16 May 2019 06:42:23 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:41200 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726857AbfEPKmX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 May 2019 06:42:23 -0400
-Received: from 79.184.255.148.ipv4.supernova.orange.pl (79.184.255.148) (HELO kreacher.localnet)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.213)
- id d86607e85533ac73; Thu, 16 May 2019 12:42:20 +0200
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     Linux ACPI <linux-acpi@vger.kernel.org>
-Cc:     Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] ACPI/PCI: PM: Add missing wakeup.flags.valid checks
-Date:   Thu, 16 May 2019 12:42:20 +0200
-Message-ID: <2091978.9z20bSIm3T@kreacher>
+        id S1727856AbfEPLko (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 16 May 2019 07:40:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49120 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727853AbfEPLkn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 May 2019 07:40:43 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id A87AD20833;
+        Thu, 16 May 2019 11:40:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1558006843;
+        bh=r7nnwI+HvDXg+ImLSt4ZAXpJMRrhBsAaw98ka5+lgnw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=WgtrNL7LwicreP2tQTMZaeGnKVifE5IxkmWA6gq0EPt3Pmj7oA3ALC7R2NHAXJvHh
+         Ohei5/CC7/CF7Ad7iMf3rZ7upVy4bDU1Jk6PgdxW+Can/UVlefQ26yHb8z7LD4Owhc
+         PvJL2pupaChMtUE4nfQrrjgHqSPK9XofSgCMrBmo=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 12/25] PCI: Fix issue with "pci=disable_acs_redir" parameter being ignored
+Date:   Thu, 16 May 2019 07:40:15 -0400
+Message-Id: <20190516114029.8682-12-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190516114029.8682-1-sashal@kernel.org>
+References: <20190516114029.8682-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+From: Logan Gunthorpe <logang@deltatee.com>
 
-Both acpi_pci_need_resume() and acpi_dev_needs_resume() check if the
-current ACPI wakeup configuration of the device matches what is
-expected as far as system wakeup from sleep states is concerned, as
-reflected by the device_may_wakeup() return value for the device.
+[ Upstream commit d5bc73f34cc97c4b4b9202cc93182c2515076edf ]
 
-However, they only should do that if wakeup.flags.valid is set for
-the device's ACPI companion, because otherwise the wakeup.prepare_count
-value for it is meaningless.
+In most cases, kmalloc() will not be available early in boot when
+pci_setup() is called.  Thus, the kstrdup() call that was added to fix the
+__initdata bug with the disable_acs_redir parameter usually returns NULL,
+so the parameter is discarded and has no effect.
 
-Add the missing wakeup.flags.valid checks to these functions.
+To fix this, store the string that's in initdata until an initcall function
+can allocate the memory appropriately.  This way we don't need any
+additional static memory.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Fixes: d2fd6e81912a ("PCI: Fix __initdata issue with "pci=disable_acs_redir" parameter")
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/acpi/device_pm.c |    4 ++--
- drivers/pci/pci-acpi.c   |    3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/pci/pci.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -666,7 +666,8 @@ static bool acpi_pci_need_resume(struct
- 	if (!adev || !acpi_device_power_manageable(adev))
- 		return false;
- 
--	if (device_may_wakeup(&dev->dev) != !!adev->wakeup.prepare_count)
-+	if (adev->wakeup.flags.valid &&
-+	    device_may_wakeup(&dev->dev) != !!adev->wakeup.prepare_count)
- 		return true;
- 
- 	if (acpi_target_system_state() == ACPI_STATE_S0)
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -952,8 +952,8 @@ static bool acpi_dev_needs_resume(struct
- 	u32 sys_target = acpi_target_system_state();
- 	int ret, state;
- 
--	if (!pm_runtime_suspended(dev) || !adev ||
--	    device_may_wakeup(dev) != !!adev->wakeup.prepare_count)
-+	if (!pm_runtime_suspended(dev) || !adev || (adev->wakeup.flags.valid &&
-+	    device_may_wakeup(dev) != !!adev->wakeup.prepare_count))
- 		return true;
- 
- 	if (sys_target == ACPI_STATE_S0)
-
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 30649addc6252..61f2ef28ea1c7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -6135,8 +6135,7 @@ static int __init pci_setup(char *str)
+ 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
+ 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
+ 			} else if (!strncmp(str, "disable_acs_redir=", 18)) {
+-				disable_acs_redir_param =
+-					kstrdup(str + 18, GFP_KERNEL);
++				disable_acs_redir_param = str + 18;
+ 			} else {
+ 				printk(KERN_ERR "PCI: Unknown option `%s'\n",
+ 						str);
+@@ -6147,3 +6146,19 @@ static int __init pci_setup(char *str)
+ 	return 0;
+ }
+ early_param("pci", pci_setup);
++
++/*
++ * 'disable_acs_redir_param' is initialized in pci_setup(), above, to point
++ * to data in the __initdata section which will be freed after the init
++ * sequence is complete. We can't allocate memory in pci_setup() because some
++ * architectures do not have any memory allocation service available during
++ * an early_param() call. So we allocate memory and copy the variable here
++ * before the init section is freed.
++ */
++static int __init pci_realloc_setup_params(void)
++{
++	disable_acs_redir_param = kstrdup(disable_acs_redir_param, GFP_KERNEL);
++
++	return 0;
++}
++pure_initcall(pci_realloc_setup_params);
+-- 
+2.20.1
 
