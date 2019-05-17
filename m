@@ -2,48 +2,49 @@ Return-Path: <SRS0=S6xX=TR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17560C04AB4
-	for <linux-pci@archiver.kernel.org>; Fri, 17 May 2019 18:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2CA2C04AB4
+	for <linux-pci@archiver.kernel.org>; Fri, 17 May 2019 18:48:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DF6D121743
-	for <linux-pci@archiver.kernel.org>; Fri, 17 May 2019 18:48:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2C7E217F4
+	for <linux-pci@archiver.kernel.org>; Fri, 17 May 2019 18:48:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="aJziovqK";
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="SOz/6r03"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="QLbsqWe5";
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=codeaurora.org header.i=@codeaurora.org header.b="Q5qKpN3d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726554AbfEQSsW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 17 May 2019 14:48:22 -0400
-Received: from smtp.codeaurora.org ([198.145.29.96]:53562 "EHLO
+        id S1729504AbfEQSsc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 17 May 2019 14:48:32 -0400
+Received: from smtp.codeaurora.org ([198.145.29.96]:54308 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726286AbfEQSsW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2019 14:48:22 -0400
+        with ESMTP id S1725933AbfEQSsc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 May 2019 14:48:32 -0400
 Received: by smtp.codeaurora.org (Postfix, from userid 1000)
-        id C2F5A61892; Fri, 17 May 2019 18:48:13 +0000 (UTC)
+        id 0658661952; Fri, 17 May 2019 18:48:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1558118900;
-        bh=35zZ5q4uMp/3q4Z0JDCSvFDAAIE0REjNe04GsZlSd9s=;
-        h=From:To:Cc:Subject:Date:From;
-        b=aJziovqK9JqfOz+VdzLUlLoZzJq7MpPBgTKdfPh4KjQN1WlFQdJrcVmdyDgeBFuDn
-         rbo6VsoEGhC0sfP5CHF5kBvY8jSYbN4swXbH29meixv5Pzt7opn32mZcMG/H+WQkhR
-         PsF/k7nTKCeSTHpc3TD7cvKDW401LvWHOmYHnUXY=
+        s=default; t=1558118911;
+        bh=OV/Plnh2chiiFpl1tPau4te8Ie4x49eB+//wLShrquY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=QLbsqWe5pg04GvaQ+/fmWgFjQ9vQgU0r6W6w4D75Q49UVpLOasUzByiGdcnCDgPai
+         t4/T+TZQshgdfeSzVLz94992RuInbqAEoBCLsIceSSPr6Zt4eiR/k6bJ0CVdILKQd3
+         e5nUdVe9NDgiApnat9fnZASHgfaWAOwRvX62jpcY=
 Received: from isaacm-linux.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: isaacm@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 736716179C;
-        Fri, 17 May 2019 18:48:10 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id F01AD619CC;
+        Fri, 17 May 2019 18:48:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=codeaurora.org;
-        s=default; t=1558118891;
-        bh=35zZ5q4uMp/3q4Z0JDCSvFDAAIE0REjNe04GsZlSd9s=;
-        h=From:To:Cc:Subject:Date:From;
-        b=SOz/6r03g7SCcJGbSThbJKQnFy/ydy//GRaazg08v/2nnzbeA2kfwt+7DU/h5VOl4
-         xXmNB0yQSIchcnRZzMOY3UoRMEbtrWtzv2tggQZPxIPf3+VznmC4rVcRLPMToj7grj
-         pn7Xia0PvsazfTd/chmiqRi5k+mz1Ap3FJqYLL18=
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 736716179C
+        s=default; t=1558118905;
+        bh=OV/Plnh2chiiFpl1tPau4te8Ie4x49eB+//wLShrquY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Q5qKpN3dzD5EBfg8X33uOuhjvsyIAfJF6baPusIbikdtrA7fSJA4JsOWL4C85cVDC
+         6FtobZvYMtIuxiz15DDKOE+LomXOAc/mc8XvGNFwKs80DvTeeluNDTIpqXyNMmQIN8
+         HYC2NEdjPmNHGdOTajB64JomRehH+pSN1aUwCpA8=
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org F01AD619CC
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: pdx-caf-mail.web.codeaurora.org; spf=none smtp.mailfrom=isaacm@codeaurora.org
 From:   "Isaac J. Manjarres" <isaacm@codeaurora.org>
@@ -54,78 +55,58 @@ Cc:     "Isaac J. Manjarres" <isaacm@codeaurora.org>, robh+dt@kernel.org,
         frowand.list@gmail.com, bhelgaas@google.com, joro@8bytes.org,
         robin.murphy@arm.com, will.deacon@arm.com, kernel-team@android.com,
         pratikp@codeaurora.org, lmark@codeaurora.org
-Subject: [RFC/PATCH 0/4] Initial support for modular IOMMU drivers
-Date:   Fri, 17 May 2019 11:47:33 -0700
-Message-Id: <1558118857-16912-1-git-send-email-isaacm@codeaurora.org>
+Subject: [RFC/PATCH 4/4] iommu: Add probe deferral support for IOMMU kernel modules
+Date:   Fri, 17 May 2019 11:47:37 -0700
+Message-Id: <1558118857-16912-5-git-send-email-isaacm@codeaurora.org>
 X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1558118857-16912-1-git-send-email-isaacm@codeaurora.org>
+References: <1558118857-16912-1-git-send-email-isaacm@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds initial support for being able to use the ARM
-SMMU driver as a loadable kernel module. The series also adds
-to the IOMMU framework, so that it can defer probing for devices
-that depend on an IOMMU driver that may be a loadable module.
+Currently, the IOMMU core assumes that all IOMMU drivers
+will be built into the kernel. This makes it so that all
+the IOMMU core will stop deferring probes when all of the
+builtin kernel drivers have finished probing (i.e. when
+initcalls are finished).
 
-The primary reason behind these changes is that having the ARM
-SMMU driver as a module allows for the same kernel image to be
-used across different platforms. For example, if one platform
-contains an IOMMU that implements one version of the ARM SMMU
-specification, and another platform simply does not have an
-IOMMU, the only way that these platforms can share the same
-kernel image is if the ARM SMMU driver is compiled into the
-kernel image.
+This is problematic if an IOMMU driver is generated as a module,
+because the registration of the IOMMU driver may happen at an
+unknown point in time after all builtin drivers have finished
+probing.
 
-This solution is not scalable, as it will lead to bloating the
-kernel image with support for several future versions of the
-SMMU specification to maintain a common kernel image that works
-across all platforms. Having the ARM SMMU driver as a module allows
-for a common kernel image to be supported across all platforms,
-while yielding a smaller kernel image size, since the correct
-SMMU driver can be loaded at runtime, if necessary.
+Thus, if there exists a chance for the IOMMU driver
+to be a module, then allow for clients to wait indefinitely
+for the IOMMU driver to be loaded. Otherwise, rely on the
+driver core to dictate when clients should stop deferring
+their probes.
 
-Patchset Summary:
+Signed-off-by: Isaac J. Manjarres <isaacm@codeaurora.org>
+---
+ drivers/iommu/of_iommu.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-1. Since the ARM SMMU driver depends on symbols being exported from
-several subsystems, the first three patches are dedicated to exporting
-the necessary symbols.
-
-2. Similar to how the pinctrl framework handles deferring probes,
-the subsequent patch makes it so that the IOMMU framework will defer
-probes indefinitely if there is a chance that the IOMMU driver that a
-device is waiting for is a module. Otherwise, it upholds the current
-behavior of stopping probe deferrals once all of the builtin drivers
-have finished probing.
-
-The ARM SMMU driver currently has support for the deprecated
-"mmu-masters" binding, which relies on the notion of initcall
-ordering for setting the bus ops to ensure that all SMMU devices
-have been bound to the driver. This poses a problem with
-making the driver a module, as there is no such notion with
-loadable modules. Will support for this be completely deprecated?
-If not, might it be useful to leverage the device tree ordering,
-and assign a property to the last SMMU device, and set the bus ops
-at that point? Or perhaps have some deferred timer based approach
-to know when to set the bus ops? 
-
-Thanks,
-Isaac
-
-Isaac J. Manjarres (4):
-  of: Export of_phandle_iterator_args() to modules
-  PCI: Export PCI ACS and DMA searching functions to modules
-  iommu: Export core IOMMU functions to kernel modules
-  iommu: Add probe deferral support for IOMMU kernel modules
-
- drivers/iommu/iommu-sysfs.c | 3 +++
- drivers/iommu/iommu.c       | 6 ++++++
- drivers/iommu/of_iommu.c    | 8 ++++++--
- drivers/of/base.c           | 1 +
- drivers/pci/pci.c           | 1 +
- drivers/pci/search.c        | 1 +
- 6 files changed, 18 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index f04a6df..1e7e323 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -116,8 +116,12 @@ static int of_iommu_xlate(struct device *dev,
+ 	 * IOMMU device we're waiting for, which will be useful if we ever get
+ 	 * a proper probe-ordering dependency mechanism in future.
+ 	 */
+-	if (!ops)
+-		return driver_deferred_probe_check_state(dev);
++	if (!ops) {
++		if (IS_ENABLED(CONFIG_MODULES))
++			return -EPROBE_DEFER;
++		else
++			return driver_deferred_probe_check_state(dev);
++	}
+ 
+ 	return ops->of_xlate(dev, iommu_spec);
+ }
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
