@@ -2,121 +2,151 @@ Return-Path: <SRS0=dqeQ=TU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9747C04AAC
-	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 13:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78BB8C04AAC
+	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 14:24:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8316021479
-	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 13:23:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4567B214AE
+	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 14:24:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1558362248;
+	bh=1H6jNgjdKG51yQncAPvUpcb+kCoMrUikgzLhAgTXm0c=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
+	b=ppLCVT02HGvDHoih4GJteTCHaqR0M8FDlVETpTNqwDBG8sVmKSXMNCafMNRhfCOzQ
+	 PH/rSRZXpiOKWZfR3SwVK2xJeyiB9gn3+1PZeGxa8XcC4Er4oFZ04F6iC4R7qWhcRj
+	 0zHqUXwaAqZb51PaLyzbBXoKXV2ZASGLvUYfhKFs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731711AbfETNXa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 May 2019 09:23:30 -0400
-Received: from mail-io1-f65.google.com ([209.85.166.65]:36657 "EHLO
-        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727319AbfETNX3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2019 09:23:29 -0400
-Received: by mail-io1-f65.google.com with SMTP id e19so11011042iob.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 May 2019 06:23:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=UBrVfji9g8YN1QxOchrV6NTuPqjMFHnp9eL00F6ULiM=;
-        b=uPBKQaU/Gs78fOO5tYFi9pCrANsy7VFoxklZXwgJs+BGkEw1ZjRxlPq6/iH6MdreyY
-         8IgWooKRVe9uqcPlelOF0oau1h2/t5bkdKw18XliUpWqzolxccMdLG4inazGI66W1u59
-         B2gp8QQV84XyW3MGps/oOFZlE0iwWO9IxqN7N3DzhvZv8YDPO9qgEluTDfiMBPbycx0e
-         F1tXY4QRWTCLpCOO5e/VDyhYkFzxWI3l2fb4YMejd8HbEOkvnaLUFoG6DXVjJHBWHRx3
-         qBFsN/K7WBtvXDStohGgZIO+D2ucHXl8rGMzF8AOfBfHroOvkVku5auhm8RpafsN6j1i
-         cXfg==
-X-Gm-Message-State: APjAAAVMn5/g6cfGPZm7DbRpwh50RNv8N9Dj3i5Y+nOIhAww9BX5yx4x
-        jjMaQYVcEDadgHD3i4wRApsFVFAQto7eOdRmRQpGAg==
-X-Google-Smtp-Source: APXvYqxgDIcPYHned1Xf/yYTEvrJIkIzs5wwpGhhFrfdvsPzxJrN7oiVZo0mO0/H8oor3x/E5Q58SxszabJc2I1Kqfw=
-X-Received: by 2002:a5e:a919:: with SMTP id c25mr17203847iod.166.1558358608788;
- Mon, 20 May 2019 06:23:28 -0700 (PDT)
+        id S1732127AbfETOYE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 May 2019 10:24:04 -0400
+Received: from casper.infradead.org ([85.118.1.10]:46420 "EHLO
+        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732407AbfETOYB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2019 10:24:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:References:In-Reply-To:Message-ID:Subject:Cc:To:From:Date:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=qpo5LDUiv3RWeUdYDR/6jtqrxtFTQ421WWKV/4Yo++s=; b=sBE2ufPAs9Lbu3ZiZBgfLpymrB
+        eaqOa+E+pqMdpORzpIo/4/4njkz0LMfduZrLzGtN0vQqMtyd/4rkf6P1DU2TQrHOaiwNUNJvKotfq
+        MaJ1k0ncxBp/fVd5tuiWSUNGpU3PuoNXrea0pqP/+c5iQhicbGpbXfQWzmLCj3mQIV/NPafQ3sj3M
+        udHReu4B9ZoIgAjA/c1dbcE/S1bv1Mk6jeUAdP83CZnhK3Y1iQoKc7U6+knEOv9e/JlzUWX3o9WRi
+        V1Scd5qCIVNWfNFgB1bUo64y4Z7mtcP9751F64j93doJsre86cax4CYrmMFf4UM+e74RhuSF8yR1c
+        7OWfYb0Q==;
+Received: from 179.176.119.151.dynamic.adsl.gvt.net.br ([179.176.119.151] helo=coco.lan)
+        by casper.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hSjCm-0003xd-CA; Mon, 20 May 2019 14:23:56 +0000
+Date:   Mon, 20 May 2019 11:23:50 -0300
+From:   Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+To:     Changbin Du <changbin.du@gmail.com>
+Cc:     bhelgaas@google.com, corbet@lwn.net, linux-pci@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v6 00/12] Include linux PCI docs into Sphinx TOC tree
+Message-ID: <20190520112350.4679df1c@coco.lan>
+In-Reply-To: <20190520061014.qtq6tc366pnnqcio@mail.google.com>
+References: <20190514144734.19760-1-changbin.du@gmail.com>
+        <20190520061014.qtq6tc366pnnqcio@mail.google.com>
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-References: <20190507201245.9295-1-kherbst@redhat.com>
-In-Reply-To: <20190507201245.9295-1-kherbst@redhat.com>
-From:   Karol Herbst <kherbst@redhat.com>
-Date:   Mon, 20 May 2019 15:23:17 +0200
-Message-ID: <CACO55tvv6uoMkJq1J2eW-o9Lj-+DNZVB5emChMVW5jqSON4zpQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/4] Potential fix for runpm issues on various laptops
-To:     nouveau <nouveau@lists.freedesktop.org>
-Cc:     Lyude Paul <lyude@redhat.com>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <helgaas@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-ping to the pci folks? I really would like to know what you make out of it.
+Em Mon, 20 May 2019 06:10:15 +0000
+Changbin Du <changbin.du@gmail.com> escreveu:
 
-In fact, this kind of looks like a pcie issue, but I just don't know
-enough to really be able to tell. I am mainly wondering why putting
-the device with a 2.5 vs a 8.0 link into d3cold makes the resume path
-break? Any ideas? broken pcie controller? broken implementation on the
-gpu?
+> Bjorn and Jonathan,
+> Could we consider to merge this serias now? Thanks.
 
-On Tue, May 7, 2019 at 10:12 PM Karol Herbst <kherbst@redhat.com> wrote:
->
-> CCing linux-pci and Bjorn Helgaas. Maybe we could get better insights on
-> how a reasonable fix would look like.
->
-> Anyway, to me this entire issue looks like something which has to be fixed
-> on a PCI level instead of inside a driver, so it makes sense to ask the
-> pci folks if they have any better suggestions.
->
-> Original cover letter:
-> While investigating the runpm issues on my GP107 I noticed that something
-> inside devinit makes runpm break. If Nouveau loads up to the point right
-> before doing devinit, runpm works without any issues, if devinit is ran,
-> not anymore.
->
-> Out of curiousity I even tried to "bisect" devinit by not running it on
-> vbios provided signed PMU image, but on the devinit parser we have inside
-> Nouveau.
-> Allthough this one isn't as feature complete as the vbios one, I was able
-> to reproduce the runpm issues as well. From that point I was able to only
-> run a certain amount of commands until I got to some PCIe initialization
-> code inside devinit which trigger those runpm issues.
->
-> Devinit on my GPU was changing the PCIe link from 8.0 to 2.5, reversing
-> that on the fini path makes runpm work again.
->
-> There are a few other things going on, but with my limited knowledge about
-> PCIe in general, the change in the link speed sounded like it could cause
-> issues on resume if the controller and the device disagree on the actual
-> link.
->
-> Maybe this is just a bug within the PCI subsystem inside linux instead and
-> the controller has to be forced to do _something_?
->
-> Anyway, with this runpm seems to work nicely on my machine. Secure booting
-> the gr (even with my workaround applied I need anyway) might fail after
-> the GPU got runtime resumed though...
->
-> Karol Herbst (4):
->   drm: don't set the pci power state if the pci subsystem handles the
->     ACPI bits
->   pci: enable pcie link changes for pascal
->   pci: add nvkm_pcie_get_speed
->   pci: save the boot pcie link speed and restore it on fini
->
->  drm/nouveau/include/nvkm/subdev/pci.h |  6 +++--
->  drm/nouveau/nouveau_acpi.c            |  7 +++++-
->  drm/nouveau/nouveau_acpi.h            |  2 ++
->  drm/nouveau/nouveau_drm.c             | 14 +++++++++---
->  drm/nouveau/nouveau_drv.h             |  2 ++
->  drm/nouveau/nvkm/subdev/pci/base.c    |  9 ++++++--
->  drm/nouveau/nvkm/subdev/pci/gk104.c   |  8 +++----
->  drm/nouveau/nvkm/subdev/pci/gp100.c   | 10 +++++++++
->  drm/nouveau/nvkm/subdev/pci/pcie.c    | 32 +++++++++++++++++++++++----
->  drm/nouveau/nvkm/subdev/pci/priv.h    |  7 ++++++
->  10 files changed, 81 insertions(+), 16 deletions(-)
->
-> --
-> 2.21.0
->
+Before merging it, did you check if the renames won't cause broken
+reference links? There were such breakages with your x86 and acpi
+patch series. I'm sending the fixes right now, but it would be
+great if you could run the ./scripts/documentation-file-ref-check
+script and address any file name change this series would be
+introducing. There's even a --fix option there that allows
+to automatically fix them (you need to double-check the results).
+
+Regards,
+Mauro
+
+> 
+> On Tue, May 14, 2019 at 10:47:22PM +0800, Changbin Du wrote:
+> > Hi all,
+> > 
+> > The kernel now uses Sphinx to generate intelligent and beautiful documentation
+> > from reStructuredText files. I converted most of the Linux PCI docs to rst
+> > format in this serias.
+> > 
+> > For you to preview, please visit below url:
+> > http://www.bytemem.com:8080/kernel-doc/PCI/index.html
+> > 
+> > Thank you!
+> > 
+> > v2: trivial style update.
+> > v3: update titles. (Bjorn Helgaas)
+> > v4: fix comments from Mauro Carvalho Chehab
+> > v5: update MAINTAINERS (Joe Perches)
+> > v6: fix comments.
+> > 
+> > Changbin Du (12):
+> >   Documentation: add Linux PCI to Sphinx TOC tree
+> >   Documentation: PCI: convert pci.txt to reST
+> >   Documentation: PCI: convert PCIEBUS-HOWTO.txt to reST
+> >   Documentation: PCI: convert pci-iov-howto.txt to reST
+> >   Documentation: PCI: convert MSI-HOWTO.txt to reST
+> >   Documentation: PCI: convert acpi-info.txt to reST
+> >   Documentation: PCI: convert pci-error-recovery.txt to reST
+> >   Documentation: PCI: convert pcieaer-howto.txt to reST
+> >   Documentation: PCI: convert endpoint/pci-endpoint.txt to reST
+> >   Documentation: PCI: convert endpoint/pci-endpoint-cfs.txt to reST
+> >   Documentation: PCI: convert endpoint/pci-test-function.txt to reST
+> >   Documentation: PCI: convert endpoint/pci-test-howto.txt to reST
+> > 
+> >  .../PCI/{acpi-info.txt => acpi-info.rst}      |  15 +-
+> >  Documentation/PCI/endpoint/index.rst          |  13 +
+> >  ...-endpoint-cfs.txt => pci-endpoint-cfs.rst} |  99 ++---
+> >  .../{pci-endpoint.txt => pci-endpoint.rst}    |  92 +++--
+> >  ...est-function.txt => pci-test-function.rst} |  84 +++--
+> >  ...{pci-test-howto.txt => pci-test-howto.rst} |  81 ++--
+> >  Documentation/PCI/index.rst                   |  18 +
+> >  .../PCI/{MSI-HOWTO.txt => msi-howto.rst}      |  85 +++--
+> >  ...or-recovery.txt => pci-error-recovery.rst} | 287 +++++++-------
+> >  .../{pci-iov-howto.txt => pci-iov-howto.rst}  | 161 ++++----
+> >  Documentation/PCI/{pci.txt => pci.rst}        | 356 ++++++++----------
+> >  .../{pcieaer-howto.txt => pcieaer-howto.rst}  | 156 +++++---
+> >  .../{PCIEBUS-HOWTO.txt => picebus-howto.rst}  | 140 ++++---
+> >  Documentation/index.rst                       |   1 +
+> >  MAINTAINERS                                   |   4 +-
+> >  include/linux/mod_devicetable.h               |  19 +
+> >  include/linux/pci.h                           |  37 ++
+> >  17 files changed, 938 insertions(+), 710 deletions(-)
+> >  rename Documentation/PCI/{acpi-info.txt => acpi-info.rst} (96%)
+> >  create mode 100644 Documentation/PCI/endpoint/index.rst
+> >  rename Documentation/PCI/endpoint/{pci-endpoint-cfs.txt => pci-endpoint-cfs.rst} (64%)
+> >  rename Documentation/PCI/endpoint/{pci-endpoint.txt => pci-endpoint.rst} (83%)
+> >  rename Documentation/PCI/endpoint/{pci-test-function.txt => pci-test-function.rst} (55%)
+> >  rename Documentation/PCI/endpoint/{pci-test-howto.txt => pci-test-howto.rst} (78%)
+> >  create mode 100644 Documentation/PCI/index.rst
+> >  rename Documentation/PCI/{MSI-HOWTO.txt => msi-howto.rst} (88%)
+> >  rename Documentation/PCI/{pci-error-recovery.txt => pci-error-recovery.rst} (67%)
+> >  rename Documentation/PCI/{pci-iov-howto.txt => pci-iov-howto.rst} (63%)
+> >  rename Documentation/PCI/{pci.txt => pci.rst} (68%)
+> >  rename Documentation/PCI/{pcieaer-howto.txt => pcieaer-howto.rst} (72%)
+> >  rename Documentation/PCI/{PCIEBUS-HOWTO.txt => picebus-howto.rst} (70%)
+> > 
+> > -- 
+> > 2.20.1
+> >   
+> 
+
+
+
+Thanks,
+Mauro
