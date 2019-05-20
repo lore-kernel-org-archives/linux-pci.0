@@ -2,78 +2,92 @@ Return-Path: <SRS0=dqeQ=TU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CA3FC04E87
-	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 10:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3523FC04AAC
+	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 13:17:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42063208C3
-	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 10:40:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A65820815
+	for <linux-pci@archiver.kernel.org>; Mon, 20 May 2019 13:17:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pGnU4Tek"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730476AbfETKkB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 20 May 2019 06:40:01 -0400
-Received: from mga01.intel.com ([192.55.52.88]:54204 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728551AbfETKkB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 May 2019 06:40:01 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 May 2019 03:40:00 -0700
-X-ExtLoop1: 1
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by fmsmga001.fm.intel.com with SMTP; 20 May 2019 03:39:58 -0700
-Received: by lahna (sSMTP sendmail emulation); Mon, 20 May 2019 13:39:57 +0300
-Date:   Mon, 20 May 2019 13:39:57 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Keith Busch <kbusch@kernel.org>
-Subject: Re: [PATCH] PCI: PM: Avoid possible suspend-to-idle issue
-Message-ID: <20190520103957.GL2781@lahna.fi.intel.com>
-References: <2315917.ZGeXE6pBFC@kreacher>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <2315917.ZGeXE6pBFC@kreacher>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.11.4 (2019-03-13)
+        id S1731449AbfETNRx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 20 May 2019 09:17:53 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:43064 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727319AbfETNRx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 May 2019 09:17:53 -0400
+Received: by mail-pf1-f194.google.com with SMTP id c6so7210462pfa.10;
+        Mon, 20 May 2019 06:17:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=D9M/M2T3Rq8qtCDChAbOi+aqSufBlSPfODs6++Et7Xc=;
+        b=pGnU4TekWP/LCapQEn6fgC5nH9uKsqOe8kk/0r8JU7LUXtj7nSQrEo5qbrg3mc/YLn
+         zNZEgQyAcZq76DgVnwCp3I4vfOD/UPIkb7lMJ8FGmH+fpU1HHNaWN1cD6SDjQxvx8ocR
+         J+ADURnF3GjaRNMI7Nb+l8scGjGCGvk4Zm+RClq9ON5Ru/g9GCqpjPttd7roP8JHN2i8
+         hGOB2RP8cVGDh0WCGr/LpIP5YWoamOdTcd/r8qqZgA0lv1deP1ZLVwJwxLWEbxDi+5Rl
+         fVjTLXSma+AJaNHCiwDVNP4auyxLhL5+9G/GaKaR8VFaD8EjGOj+IXVyUNhptFOiqaq3
+         Qnlw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=D9M/M2T3Rq8qtCDChAbOi+aqSufBlSPfODs6++Et7Xc=;
+        b=aLdQWtMTf4BaHDnYkPYzbhOcxx1eTcTdaaH1iw6q9K3DpReReD97nIwlDCVqfAN9ah
+         tEPnc2S0dRe5l68xzxkdp/tVZa+N1JgI5sUTtnROYHsVg/OCj92QIvecUgjG/i2Z2WNb
+         e/lRp6z4kJj7m5TT1Aiqil2PZ1ZPYou9KC3y8OtIcGe/rXvjzNvpKaDWF/fcEDokOyeu
+         mHn+/+p/YtdinaYPPLV3oyFqlbBPajDen3acGJsSUkHL90SLIyrMSYQzzq8JdlbZQEy7
+         orY0sthNtkd/L0uQgBI7SE6nsLma0yCqbU7vtU44v0LEz+i1t+mL+0FiIxWfQ3lkuDel
+         WHqA==
+X-Gm-Message-State: APjAAAW0ZxHLfmu4BVgtuaOli7jXDB3LKu2vpNJLTaHBfk7US7i+isWK
+        0iWdpWNVnTKz65wgPKrshqs=
+X-Google-Smtp-Source: APXvYqxbFTs17yLE40Srkn3Egq5bzs3E3ybbE6o0Z9fc9rRAMHklc9PzwU+Fgsc+SnAQ8jstG19ihg==
+X-Received: by 2002:a62:585:: with SMTP id 127mr60151821pff.231.1558358272474;
+        Mon, 20 May 2019 06:17:52 -0700 (PDT)
+Received: from e69a04389.et15sqa.tbsite.net ([106.11.237.203])
+        by smtp.gmail.com with ESMTPSA id b186sm20954819pga.5.2019.05.20.06.17.50
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 20 May 2019 06:17:51 -0700 (PDT)
+From:   Hao Zheng <mowendugu@gmail.com>
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Hao Zheng <mowendugu@gmail.com>, Quan Xu <quan.xu0@gmail.com>
+Subject: [PATCH 1/1] PCI/IOV: Fix VF0 cached config space size for other VFs
+Date:   Mon, 20 May 2019 21:17:24 +0800
+Message-Id: <1558358244-35832-1-git-send-email-mowendugu@gmail.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, May 17, 2019 at 11:08:50AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> If a PCI driver leaves the device handled by it in D0 and calls
-> pci_save_state() on the device in its ->suspend() or ->suspend_late()
-> callback, it can expect the device to stay in D0 over the whole
-> s2idle cycle.  However, that may not be the case if there is a
-> spurious wakeup while the system is suspended, because in that case
-> pci_pm_suspend_noirq() will run again after pci_pm_resume_noirq()
-> which calls pci_restore_state(), via pci_pm_default_resume_early(),
-> so state_saved is cleared and the second iteration of
-> pci_pm_suspend_noirq() will invoke pci_prepare_to_sleep() which
-> may change the power state of the device.
-> 
-> To avoid that, add a new internal flag, skip_bus_pm, that will be set
-> by pci_pm_suspend_noirq() when it runs for the first time during the
-> given system suspend-resume cycle if the state of the device has
-> been saved already and the device is still in D0.  Setting that flag
-> will cause the next iterations of pci_pm_suspend_noirq() to set
-> state_saved for pci_pm_resume_noirq(), so that it always restores the
-> device state from the originally saved data, and avoid calling
-> pci_prepare_to_sleep() for the device.
-> 
-> Fixes: 33e4f80ee69b ("ACPI / PM: Ignore spurious SCI wakeups from suspend-to-idle")
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Set the pcie_cap field before getting the config space size for
+other VFs. Otherwise, the config space size of other VFs are error
+set to 256, while the size of VF0 is 4096.
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Hao Zheng <mowendugu@gmail.com>
+Signed-off-by: Quan Xu <quan.xu0@gmail.com>
+---
+ drivers/pci/iov.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 3aa115e..239fad1 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -133,6 +133,7 @@ static void pci_read_vf_config_common(struct pci_dev *virtfn)
+ 	pci_read_config_word(virtfn, PCI_SUBSYSTEM_ID,
+ 			     &physfn->sriov->subsystem_device);
+ 
++	set_pcie_port_type(virtfn);
+ 	physfn->sriov->cfg_size = pci_cfg_space_size(virtfn);
+ }
+ 
+-- 
+1.8.3.1
+
