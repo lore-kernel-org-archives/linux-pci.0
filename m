@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66DE3C282DE
-	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:31:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD1FAC282DD
+	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:32:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4144220879
-	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:31:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DCDA20879
+	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388321AbfEWWbq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 May 2019 18:31:46 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:59942 "EHLO ale.deltatee.com"
+        id S2388185AbfEWWbK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 May 2019 18:31:10 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:59910 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388481AbfEWWbL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 May 2019 18:31:11 -0400
+        id S2387616AbfEWWbK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 May 2019 18:31:10 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hTwEs-00062P-Ev; Thu, 23 May 2019 16:31:09 -0600
+        id 1hTwEs-00062R-Eu; Thu, 23 May 2019 16:31:07 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hTwEp-0001S8-Tc; Thu, 23 May 2019 16:31:03 -0600
+        id 1hTwEq-0001SE-4P; Thu, 23 May 2019 16:31:04 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
         linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
@@ -38,8 +38,8 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Eric Pilmore <epilmore@gigaio.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 23 May 2019 16:30:53 -0600
-Message-Id: <20190523223100.5526-4-logang@deltatee.com>
+Date:   Thu, 23 May 2019 16:30:55 -0600
+Message-Id: <20190523223100.5526-6-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190523223100.5526-1-logang@deltatee.com>
 References: <20190523223100.5526-1-logang@deltatee.com>
@@ -48,7 +48,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-ntb@googlegroups.com, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, jdmason@kudzu.us, joro@8bytes.org, bhelgaas@google.com, dave.jiang@intel.com, allenbh@gmail.com, fancer.lancer@gmail.com, epilmore@gigaio.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v5 03/10] NTB: Introduce helper functions to calculate logical port number
+Subject: [PATCH v5 05/10] NTB: Rename ntb.c to support multiple source files in the module
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -56,106 +56,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch introduces the "Logical Port Number" which is similar to the
-"Port Number" in that it enumerates the ports in the system.
+The kbuild system does not support having multiple source files in
+a module if one of those source files has the same name as the module.
 
-The original (or Physical) "Port Number" can be any number used by the
-hardware to uniquely identify a port in the system. The "Logical Port
-Number" enumerates all ports in the system from 0 to the number of
-ports minus one.
+Therefore, we must rename ntb.c to core.c, while the module remains
+ntb.ko.
 
-For example a system with 5 ports might have the following port numbers
-which would be enumerated thusly:
-
-Port Number:           1  2  5  7  116
-Logical Port Number:   0  1  2  3  4
-
-The logical port number is useful when calculating which resources
-to use for which peers. So we thus define two helper functions:
-ntb_logical_port_number() and ntb_peer_logical_port_number() which
-provide the "Logical Port Number" for the local port and any peer
-respectively.
+This is similar to the way the nvme modules are structured.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Cc: Jon Mason <jdmason@kudzu.us>
 Cc: Dave Jiang <dave.jiang@intel.com>
 Cc: Allen Hubbe <allenbh@gmail.com>
-Cc: Serge Semin <fancer.lancer@gmail.com>
 ---
- include/linux/ntb.h | 53 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 52 insertions(+), 1 deletion(-)
+ drivers/ntb/Makefile          | 2 ++
+ drivers/ntb/{ntb.c => core.c} | 0
+ 2 files changed, 2 insertions(+)
+ rename drivers/ntb/{ntb.c => core.c} (100%)
 
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index 56a92e3ae3ae..91cf492b16a0 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -616,7 +616,6 @@ static inline int ntb_port_number(struct ntb_dev *ntb)
- 
- 	return ntb->ops->port_number(ntb);
- }
--
- /**
-  * ntb_peer_port_count() - get the number of peer device ports
-  * @ntb:	NTB device context.
-@@ -653,6 +652,58 @@ static inline int ntb_peer_port_number(struct ntb_dev *ntb, int pidx)
- 	return ntb->ops->peer_port_number(ntb, pidx);
- }
- 
-+/**
-+ * ntb_logical_port_number() - get the logical port number of the local port
-+ * @ntb:	NTB device context.
-+ *
-+ * The Logical Port Number is defined to be a unique number for each
-+ * port starting from zero through to the number of ports minus one.
-+ * This is in contrast to the Port Number where each port can be assigned
-+ * any unique physical number by the hardware.
-+ *
-+ * The logical port number is useful for calculating the resource indexes
-+ * used by peers.
-+ *
-+ * Return: the logical port number or negative value indicating an error
-+ */
-+static inline int ntb_logical_port_number(struct ntb_dev *ntb)
-+{
-+	int lport = ntb_port_number(ntb);
-+	int pidx;
+diff --git a/drivers/ntb/Makefile b/drivers/ntb/Makefile
+index 1921dec1949d..537226f8e78d 100644
+--- a/drivers/ntb/Makefile
++++ b/drivers/ntb/Makefile
+@@ -1,2 +1,4 @@
+ obj-$(CONFIG_NTB) += ntb.o hw/ test/
+ obj-$(CONFIG_NTB_TRANSPORT) += ntb_transport.o
 +
-+	if (lport < 0)
-+		return lport;
-+
-+	for (pidx = 0; pidx < ntb_peer_port_count(ntb); pidx++)
-+		if (lport <= ntb_peer_port_number(ntb, pidx))
-+			return pidx;
-+
-+	return pidx;
-+}
-+
-+/**
-+ * ntb_peer_logical_port_number() - get the logical peer port by given index
-+ * @ntb:	NTB device context.
-+ * @pidx:	Peer port index.
-+ *
-+ * The Logical Port Number is defined to be a unique number for each
-+ * port starting from zero through to the number of ports minus one.
-+ * This is in contrast to the Port Number where each port can be assigned
-+ * any unique physical number by the hardware.
-+ *
-+ * The logical port number is useful for calculating the resource indexes
-+ * used by peers.
-+ *
-+ * Return: the peer's logical port number or negative value indicating an error
-+ */
-+static inline int ntb_peer_logical_port_number(struct ntb_dev *ntb, int pidx)
-+{
-+	if (ntb_peer_port_number(ntb, pidx) < ntb_port_number(ntb))
-+		return pidx;
-+	else
-+		return pidx + 1;
-+}
-+
- /**
-  * ntb_peer_port_idx() - get the peer device port index by given port number
-  * @ntb:	NTB device context.
++ntb-y := core.o
+diff --git a/drivers/ntb/ntb.c b/drivers/ntb/core.c
+similarity index 100%
+rename from drivers/ntb/ntb.c
+rename to drivers/ntb/core.c
 -- 
 2.20.1
 
