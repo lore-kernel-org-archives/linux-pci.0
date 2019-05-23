@@ -2,91 +2,101 @@ Return-Path: <SRS0=jwu3=TX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD1FAC282DD
-	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BD98C282DD
+	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 23:51:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7DCDA20879
-	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:32:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B5FC2133D
+	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 23:51:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=sifive.com header.i=@sifive.com header.b="CwBpnrcY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388185AbfEWWbK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 May 2019 18:31:10 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:59910 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387616AbfEWWbK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 May 2019 18:31:10 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hTwEs-00062R-Eu; Thu, 23 May 2019 16:31:07 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hTwEq-0001SE-4P; Thu, 23 May 2019 16:31:04 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-kselftest@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Joerg Roedel <joro@8bytes.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Eric Pilmore <epilmore@gigaio.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 23 May 2019 16:30:55 -0600
-Message-Id: <20190523223100.5526-6-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190523223100.5526-1-logang@deltatee.com>
-References: <20190523223100.5526-1-logang@deltatee.com>
+        id S2388579AbfEWXvD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 May 2019 19:51:03 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:41722 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388492AbfEWXvC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 May 2019 19:51:02 -0400
+Received: by mail-lf1-f67.google.com with SMTP id d8so5662760lfb.8
+        for <linux-pci@vger.kernel.org>; Thu, 23 May 2019 16:51:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sifive.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to;
+        bh=fhBZncJ2MpAJBlQB8zRObQZP1s/1ENOk1yYHyMaqLDc=;
+        b=CwBpnrcYLEefMJFuxPFCRN4iTwN5WamdydpeCsRT71D0rSxVvB/+yh7YpZYxb0y/st
+         5uIc3/aNLUiHEsPWzhZUOxFhlgrSOswawfDUiHAURx0ICrBTwtC4fGeRzeK+bQ9fxzO2
+         AUqaFa327tG+7cjZlXV0TpFwev6e76lpur/kCU2/RB8eCN98srXtjhNhv3+3AfiHhVYt
+         VOUOoJ5Pj7J83Mghc5cBnVxIjhyDuj/U6gaRNjvAzyqixszSffdBW835Yysw9I2gNvPW
+         YuzNr3ULFt2eu7hOGS1lkEYi8akIZfNoRkPNDZvD25cMEQQZ5axf+KYvtbiHXAS7lkDn
+         qbMw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to;
+        bh=fhBZncJ2MpAJBlQB8zRObQZP1s/1ENOk1yYHyMaqLDc=;
+        b=CqKQ9v9RVaqdZYjzvrBxQ0/3vgfAaloEJPzo1OEzEe3RVvRTbDgRvXpWBLlgi8FYI1
+         kn8XKSUsu5l9Ljy4Z5gYEPseWz84AP3pVXi33gJD7GVoMpXOoeycMmNbpRavRiDsJjnk
+         RJ4tdAvz4Iw5Gyj8Pf0Y+haWv6LfaxBf7uCllbFrg3QjllrDv89zyAgCOOt+vEa1GEpy
+         g4AsE7lJ+w8Mxx4NqQxssiTscVjBW2YUIfkZk9T+YnQCR6TgkAp9iKR2/ehInhwh+A6k
+         BzKycwZnJz3kkawI3SE/XYESPQawBFwPbjM84cTUaWaIRk8vBVHyrwQRZ8ncTMkIw2ZX
+         U5PA==
+X-Gm-Message-State: APjAAAW6pHK2xVwm1Jp/MXqrLElSZIDBJYVlW4fHGYq8sHyhVMYsV9RY
+        /20Kj1gqTes6JUqqIQJ1FmOok06SnuEMLLKPuGLJAvmL8ko=
+X-Google-Smtp-Source: APXvYqxOUSWUQ3jLt0ClnRsVTHOlGj4gBaUGVeolp0BKGbX6O77PYECRjhSrrEERuRToBxdhUEoYFivoa6PmBkssuh0=
+X-Received: by 2002:ac2:4286:: with SMTP id m6mr7494929lfh.150.1558655461095;
+ Thu, 23 May 2019 16:51:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-ntb@googlegroups.com, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, jdmason@kudzu.us, joro@8bytes.org, bhelgaas@google.com, dave.jiang@intel.com, allenbh@gmail.com, fancer.lancer@gmail.com, epilmore@gigaio.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v5 05/10] NTB: Rename ntb.c to support multiple source files in the module
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+References: <1558648647-14324-1-git-send-email-alan.mikhak@sifive.com>
+In-Reply-To: <1558648647-14324-1-git-send-email-alan.mikhak@sifive.com>
+From:   Alan Mikhak <alan.mikhak@sifive.com>
+Date:   Thu, 23 May 2019 16:50:50 -0700
+Message-ID: <CABEDWGy8PhHqqRPpZjVrd3VtwxmtxV+Gs-8442e9EvKjFQLELw@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: endpoint: Clear BAR before freeing its space
+To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kishon@ti.com, lorenzo.pieralisi@arm.com,
+        linux-riscv@lists.infradead.org,
+        Palmer Dabbelt <palmer@sifive.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        gustavo.pimentel@synopsys.com, wen.yang99@zte.com.cn, kjlu@umn.edu
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The kbuild system does not support having multiple source files in
-a module if one of those source files has the same name as the module.
++Bjorn Helgaas, +Gustavo Pimentel, +Wen Yang, +Kangjie Lu
 
-Therefore, we must rename ntb.c to core.c, while the module remains
-ntb.ko.
 
-This is similar to the way the nvme modules are structured.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Allen Hubbe <allenbh@gmail.com>
----
- drivers/ntb/Makefile          | 2 ++
- drivers/ntb/{ntb.c => core.c} | 0
- 2 files changed, 2 insertions(+)
- rename drivers/ntb/{ntb.c => core.c} (100%)
-
-diff --git a/drivers/ntb/Makefile b/drivers/ntb/Makefile
-index 1921dec1949d..537226f8e78d 100644
---- a/drivers/ntb/Makefile
-+++ b/drivers/ntb/Makefile
-@@ -1,2 +1,4 @@
- obj-$(CONFIG_NTB) += ntb.o hw/ test/
- obj-$(CONFIG_NTB_TRANSPORT) += ntb_transport.o
-+
-+ntb-y := core.o
-diff --git a/drivers/ntb/ntb.c b/drivers/ntb/core.c
-similarity index 100%
-rename from drivers/ntb/ntb.c
-rename to drivers/ntb/core.c
--- 
-2.20.1
-
+On Thu, May 23, 2019 at 2:57 PM Alan Mikhak <alan.mikhak@sifive.com> wrote:
+>
+> Associated pci_epf_bar structure is needed in pci_epc_clear_bar() but
+> would be cleared in pci_epf_free_space(), if called first, and BAR
+> would not get cleared.
+>
+> Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index 27806987e93b..f81a219dde5b 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -381,8 +381,8 @@ static void pci_epf_test_unbind(struct pci_epf *epf)
+>                 epf_bar = &epf->bar[bar];
+>
+>                 if (epf_test->reg[bar]) {
+> -                       pci_epf_free_space(epf, epf_test->reg[bar], bar);
+>                         pci_epc_clear_bar(epc, epf->func_no, epf_bar);
+> +                       pci_epf_free_space(epf, epf_test->reg[bar], bar);
+>                 }
+>         }
+>  }
+> --
+> 2.7.4
+>
