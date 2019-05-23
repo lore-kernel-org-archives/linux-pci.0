@@ -2,30 +2,30 @@ Return-Path: <SRS0=jwu3=TX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21CA2C282DD
-	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:31:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA2B7C282DD
+	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:31:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC29220879
-	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:31:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 93E66217D7
+	for <linux-pci@archiver.kernel.org>; Thu, 23 May 2019 22:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388518AbfEWWbM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 23 May 2019 18:31:12 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:59978 "EHLO ale.deltatee.com"
+        id S2388572AbfEWWbQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 23 May 2019 18:31:16 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:60086 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388509AbfEWWbM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 May 2019 18:31:12 -0400
+        id S2388558AbfEWWbQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 May 2019 18:31:16 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hTwEs-00062Q-Eu; Thu, 23 May 2019 16:31:10 -0600
+        id 1hTwEs-00062L-Eu; Thu, 23 May 2019 16:31:13 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hTwEq-0001SB-0u; Thu, 23 May 2019 16:31:04 -0600
+        id 1hTwEp-0001S0-GI; Thu, 23 May 2019 16:31:03 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-ntb@googlegroups.com,
         linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
@@ -37,17 +37,15 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Eric Pilmore <epilmore@gigaio.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 23 May 2019 16:30:54 -0600
-Message-Id: <20190523223100.5526-5-logang@deltatee.com>
+Date:   Thu, 23 May 2019 16:30:50 -0600
+Message-Id: <20190523223100.5526-1-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190523223100.5526-1-logang@deltatee.com>
-References: <20190523223100.5526-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-ntb@googlegroups.com, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, jdmason@kudzu.us, joro@8bytes.org, bhelgaas@google.com, dave.jiang@intel.com, allenbh@gmail.com, fancer.lancer@gmail.com, epilmore@gigaio.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v5 04/10] NTB: Introduce functions to calculate multi-port resource index
+Subject: [PATCH v5 00/10]  Support using MSI interrupts in ntb_transport
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -55,106 +53,159 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When using multi-ports each port uses resources (dbs, msgs, mws, etc)
-on every other port. Creating a mapping for these resources such that
-each port has a corresponding resource on every other port is a bit
-tricky.
+This is another resend as there has been no feedback since v4.
+Seems Jon has been MIA this past cycle so hopefully he appears on the
+list soon.
 
-Introduce the ntb_peer_resource_idx() function for this purpose.
-It returns the peer resource number that will correspond with the
-local peer index on the remote peer.
+I've addressed the feedback so far and rebased on the latest kernel
+and would like this to be considered for merging this cycle.
 
-Also, introduce ntb_peer_highest_mw_idx() which will use
-ntb_peer_resource_idx() but return the MW index starting with the
-highest index and working down.
+The only outstanding issue I know of is that it still will not work
+with IDT hardware, but ntb_transport doesn't work with IDT hardware
+and there is still no sensible common infrastructure to support
+ntb_peer_mw_set_trans(). Thus, I decline to consider that complication
+in this patchset. However, I'll be happy to review work that adds this
+feature in the future.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Allen Hubbe <allenbh@gmail.com>
----
- include/linux/ntb.h | 70 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
+Also, as the port number and resource index stuff is a bit complicated,
+I made a quick out of tree test fixture to ensure it's correct[1]. As
+an excerise I also wrote some test code[2] using the upcomming KUnit
+feature.
 
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index 91cf492b16a0..66552830544b 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -1557,4 +1557,74 @@ static inline int ntb_peer_msg_write(struct ntb_dev *ntb, int pidx, int midx,
- 	return ntb->ops->peer_msg_write(ntb, pidx, midx, msg);
- }
- 
-+/**
-+ * ntb_peer_resource_idx() - get a resource index for a given peer idx
-+ * @ntb:	NTB device context.
-+ * @pidx:	Peer port index.
-+ *
-+ * When constructing a graph of peers, each remote peer must use a different
-+ * resource index (mw, doorbell, etc) to communicate with each other
-+ * peer.
-+ *
-+ * In a two peer system, this function should always return 0 such that
-+ * resource 0 points to the remote peer on both ports.
-+ *
-+ * In a 5 peer system, this function will return the following matrix
-+ *
-+ * pidx \ port    0    1    2    3    4
-+ * 0              0    0    1    2    3
-+ * 1              0    1    1    2    3
-+ * 2              0    1    2    2    3
-+ * 3              0    1    2    3    3
-+ *
-+ * For example, if this function is used to program peer's memory
-+ * windows, port 0 will program MW 0 on all it's peers to point to itself.
-+ * port 1 will program MW 0 in port 0 to point to itself and MW 1 on all
-+ * other ports. etc.
-+ *
-+ * For the legacy two host case, ntb_port_number() and ntb_peer_port_number()
-+ * both return zero and therefore this function will always return zero.
-+ * So MW 0 on each host would be programmed to point to the other host.
-+ *
-+ * Return: the resource index to use for that peer.
-+ */
-+static inline int ntb_peer_resource_idx(struct ntb_dev *ntb, int pidx)
-+{
-+	int local_port, peer_port;
-+
-+	if (pidx >= ntb_peer_port_count(ntb))
-+		return -EINVAL;
-+
-+	local_port = ntb_logical_port_number(ntb);
-+	peer_port = ntb_peer_logical_port_number(ntb, pidx);
-+
-+	if (peer_port < local_port)
-+		return local_port - 1;
-+	else
-+		return local_port;
-+}
-+
-+/**
-+ * ntb_peer_highest_mw_idx() - get a memory window index for a given peer idx
-+ *	using the highest index memory windows first
-+ *
-+ * @ntb:	NTB device context.
-+ * @pidx:	Peer port index.
-+ *
-+ * Like ntb_peer_resource_idx(), except it returns indexes starting with
-+ * last memory window index.
-+ *
-+ * Return: the resource index to use for that peer.
-+ */
-+static inline int ntb_peer_highest_mw_idx(struct ntb_dev *ntb, int pidx)
-+{
-+	int ret;
-+
-+	ret = ntb_peer_resource_idx(ntb, pidx);
-+	if (ret < 0)
-+		return ret;
-+
-+	return ntb_mw_count(ntb, pidx) - ret - 1;
-+}
-+
- #endif
--- 
+Logan
+
+[1] https://repl.it/repls/ExcitingPresentFile
+[2] https://github.com/sbates130272/linux-p2pmem/commits/ntb_kunit
+
+--
+
+Changes in v5:
+
+* Rebased onto v5.2-rc1 (plus the patches in ntb-next)
+
+--
+
+Changes in v4:
+
+* Rebased onto v5.1-rc6 (No changes)
+
+* Numerous grammar and spelling mistakes spotted by Bjorn
+
+--
+
+Changes in v3:
+
+* Rebased onto v5.1-rc1 (Dropped the first two patches as they have
+  been merged, and cleaned up some minor conflicts in the PCI tree)
+
+* Added a new patch (#3) to calculate logical port numbers that
+  are port numbers from 0 to (number of ports - 1). This is
+  then used in ntb_peer_resource_idx() to fix the issues brought
+  up by Serge.
+
+* Fixed missing __iomem and iowrite calls (as noticed by Serge)
+
+* Added patch 10 which describes ntb_msi_test in the documentation
+  file (as requested by Serge)
+
+* A couple other minor nits and documentation fixes
+
+--
+
+Changes in v2:
+
+* Cleaned up the changes in intel_irq_remapping.c to make them
+  less confusing and add a comment. (Per discussion with Jacob and
+  Joerg)
+
+* Fixed a nit from Bjorn and collected his Ack
+
+* Added a Kconfig dependancy on CONFIG_PCI_MSI for CONFIG_NTB_MSI
+  as the Kbuild robot hit a random config that didn't build
+  without it.
+
+* Worked in a callback for when the MSI descriptor changes so that
+  the clients can resend the new address and data values to the peer.
+  On my test system this was never necessary, but there may be
+  other platforms where this can occur. I tested this by hacking
+  in a path to rewrite the MSI descriptor when I change the cpu
+  affinity of an IRQ. There's a bit of uncertainty over the latency
+  of the change, but without hardware this can acctually occur on
+  we can't test this. This was the result of a discussion with Dave.
+
+--
+
+This patch series adds optional support for using MSI interrupts instead
+of NTB doorbells in ntb_transport. This is desirable seeing doorbells on
+current hardware are quite slow and therefore switching to MSI interrupts
+provides a significant performance gain. On switchtec hardware, a simple
+apples-to-apples comparison shows ntb_netdev/iperf numbers going from
+3.88Gb/s to 14.1Gb/s when switching to MSI interrupts.
+
+To do this, a couple changes are required outside of the NTB tree:
+
+1) The IOMMU must know to accept MSI requests from aliased bused numbers
+seeing NTB hardware typically sends proxied request IDs through
+additional requester IDs. The first patch in this series adds support
+for the Intel IOMMU. A quirk to add these aliases for switchtec hardware
+was already accepted. See commit ad281ecf1c7d ("PCI: Add DMA alias quirk
+for Microsemi Switchtec NTB") for a description of NTB proxy IDs and why
+this is necessary.
+
+2) NTB transport (and other clients) may often need more MSI interrupts
+than the NTB hardware actually advertises support for. However, seeing
+these interrupts will not be triggered by the hardware but through an
+NTB memory window, the hardware does not actually need support or need
+to know about them. Therefore we add the concept of Virtual MSI
+interrupts which are allocated just like any other MSI interrupt but
+are not programmed into the hardware's MSI table. This is done in
+Patch 2 and then made use of in Patch 3.
+
+The remaining patches in this series add a library for dealing with MSI
+interrupts, a test client and finally support in ntb_transport.
+
+The series is based off of v5.1-rc6 plus the patches in ntb-next.
+A git repo is available here:
+
+https://github.com/sbates130272/linux-p2pmem/ ntb_transport_msi_v4
+
+Thanks,
+
+Logan
+
+--
+
+Logan Gunthorpe (10):
+  PCI/MSI: Support allocating virtual MSI interrupts
+  PCI/switchtec: Add module parameter to request more interrupts
+  NTB: Introduce helper functions to calculate logical port number
+  NTB: Introduce functions to calculate multi-port resource index
+  NTB: Rename ntb.c to support multiple source files in the module
+  NTB: Introduce MSI library
+  NTB: Introduce NTB MSI Test Client
+  NTB: Add ntb_msi_test support to ntb_test
+  NTB: Add MSI interrupt support to ntb_transport
+  NTB: Describe the ntb_msi_test client in the documentation.
+
+ Documentation/ntb.txt                   |  27 ++
+ drivers/ntb/Kconfig                     |  11 +
+ drivers/ntb/Makefile                    |   3 +
+ drivers/ntb/{ntb.c => core.c}           |   0
+ drivers/ntb/msi.c                       | 415 +++++++++++++++++++++++
+ drivers/ntb/ntb_transport.c             | 169 ++++++++-
+ drivers/ntb/test/Kconfig                |   9 +
+ drivers/ntb/test/Makefile               |   1 +
+ drivers/ntb/test/ntb_msi_test.c         | 433 ++++++++++++++++++++++++
+ drivers/pci/msi.c                       |  54 ++-
+ drivers/pci/switch/switchtec.c          |  12 +-
+ include/linux/msi.h                     |   8 +
+ include/linux/ntb.h                     | 196 ++++++++++-
+ include/linux/pci.h                     |   9 +
+ tools/testing/selftests/ntb/ntb_test.sh |  54 ++-
+ 15 files changed, 1386 insertions(+), 15 deletions(-)
+ rename drivers/ntb/{ntb.c => core.c} (100%)
+ create mode 100644 drivers/ntb/msi.c
+ create mode 100644 drivers/ntb/test/ntb_msi_test.c
+
+--
 2.20.1
-
