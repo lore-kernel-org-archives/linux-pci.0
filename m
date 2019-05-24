@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C6A6C072B5
-	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 20:16:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A57ACC072B5
+	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 20:16:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E5EE2133D
-	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 20:16:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 849F52133D
+	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 20:16:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391845AbfEXUQQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2391826AbfEXUQQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 24 May 2019 16:16:16 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:33760 "EHLO ale.deltatee.com"
+Received: from ale.deltatee.com ([207.54.116.67]:33756 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391824AbfEXUQQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2391817AbfEXUQQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 24 May 2019 16:16:16 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hUGbu-00032P-Ei; Fri, 24 May 2019 14:16:16 -0600
+        id 1hUGbu-00032O-CE; Fri, 24 May 2019 14:16:15 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hUGbu-00026V-A8; Fri, 24 May 2019 14:16:14 -0600
+        id 1hUGbu-00026S-7R; Fri, 24 May 2019 14:16:14 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Fri, 24 May 2019 14:16:09 -0600
-Message-Id: <20190524201610.8039-3-logang@deltatee.com>
+Date:   Fri, 24 May 2019 14:16:08 -0600
+Message-Id: <20190524201610.8039-2-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190524201610.8039-1-logang@deltatee.com>
 References: <20190524201610.8039-1-logang@deltatee.com>
@@ -41,7 +41,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH 2/3] PCI: Move pci_[get|set]_resource_alignment_param() into their callers
+Subject: [PATCH 1/3] PCI: Clean up resource_alignment parameter to not require static buffer
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -49,73 +49,112 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Both the functions pci_get_resource_alignment_param() and
-pci_set_resource_alignment_param() are now only called in one place:
-resource_alignment_show() and resource_alignment_store() respectively.
+Clean up the 'resource_alignment' parameter code to use kstrdup
+in the initcall routine instead of a static buffer that wastes memory
+regardless of whether the feature is used.  This allows us to drop
+'COMMAND_LINE_SIZE' bytes (typically 256-4096 depending on architecture)
+of static data.
 
-There is no value in this extra set of functions so we move both into
-their callers respectively.
+This is similar to what has been done for the 'disable_acs_redir'
+parameter.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c | 30 ++++++++++--------------------
- 1 file changed, 10 insertions(+), 20 deletions(-)
+ drivers/pci/pci.c | 41 +++++++++++++++++++++++------------------
+ 1 file changed, 23 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bd7cdcfeb094..3e71e161f18b 100644
+index 766f5779db92..bd7cdcfeb094 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -6081,39 +6081,29 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	}
+@@ -5896,8 +5896,7 @@ resource_size_t __weak pcibios_default_alignment(void)
+ 	return 0;
  }
  
--static ssize_t pci_set_resource_alignment_param(const char *buf, size_t count)
--{
--	spin_lock(&resource_alignment_lock);
--
--	kfree(resource_alignment_param);
--	resource_alignment_param = kstrndup(buf, count, GFP_KERNEL);
--
--	spin_unlock(&resource_alignment_lock);
--
--	return resource_alignment_param ? count : -ENOMEM;
--}
--
--static ssize_t pci_get_resource_alignment_param(char *buf, size_t size)
-+static ssize_t resource_alignment_show(struct bus_type *bus, char *buf)
- {
- 	size_t count = 0;
+-#define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+-static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
++static char *resource_alignment_param;
+ static DEFINE_SPINLOCK(resource_alignment_lock);
+ 
+ /**
+@@ -5918,7 +5917,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
  
  	spin_lock(&resource_alignment_lock);
- 	if (resource_alignment_param)
--		count = snprintf(buf, size, "%s", resource_alignment_param);
-+		count = snprintf(buf, PAGE_SIZE, "%s", resource_alignment_param);
- 	spin_unlock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+-	if (!*p && !align)
++	if (!p || !*p)
+ 		goto out;
+ 	if (pci_has_flag(PCI_PROBE_ONLY)) {
+ 		align = 0;
+@@ -6084,21 +6083,25 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
  
- 	return count;
- }
- 
--static ssize_t resource_alignment_show(struct bus_type *bus, char *buf)
--{
--	return pci_get_resource_alignment_param(buf, PAGE_SIZE);
--}
--
- static ssize_t resource_alignment_store(struct bus_type *bus,
- 					const char *buf, size_t count)
+ static ssize_t pci_set_resource_alignment_param(const char *buf, size_t count)
  {
--	return pci_set_resource_alignment_param(buf, count);
-+	spin_lock(&resource_alignment_lock);
+-	if (count > RESOURCE_ALIGNMENT_PARAM_SIZE - 1)
+-		count = RESOURCE_ALIGNMENT_PARAM_SIZE - 1;
+ 	spin_lock(&resource_alignment_lock);
+-	strncpy(resource_alignment_param, buf, count);
+-	resource_alignment_param[count] = '\0';
 +
 +	kfree(resource_alignment_param);
 +	resource_alignment_param = kstrndup(buf, count, GFP_KERNEL);
 +
-+	spin_unlock(&resource_alignment_lock);
+ 	spin_unlock(&resource_alignment_lock);
+-	return count;
 +
 +	return resource_alignment_param ? count : -ENOMEM;
  }
  
- static BUS_ATTR_RW(resource_alignment);
+ static ssize_t pci_get_resource_alignment_param(char *buf, size_t size)
+ {
+-	size_t count;
++	size_t count = 0;
++
+ 	spin_lock(&resource_alignment_lock);
+-	count = snprintf(buf, size, "%s", resource_alignment_param);
++	if (resource_alignment_param)
++		count = snprintf(buf, size, "%s", resource_alignment_param);
+ 	spin_unlock(&resource_alignment_lock);
++
+ 	return count;
+ }
+ 
+@@ -6238,8 +6241,7 @@ static int __init pci_setup(char *str)
+ 			} else if (!strncmp(str, "cbmemsize=", 10)) {
+ 				pci_cardbus_mem_size = memparse(str + 10, &str);
+ 			} else if (!strncmp(str, "resource_alignment=", 19)) {
+-				pci_set_resource_alignment_param(str + 19,
+-							strlen(str + 19));
++				resource_alignment_param = str + 19;
+ 			} else if (!strncmp(str, "ecrc=", 5)) {
+ 				pcie_ecrc_get_policy(str + 5);
+ 			} else if (!strncmp(str, "hpiosize=", 9)) {
+@@ -6275,15 +6277,18 @@ static int __init pci_setup(char *str)
+ early_param("pci", pci_setup);
+ 
+ /*
+- * 'disable_acs_redir_param' is initialized in pci_setup(), above, to point
+- * to data in the __initdata section which will be freed after the init
+- * sequence is complete. We can't allocate memory in pci_setup() because some
+- * architectures do not have any memory allocation service available during
+- * an early_param() call. So we allocate memory and copy the variable here
+- * before the init section is freed.
++ * 'resource_alignment_param' and 'disable_acs_redir_param' are initialized
++ * in pci_setup(), above, to point to data in the __initdata section which
++ * will be freed after the init sequence is complete. We can't allocate memory
++ * in pci_setup() because some architectures do not have any memory allocation
++ * service available during an early_param() call. So we allocate memory and
++ * copy the variable here before the init section is freed.
++ *
+  */
+ static int __init pci_realloc_setup_params(void)
+ {
++	resource_alignment_param = kstrdup(resource_alignment_param,
++					   GFP_KERNEL);
+ 	disable_acs_redir_param = kstrdup(disable_acs_redir_param, GFP_KERNEL);
+ 
+ 	return 0;
 -- 
 2.20.1
 
