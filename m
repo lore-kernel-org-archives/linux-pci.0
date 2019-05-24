@@ -2,39 +2,41 @@ Return-Path: <SRS0=eyn2=TY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=AC_FROM_MANY_DOTS,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 678C3C072B5
-	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 06:07:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AABFC072B5
+	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 06:07:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DE2E2175B
-	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 06:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB7842175B
+	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 06:07:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388451AbfEXGHd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 May 2019 02:07:33 -0400
-Received: from mga05.intel.com ([192.55.52.43]:28549 "EHLO mga05.intel.com"
+        id S2388232AbfEXGHi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 May 2019 02:07:38 -0400
+Received: from mga11.intel.com ([192.55.52.93]:11205 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387622AbfEXGHd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 May 2019 02:07:33 -0400
+        id S2387622AbfEXGHh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 May 2019 02:07:37 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 May 2019 23:07:32 -0700
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 May 2019 23:07:37 -0700
 X-ExtLoop1: 1
 Received: from lftan-mobl.gar.corp.intel.com (HELO ubuntu) ([10.226.248.59])
-  by orsmga002.jf.intel.com with SMTP; 23 May 2019 23:07:29 -0700
-Received: by ubuntu (sSMTP sendmail emulation); Fri, 24 May 2019 14:07:27 +0800
+  by fmsmga007.fm.intel.com with SMTP; 23 May 2019 23:07:33 -0700
+Received: by ubuntu (sSMTP sendmail emulation); Fri, 24 May 2019 14:07:31 +0800
 From:   Ley Foon Tan <ley.foon.tan@intel.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         lftan.linux@gmail.com, Ley Foon Tan <ley.foon.tan@intel.com>
-Subject: [PATCH 0/2] Fix Altera PCIe configuration type handling
-Date:   Fri, 24 May 2019 14:07:24 +0800
-Message-Id: <1558678046-4052-1-git-send-email-ley.foon.tan@intel.com>
+Subject: [PATCH 1/2] PCI: altera: Fix configuration type based on secondary number
+Date:   Fri, 24 May 2019 14:07:25 +0800
+Message-Id: <1558678046-4052-2-git-send-email-ley.foon.tan@intel.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1558678046-4052-1-git-send-email-ley.foon.tan@intel.com>
+References: <1558678046-4052-1-git-send-email-ley.foon.tan@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -53,13 +55,65 @@ The PCIe controller send Type 1 config TLP if the targeting bus is
 larger than the secondary bus, which is when the TLP is targeting the
 device not immediate on the link.
 
-Ley Foon Tan (2):
-  PCI: altera: Fix configuration type based on secondary number
-  PCI: altera: Remove cfgrdX and cfgwrX
+Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
+---
+ drivers/pci/controller/pcie-altera.c | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
 
- drivers/pci/controller/pcie-altera.c | 47 ++++++++++++++--------------
- 1 file changed, 24 insertions(+), 23 deletions(-)
-
+diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
+index 27222071ace7..047bcc214f9b 100644
+--- a/drivers/pci/controller/pcie-altera.c
++++ b/drivers/pci/controller/pcie-altera.c
+@@ -44,6 +44,8 @@
+ #define S10_RP_RXCPL_STATUS		0x200C
+ #define S10_RP_CFG_ADDR(pcie, reg)	\
+ 	(((pcie)->hip_base) + (reg) + (1 << 20))
++#define S10_RP_SECONDARY(pcie)		\
++	readb(S10_RP_CFG_ADDR(pcie, PCI_SECONDARY_BUS))
+ 
+ /* TLP configuration type 0 and 1 */
+ #define TLP_FMTTYPE_CFGRD0		0x04	/* Configuration Read Type 0 */
+@@ -63,6 +65,14 @@
+ 	((((bus == pcie->root_bus_nr) ? pcie->pcie_data->cfgwr0		\
+ 				: pcie->pcie_data->cfgwr1) << 24) |	\
+ 				TLP_PAYLOAD_SIZE)
++#define S10_TLP_CFGRD_DW0(pcie, bus)					\
++	(((((bus) > S10_RP_SECONDARY(pcie)) ? pcie->pcie_data->cfgrd0	\
++				: pcie->pcie_data->cfgrd1) << 24) |	\
++				TLP_PAYLOAD_SIZE)
++#define S10_TLP_CFGWR_DW0(pcie, bus)					\
++	(((((bus) > S10_RP_SECONDARY(pcie)) ? pcie->pcie_data->cfgwr0	\
++				: pcie->pcie_data->cfgwr1) << 24) |	\
++				TLP_PAYLOAD_SIZE)
+ #define TLP_CFG_DW1(pcie, tag, be)	\
+ 	(((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag << 8) | (be))
+ #define TLP_CFG_DW2(bus, devfn, offset)	\
+@@ -327,7 +337,11 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ {
+ 	u32 headers[TLP_HDR_SIZE];
+ 
+-	headers[0] = TLP_CFGRD_DW0(pcie, bus);
++	if (pcie->pcie_data->version == ALTERA_PCIE_V1)
++		headers[0] = TLP_CFGRD_DW0(pcie, bus);
++	else
++		headers[0] = S10_TLP_CFGRD_DW0(pcie, bus);
++
+ 	headers[1] = TLP_CFG_DW1(pcie, TLP_READ_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
+ 
+@@ -342,7 +356,11 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	u32 headers[TLP_HDR_SIZE];
+ 	int ret;
+ 
+-	headers[0] = TLP_CFGWR_DW0(pcie, bus);
++	if (pcie->pcie_data->version == ALTERA_PCIE_V1)
++		headers[0] = TLP_CFGWR_DW0(pcie, bus);
++	else
++		headers[0] = S10_TLP_CFGWR_DW0(pcie, bus);
++
+ 	headers[1] = TLP_CFG_DW1(pcie, TLP_WRITE_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
+ 
 -- 
 2.19.0
 
