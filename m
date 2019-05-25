@@ -1,83 +1,90 @@
-Return-Path: <SRS0=eyn2=TY=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=8mAK=TZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	T_DKIMWL_WL_HIGH,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 842BEC282E1
-	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 22:15:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDEEC282E1
+	for <linux-pci@archiver.kernel.org>; Sat, 25 May 2019 03:24:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 418ED2184E
-	for <linux-pci@archiver.kernel.org>; Fri, 24 May 2019 22:15:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1558736119;
-	bh=S/mRMEkQXFi04Mis9f/sXsoi0IV12RHQlkHVTfheS9c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=q4FN0UqsYt196wMGulCxxrNbkRYW2CpZkJtHhSiMvJRIZtZSTjx3A+eBITnoEfr1L
-	 jTTESfeG/6uZy1Ds2BwnUYQNagPq9hhMfxoDoJimzVMBBr9PqsQAiN23LOgMs2PCjh
-	 h1juAKe7NGOTDgq5x9w99LkYR1n+XEkbChLm9SK8=
+	by mail.kernel.org (Postfix) with ESMTP id 039AA2177E
+	for <linux-pci@archiver.kernel.org>; Sat, 25 May 2019 03:24:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="I9KkUanw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404233AbfEXWPS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 24 May 2019 18:15:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53174 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404176AbfEXWPS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 May 2019 18:15:18 -0400
-Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A553A20862;
-        Fri, 24 May 2019 22:15:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558736117;
-        bh=S/mRMEkQXFi04Mis9f/sXsoi0IV12RHQlkHVTfheS9c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PkwFpQ4hGAB9aobq0V2zldqyZ6DaPyuZZudvGY7ehHuT9rlCafnqPXBcnOZ9HFcZM
-         QBala4Ythw8IFP0+5XprdpisSJbO7wHKXMThlksnAIoJatpAQCTcRmtMxCUMuBvVs6
-         QFQ8jubF0K02LFtkLXb3DwOEL0cpw4oJa0wmt+EY=
-Date:   Fri, 24 May 2019 18:15:16 -0400
-From:   Sasha Levin <sashal@kernel.org>
-To:     Haiyang Zhang <haiyangz@microsoft.com>
-Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>, vkuznets <vkuznets@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: hv: Detect and fix Hyper-V PCI domain number
- collision
-Message-ID: <20190524221516.GD12898@sasha-vm>
-References: <1558304821-36038-1-git-send-email-haiyangz@microsoft.com>
+        id S1726593AbfEYDY0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 24 May 2019 23:24:26 -0400
+Received: from merlin.infradead.org ([205.233.59.134]:56674 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726390AbfEYDY0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 May 2019 23:24:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=deYuWwVEMDx9F2BngHYcJsyLMkvbKf//OE69QqYwX9Y=; b=I9KkUanwg6WfwkWup0o0Ly/SVM
+        Ao/p0qI1tVg/HmlWcLPVGHBbzPuAMDbb3yuQRJ57VeiyxYDI5Yh6rhMliNzK3hkNQyT4/Ct5mv/ez
+        KaOoEoyviE4WsMQxc4UiFckxLd+MMZP12HrD9C4MMrbtsO/G8dpu/++Mm1UAGs9aRjL2BsIj/hcnC
+        hpjLLfwyJUcCOxGgh43urhrzTuTussOdDRo6XP/oqw8AP+g1KymdcORY6bJtNrsTEy8j6glkJhSGA
+        vU2MhWV1/KzgSlHEO6S5vtaTMf+71s7IuWSc/uEK/c3yOFH0TR3fSU+og0uCnhhMHOC1OPcDaXjPi
+        Wwy7b+5g==;
+Received: from static-50-53-52-16.bvtn.or.frontiernet.net ([50.53.52.16] helo=midway.dunlab)
+        by merlin.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
+        id 1hUNIE-0001Fb-W2; Sat, 25 May 2019 03:24:23 +0000
+Subject: Re: `SATA_AHCI` not selected by default with `make olddefconfig`
+To:     Paul Menzel <pmenzel@molgen.mpg.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <c2733e6e-2b45-9311-1a90-67c0b814a01b@molgen.mpg.de>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <91d3b405-1da0-fe89-14d3-f45043167822@infradead.org>
+Date:   Fri, 24 May 2019 20:24:19 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-In-Reply-To: <1558304821-36038-1-git-send-email-haiyangz@microsoft.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <c2733e6e-2b45-9311-1a90-67c0b814a01b@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, May 19, 2019 at 10:28:37PM +0000, Haiyang Zhang wrote:
->Due to Azure host agent settings, the device instance ID's bytes 8 and 9
->are no longer unique. This causes some of the PCI devices not showing up
->in VMs with multiple passthrough devices, such as GPUs. So, as recommended
->by Azure host team, we now use the bytes 4 and 5 which usually provide
->unique numbers.
->
->In the rare cases of collision, we will detect and find another number
->that is not in use.
->Thanks to Michael Kelley <mikelley@microsoft.com> for proposing this idea.
->
->Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+On 1/10/19 6:43 AM, Paul Menzel wrote:
+> Dear Linux folks,
+> 
+> 
+> There were some PCI Kconfig changes, which seem to cause problems
+> with components depending on PCI. With the attached minimal config,
+> running `make olddefconfig` on Linux 4.20 and older caused
+> `SATA_AHCI` to be selected. But, with Linux 5.0-rc1 it is not
+> selected.
+> 
+> 
+> Kind regards,
+> 
+> Paul
 
-Queued up for hyperv-fixes, thank you.
+[adding linux-pci for posterity]
 
---
-Thanks,
-Sasha
+Hi Paul,
+
+I guess this is called progress.  Anyway, it's good that you noticed and
+reported it.
+
+
+In 4.20 (and earlier), PCI defaults to y.
+As you hint, in 5.x, PCI does not default to y, so Kconfig symbols that
+depend on PCI will not be set/enabled by "make olddefconfig", including
+SATA_AHCI even though SATA_AHCI is set in your old .config file.
+
+
+-- 
+~Randy
