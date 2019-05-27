@@ -2,47 +2,97 @@ Return-Path: <SRS0=A182=T3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.1 required=3.0 tests=DATE_IN_PAST_06_12,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CA00C04AB3
-	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 18:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6142DC04AB3
+	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 22:55:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F258208CA
-	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 18:26:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BAB62075C
+	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 22:55:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=anastas.io header.i=@anastas.io header.b="KYnxCoTK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727007AbfE0S0s (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 May 2019 14:26:48 -0400
-Received: from dolcegabbana.com ([198.23.132.36]:38200 "EHLO petraband.com"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726839AbfE0S0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 May 2019 14:26:48 -0400
-To:     linux-pci@vger.kernel.org
-Subject: Help to get traffic
-Message-ID: <05327a3c0e5541b82f817c7c9f98ffa9@walkeralextra.tech>
-Date:   Mon, 27 May 2019 13:59:07 +0200
-From:   "Alex Walker" <schutz@walkeralextra.tech>
-Reply-To: fanfenqi@sina.com
+        id S1726979AbfE0Wz3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 May 2019 18:55:29 -0400
+Received: from alpha.anastas.io ([104.248.188.109]:50915 "EHLO
+        alpha.anastas.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726931AbfE0Wz3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2019 18:55:29 -0400
+Received: from authenticated-user (alpha.anastas.io [104.248.188.109])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by alpha.anastas.io (Postfix) with ESMTPSA id A62387F8EF;
+        Mon, 27 May 2019 17:55:27 -0500 (CDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=anastas.io; s=mail;
+        t=1558997728; bh=Fkmg//rw0SZv0cbWNfledPODm9FWrb76L5Rv9PgTLBY=;
+        h=From:To:Cc:Subject:Date:From;
+        b=KYnxCoTKhTuTLyhPQ9l7D0X2LQ1u9/v9EF6WIjyAIkGsxZapfKdJfCpKuzldE9/tV
+         4R3gruWPlNmAWyW2HDhIwadCiXQ8ZuZWcEHfZ2O0Eu0FC5/1CMb72muXchdDkApBTn
+         +dSD3EsJxF/uk8LU8FNzBOKp03olHpsMHRbNEBbRjWuhXAnxKa/XH1g88+woGtTm2K
+         i2BEWoeceJ/18T8pi9UBuSzYOP52bNSlukwMM6N35d5PV5+5Xw4hnPAnfYT1t3TfSv
+         BdPyDgZ3Qe/Wf3VRiIuZc8RHmxNUN78giREcHNxNCyogASoHwzMugE37WnzBnq7c+X
+         mcEW2jKASskmA==
+From:   Shawn Anastasio <shawn@anastas.io>
+To:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc:     bhelgaas@google.com, benh@kernel.crashing.org, paulus@samba.org,
+        mpe@ellerman.id.au, sbobroff@linux.ibm.com,
+        xyjxie@linux.vnet.ibm.com, rppt@linux.ibm.com,
+        linux-kernel@vger.kernel.org
+Subject: [RESEND PATCH 0/3] Allow custom PCI resource alignment on pseries
+Date:   Mon, 27 May 2019 17:55:18 -0500
+Message-Id: <20190527225521.5884-1-shawn@anastas.io>
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi
+Hello all,
 
-Do you need traffic for your website, or ecommerce store?
-We can bring 1-2 thousands of visitors to your website daily.
+This patch set implements support for user-specified PCI resource
+alignment on the pseries platform for hotplugged PCI devices.
+Currently on pseries, PCI resource alignments specified with the
+pci=resource_alignment commandline argument are ignored, since
+the firmware is in charge of managing the PCI resources. In the
+case of hotplugged devices, though, the kernel is in charge of 
+configuring the resources and should obey alignment requirements.
 
-No matter what you are selling, products or service. Getting more traffic
-is the key to your business.
+The current behavior of ignoring the alignment for hotplugged devices
+results in sub-page BARs landing between page boundaries and
+becoming un-mappable from userspace via the VFIO framework.
+This issue was observed on a pseries KVM guest with hotplugged
+ivshmem devices.
+ 
+With these changes, users can specify an appropriate
+pci=resource_alignment argument on boot for devices they wish to use 
+with VFIO.
 
-Please reply if interested, we will go options for you.
+In the future, this could be extended to provide page-aligned
+resources by default for hotplugged devices, similar to what is done
+on powernv by commit 382746376993 ("powerpc/powernv: Override
+pcibios_default_alignment() to force PCI devices to be page aligned").
+
+Feedback is appreciated.
 
 Thanks,
-Alex Walker
-Whatsapp: +8617199402387
+Shawn
+
+Shawn Anastasio (3):
+  PCI: Introduce pcibios_ignore_alignment_request
+  powerpc/64: Enable pcibios_after_init hook on ppc64
+  powerpc/pseries: Allow user-specified PCI resource alignment after
+    init
+
+ arch/powerpc/include/asm/machdep.h     |  6 ++++--
+ arch/powerpc/kernel/pci-common.c       |  9 +++++++++
+ arch/powerpc/kernel/pci_64.c           |  4 ++++
+ arch/powerpc/platforms/pseries/setup.c | 22 ++++++++++++++++++++++
+ drivers/pci/pci.c                      |  9 +++++++--
+ 5 files changed, 46 insertions(+), 4 deletions(-)
+
+-- 
+2.20.1
 
