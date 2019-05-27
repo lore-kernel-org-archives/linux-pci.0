@@ -2,185 +2,103 @@ Return-Path: <SRS0=A182=T3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09967C04AB3
-	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 11:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 926B0C07542
+	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 12:41:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCAF720883
-	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 11:10:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="B5k+uzx3"
+	by mail.kernel.org (Postfix) with ESMTP id 6BEFD20883
+	for <linux-pci@archiver.kernel.org>; Mon, 27 May 2019 12:41:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725858AbfE0LKG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 27 May 2019 07:10:06 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:7959 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725814AbfE0LKG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 May 2019 07:10:06 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5cebc58c0000>; Mon, 27 May 2019 04:10:04 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 27 May 2019 04:10:04 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 27 May 2019 04:10:04 -0700
-Received: from [10.24.45.112] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 27 May
- 2019 11:10:00 +0000
-Subject: Re: [PATCH V4 1/2] PCI: dwc: Add API support to de-initialize host
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
-        <bhelgaas@google.com>, <Jisheng.Zhang@synaptics.com>,
-        <thierry.reding@gmail.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
-References: <20190502170426.28688-1-vidyas@nvidia.com>
- <20190503112338.GA25649@e121166-lin.cambridge.arm.com>
- <dec5ecb2-863e-a1db-10c9-2d91f860a2c6@nvidia.com>
- <37697830-5a94-0f8e-a5cf-3347bc4850cb@nvidia.com>
-X-Nvconfidentiality: public
-Message-ID: <b560f3c3-b69e-d9b5-2dae-1ede52af0ea6@nvidia.com>
-Date:   Mon, 27 May 2019 16:39:58 +0530
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+        id S1726599AbfE0MlA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 27 May 2019 08:41:00 -0400
+Received: from ns.iliad.fr ([212.27.33.1]:44488 "EHLO ns.iliad.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726071AbfE0MlA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 May 2019 08:41:00 -0400
+Received: from ns.iliad.fr (localhost [127.0.0.1])
+        by ns.iliad.fr (Postfix) with ESMTP id 50FCE20A52;
+        Mon, 27 May 2019 14:40:58 +0200 (CEST)
+Received: from [192.168.108.49] (freebox.vlq16.iliad.fr [213.36.7.13])
+        by ns.iliad.fr (Postfix) with ESMTP id 41D8D1FF3E;
+        Mon, 27 May 2019 14:40:58 +0200 (CEST)
+Subject: Re: [PATCH] drivers/pci/controller: fix warning PTR_ERR_OR_ZERO can
+ be used
+To:     Hariprasad Kelam <hariprasad.kelam@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+References: <20190525085748.GA10926@hari-Inspiron-1545>
+Cc:     MSM <linux-arm-msm@vger.kernel.org>,
+        PCI <linux-pci@vger.kernel.org>,
+        Stanimir Varbanov <stanimir.varbanov@linaro.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>
+From:   Marc Gonzalez <marc.w.gonzalez@free.fr>
+Message-ID: <085da143-9d13-8741-9f6c-489754fef9f6@free.fr>
+Date:   Mon, 27 May 2019 14:40:58 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <37697830-5a94-0f8e-a5cf-3347bc4850cb@nvidia.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL105.nvidia.com (172.20.187.12) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <20190525085748.GA10926@hari-Inspiron-1545>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1558955404; bh=nU2dra4R89mw+x+E2Tv1OoaiE1ccD4BKlZtlo7GdJ5Q=;
-        h=X-PGP-Universal:Subject:From:To:CC:References:X-Nvconfidentiality:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=B5k+uzx3cwW6LzYoHxheWLsDgIX3MuJKvphicodmkeiMsE4FMPWlX/xjNQ8ZC0w7d
-         U/ZPBDYS5UWMLXY6jhGXhRiCsTWWZNkYaGgTaaWzRrQ1TIj6i4KP8MZ5RBVNUUcBlB
-         9w9MRrClVg5r0jvJFEHQY059Q9OKT4r+vqcUP96XZeqJabpzFjBsBhowk99mZ63Jys
-         02b1eAmceDVuPmMJbJXAgZw+9v1fn+eAgQn81k2Ob1PT893HZC1566LDp81Zt5qez3
-         RJjpP+oyszsSlatgDteNwhpZuajKLug+CJwj/0fbK/qsLOhcsqGfMWAfj2/g4SI3bu
-         5pjG22OZPXOmg==
+Content-Transfer-Encoding: 7bit
+X-Virus-Scanned: ClamAV using ClamSMTP ; ns.iliad.fr ; Mon May 27 14:40:58 2019 +0200 (CEST)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 5/7/2019 12:25 PM, Vidya Sagar wrote:
-> On 5/7/2019 11:19 AM, Vidya Sagar wrote:
->> On 5/3/2019 4:53 PM, Lorenzo Pieralisi wrote:
->>> On Thu, May 02, 2019 at 10:34:25PM +0530, Vidya Sagar wrote:
->>>> Add an API to group all the tasks to be done to de-initialize host whi=
-ch
->>>> can then be called by any DesignWare core based driver implementations
->>>> while adding .remove() support in their respective drivers.
->>>>
->>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>>> Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
->>>> ---
->>>> Changes from v3:
->>>> * Added check if (pci_msi_enabled() && !pp->ops->msi_host_init) before=
- calling
->>>> =C2=A0=C2=A0 dw_pcie_free_msi() API to mimic init path
->>>>
->>>> Changes from v2:
->>>> * Rebased on top of linux-next top of the tree branch
->>>>
->>>> Changes from v1:
->>>> * s/Designware/DesignWare
->>>>
->>>> =C2=A0 drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++++
->>>> =C2=A0 drivers/pci/controller/dwc/pcie-designware.h=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 | 5 +++++
->>>> =C2=A0 2 files changed, 13 insertions(+)
->>>
->>> Series doesn't apply to v5.1-rc1, what's based on ? I suspect
->>> there is a dependency on pci/keystone, given the tight timeline
->>> for the merge window, would you mind postponing it to v5.3 ?
->>>
->>> I do not think it is urgent, I am happy to create a branch
->>> for it as soon as v5.2-rc1 is released.
->> I rebased my changes on top of linux-next. I see that they have conflict=
-s
->> on top of v5.1-rc1. Do you want me to rebase them on top of v5.1-rc1 ins=
-tead
->> of linux-next?
->> I'm fine with v5.2-rc1 as well.I forgot to mention that these changes ar=
-e made on top of Jisheng's patches
-> FWIW, Jisheng's patches are approved and applied to pci/dwc for v5.2
-> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1968324.html
+On 25/05/2019 10:57, Hariprasad Kelam wrote:
 
-Hi Lorenzo,
-Now that v5.2-rc2 is also available, could you please pick up this series?
+> fix below warnings reported by coccichek
+> 
+> /drivers/pci/controller/pci-tegra.c:1132:1-3: WARNING: PTR_ERR_OR_ZERO
+> can be used
+> ./drivers/pci/controller/dwc/pcie-qcom.c:703:1-3: WARNING:
+> PTR_ERR_OR_ZERO can be used
+> ./drivers/pci/controller/dwc/pci-meson.c:185:1-3: WARNING:
+> PTR_ERR_OR_ZERO can be used
+> ./drivers/pci/controller/dwc/pci-meson.c:262:1-3: WARNING:
+> PTR_ERR_OR_ZERO can be used
+> ./drivers/pci/controller/dwc/pcie-kirin.c:141:1-3: WARNING:
+> PTR_ERR_OR_ZERO can be used
+> ./drivers/pci/controller/dwc/pcie-kirin.c:177:1-3: WARNING:
+> PTR_ERR_OR_ZERO can be used
+> ./drivers/pci/controller/dwc/pci-exynos.c:95:1-3: WARNING:
+> PTR_ERR_OR_ZERO can be used
+> 
+> Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+> ---
+>  drivers/pci/controller/dwc/pci-exynos.c | 4 +---
+>  drivers/pci/controller/dwc/pci-meson.c  | 8 ++------
+>  drivers/pci/controller/dwc/pcie-kirin.c | 8 ++------
+>  drivers/pci/controller/dwc/pcie-qcom.c  | 4 +---
+>  drivers/pci/controller/pci-tegra.c      | 4 +---
+>  5 files changed, 7 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 0ed235d..6c421e6 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -700,10 +700,8 @@ static int qcom_pcie_get_resources_2_4_0(struct qcom_pcie *pcie)
+>  		return PTR_ERR(res->ahb_reset);
+>  
+>  	res->phy_ahb_reset = devm_reset_control_get_exclusive(dev, "phy_ahb");
+> -	if (IS_ERR(res->phy_ahb_reset))
+> -		return PTR_ERR(res->phy_ahb_reset);
+>  
+> -	return 0;
+> +	return PTR_ERR_OR_ZERO(res->phy_ahb_reset);
+>  }
+>  
+>  static void qcom_pcie_deinit_2_4_0(struct qcom_pcie *pcie)
 
-Thanks,
-Vidya Sagar
+My opinion doesn't carry any weight, but IMO using PTR_ERR_OR_ZERO instead
+of PTR_ERR breaks the symmetry of the previous operations.
 
->=20
->>
->>>
->>> Thanks,
->>> Lorenzo
->>>
->>>> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drive=
-rs/pci/controller/dwc/pcie-designware-host.c
->>>> index 77db32529319..d069e4290180 100644
->>>> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
->>>> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
->>>> @@ -496,6 +496,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return ret;
->>>> =C2=A0 }
->>>> +void dw_pcie_host_deinit(struct pcie_port *pp)
->>>> +{
->>>> +=C2=A0=C2=A0=C2=A0 pci_stop_root_bus(pp->root_bus);
->>>> +=C2=A0=C2=A0=C2=A0 pci_remove_root_bus(pp->root_bus);
->>>> +=C2=A0=C2=A0=C2=A0 if (pci_msi_enabled() && !pp->ops->msi_host_init)
->>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 dw_pcie_free_msi(pp);
->>>> +}
->>>> +
->>>> =C2=A0 static int dw_pcie_access_other_conf(struct pcie_port *pp, stru=
-ct pci_bus *bus,
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 u32 devfn, =
-int where, int size, u32 *val,
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool write)
->>>> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pc=
-i/controller/dwc/pcie-designware.h
->>>> index deab426affd3..4f48ec78c7b9 100644
->>>> --- a/drivers/pci/controller/dwc/pcie-designware.h
->>>> +++ b/drivers/pci/controller/dwc/pcie-designware.h
->>>> @@ -348,6 +348,7 @@ void dw_pcie_msi_init(struct pcie_port *pp);
->>>> =C2=A0 void dw_pcie_free_msi(struct pcie_port *pp);
->>>> =C2=A0 void dw_pcie_setup_rc(struct pcie_port *pp);
->>>> =C2=A0 int dw_pcie_host_init(struct pcie_port *pp);
->>>> +void dw_pcie_host_deinit(struct pcie_port *pp);
->>>> =C2=A0 int dw_pcie_allocate_domains(struct pcie_port *pp);
->>>> =C2=A0 #else
->>>> =C2=A0 static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *p=
-p)
->>>> @@ -372,6 +373,10 @@ static inline int dw_pcie_host_init(struct pcie_p=
-ort *pp)
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
->>>> =C2=A0 }
->>>> +static inline void dw_pcie_host_deinit(struct pcie_port *pp)
->>>> +{
->>>> +}
->>>> +
->>>> =C2=A0 static inline int dw_pcie_allocate_domains(struct pcie_port *pp=
-)
->>>> =C2=A0 {
->>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return 0;
->>>> --=20
->>>> 2.17.1
->>>>
->>
->=20
+It seems to give the last operation more importance than the previous ones,
+which I don't find desirable.
 
+Regards.
