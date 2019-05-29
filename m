@@ -3,62 +3,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DF13C46460
-	for <linux-pci@archiver.kernel.org>; Wed, 29 May 2019 16:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 711D0C28CC0
+	for <linux-pci@archiver.kernel.org>; Wed, 29 May 2019 16:59:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E86923DAB
-	for <linux-pci@archiver.kernel.org>; Wed, 29 May 2019 16:32:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D39323E7F
+	for <linux-pci@archiver.kernel.org>; Wed, 29 May 2019 16:59:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726860AbfE2QcD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 29 May 2019 12:32:03 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:49158 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726062AbfE2QcD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 May 2019 12:32:03 -0400
+        id S1725956AbfE2Q7S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 29 May 2019 12:59:18 -0400
+Received: from foss.arm.com ([217.140.101.70]:49490 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725948AbfE2Q7S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 29 May 2019 12:59:18 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id D6B0E341;
-        Wed, 29 May 2019 09:32:02 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id EDDF0341;
+        Wed, 29 May 2019 09:59:17 -0700 (PDT)
 Received: from redmoon (e121166-lin.cambridge.arm.com [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 37B3A3F5AF;
-        Wed, 29 May 2019 09:32:01 -0700 (PDT)
-Date:   Wed, 29 May 2019 17:31:55 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9681C3F5AF;
+        Wed, 29 May 2019 09:59:16 -0700 (PDT)
+Date:   Wed, 29 May 2019 17:59:06 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 0/3] Qualcomm QCS404 PCIe support
-Message-ID: <20190529163155.GA24655@redmoon>
-References: <20190529005710.23950-1-bjorn.andersson@linaro.org>
+To:     Alan Mikhak <alan.mikhak@sifive.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kishon@ti.com, linux-riscv@lists.infradead.org, palmer@sifive.com,
+        paul.walmsley@sifive.com
+Subject: Re: [PATCH v2 0/2] tools: PCI: Fix broken pcitest compilation
+Message-ID: <20190529165856.GA25642@redmoon>
+References: <1558646281-12676-1-git-send-email-alan.mikhak@sifive.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190529005710.23950-1-bjorn.andersson@linaro.org>
+In-Reply-To: <1558646281-12676-1-git-send-email-alan.mikhak@sifive.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, May 28, 2019 at 05:57:07PM -0700, Bjorn Andersson wrote:
-> This series adds support for the PCIe controller in the Qualcomm QCS404
-> platform.
+On Thu, May 23, 2019 at 02:17:59PM -0700, Alan Mikhak wrote:
+> This patchset fixes a compiler error and two warnings that resulted in a
+> broken compilation of pcitest.
 > 
-> Bjorn Andersson (3):
->   PCI: qcom: Use clk_bulk API for 2.4.0 controllers
->   dt-bindings: PCI: qcom: Add QCS404 to the binding
->   PCI: qcom: Add QCS404 PCIe controller support
-> 
->  .../devicetree/bindings/pci/qcom,pcie.txt     |  25 +++-
->  drivers/pci/controller/dwc/pcie-qcom.c        | 113 ++++++++----------
->  2 files changed, 75 insertions(+), 63 deletions(-)
+>  tools/pci/pcitest.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 
-Applied to pci/qcom for v5.3, thanks.
+Applied to pci/misc for v5.3, thanks.
 
 Lorenzo
