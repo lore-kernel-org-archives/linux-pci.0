@@ -2,114 +2,160 @@ Return-Path: <SRS0=0U9d=T6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1074BC28CC0
-	for <linux-pci@archiver.kernel.org>; Thu, 30 May 2019 20:58:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23294C28CC0
+	for <linux-pci@archiver.kernel.org>; Thu, 30 May 2019 22:33:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7B5026197
-	for <linux-pci@archiver.kernel.org>; Thu, 30 May 2019 20:58:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559249907;
-	bh=RzysyGPyd/1YfGrfUAerdAkUBe+i+zzpSKAftG8O6q4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=scGNQ9ZerPmvMehzJTFMvqyUQ9WxMt2eshDrj7DEmCIlSB5nPBwmrvTdTX5MDyaJG
-	 FbwR3B4H78OrNKARxLdyA/LkqqL0y3HOJc027OJ9eGBeYHwevyCXT7ezQ0yVXCjXOA
-	 aSJraRycT0LoUKD+Fl8x8fCmTHM6q2Ovgxvbi3ts=
+	by mail.kernel.org (Postfix) with ESMTP id E98D026299
+	for <linux-pci@archiver.kernel.org>; Thu, 30 May 2019 22:33:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=anastas.io header.i=@anastas.io header.b="M+lxrRvM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726430AbfE3U60 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 30 May 2019 16:58:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36060 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726125AbfE3U60 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 May 2019 16:58:26 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726106AbfE3WdJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 30 May 2019 18:33:09 -0400
+Received: from alpha.anastas.io ([104.248.188.109]:53149 "EHLO
+        alpha.anastas.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726045AbfE3WdJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 May 2019 18:33:09 -0400
+Received: from authenticated-user (alpha.anastas.io [104.248.188.109])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B06D526197;
-        Thu, 30 May 2019 20:58:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559249906;
-        bh=RzysyGPyd/1YfGrfUAerdAkUBe+i+zzpSKAftG8O6q4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kj+YxR0PJOduRngkGNK3NVnrXL+3fjj0Twq+mHpZ8YnphK3kahYWsfVtl2Ac2Ozi3
-         9ywGdtXK4eqjk3jhGVVwxONwO+OMq1nms6trKDSwUXataFp0iQ6kkV1ErsXM9OkjnI
-         QrRU0Kh+8BQvHzqdY8mbuZEbwnl7ILpxn20AWMNY=
-Date:   Thu, 30 May 2019 15:58:23 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Himanshu Madhani <hmadhani@marvell.com>
-Cc:     Andrew Vasquez <andrewv@marvell.com>,
-        Girish Basrur <gbasrur@marvell.com>,
-        Giridhar Malavali <gmalavali@marvell.com>,
-        Myron Stowe <mstowe@redhat.com>,
+        by alpha.anastas.io (Postfix) with ESMTPSA id 72F8B7F8BF;
+        Thu, 30 May 2019 17:33:07 -0500 (CDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=anastas.io; s=mail;
+        t=1559255588; bh=3ZOWYrFYbkF4GORGQ+Tfp7UoyviSixFiW9Lo/7bz6do=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=M+lxrRvMT6PV/3q7mqKTyEQq6Y/Bq0qvZpo8+0gEZ8xNqXCwiXB4vzvl6XfoXL0im
+         KtCT7SK67s8LIKoPP/0gbjLJE7dIj8tWfyhbVgiCsajhsMNxZtP20aDvHRz3RhTekW
+         uIeqYh6LZakkKsWQKGrO4YtmAZcKttqsVfePLHEo5G41dXiaVGkUf0Ng43ltcuY2tU
+         jr3JFJWd6xmJCJAyl5WYiPaJhVtnNo0ULrVVUxFxbOUm3u74KpqUrM9LT5bHQXpZAt
+         5+EKsu9zGSOViXVcgGKlsdkYpzlGprPWwmKJ2PyhRhtY9XvnI41EVATsr4Fi+N0E8i
+         RS29W2UNAkjBg==
+Subject: Re: [EXTERNAL] Re: [PATCH v3 1/3] PCI: Introduce
+ pcibios_ignore_alignment_request
+To:     Sam Bobroff <sbobroff@linux.ibm.com>, Oliver <oohall@gmail.com>
+Cc:     linux-pci@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Quinn Tran <quinn.tran@qlogic.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [EXT] VPD access Blocked by commit
- 0d5370d1d85251e5893ab7c90a429464de2e140b
-Message-ID: <20190530205823.GA45696@google.com>
-References: <B5B745A3-96B4-46ED-8F3F-D3636A96057F@marvell.com>
- <CAErSpo5qy6WuUe9cz1vTBBnc5P_uZaPzc-Yqbag2eBBxzi+ENg@mail.gmail.com>
- <CAErSpo45bCV7geSPAwBjy5fdQqzDcX61Ybksk65c=intfTWFZQ@mail.gmail.com>
- <D8764654-E2A0-43B8-97D9-6644F2BC8D0E@marvell.com>
+        rppt@linux.ibm.com, Paul Mackerras <paulus@samba.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, xyjxie@linux.vnet.ibm.com,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+References: <20190528040313.35582-1-shawn@anastas.io>
+ <20190528040313.35582-2-shawn@anastas.io>
+ <CAOSf1CEFfbmwfvmdqT1xdt8SFb=tYdYXLfXeyZ8=iRnhg4a3Pg@mail.gmail.com>
+ <20190530065556.GA29428@tungsten.ozlabs.ibm.com>
+From:   Shawn Anastasio <shawn@anastas.io>
+Message-ID: <8785226a-b2eb-8157-e724-d575c66b7bef@anastas.io>
+Date:   Thu, 30 May 2019 17:33:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <D8764654-E2A0-43B8-97D9-6644F2BC8D0E@marvell.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190530065556.GA29428@tungsten.ozlabs.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, May 30, 2019 at 07:33:01PM +0000, Himanshu Madhani wrote:
 
-> We are able to successfully read VPD config data using lspci and cat
-> command
 
-Yes, you mentioned that in the very first email.  I was hoping you
-would include the actual data, e.g., "cat vpd | xxd".  That would help
-us figure out why you don't see the panic any more.  I suspect either:
+On 5/30/19 1:55 AM, Sam Bobroff wrote:
+> On Tue, May 28, 2019 at 03:36:34PM +1000, Oliver wrote:
+>> On Tue, May 28, 2019 at 2:03 PM Shawn Anastasio <shawn@anastas.io> wrote:
+>>>
+>>> Introduce a new pcibios function pcibios_ignore_alignment_request
+>>> which allows the PCI core to defer to platform-specific code to
+>>> determine whether or not to ignore alignment requests for PCI resources.
+>>>
+>>> The existing behavior is to simply ignore alignment requests when
+>>> PCI_PROBE_ONLY is set. This is behavior is maintained by the
+>>> default implementation of pcibios_ignore_alignment_request.
+>>>
+>>> Signed-off-by: Shawn Anastasio <shawn@anastas.io>
+>>> ---
+>>>   drivers/pci/pci.c   | 9 +++++++--
+>>>   include/linux/pci.h | 1 +
+>>>   2 files changed, 8 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>> index 8abc843b1615..8207a09085d1 100644
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -5882,6 +5882,11 @@ resource_size_t __weak pcibios_default_alignment(void)
+>>>          return 0;
+>>>   }
+>>>
+>>> +int __weak pcibios_ignore_alignment_request(void)
+>>> +{
+>>> +       return pci_has_flag(PCI_PROBE_ONLY);
+>>> +}
+>>> +
+>>>   #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+>>>   static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
+>>>   static DEFINE_SPINLOCK(resource_alignment_lock);
+>>> @@ -5906,9 +5911,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>>>          p = resource_alignment_param;
+>>>          if (!*p && !align)
+>>>                  goto out;
+>>> -       if (pci_has_flag(PCI_PROBE_ONLY)) {
+>>> +       if (pcibios_ignore_alignment_request()) {
+>>>                  align = 0;
+>>> -               pr_info_once("PCI: Ignoring requested alignments (PCI_PROBE_ONLY)\n");
+>>> +               pr_info_once("PCI: Ignoring requested alignments\n");
+>>>                  goto out;
+>>>          }
+>>
+>> I think the logic here is questionable to begin with. If the user has
+>> explicitly requested re-aligning a resource via the command line then
+>> we should probably do it even if PCI_PROBE_ONLY is set. When it breaks
+>> they get to keep the pieces.
+>>
+>> That said, the real issue here is that PCI_PROBE_ONLY probably
+>> shouldn't be set under qemu/kvm. Under the other hypervisor (PowerVM)
+>> hotplugged devices are configured by firmware before it's passed to
+>> the guest and we need to keep the FW assignments otherwise things
+>> break. QEMU however doesn't do any BAR assignments and relies on that
+>> being handled by the guest. At boot time this is done by SLOF, but
+>> Linux only keeps SLOF around until it's extracted the device-tree.
+>> Once that's done SLOF gets blown away and the kernel needs to do it's
+>> own BAR assignments. I'm guessing there's a hack in there to make it
+>> work today, but it's a little surprising that it works at all...
+>>
+>> IIRC Sam Bobroff was looking at hotplug under pseries recently so he
+>> might have something to add. He's sick at the moment, but I'll ask him
+>> to take a look at this once he's back among the living
+> 
+> There seems to be some code already in the kernel that will disable
+> PCI_PROBE_ONLY based on a device tree property, so I did a quick test
+> today and it seems to work. Only a trivial tweak is needed in QEMU to
+> do it (have spapr_dt_chosen() add a node called "linux,pci-probe-only"
+> with a value of 0), and that would allow us to set it only for QEMU (and
+> not PowerVM) if that's what we want to do. Is that useful?
+> 
+> (I haven't done any real testing yet but the guest booted up OK.)
 
-  - new QLogic firmware fixed the structure of the VPD data so Linux
-    no longer attempts to read past the end of the implemented region,
-    or,
+It was my understanding that PCI_PROBE_ONLY should actually be set
+initially so that Linux uses SLOF's BAR assignments. The issue here
+is that PCI_PROBE_ONLY shouldn't be honored after initial bringup
+on KVM so that hotplugged PCI devices can have custom BAR alignments.
 
-  - we still read past the end of the implemented VPD region, but the
-    device doesn't report an error or the platform deals with the
-    error without causing a panic.
+Of course, if there's no need to honor SLOF's initial assignments,
+I assume disabling PCI_PROBE_ONLY would work fine. In fact, I'm
+not entirely sure why it's done in the first place. Does anybody
+know?
 
-> We also verified this same configuration on a SuperMicro X10SRA-F
-> server (which i had sent in earlier email)’ and were able to verify
-> that the VPD read was good and there were no errors on PCIe trace.
+If there is actually a valid reason for preserving SLOF's initial
+assignments, then it seems like the correct solution is to disable
+PCI_PROBE_ONLY after initial PCI bringup or ignore it in
+pci_specified_resource_alignment() like I do in this patch set.
 
-Since you saw no PCIe errors here, this suggests that new firmware has
-changed the format of the VPD data.
+Bjorn Helgaas also suggested marking individual resources provided
+by SLOF/PHYP with IORESOURCE_PCI_FIXED which would remove the need
+to use PCI_PROBE_ONLY altogether.
 
-> Given this information, Please consider reverting the patch until we
-> further debug the issue and resolve as it is affecting general
-> availability of our adapter.
+Any thoughts?
 
-1) The way Linux works is that you would post a patch that does the
-revert you'd like to see done.
-
-2) It's unlikely that a simple revert of 0d5370d1d852 ("PCI: Prevent
-VPD access for QLogic ISP2722") is the right answer because that would
-make Ethan's machine panic again.  It's possible that a QLogic
-firmware update would avoid the panic, but we can't simply revert the
-patch and force users to do that update.
-
-If a QLogic firmware update indeed fixed the VPD format, I suggest
-that you ask the folks responsible for the firmware to identify the
-specific version where that was fixed and how the OS can figure that
-out.
-
-Then you could make a new quirk specific to this device that allows
-VPD reads if the adapter has new enough firmware.  If it finds older
-firmware, it could even print a message suggesting that users could
-update the firmware if they need to read VPD data.
-
-Bjorn
+- Shawn
