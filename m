@@ -2,102 +2,73 @@ Return-Path: <SRS0=rep4=T7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B0CC04AB6
-	for <linux-pci@archiver.kernel.org>; Fri, 31 May 2019 11:14:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 277A1C04AB6
+	for <linux-pci@archiver.kernel.org>; Fri, 31 May 2019 13:03:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 643822681C
-	for <linux-pci@archiver.kernel.org>; Fri, 31 May 2019 11:14:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E50ED26928
+	for <linux-pci@archiver.kernel.org>; Fri, 31 May 2019 13:03:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1559307820;
+	bh=EAcHXloLVvWOmeaCQKGt2kykF6vQUgK3h5YLYFZKb5Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=FwnUiLmCQw6PMfb+tkJglTDNcczBF5cIusROPLuH7SGMkpyfjwu+TlSNQ/wXji5n8
+	 UEF67xTylAiHmArQMS9iz6I6fZU1j+J5WduQ6As48iOe8ovtlFHKQ2cFI/YF/w7cay
+	 6Lno1uTH6kVA/mLncJSIOGVCuEsJVh5Fc8qJ41JI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726403AbfEaLON (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 31 May 2019 07:14:13 -0400
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:50240 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726240AbfEaLON (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 May 2019 07:14:13 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.72.51.249])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2A8B6341;
-        Fri, 31 May 2019 04:14:13 -0700 (PDT)
-Received: from [10.1.196.129] (ostrya.cambridge.arm.com [10.1.196.129])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2E6DF3F5AF;
-        Fri, 31 May 2019 04:14:10 -0700 (PDT)
-Subject: Re: [virtio-dev] Re: [PATCH v8 2/7] dt-bindings: virtio: Add
- virtio-pci-iommu node
-To:     "Michael S. Tsirkin" <mst@redhat.com>
-Cc:     "joro@8bytes.org" <joro@8bytes.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "bauerman@linux.ibm.com" <bauerman@linux.ibm.com>
-References: <20190530170929.19366-1-jean-philippe.brucker@arm.com>
- <20190530170929.19366-3-jean-philippe.brucker@arm.com>
- <20190530133523-mutt-send-email-mst@kernel.org>
-From:   Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <c3cd5dba-123d-e808-98b1-731ac2d4b950@arm.com>
-Date:   Fri, 31 May 2019 12:13:47 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+        id S1727207AbfEaNDj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 31 May 2019 09:03:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55804 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726330AbfEaNDj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 May 2019 09:03:39 -0400
+Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7AFA226928;
+        Fri, 31 May 2019 13:03:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1559307818;
+        bh=EAcHXloLVvWOmeaCQKGt2kykF6vQUgK3h5YLYFZKb5Q=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=0xA4neoblMrz9g0w77d8Ik0pV5W3wOMiLGHIt48Qv6JWGepPT7uMm7mCu3c0A6O0M
+         u6TYIV3M0BPYWe/tU+/R5Y8z+iayyr2RshD+zlN9jkJmqa5h4/BKw9+0FfYpsiwhy3
+         CC763w4f6Em3BN69cmomHPMD/zy8RSSze4aDNass=
+Date:   Fri, 31 May 2019 08:03:36 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     sathyanarayanan.kuppuswamy@linux.intel.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ashok.raj@intel.com, keith.busch@intel.com
+Subject: Re: [PATCH v3 1/5] PCI/ACPI: Add _OSC based negotiation support for
+ DPC
+Message-ID: <20190531130336.GO28250@google.com>
+References: <cover.1557870869.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <1d7b8966972edcad8ac9f219e9d83b47beb85f6f.1557870869.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20190530133523-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1d7b8966972edcad8ac9f219e9d83b47beb85f6f.1557870869.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 30/05/2019 18:45, Michael S. Tsirkin wrote:
-> On Thu, May 30, 2019 at 06:09:24PM +0100, Jean-Philippe Brucker wrote:
->> Some systems implement virtio-iommu as a PCI endpoint. The operating
->> system needs to discover the relationship between IOMMU and masters long
->> before the PCI endpoint gets probed. Add a PCI child node to describe the
->> virtio-iommu device.
->>
->> The virtio-pci-iommu is conceptually split between a PCI programming
->> interface and a translation component on the parent bus. The latter
->> doesn't have a node in the device tree. The virtio-pci-iommu node
->> describes both, by linking the PCI endpoint to "iommus" property of DMA
->> master nodes and to "iommu-map" properties of bus nodes.
->>
->> Reviewed-by: Rob Herring <robh@kernel.org>
->> Reviewed-by: Eric Auger <eric.auger@redhat.com>
->> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+On Tue, May 14, 2019 at 03:18:13PM -0700, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
+> From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 > 
-> So this is just an example right?
-> We are not defining any new properties or anything like that.
+> As per PCI Firmware Specification, r3.2 ECN
+> (https://members.pcisig.com/wg/PCI-SIG/document/12614), OS can use
+> bit 7 of _OSC Control Field to negotiate control over Downstream Port
+> Containment (DPC) configuration of PCIe port.
 
-Yes it's just an example. The properties already exist but it's good to
-describe how to put them together for this particular case, because
-there isn't a precedent describing the topology for an IOMMU that
-appears on the PCI bus.
+I think this citation should reference the "Downstream Port
+Containment Related Enhancements ECN", i.e., it should include the
+title of the ECN.  I first thought you were citing the PCI Firmware
+Spec, r3.2, but of course it's not in there.
 
-> I think down the road for non dt platforms we want to put this
-> info in the config space of the device. I do not think ACPI
-> is the best option for this since not all systems have it.
-> But that can wait.
-
-There is the probe order problem - PCI needs this info before starting
-to probe devices on the bus. Maybe we could store the info in a separate
-memory region, that is referenced on the command-line and that the guest
-can read early.
-
-Thanks,
-Jean
+Bjorn
