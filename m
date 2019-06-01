@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26D15C28CC3
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 22:28:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6255EC28CC3
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 22:28:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDB2A277BD
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 22:28:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A0B9277B2
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 22:28:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="JpIZxOLH"
+	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="tn0zxaPZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726879AbfFAW2B (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Jun 2019 18:28:01 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:35484 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726858AbfFAW2B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2019 18:28:01 -0400
-Received: by mail-pl1-f194.google.com with SMTP id p1so5451282plo.2
-        for <linux-pci@vger.kernel.org>; Sat, 01 Jun 2019 15:28:01 -0700 (PDT)
+        id S1726947AbfFAW2V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 18:28:21 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:34774 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726911AbfFAW2I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2019 18:28:08 -0400
+Received: by mail-pg1-f194.google.com with SMTP id h2so2810239pgg.1
+        for <linux-pci@vger.kernel.org>; Sat, 01 Jun 2019 15:28:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=joelfernandes.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=JYEdUUvy8S93JfyESlA9B4bQMgXK5qa78QvxuKI1iX8=;
-        b=JpIZxOLHu3pAr7XqjE6lQyNILkSNtWAhlsGBsqQ9nX8Mkf45RZkSqCsB1ogyuaGHYR
-         oID/Qzt9GUMhWhlEy7pzJd90HrYVZDZ4ddj9Se3v7fLclY18Kge6hu4MUcAmLD+wf4b0
-         XKyDW7+epwfSMkz4uMyVUA2uPZnDSVHkqAT6k=
+        bh=Z4Z5Q8yj6p64Y2o7Spib8gfVriUeNJkKQsEzc/+Hzz0=;
+        b=tn0zxaPZcEF0gzwva8HqnPjJia9DDhSQmHjOrC5LIgyWnnOofGPjmYj/hXfVZ8L0em
+         XP3bB8/bqiw1eHWRAsDs+Eo+KMd0muYlR7W1IGD9w2kQhutp6W3nJjVkUHo/gqw0gscT
+         hSNuQPr6j2Tn6vwct85U2AwqZoqgLSmSxBAAc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JYEdUUvy8S93JfyESlA9B4bQMgXK5qa78QvxuKI1iX8=;
-        b=ol9jMDK+FOf/snqTL70+d4Si0rPAjX/Hb0myHrTYFNSGlBdbI9GfsF1wtYhJgZsXAX
-         CJTgJf57bV0lcO+RVZNCpXU2zDj2kz8H5yyLvgqGpsFCWO36jlsdYWc3lA3H09ua5YMU
-         1sEW/S1VosA/92BOW+eJrKt7IY3CakhVDob6lnBNlgC0yKIWav2h7fLAD1S1KemnLWps
-         tS25MHup1uleFfcmHJX7sBhQhW4nFGBy66X1jfj3WztiH/sB10hfMIVLSwWwI+o6fcxE
-         v8SNKipHGNROzmahMx/8Mex5UyOuJWegqDU14Y2/cO5TA7SDmydCLcabUFS2M8urVMTS
-         HtuQ==
-X-Gm-Message-State: APjAAAWFYHOBMEh27ZfC9tBSIWXGmFFPQGYisv5oGZKXm37ItY7+eDUU
-        h5mcvM3myiLUc18jgvhXDjT6QA==
-X-Google-Smtp-Source: APXvYqwKk4GW7sHHyPB0GuHYf6OQ+CpmILR8gGtCpOPuYf+Qeg4Mh/EguSHhpRRCqMTs3zQmTpmcmg==
-X-Received: by 2002:a17:902:9a9:: with SMTP id 38mr20196036pln.10.1559428080628;
-        Sat, 01 Jun 2019 15:28:00 -0700 (PDT)
+        bh=Z4Z5Q8yj6p64Y2o7Spib8gfVriUeNJkKQsEzc/+Hzz0=;
+        b=pUhO1NHwtzHkKQvGHjMN68s00odv6paAyL3zt0cKKYdLdAInq/DimfZWJXYO0otk9b
+         vSNsOlIYkggQOfrkOjkU2bVfNAnzjwWsH6wCn81hwT5Go56XmkBCgreLMsqw+HnC9kOI
+         CE83JmLsFcUSLBIoorhbTUA8BywHrGb1BJFDRNS/WXXcic4qL/KKSANBWzeQifIyEpIv
+         sm3DCFWsDjekYHMomQKAG/uz1F8/znOmTZk7PtPRmtyOEex9H7mTshhSBoAmbN2zuHYk
+         Mp1GOu+nqA1+AgPF2vZ+/tEv/7/nWwq9ROs3US/6ofJVcsQ7tV+tB0CeT8sDHfyf6+UY
+         CmBw==
+X-Gm-Message-State: APjAAAXfqtECmtrRKv2jbhGrI2Ec/F6pDyZ5iLzduMUyS1kU+drYTbBZ
+        2oLYLMAaXkzN8PFZK7/9q+kOlA==
+X-Google-Smtp-Source: APXvYqyQL17LnHVw1B3g7pCMzLSsO7wfuWCIia7ACIsUpOs3uzhXYItiAbtRvGIh4rUXLEb0jWXqzQ==
+X-Received: by 2002:a63:a34c:: with SMTP id v12mr17850914pgn.198.1559428087981;
+        Sat, 01 Jun 2019 15:28:07 -0700 (PDT)
 Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
-        by smtp.gmail.com with ESMTPSA id t33sm9908018pjb.1.2019.06.01.15.27.57
+        by smtp.gmail.com with ESMTPSA id t33sm9908018pjb.1.2019.06.01.15.28.04
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Sat, 01 Jun 2019 15:27:59 -0700 (PDT)
+        Sat, 01 Jun 2019 15:28:07 -0700 (PDT)
 From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
@@ -75,9 +75,9 @@ Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
         Tejun Heo <tj@kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>,
         x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
-Subject: [RFC 4/6] workqueue: Convert for_each_wq to use built-in list check
-Date:   Sat,  1 Jun 2019 18:27:36 -0400
-Message-Id: <20190601222738.6856-5-joel@joelfernandes.org>
+Subject: [RFC 6/6] acpi: Use built-in RCU list checking for acpi_ioremaps list
+Date:   Sat,  1 Jun 2019 18:27:38 -0400
+Message-Id: <20190601222738.6856-7-joel@joelfernandes.org>
 X-Mailer: git-send-email 2.22.0.rc1.311.g5d7573a151-goog
 In-Reply-To: <20190601222738.6856-1-joel@joelfernandes.org>
 References: <20190601222738.6856-1-joel@joelfernandes.org>
@@ -88,31 +88,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-list_for_each_entry_rcu now has support to check for RCU reader sections
-as well as lock. Just use the support in it, instead of explictly
-checking in the caller.
+list_for_each_entry_rcu has built-in RCU and lock checking. Make use of
+it for acpi_ioremaps list traversal.
 
 Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
 ---
- kernel/workqueue.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/acpi/osl.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 9657315405de..91ed7aca16e5 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -424,9 +424,8 @@ static void workqueue_sysfs_unregister(struct workqueue_struct *wq);
-  * ignored.
-  */
- #define for_each_pwq(pwq, wq)						\
--	list_for_each_entry_rcu((pwq), &(wq)->pwqs, pwqs_node)		\
--		if (({ assert_rcu_or_wq_mutex(wq); false; })) { }	\
--		else
-+	list_for_each_entry_rcu((pwq), &(wq)->pwqs, pwqs_node,		\
-+				 lock_is_held(&(wq->mutex).dep_map))
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index f29e427d0d1d..c8b5d712c7ae 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -28,6 +28,7 @@
+ #include <linux/slab.h>
+ #include <linux/mm.h>
+ #include <linux/highmem.h>
++#include <linux/lockdep.h>
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
+ #include <linux/kmod.h>
+@@ -94,6 +95,7 @@ struct acpi_ioremap {
  
- #ifdef CONFIG_DEBUG_OBJECTS_WORK
+ static LIST_HEAD(acpi_ioremaps);
+ static DEFINE_MUTEX(acpi_ioremap_lock);
++#define acpi_ioremap_lock_held() lock_is_held(&acpi_ioremap_lock.dep_map)
  
+ static void __init acpi_request_region (struct acpi_generic_address *gas,
+ 	unsigned int length, char *desc)
+@@ -220,7 +222,7 @@ acpi_map_lookup(acpi_physical_address phys, acpi_size size)
+ {
+ 	struct acpi_ioremap *map;
+ 
+-	list_for_each_entry_rcu(map, &acpi_ioremaps, list)
++	list_for_each_entry_rcu(map, &acpi_ioremaps, list, acpi_ioremap_lock_held())
+ 		if (map->phys <= phys &&
+ 		    phys + size <= map->phys + map->size)
+ 			return map;
+@@ -263,7 +265,7 @@ acpi_map_lookup_virt(void __iomem *virt, acpi_size size)
+ {
+ 	struct acpi_ioremap *map;
+ 
+-	list_for_each_entry_rcu(map, &acpi_ioremaps, list)
++	list_for_each_entry_rcu(map, &acpi_ioremaps, list, acpi_ioremap_lock_held())
+ 		if (map->virt <= virt &&
+ 		    virt + size <= map->virt + map->size)
+ 			return map;
 -- 
 2.22.0.rc1.311.g5d7573a151-goog
 
