@@ -2,196 +2,147 @@ Return-Path: <SRS0=Eazx=UA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,T_DKIMWL_WL_HIGH autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65651C28CC4
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 22:28:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE3CCC28CC3
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 23:00:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D9D7277E2
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 22:28:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D023277DF
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 23:00:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="u9hyOmtk"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="P5a+za9L"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726935AbfFAW2c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Jun 2019 18:28:32 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:41181 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726823AbfFAW16 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 1 Jun 2019 18:27:58 -0400
-Received: by mail-pf1-f193.google.com with SMTP id q17so8349512pfq.8
-        for <linux-pci@vger.kernel.org>; Sat, 01 Jun 2019 15:27:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=joelfernandes.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=rqX2p4uQomvAAMxsp9TEtCWxlekRzsNAShlcKhjjs7M=;
-        b=u9hyOmtkHjFodsqyuMvifQjLEIbjbOOqfRSX3tNRi9E8HhOlBJLdxvNGwOW85TGM/d
-         /w6VDCUiwLJcv7Fb35zChbFxWc5Oe2xie9SV8/YjahmmS9P/twVmlQw2oBBNNunqlPpK
-         BZ1sImNKFFdkr8E6qsjV9GEwobbs6bVeqYvoY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=rqX2p4uQomvAAMxsp9TEtCWxlekRzsNAShlcKhjjs7M=;
-        b=Q+XVRnvNE194HMvqgOs6jxc7ist30WxWGuDLzdDgfdVz0bqvNeb3bqFHqR7k38Wb+6
-         8kcd5niXXsOV1CjROo5lfiD35hRnkgZgcdifwlHuyDH0zUWR/4poZpT8LzrUS8EBx9cX
-         j0NOiSdqD2fvKojjWMR3ddENyY3HqRrpN3WgirTtL5ZohaHY9/K5W0kq87+VWj+U0Mow
-         0fINDfan2rQkO7K8zrLAk5ilqVn+o206cvyqRiVbO83TgSMEQva35999E79uI4OaIsQZ
-         9eJu+hZiLa8U2cxJIwXNSaC4P7xas/NaTpkXW0O4Ji3PSy5dNLWhtEE27Cw+5/w7K6bs
-         4wOw==
-X-Gm-Message-State: APjAAAUe13Vvs4Mqw1dXHWEekCZe6VWvpUiEnNvGM2eV7NSo4ZdhUj4x
-        M/rHrrtTsm6EDFPurhiS/Dxu4g==
-X-Google-Smtp-Source: APXvYqyiCQj6LH72QpZ9kXjISAU3j1wiZHQ9UAorgqFGuK1ddmmKcw5Ut1EOXcWf5lfwMy2Ph2ZgdQ==
-X-Received: by 2002:a17:90b:d88:: with SMTP id bg8mr5074839pjb.70.1559428076902;
-        Sat, 01 Jun 2019 15:27:56 -0700 (PDT)
-Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
-        by smtp.gmail.com with ESMTPSA id t33sm9908018pjb.1.2019.06.01.15.27.53
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Sat, 01 Jun 2019 15:27:56 -0700 (PDT)
-From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>, keescook@chromium.org,
-        kernel-hardening@lists.openwall.com,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        neilb@suse.com, netdev@vger.kernel.org, oleg@redhat.com,
-        "Paul E. McKenney" <paulmck@linux.ibm.com>,
-        Pavel Machek <pavel@ucw.cz>, peterz@infradead.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, rcu@vger.kernel.org,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Tejun Heo <tj@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
-Subject: [RFC 3/6] driver/core: Convert to use built-in RCU list checking
-Date:   Sat,  1 Jun 2019 18:27:35 -0400
-Message-Id: <20190601222738.6856-4-joel@joelfernandes.org>
-X-Mailer: git-send-email 2.22.0.rc1.311.g5d7573a151-goog
-In-Reply-To: <20190601222738.6856-1-joel@joelfernandes.org>
-References: <20190601222738.6856-1-joel@joelfernandes.org>
+        id S1726211AbfFAW77 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 18:59:59 -0400
+Received: from mail-eopbgr820094.outbound.protection.outlook.com ([40.107.82.94]:41568
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726149AbfFAW77 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Jun 2019 18:59:59 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=testarcselector01; d=microsoft.com; cv=none;
+ b=fSb6VxGImQRbmaTavkMeZHoUsSVBf1DXWtzP/HAgRvmWBW14ual5jgSPk9qMxRD5bHZjI3ApOHBwsnc5pcE46fdq4e3YORh1MfZ3RMdq9F86ngck98feab2GpO4NL44j64Mj0NiXTw1WGEnSf5WVe20K3nnDWhpvF4OnU3t7epA=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=testarcselector01;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6n8cSrZdPBP+APjT0/IEZ2BwuACDxsAQURtUZpdtFGg=;
+ b=LmtRpazrLyzJLd1oQEqthEibTQtsCFdFtMI2EukQYlrugMU0LM6u0qzruVJ1cxpvwBhdZ/l/3qbOyrfzL+qfFmtulut7sfsfZQ2UE8CcjJXd6a40oFprCIfgc8FU9+MDjvBHa3kRWkrgUNWzxzlgPjSVcoKd8X/uszYZykY/b40=
+ARC-Authentication-Results: i=1; test.office365.com
+ 1;spf=none;dmarc=none;dkim=none;arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6n8cSrZdPBP+APjT0/IEZ2BwuACDxsAQURtUZpdtFGg=;
+ b=P5a+za9LL/HR4pI5A4E15ovJHrU0eC5i7p9VKaaoOo92tqJMOyyru9eg1xrAr0AHHEMF6nOYDBqzNvAL5/i5cyRgvK8EgLm9SDV2q05hukyiMDi8yCJ6HTehGrNcWn9j+QOE7NMAlLsiB41UaaMNRu+CYrmnOhczmApTmTjwT/k=
+Received: from BYAPR21MB1221.namprd21.prod.outlook.com (2603:10b6:a03:107::12)
+ by BYAPR21MB1221.namprd21.prod.outlook.com (2603:10b6:a03:107::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.1943.3; Sat, 1 Jun
+ 2019 22:59:56 +0000
+Received: from BYAPR21MB1221.namprd21.prod.outlook.com
+ ([fe80::d005:4de8:ffbf:ba6b]) by BYAPR21MB1221.namprd21.prod.outlook.com
+ ([fe80::d005:4de8:ffbf:ba6b%7]) with mapi id 15.20.1943.015; Sat, 1 Jun 2019
+ 22:59:56 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     YueHaibing <yuehaibing@huawei.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "sashal@kernel.org" <sashal@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI: hv: Fix build error without CONFIG_SYSFS
+Thread-Topic: [PATCH] PCI: hv: Fix build error without CONFIG_SYSFS
+Thread-Index: AQHVF8LqT31hu0oy4EC9yHNNMbYtz6aGQ4zQ
+Date:   Sat, 1 Jun 2019 22:59:56 +0000
+Message-ID: <BYAPR21MB12211EEA95200F437C8E37ECD71A0@BYAPR21MB1221.namprd21.prod.outlook.com>
+References: <20190531150923.12376-1-yuehaibing@huawei.com>
+In-Reply-To: <20190531150923.12376-1-yuehaibing@huawei.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=mikelley@ntdev.microsoft.com;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-06-01T22:59:54.1676311Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
+ Information Protection;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=0e76142d-58b5-4ed7-bcde-8854964c8780;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=mikelley@microsoft.com; 
+x-originating-ip: [24.22.167.197]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: a4ab7b9d-d25e-40d3-a23a-08d6e6e4ddb7
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:BYAPR21MB1221;
+x-ms-traffictypediagnostic: BYAPR21MB1221:
+x-microsoft-antispam-prvs: <BYAPR21MB12215469F4F965808C78C289D71A0@BYAPR21MB1221.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-forefront-prvs: 00550ABE1F
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(396003)(346002)(39860400002)(136003)(376002)(199004)(189003)(186003)(74316002)(229853002)(5660300002)(66476007)(66066001)(52536014)(66446008)(2906002)(256004)(22452003)(68736007)(6436002)(6116002)(11346002)(10090500001)(1511001)(76176011)(478600001)(486006)(2501003)(26005)(33656002)(476003)(9686003)(55016002)(446003)(316002)(8676002)(64756008)(76116006)(6246003)(14454004)(81156014)(71200400001)(66946007)(66556008)(8990500004)(53936002)(7736002)(86362001)(8936002)(71190400001)(305945005)(25786009)(73956011)(54906003)(7696005)(81166006)(10290500003)(6506007)(3846002)(4326008)(99286004)(110136005)(52396003)(102836004);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR21MB1221;H:BYAPR21MB1221.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: C4Y7O9stUinpPoHXFU9OYB3+n/CMkQYw6eItoBXj4T7AqdOGbpclD3v16eYbKB7FFxdhf7N6aIsVNyXWPuE+jgKa2dFYKChc5g02NS1X5YI5mQ9xSWZwTKjpjslc7Xi5f2JLDnK2JRkrZ3+yG6OwTLnTMjI5IvOC2Jq0g4kx3hhNt66vU6+2yC+NUgLu15dU6lK/EcEmivt8Y3ZSbnUSWrTkvBDhqwhw/0UNneqI4814FTUSprM+yuNdhzcqulQ9f9ULPy76/CCURB02wdN4GKe++z050Sdeiwukj/lRRY2FyrmSatRB7T3nb7olpDb/wFftWQDPSBFKlIRWaUl30Qscb+T0zopTNIv1APu65rnapKTGlVWJaW7/j4Gj75anJ/sFUQqOiRTCL8B7McPHnFkILYOF5Pn0e+zm/y7FHRg=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a4ab7b9d-d25e-40d3-a23a-08d6e6e4ddb7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Jun 2019 22:59:56.4076
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: mikelley@ntdev.microsoft.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR21MB1221
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-list_for_each_entry_rcu has built-in RCU and lock checking. Make use of
-it in driver core.
+From: YueHaibing <yuehaibing@huawei.com>  Sent: Friday, May 31, 2019 8:09 A=
+M
+>=20
+> while building without CONFIG_SYSFS, fails as below:
+>=20
+> drivers/pci/controller/pci-hyperv.o: In function 'hv_pci_assign_slots':
+> pci-hyperv.c:(.text+0x40a): undefined reference to 'pci_create_slot'
+> drivers/pci/controller/pci-hyperv.o: In function 'pci_devices_present_wor=
+k':
+> pci-hyperv.c:(.text+0xc02): undefined reference to 'pci_destroy_slot'
+> drivers/pci/controller/pci-hyperv.o: In function 'hv_pci_remove':
+> pci-hyperv.c:(.text+0xe50): undefined reference to 'pci_destroy_slot'
+> drivers/pci/controller/pci-hyperv.o: In function 'hv_eject_device_work':
+> pci-hyperv.c:(.text+0x11f9): undefined reference to 'pci_destroy_slot'
+>=20
+> Select SYSFS while PCI_HYPERV is set to fix this.
+>=20
 
-Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
----
- drivers/base/base.h          |  1 +
- drivers/base/core.c          | 10 ++++++++++
- drivers/base/power/runtime.c | 15 ++++++++++-----
- 3 files changed, 21 insertions(+), 5 deletions(-)
+I'm wondering if is the right way to fix the problem.  Conceptually
+is it possible to setup & operate virtual PCI devices like=20
+pci-hyperv.c does, even if sysfs is not present?  Or is it right to
+always required sysfs?
 
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index b405436ee28e..0d32544b6f91 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -165,6 +165,7 @@ static inline int devtmpfs_init(void) { return 0; }
- /* Device links support */
- extern int device_links_read_lock(void);
- extern void device_links_read_unlock(int idx);
-+extern int device_links_read_lock_held(void);
- extern int device_links_check_suppliers(struct device *dev);
- extern void device_links_driver_bound(struct device *dev);
- extern void device_links_driver_cleanup(struct device *dev);
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index fd7511e04e62..6c5ca9685647 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -68,6 +68,11 @@ void device_links_read_unlock(int idx)
- {
- 	srcu_read_unlock(&device_links_srcu, idx);
- }
-+
-+int device_links_read_lock_held(void)
-+{
-+	return srcu_read_lock_held(&device_links_srcu);
-+}
- #else /* !CONFIG_SRCU */
- static DECLARE_RWSEM(device_links_lock);
- 
-@@ -91,6 +96,11 @@ void device_links_read_unlock(int not_used)
- {
- 	up_read(&device_links_lock);
- }
-+
-+int device_links_read_lock_held(void)
-+{
-+	return lock_is_held(&device_links_lock);
-+}
- #endif /* !CONFIG_SRCU */
- 
- /**
-diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
-index 952a1e7057c7..7a10e8379a70 100644
---- a/drivers/base/power/runtime.c
-+++ b/drivers/base/power/runtime.c
-@@ -287,7 +287,8 @@ static int rpm_get_suppliers(struct device *dev)
- {
- 	struct device_link *link;
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node) {
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held()) {
- 		int retval;
- 
- 		if (!(link->flags & DL_FLAG_PM_RUNTIME) ||
-@@ -309,7 +310,8 @@ static void rpm_put_suppliers(struct device *dev)
- {
- 	struct device_link *link;
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node) {
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held()) {
- 		if (READ_ONCE(link->status) == DL_STATE_SUPPLIER_UNBIND)
- 			continue;
- 
-@@ -1640,7 +1642,8 @@ void pm_runtime_clean_up_links(struct device *dev)
- 
- 	idx = device_links_read_lock();
- 
--	list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
-+	list_for_each_entry_rcu(link, &dev->links.consumers, s_node,
-+				device_links_read_lock_held()) {
- 		if (link->flags & DL_FLAG_STATELESS)
- 			continue;
- 
-@@ -1662,7 +1665,8 @@ void pm_runtime_get_suppliers(struct device *dev)
- 
- 	idx = device_links_read_lock();
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held())
- 		if (link->flags & DL_FLAG_PM_RUNTIME) {
- 			link->supplier_preactivated = true;
- 			refcount_inc(&link->rpm_active);
-@@ -1683,7 +1687,8 @@ void pm_runtime_put_suppliers(struct device *dev)
- 
- 	idx = device_links_read_lock();
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held())
- 		if (link->supplier_preactivated) {
- 			link->supplier_preactivated = false;
- 			if (refcount_dec_not_one(&link->rpm_active))
--- 
-2.22.0.rc1.311.g5d7573a151-goog
+The function pci_dev_assign_slot() in slot.c has a null implementation
+in include/linux/pci.h when CONFIG_SYSFS is not defined, which
+seems to be trying to solve the same problem for that function.  And
+if CONFIG_HOTPLUG_PCI is defined but CONFIG_SYSFS is not,
+pci_hp_create_module_link() and pci_hp_remove_module_link()
+look like they would have the same problem.  Maybe there should
+be degenerate implementations of pci_create_slot() and
+pci_destroy_slot() for cases when CONFIG_SYSFS is not defined?
 
+But I'll admit I don't know the full story behind how PCI slots
+are represented and used, so maybe I'm off base.  I just noticed
+the inconsistency in how other functions in slot.c are handled.
+
+Thoughts?
+
+Michael
