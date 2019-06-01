@@ -7,48 +7,50 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D0E6C28CC4
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5841DC28CC4
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:34:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D9FA2745A
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3119A27551
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:34:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559395783;
-	bh=uAAi8CTOOnASvru0RtQIRJjMPSSGzCt7X5cKVXUegXs=;
+	s=default; t=1559396086;
+	bh=EHWpjrtgaGdvxxLPms5l6OrWYeITpsDHv3uESD7yqJs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=2EyuWEREq3KzCrWW5NxUmygdNRWPTsUHev7D26VGOqqMVlZL86bO4c6oCvacvdxvg
-	 4QJ1tzbw7dOKE7NjDrvMAu1OFCcNwvWZrX2MYHfkuBcxBiRaDmtdue6LXNl4i5bFyc
-	 4hHPezU6XW8VxC/BwVcvR5Z7mZA0SqB3dL/6go7I=
+	b=nzYkFjQCXVa2mCElpSM9z9iz34nDjuP6lkYtngl4qQ+AFGoRIWxyeIlMhv566a33U
+	 c1TtwpRFTT0vQuUTIuSVh7CdjWScF/uVL5KDpy77QkaEQ1sv/yjO2IttbnVt9mgkCi
+	 7O8Qdr+VhmrCrPybuJJGBow2XumRdR9tq5j+wY2s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727997AbfFAN3i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Jun 2019 09:29:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57348 "EHLO mail.kernel.org"
+        id S1728182AbfFANXd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 09:23:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53402 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729862AbfFAN0t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Jun 2019 09:26:49 -0400
+        id S1729037AbfFANXa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Jun 2019 09:23:30 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EC104273BD;
-        Sat,  1 Jun 2019 13:26:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EC86124C2E;
+        Sat,  1 Jun 2019 13:23:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559395608;
-        bh=uAAi8CTOOnASvru0RtQIRJjMPSSGzCt7X5cKVXUegXs=;
+        s=default; t=1559395409;
+        bh=EHWpjrtgaGdvxxLPms5l6OrWYeITpsDHv3uESD7yqJs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0X6bZYzNlH2LNW9OADR0SfFv+ow24fTjluDq0pLl1uezuEeBwDiANuq5WtuJybirJ
-         7FZ0hKLsLWDFZ4foNPijiNcvNjNky5FfLvI8JnZ1Ek1tJMTkO51u5gCsLyDEuNwSq5
-         og94ilhTrK0CtUn8fZTq9kZrTgqgxWzZIWbLDHBs=
+        b=y/c4Rd04R6gokmDxJSLrmAyKyb0DcmeZCneTCRGJJfQnBmcjFapfO7KOzmBnUwGS7
+         bFTszrJrwPIBzD/fE3FnO9l4MtR9dtwfW6S/lrFKXJnCsEiVpkaRJ+Ju9AypJaN3yB
+         Uxg+KlNYh9qIriUK8PDiNtFM0Z2pN42a5PCjxgUc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Prestwood <james.prestwood@linux.intel.com>,
+Cc:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 27/56] PCI: Mark Atheros AR9462 to avoid bus reset
-Date:   Sat,  1 Jun 2019 09:25:31 -0400
-Message-Id: <20190601132600.27427-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 047/141] PCI: dwc: Free MSI in dw_pcie_host_init() error path
+Date:   Sat,  1 Jun 2019 09:20:23 -0400
+Message-Id: <20190601132158.25821-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190601132600.27427-1-sashal@kernel.org>
-References: <20190601132600.27427-1-sashal@kernel.org>
+In-Reply-To: <20190601132158.25821-1-sashal@kernel.org>
+References: <20190601132158.25821-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -58,36 +60,66 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: James Prestwood <james.prestwood@linux.intel.com>
+From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
 
-[ Upstream commit 6afb7e26978da5e86e57e540fdce65c8b04f398a ]
+[ Upstream commit 9e2b5de5604a6ff2626c51e77014d92c9299722c ]
 
-When using PCI passthrough with this device, the host machine locks up
-completely when starting the VM, requiring a hard reboot.  Add a quirk to
-avoid bus resets on this device.
+If we ever did MSI-related initializations, we need to call
+dw_pcie_free_msi() in the error code path.
 
-Fixes: c3e59ee4e766 ("PCI: Mark Atheros AR93xx to avoid bus reset")
-Link: https://lore.kernel.org/linux-pci/20190107213248.3034-1-james.prestwood@linux.intel.com
-Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
+Remove the IS_ENABLED(CONFIG_PCI_MSI) check for MSI init because
+pci_msi_enabled() already has a stub for !CONFIG_PCI_MSI.
+
+Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: stable@vger.kernel.org	# v3.14+
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/dwc/pcie-designware-host.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index d85010ebac5aa..36c6f3702167c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3141,6 +3141,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0034, quirk_no_bus_reset);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index b56e22262a774..4eedb2c54ab38 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -439,7 +439,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (ret)
+ 		pci->num_viewport = 2;
  
- static void quirk_no_pm_reset(struct pci_dev *dev)
- {
+-	if (IS_ENABLED(CONFIG_PCI_MSI) && pci_msi_enabled()) {
++	if (pci_msi_enabled()) {
+ 		/*
+ 		 * If a specific SoC driver needs to change the
+ 		 * default number of vectors, it needs to implement
+@@ -477,7 +477,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (pp->ops->host_init) {
+ 		ret = pp->ops->host_init(pp);
+ 		if (ret)
+-			goto error;
++			goto err_free_msi;
+ 	}
+ 
+ 	pp->root_bus_nr = pp->busn->start;
+@@ -491,7 +491,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	ret = pci_scan_root_bus_bridge(bridge);
+ 	if (ret)
+-		goto error;
++		goto err_free_msi;
+ 
+ 	bus = bridge->bus;
+ 
+@@ -507,6 +507,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ 
++err_free_msi:
++	if (pci_msi_enabled() && !pp->ops->msi_host_init)
++		dw_pcie_free_msi(pp);
+ error:
+ 	pci_free_host_bridge(bridge);
+ 	return ret;
 -- 
 2.20.1
 
