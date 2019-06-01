@@ -4,122 +4,227 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBFA8C28CC4
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD5AEC28CC1
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 18:42:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5DB527693
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:41:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADD9527791
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 18:42:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559396498;
-	bh=EC9c2GInWSKJ2OTfHtjz/c/OUO0ekHNd7+59xQ4zdUo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=dTv0Gcv1FnitjYxao6Aosba3VxnVlScFDgLWEBT4CuSvP8vnn4eeKoAnntOP5EFSY
-	 qquUDppz/6ipIHIFLqS4rD4ALdwa739oB9hU6Cd/Z/VPg85WqXhrkrd3jZc8YPQwD2
-	 6VfkyQmJ7Hh9VOp6ASdMN6hROlsKSQlz2HrkJEYc=
+	s=default; t=1559414541;
+	bh=ylnKia+EXLW9UtRpuoBndbxg1FaaVmOOmXi44ieoevU=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=nhoFBaQUE99PXVKNP0Dn19QLV+b2BK6os3jgNjivGl3Y+7bHdkpXO/jaWiU1UwGiq
+	 KZ2ZJuu4F/52Nr0KadHEBWZc9SNZKB8RUv7hSiMgM3rbBOFLYkEDzxJJbIs7EtRkLA
+	 SJXLpMBoqX5NXBEUCM+fZi1UAiQdiXfeFOpuaECo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728066AbfFANTE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Jun 2019 09:19:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46234 "EHLO mail.kernel.org"
+        id S1726143AbfFASmU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 14:42:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60132 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728063AbfFANTD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Jun 2019 09:19:03 -0400
+        id S1726075AbfFASmU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Jun 2019 14:42:20 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7AEA5229EB;
-        Sat,  1 Jun 2019 13:19:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BE0572778F;
+        Sat,  1 Jun 2019 18:42:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559395143;
-        bh=EC9c2GInWSKJ2OTfHtjz/c/OUO0ekHNd7+59xQ4zdUo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ATVlVPOiu6YXFKhVypG3ijNqni909tGd6xlnGZ5YFqdOTrYidz5XDVdUjv3mTQO+A
-         qsV1pu7VMzANu3NfV+X81VcK+cboe7D258NKt7qiChqmPtXEFtEKuMLbwMaCa+9+fm
-         79dOCHphAFEzlIvrDcXQXfyCKkh/fzX6+v/KtEaE=
+        s=default; t=1559414539;
+        bh=ylnKia+EXLW9UtRpuoBndbxg1FaaVmOOmXi44ieoevU=;
+        h=From:To:Cc:Subject:Date:From;
+        b=vnqPgUaDzPJBjIlMCH529iITpLub312OLe1uqC160m3zYVgOwFPiQkuczuxPoBzh2
+         th081fLvjEZn2+u3zzngf5tycTi3Pzf5Tdl+QNPRQF328ekR7/z/LGwvdvnihc0Rvp
+         DVuHYF6TpXx22H7d4zv7fccAke6dAjJmlFFEFQXQ=
 From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 063/186] PCI: dwc: Free MSI in dw_pcie_host_init() error path
-Date:   Sat,  1 Jun 2019 09:14:39 -0400
-Message-Id: <20190601131653.24205-63-sashal@kernel.org>
+To:     lorenzo.pieralisi@arm.com, bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Haiyang Zhang <haiyangz@microsoft.com>, stable@kernel.org,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH] PCI: hv: Detect and fix Hyper-V PCI domain number collision
+Date:   Sat,  1 Jun 2019 14:42:11 -0400
+Message-Id: <20190601184211.8733-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190601131653.24205-1-sashal@kernel.org>
-References: <20190601131653.24205-1-sashal@kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+From: Haiyang Zhang <haiyangz@microsoft.com>
 
-[ Upstream commit 9e2b5de5604a6ff2626c51e77014d92c9299722c ]
+Due to Azure host agent settings, the device instance ID's bytes 8 and 9
+are no longer unique. This causes some of the PCI devices not showing up
+in VMs with multiple passthrough devices, such as GPUs. So, as recommended
+by Azure host team, we now use the bytes 4 and 5 which usually provide
+unique numbers.
 
-If we ever did MSI-related initializations, we need to call
-dw_pcie_free_msi() in the error code path.
+In the rare cases of collision, we will detect and find another number
+that is not in use.
+Thanks to Michael Kelley <mikelley@microsoft.com> for proposing this idea.
 
-Remove the IS_ENABLED(CONFIG_PCI_MSI) check for MSI init because
-pci_msi_enabled() already has a stub for !CONFIG_PCI_MSI.
-
-Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: stable@kernel.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/controller/pci-hyperv.c | 91 ++++++++++++++++++++++++-----
+ 1 file changed, 78 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 25087d3c9a823..acd185b4661e1 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -439,7 +439,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		pci->num_viewport = 2;
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index 82acd6155adf3..6b9cc6e60a040 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -37,6 +37,8 @@
+  * the PCI back-end driver in Hyper-V.
+  */
  
--	if (IS_ENABLED(CONFIG_PCI_MSI) && pci_msi_enabled()) {
-+	if (pci_msi_enabled()) {
- 		/*
- 		 * If a specific SoC driver needs to change the
- 		 * default number of vectors, it needs to implement
-@@ -477,7 +477,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init) {
- 		ret = pp->ops->host_init(pp);
- 		if (ret)
--			goto error;
-+			goto err_free_msi;
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -2507,6 +2509,47 @@ static void put_hvpcibus(struct hv_pcibus_device *hbus)
+ 		complete(&hbus->remove_event);
+ }
+ 
++#define HVPCI_DOM_MAP_SIZE (64 * 1024)
++static DECLARE_BITMAP(hvpci_dom_map, HVPCI_DOM_MAP_SIZE);
++
++/* PCI domain number 0 is used by emulated devices on Gen1 VMs, so define 0
++ * as invalid for passthrough PCI devices of this driver.
++ */
++#define HVPCI_DOM_INVALID 0
++
++/**
++ * hv_get_dom_num() - Get a valid PCI domain number
++ * Check if the PCI domain number is in use, and return another number if
++ * it is in use.
++ *
++ * @dom: Requested domain number
++ *
++ * return: domain number on success, HVPCI_DOM_INVALID on failure
++ */
++static u16 hv_get_dom_num(u16 dom)
++{
++	unsigned int i;
++
++	if (test_and_set_bit(dom, hvpci_dom_map) == 0)
++		return dom;
++
++	for_each_clear_bit(i, hvpci_dom_map, HVPCI_DOM_MAP_SIZE) {
++		if (test_and_set_bit(i, hvpci_dom_map) == 0)
++			return i;
++	}
++
++	return HVPCI_DOM_INVALID;
++}
++
++/**
++ * hv_put_dom_num() - Mark the PCI domain number as free
++ * @dom: Domain number to be freed
++ */
++static void hv_put_dom_num(u16 dom)
++{
++	clear_bit(dom, hvpci_dom_map);
++}
++
+ /**
+  * hv_pci_probe() - New VMBus channel probe, for a root PCI bus
+  * @hdev:	VMBus's tracking struct for this root PCI bus
+@@ -2518,6 +2561,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 			const struct hv_vmbus_device_id *dev_id)
+ {
+ 	struct hv_pcibus_device *hbus;
++	u16 dom_req, dom;
+ 	int ret;
+ 
+ 	/*
+@@ -2532,19 +2576,32 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	hbus->state = hv_pcibus_init;
+ 
+ 	/*
+-	 * The PCI bus "domain" is what is called "segment" in ACPI and
+-	 * other specs.  Pull it from the instance ID, to get something
+-	 * unique.  Bytes 8 and 9 are what is used in Windows guests, so
+-	 * do the same thing for consistency.  Note that, since this code
+-	 * only runs in a Hyper-V VM, Hyper-V can (and does) guarantee
+-	 * that (1) the only domain in use for something that looks like
+-	 * a physical PCI bus (which is actually emulated by the
+-	 * hypervisor) is domain 0 and (2) there will be no overlap
+-	 * between domains derived from these instance IDs in the same
+-	 * VM.
++	 * The PCI bus "domain" is what is called "segment" in ACPI and other
++	 * specs. Pull it from the instance ID, to get something usually
++	 * unique. In rare cases of collision, we will find out another number
++	 * not in use.
++	 * Note that, since this code only runs in a Hyper-V VM, Hyper-V
++	 * together with this guest driver can guarantee that (1) The only
++	 * domain used by Gen1 VMs for something that looks like a physical
++	 * PCI bus (which is actually emulated by the hypervisor) is domain 0.
++	 * (2) There will be no overlap between domains (after fixing possible
++	 * collisions) in the same VM.
+ 	 */
+-	hbus->sysdata.domain = hdev->dev_instance.b[9] |
+-			       hdev->dev_instance.b[8] << 8;
++	dom_req = hdev->dev_instance.b[5] << 8 | hdev->dev_instance.b[4];
++	dom = hv_get_dom_num(dom_req);
++
++	if (dom == HVPCI_DOM_INVALID) {
++		pr_err("Unable to use dom# 0x%hx or other numbers",
++		       dom_req);
++		ret = -EINVAL;
++		goto free_bus;
++	}
++
++	if (dom != dom_req)
++		pr_info("PCI dom# 0x%hx has collision, using 0x%hx",
++			dom_req, dom);
++
++	hbus->sysdata.domain = dom;
+ 
+ 	hbus->hdev = hdev;
+ 	refcount_set(&hbus->remove_lock, 1);
+@@ -2559,7 +2616,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 					   hbus->sysdata.domain);
+ 	if (!hbus->wq) {
+ 		ret = -ENOMEM;
+-		goto free_bus;
++		goto free_dom;
  	}
  
- 	pp->root_bus_nr = pp->busn->start;
-@@ -491,7 +491,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	ret = pci_scan_root_bus_bridge(bridge);
- 	if (ret)
--		goto error;
-+		goto err_free_msi;
- 
- 	bus = bridge->bus;
- 
-@@ -507,6 +507,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pci_bus_add_devices(bus);
- 	return 0;
- 
-+err_free_msi:
-+	if (pci_msi_enabled() && !pp->ops->msi_host_init)
-+		dw_pcie_free_msi(pp);
- error:
- 	pci_free_host_bridge(bridge);
+ 	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
+@@ -2636,6 +2693,8 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	vmbus_close(hdev->channel);
+ destroy_wq:
+ 	destroy_workqueue(hbus->wq);
++free_dom:
++	hv_put_dom_num(hbus->sysdata.domain);
+ free_bus:
+ 	free_page((unsigned long)hbus);
  	return ret;
+@@ -2717,6 +2776,9 @@ static int hv_pci_remove(struct hv_device *hdev)
+ 	put_hvpcibus(hbus);
+ 	wait_for_completion(&hbus->remove_event);
+ 	destroy_workqueue(hbus->wq);
++
++	hv_put_dom_num(hbus->sysdata.domain);
++
+ 	free_page((unsigned long)hbus);
+ 	return 0;
+ }
+@@ -2744,6 +2806,9 @@ static void __exit exit_hv_pci_drv(void)
+ 
+ static int __init init_hv_pci_drv(void)
+ {
++	/* Set the invalid domain number's bit, so it will not be used */
++	set_bit(HVPCI_DOM_INVALID, hvpci_dom_map);
++
+ 	return vmbus_driver_register(&hv_pci_drv);
+ }
+ 
 -- 
 2.20.1
 
