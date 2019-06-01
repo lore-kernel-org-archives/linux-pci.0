@@ -4,53 +4,53 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63F55C28CC1
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:21:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D07C46460
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:28:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 38BD92731B
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:21:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BE612588D
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:28:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559395302;
-	bh=b3UYFyW2TplH2lsanGiRcy3ZjlWFpAr0VzXFvEPYGwc=;
+	s=default; t=1559395689;
+	bh=bBqzhpjlF9a5ewQjycgLTP6BzvF8Q9GBGeuSnfvvjww=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=bZVRopYZUrPLhMS7HxR6merNxu8zWWFHokYwXaozuPmjKTq4W6u83RcRDJbR1T+19
-	 8v9W9MPktCYUV5/KbWV1rmqfnISM3as/HbsqhovqN34MY46uK7DryrcKhBKR9785jZ
-	 0cidSP6kY3B+6Tki6/Plj1y7zlepFLImjemTX/c8=
+	b=VmHH+PyrQKLiBLw2U1v3dfOAyKnk4FZ6Wqza38A6GMosiy99J6lZRteWbdQL4Rwi7
+	 vlBH+FKZnL3qfIhhQVu2swplQ81LE4bEo1WS6lpv+wpM0W9yonwI5Vy4/vFePX3lmO
+	 z9JJlT52x8ZaJ2iVgtIU5AVBH/Lh9CjILSSfSzt8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728556AbfFANVl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Jun 2019 09:21:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49122 "EHLO mail.kernel.org"
+        id S1729256AbfFAN2E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 09:28:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59036 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727913AbfFANVj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Jun 2019 09:21:39 -0400
+        id S1729950AbfFAN12 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Jun 2019 09:27:28 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 36BAA27301;
-        Sat,  1 Jun 2019 13:21:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id E35C524937;
+        Sat,  1 Jun 2019 13:27:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559395299;
-        bh=b3UYFyW2TplH2lsanGiRcy3ZjlWFpAr0VzXFvEPYGwc=;
+        s=default; t=1559395647;
+        bh=bBqzhpjlF9a5ewQjycgLTP6BzvF8Q9GBGeuSnfvvjww=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NxQNqBNMDpkd5fafmbJzwvU9oVdrMh22EzIwW1XsvDMooZzOIEmbZksfIZouWewIK
-         NLzasma6VM3cWn3YgIN5K+oelj+gaEadt+tUCZsiUsFv0PH8Nj3F9mzY5bm3cdVy37
-         gh97i+J+MEufkHdE7sFZVErHx7DqVx8rl2Uo3HbQ=
+        b=ehOpGPq7ip0HskbGxzeJvzPlvTTwgsUQVERM5GkdRpI/mjX55o1nbplPTV3mO4Cm8
+         QAsUjp7wt5X2BFTzdqdKx+4xcR6pooz7cjuZVAipYZpEspB4QlAFth0ZZA5O2celdN
+         I6HR52MUGl3aMqbBtSF6zRcdwdKnJWXNHscpbYHw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
+Cc:     Kangjie Lu <kjlu@umn.edu>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Steven Price <steven.price@arm.com>,
+        Mukesh Ojha <mojha@codeaurora.org>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.0 059/173] PCI: dwc: Free MSI in dw_pcie_host_init() error path
-Date:   Sat,  1 Jun 2019 09:17:31 -0400
-Message-Id: <20190601131934.25053-59-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 49/56] PCI: xilinx: Check for __get_free_pages() failure
+Date:   Sat,  1 Jun 2019 09:25:53 -0400
+Message-Id: <20190601132600.27427-49-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190601131934.25053-1-sashal@kernel.org>
-References: <20190601131934.25053-1-sashal@kernel.org>
+In-Reply-To: <20190601132600.27427-1-sashal@kernel.org>
+References: <20190601132600.27427-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,66 +60,66 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+From: Kangjie Lu <kjlu@umn.edu>
 
-[ Upstream commit 9e2b5de5604a6ff2626c51e77014d92c9299722c ]
+[ Upstream commit 699ca30162686bf305cdf94861be02eb0cf9bda2 ]
 
-If we ever did MSI-related initializations, we need to call
-dw_pcie_free_msi() in the error code path.
+If __get_free_pages() fails, return -ENOMEM to avoid a NULL pointer
+dereference.
 
-Remove the IS_ENABLED(CONFIG_PCI_MSI) check for MSI init because
-pci_msi_enabled() already has a stub for !CONFIG_PCI_MSI.
-
-Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Signed-off-by: Kangjie Lu <kjlu@umn.edu>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Reviewed-by: Steven Price <steven.price@arm.com>
+Reviewed-by: Mukesh Ojha <mojha@codeaurora.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-host.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/host/pcie-xilinx.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 9c5614f21b8eb..d14a6237bdf5a 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -439,7 +439,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		pci->num_viewport = 2;
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 4cfa46360d122..6a2499f4d6109 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -349,14 +349,19 @@ static const struct irq_domain_ops msi_domain_ops = {
+  * xilinx_pcie_enable_msi - Enable MSI support
+  * @port: PCIe port information
+  */
+-static void xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
++static int xilinx_pcie_enable_msi(struct xilinx_pcie_port *port)
+ {
+ 	phys_addr_t msg_addr;
  
--	if (IS_ENABLED(CONFIG_PCI_MSI) && pci_msi_enabled()) {
-+	if (pci_msi_enabled()) {
- 		/*
- 		 * If a specific SoC driver needs to change the
- 		 * default number of vectors, it needs to implement
-@@ -477,7 +477,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init) {
- 		ret = pp->ops->host_init(pp);
- 		if (ret)
--			goto error;
-+			goto err_free_msi;
+ 	port->msi_pages = __get_free_pages(GFP_KERNEL, 0);
++	if (!port->msi_pages)
++		return -ENOMEM;
++
+ 	msg_addr = virt_to_phys((void *)port->msi_pages);
+ 	pcie_write(port, 0x0, XILINX_PCIE_REG_MSIBASE1);
+ 	pcie_write(port, msg_addr, XILINX_PCIE_REG_MSIBASE2);
++
++	return 0;
+ }
+ 
+ /* INTx Functions */
+@@ -555,6 +560,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 	struct device *dev = port->dev;
+ 	struct device_node *node = dev->of_node;
+ 	struct device_node *pcie_intc_node;
++	int ret;
+ 
+ 	/* Setup INTx */
+ 	pcie_intc_node = of_get_next_child(node, NULL);
+@@ -582,7 +588,9 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 			return PTR_ERR(port->irq_domain);
+ 		}
+ 
+-		xilinx_pcie_enable_msi(port);
++		ret = xilinx_pcie_enable_msi(port);
++		if (ret)
++			return ret;
  	}
  
- 	pp->root_bus_nr = pp->busn->start;
-@@ -491,7 +491,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 
- 	ret = pci_scan_root_bus_bridge(bridge);
- 	if (ret)
--		goto error;
-+		goto err_free_msi;
- 
- 	bus = bridge->bus;
- 
-@@ -507,6 +507,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pci_bus_add_devices(bus);
  	return 0;
- 
-+err_free_msi:
-+	if (pci_msi_enabled() && !pp->ops->msi_host_init)
-+		dw_pcie_free_msi(pp);
- error:
- 	pci_free_host_bridge(bridge);
- 	return ret;
 -- 
 2.20.1
 
