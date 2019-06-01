@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_GIT autolearn=unavailable
+	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D71DC28CC1
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C934C28CC4
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07BD02742A
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56F822743C
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559395747;
-	bh=3K6/aUg3C52Mziko9m56XexLE8geFfS7O36EjOwfNKI=;
+	s=default; t=1559395775;
+	bh=jh4k3ff9Qzzy6TgrwDRGZoaobI4tCQlVDN3izfiOQP0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=JKNw090PT2k6rAB4TDVhuLKKPPQScieWaIyelHQSreO0foroemG6P6/4Pm3ndOGk3
-	 iLq/bF998KUQ6HuKdKxKSblOGZGawdslJMTOFwzHSrjT2pZM/yUscSwyeafThnbtc5
-	 4lyNdsMf/Wa2RNceND4DRuuJ138U1VT6HwHre6cA=
+	b=gYPBv9A9vjUIue2emrX1olYI+iyq8WUJYySgnMnqTihUGYEJNIkDCfe6en66ZNzor
+	 9kx/6KB/HVyeQ0R1WfLvyOZ9EHO5l5fDDTlgUW+vKZXrOFAnlWccbXwX3RTbdg6vSN
+	 waezZI1B0fS/CrtwTVBtGrMWZCBCL/qySoAqSk0k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729906AbfFAN1H (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Jun 2019 09:27:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57722 "EHLO mail.kernel.org"
+        id S1729323AbfFAN3a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 09:29:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57374 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729804AbfFAN1H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Jun 2019 09:27:07 -0400
+        id S1729784AbfFAN0x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Jun 2019 09:26:53 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 54522273CD;
-        Sat,  1 Jun 2019 13:27:06 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C09B7273B2;
+        Sat,  1 Jun 2019 13:26:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559395627;
-        bh=3K6/aUg3C52Mziko9m56XexLE8geFfS7O36EjOwfNKI=;
+        s=default; t=1559395612;
+        bh=jh4k3ff9Qzzy6TgrwDRGZoaobI4tCQlVDN3izfiOQP0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kJ48E0JkWSo9dkFWAXyRWVGOD9IxwW2yPNiKYPtTo2Yn+IZ2i/2EdzWsnAm50YLXO
-         P0eu/2GqTzRkYA7BWaqDoq2Wq8HCrIGcnUFTeMdZLc3C5LU7TjEWvigztOYgVEfF9G
-         Z1zIgFmu0mAHT0aJc/RwKmXrXmmSCKtpnL+/9sj8=
+        b=ajfrn+q0U2NzLeMdvsTK+8DXY5+2NFnlFQ5vhtCVh1l269HgTJ/lk0O7JVovrmbwK
+         VVRmFYR+yPPb3yQWpACPyTZOJLtGg6X9vx2r+QKV+a6obRVwdDCyqVWNBttV6th6qW
+         fKH6q4dmkgHp8OK5wB6OiALIXlkRqULUoP++Dkfg=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
+Cc:     Wenwen Wang <wang6495@umn.edu>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH AUTOSEL 4.4 39/56] PCI: rpadlpar: Fix leaked device_node references in add/remove paths
-Date:   Sat,  1 Jun 2019 09:25:43 -0400
-Message-Id: <20190601132600.27427-39-sashal@kernel.org>
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 29/56] x86/PCI: Fix PCI IRQ routing table memory leak
+Date:   Sat,  1 Jun 2019 09:25:33 -0400
+Message-Id: <20190601132600.27427-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190601132600.27427-1-sashal@kernel.org>
 References: <20190601132600.27427-1-sashal@kernel.org>
@@ -59,63 +60,67 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+From: Wenwen Wang <wang6495@umn.edu>
 
-[ Upstream commit fb26228bfc4ce3951544848555c0278e2832e618 ]
+[ Upstream commit ea094d53580f40c2124cef3d072b73b2425e7bfd ]
 
-The find_dlpar_node() helper returns a device node with its reference
-incremented.  Both the add and remove paths use this helper for find the
-appropriate node, but fail to release the reference when done.
+In pcibios_irq_init(), the PCI IRQ routing table 'pirq_table' is first
+found through pirq_find_routing_table().  If the table is not found and
+CONFIG_PCI_BIOS is defined, the table is then allocated in
+pcibios_get_irq_routing_table() using kmalloc().  Later, if the I/O APIC is
+used, this table is actually not used.  In that case, the allocated table
+is not freed, which is a memory leak.
 
-Annotate the find_dlpar_node() helper with a comment about the incremented
-reference count and call of_node_put() on the obtained device_node in the
-add and remove paths.  Also, fixup a reference leak in the find_vio_slot()
-helper where we fail to call of_node_put() on the vdevice node after we
-iterate over its children.
+Free the allocated table if it is not used.
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Signed-off-by: Wenwen Wang <wang6495@umn.edu>
+[bhelgaas: added Ingo's reviewed-by, since the only change since v1 was to
+use the irq_routing_table local variable name he suggested]
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Ingo Molnar <mingo@kernel.org>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/hotplug/rpadlpar_core.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/x86/pci/irq.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-index f2fcbe944d940..aae295708ea7a 100644
---- a/drivers/pci/hotplug/rpadlpar_core.c
-+++ b/drivers/pci/hotplug/rpadlpar_core.c
-@@ -55,6 +55,7 @@ static struct device_node *find_vio_slot_node(char *drc_name)
- 		if ((rc == 0) && (!strcmp(drc_name, name)))
- 			break;
- 	}
-+	of_node_put(parent);
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 9bd1154847457..5f0e596b0519b 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1117,6 +1117,8 @@ static struct dmi_system_id __initdata pciirq_dmi_table[] = {
  
- 	return dn;
- }
-@@ -78,6 +79,7 @@ static struct device_node *find_php_slot_pci_node(char *drc_name,
- 	return np;
- }
- 
-+/* Returns a device_node with its reference count incremented */
- static struct device_node *find_dlpar_node(char *drc_name, int *node_type)
+ void __init pcibios_irq_init(void)
  {
- 	struct device_node *dn;
-@@ -314,6 +316,7 @@ int dlpar_add_slot(char *drc_name)
- 			rc = dlpar_add_phb(drc_name, dn);
- 			break;
- 	}
-+	of_node_put(dn);
++	struct irq_routing_table *rtable = NULL;
++
+ 	DBG(KERN_DEBUG "PCI: IRQ init\n");
  
- 	printk(KERN_INFO "%s: slot %s added\n", DLPAR_MODULE_NAME, drc_name);
- exit:
-@@ -447,6 +450,7 @@ int dlpar_remove_slot(char *drc_name)
- 			rc = dlpar_remove_pci_slot(drc_name, dn);
- 			break;
- 	}
-+	of_node_put(dn);
- 	vm_unmap_aliases();
+ 	if (raw_pci_ops == NULL)
+@@ -1127,8 +1129,10 @@ void __init pcibios_irq_init(void)
+ 	pirq_table = pirq_find_routing_table();
  
- 	printk(KERN_INFO "%s: slot %s removed\n", DLPAR_MODULE_NAME, drc_name);
+ #ifdef CONFIG_PCI_BIOS
+-	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN))
++	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN)) {
+ 		pirq_table = pcibios_get_irq_routing_table();
++		rtable = pirq_table;
++	}
+ #endif
+ 	if (pirq_table) {
+ 		pirq_peer_trick();
+@@ -1143,8 +1147,10 @@ void __init pcibios_irq_init(void)
+ 		 * If we're using the I/O APIC, avoid using the PCI IRQ
+ 		 * routing table
+ 		 */
+-		if (io_apic_assign_pci_irqs)
++		if (io_apic_assign_pci_irqs) {
++			kfree(rtable);
+ 			pirq_table = NULL;
++		}
+ 	}
+ 
+ 	x86_init.pci.fixup_irqs();
 -- 
 2.20.1
 
