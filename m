@@ -7,47 +7,45 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C934C28CC4
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D0E6C28CC4
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56F822743C
-	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D9FA2745A
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:29:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559395775;
-	bh=jh4k3ff9Qzzy6TgrwDRGZoaobI4tCQlVDN3izfiOQP0=;
+	s=default; t=1559395783;
+	bh=uAAi8CTOOnASvru0RtQIRJjMPSSGzCt7X5cKVXUegXs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=gYPBv9A9vjUIue2emrX1olYI+iyq8WUJYySgnMnqTihUGYEJNIkDCfe6en66ZNzor
-	 9kx/6KB/HVyeQ0R1WfLvyOZ9EHO5l5fDDTlgUW+vKZXrOFAnlWccbXwX3RTbdg6vSN
-	 waezZI1B0fS/CrtwTVBtGrMWZCBCL/qySoAqSk0k=
+	b=2EyuWEREq3KzCrWW5NxUmygdNRWPTsUHev7D26VGOqqMVlZL86bO4c6oCvacvdxvg
+	 4QJ1tzbw7dOKE7NjDrvMAu1OFCcNwvWZrX2MYHfkuBcxBiRaDmtdue6LXNl4i5bFyc
+	 4hHPezU6XW8VxC/BwVcvR5Z7mZA0SqB3dL/6go7I=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729323AbfFAN3a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 1 Jun 2019 09:29:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57374 "EHLO mail.kernel.org"
+        id S1727997AbfFAN3i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 09:29:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57348 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729784AbfFAN0x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Jun 2019 09:26:53 -0400
+        id S1729862AbfFAN0t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Jun 2019 09:26:49 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C09B7273B2;
-        Sat,  1 Jun 2019 13:26:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EC104273BD;
+        Sat,  1 Jun 2019 13:26:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559395612;
-        bh=jh4k3ff9Qzzy6TgrwDRGZoaobI4tCQlVDN3izfiOQP0=;
+        s=default; t=1559395608;
+        bh=uAAi8CTOOnASvru0RtQIRJjMPSSGzCt7X5cKVXUegXs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ajfrn+q0U2NzLeMdvsTK+8DXY5+2NFnlFQ5vhtCVh1l269HgTJ/lk0O7JVovrmbwK
-         VVRmFYR+yPPb3yQWpACPyTZOJLtGg6X9vx2r+QKV+a6obRVwdDCyqVWNBttV6th6qW
-         fKH6q4dmkgHp8OK5wB6OiALIXlkRqULUoP++Dkfg=
+        b=0X6bZYzNlH2LNW9OADR0SfFv+ow24fTjluDq0pLl1uezuEeBwDiANuq5WtuJybirJ
+         7FZ0hKLsLWDFZ4foNPijiNcvNjNky5FfLvI8JnZ1Ek1tJMTkO51u5gCsLyDEuNwSq5
+         og94ilhTrK0CtUn8fZTq9kZrTgqgxWzZIWbLDHBs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Wenwen Wang <wang6495@umn.edu>,
+Cc:     James Prestwood <james.prestwood@linux.intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 29/56] x86/PCI: Fix PCI IRQ routing table memory leak
-Date:   Sat,  1 Jun 2019 09:25:33 -0400
-Message-Id: <20190601132600.27427-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 27/56] PCI: Mark Atheros AR9462 to avoid bus reset
+Date:   Sat,  1 Jun 2019 09:25:31 -0400
+Message-Id: <20190601132600.27427-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190601132600.27427-1-sashal@kernel.org>
 References: <20190601132600.27427-1-sashal@kernel.org>
@@ -60,67 +58,36 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Wenwen Wang <wang6495@umn.edu>
+From: James Prestwood <james.prestwood@linux.intel.com>
 
-[ Upstream commit ea094d53580f40c2124cef3d072b73b2425e7bfd ]
+[ Upstream commit 6afb7e26978da5e86e57e540fdce65c8b04f398a ]
 
-In pcibios_irq_init(), the PCI IRQ routing table 'pirq_table' is first
-found through pirq_find_routing_table().  If the table is not found and
-CONFIG_PCI_BIOS is defined, the table is then allocated in
-pcibios_get_irq_routing_table() using kmalloc().  Later, if the I/O APIC is
-used, this table is actually not used.  In that case, the allocated table
-is not freed, which is a memory leak.
+When using PCI passthrough with this device, the host machine locks up
+completely when starting the VM, requiring a hard reboot.  Add a quirk to
+avoid bus resets on this device.
 
-Free the allocated table if it is not used.
-
-Signed-off-by: Wenwen Wang <wang6495@umn.edu>
-[bhelgaas: added Ingo's reviewed-by, since the only change since v1 was to
-use the irq_routing_table local variable name he suggested]
+Fixes: c3e59ee4e766 ("PCI: Mark Atheros AR93xx to avoid bus reset")
+Link: https://lore.kernel.org/linux-pci/20190107213248.3034-1-james.prestwood@linux.intel.com
+Signed-off-by: James Prestwood <james.prestwood@linux.intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Ingo Molnar <mingo@kernel.org>
-Acked-by: Thomas Gleixner <tglx@linutronix.de>
+CC: stable@vger.kernel.org	# v3.14+
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- arch/x86/pci/irq.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/pci/quirks.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 9bd1154847457..5f0e596b0519b 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1117,6 +1117,8 @@ static struct dmi_system_id __initdata pciirq_dmi_table[] = {
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d85010ebac5aa..36c6f3702167c 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3141,6 +3141,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0034, quirk_no_bus_reset);
  
- void __init pcibios_irq_init(void)
+ static void quirk_no_pm_reset(struct pci_dev *dev)
  {
-+	struct irq_routing_table *rtable = NULL;
-+
- 	DBG(KERN_DEBUG "PCI: IRQ init\n");
- 
- 	if (raw_pci_ops == NULL)
-@@ -1127,8 +1129,10 @@ void __init pcibios_irq_init(void)
- 	pirq_table = pirq_find_routing_table();
- 
- #ifdef CONFIG_PCI_BIOS
--	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN))
-+	if (!pirq_table && (pci_probe & PCI_BIOS_IRQ_SCAN)) {
- 		pirq_table = pcibios_get_irq_routing_table();
-+		rtable = pirq_table;
-+	}
- #endif
- 	if (pirq_table) {
- 		pirq_peer_trick();
-@@ -1143,8 +1147,10 @@ void __init pcibios_irq_init(void)
- 		 * If we're using the I/O APIC, avoid using the PCI IRQ
- 		 * routing table
- 		 */
--		if (io_apic_assign_pci_irqs)
-+		if (io_apic_assign_pci_irqs) {
-+			kfree(rtable);
- 			pirq_table = NULL;
-+		}
- 	}
- 
- 	x86_init.pci.fixup_irqs();
 -- 
 2.20.1
 
