@@ -1,134 +1,127 @@
-Return-Path: <SRS0=rep4=T7=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Eazx=UA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC3C8C04AB6
-	for <linux-pci@archiver.kernel.org>; Fri, 31 May 2019 21:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D03A1C28CC4
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:19:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFF1326F39
-	for <linux-pci@archiver.kernel.org>; Fri, 31 May 2019 21:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AACBB25BFE
+	for <linux-pci@archiver.kernel.org>; Sat,  1 Jun 2019 13:19:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559337411;
-	bh=c2pv3UGEvPHler4RZI9AO4XMMtkbISSMYlJ167PAtPE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=dcQXktVg82NkZvH1bC2Q6Jw1jJaDxes1vvwALPdTgdbUnd/Z8q+b34/kjmmOwYI8Y
-	 9M1/SiRueEuqCy0YP0sN+MMp08DtREpm/Qe83WTfrL9j7ymaqEiY00piLzn9xzGdZw
-	 sYoKD1LxCAQ07K/SS/w36DsXH6blWihj5xUDKAmI=
+	s=default; t=1559395146;
+	bh=+8uuVNjuBh7liJ4Th6IHfsUlFZoyaK4mlZ2hkJpQeEk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=y3eLRyHFr3ZDwXVM3ZdvyKfi/Zf2Dz7FHEmMq3Hpi2mg3OW0JEtmkP8zLqm/ky/6w
+	 /abEBOsRzXe/fDuhI5bqA94YlWCQUJVu7flq4kVbCSr+LjMZMy6T5XeC3rfmH3HvpG
+	 r/gYWL/39VV4c6TQku3XAbzA5c1NwdWjP+6we4IU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727196AbfEaVQv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 31 May 2019 17:16:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58608 "EHLO mail.kernel.org"
+        id S1728063AbfFANTF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 1 Jun 2019 09:19:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46252 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726719AbfEaVQv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 May 2019 17:16:51 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1728079AbfFANTF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Jun 2019 09:19:05 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C017926F38;
-        Fri, 31 May 2019 21:16:49 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C1B00251C3;
+        Sat,  1 Jun 2019 13:19:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559337410;
-        bh=c2pv3UGEvPHler4RZI9AO4XMMtkbISSMYlJ167PAtPE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=LdBjFu6KfciYCDWWmv+DuahF7VCnvl9Odv8PL7Kuy3LLohhYqw2h1hmvEo7l35v9H
-         XbrSSTcz5TCAN5taXh0JwSvcrqspZYxIZgF+qItCAPe3XV9qm8svY7UoKYiwMsEW3v
-         sWGFOkmBMAerGoooJXv92W12ZYlUkNmBBVuKNClU=
-Date:   Fri, 31 May 2019 16:16:48 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: PM: Avoid resuming devices in D3hot during system
- suspend
-Message-ID: <20190531211648.GB58810@google.com>
-References: <4561083.VtDMOnK5Me@kreacher>
+        s=default; t=1559395144;
+        bh=+8uuVNjuBh7liJ4Th6IHfsUlFZoyaK4mlZ2hkJpQeEk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=BoBd/7jFS+npDi512HfVOUfYRpTZ/buMGC3iJHbw5BdIimvoGyCacxmTOWma+loIZ
+         UGBsMujrm3AHag34iob5M8oCB6IO9meL+21T+weM1OjMxGSEj5+b8oi5SD/ab0Qo9T
+         jMCdMKslmEZB6u5Cs5sV2paGKp24TanJ9Ph8ApTc=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Jisheng Zhang <Jisheng.Zhang@synaptics.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.1 064/186] PCI: dwc: Free MSI IRQ page in dw_pcie_free_msi()
+Date:   Sat,  1 Jun 2019 09:14:40 -0400
+Message-Id: <20190601131653.24205-64-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190601131653.24205-1-sashal@kernel.org>
+References: <20190601131653.24205-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4561083.VtDMOnK5Me@kreacher>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, May 31, 2019 at 11:49:30AM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The current code resumes devices in D3hot during system suspend if
-> the target power state for them is D3cold, but that is not necessary
-> in general.  It only is necessary to do that if the platform firmware
-> requires the device to be resumed, but that should be covered by
-> the platform_pci_need_resume() check anyway, so rework
-> pci_dev_keep_suspended() to avoid returning 'false' for devices
-> in D3hot which need not be resumed due to platform firmware
-> requirements.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/pci.c |   15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -2474,10 +2474,19 @@ bool pci_dev_keep_suspended(struct pci_d
->  {
->  	struct device *dev = &pci_dev->dev;
->  	bool wakeup = device_may_wakeup(dev);
-> +	pci_power_t target_state;
->  
-> -	if (!pm_runtime_suspended(dev)
-> -	    || pci_target_state(pci_dev, wakeup) != pci_dev->current_state
-> -	    || platform_pci_need_resume(pci_dev))
-> +	if (!pm_runtime_suspended(dev) || platform_pci_need_resume(pci_dev))
-> +		return false;
-> +
-> +	target_state = pci_target_state(pci_dev, wakeup);
+From: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
 
-Nit, add a blank line here.
+[ Upstream commit dc69a3d567941784c3d00e1d0834582b42b0b3e7 ]
 
-> +	/*
-> +	 * If the earlier platform check has not triggered, D3cold is just power
-> +	 * removal on top of D3hot, so no need to resume the device in that
-> +	 * case.
-> +	 */
-> +	if (target_state != pci_dev->current_state &&
-> +	    target_state != PCI_D3cold && pci_dev->current_state != PCI_D3hot)
->  		return false;
+To avoid a memory leak, free the page allocated for MSI IRQ in
+dw_pcie_free_msi().
 
-This is more a comment on the existing code than on this particular
-patch, but I find this whole function hard to understand, and I think
-one reason is that there are a lot of negative conditions, both in
-this function and in its callers.  This "target_state != ... &&
-target_state != ...  && current_state != ..." is one example.  Another
-is the function name itself.  It might be easier to read as something
-like this:
+Signed-off-by: Jisheng Zhang <Jisheng.Zhang@synaptics.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 12 ++++++++----
+ drivers/pci/controller/dwc/pcie-designware.h      |  1 +
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-  bool pci_dev_need_resume(...)
-  {
-    if (!pm_runtime_suspended(...))
-      return true;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index acd185b4661e1..9d22b19b76f2d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -303,20 +303,24 @@ void dw_pcie_free_msi(struct pcie_port *pp)
+ 
+ 	irq_domain_remove(pp->msi_domain);
+ 	irq_domain_remove(pp->irq_domain);
++
++	if (pp->msi_page)
++		__free_page(pp->msi_page);
+ }
+ 
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct device *dev = pci->dev;
+-	struct page *page;
+ 	u64 msi_target;
+ 
+-	page = alloc_page(GFP_KERNEL);
+-	pp->msi_data = dma_map_page(dev, page, 0, PAGE_SIZE, DMA_FROM_DEVICE);
++	pp->msi_page = alloc_page(GFP_KERNEL);
++	pp->msi_data = dma_map_page(dev, pp->msi_page, 0, PAGE_SIZE,
++				    DMA_FROM_DEVICE);
+ 	if (dma_mapping_error(dev, pp->msi_data)) {
+ 		dev_err(dev, "Failed to map MSI data\n");
+-		__free_page(page);
++		__free_page(pp->msi_page);
++		pp->msi_page = NULL;
+ 		return;
+ 	}
+ 	msi_target = (u64)pp->msi_data;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 377f4c0b52da5..6fb0a18799324 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -179,6 +179,7 @@ struct pcie_port {
+ 	struct irq_domain	*irq_domain;
+ 	struct irq_domain	*msi_domain;
+ 	dma_addr_t		msi_data;
++	struct page		*msi_page;
+ 	u32			num_vectors;
+ 	u32			irq_mask[MAX_MSI_CTRLS];
+ 	raw_spinlock_t		lock;
+-- 
+2.20.1
 
-    if (platform_pci_need_resume(...))
-      return true;
-
-    if (target_state != current_state)
-      return true;
-
-    ...
-
-Another reason I think it's hard to read is that
-"pci_dev_keep_suspended" suggests that this is a pure boolean function
-without side-effects, but in fact it also fiddles with the PME state
-in some cases.  I don't have any ideas for that part.
-
-Bjorn
