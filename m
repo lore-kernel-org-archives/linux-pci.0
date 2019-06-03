@@ -2,159 +2,178 @@ Return-Path: <SRS0=ZO6A=UC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC13DC04AB5
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 22:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D97EDC04AB5
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 22:32:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8D9DA2660C
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 22:13:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 963CA2426D
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 22:32:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F39ZYDel"
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="jTx5egSH";
+	dkim=pass (1024-bit key) header.d=marvell.onmicrosoft.com header.i=@marvell.onmicrosoft.com header.b="bb+nssQU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726327AbfFCWNo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Jun 2019 18:13:44 -0400
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:40782 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725956AbfFCWNn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 18:13:43 -0400
-Received: by mail-ed1-f66.google.com with SMTP id r18so27978478edo.7;
-        Mon, 03 Jun 2019 15:13:42 -0700 (PDT)
+        id S1726658AbfFCWcq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Jun 2019 18:32:46 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52012 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726642AbfFCWcp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 18:32:45 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x53LVJA4001819;
+        Mon, 3 Jun 2019 14:31:20 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=pfpt0818;
+ bh=lQsGdy/BvG5BoOv67juD7MT2P/UTEXI8nnmVOKePQLU=;
+ b=jTx5egSH0FwhtDk5uROP1SCOs60om43G2GuD1wc3U5BqZt0SopdevlQIBH239NoYTwcS
+ PgQhpdR2EQvRayd7QYZIO6YMN4h/+TlJbOGSsCQUESVyYgMs5cMDDiW3AtCHBlTes1cU
+ jBrAPSd0TSqz294h7OhfCyz8KN1p6dbrA9LExpCu83RXCac/0osmDCZFEoczOCUn7dLE
+ xGoIhU0c46kpvc0DYXyxjbW4IchqmzlShXHrub13hqI4n1jSQwFHKJwRku3mGnBmIFv3
+ 4nxrMPPvkfxfX08VeNsFWsuwayz111p3G3MhLXeWgLbNprCvfkTmS1evPwsjS0H2bYTF +g== 
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 2sw79ps1a7-13
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 03 Jun 2019 14:31:20 -0700
+Received: from SC-EXCH02.marvell.com (10.93.176.82) by SC-EXCH01.marvell.com
+ (10.93.176.81) with Microsoft SMTP Server (TLS) id 15.0.1367.3; Mon, 3 Jun
+ 2019 14:30:55 -0700
+Received: from NAM03-BY2-obe.outbound.protection.outlook.com (104.47.42.52) by
+ SC-EXCH02.marvell.com (10.93.176.82) with Microsoft SMTP Server (TLS) id
+ 15.0.1367.3 via Frontend Transport; Mon, 3 Jun 2019 14:30:55 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=QO9b5Do5ysQrr7s3GzcTFKoPLVja1hwLd/j7EFbklsk=;
-        b=F39ZYDelGutNNCw6Bm7MOuBQURzN8FAvhTNI9xGoMNHwOACNWjg9BFnW+WeFnsIQq7
-         Q0VASU62D/QuJQjOsiMtpEez8Etq7laX3OFIvnaD++/DW8DLB8ztNIkDoAITNGzs61ho
-         5MogTKA1mgmgCZsXjFQePNV6uXanaRvbqXK+zvg1ipmxn6fgfuINLrh2epN64OPP7Hga
-         jR9dl+Ejsp0swrOCM12w4x2LOgpskEk1EuaM9DdE0zsyT9PgQU3dNV60i5pv/47x9g21
-         s/o5Uy8CbEpI/Fba6v4MqWyx6TiJcKHSNLRn/NS1ok0Q2ltXR3aDtEfgHNdtp/fIPZ2L
-         uTGA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=QO9b5Do5ysQrr7s3GzcTFKoPLVja1hwLd/j7EFbklsk=;
-        b=U7mMhtEm7nh7BY/l1HOM/fDSv1GB9ctsldzI3JOei/ATfo+efc1rQbTNy/F8iKA6P/
-         Ms+hH+r9XWwID4zkzNm5RzfqnQqlOjDFxnRKDAkpGZPEJ7DZeU7Ov4EYK9tEOPFBO5k9
-         vqEscRq2fMvm8YTB0/jMyRF7/7og6Trk/dknsPoeDfRsP7vAVSB/fCZ670d02Pmt6yhz
-         0sKlGwHkMVj+TrgM7t08M036+pgEWes/9ubyjDgsLWOIu5xo7ju1KDdZBP85J85mZJ6t
-         iqhefTteHMhoeMJHgM7WshWQRShmFoiJ0IwkdtG90E1i6gwWQOuE7vNVNowpB0DmExoe
-         JbiQ==
-X-Gm-Message-State: APjAAAV4SvOHlfHyv7/08/ZF00Jq9+84xZAxo9/rEQQniz+8y8vkp9Sw
-        PlzFAhLQshOX9rTUlodj/nw=
-X-Google-Smtp-Source: APXvYqzwJdJC5UuqbhofMI8Wzs9XZsjOp6JuZrA/isKGIP5Cjz3CHyXpt3g0enOrim2YrrRwlSlnkA==
-X-Received: by 2002:a17:906:1c1b:: with SMTP id k27mr1364028ejg.13.1559600021948;
-        Mon, 03 Jun 2019 15:13:41 -0700 (PDT)
-Received: from localhost.localdomain ([2a01:4f9:2b:2b15::2])
-        by smtp.gmail.com with ESMTPSA id r9sm3869840eds.61.2019.06.03.15.13.40
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 03 Jun 2019 15:13:41 -0700 (PDT)
-From:   Nathan Chancellor <natechancellor@gmail.com>
-To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        clang-built-linux@googlegroups.com,
-        Nathan Chancellor <natechancellor@gmail.com>,
-        Nick Desaulniers <ndesaulniers@google.com>
-Subject: [PATCH v2] PCI: rpaphp: Avoid a sometimes-uninitialized warning
-Date:   Mon,  3 Jun 2019 15:11:58 -0700
-Message-Id: <20190603221157.58502-1-natechancellor@gmail.com>
-X-Mailer: git-send-email 2.22.0.rc3
-In-Reply-To: <20190603174323.48251-1-natechancellor@gmail.com>
-References: <20190603174323.48251-1-natechancellor@gmail.com>
+ d=marvell.onmicrosoft.com; s=selector2-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lQsGdy/BvG5BoOv67juD7MT2P/UTEXI8nnmVOKePQLU=;
+ b=bb+nssQUqqe1Czn9ngHHcHXSC8Y1KTT27XZsuCv1EbP9oDOAGIaE2nbv83Oc+vEFg/eDNM7A6GAMDMYB+mnLVUMDbKarjPkoVpZPWkPHFlTKIvDoHKx59xXg0/a7NehHryK9FcwoNULBBUnRJZ0T20RBOAgnUuESLL+ZjjCg6rw=
+Received: from MN2PR18MB2719.namprd18.prod.outlook.com (20.178.255.156) by
+ MN2PR18MB2944.namprd18.prod.outlook.com (20.179.22.203) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.1943.22; Mon, 3 Jun 2019 21:30:50 +0000
+Received: from MN2PR18MB2719.namprd18.prod.outlook.com
+ ([fe80::7150:ff4e:d634:ac16]) by MN2PR18MB2719.namprd18.prod.outlook.com
+ ([fe80::7150:ff4e:d634:ac16%4]) with mapi id 15.20.1943.018; Mon, 3 Jun 2019
+ 21:30:50 +0000
+From:   Himanshu Madhani <hmadhani@marvell.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     Andrew Vasquez <andrewv@marvell.com>,
+        Girish Basrur <gbasrur@marvell.com>,
+        Giridhar Malavali <gmalavali@marvell.com>,
+        Myron Stowe <mstowe@redhat.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Quinn Tran <quinn.tran@qlogic.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [EXT] VPD access Blocked by commit
+ 0d5370d1d85251e5893ab7c90a429464de2e140b
+Thread-Topic: [EXT] VPD access Blocked by commit
+ 0d5370d1d85251e5893ab7c90a429464de2e140b
+Thread-Index: AQHVFx5+bJqdlvMLuEaUREG4NUyQAKaEJpmAgAZSY4A=
+Date:   Mon, 3 Jun 2019 21:30:50 +0000
+Message-ID: <DFF05429-6C84-4DBD-B3D0-14A0BD209E38@marvell.com>
+References: <B5B745A3-96B4-46ED-8F3F-D3636A96057F@marvell.com>
+ <CAErSpo5qy6WuUe9cz1vTBBnc5P_uZaPzc-Yqbag2eBBxzi+ENg@mail.gmail.com>
+ <CAErSpo45bCV7geSPAwBjy5fdQqzDcX61Ybksk65c=intfTWFZQ@mail.gmail.com>
+ <D8764654-E2A0-43B8-97D9-6644F2BC8D0E@marvell.com>
+ <20190530205823.GA45696@google.com>
+In-Reply-To: <20190530205823.GA45696@google.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3445.104.11)
+x-originating-ip: [198.186.1.7]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: fd61acaa-1b69-47d5-f77e-08d6e86ac022
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:MN2PR18MB2944;
+x-ms-traffictypediagnostic: MN2PR18MB2944:
+x-microsoft-antispam-prvs: <MN2PR18MB2944A9964340A40678BD8165D6140@MN2PR18MB2944.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-forefront-prvs: 0057EE387C
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(136003)(376002)(346002)(396003)(366004)(39860400002)(199004)(189003)(102836004)(6512007)(15650500001)(36756003)(6916009)(26005)(54906003)(486006)(256004)(14444005)(186003)(446003)(99286004)(6506007)(6246003)(82746002)(11346002)(66446008)(76116006)(53936002)(66946007)(64756008)(66476007)(91956017)(68736007)(4326008)(2616005)(476003)(53546011)(66556008)(73956011)(76176011)(71200400001)(86362001)(478600001)(229853002)(25786009)(14454004)(5660300002)(50226002)(2906002)(33656002)(8936002)(316002)(81156014)(81166006)(66066001)(8676002)(7736002)(6436002)(6486002)(6116002)(83716004)(71190400001)(57306001)(3846002)(5024004)(305945005);DIR:OUT;SFP:1101;SCL:1;SRVR:MN2PR18MB2944;H:MN2PR18MB2719.namprd18.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: marvell.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: I/H6BpCDf1+rsiWQFVqwR6T2iKUQLjpOuKg99BbvNd9j8TzbSCfG7dTkXwxXwbaXhnGXhDyEeIUPZm+qxop4qenwvFePnLjKurnc3dettPerA1K6pH7C2brqtncioDPZ7F/gCGFxgo1/OfoxOxKEWSgmvzVicAyE5puIPEdf9NFiZpeklCrXZU7JKmvJpB6MKIAjuqnbPuMOGQpP6dqmFX3282lej+mEbr9kced6wUW3Kga0DGjQv+24M08r/rZ0H79xvZ0ool3YSXw7/u1OcgVA40hveL0f3zKeWsizn5buTQM9APKHj1U6rJZRLqI6OAOQGw/eNc81qMt48zPVbO2PDPNBuXr2hXWepVkGix4FMXdD8jhInwEc3kloWD3996rqk2POU7rqBpCBDLEzMORcP7HHep2zIt4hVEboQOg=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <2BCD98764AA87146BB5FAA87E6955DCA@namprd18.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-X-Patchwork-Bot: notify
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-CrossTenant-Network-Message-Id: fd61acaa-1b69-47d5-f77e-08d6e86ac022
+X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Jun 2019 21:30:50.5629
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: hmadhani@marvell.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR18MB2944
+X-OriginatorOrg: marvell.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-06-03_17:,,
+ signatures=0
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When building with -Wsometimes-uninitialized, clang warns:
-
-drivers/pci/hotplug/rpaphp_core.c:243:14: warning: variable 'fndit' is
-used uninitialized whenever 'for' loop exits because its condition is
-false [-Wsometimes-uninitialized]
-        for (j = 0; j < entries; j++) {
-                    ^~~~~~~~~~~
-drivers/pci/hotplug/rpaphp_core.c:256:6: note: uninitialized use occurs
-here
-        if (fndit)
-            ^~~~~
-drivers/pci/hotplug/rpaphp_core.c:243:14: note: remove the condition if
-it is always true
-        for (j = 0; j < entries; j++) {
-                    ^~~~~~~~~~~
-drivers/pci/hotplug/rpaphp_core.c:233:14: note: initialize the variable
-'fndit' to silence this warning
-        int j, fndit;
-                    ^
-                     = 0
-
-fndit is only used to gate a sprintf call, which can be moved into the
-loop to simplify the code and eliminate the local variable, which will
-fix this warning.
-
-Link: https://github.com/ClangBuiltLinux/linux/issues/504
-Fixes: 2fcf3ae508c2 ("hotplug/drc-info: Add code to search ibm,drc-info property")
-Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
-
-v1 -> v2:
-
-* Eliminate fndit altogether by shuffling the sprintf call into the for
-  loop and changing the if conditional, as suggested by Nick.
-
- drivers/pci/hotplug/rpaphp_core.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index bcd5d357ca23..c3899ee1db99 100644
---- a/drivers/pci/hotplug/rpaphp_core.c
-+++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
- 	struct of_drc_info drc;
- 	const __be32 *value;
- 	char cell_drc_name[MAX_DRC_NAME_LEN];
--	int j, fndit;
-+	int j;
- 
- 	info = of_find_property(dn->parent, "ibm,drc-info", NULL);
- 	if (info == NULL)
-@@ -245,17 +245,13 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
- 
- 		/* Should now know end of current entry */
- 
--		if (my_index > drc.last_drc_index)
--			continue;
--
--		fndit = 1;
--		break;
-+		/* Found it */
-+		if (my_index <= drc.last_drc_index) {
-+			sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
-+				my_index);
-+			break;
-+		}
- 	}
--	/* Found it */
--
--	if (fndit)
--		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix, 
--			my_index);
- 
- 	if (((drc_name == NULL) ||
- 	     (drc_name && !strcmp(drc_name, cell_drc_name))) &&
--- 
-2.22.0.rc3
-
+SGkgQmpvcm4sIA0KDQo+IE9uIE1heSAzMCwgMjAxOSwgYXQgMTo1OCBQTSwgQmpvcm4gSGVsZ2Fh
+cyA8aGVsZ2Fhc0BrZXJuZWwub3JnPiB3cm90ZToNCj4gDQo+IE9uIFRodSwgTWF5IDMwLCAyMDE5
+IGF0IDA3OjMzOjAxUE0gKzAwMDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQo+IA0KPj4gV2Ug
+YXJlIGFibGUgdG8gc3VjY2Vzc2Z1bGx5IHJlYWQgVlBEIGNvbmZpZyBkYXRhIHVzaW5nIGxzcGNp
+IGFuZCBjYXQNCj4+IGNvbW1hbmQNCj4gDQo+IFllcywgeW91IG1lbnRpb25lZCB0aGF0IGluIHRo
+ZSB2ZXJ5IGZpcnN0IGVtYWlsLiAgSSB3YXMgaG9waW5nIHlvdQ0KPiB3b3VsZCBpbmNsdWRlIHRo
+ZSBhY3R1YWwgZGF0YSwgZS5nLiwgImNhdCB2cGQgfCB4eGQiLiAgVGhhdCB3b3VsZCBoZWxwDQo+
+IHVzIGZpZ3VyZSBvdXQgd2h5IHlvdSBkb24ndCBzZWUgdGhlIHBhbmljIGFueSBtb3JlLiAgSSBz
+dXNwZWN0IGVpdGhlcjoNCj4gDQoNCk1pc3NlZCB0aGUgcmVxdWVzdCBmb3IgeHhkIG91dHB1dC4g
+SSBnb3QgYWNjZXNzIGJhY2sgdG9kYXkgZm9yIHRoZSBzeXN0ZW0gDQphbmQgY2FwdHVyZWQgaXQg
+Zm9yIHlvdQ0KDQojIGNhdCAvc3lzL2NsYXNzL3BjaV9idXMvMDAwMFw6MTMvZGV2aWNlLzAwMDBc
+OjEzXDowMC4wL3ZwZCAgfCB4eGQNCjAwMDAwMDAwOiA4MjJkIDAwNTEgNGM2ZiA2NzY5IDYzMjAg
+MzMzMiA0NzYyIDIwMzIgIC4tLlFMb2dpYyAzMkdiIDINCjAwMDAwMDEwOiAyZDcwIDZmNzIgNzQy
+MCA0NjQzIDIwNzQgNmYyMCA1MDQzIDQ5NjUgIC1wb3J0IEZDIHRvIFBDSWUNCjAwMDAwMDIwOiAy
+MDQ3IDY1NmUgMzMyMCA3ODM4IDIwNDEgNjQ2MSA3MDc0IDY1NzIgICBHZW4zIHg4IEFkYXB0ZXIN
+CjAwMDAwMDMwOiA5MDM5IDAwNTAgNGUwNyA1MTRjIDQ1MzIgMzczNCAzMjUzIDRlMGQgIC45LlBO
+LlFMRTI3NDJTTi4NCjAwMDAwMDQwOiA0MTQ2IDQ0MzEgMzUzMyAzMzU5IDMwMzIgMzkzOSAzOTQ1
+IDQzMGYgIEFGRDE1MzNZMDI5OTlFQy4NCjAwMDAwMDUwOiA0MjRiIDMzMzIgMzEzMCAzNDMwIDM3
+MmQgMzAzNSAyMDMwIDMzNTYgIEJLMzIxMDQwNy0wNSAwM1YNCjAwMDAwMDYwOiAzOTA2IDMwMzEg
+MzAzMSAzODM5IDUyNTYgMDFhMCA3OCAgICAgICAgIDkuMDEwMTg5UlYuLngNCg0KDQpQQ0llIHRy
+YWNlIGFsc28gY29uZmlybWVkIHRoZXJlIGFyZSBubyBSRUFEIGVycm9ycy4gDQooaWYgeW91IG5l
+ZWQgaSBjYW4gYXR0YWNoIC5wZXggZmlsZSBmb3IgcmV2aWV3KQ0KDQoNCj4gIC0gbmV3IFFMb2dp
+YyBmaXJtd2FyZSBmaXhlZCB0aGUgc3RydWN0dXJlIG9mIHRoZSBWUEQgZGF0YSBzbyBMaW51eA0K
+PiAgICBubyBsb25nZXIgYXR0ZW1wdHMgdG8gcmVhZCBwYXN0IHRoZSBlbmQgb2YgdGhlIGltcGxl
+bWVudGVkIHJlZ2lvbiwNCj4gICAgb3IsDQo+IA0KPiAgLSB3ZSBzdGlsbCByZWFkIHBhc3QgdGhl
+IGVuZCBvZiB0aGUgaW1wbGVtZW50ZWQgVlBEIHJlZ2lvbiwgYnV0IHRoZQ0KPiAgICBkZXZpY2Ug
+ZG9lc24ndCByZXBvcnQgYW4gZXJyb3Igb3IgdGhlIHBsYXRmb3JtIGRlYWxzIHdpdGggdGhlDQo+
+ICAgIGVycm9yIHdpdGhvdXQgY2F1c2luZyBhIHBhbmljLg0KPiANCj4+IFdlIGFsc28gdmVyaWZp
+ZWQgdGhpcyBzYW1lIGNvbmZpZ3VyYXRpb24gb24gYSBTdXBlck1pY3JvIFgxMFNSQS1GDQo+PiBz
+ZXJ2ZXIgKHdoaWNoIGkgaGFkIHNlbnQgaW4gZWFybGllciBlbWFpbCnigJkgYW5kIHdlcmUgYWJs
+ZSB0byB2ZXJpZnkNCj4+IHRoYXQgdGhlIFZQRCByZWFkIHdhcyBnb29kIGFuZCB0aGVyZSB3ZXJl
+IG5vIGVycm9ycyBvbiBQQ0llIHRyYWNlLg0KPiANCj4gU2luY2UgeW91IHNhdyBubyBQQ0llIGVy
+cm9ycyBoZXJlLCB0aGlzIHN1Z2dlc3RzIHRoYXQgbmV3IGZpcm13YXJlIGhhcw0KPiBjaGFuZ2Vk
+IHRoZSBmb3JtYXQgb2YgdGhlIFZQRCBkYXRhLg0KPiANCj4+IEdpdmVuIHRoaXMgaW5mb3JtYXRp
+b24sIFBsZWFzZSBjb25zaWRlciByZXZlcnRpbmcgdGhlIHBhdGNoIHVudGlsIHdlDQo+PiBmdXJ0
+aGVyIGRlYnVnIHRoZSBpc3N1ZSBhbmQgcmVzb2x2ZSBhcyBpdCBpcyBhZmZlY3RpbmcgZ2VuZXJh
+bA0KPj4gYXZhaWxhYmlsaXR5IG9mIG91ciBhZGFwdGVyLg0KPiANCj4gMSkgVGhlIHdheSBMaW51
+eCB3b3JrcyBpcyB0aGF0IHlvdSB3b3VsZCBwb3N0IGEgcGF0Y2ggdGhhdCBkb2VzIHRoZQ0KPiBy
+ZXZlcnQgeW91J2QgbGlrZSB0byBzZWUgZG9uZS4NCj4gDQoNCkNvcnJlY3QuIEkgd2FzIHRyeWlu
+ZyBnZXQgeW91ciBidXktaW4gYmVmb3JlIGkgc2VuZCBvdXQgcGF0Y2guDQoNCj4gMikgSXQncyB1
+bmxpa2VseSB0aGF0IGEgc2ltcGxlIHJldmVydCBvZiAwZDUzNzBkMWQ4NTIgKCJQQ0k6IFByZXZl
+bnQNCj4gVlBEIGFjY2VzcyBmb3IgUUxvZ2ljIElTUDI3MjIiKSBpcyB0aGUgcmlnaHQgYW5zd2Vy
+IGJlY2F1c2UgdGhhdCB3b3VsZA0KPiBtYWtlIEV0aGFuJ3MgbWFjaGluZSBwYW5pYyBhZ2Fpbi4g
+IEl0J3MgcG9zc2libGUgdGhhdCBhIFFMb2dpYw0KPiBmaXJtd2FyZSB1cGRhdGUgd291bGQgYXZv
+aWQgdGhlIHBhbmljLCBidXQgd2UgY2FuJ3Qgc2ltcGx5IHJldmVydCB0aGUNCj4gcGF0Y2ggYW5k
+IGZvcmNlIHVzZXJzIHRvIGRvIHRoYXQgdXBkYXRlLg0KPiANCg0KSSBkaWQgcmVhY2hlZCBvdXQg
+dG8gT3JhY2xlIHRvIGhlbHAgbG9jYXRlIG9yaWdpbmFsIGNhcmQgd2hlcmUgRXRoYW4gaGFkDQpp
+c3N1ZSBhbmQgaSBsZWFybmVkIHRoYXQgaGUgaXMgbm8gbG9uZ2VyIHdpdGggT3JhY2xlLiANCg0K
+PiBJZiBhIFFMb2dpYyBmaXJtd2FyZSB1cGRhdGUgaW5kZWVkIGZpeGVkIHRoZSBWUEQgZm9ybWF0
+LCBJIHN1Z2dlc3QNCj4gdGhhdCB5b3UgYXNrIHRoZSBmb2xrcyByZXNwb25zaWJsZSBmb3IgdGhl
+IGZpcm13YXJlIHRvIGlkZW50aWZ5IHRoZQ0KPiBzcGVjaWZpYyB2ZXJzaW9uIHdoZXJlIHRoYXQg
+d2FzIGZpeGVkIGFuZCBob3cgdGhlIE9TIGNhbiBmaWd1cmUgdGhhdA0KPiBvdXQuDQo+IA0KDQpT
+dGlsbCB3YWl0aW5nIG9uIHRoaXMgZGF0YS4gDQoNCj4gVGhlbiB5b3UgY291bGQgbWFrZSBhIG5l
+dyBxdWlyayBzcGVjaWZpYyB0byB0aGlzIGRldmljZSB0aGF0IGFsbG93cw0KPiBWUEQgcmVhZHMg
+aWYgdGhlIGFkYXB0ZXIgaGFzIG5ldyBlbm91Z2ggZmlybXdhcmUuICBJZiBpdCBmaW5kcyBvbGRl
+cg0KPiBmaXJtd2FyZSwgaXQgY291bGQgZXZlbiBwcmludCBhIG1lc3NhZ2Ugc3VnZ2VzdGluZyB0
+aGF0IHVzZXJzIGNvdWxkDQo+IHVwZGF0ZSB0aGUgZmlybXdhcmUgaWYgdGhleSBuZWVkIHRvIHJl
+YWQgVlBEIGRhdGEuDQo+IA0KPiBCam9ybg0KDQpTaW5jZSBtYWpvciBPRU1zIGFyZSBoYXZpbmcg
+aXNzdWVzIHVzaW5nIGFkYXB0ZXIgdG8gZXh0cmFjdCBWUEQgZGF0YSwgV2UgDQp3b3VsZCBsaWtl
+IHRvIGdldCB0aGVtIHJlbGllZiBmaXJzdCBhbmQgdGhlbiBhcHByb2FjaCB0aGlzIGlzc3VlIHdp
+dGggbW9yZQ0KZGV0YWlsZWQgZml4IGlmIG5lZWRlZC4gDQoNClRoYW5rcywNCkhpbWFuc2h1
