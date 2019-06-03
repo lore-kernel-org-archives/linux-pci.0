@@ -2,189 +2,146 @@ Return-Path: <SRS0=ZO6A=UC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B23C04AB5
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C96ABC04AB5
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:51:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E498123A5C
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:50:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C8ED26CF9
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:51:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fuItLAVW"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iADSXB00"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726373AbfFCVuW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Jun 2019 17:50:22 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:35962 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726076AbfFCVuT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 17:50:19 -0400
-Received: by mail-pf1-f195.google.com with SMTP id u22so11366448pfm.3
-        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2019 14:50:19 -0700 (PDT)
+        id S1726510AbfFCVvm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Jun 2019 17:51:42 -0400
+Received: from mail-ed1-f68.google.com ([209.85.208.68]:36554 "EHLO
+        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726305AbfFCVvl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 17:51:41 -0400
+Received: by mail-ed1-f68.google.com with SMTP id a8so28925180edx.3;
+        Mon, 03 Jun 2019 14:51:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=QXe1q2zoQhM8mrIXiP1zmtjet7FIsQQVo+jNhQzIKKY=;
-        b=fuItLAVWVd3R4wiL7seEnIKyn3cimQpacQ5KyC3muYyd5ND/Anuj8lVgOcUF83Cwo/
-         KYTINCBVoor6OacJJA142/HPZhJUNO37/FFKGMLA14GNOS+M1Y6P+/1XzhDfUUsmtATU
-         q9Sm3TfvT6Ra9zBytNZ66mb4uaOHYAjfVEpPE=
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=spxbSxrpztoX+OYGfxSQU5fac10irlk+vBajDvb33D0=;
+        b=iADSXB000vxOYJWwJoRtrAYRSo/dfLvDu8/qH49kJalqjkE/hRmqwTCq4kjqxxqPyz
+         mt7rwocjIZSBlcJTIetx5SRB82REH/WVNBhcl/al+3Jnif0mJk2tmzdtMRWUZ/A9kT+f
+         +vZRpM+tuHCzspT7CZxurPYPB5NkolL3JSOI2GggioMDa08zdzPluWWVaVkHqoXiCkaF
+         QXAllhgAKLE4rh2W5lCa5VoyCUhA+VrsRxjDVyYQz3WfPeUL4nfKX1Op/PRfZenluLnr
+         CDCQdYjIMW3k8Zlz8Dump4vaQY8BmqE5+lU9xzFcikpVlzg1kzyo3c4a1Az/Y6tPhB4d
+         Zt3A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=QXe1q2zoQhM8mrIXiP1zmtjet7FIsQQVo+jNhQzIKKY=;
-        b=EHagyad4Ok9JHsN1Ze9zfJU2X2IEHINhvwCG+rq2XKFhE7YGM/7OJHcssL/8DONZxr
-         /hDrE69pyxb6Y/ay+b/voUKWs5BsJR3opY/aOZ3118DGWiXv44vDDlJYc0G7K4QSUF4O
-         vBwsdipmP3cSLNBvfkbCdGRc8wvmrZ2/Uj1BZ3eD0HtTvWu3idF4GrmGx4xqdMGuwJG3
-         rsxZUJF6N036LEyOAau/u4EFBQYSGijCPan22MOOfVT7VShxLeVdD1xJU7kipzb/g84U
-         dBkkqkG8w0buXopRCbgirRXT+DvAMk85GTaQS3fjnfVzfnqKBTc02TBiCMErgvg6lAMb
-         tydA==
-X-Gm-Message-State: APjAAAUnv5ZyEfNesstm7ucWi9yadOSDXS/63HVGz+wu1oR+2NnLa9/2
-        Z12ujZOpQuUQCLpmdj24FHnjL6xLGVc=
-X-Google-Smtp-Source: APXvYqzFWBT/QzNj4YFy2RIkKCvg29kMSvPLG8SXnlZPedHNDkj+gC+CaVMGmB8lc4w88mXTFfVNFg==
-X-Received: by 2002:a17:90a:1911:: with SMTP id 17mr7751513pjg.113.1559596660707;
-        Mon, 03 Jun 2019 14:17:40 -0700 (PDT)
-Received: from [10.136.8.140] ([192.19.228.250])
-        by smtp.gmail.com with ESMTPSA id o192sm9299232pgo.74.2019.06.03.14.17.38
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 03 Jun 2019 14:17:39 -0700 (PDT)
-Subject: Re: SSD surprise removal leads to long wait inside pci_dev_wait() and
- FLR 65s timeout
-To:     Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, keith.busch@intel.com,
-        bcm-kernel-feedback-list@broadcom.com,
-        Lukas Wunner <lukas@wunner.de>
-References: <8f2d88a5-9524-c4c3-a61f-7d55d97e1c18@broadcom.com>
- <20190603004414.GA189360@google.com> <20190602194011.51ceaa23@x1.home>
-From:   JD Zheng <jiandong.zheng@broadcom.com>
-Message-ID: <78f95dfe-ac2b-408f-0e2a-b3b9d69575dd@broadcom.com>
-Date:   Mon, 3 Jun 2019 14:17:36 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=spxbSxrpztoX+OYGfxSQU5fac10irlk+vBajDvb33D0=;
+        b=bmMdPMoIggss6hKIf/XCxx8jnOB8Mg7LfFjIqJSBRK0kdLZ06RgRrSnzVWW/d6kPBi
+         moSZB/5UKGjFPAxAVUJwfA2R1m50qZGCXtz5hnDeewjwNCg8cvxcHILHvypno8YH+9o+
+         a1NwuL29iYB//b0uuunqu7xgOKyPks+UJcaroRcJzOttvEipAnzNOiVVNpFXfhl5E/3s
+         Tsz0A46eaqkv8TMt66ebWhwd5+IXEZFqRsgbAQTpY+OX175ix55+gzdrUgiWmiL+Tn6L
+         quAesuncAaaOoOru+5uFrG9GrIGXpuPqw0R/JQ60Y356CmoWAdLiry2OAxUZlNK8DXZ0
+         llng==
+X-Gm-Message-State: APjAAAVihVnRlXixCG/4EUqZS2P+mSezb7hHQ9c+e2DxUvkIR+511taQ
+        cuHz4dd+d6vhN1SGBnYBNEc=
+X-Google-Smtp-Source: APXvYqysmW+FQopVoJyDuQ/uqrAMHI1xHaH7Iwn4k4JCGIFFIXvqOIx6KZ7m/OoH/36YsKRUpIfwDQ==
+X-Received: by 2002:a17:906:25c9:: with SMTP id n9mr4769934ejb.51.1559598700059;
+        Mon, 03 Jun 2019 14:51:40 -0700 (PDT)
+Received: from archlinux-epyc ([2a01:4f9:2b:2b15::2])
+        by smtp.gmail.com with ESMTPSA id p13sm4239321edm.97.2019.06.03.14.51.38
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Mon, 03 Jun 2019 14:51:38 -0700 (PDT)
+Date:   Mon, 3 Jun 2019 14:51:36 -0700
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Nick Desaulniers <ndesaulniers@google.com>
+Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>,
+        clang-built-linux <clang-built-linux@googlegroups.com>
+Subject: Re: [PATCH] PCI: rpaphp: Avoid a sometimes-uninitialized warning
+Message-ID: <20190603215136.GA45181@archlinux-epyc>
+References: <20190603174323.48251-1-natechancellor@gmail.com>
+ <CAKwvOdkQzdZezwf51UddFVGQh0mRFMEexr1cMHx=va88T515YQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190602194011.51ceaa23@x1.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAKwvOdkQzdZezwf51UddFVGQh0mRFMEexr1cMHx=va88T515YQ@mail.gmail.com>
+User-Agent: Mutt/1.12.0 (2019-05-25)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Nick,
 
-
-On 6/2/19 6:40 PM, Alex Williamson wrote:
-> On Sun, 2 Jun 2019 19:44:14 -0500
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Mon, Jun 03, 2019 at 02:07:50PM -0700, Nick Desaulniers wrote:
+> On Mon, Jun 3, 2019 at 10:44 AM Nathan Chancellor
+> <natechancellor@gmail.com> wrote:
+> > Looking at the loop in a vacuum as clang would, fndit could be
+> > uninitialized if entries was ever zero or the if statement was
+> > always true within the loop. Regardless of whether or not this
+> > warning is a problem in practice, "found" variables should always
+> > be initialized to false so that there is no possibility of
+> > undefined behavior.
 > 
->> [+cc Alex, Lukas]
->>
->> On Fri, May 31, 2019 at 09:55:20AM -0700, JD Zheng wrote:
->>> Hello,
->>>
->>> I am running DPDK 18.11+SPDK 19.04 with v5.1 kernel. DPDK/SPDK uses SSD vfio
->>> devices and after running SPDK's nvmf_tgt, unplugging a SSD cause kernel to
->>> print out following:
->>> [  105.426952] vfio-pci 0000:04:00.0: not ready 2047ms after FLR; waiting
->>> [  107.698953] vfio-pci 0000:04:00.0: not ready 4095ms after FLR; waiting
->>> [  112.050960] vfio-pci 0000:04:00.0: not ready 8191ms after FLR; waiting
->>> [  120.498953] vfio-pci 0000:04:00.0: not ready 16383ms after FLR; waiting
->>> [  138.418957] vfio-pci 0000:04:00.0: not ready 32767ms after FLR; waiting
->>> [  173.234953] vfio-pci 0000:04:00.0: not ready 65535ms after FLR; giving up
->>>
->>> Looks like it is a PCI hotplug racing condition between DPDK's
->>> eal-intr-thread thread and kernel's pciehp thread. And it causes lockup in
->>> pci_dev_wait() at kernel side.
->>>
->>> When SSD is removed, eal-intr-thread immediately receives
->>> RTE_INTR_HANDLE_ALARM and handler calls rte_pci_detach_dev() and at kernel
->>> side vfio_pci_release() is triggered to release this vfio device, which
->>> calls pci_try_reset_function(), then _pci_reset_function_locked().
->>> pci_try_reset_function acquires the device lock but
->>> _pci_reset_function_locked() doesn't return, therefore lock is NOT released.
+> Thanks for the patch Nathan.  fndit isn't really being used for
+> anything other than a print statement outside of the loop.  How about:
+
+Thank you for the review, this seems reasonable. I will send a v2
+shortly.
+
 > 
-> To what extent does vfio-pci need to learn about surprise hotplug?  My
-> expectation is that the current state of the code would only support
-> cooperative hotplug.  When a device is surprise removed, what backs a
-> user's mmaps?  AIUI, we don't have a revoke interface to invalidate
-> these.  We should probably start with an RFE or some development effort
-> to harden vfio-pci for surprise hotplug, it's not surprising it doesn't
-> just work TBH.  Thanks,
+> ```
+> diff --git a/drivers/pci/hotplug/rpaphp_core.c
+> b/drivers/pci/hotplug/rpaphp_core.c
+> index bcd5d357ca23..c3899ee1db99 100644
+> --- a/drivers/pci/hotplug/rpaphp_core.c
+> +++ b/drivers/pci/hotplug/rpaphp_core.c
+> @@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct
+> device_node *dn, char *drc_name,
+>   struct of_drc_info drc;
+>   const __be32 *value;
+>   char cell_drc_name[MAX_DRC_NAME_LEN];
+> - int j, fndit;
+> + int j;
 > 
-> Alex
+>   info = of_find_property(dn->parent, "ibm,drc-info", NULL);
+>   if (info == NULL)
+> @@ -245,17 +245,13 @@ static int rpaphp_check_drc_props_v2(struct
+> device_node *dn, char *drc_name,
 > 
+>   /* Should now know end of current entry */
 > 
-
-I did see other issues that DPDK unmap vifo device memory was stuck due 
-to surprise removal.
-
-Are you saying that vfio-pci surprise removal is not fully implemented yet?
-
->>> Inside _pci_reset_function_locked(), pcie_has_flr(), pci_pm_reset(), etc.
->>> call pci_dev_wait() at the end but it doesn't return and print out above
->>> message until 65s timeout.
->>>
->>> At kernel pciehp side, it also detects the removal but doesn't run
->>> immediately as it is configured as "pciehp.pciehp_poll_time=5". So a couple
->>> of seconds later, it calls pciehp_unconfigure_device -> pci_walk_bus ->
->>> pci_dev_set_disconnected. pci_dev_set_disconnected() couldn't get the device
->>> lock and is stuck too because the lock is hold by eal-intr-thread.
->>>
->>> The first issue is in pci_dev_wait(). It calls pci_read_config_dword() and
->>> only when id is not all ones, it can return. But when SSD is physically
->>> removed, id retrieved is always all ones therefore, it has to wait for FLR
->>> 65s timeout to return.
->>>
->>> I did the following to check return value of pci_read_config_dword() to fix
->>> this:
->>> --- a/drivers/pci/pci.c
->>> +++ b/drivers/pci/pci.c
->>> @@ -4439,7 +4439,11 @@ static int pci_dev_wait(struct pci_dev *dev, char
->>> *reset_type, int timeout)
->>>
->>>                  msleep(delay);
->>>                  delay *= 2;
->>> -               pci_read_config_dword(dev, PCI_COMMAND, &id);
->>> +               if (pci_read_config_dword(dev, PCI_COMMAND, &id) ==
->>> +                   PCIBIOS_DEVICE_NOT_FOUND) {
->>> +                       pci_info(dev, "device disconnected\n");
->>> +                       return -ENODEV;
->>> +               }
->>>          }
->>>
->>>          if (delay > 1000)
->>>
->>> The second issue is that due to lock up described above, the
->>> pci_dev_set_disconnected() is stuck and pci_read_config_dword() won't return
->>> PCIBIOS_DEVICE_NOT_FOUND.
->>>
->>> I didn't find a easy way to fix it. Maybe use device lock in
->>> pci_dev_set_disconnected() is too coarse and we need a finer device
->>> err_state lock?
->>>
->>> BTW, pci_dev_set_disconnected wasn't using device lock until this change
->>> a6bd101b8f.
->>>
->>> Any suggestions to fix this problem?
->>
->> Would you mind opening a report at https://bugzilla.kernel.org and
->> attaching the complete dmesg log and "lspci -vv" output?
-
-I submitted one as https://bugzilla.kernel.org/show_bug.cgi?id=203797
-
->>
->> Out of curiosity, why do you use "pciehp.pciehp_poll_time=5"?
-
-This was chosen by other engineer. I tried shorter polling time, which 
-doesn't make difference.
-
-I also tried pciehp.pciehp_poll_mode=0 but hotplug doesn't seem working.
-Should I use poll mode or not?
-
->>
->> Bjorn
+> - if (my_index > drc.last_drc_index)
+> - continue;
+> -
+> - fndit = 1;
+> - break;
+> + /* Found it */
+> + if (my_index <= drc.last_drc_index) {
+> + sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
+> + my_index);
+> + break;
+> + }
+>   }
+> - /* Found it */
+> -
+> - if (fndit)
+> - sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
+> - my_index);
 > 
+>   if (((drc_name == NULL) ||
+>        (drc_name && !strcmp(drc_name, cell_drc_name))) &&
+> ```
+> (not sure my tabs were pasted properly in the above...)
+
+Doesn't look like it but no worries.
+
+Thanks,
+Nathan
