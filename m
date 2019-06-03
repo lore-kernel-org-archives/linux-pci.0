@@ -2,218 +2,189 @@ Return-Path: <SRS0=ZO6A=UC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,T_DKIMWL_WL_HIGH autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EDD4C04AB5
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 19:42:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B23C04AB5
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:50:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0E35026703
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 19:42:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E498123A5C
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:50:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="v57zkduk"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="fuItLAVW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726690AbfFCTmP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Jun 2019 15:42:15 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:43392 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726272AbfFCTmO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 15:42:14 -0400
-Received: by mail-pg1-f196.google.com with SMTP id f25so8854958pgv.10
-        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2019 12:42:14 -0700 (PDT)
+        id S1726373AbfFCVuW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Jun 2019 17:50:22 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:35962 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726076AbfFCVuT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 17:50:19 -0400
+Received: by mail-pf1-f195.google.com with SMTP id u22so11366448pfm.3
+        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2019 14:50:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=joelfernandes.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=a+lhr9Q+24Qfza3c4uXpEdm8TyEjYoUavdn6rBgETA0=;
-        b=v57zkdukOzYOvhfiKNqk2b/GOjkFP1SHWP5I5eo7SiatQZoyLWIBR+84HSu7EA2L8f
-         /Txa/lSthx5I4+d0+ItNuTqwsJewXfi+56sABsg3JwRHrqq33I7sTzcN+0Twcbb6KpI7
-         +Pr2kvxYQLWF4bCfr03Db/6neBgFbrX8K2sXo=
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=QXe1q2zoQhM8mrIXiP1zmtjet7FIsQQVo+jNhQzIKKY=;
+        b=fuItLAVWVd3R4wiL7seEnIKyn3cimQpacQ5KyC3muYyd5ND/Anuj8lVgOcUF83Cwo/
+         KYTINCBVoor6OacJJA142/HPZhJUNO37/FFKGMLA14GNOS+M1Y6P+/1XzhDfUUsmtATU
+         q9Sm3TfvT6Ra9zBytNZ66mb4uaOHYAjfVEpPE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=a+lhr9Q+24Qfza3c4uXpEdm8TyEjYoUavdn6rBgETA0=;
-        b=Eqygd8gU09wY94hwnEWFpF8R92A2bybfYop4qhMvzQSIYfnY2gEydLRqfrIsHpj4cr
-         au3Ae+xIX6nw8e2r1G4CoHehJyTPhODixk1jCuHjvE71BllMh9x6G7gnJc/9IZYF4RJ3
-         9VjPhHRsOStQFMpnlmMIjzZua7i6T6g/jiZmpGHIG3Z6FSLbiUEhFD6IJgE/fKb3AWSx
-         7tGa1dZsAqLVyMW0xokqp9dKCo7+/nqROSF2QUxjCRr+5Rnnu5cyefl29Y3D8p9IoWTW
-         wfBAS9VoJ2JPZ2PF1Z7UE/OmXrIP1QTbB96oG7VNz565r20l+t1RPe6vhXWr5lff+vmy
-         5a0A==
-X-Gm-Message-State: APjAAAX3Tv1rqXCMn+PIbhRn+F6FHmJOOafV27tlLXeQB5GBNahfk6F6
-        MXDgL2Aih/veYQJiUEI/Hmjv/g==
-X-Google-Smtp-Source: APXvYqxWMwntCJiOP/Rg6qilGaE0r4tvP3xYpgRSB5zm6o29WMIRTYv7JT5/hpFHq7FY7Jh/PBhQ6A==
-X-Received: by 2002:a63:e10d:: with SMTP id z13mr9626011pgh.116.1559590933600;
-        Mon, 03 Jun 2019 12:42:13 -0700 (PDT)
-Received: from localhost ([2620:15c:6:12:9c46:e0da:efbf:69cc])
-        by smtp.gmail.com with ESMTPSA id o2sm13442018pgm.51.2019.06.03.12.42.12
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Mon, 03 Jun 2019 12:42:12 -0700 (PDT)
-Date:   Mon, 3 Jun 2019 15:42:11 -0400
-From:   Joel Fernandes <joel@joelfernandes.org>
-To:     Peter Zijlstra <peterz@infradead.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-        Josh Triplett <josh@joshtriplett.org>, keescook@chromium.org,
-        kernel-hardening@lists.openwall.com,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        neilb@suse.com, netdev@vger.kernel.org, oleg@redhat.com,
-        "Paul E. McKenney" <paulmck@linux.ibm.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, rcu@vger.kernel.org,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Tejun Heo <tj@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>
-Subject: Re: [RFC 1/6] rcu: Add support for consolidated-RCU reader checking
-Message-ID: <20190603194211.GA228607@google.com>
-References: <20190601222738.6856-1-joel@joelfernandes.org>
- <20190601222738.6856-2-joel@joelfernandes.org>
- <20190603080128.GA3436@hirez.programming.kicks-ass.net>
- <20190603141847.GA94186@google.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=QXe1q2zoQhM8mrIXiP1zmtjet7FIsQQVo+jNhQzIKKY=;
+        b=EHagyad4Ok9JHsN1Ze9zfJU2X2IEHINhvwCG+rq2XKFhE7YGM/7OJHcssL/8DONZxr
+         /hDrE69pyxb6Y/ay+b/voUKWs5BsJR3opY/aOZ3118DGWiXv44vDDlJYc0G7K4QSUF4O
+         vBwsdipmP3cSLNBvfkbCdGRc8wvmrZ2/Uj1BZ3eD0HtTvWu3idF4GrmGx4xqdMGuwJG3
+         rsxZUJF6N036LEyOAau/u4EFBQYSGijCPan22MOOfVT7VShxLeVdD1xJU7kipzb/g84U
+         dBkkqkG8w0buXopRCbgirRXT+DvAMk85GTaQS3fjnfVzfnqKBTc02TBiCMErgvg6lAMb
+         tydA==
+X-Gm-Message-State: APjAAAUnv5ZyEfNesstm7ucWi9yadOSDXS/63HVGz+wu1oR+2NnLa9/2
+        Z12ujZOpQuUQCLpmdj24FHnjL6xLGVc=
+X-Google-Smtp-Source: APXvYqzFWBT/QzNj4YFy2RIkKCvg29kMSvPLG8SXnlZPedHNDkj+gC+CaVMGmB8lc4w88mXTFfVNFg==
+X-Received: by 2002:a17:90a:1911:: with SMTP id 17mr7751513pjg.113.1559596660707;
+        Mon, 03 Jun 2019 14:17:40 -0700 (PDT)
+Received: from [10.136.8.140] ([192.19.228.250])
+        by smtp.gmail.com with ESMTPSA id o192sm9299232pgo.74.2019.06.03.14.17.38
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 03 Jun 2019 14:17:39 -0700 (PDT)
+Subject: Re: SSD surprise removal leads to long wait inside pci_dev_wait() and
+ FLR 65s timeout
+To:     Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, keith.busch@intel.com,
+        bcm-kernel-feedback-list@broadcom.com,
+        Lukas Wunner <lukas@wunner.de>
+References: <8f2d88a5-9524-c4c3-a61f-7d55d97e1c18@broadcom.com>
+ <20190603004414.GA189360@google.com> <20190602194011.51ceaa23@x1.home>
+From:   JD Zheng <jiandong.zheng@broadcom.com>
+Message-ID: <78f95dfe-ac2b-408f-0e2a-b3b9d69575dd@broadcom.com>
+Date:   Mon, 3 Jun 2019 14:17:36 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190603141847.GA94186@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190602194011.51ceaa23@x1.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 03, 2019 at 10:18:47AM -0400, Joel Fernandes wrote:
-> On Mon, Jun 03, 2019 at 10:01:28AM +0200, Peter Zijlstra wrote:
-> > On Sat, Jun 01, 2019 at 06:27:33PM -0400, Joel Fernandes (Google) wrote:
-> > > +#define list_for_each_entry_rcu(pos, head, member, cond...)		\
-> > > +	if (COUNT_VARGS(cond) != 0) {					\
-> > > +		__list_check_rcu_cond(0, ## cond);			\
-> > > +	} else {							\
-> > > +		__list_check_rcu();					\
-> > > +	}								\
-> > > +	for (pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
-> > > +		&pos->member != (head);					\
-> > >  		pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
-> > >  
-> > >  /**
-> > > @@ -621,7 +648,12 @@ static inline void hlist_add_behind_rcu(struct hlist_node *n,
-> > >   * the _rcu list-mutation primitives such as hlist_add_head_rcu()
-> > >   * as long as the traversal is guarded by rcu_read_lock().
-> > >   */
-> > > +#define hlist_for_each_entry_rcu(pos, head, member, cond...)		\
-> > > +	if (COUNT_VARGS(cond) != 0) {					\
-> > > +		__list_check_rcu_cond(0, ## cond);			\
-> > > +	} else {							\
-> > > +		__list_check_rcu();					\
-> > > +	}								\
-> > >  	for (pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
-> > >  			typeof(*(pos)), member);			\
-> > >  		pos;							\
-> > 
-> > 
-> > This breaks code like:
-> > 
-> > 	if (...)
-> > 		list_for_each_entry_rcu(...);
-> > 
-> > as they are no longer a single statement. You'll have to frob it into
-> > the initializer part of the for statement.
+
+
+On 6/2/19 6:40 PM, Alex Williamson wrote:
+> On Sun, 2 Jun 2019 19:44:14 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
 > 
-> Thanks a lot for that. I fixed it as below (diff is on top of the patch):
+>> [+cc Alex, Lukas]
+>>
+>> On Fri, May 31, 2019 at 09:55:20AM -0700, JD Zheng wrote:
+>>> Hello,
+>>>
+>>> I am running DPDK 18.11+SPDK 19.04 with v5.1 kernel. DPDK/SPDK uses SSD vfio
+>>> devices and after running SPDK's nvmf_tgt, unplugging a SSD cause kernel to
+>>> print out following:
+>>> [  105.426952] vfio-pci 0000:04:00.0: not ready 2047ms after FLR; waiting
+>>> [  107.698953] vfio-pci 0000:04:00.0: not ready 4095ms after FLR; waiting
+>>> [  112.050960] vfio-pci 0000:04:00.0: not ready 8191ms after FLR; waiting
+>>> [  120.498953] vfio-pci 0000:04:00.0: not ready 16383ms after FLR; waiting
+>>> [  138.418957] vfio-pci 0000:04:00.0: not ready 32767ms after FLR; waiting
+>>> [  173.234953] vfio-pci 0000:04:00.0: not ready 65535ms after FLR; giving up
+>>>
+>>> Looks like it is a PCI hotplug racing condition between DPDK's
+>>> eal-intr-thread thread and kernel's pciehp thread. And it causes lockup in
+>>> pci_dev_wait() at kernel side.
+>>>
+>>> When SSD is removed, eal-intr-thread immediately receives
+>>> RTE_INTR_HANDLE_ALARM and handler calls rte_pci_detach_dev() and at kernel
+>>> side vfio_pci_release() is triggered to release this vfio device, which
+>>> calls pci_try_reset_function(), then _pci_reset_function_locked().
+>>> pci_try_reset_function acquires the device lock but
+>>> _pci_reset_function_locked() doesn't return, therefore lock is NOT released.
 > 
-> If not for that '##' , I could have abstracted the whole if/else
-> expression into its own macro and called it from list_for_each_entry_rcu() to
-> keep it more clean.
+> To what extent does vfio-pci need to learn about surprise hotplug?  My
+> expectation is that the current state of the code would only support
+> cooperative hotplug.  When a device is surprise removed, what backs a
+> user's mmaps?  AIUI, we don't have a revoke interface to invalidate
+> these.  We should probably start with an RFE or some development effort
+> to harden vfio-pci for surprise hotplug, it's not surprising it doesn't
+> just work TBH.  Thanks,
+> 
+> Alex
+> 
+> 
 
-Actually was able to roll the if/else into its own macro as well, thus
-keeping it clean. thanks!
+I did see other issues that DPDK unmap vifo device memory was stuck due 
+to surprise removal.
 
----8<-----------------------
+Are you saying that vfio-pci surprise removal is not fully implemented yet?
 
-diff --git a/include/linux/rculist.h b/include/linux/rculist.h
-index b641fdd9f1a2..cc9c382b080c 100644
---- a/include/linux/rculist.h
-+++ b/include/linux/rculist.h
-@@ -43,7 +43,11 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
- /*
-  * Check during list traversal that we are within an RCU reader
-  */
--#define __list_check_rcu()						\
-+
-+#define SIXTH_ARG(a1, a2, a3, a4, a5, a6, ...) a6
-+#define COUNT_VARGS(...) SIXTH_ARG(dummy, ## __VA_ARGS__, 4, 3, 2, 1, 0)
-+
-+#define __list_check_rcu_nocond()					\
- 	RCU_LOCKDEP_WARN(!rcu_read_lock_any_held(),			\
- 			 "RCU-list traversed in non-reader section!")
- 
-@@ -59,6 +63,16 @@ static inline void __list_check_rcu_cond(int dummy, ...)
- 	RCU_LOCKDEP_WARN(!cond && !rcu_read_lock_any_held(),
- 			 "RCU-list traversed in non-reader section!");
- }
-+
-+#define __list_check_rcu(cond...)				\
-+     ({								\
-+	if (COUNT_VARGS(cond) != 0) {				\
-+		__list_check_rcu_cond(0, ## cond);		\
-+	} else {						\
-+		__list_check_rcu_nocond();			\
-+	}							\
-+      })
-+
- /*
-  * Insert a new entry between two known consecutive entries.
-  *
-@@ -357,9 +371,6 @@ static inline void list_splice_tail_init_rcu(struct list_head *list,
- 						  member) : NULL; \
- })
- 
--#define SIXTH_ARG(a1, a2, a3, a4, a5, a6, ...) a6
--#define COUNT_VARGS(...) SIXTH_ARG(dummy, ## __VA_ARGS__, 4, 3, 2, 1, 0)
--
- /**
-  * list_for_each_entry_rcu	-	iterate over rcu list of given type
-  * @pos:	the type * to use as a loop cursor.
-@@ -371,12 +382,8 @@ static inline void list_splice_tail_init_rcu(struct list_head *list,
-  * as long as the traversal is guarded by rcu_read_lock().
-  */
- #define list_for_each_entry_rcu(pos, head, member, cond...)		\
--	if (COUNT_VARGS(cond) != 0) {					\
--		__list_check_rcu_cond(0, ## cond);			\
--	} else {							\
--		__list_check_rcu();					\
--	}								\
--	for (pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
-+	for (__list_check_rcu(cond),					\
-+	     pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
- 		&pos->member != (head);					\
- 		pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
- 
-@@ -649,12 +656,8 @@ static inline void hlist_add_behind_rcu(struct hlist_node *n,
-  * as long as the traversal is guarded by rcu_read_lock().
-  */
- #define hlist_for_each_entry_rcu(pos, head, member, cond...)		\
--	if (COUNT_VARGS(cond) != 0) {					\
--		__list_check_rcu_cond(0, ## cond);			\
--	} else {							\
--		__list_check_rcu();					\
--	}								\
--	for (pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
-+	for (__list_check_rcu(cond),					\
-+	     pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
- 			typeof(*(pos)), member);			\
- 		pos;							\
- 		pos = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(\
--- 
-2.22.0.rc1.311.g5d7573a151-goog
+>>> Inside _pci_reset_function_locked(), pcie_has_flr(), pci_pm_reset(), etc.
+>>> call pci_dev_wait() at the end but it doesn't return and print out above
+>>> message until 65s timeout.
+>>>
+>>> At kernel pciehp side, it also detects the removal but doesn't run
+>>> immediately as it is configured as "pciehp.pciehp_poll_time=5". So a couple
+>>> of seconds later, it calls pciehp_unconfigure_device -> pci_walk_bus ->
+>>> pci_dev_set_disconnected. pci_dev_set_disconnected() couldn't get the device
+>>> lock and is stuck too because the lock is hold by eal-intr-thread.
+>>>
+>>> The first issue is in pci_dev_wait(). It calls pci_read_config_dword() and
+>>> only when id is not all ones, it can return. But when SSD is physically
+>>> removed, id retrieved is always all ones therefore, it has to wait for FLR
+>>> 65s timeout to return.
+>>>
+>>> I did the following to check return value of pci_read_config_dword() to fix
+>>> this:
+>>> --- a/drivers/pci/pci.c
+>>> +++ b/drivers/pci/pci.c
+>>> @@ -4439,7 +4439,11 @@ static int pci_dev_wait(struct pci_dev *dev, char
+>>> *reset_type, int timeout)
+>>>
+>>>                  msleep(delay);
+>>>                  delay *= 2;
+>>> -               pci_read_config_dword(dev, PCI_COMMAND, &id);
+>>> +               if (pci_read_config_dword(dev, PCI_COMMAND, &id) ==
+>>> +                   PCIBIOS_DEVICE_NOT_FOUND) {
+>>> +                       pci_info(dev, "device disconnected\n");
+>>> +                       return -ENODEV;
+>>> +               }
+>>>          }
+>>>
+>>>          if (delay > 1000)
+>>>
+>>> The second issue is that due to lock up described above, the
+>>> pci_dev_set_disconnected() is stuck and pci_read_config_dword() won't return
+>>> PCIBIOS_DEVICE_NOT_FOUND.
+>>>
+>>> I didn't find a easy way to fix it. Maybe use device lock in
+>>> pci_dev_set_disconnected() is too coarse and we need a finer device
+>>> err_state lock?
+>>>
+>>> BTW, pci_dev_set_disconnected wasn't using device lock until this change
+>>> a6bd101b8f.
+>>>
+>>> Any suggestions to fix this problem?
+>>
+>> Would you mind opening a report at https://bugzilla.kernel.org and
+>> attaching the complete dmesg log and "lspci -vv" output?
 
+I submitted one as https://bugzilla.kernel.org/show_bug.cgi?id=203797
+
+>>
+>> Out of curiosity, why do you use "pciehp.pciehp_poll_time=5"?
+
+This was chosen by other engineer. I tried shorter polling time, which 
+doesn't make difference.
+
+I also tried pciehp.pciehp_poll_mode=0 but hotplug doesn't seem working.
+Should I use poll mode or not?
+
+>>
+>> Bjorn
+> 
