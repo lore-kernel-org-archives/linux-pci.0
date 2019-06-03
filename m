@@ -2,131 +2,159 @@ Return-Path: <SRS0=ZO6A=UC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_MED,USER_IN_DEF_DKIM_WL
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 221F9C04AB5
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:59:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC13DC04AB5
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 22:13:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8F4C26D36
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 21:59:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D9DA2660C
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 22:13:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="lWohiKBq"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F39ZYDel"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726697AbfFCV7a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Jun 2019 17:59:30 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:44706 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726691AbfFCV7a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 17:59:30 -0400
-Received: by mail-pg1-f195.google.com with SMTP id n2so9032056pgp.11
-        for <linux-pci@vger.kernel.org>; Mon, 03 Jun 2019 14:59:29 -0700 (PDT)
+        id S1726327AbfFCWNo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Jun 2019 18:13:44 -0400
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:40782 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725956AbfFCWNn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 18:13:43 -0400
+Received: by mail-ed1-f66.google.com with SMTP id r18so27978478edo.7;
+        Mon, 03 Jun 2019 15:13:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=jsqt76+/tC7lNIGkBOfSxOR0w7kTsY9VRuEizjLylaM=;
-        b=lWohiKBqCPBenj/eJUzVHOJpCdAi91g5TtT2pyrV0FfesO2LcED3e8srNOon8Iibg8
-         XtIVB4yvu8opanO7FhZdkXkw4qrcWHepKTZehjxMhdJDV96SRObFjXSOJ7rGU53BIOCP
-         amFtVM8IVZTgsTynPUL6wWPlqXYRwRZZzxCbIY9Ee0e3Vl33p4qUyAVxj8FpxZ60liZ+
-         tlqBRl6mtiIkFKWFCab1uDZBalnO4+vn2OxS13m7xXU6v0FU5TV28RkCj9ovOInxVDww
-         AAHmWcMNk0lFA89DRsCsZY4WJwkQ6CMV6qh3KnKzsG3YvEUYZUc8GLtbMBr5SeewywTj
-         cL0w==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=QO9b5Do5ysQrr7s3GzcTFKoPLVja1hwLd/j7EFbklsk=;
+        b=F39ZYDelGutNNCw6Bm7MOuBQURzN8FAvhTNI9xGoMNHwOACNWjg9BFnW+WeFnsIQq7
+         Q0VASU62D/QuJQjOsiMtpEez8Etq7laX3OFIvnaD++/DW8DLB8ztNIkDoAITNGzs61ho
+         5MogTKA1mgmgCZsXjFQePNV6uXanaRvbqXK+zvg1ipmxn6fgfuINLrh2epN64OPP7Hga
+         jR9dl+Ejsp0swrOCM12w4x2LOgpskEk1EuaM9DdE0zsyT9PgQU3dNV60i5pv/47x9g21
+         s/o5Uy8CbEpI/Fba6v4MqWyx6TiJcKHSNLRn/NS1ok0Q2ltXR3aDtEfgHNdtp/fIPZ2L
+         uTGA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=jsqt76+/tC7lNIGkBOfSxOR0w7kTsY9VRuEizjLylaM=;
-        b=MFBbGpRO2SwJ5dXaCUTmNZoe8PiAsjHUj4QsDZ9EdJ3tDUBL8Us7m+BF6pHG5WQ7Gq
-         xCsDR8DOJZ0SYHQxxNMlJY/gl3IOMaBtvBsELhfeF8q3nwbFpNnGLEoCoz/HgP/Dme/6
-         8TSIEN56wEByQKeWz8qdzPRiE0zP7f3QitKkE2oaFFUTF/D50qN16J8dCVySkb6iluI8
-         NVzSeMcw2Rm+i8NhEtCdoRcVzOtJI6mwQzeB9tlm8TBunFtuy4yBAArG7hJ853r/7ZhO
-         uQ0YIaZVJzfqPnhFslBVnCa2oKub+bja7n1zbpg9iarvUXG7Fx7Z2OzMB2oINcv9bn48
-         r12g==
-X-Gm-Message-State: APjAAAURt0R9LYqoiq4SzdtHvPt+nzAb/qkrmvV/xpjXaMCKMDsLlMrt
-        woyv4B+1DHhV7QJ8T0LAHPHK/IO4XWydTOlhUCSWLRepdh4=
-X-Google-Smtp-Source: APXvYqwtRDahz95jt5ckTsuH+i7KTn9MRTd6CF+6hpsuPoa7lkdPVCsC5gUhiu+y1T7oPa6/2fCZnPaB/OkOvv8EDa4=
-X-Received: by 2002:a17:90a:bf02:: with SMTP id c2mr5763850pjs.73.1559596083400;
- Mon, 03 Jun 2019 14:08:03 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190603174323.48251-1-natechancellor@gmail.com>
-In-Reply-To: <20190603174323.48251-1-natechancellor@gmail.com>
-From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Mon, 3 Jun 2019 14:07:50 -0700
-Message-ID: <CAKwvOdkQzdZezwf51UddFVGQh0mRFMEexr1cMHx=va88T515YQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rpaphp: Avoid a sometimes-uninitialized warning
-To:     Nathan Chancellor <natechancellor@gmail.com>
-Cc:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=QO9b5Do5ysQrr7s3GzcTFKoPLVja1hwLd/j7EFbklsk=;
+        b=U7mMhtEm7nh7BY/l1HOM/fDSv1GB9ctsldzI3JOei/ATfo+efc1rQbTNy/F8iKA6P/
+         Ms+hH+r9XWwID4zkzNm5RzfqnQqlOjDFxnRKDAkpGZPEJ7DZeU7Ov4EYK9tEOPFBO5k9
+         vqEscRq2fMvm8YTB0/jMyRF7/7og6Trk/dknsPoeDfRsP7vAVSB/fCZ670d02Pmt6yhz
+         0sKlGwHkMVj+TrgM7t08M036+pgEWes/9ubyjDgsLWOIu5xo7ju1KDdZBP85J85mZJ6t
+         iqhefTteHMhoeMJHgM7WshWQRShmFoiJ0IwkdtG90E1i6gwWQOuE7vNVNowpB0DmExoe
+         JbiQ==
+X-Gm-Message-State: APjAAAV4SvOHlfHyv7/08/ZF00Jq9+84xZAxo9/rEQQniz+8y8vkp9Sw
+        PlzFAhLQshOX9rTUlodj/nw=
+X-Google-Smtp-Source: APXvYqzwJdJC5UuqbhofMI8Wzs9XZsjOp6JuZrA/isKGIP5Cjz3CHyXpt3g0enOrim2YrrRwlSlnkA==
+X-Received: by 2002:a17:906:1c1b:: with SMTP id k27mr1364028ejg.13.1559600021948;
+        Mon, 03 Jun 2019 15:13:41 -0700 (PDT)
+Received: from localhost.localdomain ([2a01:4f9:2b:2b15::2])
+        by smtp.gmail.com with ESMTPSA id r9sm3869840eds.61.2019.06.03.15.13.40
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 03 Jun 2019 15:13:41 -0700 (PDT)
+From:   Nathan Chancellor <natechancellor@gmail.com>
+To:     Tyrel Datwyler <tyreld@linux.ibm.com>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+        Michael Ellerman <mpe@ellerman.id.au>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        clang-built-linux@googlegroups.com,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Nick Desaulniers <ndesaulniers@google.com>
+Subject: [PATCH v2] PCI: rpaphp: Avoid a sometimes-uninitialized warning
+Date:   Mon,  3 Jun 2019 15:11:58 -0700
+Message-Id: <20190603221157.58502-1-natechancellor@gmail.com>
+X-Mailer: git-send-email 2.22.0.rc3
+In-Reply-To: <20190603174323.48251-1-natechancellor@gmail.com>
+References: <20190603174323.48251-1-natechancellor@gmail.com>
+MIME-Version: 1.0
+X-Patchwork-Bot: notify
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 3, 2019 at 10:44 AM Nathan Chancellor
-<natechancellor@gmail.com> wrote:
-> Looking at the loop in a vacuum as clang would, fndit could be
-> uninitialized if entries was ever zero or the if statement was
-> always true within the loop. Regardless of whether or not this
-> warning is a problem in practice, "found" variables should always
-> be initialized to false so that there is no possibility of
-> undefined behavior.
+When building with -Wsometimes-uninitialized, clang warns:
 
-Thanks for the patch Nathan.  fndit isn't really being used for
-anything other than a print statement outside of the loop.  How about:
+drivers/pci/hotplug/rpaphp_core.c:243:14: warning: variable 'fndit' is
+used uninitialized whenever 'for' loop exits because its condition is
+false [-Wsometimes-uninitialized]
+        for (j = 0; j < entries; j++) {
+                    ^~~~~~~~~~~
+drivers/pci/hotplug/rpaphp_core.c:256:6: note: uninitialized use occurs
+here
+        if (fndit)
+            ^~~~~
+drivers/pci/hotplug/rpaphp_core.c:243:14: note: remove the condition if
+it is always true
+        for (j = 0; j < entries; j++) {
+                    ^~~~~~~~~~~
+drivers/pci/hotplug/rpaphp_core.c:233:14: note: initialize the variable
+'fndit' to silence this warning
+        int j, fndit;
+                    ^
+                     = 0
 
-```
-diff --git a/drivers/pci/hotplug/rpaphp_core.c
-b/drivers/pci/hotplug/rpaphp_core.c
+fndit is only used to gate a sprintf call, which can be moved into the
+loop to simplify the code and eliminate the local variable, which will
+fix this warning.
+
+Link: https://github.com/ClangBuiltLinux/linux/issues/504
+Fixes: 2fcf3ae508c2 ("hotplug/drc-info: Add code to search ibm,drc-info property")
+Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+
+v1 -> v2:
+
+* Eliminate fndit altogether by shuffling the sprintf call into the for
+  loop and changing the if conditional, as suggested by Nick.
+
+ drivers/pci/hotplug/rpaphp_core.c | 18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
 index bcd5d357ca23..c3899ee1db99 100644
 --- a/drivers/pci/hotplug/rpaphp_core.c
 +++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct
-device_node *dn, char *drc_name,
-  struct of_drc_info drc;
-  const __be32 *value;
-  char cell_drc_name[MAX_DRC_NAME_LEN];
-- int j, fndit;
-+ int j;
-
-  info = of_find_property(dn->parent, "ibm,drc-info", NULL);
-  if (info == NULL)
-@@ -245,17 +245,13 @@ static int rpaphp_check_drc_props_v2(struct
-device_node *dn, char *drc_name,
-
-  /* Should now know end of current entry */
-
-- if (my_index > drc.last_drc_index)
-- continue;
+@@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+ 	struct of_drc_info drc;
+ 	const __be32 *value;
+ 	char cell_drc_name[MAX_DRC_NAME_LEN];
+-	int j, fndit;
++	int j;
+ 
+ 	info = of_find_property(dn->parent, "ibm,drc-info", NULL);
+ 	if (info == NULL)
+@@ -245,17 +245,13 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+ 
+ 		/* Should now know end of current entry */
+ 
+-		if (my_index > drc.last_drc_index)
+-			continue;
 -
-- fndit = 1;
-- break;
-+ /* Found it */
-+ if (my_index <= drc.last_drc_index) {
-+ sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
-+ my_index);
-+ break;
-+ }
-  }
-- /* Found it */
+-		fndit = 1;
+-		break;
++		/* Found it */
++		if (my_index <= drc.last_drc_index) {
++			sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
++				my_index);
++			break;
++		}
+ 	}
+-	/* Found it */
 -
-- if (fndit)
-- sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
-- my_index);
-
-  if (((drc_name == NULL) ||
-       (drc_name && !strcmp(drc_name, cell_drc_name))) &&
-```
-(not sure my tabs were pasted properly in the above...)
-
+-	if (fndit)
+-		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix, 
+-			my_index);
+ 
+ 	if (((drc_name == NULL) ||
+ 	     (drc_name && !strcmp(drc_name, cell_drc_name))) &&
 -- 
-Thanks,
-~Nick Desaulniers
+2.22.0.rc3
+
