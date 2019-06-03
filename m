@@ -2,61 +2,118 @@ Return-Path: <SRS0=ZO6A=UC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.4 required=3.0 tests=DATE_IN_PAST_06_12,
-	FREEMAIL_REPLYTO_END_DIGIT,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EACF4C04AB6
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 05:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83CBCC46460
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 06:42:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C3C8127BA4
-	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 05:29:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66A8E205ED
+	for <linux-pci@archiver.kernel.org>; Mon,  3 Jun 2019 06:42:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726314AbfFCF3W convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 3 Jun 2019 01:29:22 -0400
-Received: from mail.palitramed.ru ([84.53.237.5]:41746 "EHLO
-        mail.palitramed.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726257AbfFCF3V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 01:29:21 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by mail.palitramed.ru (Postfix) with ESMTP id D7A2520896B6
-        for <linux-pci@vger.kernel.org>; Mon,  3 Jun 2019 08:29:19 +0300 (MSK)
-Received: from mail.palitramed.ru ([127.0.0.1])
-        by localhost (mail.palitramed.ru [127.0.0.1]) (amavisd-new, port 10032)
-        with ESMTP id WJ4I5dXT_eJT for <linux-pci@vger.kernel.org>;
-        Mon,  3 Jun 2019 08:29:19 +0300 (MSK)
-Received: from localhost (localhost [127.0.0.1])
-        by mail.palitramed.ru (Postfix) with ESMTP id BE59820E0CC4
-        for <linux-pci@vger.kernel.org>; Fri, 31 May 2019 06:45:11 +0300 (MSK)
-X-Virus-Scanned: amavisd-new at palitramed.ru
-Received: from mail.palitramed.ru ([127.0.0.1])
-        by localhost (mail.palitramed.ru [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id bB3WIcDmwbb7 for <linux-pci@vger.kernel.org>;
-        Fri, 31 May 2019 06:45:11 +0300 (MSK)
-Received: from [185.234.218.135] (unknown [185.234.218.135])
-        by mail.palitramed.ru (Postfix) with ESMTPA id BBA502084AED
-        for <linux-pci@vger.kernel.org>; Fri, 31 May 2019 00:23:56 +0300 (MSK)
-Content-Type: text/plain; charset="iso-8859-1"
+        id S1727209AbfFCGmQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 3 Jun 2019 02:42:16 -0400
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:53347 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727194AbfFCGmQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jun 2019 02:42:16 -0400
+Received: by atrey.karlin.mff.cuni.cz (Postfix, from userid 512)
+        id 72C3D80295; Mon,  3 Jun 2019 08:42:03 +0200 (CEST)
+Date:   Mon, 3 Jun 2019 08:42:12 +0200
+From:   Pavel Machek <pavel@denx.de>
+To:     Joel Fernandes <joel@joelfernandes.org>
+Cc:     Pavel Machek <pavel@denx.de>, LKML <linux-kernel@vger.kernel.org>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Eric Dumazet <edumazet@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>,
+        Kees Cook <keescook@chromium.org>,
+        Kernel Hardening <kernel-hardening@lists.openwall.com>,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, Linux PM <linux-pm@vger.kernel.org>,
+        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+        Neil Brown <neilb@suse.com>, netdev <netdev@vger.kernel.org>,
+        Oleg Nesterov <oleg@redhat.com>,
+        "Paul E. McKenney" <paulmck@linux.ibm.com>,
+        Peter Zilstra <peterz@infradead.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, rcu <rcu@vger.kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Tejun Heo <tj@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>
+Subject: Re: [RFC 2/6] ipv4: add lockdep condition to fix for_each_entry
+Message-ID: <20190603064212.GA7400@amd>
+References: <20190601222738.6856-1-joel@joelfernandes.org>
+ <20190601222738.6856-3-joel@joelfernandes.org>
+ <20190602070014.GA543@amd>
+ <CAEXW_YT3t4Hb6wKsjXPGng+YbA5rhNRa7OSdZwdN4AKGfVkX3g@mail.gmail.com>
+ <CAEXW_YSM2wwah2Q7LKmUO1Dp7GG62ciQA1nZ7GLw3m6cyuXXTw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Description: Mail message body
-Subject: In A Nutshell
-To:     linux-pci@vger.kernel.org
-From:   "Emissary" <info@hikari-international.com>
-Date:   Thu, 30 May 2019 14:23:56 -0700
-Reply-To: "Emissary" <dannuar4@gmail.com>
-Message-Id: <20190530212357.BBA502084AED@mail.palitramed.ru>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="SLDf9lqlvOQaIe6s"
+Content-Disposition: inline
+In-Reply-To: <CAEXW_YSM2wwah2Q7LKmUO1Dp7GG62ciQA1nZ7GLw3m6cyuXXTw@mail.gmail.com>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello, 
 
-We have a private business proposition for you,contact me for more details. 
+--SLDf9lqlvOQaIe6s
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thank you,     
+On Sun 2019-06-02 08:24:35, Joel Fernandes wrote:
+> On Sun, Jun 2, 2019 at 8:20 AM Joel Fernandes <joel@joelfernandes.org> wr=
+ote:
+> >
+> > On Sun, Jun 2, 2019 at 3:00 AM Pavel Machek <pavel@denx.de> wrote:
+> > >
+> > > On Sat 2019-06-01 18:27:34, Joel Fernandes (Google) wrote:
+> > > > Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
+> > >
+> > > This really needs to be merged to previous patch, you can't break
+> > > compilation in middle of series...
+> > >
+> > > Or probably you need hlist_for_each_entry_rcu_lockdep() macro with
+> > > additional argument, and switch users to it.
+> >
+> > Good point. I can also just add a temporary transition macro, and then
+> > remove it in the last patch. That way no new macro is needed.
+>=20
+> Actually, no. There is no compilation break so I did not follow what
+> you mean. The fourth argument to the hlist_for_each_entry_rcu is
+> optional. The only thing that happens is new lockdep warnings will
+> arise which later parts of the series fix by passing in that fourth
+> argument.
 
-Datuk.
-5.30.19/135p/28wwe.5
+Sorry, I missed that subtlety. Might be worth it enabling the lockdep
+warning last in the series...
+
+								Pavel
+--=20
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+
+--SLDf9lqlvOQaIe6s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlz0wUQACgkQMOfwapXb+vJZhACeMv6qy1KMl8fpAmSRbXsFU5yP
+LY8Ani5H9/TBihxu13cOJbn7mJJ9RWkQ
+=hotv
+-----END PGP SIGNATURE-----
+
+--SLDf9lqlvOQaIe6s--
