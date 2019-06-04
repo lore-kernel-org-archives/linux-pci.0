@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D1F6C282CE
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 806C9C282CE
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D66B20717
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 568A420717
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="p/w+dePU"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="KZr/Yb1n"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727612AbfFDNR7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Jun 2019 09:17:59 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:54942 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727608AbfFDNR7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2019 09:17:59 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x54DHZbs028030;
-        Tue, 4 Jun 2019 08:17:35 -0500
+        id S1727608AbfFDNSE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Jun 2019 09:18:04 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:50382 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727265AbfFDNSE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2019 09:18:04 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x54DHktZ082389;
+        Tue, 4 Jun 2019 08:17:46 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1559654255;
-        bh=NQisG6of0th5e5nh0dWxjvqkrQFUAwxLaJ6uQ3mRLhk=;
+        s=ti-com-17Q1; t=1559654266;
+        bh=t0jA6IyzaKFpaRxG+xMzbQ3TeSZ/biJLiuqhdnBH3TQ=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=p/w+dePUAOZBdhfQ0h69WotHcCUiE55mkIh05kVLvDhwP57FXWOS0v2PQ6GB0z8oC
-         Ns6QDwgoGcD3juTUBM6xVmTZQPxxn6BDTSRI/PTavSeixh1+Sxn+walG/sXKZKphGO
-         ByoDc+Hj6QGTVHa+raGna/KVWeHm4VUgqn4VBy50=
-Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x54DHZFO052752
+        b=KZr/Yb1n2JCx1xdXk+5fWxz251JLI16pKngaDfG2QC6hGXVLV4i5gvy6cCgIsJMjP
+         c4WNdd1kbTd+yYCRuS/k+h6OJjnmI4OPZi0H3EJWyU1J15IIwDqImxqx57wu5Udo9Z
+         bvFpZC/srm1v2Mm4BAhsZsXo0/fnO3zxZwm++kmk=
+Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x54DHkn2042937
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 4 Jun 2019 08:17:35 -0500
-Received: from DLEE106.ent.ti.com (157.170.170.36) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+        Tue, 4 Jun 2019 08:17:46 -0500
+Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Tue, 4 Jun
- 2019 08:17:35 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE106.ent.ti.com
- (157.170.170.36) with Microsoft SMTP Server (version=TLS1_2,
+ 2019 08:17:46 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Tue, 4 Jun 2019 08:17:34 -0500
+ Frontend Transport; Tue, 4 Jun 2019 08:17:46 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x54DGdGP098972;
-        Tue, 4 Jun 2019 08:17:30 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x54DGdGR098972;
+        Tue, 4 Jun 2019 08:17:41 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -61,9 +61,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-omap@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [RFC PATCH 09/30] PCI: cadence: Add platform_data to start link and check link status
-Date:   Tue, 4 Jun 2019 18:44:55 +0530
-Message-ID: <20190604131516.13596-10-kishon@ti.com>
+Subject: [RFC PATCH 11/30] PCI: cadence: Add support to drive PERST# line using GPIO
+Date:   Tue, 4 Jun 2019 18:44:57 +0530
+Message-ID: <20190604131516.13596-12-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190604131516.13596-1-kishon@ti.com>
 References: <20190604131516.13596-1-kishon@ti.com>
@@ -75,148 +75,75 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support in cadence driver to read platform_data passed to it from
-platform specific drivers. The platform_data right now contains two
-ops, one to start link and the other to check the link status.
-This is required since the registers for starting a link and for
-checking link status is in the wrapper and not in Cadence PCIe core.
+In platforms like TI's J721E EVM, the PERST# line is connected to a
+GPIO line and PERST# should be driven high to indicate the clocks are
+stable (As per Figure 2-10: Power Up of the PCIe CEM spec 3.0).
+
+Add support to make GPIO drive PERST# line.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/controller/pcie-cadence-ep.c   |  1 +
- drivers/pci/controller/pcie-cadence-host.c |  1 +
- drivers/pci/controller/pcie-cadence.c      | 41 ++++++++++++++++++++++
- drivers/pci/controller/pcie-cadence.h      | 13 +++++++
- 4 files changed, 56 insertions(+)
+ drivers/pci/controller/pcie-cadence-host.c | 26 ++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-cadence-ep.c b/drivers/pci/controller/pcie-cadence-ep.c
-index 07f840cfba23..b044167071e6 100644
---- a/drivers/pci/controller/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/pcie-cadence-ep.c
-@@ -462,6 +462,7 @@ static int cdns_pcie_ep_probe(struct platform_device *pdev)
- 
- 	pcie = &ep->pcie;
- 	pcie->is_rc = false;
-+	pcie->plat_data = pdev->dev.platform_data;
- 
- 	data = (struct cdns_pcie_ep_data *)match->data;
- 	if (data) {
 diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
-index ab6491b23775..2363f05e7c58 100644
+index 4ad8f2ece6e2..8b3b9827a8d6 100644
 --- a/drivers/pci/controller/pcie-cadence-host.c
 +++ b/drivers/pci/controller/pcie-cadence-host.c
-@@ -304,6 +304,7 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
- 	rc->dev = dev;
- 
- 	pcie = &rc->pcie;
-+	pcie->plat_data = pdev->dev.platform_data;
- 	pcie->is_rc = true;
- 
- 	data = (struct cdns_pcie_host_data *)match->data;
-diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
-index de5b3b06f2d0..5ac42b19bb63 100644
---- a/drivers/pci/controller/pcie-cadence.c
-+++ b/drivers/pci/controller/pcie-cadence.c
-@@ -3,6 +3,7 @@
- // Cadence PCIe controller driver.
+@@ -3,6 +3,8 @@
+ // Cadence PCIe host controller driver.
  // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
  
 +#include <linux/delay.h>
++#include <linux/gpio/consumer.h>
  #include <linux/kernel.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
+@@ -287,6 +289,7 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
+ 	struct pci_host_bridge *bridge;
+ 	struct list_head resources;
+ 	struct cdns_pcie_rc *rc;
++	struct gpio_desc *gpiod;
+ 	struct cdns_pcie *pcie;
+ 	struct resource *res;
+ 	int ret;
+@@ -349,13 +352,36 @@ static int cdns_pcie_host_probe(struct platform_device *pdev)
+ 		dev_err(dev, "missing \"mem\"\n");
+ 		return -EINVAL;
+ 	}
++
+ 	pcie->mem_res = res;
  
- #include "pcie-cadence.h"
-@@ -47,6 +48,46 @@ void cdns_pcie_write32(void __iomem *addr, int size, u32 value)
- 	writel(val, aligned_addr);
- }
- 
-+int cdns_pcie_start_link(struct cdns_pcie *pci, bool start)
-+{
-+	struct cdns_pcie_plat_data *plat_data;
-+
-+	plat_data = pci->plat_data;
-+	if (!plat_data)
-+		return 0;
-+
-+	return plat_data->start_link(plat_data, start);
-+}
-+
-+static bool cdns_pcie_is_link_up(struct cdns_pcie *pci)
-+{
-+	struct cdns_pcie_plat_data *plat_data;
-+
-+	plat_data = pci->plat_data;
-+	if (!plat_data)
-+		return true;
-+
-+	return plat_data->is_link_up(plat_data);
-+}
-+
-+int cdns_pcie_wait_for_link(struct device *dev, struct cdns_pcie *pci)
-+{
-+	int retries;
-+
-+	/* Check if the link is up or not */
-+	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+		if (cdns_pcie_is_link_up(pci)) {
-+			dev_info(dev, "Link up\n");
-+			return 0;
-+		}
-+		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
++	gpiod = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
++	if (IS_ERR(gpiod)) {
++		ret = PTR_ERR(gpiod);
++		if (ret != -EPROBE_DEFER)
++			dev_err(dev, "Failed to get reset GPIO\n");
++		return ret;
 +	}
 +
-+	dev_err(dev, "Phy link never came up\n");
+ 	ret = cdns_pcie_init_phy(dev, pcie);
+ 	if (ret) {
+ 		dev_err(dev, "failed to init phy\n");
+ 		return ret;
+ 	}
 +
-+	return -ETIMEDOUT;
-+}
++	/*
++	 * "Power Sequencing and Reset Signal Timings" table in
++	 * PCI EXPRESS CARD ELECTROMECHANICAL SPECIFICATION, REV. 3.0
++	 * indicates PERST# should be deasserted after minimum of 100us
++	 * once REFCLK is stable. The REFCLK to the connector in RC
++	 * mode is selected while enabling the PHY. So deassert PERST#
++	 * after 100 us.
++	 */
++	if (gpiod) {
++		usleep_range(100, 200);
++		gpiod_set_value_cansleep(gpiod, 1);
++	}
 +
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 fn,
- 				   u32 r, bool is_io,
- 				   u64 cpu_addr, u64 pci_addr, size_t size)
-diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
-index d157bf5eabd5..3cef398b50da 100644
---- a/drivers/pci/controller/pcie-cadence.h
-+++ b/drivers/pci/controller/pcie-cadence.h
-@@ -10,6 +10,11 @@
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
+ 	platform_set_drvdata(pdev, pcie);
  
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES	10
-+#define LINK_WAIT_USLEEP_MIN	90000
-+#define LINK_WAIT_USLEEP_MAX	100000
-+
- /*
-  * Local Management Registers
-  */
-@@ -221,6 +226,11 @@ enum cdns_pcie_msg_routing {
- 	MSG_ROUTING_GATHER,
- };
- 
-+struct cdns_pcie_plat_data {
-+	int (*start_link)(struct cdns_pcie_plat_data *data, bool start);
-+	bool (*is_link_up)(struct cdns_pcie_plat_data *data);
-+};
-+
- /**
-  * struct cdns_pcie - private data for Cadence PCIe controller drivers
-  * @reg_base: IO mapped register base
-@@ -236,6 +246,7 @@ struct cdns_pcie {
- 	int			phy_count;
- 	struct phy		**phy;
- 	struct device_link	**link;
-+	struct cdns_pcie_plat_data *plat_data;
- 	u32 (*read)(void __iomem *addr, int size);
- 	void (*write)(void __iomem *addr, int size, u32 value);
- };
-@@ -408,6 +419,8 @@ int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
- int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
- u32 cdns_pcie_read32(void __iomem *addr, int size);
- void cdns_pcie_write32(void __iomem *addr, int size, u32 value);
-+int cdns_pcie_start_link(struct cdns_pcie *pci, bool start);
-+int cdns_pcie_wait_for_link(struct device *dev, struct cdns_pcie *pci);
- extern const struct dev_pm_ops cdns_pcie_pm_ops;
- 
- #endif /* _PCIE_CADENCE_H */
+ 	pm_runtime_enable(dev);
 -- 
 2.17.1
 
