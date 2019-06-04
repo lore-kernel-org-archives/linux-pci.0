@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DF0C28CC6
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF9ADC282CE
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF637219BE
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C59D623CDC
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="wna+KbYt"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="k8e6kTrr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727413AbfFDNSf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Jun 2019 09:18:35 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:39336 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727182AbfFDNSf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2019 09:18:35 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x54DIKwr120006;
-        Tue, 4 Jun 2019 08:18:20 -0500
+        id S1727817AbfFDNSq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Jun 2019 09:18:46 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:50526 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727182AbfFDNSp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2019 09:18:45 -0400
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x54DHvTf082410;
+        Tue, 4 Jun 2019 08:17:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1559654300;
-        bh=oIzF4wPqwNRg9UTf2H8Siu9HoiPwFp65VY06zJhiVqk=;
+        s=ti-com-17Q1; t=1559654277;
+        bh=hQ9HPR/YNox9fBqati4GtPS+LZvZ2MYHAw9Ko10HNPY=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=wna+KbYt+4VB/bLdy1bkRaCyULLvGVx/mI+oJUkghKX4lGJWopq+C4sXX9eMeiSpx
-         O5qN4L99Jrr4vwmjyI4vpeX2RsUM7jj7GTW7lxK0KgEuwSBzV+lB1qycprJVS2u0O0
-         +m8ljAtaLaKCE72BeDwTxsNujVHrS3BOUK1eWMjQ=
-Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x54DIKlP053724
+        b=k8e6kTrrmF72/kBZGQIod8qTZwihPV4aZ7b6UParflsTqEHLhIBBgqfKgXbiSKFfT
+         /2nMeOosqgIMPvkzcYTcW/rWAfjjpkmYtSt1+zNJ+EQ2m0uBvLHNU0PvwdaklQMnxG
+         VR4Y7UOIGYZdHCVyepenhJQNIhP+ZJJlHm9Rf7v4=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x54DHvkL001773
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 4 Jun 2019 08:18:20 -0500
-Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE105.ent.ti.com
- (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
+        Tue, 4 Jun 2019 08:17:57 -0500
+Received: from DFLE107.ent.ti.com (10.64.6.28) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Tue, 4 Jun
- 2019 08:18:19 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE102.ent.ti.com
- (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ 2019 08:17:57 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE107.ent.ti.com
+ (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Tue, 4 Jun 2019 08:18:19 -0500
+ Frontend Transport; Tue, 4 Jun 2019 08:17:57 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x54DGdGX098972;
-        Tue, 4 Jun 2019 08:18:14 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x54DGdGT098972;
+        Tue, 4 Jun 2019 08:17:52 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -61,9 +61,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-omap@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [RFC PATCH 17/30] PCI: endpoint: Protect concurrent access to pci_epf_ops with mutex
-Date:   Tue, 4 Jun 2019 18:45:03 +0530
-Message-ID: <20190604131516.13596-18-kishon@ti.com>
+Subject: [RFC PATCH 13/30] PCI: cadence: Use local management register to configure Vendor ID
+Date:   Tue, 4 Jun 2019 18:44:59 +0530
+Message-ID: <20190604131516.13596-14-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190604131516.13596-1-kishon@ti.com>
 References: <20190604131516.13596-1-kishon@ti.com>
@@ -75,79 +75,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Protect concurrent access to pci_epf_ops with mutex.
+PCI_VENDOR_ID in root port configuration space is read-only register
+and writing to it will have no effect. Use local management register to
+configure Vendor ID and Subsystem Vendor ID.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-epf-core.c | 11 ++++++++++-
- include/linux/pci-epf.h             |  3 +++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pcie-cadence-host.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 93f28c65ace0..6e0648991b5c 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -35,7 +35,9 @@ void pci_epf_unbind(struct pci_epf *epf)
- 		return;
- 	}
- 
-+	mutex_lock(&epf->lock);
- 	epf->driver->ops->unbind(epf);
-+	mutex_unlock(&epf->lock);
- 	module_put(epf->driver->owner);
- }
- EXPORT_SYMBOL_GPL(pci_epf_unbind);
-@@ -49,6 +51,8 @@ EXPORT_SYMBOL_GPL(pci_epf_unbind);
-  */
- int pci_epf_bind(struct pci_epf *epf)
+diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
+index 14a54f6a11de..dcecf47805ad 100644
+--- a/drivers/pci/controller/pcie-cadence-host.c
++++ b/drivers/pci/controller/pcie-cadence-host.c
+@@ -148,6 +148,7 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
  {
-+	int ret;
+ 	struct cdns_pcie *pcie = &rc->pcie;
+ 	u32 value, ctrl;
++	u32 id;
+ 
+ 	/*
+ 	 * Set the root complex BAR configuration register:
+@@ -167,8 +168,12 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
+ 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
+ 
+ 	/* Set root port configuration space */
+-	if (rc->vendor_id != 0xffff)
+-		cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, rc->vendor_id);
++	if (rc->vendor_id != 0xffff) {
++		id = CDNS_PCIE_LM_ID_VENDOR(rc->vendor_id) |
++			CDNS_PCIE_LM_ID_SUBSYS(rc->vendor_id);
++		cdns_pcie_writel(pcie, CDNS_PCIE_LM_ID, id);
++	}
 +
- 	if (!epf->driver) {
- 		dev_WARN(&epf->dev, "epf device not bound to driver\n");
- 		return -EINVAL;
-@@ -57,7 +61,11 @@ int pci_epf_bind(struct pci_epf *epf)
- 	if (!try_module_get(epf->driver->owner))
- 		return -EAGAIN;
+ 	if (rc->device_id != 0xffff)
+ 		cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, rc->device_id);
  
--	return epf->driver->ops->bind(epf);
-+	mutex_lock(&epf->lock);
-+	ret = epf->driver->ops->bind(epf);
-+	mutex_unlock(&epf->lock);
-+
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(pci_epf_bind);
- 
-@@ -252,6 +260,7 @@ struct pci_epf *pci_epf_create(const char *name)
- 	device_initialize(dev);
- 	dev->bus = &pci_epf_bus_type;
- 	dev->type = &pci_epf_type;
-+	mutex_init(&epf->lock);
- 
- 	ret = dev_set_name(dev, "%s", name);
- 	if (ret) {
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 4993f7f6439b..bcdf4f07bde7 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -110,6 +110,7 @@ struct pci_epf_bar {
-  * @driver: the EPF driver to which this EPF device is bound
-  * @list: to add pci_epf as a list of PCI endpoint functions to pci_epc
-  * @nb: notifier block to notify EPF of any EPC events (like linkup)
-+ * @lock: mutex to protect pci_epf_ops
-  */
- struct pci_epf {
- 	struct device		dev;
-@@ -124,6 +125,8 @@ struct pci_epf {
- 	struct pci_epf_driver	*driver;
- 	struct list_head	list;
- 	struct notifier_block   nb;
-+	/* mutex to protect against concurrent access of pci_epf_ops */
-+	struct mutex		lock;
- };
- 
- #define to_pci_epf(epf_dev) container_of((epf_dev), struct pci_epf, dev)
 -- 
 2.17.1
 
