@@ -2,199 +2,103 @@ Return-Path: <SRS0=Xta/=UD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 963CFC282CE
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 20:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DACE4C282CE
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 20:36:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63A0A2070B
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 20:32:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559680347;
-	bh=/AqGiZDSEw4WYJPXkLsV5qAXCrwMCotDuhGsf4zvuCg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=aQt9U84z+0AQ5J2HtS1s1vt0+OQBLVE39A8+pwKxdCFhc/h4gAIt4S8CEapm8ShwY
-	 TZhXh+5RTnQt6tRlvzsx7i37m0tM31wg5d2it/sV9f0HzYIc/i8dI+hpS2EgEtIkf6
-	 7dckbUK0xZTorP901HviFVdWmLc4reYYcU/bjCvg=
+	by mail.kernel.org (Postfix) with ESMTP id BEF9A20848
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 20:36:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726805AbfFDUc0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Jun 2019 16:32:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60388 "EHLO mail.kernel.org"
+        id S1726555AbfFDUgY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Jun 2019 16:36:24 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:34042 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726788AbfFDUcY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Jun 2019 16:32:24 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726293AbfFDUgY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Jun 2019 16:36:24 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 73A842070B;
-        Tue,  4 Jun 2019 20:26:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559680011;
-        bh=/AqGiZDSEw4WYJPXkLsV5qAXCrwMCotDuhGsf4zvuCg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=pokyw4qBpjQn4MzvAhuN6BHrC10UueaDCimFSZNh8SNIadcM8xlChWRwa/QoQIpTK
-         QC4EuJ3iVx+GZKfzuqTTfHp4LIabb94QKzdaikpaMTH3dNttmhZdIF0ETxfVf4uwXq
-         C/4ZSc2bhCFIG1th7FFi+HfYl1OnWpmzOVLxXkTI=
-Date:   Tue, 4 Jun 2019 15:26:48 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Cc:     mj@ucw.cz, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Add PCIe 5.0 data rate (32 GT/s) support
-Message-ID: <20190604202648.GC84290@google.com>
-References: <92365e3caf0fc559f9ab14bcd053bfc92d4f661c.1559664969.git.gustavo.pimentel@synopsys.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 36F60C1EB1EC;
+        Tue,  4 Jun 2019 20:36:19 +0000 (UTC)
+Received: from x1.home (ovpn-116-22.phx2.redhat.com [10.3.116.22])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BE9F519C69;
+        Tue,  4 Jun 2019 20:36:17 +0000 (UTC)
+Date:   Tue, 4 Jun 2019 14:36:17 -0600
+From:   Alex Williamson <alex.williamson@redhat.com>
+To:     linux-pci@vger.kernel.org
+Cc:     KarimAllah Ahmed <karahmed@amazon.de>, bhelgaas@google.com,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/IOV: Fix VF cfg_size
+Message-ID: <20190604143617.0a226555@x1.home>
+In-Reply-To: <155966918965.10361.16228304474160813310.stgit@gimli.home>
+References: <155966918965.10361.16228304474160813310.stgit@gimli.home>
+Organization: Red Hat
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <92365e3caf0fc559f9ab14bcd053bfc92d4f661c.1559664969.git.gustavo.pimentel@synopsys.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 04 Jun 2019 20:36:24 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 04, 2019 at 06:24:43PM +0200, Gustavo Pimentel wrote:
-> PCIe 5.0 allows an effective 32.0 GT/s speed per lane.
+On Tue, 04 Jun 2019 11:26:42 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
+
+> Commit 975bb8b4dc93 ("PCI/IOV: Use VF0 cached config space size for
+> other VFs") attempts to cache the config space size of VF0 to re-use
+> for all other VFs, but the cache is setup before the call to
+> pci_setup_device(), where we use set_pcie_port_type() to setup the
+> pcie_cap field on the struct pci_dev.  Without pcie_cap configured,
+> pci_cfg_space_size() returns PCI_CFG_SPACE_SIZE for the size.  VF0
+> has a bypass through pci_cfg_space_size(), so its size is reported
+> correctly, but all subsequent VFs incorrectly report 256 bytes of
+> config space.
 > 
-> Currently if you read a PCIe 5.0 EP link data rate through sysfs, the
-> resulting output will be "Unknown speed" instead of "32.0 GT/s" as we
-> would be expect.
+> Resolve by delaying pci_read_vf_config_common() until after
+> pci_setup_device().
 > 
-> Signed-off-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-
-Applied to pci/enumeration for v5.3, thanks!
-
-I reworded the commit log to emphasize that this only affects
-*decoding* of the new speed; the actual *support* for operating at this
-speed is in the hardware and needs no assistance from the OS.
-
-  PCI: Decode PCIe 32 GT/s link speed
-
-  PCIe r5.0, sec 7.5.3.18, defines a new 32.0 GT/s bit in the Supported Link
-  Speeds Vector of Link Capabilities 2.  Decode this new speed.  This does
-  not affect the speed of the link, which should be negotiated automatically
-  by the hardware; it only adds decoding when showing the speed to the user.
-
-  Previously, reading the speed of a link operating at this speed showed
-  "Unknown speed" instead of "32.0 GT/s".
-
+> Fixes: 975bb8b4dc93 ("PCI/IOV: Use VF0 cached config space size for other VFs")
+> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1714978
+> Cc: KarimAllah Ahmed <karahmed@amazon.de>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 > ---
-> Changes:
-> v1 -> v2
->  - Rebase patch
+>  drivers/pci/iov.c |    6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
->  drivers/pci/pci-sysfs.c       | 3 +++
->  drivers/pci/pci.c             | 4 +++-
->  drivers/pci/probe.c           | 2 +-
->  drivers/pci/slot.c            | 1 +
->  include/linux/pci.h           | 1 +
->  include/uapi/linux/pci_regs.h | 4 ++++
->  6 files changed, 13 insertions(+), 2 deletions(-)
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 3aa115ed3a65..34b1f78f4d31 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -161,13 +161,13 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
+>  	virtfn->is_virtfn = 1;
+>  	virtfn->physfn = pci_dev_get(dev);
+>  
+> -	if (id == 0)
+> -		pci_read_vf_config_common(virtfn);
+> -
+>  	rc = pci_setup_device(virtfn);
+>  	if (rc)
+>  		goto failed1;
+>  
+> +	if (id == 0)
+> +		pci_read_vf_config_common(virtfn);
+> +
+>  	virtfn->dev.parent = dev->dev.parent;
+>  	virtfn->multifunction = 0;
+>  
 > 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 6d27475..d52d304 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -182,6 +182,9 @@ static ssize_t current_link_speed_show(struct device *dev,
->  		return -EINVAL;
->  
->  	switch (linkstat & PCI_EXP_LNKSTA_CLS) {
-> +	case PCI_EXP_LNKSTA_CLS_32_0GB:
-> +		speed = "32 GT/s";
-> +		break;
->  	case PCI_EXP_LNKSTA_CLS_16_0GB:
->  		speed = "16 GT/s";
->  		break;
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8abc843..4729a7c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5621,7 +5621,9 @@ enum pci_bus_speed pcie_get_speed_cap(struct pci_dev *dev)
->  	 */
->  	pcie_capability_read_dword(dev, PCI_EXP_LNKCAP2, &lnkcap2);
->  	if (lnkcap2) { /* PCIe r3.0-compliant */
-> -		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_16_0GB)
-> +		if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_32_0GB)
-> +			return PCIE_SPEED_32_0GT;
-> +		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_16_0GB)
->  			return PCIE_SPEED_16_0GT;
->  		else if (lnkcap2 & PCI_EXP_LNKCAP2_SLS_8_0GB)
->  			return PCIE_SPEED_8_0GT;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 0e8e2c1..c5f27c8 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -668,7 +668,7 @@ const unsigned char pcie_link_speed[] = {
->  	PCIE_SPEED_5_0GT,		/* 2 */
->  	PCIE_SPEED_8_0GT,		/* 3 */
->  	PCIE_SPEED_16_0GT,		/* 4 */
-> -	PCI_SPEED_UNKNOWN,		/* 5 */
-> +	PCIE_SPEED_32_0GT,		/* 5 */
->  	PCI_SPEED_UNKNOWN,		/* 6 */
->  	PCI_SPEED_UNKNOWN,		/* 7 */
->  	PCI_SPEED_UNKNOWN,		/* 8 */
-> diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-> index f4d92b1..ae4aa0e 100644
-> --- a/drivers/pci/slot.c
-> +++ b/drivers/pci/slot.c
-> @@ -75,6 +75,7 @@ static const char *pci_bus_speed_strings[] = {
->  	"5.0 GT/s PCIe",	/* 0x15 */
->  	"8.0 GT/s PCIe",	/* 0x16 */
->  	"16.0 GT/s PCIe",	/* 0x17 */
-> +	"32.0 GT/s PCIe",	/* 0x18 */
->  };
->  
->  static ssize_t bus_speed_read(enum pci_bus_speed speed, char *buf)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 4a5a84d..2173e6b 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -258,6 +258,7 @@ enum pci_bus_speed {
->  	PCIE_SPEED_5_0GT		= 0x15,
->  	PCIE_SPEED_8_0GT		= 0x16,
->  	PCIE_SPEED_16_0GT		= 0x17,
-> +	PCIE_SPEED_32_0GT		= 0x18,
->  	PCI_SPEED_UNKNOWN		= 0xff,
->  };
->  
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 2716476..f28e562 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -528,6 +528,7 @@
->  #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
->  #define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
->  #define  PCI_EXP_LNKCAP_SLS_16_0GB 0x00000004 /* LNKCAP2 SLS Vector bit 3 */
-> +#define  PCI_EXP_LNKCAP_SLS_32_0GB 0x00000005 /* LNKCAP2 SLS Vector bit 4 */
->  #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
->  #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
->  #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
-> @@ -556,6 +557,7 @@
->  #define  PCI_EXP_LNKSTA_CLS_5_0GB 0x0002 /* Current Link Speed 5.0GT/s */
->  #define  PCI_EXP_LNKSTA_CLS_8_0GB 0x0003 /* Current Link Speed 8.0GT/s */
->  #define  PCI_EXP_LNKSTA_CLS_16_0GB 0x0004 /* Current Link Speed 16.0GT/s */
-> +#define  PCI_EXP_LNKSTA_CLS_32_0GB 0x0005 /* Current Link Speed 32.0GT/s */
->  #define  PCI_EXP_LNKSTA_NLW	0x03f0	/* Negotiated Link Width */
->  #define  PCI_EXP_LNKSTA_NLW_X1	0x0010	/* Current Link Width x1 */
->  #define  PCI_EXP_LNKSTA_NLW_X2	0x0020	/* Current Link Width x2 */
-> @@ -661,6 +663,7 @@
->  #define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5GT/s */
->  #define  PCI_EXP_LNKCAP2_SLS_8_0GB	0x00000008 /* Supported Speed 8GT/s */
->  #define  PCI_EXP_LNKCAP2_SLS_16_0GB	0x00000010 /* Supported Speed 16GT/s */
-> +#define  PCI_EXP_LNKCAP2_SLS_32_0GB	0x00000020 /* Supported Speed 32GT/s */
->  #define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
->  #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
->  #define  PCI_EXP_LNKCTL2_TLS		0x000f
-> @@ -668,6 +671,7 @@
->  #define  PCI_EXP_LNKCTL2_TLS_5_0GT	0x0002 /* Supported Speed 5GT/s */
->  #define  PCI_EXP_LNKCTL2_TLS_8_0GT	0x0003 /* Supported Speed 8GT/s */
->  #define  PCI_EXP_LNKCTL2_TLS_16_0GT	0x0004 /* Supported Speed 16GT/s */
-> +#define  PCI_EXP_LNKCTL2_TLS_32_0GT	0x0005 /* Supported Speed 32GT/s */
->  #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
->  #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	52	/* v2 endpoints with link end here */
->  #define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
-> -- 
-> 2.7.4
-> 
+
+Would it actually make more sense to revert 975bb8b4dc93 and just
+assume any is_virtfn device has PCI_CFG_SPACE_EXP_SIZE for cfg_size?
+Per the SR-IOV spec, VFs are required to implement a PCIe capability,
+which should imply 4K of config space.  The reachability of that
+extended config space seems unnecessary to test if we assume that it
+has the same characteristics as the PF, which must be reachable if
+we're able to enable SR-IOV.  Thoughts?  Thanks,
+
+Alex
