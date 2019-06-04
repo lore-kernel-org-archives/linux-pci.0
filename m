@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8AFAC282CE
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:17:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A4CDC282CE
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:17:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F18620828
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:17:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F604219BE
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:17:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="FZrwJCy0"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="LSVcOA+Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727530AbfFDNRc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Jun 2019 09:17:32 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:54854 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727480AbfFDNRb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2019 09:17:31 -0400
+        id S1727577AbfFDNRu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Jun 2019 09:17:50 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:50334 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727149AbfFDNRt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2019 09:17:49 -0400
 Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x54DHD1u027960;
-        Tue, 4 Jun 2019 08:17:13 -0500
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x54DHOCZ082297;
+        Tue, 4 Jun 2019 08:17:24 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1559654233;
-        bh=gskYCXt69auxdl0gJm5PmVmDCrGNb92GxmcQN4v//vI=;
+        s=ti-com-17Q1; t=1559654244;
+        bh=r7Ei7rsj5lX30OaH2FuRyDzaWU4cllou71wNl6pyjGU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=FZrwJCy0oF0940yJ1Ges+n6/f/6gfkwi/N2rjMaSwcFAhzwrUyrlOK/UTy3CHL+b4
-         FfHYPO+7aXQbd9He0w5ngaEoaMUIH8tBK354E0FwyLdaZ3IDNCJllHtlFmT+4JIFrf
-         SaqAqv6a8M87X221Mal/XQziW2sjRBOIqRkwxTXs=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x54DHDRb042475
+        b=LSVcOA+Yvgp5r4q37wsXmkUbV/VfLRgfiNv3EB13v74k4jJgbghcsXk7Gnb59nUyf
+         jSgBO6w/fIVnaXDF1mZkeFCQcxOtdDnsWypr0fkDmTYMDir+xvtwJ6WCRweqfrkiJy
+         cZC3MNhpjHt2TvSlI8WXEamLJPJiycennA//lZtg=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x54DHOIc042670
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 4 Jun 2019 08:17:13 -0500
-Received: from DFLE100.ent.ti.com (10.64.6.21) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+        Tue, 4 Jun 2019 08:17:24 -0500
+Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Tue, 4 Jun
- 2019 08:17:12 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+ 2019 08:17:24 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE111.ent.ti.com
+ (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Tue, 4 Jun 2019 08:17:12 -0500
+ Frontend Transport; Tue, 4 Jun 2019 08:17:24 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x54DGdGL098972;
-        Tue, 4 Jun 2019 08:17:07 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x54DGdGN098972;
+        Tue, 4 Jun 2019 08:17:19 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Tom Joseph <tjoseph@cadence.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -61,9 +61,9 @@ CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         <linux-omap@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
         <linux-arm-kernel@lists.infradead.org>,
         Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [RFC PATCH 05/30] linux/kernel.h: Add PTR_ALIGN_DOWN macro
-Date:   Tue, 4 Jun 2019 18:44:51 +0530
-Message-ID: <20190604131516.13596-6-kishon@ti.com>
+Subject: [RFC PATCH 07/30] PCI: cadence: Add read and write accessors to perform only 32-bit accesses
+Date:   Tue, 4 Jun 2019 18:44:53 +0530
+Message-ID: <20190604131516.13596-8-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190604131516.13596-1-kishon@ti.com>
 References: <20190604131516.13596-1-kishon@ti.com>
@@ -75,27 +75,80 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a macro for aligning down a pointer. This is useful to get an
-aligned register address when a device allows only word access and
-doesn't allow half word or byte access.
+Certain platforms like TI's J721E allows only 32-bit register accesses.
+Add read and write accessor to perform only 32-bit accesses in order to
+support platfroms like TI's J721E.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- include/linux/kernel.h | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/pcie-cadence.c | 40 +++++++++++++++++++++++++++
+ drivers/pci/controller/pcie-cadence.h |  2 ++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index 74b1ee9027f5..f5be987f1f95 100644
---- a/include/linux/kernel.h
-+++ b/include/linux/kernel.h
-@@ -34,6 +34,7 @@
- #define ALIGN_DOWN(x, a)	__ALIGN_KERNEL((x) - ((a) - 1), (a))
- #define __ALIGN_MASK(x, mask)	__ALIGN_KERNEL_MASK((x), (mask))
- #define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))
-+#define PTR_ALIGN_DOWN(p, a)	((typeof(p))ALIGN_DOWN((unsigned long)(p), (a)))
- #define IS_ALIGNED(x, a)		(((x) & ((typeof(x))(a) - 1)) == 0)
+diff --git a/drivers/pci/controller/pcie-cadence.c b/drivers/pci/controller/pcie-cadence.c
+index cd795f6fc1e2..de5b3b06f2d0 100644
+--- a/drivers/pci/controller/pcie-cadence.c
++++ b/drivers/pci/controller/pcie-cadence.c
+@@ -7,6 +7,46 @@
  
- /* generic data direction definitions */
+ #include "pcie-cadence.h"
+ 
++u32 cdns_pcie_read32(void __iomem *addr, int size)
++{
++	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
++	unsigned int offset = (unsigned long)addr & 0x3;
++	u32 val = readl(aligned_addr);
++
++	if (!IS_ALIGNED((uintptr_t)addr, size)) {
++		pr_err("Invalid Address in function:%s\n", __func__);
++		return 0;
++	}
++
++	if (size > 2)
++		return val;
++
++	return (val >> (8 * offset)) & ((1 << (size * 8)) - 1);
++}
++
++void cdns_pcie_write32(void __iomem *addr, int size, u32 value)
++{
++	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
++	unsigned int offset = (unsigned long)addr & 0x3;
++	u32 mask;
++	u32 val;
++
++	if (!IS_ALIGNED((uintptr_t)addr, size)) {
++		pr_err("Invalid Address in function:%s\n", __func__);
++		return;
++	}
++
++	if (size > 2) {
++		writel(value, addr);
++		return;
++	}
++
++	mask = ~(((1 << (size * 8)) - 1) << (offset * 8));
++	val = readl(aligned_addr) & mask;
++	val |= value << (offset * 8);
++	writel(val, aligned_addr);
++}
++
+ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 fn,
+ 				   u32 r, bool is_io,
+ 				   u64 cpu_addr, u64 pci_addr, size_t size)
+diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
+index 0134c1b1ad65..d157bf5eabd5 100644
+--- a/drivers/pci/controller/pcie-cadence.h
++++ b/drivers/pci/controller/pcie-cadence.h
+@@ -406,6 +406,8 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r);
+ void cdns_pcie_disable_phy(struct cdns_pcie *pcie);
+ int cdns_pcie_enable_phy(struct cdns_pcie *pcie);
+ int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie);
++u32 cdns_pcie_read32(void __iomem *addr, int size);
++void cdns_pcie_write32(void __iomem *addr, int size, u32 value);
+ extern const struct dev_pm_ops cdns_pcie_pm_ops;
+ 
+ #endif /* _PCIE_CADENCE_H */
 -- 
 2.17.1
 
