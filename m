@@ -2,115 +2,79 @@ Return-Path: <SRS0=Xta/=UD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF9ADC282CE
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEEEFC282CE
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C59D623CDC
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="k8e6kTrr"
+	by mail.kernel.org (Postfix) with ESMTP id 9ECDF2199C
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 13:18:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1559654336;
+	bh=kstaWkEOjz4sGnvduRYtac82iKRZqlwD3wYOfYdZAJU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=jwJGvtn2LSRJ3owVaY76t/LDKXxRMlwmmEm/84EZ+ydKIzAgPRp/B7HIGtsKCYKC8
+	 trn14zJCbQ5SkgkKR4KQ98ZeWJH6hYJJ8gD5Q4pNTrzRuRLGcv9CJ3QwD0qtAdW3XB
+	 uz8m9Ie1ZVCdvzOZxxO/SwOnngOY/I/N5NYgAKvA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727817AbfFDNSq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Jun 2019 09:18:46 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:50526 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727182AbfFDNSp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jun 2019 09:18:45 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x54DHvTf082410;
-        Tue, 4 Jun 2019 08:17:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1559654277;
-        bh=hQ9HPR/YNox9fBqati4GtPS+LZvZ2MYHAw9Ko10HNPY=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=k8e6kTrrmF72/kBZGQIod8qTZwihPV4aZ7b6UParflsTqEHLhIBBgqfKgXbiSKFfT
-         /2nMeOosqgIMPvkzcYTcW/rWAfjjpkmYtSt1+zNJ+EQ2m0uBvLHNU0PvwdaklQMnxG
-         VR4Y7UOIGYZdHCVyepenhJQNIhP+ZJJlHm9Rf7v4=
-Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x54DHvkL001773
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 4 Jun 2019 08:17:57 -0500
-Received: from DFLE107.ent.ti.com (10.64.6.28) by DFLE103.ent.ti.com
- (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Tue, 4 Jun
- 2019 08:17:57 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE107.ent.ti.com
- (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Tue, 4 Jun 2019 08:17:57 -0500
-Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x54DGdGT098972;
-        Tue, 4 Jun 2019 08:17:52 -0500
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-To:     Tom Joseph <tjoseph@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
-CC:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [RFC PATCH 13/30] PCI: cadence: Use local management register to configure Vendor ID
-Date:   Tue, 4 Jun 2019 18:44:59 +0530
-Message-ID: <20190604131516.13596-14-kishon@ti.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190604131516.13596-1-kishon@ti.com>
-References: <20190604131516.13596-1-kishon@ti.com>
+        id S1727827AbfFDNSv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Jun 2019 09:18:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56650 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727182AbfFDNSu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Jun 2019 09:18:50 -0400
+Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8B3242199C;
+        Tue,  4 Jun 2019 13:18:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1559654329;
+        bh=kstaWkEOjz4sGnvduRYtac82iKRZqlwD3wYOfYdZAJU=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=Ne0yes6lGitXgq3FdEvA/6cW2YR77DufQi52Gox4dH+56J4CFagViIAsuRlw+SY1h
+         GeQJt2hA7XSzmQP1p1M+2CIZZKq/BL7Y+B9v74X6DxRsjFb3vBQaL3elhp51Wu0q/L
+         /lWNsSEXnx/Kduvzcs5X43uAwHfOAN0pyqHu50Vo=
+Date:   Tue, 4 Jun 2019 08:18:48 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Ley Foon Tan <ley.foon.tan@intel.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, lftan.linux@gmail.com
+Subject: Re: [PATCH] PCI: altera: Allow building as module
+Message-ID: <20190604131848.GA40122@google.com>
+References: <1556081835-12921-1-git-send-email-ley.foon.tan@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1556081835-12921-1-git-send-email-ley.foon.tan@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI_VENDOR_ID in root port configuration space is read-only register
-and writing to it will have no effect. Use local management register to
-configure Vendor ID and Subsystem Vendor ID.
+On Wed, Apr 24, 2019 at 12:57:14PM +0800, Ley Foon Tan wrote:
+> Altera PCIe Rootport IP is a soft IP and is only available after
+> FPGA image is programmed.
+> 
+> Make driver modulable to support use case FPGA image is programmed
+> after kernel is booted. User proram FPGA image in kernel then only load
+> PCIe driver module.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/controller/pcie-cadence-host.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+I'm not objecting to these patches, but help me understand how this
+works.  The "usual" scenario is that if a driver is loaded before a
+matching device is available, i.e., either the driver is built
+statically or it is loaded before a device is hot-added, the event of
+the device being available causes the driver's probe method to be
+called.
 
-diff --git a/drivers/pci/controller/pcie-cadence-host.c b/drivers/pci/controller/pcie-cadence-host.c
-index 14a54f6a11de..dcecf47805ad 100644
---- a/drivers/pci/controller/pcie-cadence-host.c
-+++ b/drivers/pci/controller/pcie-cadence-host.c
-@@ -148,6 +148,7 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
- {
- 	struct cdns_pcie *pcie = &rc->pcie;
- 	u32 value, ctrl;
-+	u32 id;
- 
- 	/*
- 	 * Set the root complex BAR configuration register:
-@@ -167,8 +168,12 @@ static int cdns_pcie_host_init_root_port(struct cdns_pcie_rc *rc)
- 	cdns_pcie_writel(pcie, CDNS_PCIE_LM_RC_BAR_CFG, value);
- 
- 	/* Set root port configuration space */
--	if (rc->vendor_id != 0xffff)
--		cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, rc->vendor_id);
-+	if (rc->vendor_id != 0xffff) {
-+		id = CDNS_PCIE_LM_ID_VENDOR(rc->vendor_id) |
-+			CDNS_PCIE_LM_ID_SUBSYS(rc->vendor_id);
-+		cdns_pcie_writel(pcie, CDNS_PCIE_LM_ID, id);
-+	}
-+
- 	if (rc->device_id != 0xffff)
- 		cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, rc->device_id);
- 
--- 
-2.17.1
+This seems to be a more manual process of programming the FPGA which
+results in a new "altera-pcie" platform device.  And then apparently
+you need to load the appropriate module by hand?  Is there no
+"hot-add" type of event for this platform device that automatically
+looks for the driver?
 
+Bjorn
