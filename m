@@ -2,76 +2,105 @@ Return-Path: <SRS0=Xta/=UD=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AFA3C28CC6
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 19:40:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1BE0C282CE
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 19:46:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F19E320851
-	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 19:40:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD3F620851
+	for <linux-pci@archiver.kernel.org>; Tue,  4 Jun 2019 19:46:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559677213;
-	bh=+cscAFWsOH7WHGhho7mDMmfcoadmTvFihqyo/p2GdEc=;
+	s=default; t=1559677565;
+	bh=1tBYtI0D2Gm8NgAPNHeS+3+9XEB1WWJiwXHzo6wtquI=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=OXk41QbrH2pxgQ/VJ8YUWFzO0xfuvkB58JSPa2gTUvA44Spm70uJt9idGOo9/8YCf
-	 XKCkQizb/aviUAGJqJRxSZEzaVtbAM6PTNvQ1H/7G7Acg35AaNuCbDaIIQFoDo/xb5
-	 BbtjMFmdX9KSYGIzip7a5JcYXQdZPJhxRQUdQM+M=
+	b=iwt7lAeD+MEoQOcqPKt9THDkEr8/iiDNvueAsdgoCpyFPKp1croxK4qPRcp5mzYRH
+	 312mKlSIEWmAWh13tGZWVgvJeMWcaqvDUptGWlR0Vug76qkkc4U9+QAoOrsq2BBpxF
+	 TSBnEow3b2YdmDQ797LdY82T8viAyr5tal1oQSZg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726238AbfFDTkM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 4 Jun 2019 15:40:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39770 "EHLO mail.kernel.org"
+        id S1726295AbfFDTqB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 4 Jun 2019 15:46:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41314 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725933AbfFDTkM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Jun 2019 15:40:12 -0400
+        id S1726179AbfFDTqA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Jun 2019 15:46:00 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D81BB2075B;
-        Tue,  4 Jun 2019 19:40:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AB087206B8;
+        Tue,  4 Jun 2019 19:45:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559677211;
-        bh=+cscAFWsOH7WHGhho7mDMmfcoadmTvFihqyo/p2GdEc=;
+        s=default; t=1559677559;
+        bh=1tBYtI0D2Gm8NgAPNHeS+3+9XEB1WWJiwXHzo6wtquI=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uOqBatnXcSTa/YKypYeRlpuhkVCfYhaNyYdPM/fdJzBfUKRMRU3H3wPioXZ+gwmyh
-         WRxeMqKat3haFqJBzUmvPnixd9dBi+KW7l1QaHTs1eFzM3dy/vCWE8VYAZwEQcH1id
-         k+gftk2wHpP5njYCrBtTZYLk7PfYff1f+cWVT3nk=
-Date:   Tue, 4 Jun 2019 14:40:08 -0500
+        b=wiCx5eHdZP0Vtxa21xguwHieM1fpdxfa/f3hN0HhcqBIWd7i1OT7ClXdvS7I74hEx
+         Us9WAhkHug9BCopGgZexJIDCTTT5ogopVfG9VKrEPGVA4nldu5XguklleSkSPhiCto
+         53m3TzWmgImw9Vh0/2c9Ug7HCpkktPv86AZkDLHg=
+Date:   Tue, 4 Jun 2019 14:45:57 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Cc:     linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [PATCH v2 0/6] dmaengine: Add Synopsys eDMA IP driver (version 0)
-Message-ID: <20190604194008.GA84290@google.com>
-References: <cover.1559654565.git.gustavo.pimentel@synopsys.com>
+To:     Kishon Vijay Abraham I <kishon@ti.com>
+Cc:     Tom Joseph <tjoseph@cadence.com>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH 26/30] MAINTAINERS: Add MAINTAINER entry for PCIe on
+ TI's J721E SoC
+Message-ID: <20190604194557.GB84290@google.com>
+References: <20190604131516.13596-1-kishon@ti.com>
+ <20190604131516.13596-27-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cover.1559654565.git.gustavo.pimentel@synopsys.com>
+In-Reply-To: <20190604131516.13596-27-kishon@ti.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 04, 2019 at 03:29:21PM +0200, Gustavo Pimentel wrote:
-> Add Synopsys eDMA IP driver (version 0 and for EP side only) to Linux
-> kernel. This IP is generally distributed with Synopsys PCIe EndPoint IP
-> (depends of the use and licensing agreement), which supports:
->  - legacy and unroll modes
->  - 16 independent and concurrent channels (8 write + 8 read)
->  - supports linked list (scatter-gather) transfer
->  - each linked list descriptor can transfer from 1 byte to 4 Gbytes
->  - supports cyclic transfer
->  - PCIe EndPoint glue-logic
+Nit: the subject wastes a lot of space in the most valuable part (the
+beginning).  Something like this would make "git log --oneline" more
+useful:
+
+  MAINTAINERS: Add Kishon Vijay Abraham I for TI J721E SoC PCIe
+
+On Tue, Jun 04, 2019 at 06:45:12PM +0530, Kishon Vijay Abraham I wrote:
+> Add MAINTAINER entry for PCIe on TI's J721E SoC.
 > 
-> This patch series contains:
->  - eDMA core + eDMA core v0 driver (implements the interface with
->  DMAengine controller APIs and interfaces with eDMA HW block)
->  - eDMA PCIe glue-logic reference driver (attaches to Synopsys EP and
->  provides memory access to eDMA core driver)
-
-What changed from v1?  (Just curious; I expect somebody else to merge
-this since I've already acked the PCI parts.)
-
-Bjorn
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  MAINTAINERS | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index a6954776a37e..8a421949f335 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -12122,13 +12122,14 @@ S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
+>  F:	drivers/pci/controller/dwc/*designware*
+>  
+> -PCI DRIVER FOR TI DRA7XX
+> +PCI DRIVER FOR TI DRA7XX/J721E
+>  M:	Kishon Vijay Abraham I <kishon@ti.com>
+>  L:	linux-omap@vger.kernel.org
+>  L:	linux-pci@vger.kernel.org
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/pci/ti-pci.txt
+>  F:	drivers/pci/controller/dwc/pci-dra7xx.c
+> +F:	drivers/pci/controller/pci-j721e.c
+>  
+>  PCI DRIVER FOR TI KEYSTONE
+>  M:	Murali Karicheri <m-karicheri2@ti.com>
+> -- 
+> 2.17.1
+> 
