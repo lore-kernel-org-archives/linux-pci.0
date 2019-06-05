@@ -2,31 +2,31 @@ Return-Path: <SRS0=BMbW=UE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C2E4C46470
-	for <linux-pci@archiver.kernel.org>; Wed,  5 Jun 2019 14:58:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B13FC28CC6
+	for <linux-pci@archiver.kernel.org>; Wed,  5 Jun 2019 14:58:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 66F03206C3
+	by mail.kernel.org (Postfix) with ESMTP id D8520206B8
 	for <linux-pci@archiver.kernel.org>; Wed,  5 Jun 2019 14:58:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728478AbfFEO6Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728287AbfFEO6Z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Wed, 5 Jun 2019 10:58:25 -0400
-Received: from mga11.intel.com ([192.55.52.93]:16351 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:16397 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728287AbfFEO6Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1728448AbfFEO6Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 5 Jun 2019 10:58:25 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 05 Jun 2019 07:58:24 -0700
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga101.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 05 Jun 2019 07:58:24 -0700
 X-ExtLoop1: 1
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga007.fm.intel.com with ESMTP; 05 Jun 2019 07:58:22 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 05 Jun 2019 07:58:22 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 37C8A2D4; Wed,  5 Jun 2019 17:58:20 +0300 (EEST)
+        id 5193C462; Wed,  5 Jun 2019 17:58:21 +0300 (EEST)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>
@@ -36,10 +36,12 @@ Cc:     Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         Alexandru Gagniuc <mr.nuke.me@gmail.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 0/3] PCI: Power management improvements
-Date:   Wed,  5 Jun 2019 17:58:17 +0300
-Message-Id: <20190605145820.37169-1-mika.westerberg@linux.intel.com>
+Subject: [PATCH 2/3] PCI: Do not poll for PME if the device is in D3cold
+Date:   Wed,  5 Jun 2019 17:58:19 +0300
+Message-Id: <20190605145820.37169-3-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190605145820.37169-1-mika.westerberg@linux.intel.com>
+References: <20190605145820.37169-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -47,28 +49,49 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+PME polling does not take into account that a device that is directly
+connected to the host bridge may go into D3cold as well. This leads to a
+situation where the PME poll thread reads from a config space of a
+device that is in D3cold and gets incorrect information because the
+config space is not accessible.
 
-This series includes a couple of changes to the PCI power management that
-should make Linux follow the PCIe spec better and also support for sibling
-PCIe devices sharing ACPI power resources. The issues this series aims to
-solve came up with Intel Ice Lake Thunderbolt enabling where the controller
-is first time integrated into the SoC but I think these issues are generic
-to any platform having similar configuration.
+Here is an example from Intel Ice Lake system where two PCIe root ports
+are in D3cold (I've instrumented the kernel to log the PMCSR register
+contents):
 
-Mika Westerberg (3):
-  PCI: Add missing link delays required by the PCIe spec
-  PCI: Do not poll for PME if the device is in D3cold
-  PCI / ACPI: Handle sibling devices sharing power resources
+  [   62.971442] pcieport 0000:00:07.1: Check PME status, PMCSR=0xffff
+  [   62.971504] pcieport 0000:00:07.0: Check PME status, PMCSR=0xffff
 
- drivers/acpi/power.c            |  32 ++++++++
- drivers/pci/pci-acpi.c          |  32 ++++++--
- drivers/pci/pci.c               | 138 ++++++++++++++++++++++++--------
- drivers/pci/pci.h               |   6 ++
- drivers/pci/pcie/portdrv_core.c |  62 ++++++++++++++
- include/acpi/acpi_bus.h         |   3 +
- 6 files changed, 233 insertions(+), 40 deletions(-)
+Since 0xffff is interpreted so that PME is pending, the root ports will
+be runtime resumed. This repeats over and over again essentially
+blocking all runtime power management.
 
+Prevent this from happening by checking whether the device is in D3cold
+before its PME status is read.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pci.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 87a1f902fa8e..720da09d4d73 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2060,6 +2060,13 @@ static void pci_pme_list_scan(struct work_struct *work)
+ 			 */
+ 			if (bridge && bridge->current_state != PCI_D0)
+ 				continue;
++			/*
++			 * If the device is in D3cold it should not be
++			 * polled either.
++			 */
++			if (pme_dev->dev->current_state == PCI_D3cold)
++				continue;
++
+ 			pci_pme_wakeup(pme_dev->dev, NULL);
+ 		} else {
+ 			list_del(&pme_dev->list);
 -- 
 2.20.1
 
