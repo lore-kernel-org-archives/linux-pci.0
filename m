@@ -2,34 +2,60 @@ Return-Path: <SRS0=1R7R=UF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31F4DC28EB4
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Jun 2019 14:17:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0E4BC28EB3
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Jun 2019 14:27:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C81620868
-	for <linux-pci@archiver.kernel.org>; Thu,  6 Jun 2019 14:17:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A285420673
+	for <linux-pci@archiver.kernel.org>; Thu,  6 Jun 2019 14:27:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1559831254;
+	bh=1xNWNB5sgwNkGUtQTBlGX5djH0qV/9TnIK1ujomMJs0=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=WpSczmUaQnJ0YnQAPRT7dQHn/uH9KOpC+A07zjFGTgeHkSDw4S8PcPxlFn+HesaRW
+	 kxN7uu8REaDdjtbsFHpsbkfW8iTa7xX22CUsPiPAoYHz4XU/bKw4DK+mHYi+KQ5Zu2
+	 IKsshVpeGuJ1Z5WxE37kGkbUgZ1IDS++b9nePPHI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728803AbfFFORW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 6 Jun 2019 10:17:22 -0400
-Received: from mga03.intel.com ([134.134.136.65]:33050 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727168AbfFFORW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Jun 2019 10:17:22 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Jun 2019 07:17:21 -0700
-X-ExtLoop1: 1
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by fmsmga001.fm.intel.com with SMTP; 06 Jun 2019 07:17:17 -0700
-Received: by lahna (sSMTP sendmail emulation); Thu, 06 Jun 2019 17:17:17 +0300
-Date:   Thu, 6 Jun 2019 17:17:17 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        id S1728508AbfFFO1d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 6 Jun 2019 10:27:33 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:38086 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727133AbfFFO1d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jun 2019 10:27:33 -0400
+Received: by mail-ot1-f68.google.com with SMTP id d17so2127664oth.5;
+        Thu, 06 Jun 2019 07:27:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=7GKWCLG/GT2LktE691tccL1tmESYFiwnVBBPoKD3Vvg=;
+        b=nHDpEgYJImFjEymA5iiaD18kt11l9aiha0jTcfOUdYXvq5YE5Weoann526lmYfYydY
+         enz2uxITrY7bD4onq0TSjBTX207K70H/lumFU6bDe02Twmbo7dRptI+OdYaNuUxrgRm6
+         JO5vDgtAOC65uYplSQYP9+6rbH/NMtWSrBcmwZOq3ifV883KAPIjWj3qE8Jf6Ey9JXXk
+         GYOJZERCQSfoD8e+47SMP0+6PnsgIFMwZ7/XpgDjRAsG1tz0FsXThZy0utMBbJ7oE+PV
+         wuq5Rb8dK14FvBIvrOQ4o6WRJWGSVdSrXeExU+ECDkZ3srKp25i7G1BXCEcxJaEx1kes
+         OGSQ==
+X-Gm-Message-State: APjAAAVZzJ7f9Q38z2wUlw3rUh73UGXBCFyXOXX3Cq17+FH7RTTyn7Qe
+        d0w3u0P/6gMUKHGmB9hRfUTNuCpaQqMQIk+Ocs0=
+X-Google-Smtp-Source: APXvYqxheBPppPgzN6lTA9fJVQ1RTMgc+9yV/fTgzHdgpDDSiM4e4guFQq8Qyymr+tRVo2CYmNEzkEanbAjekD/fkao=
+X-Received: by 2002:a9d:3285:: with SMTP id u5mr15751944otb.266.1559831252101;
+ Thu, 06 Jun 2019 07:27:32 -0700 (PDT)
+MIME-Version: 1.0
+References: <20190605145820.37169-1-mika.westerberg@linux.intel.com>
+ <20190605145820.37169-4-mika.westerberg@linux.intel.com> <CAJZ5v0iGu8f6H68082RGDmDCQsmQZNTULLwnb5JzpKA7m1QvVA@mail.gmail.com>
+ <20190606112640.GA2781@lahna.fi.intel.com> <20190606134419.GL2781@lahna.fi.intel.com>
+ <CAJZ5v0gHTVPNc_LJzPCOLZpHU=wsbYQs__WabOQHmu8GPCChag@mail.gmail.com> <20190606141717.GM2781@lahna.fi.intel.com>
+In-Reply-To: <20190606141717.GM2781@lahna.fi.intel.com>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Thu, 6 Jun 2019 16:27:21 +0200
+Message-ID: <CAJZ5v0gwqMd0W43KQoU80=fdYooLkgPg1n0cbbAWjPqrOepYsg@mail.gmail.com>
+Subject: Re: [PATCH 3/3] PCI / ACPI: Handle sibling devices sharing power resources
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
         Keith Busch <keith.busch@intel.com>,
@@ -37,32 +63,27 @@ Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Alexandru Gagniuc <mr.nuke.me@gmail.com>,
         ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 3/3] PCI / ACPI: Handle sibling devices sharing power
- resources
-Message-ID: <20190606141717.GM2781@lahna.fi.intel.com>
-References: <20190605145820.37169-1-mika.westerberg@linux.intel.com>
- <20190605145820.37169-4-mika.westerberg@linux.intel.com>
- <CAJZ5v0iGu8f6H68082RGDmDCQsmQZNTULLwnb5JzpKA7m1QvVA@mail.gmail.com>
- <20190606112640.GA2781@lahna.fi.intel.com>
- <20190606134419.GL2781@lahna.fi.intel.com>
- <CAJZ5v0gHTVPNc_LJzPCOLZpHU=wsbYQs__WabOQHmu8GPCChag@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJZ5v0gHTVPNc_LJzPCOLZpHU=wsbYQs__WabOQHmu8GPCChag@mail.gmail.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
-User-Agent: Mutt/1.11.4 (2019-03-13)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 06, 2019 at 04:08:11PM +0200, Rafael J. Wysocki wrote:
-> That isn't necessary IMO as long as the device are not accessed.  If
-> the kernel thinks that a given device is in D3cold and doesn't access
-> it, then it really doesn't matter too much what state the device is in
-> physically.  On the first access the device should be reinitialized
-> anyway.
+On Thu, Jun 6, 2019 at 4:17 PM Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+>
+> On Thu, Jun 06, 2019 at 04:08:11PM +0200, Rafael J. Wysocki wrote:
+> > That isn't necessary IMO as long as the device are not accessed.  If
+> > the kernel thinks that a given device is in D3cold and doesn't access
+> > it, then it really doesn't matter too much what state the device is in
+> > physically.  On the first access the device should be reinitialized
+> > anyway.
+>
+> But if the device is configured to wake. For example when it detects a
+> hotplug that state is gone when it goes to D0unitialized.
 
-But if the device is configured to wake. For example when it detects a
-hotplug that state is gone when it goes to D0unitialized.
+For this we'll need a pm_runtime_resume() of the dependent device on
+the resource going "on".
+
+That means we need a list of devices to resume when the resource goes
+"on" after being taken "off".
