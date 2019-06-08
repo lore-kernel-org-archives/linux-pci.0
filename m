@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EA2AC28CC5
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:45:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A2B1C468BC
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 017F0214AF
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:45:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4413B214DA
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:47:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559994306;
-	bh=VbJ6OMaWH+tZgovy7MZ8puKAfpEhNIIolczFkw42pxg=;
+	s=default; t=1559994449;
+	bh=2hXKE5D9c+8naLVRZy80JT2Dh17PpGbYanYln6RyBPA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=x31i7zJulD+FCMzcCl48sU9aVrrklDw957oHWxC5lrms2uCIbJGhoDBPMjr4IJ6BR
-	 4e7g4v1E1zknfHi0+Flb16697Ex24Y4gUegFSPw/skDHugysgJiLAQ64tC6UazBjHM
-	 uaXC0hjhi5eKW2PP5RW0TVC6TRzpZaNWjP2NVYTI=
+	b=IqqBPpQN9Ua52z6k9j1tPMJe2LzF+IsUUczs+XXSQBmd1xM18Ua5NzT7wTreRw6tV
+	 wFLqSgzeXQ4far+R6z4uY8byXKKKMIpxyd2Foe0BHJ9D2P1mxLQlpnXWEV0BLsInX/
+	 7rN+ly6HSO4DMuD6nvpUFzCbEu5tkIAY3ntdqguY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728201AbfFHLo5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 8 Jun 2019 07:44:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60838 "EHLO mail.kernel.org"
+        id S1729208AbfFHLr0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 8 Jun 2019 07:47:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36116 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727817AbfFHLn3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 8 Jun 2019 07:43:29 -0400
+        id S1729233AbfFHLrZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 8 Jun 2019 07:47:25 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D2ACE21530;
-        Sat,  8 Jun 2019 11:43:27 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F298521530;
+        Sat,  8 Jun 2019 11:47:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559994208;
-        bh=VbJ6OMaWH+tZgovy7MZ8puKAfpEhNIIolczFkw42pxg=;
+        s=default; t=1559994444;
+        bh=2hXKE5D9c+8naLVRZy80JT2Dh17PpGbYanYln6RyBPA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E8YJvEjlYkiJEwzAt3PPFrAsD8XemneITRv8ude8MHWVzpLPliliOFCogqt1y3CdC
-         /GmDTZrfaDNN1DUsEogZLZ1vUkicFMqgreIz6nVW474vFsPyb+GgN//cDHJWPEs1RH
-         Q0LaGF2aILkntUnmPBgCrlduVq+W/Q9y40+IELqM=
+        b=k61BY1+rH7ub4Lk4Oi2RUrG9bmhtB+P2+gTS/9FLSDL42W3aQdfUy9UWodUs+q3zO
+         NRMT09RHYZWBan8IKTlzuxFL9dm93ZJtls+Y0rlONe92bZ8Dm/K4PvZxdCPisZ1Sq6
+         7zFHsDeKC71CPb8BBr+MkMG9wDx9qSJv8DbHHkjo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 20/49] ACPI/PCI: PM: Add missing wakeup.flags.valid checks
-Date:   Sat,  8 Jun 2019 07:42:01 -0400
-Message-Id: <20190608114232.8731-20-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 15/31] PCI: PM: Avoid possible suspend-to-idle issue
+Date:   Sat,  8 Jun 2019 07:46:26 -0400
+Message-Id: <20190608114646.9415-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190608114232.8731-1-sashal@kernel.org>
-References: <20190608114232.8731-1-sashal@kernel.org>
+In-Reply-To: <20190608114646.9415-1-sashal@kernel.org>
+References: <20190608114646.9415-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -61,56 +61,85 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-[ Upstream commit 9a51c6b1f9e0239a9435db036b212498a2a3b75c ]
+[ Upstream commit d491f2b75237ef37d8867830ab7fad8d9659e853 ]
 
-Both acpi_pci_need_resume() and acpi_dev_needs_resume() check if the
-current ACPI wakeup configuration of the device matches what is
-expected as far as system wakeup from sleep states is concerned, as
-reflected by the device_may_wakeup() return value for the device.
+If a PCI driver leaves the device handled by it in D0 and calls
+pci_save_state() on the device in its ->suspend() or ->suspend_late()
+callback, it can expect the device to stay in D0 over the whole
+s2idle cycle.  However, that may not be the case if there is a
+spurious wakeup while the system is suspended, because in that case
+pci_pm_suspend_noirq() will run again after pci_pm_resume_noirq()
+which calls pci_restore_state(), via pci_pm_default_resume_early(),
+so state_saved is cleared and the second iteration of
+pci_pm_suspend_noirq() will invoke pci_prepare_to_sleep() which
+may change the power state of the device.
 
-However, they only should do that if wakeup.flags.valid is set for
-the device's ACPI companion, because otherwise the wakeup.prepare_count
-value for it is meaningless.
+To avoid that, add a new internal flag, skip_bus_pm, that will be set
+by pci_pm_suspend_noirq() when it runs for the first time during the
+given system suspend-resume cycle if the state of the device has
+been saved already and the device is still in D0.  Setting that flag
+will cause the next iterations of pci_pm_suspend_noirq() to set
+state_saved for pci_pm_resume_noirq(), so that it always restores the
+device state from the originally saved data, and avoid calling
+pci_prepare_to_sleep() for the device.
 
-Add the missing wakeup.flags.valid checks to these functions.
-
+Fixes: 33e4f80ee69b ("ACPI / PM: Ignore spurious SCI wakeups from suspend-to-idle")
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Keith Busch <keith.busch@intel.com>
 Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/acpi/device_pm.c | 4 ++--
- drivers/pci/pci-acpi.c   | 3 ++-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/pci/pci-driver.c | 17 ++++++++++++++++-
+ include/linux/pci.h      |  1 +
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-index a7c2673ffd36..1806260938e8 100644
---- a/drivers/acpi/device_pm.c
-+++ b/drivers/acpi/device_pm.c
-@@ -948,8 +948,8 @@ static bool acpi_dev_needs_resume(struct device *dev, struct acpi_device *adev)
- 	u32 sys_target = acpi_target_system_state();
- 	int ret, state;
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index ea69b4dbab66..f5d66335fe53 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -726,6 +726,8 @@ static int pci_pm_suspend(struct device *dev)
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
  
--	if (!pm_runtime_suspended(dev) || !adev ||
--	    device_may_wakeup(dev) != !!adev->wakeup.prepare_count)
-+	if (!pm_runtime_suspended(dev) || !adev || (adev->wakeup.flags.valid &&
-+	    device_may_wakeup(dev) != !!adev->wakeup.prepare_count))
- 		return true;
++	pci_dev->skip_bus_pm = false;
++
+ 	if (pci_has_legacy_pm_support(pci_dev))
+ 		return pci_legacy_suspend(dev, PMSG_SUSPEND);
  
- 	if (sys_target == ACPI_STATE_S0)
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index f8436d1c4d45..f7218c1673ce 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -625,7 +625,8 @@ static bool acpi_pci_need_resume(struct pci_dev *dev)
- 	if (!adev || !acpi_device_power_manageable(adev))
- 		return false;
+@@ -799,7 +801,20 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 		}
+ 	}
  
--	if (device_may_wakeup(&dev->dev) != !!adev->wakeup.prepare_count)
-+	if (adev->wakeup.flags.valid &&
-+	    device_may_wakeup(&dev->dev) != !!adev->wakeup.prepare_count)
- 		return true;
- 
- 	if (acpi_target_system_state() == ACPI_STATE_S0)
+-	if (!pci_dev->state_saved) {
++	if (pci_dev->skip_bus_pm) {
++		/*
++		 * The function is running for the second time in a row without
++		 * going through full resume, which is possible only during
++		 * suspend-to-idle in a spurious wakeup case.  Moreover, the
++		 * device was originally left in D0, so its power state should
++		 * not be changed here and the device register values saved
++		 * originally should be restored on resume again.
++		 */
++		pci_dev->state_saved = true;
++	} else if (pci_dev->state_saved) {
++		if (pci_dev->current_state == PCI_D0)
++			pci_dev->skip_bus_pm = true;
++	} else {
+ 		pci_save_state(pci_dev);
+ 		if (pci_power_manageable(pci_dev))
+ 			pci_prepare_to_sleep(pci_dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 59f4d10568c6..430f3c335446 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -346,6 +346,7 @@ struct pci_dev {
+ 						   D3cold, not set for devices
+ 						   powered on/off by the
+ 						   corresponding bridge */
++	unsigned int	skip_bus_pm:1;	/* Internal: Skip bus-level PM */
+ 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
+ 	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
+ 						      controlled exclusively by
 -- 
 2.20.1
 
