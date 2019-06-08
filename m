@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_PASS,T_DKIMWL_WL_HIGH,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A2B1C468BC
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74778C468BC
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:53:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4413B214DA
-	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:47:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D97E21537
+	for <linux-pci@archiver.kernel.org>; Sat,  8 Jun 2019 11:53:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1559994449;
-	bh=2hXKE5D9c+8naLVRZy80JT2Dh17PpGbYanYln6RyBPA=;
+	s=default; t=1559994818;
+	bh=7Z2DzOh+8oJ31IHPYXWF/N8KjvSI+2Z9iVCB+0PL2A4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IqqBPpQN9Ua52z6k9j1tPMJe2LzF+IsUUczs+XXSQBmd1xM18Ua5NzT7wTreRw6tV
-	 wFLqSgzeXQ4far+R6z4uY8byXKKKMIpxyd2Foe0BHJ9D2P1mxLQlpnXWEV0BLsInX/
-	 7rN+ly6HSO4DMuD6nvpUFzCbEu5tkIAY3ntdqguY=
+	b=r/ITBgPwEJvKTggKst8zSz8CTcf79LSQ7de/KqBrYNT3o3MwK7uwtCffCjboDLSrP
+	 kFvBxFCHfQKZSLzEnOugRrnrGHTFM6Ksk+bM1BkMY59cfeMjdCwmpJfP33hNUjUr1r
+	 2ctYNDgjnonnWY2X2OoRpDbQw4pGBtTiyOurDzKc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729208AbfFHLr0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 8 Jun 2019 07:47:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36116 "EHLO mail.kernel.org"
+        id S1727842AbfFHLkq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 8 Jun 2019 07:40:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58000 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729233AbfFHLrZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 8 Jun 2019 07:47:25 -0400
+        id S1727828AbfFHLko (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 8 Jun 2019 07:40:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F298521530;
-        Sat,  8 Jun 2019 11:47:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 496B0208C0;
+        Sat,  8 Jun 2019 11:40:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1559994444;
-        bh=2hXKE5D9c+8naLVRZy80JT2Dh17PpGbYanYln6RyBPA=;
+        s=default; t=1559994044;
+        bh=7Z2DzOh+8oJ31IHPYXWF/N8KjvSI+2Z9iVCB+0PL2A4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=k61BY1+rH7ub4Lk4Oi2RUrG9bmhtB+P2+gTS/9FLSDL42W3aQdfUy9UWodUs+q3zO
-         NRMT09RHYZWBan8IKTlzuxFL9dm93ZJtls+Y0rlONe92bZ8Dm/K4PvZxdCPisZ1Sq6
-         7zFHsDeKC71CPb8BBr+MkMG9wDx9qSJv8DbHHkjo=
+        b=CqZpprrTBlNq+3CDrajgdqK47AH6r1wLu6h8rPdt1HUXs6i62ks/FeS45SL4oprzh
+         zftUMyMoluWm3UuSlID8ZP6p+hd8HBLU9DTOjWu8YLCZr/yx0CEGtuhpG+oTckp34I
+         910ZFKMTpI0ch7oBC7vxFek38scyU+BATAby2We0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         Keith Busch <keith.busch@intel.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 15/31] PCI: PM: Avoid possible suspend-to-idle issue
-Date:   Sat,  8 Jun 2019 07:46:26 -0400
-Message-Id: <20190608114646.9415-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 34/70] PCI: PM: Avoid possible suspend-to-idle issue
+Date:   Sat,  8 Jun 2019 07:39:13 -0400
+Message-Id: <20190608113950.8033-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190608114646.9415-1-sashal@kernel.org>
-References: <20190608114646.9415-1-sashal@kernel.org>
+In-Reply-To: <20190608113950.8033-1-sashal@kernel.org>
+References: <20190608113950.8033-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -94,10 +94,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index ea69b4dbab66..f5d66335fe53 100644
+index 71853befd435..6375c2f32ba1 100644
 --- a/drivers/pci/pci-driver.c
 +++ b/drivers/pci/pci-driver.c
-@@ -726,6 +726,8 @@ static int pci_pm_suspend(struct device *dev)
+@@ -734,6 +734,8 @@ static int pci_pm_suspend(struct device *dev)
  	struct pci_dev *pci_dev = to_pci_dev(dev);
  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
  
@@ -106,7 +106,7 @@ index ea69b4dbab66..f5d66335fe53 100644
  	if (pci_has_legacy_pm_support(pci_dev))
  		return pci_legacy_suspend(dev, PMSG_SUSPEND);
  
-@@ -799,7 +801,20 @@ static int pci_pm_suspend_noirq(struct device *dev)
+@@ -827,7 +829,20 @@ static int pci_pm_suspend_noirq(struct device *dev)
  		}
  	}
  
@@ -129,10 +129,10 @@ index ea69b4dbab66..f5d66335fe53 100644
  		if (pci_power_manageable(pci_dev))
  			pci_prepare_to_sleep(pci_dev);
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 59f4d10568c6..430f3c335446 100644
+index 2c056a7a728a..1ad70686f62e 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -346,6 +346,7 @@ struct pci_dev {
+@@ -344,6 +344,7 @@ struct pci_dev {
  						   D3cold, not set for devices
  						   powered on/off by the
  						   corresponding bridge */
