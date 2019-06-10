@@ -2,76 +2,38 @@ Return-Path: <SRS0=ZyPt=UJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,T_DKIMWL_WL_HIGH,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.4 required=3.0 tests=DATE_IN_PAST_06_12,
+	MAILING_LIST_MULTI,PLING_QUERY,SPF_HELO_NONE,SPF_PASS,TVD_SPACE_RATIO
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4545FC468C1
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Jun 2019 07:45:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A77DBC282DD
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Jun 2019 10:06:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1593D206E0
-	for <linux-pci@archiver.kernel.org>; Mon, 10 Jun 2019 07:45:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1560152756;
-	bh=ENaV0hH+t6dBvquoHYccnSfqO4CQH7u4IkveLe6qZzM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=yUJSFQ/RUiYzcSmeT2cmKcCB+ALISusIaBJbWYQCVD1G1TvsS+7D8sNikQvXEGbQm
-	 ZAcytyv7g6ojAlegYvYwQFh4OUN5/qxFUfsdnZV6Tls/8+tQYxtczoRZdcz731/Ui5
-	 EyaGGCLcwq/M5CrgJvEYrKOmsZahlS1CG6JXgirE=
+	by mail.kernel.org (Postfix) with ESMTP id 8149E2082E
+	for <linux-pci@archiver.kernel.org>; Mon, 10 Jun 2019 10:06:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388248AbfFJHpz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 10 Jun 2019 03:45:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33400 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387781AbfFJHpy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jun 2019 03:45:54 -0400
-Received: from localhost (unknown [122.178.227.46])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7D6C620859;
-        Mon, 10 Jun 2019 07:45:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560152754;
-        bh=ENaV0hH+t6dBvquoHYccnSfqO4CQH7u4IkveLe6qZzM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ff8vzlj0sGdqchlj/ZcmdtKkv94kfs1E7RptUp7cFN5X074GV6fliy9+tFCtS5uA6
-         R6dIV28R/XdvcvnN9sRoBBtwS6V2yRgi2GLm/EaQcXC721U55GCxvvyTtRZpz+dj61
-         o4dZE+9QbQYVzGO60bvF4IKXj0Cg0lhLcKVfSeFc=
-Date:   Mon, 10 Jun 2019 13:12:45 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>
-Cc:     linux-pci@vger.kernel.org, dmaengine@vger.kernel.org
-Subject: Re: [PATCH v2 0/6] dmaengine: Add Synopsys eDMA IP driver (version 0)
-Message-ID: <20190610074245.GM9160@vkoul-mobl.Dlink>
-References: <cover.1559654565.git.gustavo.pimentel@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1559654565.git.gustavo.pimentel@synopsys.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+        id S2388688AbfFJKGK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 10 Jun 2019 06:06:10 -0400
+Received: from [45.55.76.110] ([45.55.76.110]:33314 "EHLO ubuntu"
+        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2388647AbfFJKGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Jun 2019 06:06:10 -0400
+X-Greylist: delayed 21904 seconds by postgrey-1.27 at vger.kernel.org; Mon, 10 Jun 2019 06:06:10 EDT
+Received: from localhost (localhost [127.0.0.1])
+        by ubuntu (Postfix) with SMTP id A5077BE54F
+        for <linux-pci@vger.kernel.org>; Sun,  9 Jun 2019 23:37:21 -0400 (AST)
+From:   linux-pci@vger.kernel.org
+To:     linux-pci@vger.kernel.org
+Reply-To: prodawez@armyspy.com
+Subject: Zdravstvuyte! Vas interesuyut kliyentskiye bazy dannykh?
+Message-Id: <20190610033721.A5077BE54F@ubuntu>
+Date:   Sun,  9 Jun 2019 23:37:21 -0400 (AST)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 04-06-19, 15:29, Gustavo Pimentel wrote:
-> Add Synopsys eDMA IP driver (version 0 and for EP side only) to Linux
-> kernel. This IP is generally distributed with Synopsys PCIe EndPoint IP
-> (depends of the use and licensing agreement), which supports:
->  - legacy and unroll modes
->  - 16 independent and concurrent channels (8 write + 8 read)
->  - supports linked list (scatter-gather) transfer
->  - each linked list descriptor can transfer from 1 byte to 4 Gbytes
->  - supports cyclic transfer
->  - PCIe EndPoint glue-logic
-> 
-> This patch series contains:
->  - eDMA core + eDMA core v0 driver (implements the interface with
->  DMAengine controller APIs and interfaces with eDMA HW block)
->  - eDMA PCIe glue-logic reference driver (attaches to Synopsys EP and
->  provides memory access to eDMA core driver)
+Zdravstvuyte! Vas interesuyut kliyentskiye bazy dannykh?
 
-Applied all, thanks
 
--- 
-~Vinod
+
