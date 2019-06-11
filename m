@@ -2,119 +2,165 @@ Return-Path: <SRS0=+3kZ=UK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,T_DKIMWL_WL_HIGH autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79FF4C4321B
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Jun 2019 04:40:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F219C4321A
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Jun 2019 05:46:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50CDA20679
-	for <linux-pci@archiver.kernel.org>; Tue, 11 Jun 2019 04:40:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="PtUYWVLx"
+	by mail.kernel.org (Postfix) with ESMTP id 2F9712086D
+	for <linux-pci@archiver.kernel.org>; Tue, 11 Jun 2019 05:46:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391032AbfFKEkL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 11 Jun 2019 00:40:11 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:34050 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388141AbfFKEkL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jun 2019 00:40:11 -0400
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x5B4druO021816;
-        Mon, 10 Jun 2019 23:39:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1560227993;
-        bh=4CSDiP1xLUzAxuQfz4ZRA31r4GwtzqiVasSISApjHu4=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=PtUYWVLx1XD5jnus/WobdTrHYWH38XwEd6RhBdD4d9ID+gD//I2BIe2INKAip1XwE
-         21KPjF8ghgsEjgj7ZTvAKKjT0Sg9P2PDJp6defIHu6/JyQo1Vjh+P6Md6TX/KZhfTY
-         B2bml38ZGyAf1Zmtb/u8LU5lTIk9xdQLHEFvGNFg=
-Received: from DFLE107.ent.ti.com (dfle107.ent.ti.com [10.64.6.28])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x5B4dr8j018697
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 10 Jun 2019 23:39:53 -0500
-Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE107.ent.ti.com
- (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Mon, 10
- Jun 2019 23:39:53 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE104.ent.ti.com
- (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Mon, 10 Jun 2019 23:39:53 -0500
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id x5B4dmJ6034860;
-        Mon, 10 Jun 2019 23:39:49 -0500
-Subject: Re: [RFC PATCH 23/30] of/platform: Export
- of_platform_device_create_pdata()
-To:     Rob Herring <robh+dt@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC:     Tom Joseph <tjoseph@cadence.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-omap <linux-omap@vger.kernel.org>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>
-References: <20190604131516.13596-1-kishon@ti.com>
- <20190604131516.13596-24-kishon@ti.com>
- <CAL_JsqJ5gsctd7L3VOhTO1JdUqmMmSJRpos1XQyfxzmGO7wauw@mail.gmail.com>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <a80c7c33-7091-70d9-cd86-a19fe43d3bc6@ti.com>
-Date:   Tue, 11 Jun 2019 10:08:24 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
-MIME-Version: 1.0
-In-Reply-To: <CAL_JsqJ5gsctd7L3VOhTO1JdUqmMmSJRpos1XQyfxzmGO7wauw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
+        id S2391123AbfFKFql (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 11 Jun 2019 01:46:41 -0400
+Received: from gate.crashing.org ([63.228.1.57]:60815 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2391085AbfFKFql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Jun 2019 01:46:41 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x5B5kJLC028760;
+        Tue, 11 Jun 2019 00:46:20 -0500
+Message-ID: <691ffca7e2cc5a2ea78a98e2c190502e0e14b108.camel@kernel.crashing.org>
+Subject: Re: [RFC] ARM64 PCI resource survey issue(s)
+From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Sinan Kaya <okaya@kernel.org>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        "Zilberman, Zeev" <zeev@amazon.com>,
+        "Saidi, Ali" <alisaidi@amazon.com>
+Date:   Tue, 11 Jun 2019 15:46:19 +1000
+In-Reply-To: <20190610101129.GC25976@redmoon>
+References: <56715377f941f1953be43b488c2203ec090079a1.camel@kernel.crashing.org>
+         <20190604014945.GE189360@google.com>
+         <960c94eb151ba1d066090774621cf6ca6566d135.camel@kernel.crashing.org>
+         <20190604124959.GF189360@google.com>
+         <e520a4269224ac54798314798a80c080832e68b1.camel@kernel.crashing.org>
+         <20190610101129.GC25976@redmoon>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Rob,
-
-On 10/06/19 11:13 PM, Rob Herring wrote:
-> On Tue, Jun 4, 2019 at 7:19 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
->>
->> Export of_platform_device_create_pdata() to be used by drivers to
->> create child devices with the given platform data. This can be used
->> by platform specific driver to send platform data core driver. For e.g.,
->> this will be used by TI's J721E SoC specific PCIe driver to send
->> ->start_link() ops and ->is_link_up() ops to Cadence core PCIe driver.
+On Mon, 2019-06-10 at 11:11 +0100, Lorenzo Pieralisi wrote:
 > 
-> NAK
+> > I agree and I assume the problem stems from BIOSes creating either
+> > invalid or incomplete assignments but as I said, I don't know for sure
+> > as our platforms dont have that problem.
 > 
-> of_platform_device_create_pdata() is purely for legacy handling of
-> auxdata which is something I hope to get rid of someday. Or to put it
-> another way, auxdata use is a sign of platforms not fully converted to
-> DT.
+> The first thing that I would like to agree on is what mechanism the
+> kernel has to ensure a BAR resource is not changed by the
+> PCI resource assignment mechanism.
+> 
+> (1) IORESOURCE_PCI_FIXED flag: I have *very* strong feelings that this
+>     flag works because x86 kernel code claims all resources on probe
+>     (which effectively makes them immutable). It does not work for
+>     PCI bridges apertures and I am not sure it works for arches (eg
+>     ARM64) that reassign everything, even for *devices*
 
-All right. Thanks for letting me know your thoughts.
+I'm pretty sure this flag generally doesn't work indeed, see my other
+messages on that subject. The only valid use I can see for this flag
+honestly is in a context where we do an x86-style claim pass, to
+prevent selected resources or bridge windows from being moved or
+resized due to conflicts (ie: move the *other* one if there's a
+conflict) but it's of very limited value.
 
-Lorenzo,
+> (2) Claiming resources: this basically means assigning a parent to
+>     a resource.
 
-We've modeled Cadence PCIe core as a separate driver and for some of the
-functionalities (for example starting LTSSM or checking link status) it has to
-invoke the wrapper driver functions (The registers for these are present in
-wrapper and not in Cadence Core). In the case of Designware, we modeled DWC
-core as a library which provided APIs to be used by wrapper driver. Now that
-Rob is not inclined for passing platform data from one driver to another (in
-this case TI specific J721E driver to Cadence PCIe driver), should we model
-Cadence core also as a library? If you agree, I can prepare patches for making
-Cadence PCIe core as a library. Please let me know your thoughts.
+Well yes, a claimed resource is immutable, that's a given.
 
-Thanks
-Kishon
+That and of course it's implied that there are no conflicts between
+claimed resources and/or the resources have valid existing assigned
+values. From my quick look last week, it doesn't seem like
+pci_bus_claim_resources() handle those edge cases terribly well.
+
+This is why I'm keen on trying to standardize around the x86 (and
+powerpc which is similar) method which deals with these partial
+assignments and some broken cases much better.
+
+> Kernel PCI resource assignment code is full of code I do not understand
+> and that in my opinion works because of (1). I *tried*, while posting
+> ACPI PCI code for ARM64, to do what x86 does:
+
+:-)
+
+> - Claim all resources
+> - Reassign the resources that could not be claimed
+> 
+> This led to:
+> 
+> a) Spurious dmesg logs (Eg Resources that could not be claimed)
+> b) If FW set-up bridge windows, it may lead to reassignment failures
+>    if the bridge windows were sized *wrongly* but the kernel still
+>    manage to claim them (because they fit in the parent window).
+> 
+> Hence, we reassign everything on ARM64 on ACPI (except for bus numbers
+> and that was, indeed, a mistake).
+
+Hrm... do you have example systems or the ability to give me access to
+systems where these problems occur ? The x86 code has some smarts to
+deal with BIOSes who didn't quite do the right thing that we might be
+able to port over. What I called the "2 pass survey followed by
+pci_assign_unassigned_resources". I've implemented something similar
+back in the days for powerpc and it served us well there too. I'd like
+to give a shot and making this generic and using it on arm64.
+
+> In short, this is a mess and one that I do not have much leeway to fix
+> because the PCI resource assignment code is as it is owing to legacy
+> that we can't touch unless we want to fix regressions for the next
+> year.
+
+Yes and no... We can try to make the x86 method work on arm64 and see
+what goes right or wrong. I wouldn't mind adding quirks to recognize
+existing broken amd64 firmwares if those really still don't work
+properly, if we can help getting future ones better as well.
+
+> And then there is _DSM #5.
+> 
+> The problem we have is that there is *no* specific way to tell what's
+> right or wrong and that's what _DSM #5 is supposed to fix. To implement
+> it to the letter it will take lots of work.
+
+Correct but I don't think we need fully "to the letter", it's almost
+impossible to support all possible cases of _DSM #5 values at arbitrary
+locations in the tree.
+
+> First thing is to answer and agree (1) vs (2) above, aka define what
+> an immutable resource is from a kernel point of view, one with a
+> parent != NULL OR one with IORESOURCE_PCI_FIXED flag.
+
+Well, I think (2) is a given. The issue however is that a resource
+can't be "fixed" in isolation. It's parent need to be sufficiently
+"fixed" to enclose that resource, and it's parent parent etc.... This
+is why random _DSM #5 on leaf nodes isn't going to fly terribly well if
+the FW hasn't already assigned sane windows to bridges.
+
+I think the key here is to try to claim what FW setup iff it doesn't
+conflict and looks like it's valid at all (assigned at all), using a
+similar kind of 2 pass mechanism as x86 and powrpc that favors already
+enabled devices (likely to be used by FW), and (re)assigns everything
+else.
+
+I can look at making x86 and powerpc common with reasonable ease as I
+wrote a lot of the powerpc code for that. I don't have all the HW at
+hand to test anymore but I still know who does :-)
+
+For ARM64, the difficulty is all I have access to at the moment are
+Amazon own systems which seem to have a reasonable FW assignment, and
+qemu. So I'll need help with testing against the bad guys.
+
+In the meantime, I'm still keen on getting in Ard patch that handles
+_DSM #5 at the host bridge level. It will help existing valid use cases
+and we are reasonably confident it won't break anything.
+
+Cheers,
+Ben.
+
 
