@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AE52C31E4B
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45A22C31E4A
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5311120B7C
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E2D4208CA
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k97Dd7pL"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="rUn+qQEr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729614AbfFMPn6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 13 Jun 2019 11:43:58 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:33652 "EHLO
+        id S1726744AbfFMPo3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 13 Jun 2019 11:44:29 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:33544 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731829AbfFMJoe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2019 05:44:34 -0400
+        with ESMTP id S1731820AbfFMJoS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2019 05:44:18 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=kZ4qxfaugsPBAzNnf2F5+YBv7IsxX/EWqM6pYodKjkw=; b=k97Dd7pLGeOpmCNCf65fhjYJNc
-        ImDu+Xfy6FCJV49fGpZqtY6ITY20Ga5rfbF1ZP8/+kIAUOmCJaXe/qfHjuLsqZDKoqXq4TdEj5Vp0
-        jtQNy4yxzFvw8d8X2ge3Dw8edBPvJTaL6od2e2JrfH7Xxbknm4G8HBU9oSnr3E1JnwunI7X3nvPkT
-        gG7E9aumHhR8ixTiSTA9r3AzufEbuqKR9dAa8/cqyW4WBVN++uRv1Vx9WTUDrrW59jnByDhykg/ZP
-        Vn1lViZhnwx6LLeJpNkx+m+iBmbD0cfZ+ta1tZifhaEB9tvPlXBZQ5SA/zqi/MaVwZjAenHCd3+pW
-        jVf38HmA==;
+        bh=AuQMTpcqJo62VjhPIKMCZhZk+h6e6THsOZ01qDGPkX8=; b=rUn+qQErmwhgGijTtCS+CPfQfX
+        C6JSAQ1wYIYTWBE1sk8wIkEnTQn0lkCbB5R+ffY6ISa5sjGbOSw0+7bEyC7m+Qij4zcVeeFUifawM
+        Un1Dx3C+QCWSrqmn1w2RLX0JpvUup817a1QufBRSu4NPSt1SswH6b9wJA03REDNoLrDPDc5TclJrr
+        xEr8kX7Hqw6gfUzged3ZKit4eyUFtG+CmH6acz3g27hPRgnBplRhZJoO5JRbm+/AUSeySbU2/KzoK
+        i4uKJlLh0eU/1N6Uuc+zL/fMMHvYHpiCNP22jqmNO+zDGCudBxJG6+3+BI8MnXE1HOXlORblkJtCC
+        FLHmz0jw==;
 Received: from mpp-cp1-natpool-1-198.ethz.ch ([82.130.71.198] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hbMHW-0001xS-3I; Thu, 13 Jun 2019 09:44:30 +0000
+        id 1hbMHG-0001u9-ME; Thu, 13 Jun 2019 09:44:15 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -44,9 +44,9 @@ To:     Dan Williams <dan.j.williams@intel.com>,
 Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 21/22] mm: remove the HMM config option
-Date:   Thu, 13 Jun 2019 11:43:24 +0200
-Message-Id: <20190613094326.24093-22-hch@lst.de>
+Subject: [PATCH 16/22] mm: remove hmm_vma_alloc_locked_page
+Date:   Thu, 13 Jun 2019 11:43:19 +0200
+Message-Id: <20190613094326.24093-17-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190613094326.24093-1-hch@lst.de>
 References: <20190613094326.24093-1-hch@lst.de>
@@ -58,171 +58,54 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-All the mm/hmm.c code is better keyed off HMM_MIRROR.  Also let nouveau
-depend on it instead of the mix of a dummy dependency symbol plus the
-actually selected one.  Drop various odd dependencies, as the code is
-pretty portable.
+The only user of it has just been removed, and there wasn't really any need
+to wrap a basic memory allocator to start with.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/gpu/drm/nouveau/Kconfig |  3 +--
- include/linux/hmm.h             | 14 +++-----------
- include/linux/mm_types.h        |  2 +-
- mm/Kconfig                      | 27 +++------------------------
- mm/Makefile                     |  2 +-
- mm/hmm.c                        |  2 --
- 6 files changed, 9 insertions(+), 41 deletions(-)
+ include/linux/hmm.h |  3 ---
+ mm/hmm.c            | 14 --------------
+ 2 files changed, 17 deletions(-)
 
-diff --git a/drivers/gpu/drm/nouveau/Kconfig b/drivers/gpu/drm/nouveau/Kconfig
-index 6303d203ab1d..66c839d8e9d1 100644
---- a/drivers/gpu/drm/nouveau/Kconfig
-+++ b/drivers/gpu/drm/nouveau/Kconfig
-@@ -84,11 +84,10 @@ config DRM_NOUVEAU_BACKLIGHT
- 
- config DRM_NOUVEAU_SVM
- 	bool "(EXPERIMENTAL) Enable SVM (Shared Virtual Memory) support"
--	depends on ARCH_HAS_HMM
- 	depends on DEVICE_PRIVATE
- 	depends on DRM_NOUVEAU
-+	depends on HMM_MIRROR
- 	depends on STAGING
--	select HMM_MIRROR
- 	default n
- 	help
- 	  Say Y here if you want to enable experimental support for
 diff --git a/include/linux/hmm.h b/include/linux/hmm.h
-index e095a8b55dfa..64ea2fa00872 100644
+index 3c9a59dbfdb8..0e61d830b0a9 100644
 --- a/include/linux/hmm.h
 +++ b/include/linux/hmm.h
-@@ -62,7 +62,7 @@
- #include <linux/kconfig.h>
- #include <asm/pgtable.h>
+@@ -553,9 +553,6 @@ static inline void hmm_mm_init(struct mm_struct *mm) {}
+ #if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
+ struct hmm_devmem;
  
--#if IS_ENABLED(CONFIG_HMM)
-+#ifdef CONFIG_HMM_MIRROR
- 
- #include <linux/device.h>
- #include <linux/migrate.h>
-@@ -324,9 +324,6 @@ static inline uint64_t hmm_pfn_from_pfn(const struct hmm_range *range,
- 	return hmm_device_entry_from_pfn(range, pfn);
- }
- 
+-struct page *hmm_vma_alloc_locked_page(struct vm_area_struct *vma,
+-				       unsigned long addr);
 -
--
--#if IS_ENABLED(CONFIG_HMM_MIRROR)
  /*
-  * Mirroring: how to synchronize device page table with CPU page table.
+  * struct hmm_devmem_ops - callback for ZONE_DEVICE memory events
   *
-@@ -546,13 +543,8 @@ static inline void hmm_mm_init(struct mm_struct *mm)
- {
- 	mm->hmm = NULL;
- }
--#else /* IS_ENABLED(CONFIG_HMM_MIRROR) */
--static inline void hmm_mm_init(struct mm_struct *mm) {}
--#endif /* IS_ENABLED(CONFIG_HMM_MIRROR) */
--
--#else /* IS_ENABLED(CONFIG_HMM) */
--static inline void hmm_mm_destroy(struct mm_struct *mm) {}
-+#else /* CONFIG_HMM_MIRROR */
- static inline void hmm_mm_init(struct mm_struct *mm) {}
--#endif /* IS_ENABLED(CONFIG_HMM) */
-+#endif /* CONFIG_HMM_MIRROR */
- 
- #endif /* LINUX_HMM_H */
-diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index f33a1289c101..8d37182f8dbe 100644
---- a/include/linux/mm_types.h
-+++ b/include/linux/mm_types.h
-@@ -501,7 +501,7 @@ struct mm_struct {
- #endif
- 		struct work_struct async_put_work;
- 
--#if IS_ENABLED(CONFIG_HMM)
-+#ifdef CONFIG_HMM_MIRROR
- 		/* HMM needs to track a few things per mm */
- 		struct hmm *hmm;
- #endif
-diff --git a/mm/Kconfig b/mm/Kconfig
-index 4dbd718c8cf4..73676cb4693f 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -669,37 +669,17 @@ config ZONE_DEVICE
- 
- 	  If FS_DAX is enabled, then say Y.
- 
--config ARCH_HAS_HMM_MIRROR
--	bool
--	default y
--	depends on (X86_64 || PPC64)
--	depends on MMU && 64BIT
--
--config ARCH_HAS_HMM
--	bool
--	depends on (X86_64 || PPC64)
--	depends on ZONE_DEVICE
--	depends on MMU && 64BIT
--	depends on MEMORY_HOTPLUG
--	depends on MEMORY_HOTREMOVE
--	depends on SPARSEMEM_VMEMMAP
--	default y
--
- config MIGRATE_VMA_HELPER
- 	bool
- 
- config DEV_PAGEMAP_OPS
- 	bool
- 
--config HMM
--	bool
--	select MMU_NOTIFIER
--	select MIGRATE_VMA_HELPER
--
- config HMM_MIRROR
- 	bool "HMM mirror CPU page table into a device page table"
--	depends on ARCH_HAS_HMM
--	select HMM
-+	depends on MMU
-+	select MMU_NOTIFIER
-+	select MIGRATE_VMA_HELPER
- 	help
- 	  Select HMM_MIRROR if you want to mirror range of the CPU page table of a
- 	  process into a device page table. Here, mirror means "keep synchronized".
-@@ -721,7 +701,6 @@ config DEVICE_PUBLIC
- 	bool "Addressable device memory (like GPU memory)"
- 	depends on ARCH_HAS_HMM
- 	depends on BROKEN
--	select HMM
- 	select DEV_PAGEMAP_OPS
- 
- 	help
-diff --git a/mm/Makefile b/mm/Makefile
-index ac5e5ba78874..91c99040065c 100644
---- a/mm/Makefile
-+++ b/mm/Makefile
-@@ -102,5 +102,5 @@ obj-$(CONFIG_FRAME_VECTOR) += frame_vector.o
- obj-$(CONFIG_DEBUG_PAGE_REF) += debug_page_ref.o
- obj-$(CONFIG_HARDENED_USERCOPY) += usercopy.o
- obj-$(CONFIG_PERCPU_STATS) += percpu-stats.o
--obj-$(CONFIG_HMM) += hmm.o
-+obj-$(CONFIG_HMM_MIRROR) += hmm.o
- obj-$(CONFIG_MEMFD_CREATE) += memfd.o
 diff --git a/mm/hmm.c b/mm/hmm.c
-index 5b2e9bb6063a..8d50c482469c 100644
+index ff0f9568922b..c15283f9bbf0 100644
 --- a/mm/hmm.c
 +++ b/mm/hmm.c
-@@ -26,7 +26,6 @@
- #include <linux/mmu_notifier.h>
- #include <linux/memory_hotplug.h>
+@@ -1293,20 +1293,6 @@ EXPORT_SYMBOL(hmm_range_dma_unmap);
  
--#if IS_ENABLED(CONFIG_HMM_MIRROR)
- static const struct mmu_notifier_ops hmm_mmu_notifier_ops;
  
- /**
-@@ -1289,4 +1288,3 @@ long hmm_range_dma_unmap(struct hmm_range *range,
- 	return cpages;
- }
- EXPORT_SYMBOL(hmm_range_dma_unmap);
--#endif /* IS_ENABLED(CONFIG_HMM_MIRROR) */
+ #if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
+-struct page *hmm_vma_alloc_locked_page(struct vm_area_struct *vma,
+-				       unsigned long addr)
+-{
+-	struct page *page;
+-
+-	page = alloc_page_vma(GFP_HIGHUSER, vma, addr);
+-	if (!page)
+-		return NULL;
+-	lock_page(page);
+-	return page;
+-}
+-EXPORT_SYMBOL(hmm_vma_alloc_locked_page);
+-
+-
+ static void hmm_devmem_ref_release(struct percpu_ref *ref)
+ {
+ 	struct hmm_devmem *devmem;
 -- 
 2.20.1
 
