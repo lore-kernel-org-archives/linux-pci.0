@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1972DC31E45
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 508C3C31E49
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBC05208CA
-	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19643206BB
+	for <linux-pci@archiver.kernel.org>; Thu, 13 Jun 2019 15:44:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FHc5fDnC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="udKbgJZR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726635AbfFMPo3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1730122AbfFMPo3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 13 Jun 2019 11:44:29 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:33524 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:33570 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731819AbfFMJoP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2019 05:44:15 -0400
+        with ESMTP id S1731821AbfFMJoW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jun 2019 05:44:22 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=xYfBteKZe/e5Ckife8ohrecFQV6hfjj2YQprkCVN138=; b=FHc5fDnCPAlG2X1P5hqmN6BAee
-        WHf3iENBPRs8zYQpDQqPHSt6VFl+W/mC4zAPs7QsvZ5+2/s2LsCURy9tSKz1/q4hFYNZylr+Oqv5B
-        zjYfm+hFE3TcyvD6fP6qk2GNuODPVs4jZRq81oI3rTvaACEI8Km27qsiPAX8JsYZb4lHLwTHE03tG
-        9d6udUEpc2xY47EFvzzUdk14MpPcrfZ3EMMY7JNQPXp8Sy9a7L35wlI8DB7oV5VASIbgmY0nwXAu1
-        clBKVjIf19N93xjC8Ygkyyt70lJKIA3r2MZyU8I7YH4B8xSktOWIurHDeOMEjy+T3JRDHMXtyUE8W
-        Q1zQJh1A==;
+        bh=bHeNfTwD4XAIS0eLeLiZcWglvOw+19Z/Sq7aWx7Y048=; b=udKbgJZRJ+SciwR1Pd2q2Ka65G
+        9Skj/f/gJTQ+G9l3fpEf5dUSUFcYh4QSwiDYZHL2RgWWhVw1acSH3tCYUNAdEMgWjvKo9XmZJKowh
+        ynPRiFcvwNh6m1Qke2wr57eEX6NYF82GOwMdjZuINowQ/aiErhvPQvL+uj9CEzkporjQHs5Iji2lr
+        OdhXwDyPRQt5lyuEIA33C7LIhZVxwjAv+lbGWP3qPVg3XyAWri6plie5WWu1n/mj/M+A76ZBdXqMx
+        zpQCcIA67an3Shb/STrkhn7Fz+6a7GXN3TcVMw1u7P1mN1h2pWvHraQmJn4sm19vwHc16182jf4WO
+        A19H4NrA==;
 Received: from mpp-cp1-natpool-1-198.ethz.ch ([82.130.71.198] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hbMHD-0001tQ-VU; Thu, 13 Jun 2019 09:44:12 +0000
+        id 1hbMHK-0001uV-3d; Thu, 13 Jun 2019 09:44:18 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -44,9 +44,9 @@ To:     Dan Williams <dan.j.williams@intel.com>,
 Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 15/22] nouveau: use devm_memremap_pages directly
-Date:   Thu, 13 Jun 2019 11:43:18 +0200
-Message-Id: <20190613094326.24093-16-hch@lst.de>
+Subject: [PATCH 17/22] mm: remove hmm_devmem_add
+Date:   Thu, 13 Jun 2019 11:43:20 +0200
+Message-Id: <20190613094326.24093-18-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190613094326.24093-1-hch@lst.de>
 References: <20190613094326.24093-1-hch@lst.de>
@@ -58,191 +58,317 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Just use devm_memremap_pages instead of hmm_devmem_add pages to allow
-killing that wrapper which doesn't provide a whole lot of benefits.
+There isn't really much value add in the hmm_devmem_add wrapper.  Just
+factor out a little helper to find the resource, and otherwise let the
+driver implement the dev_pagemap_ops directly.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/gpu/drm/nouveau/nouveau_dmem.c | 80 ++++++++++++--------------
- 1 file changed, 38 insertions(+), 42 deletions(-)
+ Documentation/vm/hmm.rst |  26 --------
+ include/linux/hmm.h      | 129 ---------------------------------------
+ mm/hmm.c                 | 115 ----------------------------------
+ 3 files changed, 270 deletions(-)
 
-diff --git a/drivers/gpu/drm/nouveau/nouveau_dmem.c b/drivers/gpu/drm/nouveau/nouveau_dmem.c
-index a50f6fd2fe24..9e32bc8ecbc7 100644
---- a/drivers/gpu/drm/nouveau/nouveau_dmem.c
-+++ b/drivers/gpu/drm/nouveau/nouveau_dmem.c
-@@ -72,7 +72,8 @@ struct nouveau_dmem_migrate {
- };
+diff --git a/Documentation/vm/hmm.rst b/Documentation/vm/hmm.rst
+index 7b6eeda5a7c0..b1c960fe246d 100644
+--- a/Documentation/vm/hmm.rst
++++ b/Documentation/vm/hmm.rst
+@@ -336,32 +336,6 @@ directly using struct page for device memory which left most kernel code paths
+ unaware of the difference. We only need to make sure that no one ever tries to
+ map those pages from the CPU side.
  
- struct nouveau_dmem {
+-HMM provides a set of helpers to register and hotplug device memory as a new
+-region needing a struct page. This is offered through a very simple API::
+-
+- struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+-                                   struct device *device,
+-                                   unsigned long size);
+- void hmm_devmem_remove(struct hmm_devmem *devmem);
+-
+-The hmm_devmem_ops is where most of the important things are::
+-
+- struct hmm_devmem_ops {
+-     void (*free)(struct hmm_devmem *devmem, struct page *page);
+-     vm_fault_t (*fault)(struct hmm_devmem *devmem,
+-                  struct vm_area_struct *vma,
+-                  unsigned long addr,
+-                  struct page *page,
+-                  unsigned flags,
+-                  pmd_t *pmdp);
+- };
+-
+-The first callback (free()) happens when the last reference on a device page is
+-dropped. This means the device page is now free and no longer used by anyone.
+-The second callback happens whenever the CPU tries to access a device page
+-which it cannot do. This second callback must trigger a migration back to
+-system memory.
+-
+ 
+ Migration to and from device memory
+ ===================================
+diff --git a/include/linux/hmm.h b/include/linux/hmm.h
+index 0e61d830b0a9..13152ab504ec 100644
+--- a/include/linux/hmm.h
++++ b/include/linux/hmm.h
+@@ -551,135 +551,6 @@ static inline void hmm_mm_init(struct mm_struct *mm) {}
+ #endif /* IS_ENABLED(CONFIG_HMM_MIRROR) */
+ 
+ #if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
+-struct hmm_devmem;
+-
+-/*
+- * struct hmm_devmem_ops - callback for ZONE_DEVICE memory events
+- *
+- * @free: call when refcount on page reach 1 and thus is no longer use
+- * @fault: call when there is a page fault to unaddressable memory
+- *
+- * Both callback happens from page_free() and page_fault() callback of struct
+- * dev_pagemap respectively. See include/linux/memremap.h for more details on
+- * those.
+- *
+- * The hmm_devmem_ops callback are just here to provide a coherent and
+- * uniq API to device driver and device driver should not register their
+- * own page_free() or page_fault() but rely on the hmm_devmem_ops call-
+- * back.
+- */
+-struct hmm_devmem_ops {
+-	/*
+-	 * free() - free a device page
+-	 * @devmem: device memory structure (see struct hmm_devmem)
+-	 * @page: pointer to struct page being freed
+-	 *
+-	 * Call back occurs whenever a device page refcount reach 1 which
+-	 * means that no one is holding any reference on the page anymore
+-	 * (ZONE_DEVICE page have an elevated refcount of 1 as default so
+-	 * that they are not release to the general page allocator).
+-	 *
+-	 * Note that callback has exclusive ownership of the page (as no
+-	 * one is holding any reference).
+-	 */
+-	void (*free)(struct hmm_devmem *devmem, struct page *page);
+-	/*
+-	 * fault() - CPU page fault or get user page (GUP)
+-	 * @devmem: device memory structure (see struct hmm_devmem)
+-	 * @vma: virtual memory area containing the virtual address
+-	 * @addr: virtual address that faulted or for which there is a GUP
+-	 * @page: pointer to struct page backing virtual address (unreliable)
+-	 * @flags: FAULT_FLAG_* (see include/linux/mm.h)
+-	 * @pmdp: page middle directory
+-	 * Return: VM_FAULT_MINOR/MAJOR on success or one of VM_FAULT_ERROR
+-	 *   on error
+-	 *
+-	 * The callback occurs whenever there is a CPU page fault or GUP on a
+-	 * virtual address. This means that the device driver must migrate the
+-	 * page back to regular memory (CPU accessible).
+-	 *
+-	 * The device driver is free to migrate more than one page from the
+-	 * fault() callback as an optimization. However if the device decides
+-	 * to migrate more than one page it must always priotirize the faulting
+-	 * address over the others.
+-	 *
+-	 * The struct page pointer is only given as a hint to allow quick
+-	 * lookup of internal device driver data. A concurrent migration
+-	 * might have already freed that page and the virtual address might
+-	 * no longer be backed by it. So it should not be modified by the
+-	 * callback.
+-	 *
+-	 * Note that mmap semaphore is held in read mode at least when this
+-	 * callback occurs, hence the vma is valid upon callback entry.
+-	 */
+-	vm_fault_t (*fault)(struct hmm_devmem *devmem,
+-		     struct vm_area_struct *vma,
+-		     unsigned long addr,
+-		     const struct page *page,
+-		     unsigned int flags,
+-		     pmd_t *pmdp);
+-};
+-
+-/*
+- * struct hmm_devmem - track device memory
+- *
+- * @completion: completion object for device memory
+- * @pfn_first: first pfn for this resource (set by hmm_devmem_add())
+- * @pfn_last: last pfn for this resource (set by hmm_devmem_add())
+- * @resource: IO resource reserved for this chunk of memory
+- * @pagemap: device page map for that chunk
+- * @device: device to bind resource to
+- * @ops: memory operations callback
+- * @ref: per CPU refcount
+- * @page_fault: callback when CPU fault on an unaddressable device page
+- *
+- * This is a helper structure for device drivers that do not wish to implement
+- * the gory details related to hotplugging new memoy and allocating struct
+- * pages.
+- *
+- * Device drivers can directly use ZONE_DEVICE memory on their own if they
+- * wish to do so.
+- *
+- * The page_fault() callback must migrate page back, from device memory to
+- * system memory, so that the CPU can access it. This might fail for various
+- * reasons (device issues,  device have been unplugged, ...). When such error
+- * conditions happen, the page_fault() callback must return VM_FAULT_SIGBUS and
+- * set the CPU page table entry to "poisoned".
+- *
+- * Note that because memory cgroup charges are transferred to the device memory,
+- * this should never fail due to memory restrictions. However, allocation
+- * of a regular system page might still fail because we are out of memory. If
+- * that happens, the page_fault() callback must return VM_FAULT_OOM.
+- *
+- * The page_fault() callback can also try to migrate back multiple pages in one
+- * chunk, as an optimization. It must, however, prioritize the faulting address
+- * over all the others.
+- */
+-
+-struct hmm_devmem {
+-	struct completion		completion;
+-	unsigned long			pfn_first;
+-	unsigned long			pfn_last;
+-	struct resource			*resource;
+-	struct device			*device;
+-	struct dev_pagemap		pagemap;
+-	const struct hmm_devmem_ops	*ops;
+-	struct percpu_ref		ref;
+-};
+-
+-/*
+- * To add (hotplug) device memory, HMM assumes that there is no real resource
+- * that reserves a range in the physical address space (this is intended to be
+- * use by unaddressable device memory). It will reserve a physical range big
+- * enough and allocate struct page for it.
+- *
+- * The device driver can wrap the hmm_devmem struct inside a private device
+- * driver struct.
+- */
+-struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+-				  struct device *device,
+-				  unsigned long size);
+-
+ /*
+  * hmm_devmem_page_set_drvdata - set per-page driver data field
+  *
+diff --git a/mm/hmm.c b/mm/hmm.c
+index c15283f9bbf0..5b2e9bb6063a 100644
+--- a/mm/hmm.c
++++ b/mm/hmm.c
+@@ -1290,118 +1290,3 @@ long hmm_range_dma_unmap(struct hmm_range *range,
+ }
+ EXPORT_SYMBOL(hmm_range_dma_unmap);
+ #endif /* IS_ENABLED(CONFIG_HMM_MIRROR) */
+-
+-
+-#if IS_ENABLED(CONFIG_DEVICE_PRIVATE) ||  IS_ENABLED(CONFIG_DEVICE_PUBLIC)
+-static void hmm_devmem_ref_release(struct percpu_ref *ref)
+-{
 -	struct hmm_devmem *devmem;
-+	struct nouveau_drm *drm;
-+	struct dev_pagemap pagemap;
- 	struct nouveau_dmem_migrate migrate;
- 	struct list_head chunk_free;
- 	struct list_head chunk_full;
-@@ -80,6 +81,11 @@ struct nouveau_dmem {
- 	struct mutex mutex;
- };
- 
-+static inline struct nouveau_dmem *page_to_dmem(struct page *page)
-+{
-+	return container_of(page->pgmap, struct nouveau_dmem, pagemap);
-+}
-+
- struct nouveau_dmem_fault {
- 	struct nouveau_drm *drm;
- 	struct nouveau_fence *fence;
-@@ -96,8 +102,7 @@ struct nouveau_migrate {
- 	unsigned long dma_nr;
- };
- 
--static void
--nouveau_dmem_free(struct hmm_devmem *devmem, struct page *page)
-+static void nouveau_dmem_page_free(struct page *page)
- {
- 	struct nouveau_dmem_chunk *chunk;
- 	unsigned long idx;
-@@ -260,29 +265,21 @@ static const struct migrate_vma_ops nouveau_dmem_fault_migrate_ops = {
- 	.finalize_and_map	= nouveau_dmem_fault_finalize_and_map,
- };
- 
--static vm_fault_t
--nouveau_dmem_fault(struct hmm_devmem *devmem,
--		   struct vm_area_struct *vma,
--		   unsigned long addr,
--		   const struct page *page,
--		   unsigned int flags,
--		   pmd_t *pmdp)
-+static vm_fault_t nouveau_dmem_devmem_migrate(struct vm_fault *vmf)
- {
--	struct drm_device *drm_dev = dev_get_drvdata(devmem->device);
-+	struct nouveau_dmem *dmem = page_to_dmem(vmf->page);
- 	unsigned long src[1] = {0}, dst[1] = {0};
--	struct nouveau_dmem_fault fault = {0};
-+	struct nouveau_dmem_fault fault = { .drm = dmem->drm };
- 	int ret;
- 
 -
+-	devmem = container_of(ref, struct hmm_devmem, ref);
+-	complete(&devmem->completion);
+-}
 -
- 	/*
- 	 * FIXME what we really want is to find some heuristic to migrate more
- 	 * than just one page on CPU fault. When such fault happens it is very
- 	 * likely that more surrounding page will CPU fault too.
- 	 */
--	fault.drm = nouveau_drm(drm_dev);
--	ret = migrate_vma(&nouveau_dmem_fault_migrate_ops, vma, addr,
--			  addr + PAGE_SIZE, src, dst, &fault);
-+	ret = migrate_vma(&nouveau_dmem_fault_migrate_ops, vmf->vma,
-+			vmf->address, vmf->address + PAGE_SIZE,
-+			src, dst, &fault);
- 	if (ret)
- 		return VM_FAULT_SIGBUS;
- 
-@@ -292,10 +289,9 @@ nouveau_dmem_fault(struct hmm_devmem *devmem,
- 	return 0;
- }
- 
--static const struct hmm_devmem_ops
--nouveau_dmem_devmem_ops = {
--	.free = nouveau_dmem_free,
--	.fault = nouveau_dmem_fault,
-+static const struct dev_pagemap_ops nouveau_dmem_pagemap_ops = {
-+	.page_free		= nouveau_dmem_page_free,
-+	.migrate		= nouveau_dmem_devmem_migrate,
- };
- 
- static int
-@@ -581,7 +577,8 @@ void
- nouveau_dmem_init(struct nouveau_drm *drm)
- {
- 	struct device *device = drm->dev->dev;
--	unsigned long i, size;
-+	struct resource *res;
-+	unsigned long i, size, pfn_first;
- 	int ret;
- 
- 	/* This only make sense on PASCAL or newer */
-@@ -591,6 +588,7 @@ nouveau_dmem_init(struct nouveau_drm *drm)
- 	if (!(drm->dmem = kzalloc(sizeof(*drm->dmem), GFP_KERNEL)))
- 		return;
- 
-+	drm->dmem->drm = drm;
- 	mutex_init(&drm->dmem->mutex);
- 	INIT_LIST_HEAD(&drm->dmem->chunk_free);
- 	INIT_LIST_HEAD(&drm->dmem->chunk_full);
-@@ -600,11 +598,8 @@ nouveau_dmem_init(struct nouveau_drm *drm)
- 
- 	/* Initialize migration dma helpers before registering memory */
- 	ret = nouveau_dmem_migrate_init(drm);
--	if (ret) {
--		kfree(drm->dmem);
--		drm->dmem = NULL;
--		return;
--	}
-+	if (ret)
-+		goto out_free;
- 
- 	/*
- 	 * FIXME we need some kind of policy to decide how much VRAM we
-@@ -612,14 +607,16 @@ nouveau_dmem_init(struct nouveau_drm *drm)
- 	 * and latter if we want to do thing like over commit then we
- 	 * could revisit this.
- 	 */
--	drm->dmem->devmem = hmm_devmem_add(&nouveau_dmem_devmem_ops,
--					   device, size);
--	if (IS_ERR(drm->dmem->devmem)) {
--		kfree(drm->dmem);
--		drm->dmem = NULL;
--		return;
--	}
+-static void hmm_devmem_ref_exit(void *data)
+-{
+-	struct percpu_ref *ref = data;
+-	struct hmm_devmem *devmem;
 -
-+	res = devm_request_free_mem_region(device, &iomem_resource, size);
-+	if (IS_ERR(res))
-+		goto out_free;
-+	drm->dmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
-+	drm->dmem->pagemap.res = *res;
-+	drm->dmem->pagemap.ops = &nouveau_dmem_pagemap_ops;
-+	if (IS_ERR(devm_memremap_pages(device, &drm->dmem->pagemap)))
-+		goto out_free;
-+
-+	pfn_first = res->start >> PAGE_SHIFT;
- 	for (i = 0; i < (size / DMEM_CHUNK_SIZE); ++i) {
- 		struct nouveau_dmem_chunk *chunk;
- 		struct page *page;
-@@ -632,8 +629,7 @@ nouveau_dmem_init(struct nouveau_drm *drm)
- 		}
- 
- 		chunk->drm = drm;
--		chunk->pfn_first = drm->dmem->devmem->pfn_first;
--		chunk->pfn_first += (i * DMEM_CHUNK_NPAGES);
-+		chunk->pfn_first = pfn_first + (i * DMEM_CHUNK_NPAGES);
- 		list_add_tail(&chunk->list, &drm->dmem->chunk_empty);
- 
- 		page = pfn_to_page(chunk->pfn_first);
-@@ -643,6 +639,10 @@ nouveau_dmem_init(struct nouveau_drm *drm)
- 	}
- 
- 	NV_INFO(drm, "DMEM: registered %ldMB of device memory\n", size >> 20);
-+	return;
-+out_free:
-+	kfree(drm->dmem);
-+	drm->dmem = NULL;
- }
- 
- static void
-@@ -835,11 +835,7 @@ nouveau_dmem_page(struct nouveau_drm *drm, struct page *page)
- {
- 	if (!is_device_private_page(page))
- 		return false;
+-	devmem = container_of(ref, struct hmm_devmem, ref);
+-	wait_for_completion(&devmem->completion);
+-	percpu_ref_exit(ref);
+-}
 -
--	if (drm->dmem->devmem != page->pgmap->data)
--		return false;
+-static void hmm_devmem_ref_kill(struct dev_pagemap *pgmap)
+-{
+-	percpu_ref_kill(pgmap->ref);
+-}
 -
--	return true;
-+	return drm->dmem == page_to_dmem(page);
- }
- 
- void
+-static vm_fault_t hmm_devmem_migrate(struct vm_fault *vmf)
+-{
+-	struct hmm_devmem *devmem =
+-		container_of(vmf->page->pgmap, struct hmm_devmem, pagemap);
+-
+-	return devmem->ops->fault(devmem, vmf->vma, vmf->address, vmf->page,
+-			vmf->flags, vmf->pmd);
+-}
+-
+-static void hmm_devmem_free(struct page *page)
+-{
+-	struct hmm_devmem *devmem =
+-		container_of(page->pgmap, struct hmm_devmem, pagemap);
+-
+-	devmem->ops->free(devmem, page);
+-}
+-
+-static const struct dev_pagemap_ops hmm_pagemap_ops = {
+-	.page_free		= hmm_devmem_free,
+-	.kill			= hmm_devmem_ref_kill,
+-	.migrate		= hmm_devmem_migrate,
+-};
+-
+-/*
+- * hmm_devmem_add() - hotplug ZONE_DEVICE memory for device memory
+- *
+- * @ops: memory event device driver callback (see struct hmm_devmem_ops)
+- * @device: device struct to bind the resource too
+- * @size: size in bytes of the device memory to add
+- * Return: pointer to new hmm_devmem struct ERR_PTR otherwise
+- *
+- * This function first finds an empty range of physical address big enough to
+- * contain the new resource, and then hotplugs it as ZONE_DEVICE memory, which
+- * in turn allocates struct pages. It does not do anything beyond that; all
+- * events affecting the memory will go through the various callbacks provided
+- * by hmm_devmem_ops struct.
+- *
+- * Device driver should call this function during device initialization and
+- * is then responsible of memory management. HMM only provides helpers.
+- */
+-struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+-				  struct device *device,
+-				  unsigned long size)
+-{
+-	struct hmm_devmem *devmem;
+-	void *result;
+-	int ret;
+-
+-	devmem = devm_kzalloc(device, sizeof(*devmem), GFP_KERNEL);
+-	if (!devmem)
+-		return ERR_PTR(-ENOMEM);
+-
+-	init_completion(&devmem->completion);
+-	devmem->pfn_first = -1UL;
+-	devmem->pfn_last = -1UL;
+-	devmem->resource = NULL;
+-	devmem->device = device;
+-	devmem->ops = ops;
+-
+-	ret = percpu_ref_init(&devmem->ref, &hmm_devmem_ref_release,
+-			      0, GFP_KERNEL);
+-	if (ret)
+-		return ERR_PTR(ret);
+-
+-	ret = devm_add_action_or_reset(device, hmm_devmem_ref_exit, &devmem->ref);
+-	if (ret)
+-		return ERR_PTR(ret);
+-
+-	devmem->resource = devm_request_free_mem_region(device, &iomem_resource,
+-			size);
+-	if (IS_ERR(devmem->resource))
+-		return ERR_CAST(devmem->resource);
+-	devmem->pfn_first = devmem->resource->start >> PAGE_SHIFT;
+-	devmem->pfn_last = devmem->pfn_first +
+-			   (resource_size(devmem->resource) >> PAGE_SHIFT);
+-
+-	devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
+-	devmem->pagemap.res = *devmem->resource;
+-	devmem->pagemap.ops = &hmm_pagemap_ops;
+-	devmem->pagemap.altmap_valid = false;
+-	devmem->pagemap.ref = &devmem->ref;
+-
+-	result = devm_memremap_pages(devmem->device, &devmem->pagemap);
+-	if (IS_ERR(result))
+-		return result;
+-	return devmem;
+-}
+-EXPORT_SYMBOL_GPL(hmm_devmem_add);
+-#endif /* CONFIG_DEVICE_PRIVATE || CONFIG_DEVICE_PUBLIC */
 -- 
 2.20.1
 
