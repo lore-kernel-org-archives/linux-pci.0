@@ -2,101 +2,132 @@ Return-Path: <SRS0=4r0Q=UN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8E9BC31E4B
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 20:13:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37062C31E4F
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 20:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A04C421848
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 20:13:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1560543213;
-	bh=xAM7mBjDbgUS5XcFtTkGqbwxqhzw2VQJQpfEmS3r5OU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=H4rfL/8lpb2Qcug97MDly2KlxQm/JlTm3/LIKNRpG/vjw9377+7LjfP/Z6r1okdoB
-	 5Jxj9G4ANIgS15sfDkTdV/qSINQKhjGE6MLe0sqF8HfzQTSw05hiFg17qdnm+5xjG2
-	 90N4/5U7q4gjvMlNJRZkC7ZJOrynpveC9JasUMKQ=
+	by mail.kernel.org (Postfix) with ESMTP id 15E70217F9
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 20:36:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725868AbfFNUNd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Jun 2019 16:13:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56852 "EHLO mail.kernel.org"
+        id S1727614AbfFNUgi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Jun 2019 16:36:38 -0400
+Received: from ms.lwn.net ([45.79.88.28]:54134 "EHLO ms.lwn.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725825AbfFNUNc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Jun 2019 16:13:32 -0400
-Received: from localhost (unknown [69.71.4.100])
+        id S1728435AbfFNUgi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Jun 2019 16:36:38 -0400
+Received: from lwn.net (localhost [127.0.0.1])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AC94E2133D;
-        Fri, 14 Jun 2019 20:13:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560543212;
-        bh=xAM7mBjDbgUS5XcFtTkGqbwxqhzw2VQJQpfEmS3r5OU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=y9B/wKt8iAZmQzcNZMwojsGSPxWD0nlvAJ9fR2Mgc9gCFoXg973sQdjAjVCP/6T1t
-         b9gCFz2nYYCVV+dwHCGPAcSHn7aY/9VRZMzyrF48P1GQ4HMlgijZoW0/5QGEf73pu9
-         RW4fNguuPDa39W3Az18UKkqM6+czwwa/16ADuqpE=
-Date:   Fri, 14 Jun 2019 15:13:18 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Sinan Kaya <okaya@kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [RFC PATCH v2] arm64: acpi/pci: invoke _DSM whether to preserve
- firmware PCI setup
-Message-ID: <20190614201318.GT13533@google.com>
-References: <5783e36561bb77a1deb6ba67e5a9824488cc69c6.camel@kernel.crashing.org>
- <20190613190248.GH13533@google.com>
- <e6c7854ae360be513f6f43729ed6d4052e289376.camel@kernel.crashing.org>
- <CAKv+Gu95pQ7_OfLbEXHZ_bhYnqOgTBKCmTgqUY27un-Y708BgQ@mail.gmail.com>
- <d5d3e7b9553438482854c97e09543afb7de23eaa.camel@kernel.crashing.org>
- <20190614095742.GA27188@e121166-lin.cambridge.arm.com>
- <906b2576756e82a54b584c3de2d8362602de07ce.camel@kernel.crashing.org>
- <84320a45ef9395d82bf1c5d4d2d7e6db189cbfda.camel@kernel.crashing.org>
- <20190614131253.GR13533@google.com>
- <fdedfe23250f0dcb49619ed9da1d53ff7e7403d8.camel@kernel.crashing.org>
+        by ms.lwn.net (Postfix) with ESMTPSA id 656C91429;
+        Fri, 14 Jun 2019 20:36:36 +0000 (UTC)
+Date:   Fri, 14 Jun 2019 14:36:35 -0600
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org,
+        Linas Vepstas <linasvepstas@gmail.com>,
+        Russell Currey <ruscur@russell.cc>,
+        Sam Bobroff <sbobroff@linux.ibm.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        "Manoj N. Kumar" <manoj@linux.ibm.com>,
+        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        Qiang Zhao <qiang.zhao@nxp.com>, Li Yang <leoyang.li@nxp.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jslaby@suse.com>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Subject: Re: [PATCH v4 19/28] docs: powerpc: convert docs to ReST and rename
+ to *.rst
+Message-ID: <20190614143635.3aff154d@lwn.net>
+In-Reply-To: <63560c1ee7174952e148a353840a17969fe0be2d.1560361364.git.mchehab+samsung@kernel.org>
+References: <cover.1560361364.git.mchehab+samsung@kernel.org>
+        <63560c1ee7174952e148a353840a17969fe0be2d.1560361364.git.mchehab+samsung@kernel.org>
+Organization: LWN.net
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fdedfe23250f0dcb49619ed9da1d53ff7e7403d8.camel@kernel.crashing.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 11:48:18PM +1000, Benjamin Herrenschmidt wrote:
-> On Fri, 2019-06-14 at 08:12 -0500, Bjorn Helgaas wrote:
-> > On Fri, Jun 14, 2019 at 08:43:19PM +1000, Benjamin Herrenschmidt
-> > wrote:
-> > 
-> > > This least to another conversation we hinted at earlier.. we should
-> > > probably have a way to do the same at least for BARs on ACPI
-> > > systems so
-> > > we don't have to temporarily disable access to a device to size
-> > > them.
-> > 
-> > The PCI Enhanced Allocation capability provides a way to do this.  I
-> > don't know how widely used it is, but it's theoretically possible.
+On Wed, 12 Jun 2019 14:52:55 -0300
+Mauro Carvalho Chehab <mchehab+samsung@kernel.org> wrote:
+
+> Convert docs to ReST and add them to the arch-specific
+> book.
 > 
-> Ok, I have to read about this. I haven't seen a device with that on
-> yet, it looks messy at a quick glance.
+> The conversion here was trivial, as almost every file there
+> was already using an elegant format close to ReST standard.
 > 
-> Can ACPI convey the information ? On powerpc and sparc64 we have ways
-> to read the BAR values from the device-tree created by OF when it
-> assigned them.
+> The changes were mostly to mark literal blocks and add a few
+> missing section title identifiers.
+> 
+> One note with regards to "--": on Sphinx, this can't be used
+> to identify a list, as it will format it badly. This can be
+> used, however, to identify a long hyphen - and "---" is an
+> even longer one.
+> 
+> At its new index.rst, let's add a :orphan: while this is not linked to
+> the main index.rst file, in order to avoid build warnings.
+> 
+> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+> Acked-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com> # cxl
 
-I agree, EA is messy.
+This one fails to apply because ...
 
-I don't think it's feasible to do this in ACPI.  It's a pretty
-fundamental principle of PCI that you can discover what resources a
-device needs and uses by looking at its config space.  In general PCIe
-requires ECAM, which gives the OS direct access to config space,
-although it does allow exceptions for architecture-specific firmware
-interfaces for accessing config space, e.g., ia64 SAL (PCIe r4.0, sec
-7.2.2).
+[...]
 
-Bjorn
+> diff --git a/Documentation/PCI/pci-error-recovery.rst b/Documentation/PCI/pci-error-recovery.rst
+> index 83db42092935..acc21ecca322 100644
+> --- a/Documentation/PCI/pci-error-recovery.rst
+> +++ b/Documentation/PCI/pci-error-recovery.rst
+> @@ -403,7 +403,7 @@ That is, the recovery API only requires that:
+>  .. note::
+>  
+>     Implementation details for the powerpc platform are discussed in
+> -   the file Documentation/powerpc/eeh-pci-error-recovery.txt
+> +   the file Documentation/powerpc/eeh-pci-error-recovery.rst
+>  
+>     As of this writing, there is a growing list of device drivers with
+>     patches implementing error recovery. Not all of these patches are in
+> @@ -422,3 +422,24 @@ That is, the recovery API only requires that:
+>     - drivers/net/cxgb3
+>     - drivers/net/s2io.c
+>     - drivers/net/qlge
+> +
+> +>>> As of this writing, there is a growing list of device drivers with
+> +>>> patches implementing error recovery. Not all of these patches are in
+> +>>> mainline yet. These may be used as "examples":
+> +>>>
+> +>>> drivers/scsi/ipr
+> +>>> drivers/scsi/sym53c8xx_2
+> +>>> drivers/scsi/qla2xxx
+> +>>> drivers/scsi/lpfc
+> +>>> drivers/next/bnx2.c
+> +>>> drivers/next/e100.c
+> +>>> drivers/net/e1000
+> +>>> drivers/net/e1000e
+> +>>> drivers/net/ixgb
+> +>>> drivers/net/ixgbe
+> +>>> drivers/net/cxgb3
+> +>>> drivers/net/s2io.c
+> +>>> drivers/net/qlge  
+
+...of this, which has the look of a set of conflict markers that managed
+to get committed...?
+
+jon
+
