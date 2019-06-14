@@ -2,96 +2,172 @@ Return-Path: <SRS0=4r0Q=UN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78373C31E44
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 06:54:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C68D5C31E44
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 07:09:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C18320673
-	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 06:54:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9240E2133D
+	for <linux-pci@archiver.kernel.org>; Fri, 14 Jun 2019 07:09:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="BFQ7n7Zx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725858AbfFNGyZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 14 Jun 2019 02:54:25 -0400
-Received: from mslow2.mail.gandi.net ([217.70.178.242]:33860 "EHLO
-        mslow2.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725845AbfFNGyZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2019 02:54:25 -0400
-Received: from relay7-d.mail.gandi.net (unknown [217.70.183.200])
-        by mslow2.mail.gandi.net (Postfix) with ESMTP id D2E883A570C;
-        Fri, 14 Jun 2019 06:33:02 +0000 (UTC)
-X-Originating-IP: 88.190.179.123
-Received: from localhost (unknown [88.190.179.123])
-        (Authenticated sender: repk@triplefau.lt)
-        by relay7-d.mail.gandi.net (Postfix) with ESMTPSA id EA8272000E;
-        Fri, 14 Jun 2019 06:32:52 +0000 (UTC)
-From:   Remi Pommarel <repk@triplefau.lt>
-To:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Ellie Reeves <ellierevves@gmail.com>, linux-pci@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Remi Pommarel <repk@triplefau.lt>
-Subject: [PATCH v2] PCI: aardvark: Fix PCI_EXP_RTCTL conf register writing
-Date:   Fri, 14 Jun 2019 08:42:25 +0200
-Message-Id: <20190614064225.24434-1-repk@triplefau.lt>
-X-Mailer: git-send-email 2.20.1
+        id S1725846AbfFNHJH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 14 Jun 2019 03:09:07 -0400
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:37500 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725837AbfFNHJG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jun 2019 03:09:06 -0400
+Received: by mail-lj1-f195.google.com with SMTP id 131so1278980ljf.4
+        for <linux-pci@vger.kernel.org>; Fri, 14 Jun 2019 00:09:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mobiveil.co.in; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=yxfyM6IErwzUuZQc4rX6nb5MYVBMEiaUIJAOhGRqMq4=;
+        b=BFQ7n7ZxnDJCfw3InVQV8Lykl7mTzTO/uKjfT68koQImu8DCSUAFvWIamSHmM+uW7E
+         GZVxCsJcMdhXyWOdvsBS8286msfvR4ZWO78pNH0mqpSacM6BftYDWL1xMkdIh7w9MiX3
+         3tb2/ogsbdl7Lw2YtiCBHiD3UaatAaBTKNvM0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=yxfyM6IErwzUuZQc4rX6nb5MYVBMEiaUIJAOhGRqMq4=;
+        b=W7kbYvFIHv6oc/dO2DZ8RsjDMFtZx5mX2PKCwiqw0eJo+x/k/TyXG4CZRRLOXF4v/F
+         2RN/nCFAqmyIaMY7u03q94OK+DnUiKyYoY8o6ifapxpn9yPFH1KJkVHNYuFMr3C3oTyT
+         uWkMohdeO2BHCPzXpi/dvoDohF8Y60JqzDHv9n7bY8SIWla8IY4R+dmYS+HehVKH6cN4
+         kzVIBEhIdSyu04X/+ca+Yf45/FBYzHA6OGGyIjo+HGaFNZ7t+ORNYSIdM9PqTq/fFKt0
+         ldyD7MIQ0BWiM5kUeLWYP+yvoJw92LzEkLCKKd52hNPfuEP3COdYO0wSS/ChdLEcFonY
+         /ZBQ==
+X-Gm-Message-State: APjAAAUp4BxujB3EDZDfqDXBn/UPX+HSN5roR41ZvWlmQ4MF5OxKvTOh
+        7eh0zs3s+fDDHNTUm3Z+dVwCUTftFThUokQrYAmk4GaIXT980Em2tyvpDrlplNAOhYSXRaNyEBm
+        MAKudLHCctV9+lc9UrDyy6glunh2GRQ==
+X-Google-Smtp-Source: APXvYqygzgKoulB56EW6IgCZUnp+so8s8umG4AYyfJaRVIp1tDhleNADbz8MqdlwR5Bohv/3k4ORVDx+UFQFAkoJJWU=
+X-Received: by 2002:a2e:760f:: with SMTP id r15mr34139345ljc.18.1560496143737;
+ Fri, 14 Jun 2019 00:09:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190412083635.33626-1-Zhiqiang.Hou@nxp.com> <20190412083635.33626-11-Zhiqiang.Hou@nxp.com>
+ <20190612150819.GD15747@redmoon>
+In-Reply-To: <20190612150819.GD15747@redmoon>
+From:   Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>
+Date:   Fri, 14 Jun 2019 12:38:51 +0530
+Message-ID: <CAKnKUHFMH6=ox=qdaUR1kNEhETDCVyu3jQZEj+taEbbMRBRuYA@mail.gmail.com>
+Subject: Re: [PATCHv5 10/20] PCI: mobiveil: Fix the INTx process errors
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "l.subrahmanya@mobiveil.co.in" <l.subrahmanya@mobiveil.co.in>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Xiaowei Bao <xiaowei.bao@nxp.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI_EXP_RTCTL is used to activate PME interrupt only, so writing into it
-should not modify other interrupts' mask. The ISR mask polarity was also
-inverted, when PCI_EXP_RTCTL_PMEIE is set PCIE_MSG_PM_PME_MASK mask bit
-should actually be cleared.
+Hi Lorenzo and Hou Zhiqiang
+ PAB_INTP_AMBA_MISC_STAT does have other status in the higher bits, it
+should have been masked before checking for the status
 
-Fixes: 6302bf3ef78d ("PCI: Init PCIe feature bits for managed host bridge alloc")
-Signed-off-by: Remi Pommarel <repk@triplefau.lt>
----
-Changes since v1:
- * Improve code readability
- * Fix mask polarity
- * PME_MASK shift was off by one
----
- drivers/pci/controller/pci-aardvark.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+Acked-by: Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>
 
-diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
-index 134e0306ff00..f6e55c4597b1 100644
---- a/drivers/pci/controller/pci-aardvark.c
-+++ b/drivers/pci/controller/pci-aardvark.c
-@@ -415,7 +415,7 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
- 
- 	case PCI_EXP_RTCTL: {
- 		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
--		*value = (val & PCIE_MSG_PM_PME_MASK) ? PCI_EXP_RTCTL_PMEIE : 0;
-+		*value = (val & PCIE_MSG_PM_PME_MASK) ? 0 : PCI_EXP_RTCTL_PMEIE;
- 		return PCI_BRIDGE_EMUL_HANDLED;
- 	}
- 
-@@ -451,10 +451,15 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
- 		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
- 		break;
- 
--	case PCI_EXP_RTCTL:
--		new = (new & PCI_EXP_RTCTL_PMEIE) << 3;
--		advk_writel(pcie, new, PCIE_ISR0_MASK_REG);
-+	case PCI_EXP_RTCTL: {
-+		/* Only mask/unmask PME interrupt */
-+		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG) &
-+			~PCIE_MSG_PM_PME_MASK;
-+		if ((new & PCI_EXP_RTCTL_PMEIE) == 0)
-+			val |= PCIE_MSG_PM_PME_MASK;
-+		advk_writel(pcie, val, PCIE_ISR0_MASK_REG);
- 		break;
-+	}
- 
- 	case PCI_EXP_RTSTA:
- 		new = (new & PCI_EXP_RTSTA_PME) >> 9;
+On Wed, Jun 12, 2019 at 8:38 PM Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+>
+> On Fri, Apr 12, 2019 at 08:36:12AM +0000, Z.q. Hou wrote:
+> > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> >
+> > In the loop block, there is not code to update the loop key,
+> > this patch updates the loop key by re-read the INTx status
+> > register.
+> >
+> > This patch also add the clearing of the handled INTx status.
+> >
+> > Note: Need MV to test this fix.
+>
+> This means INTX were never tested and current code handling them is,
+> AFAICS, an infinite loop which is very very bad.
+>
+> This is a gross bug and must be fixed as soon as possible.
+>
+> I want Karthikeyan ACK and Tested-by on this patch.
+>
+> Lorenzo
+>
+> > Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
+> > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> > Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+> > Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+> > ---
+> > V5:
+> >  - Corrected and retouched the subject and changelog.
+> >
+> >  drivers/pci/controller/pcie-mobiveil.c | 13 +++++++++----
+> >  1 file changed, 9 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+> > index 4ba458474e42..78e575e71f4d 100644
+> > --- a/drivers/pci/controller/pcie-mobiveil.c
+> > +++ b/drivers/pci/controller/pcie-mobiveil.c
+> > @@ -361,6 +361,7 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
+> >       /* Handle INTx */
+> >       if (intr_status & PAB_INTP_INTX_MASK) {
+> >               shifted_status = csr_readl(pcie, PAB_INTP_AMBA_MISC_STAT);
+> > +             shifted_status &= PAB_INTP_INTX_MASK;
+> >               shifted_status >>= PAB_INTX_START;
+> >               do {
+> >                       for_each_set_bit(bit, &shifted_status, PCI_NUM_INTX) {
+> > @@ -372,12 +373,16 @@ static void mobiveil_pcie_isr(struct irq_desc *desc)
+> >                                       dev_err_ratelimited(dev, "unexpected IRQ, INT%d\n",
+> >                                                           bit);
+> >
+> > -                             /* clear interrupt */
+> > -                             csr_writel(pcie,
+> > -                                        shifted_status << PAB_INTX_START,
+> > +                             /* clear interrupt handled */
+> > +                             csr_writel(pcie, 1 << (PAB_INTX_START + bit),
+> >                                          PAB_INTP_AMBA_MISC_STAT);
+> >                       }
+> > -             } while ((shifted_status >> PAB_INTX_START) != 0);
+> > +
+> > +                     shifted_status = csr_readl(pcie,
+> > +                                                PAB_INTP_AMBA_MISC_STAT);
+> > +                     shifted_status &= PAB_INTP_INTX_MASK;
+> > +                     shifted_status >>= PAB_INTX_START;
+> > +             } while (shifted_status != 0);
+> >       }
+> >
+> >       /* read extra MSI status register */
+> > --
+> > 2.17.1
+> >
+
+
+
 -- 
-2.20.1
+Thanks,
+Regards,
+Karthikeyan Mitran
 
+-- 
+Mobiveil INC., CONFIDENTIALITY NOTICE: This e-mail message, including any 
+attachments, is for the sole use of the intended recipient(s) and may 
+contain proprietary confidential or privileged information or otherwise be 
+protected by law. Any unauthorized review, use, disclosure or distribution 
+is prohibited. If you are not the intended recipient, please notify the 
+sender and destroy all copies and the original message.
