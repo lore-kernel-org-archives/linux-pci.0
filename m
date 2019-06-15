@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B3A3C46477
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F5C2C31E50
 	for <linux-pci@archiver.kernel.org>; Sat, 15 Jun 2019 00:30:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4ABBA217D6
+	by mail.kernel.org (Postfix) with ESMTP id 29552217F9
 	for <linux-pci@archiver.kernel.org>; Sat, 15 Jun 2019 00:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726138AbfFOAaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726140AbfFOAaE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 14 Jun 2019 20:30:04 -0400
-Received: from gate.crashing.org ([63.228.1.57]:46446 "EHLO gate.crashing.org"
+Received: from gate.crashing.org ([63.228.1.57]:46443 "EHLO gate.crashing.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725981AbfFOAaE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726138AbfFOAaE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 14 Jun 2019 20:30:04 -0400
 Received: from ufdda393ec48b57.ant.amazon.com (localhost.localdomain [127.0.0.1])
-        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x5F0TfFS010961;
-        Fri, 14 Jun 2019 19:29:50 -0500
+        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x5F0TfFQ010961;
+        Fri, 14 Jun 2019 19:29:42 -0500
 From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
 To:     linux-pci@vger.kernel.org
 Cc:     Bjorn Helgaas <helgaas@kernel.org>,
@@ -30,47 +30,44 @@ Cc:     Bjorn Helgaas <helgaas@kernel.org>,
         Zeev Zilberman <zeev@amazon.com>,
         linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
         Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: [PATCH 3/4] pci: Do not auto-enable PCI reallocation when _DSM #5 returns 0
-Date:   Sat, 15 Jun 2019 10:23:58 +1000
-Message-Id: <20190615002359.29577-3-benh@kernel.crashing.org>
+Subject: [PATCH 1/4] arm64: pci: acpi: Use pci_assign_unassigned_root_bus_resources()
+Date:   Sat, 15 Jun 2019 10:23:56 +1000
+Message-Id: <20190615002359.29577-1-benh@kernel.crashing.org>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190615002359.29577-1-benh@kernel.crashing.org>
-References: <20190615002359.29577-1-benh@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This prevents auto-enabling of bridges reallocation when the FW tells
-us that the initial configuration must be preserved for a given host
-bridge.
+Instead of the simpler
+
+	pci_bus_size_bridges(bus);
+	pci_bus_assign_resources(bus);
+
+Use pci_assign_unassigned_root_bus_resources(). This should have no effect
+as long as we are reassigning everything. Once we start honoring FW
+resource allocations, this will bring up the "reallocation" feature
+which can help making room for SR-IOV when necessary.
 
 Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 ---
- drivers/pci/setup-bus.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ arch/arm64/kernel/pci.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0cdd5ff389de..049a5602b942 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1684,10 +1684,16 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- 					   enum enable_type enable_local)
- {
- 	bool unassigned = false;
-+	struct pci_host_bridge *hb;
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index bb85e2f4603f..1419b1b4e9b9 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -193,8 +193,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (!bus)
+ 		return NULL;
  
- 	if (enable_local != undefined)
- 		return enable_local;
+-	pci_bus_size_bridges(bus);
+-	pci_bus_assign_resources(bus);
++	pci_assign_unassigned_root_bus_resources(bus);
  
-+	/* Don't realloc if ACPI tells us not to */
-+	hb = pci_find_host_bridge(bus);
-+	if (hb->preserve_config)
-+		return auto_disabled;
-+
- 	pci_walk_bus(bus, iov_resources_unassigned, &unassigned);
- 	if (unassigned)
- 		return auto_enabled;
+ 	list_for_each_entry(child, &bus->children, node)
+ 		pcie_bus_configure_settings(child);
 -- 
 2.17.1
 
