@@ -2,105 +2,73 @@ Return-Path: <SRS0=+Ccl=UQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7151EC31E5B
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACA8EC31E5B
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:43:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4E6A5208C0
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:41:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="RkjomgiG"
+	by mail.kernel.org (Postfix) with ESMTP id 865AD2084D
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:43:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728682AbfFQRla (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jun 2019 13:41:30 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:12038 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726593AbfFQRla (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 13:41:30 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d07d0c90002>; Mon, 17 Jun 2019 10:41:29 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 17 Jun 2019 10:41:29 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 17 Jun 2019 10:41:29 -0700
-Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL103.nvidia.com
- (172.20.187.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 17 Jun
- 2019 17:41:29 +0000
-Received: from HQMAIL108.nvidia.com (172.18.146.13) by HQMAIL109.nvidia.com
- (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 17 Jun
- 2019 17:41:29 +0000
-Received: from manikanta-bm2.nvidia.com (10.124.1.5) by HQMAIL108.nvidia.com
- (172.18.146.13) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Mon, 17 Jun 2019 17:41:25 +0000
-From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
-To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <jonathanh@nvidia.com>, <lorenzo.pieralisi@arm.com>,
-        <vidyas@nvidia.com>
-CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>,
-        Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V5 27/27] PCI: tegra: Change link retry log level to debug
-Date:   Mon, 17 Jun 2019 23:09:52 +0530
-Message-ID: <20190617173952.29363-28-mmaddireddy@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190617173952.29363-1-mmaddireddy@nvidia.com>
-References: <20190617173952.29363-1-mmaddireddy@nvidia.com>
-X-NVConfidentiality: public
+        id S1727678AbfFQRnX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 13:43:23 -0400
+Received: from verein.lst.de ([213.95.11.211]:39910 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726047AbfFQRnW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Jun 2019 13:43:22 -0400
+Received: by newverein.lst.de (Postfix, from userid 2407)
+        id EE36B67358; Mon, 17 Jun 2019 19:42:51 +0200 (CEST)
+Date:   Mon, 17 Jun 2019 19:42:51 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Ben Skeggs <bskeggs@redhat.com>, Linux MM <linux-mm@kvack.org>,
+        nouveau@lists.freedesktop.org,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: Re: [PATCH 06/25] mm: factor out a devm_request_free_mem_region
+ helper
+Message-ID: <20190617174251.GA18249@lst.de>
+References: <20190617122733.22432-1-hch@lst.de> <20190617122733.22432-7-hch@lst.de> <CAPcyv4hoRR6gzTSkWnwMiUtX6jCKz2NMOhCUfXTji8f2H1v+rg@mail.gmail.com> <20190617174018.GA18185@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1560793289; bh=h+ALh4VYR7/sq/2F4QenUUpb2Ni490+vQwaFA/iAICM=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
-         Content-Type;
-        b=RkjomgiGG/pIAR7PSbtmPd1JD2WiEOhM1LAas4qhbHHs7bFJ9x+lSZA54lfjZOTbS
-         cmFFsKUGRMthWkb4ufI3AgZ99UDWo2z5Z0wfmFnNCY9AqumIke+r23AozHQf0Vr95Y
-         BcO87E3Ief1852VCopTGxzJx+/FyG6OSa8NoqJwo9gZgBoHlfybFnzcmPiiUF9xkFw
-         oxkbVP6ODEHWC5La6XvsiYtSn8g/0ZKsNNwjOXfvsDcHR8y1mdRFg2wer+PrNdHIMf
-         IdaxV2qZGvT4P98eB3ZsJ8dVoXQ+0pQrR3UiEem5I1DwBivWGj1d53vMjq7tiDSWcn
-         UdJDbQOZLBzvg==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190617174018.GA18185@lst.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Driver checks for link up three times before giving up, each retry attempt
-is printed as an error. Letting users know that PCIe link is down and in the
-process of being brought up again is for debug, not an error condition.
+On Mon, Jun 17, 2019 at 07:40:18PM +0200, Christoph Hellwig wrote:
+> On Mon, Jun 17, 2019 at 10:37:12AM -0700, Dan Williams wrote:
+> > > +struct resource *devm_request_free_mem_region(struct device *dev,
+> > > +               struct resource *base, unsigned long size);
+> > 
+> > This appears to need a 'static inline' helper stub in the
+> > CONFIG_DEVICE_PRIVATE=n case, otherwise this compile error triggers:
+> > 
+> > ld: mm/hmm.o: in function `hmm_devmem_add':
+> > /home/dwillia2/git/linux/mm/hmm.c:1427: undefined reference to
+> > `devm_request_free_mem_region'
+> 
+> *sigh* - hmm_devmem_add already only works for device private memory,
+> so it shouldn't be built if that option is not enabled, but in the
+> current code it is.  And a few patches later in the series we just
+> kill it off entirely, and the only real caller of this function
+> already depends on CONFIG_DEVICE_PRIVATE.  So I'm tempted to just
+> ignore the strict bisectability requirement here instead of making
+> things messy by either adding the proper ifdefs in hmm.c or providing
+> a stub we don't really need.
 
-Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Acked-by: Thierry Reding <treding@nvidia.com>
----
-V5: No change
-
-V4: No change
-
-V3: Changed dev_err to dev_dbg
-
-V2: Updated commit log
-
- drivers/pci/controller/pci-tegra.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 2e55d64a0428..629397bb5daa 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -2338,7 +2338,7 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
- 		} while (--timeout);
- 
- 		if (!timeout) {
--			dev_err(dev, "link %u down, retrying\n", port->index);
-+			dev_dbg(dev, "link %u down, retrying\n", port->index);
- 			goto retry;
- 		}
- 
--- 
-2.17.1
-
+Actually, I could just move the patch to mark CONFIG_DEVICE_PUBLIC
+broken earlier, which would force hmm_devmem_add to only be built
+when CONFIG_DEVICE_PRIVATE ist set.
