@@ -2,82 +2,106 @@ Return-Path: <SRS0=+Ccl=UQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06D89C31E57
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED9EAC31E57
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:43:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C7B8F20657
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:29:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nRxanBbF"
+	by mail.kernel.org (Postfix) with ESMTP id BD2B720861
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:43:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726673AbfFQM1q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jun 2019 08:27:46 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42416 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726669AbfFQM1p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 08:27:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=IiaLcJALEKaB7Li7OAHwGVaUV7J5HHtfGyRFzVhVT5I=; b=nRxanBbFaXKRrfonPCdCK8x8a
-        H13NLWpT/FYGEMhPawtjpKXuuFd5AsVGls0FU/bFblMxeQyfmVpGkj8pGsbrVCCWMJWTllTMnGpqR
-        lLvHY6XYJAnUlu8naiV+ey/kfflUSIzdOe46iLEfPoDAcpWQgUXfY+Hmls32zlkAUygawRFXkMCHP
-        wYZFnLlYcqST58xEgFnwklfAMQdGemLG8MCW+sf8MPt5vq44TqtytxlspPlDutukXjQTeeXjgmomc
-        DBnAvx70XsOhTxq4s1gUZqpsTkLMt1yioXaF7KDQUOS+v7Psp7YyIakjW17TKDyANImlYyLvulA8s
-        Kdy4HvCiw==;
-Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hcqjZ-0008K6-5z; Mon, 17 Jun 2019 12:27:37 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Dan Williams <dan.j.williams@intel.com>,
-        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Ben Skeggs <bskeggs@redhat.com>
-Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: dev_pagemap related cleanups v2
-Date:   Mon, 17 Jun 2019 14:27:08 +0200
-Message-Id: <20190617122733.22432-1-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
+        id S1726432AbfFQMnw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 08:43:52 -0400
+Received: from foss.arm.com ([217.140.110.172]:48538 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725995AbfFQMnw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Jun 2019 08:43:52 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6064F2B;
+        Mon, 17 Jun 2019 05:43:51 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 5CD913F246;
+        Mon, 17 Jun 2019 05:43:50 -0700 (PDT)
+Date:   Mon, 17 Jun 2019 13:43:36 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Remi Pommarel <repk@triplefau.lt>
+Cc:     Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Ellie Reeves <ellierevves@gmail.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: aardvark: Fix PCI_EXP_RTCTL register
+ configuration
+Message-ID: <20190617124328.GA27113@e121166-lin.cambridge.arm.com>
+References: <20190614101059.1664-1-repk@triplefau.lt>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190614101059.1664-1-repk@triplefau.lt>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Dan, Jérôme and Jason,
+On Fri, Jun 14, 2019 at 12:10:59PM +0200, Remi Pommarel wrote:
+> PCI_EXP_RTCTL is used to activate PME interrupt only, so writing into it
+> should not modify other interrupts' mask. The ISR mask polarity was also
+> inverted, when PCI_EXP_RTCTL_PMEIE is set PCIE_MSG_PM_PME_MASK mask bit
+> should actually be cleared.
+> 
+> Fixes: 8a3ebd8de328 ("PCI: aardvark: Implement emulated root PCI bridge config space")
+> Signed-off-by: Remi Pommarel <repk@triplefau.lt>
+> ---
+> Changes since v1:
+>  * Improve code readability
+>  * Fix mask polarity
+>  * PME_MASK shift was off by one
+> Changes since v2:
+>  * Modify patch title
+>  * Change Fixes tag to commit that actually introduces the bug
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
 
-below is a series that cleans up the dev_pagemap interface so that
-it is more easily usable, which removes the need to wrap it in hmm
-and thus allowing to kill a lot of code
+I need Thomas' ACK to apply it, thanks.
 
-Note: this series is on top of the rdma/hmm branch + the dev_pagemap
-releas fix series from Dan that went into 5.2-rc5.
+Lorenzo
 
-Git tree:
-
-    git://git.infradead.org/users/hch/misc.git hmm-devmem-cleanup.2
-
-Gitweb:
-
-    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/hmm-devmem-cleanup.2
-
-Changes since v1:
- - rebase
- - also switch p2pdma to the internal refcount
- - add type checking for pgmap->type
- - rename the migrate method to migrate_to_ram
- - cleanup the altmap_valid flag
- - various tidbits from the reviews
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index 134e0306ff00..f6e55c4597b1 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -415,7 +415,7 @@ advk_pci_bridge_emul_pcie_conf_read(struct pci_bridge_emul *bridge,
+>  
+>  	case PCI_EXP_RTCTL: {
+>  		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG);
+> -		*value = (val & PCIE_MSG_PM_PME_MASK) ? PCI_EXP_RTCTL_PMEIE : 0;
+> +		*value = (val & PCIE_MSG_PM_PME_MASK) ? 0 : PCI_EXP_RTCTL_PMEIE;
+>  		return PCI_BRIDGE_EMUL_HANDLED;
+>  	}
+>  
+> @@ -451,10 +451,15 @@ advk_pci_bridge_emul_pcie_conf_write(struct pci_bridge_emul *bridge,
+>  		advk_writel(pcie, new, PCIE_CORE_PCIEXP_CAP + reg);
+>  		break;
+>  
+> -	case PCI_EXP_RTCTL:
+> -		new = (new & PCI_EXP_RTCTL_PMEIE) << 3;
+> -		advk_writel(pcie, new, PCIE_ISR0_MASK_REG);
+> +	case PCI_EXP_RTCTL: {
+> +		/* Only mask/unmask PME interrupt */
+> +		u32 val = advk_readl(pcie, PCIE_ISR0_MASK_REG) &
+> +			~PCIE_MSG_PM_PME_MASK;
+> +		if ((new & PCI_EXP_RTCTL_PMEIE) == 0)
+> +			val |= PCIE_MSG_PM_PME_MASK;
+> +		advk_writel(pcie, val, PCIE_ISR0_MASK_REG);
+>  		break;
+> +	}
+>  
+>  	case PCI_EXP_RTSTA:
+>  		new = (new & PCI_EXP_RTSTA_PME) >> 9;
+> -- 
+> 2.20.1
+> 
