@@ -2,68 +2,167 @@ Return-Path: <SRS0=+Ccl=UQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5883C31E5B
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56CA7C31E5C
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB2CB208C0
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32BCD2084D
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="ZawLCM7w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727738AbfFQRku (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jun 2019 13:40:50 -0400
-Received: from verein.lst.de ([213.95.11.211]:39893 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727633AbfFQRkt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Jun 2019 13:40:49 -0400
-Received: by newverein.lst.de (Postfix, from userid 2407)
-        id AA7D667358; Mon, 17 Jun 2019 19:40:18 +0200 (CEST)
-Date:   Mon, 17 Jun 2019 19:40:18 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Ben Skeggs <bskeggs@redhat.com>, Linux MM <linux-mm@kvack.org>,
-        nouveau@lists.freedesktop.org,
-        Maling list - DRI developers 
-        <dri-devel@lists.freedesktop.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        John Hubbard <jhubbard@nvidia.com>
-Subject: Re: [PATCH 06/25] mm: factor out a devm_request_free_mem_region
- helper
-Message-ID: <20190617174018.GA18185@lst.de>
-References: <20190617122733.22432-1-hch@lst.de> <20190617122733.22432-7-hch@lst.de> <CAPcyv4hoRR6gzTSkWnwMiUtX6jCKz2NMOhCUfXTji8f2H1v+rg@mail.gmail.com>
+        id S1727633AbfFQRkv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 13:40:51 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:10923 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725995AbfFQRku (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 13:40:50 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d07d0a10000>; Mon, 17 Jun 2019 10:40:49 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Mon, 17 Jun 2019 10:40:49 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Mon, 17 Jun 2019 10:40:49 -0700
+Received: from HQMAIL108.nvidia.com (172.18.146.13) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 17 Jun
+ 2019 17:40:49 +0000
+Received: from manikanta-bm2.nvidia.com (10.124.1.5) by HQMAIL108.nvidia.com
+ (172.18.146.13) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
+ Transport; Mon, 17 Jun 2019 17:40:46 +0000
+From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <jonathanh@nvidia.com>, <lorenzo.pieralisi@arm.com>,
+        <vidyas@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V5 15/27] PCI: tegra: Update flow control timer frequency in Tegra210
+Date:   Mon, 17 Jun 2019 23:09:40 +0530
+Message-ID: <20190617173952.29363-16-mmaddireddy@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190617173952.29363-1-mmaddireddy@nvidia.com>
+References: <20190617173952.29363-1-mmaddireddy@nvidia.com>
+X-NVConfidentiality: public
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4hoRR6gzTSkWnwMiUtX6jCKz2NMOhCUfXTji8f2H1v+rg@mail.gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1560793249; bh=YLhzUZJSFbhsQ1X0SbFe+TLa7Alhn2g9T+lQcQupn04=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
+         Content-Type;
+        b=ZawLCM7wQK9jsYnBgweqneDnU29FN213GJkpNvFwZK1I94EcEfF+DNcv93X3kAQTX
+         1RgUoAu7BEEFP0KrznUQ8EwBE3Ea5WOEOnRzI/gxOwWb/VUzxRAZ7b1qku07+fzBxF
+         tosjTzHy+ZNG6cSh5u+zicXCfVNw4RDOELw+Htc9LK7ODEDRJZ4vM9B35iBdl9lOF4
+         g0H1zaUfCGCGJvWDJU2WXsPVWu/90UPvka8Z4Hs8Sv9J/ldCcT54mLberXewKXaXLE
+         EuCTl+wOlvRFh383h331dEloXJF02MW88rA+Zyf659wRlCT4XSK96Mpi9tV8n8MiDy
+         5shh3wqg7U/Vg==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 17, 2019 at 10:37:12AM -0700, Dan Williams wrote:
-> > +struct resource *devm_request_free_mem_region(struct device *dev,
-> > +               struct resource *base, unsigned long size);
-> 
-> This appears to need a 'static inline' helper stub in the
-> CONFIG_DEVICE_PRIVATE=n case, otherwise this compile error triggers:
-> 
-> ld: mm/hmm.o: in function `hmm_devmem_add':
-> /home/dwillia2/git/linux/mm/hmm.c:1427: undefined reference to
-> `devm_request_free_mem_region'
+Recommended UpdateFC threshold in Tegra210 is 0x60 for best performance
+of x1 link. Setting this to 0x60 provides the best balance between number
+of UpdateFC packets and read data sent over the link.
 
-*sigh* - hmm_devmem_add already only works for device private memory,
-so it shouldn't be built if that option is not enabled, but in the
-current code it is.  And a few patches later in the series we just
-kill it off entirely, and the only real caller of this function
-already depends on CONFIG_DEVICE_PRIVATE.  So I'm tempted to just
-ignore the strict bisectability requirement here instead of making
-things messy by either adding the proper ifdefs in hmm.c or providing
-a stub we don't really need.
+UpdateFC timer frequency is equal to twice the value of register content
+in nsec, i.e (2 * 0x60) = 192 nsec.
+
+Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Acked-by: Thierry Reding <treding@nvidia.com>
+---
+V5: No change
+
+V4: No change
+
+V3: No change
+
+V2: Changed update_fc_val to update_fc_threshold
+
+ drivers/pci/controller/pci-tegra.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+index 70bfbb7930c8..6ed406c46409 100644
+--- a/drivers/pci/controller/pci-tegra.c
++++ b/drivers/pci/controller/pci-tegra.c
+@@ -320,6 +320,7 @@ struct tegra_pcie_soc {
+ 	bool update_clamp_threshold;
+ 	bool program_deskew_time;
+ 	bool raw_violation_fixup;
++	bool update_fc_timer;
+ 	struct {
+ 		struct {
+ 			u32 rp_ectl_2_r1;
+@@ -668,6 +669,13 @@ static void tegra_pcie_apply_sw_fixup(struct tegra_pcie_port *port)
+ 		value |= soc->update_fc_threshold;
+ 		writel(value, port->base + RP_VEND_XP);
+ 	}
++
++	if (soc->update_fc_timer) {
++		value = readl(port->base + RP_VEND_XP);
++		value &= ~RP_VEND_XP_UPDATE_FC_THRESHOLD_MASK;
++		value |= soc->update_fc_threshold;
++		writel(value, port->base + RP_VEND_XP);
++	}
+ }
+ 
+ static void tegra_pcie_port_enable(struct tegra_pcie_port *port)
+@@ -2410,6 +2418,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.program_deskew_time = false,
+ 	.raw_violation_fixup = false,
++	.update_fc_timer = false,
+ 	.ectl.enable = false,
+ };
+ 
+@@ -2437,6 +2446,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.program_deskew_time = false,
+ 	.raw_violation_fixup = false,
++	.update_fc_timer = false,
+ 	.ectl.enable = false,
+ };
+ 
+@@ -2459,6 +2469,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.program_deskew_time = false,
+ 	.raw_violation_fixup = true,
++	.update_fc_timer = false,
+ 	.ectl.enable = false,
+ };
+ 
+@@ -2469,6 +2480,8 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.pads_pll_ctl = PADS_PLL_CTL_TEGRA30,
+ 	.tx_ref_sel = PADS_PLL_CTL_TXCLKREF_BUF_EN,
+ 	.pads_refclk_cfg0 = 0x90b890b8,
++	/* FC threshold is bit[25:18] */
++	.update_fc_threshold = 0x01800000,
+ 	.has_pex_clkreq_en = true,
+ 	.has_pex_bias_ctrl = true,
+ 	.has_intr_prsnt_sense = true,
+@@ -2479,6 +2492,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+ 	.update_clamp_threshold = true,
+ 	.program_deskew_time = true,
+ 	.raw_violation_fixup = false,
++	.update_fc_timer = true,
+ 	.ectl = {
+ 		.regs = {
+ 			.rp_ectl_2_r1 = 0x0000000f,
+@@ -2518,6 +2532,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+ 	.update_clamp_threshold = false,
+ 	.program_deskew_time = false,
+ 	.raw_violation_fixup = false,
++	.update_fc_timer = false,
+ 	.ectl.enable = false,
+ };
+ 
+-- 
+2.17.1
+
