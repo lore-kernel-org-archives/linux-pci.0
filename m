@@ -1,144 +1,107 @@
-Return-Path: <SRS0=scSh=UP=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=+Ccl=UQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D57EC31E50
-	for <linux-pci@archiver.kernel.org>; Sun, 16 Jun 2019 20:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 859DDC31E53
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 08:35:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DDAD20657
-	for <linux-pci@archiver.kernel.org>; Sun, 16 Jun 2019 20:04:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A960223A0
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 08:35:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727394AbfFPUEz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 16 Jun 2019 16:04:55 -0400
-Received: from mail-qk1-f196.google.com ([209.85.222.196]:45558 "EHLO
-        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727211AbfFPUEz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Jun 2019 16:04:55 -0400
-Received: by mail-qk1-f196.google.com with SMTP id s22so4964256qkj.12
-        for <linux-pci@vger.kernel.org>; Sun, 16 Jun 2019 13:04:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=MSqaCoMGco6P2zrSK37/hWJH9CXgQkBw2hzb1U1jzNw=;
-        b=ArbvyylwpEx3nXGN2LFw79zVS27pUc7IYLsCsTBSOcvzO1R6z/T0iC4xOtJzB2a4QJ
-         hUjy7CWgY64wttqVCIYOpIrXBYaBnob/IUXD5JAxsxaO2b+Hh9O/CZ/c+HmZGAEzuCAl
-         Ly/LkWWjOysOwOu9oOE2KvWiCZNojZXBy3n5LAZM5pL35uMJl3doeTsPK5DL7n4nppWz
-         AxZUha8rPJTjUYdfQa3XAAl+acuT0bEaFWORc/fB/SGDCEp1tmgN/u4yyraAYufRkPPW
-         /AALkKo98HUuZRpe6GjHE6rendFOTjwLgPGWRsxDSicwlcVJTu2HRISSkmb6JTvyJmM6
-         6LzQ==
-X-Gm-Message-State: APjAAAX3EfYvwxvEu2Pgn4N2vid9QRGDaqE8yem+U8vJ1YCah2xyAydJ
-        rmNqJRyPpUixCCmLVdQ5yfhX/g==
-X-Google-Smtp-Source: APXvYqzk8vjSAyBVM9AEC2sCcZJe/bhI9soeo5hRV28lwc5eEPs3dYN+S5Bd7YkUw5B0eEUJ+IVZrA==
-X-Received: by 2002:ae9:c21a:: with SMTP id j26mr65498831qkg.310.1560715494165;
-        Sun, 16 Jun 2019 13:04:54 -0700 (PDT)
-Received: from redhat.com (pool-100-0-197-103.bstnma.fios.verizon.net. [100.0.197.103])
-        by smtp.gmail.com with ESMTPSA id w51sm4943466qth.18.2019.06.16.13.04.51
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Sun, 16 Jun 2019 13:04:53 -0700 (PDT)
-Date:   Sun, 16 Jun 2019 16:04:49 -0400
-From:   "Michael S. Tsirkin" <mst@redhat.com>
-To:     Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc:     "joro@8bytes.org" <joro@8bytes.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "virtualization@lists.linux-foundation.org" 
-        <virtualization@lists.linux-foundation.org>,
-        "virtio-dev@lists.oasis-open.org" <virtio-dev@lists.oasis-open.org>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        Mark Rutland <Mark.Rutland@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Robin Murphy <Robin.Murphy@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "kvmarm@lists.cs.columbia.edu" <kvmarm@lists.cs.columbia.edu>,
-        "eric.auger@redhat.com" <eric.auger@redhat.com>,
-        "tnowicki@caviumnetworks.com" <tnowicki@caviumnetworks.com>,
-        "kevin.tian@intel.com" <kevin.tian@intel.com>,
-        "bauerman@linux.ibm.com" <bauerman@linux.ibm.com>
-Subject: Re: [virtio-dev] Re: [PATCH v8 2/7] dt-bindings: virtio: Add
- virtio-pci-iommu node
-Message-ID: <20190616154841-mutt-send-email-mst@kernel.org>
-References: <20190530170929.19366-1-jean-philippe.brucker@arm.com>
- <20190530170929.19366-3-jean-philippe.brucker@arm.com>
- <20190530133523-mutt-send-email-mst@kernel.org>
- <c3cd5dba-123d-e808-98b1-731ac2d4b950@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c3cd5dba-123d-e808-98b1-731ac2d4b950@arm.com>
+        id S1727554AbfFQIfi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 04:35:38 -0400
+Received: from gate.crashing.org ([63.228.1.57]:42189 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725837AbfFQIfh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Jun 2019 04:35:37 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x5H8ZH30015805;
+        Mon, 17 Jun 2019 03:35:18 -0500
+Message-ID: <bd5144fc12eeb611a85d194bbccdcac577fc6084.camel@kernel.crashing.org>
+Subject: IORESOURCE_PCI_FIXES & __pci_bus_assign_resources()
+From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To:     linux-pci <linux-pci@vger.kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Richard Henderson <rth@twiddle.net>,
+        Matt Turner <mattst88@gmail.com>
+Date:   Mon, 17 Jun 2019 18:35:16 +1000
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, May 31, 2019 at 12:13:47PM +0100, Jean-Philippe Brucker wrote:
-> On 30/05/2019 18:45, Michael S. Tsirkin wrote:
-> > On Thu, May 30, 2019 at 06:09:24PM +0100, Jean-Philippe Brucker wrote:
-> >> Some systems implement virtio-iommu as a PCI endpoint. The operating
-> >> system needs to discover the relationship between IOMMU and masters long
-> >> before the PCI endpoint gets probed. Add a PCI child node to describe the
-> >> virtio-iommu device.
-> >>
-> >> The virtio-pci-iommu is conceptually split between a PCI programming
-> >> interface and a translation component on the parent bus. The latter
-> >> doesn't have a node in the device tree. The virtio-pci-iommu node
-> >> describes both, by linking the PCI endpoint to "iommus" property of DMA
-> >> master nodes and to "iommu-map" properties of bus nodes.
-> >>
-> >> Reviewed-by: Rob Herring <robh@kernel.org>
-> >> Reviewed-by: Eric Auger <eric.auger@redhat.com>
-> >> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> > 
-> > So this is just an example right?
-> > We are not defining any new properties or anything like that.
-> 
-> Yes it's just an example. The properties already exist but it's good to
-> describe how to put them together for this particular case, because
-> there isn't a precedent describing the topology for an IOMMU that
-> appears on the PCI bus.
-> 
-> > I think down the road for non dt platforms we want to put this
-> > info in the config space of the device. I do not think ACPI
-> > is the best option for this since not all systems have it.
-> > But that can wait.
-> 
-> There is the probe order problem - PCI needs this info before starting
-> to probe devices on the bus.
+Hi !
 
+While working on consolidating resource assignment, I stumbled upon
+something alpha does (and maybe others I haven't spotted yet):
 
-This isn't all that special - it's pretty common for
-IOMMUs to be pci devices. The solution is to have the device on
-bus 0. For example, add it with
+On most platforms (not all), it uses the usual pair:
 
-DECLARE_PCI_FIXUP_EARLY
-or
-DECLARE_PCI_FIXUP_CLASS_EARLY
+	pci_bus_size_bridges(bus);
+	pci_bus_assign_resources(bus);
 
-in e.g.
-arch/x86/kernel/quirks.c
-or
-drivers/pci/quirks.c
+to reassign everything.
 
-You can also use the configuration access capability
-if there's need to access the device before its memory is
-enabled.
+However, before doing so, it first calls pcibios_claim_one_bus() which,
+on those platforms (ie those who don't set PCI_PROBE_ONLY), will
+effectively claim only resources that have IORESOURCE_PCI_FIXED.
 
-> Maybe we could store the info in a separate
-> memory region, that is referenced on the command-line and that the guest
-> can read early.
-> 
-> Thanks,
-> Jean
+Now, let's leave alone for now the fact that this is will really only
+work if those resources aren't behind a bridge as, to the best of my
+undertanding of the code at this point, we aren't going to take them
+into account when sizing & locating bridges. But that's not my point
+right now :-)
 
-The point is to avoid command line hacks. Devices should be
-self describing.
+From what I can tell, these days, pci_bus_assign_resources() will
+already claim those fixed resources via pdev_assign_fixed_resources().
 
--- 
-MST
+However, it does so *after* it has assigned and claimed resoures for
+all the sibling devices on that bus.
+
+That looks wrong to me. Shouldn't we claim the fixed resources first ?
+IE something like:
+
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1345,11 +1345,12 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 	struct pci_bus *b;
+ 	struct pci_dev *dev;
+ 
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		pdev_assign_fixed_resources(dev);
++
+ 	pbus_assign_resources_sorted(bus, realloc_head, fail_head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		pdev_assign_fixed_resources(dev);
+-
+ 		b = dev->subordinate;
+ 		if (!b)
+ 			continue;
+?
+
+Now, I suspect most of the time it happens to work due to the fact that
+the fixed resources are generally IO resources in the legacy low ranges
+( < 0x1000) and PCIBIOS_MIN_IO is *generally* set to 0x1000 but it still
+sounds fishy to me.
+
+I don't think I have HW at hand with that type of fixed stuff to test
+with at the moment, so this is very much academic right now but I worry
+that when I convert archs such as alpha who does that claiming before
+the rest of the assignment, switching doing things the other way around
+will break.
+
+Any thoughts ?
+
+Cheers,
+Ben.
+ 
+
