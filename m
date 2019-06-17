@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0C82C31E5D
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6702C31E5B
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3143208E4
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C21E32084D
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 17:40:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="rUlM7jBG"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="fJ06Kzxv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728532AbfFQRkR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728564AbfFQRkR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 17 Jun 2019 13:40:17 -0400
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:10843 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727633AbfFQRkQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 13:40:16 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d07d07e0000>; Mon, 17 Jun 2019 10:40:14 -0700
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:11866 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728467AbfFQRkR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 13:40:17 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d07d0800000>; Mon, 17 Jun 2019 10:40:16 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 17 Jun 2019 10:40:14 -0700
+  Mon, 17 Jun 2019 10:40:16 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 17 Jun 2019 10:40:14 -0700
-Received: from HQMAIL110.nvidia.com (172.18.146.15) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 17 Jun
- 2019 17:40:13 +0000
-Received: from HQMAIL108.nvidia.com (172.18.146.13) by hqmail110.nvidia.com
- (172.18.146.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 17 Jun
- 2019 17:40:09 +0000
+        by hqpgpgate101.nvidia.com on Mon, 17 Jun 2019 10:40:16 -0700
+Received: from HQMAIL102.nvidia.com (172.18.146.10) by HQMAIL108.nvidia.com
+ (172.18.146.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 17 Jun
+ 2019 17:40:15 +0000
+Received: from HQMAIL108.nvidia.com (172.18.146.13) by HQMAIL102.nvidia.com
+ (172.18.146.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 17 Jun
+ 2019 17:40:15 +0000
 Received: from manikanta-bm2.nvidia.com (10.124.1.5) by HQMAIL108.nvidia.com
  (172.18.146.13) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
- Transport; Mon, 17 Jun 2019 17:40:06 +0000
+ Transport; Mon, 17 Jun 2019 17:40:12 +0000
 From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
 To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <mark.rutland@arm.com>,
@@ -45,9 +45,9 @@ To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
 CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <devicetree@vger.kernel.org>,
         Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Subject: [PATCH V5 03/27] PCI: tegra: Rearrange Tegra PCIe driver functions
-Date:   Mon, 17 Jun 2019 23:09:28 +0530
-Message-ID: <20190617173952.29363-4-mmaddireddy@nvidia.com>
+Subject: [PATCH V5 05/27] PCI: tegra: Fix PCIe host power up sequence
+Date:   Mon, 17 Jun 2019 23:09:30 +0530
+Message-ID: <20190617173952.29363-6-mmaddireddy@nvidia.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190617173952.29363-1-mmaddireddy@nvidia.com>
 References: <20190617173952.29363-1-mmaddireddy@nvidia.com>
@@ -55,35 +55,39 @@ X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1560793214; bh=BpaMkm/+KLbYIOV+YN9GB9viUZTzQ4AB9F6zWPQ6Ayg=;
+        t=1560793216; bh=J99oOn2yhWDUdF+usw5wr2Vix4nQuTb2w5jMlI/57jI=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
          In-Reply-To:References:X-NVConfidentiality:MIME-Version:
          Content-Type;
-        b=rUlM7jBGNKrGwOFfxr4yEIsqS3X910GlVrwhEZP3EaF8IHFG65YfscTP1qNip+v25
-         slUwoFlGbvlt0gedVOwobczdaKlRI41iVGAJdXtIAvazyC3HW5HeKGABRzEty3BHEe
-         92Cm1o+vW05ehaaQ38L+1T/3O5Pop1Kv6qvSk605XssjqSIBDbgS+IPxWn8+YPWYXq
-         W5vw5cijGTOC6mzuEPREKtkevFHW0HfnlVvrLtQVbCAB4pgdBb10epuUov9KsWvdk5
-         ArAEk1oak04/cWkcxZmkOPW3OvRBH1GW7XGTtVDVTsQ8F/poh941CezpX9Vm+ZBJGY
-         NBJdqOQd4tosA==
+        b=fJ06Kzxv03VGS7EEbT7ReNN4BlMr+hQPrxenPxk+GkxCLscEGmBAnDY1GwYQSw7G3
+         +46uVOet1d/W8cx84VSIeuDt75WVhUqGN7PXM999AYbMstUzr2VIlpKZ+i8K0pn0wD
+         fpKpDpga/tmAwFz2s7Y8No3vGIaOhe3lydXauZqEETWuRDycOOXuO0a3QgduLVrt2i
+         zYvJjeYqGnlPaZI+8xKBmY6CBNj70NESTxNX9r0iIlGUmWsH6ZOIyhrWFpEFkCzNOC
+         WjzgckXqCp/DI0/kUjyvmyqjinafmB2vOQ+IIeVUcDcTAammf78FvJ/aM08k+3FKzi
+         MRN0xwCnSnBOA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Tegra PCIe has register spec for,
- - AXI to FPCI(AFI) bridge
- - Multiple PCIe root ports
- - PCIe PHY
- - PCIe pad control
+PCIe host power up sequence involves programming AFI(AXI to FPCI bridge)
+registers first and then PCIe registers. Otherwise AFI register settings
+may not latch to PCIe IP.
 
-Rearrange Tegra PCIe driver functions such that each function programs
-required module only.
- - tegra_pcie_enable_controller(): Program AFI module and enable PCIe
-controller.
- - tegra_pcie_phy_power_on(): Bring up PCIe PHY.
- - tegra_pcie_apply_pad_settings(): Program PCIe REFCLK pad settings.
- - tegra_pcie_enable_ports(): Program each root port and bring up PCIe
-link.
+PCIe root port starts LTSSM as soon as PCIe xrst is deasserted.
+So deassert PCIe xrst after programming PCIe registers.
+
+Modify PCIe power up sequence as follows,
+ - Power ungate PCIe partition
+ - Enable AFI clock
+ - Deassert AFI reset
+ - Program AFI registers
+ - Enable PCIe clock
+ - Deassert PCIe reset
+ - Program PCIe PHY
+ - Program PCIe pad control registers
+ - Program PCIe root port registers
+ - Deassert PCIe xrst to start LTSSM
 
 Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
 Acked-by: Thierry Reding <treding@nvidia.com>
@@ -94,159 +98,158 @@ V4: No change
 
 V3: No change
 
-V2: This is new patch in V2
+V2: Error cleanup changes are moved to new patch and only sequence
+correction is done in this patch.
 
- drivers/pci/controller/pci-tegra.c | 70 +++++++++++++-----------------
- 1 file changed, 30 insertions(+), 40 deletions(-)
+ drivers/pci/controller/pci-tegra.c | 52 +++++++++++++++++-------------
+ 1 file changed, 30 insertions(+), 22 deletions(-)
 
 diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 8235d937951b..bb3c0af9c830 100644
+index 0453bfb2726e..5e9fcef5f8eb 100644
 --- a/drivers/pci/controller/pci-tegra.c
 +++ b/drivers/pci/controller/pci-tegra.c
-@@ -852,7 +852,6 @@ static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
- static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
--	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct tegra_pcie_port *port;
- 	int err;
- 
-@@ -878,12 +877,6 @@ static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
- 		}
- 	}
- 
--	/* Configure the reference clock driver */
--	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
--
--	if (soc->num_ports > 2)
--		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
--
- 	return 0;
- }
- 
-@@ -918,13 +911,11 @@ static int tegra_pcie_phy_power_off(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
--static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
-+static void tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- {
--	struct device *dev = pcie->dev;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
- 	struct tegra_pcie_port *port;
- 	unsigned long value;
--	int err;
- 
- 	/* enable PLL power down */
- 	if (pcie->phy) {
-@@ -958,14 +949,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+@@ -949,9 +949,6 @@ static void tegra_pcie_enable_controller(struct tegra_pcie *pcie)
  		afi_writel(pcie, value, AFI_FUSE);
  	}
  
--	if (soc->program_uphy) {
--		err = tegra_pcie_phy_power_on(pcie);
--		if (err < 0) {
--			dev_err(dev, "failed to power on PHY(s): %d\n", err);
--			return err;
--		}
--	}
+-	/* take the PCIe interface module out of reset */
+-	reset_control_deassert(pcie->pcie_xrst);
 -
- 	/* take the PCIe interface module out of reset */
- 	reset_control_deassert(pcie->pcie_xrst);
+ 	/* finally enable PCIe */
+ 	value = afi_readl(pcie, AFI_CONFIGURATION);
+ 	value |= AFI_CONFIGURATION_EN_FPCI;
+@@ -981,13 +978,11 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
+ 	int err;
  
-@@ -989,22 +972,6 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 	reset_control_assert(pcie->afi_rst);
+-	reset_control_assert(pcie->pex_rst);
  
- 	/* disable all exceptions */
- 	afi_writel(pcie, 0, AFI_FPCI_ERROR_MASKS);
--
--	return 0;
--}
--
--static void tegra_pcie_disable_controller(struct tegra_pcie *pcie)
--{
--	int err;
--
--	reset_control_assert(pcie->pcie_xrst);
--
--	if (pcie->soc->program_uphy) {
--		err = tegra_pcie_phy_power_off(pcie);
--		if (err < 0)
--			dev_err(pcie->dev, "failed to power off PHY(s): %d\n",
--				err);
--	}
- }
+ 	clk_disable_unprepare(pcie->pll_e);
+ 	if (soc->has_cml_clk)
+ 		clk_disable_unprepare(pcie->cml_clk);
+ 	clk_disable_unprepare(pcie->afi_clk);
+-	clk_disable_unprepare(pcie->pex_clk);
  
- static void tegra_pcie_power_off(struct tegra_pcie *pcie)
-@@ -1106,6 +1073,17 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
- 	return err;
- }
+ 	if (!dev->pm_domain)
+ 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+@@ -1015,25 +1010,19 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+ 	if (err < 0)
+ 		dev_err(dev, "failed to enable regulators: %d\n", err);
  
-+static void tegra_pcie_apply_pad_settings(struct tegra_pcie *pcie)
-+{
-+	const struct tegra_pcie_soc *soc = pcie->soc;
+-	if (dev->pm_domain) {
+-		err = clk_prepare_enable(pcie->pex_clk);
++	if (!dev->pm_domain) {
++		err = tegra_powergate_power_on(TEGRA_POWERGATE_PCIE);
+ 		if (err) {
+-			dev_err(dev, "failed to enable PEX clock: %d\n", err);
++			dev_err(dev, "failed to power ungate: %d\n", err);
+ 			goto regulator_disable;
+ 		}
+-		reset_control_deassert(pcie->pex_rst);
+-	} else {
+-		err = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_PCIE,
+-							pcie->pex_clk,
+-							pcie->pex_rst);
++		err = tegra_powergate_remove_clamping(TEGRA_POWERGATE_PCIE);
+ 		if (err) {
+-			dev_err(dev, "powerup sequence failed: %d\n", err);
+-			goto regulator_disable;
++			dev_err(dev, "failed to remove clamp: %d\n", err);
++			goto powergate;
+ 		}
+ 	}
+ 
+-	reset_control_deassert(pcie->afi_rst);
+-
+ 	err = clk_prepare_enable(pcie->afi_clk);
+ 	if (err < 0) {
+ 		dev_err(dev, "failed to enable AFI clock: %d\n", err);
+@@ -1054,6 +1043,8 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+ 		goto disable_cml_clk;
+ 	}
+ 
++	reset_control_deassert(pcie->afi_rst);
 +
-+	/* Configure the reference clock driver */
-+	pads_writel(pcie, soc->pads_refclk_cfg0, PADS_REFCLK_CFG0);
-+
-+	if (soc->num_ports > 2)
-+		pads_writel(pcie, soc->pads_refclk_cfg1, PADS_REFCLK_CFG1);
-+}
-+
- static int tegra_pcie_clocks_get(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -2482,16 +2460,23 @@ static int __maybe_unused tegra_pcie_pm_suspend(struct device *dev)
- {
- 	struct tegra_pcie *pcie = dev_get_drvdata(dev);
- 	struct tegra_pcie_port *port;
-+	int err;
+ 	return 0;
  
- 	list_for_each_entry(port, &pcie->ports, list)
- 		tegra_pcie_pme_turnoff(port);
+ disable_cml_clk:
+@@ -1062,9 +1053,6 @@ static int tegra_pcie_power_on(struct tegra_pcie *pcie)
+ disable_afi_clk:
+ 	clk_disable_unprepare(pcie->afi_clk);
+ powergate:
+-	reset_control_assert(pcie->afi_rst);
+-	reset_control_assert(pcie->pex_rst);
+-	clk_disable_unprepare(pcie->pex_clk);
+ 	if (!dev->pm_domain)
+ 		tegra_powergate_power_off(TEGRA_POWERGATE_PCIE);
+ regulator_disable:
+@@ -2111,7 +2099,12 @@ static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
+ 			 port->index, port->lanes);
  
- 	tegra_pcie_disable_ports(pcie);
- 
-+	if (pcie->soc->program_uphy) {
-+		err = tegra_pcie_phy_power_off(pcie);
-+		if (err < 0)
-+			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+ 		tegra_pcie_port_enable(port);
 +	}
+ 
++	/* Start LTSSM from Tegra side */
++	reset_control_deassert(pcie->pcie_xrst);
++
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+ 		if (tegra_pcie_port_check_link(port))
+ 			continue;
+ 
+@@ -2126,6 +2119,8 @@ static void tegra_pcie_disable_ports(struct tegra_pcie *pcie)
+ {
+ 	struct tegra_pcie_port *port, *tmp;
+ 
++	reset_control_assert(pcie->pcie_xrst);
++
+ 	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+ 		tegra_pcie_port_disable(port);
+ }
+@@ -2488,10 +2483,12 @@ static int __maybe_unused tegra_pcie_pm_suspend(struct device *dev)
+ 			dev_err(dev, "failed to power off PHY(s): %d\n", err);
+ 	}
+ 
++	reset_control_assert(pcie->pex_rst);
++	clk_disable_unprepare(pcie->pex_clk);
 +
  	if (IS_ENABLED(CONFIG_PCI_MSI))
  		tegra_pcie_disable_msi(pcie);
  
--	tegra_pcie_disable_controller(pcie);
-+	reset_control_assert(pcie->pcie_xrst);
+-	reset_control_assert(pcie->pcie_xrst);
  	tegra_pcie_power_off(pcie);
  
  	return 0;
-@@ -2507,16 +2492,21 @@ static int __maybe_unused tegra_pcie_pm_resume(struct device *dev)
- 		dev_err(dev, "tegra pcie power on fail: %d\n", err);
- 		return err;
- 	}
--	err = tegra_pcie_enable_controller(pcie);
--	if (err) {
--		dev_err(dev, "tegra pcie controller enable fail: %d\n", err);
--		goto poweroff;
--	}
-+	tegra_pcie_enable_controller(pcie);
- 	tegra_pcie_setup_translations(pcie);
- 
+@@ -2513,11 +2510,19 @@ static int __maybe_unused tegra_pcie_pm_resume(struct device *dev)
  	if (IS_ENABLED(CONFIG_PCI_MSI))
  		tegra_pcie_enable_msi(pcie);
  
-+	if (pcie->soc->program_uphy) {
-+		err = tegra_pcie_phy_power_on(pcie);
-+		if (err < 0) {
-+			dev_err(dev, "failed to power on PHY(s): %d\n", err);
-+			goto poweroff;
-+		}
++	err = clk_prepare_enable(pcie->pex_clk);
++	if (err) {
++		dev_err(dev, "failed to enable PEX clock: %d\n", err);
++		goto poweroff;
 +	}
 +
-+	tegra_pcie_apply_pad_settings(pcie);
- 	tegra_pcie_enable_ports(pcie);
++	reset_control_deassert(pcie->pex_rst);
++
+ 	if (pcie->soc->program_uphy) {
+ 		err = tegra_pcie_phy_power_on(pcie);
+ 		if (err < 0) {
+ 			dev_err(dev, "failed to power on PHY(s): %d\n", err);
+-			goto poweroff;
++			goto disable_pex_clk;
+ 		}
+ 	}
+ 
+@@ -2526,6 +2531,9 @@ static int __maybe_unused tegra_pcie_pm_resume(struct device *dev)
  
  	return 0;
+ 
++disable_pex_clk:
++	reset_control_assert(pcie->pex_rst);
++	clk_disable_unprepare(pcie->pex_clk);
+ poweroff:
+ 	tegra_pcie_power_off(pcie);
+ 
 -- 
 2.17.1
 
