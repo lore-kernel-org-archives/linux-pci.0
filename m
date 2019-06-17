@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 087F7C31E57
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:28:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14CE1C31E59
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:28:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBD86208E4
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:28:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1A2B21881
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:28:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="W2VpTqt7"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WuL0DYWb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727892AbfFQM2D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jun 2019 08:28:03 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42622 "EHLO
+        id S1728007AbfFQM2S (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 08:28:18 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42780 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727876AbfFQM2D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 08:28:03 -0400
+        with ESMTP id S1728045AbfFQM2R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 08:28:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=SrlBfglV2hFr71vKq82TSTUn2RS300iWsrC5HG0Yr4o=; b=W2VpTqt7EskSNl6OuXPvH3bTWa
-        Oxg4VSsFhUtYN/smPPmJ/TmFjbu6FrvzGufjEzmKE0uOJrxOjmjRrjYb/YHVyc13wqj4131sLqdMW
-        Di83pcGzCmYLYtdJivugv1+KG0NJ3i0vHj4cqwGx6dLona+c6BJTgo+6AyG47cNDxzrOuhEbFZgta
-        sSTuRxsX8hlFCFBDHEQVB7HhiHPeE6HZ+5YwoMol64nHRFYkCX0Sca+lcM6aXnuI41SjltLH0lSfU
-        X9k4JK6mamu83Z+QHUj8CXn+SiW++AFS5aMwKTYRlnBMa8VbjP/mTavSO9PsG15HZSuj3gzWVrqZT
-        Th+7BvSw==;
+        bh=bqNW86dzEIGFtFX91S0QfixvDgbjQWnIT6qUU0eVEH4=; b=WuL0DYWbzTX1df3odeTY431W11
+        U+IcQwoSHpIn1fMOzejiKLQ4T8swbios1PHMUkKcA2qDdFfDiObZfLsILw7OcEJxSkmTjZINPR6Ex
+        JU5UL9obm/Ujq0gzLG5GLwV6DXCHwO9XcVhmV5JdSTTENkyBGpYwzs9vK4bZgbYpWH0X2uxeezDtb
+        zTKdJMavLuTl530T4mh89YjZh7oD2lAFwjczLk5AV3FaKTfWD1grijdKZyC4ZIwEVCxgVy3oz5n7T
+        RBeVOLMjWP1rN6VKNGoDkd/NFq1PppJFQffAUKysbEbgpOzqWo2a2uIJuDwVJADkhF56XaEwfYDf2
+        sPXWKLLg==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hcqjv-0000AI-IK; Mon, 17 Jun 2019 12:27:59 +0000
+        id 1hcqk8-0000Gn-Ll; Mon, 17 Jun 2019 12:28:12 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -44,9 +44,9 @@ To:     Dan Williams <dan.j.williams@intel.com>,
 Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 10/25] memremap: lift the devmap_enable manipulation into devm_memremap_pages
-Date:   Mon, 17 Jun 2019 14:27:18 +0200
-Message-Id: <20190617122733.22432-11-hch@lst.de>
+Subject: [PATCH 16/25] PCI/P2PDMA: use the dev_pagemap internal refcount
+Date:   Mon, 17 Jun 2019 14:27:24 +0200
+Message-Id: <20190617122733.22432-17-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190617122733.22432-1-hch@lst.de>
 References: <20190617122733.22432-1-hch@lst.de>
@@ -58,201 +58,127 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Just check if there is a ->page_free operation set and take care of the
-static key enable, as well as the put using device managed resources.
-Also check that a ->page_free is provided for the pgmaps types that
-require it, and check for a valid type as well while we are at it.
-
-Note that this also fixes the fact that hmm never called
-dev_pagemap_put_ops and thus would leave the slow path enabled forever,
-even after a device driver unload or disable.
+The functionality is identical to the one currently open coded in
+p2pdma.c.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/nvdimm/pmem.c | 23 +++--------------
- include/linux/mm.h    | 10 --------
- kernel/memremap.c     | 57 ++++++++++++++++++++++++++-----------------
- mm/hmm.c              |  2 --
- 4 files changed, 39 insertions(+), 53 deletions(-)
+ drivers/pci/p2pdma.c | 56 ++++----------------------------------------
+ 1 file changed, 4 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 469a0f5b3380..85364c59c607 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -342,11 +342,6 @@ static void pmem_release_disk(void *__pmem)
- 	put_disk(pmem->disk);
- }
- 
--static void pmem_release_pgmap_ops(void *__pgmap)
--{
--	dev_pagemap_put_ops();
--}
--
- static void pmem_pagemap_page_free(struct page *page, void *data)
- {
- 	wake_up_var(&page->_refcount);
-@@ -358,16 +353,6 @@ static const struct dev_pagemap_ops fsdax_pagemap_ops = {
- 	.cleanup		= pmem_pagemap_cleanup,
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 48a88158e46a..608f84df604a 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -24,12 +24,6 @@ struct pci_p2pdma {
+ 	bool p2pmem_published;
  };
  
--static int setup_pagemap_fsdax(struct device *dev, struct dev_pagemap *pgmap)
--{
--	dev_pagemap_get_ops();
--	if (devm_add_action_or_reset(dev, pmem_release_pgmap_ops, pgmap))
--		return -ENOMEM;
--	pgmap->type = MEMORY_DEVICE_FS_DAX;
--	pgmap->ops = &fsdax_pagemap_ops;
--	return 0;
--}
+-struct p2pdma_pagemap {
+-	struct dev_pagemap pgmap;
+-	struct percpu_ref ref;
+-	struct completion ref_done;
+-};
 -
- static int pmem_attach_disk(struct device *dev,
- 		struct nd_namespace_common *ndns)
+ static ssize_t size_show(struct device *dev, struct device_attribute *attr,
+ 			 char *buf)
  {
-@@ -423,8 +408,8 @@ static int pmem_attach_disk(struct device *dev,
- 	pmem->pfn_flags = PFN_DEV;
- 	pmem->pgmap.ref = &q->q_usage_counter;
- 	if (is_nd_pfn(dev)) {
--		if (setup_pagemap_fsdax(dev, &pmem->pgmap))
--			return -ENOMEM;
-+		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
-+		pmem->pgmap.ops = &fsdax_pagemap_ops;
- 		addr = devm_memremap_pages(dev, &pmem->pgmap);
- 		pfn_sb = nd_pfn->pfn_sb;
- 		pmem->data_offset = le64_to_cpu(pfn_sb->dataoff);
-@@ -436,8 +421,8 @@ static int pmem_attach_disk(struct device *dev,
- 	} else if (pmem_should_map_pages(dev)) {
- 		memcpy(&pmem->pgmap.res, &nsio->res, sizeof(pmem->pgmap.res));
- 		pmem->pgmap.altmap_valid = false;
--		if (setup_pagemap_fsdax(dev, &pmem->pgmap))
--			return -ENOMEM;
-+		pmem->pgmap.type = MEMORY_DEVICE_FS_DAX;
-+		pmem->pgmap.ops = &fsdax_pagemap_ops;
- 		addr = devm_memremap_pages(dev, &pmem->pgmap);
- 		pmem->pfn_flags |= PFN_MAP;
- 		memcpy(&bb_res, &pmem->pgmap.res, sizeof(bb_res));
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index 0e8834ac32b7..edcf2b821647 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -921,8 +921,6 @@ static inline bool is_zone_device_page(const struct page *page)
- #endif
+@@ -78,32 +72,6 @@ static const struct attribute_group p2pmem_group = {
+ 	.name = "p2pmem",
+ };
  
- #ifdef CONFIG_DEV_PAGEMAP_OPS
--void dev_pagemap_get_ops(void);
--void dev_pagemap_put_ops(void);
- void __put_devmap_managed_page(struct page *page);
- DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
- static inline bool put_devmap_managed_page(struct page *page)
-@@ -969,14 +967,6 @@ static inline bool is_pci_p2pdma_page(const struct page *page)
- #endif /* CONFIG_PCI_P2PDMA */
- 
- #else /* CONFIG_DEV_PAGEMAP_OPS */
--static inline void dev_pagemap_get_ops(void)
+-static struct p2pdma_pagemap *to_p2p_pgmap(struct percpu_ref *ref)
 -{
+-	return container_of(ref, struct p2pdma_pagemap, ref);
 -}
 -
--static inline void dev_pagemap_put_ops(void)
+-static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
 -{
+-	struct p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(ref);
+-
+-	complete(&p2p_pgmap->ref_done);
 -}
 -
- static inline bool put_devmap_managed_page(struct page *page)
+-static void pci_p2pdma_percpu_kill(struct dev_pagemap *pgmap)
+-{
+-	percpu_ref_kill(pgmap->ref);
+-}
+-
+-static void pci_p2pdma_percpu_cleanup(struct dev_pagemap *pgmap)
+-{
+-	struct p2pdma_pagemap *p2p_pgmap =
+-		container_of(pgmap, struct p2pdma_pagemap, pgmap);
+-
+-	wait_for_completion(&p2p_pgmap->ref_done);
+-	percpu_ref_exit(&p2p_pgmap->ref);
+-}
+-
+ static void pci_p2pdma_release(void *data)
  {
- 	return false;
-diff --git a/kernel/memremap.c b/kernel/memremap.c
-index ba7156bd52d1..7272027fbdd7 100644
---- a/kernel/memremap.c
-+++ b/kernel/memremap.c
-@@ -17,6 +17,35 @@ static DEFINE_XARRAY(pgmap_array);
- #define SECTION_MASK ~((1UL << PA_SECTION_SHIFT) - 1)
- #define SECTION_SIZE (1UL << PA_SECTION_SHIFT)
+ 	struct pci_dev *pdev = data;
+@@ -153,11 +121,6 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
+ 	return error;
+ }
  
-+#ifdef CONFIG_DEV_PAGEMAP_OPS
-+DEFINE_STATIC_KEY_FALSE(devmap_managed_key);
-+EXPORT_SYMBOL(devmap_managed_key);
-+static atomic_t devmap_enable;
-+
-+static void dev_pagemap_put_ops(void *data)
-+{
-+	if (atomic_dec_and_test(&devmap_enable))
-+		static_branch_disable(&devmap_managed_key);
-+}
-+
-+static int dev_pagemap_get_ops(struct device *dev, struct dev_pagemap *pgmap)
-+{
-+	if (!pgmap->ops->page_free) {
-+		WARN(1, "Missing page_free method\n");
-+		return -EINVAL;
-+	}
-+
-+	if (atomic_inc_return(&devmap_enable) == 1)
-+		static_branch_enable(&devmap_managed_key);
-+	return devm_add_action_or_reset(dev, dev_pagemap_put_ops, NULL);
-+}
-+#else
-+static int dev_pagemap_get_ops(struct device *dev, struct dev_pagemap *pgmap)
-+{
-+	return -EINVAL;
-+}
-+#endif /* CONFIG_DEV_PAGEMAP_OPS */
-+
- #if IS_ENABLED(CONFIG_DEVICE_PRIVATE)
- vm_fault_t device_private_entry_fault(struct vm_area_struct *vma,
- 		       unsigned long addr,
-@@ -190,6 +219,12 @@ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
- 		return ERR_PTR(-EINVAL);
+-static const struct dev_pagemap_ops pci_p2pdma_pagemap_ops = {
+-	.kill		= pci_p2pdma_percpu_kill,
+-	.cleanup	= pci_p2pdma_percpu_cleanup,
+-};
+-
+ /**
+  * pci_p2pdma_add_resource - add memory for use as p2p memory
+  * @pdev: the device to add the memory to
+@@ -171,7 +134,6 @@ static const struct dev_pagemap_ops pci_p2pdma_pagemap_ops = {
+ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 			    u64 offset)
+ {
+-	struct p2pdma_pagemap *p2p_pgmap;
+ 	struct dev_pagemap *pgmap;
+ 	void *addr;
+ 	int error;
+@@ -194,22 +156,12 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 			return error;
  	}
  
-+	if (pgmap->type != MEMORY_DEVICE_PCI_P2PDMA) {
-+		error = dev_pagemap_get_ops(dev, pgmap);
-+		if (error)
-+			return ERR_PTR(error);
-+	}
-+
- 	align_start = res->start & ~(SECTION_SIZE - 1);
- 	align_size = ALIGN(res->start + resource_size(res), SECTION_SIZE)
- 		- align_start;
-@@ -356,28 +391,6 @@ struct dev_pagemap *get_dev_pagemap(unsigned long pfn,
- EXPORT_SYMBOL_GPL(get_dev_pagemap);
+-	p2p_pgmap = devm_kzalloc(&pdev->dev, sizeof(*p2p_pgmap), GFP_KERNEL);
+-	if (!p2p_pgmap)
++	pgmap = devm_kzalloc(&pdev->dev, sizeof(*pgmap), GFP_KERNEL);
++	if (!pgmap)
+ 		return -ENOMEM;
+-
+-	init_completion(&p2p_pgmap->ref_done);
+-	error = percpu_ref_init(&p2p_pgmap->ref,
+-			pci_p2pdma_percpu_release, 0, GFP_KERNEL);
+-	if (error)
+-		goto pgmap_free;
+-
+-	pgmap = &p2p_pgmap->pgmap;
+-
+ 	pgmap->res.start = pci_resource_start(pdev, bar) + offset;
+ 	pgmap->res.end = pgmap->res.start + size - 1;
+ 	pgmap->res.flags = pci_resource_flags(pdev, bar);
+-	pgmap->ref = &p2p_pgmap->ref;
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
+ 	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
+ 		pci_resource_start(pdev, bar);
+@@ -223,7 +175,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	error = gen_pool_add_owner(pdev->p2pdma->pool, (unsigned long)addr,
+ 			pci_bus_address(pdev, bar) + offset,
+ 			resource_size(&pgmap->res), dev_to_node(&pdev->dev),
+-			&p2p_pgmap->ref);
++			pgmap->ref);
+ 	if (error)
+ 		goto pages_free;
  
- #ifdef CONFIG_DEV_PAGEMAP_OPS
--DEFINE_STATIC_KEY_FALSE(devmap_managed_key);
--EXPORT_SYMBOL(devmap_managed_key);
--static atomic_t devmap_enable;
--
--/*
-- * Toggle the static key for ->page_free() callbacks when dev_pagemap
-- * pages go idle.
-- */
--void dev_pagemap_get_ops(void)
--{
--	if (atomic_inc_return(&devmap_enable) == 1)
--		static_branch_enable(&devmap_managed_key);
--}
--EXPORT_SYMBOL_GPL(dev_pagemap_get_ops);
--
--void dev_pagemap_put_ops(void)
--{
--	if (atomic_dec_and_test(&devmap_enable))
--		static_branch_disable(&devmap_managed_key);
--}
--EXPORT_SYMBOL_GPL(dev_pagemap_put_ops);
--
- void __put_devmap_managed_page(struct page *page)
- {
- 	int count = page_ref_dec_return(page);
-diff --git a/mm/hmm.c b/mm/hmm.c
-index ec3bf2c5c699..0add50944d64 100644
---- a/mm/hmm.c
-+++ b/mm/hmm.c
-@@ -1412,8 +1412,6 @@ struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
- 	void *result;
- 	int ret;
- 
--	dev_pagemap_get_ops();
--
- 	devmem = devm_kzalloc(device, sizeof(*devmem), GFP_KERNEL);
- 	if (!devmem)
- 		return ERR_PTR(-ENOMEM);
+@@ -235,7 +187,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ pages_free:
+ 	devm_memunmap_pages(&pdev->dev, pgmap);
+ pgmap_free:
+-	devm_kfree(&pdev->dev, p2p_pgmap);
++	devm_kfree(&pdev->dev, pgmap);
+ 	return error;
+ }
+ EXPORT_SYMBOL_GPL(pci_p2pdma_add_resource);
 -- 
 2.20.1
 
