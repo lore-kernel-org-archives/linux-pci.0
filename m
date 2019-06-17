@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F553C31E57
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:29:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB95AC31E57
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:29:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 185092087F
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:29:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5CEE20657
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:29:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gQAEn4aB"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Bpx0/+YD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726834AbfFQM1y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jun 2019 08:27:54 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42486 "EHLO
+        id S1726432AbfFQM3d (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 08:29:33 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42458 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727675AbfFQM1w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 08:27:52 -0400
+        with ESMTP id S1727207AbfFQM1u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 08:27:50 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=0rpTHljYB087yEOOsZI9c9yqKYmTPhfVemezVGqcscg=; b=gQAEn4aBEmQ132Z0wP5I7jCauB
-        LBw2hOlfvCDQ7d5fQKNPO6djGCxEKQh4CVo9EuYbFLF4QJhOgBejZ8OlWo206WldjRYOfhT4AFXLE
-        9L9qHayf35ChGEv7g6MIcpHnXhCiExQ4fiDCZ31LF2RdPao4FFTC2z3uorshZP+Aw61Hgacx5tekH
-        AsvC3ssCa68V+0zIIoesTfI1zxzVEaOuvsIAMGhuXyHQ3tSMzjWx14WKmPXgm3FDPe3h/HDsavVrv
-        jUYfnpdHPmfR+1OXsOoS+idioOXrQhBTR8rrL0J5g0GVZnduKQ9EwD/JKCrznGMn1BshcDxe2+90o
-        qyyv31zA==;
+        bh=K9g0rbDWkkxSMGlYVgcFvd5xNggbvRNJSx9Dd0Ro7/M=; b=Bpx0/+YDXKRBCn8UCT2IVcE71B
+        X2OqFR2P6cQnqBb88ElPZ9QzRIcJuB6fh/pwFQhL10fCq/BTxAcobe/zVEp/r2n7V0pP7sSWfY3vI
+        grf6B5YyGDCZtvbTmqOmLHV4oQdCc5CWcHzwXul0Xks3Jy5S8OX2HaJLSwsERvlhqYUhbplZj+Hbe
+        nGltq+FfZLW+kAOtOqlrJUw+V8Bf9yuRaWt+YX/y8HdJGvUzLzWUpFih1p8MBWWbxiSlX6mIpF/9f
+        YI8qf3+O29zr6OMxqhKepaX1ADDNERghmpgXvc2+qF1AVzDFKhLXEhxF4xHhfGx1sWibYKtViGFl+
+        Wp33jgyA==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hcqjk-0008W5-FE; Mon, 17 Jun 2019 12:27:48 +0000
+        id 1hcqji-0008Q6-8H; Mon, 17 Jun 2019 12:27:46 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -45,9 +45,9 @@ Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         John Hubbard <jhubbard@nvidia.com>
-Subject: [PATCH 05/25] mm: export alloc_pages_vma
-Date:   Mon, 17 Jun 2019 14:27:13 +0200
-Message-Id: <20190617122733.22432-6-hch@lst.de>
+Subject: [PATCH 04/25] mm: don't clear ->mapping in hmm_devmem_free
+Date:   Mon, 17 Jun 2019 14:27:12 +0200
+Message-Id: <20190617122733.22432-5-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190617122733.22432-1-hch@lst.de>
 References: <20190617122733.22432-1-hch@lst.de>
@@ -59,27 +59,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-nouveau is currently using this through an odd hmm wrapper, and I plan
-to switch it to the real thing later in this series.
+->mapping isn't even used by HMM users, and the field at the same offset
+in the zone_device part of the union is declared as pad.  (Which btw is
+rather confusing, as DAX uses ->pgmap and ->mapping from two different
+sides of the union, but DAX doesn't use hmm_devmem_free).
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jason Gunthorpe <jgg@mellanox.com>
 Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- mm/mempolicy.c | 1 +
- 1 file changed, 1 insertion(+)
+ mm/hmm.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index 01600d80ae01..f9023b5fba37 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -2098,6 +2098,7 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
- out:
- 	return page;
- }
-+EXPORT_SYMBOL_GPL(alloc_pages_vma);
+diff --git a/mm/hmm.c b/mm/hmm.c
+index dc251c51803a..64e788bb1211 100644
+--- a/mm/hmm.c
++++ b/mm/hmm.c
+@@ -1380,8 +1380,6 @@ static void hmm_devmem_free(struct page *page, void *data)
+ {
+ 	struct hmm_devmem *devmem = data;
  
- /**
-  * 	alloc_pages_current - Allocate pages.
+-	page->mapping = NULL;
+-
+ 	devmem->ops->free(devmem, page);
+ }
+ 
 -- 
 2.20.1
 
