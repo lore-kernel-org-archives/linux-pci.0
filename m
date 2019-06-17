@@ -2,157 +2,89 @@ Return-Path: <SRS0=+Ccl=UQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42DB7C31E57
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 11:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2774AC31E57
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:27:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15CF520861
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 11:48:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E35272084D
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 12:27:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RGGbjb6x"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sb1bPHYS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725810AbfFQLsx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jun 2019 07:48:53 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:39016 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725763AbfFQLsx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 07:48:53 -0400
-Received: by mail-wr1-f65.google.com with SMTP id x4so9603509wrt.6;
-        Mon, 17 Jun 2019 04:48:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=YFZzGQiR/+q8BqcMsjHSVIUX4cRDO+kiz9QvlDUt+/o=;
-        b=RGGbjb6x8Bl+gCJ6qmzaAQAjg3dzjOzIBHOEEY/T1qsZYPuqTqCYn/LK0QhJFDSJ1Z
-         5dCwlEjJP6C28OhXXYfENT7YKEZ85lf5ItpbENW1yYTOQfP5vA1O/AlTNQSnhvxqnpr2
-         5Xf5jw7QxELcjjmWM/1AgkVvH3Nquxy9JKNIhtoqvVC9npCFtjBNBh128Vsxrjdkziju
-         2FogeYr2uyOcOI22hWwg/oxPozky3R906gMcE9fVICrMtUca9Bt7d0RqFISwMdfy82u4
-         HNrBB8dn52aGgxF3bKhGk6TWkyJ9+xInu+J7x1W7e3f7N0BBifNbtaoor+o3Dw0na1oK
-         VfRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=YFZzGQiR/+q8BqcMsjHSVIUX4cRDO+kiz9QvlDUt+/o=;
-        b=UfkKTgHJ4Qa+iYSwg80IY0HBHw7OF85qE+HwnXFnBHOtR5Ojzd7yVpJtydin0g9F2W
-         NtEe0+LM26ScDoSG3WkFhwh1UZHNwpwCL+AeSghCReAHRZMF4h6/xjHh3WLEwFfYfknw
-         Un7pdDAj7wdFJmSicfUAWYb4UNrmtu6FBvoUSwTnW/Kwl/90OJINo8bzZvId7lcqLyzL
-         Z0sTp0N9edhOsRHepVS/CQHd+QPdN8I72cV7yurd1OjSK+vAlhN9svNK7D2b/P9ZdbuV
-         6xi9fOErqpsaEc05iPQL5rM19svJsqClo2PyG8z4UQWds46qYO9eJbuDNlxZJZeouQz6
-         yAtQ==
-X-Gm-Message-State: APjAAAXpXfdgpO5yAWuNgd0+uxNuRaHhjjC2GqZgz9hVbniAvCiBo4Pj
-        moBeGlupYDAiWMcAUk9jmro=
-X-Google-Smtp-Source: APXvYqzbohfQXHTSgJpr150hQG2s0BU+/GxYSWrhYfr7eLtWqRK5RzlsTV/R1nmSt+iSooHPz6e06g==
-X-Received: by 2002:adf:dd82:: with SMTP id x2mr1576838wrl.27.1560772130643;
-        Mon, 17 Jun 2019 04:48:50 -0700 (PDT)
-Received: from localhost (p2E5BEF36.dip0.t-ipconnect.de. [46.91.239.54])
-        by smtp.gmail.com with ESMTPSA id 18sm9533971wmg.43.2019.06.17.04.48.49
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Mon, 17 Jun 2019 04:48:49 -0700 (PDT)
-Date:   Mon, 17 Jun 2019 13:48:49 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        jonathanh@nvidia.com, lorenzo.pieralisi@arm.com, vidyas@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH V4 26/28] PCI: Add DT binding for "reset-gpios" property
-Message-ID: <20190617114849.GM508@ulmo>
-References: <20190516055307.25737-1-mmaddireddy@nvidia.com>
- <20190516055307.25737-27-mmaddireddy@nvidia.com>
- <20190617113038.GK508@ulmo>
- <bc6a3de8-89b0-41a8-006e-0db85fbb4d4d@nvidia.com>
+        id S1725962AbfFQM1p (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 08:27:45 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42412 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725906AbfFQM1p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 08:27:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=PvDb2Ox1k4dZazYGdHDZANbuB1HI2/N93WOg6eXhjAQ=; b=sb1bPHYSDLwe702WgBPwsLs+J0
+        vhPm0vc39IREraw5fNiKWwVi9b2XYJL8w6l2OeJY6AgdG8fPQh63r1aibZKvGoX4P777qmADQIXze
+        OYKNAjycAzImv4MUUNJ1Sv6fOnX95UP0Tu509ppILxE5n4d614sDWPMcRXsHXnhq1gEXEUCA1AvUq
+        OqgqDRRmXt/AFAdHkWOVd0/MMaDaR60es8wSgvkI32aP283KFFhUOZkJ79kLqoS/P/7e6eF2EVA7o
+        0cDAzMOCQw8d61JCfYZgkqA5mYDhyXUXH6xL/G5qSJueB/oc/v0KwCGT+woKWUhfY5a9eI/qAtVq6
+        jjs4LpNQ==;
+Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
+        id 1hcqjb-0008KG-Cp; Mon, 17 Jun 2019 12:27:39 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Ben Skeggs <bskeggs@redhat.com>
+Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 01/25] mm: remove the unused ARCH_HAS_HMM_DEVICE Kconfig option
+Date:   Mon, 17 Jun 2019 14:27:09 +0200
+Message-Id: <20190617122733.22432-2-hch@lst.de>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190617122733.22432-1-hch@lst.de>
+References: <20190617122733.22432-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="TxukmIqg3MmZ0Kmh"
-Content-Disposition: inline
-In-Reply-To: <bc6a3de8-89b0-41a8-006e-0db85fbb4d4d@nvidia.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jason Gunthorpe <jgg@mellanox.com>
+---
+ mm/Kconfig | 10 ----------
+ 1 file changed, 10 deletions(-)
 
---TxukmIqg3MmZ0Kmh
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+diff --git a/mm/Kconfig b/mm/Kconfig
+index f0c76ba47695..0d2ba7e1f43e 100644
+--- a/mm/Kconfig
++++ b/mm/Kconfig
+@@ -675,16 +675,6 @@ config ARCH_HAS_HMM_MIRROR
+ 	depends on (X86_64 || PPC64)
+ 	depends on MMU && 64BIT
+ 
+-config ARCH_HAS_HMM_DEVICE
+-	bool
+-	default y
+-	depends on (X86_64 || PPC64)
+-	depends on MEMORY_HOTPLUG
+-	depends on MEMORY_HOTREMOVE
+-	depends on SPARSEMEM_VMEMMAP
+-	depends on ARCH_HAS_ZONE_DEVICE
+-	select XARRAY_MULTI
+-
+ config ARCH_HAS_HMM
+ 	bool
+ 	default y
+-- 
+2.20.1
 
-On Mon, Jun 17, 2019 at 05:08:45PM +0530, Manikanta Maddireddy wrote:
->=20
->=20
-> On 17-Jun-19 5:00 PM, Thierry Reding wrote:
-> > On Thu, May 16, 2019 at 11:23:05AM +0530, Manikanta Maddireddy wrote:
-> >> Add DT binding for "reset-gpios" property which supports GPIO based PE=
-RST#
-> >> signal.
-> >>
-> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> >> Reviewed-by: Rob Herring <robh@kernel.org>
-> >> Acked-by: Thierry Reding <treding@nvidia.com>
-> >> ---
-> >> V4: No change
-> >>
-> >> V3: Moved to common pci binding doc
-> >>
-> >> V2: Using standard "reset-gpio" property
-> >>
-> >>  Documentation/devicetree/bindings/pci/pci.txt | 3 +++
-> >>  1 file changed, 3 insertions(+)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documenta=
-tion/devicetree/bindings/pci/pci.txt
-> >> index c77981c5dd18..79124898aa5b 100644
-> >> --- a/Documentation/devicetree/bindings/pci/pci.txt
-> >> +++ b/Documentation/devicetree/bindings/pci/pci.txt
-> >> @@ -24,3 +24,6 @@ driver implementation may support the following prop=
-erties:
-> >>     unsupported link speed, for instance, trying to do training for
-> >>     unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, =
-'2'
-> >>     for gen2, and '1' for gen1. Any other values are invalid.
-> >> +- reset-gpios:
-> >> +   If present this property specifies PERST# GPIO. Host drivers can p=
-arse the
-> >> +   GPIO and apply fundamental reset to endpoints.
-> > As mentioned in patch 27/28, maybe mention here that this is only a
-> > workaround for bad board designs and that it shouldn't be necessary in
-> > the majority of cases.
-> >
-> > Thierry
->=20
-> This is common DT binding doc, I cannot add Tegra specific here.
-> reset-gpios is common DT prop, so Rob asked me to add it in common file.
-
-Ah, indeed. Alright, let's document it in the Tegra driver patch, then.
-
-Thierry
-
---TxukmIqg3MmZ0Kmh
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAl0HfiAACgkQ3SOs138+
-s6Fn+w/+LYI/OWEFoh9H55Bv5F4iAYdjJsFolI2oa373iKROlpxS3+KJQ1sE3rGO
-Q+WSuTiuR2mWU98KZtW7wC1bq4tZIFatu1NSWU+GHoOsFK4RFF7ysbgD3i4xIRm9
-lnVADCS4XYTjtU6pt8psSiYaIGmTStAVeqJ1qMENChW417flbJzT4EWpuaqsPMy/
-OpNvBkJSm/9CpnRcxpc7YIQhdr7EUQtOj/h+r8TNrBACdu1ipH15jps2iv3Co2K8
-4SIO89bAEsbp+yH2aaC0jE3sJdXsXKLkd8s57Dhz2jHI7DGK9hUutX2Z/UmIVw0v
-yuTVrE4peXcNoFDoBDcT+qKSjuanEF6fDIPrXuuvtUapwLzSRHRCMuj0lrtg0vTD
-Tgiic1Asw6eTM9ruKq+MHJpaD0SQYIUGWOq50bNl1bavmHDdxhEO+aMh/742STpR
-ULwnCMVgldH2dCQ08PXjzxusIOOCXX0jaDA943LvwPBcQ4xvojyx0FZ/Qe9dygCq
-Pi/blX9EbqzGJjd8rA+QymTxpmI1UmP0NiXgP/7VqLMc4DFfGkEKf28o6rgucxa4
-1Wt8uNxCrptrOYf7ywh1L/xbeDY+q0o9m0oQ1jny9UlCihLNDbS/rbkdYOplDqW5
-uWhAqucz679mcX3rCo4GB2CHoHVt0NHPAnm1Y3aIh1EUY8fiZjs=
-=mels
------END PGP SIGNATURE-----
-
---TxukmIqg3MmZ0Kmh--
