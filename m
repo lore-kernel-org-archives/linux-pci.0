@@ -2,56 +2,83 @@ Return-Path: <SRS0=+Ccl=UQ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45CB8C31E5D
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 20:10:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40449C31E5B
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 20:36:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20202208C4
-	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 20:10:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 032D220861
+	for <linux-pci@archiver.kernel.org>; Mon, 17 Jun 2019 20:36:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="iJnOfDSp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729065AbfFQUKa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 17 Jun 2019 16:10:30 -0400
-Received: from verein.lst.de ([213.95.11.211]:40726 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728932AbfFQUKa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Jun 2019 16:10:30 -0400
-Received: by newverein.lst.de (Postfix, from userid 2407)
-        id 0673468B02; Mon, 17 Jun 2019 22:09:58 +0200 (CEST)
-Date:   Mon, 17 Jun 2019 22:09:57 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Ben Skeggs <bskeggs@redhat.com>, linux-mm@kvack.org,
-        nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        linux-nvdimm@lists.01.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 08/25] memremap: move dev_pagemap callbacks into a
- separate structure
-Message-ID: <20190617200957.GA20645@lst.de>
-References: <20190617122733.22432-1-hch@lst.de> <20190617122733.22432-9-hch@lst.de> <d68c5e4c-b2de-95c3-0b75-1f2391b25a34@deltatee.com>
+        id S1728661AbfFQUg5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 17 Jun 2019 16:36:57 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:42016 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725844AbfFQUg5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jun 2019 16:36:57 -0400
+Received: by mail-oi1-f193.google.com with SMTP id s184so7711712oie.9
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jun 2019 13:36:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=WUuONrlgmwtIZdvsw0S0/4Mq9T1WyA1gy6J4VLXnacI=;
+        b=iJnOfDSpsfcRrkO7Z3UmtsU/3SdEZ7eTfjySEwglR4kCk3eP1rlaXEv8n0WSdyQhgA
+         KaWNKrnvNbK3Ivdrsdf3WrCRENxklnMUOfkYt77DH4iUmhsBJjRM+eotXHjLnTJ0fpft
+         IRATZl7xjDYDdLodZoW7pDj5e/et1XUyWXubUfGW4vRD1RKoqQhNZy2/KBjKy8cusMgh
+         2woSBHrnLGC1xQF+N5ZRLi9uSQi5GRNsM2OXCHe8Pv4k1LMuUVnyUieU8WnCi9CQp/zd
+         XBqL0kuZ9/hoegyaGxXD87pJJNEmxb5JL0BejjNLkP1oeIbdjPfVsh40yBVMT2gDQuUx
+         ng8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=WUuONrlgmwtIZdvsw0S0/4Mq9T1WyA1gy6J4VLXnacI=;
+        b=IKhN1a+s4WsiaKIP0Us1QAnsui7Vc2bb3RkSAjUIu0w4DKDvVQ+dbACv4A2FZ1QmD1
+         SxlCgGfKwRKPHu213DZgCrxH5uk1jJQgd+421YLg3tdsxgd0OkPBYt/Qx3s9gU9kju2F
+         fHOMwrGnjYpoeqG8ghyhMlOV2XoLdOMNSuuM25IzrWBAHo+6C7MGrDk1VbwD1zQv7N4R
+         JtW4RqSBi+GNDB0O8E92S5Ev2IoSktrwtbeTSycYfNhFiLoej8HmOrm5skjefyoZQMFj
+         S4GQUk8vbKDFDFN38mN4V/Q+SoEYuEIODnC7c0ndE4fkcH79vxFrh4eksETfoKB8MvYK
+         X2Cw==
+X-Gm-Message-State: APjAAAVYwqqtOoSqhAlM0qZ3+cLCGLvy6CaooOsr1o1sUWvGA3uYxWeA
+        6aZm1pDW4p1PcphrjIdwdPJyTI62q8fRDnwSOqkfug==
+X-Google-Smtp-Source: APXvYqyP6F9zlBzZPah8lr14kIAj+Xnb/4HPIraAg3Phba4tJ1HESSkAprhGKci8EGOWV3IPPT/MSOptYr7l5lvozUE=
+X-Received: by 2002:aca:3006:: with SMTP id w6mr9263oiw.5.1560803816566; Mon,
+ 17 Jun 2019 13:36:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d68c5e4c-b2de-95c3-0b75-1f2391b25a34@deltatee.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+References: <20190617122733.22432-1-hch@lst.de> <20190617122733.22432-8-hch@lst.de>
+ <CAPcyv4hbGfOawfafqQ-L1CMr6OMFGmnDtdgLTXrgQuPxYNHA2w@mail.gmail.com> <20190617195404.GA20275@lst.de>
+In-Reply-To: <20190617195404.GA20275@lst.de>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 17 Jun 2019 13:36:44 -0700
+Message-ID: <CAPcyv4jhhEbLDi82gVw7GLASEtqU=U7Ty67AGwTijmzMqw8X8Q@mail.gmail.com>
+Subject: Re: [PATCH 07/25] memremap: validate the pagemap type passed to devm_memremap_pages
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Ben Skeggs <bskeggs@redhat.com>, Linux MM <linux-mm@kvack.org>,
+        nouveau@lists.freedesktop.org,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jun 17, 2019 at 02:08:14PM -0600, Logan Gunthorpe wrote:
-> I just noticed this is missing a line to set pgmap->ops to
-> pci_p2pdma_pagemap_ops. I must have gotten confused by the other users
-> in my original review. Though I'm not sure how this compiles as the new
-> struct is static and unused. However, it is rendered moot in Patch 16
-> when this is all removed.
+On Mon, Jun 17, 2019 at 12:59 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Mon, Jun 17, 2019 at 12:02:09PM -0700, Dan Williams wrote:
+> > Need a lead in patch that introduces MEMORY_DEVICE_DEVDAX, otherwise:
+>
+> Or maybe a MEMORY_DEVICE_DEFAULT = 0 shared by fsdax and p2pdma?
 
-It probably was there in the original and got lost in the merge conflicts
-from the rebase.  I should have dropped all the reviewed-bys for patches
-with non-trivial merge resolution, sorry.
+I thought about that, but it seems is_pci_p2pdma_page() needs the
+distinction between the 2 types.
