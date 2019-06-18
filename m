@@ -2,110 +2,99 @@ Return-Path: <SRS0=bzeM=UR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21892C31E51
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 07:02:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D947C31E51
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 07:38:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0488220823
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 07:02:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02E0C2082C
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 07:38:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="OcKPYCfp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726238AbfFRHB4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Jun 2019 03:01:56 -0400
-Received: from gate.crashing.org ([63.228.1.57]:44279 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725829AbfFRHB4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jun 2019 03:01:56 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x5I5RJD1009174;
-        Tue, 18 Jun 2019 00:27:22 -0500
-Message-ID: <e406c7bc73971a3626cf587f3ee9970973b0782a.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3 2/2] PCI: Fix disabling of bridge BARs when assigning
- bus resources
-From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
-        Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Kit Chow <kchow@gigaio.com>, Yinghai Lu <yinghai@kernel.org>
-Date:   Tue, 18 Jun 2019 15:27:18 +1000
-In-Reply-To: <20190617135307.GA13533@google.com>
-References: <20190531171216.20532-1-logang@deltatee.com>
-         <20190531171216.20532-3-logang@deltatee.com>
-         <20190617135307.GA13533@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1725900AbfFRHiT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Jun 2019 03:38:19 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:9237 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725913AbfFRHiT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2019 03:38:19 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d0894ea0000>; Tue, 18 Jun 2019 00:38:18 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 18 Jun 2019 00:38:18 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 18 Jun 2019 00:38:18 -0700
+Received: from HQMAIL104.nvidia.com (172.18.146.11) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 18 Jun
+ 2019 07:38:18 +0000
+Received: from hqnvemgw01.nvidia.com (172.20.150.20) by HQMAIL104.nvidia.com
+ (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Tue, 18 Jun 2019 07:38:18 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5d0894e60008>; Tue, 18 Jun 2019 00:38:17 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+        <treding@nvidia.com>, <jonathanh@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <sagar.tv@gmail.com>
+Subject: [PATCH] PCI: tegra: Enable Relaxed Ordering only for Tegra20 & Tegra30
+Date:   Tue, 18 Jun 2019 13:08:10 +0530
+Message-ID: <20190618073810.30270-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+X-NVConfidentiality: public
+MIME-Version: 1.0
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1560843498; bh=b6l2MOnYvA7QD1RhZe0gmc+lZ9NiSwOeR+S40ZiwKI0=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=OcKPYCfp23DM0vyKm/uOs4PNd7VneVJrkeKDMB8VNupUPadM8k/Kq+lYzgQLR1bWl
+         X7MUHbI6z9eQpBQI2QMXPG/I4C1TZlcCnVaxOAsKqkGIlNhUfRJgGtEBCqsfXQb4If
+         s9GbGEuLRAq/5UsMErQ5MDM9U3AOflpf51/ktyhvIuZ+TbPeI7U6aZCGLNZ/lEQ+/j
+         5IPCIXIpGDsAU2d53RoUriJ7yQbmyjksA1LuNTKJ/ruEI5mXIPT7tKyp4tJNWxiQKL
+         zLHggdntrIPZc3yXX6wnJqKtkMl5hdHROKTTD58f/rc6dJnYhAsWUpolsmOTXzw3vr
+         IjqcAdy7JNG2g==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, 2019-06-17 at 08:53 -0500, Bjorn Helgaas wrote:
-> On Fri, May 31, 2019 at 11:12:16AM -0600, Logan Gunthorpe wrote:
-> > One odd quirk of PLX switches is that their upstream bridge port has
-> > 256K of space allocated behind its BAR0 (most other bridge
-> > implementations do not report any BAR space).
-> 
-> Somewhat unusual, but completely legal, of course.
+Currently Relaxed Ordering bit in the configuration space is enabled for
+all devices whereas it should be enabled only for root ports for Tegra20
+and Tegra30 chips to avoid deadlock in hardware.
 
-Ah yes, I've seen these. They have an MMIO path to their internal
-registers in addition to cfg. Can be annoying.
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+---
+ drivers/pci/controller/pci-tegra.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-> If a bridge has memory BARs, AFAIK it is impossible to enable a memory
-> window without also enabling the BARs, so if we want to use the bridge
-> at all, we *must* allocate space for its BARs, just like for any other
-> device.
-
-Right.
-
- .../... (agreeing violently)
-
-> In my ideal world we wouldn't zap the flags of any resource.  I think
-> we should derive the flags from the device's config space *once*
-> during enumeration and remember them for the life of the device.
-
-Amen brother. It will take a little while to get there. One thing we
-should do is have a clearer way to mark a resource that failed to
-assign/allocate (though technically parent=NULL is it really, as long
-as all archs these days claim properly, it used not to be the case).
-
-We do wipe *bridge* windows (nor BARs) all over the place, that is less
-of an issue I suppose though I would be more comfortable if we also
-wrote to the bridge to close those windows as we do so...
-
-The problem of course is how much old weird quirky will break due to
-subtle assumptions as we "fix" these things :-)
-
-> This patch preserves res->flags for bridge BARs just like for any
-> other device, so I think this is definitely a step in the right
-> direction.
-> 
-> I'm not sure the "dev->subordinate" test is really correct, though.
-
-Right, shouldn't it be pci_is_bridge() ?
-
-> I think the original intent of this code was to clear res->flags for
-> bridge windows under the assumptions that (a) we can identify bridges
-> by "dev->subordinate" being non-zero, and (b) bridges only have
-> windows and didn't have BARs.
-> 
-> This patch fixes assumption (b), but I think (a) is false, and we
-> should fix it as well.  One can imagine a bridge device without a
-> subordinate bus (maybe we ran out of bus numbers), so I don't think we
-> should test dev->subordinate.
-
-Yup.
-
-> We could test something like pci_is_bridge(), although testing for idx
-> being in the PCI_BRIDGE_RESOURCES range should be sufficient because I
-> don't think we use those resource for anything other than windows.
-
-Yeah quite possibly.
-
-Cheers,
-Ben.
-
+diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+index 464ba2538d52..bc7be369c1b3 100644
+--- a/drivers/pci/controller/pci-tegra.c
++++ b/drivers/pci/controller/pci-tegra.c
+@@ -545,12 +545,15 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_fixup_class);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_fixup_class);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_fixup_class);
+ 
+-/* Tegra PCIE requires relaxed ordering */
++/* Tegra20 and Tegra30 PCIE requires relaxed ordering */
+ static void tegra_pcie_relax_enable(struct pci_dev *dev)
+ {
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
+ }
+-DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x0bf0, tegra_pcie_relax_enable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x0bf1, tegra_pcie_relax_enable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x0e1c, tegra_pcie_relax_enable);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_NVIDIA, 0x0e1d, tegra_pcie_relax_enable);
+ 
+ static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
+ {
+-- 
+2.17.1
 
