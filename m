@@ -2,276 +2,134 @@ Return-Path: <SRS0=bzeM=UR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B47B8C31E5F
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 16:19:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4F80C31E5B
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 18:02:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97008213F2
-	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 16:19:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F129206B7
+	for <linux-pci@archiver.kernel.org>; Tue, 18 Jun 2019 18:02:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="N4tsu3GZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729877AbfFRQTF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 18 Jun 2019 12:19:05 -0400
-Received: from mga07.intel.com ([134.134.136.100]:30536 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729320AbfFRQTE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jun 2019 12:19:04 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 18 Jun 2019 09:19:02 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.63,389,1557212400"; 
-   d="scan'208";a="357908920"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga005.fm.intel.com with ESMTP; 18 Jun 2019 09:18:59 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 8A7D6179; Tue, 18 Jun 2019 19:18:58 +0300 (EEST)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v2 2/3] ACPI / PM: Introduce concept of a _PR0 dependent device
-Date:   Tue, 18 Jun 2019 19:18:57 +0300
-Message-Id: <20190618161858.77834-3-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190618161858.77834-1-mika.westerberg@linux.intel.com>
-References: <20190618161858.77834-1-mika.westerberg@linux.intel.com>
+        id S1730089AbfFRSCR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 18 Jun 2019 14:02:17 -0400
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:12465 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729337AbfFRSCQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jun 2019 14:02:16 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d0927280000>; Tue, 18 Jun 2019 11:02:16 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Tue, 18 Jun 2019 11:02:15 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Tue, 18 Jun 2019 11:02:15 -0700
+Received: from HQMAIL102.nvidia.com (172.18.146.10) by HQMAIL104.nvidia.com
+ (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 18 Jun
+ 2019 18:02:15 +0000
+Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL102.nvidia.com
+ (172.18.146.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 18 Jun
+ 2019 18:02:15 +0000
+Received: from manikanta-bm2.nvidia.com (10.124.1.5) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
+ Transport; Tue, 18 Jun 2019 18:02:12 +0000
+From:   Manikanta Maddireddy <mmaddireddy@nvidia.com>
+To:     <thierry.reding@gmail.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <jonathanh@nvidia.com>, <lorenzo.pieralisi@arm.com>,
+        <vidyas@nvidia.com>
+CC:     <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Subject: [PATCH V6 00/27] Enable Tegra PCIe root port features
+Date:   Tue, 18 Jun 2019 23:31:39 +0530
+Message-ID: <20190618180206.4908-1-mmaddireddy@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+X-NVConfidentiality: public
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1560880936; bh=BcALiKmLvUfe+LlZIDQ4JqaZ+0Ps22RbUxVRHExJOuY=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=N4tsu3GZyYs3hTHmn8m90v0CWBIpQ15zqWTW/7yRcSMbrO88xU1OciQGwC725sBUZ
+         JNfRXy5JzVdIffOA08Ef5KP6LgivVudGVDLrwvIYSIpKikqmHHE+cU01WA1MSJzsMe
+         1fkfcSUTDGvxwP53T2lPiD8/r4D43UFGhEefDBUAhOddu9TTKzF2Th5Lhu5U5LNqw9
+         N8h6b0sNiMIWZm5PrYBZBkE6ajNDpX3neCBDmEXpu2w64DgtTTUHq7ecZw5qLRrmw9
+         noB69GA4wwLMgdX7sEw2fZ3gOTveJuQBPgXTgxNDxE2spXlXNwC00KqxC5iWTNfrMQ
+         8lmGbahPRMdxA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If there are shared power resources between otherwise unrelated devices
-turning them on causes the other devices sharing them to be powered up
-as well. In case of PCI devices go into D0uninitialized state meaning
-that if they were configured to trigger wake that configuration is lost
-at this point.
+This series of patches adds,
+- Tegra root port features like Gen2, AER, etc
+- Power and perf optimizations
+- Fixes like "power up sequence", "dev_err prints", etc
 
-For this reason introduce a concept of "_PR0 dependent device" that can
-be added to any ACPI device that has power resources. The dependent
-device will be included in a list of dependent devices for all power
-resources returned by the ACPI device's _PR0 (assuming it has one).
-Whenever a power resource having dependent devices is turned physically
-on (its _ON method is called) we runtime resume all of them to allow
-their driver or in case of PCI the PCI core to re-initialize the device
-and its wake configuration.
+This series of patches are tested on Tegra186 based Jetson-TX2, Tegra210
+based Jetson-TX1, T124 based Jetson-TK1, Tegra20 and Tegra30 platforms.
 
-This adds two functions that can be used to add and remove these
-dependent devices. Note the dependent device does not necessary need
-share power resources so this functionality can be used to add "software
-dependencies" as well if needed.
+Changes from V5 to V6:
+  - Patch [V4, 20/27]: Replaced pcie_pme_disable_msi() with no_msi quirk
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/acpi/power.c    | 139 ++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_bus.h |   4 ++
- 2 files changed, 143 insertions(+)
+Changes from V4 to V5:
+ - Patch [V4, 4/28]: Added blank line before block style comment
+ - Patch [V4, 22/28]: "Access endpoint config only if PCIe link is up"
+patch is dropped
+ - Patch [V4, 27/28]:
+* Updated reset gpio toggle logic to reflect active low usage
+* Replaced kasprintf() with devm_kasprintf()
+* Updated commit message with more information.
 
-diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
-index a916417b9e70..76d298192940 100644
---- a/drivers/acpi/power.c
-+++ b/drivers/acpi/power.c
-@@ -42,6 +42,11 @@ ACPI_MODULE_NAME("power");
- #define ACPI_POWER_RESOURCE_STATE_ON	0x01
- #define ACPI_POWER_RESOURCE_STATE_UNKNOWN 0xFF
- 
-+struct acpi_power_dependent_device {
-+	struct device *dev;
-+	struct list_head node;
-+};
-+
- struct acpi_power_resource {
- 	struct acpi_device device;
- 	struct list_head list_node;
-@@ -51,6 +56,7 @@ struct acpi_power_resource {
- 	unsigned int ref_count;
- 	bool wakeup_enabled;
- 	struct mutex resource_lock;
-+	struct list_head dependents;
- };
- 
- struct acpi_power_resource_entry {
-@@ -232,8 +238,125 @@ static int acpi_power_get_list_state(struct list_head *list, int *state)
- 	return 0;
- }
- 
-+static int
-+acpi_power_resource_add_dependent(struct acpi_power_resource *resource,
-+				  struct device *dev)
-+{
-+	struct acpi_power_dependent_device *dep;
-+	int ret = 0;
-+
-+	mutex_lock(&resource->resource_lock);
-+	list_for_each_entry(dep, &resource->dependents, node) {
-+		/* Only add it once */
-+		if (dep->dev == dev)
-+			goto unlock;
-+	}
-+
-+	dep = kzalloc(sizeof(*dep), GFP_KERNEL);
-+	if (!dep) {
-+		ret = -ENOMEM;
-+		goto unlock;
-+	}
-+
-+	dep->dev = dev;
-+	list_add_tail(&dep->node, &resource->dependents);
-+	dev_dbg(dev, "added power dependency to [%s]\n", resource->name);
-+
-+unlock:
-+	mutex_unlock(&resource->resource_lock);
-+	return ret;
-+}
-+
-+static void
-+acpi_power_resource_remove_dependent(struct acpi_power_resource *resource,
-+				     struct device *dev)
-+{
-+	struct acpi_power_dependent_device *dep;
-+
-+	mutex_lock(&resource->resource_lock);
-+	list_for_each_entry(dep, &resource->dependents, node) {
-+		if (dep->dev == dev) {
-+			list_del(&dep->node);
-+			kfree(dep);
-+			dev_dbg(dev, "removed power dependency to [%s]\n",
-+				resource->name);
-+			break;
-+		}
-+	}
-+	mutex_unlock(&resource->resource_lock);
-+}
-+
-+/**
-+ * acpi_device_power_add_dependent - Add dependent device of this ACPI device
-+ * @adev: ACPI device pointer
-+ * @dev: Dependent device
-+ *
-+ * If @adev has non-empty _PR0 the @dev is added as dependent device to all
-+ * power resources returned by it. This means that whenever these power
-+ * resources are turned _ON the dependent devices get runtime resumed. This
-+ * is needed for devices such as PCI to allow its driver to re-initialize
-+ * it after it went to D0uninitialized.
-+ *
-+ * If @adev does not have _PR0 this does nothing.
-+ *
-+ * Returns %0 in case of success and negative errno otherwise.
-+ */
-+int acpi_device_power_add_dependent(struct acpi_device *adev,
-+				    struct device *dev)
-+{
-+	struct acpi_power_resource_entry *entry;
-+	struct list_head *resources;
-+	int ret;
-+
-+	if (!adev->power.flags.power_resources)
-+		return 0;
-+	if (!adev->power.states[ACPI_STATE_D0].flags.valid)
-+		return 0;
-+
-+	resources = &adev->power.states[ACPI_STATE_D0].resources;
-+	list_for_each_entry(entry, resources, node) {
-+		ret = acpi_power_resource_add_dependent(entry->resource, dev);
-+		if (ret)
-+			goto err;
-+	}
-+
-+	return 0;
-+
-+err:
-+	list_for_each_entry(entry, resources, node)
-+		acpi_power_resource_remove_dependent(entry->resource, dev);
-+
-+	return ret;
-+}
-+
-+/**
-+ * acpi_device_power_remove_dependent - Remove dependent device
-+ * @adev: ACPI device pointer
-+ * @dev: Dependent device
-+ *
-+ * Does the opposite of acpi_device_power_add_dependent() and removes the
-+ * dependent device if it is found. Can be called to @adev that does not
-+ * have _PR0 as well.
-+ */
-+void acpi_device_power_remove_dependent(struct acpi_device *adev,
-+					struct device *dev)
-+{
-+	struct acpi_power_resource_entry *entry;
-+	struct list_head *resources;
-+
-+	if (!adev->power.flags.power_resources)
-+		return;
-+	if (!adev->power.states[ACPI_STATE_D0].flags.valid)
-+		return;
-+
-+	resources = &adev->power.states[ACPI_STATE_D0].resources;
-+	list_for_each_entry_reverse(entry, resources, node)
-+		acpi_power_resource_remove_dependent(entry->resource, dev);
-+}
-+
- static int __acpi_power_on(struct acpi_power_resource *resource)
- {
-+	struct acpi_power_dependent_device *dep;
- 	acpi_status status = AE_OK;
- 
- 	status = acpi_evaluate_object(resource->device.handle, "_ON", NULL, NULL);
-@@ -243,6 +366,21 @@ static int __acpi_power_on(struct acpi_power_resource *resource)
- 	ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Power resource [%s] turned on\n",
- 			  resource->name));
- 
-+	/*
-+	 * If there are other dependents on this power resource we need to
-+	 * resume them now so that their drivers can re-initialize the
-+	 * hardware properly after it went back to D0.
-+	 */
-+	if (list_empty(&resource->dependents) ||
-+	    list_is_singular(&resource->dependents))
-+		return 0;
-+
-+	list_for_each_entry(dep, &resource->dependents, node) {
-+		dev_dbg(dep->dev, "runtime resuming because [%s] turned on\n",
-+			resource->name);
-+		pm_request_resume(dep->dev);
-+	}
-+
- 	return 0;
- }
- 
-@@ -810,6 +948,7 @@ int acpi_add_power_resource(acpi_handle handle)
- 				ACPI_STA_DEFAULT);
- 	mutex_init(&resource->resource_lock);
- 	INIT_LIST_HEAD(&resource->list_node);
-+	INIT_LIST_HEAD(&resource->dependents);
- 	resource->name = device->pnp.bus_id;
- 	strcpy(acpi_device_name(device), ACPI_POWER_DEVICE_NAME);
- 	strcpy(acpi_device_class(device), ACPI_POWER_CLASS);
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 31b6c87d6240..4752ff0a9d9b 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -513,6 +513,10 @@ int acpi_device_fix_up_power(struct acpi_device *device);
- int acpi_bus_update_power(acpi_handle handle, int *state_p);
- int acpi_device_update_power(struct acpi_device *device, int *state_p);
- bool acpi_bus_power_manageable(acpi_handle handle);
-+int acpi_device_power_add_dependent(struct acpi_device *adev,
-+				    struct device *dev);
-+void acpi_device_power_remove_dependent(struct acpi_device *adev,
-+					struct device *dev);
- 
- #ifdef CONFIG_PM
- bool acpi_bus_can_wakeup(acpi_handle handle);
+Changes from V3 to V4:
+ - Patch [V3,27/29] is dropped
+ - Patch [V3,28/29]: devm_gpiod_get_from_of_node() is directly used in
+   pci-tegra driver instead of of_get_pci* wrapper function defined in
+   Patch [V3,27/29].
+
+Manikanta Maddireddy (27):
+  soc/tegra: pmc: Export tegra_powergate_power_on()
+  PCI: tegra: Handle failure cases in tegra_pcie_power_on()
+  PCI: tegra: Rearrange Tegra PCIe driver functions
+  PCI: tegra: Mask AFI_INTR in runtime suspend
+  PCI: tegra: Fix PCIe host power up sequence
+  PCI: tegra: Add PCIe Gen2 link speed support
+  PCI: tegra: Advertise PCIe Advanced Error Reporting (AER) capability
+  PCI: tegra: Program UPHY electrical settings for Tegra210
+  PCI: tegra: Enable opportunistic UpdateFC and ACK
+  PCI: tegra: Disable AFI dynamic clock gating
+  PCI: tegra: Process pending DLL transactions before entering L1 or L2
+  PCI: tegra: Enable PCIe xclk clock clamping
+  PCI: tegra: Increase the deskew retry time
+  PCI: tegra: Add SW fixup for RAW violations
+  PCI: tegra: Update flow control timer frequency in Tegra210
+  PCI: tegra: Set target speed as Gen1 before starting LTSSM
+  PCI: tegra: Fix PLLE power down issue due to CLKREQ# signal
+  PCI: tegra: Program AFI_CACHE* registers only for Tegra20
+  PCI: tegra: Change PRSNT_SENSE IRQ log to debug
+  PCI: tegra: Disable MSI for Tegra PCIe root port
+  PCI: tegra: Add AFI_PEX2_CTRL reg offset as part of soc struct
+  dt-bindings: pci: tegra: Document PCIe DPD pinctrl optional prop
+  arm64: tegra: Add PEX DPD states as pinctrl properties
+  PCI: tegra: Put PEX CLK & BIAS pads in DPD mode
+  PCI: Add DT binding for "reset-gpios" property
+  PCI: tegra: Add support for GPIO based PERST#
+  PCI: tegra: Change link retry log level to debug
+
+ .../bindings/pci/nvidia,tegra20-pcie.txt      |   8 +
+ Documentation/devicetree/bindings/pci/pci.txt |   3 +
+ arch/arm64/boot/dts/nvidia/tegra210.dtsi      |  19 +
+ drivers/pci/controller/pci-tegra.c            | 578 +++++++++++++++---
+ drivers/pci/quirks.c                          |  39 ++
+ drivers/soc/tegra/pmc.c                       |   1 +
+ 6 files changed, 568 insertions(+), 80 deletions(-)
+
 -- 
-2.20.1
+2.17.1
 
