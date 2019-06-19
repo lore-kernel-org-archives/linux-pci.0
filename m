@@ -2,140 +2,115 @@ Return-Path: <SRS0=+EjW=US=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB6D1C31E5B
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 16:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB341C31E5B
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 16:37:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9684217D7
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 16:21:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C47742173E
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 16:37:01 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="EDamHHKF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727244AbfFSQV0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Jun 2019 12:21:26 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:60540 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726091AbfFSQV0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Jun 2019 12:21:26 -0400
-Received: from s01061831bf6ec98c.cg.shawcable.net ([68.147.80.180] helo=[192.168.6.132])
-        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1hddKu-0000b5-DA; Wed, 19 Jun 2019 10:21:25 -0600
-To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-References: <SL2P216MB01874DFDDBDE49B935A9B1B380E50@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Cc:     "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Message-ID: <e768271e-9455-2a3d-ad76-4a6d9c71d669@deltatee.com>
-Date:   Wed, 19 Jun 2019 10:21:21 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+        id S1726518AbfFSQg6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Jun 2019 12:36:58 -0400
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:42722 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726246AbfFSQg5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jun 2019 12:36:57 -0400
+Received: by mail-qt1-f195.google.com with SMTP id s15so20645235qtk.9
+        for <linux-pci@vger.kernel.org>; Wed, 19 Jun 2019 09:36:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=DzpNw7iMfHgKemdLUrfJxvdy9KGKJSIkCkr6aus8rCA=;
+        b=EDamHHKFiI7TTHkw3d71MrV0NdBwB6F1R0bV3XkjGbuH5mQMYmiVlZa63N43certmw
+         GaIE2u+163Cb4BhvTpbwTBxOWcLAcGEeI/3LO9nZ2D3hphDdktczve9XtPtWbb/zjdgx
+         QuoJYZuWKxQ1Q1HWKQMOXlDG8688RHVxOe9ZrXX0wEZogGnlfFfLqDn8V5Dbs8IQvczi
+         yQX28xdFN722tg0xFkBas291DRO6iaiEm0BDaeD7B2Eul7XBDtVnG/ZeKQsPeS/6vBSl
+         FO7l2jZl3LYlQIBoVhkk/uCuTaMtyaMfsLTID0dqUBuf/FNrb2Plto9Q3eXvKdPYCYXn
+         mxug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=DzpNw7iMfHgKemdLUrfJxvdy9KGKJSIkCkr6aus8rCA=;
+        b=SeICj2Lx3Dh6Pno/ymFHAN/xAW+t29AUNrhyFG4PzucWcVjuIVR1V3tBV/kkHgTBxt
+         SMESWhNMPTNp60CdGbuCf6zzJ/oreOsj649PnXVpxKlr5YN64KwG5qUMklsCqZzf5iPG
+         ZdP2diy6xTZaW5Km4rpPVvrR91y/AV3HBLkfMSkTSgRl2ieHZSfGWPbAgjP91zPmlgiG
+         GabcbhzxWUmNHGfZidzmd+3+m+2EoWpFCGEsiT0I5WfjoiEaQdsV0YVPPU2urY6RXzwe
+         easDcabRg8a1LbkOeKC6Uow97Bnn/1LpC5CUdF8/P61BlaZZyOcqp++H6n/AkUE2fe6w
+         jvVA==
+X-Gm-Message-State: APjAAAWsxAuYVPeA2GUgLWNzCwNJzLwUFC5z7aOApZ3rVtkeCbX8Iwpy
+        6boHEqZCgYiAiowi6lNPO12k6A==
+X-Google-Smtp-Source: APXvYqzqHRHHrr8SACyRyLxcASgrxSvjDf6v3XwfN8DQX4ZVR7KLVzKliqO65H7tJkj2zv0u+29foQ==
+X-Received: by 2002:a0c:d24d:: with SMTP id o13mr34947576qvh.86.1560962216870;
+        Wed, 19 Jun 2019 09:36:56 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-156-34-55-100.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.55.100])
+        by smtp.gmail.com with ESMTPSA id r36sm11720396qte.71.2019.06.19.09.36.56
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 19 Jun 2019 09:36:56 -0700 (PDT)
+Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1hddZv-0001vf-QN; Wed, 19 Jun 2019 13:36:55 -0300
+Date:   Wed, 19 Jun 2019 13:36:55 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+        Ben Skeggs <bskeggs@redhat.com>, Linux MM <linux-mm@kvack.org>,
+        nouveau@lists.freedesktop.org,
+        Maling list - DRI developers 
+        <dri-devel@lists.freedesktop.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        linux-pci@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: dev_pagemap related cleanups v2
+Message-ID: <20190619163655.GG9360@ziepe.ca>
+References: <20190617122733.22432-1-hch@lst.de>
+ <CAPcyv4hBUJB2RxkDqHkfEGCupDdXfQSrEJmAdhLFwnDOwt8Lig@mail.gmail.com>
+ <20190619094032.GA8928@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <SL2P216MB01874DFDDBDE49B935A9B1B380E50@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 68.147.80.180
-X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, bhelgaas@google.com, benh@kernel.crashing.org, nicholas.johnson-opensource@outlook.com.au
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [nicholas.johnson-opensource@outlook.com.au: [PATCH v6 3/4] PCI:
- Fix bug resulting in double hpmemsize being assigned to MMIO window]
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190619094032.GA8928@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-*(cc'd back Bjorn and the list)
+On Wed, Jun 19, 2019 at 11:40:32AM +0200, Christoph Hellwig wrote:
+> On Tue, Jun 18, 2019 at 12:47:10PM -0700, Dan Williams wrote:
+> > > Git tree:
+> > >
+> > >     git://git.infradead.org/users/hch/misc.git hmm-devmem-cleanup.2
+> > >
+> > > Gitweb:
+> > >
+> > >     http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/hmm-devmem-cleanup.2
+> 
+> > 
+> > Attached is my incremental fixups on top of this series, with those
+> > integrated you can add:
+> 
+> I've folded your incremental bits in and pushed out a new
+> hmm-devmem-cleanup.3 to the repo above.  Let me know if I didn't mess
+> up anything else.  I'll wait for a few more comments and Jason's
+> planned rebase of the hmm branch before reposting.
 
-On 2019-06-19 8:00 a.m., Nicholas Johnson wrote:
-> Hi Ben and Logan,
-> 
-> It looks like my git send-email has been not working correctly since I
-> started trying to get these patches accepted. I may have remedied this
-> now, but I have seen that Logan tried to find these patches and failed.
-> So as a courtesy until I post PATCH v7 (hopefully correctly, this time),
-> I am forwarding you the patches. I hope you like them. I would love to 
-> know of any concerns or questions you may have, and / or what happens if 
-> you test them. Thanks and all the best!
-> 
-> ----- Forwarded message from Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au> -----
-> 
-> Date: Thu, 23 May 2019 06:29:27 +0800
-> From: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-> To: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mika.westerberg@linux.intel.com, corbet@lwn.net, Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-> Subject: [PATCH v6 3/4] PCI: Fix bug resulting in double hpmemsize being assigned to MMIO window
-> X-Mailer: git-send-email 2.19.1
-> 
-> Background
-> ==========================================================================
-> 
-> Solve bug report:
-> https://bugzilla.kernel.org/show_bug.cgi?id=203243
+I said I wouldn't rebase the hmm.git (as it needs to go to DRM, AMD
+and RDMA git trees)..
 
-This is all kinds of confusing... the bug report just seems to be a copy
-of the patch set. The description of the actual symptoms of the problem
-appears to be missing from all of it.
+Instead I will merge v5.2-rc5 to the tree before applying this series.
 
-> Currently, the kernel can sometimes assign the MMIO_PREF window
-> additional size into the MMIO window, resulting in double the MMIO
-> additional size, even if the MMIO_PREF window was successful.
-> 
-> This happens if in the first pass, the MMIO_PREF succeeds but the MMIO
-> fails. In the next pass, because MMIO_PREF is already assigned, the
-> attempt to assign MMIO_PREF returns an error code instead of success
-> (nothing more to do, already allocated).
-> 
-> Example of problem (more context can be found in the bug report URL):
-> 
-> Mainline kernel:
-> pci 0000:06:01.0: BAR 14: assigned [mem 0x90100000-0xa00fffff] = 256M
-> pci 0000:06:04.0: BAR 14: assigned [mem 0xa0200000-0xb01fffff] = 256M
-> 
-> Patched kernel:
-> pci 0000:06:01.0: BAR 14: assigned [mem 0x90100000-0x980fffff] = 128M
-> pci 0000:06:04.0: BAR 14: assigned [mem 0x98200000-0xa01fffff] = 128M
-> 
-> This was using pci=realloc,hpmemsize=128M,nocrs - on the same machine
-> with the same configuration, with a Ubuntu mainline kernel and a kernel
-> patched with this patch series.
-> 
-> This patch is vital for the next patch in the series. The next patch
-> allows the user to specify MMIO and MMIO_PREF independently. If the
-> MMIO_PREF is set to be very large, this bug will end up more than
-> doubling the MMIO size. The bug results in the MMIO_PREF being added to
-> the MMIO window, which means doubling if MMIO_PREF size == MMIO size.
-> With a large MMIO_PREF, without this patch, the MMIO window will likely
-> fail to be assigned altogether due to lack of 32-bit address space.
-> 
-> Patch notes
-> ==========================================================================
-> 
-> Change find_free_bus_resource() to not skip assigned resources with
-> non-null parent.
-> 
-> Add checks in pbus_size_io() and pbus_size_mem() to return success if
-> resource returned from find_free_bus_resource() is already allocated.
-> 
-> This avoids pbus_size_io() and pbus_size_mem() returning error code to
-> __pci_bus_size_bridges() when a resource has been successfully assigned
-> in a previous pass. This fixes the existing behaviour where space for a
-> resource could be reserved multiple times in different parent bridge
-> windows. This also greatly reduces the number of failed BAR messages in
-> dmesg when Linux assigns resources.
+I've understood this to be Linus's prefered workflow.
 
-This patch looks like the same bug that I tracked down earlier but I
-solved in a slightly different way. See this patch[1] which is still
-under review. Can you maybe test it and see if it solves the same problem?
+So, please send the next iteration of this against either
+plainv5.2-rc5 or v5.2-rc5 merged with hmm.git and I'll sort it out.
 
-Thanks,
-
-Logan
-
-[1]
-https://lore.kernel.org/lkml/20190531171216.20532-2-logang@deltatee.com/T/#u
+Jason
