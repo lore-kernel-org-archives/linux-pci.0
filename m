@@ -2,139 +2,109 @@ Return-Path: <SRS0=+EjW=US=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F3D5C4646C
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:41:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC8CC43613
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:45:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 214EA20861
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:41:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 556AD2166E
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:45:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1560980705;
+	bh=xq3nh0b03CKV7/ml8UOF1l5b9iR5UaRfb5yS2tTRobE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=i6Hts+PR9C7idPwRr87BGt15qhEgYF8l+JE5zMa/Ma2mVrbMxdpJwFrxruOJB2mT9
+	 PdNs3YO9ayKASCkaAbTmoSVwP9/1+DGsl0QGW45DlXQIYVbowpNINZ+3UgLuOaAx/H
+	 t85whQMV8keW4v7kK8hMOFMzmGXF5yspcbtdR1fw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730578AbfFSVlq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Jun 2019 17:41:46 -0400
-Received: from mga11.intel.com ([192.55.52.93]:10387 "EHLO mga11.intel.com"
+        id S1730578AbfFSVpE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Jun 2019 17:45:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56864 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730596AbfFSVlq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Jun 2019 17:41:46 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Jun 2019 14:41:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.63,394,1557212400"; 
-   d="scan'208";a="170683464"
-Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.162])
-  by orsmga002.jf.intel.com with ESMTP; 19 Jun 2019 14:41:44 -0700
-From:   Megha Dey <megha.dey@linux.intel.com>
-To:     bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc:     ashok.raj@intel.com, jacob.jun.pan@linux.intel.com,
-        megha.dey@intel.com, Megha Dey <megha.dey@linux.intel.com>
-Subject: [RFC V1 4/6] PCI/MSI: Introduce new structure to manage MSI-x entries
-Date:   Wed, 19 Jun 2019 15:03:42 -0700
-Message-Id: <1560981824-3966-5-git-send-email-megha.dey@linux.intel.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1560981824-3966-1-git-send-email-megha.dey@linux.intel.com>
-References: <1560981824-3966-1-git-send-email-megha.dey@linux.intel.com>
+        id S1730574AbfFSVpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Jun 2019 17:45:04 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8E1D4208CA;
+        Wed, 19 Jun 2019 21:45:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1560980703;
+        bh=xq3nh0b03CKV7/ml8UOF1l5b9iR5UaRfb5yS2tTRobE=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=s68rn5cWw2JOtOq9KGBN4KE3onSVG07yaJh4C0Gbk5tMytYF4TcV+5Y4/1QRVWiAD
+         AyKU8mo5SwKIRGA+be5GMlmZi5DLDFKnrrbzYHXh2PTHfAYWr6mGxJUGH3fTID8PMP
+         fj62g/96hZadZbVVuDhk1LacvotRxOEs0q06soXo=
+Date:   Wed, 19 Jun 2019 16:45:02 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     "linux-pci @ vger . kernel . org" <linux-pci@vger.kernel.org>,
+        linux-kernel@vger.kernel.org,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v2] PCI/P2PDMA: Root complex whitelist should not apply
+ when an IOMMU is present
+Message-ID: <20190619214502.GE143205@google.com>
+References: <20190619185626.15806-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190619185626.15806-1-logang@deltatee.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This is a preparatory patch to introduce disabling of MSI-X vectors
-belonging to a particular group. In this patch, we introduce a new
-structure msix_sysfs, which manages sysfs entries for dynamically
-allocated MSI-X vectors belonging to a particular group.
+On Wed, Jun 19, 2019 at 12:56:26PM -0600, Logan Gunthorpe wrote:
+> Presently, there is no path to DMA map P2PDMA memory, so if a TLP
+> targeting this memory hits the root complex and an IOMMU is present,
+> the IOMMU will reject the transaction, even if the RC would support
+> P2PDMA.
+> 
+> So until the kernel knows to map these DMA addresses in the IOMMU,
+> we should not enable the whitelist when an IOMMU is present.
+> 
+> Link: https://lore.kernel.org/linux-pci/20190522201252.2997-1-logang@deltatee.com/
+> Fixes: 0f97da831026 ("PCI/P2PDMA: Allow P2P DMA between any devices under AMD ZEN Root Complex")
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Christian König <christian.koenig@amd.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Christoph Hellwig <hch@lst.de>
 
-Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>
-Cc: Ashok Raj <ashok.raj@intel.com>
-Signed-off-by: Megha Dey <megha.dey@linux.intel.com>
----
- drivers/pci/msi.c   | 12 +++++++++++-
- drivers/pci/probe.c |  1 +
- include/linux/pci.h |  9 +++++++++
- 3 files changed, 21 insertions(+), 1 deletion(-)
+Applied to for-linus for v5.2, since we merged 0f97da831026 during the v5.2
+merge window, thanks!
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index fd7fa6e..e947243 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -479,10 +479,11 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 	struct device_attribute *msi_dev_attr;
- 	struct attribute_group *msi_irq_group;
- 	const struct attribute_group **msi_irq_groups;
-+	struct msix_sysfs *msix_sysfs_entry;
- 	struct msi_desc *entry;
- 	int ret = -ENOMEM;
- 	int num_msi = 0;
--	int count = 0;
-+	int count = 0, group = -1;
- 	int i;
- 
- 	/* Determine how many msi entries we have */
-@@ -509,6 +510,8 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 				goto error_attrs;
- 			msi_dev_attr->attr.mode = S_IRUGO;
- 			msi_dev_attr->show = msi_mode_show;
-+			if (!i)
-+				group = entry->group_id;
- 			++count;
- 		}
- 	}
-@@ -524,6 +527,13 @@ static int populate_msi_sysfs(struct pci_dev *pdev)
- 		goto error_irq_group;
- 	msi_irq_groups[0] = msi_irq_group;
- 
-+	msix_sysfs_entry = kzalloc(sizeof(*msix_sysfs_entry) * 2, GFP_KERNEL);
-+	msix_sysfs_entry->msi_irq_group = msi_irq_group;
-+	msix_sysfs_entry->group_id = group;
-+	msix_sysfs_entry->vecs_in_grp = count;
-+	INIT_LIST_HEAD(&msix_sysfs_entry->list);
-+	list_add_tail(&msix_sysfs_entry->list, &pdev->msix_sysfs);
-+
- 	if (!pdev->msix_enabled)
- 		ret = sysfs_create_group(&pdev->dev.kobj, msi_irq_group);
- 	else
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 491c1cf..bb20ef6 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2435,6 +2435,7 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- 	idr_init(dev->grp_idr);
- 
- 	INIT_LIST_HEAD(&dev->bus_list);
-+	INIT_LIST_HEAD(&dev->msix_sysfs);
- 	dev->dev.type = &pci_dev_type;
- 	dev->bus = pci_bus_get(bus);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c56462c..73385c0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -471,6 +471,7 @@ struct pci_dev {
- 	struct idr	*grp_idr;       /* IDR to assign group to MSI-X vecs */
- 	unsigned long	*entry;         /* Bitmap to represent MSI-X entries */
- 	bool		one_shot;	/* If true, oneshot MSI-X allocation */
-+	struct list_head	msix_sysfs; /* sysfs entries for MSI-X group */
- };
- 
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
-@@ -1390,6 +1391,14 @@ struct msix_entry {
- 	u16	entry;	/* Driver uses to specify entry, OS writes */
- };
- 
-+/* Manage sysfs entries for dynamically allocated MSI-X vectors */
-+struct msix_sysfs {
-+	struct	attribute_group *msi_irq_group;
-+	struct	list_head list;
-+	int	group_id;
-+	int	vecs_in_grp;
-+};
-+
- #ifdef CONFIG_PCI_MSI
- int pci_msi_vec_count(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
--- 
-2.7.4
-
+> ---
+>  drivers/pci/p2pdma.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index a98126ad9c3a..a4994aa3acc0 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -18,6 +18,7 @@
+>  #include <linux/percpu-refcount.h>
+>  #include <linux/random.h>
+>  #include <linux/seq_buf.h>
+> +#include <linux/iommu.h>
+>  
+>  struct pci_p2pdma {
+>  	struct gen_pool *pool;
+> @@ -299,6 +300,9 @@ static bool root_complex_whitelist(struct pci_dev *dev)
+>  	struct pci_dev *root = pci_get_slot(host->bus, PCI_DEVFN(0, 0));
+>  	unsigned short vendor, device;
+>  
+> +	if (iommu_present(dev->dev.bus))
+> +		return false;
+> +
+>  	if (!root)
+>  		return false;
+>  
+> -- 
+> 2.20.1
+> 
