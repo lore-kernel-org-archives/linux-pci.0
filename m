@@ -2,173 +2,93 @@ Return-Path: <SRS0=+EjW=US=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C3DC43613
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:32:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96CB3C43613
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:41:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E49552166E
-	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:32:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1560979963;
-	bh=CDPA4HtuI28sp/o5jhSfPYklJ8LJ3Tdxzzv6K+fuFJQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=fw7Fev34r/FT0RbPNZ2sPrIM7e4A6WUOvUd5bDVzigHnSzXs9GcBC1nT/YP52+a0g
-	 kd9MU5BkGhBdCS88rEeoPp3r2nHR7M7cNJyxh5GFL+Ks6PsDwHNdeUMQwuGHvxXWGY
-	 Sby6J+7JF1ZUNvpUaOttNL4T7j3hEiTdqgSPHAJw=
+	by mail.kernel.org (Postfix) with ESMTP id 67EF720861
+	for <linux-pci@archiver.kernel.org>; Wed, 19 Jun 2019 21:41:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726246AbfFSVcm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 19 Jun 2019 17:32:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51744 "EHLO mail.kernel.org"
+        id S1726251AbfFSVlg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 19 Jun 2019 17:41:36 -0400
+Received: from mga09.intel.com ([134.134.136.24]:28113 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726230AbfFSVcm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Jun 2019 17:32:42 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AF30F208CB;
-        Wed, 19 Jun 2019 21:32:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560979961;
-        bh=CDPA4HtuI28sp/o5jhSfPYklJ8LJ3Tdxzzv6K+fuFJQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=w9n5drERN5CmY9LmSEE4xtZ+wc2vv/xUBUixBx/eJq5MfwudUWR8RjTeHD1ql9Kkh
-         FR6ejrN47TjQfMC3szeb+mdZJ+6+e96gmgAHMbfhwBEZU/pt+ItXKaTDftz2sni849
-         hjTODNvj1Bn6YYr4U7tHFpC5WavZeePVlBbZdovc=
-Date:   Wed, 19 Jun 2019 16:32:39 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     Realtek linux nic maintainers <nic_swsd@realtek.com>,
-        David Miller <davem@davemloft.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH net-next 1/2] PCI: let pci_disable_link_state propagate
- errors
-Message-ID: <20190619213238.GD143205@google.com>
-References: <5ea56278-05e2-794f-5f66-23343e72164c@gmail.com>
- <604f2954-c60c-d2aa-3849-9a2f8872001c@gmail.com>
+        id S1725908AbfFSVlg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Jun 2019 17:41:36 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Jun 2019 14:41:35 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.63,394,1557212400"; 
+   d="scan'208";a="170683440"
+Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.162])
+  by orsmga002.jf.intel.com with ESMTP; 19 Jun 2019 14:41:35 -0700
+From:   Megha Dey <megha.dey@linux.intel.com>
+To:     bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc:     ashok.raj@intel.com, jacob.jun.pan@linux.intel.com,
+        megha.dey@intel.com, Megha Dey <megha.dey@linux.intel.com>
+Subject: [RFC V1 0/6] Introduce dynamic allocation/freeing of MSI-X vectors
+Date:   Wed, 19 Jun 2019 15:03:38 -0700
+Message-Id: <1560981824-3966-1-git-send-email-megha.dey@linux.intel.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <604f2954-c60c-d2aa-3849-9a2f8872001c@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 18, 2019 at 11:13:48PM +0200, Heiner Kallweit wrote:
-> Drivers may rely on pci_disable_link_state() having disabled certain
-> ASPM link states. If OS can't control ASPM then pci_disable_link_state()
-> turns into a no-op w/o informing the caller. The driver therefore may
-> falsely assume the respective ASPM link states are disabled.
-> Let pci_disable_link_state() propagate errors to the caller, enabling
-> the caller to react accordingly.
-> 
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Currently, MSI-X vector enabling and allocation for a PCIe device is
+static i.e. a device driver gets only one chance to enable a specific
+number of MSI-X vectors, usually during device probe. Also, in many
+cases, drivers usually reserve more than required number of vectors
+anticipating their use, which unnecessarily blocks resources that
+could have been made available to other devices. Lastly, there is no
+way for drivers to reserve more vectors, if the MSI-x has already been
+enabled for that device.
+ 
+Hence, a dynamic MSI-X kernel infrastructure can benefit drivers by
+deferring MSI-X allocation to post probe phase, where actual demand
+information is available.
+ 
+This patchset enables the dynamic allocation/de-allocation of MSI-X
+vectors by introducing 2 new APIs:
+pci_alloc_irq_vectors_dyn() and pci_free_irq_vectors_grp():
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+We have had requests from some of the NIC/RDMA users who have lots of
+interrupt resources and would like to allocate them on demand,
+instead of using an all or none approach.
 
-Thanks, I think this makes good sense.
+The APIs are fairly well tested (multiple allocations/deallocations),
+but we have no early adopters yet. Hence, sending this series as an
+RFC for review and comments.
 
-> ---
->  drivers/pci/pcie/aspm.c  | 20 +++++++++++---------
->  include/linux/pci-aspm.h |  7 ++++---
->  2 files changed, 15 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index fd4cb7508..e44af7f4d 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1062,18 +1062,18 @@ void pcie_aspm_powersave_config_link(struct pci_dev *pdev)
->  	up_read(&pci_bus_sem);
->  }
->  
-> -static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
-> +static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
->  {
->  	struct pci_dev *parent = pdev->bus->self;
->  	struct pcie_link_state *link;
->  
->  	if (!pci_is_pcie(pdev))
-> -		return;
-> +		return 0;
->  
->  	if (pdev->has_secondary_link)
->  		parent = pdev;
->  	if (!parent || !parent->link_state)
-> -		return;
-> +		return -EINVAL;
->  
->  	/*
->  	 * A driver requested that ASPM be disabled on this device, but
-> @@ -1085,7 +1085,7 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
->  	 */
->  	if (aspm_disabled) {
->  		pci_warn(pdev, "can't disable ASPM; OS doesn't have ASPM control\n");
-> -		return;
-> +		return -EPERM;
->  	}
->  
->  	if (sem)
-> @@ -1105,11 +1105,13 @@ static void __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
->  	mutex_unlock(&aspm_lock);
->  	if (sem)
->  		up_read(&pci_bus_sem);
-> +
-> +	return 0;
->  }
->  
-> -void pci_disable_link_state_locked(struct pci_dev *pdev, int state)
-> +int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
->  {
-> -	__pci_disable_link_state(pdev, state, false);
-> +	return __pci_disable_link_state(pdev, state, false);
->  }
->  EXPORT_SYMBOL(pci_disable_link_state_locked);
->  
-> @@ -1117,14 +1119,14 @@ EXPORT_SYMBOL(pci_disable_link_state_locked);
->   * pci_disable_link_state - Disable device's link state, so the link will
->   * never enter specific states.  Note that if the BIOS didn't grant ASPM
->   * control to the OS, this does nothing because we can't touch the LNKCTL
-> - * register.
-> + * register. Returns 0 or a negative errno.
->   *
->   * @pdev: PCI device
->   * @state: ASPM link state to disable
->   */
-> -void pci_disable_link_state(struct pci_dev *pdev, int state)
-> +int pci_disable_link_state(struct pci_dev *pdev, int state)
->  {
-> -	__pci_disable_link_state(pdev, state, true);
-> +	return __pci_disable_link_state(pdev, state, true);
->  }
->  EXPORT_SYMBOL(pci_disable_link_state);
->  
-> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
-> index df28af5ce..67064145d 100644
-> --- a/include/linux/pci-aspm.h
-> +++ b/include/linux/pci-aspm.h
-> @@ -24,11 +24,12 @@
->  #define PCIE_LINK_STATE_CLKPM	4
->  
->  #ifdef CONFIG_PCIEASPM
-> -void pci_disable_link_state(struct pci_dev *pdev, int state);
-> -void pci_disable_link_state_locked(struct pci_dev *pdev, int state);
-> +int pci_disable_link_state(struct pci_dev *pdev, int state);
-> +int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
->  void pcie_no_aspm(void);
->  #else
-> -static inline void pci_disable_link_state(struct pci_dev *pdev, int state) { }
-> +static inline int pci_disable_link_state(struct pci_dev *pdev, int state)
-> +{ return 0; }
->  static inline void pcie_no_aspm(void) { }
->  #endif
->  
-> -- 
-> 2.22.0
-> 
-> 
+The patches are based out of Linux 5.2-rc5.
+
+Megha Dey (6):
+  PCI/MSI: New structures/macros for dynamic MSI-X allocation
+  PCI/MSI: Dynamic allocation of MSI-X vectors by group
+  x86: Introduce the dynamic teardown function
+  PCI/MSI: Introduce new structure to manage MSI-x entries
+  PCI/MSI: Free MSI-X resources by group
+  Documentation: PCI/MSI: Document dynamic MSI-X infrastructure
+
+ Documentation/PCI/MSI-HOWTO.txt |  38 +++++
+ arch/x86/include/asm/x86_init.h |   1 +
+ arch/x86/kernel/x86_init.c      |   6 +
+ drivers/pci/msi.c               | 363 +++++++++++++++++++++++++++++++++++++---
+ drivers/pci/probe.c             |   9 +
+ include/linux/device.h          |   3 +
+ include/linux/msi.h             |  13 ++
+ include/linux/pci.h             |  61 +++++++
+ kernel/irq/msi.c                |  34 +++-
+ 9 files changed, 497 insertions(+), 31 deletions(-)
+
+-- 
+2.7.4
+
