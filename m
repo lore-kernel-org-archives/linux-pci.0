@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6E7EC43613
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 745BFC48BE3
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6F8F2070B
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57E3D2070B
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732247AbfFTQOk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Jun 2019 12:14:40 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:59438 "EHLO ale.deltatee.com"
+        id S1732122AbfFTQOs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Jun 2019 12:14:48 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:59414 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732122AbfFTQM4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jun 2019 12:12:56 -0400
+        id S1732077AbfFTQMy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jun 2019 12:12:54 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hdzg6-00046U-6A; Thu, 20 Jun 2019 10:12:53 -0600
+        id 1hdzg6-00046Y-69; Thu, 20 Jun 2019 10:12:53 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hdzg5-0005wW-1p; Thu, 20 Jun 2019 10:12:45 -0600
+        id 1hdzg5-0005wi-EH; Thu, 20 Jun 2019 10:12:45 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -39,8 +39,8 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Jason Gunthorpe <jgg@ziepe.ca>,
         Stephen Bates <sbates@raithlin.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 20 Jun 2019 10:12:25 -0600
-Message-Id: <20190620161240.22738-14-logang@deltatee.com>
+Date:   Thu, 20 Jun 2019 10:12:29 -0600
+Message-Id: <20190620161240.22738-18-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190620161240.22738-1-logang@deltatee.com>
 References: <20190620161240.22738-1-logang@deltatee.com>
@@ -49,7 +49,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, axboe@kernel.dk, hch@lst.de, bhelgaas@google.com, dan.j.williams@intel.com, sagi@grimberg.me, kbusch@kernel.org, jgg@ziepe.ca, sbates@raithlin.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [RFC PATCH 13/28] block: Generalize bvec_should_split()
+Subject: [RFC PATCH 17/28] block: Introduce queue flag to indicate support for dma-direct bios
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -57,92 +57,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-bvec_should_split() will need to also operate on dma_vecs so
-generalize it to take an offset and length instead of a bio_vec.
+Queues will need to advertise support to accept dma-direct requests.
+
+The existing PCI P2P support which will be replaced by this and thus
+the P2P flag will be dropped in a subsequent patch.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- block/blk-merge.c | 31 +++++++++++++++++--------------
- 1 file changed, 17 insertions(+), 14 deletions(-)
+ include/linux/blkdev.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index d9e89c0ad40d..32653fca53ce 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -206,23 +206,25 @@ struct blk_segment_split_ctx {
- 	unsigned sectors;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ce70d5dded5f..a5b856324276 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -616,6 +616,7 @@ struct request_queue {
+ #define QUEUE_FLAG_SCSI_PASSTHROUGH 23	/* queue supports SCSI commands */
+ #define QUEUE_FLAG_QUIESCED	24	/* queue has been quiesced */
+ #define QUEUE_FLAG_PCI_P2PDMA	25	/* device supports PCI p2p requests */
++#define QUEUE_FLAG_DMA_DIRECT	26	/* device supports dma-addr requests */
  
- 	bool prv_valid;
--	struct bio_vec bvprv;
-+	unsigned prv_offset;
-+	unsigned prv_len;
+ #define QUEUE_FLAG_MQ_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_SAME_COMP))
+@@ -642,6 +643,8 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
+ 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
+ #define blk_queue_pci_p2pdma(q)	\
+ 	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
++#define blk_queue_dma_direct(q)	\
++	test_bit(QUEUE_FLAG_DMA_DIRECT, &(q)->queue_flags)
  
- 	const unsigned max_sectors;
- 	const unsigned max_segs;
- };
- 
--static bool bvec_should_split(struct request_queue *q, struct bio_vec *bv,
--			      struct blk_segment_split_ctx *ctx)
-+static bool vec_should_split(struct request_queue *q, unsigned offset,
-+			     unsigned len, struct blk_segment_split_ctx *ctx)
- {
- 	/*
- 	 * If the queue doesn't support SG gaps and adding this
- 	 * offset would create a gap, disallow it.
- 	 */
--	if (ctx->prv_valid && bvec_gap_to_prev(q, &ctx->bvprv, bv->bv_offset))
-+	if (ctx->prv_valid &&
-+	    vec_gap_to_prev(q, ctx->prv_offset, ctx->prv_len, offset))
- 		return true;
- 
--	if (ctx->sectors + (bv->bv_len >> 9) > ctx->max_sectors) {
-+	if (ctx->sectors + (len >> 9) > ctx->max_sectors) {
- 		/*
- 		 * Consider this a new segment if we're splitting in
- 		 * the middle of this vector.
-@@ -230,9 +232,9 @@ static bool bvec_should_split(struct request_queue *q, struct bio_vec *bv,
- 		if (ctx->nsegs < ctx->max_segs &&
- 		    ctx->sectors < ctx->max_sectors) {
- 			/* split in the middle of bvec */
--			bv->bv_len = (ctx->max_sectors - ctx->sectors) << 9;
--			bvec_split_segs(q, bv, &ctx->nsegs,
--					&ctx->sectors, ctx->max_segs);
-+			len = (ctx->max_sectors - ctx->sectors) << 9;
-+			vec_split_segs(q, offset, len, &ctx->nsegs,
-+				       &ctx->sectors, ctx->max_segs);
- 		}
- 		return true;
- 	}
-@@ -240,14 +242,15 @@ static bool bvec_should_split(struct request_queue *q, struct bio_vec *bv,
- 	if (ctx->nsegs == ctx->max_segs)
- 		return true;
- 
--	ctx->bvprv = *bv;
-+	ctx->prv_offset = offset;
-+	ctx->prv_len = len;
- 	ctx->prv_valid = true;
- 
--	if (bv->bv_offset + bv->bv_len <= PAGE_SIZE) {
-+	if (offset + len <= PAGE_SIZE) {
- 		ctx->nsegs++;
--		ctx->sectors += bv->bv_len >> 9;
--	} else if (bvec_split_segs(q, bv, &ctx->nsegs, &ctx->sectors,
--				   ctx->max_segs)) {
-+		ctx->sectors += len >> 9;
-+	} else if (vec_split_segs(q, offset, len, &ctx->nsegs, &ctx->sectors,
-+				  ctx->max_segs)) {
- 		return true;
- 	}
- 
-@@ -270,7 +273,7 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
- 	};
- 
- 	bio_for_each_bvec(bv, bio, iter) {
--		do_split = bvec_should_split(q, &bv, &ctx);
-+		do_split = vec_should_split(q, bv.bv_offset, bv.bv_len, &ctx);
- 		if (do_split)
- 			break;
- 	}
+ #define blk_noretry_request(rq) \
+ 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
 -- 
 2.20.1
 
