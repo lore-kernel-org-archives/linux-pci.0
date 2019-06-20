@@ -2,150 +2,138 @@ Return-Path: <SRS0=HNSb=UT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B9AC43613
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:34:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55185C43613
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:53:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBE50206E0
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:34:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 323AE2082C
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:53:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726915AbfFTKdf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Jun 2019 06:33:35 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:18648 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726345AbfFTKdf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jun 2019 06:33:35 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id EC3BFE25D40905185C3B;
-        Thu, 20 Jun 2019 18:33:32 +0800 (CST)
-Received: from localhost.localdomain (10.67.212.75) by
- DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
- 14.3.439.0; Thu, 20 Jun 2019 18:33:25 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <xuwei5@huawei.com>
-CC:     <bhelgaas@google.com>, <linuxarm@huawei.com>, <arm@kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <joe@perches.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH 1/5] lib: logic_pio: Fix RCU usage
-Date:   Thu, 20 Jun 2019 18:31:52 +0800
-Message-ID: <1561026716-140537-2-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1561026716-140537-1-git-send-email-john.garry@huawei.com>
-References: <1561026716-140537-1-git-send-email-john.garry@huawei.com>
+        id S1731444AbfFTKxI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Jun 2019 06:53:08 -0400
+Received: from foss.arm.com ([217.140.110.172]:59330 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731253AbfFTKxI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jun 2019 06:53:08 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 10780360;
+        Thu, 20 Jun 2019 03:53:07 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id AF5C23F718;
+        Thu, 20 Jun 2019 03:53:05 -0700 (PDT)
+Date:   Thu, 20 Jun 2019 11:53:01 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Thierry Reding <thierry.reding@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Manikanta Maddireddy <mmaddireddy@nvidia.com>,
+        robh+dt@kernel.org, mark.rutland@arm.com, jonathanh@nvidia.com,
+        vidyas@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH V6 00/27] Enable Tegra PCIe root port features
+Message-ID: <20190620105301.GA23729@e121166-lin.cambridge.arm.com>
+References: <20190618180206.4908-1-mmaddireddy@nvidia.com>
+ <20190620102552.GB28703@ulmo>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.212.75]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190620102552.GB28703@ulmo>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The traversing of io_range_list with list_for_each_entry_rcu()
-is not properly protected by rcu_read_lock(), so add it.
+On Thu, Jun 20, 2019 at 12:25:52PM +0200, Thierry Reding wrote:
+> On Tue, Jun 18, 2019 at 11:31:39PM +0530, Manikanta Maddireddy wrote:
+> > This series of patches adds,
+> > - Tegra root port features like Gen2, AER, etc
+> > - Power and perf optimizations
+> > - Fixes like "power up sequence", "dev_err prints", etc
+> > 
+> > This series of patches are tested on Tegra186 based Jetson-TX2, Tegra210
+> > based Jetson-TX1, T124 based Jetson-TK1, Tegra20 and Tegra30 platforms.
+> > 
+> > Changes from V5 to V6:
+> >   - Patch [V4, 20/27]: Replaced pcie_pme_disable_msi() with no_msi quirk
+> > 
+> > Changes from V4 to V5:
+> >  - Patch [V4, 4/28]: Added blank line before block style comment
+> >  - Patch [V4, 22/28]: "Access endpoint config only if PCIe link is up"
+> > patch is dropped
+> >  - Patch [V4, 27/28]:
+> > * Updated reset gpio toggle logic to reflect active low usage
+> > * Replaced kasprintf() with devm_kasprintf()
+> > * Updated commit message with more information.
+> > 
+> > Changes from V3 to V4:
+> >  - Patch [V3,27/29] is dropped
+> >  - Patch [V3,28/29]: devm_gpiod_get_from_of_node() is directly used in
+> >    pci-tegra driver instead of of_get_pci* wrapper function defined in
+> >    Patch [V3,27/29].
+> > 
+> > Manikanta Maddireddy (27):
+> >   soc/tegra: pmc: Export tegra_powergate_power_on()
+> >   PCI: tegra: Handle failure cases in tegra_pcie_power_on()
+> >   PCI: tegra: Rearrange Tegra PCIe driver functions
+> >   PCI: tegra: Mask AFI_INTR in runtime suspend
+> >   PCI: tegra: Fix PCIe host power up sequence
+> >   PCI: tegra: Add PCIe Gen2 link speed support
+> >   PCI: tegra: Advertise PCIe Advanced Error Reporting (AER) capability
+> >   PCI: tegra: Program UPHY electrical settings for Tegra210
+> >   PCI: tegra: Enable opportunistic UpdateFC and ACK
+> >   PCI: tegra: Disable AFI dynamic clock gating
+> >   PCI: tegra: Process pending DLL transactions before entering L1 or L2
+> >   PCI: tegra: Enable PCIe xclk clock clamping
+> >   PCI: tegra: Increase the deskew retry time
+> >   PCI: tegra: Add SW fixup for RAW violations
+> >   PCI: tegra: Update flow control timer frequency in Tegra210
+> >   PCI: tegra: Set target speed as Gen1 before starting LTSSM
+> >   PCI: tegra: Fix PLLE power down issue due to CLKREQ# signal
+> >   PCI: tegra: Program AFI_CACHE* registers only for Tegra20
+> >   PCI: tegra: Change PRSNT_SENSE IRQ log to debug
+> >   PCI: tegra: Disable MSI for Tegra PCIe root port
+> >   PCI: tegra: Add AFI_PEX2_CTRL reg offset as part of soc struct
+> >   dt-bindings: pci: tegra: Document PCIe DPD pinctrl optional prop
+> >   arm64: tegra: Add PEX DPD states as pinctrl properties
+> >   PCI: tegra: Put PEX CLK & BIAS pads in DPD mode
+> >   PCI: Add DT binding for "reset-gpios" property
+> >   PCI: tegra: Add support for GPIO based PERST#
+> >   PCI: tegra: Change link retry log level to debug
+> 
+> Hi Lorenzo, Bjorn,
+> 
+> There's a build-time dependency from the PCI patches on patch 1 of this
+> series. I've already Acked that, so I think you should take it through
+> the PCI tree along with the rest of the series.
+> 
+> The only patch that I picked up is the DT change in patch 23, which is
+> decoupled from the others via DT, though the data that it adds to DT
+> will be used in patch 24.
+> 
+> Does that sound good to you?
 
-In addition, the list traversing used in logic_pio_register_range()
-does not need to use the rcu variant.
+Yes, I will drop patch 20 too as requested. Is there a merge ordering
+dependency between patch 23 and 24 ? If yes we should let Bjorn know
+or you drop patch 23 and I will merge it via PCI, let us know.
 
-Fixes: 031e3601869c ("lib: Add generic PIO mapping method")
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- lib/logic_pio.c | 49 +++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 35 insertions(+), 14 deletions(-)
+Lorenzo
 
-diff --git a/lib/logic_pio.c b/lib/logic_pio.c
-index feea48fd1a0d..761296376fbc 100644
---- a/lib/logic_pio.c
-+++ b/lib/logic_pio.c
-@@ -46,7 +46,7 @@ int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
- 	end = new_range->hw_start + new_range->size;
- 
- 	mutex_lock(&io_range_mutex);
--	list_for_each_entry_rcu(range, &io_range_list, list) {
-+	list_for_each_entry(range, &io_range_list, list) {
- 		if (range->fwnode == new_range->fwnode) {
- 			/* range already there */
- 			goto end_register;
-@@ -108,26 +108,38 @@ int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
-  */
- struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode)
- {
--	struct logic_pio_hwaddr *range;
-+	struct logic_pio_hwaddr *range, *found_range = NULL;
- 
-+	rcu_read_lock();
- 	list_for_each_entry_rcu(range, &io_range_list, list) {
--		if (range->fwnode == fwnode)
--			return range;
-+		if (range->fwnode == fwnode) {
-+			found_range = range;
-+			break;
-+		}
- 	}
--	return NULL;
-+	rcu_read_unlock();
-+
-+	return found_range;
- }
- 
- /* Return a registered range given an input PIO token */
- static struct logic_pio_hwaddr *find_io_range(unsigned long pio)
- {
--	struct logic_pio_hwaddr *range;
-+	struct logic_pio_hwaddr *range, *found_range = NULL;
- 
-+	rcu_read_lock();
- 	list_for_each_entry_rcu(range, &io_range_list, list) {
--		if (in_range(pio, range->io_start, range->size))
--			return range;
-+		if (in_range(pio, range->io_start, range->size)) {
-+			found_range = range;
-+			break;
-+		}
- 	}
--	pr_err("PIO entry token %lx invalid\n", pio);
--	return NULL;
-+	rcu_read_unlock();
-+
-+	if (!found_range)
-+		pr_err("PIO entry token 0x%lx invalid\n", pio);
-+
-+	return found_range;
- }
- 
- /**
-@@ -180,14 +192,23 @@ unsigned long logic_pio_trans_cpuaddr(resource_size_t addr)
- {
- 	struct logic_pio_hwaddr *range;
- 
-+	rcu_read_lock();
- 	list_for_each_entry_rcu(range, &io_range_list, list) {
- 		if (range->flags != LOGIC_PIO_CPU_MMIO)
- 			continue;
--		if (in_range(addr, range->hw_start, range->size))
--			return addr - range->hw_start + range->io_start;
-+		if (in_range(addr, range->hw_start, range->size)) {
-+			unsigned long cpuaddr;
-+
-+			cpuaddr = addr - range->hw_start + range->io_start;
-+
-+			rcu_read_unlock();
-+			return cpuaddr;
-+		}
- 	}
--	pr_err("addr %llx not registered in io_range_list\n",
--	       (unsigned long long) addr);
-+	rcu_read_unlock();
-+
-+	pr_err("addr %pa not registered in io_range_list\n", &addr);
-+
- 	return ~0UL;
- }
- 
--- 
-2.17.1
+> Thierry
+> 
+> > 
+> >  .../bindings/pci/nvidia,tegra20-pcie.txt      |   8 +
+> >  Documentation/devicetree/bindings/pci/pci.txt |   3 +
+> >  arch/arm64/boot/dts/nvidia/tegra210.dtsi      |  19 +
+> >  drivers/pci/controller/pci-tegra.c            | 578 +++++++++++++++---
+> >  drivers/pci/quirks.c                          |  39 ++
+> >  drivers/soc/tegra/pmc.c                       |   1 +
+> >  6 files changed, 568 insertions(+), 80 deletions(-)
+> > 
+> > -- 
+> > 2.17.1
+> > 
+
 
