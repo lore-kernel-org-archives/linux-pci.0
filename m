@@ -7,26 +7,26 @@ X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AAE9C43613
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71279C43613
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7BE22070B
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52EBB2070B
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:14:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732076AbfFTQMx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Jun 2019 12:12:53 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:59402 "EHLO ale.deltatee.com"
+        id S1732077AbfFTQOx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Jun 2019 12:14:53 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:59390 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732037AbfFTQMx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1731927AbfFTQMx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 20 Jun 2019 12:12:53 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hdzg6-00046M-6H; Thu, 20 Jun 2019 10:12:52 -0600
+        id 1hdzg6-00046I-68; Thu, 20 Jun 2019 10:12:52 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1hdzg4-0005w8-9k; Thu, 20 Jun 2019 10:12:44 -0600
+        id 1hdzg3-0005vw-T4; Thu, 20 Jun 2019 10:12:43 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
@@ -39,8 +39,8 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         Jason Gunthorpe <jgg@ziepe.ca>,
         Stephen Bates <sbates@raithlin.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 20 Jun 2019 10:12:17 -0600
-Message-Id: <20190620161240.22738-6-logang@deltatee.com>
+Date:   Thu, 20 Jun 2019 10:12:13 -0600
+Message-Id: <20190620161240.22738-2-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190620161240.22738-1-logang@deltatee.com>
 References: <20190620161240.22738-1-logang@deltatee.com>
@@ -49,7 +49,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, axboe@kernel.dk, hch@lst.de, bhelgaas@google.com, dan.j.williams@intel.com, sagi@grimberg.me, kbusch@kernel.org, jgg@ziepe.ca, sbates@raithlin.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [RFC PATCH 05/28] block: Skip dma-direct bios in bio_integrity_prep()
+Subject: [RFC PATCH 01/28] block: Introduce DMA direct request type
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -57,35 +57,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The block layer will not be able to handle integrity for dma-direct
-bios seeing it does not have access to the underlying data.
-
-If users of dma-direct require integrity, they will have to handle it
-in the layer creating the bios. This is left as future work should
-somebody care about handling such a case.
-
-Thus, bio_integrity_prep() should ignore dma-direct bios.
+A DMA direct request allows passing DMA addresses directly through
+the block layer, instead of struct pages. This allows the calling
+layer to take care of the mapping and unmapping and also creates
+a path to doing peer-to-peer transactions without using struct pages.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- block/bio-integrity.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ include/linux/blk_types.h |  9 ++++++++-
+ include/linux/blkdev.h    | 10 ++++++++++
+ 2 files changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/block/bio-integrity.c b/block/bio-integrity.c
-index 4db620849515..10fdf456fcd8 100644
---- a/block/bio-integrity.c
-+++ b/block/bio-integrity.c
-@@ -221,6 +221,10 @@ bool bio_integrity_prep(struct bio *bio)
- 	if (bio_integrity(bio))
- 		return true;
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 95202f80676c..f3cabfdb6774 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -322,6 +322,7 @@ enum req_flag_bits {
+ 	__REQ_NOUNMAP,		/* do not free blocks when zeroing */
  
-+	/* The block layer cannot handle integrity for dma-direct bios */
-+	if (bio_is_dma_direct(bio))
-+		return true;
+ 	__REQ_HIPRI,
++	__REQ_DMA_DIRECT,	/* DMA address direct request */
+ 
+ 	/* for driver use */
+ 	__REQ_DRV,
+@@ -345,6 +346,7 @@ enum req_flag_bits {
+ #define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
+ #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
+ #define REQ_HIPRI		(1ULL << __REQ_HIPRI)
++#define REQ_DMA_DIRECT		(1ULL << __REQ_DMA_DIRECT)
+ 
+ #define REQ_DRV			(1ULL << __REQ_DRV)
+ #define REQ_SWAP		(1ULL << __REQ_SWAP)
+@@ -353,7 +355,7 @@ enum req_flag_bits {
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+ 
+ #define REQ_NOMERGE_FLAGS \
+-	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA)
++	(REQ_NOMERGE | REQ_PREFLUSH | REQ_FUA | REQ_DMA_DIRECT)
+ 
+ enum stat_group {
+ 	STAT_READ,
+@@ -412,6 +414,11 @@ static inline int op_stat_group(unsigned int op)
+ 	return op_is_write(op);
+ }
+ 
++static inline int op_is_dma_direct(unsigned int op)
++{
++	return op & REQ_DMA_DIRECT;
++}
 +
- 	if (bio_data_dir(bio) == READ) {
- 		if (!bi->profile->verify_fn ||
- 		    !(bi->flags & BLK_INTEGRITY_VERIFY))
+ typedef unsigned int blk_qc_t;
+ #define BLK_QC_T_NONE		-1U
+ #define BLK_QC_T_SHIFT		16
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 592669bcc536..ce70d5dded5f 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -271,6 +271,16 @@ static inline bool bio_is_passthrough(struct bio *bio)
+ 	return blk_op_is_scsi(op) || blk_op_is_private(op);
+ }
+ 
++static inline bool bio_is_dma_direct(struct bio *bio)
++{
++	return op_is_dma_direct(bio->bi_opf);
++}
++
++static inline bool blk_rq_is_dma_direct(struct request *rq)
++{
++	return op_is_dma_direct(rq->cmd_flags);
++}
++
+ static inline unsigned short req_get_ioprio(struct request *req)
+ {
+ 	return req->ioprio;
 -- 
 2.20.1
 
