@@ -2,187 +2,112 @@ Return-Path: <SRS0=HNSb=UT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0C64C43613
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D50FC43613
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:33:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BD957206BA
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:25:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iHK0GxqR"
+	by mail.kernel.org (Postfix) with ESMTP id 39D2E206E0
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 10:33:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726855AbfFTKZ4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Jun 2019 06:25:56 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:42320 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726404AbfFTKZ4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2019 06:25:56 -0400
-Received: by mail-wr1-f68.google.com with SMTP id x17so2422501wrl.9;
-        Thu, 20 Jun 2019 03:25:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=IZux+0y6W3wGncScY0sULaLkiLuQXyFaCcmHQcwF3Ek=;
-        b=iHK0GxqR8KLeoNT4IpWTYjL1C7r5Jim/Gu0U0xMYHbx28syynq99M64gRdc49CC/7M
-         QGPBdZu6pkGDMp1/VyvvHaOFw/+n3Y0qUf4v2gUHkK4Ip+HhM13hiGoHz9OZ2ZJw44jy
-         tH+a3kEUX+7x6eS57R0BhzJjtBicbTph3QAdlucBgw7vKhllZvWv4qHw5C3UjJzzmg7k
-         +14oAMO2um+xHvMmCM1hCi/fTa3Jd20lGny6f5EXPjTT2Ji2PRd+a/padOOTggiD8Twf
-         8z3G9Lzg6VNkmBJ4KRa2O175K8eEr2h9DnKCMBpkwh+3rvhqezf1+OoUFCAFFWKjDYfB
-         8LSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=IZux+0y6W3wGncScY0sULaLkiLuQXyFaCcmHQcwF3Ek=;
-        b=jNKxzp5bG/+s/brFTOxZ6L4APpL2lVXlGomCV1xf2r+8f4MgV9Zz0anw01axPNWBmJ
-         Q5cAZm8JNFre9S67FI9DLfCZKh+C2VLTPgmGy+va/MGwci5r7a6yFHQTseXlizIgNIFs
-         38W3Cz/zuFVQoVcB7Yvm+B2IMMCF4UBLsJ+AorlhZAOW1cqptXTmrSyutfJuD14G+X/Z
-         Fpw+CyvPtGTX7RylR18jUUP54b8+C2+dSl3OR+s5yWBFvacgZAlbt94Vi8cmm3jBsSDs
-         GmXHaQ9I6/aQ0yF15EpmJSFDuv+kRjMjeyvldbqKSfpDh6UmqF8p0bqnrIXihqQZbCNv
-         rXkw==
-X-Gm-Message-State: APjAAAUqDk5sozOZmojzYHZx37XCJr1TyDmSyd3P5N9wxot+jg79GUy7
-        WniF3C2HXNWQFonNuLPvTUnaKAUz1fk=
-X-Google-Smtp-Source: APXvYqxl64CuXACy1/N5308HxJq8t3k5eboPGmeDE9ZzreydTMgyOJxjaGjnqlcD4T9RPoOmBaOUGQ==
-X-Received: by 2002:adf:dd03:: with SMTP id a3mr38116705wrm.87.1561026354581;
-        Thu, 20 Jun 2019 03:25:54 -0700 (PDT)
-Received: from localhost (p2E5BEF36.dip0.t-ipconnect.de. [46.91.239.54])
-        by smtp.gmail.com with ESMTPSA id a64sm7975774wmf.1.2019.06.20.03.25.53
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 20 Jun 2019 03:25:53 -0700 (PDT)
-Date:   Thu, 20 Jun 2019 12:25:52 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Manikanta Maddireddy <mmaddireddy@nvidia.com>, robh+dt@kernel.org,
-        mark.rutland@arm.com, jonathanh@nvidia.com, vidyas@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH V6 00/27] Enable Tegra PCIe root port features
-Message-ID: <20190620102552.GB28703@ulmo>
-References: <20190618180206.4908-1-mmaddireddy@nvidia.com>
+        id S1726692AbfFTKdf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Jun 2019 06:33:35 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:18647 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726222AbfFTKdf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jun 2019 06:33:35 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id D286968E86C6D27CF9A1;
+        Thu, 20 Jun 2019 18:33:32 +0800 (CST)
+Received: from localhost.localdomain (10.67.212.75) by
+ DGGEMS402-HUB.china.huawei.com (10.3.19.202) with Microsoft SMTP Server id
+ 14.3.439.0; Thu, 20 Jun 2019 18:33:25 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <xuwei5@huawei.com>
+CC:     <bhelgaas@google.com>, <linuxarm@huawei.com>, <arm@kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <joe@perches.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH 2/5] lib: logic_pio: Add logic_pio_unregister_range()
+Date:   Thu, 20 Jun 2019 18:31:53 +0800
+Message-ID: <1561026716-140537-3-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1561026716-140537-1-git-send-email-john.garry@huawei.com>
+References: <1561026716-140537-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="St7VIuEGZ6dlpu13"
-Content-Disposition: inline
-In-Reply-To: <20190618180206.4908-1-mmaddireddy@nvidia.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+Content-Type: text/plain
+X-Originating-IP: [10.67.212.75]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add a function to unregister a logical PIO range.
 
---St7VIuEGZ6dlpu13
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The method used to allocate LOGIC_PIO_CPU_MMIO regions during registration
+is slightly modified to ensure that we get no overlap when regions are
+unregistered. This is needed because the allocation scheme assumed that no
+regions are ever unregistered.
 
-On Tue, Jun 18, 2019 at 11:31:39PM +0530, Manikanta Maddireddy wrote:
-> This series of patches adds,
-> - Tegra root port features like Gen2, AER, etc
-> - Power and perf optimizations
-> - Fixes like "power up sequence", "dev_err prints", etc
->=20
-> This series of patches are tested on Tegra186 based Jetson-TX2, Tegra210
-> based Jetson-TX1, T124 based Jetson-TK1, Tegra20 and Tegra30 platforms.
->=20
-> Changes from V5 to V6:
->   - Patch [V4, 20/27]: Replaced pcie_pme_disable_msi() with no_msi quirk
->=20
-> Changes from V4 to V5:
->  - Patch [V4, 4/28]: Added blank line before block style comment
->  - Patch [V4, 22/28]: "Access endpoint config only if PCIe link is up"
-> patch is dropped
->  - Patch [V4, 27/28]:
-> * Updated reset gpio toggle logic to reflect active low usage
-> * Replaced kasprintf() with devm_kasprintf()
-> * Updated commit message with more information.
->=20
-> Changes from V3 to V4:
->  - Patch [V3,27/29] is dropped
->  - Patch [V3,28/29]: devm_gpiod_get_from_of_node() is directly used in
->    pci-tegra driver instead of of_get_pci* wrapper function defined in
->    Patch [V3,27/29].
->=20
-> Manikanta Maddireddy (27):
->   soc/tegra: pmc: Export tegra_powergate_power_on()
->   PCI: tegra: Handle failure cases in tegra_pcie_power_on()
->   PCI: tegra: Rearrange Tegra PCIe driver functions
->   PCI: tegra: Mask AFI_INTR in runtime suspend
->   PCI: tegra: Fix PCIe host power up sequence
->   PCI: tegra: Add PCIe Gen2 link speed support
->   PCI: tegra: Advertise PCIe Advanced Error Reporting (AER) capability
->   PCI: tegra: Program UPHY electrical settings for Tegra210
->   PCI: tegra: Enable opportunistic UpdateFC and ACK
->   PCI: tegra: Disable AFI dynamic clock gating
->   PCI: tegra: Process pending DLL transactions before entering L1 or L2
->   PCI: tegra: Enable PCIe xclk clock clamping
->   PCI: tegra: Increase the deskew retry time
->   PCI: tegra: Add SW fixup for RAW violations
->   PCI: tegra: Update flow control timer frequency in Tegra210
->   PCI: tegra: Set target speed as Gen1 before starting LTSSM
->   PCI: tegra: Fix PLLE power down issue due to CLKREQ# signal
->   PCI: tegra: Program AFI_CACHE* registers only for Tegra20
->   PCI: tegra: Change PRSNT_SENSE IRQ log to debug
->   PCI: tegra: Disable MSI for Tegra PCIe root port
->   PCI: tegra: Add AFI_PEX2_CTRL reg offset as part of soc struct
->   dt-bindings: pci: tegra: Document PCIe DPD pinctrl optional prop
->   arm64: tegra: Add PEX DPD states as pinctrl properties
->   PCI: tegra: Put PEX CLK & BIAS pads in DPD mode
->   PCI: Add DT binding for "reset-gpios" property
->   PCI: tegra: Add support for GPIO based PERST#
->   PCI: tegra: Change link retry log level to debug
+Logical PIO space can still be leaked when unregistering certain
+LOGIC_PIO_CPU_MMIO regions, but this acceptable for now since there are no
+callers to unregister LOGIC_PIO_CPU_MMIO regions, and the logical PIO
+region allocation scheme would need significant work to improve this.
 
-Hi Lorenzo, Bjorn,
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ include/linux/logic_pio.h |  1 +
+ lib/logic_pio.c           | 16 +++++++++++++++-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-There's a build-time dependency from the PCI patches on patch 1 of this
-series. I've already Acked that, so I think you should take it through
-the PCI tree along with the rest of the series.
+diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
+index cbd9d8495690..88e1e6304a71 100644
+--- a/include/linux/logic_pio.h
++++ b/include/linux/logic_pio.h
+@@ -117,6 +117,7 @@ struct logic_pio_hwaddr *find_io_range_by_fwnode(struct fwnode_handle *fwnode);
+ unsigned long logic_pio_trans_hwaddr(struct fwnode_handle *fwnode,
+ 			resource_size_t hw_addr, resource_size_t size);
+ int logic_pio_register_range(struct logic_pio_hwaddr *newrange);
++void logic_pio_unregister_range(struct logic_pio_hwaddr *range);
+ resource_size_t logic_pio_to_hwaddr(unsigned long pio);
+ unsigned long logic_pio_trans_cpuaddr(resource_size_t hw_addr);
+ 
+diff --git a/lib/logic_pio.c b/lib/logic_pio.c
+index 761296376fbc..45eb57af2574 100644
+--- a/lib/logic_pio.c
++++ b/lib/logic_pio.c
+@@ -56,7 +56,7 @@ int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
+ 			/* for MMIO ranges we need to check for overlap */
+ 			if (start >= range->hw_start + range->size ||
+ 			    end < range->hw_start) {
+-				mmio_sz += range->size;
++				mmio_sz = range->io_start + range->size;
+ 			} else {
+ 				ret = -EFAULT;
+ 				goto end_register;
+@@ -98,6 +98,20 @@ int logic_pio_register_range(struct logic_pio_hwaddr *new_range)
+ 	return ret;
+ }
+ 
++/**
++ * logic_pio_unregister_range - unregister logical PIO range for a host
++ * @range: pointer to the IO range which has been already registered.
++ *
++ * Unregister a previously-registered IO range node.
++ */
++void logic_pio_unregister_range(struct logic_pio_hwaddr *range)
++{
++	mutex_lock(&io_range_mutex);
++	list_del_rcu(&range->list);
++	mutex_unlock(&io_range_mutex);
++	synchronize_rcu();
++}
++
+ /**
+  * find_io_range_by_fwnode - find logical PIO range for given FW node
+  * @fwnode: FW node handle associated with logical PIO range
+-- 
+2.17.1
 
-The only patch that I picked up is the DT change in patch 23, which is
-decoupled from the others via DT, though the data that it adds to DT
-will be used in patch 24.
-
-Does that sound good to you?
-
-Thierry
-
->=20
->  .../bindings/pci/nvidia,tegra20-pcie.txt      |   8 +
->  Documentation/devicetree/bindings/pci/pci.txt |   3 +
->  arch/arm64/boot/dts/nvidia/tegra210.dtsi      |  19 +
->  drivers/pci/controller/pci-tegra.c            | 578 +++++++++++++++---
->  drivers/pci/quirks.c                          |  39 ++
->  drivers/soc/tegra/pmc.c                       |   1 +
->  6 files changed, 568 insertions(+), 80 deletions(-)
->=20
-> --=20
-> 2.17.1
->=20
-
---St7VIuEGZ6dlpu13
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAl0LXy0ACgkQ3SOs138+
-s6GtiRAAwFrY3sTpw//mIf0cd83jzuDuxWvqG/UEB4re3vClHiONc/rihLpZi0CY
-R5V8Ghe9gsuEQb1ttKobFX/YJ5omW/cXSA3Qc2dy9uQyvMkwcUlpQmfgzaZgl+v2
-G6BPqIMLz6/Zb5QeOKH3Dz9XNc1FoZz1mvD7gHdZGeLskAx3Qx9OyMmwLQA1gYSd
-rwSPV1uuP2Hpjv3MILNnFKQ/18wdk/fX6Wvnm6GnQAJCw9QywFHer5RvYThFxHrX
-oJpUTvCk5I/Z+0CBTOw00hIyV/7Ml4sQPrR4U1TVdBOnPn7HagiWNLkgPxU5KOsP
-hG6dvN67x8JuOpazK46UulyDGKUnlndOdRlpPeZDmfN5E6PuOUUIq+O5YjvClIw6
-PUg5wDd6eJJAC9U1B8QYIMBFt0EeZ8swYuXaXCE5KY6Ro4VvWW4ll3SMn0TOWjIA
-UpX1O9VACuqSXyOGkjA+tuTiSsV0t1mjusvaokEEOTEv0cBOeIi9RG+iYgQDG3l3
-hNJEH3I1QA41Hf3mMZuef9AEZl/FuWfpN792KN48cxM14RxuwjuwFA+z0Z1zHjqb
-s6ardenJPxEzXzW27x6GA4EcTCuu1Letun+5ew+D9FaefDlSkuM4eFV8ifxVDLFp
-Yf/iGDZhrkalTfoBUOs9E7AtAhSdF7n10rXRJ6mU/6EJw70OaqU=
-=Pbxk
------END PGP SIGNATURE-----
-
---St7VIuEGZ6dlpu13--
