@@ -2,137 +2,149 @@ Return-Path: <SRS0=HNSb=UT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 586BEC43613
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:15:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B155DC43613
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:26:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C3D82084E
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:15:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 915EE2084E
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:26:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726654AbfFTQMt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Jun 2019 12:12:49 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:59328 "EHLO ale.deltatee.com"
+        id S1732048AbfFTQ0q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Jun 2019 12:26:46 -0400
+Received: from foss.arm.com ([217.140.110.172]:47568 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726530AbfFTQMs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jun 2019 12:12:48 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hdzg6-00046V-6A; Thu, 20 Jun 2019 10:12:47 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hdzg5-0005wZ-4g; Thu, 20 Jun 2019 10:12:45 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-rdma@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Keith Busch <kbusch@kernel.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Stephen Bates <sbates@raithlin.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 20 Jun 2019 10:12:26 -0600
-Message-Id: <20190620161240.22738-15-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190620161240.22738-1-logang@deltatee.com>
-References: <20190620161240.22738-1-logang@deltatee.com>
+        id S1726675AbfFTQ0p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jun 2019 12:26:45 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id B541E2B;
+        Thu, 20 Jun 2019 09:26:44 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 604CB3F246;
+        Thu, 20 Jun 2019 09:26:43 -0700 (PDT)
+Date:   Thu, 20 Jun 2019 17:26:38 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
+Cc:     thierry.reding@gmail.com, bhelgaas@google.com, robh+dt@kernel.org,
+        mark.rutland@arm.com, jonathanh@nvidia.com, vidyas@nvidia.com,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH V6 18/27] PCI: tegra: Program AFI_CACHE* registers only
+ for Tegra20
+Message-ID: <20190620162638.GA18771@e121166-lin.cambridge.arm.com>
+References: <20190618180206.4908-1-mmaddireddy@nvidia.com>
+ <20190618180206.4908-19-mmaddireddy@nvidia.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, axboe@kernel.dk, hch@lst.de, bhelgaas@google.com, dan.j.williams@intel.com, sagi@grimberg.me, kbusch@kernel.org, jgg@ziepe.ca, sbates@raithlin.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [RFC PATCH 14/28] block: Support splitting dma-direct bios
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190618180206.4908-19-mmaddireddy@nvidia.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If the bio is a dma-direct bio, loop through the dma_vecs instead
-of the bio_vecs when calling vec_should_split().
+On Tue, Jun 18, 2019 at 11:31:57PM +0530, Manikanta Maddireddy wrote:
+> Cacheable upstream transactions are supported in Tegra20 and Tegra186 only.
+> AFI_CACHE* registers are available in Tegra20 to support cacheable upstream
+> transactions. In Tegra186, AFI_AXCACHE register is defined instead of
+> AFI_CACHE* to be in line with its MSS design. Therefore, program AFI_CACHE*
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- block/blk-merge.c | 45 +++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 37 insertions(+), 8 deletions(-)
+What's an MSS ?
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 32653fca53ce..c4c016f994f6 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -257,14 +257,44 @@ static bool vec_should_split(struct request_queue *q, unsigned offset,
- 	return false;
- }
- 
-+static bool bio_should_split(struct request_queue *q, struct bio *bio,
-+			     struct blk_segment_split_ctx *ctx)
-+{
-+	struct bvec_iter iter;
-+	struct bio_vec bv;
-+	bool ret;
-+
-+	bio_for_each_bvec(bv, bio, iter) {
-+		ret = vec_should_split(q, bv.bv_offset, bv.bv_len, ctx);
-+		if (ret)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+static bool bio_dma_should_split(struct request_queue *q, struct bio *bio,
-+				 struct blk_segment_split_ctx *ctx)
-+{
-+	struct bvec_iter iter;
-+	struct dma_vec dv;
-+	bool ret;
-+
-+	bio_for_each_dvec(dv, bio, iter) {
-+		ret = vec_should_split(q, dv.dv_addr, dv.dv_len, ctx);
-+		if (ret)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- static struct bio *blk_bio_segment_split(struct request_queue *q,
- 					 struct bio *bio,
- 					 struct bio_set *bs,
- 					 unsigned *segs)
- {
--	struct bio_vec bv;
--	struct bvec_iter iter;
--	bool do_split = false;
-+	bool do_split;
- 	struct bio *new = NULL;
- 
- 	struct blk_segment_split_ctx ctx = {
-@@ -272,11 +302,10 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
- 		.max_segs = queue_max_segments(q),
- 	};
- 
--	bio_for_each_bvec(bv, bio, iter) {
--		do_split = vec_should_split(q, bv.bv_offset, bv.bv_len, &ctx);
--		if (do_split)
--			break;
--	}
-+	if (bio_is_dma_direct(bio))
-+		do_split = bio_dma_should_split(q, bio, &ctx);
-+	else
-+		do_split = bio_should_split(q, bio, &ctx);
- 
- 	*segs = ctx.nsegs;
- 
--- 
-2.20.1
+Lorenzo
 
+> registers only for Tegra20.
+> 
+> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
+> Acked-by: Thierry Reding <treding@nvidia.com>
+> ---
+> V6: No change
+> 
+> V5: No change
+> 
+> V4: No change
+> 
+> V3: Initialized has_cache_bars variable for each soc data structure.
+> 
+> V2: Used soc variable for comparision instead of compatible string.
+> 
+>  drivers/pci/controller/pci-tegra.c | 18 +++++++++++++-----
+>  1 file changed, 13 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index 3d9028cecc18..a746d963ca36 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -323,6 +323,7 @@ struct tegra_pcie_soc {
+>  	bool program_deskew_time;
+>  	bool raw_violation_fixup;
+>  	bool update_fc_timer;
+> +	bool has_cache_bars;
+>  	struct {
+>  		struct {
+>  			u32 rp_ectl_2_r1;
+> @@ -932,11 +933,13 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+>  	afi_writel(pcie, 0, AFI_AXI_BAR5_SZ);
+>  	afi_writel(pcie, 0, AFI_FPCI_BAR5);
+>  
+> -	/* map all upstream transactions as uncached */
+> -	afi_writel(pcie, 0, AFI_CACHE_BAR0_ST);
+> -	afi_writel(pcie, 0, AFI_CACHE_BAR0_SZ);
+> -	afi_writel(pcie, 0, AFI_CACHE_BAR1_ST);
+> -	afi_writel(pcie, 0, AFI_CACHE_BAR1_SZ);
+> +	if (pcie->soc->has_cache_bars) {
+> +		/* map all upstream transactions as uncached */
+> +		afi_writel(pcie, 0, AFI_CACHE_BAR0_ST);
+> +		afi_writel(pcie, 0, AFI_CACHE_BAR0_SZ);
+> +		afi_writel(pcie, 0, AFI_CACHE_BAR1_ST);
+> +		afi_writel(pcie, 0, AFI_CACHE_BAR1_SZ);
+> +	}
+>  
+>  	/* MSI translations are setup only when needed */
+>  	afi_writel(pcie, 0, AFI_MSI_FPCI_BAR_ST);
+> @@ -2441,6 +2444,7 @@ static const struct tegra_pcie_soc tegra20_pcie = {
+>  	.program_deskew_time = false,
+>  	.raw_violation_fixup = false,
+>  	.update_fc_timer = false,
+> +	.has_cache_bars = true,
+>  	.ectl.enable = false,
+>  };
+>  
+> @@ -2469,6 +2473,7 @@ static const struct tegra_pcie_soc tegra30_pcie = {
+>  	.program_deskew_time = false,
+>  	.raw_violation_fixup = false,
+>  	.update_fc_timer = false,
+> +	.has_cache_bars = false,
+>  	.ectl.enable = false,
+>  };
+>  
+> @@ -2492,6 +2497,7 @@ static const struct tegra_pcie_soc tegra124_pcie = {
+>  	.program_deskew_time = false,
+>  	.raw_violation_fixup = true,
+>  	.update_fc_timer = false,
+> +	.has_cache_bars = false,
+>  	.ectl.enable = false,
+>  };
+>  
+> @@ -2515,6 +2521,7 @@ static const struct tegra_pcie_soc tegra210_pcie = {
+>  	.program_deskew_time = true,
+>  	.raw_violation_fixup = false,
+>  	.update_fc_timer = true,
+> +	.has_cache_bars = false,
+>  	.ectl = {
+>  		.regs = {
+>  			.rp_ectl_2_r1 = 0x0000000f,
+> @@ -2555,6 +2562,7 @@ static const struct tegra_pcie_soc tegra186_pcie = {
+>  	.program_deskew_time = false,
+>  	.raw_violation_fixup = false,
+>  	.update_fc_timer = false,
+> +	.has_cache_bars = false,
+>  	.ectl.enable = false,
+>  };
+>  
+> -- 
+> 2.17.1
+> 
