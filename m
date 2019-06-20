@@ -2,124 +2,142 @@ Return-Path: <SRS0=HNSb=UT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1C81C43613
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 15:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A80EC48BE1
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:12:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BBB6206B7
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 15:22:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59DFA2070B
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 16:12:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726866AbfFTPWg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Jun 2019 11:22:36 -0400
-Received: from foss.arm.com ([217.140.110.172]:44334 "EHLO foss.arm.com"
+        id S1732150AbfFTQM5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Jun 2019 12:12:57 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:59442 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726661AbfFTPWf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jun 2019 11:22:35 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id EEF0E28;
-        Thu, 20 Jun 2019 08:22:34 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9AD953F246;
-        Thu, 20 Jun 2019 08:22:33 -0700 (PDT)
-Date:   Thu, 20 Jun 2019 16:22:31 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Manikanta Maddireddy <mmaddireddy@nvidia.com>
-Cc:     thierry.reding@gmail.com, bhelgaas@google.com, robh+dt@kernel.org,
-        mark.rutland@arm.com, jonathanh@nvidia.com, vidyas@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH V6 06/27] PCI: tegra: Add PCIe Gen2 link speed support
-Message-ID: <20190620152231.GB23729@e121166-lin.cambridge.arm.com>
-References: <20190618180206.4908-1-mmaddireddy@nvidia.com>
- <20190618180206.4908-7-mmaddireddy@nvidia.com>
- <20190620143251.GB31996@e121166-lin.cambridge.arm.com>
- <d46fbde3-1e42-e7b6-8926-efb599ad335f@nvidia.com>
+        id S1732133AbfFTQM4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jun 2019 12:12:56 -0400
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hdzg6-00046a-68; Thu, 20 Jun 2019 10:12:55 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hdzg5-0005wo-L2; Thu, 20 Jun 2019 10:12:45 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-rdma@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Keith Busch <kbusch@kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Thu, 20 Jun 2019 10:12:31 -0600
+Message-Id: <20190620161240.22738-20-logang@deltatee.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190620161240.22738-1-logang@deltatee.com>
+References: <20190620161240.22738-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d46fbde3-1e42-e7b6-8926-efb599ad335f@nvidia.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, axboe@kernel.dk, hch@lst.de, bhelgaas@google.com, dan.j.williams@intel.com, sagi@grimberg.me, kbusch@kernel.org, jgg@ziepe.ca, sbates@raithlin.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [RFC PATCH 19/28] nvme-pci: Support dma-direct bios
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Jun 20, 2019 at 08:27:15PM +0530, Manikanta Maddireddy wrote:
-> 
-> 
-> On 20-Jun-19 8:02 PM, Lorenzo Pieralisi wrote:
-> > On Tue, Jun 18, 2019 at 11:31:45PM +0530, Manikanta Maddireddy wrote:
-> >> Tegra124, Tegra132, Tegra210 and Tegra186 support Gen2 link speed. After
-> >> PCIe link is up in Gen1, set target link speed as Gen2 and retrain link.
-> >> Link switches to Gen2 speed if Gen2 capable end point is connected, else
-> >> link stays in Gen1.
-> >>
-> >> Per PCIe 4.0r0.9 sec 7.6.3.7 implementation note, driver need to wait for
-> >> PCIe LTSSM to come back from recovery before retraining the link.
-> >>
-> >> Signed-off-by: Manikanta Maddireddy <mmaddireddy@nvidia.com>
-> >> Acked-by: Thierry Reding <treding@nvidia.com>
-> >> ---
-> >> V6: No change
-> >>
-> >> V5: No change
-> >>
-> >> V4: No change
-> >>
-> >> V3: Added blank line after each while loop.
-> >>
-> >> V2: Changed "for loop" to "while", to make it compact and handled coding
-> >> style comments.
-> >>
-> >>  drivers/pci/controller/pci-tegra.c | 64 ++++++++++++++++++++++++++++++
-> >>  1 file changed, 64 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-> >> index 5e9fcef5f8eb..5d19067f7193 100644
-> >> --- a/drivers/pci/controller/pci-tegra.c
-> >> +++ b/drivers/pci/controller/pci-tegra.c
-> >> @@ -191,6 +191,8 @@
-> >>  #define  RP_LINK_CONTROL_STATUS_DL_LINK_ACTIVE	0x20000000
-> >>  #define  RP_LINK_CONTROL_STATUS_LINKSTAT_MASK	0x3fff0000
-> >>  
-> >> +#define RP_LINK_CONTROL_STATUS_2		0x000000b0
-> >> +
-> >>  #define PADS_CTL_SEL		0x0000009c
-> >>  
-> >>  #define PADS_CTL		0x000000a0
-> >> @@ -226,6 +228,7 @@
-> >>  #define PADS_REFCLK_CFG_DRVI_SHIFT		12 /* 15:12 */
-> >>  
-> >>  #define PME_ACK_TIMEOUT 10000
-> >> +#define LINK_RETRAIN_TIMEOUT 100000 /* in usec */
-> >>  
-> >>  struct tegra_msi {
-> >>  	struct msi_controller chip;
-> >> @@ -2089,6 +2092,64 @@ static bool tegra_pcie_port_check_link(struct tegra_pcie_port *port)
-> >>  	return false;
-> >>  }
-> >>  
-> >> +static void tegra_pcie_change_link_speed(struct tegra_pcie *pcie)
-> >> +{
-> >> +	struct device *dev = pcie->dev;
-> >> +	struct tegra_pcie_port *port, *tmp;
-> >> +	ktime_t deadline;
-> >> +	u32 value;
-> >> +
-> >> +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> > And the reason to use the _safe version is ?
-> >
-> > Lorenzo
-> 
-> This function is called in probe and resume_noirq. list entry is deleted in
-> remove, I don't see any scenario where it can cause a race condition.
-> It is fine to drop _safe. I will fix it in next version.
+Adding support for dma-direct bios only requires putting a condition
+around the call to dma_map_sg() so it is skipped when the request
+has the REQ_DMA_ADDR flag.
 
-I will do it myself, it is not a fundamental issue, do not send another
-version.
+We then need to indicate support for the queue in much the same way
+we did with PCI P2PDMA. Seeing this provides the same support as
+PCI P2PDMA those flags will be removed in a subsequent patch.
 
-Thanks,
-Lorenzo
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/nvme/host/core.c |  2 ++
+ drivers/nvme/host/nvme.h |  1 +
+ drivers/nvme/host/pci.c  | 10 +++++++---
+ 3 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 120fb593d1da..8e876417c44b 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -3259,6 +3259,8 @@ static int nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
+ 	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
+ 	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
+ 		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
++	if (ctrl->ops->flags & NVME_F_DMA_DIRECT)
++		blk_queue_flag_set(QUEUE_FLAG_DMA_DIRECT, ns->queue);
+ 
+ 	ns->queue->queuedata = ns;
+ 	ns->ctrl = ctrl;
+diff --git a/drivers/nvme/host/nvme.h b/drivers/nvme/host/nvme.h
+index 55553d293a98..f1dddc95c6a8 100644
+--- a/drivers/nvme/host/nvme.h
++++ b/drivers/nvme/host/nvme.h
+@@ -362,6 +362,7 @@ struct nvme_ctrl_ops {
+ #define NVME_F_FABRICS			(1 << 0)
+ #define NVME_F_METADATA_SUPPORTED	(1 << 1)
+ #define NVME_F_PCI_P2PDMA		(1 << 2)
++#define NVME_F_DMA_DIRECT		(1 << 3)
+ 	int (*reg_read32)(struct nvme_ctrl *ctrl, u32 off, u32 *val);
+ 	int (*reg_write32)(struct nvme_ctrl *ctrl, u32 off, u32 val);
+ 	int (*reg_read64)(struct nvme_ctrl *ctrl, u32 off, u64 *val);
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 524d6bd6d095..5957f3a4f261 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -565,7 +565,8 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
+ 	WARN_ON_ONCE(!iod->nents);
+ 
+ 	/* P2PDMA requests do not need to be unmapped */
+-	if (!is_pci_p2pdma_page(sg_page(iod->sg)))
++	if (!is_pci_p2pdma_page(sg_page(iod->sg)) &&
++	    !blk_rq_is_dma_direct(req))
+ 		dma_unmap_sg(dev->dev, iod->sg, iod->nents, rq_dma_dir(req));
+ 
+ 
+@@ -824,7 +825,7 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+ 	blk_status_t ret = BLK_STS_RESOURCE;
+ 	int nr_mapped;
+ 
+-	if (blk_rq_nr_phys_segments(req) == 1) {
++	if (blk_rq_nr_phys_segments(req) == 1 && !blk_rq_is_dma_direct(req)) {
+ 		struct bio_vec bv = req_bvec(req);
+ 
+ 		if (!is_pci_p2pdma_page(bv.bv_page)) {
+@@ -851,6 +852,8 @@ static blk_status_t nvme_map_data(struct nvme_dev *dev, struct request *req,
+ 	if (is_pci_p2pdma_page(sg_page(iod->sg)))
+ 		nr_mapped = pci_p2pdma_map_sg(dev->dev, iod->sg, iod->nents,
+ 					      rq_dma_dir(req));
++	else if (blk_rq_is_dma_direct(req))
++		nr_mapped = iod->nents;
+ 	else
+ 		nr_mapped = dma_map_sg_attrs(dev->dev, iod->sg, iod->nents,
+ 					     rq_dma_dir(req), DMA_ATTR_NO_WARN);
+@@ -2639,7 +2642,8 @@ static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
+ 	.name			= "pcie",
+ 	.module			= THIS_MODULE,
+ 	.flags			= NVME_F_METADATA_SUPPORTED |
+-				  NVME_F_PCI_P2PDMA,
++				  NVME_F_PCI_P2PDMA |
++				  NVME_F_DMA_DIRECT,
+ 	.reg_read32		= nvme_pci_reg_read32,
+ 	.reg_write32		= nvme_pci_reg_write32,
+ 	.reg_read64		= nvme_pci_reg_read64,
+-- 
+2.20.1
+
