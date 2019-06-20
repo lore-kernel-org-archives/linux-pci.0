@@ -4,65 +4,65 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C3B8C48BE2
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 05:13:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02B61C43613
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 05:14:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E638120B1F
-	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 05:13:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C19C621721
+	for <linux-pci@archiver.kernel.org>; Thu, 20 Jun 2019 05:14:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="oo7A3kwo"
+	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="tfKVTzBh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731490AbfFTFN5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 20 Jun 2019 01:13:57 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:44659 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730815AbfFTFNy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2019 01:13:54 -0400
-Received: by mail-pf1-f193.google.com with SMTP id t16so951054pfe.11
-        for <linux-pci@vger.kernel.org>; Wed, 19 Jun 2019 22:13:54 -0700 (PDT)
+        id S1731617AbfFTFOC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 20 Jun 2019 01:14:02 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:42265 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731605AbfFTFOB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jun 2019 01:14:01 -0400
+Received: by mail-pg1-f194.google.com with SMTP id l19so912179pgh.9
+        for <linux-pci@vger.kernel.org>; Wed, 19 Jun 2019 22:14:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=endlessm-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=93pd9G4UIoBr8e0tvrz9C44+OnAylV1JTAk/uJtJYjk=;
-        b=oo7A3kwoOK6VCYBLqyaL9S+XBir5vMHc4AzSTp8Dh5XTbhRQrmHlNiYhNXe8aGKimx
-         J7RauecVI3mbpcEn0QVXx0N6NUZbX+Ep0D0uusXtSYABGaxjLighwAHdy8oNdTQoBoVC
-         bcwaa/6qE+mARo3GHiwJ09fssO5Tz2Rs7U7+vmiddO6jvIzVbZLizwXBh4QwLJvLIv99
-         eCwoXq9k1c352H1RevOjR81xKy88MLU9ASr0tGJv6T46ffidSBPOOwM2D2tGEIcMa2eb
-         l5TmgW4nHdf/A+kBWA+B8mSiRBk3V5wJ7LTm8i7VxyhdGiDWc+qM8OErGKeGopbkU/r0
-         bFnA==
+        bh=32H8bMdQWLl4HBY6nkF3Y7yCvSJU2H00os9QmN/seNQ=;
+        b=tfKVTzBh7gfF7qUht9OuGoFAQNbi+Ib5OdsCnBF6AuLA2aS+trvzdAcW9zMt31TzFE
+         Nu0iKxOQTKxS4JtyPSyIe+njd+htVd7GAuGapiIU+m8S96mR57IsUHWe8A8uprQaasG9
+         KWLWtdtUPny2LGYv3e1JLrBdxD2A25F+PFYJfcosJIUTbbVlRrOXhK0CFX4LiTpW2OWC
+         sSJxAhvEIh1m+JvazRVvMdSF9beGDUt7lj2DG6idoujiMUB4hYj75iwRuTqSxx06Ji4i
+         OBtqksL4+pxhCVeyyb9MCRapFSC+zm7cchDq5WmQ5+UD8bMnFvR36FkZXoOHWkoDM/nu
+         zzbg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=93pd9G4UIoBr8e0tvrz9C44+OnAylV1JTAk/uJtJYjk=;
-        b=Xi8OEA/uRWqfOHYUd8LrUfpo8QPUkvrUGbvFv33z9hX3nA2GDKp+QyfryaaNvh/dVJ
-         82zUWfuvnVJO2TK3BZ2UGzUPMjCl1Oee9MktxVrNGIum3gSSwWzrVowd/ldscyYn3NWY
-         8bZckCML6s+/3I0RaDJPmFMKs5p4wElDUWxJc3JFCfIzqgtxHggXt5bksbL3Jne5xYQ3
-         zUA6TbD/AyAP5XJ3MJwF7w+199tg/62fJHTUo2RhxcQgVU2u+LqC6XBGkzGsSgHeNRt9
-         NChwK7Z5AM7BpR5kIe6I3ynVohJ5c/YWTEgfm8jLh4sMCQHMdBQ4zm/acAha+d3YfAXx
-         M43w==
-X-Gm-Message-State: APjAAAXkXEDt8FeYCxwQYf7yz8WoQTp69MBBECdMVN3mA6C1A3TqRIA1
-        JN/Pxl8AM/kpQEhspKmRWT+Mew==
-X-Google-Smtp-Source: APXvYqyUdnoXHD0MZr35aFY9ap745bjtRuh4g+87m2KYH4pWO+nAlZ1xGOtU603AW3GnIk1/gjmKYQ==
-X-Received: by 2002:a62:e910:: with SMTP id j16mr27077606pfh.123.1561007633635;
-        Wed, 19 Jun 2019 22:13:53 -0700 (PDT)
+        bh=32H8bMdQWLl4HBY6nkF3Y7yCvSJU2H00os9QmN/seNQ=;
+        b=gmbR8vHmIuxrlR2Rc6a+4UDBo8uuvuIgW8oYK93ymF/+2Yh5CNdfdpIG3R6tTsGlZ8
+         FYo01k7m5UqCOVshmKQ55EvjoHogtfL+i8gLt6N2zH9ueh+wwt2r3V+GkWSHtCD7mZXf
+         07GZ9TdvL7BQuiI0LJnr93KCmv6aBppgG5tk9N0i3XiSYf5ahZ5DUMe4zfRvyPdofbQj
+         aRBBBKaYiyQTTTJvQon0zMjIXkyKU1SIeh3S2huBM3ccpdSPB1uxuQOHc5FOWN7rjgZ/
+         rFusClUrNzcBvRvLvK+340/Tui4IKErUsM8Od7Bhvrzno9zYvNXr4gKKgv64Kxr5/SLE
+         oRQQ==
+X-Gm-Message-State: APjAAAWjgN44EvZASpMAE0XgjgCmnG0JBRxczcN4lXmwhzO4l28N4poS
+        2D8XEQfvl6h/K8FIPSbIDIJNEA==
+X-Google-Smtp-Source: APXvYqwv4o9k382uodWhKnV3+u/6LJ8KbCgAn7Gw6I7aSlqt6Yg7joY1bw+jPfz0F5fMMt+8cS1Pow==
+X-Received: by 2002:aa7:83d4:: with SMTP id j20mr132388733pfn.90.1561007641132;
+        Wed, 19 Jun 2019 22:14:01 -0700 (PDT)
 Received: from limbo.local (123-204-46-122.static.seed.net.tw. [123.204.46.122])
-        by smtp.gmail.com with ESMTPSA id j2sm26383423pfn.135.2019.06.19.22.13.49
+        by smtp.gmail.com with ESMTPSA id j2sm26383423pfn.135.2019.06.19.22.13.58
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 19 Jun 2019 22:13:53 -0700 (PDT)
+        Wed, 19 Jun 2019 22:14:00 -0700 (PDT)
 From:   Daniel Drake <drake@endlessm.com>
 To:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me
 Cc:     linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
         bhelgaas@google.com, linux-ide@vger.kernel.org, linux@endlessm.com,
         linux-kernel@vger.kernel.org, hare@suse.de,
         alex.williamson@redhat.com, dan.j.williams@intel.com
-Subject: [PATCH v2 2/5] nvme: rename "pci" operations to "mmio"
-Date:   Thu, 20 Jun 2019 13:13:30 +0800
-Message-Id: <20190620051333.2235-3-drake@endlessm.com>
+Subject: [PATCH v2 4/5] nvme: move common definitions to pci.h
+Date:   Thu, 20 Jun 2019 13:13:32 +0800
+Message-Id: <20190620051333.2235-5-drake@endlessm.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190620051333.2235-1-drake@endlessm.com>
 References: <20190620051333.2235-1-drake@endlessm.com>
@@ -75,100 +75,312 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-In preparation for adding a platform_device nvme host, rename to a more
-generic "mmio" prefix.
+A platform-driver for nvme resources needs access to struct nvme_dev and
+other definitions that are currently local to pci.c.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 Signed-off-by: Daniel Drake <drake@endlessm.com>
 ---
- drivers/nvme/host/pci.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+ drivers/nvme/host/pci.c | 125 +-----------------------------------
+ drivers/nvme/host/pci.h | 136 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 137 insertions(+), 124 deletions(-)
+ create mode 100644 drivers/nvme/host/pci.h
 
 diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 524d6bd6d095..42990b93349d 100644
+index 23bda524f16b..bed6c91b6b7c 100644
 --- a/drivers/nvme/host/pci.c
 +++ b/drivers/nvme/host/pci.c
-@@ -1108,7 +1108,7 @@ static int nvme_poll(struct blk_mq_hw_ctx *hctx)
- 	return found;
- }
+@@ -26,6 +26,7 @@
  
--static void nvme_pci_submit_async_event(struct nvme_ctrl *ctrl)
-+static void nvme_mmio_submit_async_event(struct nvme_ctrl *ctrl)
+ #include "trace.h"
+ #include "nvme.h"
++#include "pci.h"
+ 
+ #define SQ_SIZE(depth)		(depth * sizeof(struct nvme_command))
+ #define CQ_SIZE(depth)		(depth * sizeof(struct nvme_completion))
+@@ -83,97 +84,9 @@ static int poll_queues = 0;
+ module_param_cb(poll_queues, &queue_count_ops, &poll_queues, 0644);
+ MODULE_PARM_DESC(poll_queues, "Number of queues to use for polled IO.");
+ 
+-struct nvme_dev;
+-struct nvme_queue;
+-
+ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown);
+ static bool __nvme_disable_io_queues(struct nvme_dev *dev, u8 opcode);
+ 
+-struct nvme_dev_ops {
+-	/* Enable device (required) */
+-	int (*enable)(struct nvme_dev *dev);
+-
+-	/* Disable device (required) */
+-	void (*disable)(struct nvme_dev *dev);
+-
+-	/* Allocate IRQ vectors for given number of io queues (required) */
+-	int (*setup_irqs)(struct nvme_dev *dev, int nr_io_queues);
+-
+-	/* Get the IRQ vector for a specific queue */
+-	int (*q_irq)(struct nvme_queue *q);
+-
+-	/* Allocate device-specific SQ command buffer (optional) */
+-	int (*cmb_alloc_sq_cmds)(struct nvme_queue *nvmeq, size_t size,
+-				 struct nvme_command **sq_cmds,
+-				 dma_addr_t *sq_dma_addr);
+-
+-	/* Free device-specific SQ command buffer (optional) */
+-	void (*cmb_free_sq_cmds)(struct nvme_queue *nvmeq,
+-				 struct nvme_command *sq_cmds, size_t size);
+-
+-	/* Device-specific mapping of blk queues to CPUs (optional) */
+-	int (*map_queues)(struct nvme_dev *dev, struct blk_mq_queue_map *map,
+-			  int offset);
+-
+-	/* Check if device is enabled on the bus (required) */
+-	int (*is_enabled)(struct nvme_dev *dev);
+-
+-	/* Check if channel is in running state (required) */
+-	int (*is_offline)(struct nvme_dev *dev);
+-
+-	/* Check if device is present and responding (optional) */
+-	bool (*is_present)(struct nvme_dev *dev);
+-
+-	/* Check & log device state before it gets reset (optional) */
+-	void (*warn_reset)(struct nvme_dev *dev);
+-};
+-
+-/*
+- * Represents an NVM Express device.  Each nvme_dev is a PCI function.
+- */
+-struct nvme_dev {
+-	const struct resource *res;
+-	const struct nvme_dev_ops *ops;
+-	struct nvme_queue *queues;
+-	struct blk_mq_tag_set tagset;
+-	struct blk_mq_tag_set admin_tagset;
+-	u32 __iomem *dbs;
+-	struct device *dev;
+-	struct dma_pool *prp_page_pool;
+-	struct dma_pool *prp_small_pool;
+-	unsigned online_queues;
+-	unsigned max_qid;
+-	unsigned io_queues[HCTX_MAX_TYPES];
+-	unsigned int num_vecs;
+-	int q_depth;
+-	u32 db_stride;
+-	void __iomem *bar;
+-	unsigned long bar_mapped_size;
+-	struct work_struct remove_work;
+-	struct mutex shutdown_lock;
+-	bool subsystem;
+-	u64 cmb_size;
+-	bool cmb_use_sqes;
+-	u32 cmbsz;
+-	u32 cmbloc;
+-	struct nvme_ctrl ctrl;
+-
+-	mempool_t *iod_mempool;
+-
+-	/* shadow doorbell buffer support: */
+-	u32 *dbbuf_dbs;
+-	dma_addr_t dbbuf_dbs_dma_addr;
+-	u32 *dbbuf_eis;
+-	dma_addr_t dbbuf_eis_dma_addr;
+-
+-	/* host memory buffer support: */
+-	u64 host_mem_size;
+-	u32 nr_host_mem_descs;
+-	dma_addr_t host_mem_descs_dma;
+-	struct nvme_host_mem_buf_desc *host_mem_descs;
+-	void **host_mem_desc_bufs;
+-};
+-
+ static int io_queue_depth_set(const char *val, const struct kernel_param *kp)
  {
- 	struct nvme_dev *dev = to_nvme_dev(ctrl);
- 	struct nvme_queue *nvmeq = &dev->queues[0];
-@@ -2448,7 +2448,7 @@ static void nvme_release_prp_pools(struct nvme_dev *dev)
- 	dma_pool_destroy(dev->prp_small_pool);
+ 	int n = 0, ret;
+@@ -213,42 +126,6 @@ static inline struct nvme_dev *to_nvme_dev(struct nvme_ctrl *ctrl)
+ 	return container_of(ctrl, struct nvme_dev, ctrl);
  }
  
--static void nvme_pci_free_ctrl(struct nvme_ctrl *ctrl)
-+static void nvme_mmio_free_ctrl(struct nvme_ctrl *ctrl)
- {
- 	struct nvme_dev *dev = to_nvme_dev(ctrl);
- 
-@@ -2610,42 +2610,42 @@ static void nvme_remove_dead_ctrl_work(struct work_struct *work)
- 	nvme_put_ctrl(&dev->ctrl);
- }
- 
--static int nvme_pci_reg_read32(struct nvme_ctrl *ctrl, u32 off, u32 *val)
-+static int nvme_mmio_reg_read32(struct nvme_ctrl *ctrl, u32 off, u32 *val)
- {
- 	*val = readl(to_nvme_dev(ctrl)->bar + off);
- 	return 0;
- }
- 
--static int nvme_pci_reg_write32(struct nvme_ctrl *ctrl, u32 off, u32 val)
-+static int nvme_mmio_reg_write32(struct nvme_ctrl *ctrl, u32 off, u32 val)
- {
- 	writel(val, to_nvme_dev(ctrl)->bar + off);
- 	return 0;
- }
- 
--static int nvme_pci_reg_read64(struct nvme_ctrl *ctrl, u32 off, u64 *val)
-+static int nvme_mmio_reg_read64(struct nvme_ctrl *ctrl, u32 off, u64 *val)
- {
- 	*val = readq(to_nvme_dev(ctrl)->bar + off);
- 	return 0;
- }
- 
--static int nvme_pci_get_address(struct nvme_ctrl *ctrl, char *buf, int size)
-+static int nvme_mmio_get_address(struct nvme_ctrl *ctrl, char *buf, int size)
- {
- 	struct pci_dev *pdev = to_pci_dev(to_nvme_dev(ctrl)->dev);
- 
- 	return snprintf(buf, size, "%s", dev_name(&pdev->dev));
- }
- 
--static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
-+static const struct nvme_ctrl_ops nvme_mmio_ctrl_ops = {
- 	.name			= "pcie",
- 	.module			= THIS_MODULE,
- 	.flags			= NVME_F_METADATA_SUPPORTED |
- 				  NVME_F_PCI_P2PDMA,
--	.reg_read32		= nvme_pci_reg_read32,
--	.reg_write32		= nvme_pci_reg_write32,
--	.reg_read64		= nvme_pci_reg_read64,
--	.free_ctrl		= nvme_pci_free_ctrl,
--	.submit_async_event	= nvme_pci_submit_async_event,
--	.get_address		= nvme_pci_get_address,
-+	.reg_read32		= nvme_mmio_reg_read32,
-+	.reg_write32		= nvme_mmio_reg_write32,
-+	.reg_read64		= nvme_mmio_reg_read64,
-+	.free_ctrl		= nvme_mmio_free_ctrl,
-+	.submit_async_event	= nvme_mmio_submit_async_event,
-+	.get_address		= nvme_mmio_get_address,
- };
- 
- static int nvme_dev_map(struct nvme_dev *dev)
-@@ -2758,7 +2758,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto release_pools;
- 	}
- 
--	result = nvme_init_ctrl(&dev->ctrl, &pdev->dev, &nvme_pci_ctrl_ops,
-+	result = nvme_init_ctrl(&dev->ctrl, &pdev->dev, &nvme_mmio_ctrl_ops,
- 			quirks);
- 	if (result)
- 		goto release_mempool;
+-/*
+- * An NVM Express queue.  Each device has at least two (one for admin
+- * commands and one for I/O commands).
+- */
+-struct nvme_queue {
+-	struct nvme_dev *dev;
+-	char irqname[24];	/* nvme4294967295-65535\0 */
+-	spinlock_t sq_lock;
+-	struct nvme_command *sq_cmds;
+-	 /* only used for poll queues: */
+-	spinlock_t cq_poll_lock ____cacheline_aligned_in_smp;
+-	volatile struct nvme_completion *cqes;
+-	struct blk_mq_tags **tags;
+-	dma_addr_t sq_dma_addr;
+-	dma_addr_t cq_dma_addr;
+-	u32 __iomem *q_db;
+-	u16 q_depth;
+-	u16 cq_vector;
+-	u16 sq_tail;
+-	u16 last_sq_tail;
+-	u16 cq_head;
+-	u16 last_cq_head;
+-	u16 qid;
+-	u8 cq_phase;
+-	unsigned long flags;
+-#define NVMEQ_ENABLED		0
+-#define NVMEQ_SQ_CMB		1
+-#define NVMEQ_DELETE_ERROR	2
+-#define NVMEQ_POLLED		3
+-	u32 *dbbuf_sq_db;
+-	u32 *dbbuf_cq_db;
+-	u32 *dbbuf_sq_ei;
+-	u32 *dbbuf_cq_ei;
+-	struct completion delete_done;
+-};
+-
+ /*
+  * The nvme_iod describes the data in an I/O.
+  *
+diff --git a/drivers/nvme/host/pci.h b/drivers/nvme/host/pci.h
+new file mode 100644
+index 000000000000..7e4d73a22876
+--- /dev/null
++++ b/drivers/nvme/host/pci.h
+@@ -0,0 +1,136 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * NVM Express device driver
++ * Copyright (c) 2011-2014, Intel Corporation.
++ */
++
++#ifndef __NVME_PCI_H__
++#define __NVME_PCI_H__
++#include <linux/blk-mq.h>
++#include <linux/device.h>
++
++struct nvme_queue;
++struct nvme_dev;
++
++struct nvme_dev_ops {
++	/* Enable device (required) */
++	int (*enable)(struct nvme_dev *dev);
++
++	/* Disable device (required) */
++	void (*disable)(struct nvme_dev *dev);
++
++	/* Allocate IRQ vectors for given number of io queues (required) */
++	int (*setup_irqs)(struct nvme_dev *dev, int nr_io_queues);
++
++	/* Get the IRQ vector for a specific queue */
++	int (*q_irq)(struct nvme_queue *q);
++
++	/* Allocate device-specific SQ command buffer (optional) */
++	int (*cmb_alloc_sq_cmds)(struct nvme_queue *nvmeq, size_t size,
++				 struct nvme_command **sq_cmds,
++				 dma_addr_t *sq_dma_addr);
++
++	/* Free device-specific SQ command buffer (optional) */
++	void (*cmb_free_sq_cmds)(struct nvme_queue *nvmeq,
++				 struct nvme_command *sq_cmds, size_t size);
++
++	/* Device-specific mapping of blk queues to CPUs (optional) */
++	int (*map_queues)(struct nvme_dev *dev, struct blk_mq_queue_map *map,
++			  int offset);
++
++	/* Check if device is enabled on the bus (required) */
++	int (*is_enabled)(struct nvme_dev *dev);
++
++	/* Check if channel is in running state (required) */
++	int (*is_offline)(struct nvme_dev *dev);
++
++	/* Check if device is present and responding (optional) */
++	bool (*is_present)(struct nvme_dev *dev);
++
++	/* Check & log device state before it gets reset (optional) */
++	void (*warn_reset)(struct nvme_dev *dev);
++};
++
++/*
++ * Represents an NVM Express device.  Each nvme_dev is a PCI function.
++ */
++struct nvme_dev {
++	const struct resource *res;
++	const struct nvme_dev_ops *ops;
++	struct nvme_queue *queues;
++	struct blk_mq_tag_set tagset;
++	struct blk_mq_tag_set admin_tagset;
++	u32 __iomem *dbs;
++	struct device *dev;
++	struct dma_pool *prp_page_pool;
++	struct dma_pool *prp_small_pool;
++	unsigned online_queues;
++	unsigned max_qid;
++	unsigned io_queues[HCTX_MAX_TYPES];
++	unsigned int num_vecs;
++	int q_depth;
++	u32 db_stride;
++	void __iomem *bar;
++	unsigned long bar_mapped_size;
++	struct work_struct remove_work;
++	struct mutex shutdown_lock;
++	bool subsystem;
++	u64 cmb_size;
++	bool cmb_use_sqes;
++	u32 cmbsz;
++	u32 cmbloc;
++	struct nvme_ctrl ctrl;
++
++	mempool_t *iod_mempool;
++
++	/* shadow doorbell buffer support: */
++	u32 *dbbuf_dbs;
++	dma_addr_t dbbuf_dbs_dma_addr;
++	u32 *dbbuf_eis;
++	dma_addr_t dbbuf_eis_dma_addr;
++
++	/* host memory buffer support: */
++	u64 host_mem_size;
++	u32 nr_host_mem_descs;
++	dma_addr_t host_mem_descs_dma;
++	struct nvme_host_mem_buf_desc *host_mem_descs;
++	void **host_mem_desc_bufs;
++};
++
++/*
++ * An NVM Express queue.  Each device has at least two (one for admin
++ * commands and one for I/O commands).
++ */
++struct nvme_queue {
++	struct nvme_dev *dev;
++	char irqname[24];	/* nvme4294967295-65535\0 */
++	spinlock_t sq_lock;
++	struct nvme_command *sq_cmds;
++	 /* only used for poll queues: */
++	spinlock_t cq_poll_lock ____cacheline_aligned_in_smp;
++	volatile struct nvme_completion *cqes;
++	struct blk_mq_tags **tags;
++	dma_addr_t sq_dma_addr;
++	dma_addr_t cq_dma_addr;
++	u32 __iomem *q_db;
++	u16 q_depth;
++	u16 cq_vector;
++	u16 sq_tail;
++	u16 last_sq_tail;
++	u16 cq_head;
++	u16 last_cq_head;
++	u16 qid;
++	u8 cq_phase;
++	unsigned long flags;
++#define NVMEQ_ENABLED		0
++#define NVMEQ_SQ_CMB		1
++#define NVMEQ_DELETE_ERROR	2
++#define NVMEQ_POLLED		3
++	u32 *dbbuf_sq_db;
++	u32 *dbbuf_cq_db;
++	u32 *dbbuf_sq_ei;
++	u32 *dbbuf_cq_ei;
++	struct completion delete_done;
++};
++
++#endif /* __NVME_PCI_H__ */
 -- 
 2.20.1
 
