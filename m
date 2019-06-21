@@ -2,125 +2,118 @@ Return-Path: <SRS0=K8vK=UU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65128C43613
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:41:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CFFFC4646C
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:45:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A8E420673
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:41:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0650020673
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:45:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ip23F2gH"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="moZqDRZ2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726557AbfFUPlH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jun 2019 11:41:07 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:46652 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725992AbfFUPlG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 11:41:06 -0400
-Received: by mail-pf1-f195.google.com with SMTP id 81so3777107pfy.13;
-        Fri, 21 Jun 2019 08:41:06 -0700 (PDT)
+        id S1726083AbfFUPpE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jun 2019 11:45:04 -0400
+Received: from mail-io1-f67.google.com ([209.85.166.67]:40795 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726098AbfFUPpE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 11:45:04 -0400
+Received: by mail-io1-f67.google.com with SMTP id n5so89356ioc.7
+        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2019 08:45:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Aoj0LDY9u1XoPkQxBcF3bn2Pa+FqX3opzjAviuLaNWM=;
-        b=Ip23F2gH/oF/bVFpx3SqQJnQpWuWDYDVYN8cs+WcWNE+s2xj5xp2KdkfpRXpeAuykI
-         7dRyZK7/qvXJ3mx20w3B3YsKQhjdy8Lz7/fHTqnIDSgYVy7G0iOKxsokqcP2q1qW7dTE
-         91DnhKD8J80pu5eFfQTdP9OPFcUYxaROaKdnAgAV1DksbVbd1Hf2QJ8gpZG1vssnwOFq
-         UUVK+nt9hWj1lVbEEbjsETDQ/g0UqL7k+lw0fh3YExQKvVgcgn+CCg//9da4SA8y+JeE
-         B1YkvzsOXKtVerOzcTTtMaH1KaHm0UosDzXrKkILMyWD/5AD0neQPWWqCPPVdcmWJYYz
-         KHAg==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=gxm7GOcU7qUFuWy1WhLbGliMHK4qz3vxLGVpx4HgQB0=;
+        b=moZqDRZ2BR+wvMG5nlpY0ZdMbc4FBaH9Oatm9ufFW1xWv4o//FJ6SY5IXFB1Na8ESB
+         R5WPHrWvdAzZyibh/L9Xm3NFcL33L0sAC/XY+EFM6rN+q+bFT2VcCyNCSKedQNXI/44/
+         ssbWKLOfTr9BOlWxnbVy5U6MsNf1HuBl2PU8mCKOOFveZQtjW31frkb3+44ocuxTS5Nu
+         VOIggl8fh1dcZZSnE3q/kb82ZU68iaWtdBliNWXZsVWgcvG1DALSnyW9CacDD21HTACl
+         oNvvnz+1HillIZjWciMPJr55EMvJ0Vi4C6MgPDUjbhcQ4dWZVqWhN1xrQ6lalyK8UDeo
+         JHqg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Aoj0LDY9u1XoPkQxBcF3bn2Pa+FqX3opzjAviuLaNWM=;
-        b=iD25E6Z/I3uMuB32Cb/GfZAvDv+OjtO9Mt182CKqVn4LujTSb4dUyUaR+0Q0AYkPF0
-         1KjjC9CwmuXyimfUxlVM6VBBxlrQrI7UcSvOAFQecCybdbGmXgOcsJttNQlzUiNQ3pha
-         QZsRZ7PPq72KVS9G0IrUn0Q7M/VeX2Qws6Egjj9Eps4eHD8HO1/sFchXbnThFyexp1Eb
-         ovmw/Hj9iOvKwTKM76nMJMTTcjlHQDciwxD/5evUMLol8iXtFLQFCDW/Ecea39/fKVRK
-         diZ/70LzAYDvjMUB67S9NveAPYbaXdJ+5636R63w8CkdZhf/xD14P+ZG8AE+p4Hw2eF3
-         UnGQ==
-X-Gm-Message-State: APjAAAUpkt3yEbtvW/C+ItrHBV6yLWGAB83Y3wetAWuugII5XJ9PXzue
-        ZHYBwhQ5TlVbPezyJnL6UMw=
-X-Google-Smtp-Source: APXvYqzDQOmbN6ealF+fTcqT/CypEBXpOiru0DZ4Q4FpL8sVFL6yIucuvUoeXMrRa3y8MlNzzISpKw==
-X-Received: by 2002:a63:f648:: with SMTP id u8mr18995080pgj.132.1561131664539;
-        Fri, 21 Jun 2019 08:41:04 -0700 (PDT)
-Received: from localhost.localdomain ([112.196.181.13])
-        by smtp.googlemail.com with ESMTPSA id m8sm2556940pjs.22.2019.06.21.08.41.01
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 21 Jun 2019 08:41:04 -0700 (PDT)
-From:   Puranjay Mohan <puranjay12@gmail.com>
-To:     Shuah Khan <skhan@linuxfoundation.org>
-Cc:     Puranjay Mohan <puranjay12@gmail.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>,
-        netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-pci@vger.kernel.org,
-        Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH v5 1/3] net: fddi: skfp: Rename local PCI defines to match generic PCI defines
-Date:   Fri, 21 Jun 2019 21:10:35 +0530
-Message-Id: <20190621154037.25245-2-puranjay12@gmail.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190621154037.25245-1-puranjay12@gmail.com>
-References: <20190621154037.25245-1-puranjay12@gmail.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=gxm7GOcU7qUFuWy1WhLbGliMHK4qz3vxLGVpx4HgQB0=;
+        b=hWEoIXmEH/B2Kf0+zNmHixKiP+uIwnuzrwA0PTMXAtKpPBCk6YMO9pXvoycdK9U+Qe
+         7VyYra4z+e2OIul2H6JG+3ykaDE3RAzAfZLtArELC1/GGi7qnypmqR565ZxQzSpQO095
+         12by/NFEuaeTJj9hvwETBGJ5smjYT/TV3RWAAbfOm005QFWOwPAH9vadNeWXVaS4nLlS
+         gO9fP4jvSkNHPjoPvwJT+7mus9FRM9c6v+CDw2fquO1yb8REZeL7AvwOs0VJupw2PI5K
+         da18jWaXLGr9lWaYlwsDrVnojnxkQIqG5HOrbP307aJelXUu/vSvNPVCOZaLy9KqL/Wr
+         B5sg==
+X-Gm-Message-State: APjAAAWuCzlt3S2u4s7XvPhgG9EpCkhxm3w4F4NvZ0LLNgi0PUJf/2lX
+        1YWUf8VeLFwNUBMli3LYBtdxddE73xCTrnCBFLbPRg==
+X-Google-Smtp-Source: APXvYqzZY+gOixQjMUl856N0sHPx+HD44kd2sZoHmHXE1d0Rv7jbWWsubnhodFuDC99TqRUIdNNTbX9lAyGC6TFDJNs=
+X-Received: by 2002:a5d:8794:: with SMTP id f20mr37337499ion.128.1561131903453;
+ Fri, 21 Jun 2019 08:45:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190615002359.29577-1-benh@kernel.crashing.org> <20190615002359.29577-4-benh@kernel.crashing.org>
+In-Reply-To: <20190615002359.29577-4-benh@kernel.crashing.org>
+From:   Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date:   Fri, 21 Jun 2019 17:44:52 +0200
+Message-ID: <CAKv+Gu95mmsSzzAUTp5Cw3vN-Ge=OZ6danTSeb3xs7dj9Vs6ow@mail.gmail.com>
+Subject: Re: [PATCH 4/4] arm64: pci: acpi: Preserve PCI resources
+ configuration when asked by ACPI
+To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Sinan Kaya <okaya@kernel.org>, Ali Saidi <alisaidi@amazon.com>,
+        Zeev Zilberman <zeev@amazon.com>,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rename the PCI_REV_ID and other local defines to Generic PCI define names
-in skfbi.h and drvfbi.c to make it compatible with the pci_regs.h.
+On Sat, 15 Jun 2019 at 02:30, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+>
+> When _DSM #5 returns 0 for a host bridge, we need to claim the existing
+> resources rather than reassign everything.
+>
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-Signed-off-by: Puranjay Mohan <puranjay12@gmail.com>
----
- drivers/net/fddi/skfp/drvfbi.c  | 2 +-
- drivers/net/fddi/skfp/h/skfbi.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Acked-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 
-diff --git a/drivers/net/fddi/skfp/drvfbi.c b/drivers/net/fddi/skfp/drvfbi.c
-index bdd5700e71fa..b324c1acf195 100644
---- a/drivers/net/fddi/skfp/drvfbi.c
-+++ b/drivers/net/fddi/skfp/drvfbi.c
-@@ -127,7 +127,7 @@ static void card_start(struct s_smc *smc)
- 	 *	 at very first before any other initialization functions is
- 	 *	 executed.
- 	 */
--	rev_id = inp(PCI_C(PCI_REV_ID)) ;
-+	rev_id = inp(PCI_C(PCI_REVISION_ID)) ;
- 	if ((rev_id & 0xf0) == SK_ML_ID_1 || (rev_id & 0xf0) == SK_ML_ID_2) {
- 		smc->hw.hw_is_64bit = TRUE ;
- 	} else {
-diff --git a/drivers/net/fddi/skfp/h/skfbi.h b/drivers/net/fddi/skfp/h/skfbi.h
-index 89557457b352..5f9b631e7515 100644
---- a/drivers/net/fddi/skfp/h/skfbi.h
-+++ b/drivers/net/fddi/skfp/h/skfbi.h
-@@ -31,7 +31,7 @@
- #define	PCI_DEVICE_ID	0x02	/* 16 bit	Device ID */
- #define	PCI_COMMAND	0x04	/* 16 bit	Command */
- #define	PCI_STATUS	0x06	/* 16 bit	Status */
--#define	PCI_REV_ID	0x08	/*  8 bit	Revision ID */
-+#define	PCI_REVISION_ID	0x08	/*  8 bit	Revision ID */
- #define	PCI_CLASS_CODE	0x09	/* 24 bit	Class Code */
- #define	PCI_CACHE_LSZ	0x0c	/*  8 bit	Cache Line Size */
- #define	PCI_LAT_TIM	0x0d	/*  8 bit	Latency Timer */
-@@ -110,7 +110,7 @@
- #define PCI_66MHZCAP	0x0020	/* Bit 5:	66 MHz PCI bus clock capable */
- #define PCI_NEWCAP	0x0010	/* Bit 4:	New cap. list implemented */
- 
--#define PCI_ERRBITS	(PCI_PERR|PCI_SERR|PCI_RMABORT|PCI_STABORT|PCI_DATAPERR)
-+#define PCI_ERRBITS	(PCI_STATUS_DETECTED_PARITY | PCI_STATUS_SIG_SYSTEM_ERROR | PCI_STATUS_REC_MASTER_ABORT | PCI_STATUS_SIG_TARGET_ABORT | PCI_STATUS_PARITY)
- 
- /*	PCI_REV_ID	8 bit	Revision ID */
- /*	PCI_CLASS_CODE	24 bit	Class Code */
--- 
-2.21.0
-
+> ---
+>  arch/arm64/kernel/pci.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
+>
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 1419b1b4e9b9..a2c608a3fc41 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -168,6 +168,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>         struct acpi_pci_generic_root_info *ri;
+>         struct pci_bus *bus, *child;
+>         struct acpi_pci_root_ops *root_ops;
+> +       struct pci_host_bridge *hb;
+>
+>         ri = kzalloc(sizeof(*ri), GFP_KERNEL);
+>         if (!ri)
+> @@ -193,6 +194,16 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>         if (!bus)
+>                 return NULL;
+>
+> +       hb = pci_find_host_bridge(bus);
+> +
+> +       /* If ACPI tells us to preserve the resource configuration, claim now */
+> +       if (hb->preserve_config)
+> +               pci_bus_claim_resources(bus);
+> +
+> +       /*
+> +        * Assign whatever was left unassigned. If we didn't claim above, this will
+> +        * reassign everything.
+> +        */
+>         pci_assign_unassigned_root_bus_resources(bus);
+>
+>         list_for_each_entry(child, &bus->children, node)
+> --
+> 2.17.1
+>
