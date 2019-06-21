@@ -2,59 +2,58 @@ Return-Path: <SRS0=K8vK=UU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FB0C43613
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:19:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1325FC43613
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:41:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B584206B7
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:19:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDDF720673
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:41:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JG74n1GE"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CBeHdfsA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726106AbfFUPTn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jun 2019 11:19:43 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:33178 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726070AbfFUPTn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 11:19:43 -0400
-Received: by mail-pf1-f194.google.com with SMTP id x15so3786165pfq.0;
-        Fri, 21 Jun 2019 08:19:42 -0700 (PDT)
+        id S1726135AbfFUPlC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jun 2019 11:41:02 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:44733 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725992AbfFUPlB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 11:41:01 -0400
+Received: by mail-pf1-f195.google.com with SMTP id t16so3782782pfe.11;
+        Fri, 21 Jun 2019 08:41:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=wkYJv093Ph/iPqswb4+lpc13NRD+hmqJJxad6v6T4Wg=;
-        b=JG74n1GEpv3kCeplvo4x/WuN7VNLAV3o6XmJ5NxsplUNZojG8xOuo4wLMtEfwA3UFP
-         DNVnx7x8a6Hwedzhz84nYPdNwjT4Y4ft0QUOtVSaiIR6QP2p1WZOQbdNz8PraDw2nFRr
-         lzIRaPAJMrJy+XiaQ7RJcHOoI06br0TzTijIq5ar1nuEvTHTgNm0JArmd9FGbnBKOvJC
-         9lJbEzJOrgYrfCW8jYb27HnFH8NS8Fqqi02DpvXiAdNN/8gL2O0A0C2kzqZKwZqJd2hU
-         2FohhOBL3ghbeKuNnGJnCiTMpNNV7mDXryE4UTyCHHub3QD2HLm8Tx43UroDd1+r4yQ4
-         RHDg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EJDiq31OV+XOzMvfVzXl+2UwahEbMZev2ZHrV8WxK5E=;
+        b=CBeHdfsAjH/vhHFVhKYolBfVhpk7AU5PIFQxMEcrUxqMTagGV1z3K8iN5P+BDWMAiH
+         4YOSwc/2XYkLD5UudTQzEAWJ3H2/m6/wAK59VqASaWdrqmEA8cOYKjVLWERY97s23i6j
+         3uiVQ6e9SA0egeqbjRZK5yOSTQGsGq27ULHdW4RZvDGUEz3B0E7gwoRpwp8WH/6Bt+S/
+         VvRpPJICbg31ocSKcu5fXhN32BVPubS7QWV7q4e0dwg/kPrML5PY6wHyCfvuV71lw+cf
+         LT6qVxggJCaZ+/7hOxLH9eZyOGmb028d7oqILfgWAGpaJbkfbzGD35RBDwWDzPDElyoJ
+         qXhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=wkYJv093Ph/iPqswb4+lpc13NRD+hmqJJxad6v6T4Wg=;
-        b=BH+6Xoill4yCvbKRHnxRSwDNICrkudVi5THQLaQRltiQHMCpShY+KxAVhM/ZbjEYqc
-         CRE/u5ltQbwQ9tZgetD9OxwLe5HV/nHMJLSv7dP62qFNuW8eL6LMrOAixxVvbODvoLCt
-         k4iV2axa/fHPfNb/5hPQ0iL7Bhr87XWQ7YJ9hf0NnnyO/M6BVTJSRSGvI6xry34OMtim
-         c7mJiM+wxNgSm+USaAXx1K1MMuoASx8sqgIK0FTFFUqfCq8AEq/NnnwJdR13o19e8qbI
-         E+RrtGESeaGsUW/yoc+l9S8l6NDKq2cqaZfea/PBhaM0xnQ6QZ4EfGqbQCJXXwIkIjSo
-         h1Aw==
-X-Gm-Message-State: APjAAAUSpFl4XCRp67YL1ZzgfZ1ky6MRTTAvHG35I4wtfArSQVF14EAR
-        XtPbfa/ZSGumUS5k0Zsm/EuCSLRBJXVIPQ==
-X-Google-Smtp-Source: APXvYqwdKO8QnReTZDmtgPmfnr2ABDKp3jxXDz3DL9xxFZWLD9xyLVdfrqcULfi/6Fo47NOHO+Wksw==
-X-Received: by 2002:a63:5c19:: with SMTP id q25mr19314252pgb.215.1561130382498;
-        Fri, 21 Jun 2019 08:19:42 -0700 (PDT)
-Received: from arch ([112.196.181.13])
-        by smtp.gmail.com with ESMTPSA id b6sm2800521pgd.5.2019.06.21.08.19.38
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EJDiq31OV+XOzMvfVzXl+2UwahEbMZev2ZHrV8WxK5E=;
+        b=ug/glARO3tcMNSs+hpM4MK4VbhY3bTxSOnvpA9RvD9+w2PdZRAE/rrFXcWTbCUUi/G
+         Zn7BbFjCUlF5xBKMnIsiLUd5IB/ngjhCyFvQH16V2YaGehUxcpztcOHlrYF4HWJ+4g6Q
+         /2FCI3sn4azmCCj9RBoYxA6bZBRjos/YJcwmg8ZCF11m6jcgM2tNL2Dk9AxDbJ12fh8n
+         MhpXV4fENvak0qI9it1E3U/trE91wuJNfjFCUvcEJrVkYpZLuu+Qg+lRGTi2xPXVDM+z
+         O6ar6KAWuIPj7OvPUlRIb+3/c1Ujzz9YZ6TBt9QavlhWQoCmrZ7VjsFdpQgBZD3mWRvz
+         Lt9A==
+X-Gm-Message-State: APjAAAWFce/urcqEX6iHx2lZwryoiPBFkBvKRrsKTj4iLUh2CbxVtVPJ
+        NvmBlm/A4EsY/hGofBrn95evu7SAC4YB6w==
+X-Google-Smtp-Source: APXvYqwkpj2NQ/IdVQNi2ZOIXe+vJ+m5C2x0CHDk6mvsjFr0zVBFRoEF0zomjold+7YGGDZJZC2C6A==
+X-Received: by 2002:a63:6ec1:: with SMTP id j184mr19205606pgc.225.1561131660887;
+        Fri, 21 Jun 2019 08:41:00 -0700 (PDT)
+Received: from localhost.localdomain ([112.196.181.13])
+        by smtp.googlemail.com with ESMTPSA id m8sm2556940pjs.22.2019.06.21.08.40.57
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 21 Jun 2019 08:19:42 -0700 (PDT)
-Date:   Fri, 21 Jun 2019 20:49:28 +0530
+        Fri, 21 Jun 2019 08:41:00 -0700 (PDT)
 From:   Puranjay Mohan <puranjay12@gmail.com>
 To:     Shuah Khan <skhan@linuxfoundation.org>
 Cc:     Puranjay Mohan <puranjay12@gmail.com>,
@@ -64,57 +63,53 @@ Cc:     Puranjay Mohan <puranjay12@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org,
         Stephen Hemminger <stephen@networkplumber.org>
-Subject: Re: [PATCH v4 0/3] net: fddi: skfp: Use PCI generic definitions
- instead of private duplicates
-Message-ID: <20190621151927.GA12091@arch>
-References: <20190621151415.10795-1-puranjay12@gmail.com>
+Subject: [PATCH v5 0/3] net: fddi: skfp: Use PCI generic definitions instead of private duplicates
+Date:   Fri, 21 Jun 2019 21:10:34 +0530
+Message-Id: <20190621154037.25245-1-puranjay12@gmail.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190621151415.10795-1-puranjay12@gmail.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 21, 2019 at 08:44:12PM +0530, Puranjay Mohan wrote:
-> This patch series removes the private duplicates of PCI definitions in
-> favour of generic definitions defined in pci_regs.h.
-> 
-> This driver only uses some of the generic PCI definitons,
-> which are included from pci_regs.h and thier private versions
-> are removed from skfbi.h with all other private defines.
-> 
-> The skfbi.h defines PCI_REV_ID and other private defines with different
-> names, these are renamed to Generic PCI names to make them
-> compatible with defines in pci_regs.h.
-> 
-> All unused defines are removed from skfbi.h.
->
-I left some of the definitions in v4 too!
-will remove them all and send v5
-sorry for the inconvenience
-> Changes in v4:
-> Removed unused PCI definitions which were left in v3
-> 
-> Changes in v3:
-> Renamed all local PCI definitions to Generic names.
-> Corrected coding style mistakes.
-> 
-> Changes in v2:
-> Converted individual patches to a series.
-> Made sure that individual patches build correctly
-> 
-> Puranjay Mohan (3):
->   net: fddi: skfp: Rename local PCI defines to match generic PCI defines
->   net: fddi: skfp: Include generic PCI definitions
->   net: fddi: skfp: Remove unused private PCI definitions
-> 
->  drivers/net/fddi/skfp/drvfbi.c  |   3 +-
->  drivers/net/fddi/skfp/h/skfbi.h | 217 +-------------------------------
->  2 files changed, 6 insertions(+), 214 deletions(-)
-> 
-> -- 
-> 2.21.0
-> 
+This patch series removes the private duplicates of PCI definitions in
+favour of generic definitions defined in pci_regs.h.
+
+This driver only uses some of the generic PCI definitons,
+which are included from pci_regs.h and thier private versions
+are removed from skfbi.h with all other private defines.
+
+The skfbi.h defines PCI_REV_ID and other private defines with different
+names, these are renamed to Generic PCI names to make them
+compatible with defines in pci_regs.h.
+
+All unused defines are removed from skfbi.h.
+
+Changes in v5:
+Removed unused PCI definitions which were left in v4
+
+Changes in v4:
+Removed unused PCI definitions which were left in v3
+
+Changes in v3:
+Renamed all local PCI definitions to Generic names.
+Corrected coding style mistakes.
+
+Changes in v2:
+Converted individual patches to a series.
+Made sure that individual patches build correctly
+
+Puranjay Mohan (3):
+  net: fddi: skfp: Rename local PCI defines to match generic PCI defines
+  net: fddi: skfp: Include generic PCI definitions
+  net: fddi: skfp: Remove unused private PCI definitions
+
+ drivers/net/fddi/skfp/drvfbi.c  |   3 +-
+ drivers/net/fddi/skfp/h/skfbi.h | 231 +-------------------------------
+ 2 files changed, 6 insertions(+), 228 deletions(-)
+
+-- 
+2.21.0
+
