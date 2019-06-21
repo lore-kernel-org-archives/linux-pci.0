@@ -2,124 +2,91 @@ Return-Path: <SRS0=K8vK=UU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A63FC43613
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 17:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4BB1C43613
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 17:59:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9D8D2070B
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 17:54:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="As84DIw2"
+	by mail.kernel.org (Postfix) with ESMTP id C99CC2070B
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 17:59:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726168AbfFURyP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jun 2019 13:54:15 -0400
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:35152 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726049AbfFURyO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 13:54:14 -0400
-Received: by mail-oi1-f193.google.com with SMTP id a127so5274660oii.2
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2019 10:54:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fWe7JksCarDHmhen9C6EallwqzcNZ3VFsoR3OU1kFs4=;
-        b=As84DIw2X46ExupdWbzau6JXRpfTr7Tvcr3DD71THl2AN+TnXs0Ix3/5NguTZ90GAz
-         ekIGjYs3rGIAaU4Zuhl2b4EC6neLHHrPVvKddYVZchq1kXmnav7PduMCSelt4uRqkhBs
-         H6p2Pp58HhLk/LXcpDOvizAOu5AHmWbnz/KsTZgVWJrU6fecK457WQGr88aTmThOzoDo
-         kIbZw6EA5L0scx+eGkbpDNANsnLPNtIWwS38tDIBjYdLir4joVLYIfAPI245qWV0YPLa
-         EaVu5FdkVKrQyA3imM8SjFY32qBhtVTtiyaBMdTtwU7Qw8VwBekQT0lKHFzrqw/XiED8
-         oIzw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=fWe7JksCarDHmhen9C6EallwqzcNZ3VFsoR3OU1kFs4=;
-        b=ZLs5iOOLCxdBZ/f9v8MG9vekn6dLr9Fn4X6vJc/Uik5QomyIZEr3i0T8Hf0ipzGrLq
-         Agr/2k46NL25HS1Wz4RLoy6XLQ+kOnSHBrHEylRBJTiZeDzw+1ua3DiuW6+6EAvmaZ3H
-         ySUfD0XjQlDJARYvLQ38igXZTd8TAu0kle/XCodlVTQOAJLB1ER70v42w4dzaMCbVxyk
-         R1fuRRBep5mukZMracZ7KRhV9GLloWmLtgwXD8Zpo9AdDNkv6wJ3DscgP6c7VC8QScDv
-         zhxlpZ31+0Pk4GIDMfs+y9DTfKNC/oIUFKNJbd+HwDr/xomssy16VkrMzBXHekY0UCPh
-         gspQ==
-X-Gm-Message-State: APjAAAULZesh+AbCKhUhNibmPRWZ4F3I0rXivl0rxoir5akhSCZ4ceat
-        9ka7zCARu07ZNE+byzD/vSOIN/vWCLQ3kieSCQReAA==
-X-Google-Smtp-Source: APXvYqxXNEbZxH2OdZlBe/PUqIOg67j/c0SHGrDk007xE/yb3KKMifeBH5RBDM8Vp5lM8PAB7JeI8idaR7EqqO3oB4Y=
-X-Received: by 2002:aca:ec82:: with SMTP id k124mr3352429oih.73.1561139654054;
- Fri, 21 Jun 2019 10:54:14 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190620161240.22738-1-logang@deltatee.com> <CAPcyv4ijztOK1FUjLuFing7ps4LOHt=6z=eO=98HHWauHA+yog@mail.gmail.com>
- <20190620193353.GF19891@ziepe.ca> <CAPcyv4jyNRBvtWhr9+aHbzWP6=D4qAME+=hWMtOYJ17BVHdy2w@mail.gmail.com>
- <20190621174724.GV19891@ziepe.ca>
-In-Reply-To: <20190621174724.GV19891@ziepe.ca>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Fri, 21 Jun 2019 10:54:03 -0700
-Message-ID: <CAPcyv4h6CjzxbWLg3upmUiaYQ2eqP-ZyHxMBfh6kkQpwHX9HWg@mail.gmail.com>
-Subject: Re: [RFC PATCH 00/28] Removing struct page from P2PDMA
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        id S1726049AbfFUR70 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jun 2019 13:59:26 -0400
+Received: from smtprelay0062.hostedemail.com ([216.40.44.62]:39534 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725992AbfFUR7Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 13:59:25 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay03.hostedemail.com (Postfix) with ESMTP id 2CFC9837F24D;
+        Fri, 21 Jun 2019 17:59:24 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: paint61_8c15a38e8ef39
+X-Filterd-Recvd-Size: 2525
+Received: from XPS-9350 (cpe-23-242-196-136.socal.res.rr.com [23.242.196.136])
+        (Authenticated sender: joe@perches.com)
+        by omf06.hostedemail.com (Postfix) with ESMTPA;
+        Fri, 21 Jun 2019 17:59:22 +0000 (UTC)
+Message-ID: <5025da034080c6653b23d7362e06cf211d2cec3c.camel@perches.com>
+Subject: Re: [PATCH v3 0/3] net: fddi: skfp: Use PCI generic definitions
+ instead of private duplicates
+From:   Joe Perches <joe@perches.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc:     Puranjay Mohan <puranjay12@gmail.com>,
+        Shuah Khan <skhan@linuxfoundation.org>,
+        Bjorn Helgaas <bjorn@helgaas.com>,
+        netdev <netdev@vger.kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-rdma <linux-rdma@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Keith Busch <kbusch@kernel.org>,
-        Stephen Bates <sbates@raithlin.com>
-Content-Type: text/plain; charset="UTF-8"
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-pci@vger.kernel.org
+Date:   Fri, 21 Jun 2019 10:59:21 -0700
+In-Reply-To: <20190621164429.GA187016@google.com>
+References: <20190621094607.15011-1-puranjay12@gmail.com>
+         <20190621162024.53620dd9@alans-desktop>
+         <20190621164429.GA187016@google.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.30.5-0ubuntu0.18.10.1 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 21, 2019 at 10:47 AM Jason Gunthorpe <jgg@ziepe.ca> wrote:
->
-> On Thu, Jun 20, 2019 at 01:18:13PM -0700, Dan Williams wrote:
->
-> > > This P2P is quite distinct from DAX as the struct page* would point to
-> > > non-cacheable weird memory that few struct page users would even be
-> > > able to work with, while I understand DAX use cases focused on CPU
-> > > cache coherent memory, and filesystem involvement.
-> >
-> > What I'm poking at is whether this block layer capability can pick up
-> > users outside of RDMA, more on this below...
->
-> The generic capability is to do a transfer through the block layer and
-> scatter/gather the resulting data to some PCIe BAR memory. Currently
-> the block layer can only scatter/gather data into CPU cache coherent
-> memory.
->
-> We know of several useful places to put PCIe BAR memory already:
->  - On a GPU (or FPGA, acclerator, etc), ie the GB's of GPU private
->    memory that is standard these days.
->  - On a NVMe CMB. This lets the NVMe drive avoid DMA entirely
->  - On a RDMA NIC. Mellanox NICs have a small amount of BAR memory that
->    can be used like a CMB and avoids a DMA
->
-> RDMA doesn't really get so involved here, except that RDMA is often
-> the prefered way to source/sink the data buffers after the block layer has
-> scatter/gathered to them. (and of course RDMA is often for a block
-> driver, ie NMVe over fabrics)
->
-> > > > My primary concern with this is that ascribes a level of generality
-> > > > that just isn't there for peer-to-peer dma operations. "Peer"
-> > > > addresses are not "DMA" addresses, and the rules about what can and
-> > > > can't do peer-DMA are not generically known to the block layer.
-> > >
-> > > ?? The P2P infrastructure produces a DMA bus address for the
-> > > initiating device that is is absolutely a DMA address. There is some
-> > > intermediate CPU centric representation, but after mapping it is the
-> > > same as any other DMA bus address.
-> >
-> > Right, this goes back to the confusion caused by the hardware / bus /
-> > address that a dma-engine would consume directly, and Linux "DMA"
-> > address as a device-specific translation of host memory.
->
-> I don't think there is a confusion :) Logan explained it, the
-> dma_addr_t is always the thing you program into the DMA engine of the
-> device it was created for, and this changes nothing about that.
+On Fri, 2019-06-21 at 11:44 -0500, Bjorn Helgaas wrote:
+> On Fri, Jun 21, 2019 at 04:20:24PM +0100, Alan Cox wrote:
+> > On Fri, 21 Jun 2019 15:16:04 +0530
+> > Puranjay Mohan <puranjay12@gmail.com> wrote:
+> > 
+> > > This patch series removes the private duplicates of PCI definitions in
+> > > favour of generic definitions defined in pci_regs.h.
+> > 
+> > Why bother ? It's an ancient obsolete card ?
+> 
+> That's a fair question.
+> 
+> Is there anything that would indicate that "this file is obsolete and
+> problems shouldn't be fixed"?  Nobody wants to waste time on things
+> that don't need to be fixed, but I don't know how to tell if something
+> is obsolete.
+> 
+> My naive assumption is that if something is in the tree, it's fair
+> game for fixes and cleanups.
 
-Yup, Logan and I already settled that point on our last exchange and
-offered to make that clearer in the changelog.
+I'd prefer to move the old, crufty, obsolete and generally
+unsupported drivers to new directory trees and possibly
+symlink those drivers to their current locations.
+
+I suggested on the kernel summit list:
+https://lists.linuxfoundation.org/pipermail/ksummit-discuss/2019-June/006482.html
+
+---
+
+Perhaps a mechanism to move these old, generally unsupported
+by an actual maintainer, and rarely tested drivers out of the
+mainline drivers directory into a separate obsolete directory
+would help isolate the whitespace and trivial api changes.
+
+
