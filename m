@@ -2,99 +2,78 @@ Return-Path: <SRS0=K8vK=UU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_MUTT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44DDDC43613
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 09:47:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13505C4646C
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 09:59:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D570215EA
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 09:47:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tHmDc21h"
+	by mail.kernel.org (Postfix) with ESMTP id E1F2820665
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 09:59:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726311AbfFUJqs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jun 2019 05:46:48 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:42102 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726299AbfFUJqr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 05:46:47 -0400
-Received: by mail-pg1-f194.google.com with SMTP id l19so3097768pgh.9;
-        Fri, 21 Jun 2019 02:46:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SDb6fS66l3rIdgOP+xeGdS65KBD4+SVxzLqxETJy540=;
-        b=tHmDc21h4z8FGOySimqA/JJA0jud8SB83BSGl90MQpJLk4bLP7R/QKQw+45dqU88s4
-         WXXo8j36RcJwF3JJucdQVOhwR2NBs2/0pAWugp39yqS0XTOAWHZb5Okwv6I6KFUp9Ltj
-         nMqVlI190DQ5Kfk48bAD1spf0Ql3q1ZKCBs2SHguekVAFRslfHLsjYmfxMNj9/Zobwc1
-         0g9p7aUWGtwDhilimS6/rZffSJ+VjltLI0yGx3LN/YtkeFPnu7oCrqn5Yr+pLsoVcdgM
-         FzR+n6gqpNcZk6Uhbu0q9W+qWXwhJ3aVN//CwEocRUsuuURi3ELhdAqTF4iypNAsrBYm
-         uROQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SDb6fS66l3rIdgOP+xeGdS65KBD4+SVxzLqxETJy540=;
-        b=aoDRtoIMkmZH+cwIlACaQS+oNmW267xNOPsffpcMwRb0x1vcuuo8AAXksy9yIuXYk0
-         DtXj8/srT2kK2sgWXbKOrJG0ER9KJuHVG3NICMvbaUpWa5VkZelWVQBAwbFi4dU7ueGF
-         ObF1t6Q4xly/7vV5mAPyveBKv236jJ4hGTJ6UgFkbygKzsjspbx4Ccxk8UQ0VjSrugJY
-         xkf2WL01w9XDPXuAuz3tMyobyNvj74L7hrTZz7EAhJsuj+6VZeD/muP2hWB0x9ZMG/QB
-         BHFOC+0gGuzGDDV6m9h+mGgZG0iu3fs4lKmEUKv80HGx/Gn03as6j97k2B3OFpiAydBH
-         t+rA==
-X-Gm-Message-State: APjAAAXLIhtAUJL+HPXqUryB4TPSQ6aNnGIbJxP2QrkHJTOm2w76x4Ev
-        w6scMjr+dWHA0X7cB4A4VNedmsn+5eGOmQ==
-X-Google-Smtp-Source: APXvYqzYDIumDjcuNF+spxLeWY+sn/VYIJJTKdnueD12yLGO0ruD7QUv9wfI2q5NeSuiyLopssoMJg==
-X-Received: by 2002:a65:50cb:: with SMTP id s11mr17411630pgp.371.1561110406990;
-        Fri, 21 Jun 2019 02:46:46 -0700 (PDT)
-Received: from localhost.localdomain ([2402:3a80:913:88b1:ac7e:774f:a03c:dcac])
-        by smtp.googlemail.com with ESMTPSA id u2sm2147746pjv.9.2019.06.21.02.46.42
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 21 Jun 2019 02:46:46 -0700 (PDT)
-From:   Puranjay Mohan <puranjay12@gmail.com>
-To:     Shuah Khan <skhan@linuxfoundation.org>
-Cc:     Puranjay Mohan <puranjay12@gmail.com>,
-        Bjorn Helgaas <bjorn@helgaas.com>,
-        netdev <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v3 0/3] net: fddi: skfp: Use PCI generic definitions instead of private duplicates
-Date:   Fri, 21 Jun 2019 15:16:04 +0530
-Message-Id: <20190621094607.15011-1-puranjay12@gmail.com>
-X-Mailer: git-send-email 2.21.0
+        id S1726299AbfFUJ7G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jun 2019 05:59:06 -0400
+Received: from foss.arm.com ([217.140.110.172]:56266 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726210AbfFUJ7G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Jun 2019 05:59:06 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6D31B142F;
+        Fri, 21 Jun 2019 02:59:05 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id F26FB3F246;
+        Fri, 21 Jun 2019 02:59:03 -0700 (PDT)
+Date:   Fri, 21 Jun 2019 10:58:59 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Biju Das <biju.das@bp.renesas.com>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Chris Paterson <Chris.Paterson2@renesas.com>,
+        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: PCI: rcar: Add device tree support for
+ r8a774a1
+Message-ID: <20190621095859.GA8785@e121166-lin.cambridge.arm.com>
+References: <1559891016-56157-1-git-send-email-biju.das@bp.renesas.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1559891016-56157-1-git-send-email-biju.das@bp.renesas.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series removes the private duplicates of PCI definitions in
-favour of generic definitions defined in pci_regs.h.
+On Fri, Jun 07, 2019 at 08:03:36AM +0100, Biju Das wrote:
+> Add PCIe support for the RZ/G2M (a.k.a. R8A774A1).
+> 
+> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+> ---
+>  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
+>  1 file changed, 1 insertion(+)
 
-This driver only uses some of the generic PCI definitons,
-which are included from pci_regs.h and thier private versions
-are removed from skfbi.h with all other private defines.
+Applied to pci/rcar for v5.3, thanks.
 
-The skfbi.h defines PCI_REV_ID and other private defines with different
-names, these are renamed to Generic PCI names to make them
-compatible with defines in pci_regs.h.
+Lorenzo
 
-All unused defines are removed from skfbi.h.
-
-Puranjay Mohan (3):
-  net: fddi: skfp: Rename local PCI defines to match generic PCI defines
-  net: fddi: skfp: Include generic PCI definitions
-  net: fddi: skfp: Remove unused private PCI definitions
-
- drivers/net/fddi/skfp/drvfbi.c  |  3 +-
- drivers/net/fddi/skfp/h/skfbi.h | 80 +--------------------------------
- 2 files changed, 4 insertions(+), 79 deletions(-)
-
--- 
-2.21.0
-
+> diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> index 6904882..45bba9f 100644
+> --- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+> @@ -3,6 +3,7 @@
+>  Required properties:
+>  compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
+>  	    "renesas,pcie-r8a7744" for the R8A7744 SoC;
+> +	    "renesas,pcie-r8a774a1" for the R8A774A1 SoC;
+>  	    "renesas,pcie-r8a774c0" for the R8A774C0 SoC;
+>  	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
+>  	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
+> -- 
+> 2.7.4
+> 
