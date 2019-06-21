@@ -2,59 +2,59 @@ Return-Path: <SRS0=K8vK=UU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_MUTT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4485C43613
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:14:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FB0C43613
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:19:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCB3C2070B
-	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:14:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B584206B7
+	for <linux-pci@archiver.kernel.org>; Fri, 21 Jun 2019 15:19:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fM1Zw8hT"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JG74n1GE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726174AbfFUPOj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 21 Jun 2019 11:14:39 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:35026 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726002AbfFUPOj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 11:14:39 -0400
-Received: by mail-pg1-f194.google.com with SMTP id s27so3542114pgl.2;
-        Fri, 21 Jun 2019 08:14:38 -0700 (PDT)
+        id S1726106AbfFUPTn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 21 Jun 2019 11:19:43 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:33178 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726070AbfFUPTn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jun 2019 11:19:43 -0400
+Received: by mail-pf1-f194.google.com with SMTP id x15so3786165pfq.0;
+        Fri, 21 Jun 2019 08:19:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Aoj0LDY9u1XoPkQxBcF3bn2Pa+FqX3opzjAviuLaNWM=;
-        b=fM1Zw8hT0BrBAuSVgq1zvrljohF97RpbUVxivo0Qvy438t5u3CZNvUIhHpiENg5PwT
-         iyw6epymE9cC2MPYiEyBeur+000JZXYFfgxK4PQ/k1wKpR/km8bC0NvEy5/rMFeHdz3l
-         qf06gHDmoasoa17WrpXD7WEjC8a7L+uBnS+s+1whtQwq+Fr6+pNJ6iqXuyE+mhvSDYtf
-         HHEc0B11zSf/4h22TOurH6PH9248yXU+qZiG95L0GGDG2SzAY9WeFRpjnsYSvLZn2D0O
-         tefmDVf6EUUyCj4sGeWSchzyK1JzWWagNCjMTvxAHjotYBklr2nXnJldBi0Ob5ermMSE
-         T3Vw==
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=wkYJv093Ph/iPqswb4+lpc13NRD+hmqJJxad6v6T4Wg=;
+        b=JG74n1GEpv3kCeplvo4x/WuN7VNLAV3o6XmJ5NxsplUNZojG8xOuo4wLMtEfwA3UFP
+         DNVnx7x8a6Hwedzhz84nYPdNwjT4Y4ft0QUOtVSaiIR6QP2p1WZOQbdNz8PraDw2nFRr
+         lzIRaPAJMrJy+XiaQ7RJcHOoI06br0TzTijIq5ar1nuEvTHTgNm0JArmd9FGbnBKOvJC
+         9lJbEzJOrgYrfCW8jYb27HnFH8NS8Fqqi02DpvXiAdNN/8gL2O0A0C2kzqZKwZqJd2hU
+         2FohhOBL3ghbeKuNnGJnCiTMpNNV7mDXryE4UTyCHHub3QD2HLm8Tx43UroDd1+r4yQ4
+         RHDg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Aoj0LDY9u1XoPkQxBcF3bn2Pa+FqX3opzjAviuLaNWM=;
-        b=DzGmBrnl7WvW1BXcKx76rQhUt0b6d8INLaR0XfstcXzhXna8pJyjBw/1JDYCVcJUXC
-         L7e1qfF0nfN6vh9u0Z2ke0GSFjxMH+yc4dD61eF/M2qCtcyjahinWsPcxIFVPo+CtP8U
-         RS8rUbn5OkJjgsW5dBziNnyb7Jd0y2eZIA93gqngP3l5pc/QmCwXTcT45HtcYeyw9jVW
-         ZyglteoZHut9L53aJVEtwXhLT6jL90LKa0Hid7+EVVrZ3yaicmLn/QomErMKd044SyQ4
-         JYuiSkbSaMQ94mmeZsV7eaNY/OlibxhIynp9h9t0KJRfxGDHHOAmsfwwA2q8lf2AgAky
-         DbTQ==
-X-Gm-Message-State: APjAAAXYUHTIMG2iiQy44wUI8EkQEZe6xpK9+o+Wv2jwIt72mo59sH4v
-        RB1XkVDKcFV44A7BqWwaOtU=
-X-Google-Smtp-Source: APXvYqyZhnjj5XV42ihCFCrbqBXDboaEat+z613KWNvrAVw5c72yTv3EyiLciiqEW28iKAVl8HpKqA==
-X-Received: by 2002:a17:90a:9903:: with SMTP id b3mr7300906pjp.80.1561130078234;
-        Fri, 21 Jun 2019 08:14:38 -0700 (PDT)
-Received: from localhost.localdomain ([112.196.181.13])
-        by smtp.googlemail.com with ESMTPSA id 25sm3254465pfp.76.2019.06.21.08.14.34
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=wkYJv093Ph/iPqswb4+lpc13NRD+hmqJJxad6v6T4Wg=;
+        b=BH+6Xoill4yCvbKRHnxRSwDNICrkudVi5THQLaQRltiQHMCpShY+KxAVhM/ZbjEYqc
+         CRE/u5ltQbwQ9tZgetD9OxwLe5HV/nHMJLSv7dP62qFNuW8eL6LMrOAixxVvbODvoLCt
+         k4iV2axa/fHPfNb/5hPQ0iL7Bhr87XWQ7YJ9hf0NnnyO/M6BVTJSRSGvI6xry34OMtim
+         c7mJiM+wxNgSm+USaAXx1K1MMuoASx8sqgIK0FTFFUqfCq8AEq/NnnwJdR13o19e8qbI
+         E+RrtGESeaGsUW/yoc+l9S8l6NDKq2cqaZfea/PBhaM0xnQ6QZ4EfGqbQCJXXwIkIjSo
+         h1Aw==
+X-Gm-Message-State: APjAAAUSpFl4XCRp67YL1ZzgfZ1ky6MRTTAvHG35I4wtfArSQVF14EAR
+        XtPbfa/ZSGumUS5k0Zsm/EuCSLRBJXVIPQ==
+X-Google-Smtp-Source: APXvYqwdKO8QnReTZDmtgPmfnr2ABDKp3jxXDz3DL9xxFZWLD9xyLVdfrqcULfi/6Fo47NOHO+Wksw==
+X-Received: by 2002:a63:5c19:: with SMTP id q25mr19314252pgb.215.1561130382498;
+        Fri, 21 Jun 2019 08:19:42 -0700 (PDT)
+Received: from arch ([112.196.181.13])
+        by smtp.gmail.com with ESMTPSA id b6sm2800521pgd.5.2019.06.21.08.19.38
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 21 Jun 2019 08:14:37 -0700 (PDT)
+        Fri, 21 Jun 2019 08:19:42 -0700 (PDT)
+Date:   Fri, 21 Jun 2019 20:49:28 +0530
 From:   Puranjay Mohan <puranjay12@gmail.com>
 To:     Shuah Khan <skhan@linuxfoundation.org>
 Cc:     Puranjay Mohan <puranjay12@gmail.com>,
@@ -64,63 +64,57 @@ Cc:     Puranjay Mohan <puranjay12@gmail.com>,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org,
         Stephen Hemminger <stephen@networkplumber.org>
-Subject: [PATCH v4 1/3] net: fddi: skfp: Rename local PCI defines to match generic PCI defines
-Date:   Fri, 21 Jun 2019 20:44:13 +0530
-Message-Id: <20190621151415.10795-2-puranjay12@gmail.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190621151415.10795-1-puranjay12@gmail.com>
+Subject: Re: [PATCH v4 0/3] net: fddi: skfp: Use PCI generic definitions
+ instead of private duplicates
+Message-ID: <20190621151927.GA12091@arch>
 References: <20190621151415.10795-1-puranjay12@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190621151415.10795-1-puranjay12@gmail.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Rename the PCI_REV_ID and other local defines to Generic PCI define names
-in skfbi.h and drvfbi.c to make it compatible with the pci_regs.h.
-
-Signed-off-by: Puranjay Mohan <puranjay12@gmail.com>
----
- drivers/net/fddi/skfp/drvfbi.c  | 2 +-
- drivers/net/fddi/skfp/h/skfbi.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/fddi/skfp/drvfbi.c b/drivers/net/fddi/skfp/drvfbi.c
-index bdd5700e71fa..b324c1acf195 100644
---- a/drivers/net/fddi/skfp/drvfbi.c
-+++ b/drivers/net/fddi/skfp/drvfbi.c
-@@ -127,7 +127,7 @@ static void card_start(struct s_smc *smc)
- 	 *	 at very first before any other initialization functions is
- 	 *	 executed.
- 	 */
--	rev_id = inp(PCI_C(PCI_REV_ID)) ;
-+	rev_id = inp(PCI_C(PCI_REVISION_ID)) ;
- 	if ((rev_id & 0xf0) == SK_ML_ID_1 || (rev_id & 0xf0) == SK_ML_ID_2) {
- 		smc->hw.hw_is_64bit = TRUE ;
- 	} else {
-diff --git a/drivers/net/fddi/skfp/h/skfbi.h b/drivers/net/fddi/skfp/h/skfbi.h
-index 89557457b352..5f9b631e7515 100644
---- a/drivers/net/fddi/skfp/h/skfbi.h
-+++ b/drivers/net/fddi/skfp/h/skfbi.h
-@@ -31,7 +31,7 @@
- #define	PCI_DEVICE_ID	0x02	/* 16 bit	Device ID */
- #define	PCI_COMMAND	0x04	/* 16 bit	Command */
- #define	PCI_STATUS	0x06	/* 16 bit	Status */
--#define	PCI_REV_ID	0x08	/*  8 bit	Revision ID */
-+#define	PCI_REVISION_ID	0x08	/*  8 bit	Revision ID */
- #define	PCI_CLASS_CODE	0x09	/* 24 bit	Class Code */
- #define	PCI_CACHE_LSZ	0x0c	/*  8 bit	Cache Line Size */
- #define	PCI_LAT_TIM	0x0d	/*  8 bit	Latency Timer */
-@@ -110,7 +110,7 @@
- #define PCI_66MHZCAP	0x0020	/* Bit 5:	66 MHz PCI bus clock capable */
- #define PCI_NEWCAP	0x0010	/* Bit 4:	New cap. list implemented */
- 
--#define PCI_ERRBITS	(PCI_PERR|PCI_SERR|PCI_RMABORT|PCI_STABORT|PCI_DATAPERR)
-+#define PCI_ERRBITS	(PCI_STATUS_DETECTED_PARITY | PCI_STATUS_SIG_SYSTEM_ERROR | PCI_STATUS_REC_MASTER_ABORT | PCI_STATUS_SIG_TARGET_ABORT | PCI_STATUS_PARITY)
- 
- /*	PCI_REV_ID	8 bit	Revision ID */
- /*	PCI_CLASS_CODE	24 bit	Class Code */
--- 
-2.21.0
-
+On Fri, Jun 21, 2019 at 08:44:12PM +0530, Puranjay Mohan wrote:
+> This patch series removes the private duplicates of PCI definitions in
+> favour of generic definitions defined in pci_regs.h.
+> 
+> This driver only uses some of the generic PCI definitons,
+> which are included from pci_regs.h and thier private versions
+> are removed from skfbi.h with all other private defines.
+> 
+> The skfbi.h defines PCI_REV_ID and other private defines with different
+> names, these are renamed to Generic PCI names to make them
+> compatible with defines in pci_regs.h.
+> 
+> All unused defines are removed from skfbi.h.
+>
+I left some of the definitions in v4 too!
+will remove them all and send v5
+sorry for the inconvenience
+> Changes in v4:
+> Removed unused PCI definitions which were left in v3
+> 
+> Changes in v3:
+> Renamed all local PCI definitions to Generic names.
+> Corrected coding style mistakes.
+> 
+> Changes in v2:
+> Converted individual patches to a series.
+> Made sure that individual patches build correctly
+> 
+> Puranjay Mohan (3):
+>   net: fddi: skfp: Rename local PCI defines to match generic PCI defines
+>   net: fddi: skfp: Include generic PCI definitions
+>   net: fddi: skfp: Remove unused private PCI definitions
+> 
+>  drivers/net/fddi/skfp/drvfbi.c  |   3 +-
+>  drivers/net/fddi/skfp/h/skfbi.h | 217 +-------------------------------
+>  2 files changed, 6 insertions(+), 214 deletions(-)
+> 
+> -- 
+> 2.21.0
+> 
