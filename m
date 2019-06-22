@@ -2,86 +2,142 @@ Return-Path: <SRS0=xdJP=UV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 273B4C43613
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Jun 2019 16:16:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D07EC43613
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Jun 2019 16:51:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9F0E2070B
-	for <linux-pci@archiver.kernel.org>; Sat, 22 Jun 2019 16:16:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1561220188;
-	bh=sOelX0K4gWk6y8t5+w0Xe4HGl02QASsSknUsKPiEemk=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=D1QJk+UVB2USgKw2Hn5N6LR8qfAr/0d82BzTFSLMhC57Zix9M/yhoLvxcEU6ttxHx
-	 v+zw0T+JWBZPHEkrW10KcTMQullks79mOs84zqJxbBgxiB6+9YusZu0Cj+ur50ZatN
-	 3QrTmKkObHVmGLNlou3OrNC+T/9ZrGrY6aqDdGoY=
+	by mail.kernel.org (Postfix) with ESMTP id 4044E20679
+	for <linux-pci@archiver.kernel.org>; Sat, 22 Jun 2019 16:51:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="nYMdTrRp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726296AbfFVQQ1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 22 Jun 2019 12:16:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56346 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726276AbfFVQQ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 22 Jun 2019 12:16:27 -0400
-Received: from localhost (224.sub-174-234-138.myvzw.com [174.234.138.224])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BB8F620675;
-        Sat, 22 Jun 2019 16:16:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561220186;
-        bh=sOelX0K4gWk6y8t5+w0Xe4HGl02QASsSknUsKPiEemk=;
-        h=Date:From:To:Cc:Subject:From;
-        b=BnHqtreSGCgPbHxJloNzi2ybq5yVxXDdB0hcf66VoUA41+3/EN/MYM15LYvq/2FQr
-         DMaEYRYvkvJXU/em7yCvAj7dcNbCoc7V389Vs/Z7IWcnmXXSyr5Rvgz3XMNJ3r5uuL
-         TG+YOe1314SjBQ9yIZCE0jq+kFJw6Qe+l59XOlQc=
-Date:   Sat, 22 Jun 2019 11:16:23 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [GIT PULL] PCI fixes for v5.2
-Message-ID: <20190622161623.GH127746@google.com>
+        id S1726355AbfFVQvw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 22 Jun 2019 12:51:52 -0400
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17134 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726353AbfFVQvw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Jun 2019 12:51:52 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d0e5ca80000>; Sat, 22 Jun 2019 09:51:53 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Sat, 22 Jun 2019 09:51:51 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Sat, 22 Jun 2019 09:51:51 -0700
+Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL104.nvidia.com
+ (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 22 Jun
+ 2019 16:51:50 +0000
+Received: from hqnvemgw01.nvidia.com (172.20.150.20) by HQMAIL105.nvidia.com
+ (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Sat, 22 Jun 2019 16:51:50 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5d0e5ca30001>; Sat, 22 Jun 2019 09:51:50 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
+        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <Jisheng.Zhang@synaptics.com>, <thierry.reding@gmail.com>,
+        <kishon@ti.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
+        <sagar.tv@gmail.com>
+Subject: [PATCH V7 1/3] PCI: dwc: Add API support to de-initialize host
+Date:   Sat, 22 Jun 2019 22:21:41 +0530
+Message-ID: <20190622165143.11906-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+X-NVConfidentiality: public
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1561222313; bh=kHzOZ0ioktzRy5B/z8d32g38iVfdRdG4Wj2O9cc1+GE=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=nYMdTrRp5GvL4l0CxWhqGkVdMSxUSWt6LmMWtx359BuKSLKtSp0dYu/TcsdRQ1NLL
+         6fPZJfXr7NlX4QD9r1TfBG+EtJvidJ+xyITK+vtMhtc8bmIf1C63e3enhaJ13WSsoT
+         psVQnZeREfpXLHdtnpSFvXySI/lgPTinWNvRchUL788PD1IFtYZEECpLwySuT9/oUF
+         QT6bGfSnE/u6RKc5yckGgTcGHFNqWjpTbSwGieKdWQ7Me8MCGK2tbl3V6GqA+YytlN
+         kx0WGkx+gDc3P61KGhZKaDhqzkOfy1/JW+DbwtiE1R1Gm1BXuXu7u5pFeHNcL+gyJo
+         9lKoKLe43AUXA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCI fixes:
+Add an API to group all the tasks to be done to de-initialize host which
+can then be called by any DesignWare core based driver implementations
+while adding .remove() support in their respective drivers.
 
-  - If an IOMMU is present, ignore the P2PDMA whitelist we added for v5.2
-    because we don't yet know how to support P2PDMA in that case (Logan
-    Gunthorpe)
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+---
+Changes from v6:
+* None
 
+Changes from v5:
+* None
 
-The following changes since commit a188339ca5a396acc588e5851ed7e19f66b0ebd9:
+Changes from v4:
+* None
 
-  Linux 5.2-rc1 (2019-05-19 15:47:09 -0700)
+Changes from v3:
+* Added check if (pci_msi_enabled() && !pp->ops->msi_host_init) before calling
+  dw_pcie_free_msi() API to mimic init path
 
-are available in the Git repository at:
+Changes from v2:
+* Rebased on top of linux-next top of the tree branch
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v5.2-fixes-1
+Changes from v1:
+* s/Designware/DesignWare
 
-for you to fetch changes up to 6dbbd053e6aea827abde89ac9b9d6855dab1a66b:
+ drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++++
+ drivers/pci/controller/dwc/pcie-designware.h      | 5 +++++
+ 2 files changed, 13 insertions(+)
 
-  PCI/P2PDMA: Ignore root complex whitelist when an IOMMU is present (2019-06-19 16:43:42 -0500)
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 77db32529319..d069e4290180 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -496,6 +496,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	return ret;
+ }
+ 
++void dw_pcie_host_deinit(struct pcie_port *pp)
++{
++	pci_stop_root_bus(pp->root_bus);
++	pci_remove_root_bus(pp->root_bus);
++	if (pci_msi_enabled() && !pp->ops->msi_host_init)
++		dw_pcie_free_msi(pp);
++}
++
+ static int dw_pcie_access_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 				     u32 devfn, int where, int size, u32 *val,
+ 				     bool write)
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index b8993f2b78df..14762e262758 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -351,6 +351,7 @@ void dw_pcie_msi_init(struct pcie_port *pp);
+ void dw_pcie_free_msi(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
++void dw_pcie_host_deinit(struct pcie_port *pp);
+ int dw_pcie_allocate_domains(struct pcie_port *pp);
+ #else
+ static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+@@ -375,6 +376,10 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
++static inline void dw_pcie_host_deinit(struct pcie_port *pp)
++{
++}
++
+ static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
+ {
+ 	return 0;
+-- 
+2.17.1
 
-----------------------------------------------------------------
-pci-v5.2-fixes-1
-
-----------------------------------------------------------------
-Logan Gunthorpe (1):
-      PCI/P2PDMA: Ignore root complex whitelist when an IOMMU is present
-
- drivers/pci/p2pdma.c | 4 ++++
- 1 file changed, 4 insertions(+)
