@@ -2,170 +2,82 @@ Return-Path: <SRS0=Q0Wt=UX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEDEC43613
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Jun 2019 09:15:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BB56C43613
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Jun 2019 09:15:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9CA620665
-	for <linux-pci@archiver.kernel.org>; Mon, 24 Jun 2019 09:15:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="gijq2YQZ"
+	by mail.kernel.org (Postfix) with ESMTP id 6B32920665
+	for <linux-pci@archiver.kernel.org>; Mon, 24 Jun 2019 09:15:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727883AbfFXJPh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Jun 2019 05:15:37 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:11726 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727101AbfFXJPh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jun 2019 05:15:37 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d1094b60001>; Mon, 24 Jun 2019 02:15:34 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Mon, 24 Jun 2019 02:15:34 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Mon, 24 Jun 2019 02:15:34 -0700
-Received: from HQMAIL108.nvidia.com (172.18.146.13) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 24 Jun
- 2019 09:15:33 +0000
-Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL108.nvidia.com
- (172.18.146.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Mon, 24 Jun 2019 09:15:33 +0000
-Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5d1094b10001>; Mon, 24 Jun 2019 02:15:34 -0700
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <kishon@ti.com>, <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>
-CC:     <digetx@gmail.com>, <mperttunen@nvidia.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
-        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V11 02/12] PCI: Disable MSI for Tegra root ports
-Date:   Mon, 24 Jun 2019 14:44:55 +0530
-Message-ID: <20190624091505.1711-3-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190624091505.1711-1-vidyas@nvidia.com>
-References: <20190624091505.1711-1-vidyas@nvidia.com>
-X-NVConfidentiality: public
-MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1561367734; bh=ACcC9pZzXga78QBYPyVeBRI1SFRkUODd24UijlDSbAA=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
-         Content-Type;
-        b=gijq2YQZ2t0vme/1p5bbO0NHxYc/Ra1pP08WBfrzK+0YoosH3EDXguk6Ia6SQvfEU
-         kKsYgDc6GNWPUFG1kPLGdrFbNOI8gJfOVPokxv1idd2nIA8btblivDjCQaPL7DNBtr
-         k1H8fcOe4J3uc10WpB6Q1qV1twkenGiQUCvfA7Hwk5f1vK+7S4Ga1EdIhStt+5XYlS
-         Tq5q8mCN1SoNxxpEaezTbrXV7yqOUnq6HdLJ/Gpw+w2qF3LIn7sPJJ3owk5cHkbSPx
-         +7tUUO3GRPJ7n0HTS7NJ2Rx2WJMwDqj3ed0IM+l/BGfLiAbXb5lu5lCWm+L7Ql6NQ8
-         zB0dm5InHP7EQ==
+        id S1728365AbfFXJPi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 24 Jun 2019 05:15:38 -0400
+Received: from gate.crashing.org ([63.228.1.57]:44065 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727101AbfFXJPi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Jun 2019 05:15:38 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x5O9FWaW024123;
+        Mon, 24 Jun 2019 04:15:33 -0500
+Message-ID: <b873931988c7e6ccf61010e8ad03cf2d7f3e4b09.camel@kernel.crashing.org>
+Subject: Re: Question about call to pci_assign_unassigned_bus_resources in
+ amdgpu
+From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To:     "Koenig, Christian" <Christian.Koenig@amd.com>
+Cc:     "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date:   Mon, 24 Jun 2019 19:15:32 +1000
+In-Reply-To: <f4cb8429-a32d-d3af-dee0-0bae1935cb47@amd.com>
+References: <ed3d3e4e87b54fa4d0d8e68abeebb7be6711b82a.camel@kernel.crashing.org>
+         <71904c98-be86-2807-d5c9-4b90c7387f6f@amd.com>
+         <ea9f770c373ad9c6a998edbd603972014e4b7fea.camel@kernel.crashing.org>
+         <f4cb8429-a32d-d3af-dee0-0bae1935cb47@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Tegra PCIe rootports don't generate MSI interrupts for PME and AER events.
-Since PCIe spec (Ref: r4.0 sec 7.7.1.2 and 7.7.2.2) doesn't support using
-a mix of INTx and MSI/MSI-X, MSI needs to be disabled to avoid root ports
-service drivers registering their respective ISRs with MSI interrupt and
-to let only INTx be used for all events.
+On Mon, 2019-06-24 at 09:08 +0000, Koenig, Christian wrote:
+> 
+> Yeah, can't agree more :) It was one of the main challenges implementing 
+> the resizing support.
+> 
+> If you want to clean this up feel free to CC me and I can take a look as 
+> well. But honestly I was scared of touching it when I worked on this, 
+> because of all the little corner cases you have in PCI.
+> 
+> > Question: Do you ever need to assign anything other than that one
+> > device though ? In my branch, I've added this typically for the case
+> > where a single device needs to be reassigned:
+> > 
+> > +void pci_dev_assign_resources(struct pci_dev *dev)
+> > +{
+> > +	LIST_HEAD(head);
+> > +
+> > +	/* Assign non-fixed resources */
+> > +	__dev_sort_resources(dev, &head);
+> > +	__assign_resources_sorted(&head, NULL, NULL);
+> > +
+> > +	/* Assign fixed ones if any */
+> > +	pdev_assign_fixed_resources(dev);
+> > +}
+> > +EXPORT_SYMBOL(pci_dev_assign_resources);
+> > 
+> > Would that work for you ?
+> 
+> That should work perfectly fine.
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Reviewed-by: Thierry Reding <treding@nvidia.com>
----
-Changes since [v10]:
-* Included older Tegra chips to extend the quirk as this issue is present in
-  older Tegra chips as well.
+Ok, Ill plumb it that way in my branch, I'll let you know when it's
+worth testing. BTW. Which GPUs typically are affected ? I'm pretty sure
+my old R9 290 isn't :-) But I was thinking of upgrading so...
 
-Changes since [v9]:
-* None
+Cheers,
+Ben.
 
-Changes since [v8]:
-* None
-
-Changes since [v7]:
-* Changed quirk macro to consider class code as well to avoid this quirk
-  getting applied to Tegra194 when it is operating in endpoint mode. Also
-  quoted relevant sections from PCIe spec in comments.
-
-Changes since [v6]:
-* This is a new patch
-
- drivers/pci/quirks.c | 53 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index c66c0ca446c4..1d3cac43ecbc 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2592,6 +2592,59 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_NVIDIA,
- 			PCI_DEVICE_ID_NVIDIA_NVENET_15,
- 			nvenet_msi_disable);
- 
-+/*
-+ * PCIe spec r4.0 sec 7.7.1.2 and sec 7.7.2.2 say that if MSI/MSI-X is enabled,
-+ * then the device can't use INTx interrupts. Tegra's PCIe root ports don't
-+ * generate MSI interrupts for PME and AER events instead only INTx interrupts
-+ * are generated. Though Tegra's PCIe root ports can generate MSI interrupts
-+ * for other events, since PCIe specificiation doesn't support using a mix of
-+ * INTx and MSI/MSI-X, it is required to disable MSI interrupts to avoid port
-+ * service drivers registering their respective ISRs for MSIs.
-+ */
-+static void pci_quirk_nvidia_tegra_disable_rp_msi(struct pci_dev *dev)
-+{
-+	dev->no_msi = 1;
-+}
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x1ad0,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x1ad1,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x1ad2,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf0,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0bf1,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1c,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e1d,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e12,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0e13,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0fae,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x0faf,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x10e5,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_NVIDIA, 0x10e6,
-+			      PCI_CLASS_BRIDGE_PCI, 8,
-+			      pci_quirk_nvidia_tegra_disable_rp_msi);
-+
- /*
-  * Some versions of the MCP55 bridge from Nvidia have a legacy IRQ routing
-  * config register.  This register controls the routing of legacy
--- 
-2.17.1
 
