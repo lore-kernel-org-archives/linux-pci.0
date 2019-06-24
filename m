@@ -2,40 +2,38 @@ Return-Path: <SRS0=Q0Wt=UX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E688EC48BEA
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66DCDC48BE8
 	for <linux-pci@archiver.kernel.org>; Mon, 24 Jun 2019 14:37:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C866920820
+	by mail.kernel.org (Postfix) with ESMTP id 3774120820
 	for <linux-pci@archiver.kernel.org>; Mon, 24 Jun 2019 14:37:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727520AbfFXOhJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 24 Jun 2019 10:37:09 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:33262 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727607AbfFXOgk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1727877AbfFXOgk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 24 Jun 2019 10:36:40 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id 40541D2741A4D5A33F3C;
+Received: from szxga04-in.huawei.com ([45.249.212.190]:19068 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727170AbfFXOgj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Jun 2019 10:36:39 -0400
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 0CD4920D55B641FA4EB3;
         Mon, 24 Jun 2019 22:36:37 +0800 (CST)
 Received: from localhost.localdomain (10.67.212.75) by
  DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.439.0; Mon, 24 Jun 2019 22:36:28 +0800
+ 14.3.439.0; Mon, 24 Jun 2019 22:36:27 +0800
 From:   John Garry <john.garry@huawei.com>
 To:     <xuwei5@huawei.com>
 CC:     <bhelgaas@google.com>, <linuxarm@huawei.com>,
         <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
         <arnd@arndb.de>, <olof@lixom.net>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 5/6] bus: hisi_lpc: Add .remove method to avoid driver unbind crash
-Date:   Mon, 24 Jun 2019 22:35:07 +0800
-Message-ID: <1561386908-31884-6-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 0/6] Fixes for HiSilicon LPC driver and logical PIO code
+Date:   Mon, 24 Jun 2019 22:35:02 +0800
+Message-ID: <1561386908-31884-1-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1561386908-31884-1-git-send-email-john.garry@huawei.com>
-References: <1561386908-31884-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.67.212.75]
@@ -45,155 +43,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The original driver author seemed to be under the impression that a driver
-cannot be removed if it does not have a .remove method. Or maybe if it is
-a built-in platform driver.
+As reported in [1], the hisi-lpc driver has certain issues in handling
+logical PIO regions, specifically unregistering regions.
 
-This is not true. This crash can be created:
+This series add a method to unregister a logical PIO region, and fixes up
+the driver to use them.
 
-root@ubuntu:/sys/bus/platform/drivers/hisi-lpc# echo HISI0191\:00 > unbind
-root@ubuntu:/sys/bus/platform/drivers/hisi-lpc# ipmitool raw 6 1
- Unable to handle kernel paging request at virtual address ffff000010035010
- Mem abort info:
-   ESR = 0x96000047
-   Exception class = DABT (current EL), IL = 32 bits
-   SET = 0, FnV = 0
-   EA = 0, S1PTW = 0
- Data abort info:
-   ISV = 0, ISS = 0x00000047
-   CM = 0, WnR = 1
- swapper pgtable: 4k pages, 48-bit VAs, pgdp=000000000118b000
- [ffff000010035010] pgd=0000041ffbfff003, pud=0000041ffbffe003, pmd=0000041ffbffd003, pte=0000000000000000
- Internal error: Oops: 96000047 [#1] PREEMPT SMP
- Modules linked in:
- CPU: 17 PID: 1473 Comm: ipmitool Not tainted 5.2.0-rc5-00003-gf68c53b414a3-dirty #198
- Hardware name: Huawei Taishan 2280 /D05, BIOS Hisilicon D05 IT21 Nemo 2.0 RC0 04/18/2018
- pstate: 20000085 (nzCv daIf -PAN -UAO)
- pc : hisi_lpc_target_in+0x7c/0x120
- lr : hisi_lpc_target_in+0x70/0x120
- sp : ffff00001efe3930
- x29: ffff00001efe3930 x28: ffff841f9f599200
- x27: 0000000000000002 x26: 0000000000000000
- x25: 0000000000000080 x24: 00000000000000e4
- x23: 0000000000000000 x22: 0000000000000064
- x21: ffff801fb667d280 x20: 0000000000000001
- x19: ffff00001efe39ac x18: 0000000000000000
- x17: 0000000000000000 x16: 0000000000000000
- x15: 0000000000000000 x14: 0000000000000000
- x13: 0000000000000000 x12: 0000000000000000
- x11: 0000000000000000 x10: 0000000000000000
- x9 : 0000000000000000 x8 : ffff841febe60340
- x7 : ffff801fb55c52e8 x6 : 0000000000000000
- x5 : 0000000000ffc0e3 x4 : 0000000000000001
- x3 : ffff801fb667d280 x2 : 0000000000000001
- x1 : ffff000010035010 x0 : ffff000010035000
- Call trace:
-  hisi_lpc_target_in+0x7c/0x120
-  hisi_lpc_comm_in+0x88/0x98
-  logic_inb+0x5c/0xb8
-  port_inb+0x18/0x20
-  bt_event+0x38/0x808
-  smi_event_handler+0x4c/0x5a0
-  check_start_timer_thread.part.4+0x40/0x58
-  sender+0x78/0x88
-  smi_send.isra.6+0x94/0x108
-  i_ipmi_request+0x2c4/0x8f8
-  ipmi_request_settime+0x124/0x160
-  handle_send_req+0x19c/0x208
-  ipmi_ioctl+0x2c0/0x990
-  do_vfs_ioctl+0xb8/0x8f8
-  ksys_ioctl+0x80/0xb8
-  __arm64_sys_ioctl+0x1c/0x28
-  el0_svc_common.constprop.0+0x64/0x160
-  el0_svc_handler+0x28/0x78
-  el0_svc+0x8/0xc
- Code: 941d1511 aa0003f9 f94006a0 91004001 (b9000034)
- ---[ end trace aa842b86af7069e4 ]---
+RCU usage in logical PIO code looks to always have been broken, so that
+is fixed also. This is not a major fix as the list which RCU protects
+would be rarely modified.
 
-The problem here is that the host goes away but the associated logical PIO
-region remains registered, as do the children devices.
+There is another patch to simplify logical PIO registration, made possible
+by the fixes.
 
-Fix by adding a .remove method to tidy-up by removing the child devices
-and unregistering the logical PIO region.
+At this point, there are still separate ongoing discussions about how to
+stop the logical PIO and PCI host bridge code leaking ranges, as in [2].
 
-Fixes: adf38bb0b595 ("HISI LPC: Support the LPC host on Hip06/Hip07 with DT bindings")
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/bus/hisi_lpc.c | 34 ++++++++++++++++++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+Hopefully this series can go through the arm soc tree and the maintainers
+have no issue with that. I'm talking specifically about the logical PIO
+code, which went through PCI tree on only previous upstreaming.
 
-diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
-index 6d301aafcad2..0e9f1f141c93 100644
---- a/drivers/bus/hisi_lpc.c
-+++ b/drivers/bus/hisi_lpc.c
-@@ -456,6 +456,17 @@ struct hisi_lpc_acpi_cell {
- 	size_t pdata_size;
- };
- 
-+static void hisi_lpc_acpi_remove(struct device *hostdev)
-+{
-+	struct acpi_device *adev = ACPI_COMPANION(hostdev);
-+	struct acpi_device *child;
-+
-+	device_for_each_child(hostdev, NULL, hisi_lpc_acpi_remove_subdev);
-+
-+	list_for_each_entry(child, &adev->children, node)
-+		acpi_device_clear_enumerated(child);
-+}
-+
- /*
-  * hisi_lpc_acpi_probe - probe children for ACPI FW
-  * @hostdev: LPC host device pointer
-@@ -555,8 +566,7 @@ static int hisi_lpc_acpi_probe(struct device *hostdev)
- 	return 0;
- 
- fail:
--	device_for_each_child(hostdev, NULL,
--			      hisi_lpc_acpi_remove_subdev);
-+	hisi_lpc_acpi_remove(hostdev);
- 	return ret;
- }
- 
-@@ -626,6 +636,8 @@ static int hisi_lpc_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
-+	dev_set_drvdata(dev, lpcdev);
-+
- 	io_end = lpcdev->io_host->io_start + lpcdev->io_host->size;
- 	dev_info(dev, "registered range [%pa - %pa]\n",
- 		 &lpcdev->io_host->io_start, &io_end);
-@@ -633,6 +645,23 @@ static int hisi_lpc_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
-+static int hisi_lpc_remove(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct acpi_device *acpi_device = ACPI_COMPANION(dev);
-+	struct hisi_lpc_dev *lpcdev = dev_get_drvdata(dev);
-+	struct logic_pio_hwaddr *range = lpcdev->io_host;
-+
-+	if (acpi_device)
-+		hisi_lpc_acpi_remove(dev);
-+	else
-+		of_platform_depopulate(dev);
-+
-+	logic_pio_unregister_range(range);
-+
-+	return 0;
-+}
-+
- static const struct of_device_id hisi_lpc_of_match[] = {
- 	{ .compatible = "hisilicon,hip06-lpc", },
- 	{ .compatible = "hisilicon,hip07-lpc", },
-@@ -646,5 +675,6 @@ static struct platform_driver hisi_lpc_driver = {
- 		.acpi_match_table = ACPI_PTR(hisi_lpc_acpi_match),
- 	},
- 	.probe = hisi_lpc_probe,
-+	.remove = hisi_lpc_remove,
- };
- builtin_platform_driver(hisi_lpc_driver);
+Cc. linux-pci@vger.kernel.org
+
+[1] https://lore.kernel.org/lkml/1560770148-57960-1-git-send-email-john.garry@huawei.com/
+[2] https://lore.kernel.org/lkml/4b24fd36-e716-7c5e-31cc-13da727802e7@huawei.com/
+
+Changes since v1:
+- Add more reasoning in RCU fix patch
+- Create separate patch to change LOGIC_PIO_CPU_MMIO registration to
+  accomodate unregistration
+
+John Garry (6):
+  lib: logic_pio: Fix RCU usage
+  lib: logic_pio: Avoid possible overlap for unregistering regions
+  lib: logic_pio: Add logic_pio_unregister_range()
+  bus: hisi_lpc: Unregister logical PIO range to avoid potential
+    use-after-free
+  bus: hisi_lpc: Add .remove method to avoid driver unbind crash
+  lib: logic_pio: Enforce LOGIC_PIO_INDIRECT region ops are set at
+    registration
+
+ drivers/bus/hisi_lpc.c    | 43 +++++++++++++++++---
+ include/linux/logic_pio.h |  1 +
+ lib/logic_pio.c           | 86 +++++++++++++++++++++++++++------------
+ 3 files changed, 99 insertions(+), 31 deletions(-)
+
 -- 
 2.17.1
 
