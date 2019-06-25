@@ -2,104 +2,272 @@ Return-Path: <SRS0=yH3J=UY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54FB5C48BD4
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 10:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2332AC48BD4
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 10:29:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 298EB214DA
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 10:23:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFD6A2168B
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 10:29:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731283AbfFYKXb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Jun 2019 06:23:31 -0400
-Received: from lhrrgout.huawei.com ([185.176.76.210]:33032 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726301AbfFYKXb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jun 2019 06:23:31 -0400
-Received: from LHREML712-CAH.china.huawei.com (unknown [172.18.7.106])
-        by Forcepoint Email with ESMTP id 8453260D02D8B346C6FA;
-        Tue, 25 Jun 2019 11:23:29 +0100 (IST)
-Received: from [127.0.0.1] (10.202.227.157) by LHREML712-CAH.china.huawei.com
- (10.201.108.35) with Microsoft SMTP Server id 14.3.408.0; Tue, 25 Jun 2019
- 11:23:22 +0100
-From:   Wei Xu <xuwei5@hisilicon.com>
-Subject: [GIT PULL] Hisilicon fixes for v5.2
-To:     <arm@kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        Olof Johansson <olof@lixom.net>, <arnd@arndb.de>
-CC:     <linuxarm@huawei.com>, "xuwei (O)" <xuwei5@huawei.com>,
-        John Garry <john.garry@huawei.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <rjw@rjwysocki.net>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Zhangyi ac <zhangyi.ac@huawei.com>,
-        "Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-        <jinying@hisilicon.com>, huangdaode <huangdaode@hisilicon.com>,
-        Tangkunshan <tangkunshan@huawei.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Shameerali Kolothum Thodi 
-        <shameerali.kolothum.thodi@huawei.com>,
-        Shiju Jose <shiju.jose@huawei.com>,
-        Salil Mehta <salil.mehta@huawei.com>
-Message-ID: <b89ef8f0-d102-7f78-f373-cbcc7faddee3@hisilicon.com>
-Date:   Tue, 25 Jun 2019 11:23:21 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        id S1732003AbfFYK3t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Jun 2019 06:29:49 -0400
+Received: from mga09.intel.com ([134.134.136.24]:62003 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731994AbfFYK3s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jun 2019 06:29:48 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Jun 2019 03:29:46 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.63,415,1557212400"; 
+   d="scan'208";a="166635610"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga006.jf.intel.com with ESMTP; 25 Jun 2019 03:29:44 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 4721C232; Tue, 25 Jun 2019 13:29:43 +0300 (EEST)
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 2/3] ACPI / PM: Introduce concept of a _PR0 dependent device
+Date:   Tue, 25 Jun 2019 13:29:41 +0300
+Message-Id: <20190625102942.27740-3-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190625102942.27740-1-mika.westerberg@linux.intel.com>
+References: <20190625102942.27740-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.157]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi ARM-SoC team,
+If there are shared power resources between otherwise unrelated devices
+turning them on causes the other devices sharing them to be powered up
+as well. In case of PCI devices go into D0uninitialized state meaning
+that if they were configured to trigger wake that configuration is lost
+at this point.
 
-Please consider to pull the following changes.
-Thanks!
+For this reason introduce a concept of "_PR0 dependent device" that can
+be added to any ACPI device that has power resources. The dependent
+device will be included in a list of dependent devices for all power
+resources returned by the ACPI device's _PR0 (assuming it has one).
+Whenever a power resource having dependent devices is turned physically
+on (its _ON method is called) we runtime resume all of them to allow
+their driver or in case of PCI the PCI core to re-initialize the device
+and its wake configuration.
 
-Best Regards,
-Wei
+This adds two functions that can be used to add and remove these
+dependent devices. Note the dependent device does not necessary need
+share power resources so this functionality can be used to add "software
+dependencies" as well if needed.
 
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
+ drivers/acpi/power.c    | 135 ++++++++++++++++++++++++++++++++++++++++
+ include/acpi/acpi_bus.h |   4 ++
+ 2 files changed, 139 insertions(+)
 
-The following changes since commit a188339ca5a396acc588e5851ed7e19f66b0ebd9:
-
-  Linux 5.2-rc1 (2019-05-19 15:47:09 -0700)
-
-are available in the Git repository at:
-
-  git://github.com/hisilicon/linux-hisi.git tags/hisi-fixes-for-5.2
-
-for you to fetch changes up to 07c811af1c00d7b4212eac86900b023b6405a954:
-
-  lib: logic_pio: Enforce LOGIC_PIO_INDIRECT region ops are set at registration (2019-06-25 09:40:42 +0100)
-
-----------------------------------------------------------------
-Hisilicon fixes for v5.2-rc
-
-- fixed RCU usage in logical PIO
-- Added a function to unregister a logical PIO range in logical PIO
-  to support the fixes in the hisi-lpc driver
-- fixed and optimized hisi-lpc driver to avoid potential use-after-free
-  and driver unbind crash
-
-----------------------------------------------------------------
-John Garry (6):
-      lib: logic_pio: Fix RCU usage
-      lib: logic_pio: Avoid possible overlap for unregistering regions
-      lib: logic_pio: Add logic_pio_unregister_range()
-      bus: hisi_lpc: Unregister logical PIO range to avoid potential use-after-free
-      bus: hisi_lpc: Add .remove method to avoid driver unbind crash
-      lib: logic_pio: Enforce LOGIC_PIO_INDIRECT region ops are set at registration
-
- drivers/bus/hisi_lpc.c    | 43 ++++++++++++++++++++----
- include/linux/logic_pio.h |  1 +
- lib/logic_pio.c           | 86 +++++++++++++++++++++++++++++++++--------------
- 3 files changed, 99 insertions(+), 31 deletions(-)
+diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+index a916417b9e70..fe1e7bc91a5e 100644
+--- a/drivers/acpi/power.c
++++ b/drivers/acpi/power.c
+@@ -42,6 +42,11 @@ ACPI_MODULE_NAME("power");
+ #define ACPI_POWER_RESOURCE_STATE_ON	0x01
+ #define ACPI_POWER_RESOURCE_STATE_UNKNOWN 0xFF
+ 
++struct acpi_power_dependent_device {
++	struct device *dev;
++	struct list_head node;
++};
++
+ struct acpi_power_resource {
+ 	struct acpi_device device;
+ 	struct list_head list_node;
+@@ -51,6 +56,7 @@ struct acpi_power_resource {
+ 	unsigned int ref_count;
+ 	bool wakeup_enabled;
+ 	struct mutex resource_lock;
++	struct list_head dependents;
+ };
+ 
+ struct acpi_power_resource_entry {
+@@ -232,8 +238,121 @@ static int acpi_power_get_list_state(struct list_head *list, int *state)
+ 	return 0;
+ }
+ 
++static int
++acpi_power_resource_add_dependent(struct acpi_power_resource *resource,
++				  struct device *dev)
++{
++	struct acpi_power_dependent_device *dep;
++	int ret = 0;
++
++	mutex_lock(&resource->resource_lock);
++	list_for_each_entry(dep, &resource->dependents, node) {
++		/* Only add it once */
++		if (dep->dev == dev)
++			goto unlock;
++	}
++
++	dep = kzalloc(sizeof(*dep), GFP_KERNEL);
++	if (!dep) {
++		ret = -ENOMEM;
++		goto unlock;
++	}
++
++	dep->dev = dev;
++	list_add_tail(&dep->node, &resource->dependents);
++	dev_dbg(dev, "added power dependency to [%s]\n", resource->name);
++
++unlock:
++	mutex_unlock(&resource->resource_lock);
++	return ret;
++}
++
++static void
++acpi_power_resource_remove_dependent(struct acpi_power_resource *resource,
++				     struct device *dev)
++{
++	struct acpi_power_dependent_device *dep;
++
++	mutex_lock(&resource->resource_lock);
++	list_for_each_entry(dep, &resource->dependents, node) {
++		if (dep->dev == dev) {
++			list_del(&dep->node);
++			kfree(dep);
++			dev_dbg(dev, "removed power dependency to [%s]\n",
++				resource->name);
++			break;
++		}
++	}
++	mutex_unlock(&resource->resource_lock);
++}
++
++/**
++ * acpi_device_power_add_dependent - Add dependent device of this ACPI device
++ * @adev: ACPI device pointer
++ * @dev: Dependent device
++ *
++ * If @adev has non-empty _PR0 the @dev is added as dependent device to all
++ * power resources returned by it. This means that whenever these power
++ * resources are turned _ON the dependent devices get runtime resumed. This
++ * is needed for devices such as PCI to allow its driver to re-initialize
++ * it after it went to D0uninitialized.
++ *
++ * If @adev does not have _PR0 this does nothing.
++ *
++ * Returns %0 in case of success and negative errno otherwise.
++ */
++int acpi_device_power_add_dependent(struct acpi_device *adev,
++				    struct device *dev)
++{
++	struct acpi_power_resource_entry *entry;
++	struct list_head *resources;
++	int ret;
++
++	if (!adev->flags.power_manageable)
++		return 0;
++
++	resources = &adev->power.states[ACPI_STATE_D0].resources;
++	list_for_each_entry(entry, resources, node) {
++		ret = acpi_power_resource_add_dependent(entry->resource, dev);
++		if (ret)
++			goto err;
++	}
++
++	return 0;
++
++err:
++	list_for_each_entry(entry, resources, node)
++		acpi_power_resource_remove_dependent(entry->resource, dev);
++
++	return ret;
++}
++
++/**
++ * acpi_device_power_remove_dependent - Remove dependent device
++ * @adev: ACPI device pointer
++ * @dev: Dependent device
++ *
++ * Does the opposite of acpi_device_power_add_dependent() and removes the
++ * dependent device if it is found. Can be called to @adev that does not
++ * have _PR0 as well.
++ */
++void acpi_device_power_remove_dependent(struct acpi_device *adev,
++					struct device *dev)
++{
++	struct acpi_power_resource_entry *entry;
++	struct list_head *resources;
++
++	if (!adev->flags.power_manageable)
++		return;
++
++	resources = &adev->power.states[ACPI_STATE_D0].resources;
++	list_for_each_entry_reverse(entry, resources, node)
++		acpi_power_resource_remove_dependent(entry->resource, dev);
++}
++
+ static int __acpi_power_on(struct acpi_power_resource *resource)
+ {
++	struct acpi_power_dependent_device *dep;
+ 	acpi_status status = AE_OK;
+ 
+ 	status = acpi_evaluate_object(resource->device.handle, "_ON", NULL, NULL);
+@@ -243,6 +362,21 @@ static int __acpi_power_on(struct acpi_power_resource *resource)
+ 	ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Power resource [%s] turned on\n",
+ 			  resource->name));
+ 
++	/*
++	 * If there are other dependents on this power resource we need to
++	 * resume them now so that their drivers can re-initialize the
++	 * hardware properly after it went back to D0.
++	 */
++	if (list_empty(&resource->dependents) ||
++	    list_is_singular(&resource->dependents))
++		return 0;
++
++	list_for_each_entry(dep, &resource->dependents, node) {
++		dev_dbg(dep->dev, "runtime resuming because [%s] turned on\n",
++			resource->name);
++		pm_request_resume(dep->dev);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -810,6 +944,7 @@ int acpi_add_power_resource(acpi_handle handle)
+ 				ACPI_STA_DEFAULT);
+ 	mutex_init(&resource->resource_lock);
+ 	INIT_LIST_HEAD(&resource->list_node);
++	INIT_LIST_HEAD(&resource->dependents);
+ 	resource->name = device->pnp.bus_id;
+ 	strcpy(acpi_device_name(device), ACPI_POWER_DEVICE_NAME);
+ 	strcpy(acpi_device_class(device), ACPI_POWER_CLASS);
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 31b6c87d6240..4752ff0a9d9b 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -513,6 +513,10 @@ int acpi_device_fix_up_power(struct acpi_device *device);
+ int acpi_bus_update_power(acpi_handle handle, int *state_p);
+ int acpi_device_update_power(struct acpi_device *device, int *state_p);
+ bool acpi_bus_power_manageable(acpi_handle handle);
++int acpi_device_power_add_dependent(struct acpi_device *adev,
++				    struct device *dev);
++void acpi_device_power_remove_dependent(struct acpi_device *adev,
++					struct device *dev);
+ 
+ #ifdef CONFIG_PM
+ bool acpi_bus_can_wakeup(acpi_handle handle);
+-- 
+2.20.1
 
