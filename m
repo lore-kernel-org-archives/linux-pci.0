@@ -2,151 +2,105 @@ Return-Path: <SRS0=yH3J=UY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30EB8C48BD4
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 09:23:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F098C48BD5
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 09:46:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0899720883
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 09:23:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="U9oq345/"
+	by mail.kernel.org (Postfix) with ESMTP id 523EF2168B
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 09:46:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731397AbfFYJXJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Jun 2019 05:23:09 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:7095 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726423AbfFYJXI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2019 05:23:08 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d11e7fa0001>; Tue, 25 Jun 2019 02:23:06 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 25 Jun 2019 02:23:07 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 25 Jun 2019 02:23:07 -0700
-Received: from HQMAIL110.nvidia.com (172.18.146.15) by HQMAIL103.nvidia.com
- (172.20.187.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 25 Jun
- 2019 09:23:06 +0000
-Received: from HQMAIL106.nvidia.com (172.18.146.12) by hqmail110.nvidia.com
- (172.18.146.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 25 Jun
- 2019 09:22:43 +0000
-Received: from hqnvemgw01.nvidia.com (172.20.150.20) by HQMAIL106.nvidia.com
- (172.18.146.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Tue, 25 Jun 2019 09:22:43 +0000
-Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5d11e7e00001>; Tue, 25 Jun 2019 02:22:43 -0700
-From:   Vidya Sagar <vidyas@nvidia.com>
-To:     <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
-        <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <Jisheng.Zhang@synaptics.com>, <thierry.reding@gmail.com>,
-        <kishon@ti.com>
-CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>,
-        <sagar.tv@gmail.com>
-Subject: [PATCH V9 1/3] PCI: dwc: Add API support to de-initialize host
-Date:   Tue, 25 Jun 2019 14:52:36 +0530
-Message-ID: <20190625092238.13207-1-vidyas@nvidia.com>
-X-Mailer: git-send-email 2.17.1
-X-NVConfidentiality: public
+        id S1728361AbfFYJqE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Jun 2019 05:46:04 -0400
+Received: from mga01.intel.com ([192.55.52.88]:28571 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728360AbfFYJqE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jun 2019 05:46:04 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Jun 2019 02:46:04 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.63,415,1557212400"; 
+   d="scan'208";a="182852468"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
+  by fmsmga001.fm.intel.com with SMTP; 25 Jun 2019 02:46:00 -0700
+Received: by lahna (sSMTP sendmail emulation); Tue, 25 Jun 2019 12:45:59 +0300
+Date:   Tue, 25 Jun 2019 12:45:59 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Len Brown <lenb@kernel.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] PCI / ACPI: Use cached ACPI device state to get
+ PCI device power state
+Message-ID: <20190625094559.GY2640@lahna.fi.intel.com>
+References: <20190618161858.77834-1-mika.westerberg@linux.intel.com>
+ <20190620141541.GA257318@google.com>
+ <CAJZ5v0hfCnyuAA7kC5-fXRo-Mf0jvGZQASV9T4iK8QxsqHMN_g@mail.gmail.com>
+ <1858642.x2LvR771H8@kreacher>
 MIME-Version: 1.0
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1561454586; bh=pKDb0lhCcGoJ6FcXLGVKpyAC603cvlAqnZyOBCd3oO8=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         X-NVConfidentiality:MIME-Version:Content-Type;
-        b=U9oq345/IQbV6JNCyoor0+fpjN9QRYHZgJyq5Z+v9ZjGC+QNpOI1dI1MAFJ3QMwoa
-         d0MvcQw7PqdSNfJMXexGyKMZuFfRK/z24kPL0f7sr+FsoIgXYIZRnjMAaNp6jqDEhd
-         khkrSWG5JCQO3+f+H8xhTYzC1+20ylHPkB9tlgIC7oHeGqpT+uM3iNnb+P11l+h00E
-         /fHeZzxMA8uY5G4Cserb+HuydjCRUYQkRH+u7wS1YWR8TWizhzle35Jz5WEaLHdzVw
-         LkieiWgvyfWwle2PZdMT4rOlXPxDRcJMmHu8ffiq03/Nuswr0AZCQAAiIVsZnkWKQM
-         z+yImgqSaRMug==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1858642.x2LvR771H8@kreacher>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add an API to group all the tasks to be done to de-initialize host which
-can then be called by any DesignWare core based driver implementations
-while adding .remove() support in their respective drivers.
+On Mon, Jun 24, 2019 at 01:14:47PM +0200, Rafael J. Wysocki wrote:
+> > The problem here is that acpi_device_get_power() really only should be
+> > used for two purposes: (1) To initialize adev->power.state, or to
+> > update it via acpi_device_update_power(), and (2) by the
+> > "real_power_state" sysfs attribute (of ACPI device objects).  The
+> > adev->power.state value should be used anywhere else, in principle, so
+> > the Mika's patch is correct.
+> 
+> Well, it is an improvement, but it is not sufficient.
+> 
+> > [Note that adev->power.state cannot be updated after calling
+> > acpi_device_get_power() to the value returned by it without updating
+> > the reference counters of the power resources that are "on" *exactly*
+> > because of the problem at hand here.]
+> 
+> That is obviously correct, but ->
+> 
+> > > but that's just an idle thought, not a suggestion.
+> > 
+> > After the initialization of the ACPI subsystem, the authoritative
+> > source of the ACPI device power state information is
+> > adev->power.state.  The ACPI subsystem is expected to update this
+> > value as needed going forward (including system-wide transitions like
+> > resume from S3).
+> 
+> -> the "resume from S3 or hibernation" case needs special handling, because
+> in that case the device power state need not reflect the information the ACPI
+> subsystem has.  That only matters if adev->power.state is ACPI_STATE_D0 and
+> the device is actually *not* in D0, because in that case acpi_device_set_power()
+> will not work. 
 
-Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
-Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
----
-Changes from v8:
-* None
+I guess you are talking about the special-cased devices that we leave in
+D0 when system suspend (via firmware) is entered?
 
-Changes from v7:
-* None
+> So that case is not covered currently (it should be rare in practice,
+> though, if it happens at all), so something like the patch below (untested) may
+> be needed in addition to the Mika's patch.
 
-Changes from v6:
-* None
+Looks good to me.
 
-Changes from v5:
-* None
+> Still, there is also the "power state not matching" case in pci_pm_complete() that's
+> need to be covered and the non-PCI ACPI PM has a similar issue in theory, so I
+> need to think about this a bit more.
 
-Changes from v4:
-* None
-
-Changes from v3:
-* Added check if (pci_msi_enabled() && !pp->ops->msi_host_init) before calling
-  dw_pcie_free_msi() API to mimic init path
-
-Changes from v2:
-* Rebased on top of linux-next top of the tree branch
-
-Changes from v1:
-* s/Designware/DesignWare
-
- drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++++
- drivers/pci/controller/dwc/pcie-designware.h      | 5 +++++
- 2 files changed, 13 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 77db32529319..d069e4290180 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -496,6 +496,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	return ret;
- }
- 
-+void dw_pcie_host_deinit(struct pcie_port *pp)
-+{
-+	pci_stop_root_bus(pp->root_bus);
-+	pci_remove_root_bus(pp->root_bus);
-+	if (pci_msi_enabled() && !pp->ops->msi_host_init)
-+		dw_pcie_free_msi(pp);
-+}
-+
- static int dw_pcie_access_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 				     u32 devfn, int where, int size, u32 *val,
- 				     bool write)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index b8993f2b78df..14762e262758 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -351,6 +351,7 @@ void dw_pcie_msi_init(struct pcie_port *pp);
- void dw_pcie_free_msi(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-+void dw_pcie_host_deinit(struct pcie_port *pp);
- int dw_pcie_allocate_domains(struct pcie_port *pp);
- #else
- static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
-@@ -375,6 +376,10 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
-+static inline void dw_pcie_host_deinit(struct pcie_port *pp)
-+{
-+}
-+
- static inline int dw_pcie_allocate_domains(struct pcie_port *pp)
- {
- 	return 0;
--- 
-2.17.1
-
+Do you want me to hold off sending an updated version of the patch
+series while we figure this one out or is it fine if I send it out now
+and we can add further details on top?
