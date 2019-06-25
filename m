@@ -2,123 +2,96 @@ Return-Path: <SRS0=yH3J=UY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_NEOMUTT autolearn=ham
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83D82C48BD4
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 12:04:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE0A6C48BD5
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 12:04:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59C6F208CA
-	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 12:04:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=lixom-net.20150623.gappssmtp.com header.i=@lixom-net.20150623.gappssmtp.com header.b="hZRADPiz"
+	by mail.kernel.org (Postfix) with ESMTP id AE9F721655
+	for <linux-pci@archiver.kernel.org>; Tue, 25 Jun 2019 12:04:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726628AbfFYME1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 25 Jun 2019 08:04:27 -0400
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:34805 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726397AbfFYME1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jun 2019 08:04:27 -0400
-Received: by mail-lf1-f66.google.com with SMTP id y198so12452600lfa.1
-        for <linux-pci@vger.kernel.org>; Tue, 25 Jun 2019 05:04:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lixom-net.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=dF0IbJavBkDmedpj3yJyJEczStf0zljEZ8y8GfrnLNo=;
-        b=hZRADPizKg59OjucPBI3M0TUhnj8/1G1RIWD4zZbMQjcz8KM4CL4S+r66k1z7jRWqY
-         I+Qsw9vnUgoKZVK8z74l0ZwEZ5FmjLRHeGGsz2YpjdwS6dSEYMH82ElW4689vbo/7B61
-         sanDevh+OlBX3C5KyD8iujyOd0GaUoLg7N5JQMUQnTZeeavqf5yX2ij6+bFa3rBhevya
-         rNWGq4ASu/C5OhvTm03GcPSKRhVjdzDfIo4aY4rYi+JYYofnvMvEUp7VUaszHQJhU2A9
-         O5VUYsLKjJKuzh4LzmqbVJpqGwIzi0iwVRrHIy4tX84EfC2KAcgbeCoMlE7BLOEHRuNZ
-         q/qg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=dF0IbJavBkDmedpj3yJyJEczStf0zljEZ8y8GfrnLNo=;
-        b=Ot5PKTvIJ55pRRv5u7U/yXUsat2zzAiORcNx6qD3PgKouF04bpt9mm52Q4QVurGG9L
-         oKuCrypDywztALqmnn5n8YgimxJ82bwOw8LfMhkQfjl+/ZaNQPXQeLfyLvtJ69USP08Y
-         jJ4E5tJxT7XvAF375frbe3QpV4Eks2h/kliidYQpzvXrLfFUL6jJNlFwEl0p9Fq0bF9K
-         gFCX/A82vKomBPQU2nxEGbVLRfYrWP48yHMRzICarU4UnpPaZi6kOq+vdGrnHq46LirA
-         o+h6TbvcCbGm48EGOoo9oMcSgsj6esVFwUpEliPBOqLzS20hn0L3hCZ8O9LKRlvcTej4
-         D0iw==
-X-Gm-Message-State: APjAAAWLwcoMJLP6ZqgHWkQxdE8QdK3LbpvPhE56ZROpm/D15Td1i8R7
-        1VUJ4DHa8ROijfTlxuzTuOUtKQ==
-X-Google-Smtp-Source: APXvYqwE0jVw8SSrbGCE55bdvMBAD//3OUaYwM0AqC52kAzrBq0+YhNc2p7IsfW9HIfpQvIyWtX8Fw==
-X-Received: by 2002:a05:6512:24a:: with SMTP id b10mr77179858lfo.37.1561464265290;
-        Tue, 25 Jun 2019 05:04:25 -0700 (PDT)
-Received: from localhost (h85-30-9-151.cust.a3fiber.se. [85.30.9.151])
-        by smtp.gmail.com with ESMTPSA id h4sm2245272ljj.31.2019.06.25.05.04.23
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 25 Jun 2019 05:04:24 -0700 (PDT)
-Date:   Tue, 25 Jun 2019 04:21:48 -0700
-From:   Olof Johansson <olof@lixom.net>
-To:     Wei Xu <xuwei5@hisilicon.com>
-Cc:     arm@kernel.org,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        arnd@arndb.de, linuxarm@huawei.com,
-        "xuwei (O)" <xuwei5@huawei.com>,
-        John Garry <john.garry@huawei.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, rjw@rjwysocki.net,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Zhangyi ac <zhangyi.ac@huawei.com>,
-        "Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-        jinying@hisilicon.com, huangdaode <huangdaode@hisilicon.com>,
-        Tangkunshan <tangkunshan@huawei.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Shameerali Kolothum Thodi 
-        <shameerali.kolothum.thodi@huawei.com>,
-        Shiju Jose <shiju.jose@huawei.com>,
-        Salil Mehta <salil.mehta@huawei.com>
-Subject: Re: [GIT PULL] Hisilicon fixes for v5.2
-Message-ID: <20190625112148.ckj7sgdgvyeel7vy@localhost>
-References: <b89ef8f0-d102-7f78-f373-cbcc7faddee3@hisilicon.com>
+        id S1726761AbfFYME7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 25 Jun 2019 08:04:59 -0400
+Received: from mga11.intel.com ([192.55.52.93]:43656 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726557AbfFYME7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jun 2019 08:04:59 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Jun 2019 05:04:57 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.63,415,1557212400"; 
+   d="scan'208";a="182873319"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
+  by fmsmga001.fm.intel.com with SMTP; 25 Jun 2019 05:04:56 -0700
+Received: by lahna (sSMTP sendmail emulation); Tue, 25 Jun 2019 15:04:55 +0300
+Date:   Tue, 25 Jun 2019 15:04:55 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] PCI: Skip resource distribution when no hotplug
+ bridges
+Message-ID: <20190625120455.GF2640@lahna.fi.intel.com>
+References: <20190622210310.180905-1-helgaas@kernel.org>
+ <20190622210310.180905-3-helgaas@kernel.org>
+ <20190624112449.GJ2640@lahna.fi.intel.com>
+ <8a53232416cce158fad35b781eb80b3ace3afc08.camel@kernel.crashing.org>
+ <20190625100534.GZ2640@lahna.fi.intel.com>
+ <c4daf43a302eeb1c507b9cf4a353200669e04ad8.camel@kernel.crashing.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b89ef8f0-d102-7f78-f373-cbcc7faddee3@hisilicon.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+In-Reply-To: <c4daf43a302eeb1c507b9cf4a353200669e04ad8.camel@kernel.crashing.org>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jun 25, 2019 at 11:23:21AM +0100, Wei Xu wrote:
-> Hi ARM-SoC team,
+On Tue, Jun 25, 2019 at 09:48:19PM +1000, Benjamin Herrenschmidt wrote:
+> On Tue, 2019-06-25 at 13:05 +0300, Mika Westerberg wrote:
+> > > We only every distribute resources when using
+> > > pci_assign_unassigned_bridge_resources which we only use some cases,
+> > > and it's completely non obvious why we would use it there and not in
+> > > other places.
+> > 
+> > We added it only for native PCIe hotplug path with the assumption that
+> > the boot firmware takes care of the initial resource allocation. I don't
+> > see any particular reason why it could not be called for other paths as
+> > well, though.
 > 
-> Please consider to pull the following changes.
-> Thanks!
+> Ok, we need to look into this for all the platforms who just reassign
+> everything in Linux (ie, ignore whatever the boot firmware did, if it
+> did anything).
 > 
-> Best Regards,
-> Wei
-> 
-> ---
-> 
-> The following changes since commit a188339ca5a396acc588e5851ed7e19f66b0ebd9:
-> 
->   Linux 5.2-rc1 (2019-05-19 15:47:09 -0700)
-> 
-> are available in the Git repository at:
-> 
->   git://github.com/hisilicon/linux-hisi.git tags/hisi-fixes-for-5.2
-> 
-> for you to fetch changes up to 07c811af1c00d7b4212eac86900b023b6405a954:
-> 
->   lib: logic_pio: Enforce LOGIC_PIO_INDIRECT region ops are set at registration (2019-06-25 09:40:42 +0100)
-> 
-> ----------------------------------------------------------------
-> Hisilicon fixes for v5.2-rc
-> 
-> - fixed RCU usage in logical PIO
-> - Added a function to unregister a logical PIO range in logical PIO
->   to support the fixes in the hisi-lpc driver
-> - fixed and optimized hisi-lpc driver to avoid potential use-after-free
->   and driver unbind crash
+> I feel like all these platforms today will have a hard time getting
+> anything useful out of hotplug with our default "2M" add to the hotplug
+> bridges :)
 
-Merged to fixes, thanks.
+Yeah, at least if Thunderbolt is involved each "daisy-chained" device
+adds a complete PCIe switch running out of resources rather quick.
 
+> > > We also don't distribute during the initial root survey meaning afaik
+> > > that we get toast for any hotplug bridge that has stuff already there
+> > > at boot.
+> > 
+> > The boot firmware obviously needs to follow the same logic. AFAICT
+> > recent PCs and Macs using native PCIe hotplug handle it.
+> 
+> What's your experience in that area ? How (well) do they handle it in
+> the boot firmware ? at least on arm64, boot firmwares are rather
+> catastrophic when it comes to PCI, and on other embedded devices they
+> are basically non-existent.
 
--Olof
+Well my experience is quite limited to recent Macs and PCs which usually
+handle the initial resource allocation just fine. In case of Thunderbolt
+some "older" PCs handle everything in firmware, even the runtime
+resource allocation via SMI handler accompanied with ACPI hotplug.
