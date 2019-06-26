@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89831C48BD8
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC91C48BD3
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 65E7D20B1F
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 121E220B1F
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qeW+utdJ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bL49WJDD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727733AbfFZM2n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Jun 2019 08:28:43 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:43156 "EHLO
+        id S1727754AbfFZM2f (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Jun 2019 08:28:35 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:43134 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727738AbfFZM2f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2019 08:28:35 -0400
+        with ESMTP id S1727746AbfFZM2d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2019 08:28:33 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=8c7Qw79j4iTVfYu8BDZ4XSZccS1fj4ydMQxMOZ0rYRM=; b=qeW+utdJvjdhQsheXW/BJJc+6E
-        Je3Qw7KX8yqGRD61b+aMkwDnKhRl79dbPTB2oSJS9EJkkp6B04gH0AKwiMVXmZSWXedEVwmeZuHtd
-        rxfolj9Lb0kntloPPle3ysnemn+eVNPk1PVLI65krTeg8f8ixCclNzvQ1VMgjJNdcaSfpbGEE5JqZ
-        LdQuIQpaH4WpWeh96t9pFdDMHn8Nlh1iBjfjdCn7Tu5xaSa1u8SC412S343cnc/TFWSgHhCX2D4kz
-        T8P1Ggyzn7yKEs00DA9YZRe2O9RSSxL1RnyDktKkewIGQSovonLhKuAUk0FzNPPqOPnS9qC33UPWA
-        glFwMabA==;
+        bh=1EWGF/F6e1vBHfjAA6nX1LYEAAsLgFm61+exsZF7p+E=; b=bL49WJDDJc3uz+E3Tq04Tm5aOh
+        6UKiHfGJ4xc1EdjM+wIO+4O7TabN+U+mE4CUE7GVW/6hNT1G25p6zM6t2nVmATDNy70CoTYKvUXYh
+        h63gBbqAnP0fS/lvCqryLq3sJaRMn4yQ/kLLVV4MhA9L5yzp96EXF7zgv5NJOti4WMo+m7s82bMJK
+        tcjaFPnwpZ0KnnQ9gPRDwYlIZplqIULbGZnpwlX73gmGQjQ6zUyUid/upr/R6McnyA6o8yC/58lCE
+        OCyyeu7FUxcUuZa0aNWyNmTN2ebeV0grSQhN82z/PKk4I5ke7M0SV3GzBYODNCZUs6sDgaWMbxtfQ
+        or4ndx9w==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hg72M-0001fg-QA; Wed, 26 Jun 2019 12:28:31 +0000
+        id 1hg72E-0001cj-Jv; Wed, 26 Jun 2019 12:28:23 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -44,9 +44,9 @@ To:     Dan Williams <dan.j.williams@intel.com>,
 Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 24/25] mm: remove the HMM config option
-Date:   Wed, 26 Jun 2019 14:27:23 +0200
-Message-Id: <20190626122724.13313-25-hch@lst.de>
+Subject: [PATCH 21/25] mm: remove hmm_devmem_add
+Date:   Wed, 26 Jun 2019 14:27:20 +0200
+Message-Id: <20190626122724.13313-22-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190626122724.13313-1-hch@lst.de>
 References: <20190626122724.13313-1-hch@lst.de>
@@ -58,148 +58,312 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-All the mm/hmm.c code is better keyed off HMM_MIRROR.  Also let nouveau
-depend on it instead of the mix of a dummy dependency symbol plus the
-actually selected one.  Drop various odd dependencies, as the code is
-pretty portable.
+There isn't really much value add in the hmm_devmem_add wrapper and
+more, as using devm_memremap_pages directly now is just as simple.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jason Gunthorpe <jgg@mellanox.com>
 ---
- drivers/gpu/drm/nouveau/Kconfig |  3 +--
- include/linux/hmm.h             |  5 +----
- include/linux/mm_types.h        |  2 +-
- mm/Kconfig                      | 27 ++++-----------------------
- mm/Makefile                     |  2 +-
- mm/hmm.c                        |  2 --
- 6 files changed, 8 insertions(+), 33 deletions(-)
+ Documentation/vm/hmm.rst |  26 --------
+ include/linux/hmm.h      | 129 ---------------------------------------
+ mm/hmm.c                 | 110 ---------------------------------
+ 3 files changed, 265 deletions(-)
 
-diff --git a/drivers/gpu/drm/nouveau/Kconfig b/drivers/gpu/drm/nouveau/Kconfig
-index 6303d203ab1d..66c839d8e9d1 100644
---- a/drivers/gpu/drm/nouveau/Kconfig
-+++ b/drivers/gpu/drm/nouveau/Kconfig
-@@ -84,11 +84,10 @@ config DRM_NOUVEAU_BACKLIGHT
+diff --git a/Documentation/vm/hmm.rst b/Documentation/vm/hmm.rst
+index 7cdf7282e022..50e1380950a9 100644
+--- a/Documentation/vm/hmm.rst
++++ b/Documentation/vm/hmm.rst
+@@ -329,32 +329,6 @@ directly using struct page for device memory which left most kernel code paths
+ unaware of the difference. We only need to make sure that no one ever tries to
+ map those pages from the CPU side.
  
- config DRM_NOUVEAU_SVM
- 	bool "(EXPERIMENTAL) Enable SVM (Shared Virtual Memory) support"
--	depends on ARCH_HAS_HMM
- 	depends on DEVICE_PRIVATE
- 	depends on DRM_NOUVEAU
-+	depends on HMM_MIRROR
- 	depends on STAGING
--	select HMM_MIRROR
- 	default n
- 	help
- 	  Say Y here if you want to enable experimental support for
+-HMM provides a set of helpers to register and hotplug device memory as a new
+-region needing a struct page. This is offered through a very simple API::
+-
+- struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+-                                   struct device *device,
+-                                   unsigned long size);
+- void hmm_devmem_remove(struct hmm_devmem *devmem);
+-
+-The hmm_devmem_ops is where most of the important things are::
+-
+- struct hmm_devmem_ops {
+-     void (*free)(struct hmm_devmem *devmem, struct page *page);
+-     int (*fault)(struct hmm_devmem *devmem,
+-                  struct vm_area_struct *vma,
+-                  unsigned long addr,
+-                  struct page *page,
+-                  unsigned flags,
+-                  pmd_t *pmdp);
+- };
+-
+-The first callback (free()) happens when the last reference on a device page is
+-dropped. This means the device page is now free and no longer used by anyone.
+-The second callback happens whenever the CPU tries to access a device page
+-which it cannot do. This second callback must trigger a migration back to
+-system memory.
+-
+ 
+ Migration to and from device memory
+ ===================================
 diff --git a/include/linux/hmm.h b/include/linux/hmm.h
-index 3d00e9550e77..b697496e85ba 100644
+index 1d55b7ea2da6..86aa4ec3404c 100644
 --- a/include/linux/hmm.h
 +++ b/include/linux/hmm.h
-@@ -62,7 +62,7 @@
- #include <linux/kconfig.h>
- #include <asm/pgtable.h>
+@@ -585,135 +585,6 @@ static inline void hmm_mm_init(struct mm_struct *mm) {}
+ #endif /* IS_ENABLED(CONFIG_HMM_MIRROR) */
  
--#if IS_ENABLED(CONFIG_HMM)
-+#ifdef CONFIG_HMM_MIRROR
- 
- #include <linux/device.h>
- #include <linux/migrate.h>
-@@ -332,9 +332,6 @@ static inline uint64_t hmm_pfn_from_pfn(const struct hmm_range *range,
- 	return hmm_device_entry_from_pfn(range, pfn);
- }
- 
+ #if IS_ENABLED(CONFIG_DEVICE_PRIVATE)
+-struct hmm_devmem;
 -
+-/*
+- * struct hmm_devmem_ops - callback for ZONE_DEVICE memory events
+- *
+- * @free: call when refcount on page reach 1 and thus is no longer use
+- * @fault: call when there is a page fault to unaddressable memory
+- *
+- * Both callback happens from page_free() and page_fault() callback of struct
+- * dev_pagemap respectively. See include/linux/memremap.h for more details on
+- * those.
+- *
+- * The hmm_devmem_ops callback are just here to provide a coherent and
+- * uniq API to device driver and device driver should not register their
+- * own page_free() or page_fault() but rely on the hmm_devmem_ops call-
+- * back.
+- */
+-struct hmm_devmem_ops {
+-	/*
+-	 * free() - free a device page
+-	 * @devmem: device memory structure (see struct hmm_devmem)
+-	 * @page: pointer to struct page being freed
+-	 *
+-	 * Call back occurs whenever a device page refcount reach 1 which
+-	 * means that no one is holding any reference on the page anymore
+-	 * (ZONE_DEVICE page have an elevated refcount of 1 as default so
+-	 * that they are not release to the general page allocator).
+-	 *
+-	 * Note that callback has exclusive ownership of the page (as no
+-	 * one is holding any reference).
+-	 */
+-	void (*free)(struct hmm_devmem *devmem, struct page *page);
+-	/*
+-	 * fault() - CPU page fault or get user page (GUP)
+-	 * @devmem: device memory structure (see struct hmm_devmem)
+-	 * @vma: virtual memory area containing the virtual address
+-	 * @addr: virtual address that faulted or for which there is a GUP
+-	 * @page: pointer to struct page backing virtual address (unreliable)
+-	 * @flags: FAULT_FLAG_* (see include/linux/mm.h)
+-	 * @pmdp: page middle directory
+-	 * Returns: VM_FAULT_MINOR/MAJOR on success or one of VM_FAULT_ERROR
+-	 *   on error
+-	 *
+-	 * The callback occurs whenever there is a CPU page fault or GUP on a
+-	 * virtual address. This means that the device driver must migrate the
+-	 * page back to regular memory (CPU accessible).
+-	 *
+-	 * The device driver is free to migrate more than one page from the
+-	 * fault() callback as an optimization. However if device decide to
+-	 * migrate more than one page it must always priotirize the faulting
+-	 * address over the others.
+-	 *
+-	 * The struct page pointer is only given as an hint to allow quick
+-	 * lookup of internal device driver data. A concurrent migration
+-	 * might have already free that page and the virtual address might
+-	 * not longer be back by it. So it should not be modified by the
+-	 * callback.
+-	 *
+-	 * Note that mmap semaphore is held in read mode at least when this
+-	 * callback occurs, hence the vma is valid upon callback entry.
+-	 */
+-	vm_fault_t (*fault)(struct hmm_devmem *devmem,
+-		     struct vm_area_struct *vma,
+-		     unsigned long addr,
+-		     const struct page *page,
+-		     unsigned int flags,
+-		     pmd_t *pmdp);
+-};
 -
--#if IS_ENABLED(CONFIG_HMM_MIRROR)
+-/*
+- * struct hmm_devmem - track device memory
+- *
+- * @completion: completion object for device memory
+- * @pfn_first: first pfn for this resource (set by hmm_devmem_add())
+- * @pfn_last: last pfn for this resource (set by hmm_devmem_add())
+- * @resource: IO resource reserved for this chunk of memory
+- * @pagemap: device page map for that chunk
+- * @device: device to bind resource to
+- * @ops: memory operations callback
+- * @ref: per CPU refcount
+- * @page_fault: callback when CPU fault on an unaddressable device page
+- *
+- * This an helper structure for device drivers that do not wish to implement
+- * the gory details related to hotplugging new memoy and allocating struct
+- * pages.
+- *
+- * Device drivers can directly use ZONE_DEVICE memory on their own if they
+- * wish to do so.
+- *
+- * The page_fault() callback must migrate page back, from device memory to
+- * system memory, so that the CPU can access it. This might fail for various
+- * reasons (device issues,  device have been unplugged, ...). When such error
+- * conditions happen, the page_fault() callback must return VM_FAULT_SIGBUS and
+- * set the CPU page table entry to "poisoned".
+- *
+- * Note that because memory cgroup charges are transferred to the device memory,
+- * this should never fail due to memory restrictions. However, allocation
+- * of a regular system page might still fail because we are out of memory. If
+- * that happens, the page_fault() callback must return VM_FAULT_OOM.
+- *
+- * The page_fault() callback can also try to migrate back multiple pages in one
+- * chunk, as an optimization. It must, however, prioritize the faulting address
+- * over all the others.
+- */
+-
+-struct hmm_devmem {
+-	struct completion		completion;
+-	unsigned long			pfn_first;
+-	unsigned long			pfn_last;
+-	struct resource			*resource;
+-	struct device			*device;
+-	struct dev_pagemap		pagemap;
+-	const struct hmm_devmem_ops	*ops;
+-	struct percpu_ref		ref;
+-};
+-
+-/*
+- * To add (hotplug) device memory, HMM assumes that there is no real resource
+- * that reserves a range in the physical address space (this is intended to be
+- * use by unaddressable device memory). It will reserve a physical range big
+- * enough and allocate struct page for it.
+- *
+- * The device driver can wrap the hmm_devmem struct inside a private device
+- * driver struct.
+- */
+-struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+-				  struct device *device,
+-				  unsigned long size);
+-
  /*
-  * Mirroring: how to synchronize device page table with CPU page table.
+  * hmm_devmem_page_set_drvdata - set per-page driver data field
   *
-diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index f33a1289c101..8d37182f8dbe 100644
---- a/include/linux/mm_types.h
-+++ b/include/linux/mm_types.h
-@@ -501,7 +501,7 @@ struct mm_struct {
- #endif
- 		struct work_struct async_put_work;
- 
--#if IS_ENABLED(CONFIG_HMM)
-+#ifdef CONFIG_HMM_MIRROR
- 		/* HMM needs to track a few things per mm */
- 		struct hmm *hmm;
- #endif
-diff --git a/mm/Kconfig b/mm/Kconfig
-index eecf037a54b3..1e426c26b1d6 100644
---- a/mm/Kconfig
-+++ b/mm/Kconfig
-@@ -669,37 +669,18 @@ config ZONE_DEVICE
- 
- 	  If FS_DAX is enabled, then say Y.
- 
--config ARCH_HAS_HMM_MIRROR
--	bool
--	default y
--	depends on (X86_64 || PPC64)
--	depends on MMU && 64BIT
--
--config ARCH_HAS_HMM
--	bool
--	depends on (X86_64 || PPC64)
--	depends on ZONE_DEVICE
--	depends on MMU && 64BIT
--	depends on MEMORY_HOTPLUG
--	depends on MEMORY_HOTREMOVE
--	depends on SPARSEMEM_VMEMMAP
--	default y
--
- config MIGRATE_VMA_HELPER
- 	bool
- 
- config DEV_PAGEMAP_OPS
- 	bool
- 
--config HMM
--	bool
--	select MMU_NOTIFIER
--	select MIGRATE_VMA_HELPER
--
- config HMM_MIRROR
- 	bool "HMM mirror CPU page table into a device page table"
--	depends on ARCH_HAS_HMM
--	select HMM
-+	depends on (X86_64 || PPC64)
-+	depends on MMU && 64BIT
-+	select MMU_NOTIFIER
-+	select MIGRATE_VMA_HELPER
- 	help
- 	  Select HMM_MIRROR if you want to mirror range of the CPU page table of a
- 	  process into a device page table. Here, mirror means "keep synchronized".
-diff --git a/mm/Makefile b/mm/Makefile
-index ac5e5ba78874..91c99040065c 100644
---- a/mm/Makefile
-+++ b/mm/Makefile
-@@ -102,5 +102,5 @@ obj-$(CONFIG_FRAME_VECTOR) += frame_vector.o
- obj-$(CONFIG_DEBUG_PAGE_REF) += debug_page_ref.o
- obj-$(CONFIG_HARDENED_USERCOPY) += usercopy.o
- obj-$(CONFIG_PERCPU_STATS) += percpu-stats.o
--obj-$(CONFIG_HMM) += hmm.o
-+obj-$(CONFIG_HMM_MIRROR) += hmm.o
- obj-$(CONFIG_MEMFD_CREATE) += memfd.o
 diff --git a/mm/hmm.c b/mm/hmm.c
-index 90ca0cdab9db..d62ce64d6bca 100644
+index fdbd48771292..90ca0cdab9db 100644
 --- a/mm/hmm.c
 +++ b/mm/hmm.c
-@@ -25,7 +25,6 @@
- #include <linux/mmu_notifier.h>
- #include <linux/memory_hotplug.h>
- 
--#if IS_ENABLED(CONFIG_HMM_MIRROR)
- static const struct mmu_notifier_ops hmm_mmu_notifier_ops;
- 
- static inline struct hmm *mm_get_hmm(struct mm_struct *mm)
-@@ -1326,4 +1325,3 @@ long hmm_range_dma_unmap(struct hmm_range *range,
- 	return cpages;
+@@ -1327,113 +1327,3 @@ long hmm_range_dma_unmap(struct hmm_range *range,
  }
  EXPORT_SYMBOL(hmm_range_dma_unmap);
--#endif /* IS_ENABLED(CONFIG_HMM_MIRROR) */
+ #endif /* IS_ENABLED(CONFIG_HMM_MIRROR) */
+-
+-
+-#if IS_ENABLED(CONFIG_DEVICE_PRIVATE)
+-static void hmm_devmem_ref_release(struct percpu_ref *ref)
+-{
+-	struct hmm_devmem *devmem;
+-
+-	devmem = container_of(ref, struct hmm_devmem, ref);
+-	complete(&devmem->completion);
+-}
+-
+-static void hmm_devmem_ref_exit(struct dev_pagemap *pgmap)
+-{
+-	struct hmm_devmem *devmem;
+-
+-	devmem = container_of(pgmap, struct hmm_devmem, pagemap);
+-	wait_for_completion(&devmem->completion);
+-	percpu_ref_exit(pgmap->ref);
+-}
+-
+-static void hmm_devmem_ref_kill(struct dev_pagemap *pgmap)
+-{
+-	percpu_ref_kill(pgmap->ref);
+-}
+-
+-static vm_fault_t hmm_devmem_migrate_to_ram(struct vm_fault *vmf)
+-{
+-	struct hmm_devmem *devmem =
+-		container_of(vmf->page->pgmap, struct hmm_devmem, pagemap);
+-
+-	return devmem->ops->fault(devmem, vmf->vma, vmf->address, vmf->page,
+-			vmf->flags, vmf->pmd);
+-}
+-
+-static void hmm_devmem_free(struct page *page)
+-{
+-	struct hmm_devmem *devmem =
+-		container_of(page->pgmap, struct hmm_devmem, pagemap);
+-
+-	devmem->ops->free(devmem, page);
+-}
+-
+-static const struct dev_pagemap_ops hmm_pagemap_ops = {
+-	.page_free		= hmm_devmem_free,
+-	.kill			= hmm_devmem_ref_kill,
+-	.cleanup		= hmm_devmem_ref_exit,
+-	.migrate_to_ram		= hmm_devmem_migrate_to_ram,
+-};
+-
+-/*
+- * hmm_devmem_add() - hotplug ZONE_DEVICE memory for device memory
+- *
+- * @ops: memory event device driver callback (see struct hmm_devmem_ops)
+- * @device: device struct to bind the resource too
+- * @size: size in bytes of the device memory to add
+- * Returns: pointer to new hmm_devmem struct ERR_PTR otherwise
+- *
+- * This function first finds an empty range of physical address big enough to
+- * contain the new resource, and then hotplugs it as ZONE_DEVICE memory, which
+- * in turn allocates struct pages. It does not do anything beyond that; all
+- * events affecting the memory will go through the various callbacks provided
+- * by hmm_devmem_ops struct.
+- *
+- * Device driver should call this function during device initialization and
+- * is then responsible of memory management. HMM only provides helpers.
+- */
+-struct hmm_devmem *hmm_devmem_add(const struct hmm_devmem_ops *ops,
+-				  struct device *device,
+-				  unsigned long size)
+-{
+-	struct hmm_devmem *devmem;
+-	void *result;
+-	int ret;
+-
+-	devmem = devm_kzalloc(device, sizeof(*devmem), GFP_KERNEL);
+-	if (!devmem)
+-		return ERR_PTR(-ENOMEM);
+-
+-	init_completion(&devmem->completion);
+-	devmem->pfn_first = -1UL;
+-	devmem->pfn_last = -1UL;
+-	devmem->resource = NULL;
+-	devmem->device = device;
+-	devmem->ops = ops;
+-
+-	ret = percpu_ref_init(&devmem->ref, &hmm_devmem_ref_release,
+-			      0, GFP_KERNEL);
+-	if (ret)
+-		return ERR_PTR(ret);
+-
+-	devmem->resource = devm_request_free_mem_region(device, &iomem_resource,
+-			size);
+-	if (IS_ERR(devmem->resource))
+-		return ERR_CAST(devmem->resource);
+-	devmem->pfn_first = devmem->resource->start >> PAGE_SHIFT;
+-	devmem->pfn_last = devmem->pfn_first +
+-			   (resource_size(devmem->resource) >> PAGE_SHIFT);
+-
+-	devmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
+-	devmem->pagemap.res = *devmem->resource;
+-	devmem->pagemap.ops = &hmm_pagemap_ops;
+-	devmem->pagemap.ref = &devmem->ref;
+-
+-	result = devm_memremap_pages(devmem->device, &devmem->pagemap);
+-	if (IS_ERR(result))
+-		return result;
+-	return devmem;
+-}
+-EXPORT_SYMBOL_GPL(hmm_devmem_add);
+-#endif /* CONFIG_DEVICE_PRIVATE  */
 -- 
 2.20.1
 
