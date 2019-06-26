@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7F5AC48BD8
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17FBAC48BD3
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0FB020B1F
-	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4ECB2063F
+	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:28:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uYRez3iz"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jgy09Umb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727650AbfFZM2R (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Jun 2019 08:28:17 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42984 "EHLO
+        id S1727679AbfFZM2V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Jun 2019 08:28:21 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:43034 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727641AbfFZM2Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2019 08:28:16 -0400
+        with ESMTP id S1727676AbfFZM2V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2019 08:28:21 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=O8xTiSY5VJngyKM6+yEPSiv/sNrzxm4spoPZD5fr/FE=; b=uYRez3izVT1tTJ2inEjlr+sqzJ
-        mQ/FCU73nGQFwZr8hbyBONC+pRy4Y5zWmPKwE4e+/VnM1Wd54RXoko27P7OJdwYWEVZyOfhCpakZS
-        NceKKQi8BIED/6Zf1boEQOc2fhm7lXJtPKrQRbyudvIk9ok/2lsM7oKgHQmN0A0NUt1wauMOTrnNb
-        YztM4+JK3tURRAcVPdB2QDw04eLlKqyMRUZblAnCS+8D4s/P8NuKrPuYvEzOGKhpFIyCfq1gDkpSy
-        T+Z7xfSW0MFySDPpzpi2T3kL1+k8AT2+W9JX8ZK8GzydNUFd8VyzyqZ163oz2EZ+8MZT6vIfA9Trk
-        2ljmFk6A==;
+        bh=h3EyOBgzIzwY5aTyr8+M/7FbufnJaVYVU0zNDtVIxKY=; b=jgy09UmbLfN+TWf3ytByumWWNU
+        MBpzdiGmKPVtjV+r0URWfeF2E9GRBVEM/c8PnQUO2wZiW0zBK04cKMOZbgGnhwOq4cUSwiniKoMeX
+        nT+P2ZmloBddnkxKnDLCv0p9C9VKIfvJhCYoDMLDhebT7jxtq+qTcxT+DpTV1aEPuh24GfFM+21jc
+        kOYj7R6c4SAui71wSqq81SUZTzHwpTbjiSuAhN1+J8BxHpjAxvSj7bpXQIAp5IJs+sveIvxCpy3e5
+        M8/sKyXAXPj85iSMU4X7j+qpHu/XpfkJAYPDnm1oVPWTY+HoDT6ptwrKa0Hjb/nKTsoEaSJKqs41g
+        dD55ye6w==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hg724-0001YD-CI; Wed, 26 Jun 2019 12:28:12 +0000
+        id 1hg729-0001ab-Cw; Wed, 26 Jun 2019 12:28:17 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -44,9 +44,9 @@ To:     Dan Williams <dan.j.williams@intel.com>,
 Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 17/25] PCI/P2PDMA: use the dev_pagemap internal refcount
-Date:   Wed, 26 Jun 2019 14:27:16 +0200
-Message-Id: <20190626122724.13313-18-hch@lst.de>
+Subject: [PATCH 19/25] nouveau: use devm_memremap_pages directly
+Date:   Wed, 26 Jun 2019 14:27:18 +0200
+Message-Id: <20190626122724.13313-20-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190626122724.13313-1-hch@lst.de>
 References: <20190626122724.13313-1-hch@lst.de>
@@ -58,131 +58,193 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The functionality is identical to the one currently open coded in
-p2pdma.c.
+Just use devm_memremap_pages instead of hmm_devmem_add pages to allow
+killing that wrapper which doesn't provide a whole lot of benefits.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/p2pdma.c | 57 ++++----------------------------------------
- 1 file changed, 4 insertions(+), 53 deletions(-)
+ drivers/gpu/drm/nouveau/nouveau_dmem.c | 82 ++++++++++++--------------
+ 1 file changed, 38 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index ebd8ce3bba2e..608f84df604a 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -24,12 +24,6 @@ struct pci_p2pdma {
- 	bool p2pmem_published;
+diff --git a/drivers/gpu/drm/nouveau/nouveau_dmem.c b/drivers/gpu/drm/nouveau/nouveau_dmem.c
+index a50f6fd2fe24..0fb7a44b8bc4 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_dmem.c
++++ b/drivers/gpu/drm/nouveau/nouveau_dmem.c
+@@ -72,7 +72,8 @@ struct nouveau_dmem_migrate {
  };
  
--struct p2pdma_pagemap {
--	struct dev_pagemap pgmap;
--	struct percpu_ref ref;
--	struct completion ref_done;
--};
--
- static ssize_t size_show(struct device *dev, struct device_attribute *attr,
- 			 char *buf)
- {
-@@ -78,32 +72,6 @@ static const struct attribute_group p2pmem_group = {
- 	.name = "p2pmem",
+ struct nouveau_dmem {
+-	struct hmm_devmem *devmem;
++	struct nouveau_drm *drm;
++	struct dev_pagemap pagemap;
+ 	struct nouveau_dmem_migrate migrate;
+ 	struct list_head chunk_free;
+ 	struct list_head chunk_full;
+@@ -80,6 +81,11 @@ struct nouveau_dmem {
+ 	struct mutex mutex;
  };
  
--static struct p2pdma_pagemap *to_p2p_pgmap(struct percpu_ref *ref)
--{
--	return container_of(ref, struct p2pdma_pagemap, ref);
--}
--
--static void pci_p2pdma_percpu_release(struct percpu_ref *ref)
--{
--	struct p2pdma_pagemap *p2p_pgmap = to_p2p_pgmap(ref);
--
--	complete(&p2p_pgmap->ref_done);
--}
--
--static void pci_p2pdma_percpu_kill(struct dev_pagemap *pgmap)
--{
--	percpu_ref_kill(pgmap->ref);
--}
--
--static void pci_p2pdma_percpu_cleanup(struct dev_pagemap *pgmap)
--{
--	struct p2pdma_pagemap *p2p_pgmap =
--		container_of(pgmap, struct p2pdma_pagemap, pgmap);
--
--	wait_for_completion(&p2p_pgmap->ref_done);
--	percpu_ref_exit(&p2p_pgmap->ref);
--}
--
- static void pci_p2pdma_release(void *data)
++static inline struct nouveau_dmem *page_to_dmem(struct page *page)
++{
++	return container_of(page->pgmap, struct nouveau_dmem, pagemap);
++}
++
+ struct nouveau_dmem_fault {
+ 	struct nouveau_drm *drm;
+ 	struct nouveau_fence *fence;
+@@ -96,8 +102,7 @@ struct nouveau_migrate {
+ 	unsigned long dma_nr;
+ };
+ 
+-static void
+-nouveau_dmem_free(struct hmm_devmem *devmem, struct page *page)
++static void nouveau_dmem_page_free(struct page *page)
  {
- 	struct pci_dev *pdev = data;
-@@ -153,11 +121,6 @@ static int pci_p2pdma_setup(struct pci_dev *pdev)
- 	return error;
+ 	struct nouveau_dmem_chunk *chunk;
+ 	unsigned long idx;
+@@ -260,29 +265,21 @@ static const struct migrate_vma_ops nouveau_dmem_fault_migrate_ops = {
+ 	.finalize_and_map	= nouveau_dmem_fault_finalize_and_map,
+ };
+ 
+-static vm_fault_t
+-nouveau_dmem_fault(struct hmm_devmem *devmem,
+-		   struct vm_area_struct *vma,
+-		   unsigned long addr,
+-		   const struct page *page,
+-		   unsigned int flags,
+-		   pmd_t *pmdp)
++static vm_fault_t nouveau_dmem_migrate_to_ram(struct vm_fault *vmf)
+ {
+-	struct drm_device *drm_dev = dev_get_drvdata(devmem->device);
++	struct nouveau_dmem *dmem = page_to_dmem(vmf->page);
+ 	unsigned long src[1] = {0}, dst[1] = {0};
+-	struct nouveau_dmem_fault fault = {0};
++	struct nouveau_dmem_fault fault = { .drm = dmem->drm };
+ 	int ret;
+ 
+-
+-
+ 	/*
+ 	 * FIXME what we really want is to find some heuristic to migrate more
+ 	 * than just one page on CPU fault. When such fault happens it is very
+ 	 * likely that more surrounding page will CPU fault too.
+ 	 */
+-	fault.drm = nouveau_drm(drm_dev);
+-	ret = migrate_vma(&nouveau_dmem_fault_migrate_ops, vma, addr,
+-			  addr + PAGE_SIZE, src, dst, &fault);
++	ret = migrate_vma(&nouveau_dmem_fault_migrate_ops, vmf->vma,
++			vmf->address, vmf->address + PAGE_SIZE,
++			src, dst, &fault);
+ 	if (ret)
+ 		return VM_FAULT_SIGBUS;
+ 
+@@ -292,10 +289,9 @@ nouveau_dmem_fault(struct hmm_devmem *devmem,
+ 	return 0;
  }
  
--static const struct dev_pagemap_ops pci_p2pdma_pagemap_ops = {
--	.kill		= pci_p2pdma_percpu_kill,
--	.cleanup	= pci_p2pdma_percpu_cleanup,
--};
--
- /**
-  * pci_p2pdma_add_resource - add memory for use as p2p memory
-  * @pdev: the device to add the memory to
-@@ -171,7 +134,6 @@ static const struct dev_pagemap_ops pci_p2pdma_pagemap_ops = {
- int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 			    u64 offset)
+-static const struct hmm_devmem_ops
+-nouveau_dmem_devmem_ops = {
+-	.free = nouveau_dmem_free,
+-	.fault = nouveau_dmem_fault,
++static const struct dev_pagemap_ops nouveau_dmem_pagemap_ops = {
++	.page_free		= nouveau_dmem_page_free,
++	.migrate_to_ram		= nouveau_dmem_migrate_to_ram,
+ };
+ 
+ static int
+@@ -581,7 +577,8 @@ void
+ nouveau_dmem_init(struct nouveau_drm *drm)
  {
--	struct p2pdma_pagemap *p2p_pgmap;
- 	struct dev_pagemap *pgmap;
- 	void *addr;
- 	int error;
-@@ -194,26 +156,15 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 			return error;
+ 	struct device *device = drm->dev->dev;
+-	unsigned long i, size;
++	struct resource *res;
++	unsigned long i, size, pfn_first;
+ 	int ret;
+ 
+ 	/* This only make sense on PASCAL or newer */
+@@ -591,6 +588,7 @@ nouveau_dmem_init(struct nouveau_drm *drm)
+ 	if (!(drm->dmem = kzalloc(sizeof(*drm->dmem), GFP_KERNEL)))
+ 		return;
+ 
++	drm->dmem->drm = drm;
+ 	mutex_init(&drm->dmem->mutex);
+ 	INIT_LIST_HEAD(&drm->dmem->chunk_free);
+ 	INIT_LIST_HEAD(&drm->dmem->chunk_full);
+@@ -600,11 +598,8 @@ nouveau_dmem_init(struct nouveau_drm *drm)
+ 
+ 	/* Initialize migration dma helpers before registering memory */
+ 	ret = nouveau_dmem_migrate_init(drm);
+-	if (ret) {
+-		kfree(drm->dmem);
+-		drm->dmem = NULL;
+-		return;
+-	}
++	if (ret)
++		goto out_free;
+ 
+ 	/*
+ 	 * FIXME we need some kind of policy to decide how much VRAM we
+@@ -612,14 +607,16 @@ nouveau_dmem_init(struct nouveau_drm *drm)
+ 	 * and latter if we want to do thing like over commit then we
+ 	 * could revisit this.
+ 	 */
+-	drm->dmem->devmem = hmm_devmem_add(&nouveau_dmem_devmem_ops,
+-					   device, size);
+-	if (IS_ERR(drm->dmem->devmem)) {
+-		kfree(drm->dmem);
+-		drm->dmem = NULL;
+-		return;
+-	}
+-
++	res = devm_request_free_mem_region(device, &iomem_resource, size);
++	if (IS_ERR(res))
++		goto out_free;
++	drm->dmem->pagemap.type = MEMORY_DEVICE_PRIVATE;
++	drm->dmem->pagemap.res = *res;
++	drm->dmem->pagemap.ops = &nouveau_dmem_pagemap_ops;
++	if (IS_ERR(devm_memremap_pages(device, &drm->dmem->pagemap)))
++		goto out_free;
++
++	pfn_first = res->start >> PAGE_SHIFT;
+ 	for (i = 0; i < (size / DMEM_CHUNK_SIZE); ++i) {
+ 		struct nouveau_dmem_chunk *chunk;
+ 		struct page *page;
+@@ -632,8 +629,7 @@ nouveau_dmem_init(struct nouveau_drm *drm)
+ 		}
+ 
+ 		chunk->drm = drm;
+-		chunk->pfn_first = drm->dmem->devmem->pfn_first;
+-		chunk->pfn_first += (i * DMEM_CHUNK_NPAGES);
++		chunk->pfn_first = pfn_first + (i * DMEM_CHUNK_NPAGES);
+ 		list_add_tail(&chunk->list, &drm->dmem->chunk_empty);
+ 
+ 		page = pfn_to_page(chunk->pfn_first);
+@@ -643,6 +639,10 @@ nouveau_dmem_init(struct nouveau_drm *drm)
  	}
  
--	p2p_pgmap = devm_kzalloc(&pdev->dev, sizeof(*p2p_pgmap), GFP_KERNEL);
--	if (!p2p_pgmap)
-+	pgmap = devm_kzalloc(&pdev->dev, sizeof(*pgmap), GFP_KERNEL);
-+	if (!pgmap)
- 		return -ENOMEM;
--
--	init_completion(&p2p_pgmap->ref_done);
--	error = percpu_ref_init(&p2p_pgmap->ref,
--			pci_p2pdma_percpu_release, 0, GFP_KERNEL);
--	if (error)
--		goto pgmap_free;
--
--	pgmap = &p2p_pgmap->pgmap;
--
- 	pgmap->res.start = pci_resource_start(pdev, bar) + offset;
- 	pgmap->res.end = pgmap->res.start + size - 1;
- 	pgmap->res.flags = pci_resource_flags(pdev, bar);
--	pgmap->ref = &p2p_pgmap->ref;
- 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
- 	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
- 		pci_resource_start(pdev, bar);
--	pgmap->ops = &pci_p2pdma_pagemap_ops;
- 
- 	addr = devm_memremap_pages(&pdev->dev, pgmap);
- 	if (IS_ERR(addr)) {
-@@ -224,7 +175,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- 	error = gen_pool_add_owner(pdev->p2pdma->pool, (unsigned long)addr,
- 			pci_bus_address(pdev, bar) + offset,
- 			resource_size(&pgmap->res), dev_to_node(&pdev->dev),
--			&p2p_pgmap->ref);
-+			pgmap->ref);
- 	if (error)
- 		goto pages_free;
- 
-@@ -236,7 +187,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
- pages_free:
- 	devm_memunmap_pages(&pdev->dev, pgmap);
- pgmap_free:
--	devm_kfree(&pdev->dev, p2p_pgmap);
-+	devm_kfree(&pdev->dev, pgmap);
- 	return error;
+ 	NV_INFO(drm, "DMEM: registered %ldMB of device memory\n", size >> 20);
++	return;
++out_free:
++	kfree(drm->dmem);
++	drm->dmem = NULL;
  }
- EXPORT_SYMBOL_GPL(pci_p2pdma_add_resource);
+ 
+ static void
+@@ -833,13 +833,7 @@ nouveau_dmem_migrate_vma(struct nouveau_drm *drm,
+ static inline bool
+ nouveau_dmem_page(struct nouveau_drm *drm, struct page *page)
+ {
+-	if (!is_device_private_page(page))
+-		return false;
+-
+-	if (drm->dmem->devmem != page->pgmap->data)
+-		return false;
+-
+-	return true;
++	return is_device_private_page(page) && drm->dmem == page_to_dmem(page);
+ }
+ 
+ void
 -- 
 2.20.1
 
