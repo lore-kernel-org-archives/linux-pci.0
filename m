@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CFE1C48BD8
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E81C3C48BD9
 	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:29:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1702920B1F
+	by mail.kernel.org (Postfix) with ESMTP id B80B920B1F
 	for <linux-pci@archiver.kernel.org>; Wed, 26 Jun 2019 12:29:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AoPkQ1Ya"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="c6rggi27"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726347AbfFZM3P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 26 Jun 2019 08:29:15 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42744 "EHLO
+        id S1727498AbfFZM1u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 26 Jun 2019 08:27:50 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42706 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727513AbfFZM1w (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2019 08:27:52 -0400
+        with ESMTP id S1726484AbfFZM1u (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jun 2019 08:27:50 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=jJLN4PQyh+NiJMk0GjPmnktfOIwnazdB1WyLd+EwQBI=; b=AoPkQ1Ya+GVeIiAkwNrcOY3WXy
-        sAhllTHY9EgHAAks54i/wuled6yq4/SYKn1NbwYo04wuJLkW52WmxaNmHyzJwOIaCd1GOvXiEtOFh
-        ThHQsj3EyWPwSyeHernbRDYWFXPuc50UnHzB/Ux1T9z32tWTuakN3Zxrkm+83YlNJ6VlyDhXoVpV0
-        swGfUgPd+voS9n+3QCOoIUtQgxulHB6VDtuaVG04iQieR5ANlKAx/Sb/w9GgYjty+E8OOcprpShvj
-        UdtX/dRdsOG235kDLoTkXHXo33rFg+7/1zOnF3ap3zxhTo4sRT+LAOqrSL+ve8dTmWYfKoZdPNkJ2
-        oG9lwaoA==;
+        bh=0wBvIBHex+/cCiI1pboKPdW0nxKbhC7t4v1/DWHTWzI=; b=c6rggi27+6bcNfZZv1zIRlyPCG
+        dTeW2W12t37x3woY9zWdBtIsP4n1E9dw47beifpdnx/fz2SnFKoQs6M0ObFbnzav7MGUD/YXjCZ/Y
+        /nrVNGsZF9j5DfrhyO6TTdGG/hzYaJp6AQ98WUFsFTaB6Ol4fyNoNVg8mhvpvqgaxZEjbFL/UASiZ
+        /3sLgB2UV5SSt6KHctKLOsDSch/tnc7UKteZTeFrWqxh0JqkYe6iQjKxxaOZL1CYQ9QXxFMmVhNNO
+        27wXVoCLF43f+0c2qpIsvN2eFaGW98w89wJCDa2RWtuWV5oIL49PGwubBepu8AuvptmiewrxjXd5v
+        6kqTr2hA==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hg71g-0001O4-Pe; Wed, 26 Jun 2019 12:27:49 +0000
+        id 1hg71Z-0001Lv-4k; Wed, 26 Jun 2019 12:27:41 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -43,10 +43,11 @@ To:     Dan Williams <dan.j.williams@intel.com>,
         Ben Skeggs <bskeggs@redhat.com>
 Cc:     linux-mm@kvack.org, nouveau@lists.freedesktop.org,
         dri-devel@lists.freedesktop.org, linux-nvdimm@lists.01.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 08/25] memremap: validate the pagemap type passed to devm_memremap_pages
-Date:   Wed, 26 Jun 2019 14:27:07 +0200
-Message-Id: <20190626122724.13313-9-hch@lst.de>
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH 05/25] mm: don't clear ->mapping in hmm_devmem_free
+Date:   Wed, 26 Jun 2019 14:27:04 +0200
+Message-Id: <20190626122724.13313-6-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190626122724.13313-1-hch@lst.de>
 References: <20190626122724.13313-1-hch@lst.de>
@@ -58,89 +59,31 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Most pgmap types are only supported when certain config options are
-enabled.  Check for a type that is valid for the current configuration
-before setting up the pagemap.  For this the usage of the 0 type for
-device dax gets replaced with an explicit MEMORY_DEVICE_DEVDAX type.
+->mapping isn't even used by HMM users, and the field at the same offset
+in the zone_device part of the union is declared as pad.  (Which btw is
+rather confusing, as DAX uses ->pgmap and ->mapping from two different
+sides of the union, but DAX doesn't use hmm_devmem_free).
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jason Gunthorpe <jgg@mellanox.com>
+Reviewed-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/dax/device.c     |  1 +
- include/linux/memremap.h |  8 ++++++++
- kernel/memremap.c        | 22 ++++++++++++++++++++++
- 3 files changed, 31 insertions(+)
+ mm/hmm.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/dax/device.c b/drivers/dax/device.c
-index 8465d12fecba..79014baa782d 100644
---- a/drivers/dax/device.c
-+++ b/drivers/dax/device.c
-@@ -468,6 +468,7 @@ int dev_dax_probe(struct device *dev)
- 	dev_dax->pgmap.ref = &dev_dax->ref;
- 	dev_dax->pgmap.kill = dev_dax_percpu_kill;
- 	dev_dax->pgmap.cleanup = dev_dax_percpu_exit;
-+	dev_dax->pgmap.type = MEMORY_DEVICE_DEVDAX;
- 	addr = devm_memremap_pages(dev, &dev_dax->pgmap);
- 	if (IS_ERR(addr))
- 		return PTR_ERR(addr);
-diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-index 995c62c5a48b..0c86f2c5ac9c 100644
---- a/include/linux/memremap.h
-+++ b/include/linux/memremap.h
-@@ -45,13 +45,21 @@ struct vmem_altmap {
-  * wakeup is used to coordinate physical address space management (ex:
-  * fs truncate/hole punch) vs pinned pages (ex: device dma).
-  *
-+ * MEMORY_DEVICE_DEVDAX:
-+ * Host memory that has similar access semantics as System RAM i.e. DMA
-+ * coherent and supports page pinning. In contrast to
-+ * MEMORY_DEVICE_FS_DAX, this memory is access via a device-dax
-+ * character device.
-+ *
-  * MEMORY_DEVICE_PCI_P2PDMA:
-  * Device memory residing in a PCI BAR intended for use with Peer-to-Peer
-  * transactions.
-  */
- enum memory_type {
-+	/* 0 is reserved to catch uninitialized type fields */
- 	MEMORY_DEVICE_PRIVATE = 1,
- 	MEMORY_DEVICE_FS_DAX,
-+	MEMORY_DEVICE_DEVDAX,
- 	MEMORY_DEVICE_PCI_P2PDMA,
- };
+diff --git a/mm/hmm.c b/mm/hmm.c
+index 376159a769fb..e7dd2ab8f9ab 100644
+--- a/mm/hmm.c
++++ b/mm/hmm.c
+@@ -1383,8 +1383,6 @@ static void hmm_devmem_free(struct page *page, void *data)
+ {
+ 	struct hmm_devmem *devmem = data;
  
-diff --git a/kernel/memremap.c b/kernel/memremap.c
-index 6e1970719dc2..abda62d1e5a3 100644
---- a/kernel/memremap.c
-+++ b/kernel/memremap.c
-@@ -157,6 +157,28 @@ void *devm_memremap_pages(struct device *dev, struct dev_pagemap *pgmap)
- 	pgprot_t pgprot = PAGE_KERNEL;
- 	int error, nid, is_ram;
+-	page->mapping = NULL;
+-
+ 	devmem->ops->free(devmem, page);
+ }
  
-+	switch (pgmap->type) {
-+	case MEMORY_DEVICE_PRIVATE:
-+		if (!IS_ENABLED(CONFIG_DEVICE_PRIVATE)) {
-+			WARN(1, "Device private memory not supported\n");
-+			return ERR_PTR(-EINVAL);
-+		}
-+		break;
-+	case MEMORY_DEVICE_FS_DAX:
-+		if (!IS_ENABLED(CONFIG_ZONE_DEVICE) ||
-+		    IS_ENABLED(CONFIG_FS_DAX_LIMITED)) {
-+			WARN(1, "File system DAX not supported\n");
-+			return ERR_PTR(-EINVAL);
-+		}
-+		break;
-+	case MEMORY_DEVICE_DEVDAX:
-+	case MEMORY_DEVICE_PCI_P2PDMA:
-+		break;
-+	default:
-+		WARN(1, "Invalid pgmap type %d\n", pgmap->type);
-+		break;
-+	}
-+
- 	if (!pgmap->ref || !pgmap->kill || !pgmap->cleanup) {
- 		WARN(1, "Missing reference count teardown definition\n");
- 		return ERR_PTR(-EINVAL);
 -- 
 2.20.1
 
