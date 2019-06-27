@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_MUTT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73C9BC48BD6
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 08:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E976FC48BD7
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 08:52:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D41C206E0
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 08:51:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C73B7206E0
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 08:52:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726295AbfF0IvU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Jun 2019 04:51:20 -0400
-Received: from verein.lst.de ([213.95.11.211]:50729 "EHLO newverein.lst.de"
+        id S1726315AbfF0IwH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Jun 2019 04:52:07 -0400
+Received: from verein.lst.de ([213.95.11.211]:50739 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725385AbfF0IvU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Jun 2019 04:51:20 -0400
+        id S1726314AbfF0IwH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Jun 2019 04:52:07 -0400
 Received: by newverein.lst.de (Postfix, from userid 2407)
-        id 742B868B20; Thu, 27 Jun 2019 10:50:47 +0200 (CEST)
-Date:   Thu, 27 Jun 2019 10:50:47 +0200
+        id B4FDB68B20; Thu, 27 Jun 2019 10:51:35 +0200 (CEST)
+Date:   Thu, 27 Jun 2019 10:51:35 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Ira Weiny <ira.weiny@intel.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -31,29 +31,35 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         dri-devel@lists.freedesktop.org, linux-mm@kvack.org,
         nouveau@lists.freedesktop.org
-Subject: Re: [PATCH 11/25] memremap: lift the devmap_enable manipulation
- into devm_memremap_pages
-Message-ID: <20190627085047.GA11420@lst.de>
-References: <20190626122724.13313-1-hch@lst.de> <20190626122724.13313-12-hch@lst.de> <20190626190445.GE4605@iweiny-DESK2.sc.intel.com>
+Subject: Re: [PATCH 15/25] memremap: provide an optional internal refcount
+ in struct dev_pagemap
+Message-ID: <20190627085135.GB11420@lst.de>
+References: <20190626122724.13313-1-hch@lst.de> <20190626122724.13313-16-hch@lst.de> <20190626214750.GC8399@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190626190445.GE4605@iweiny-DESK2.sc.intel.com>
+In-Reply-To: <20190626214750.GC8399@iweiny-DESK2.sc.intel.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jun 26, 2019 at 12:04:46PM -0700, Ira Weiny wrote:
-> > +static int devmap_managed_enable_get(struct device *dev, struct dev_pagemap *pgmap)
-> > +{
-> > +	if (!pgmap->ops->page_free) {
+On Wed, Jun 26, 2019 at 02:47:50PM -0700, Ira Weiny wrote:
+> > +
+> > +		init_completion(&pgmap->done);
+> > +		error = percpu_ref_init(&pgmap->internal_ref,
+> > +				dev_pagemap_percpu_release, 0, GFP_KERNEL);
+> > +		if (error)
+> > +			return ERR_PTR(error);
+> > +		pgmap->ref = &pgmap->internal_ref;
+> > +	} else {
+> > +		if (!pgmap->ops || !pgmap->ops->kill || !pgmap->ops->cleanup) {
+> > +			WARN(1, "Missing reference count teardown definition\n");
+> > +			return ERR_PTR(-EINVAL);
+> > +		}
 > 
-> NIT: later on you add the check for pgmap->ops...  it should probably be here.
-> 
-> But not sure that bisection will be an issue here.
+> After this series are there any users who continue to supply their own
+> reference object and these callbacks?
 
-At this point we do not allow a NULL ops pointer.  That only becomes
-a valid option one the internal refcount is added.  Until then a NULL
-->ops pointer leads to an error return from devm_memremap_pages.
+Yes, fsdax uses the block layer request_queue reference count.
