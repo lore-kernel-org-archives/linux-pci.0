@@ -6,159 +6,147 @@ X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECAC0C48BD7
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 16:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED83C48BD7
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 16:55:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CAE5520659
-	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 16:54:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D42F720659
+	for <linux-pci@archiver.kernel.org>; Thu, 27 Jun 2019 16:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726441AbfF0QyY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 27 Jun 2019 12:54:24 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:36910 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726405AbfF0QyX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 27 Jun 2019 12:54:23 -0400
-Received: from s01061831bf6ec98c.cg.shawcable.net ([68.147.80.180] helo=[192.168.6.132])
-        by ale.deltatee.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1hgXfA-00034h-4H; Thu, 27 Jun 2019 10:54:22 -0600
-To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
-Cc:     "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        id S1726441AbfF0Qzt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 27 Jun 2019 12:55:49 -0400
+Received: from mout.kundenserver.de ([212.227.17.24]:35303 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726405AbfF0Qzt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Jun 2019 12:55:49 -0400
+Received: from [192.168.1.162] ([37.4.249.111]) by mrelayeu.kundenserver.de
+ (mreue109 [212.227.15.183]) with ESMTPSA (Nemesis) id
+ 1MRTEp-1hspKc0A8z-00NSkY; Thu, 27 Jun 2019 18:55:27 +0200
+Subject: Re: [PATCH v5 04/12] PCI: brcmstb: add dma-range mapping for inbound
+ traffic
+To:     Jim Quinlan <jim2101024@gmail.com>
+Cc:     ard.biesheuvel@linaro.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel@vger.kernel.org,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <SL2P216MB01874DFDDBDE49B935A9B1B380E50@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
- <e768271e-9455-2a3d-ad76-4a6d9c71d669@deltatee.com>
- <SL2P216MB0187E3E3A8307DF01B04020D80FD0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <b8f6c13c-ae27-dac4-2c34-497fafcffef0@deltatee.com>
-Date:   Thu, 27 Jun 2019 10:54:18 -0600
+        Brian Norris <computersforpeace@gmail.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>
+References: <1537367527-20773-1-git-send-email-jim2101024@gmail.com>
+ <1537367527-20773-5-git-send-email-jim2101024@gmail.com>
+ <CAKv+Gu_d-r0ubyqZcDzERYd5FVTSpjBk++iACHqVgtHrOK0F7A@mail.gmail.com>
+ <7fa897cf-4d58-c63f-afdd-a3ec5a6a56bf@gmail.com>
+ <CAKv+Gu8aJRV4nqq1e-5HRLvbrANQsYuMf-pwWB53BhxLgX7iWg@mail.gmail.com>
+ <b74d3c16-a512-73dc-c94a-ef6adde5f757@gmail.com>
+ <CAKv+Gu8ZbN3BDRyuFzt4o--SSUmhuOh+jnpq8ZR-Ay13DJrAqg@mail.gmail.com>
+ <fa285694-c3e1-adf8-032a-202e7598de41@gmail.com>
+ <CANCKTBsypcVS_iC1+sbW5fMKfj+tTsxbQv9CvDwcO8GV3a8_Yg@mail.gmail.com>
+ <CAKv+Gu-+OjJi8zGLqvnsOJQ9ygMot-O0EbyMKO-yyG-+k-274A@mail.gmail.com>
+ <CANCKTBtbwSqfSU0b_d6Yi7TV3R_ijEpPE8a4bpgpkcOxJOa_zQ@mail.gmail.com>
+From:   Stefan Wahren <stefan.wahren@i2se.com>
+Openpgp: preference=signencrypt
+Autocrypt: addr=stefan.wahren@i2se.com; keydata=
+ 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 AQ==
+Message-ID: <cd1a967d-2088-c644-6b50-547b14cd3357@i2se.com>
+Date:   Thu, 27 Jun 2019 18:55:25 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+ Thunderbird/60.7.1
 MIME-Version: 1.0
-In-Reply-To: <SL2P216MB0187E3E3A8307DF01B04020D80FD0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+In-Reply-To: <CANCKTBtbwSqfSU0b_d6Yi7TV3R_ijEpPE8a4bpgpkcOxJOa_zQ@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 68.147.80.180
-X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, bhelgaas@google.com, benh@kernel.crashing.org, nicholas.johnson-opensource@outlook.com.au
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [nicholas.johnson-opensource@outlook.com.au: [PATCH v6 3/4] PCI:
- Fix bug resulting in double hpmemsize being assigned to MMIO window]
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Language: en-US
+X-Provags-ID: V03:K1:l0xqY3UsxG8WEbzy1MkAb9rzx+/CW3Sl86OkU9r+x4PXh3NDpHY
+ 1fwSKXJXdqciEj2c2bsPwifFf8+/31Gek/e6wGpwtSJqPM+76aw6uGipn+WSViX7bpUjccb
+ 9zPy89bXBT9oPQCwtOulXmsYEP6wsu+5J3kc0qetQHJHRlDsDoCwRdHPrudpPnmS3C4UQXb
+ 74x2o4zcoNmEV0yL/aemw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:klzKvQL7Mbc=:b++CW595MCjhCMXg9C4h31
+ RtO/vAve4myjETFhYIxsF5oFo5fRpCpdJH2139LBmLFuxAJgnmtH6Pr0u5ZHeThJKVKz2Ejpk
+ jDcvjod4IGE+4yJyitnP/HoEIxcxHOTRiJVkuUa8x+b+vRAP3P795AwCT1Q5LCkkD0LLb2B1W
+ vcUHjwpnmZoSMvU565P1Ms2Glmw/qjV5HXVk1miUwZfvzv3eqTe1uogzQr8OBbAGLEowVRhhU
+ CP/GqAj5pUjo3BvhA311IgmmBAA5fUIRsdOzdV2xIRAdSpqUlL+GkajB5Q6ISAHYS4X1l5W5q
+ PjZOMdCeBoolYEgp6hm9UM/+plE2lo/Asq8G2k7g3TMaXfJvkT7M+AXV4oA0B3AxKqhWJIJFo
+ DwdTB3N/mog32B9umoVLSeyozBsVgQyb05MjqKBO4+sw2EI0wd2D0RCbVZLiBUM/WvxRXyO+K
+ lvtVY0fkO4KJ9uuPTgmkhVbVOh01k+3MiVVcWeX1iCnJhucYno1VHzorRnI1qmnyr/ygGdGkl
+ NVCFxrtaux/gGO10Af4qijoAjDjuQVOH92ZuGuuJiwkjOEnGZSNUUQ2UlhgNbP/yX7L+lDUBD
+ JWFw68rIATVEm1HFgoCbniN/tVXYlIsiAGlOWS5YIndUfXdN+DZy6T1EJwo0R34AqX0pSirMS
+ FX72uEEHggC8IaBDbfz5bXSIWxJ9gh1oTvJTHxikDpAlTxEMzLAppcMblW2z5qCTySFFvIMAF
+ /PMQkbheeqzQANXwVlQy4KiZuAVut5luUMrvdtR41GmGRRMLS2BhQkOTPu8=
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Hi Jim,
 
+Am 24.09.18 um 17:01 schrieb Jim Quinlan:
+> On Mon, Sep 24, 2018 at 4:25 AM Ard Biesheuvel
+> <ard.biesheuvel@linaro.org> wrote:
+>> On Fri, 21 Sep 2018 at 19:41, Jim Quinlan <jim2101024@gmail.com> wrote:
+>>> On Thu, Sep 20, 2018 at 5:39 PM Florian Fainelli <f.fainelli@gmail.com> wrote:
+>>>> On 09/20/2018 02:33 PM, Ard Biesheuvel wrote:
+>>>>> On 20 September 2018 at 14:31, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>>>>>> On 09/20/2018 02:04 PM, Ard Biesheuvel wrote:
+>>>>>>> On 20 September 2018 at 13:55, Florian Fainelli <f.fainelli@gmail.com> wrote:
+>>>>>>>> On 09/19/2018 07:19 PM, Ard Biesheuvel wrote:
+>>>>>>>>> On 19 September 2018 at 07:31, Jim Quinlan <jim2101024@gmail.com> wrote:
+>>>>>>>>>> The Broadcom STB PCIe host controller is intimately related to the
+>>>>>>>>>> memory subsystem.  This close relationship adds complexity to how cpu
+>>>>>>>>>> system memory is mapped to PCIe memory.  Ideally, this mapping is an
+>>>>>>>>>> identity mapping, or an identity mapping off by a constant.  Not so in
+>>>>>>>>>> this case.
 
-On 2019-06-27 1:50 a.m., Nicholas Johnson wrote:
-> On Wed, Jun 19, 2019 at 10:21:21AM -0600, Logan Gunthorpe wrote:
->> *(cc'd back Bjorn and the list)
->>
->> On 2019-06-19 8:00 a.m., Nicholas Johnson wrote:
->>> Hi Ben and Logan,
->>>
->>> It looks like my git send-email has been not working correctly since I
->>> started trying to get these patches accepted. I may have remedied this
->>> now, but I have seen that Logan tried to find these patches and failed.
->>> So as a courtesy until I post PATCH v7 (hopefully correctly, this time),
->>> I am forwarding you the patches. I hope you like them. I would love to 
->>> know of any concerns or questions you may have, and / or what happens if 
->>> you test them. Thanks and all the best!
->>>
->>> ----- Forwarded message from Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au> -----
->>>
->>> Date: Thu, 23 May 2019 06:29:27 +0800
->>> From: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
->>> To: linux-kernel@vger.kernel.org
->>> Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mika.westerberg@linux.intel.com, corbet@lwn.net, Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
->>> Subject: [PATCH v6 3/4] PCI: Fix bug resulting in double hpmemsize being assigned to MMIO window
->>> X-Mailer: git-send-email 2.19.1
->>>
->>> Background
->>> ==========================================================================
->>>
->>> Solve bug report:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=203243
->>
->> This is all kinds of confusing... the bug report just seems to be a copy
->> of the patch set. The description of the actual symptoms of the problem
->> appears to be missing from all of it.
->>
->>> Currently, the kernel can sometimes assign the MMIO_PREF window
->>> additional size into the MMIO window, resulting in double the MMIO
->>> additional size, even if the MMIO_PREF window was successful.
->>>
->>> This happens if in the first pass, the MMIO_PREF succeeds but the MMIO
->>> fails. In the next pass, because MMIO_PREF is already assigned, the
->>> attempt to assign MMIO_PREF returns an error code instead of success
->>> (nothing more to do, already allocated).
->>>
->>> Example of problem (more context can be found in the bug report URL):
->>>
->>> Mainline kernel:
->>> pci 0000:06:01.0: BAR 14: assigned [mem 0x90100000-0xa00fffff] = 256M
->>> pci 0000:06:04.0: BAR 14: assigned [mem 0xa0200000-0xb01fffff] = 256M
->>>
->>> Patched kernel:
->>> pci 0000:06:01.0: BAR 14: assigned [mem 0x90100000-0x980fffff] = 128M
->>> pci 0000:06:04.0: BAR 14: assigned [mem 0x98200000-0xa01fffff] = 128M
->>>
->>> This was using pci=realloc,hpmemsize=128M,nocrs - on the same machine
->>> with the same configuration, with a Ubuntu mainline kernel and a kernel
->>> patched with this patch series.
->>>
->>> This patch is vital for the next patch in the series. The next patch
->>> allows the user to specify MMIO and MMIO_PREF independently. If the
->>> MMIO_PREF is set to be very large, this bug will end up more than
->>> doubling the MMIO size. The bug results in the MMIO_PREF being added to
->>> the MMIO window, which means doubling if MMIO_PREF size == MMIO size.
->>> With a large MMIO_PREF, without this patch, the MMIO window will likely
->>> fail to be assigned altogether due to lack of 32-bit address space.
->>>
->>> Patch notes
->>> ==========================================================================
->>>
->>> Change find_free_bus_resource() to not skip assigned resources with
->>> non-null parent.
->>>
->>> Add checks in pbus_size_io() and pbus_size_mem() to return success if
->>> resource returned from find_free_bus_resource() is already allocated.
->>>
->>> This avoids pbus_size_io() and pbus_size_mem() returning error code to
->>> __pci_bus_size_bridges() when a resource has been successfully assigned
->>> in a previous pass. This fixes the existing behaviour where space for a
->>> resource could be reserved multiple times in different parent bridge
->>> windows. This also greatly reduces the number of failed BAR messages in
->>> dmesg when Linux assigns resources.
->>
->> This patch looks like the same bug that I tracked down earlier but I
->> solved in a slightly different way. See this patch[1] which is still
->> under review. Can you maybe test it and see if it solves the same problem?
->>
->> Thanks,
->>
->> Logan
->>
->> [1]
->> https://lore.kernel.org/lkml/20190531171216.20532-2-logang@deltatee.com/T/#u
-> [1] says Reported-by: Kit Chow, but I cannot find the bug report on 
-> bugzilla.kernel.org - should I be linking the bug reports into my 
-> version of this patch in case it is accepted?
+are there any plans to release a new version of this series?
 
-Reported-by doesn't indicate a bug report is on bugzilla. In fact I
-don't think too many people rely on bugzilla. It's more of a place that
-triage is done to send reporters to appropriate mailing lists.
+The Raspberry Pi 4 uses a similiar PCIe controller, so it would be nice
+to get this upstream. Unfortunately i have no clue about PCI, so i the
+only thing i can do is testing.
 
-> Bjorn never replied to my queries about which should be accepted and 
-> what I should do either way. For now I am moving my version of this 
-> patch to the end of my series so that it can easily be knocked off if 
-> Bjorn prefers your patch.
+Regards
+Stefan
 
-I'm sure he'll get to it eventually. Probably just seeing where some of
-the discussion is leading.
-
-Logan
