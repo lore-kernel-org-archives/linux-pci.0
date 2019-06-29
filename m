@@ -2,26 +2,25 @@ Return-Path: <SRS0=XjGt=U4=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8D39C5B57A
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB113C5B57A
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1C23215EA
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEAA0214DA
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726888AbfF2JxI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Jun 2019 05:53:08 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:61257 "EHLO
+        id S1727037AbfF2JxM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Jun 2019 05:53:12 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:52207 "EHLO
         cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726818AbfF2JxH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Jun 2019 05:53:07 -0400
+        with ESMTP id S1726965AbfF2JxL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Jun 2019 05:53:11 -0400
 Received: from 79.184.254.216.ipv4.supernova.orange.pl (79.184.254.216) (HELO kreacher.localnet)
  by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.267)
- id 2bca45c763b3ae74; Sat, 29 Jun 2019 11:53:04 +0200
+ id cb0f85cb5e292c0e; Sat, 29 Jun 2019 11:53:08 +0200
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Linux PM <linux-pm@vger.kernel.org>
 Cc:     Linux PCI <linux-pci@vger.kernel.org>,
@@ -32,11 +31,9 @@ Cc:     Linux PCI <linux-pci@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Hans De Goede <hdegoede@redhat.com>,
         "Robert R. Howell" <RHowell@uwyo.edu>
-Subject: [PATCH 6/6] ACPI: PM: Drop unused function and function header
-Date:   Sat, 29 Jun 2019 11:52:26 +0200
-Message-ID: <2601948.CB932FxA9G@kreacher>
-In-Reply-To: <2318839.0szTqvJMZa@kreacher>
-References: <2318839.0szTqvJMZa@kreacher>
+Subject: [PATCH 0/6] PM: PCI/ACPI: Hibernation handling fixes
+Date:   Sat, 29 Jun 2019 11:33:30 +0200
+Message-ID: <2318839.0szTqvJMZa@kreacher>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -45,37 +42,30 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi All,
 
-Remove a leftover function header and a static inline stub with no
-users from the ACPI header file.
+This series of patches addresses a few issues related to the handling of
+hibernation in the PCI bus type and the ACPI PM domain and ACPI LPSS driver.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- include/linux/acpi.h |    2 --
- 1 file changed, 2 deletions(-)
+First of all, all of the runtime-suspended PCI devices and devices in the ACPI PM and LPSS
+PM domains will be resumed during hibernation (first patch).  This appears to be the
+only way to avoid weird corner cases and the benefit from avoiding to resume those
+devices during hibernation is questionable.
 
-Index: linux-pm/include/linux/acpi.h
-===================================================================
---- linux-pm.orig/include/linux/acpi.h
-+++ linux-pm/include/linux/acpi.h
-@@ -913,7 +913,6 @@ static inline int acpi_dev_pm_attach(str
- #endif
- 
- #if defined(CONFIG_ACPI) && defined(CONFIG_PM_SLEEP)
--int acpi_dev_suspend_late(struct device *dev);
- int acpi_subsys_prepare(struct device *dev);
- void acpi_subsys_complete(struct device *dev);
- int acpi_subsys_suspend_noirq(struct device *dev);
-@@ -921,7 +920,6 @@ int acpi_subsys_suspend(struct device *d
- int acpi_subsys_freeze(struct device *dev);
- int acpi_subsys_poweroff(struct device *dev);
- #else
--static inline int acpi_dev_resume_early(struct device *dev) { return 0; }
- static inline int acpi_subsys_prepare(struct device *dev) { return 0; }
- static inline void acpi_subsys_complete(struct device *dev) {}
- static inline int acpi_subsys_suspend_noirq(struct device *dev) { return 0; }
+That change allows the the hibernation callbacks in all of the involved subsystems to be
+simplified (patches 2 and 3).
 
+While at it, there is a subtle issue in the LPSS suspend callbacks which is addressed
+by patch 4.
+
+Moreover, reusing bus-level suspend callbacks for the "poweroff" transition during
+hibernation (which is the case for the ACPI PM domain and LPSS) is incorrect, so patch 5
+fixes that.
+
+Finally, there are some leftover items in linux/acpi.h that can be dropped (patch 6).
+
+Thanks,
+Rafael
 
 
 
