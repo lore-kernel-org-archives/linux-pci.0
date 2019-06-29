@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BB55C4321A
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1CD6C5B57A
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D6FF216FD
-	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 85091216FD
+	for <linux-pci@archiver.kernel.org>; Sat, 29 Jun 2019 09:53:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726968AbfF2JxJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 29 Jun 2019 05:53:09 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:46717 "EHLO
+        id S1726818AbfF2JxI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 29 Jun 2019 05:53:08 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:53402 "EHLO
         cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726937AbfF2JxJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Jun 2019 05:53:09 -0400
+        with ESMTP id S1726874AbfF2JxI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Jun 2019 05:53:08 -0400
 Received: from 79.184.254.216.ipv4.supernova.orange.pl (79.184.254.216) (HELO kreacher.localnet)
  by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.267)
- id db6c82754ccb710d; Sat, 29 Jun 2019 11:53:07 +0200
+ id 9df156552b97bad2; Sat, 29 Jun 2019 11:53:05 +0200
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Linux PM <linux-pm@vger.kernel.org>
 Cc:     Linux PCI <linux-pci@vger.kernel.org>,
@@ -31,9 +31,9 @@ Cc:     Linux PCI <linux-pci@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Hans De Goede <hdegoede@redhat.com>,
         "Robert R. Howell" <RHowell@uwyo.edu>
-Subject: [PATCH 2/6] PCI: PM: Simplify bus-level hibernation callbacks
-Date:   Sat, 29 Jun 2019 11:49:29 +0200
-Message-ID: <2374682.f9L2DV4Cc2@kreacher>
+Subject: [PATCH 4/6] ACPI: LPSS: Fix ->suspend_late callbacks handling
+Date:   Sat, 29 Jun 2019 11:50:54 +0200
+Message-ID: <2981101.tKVHzisTAg@kreacher>
 In-Reply-To: <2318839.0szTqvJMZa@kreacher>
 References: <2318839.0szTqvJMZa@kreacher>
 MIME-Version: 1.0
@@ -46,88 +46,118 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-After a previous change causing all runtime-suspended PCI devices
-to be resumed before creating a snapshot image of memory during
-hibernation, it is not necessary to worry about the case in which
-them might be left in runtime-suspend any more, so get rid of the
-code related to that from bus-level PCI hibernation callbacks.
+If the resume_from_noirq flag is set in dev_desc, the ->suspend_late
+callback provided by the device driver will be invoked at the "noirq"
+stage of system suspend, via acpi_lpss_do_suspend_late(), which is
+incorrect.
 
+To fix that, drop acpi_lpss_do_suspend_late() and rearrange
+acpi_lpss_suspend_late() to call pm_generic_suspend_late()
+directly, before calling acpi_lpss_suspend(), in analogy with
+acpi_subsys_suspend_late().
+
+Also notice that acpi_subsys_suspend_late() is not used outside
+of the file where it is defined, so make it static and drop its
+header for the header file containing it.
+
+Fixes: 48402cee6889 (ACPI / LPSS: Resume BYT/CHT I2C controllers from resume_noirq)
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/pci-driver.c |   27 ---------------------------
- 1 file changed, 27 deletions(-)
+ drivers/acpi/acpi_lpss.c |   23 ++++++++++-------------
+ drivers/acpi/device_pm.c |    3 +--
+ include/linux/acpi.h     |    2 --
+ 3 files changed, 11 insertions(+), 17 deletions(-)
 
-Index: linux-pm/drivers/pci/pci-driver.c
+Index: linux-pm/drivers/acpi/acpi_lpss.c
 ===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1034,22 +1034,11 @@ static int pci_pm_freeze(struct device *
- 	return 0;
+--- linux-pm.orig/drivers/acpi/acpi_lpss.c
++++ linux-pm/drivers/acpi/acpi_lpss.c
+@@ -1034,34 +1034,31 @@ static int acpi_lpss_resume(struct devic
  }
  
--static int pci_pm_freeze_late(struct device *dev)
--{
--	if (dev_pm_smart_suspend_and_suspended(dev))
--		return 0;
--
--	return pm_generic_freeze_late(dev);
--}
--
- static int pci_pm_freeze_noirq(struct device *dev)
+ #ifdef CONFIG_PM_SLEEP
+-static int acpi_lpss_do_suspend_late(struct device *dev)
++static int acpi_lpss_suspend_late(struct device *dev)
  {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	struct device_driver *drv = dev->driver;
++	struct lpss_private_data *pdata = acpi_driver_data(ACPI_COMPANION(dev));
+ 	int ret;
  
--	if (dev_pm_smart_suspend_and_suspended(dev))
+ 	if (dev_pm_smart_suspend_and_suspended(dev))
+ 		return 0;
+ 
+ 	ret = pm_generic_suspend_late(dev);
+-	return ret ? ret : acpi_lpss_suspend(dev, device_may_wakeup(dev));
+-}
++	if (ret)
++		return ret;
+ 
+-static int acpi_lpss_suspend_late(struct device *dev)
+-{
+-	struct lpss_private_data *pdata = acpi_driver_data(ACPI_COMPANION(dev));
+-
+-	if (pdata->dev_desc->resume_from_noirq)
 -		return 0;
--
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_suspend_late(dev, PMSG_FREEZE);
++	if (!pdata->dev_desc->resume_from_noirq)
++		return acpi_lpss_suspend(dev, device_may_wakeup(dev));
  
-@@ -1079,16 +1068,6 @@ static int pci_pm_thaw_noirq(struct devi
- 	struct device_driver *drv = dev->driver;
- 	int error = 0;
+-	return acpi_lpss_do_suspend_late(dev);
++	return 0;
+ }
  
--	/*
--	 * If the device is in runtime suspend, the code below may not work
--	 * correctly with it, so skip that code and make the PM core skip all of
--	 * the subsequent "thaw" callbacks for the device.
--	 */
--	if (dev_pm_smart_suspend_and_suspended(dev)) {
--		dev_pm_skip_next_resume_phases(dev);
--		return 0;
--	}
--
- 	if (pcibios_pm_ops.thaw_noirq) {
- 		error = pcibios_pm_ops.thaw_noirq(dev);
- 		if (error)
-@@ -1226,10 +1205,6 @@ static int pci_pm_restore_noirq(struct d
- 	struct device_driver *drv = dev->driver;
- 	int error = 0;
+ static int acpi_lpss_suspend_noirq(struct device *dev)
+ {
+ 	struct lpss_private_data *pdata = acpi_driver_data(ACPI_COMPANION(dev));
+-	int ret;
  
--	/* This is analogous to the pci_pm_resume_noirq() case. */
--	if (dev_pm_smart_suspend_and_suspended(dev))
--		pm_runtime_set_active(dev);
--
- 	if (pcibios_pm_ops.restore_noirq) {
- 		error = pcibios_pm_ops.restore_noirq(dev);
- 		if (error)
-@@ -1279,7 +1254,6 @@ static int pci_pm_restore(struct device
- #else /* !CONFIG_HIBERNATE_CALLBACKS */
+-	if (pdata->dev_desc->resume_from_noirq) {
+-		ret = acpi_lpss_do_suspend_late(dev);
++	if (!dev_pm_smart_suspend_and_suspended(dev) &&
++	    pdata->dev_desc->resume_from_noirq) {
++		int ret = acpi_lpss_suspend(dev, device_may_wakeup(dev));
+ 		if (ret)
+ 			return ret;
+ 	}
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -1069,7 +1069,7 @@ EXPORT_SYMBOL_GPL(acpi_subsys_suspend);
+  * Carry out the generic late suspend procedure for @dev and use ACPI to put
+  * it into a low-power state during system transition into a sleep state.
+  */
+-int acpi_subsys_suspend_late(struct device *dev)
++static int acpi_subsys_suspend_late(struct device *dev)
+ {
+ 	int ret;
  
- #define pci_pm_freeze		NULL
--#define pci_pm_freeze_late	NULL
- #define pci_pm_freeze_noirq	NULL
- #define pci_pm_thaw		NULL
- #define pci_pm_thaw_noirq	NULL
-@@ -1405,7 +1379,6 @@ static const struct dev_pm_ops pci_dev_p
- 	.suspend_late = pci_pm_suspend_late,
- 	.resume = pci_pm_resume,
- 	.freeze = pci_pm_freeze,
--	.freeze_late = pci_pm_freeze_late,
- 	.thaw = pci_pm_thaw,
- 	.poweroff = pci_pm_poweroff,
- 	.poweroff_late = pci_pm_poweroff_late,
+@@ -1079,7 +1079,6 @@ int acpi_subsys_suspend_late(struct devi
+ 	ret = pm_generic_suspend_late(dev);
+ 	return ret ? ret : acpi_dev_suspend(dev, device_may_wakeup(dev));
+ }
+-EXPORT_SYMBOL_GPL(acpi_subsys_suspend_late);
+ 
+ /**
+  * acpi_subsys_suspend_noirq - Run the device driver's "noirq" suspend callback.
+Index: linux-pm/include/linux/acpi.h
+===================================================================
+--- linux-pm.orig/include/linux/acpi.h
++++ linux-pm/include/linux/acpi.h
+@@ -916,7 +916,6 @@ static inline int acpi_dev_pm_attach(str
+ int acpi_dev_suspend_late(struct device *dev);
+ int acpi_subsys_prepare(struct device *dev);
+ void acpi_subsys_complete(struct device *dev);
+-int acpi_subsys_suspend_late(struct device *dev);
+ int acpi_subsys_suspend_noirq(struct device *dev);
+ int acpi_subsys_suspend(struct device *dev);
+ int acpi_subsys_freeze(struct device *dev);
+@@ -924,7 +923,6 @@ int acpi_subsys_freeze(struct device *de
+ static inline int acpi_dev_resume_early(struct device *dev) { return 0; }
+ static inline int acpi_subsys_prepare(struct device *dev) { return 0; }
+ static inline void acpi_subsys_complete(struct device *dev) {}
+-static inline int acpi_subsys_suspend_late(struct device *dev) { return 0; }
+ static inline int acpi_subsys_suspend_noirq(struct device *dev) { return 0; }
+ static inline int acpi_subsys_suspend(struct device *dev) { return 0; }
+ static inline int acpi_subsys_freeze(struct device *dev) { return 0; }
 
 
 
