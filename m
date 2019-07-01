@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94555C0650F
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Jul 2019 06:21:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0EEEC5B578
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Jul 2019 06:21:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D20A21479
-	for <linux-pci@archiver.kernel.org>; Mon,  1 Jul 2019 06:21:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 988B3212F5
+	for <linux-pci@archiver.kernel.org>; Mon,  1 Jul 2019 06:21:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PSbfEnpL"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Sh+xg97C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727710AbfGAGVD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 1 Jul 2019 02:21:03 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:48522 "EHLO
+        id S1727763AbfGAGVO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 1 Jul 2019 02:21:14 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:48668 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727701AbfGAGVB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2019 02:21:01 -0400
+        with ESMTP id S1727773AbfGAGVO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 Jul 2019 02:21:14 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
-        To:From:Sender:Reply-To:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=K+5Y7Ez4pfTMCmPiyIGRChGh4O04+aapHsZzDHBkVJo=; b=PSbfEnpLRE8SG9bLML+fRlhf0
-        HtVXUwpI1yGra8E8q+rwV6qJm4ONJSDzOZ753xm3ERQHmxUjdhHbZaiUebewXGu/ryXEdIqi7spGD
-        Nlr6XlnU/i9TC0WMqh3qrx9cT7ITHZkOAeu54JXvWWQ2MaeC+xjlwX/7+GOXnST0/kVvSEpc1HmW/
-        hO3augHviB0cDdLARWF6uP/j90BGjEpU45QJHn+ssAOFsyOrVWV8bsQFxpmwUu7D3kHoTQPtfD/+9
-        h1Gpz4y5W71lm5fa5MIvKeZct6x0kCAYyPKLWFw3cLp1onhIVhjCvfTwvaeENThWQJ0FWVoyh0659
-        oBUZxg5rA==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=pfzb7DKQGxSim4j5P5NViAehCYDnD7twhlehxZF4/mk=; b=Sh+xg97CAaxfCofmcqXvvWAphg
+        /FC2T86IXntWnlzo7VNQ0a7nvzkSU5M8Vor1yTinwL8XHWySWdAmf559BGxhLygWpZkXa+jWcNQpF
+        yiqysTo4IQb6Xpt1GUM99QV4WcYAL16tbM/uA/Iri95ouR7gdrojQ0Q1FFO88taxm3tHE0W2P75Ls
+        uFALgpav78FJe/L2HvoUQuW9Nx75lFKVz+WQqk7Svyo2Nz6faU7+QmTVPfGCiVaW1HVgnmdn0SnRa
+        bWnACDf6hys4JLjnsuvv+pNy9oG68GRh5KBdYs5IrjoRydXBE/posTx59K1lsO1UsoEGdwy2Of8G0
+        zfk6CmHg==;
 Received: from [46.140.178.35] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hhpgO-00034k-I0; Mon, 01 Jul 2019 06:20:57 +0000
+        id 1hhpgb-0003W2-Ks; Mon, 01 Jul 2019 06:21:09 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dan Williams <dan.j.williams@intel.com>,
         =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
@@ -44,18 +44,14 @@ To:     Dan Williams <dan.j.williams@intel.com>,
 Cc:     Ira Weiny <ira.weiny@intel.com>, linux-mm@kvack.org,
         nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         linux-nvdimm@lists.01.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, John Hubbard <jhubbard@nvidia.com>,
-        Souptick Joarder <jrdr.linux@gmail.com>,
-        Ralph Campbell <rcampbell@nvidia.com>,
-        Philip Yang <Philip.Yang@amd.com>
-Subject: [PATCH 15/22] mm/hmm: Poison hmm_range during unregister
-Date:   Mon,  1 Jul 2019 08:20:13 +0200
-Message-Id: <20190701062020.19239-16-hch@lst.de>
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 21/22] nouveau: unlock mmap_sem on all errors from nouveau_range_fault
+Date:   Mon,  1 Jul 2019 08:20:19 +0200
+Message-Id: <20190701062020.19239-22-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190701062020.19239-1-hch@lst.de>
 References: <20190701062020.19239-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
@@ -63,54 +59,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jason Gunthorpe <jgg@mellanox.com>
+Currently nouveau_svm_fault expects nouveau_range_fault to never unlock
+mmap_sem, but the latter unlocks it for a random selection of error
+codes. Fix this up by always unlocking mmap_sem for non-zero return
+values in nouveau_range_fault, and only unlocking it in the caller
+for successful returns.
 
-Trying to misuse a range outside its lifetime is a kernel bug. Use poison
-bytes to help detect this condition. Double unregister will reliably crash.
-
-Signed-off-by: Jason Gunthorpe <jgg@mellanox.com>
-Reviewed-by: Jérôme Glisse <jglisse@redhat.com>
-Reviewed-by: John Hubbard <jhubbard@nvidia.com>
-Acked-by: Souptick Joarder <jrdr.linux@gmail.com>
-Reviewed-by: Ralph Campbell <rcampbell@nvidia.com>
-Reviewed-by: Ira Weiny <ira.weiny@intel.com>
-Tested-by: Philip Yang <Philip.Yang@amd.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- mm/hmm.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ drivers/gpu/drm/nouveau/nouveau_svm.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/mm/hmm.c b/mm/hmm.c
-index 2ef14b2b5505..c30aa9403dbe 100644
---- a/mm/hmm.c
-+++ b/mm/hmm.c
-@@ -925,19 +925,21 @@ void hmm_range_unregister(struct hmm_range *range)
- {
- 	struct hmm *hmm = range->hmm;
+diff --git a/drivers/gpu/drm/nouveau/nouveau_svm.c b/drivers/gpu/drm/nouveau/nouveau_svm.c
+index e831f4184a17..c0cf7aeaefb3 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_svm.c
++++ b/drivers/gpu/drm/nouveau/nouveau_svm.c
+@@ -500,8 +500,10 @@ nouveau_range_fault(struct hmm_mirror *mirror, struct hmm_range *range,
+ 	ret = hmm_range_register(range, mirror,
+ 				 range->start, range->end,
+ 				 PAGE_SHIFT);
+-	if (ret)
++	if (ret) {
++		up_read(&range->vma->vm_mm->mmap_sem);
+ 		return (int)ret;
++	}
  
--	/* Sanity check this really should not happen. */
--	if (hmm == NULL || range->end <= range->start)
--		return;
--
- 	mutex_lock(&hmm->lock);
- 	list_del_init(&range->list);
- 	mutex_unlock(&hmm->lock);
+ 	if (!hmm_range_wait_until_valid(range, NOUVEAU_RANGE_FAULT_TIMEOUT)) {
+ 		/*
+@@ -515,15 +517,14 @@ nouveau_range_fault(struct hmm_mirror *mirror, struct hmm_range *range,
  
- 	/* Drop reference taken by hmm_range_register() */
--	range->valid = false;
- 	mmput(hmm->mm);
- 	hmm_put(hmm);
--	range->hmm = NULL;
+ 	ret = hmm_range_fault(range, block);
+ 	if (ret <= 0) {
+-		if (ret == -EBUSY || !ret) {
+-			/* Same as above, drop mmap_sem to match old API. */
+-			up_read(&range->vma->vm_mm->mmap_sem);
+-			ret = -EBUSY;
+-		} else if (ret == -EAGAIN)
++		if (ret == 0)
+ 			ret = -EBUSY;
++		if (ret != -EAGAIN)
++			up_read(&range->vma->vm_mm->mmap_sem);
+ 		hmm_range_unregister(range);
+ 		return ret;
+ 	}
 +
-+	/*
-+	 * The range is now invalid and the ref on the hmm is dropped, so
-+	 * poison the pointer.  Leave other fields in place, for the caller's
-+	 * use.
-+	 */
-+	range->valid = false;
-+	memset(&range->hmm, POISON_INUSE, sizeof(range->hmm));
+ 	return 0;
  }
- EXPORT_SYMBOL(hmm_range_unregister);
  
+@@ -718,8 +719,8 @@ nouveau_svm_fault(struct nvif_notify *notify)
+ 						NULL);
+ 			svmm->vmm->vmm.object.client->super = false;
+ 			mutex_unlock(&svmm->mutex);
++			up_read(&svmm->mm->mmap_sem);
+ 		}
+-		up_read(&svmm->mm->mmap_sem);
+ 
+ 		/* Cancel any faults in the window whose pages didn't manage
+ 		 * to keep their valid bit, or stay writeable when required.
 -- 
 2.20.1
 
