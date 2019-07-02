@@ -2,114 +2,103 @@ Return-Path: <SRS0=6jqy=VA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3AFCC5B57D
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 00:33:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E856FC5B57D
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 00:53:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C6467218A4
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 00:33:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="AAxljt6p"
+	by mail.kernel.org (Postfix) with ESMTP id B397B2184C
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 00:53:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1562115198;
+	bh=jOXGGlTtxKxUoZb4qZ8/SnpaBt3eFan28kHr8Q3ujSc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=04HNSsETqMyZU2ohQuzc3a7xghq7nXA0XF3EoMD/5WnpBbumy5iY1v6MP+Nb2U8Rs
+	 UuUqh5jy+fyGwmZJe/JsXBq1jk7eMrOHMtxYCbJ8t8TLu51+HeaOQVAMOkiUMKKko1
+	 2lUjGuwWIj5VItJjycChchNaldNfdH9ADRLefx+o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727212AbfGCAdg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jul 2019 20:33:36 -0400
-Received: from mail-qk1-f196.google.com ([209.85.222.196]:33108 "EHLO
-        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727108AbfGCAdf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2019 20:33:35 -0400
-Received: by mail-qk1-f196.google.com with SMTP id r6so425372qkc.0
-        for <linux-pci@vger.kernel.org>; Tue, 02 Jul 2019 17:33:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MdOAu5KOREG+EbRK6Nq+YrKhvJXs3HmUBDCrdZ5KiX8=;
-        b=AAxljt6pnpE2phFv0au/KMXwtndrEkpi/j2/EJsMk1Ltm/znau8U4oC61EO2/d59Sk
-         xJPU1u0BtjEPFESekQuX2BJ1u/SqIZ7bMflpffyt+/cccxx1yOrusUEn8yOp2ywWrOCf
-         Lld5MDyXgnJIr3ve2Fh/w5j5fkwVyTxgAGins3VH29cEQcbzt+qyDR2bHhjmFSi3jbg6
-         /F7F3gPexkQQQsNw63xYHhsOrFz2Bzyo6kl0n9KIvQtP8bxrPZ5QJz8X1GXONm3VkV3X
-         NKNrdqQe5b84FicJ1h0fFR5CFdrR9SaWP/732ngOtvNn+h+/TB30mAQ6Zl96yTI1xlw7
-         I9fQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=MdOAu5KOREG+EbRK6Nq+YrKhvJXs3HmUBDCrdZ5KiX8=;
-        b=KU/ayU/zX6ZWrm80w/MIa0kV2ds5ApufQN4y01iyDh1uBYFNNAUYekWWht4tIHm1+d
-         5Jm0fikNyEDlJJaQdr1xzIiBsAjvi2AQJfIQ1sXk/B1CGRBiw7fP67xMlYSRrPrriu1H
-         3ee9Vf+QARpdiidRz27fF257STdWqbfgI8j82haSys2XJwIzWgEvrKGQXfPr24Hck9QH
-         dhI1ywNEUJ3dNJ7D+Gs57Tu9dRDplNpd3+95T6ucHPUH1vpwad7VhWwrIZEjZb5y96fy
-         G2hLrrK8XtGPEakOt9umDw43P5+MofGG5NE8RrP5ftK+iCp1/T/YaVlHOyJs56y+VteT
-         nZBw==
-X-Gm-Message-State: APjAAAW6qnp0L/t7zgReHX8NJ6vI2zwrOaIzpKQeQmgoSKZz7y6kppwE
-        Tl12hZFY2W3K/5Gya4zFM4PaTg==
-X-Google-Smtp-Source: APXvYqzUcLNxWLj8a1mpiDGB2K6z0y2WfLWUEsAEOQWJszxbWpBMhPdailzBeKZol6g1VGK7JNoCSA==
-X-Received: by 2002:a37:9904:: with SMTP id b4mr26656775qke.159.1562107531140;
-        Tue, 02 Jul 2019 15:45:31 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-55-100.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.55.100])
-        by smtp.gmail.com with ESMTPSA id j3sm141576qki.5.2019.07.02.15.45.30
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 02 Jul 2019 15:45:30 -0700 (PDT)
-Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1hiRWk-0003Lm-82; Tue, 02 Jul 2019 19:45:30 -0300
-Date:   Tue, 2 Jul 2019 19:45:30 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
+        id S1726930AbfGCAxR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jul 2019 20:53:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47376 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727092AbfGCAxF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jul 2019 20:53:05 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C1D9420B1F;
+        Tue,  2 Jul 2019 23:37:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1562110648;
+        bh=jOXGGlTtxKxUoZb4qZ8/SnpaBt3eFan28kHr8Q3ujSc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=q2qrTeTkiRv5BRUDGvR3KhEh7eRJEcJV/t9TQjTGVbuVFXawgLXl4iKY3PIevY1a5
+         gzCV0UqSy1wvthVyN7TclqnAc0jI/1yVcQ6qv1iUVY+xZEv9PREZDKygNkw6UMvMRn
+         r95Dz0RFbhYpgjUd1w35MEmic7ObUfs9KbbT5ab8=
+Date:   Tue, 2 Jul 2019 18:37:26 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Keith Busch <kbusch@kernel.org>,
-        Stephen Bates <sbates@raithlin.com>
-Subject: Re: [RFC PATCH 00/28] Removing struct page from P2PDMA
-Message-ID: <20190702224530.GD11860@ziepe.ca>
-References: <20190627063223.GA7736@ziepe.ca>
- <6afe4027-26c8-df4e-65ce-49df07dec54d@deltatee.com>
- <20190627163504.GB9568@ziepe.ca>
- <4894142c-3233-a3bb-f9a3-4a4985136e9b@deltatee.com>
- <20190628045705.GD3705@ziepe.ca>
- <8022a2a4-4069-d256-11da-e6d9b2ffbf60@deltatee.com>
- <20190628172926.GA3877@ziepe.ca>
- <25a87c72-630b-e1f1-c858-9c8b417506fc@deltatee.com>
- <20190628190931.GC3877@ziepe.ca>
- <cb680437-9615-da42-ebc5-4751e024a45f@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/P2PDMA: Fix missing check for dma_virt_ops
+Message-ID: <20190702233726.GG128603@google.com>
+References: <20190702173544.21950-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cb680437-9615-da42-ebc5-4751e024a45f@deltatee.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20190702173544.21950-1-logang@deltatee.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Jun 28, 2019 at 01:35:42PM -0600, Logan Gunthorpe wrote:
-
-> > However, I'd feel more comfortable about that assumption if we had
-> > code to support the IOMMU case, and know for sure it doesn't require
-> > more info :(
+On Tue, Jul 02, 2019 at 11:35:44AM -0600, Logan Gunthorpe wrote:
+> Drivers that use dma_virt_ops were meant to be rejected when testing
+> compatibility for P2PDMA.
 > 
-> The example I posted *does* support the IOMMU case. That was case (b1)
-> in the description. The idea is that pci_p2pdma_dist() returns a
-> distance with a high bit set (PCI_P2PDMA_THRU_HOST_BRIDGE) when an IOMMU
-> mapping is required and the appropriate flag tells it to call
-> dma_map_resource(). This way, it supports both same-segment and
-> different-segments without needing any look ups in the map step.
+> This check got inadvertantly dropped in one of the later versions of the
+> original patchset, so add it back.
+> 
+> Fixes: 52916982af48 ("PCI/P2PDMA: Support peer-to-peer memory")
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-I mean we actually have some iommu drivers that can setup P2P in real
-HW. I'm worried that real IOMMUs will need to have the BDF of the
-completer to route completions back to the requester - which we can't
-trivially get through this scheme.
+Applied to pci/peer-to-peer for v5.3, thanks!
 
-However, maybe that is just a future problem, and certainly we can see
-that with an interval tree or otherwise such a IOMMU could get the
-information it needs.
-
-Jason
+> ---
+>  drivers/pci/p2pdma.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index a4994aa3acc0..ab48babdf214 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -487,6 +487,14 @@ int pci_p2pdma_distance_many(struct pci_dev *provider, struct device **clients,
+>  		return -1;
+>  
+>  	for (i = 0; i < num_clients; i++) {
+> +		if (IS_ENABLED(CONFIG_DMA_VIRT_OPS) &&
+> +		    clients[i]->dma_ops == &dma_virt_ops) {
+> +			if (verbose)
+> +				dev_warn(clients[i],
+> +					 "cannot be used for peer-to-peer DMA because the driver makes use of dma_virt_ops\n");
+> +			return -1;
+> +		}
+> +
+>  		pci_client = find_parent_pci_dev(clients[i]);
+>  		if (!pci_client) {
+>  			if (verbose)
+> @@ -765,7 +773,7 @@ int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg, int nents,
+>  	 * p2pdma mappings are not compatible with devices that use
+>  	 * dma_virt_ops. If the upper layers do the right thing
+>  	 * this should never happen because it will be prevented
+> -	 * by the check in pci_p2pdma_add_client()
+> +	 * by the check in pci_p2pdma_distance_many()
+>  	 */
+>  	if (WARN_ON_ONCE(IS_ENABLED(CONFIG_DMA_VIRT_OPS) &&
+>  			 dev->dma_ops == &dma_virt_ops))
+> -- 
+> 2.20.1
+> 
