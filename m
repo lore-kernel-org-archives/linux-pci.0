@@ -2,84 +2,91 @@ Return-Path: <SRS0=6jqy=VA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE78C5B57D
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D62C5B57D
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:03:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B9CFE2089C
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:03:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6751420B1F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:03:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1562115800;
-	bh=c/MyoEL1y9iSRH8tUqhzcXV9ntk3My2ap/3Dn7awyKw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=HlJ0TJ6otagLAZXIPozcZYXjWPjkobsA9okYnaYfP493GhmmFay0VmZxKaSHxLgQX
-	 dFTWLXZmhdUJ7VoARJ4WzPamgPKqJvceAP66TiXs5L6YPOjxB7WlTtCSiAoA7Fp49A
-	 R+0FQwloxzwwxWuFjOuQcTewjeqj1mVt5QOXgQj0=
+	s=default; t=1562115802;
+	bh=HHd7/JqeDyA8cgnz+y55uY+RyTkhNRZ7JSHv+IT51Gc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=MZeiVq+5ik2sR0xHfY+2dcZAlB2IqtkW2C4cgUAim6HiChDWJAmeEJpUE/J+bkADK
+	 MwejCdfGRJPWwfBCwKbY6S/KHem85CbiRf5cjWF1hufMSE2FvqBqHxI1U67eu2MJSl
+	 5Y3URO9v0s6lFUjLMUV9wlftdPp+Uo5QUDwhMaQs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727212AbfGCBDF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1727121AbfGCBDF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 2 Jul 2019 21:03:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51748 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:51744 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727082AbfGCBDF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726329AbfGCBDF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 2 Jul 2019 21:03:05 -0400
-Received: from akpm3.svl.corp.google.com (unknown [104.133.8.65])
+Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6F38A21904;
-        Tue,  2 Jul 2019 22:35:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1DE7121BF1;
+        Tue,  2 Jul 2019 23:46:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1562106936;
-        bh=c/MyoEL1y9iSRH8tUqhzcXV9ntk3My2ap/3Dn7awyKw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=l01hbVKK1DS91crh+dWLCuA/4HwJhhjblV3ZmG7+ToSZt2H6+9chb5C6lWKcVbpZT
-         6yf7b0ESc5qYx1xKDTnqLzeOjjZhZFZwE/7x1lR6/PQ/5qZQPNx1I+vWXKWbwacqes
-         0uz8JuzySX1Z2Xp+A47oGKzrXsLwsUNXRd+bPFwo=
-Date:   Tue, 2 Jul 2019 15:35:35 -0700
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jason Gunthorpe <jgg@mellanox.com>,
-        =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 16/25] device-dax: use the dev_pagemap internal refcount
-Message-Id: <20190702153535.228365fea7f0063cceec96cd@linux-foundation.org>
-In-Reply-To: <CAPcyv4h90DAVHbZ4bgvJwpfB8wr2K28oEes6HcdQOpf02+NL=g@mail.gmail.com>
-References: <20190626122724.13313-17-hch@lst.de>
-        <20190628153827.GA5373@mellanox.com>
-        <CAPcyv4joSiFMeYq=D08C-QZSkHz0kRpvRfseNQWrN34Rrm+S7g@mail.gmail.com>
-        <20190628170219.GA3608@mellanox.com>
-        <CAPcyv4ja9DVL2zuxuSup8x3VOT_dKAOS8uBQweE9R81vnYRNWg@mail.gmail.com>
-        <CAPcyv4iWTe=vOXUqkr_CguFrFRqgA7hJSt4J0B3RpuP-Okz0Vw@mail.gmail.com>
-        <20190628182922.GA15242@mellanox.com>
-        <CAPcyv4g+zk9pnLcj6Xvwh-svKM+w4hxfYGikcmuoBAFGCr-HAw@mail.gmail.com>
-        <20190628185152.GA9117@lst.de>
-        <CAPcyv4i+b6bKhSF2+z7Wcw4OUAvb1=m289u9QF8zPwLk402JVg@mail.gmail.com>
-        <20190628190207.GA9317@lst.de>
-        <CAPcyv4h90DAVHbZ4bgvJwpfB8wr2K28oEes6HcdQOpf02+NL=g@mail.gmail.com>
-X-Mailer: Sylpheed 3.7.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        s=default; t=1562111178;
+        bh=HHd7/JqeDyA8cgnz+y55uY+RyTkhNRZ7JSHv+IT51Gc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=CrIu84spArwVRPyBzpYPsRgnNuSm+lDSIBhd3KtX3SHm9xW7OQsYblD6gEf1Pscxf
+         y/k2K0wUqzF65nDFT1nh89HdvzjtV7CzNkbzValklRdVH30+iyOALXAeO19kd8xhCq
+         bCyfUwDDdyUUc6TCvECcWPKG41dYIxhnZ2wWQBeQ=
+Date:   Tue, 2 Jul 2019 18:46:16 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Markus Elfring <Markus.Elfring@web.de>
+Cc:     linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] pci/proc: Use seq_puts() in show_device()
+Message-ID: <20190702234616.GH128603@google.com>
+References: <a6b110cb-0d0e-5dc3-9ca1-9041609cf74c@web.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <a6b110cb-0d0e-5dc3-9ca1-9041609cf74c@web.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 28 Jun 2019 12:14:44 -0700 Dan Williams <dan.j.williams@intel.com> wrote:
+On Tue, Jul 02, 2019 at 01:26:27PM +0200, Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Tue, 2 Jul 2019 13:21:33 +0200
+> 
+> A string which did not contain a data format specification should be put
+> into a sequence. Thus use the corresponding function “seq_puts”.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-> I believe -mm auto drops patches when they appear in the -next
-> baseline. So it should "just work" to pull it into the series and send
-> it along for -next inclusion.
+Applied to pci/misc for v5.3, thanks!
 
-Yup.  Although it isn't very "auto" - I manually check that the patch
-which turned up in -next was identical to the version which I had.  If
-not, I go find out why...
-
+> ---
+>  drivers/pci/proc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index 445b51db75b0..fe7fe678965b 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -377,7 +377,7 @@ static int show_device(struct seq_file *m, void *v)
+>  	}
+>  	seq_putc(m, '\t');
+>  	if (drv)
+> -		seq_printf(m, "%s", drv->name);
+> +		seq_puts(m, drv->name);
+>  	seq_putc(m, '\n');
+>  	return 0;
+>  }
+> --
+> 2.22.0
+> 
