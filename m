@@ -2,114 +2,236 @@ Return-Path: <SRS0=6jqy=VA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 368E3C5B57D
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:01:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3723C5B57D
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:03:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 161442089C
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:01:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 806BD2089C
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:03:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1562115794;
+	bh=oiyxtfK7M35SdgF9TLOGYB8qTNTecCfmWOOqN0GIClQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=UF/ahmjVjEzeGfPo35ci7DsCuuh0uDzb5ggqaaU08zxEjtRko8sfdob0ZRCDoMHOY
+	 P+yEq/D7mdCONLSbYphcmjrkS5qRxz5m56JjoiuqUB3Jk7zfw/G44HfqDQAWx/jxpb
+	 GiMqvPSYS5DTaBmmoU7bgt9MJXoo9lpnf91dDkVQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727251AbfGCBB4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jul 2019 21:01:56 -0400
-Received: from gate.crashing.org ([63.228.1.57]:53004 "EHLO gate.crashing.org"
+        id S1727237AbfGCBDN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jul 2019 21:03:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51746 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727117AbfGCBB4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Jul 2019 21:01:56 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x630GoNZ006339;
-        Tue, 2 Jul 2019 19:16:51 -0500
-Message-ID: <eaea693094caecf291e2a40a7ed88cd9fb273ab8.camel@kernel.crashing.org>
-Subject: Re: Archs using generic PCI controller drivers vs. resource policy
-From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Date:   Wed, 03 Jul 2019 10:16:49 +1000
-In-Reply-To: <20190702201914.GD128603@google.com>
-References: <5f3dcc3a8dafad188e3adb8ee9cf347bebdee7f6.camel@kernel.crashing.org>
-         <20190702201914.GD128603@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+        id S1726963AbfGCBDG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jul 2019 21:03:06 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6331721871;
+        Tue,  2 Jul 2019 20:13:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1562098399;
+        bh=oiyxtfK7M35SdgF9TLOGYB8qTNTecCfmWOOqN0GIClQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=t3vrIcZpBDnA/vNnTdKLssc+IIlJbrCPInKqwmH8RnXWAVefCaG5MlE+uz1EQdavp
+         kCeI8YNk7EoGai4ONb99/39zhRBFNnHYMwHrmSjIonr15UvpP4iYojqffz0Hxahz36
+         /pboLPuorrf/kondW+kWgwjIauL0wZW+m3aAKkqM=
+Date:   Tue, 2 Jul 2019 15:13:18 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Aaron Sierra <asierra@xes-inc.com>
+Cc:     linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>
+Subject: Re: [PATCH v4 2/3] PCI/ACPI: Allow _OSC request without ASPM support
+Message-ID: <20190702201318.GC128603@google.com>
+References: <20190213213242.21920-1-git-send-email-asierra@xes-inc.com>
+ <20190701204515.23374-1-asierra@xes-inc.com>
+ <20190701204515.23374-3-asierra@xes-inc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190701204515.23374-3-asierra@xes-inc.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 2019-07-02 at 15:19 -0500, Bjorn Helgaas wrote:
-> On Sun, Jun 23, 2019 at 10:30:42AM +1000, Benjamin Herrenschmidt
-> wrote:
-> > Hi !
-> > 
-> > As part of my cleanup and consolidation of the PCI resource
-> > assignment
-> > policies, I need to clarify something.
-> > 
-> > At the moment, unless PCI_PROBE_ONLY is set, a number of
-> > platforms/archs expect Linux to reassign everything rather than
-> > honor
-> > what has setup, then (re)assign what's left or broken.
+On Mon, Jul 01, 2019 at 03:45:14PM -0500, Aaron Sierra wrote:
+> Some use cases favor resiliency over efficiency. In my company's case,
+> the power savings offered by Active State Power Management (ASPM) are
+> entirely secondary to ensuring robust operation. For that same reason we
+> want to stay aware of events reportable via Advanced Error Reporting
+> (AER). We found, on x86 platforms, that AER has an erroneous implicit
+> dependency on ASPM within negotiate_os_control().
 > 
-> I don't think "reassign everything" is any different from "honor what
-> has been setup and (re)assign what's left or broken".
-
-No it actually is. The policy on these is to rather explicitely ignore
-what was set. If you just switch to honoring it, a good number of those
-platforms will break. (We know that happens on arm64 as we are trying
-to do just that).
-
-Part of the problem is it's not always easy to figure out whether the
-existing setup is "broken". It could just be "very suboptimal" for
-example. Or broken in ways we don't detect early enough to do a good
-job about it.
-
-I really wouldn't try to change that at this point. Those platforms are
-happy with Linux doing the complete setup the way it does, I don't see
-areason to change it. In fact, in some cases we can do even better (see
-below).
-
-> "Reassign everything" is clearly allowed to produce the exact same
-> result as "honor what has been setup and (re)assign what's left or
-> broken".
-
-Provided we have some IA that can figure out what "broken" means :)
-
-> I claim any difference between the two is actually a fragile
-> dependency on the Linux assignment algorithm that is likely to break
-> as that algorithm changes.
+> This patch updates negotiate_os_control() to be less ASPM-centric in
+> order to allow other features (notably AER) to work without enabling
+> ASPM (either at compile time or at run time).
 > 
-> Or am I missing something?
+> Signed-off-by: Aaron Sierra <asierra@xes-inc.com>
+> ---
+>  drivers/acpi/pci_root.c | 49 +++++++++++++++++++++++++++--------------
+>  1 file changed, 33 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 21aa56f9ca54..9b8a44391ea0 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -53,9 +53,13 @@ static int acpi_pci_root_scan_dependent(struct acpi_device *adev)
+>  }
+>  
+>  #define ACPI_PCIE_REQ_SUPPORT (OSC_PCI_EXT_CONFIG_SUPPORT \
+> -				| OSC_PCI_ASPM_SUPPORT \
+> -				| OSC_PCI_CLOCK_PM_SUPPORT \
+>  				| OSC_PCI_MSI_SUPPORT)
 
-Well, reassign-everything isn't that likely to break when Linux changes
-as long as linux doesn't change in ways that are completely busted
-anyway. It's a pretty simple process really. And that would be caught
-quickly since a LOT of platforms use that method.
+This change so we can use AER even if the OS has no ASPM support makes
+sense to me.
 
-As for the reasons, well, this tends to be embedded platforms where the
-firmware may have left crap behind that we really don't want to honor
-and can't really detect as "broken".
+But Rafael added ACPI_PCIE_REQ_SUPPORT with 415e12b23792 ("PCI/ACPI:
+Request _OSC control once for each root bridge (v3)") [1], apparently
+related to a bug [2].  I assume there was some reason for requiring
+all those things together, so I'd really like his comments.
 
-For example, switches sized incorrectly, or too big, sub optimal
-placement with everything in 32-bit space and no room left for SR-IOV,
-etc...
+[1] https://git.kernel.org/linus/415e12b23792
+[2] https://bugzilla.kernel.org/show_bug.cgi?id=20232
 
-In fact, I'm thinking that on these platforms (which are basically
-*all* arm32, all embedded ppc, and pretty much all other non-
-server/desktop archs that aren't x86), we could in fact go one step
-further and improve the default algorithm by applying the "distribute
-available space" method at the top level (we currently only do it for
-hotplug bridges below that, so the top level bridges will get the
-default which, for hotplug, isn't likely to be enough).
+> +#define ACPI_PCIE_ASPM_SUPPORT (ACPI_PCIE_REQ_SUPPORT \
+> +				| OSC_PCI_ASPM_SUPPORT \
+> +				| OSC_PCI_CLOCK_PM_SUPPORT)
+> +#define OSC_CONTROL_BITS_ASPM (OSC_PCI_EXPRESS_CAPABILITY_CONTROL \
+> +				| OSC_PCI_EXPRESS_LTR_CONTROL \
+> +				| OSC_PCI_EXPRESS_PME_CONTROL)
+>  
+>  static const struct acpi_device_id root_device_ids[] = {
+>  	{"PNP0A03", 0},
+> @@ -422,6 +426,11 @@ acpi_status acpi_pci_osc_control_set(acpi_handle handle, u32 *mask, u32 req)
+>  }
+>  EXPORT_SYMBOL(acpi_pci_osc_control_set);
+>  
+> +static inline bool osc_have_support(u32 support, u32 required)
+> +{
+> +	return ((support & required) == required);
+> +}
 
-I plan to toy around once I'm done with the first stage of
-consolidation (which I put on the backburner for a little bit as I have
-to deal with something else first, but I'll get back to it soon).
+This is used to test both "support" bitmasks and "control" bitmasks,
+so the name is a little confusing.  Maybe the function could have a
+more generic name, and the "osc" and "support/control" hints could
+come from the arguments passed to it?  It actually does nothing
+_OSC-specific, so we probably don't even need a hint for that.
 
-Cheers,
-Ben.
+Maybe it would be overkill, but this could be added with a separate
+preliminary patch so the "allow AER with ASPM" patch becomes even
+simpler.
 
+>  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+>  				 bool is_pcie)
+>  {
+> @@ -475,38 +484,47 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+>  		return;
+>  	}
+>  
+> -	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
+> +	/*
+> +	 * Require the least restrictive set needed to satisfy at least one
+> +	 * kernel feature.
+> +	 */
+> +	if (!osc_have_support(support, ACPI_PCIE_REQ_SUPPORT)) {
+>  		decode_osc_support(root, "not requesting OS control; OS requires",
+>  				   ACPI_PCIE_REQ_SUPPORT);
+>  		return;
+>  	}
 
+It seems like the changes below could be a separate patch?  Or do they
+actually depend on the ACPI_PCIE_REQ_SUPPORT change?  Changing
+ACPI_PCIE_REQ_SUPPORT is fairly significant, so I'd like to isolate it
+as much as possible.
 
+I think it's fine to pull out the OSC_PCI_EXPRESS_CAPABILITY_CONTROL
+dependency into each feature that requires it, but theoretically that
+would be cosmetic with no real functional change, so it could be in
+its own separate patch.
+
+> -	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
+> -		| OSC_PCI_EXPRESS_PME_CONTROL;
+> +	control = 0;
+> +
+> +	if (osc_have_support(support, ACPI_PCIE_ASPM_SUPPORT))
+> +		control |= OSC_CONTROL_BITS_ASPM;
+
+I think this would actually be easier to read without the
+OSC_CONTROL_BITS_ASPM #define because then it would be directly
+parallel with the other cases below, e.g., as
+
+  if (osc_have_support(support, ACPI_PCIE_ASPM_SUPPORT))
+    control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
+               OSC_PCI_EXPRESS_LTR_CONTROL |
+               OSC_PCI_EXPRESS_PME_CONTROL;
+
+Also, since OSC_CONTROL_BITS_ASPM includes both
+OSC_PCI_EXPRESS_LTR_CONTROL and OSC_PCI_EXPRESS_PME_CONTROL, this
+change seems to connect PME to ASPM, and I'm not sure why.  Those are
+two different features, and it seems like we should be able to request
+PME control even if the OS doesn't have ASPM support.
+
+It seems like maybe the OSC_PCI_EXPRESS_PME_CONTROL part should depend
+on CONFIG_PCIE_PME, the same way OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
+depends on CONFIG_HOTPLUG_PCI_PCIE.  That would be a potential
+behavior change and should be its own separate patch.
+
+Rafael is the PME expert, so maybe he has an opinion on this, too.
+
+> -	if (IS_ENABLED(CONFIG_PCIEASPM))
+> -		control |= OSC_PCI_EXPRESS_LTR_CONTROL;
+> +	if (!control)
+> +		*no_aspm = 1;
+>  
+>  	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
+> -		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
+> +		control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
+> +			   OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
+>  
+>  	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
+> -		control |= OSC_PCI_SHPC_NATIVE_HP_CONTROL;
+> +		control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
+> +			   OSC_PCI_SHPC_NATIVE_HP_CONTROL;
+>  
+>  	if (pci_aer_available()) {
+>  		if (aer_acpi_firmware_first())
+>  			dev_info(&device->dev,
+>  				 "PCIe AER handled by firmware\n");
+>  		else
+> -			control |= OSC_PCI_EXPRESS_AER_CONTROL;
+> +			control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
+> +				   OSC_PCI_EXPRESS_AER_CONTROL;
+>  	}
+>  
+>  	requested = control;
+> -	status = acpi_pci_osc_control_set(handle, &control,
+> -					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
+> +	acpi_pci_osc_control_set(handle, &control, 0);
+>  	decode_osc_control(root, "OS requested", requested);
+>  	decode_osc_control(root, "platform granted", control);
+> -	if (ACPI_SUCCESS(status)) {
+> +
+> +	if (osc_have_support(control, OSC_CONTROL_BITS_ASPM)) {
+>  		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
+>  			/*
+>  			 * We have ASPM control, but the FADT indicates that
+> @@ -516,9 +534,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+>  			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS configuration\n");
+>  			*no_aspm = 1;
+>  		}
+> -	} else {
+> -		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
+> -			acpi_format_exception(status));
+> +	} else if (!*no_aspm) {
+> +		dev_info(&device->dev, "_OSC failed; disabling ASPM\n");
+>  
+>  		/*
+>  		 * We want to disable ASPM here, but aspm_disabled
+> -- 
+> 2.17.1
+> 
