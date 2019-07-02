@@ -2,67 +2,110 @@ Return-Path: <SRS0=6jqy=VA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E28CCC5B57D
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:14:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F242C5B57D
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:18:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B404A20673
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:14:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4840F20673
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:18:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1562116701;
+	bh=qg21pARqRrGiqzp8oVFATV/rRvwdeZy0ZvC+FpGJras=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=AhOtobrZehKX7PmrSIeH/s25yiZutIpiKQjdJk6DdO5xZH2knIL8jrN1OYfvhxQh9
+	 CpVUpvDiX/BSUaUhnTs1mt74/Y+XgiMVO3L5yCLEbsgoWKHwB1ub/p8v9ZnxTfuuKV
+	 r6x3hckrXgz4jwmuf2B6UKOU7fGEjXfIXIOI6slU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727065AbfGCBOZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jul 2019 21:14:25 -0400
-Received: from verein.lst.de ([213.95.11.211]:46852 "EHLO verein.lst.de"
+        id S1727360AbfGCBST (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jul 2019 21:18:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59100 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727051AbfGCBOZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Jul 2019 21:14:25 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 9F50E68B20; Wed,  3 Jul 2019 00:47:31 +0200 (CEST)
-Date:   Wed, 3 Jul 2019 00:47:31 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Weiny, Ira" <ira.weiny@intel.com>
-Cc:     Jason Gunthorpe <jgg@mellanox.com>, Christoph Hellwig <hch@lst.de>,
-        "Williams, Dan J" <dan.j.williams@intel.com>,
-        =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "nouveau@lists.freedesktop.org" <nouveau@lists.freedesktop.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: dev_pagemap related cleanups v4
-Message-ID: <20190702224731.GA23841@lst.de>
-References: <20190701062020.19239-1-hch@lst.de> <20190701082517.GA22461@lst.de> <20190702184201.GO31718@mellanox.com> <2807E5FD2F6FDA4886F6618EAC48510E79DEA747@CRSMSX101.amr.corp.intel.com>
+        id S1727377AbfGCBSF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jul 2019 21:18:05 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 75DB3218D9;
+        Tue,  2 Jul 2019 21:39:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1562103594;
+        bh=qg21pARqRrGiqzp8oVFATV/rRvwdeZy0ZvC+FpGJras=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=AdDH7F2UwNKk7hs8XFn48mBnJYW3tekpy49ww101NDf6ClrVP8HVoVh9ZXMduwfGI
+         4c9zuOtndSvhsQmRkGPnlQJT1IUNR1jMFyb0erLoU6mlKMKP/lZCGuiIKyloixILC7
+         QSoakQtXMIafoY2n2pzNdlCTaF9hR/xp3U/7j5RQ=
+Date:   Tue, 2 Jul 2019 16:39:51 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Multitude of resource assignment functions
+Message-ID: <20190702213951.GF128603@google.com>
+References: <SL2P216MB01874DFDDBDE49B935A9B1B380E50@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+ <e768271e-9455-2a3d-ad76-4a6d9c71d669@deltatee.com>
+ <SL2P216MB01872DFDDA9C313CA43C7B3280E40@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+ <024eec86-dfb9-0a23-6385-9e8dfe9a0381@deltatee.com>
+ <SL2P216MB0187340941F03A5A03625F4F80E10@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+ <442c6b35a1aab9833fd2942b499d4fb082a71a15.camel@kernel.crashing.org>
+ <dc631e87-099f-3354-5477-b95e97e55d3f@deltatee.com>
+ <SL2P216MB01875C9CB93E6B39846749B280FD0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+ <e2eec9dc-5eef-62ba-6251-f420d6579d03@deltatee.com>
+ <SL2P216MB0187E659CFF6F9385E92838680FE0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2807E5FD2F6FDA4886F6618EAC48510E79DEA747@CRSMSX101.amr.corp.intel.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <SL2P216MB0187E659CFF6F9385E92838680FE0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jul 02, 2019 at 10:45:34PM +0000, Weiny, Ira wrote:
-> > 
-> > On Mon, Jul 01, 2019 at 10:25:17AM +0200, Christoph Hellwig wrote:
-> > > And I've demonstrated that I can't send patch series..  While this has
-> > > all the right patches, it also has the extra patches already in the
-> > > hmm tree, and four extra patches I wanted to send once this series is
-> > > merged.  I'll give up for now, please use the git url for anything
-> > > serious, as it contains the right thing.
-> > 
-> > Okay, I sorted it all out and temporarily put it here:
-> > 
-> > https://github.com/jgunthorpe/linux/commits/hmm
-> > 
-> > Bit involved job:
-> > - Took Ira's v4 patch into hmm.git and confirmed it matches what
-> >   Andrew has in linux-next after all the fixups
-> 
-> Looking at the final branch seems good.
+On Sun, Jun 30, 2019 at 02:57:37AM +0000, Nicholas Johnson wrote:
 
-Looks good to me as well.
+> - Should pci=noacpi imply pci=nocrs? It does not appear to, and I feel 
+> like it should, as CRS is part of ACPI and relates to PCI.
+
+"pci=noacpi" means "Do not use ACPI for IRQ routing or for PCI
+scanning."
+
+"pci=nocrs" means "Ignore PCI host bridge windows from ACPI."  If we
+ignore _CRS, we have no idea what the PCI host bridge apertures are,
+so we cannot allocate resources for devices on the root bus.
+
+The "Do not use ACPI for ... PCI scanning" part indeed does suggest
+that "pci=noacpi" could imply "pci=nocrs", but I don't think there's
+anything to be gained by changing that now.
+
+We probably *should* remove "or for PCI scanning" from the
+documentation, because "pci=noacpi" only affects IRQs.
+
+The only reason these exist at all is as a debugging aid to
+temporarily work around issues in firmware or Linux until we can
+develop a real fix or quirk that works without the user specifying a
+kernel parameter.
+
+> - Does anybody know why with pci=noacpi, you get dmesg warnings about 
+> cannot find PCI int A mapping - but they do not seem to cause the 
+> devices any issues in functioning? Is it because they are using MSI?
+
+I doubt it.  I think you're just lucky.  In general the information
+from _PRT and _CRS is essential for correct operation.
+
+> - Does pci=ignorefw sound good for a future proposal?
+
+No, at least not without more description of what this would
+accomplish.
+
+It sounds like you would want this to turn off _PRT, _CRS, and other
+information from ACPI.  You may not like ACPI, but that information is
+there for good reason, and if we didn't get it from ACPI we would have
+to get it from somewhere else.
+
+There is always "acpi=off" if you just don't want ACPI at all.
+
+Bjorn
