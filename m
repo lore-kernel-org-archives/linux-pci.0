@@ -2,73 +2,68 @@ Return-Path: <SRS0=rgU2=U7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C047C06510
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Jul 2019 11:28:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8F7AC06510
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Jul 2019 12:28:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 071AF2063F
-	for <linux-pci@archiver.kernel.org>; Tue,  2 Jul 2019 11:28:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B66AB20836
+	for <linux-pci@archiver.kernel.org>; Tue,  2 Jul 2019 12:28:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726193AbfGBL2Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jul 2019 07:28:16 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:57426 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725867AbfGBL2Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Jul 2019 07:28:16 -0400
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 544329EB6D970CEBF76A;
-        Tue,  2 Jul 2019 19:28:09 +0800 (CST)
-Received: from huawei.com (10.175.100.202) by DGGEMS401-HUB.china.huawei.com
- (10.3.19.201) with Microsoft SMTP Server id 14.3.439.0; Tue, 2 Jul 2019
- 19:28:00 +0800
-From:   Miaohe Lin <linmiaohe@huawei.com>
-To:     <bhelgaas@google.com>, <andy.shevchenko@gmail.com>,
-        <sebott@linux.ibm.com>, <lukas@wunner.de>,
-        <gustavo@embeddedor.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <linmiaohe@huawei.com>, <mingfangsen@huawei.com>
-Subject: [PATCH] net: pci: Fix hotplug event timeout with shpchp
-Date:   Tue, 2 Jul 2019 13:35:19 +0000
-Message-ID: <1562074519-205047-1-git-send-email-linmiaohe@huawei.com>
-X-Mailer: git-send-email 1.8.3.4
+        id S1726167AbfGBM2h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jul 2019 08:28:37 -0400
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:47591 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725922AbfGBM2g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2019 08:28:36 -0400
+X-Greylist: delayed 436 seconds by postgrey-1.27 at vger.kernel.org; Tue, 02 Jul 2019 08:28:35 EDT
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout3.hostsharing.net (Postfix) with ESMTPS id 787F8100D9405;
+        Tue,  2 Jul 2019 14:21:18 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id E20E6132E3E; Tue,  2 Jul 2019 14:21:17 +0200 (CEST)
+Date:   Tue, 2 Jul 2019 14:21:17 +0200
+From:   Lukas Wunner <lukas@wunner.de>
+To:     linmiaohe <linmiaohe@huawei.com>
+Cc:     "bhelgaas@google.com" <bhelgaas@google.com>,
+        "andy.shevchenko@gmail.com" <andy.shevchenko@gmail.com>,
+        "rafael.j.wysocki@intel.com" <rafael.j.wysocki@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Mingfangsen <mingfangsen@huawei.com>
+Subject: Re: A question about shpcp.
+Message-ID: <20190702122117.vl2opo55zpsykjf6@wunner.de>
+References: <d87dfa281d0d4e7da3f6bf714a7c2e5a@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.175.100.202]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d87dfa281d0d4e7da3f6bf714a7c2e5a@huawei.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hotplug a network card would take more than 5 seconds
-in qemu + shpchp scene. It’s because 5 seconds
-delayed_work in func handle_button_press_event with
-case STATIC_STATE. And this will break some
-protocols with timeout within 5 seconds.
+On Thu, Jun 27, 2019 at 12:16:18PM +0000, linmiaohe wrote:
+> In qemu+shpcp+pcie scene, hotplug a network card(virtio) would take more
+> than 5 seconds. It's because 5 seconds delayed_work in func
+> handle_button_press_event with case STATIC_STATE. And this will break some
+> protocols with timeout within 5 seconds.
+> It's very nice of you if you could tell me why is 5*HZ there and if this
+> delay can be reduced?
 
-Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
----
- drivers/pci/hotplug/shpchp_ctrl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+According to Table 2-4 of the PCI Standard Hot-Plug Controller and
+Subsystem Specification, "System software is waiting 5 seconds to
+provide the user with an opportunity to cancel the hot-plug operation."
+(http://drydkim.com/MyDocuments/PCI%20Spec/specifications/shpc1_0.pdf)
 
-diff --git a/drivers/pci/hotplug/shpchp_ctrl.c b/drivers/pci/hotplug/shpchp_ctrl.c
-index 078003dcde5b..cbb00acaba0d 100644
---- a/drivers/pci/hotplug/shpchp_ctrl.c
-+++ b/drivers/pci/hotplug/shpchp_ctrl.c
-@@ -478,7 +478,7 @@ static void handle_button_press_event(struct slot *p_slot)
- 		p_slot->hpc_ops->green_led_blink(p_slot);
- 		p_slot->hpc_ops->set_attention_status(p_slot, 0);
- 
--		queue_delayed_work(p_slot->wq, &p_slot->work, 5*HZ);
-+		queue_delayed_work(p_slot->wq, &p_slot->work, 0);
- 		break;
- 	case BLINKINGOFF_STATE:
- 	case BLINKINGON_STATE:
--- 
-2.21.GIT
+So the reason the delay can't be reduced or removed is because the spec
+mandates it.
 
+Thanks,
+
+Lukas
