@@ -4,27 +4,28 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4F89C0650E
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 15:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77B39C06513
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 15:19:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 963822189E
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 15:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DB80218A6
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 15:19:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726997AbfGCPK2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Jul 2019 11:10:28 -0400
-Received: from foss.arm.com ([217.140.110.172]:50424 "EHLO foss.arm.com"
+        id S1726621AbfGCPTL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Jul 2019 11:19:11 -0400
+Received: from foss.arm.com ([217.140.110.172]:50626 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726490AbfGCPK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Jul 2019 11:10:27 -0400
+        id S1725933AbfGCPTL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jul 2019 11:19:11 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 508B12B;
-        Wed,  3 Jul 2019 08:10:26 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id A0B3C344;
+        Wed,  3 Jul 2019 08:19:09 -0700 (PDT)
 Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 327CC3F718;
-        Wed,  3 Jul 2019 08:10:24 -0700 (PDT)
-Date:   Wed, 3 Jul 2019 16:10:21 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 82E913F718;
+        Wed,  3 Jul 2019 08:19:07 -0700 (PDT)
+Date:   Wed, 3 Jul 2019 16:19:05 +0100
 From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -45,7 +46,7 @@ Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         Xiaowei Bao <xiaowei.bao@nxp.com>
 Subject: Re: [PATCHv5 02/20] PCI: mobiveil: Format the code without
  functionality change
-Message-ID: <20190703151021.GC26804@e121166-lin.cambridge.arm.com>
+Message-ID: <20190703151905.GD26804@e121166-lin.cambridge.arm.com>
 References: <20190412083635.33626-1-Zhiqiang.Hou@nxp.com>
  <20190412083635.33626-3-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
@@ -72,15 +73,23 @@ On Fri, Apr 12, 2019 at 08:35:24AM +0000, Z.q. Hou wrote:
 >  drivers/pci/controller/pcie-mobiveil.c | 261 +++++++++++++------------
 >  1 file changed, 137 insertions(+), 124 deletions(-)
 
-Again, I will drop this patch. You tend to do multiple changes
-in one single patch, I understand this patch is just
-reformatting/renaming variables but at least I would separate
-indentation changes from changes where eg you add local variables.
+Ok, dropping this patch means that everything else should be
+rebased. So what I am going to do:
 
-At least try to group the changes you are making instead of mixing
-them all up.
+- I will publish a branch (pci/mobiveil) where I added the patches
+  that are ready to be merged with commit logs rewritten; this patch
+  is part of it but in the final version it must be split as requested.
+- You have to split this patch and the other patches I requested
+  you to split but do NOT modify the patches with my commit logs
+  rewritten in pci/mobiveil, it took me time to rewrite them.
 
-Thanks,
+If you can manage to rebase patches on pci/mobiveil on top
+of v5.2-rc1, send them separately so that I can merge them
+as a base for the subsequent patches to be applied.
+
+If you have any questions please ask, do not post patches
+if there is something that is not clear.
+
 Lorenzo
 
 > diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
