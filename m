@@ -4,20 +4,20 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.0 required=3.0
 	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F0DC06513
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 20:32:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB88C06511
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 20:32:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CAA6218A0
+	by mail.kernel.org (Postfix) with ESMTP id E9DC4218A0
 	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 20:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727188AbfGCUcb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Jul 2019 16:32:31 -0400
+        id S1727177AbfGCUco (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Jul 2019 16:32:44 -0400
 Received: from mga04.intel.com ([192.55.52.120]:60933 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727285AbfGCUcU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1727281AbfGCUcU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Wed, 3 Jul 2019 16:32:20 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
@@ -25,7 +25,7 @@ Received: from orsmga008.jf.intel.com ([10.7.209.65])
   by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Jul 2019 13:32:19 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.63,448,1557212400"; 
-   d="scan'208";a="158089422"
+   d="scan'208";a="158089415"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
   by orsmga008.jf.intel.com with ESMTP; 03 Jul 2019 13:32:18 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
@@ -33,9 +33,9 @@ To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v4 6/8] PCI/AER: Allow clearing Error Status Register in FF mode
-Date:   Wed,  3 Jul 2019 13:29:53 -0700
-Message-Id: <8ec91f8bd8774d0d1a54d06f1f8f3ef76eee24a3.1562185606.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v4 4/8] PCI/DPC: Add dpc_process_error() wrapper function
+Date:   Wed,  3 Jul 2019 13:29:51 -0700
+Message-Id: <0202c06d4500762994f4f3e723b6f3e4801f53b4.1562185606.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1562185606.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1562185606.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -48,52 +48,47 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-As per PCI firmware specification r3.2 Downstream Port Containment
-Related Enhancements ECN, sec 4.5.1, table 4-6, Error Disconnect
-Recover (EDR) support allows OS to handle error recovery and
-clearing Error Registers even in FF mode. So remove FF mode checks in
-pci_cleanup_aer_uncorrect_error_status(), pci_aer_clear_fatal_status()
-and pci_cleanup_aer_error_status_regs() functions.
+With Error Disconnect Recover (EDR) support, we need to support
+processing DPC event either from DPC IRQ or ACPI EDR event. So create
+a wrapper function dpc_process_error() and move common error handling
+code in to it. It will be used to process the DPC event in both DPC IRQ
+and EDR ACPI event contexts.
 
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pcie/aer.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ drivers/pci/pcie/dpc.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index b45bc47d04fe..ae5eed084ae5 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -383,9 +383,6 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- 	if (!pos)
- 		return -EIO;
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 9717fda012f8..4137ec7b48cc 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -232,10 +232,9 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+ 	return 1;
+ }
  
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
- 	/* Clear status bits for ERR_NONFATAL errors only */
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
-@@ -406,9 +403,6 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev)
- 	if (!pos)
- 		return;
+-static irqreturn_t dpc_handler(int irq, void *context)
++static void dpc_process_error(struct dpc_dev *dpc)
+ {
+ 	struct aer_err_info info;
+-	struct dpc_dev *dpc = context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
  
--	if (pcie_aer_get_firmware_first(dev))
--		return;
--
- 	/* Clear status bits for ERR_FATAL errors only */
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
-@@ -430,9 +424,6 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	if (!pos)
- 		return -EIO;
+@@ -268,6 +267,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
  
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
- 	port_type = pci_pcie_type(dev);
- 	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
- 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+ 	pcie_do_recovery(pdev, pci_channel_io_frozen, PCIE_PORT_SERVICE_DPC);
++}
++
++static irqreturn_t dpc_handler(int irq, void *context)
++{
++	struct dpc_dev *dpc = context;
++
++	dpc_process_error(dpc);
+ 
+ 	return IRQ_HANDLED;
+ }
 -- 
 2.21.0
 
