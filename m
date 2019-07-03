@@ -2,132 +2,60 @@ Return-Path: <SRS0=6jqy=VA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BC4C06511
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 20:49:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01D08C5B578
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 22:54:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 43BA0218A3
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 20:49:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D385D20645
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 22:54:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727286AbfGCUsi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 3 Jul 2019 16:48:38 -0400
-Received: from mga05.intel.com ([192.55.52.43]:7207 "EHLO mga05.intel.com"
+        id S1727193AbfGCWyW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 3 Jul 2019 18:54:22 -0400
+Received: from gate.crashing.org ([63.228.1.57]:40579 "EHLO gate.crashing.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726739AbfGCUsi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 Jul 2019 16:48:38 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 03 Jul 2019 13:48:37 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.63,448,1557212400"; 
-   d="scan'208";a="172258081"
-Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by FMSMGA003.fm.intel.com with ESMTP; 03 Jul 2019 13:48:37 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, keith.busch@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v4 1/7] PCI/ATS: Fix pci_prg_resp_pasid_required() dependency issues
-Date:   Wed,  3 Jul 2019 13:46:18 -0700
-Message-Id: <8b2531c25ea4c85f89127130a5604a0f0b854067.1562172836.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1562172836.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1562172836.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1727021AbfGCWyW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 3 Jul 2019 18:54:22 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x63Ms7Z4012251;
+        Wed, 3 Jul 2019 17:54:08 -0500
+Message-ID: <b73eb3ecf37cec8761e9e62d14a35e7eddd62fd1.camel@kernel.crashing.org>
+Subject: Re: Multitude of resource assignment functions
+From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Date:   Thu, 04 Jul 2019 08:54:07 +1000
+In-Reply-To: <SL2P216MB01878623FC34BC4894EB495280FB0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+References: <e768271e-9455-2a3d-ad76-4a6d9c71d669@deltatee.com>
+         <SL2P216MB01872DFDDA9C313CA43C7B3280E40@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+         <024eec86-dfb9-0a23-6385-9e8dfe9a0381@deltatee.com>
+         <SL2P216MB0187340941F03A5A03625F4F80E10@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+         <442c6b35a1aab9833fd2942b499d4fb082a71a15.camel@kernel.crashing.org>
+         <dc631e87-099f-3354-5477-b95e97e55d3f@deltatee.com>
+         <SL2P216MB01875C9CB93E6B39846749B280FD0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+         <e2eec9dc-5eef-62ba-6251-f420d6579d03@deltatee.com>
+         <SL2P216MB0187E659CFF6F9385E92838680FE0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+         <20190702213951.GF128603@google.com>
+         <SL2P216MB01878623FC34BC4894EB495280FB0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+On Wed, 2019-07-03 at 13:43 +0000, Nicholas Johnson wrote:
+> The nocrs is vital because the BIOS places pitiful space behind the root 
+> complex and will fail for assigning large BARs - hence why Xeon Phi 
 
-Since pci_prg_resp_pasid_required() function has dependency on both
-PASID and PRI, define it only if both CONFIG_PCI_PRI and
-CONFIG_PCI_PASID config options are enabled.
+Can you check what you get out of _DSM #5 behind these if it exists ?
 
-Fixes: e5567f5f6762 ("PCI/ATS: Add pci_prg_resp_pasid_required()
-interface.")
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/ats.c       | 10 ++++++----
- include/linux/pci-ats.h | 12 +++++++++---
- 2 files changed, 15 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index 97c08146534a..f9eeb7db0db3 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -395,6 +395,8 @@ int pci_pasid_features(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_pasid_features);
- 
-+#ifdef CONFIG_PCI_PRI
-+
- /**
-  * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
-  *				 status.
-@@ -402,10 +404,8 @@ EXPORT_SYMBOL_GPL(pci_pasid_features);
-  *
-  * Returns 1 if PASID is required in PRG Response Message, 0 otherwise.
-  *
-- * Even though the PRG response PASID status is read from PRI Status
-- * Register, since this API will mainly be used by PASID users, this
-- * function is defined within #ifdef CONFIG_PCI_PASID instead of
-- * CONFIG_PCI_PRI.
-+ * Since this API has dependency on both PRI and PASID, protect it
-+ * with both CONFIG_PCI_PRI and CONFIG_PCI_PASID.
-  */
- int pci_prg_resp_pasid_required(struct pci_dev *pdev)
- {
-@@ -425,6 +425,8 @@ int pci_prg_resp_pasid_required(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
- 
-+#endif
-+
- #define PASID_NUMBER_SHIFT	8
- #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
- /**
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 1ebb88e7c184..1a0bdaee2f32 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -40,7 +40,6 @@ void pci_disable_pasid(struct pci_dev *pdev);
- void pci_restore_pasid_state(struct pci_dev *pdev);
- int pci_pasid_features(struct pci_dev *pdev);
- int pci_max_pasids(struct pci_dev *pdev);
--int pci_prg_resp_pasid_required(struct pci_dev *pdev);
- 
- #else  /* CONFIG_PCI_PASID */
- 
-@@ -67,11 +66,18 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
- 	return -EINVAL;
- }
- 
-+#endif /* CONFIG_PCI_PASID */
-+
-+#if defined(CONFIG_PCI_PRI) && defined(CONFIG_PCI_PASID)
-+
-+int pci_prg_resp_pasid_required(struct pci_dev *pdev);
-+
-+#else /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
-+
- static inline int pci_prg_resp_pasid_required(struct pci_dev *pdev)
- {
- 	return 0;
- }
--#endif /* CONFIG_PCI_PASID */
--
-+#endif
- 
- #endif /* LINUX_PCI_ATS_H*/
--- 
-2.21.0
+Cheers
+Ben.
 
