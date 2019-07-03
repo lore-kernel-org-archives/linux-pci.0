@@ -3,100 +3,113 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4314C06511
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 00:54:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 368E3C5B57D
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:01:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A71EF2089C
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 00:54:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 161442089C
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:01:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727059AbfGCAy7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jul 2019 20:54:59 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:48638 "EHLO ale.deltatee.com"
+        id S1727251AbfGCBB4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jul 2019 21:01:56 -0400
+Received: from gate.crashing.org ([63.228.1.57]:53004 "EHLO gate.crashing.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726963AbfGCAy6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 Jul 2019 20:54:58 -0400
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtp (Exim 4.89)
-        (envelope-from <logang@deltatee.com>)
-        id 1hiRdk-0001o8-HO; Tue, 02 Jul 2019 16:52:46 -0600
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Keith Busch <kbusch@kernel.org>,
-        Stephen Bates <sbates@raithlin.com>
-References: <20190627063223.GA7736@ziepe.ca>
- <6afe4027-26c8-df4e-65ce-49df07dec54d@deltatee.com>
- <20190627163504.GB9568@ziepe.ca>
- <4894142c-3233-a3bb-f9a3-4a4985136e9b@deltatee.com>
- <20190628045705.GD3705@ziepe.ca>
- <8022a2a4-4069-d256-11da-e6d9b2ffbf60@deltatee.com>
- <20190628172926.GA3877@ziepe.ca>
- <25a87c72-630b-e1f1-c858-9c8b417506fc@deltatee.com>
- <20190628190931.GC3877@ziepe.ca>
- <cb680437-9615-da42-ebc5-4751e024a45f@deltatee.com>
- <20190702224530.GD11860@ziepe.ca>
-From:   Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <49c7f848-3cd5-7225-0821-b19fb4547ad9@deltatee.com>
-Date:   Tue, 2 Jul 2019 16:52:41 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
-MIME-Version: 1.0
-In-Reply-To: <20190702224530.GD11860@ziepe.ca>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-CA
+        id S1727117AbfGCBB4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jul 2019 21:01:56 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by gate.crashing.org (8.14.1/8.14.1) with ESMTP id x630GoNZ006339;
+        Tue, 2 Jul 2019 19:16:51 -0500
+Message-ID: <eaea693094caecf291e2a40a7ed88cd9fb273ab8.camel@kernel.crashing.org>
+Subject: Re: Archs using generic PCI controller drivers vs. resource policy
+From:   Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Date:   Wed, 03 Jul 2019 10:16:49 +1000
+In-Reply-To: <20190702201914.GD128603@google.com>
+References: <5f3dcc3a8dafad188e3adb8ee9cf347bebdee7f6.camel@kernel.crashing.org>
+         <20190702201914.GD128603@google.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.1 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: sbates@raithlin.com, kbusch@kernel.org, sagi@grimberg.me, dan.j.williams@intel.com, bhelgaas@google.com, axboe@kernel.dk, linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, jgg@ziepe.ca
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [RFC PATCH 00/28] Removing struct page from P2PDMA
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 2019-07-02 4:45 p.m., Jason Gunthorpe wrote:
-> On Fri, Jun 28, 2019 at 01:35:42PM -0600, Logan Gunthorpe wrote:
+On Tue, 2019-07-02 at 15:19 -0500, Bjorn Helgaas wrote:
+> On Sun, Jun 23, 2019 at 10:30:42AM +1000, Benjamin Herrenschmidt
+> wrote:
+> > Hi !
+> > 
+> > As part of my cleanup and consolidation of the PCI resource
+> > assignment
+> > policies, I need to clarify something.
+> > 
+> > At the moment, unless PCI_PROBE_ONLY is set, a number of
+> > platforms/archs expect Linux to reassign everything rather than
+> > honor
+> > what has setup, then (re)assign what's left or broken.
 > 
->>> However, I'd feel more comfortable about that assumption if we had
->>> code to support the IOMMU case, and know for sure it doesn't require
->>> more info :(
->>
->> The example I posted *does* support the IOMMU case. That was case (b1)
->> in the description. The idea is that pci_p2pdma_dist() returns a
->> distance with a high bit set (PCI_P2PDMA_THRU_HOST_BRIDGE) when an IOMMU
->> mapping is required and the appropriate flag tells it to call
->> dma_map_resource(). This way, it supports both same-segment and
->> different-segments without needing any look ups in the map step.
+> I don't think "reassign everything" is any different from "honor what
+> has been setup and (re)assign what's left or broken".
+
+No it actually is. The policy on these is to rather explicitely ignore
+what was set. If you just switch to honoring it, a good number of those
+platforms will break. (We know that happens on arm64 as we are trying
+to do just that).
+
+Part of the problem is it's not always easy to figure out whether the
+existing setup is "broken". It could just be "very suboptimal" for
+example. Or broken in ways we don't detect early enough to do a good
+job about it.
+
+I really wouldn't try to change that at this point. Those platforms are
+happy with Linux doing the complete setup the way it does, I don't see
+areason to change it. In fact, in some cases we can do even better (see
+below).
+
+> "Reassign everything" is clearly allowed to produce the exact same
+> result as "honor what has been setup and (re)assign what's left or
+> broken".
+
+Provided we have some IA that can figure out what "broken" means :)
+
+> I claim any difference between the two is actually a fragile
+> dependency on the Linux assignment algorithm that is likely to break
+> as that algorithm changes.
 > 
-> I mean we actually have some iommu drivers that can setup P2P in real
-> HW. I'm worried that real IOMMUs will need to have the BDF of the
-> completer to route completions back to the requester - which we can't
-> trivially get through this scheme.
+> Or am I missing something?
 
-I've never seen such an IOMMU but I guess, in theory, it could exist.
-The IOMMUs that setup P2P-like transactions in real hardware make use of
-dma_map_resource(). There aren't a lot of users of this function (it's
-actually been broken with the Intel IOMMU until I fixed it recently and
-I'd expect there are other broken implementations); but, to my
-knowledge, none of them have needed the BDF of the provider to date.
+Well, reassign-everything isn't that likely to break when Linux changes
+as long as linux doesn't change in ways that are completely busted
+anyway. It's a pretty simple process really. And that would be caught
+quickly since a LOT of platforms use that method.
 
-> However, maybe that is just a future problem, and certainly we can see
-> that with an interval tree or otherwise such a IOMMU could get the
-> information it needs.
+As for the reasons, well, this tends to be embedded platforms where the
+firmware may have left crap behind that we really don't want to honor
+and can't really detect as "broken".
 
-Yup, the rule of thumb is to design for the needs we have today not
-imagined future problems.
+For example, switches sized incorrectly, or too big, sub optimal
+placement with everything in 32-bit space and no room left for SR-IOV,
+etc...
 
-Logan
+In fact, I'm thinking that on these platforms (which are basically
+*all* arm32, all embedded ppc, and pretty much all other non-
+server/desktop archs that aren't x86), we could in fact go one step
+further and improve the default algorithm by applying the "distribute
+available space" method at the top level (we currently only do it for
+hotplug bridges below that, so the top level bridges will get the
+default which, for hotplug, isn't likely to be enough).
+
+I plan to toy around once I'm done with the first stage of
+consolidation (which I put on the backburner for a little bit as I have
+to deal with something else first, but I'll get back to it soon).
+
+Cheers,
+Ben.
+
+
+
