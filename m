@@ -2,103 +2,77 @@ Return-Path: <SRS0=6jqy=VA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C97E4C06510
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:33:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8476BC5B57D
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 02:07:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F62D21721
-	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 01:33:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HJjRCX8t"
+	by mail.kernel.org (Postfix) with ESMTP id 637A52063F
+	for <linux-pci@archiver.kernel.org>; Wed,  3 Jul 2019 02:07:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727508AbfGCBdR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 2 Jul 2019 21:33:17 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:38736 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727447AbfGCBdR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 Jul 2019 21:33:17 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=T6lwvzaIdbz/BZ6sGTCQ6xcfRARrDSx4wOd7/AZvlgA=; b=HJjRCX8tM0V+o6w1ycakC1h/u
-        KJ57SgETpC2AjqSXKpyUth7aNElF3NTRN/A+moXQyzH3YVlD9OnYdHZfS76ngLzVCiFlWkfeQ23f8
-        CmqxCFkMJ+vzAMgsnO/gTjV4/LUWVntkllTW3kyh+BMpSuOmY1brDlDFxlMGmb2b6CoABpbcjBXCF
-        7dSH+0UPowDVDgQHSN6f8MY4h+C4BYcIwBmVANFgpoLLn2eX6q2khzxXqjixtOLQcbB485j4GWSxN
-        PLFTl2Ewoc0v6q+dMoYHfnrtyZ1XEZ+MJKAQfjslONQ8q7Jt4LAB6n/s4cvhubKt4oVwu6Z5yQih1
-        QVQthwgkg==;
-Received: from static-50-53-52-16.bvtn.or.frontiernet.net ([50.53.52.16] helo=dragon.dunlab)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1hiS8V-0003XW-Td; Tue, 02 Jul 2019 23:24:31 +0000
-To:     LKML <linux-kernel@vger.kernel.org>, linux-hyperv@vger.kernel.org
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Jake Oshins <jakeo@microsoft.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH] PCI: hv: fix pci-hyperv build, depends on SYSFS
-Message-ID: <69c25bc3-da00-2758-92ee-13c82b51fc45@infradead.org>
-Date:   Tue, 2 Jul 2019 16:24:30 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1727074AbfGCCHy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 2 Jul 2019 22:07:54 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:2963 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726329AbfGCCHy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 Jul 2019 22:07:54 -0400
+Received: from DGGEMM406-HUB.china.huawei.com (unknown [172.30.72.53])
+        by Forcepoint Email with ESMTP id BA99EBBF4176F5607A9F;
+        Wed,  3 Jul 2019 10:07:52 +0800 (CST)
+Received: from dggeme716-chm.china.huawei.com (10.1.199.112) by
+ DGGEMM406-HUB.china.huawei.com (10.3.20.214) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Wed, 3 Jul 2019 10:07:52 +0800
+Received: from dggeme763-chm.china.huawei.com (10.3.19.109) by
+ dggeme716-chm.china.huawei.com (10.1.199.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.1591.10; Wed, 3 Jul 2019 10:07:52 +0800
+Received: from dggeme763-chm.china.huawei.com ([10.6.66.36]) by
+ dggeme763-chm.china.huawei.com ([10.6.66.36]) with mapi id 15.01.1591.008;
+ Wed, 3 Jul 2019 10:07:52 +0800
+From:   linmiaohe <linmiaohe@huawei.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     "andy.shevchenko@gmail.com" <andy.shevchenko@gmail.com>,
+        "sebott@linux.ibm.com" <sebott@linux.ibm.com>,
+        "lukas@wunner.de" <lukas@wunner.de>,
+        "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Mingfangsen <mingfangsen@huawei.com>
+Subject: Re: [PATCH] net: pci: Fix hotplug event timeout with shpchp
+Thread-Topic: [PATCH] net: pci: Fix hotplug event timeout with shpchp
+Thread-Index: AdUxQ4Ot2MsgjZ40Rim/5d9K2wgLog==
+Date:   Wed, 3 Jul 2019 02:07:51 +0000
+Message-ID: <fdbaef22bd774ee49fc58fe13a76bf91@huawei.com>
+Accept-Language: en-US
+Content-Language: zh-CN
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.184.189.20]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Randy Dunlap <rdunlap@infradead.org>
-
-Fix build errors when building almost-allmodconfig but with SYSFS
-not set (not enabled).  Fixes these build errors:
-
-ERROR: "pci_destroy_slot" [drivers/pci/controller/pci-hyperv.ko] undefined!
-ERROR: "pci_create_slot" [drivers/pci/controller/pci-hyperv.ko] undefined!
-
-drivers/pci/slot.o is only built when SYSFS is enabled, so
-pci-hyperv.o has an implicit dependency on SYSFS.
-Make that explicit.
-
-Also, depending on X86 && X86_64 is not needed, so just change that
-to depend on X86_64.
-
-Fixes: 4daace0d8ce8 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V VMs")
-
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Jake Oshins <jakeo@microsoft.com>
-Cc: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: Stephen Hemminger <sthemmin@microsoft.com>
-Cc: Sasha Levin <sashal@kernel.org>
-Cc: linux-hyperv@vger.kernel.org
----
- drivers/pci/Kconfig |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
---- lnx-52-rc7.orig/drivers/pci/Kconfig
-+++ lnx-52-rc7/drivers/pci/Kconfig
-@@ -181,7 +181,7 @@ config PCI_LABEL
- 
- config PCI_HYPERV
-         tristate "Hyper-V PCI Frontend"
--        depends on X86 && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN && X86_64
-+        depends on X86_64 && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN && SYSFS
-         help
-           The PCI device frontend driver allows the kernel to import arbitrary
-           PCI devices from a PCI backend to support PCI driver domains.
-
-
+DQpPbiBUdWUsIEp1bCAwMiwgMjAxOSBhdCAwMTozNToxOVBNICswMDAwLCBNaWFvaGUgTGluIHdy
+b3RlOg0KPiA+IEhvdHBsdWcgYSBuZXR3b3JrIGNhcmQgd291bGQgdGFrZSBtb3JlIHRoYW4gNSBz
+ZWNvbmRzIGluIHFlbXUgKyBzaHBjaHAgDQo+ID4gc2NlbmUuIEl04oCZcyBiZWNhdXNlIDUgc2Vj
+b25kcyBkZWxheWVkX3dvcmsgaW4gZnVuYyANCj4NCj4gSSdtIGRyb3BwaW5nIHRoaXMgYmVjYXVz
+ZSBvZiB0aGUgcmVxdWlyZWQgZGVsYXkgcG9pbnRlZCBvdXQgYnkgTHVrYXMuDQo+DQo+IElmIHlv
+dSB0aGluayB3ZSBzdGlsbCBuZWVkIHRvIGRvIHNvbWV0aGluZyBoZXJlLCBwbGVhc2UgY2xhcmlm
+eSB0aGUgc2l0dWF0aW9uLiAgQXJlIHlvdSBob3QtYWRkaW5nPyAgSG90LXN3YXBwaW5nPyAgU2lu
+Y2UgeW91IG1lbnRpb24gYSBwcm90b2NvbCB0aW1lb3V0LCBJIHN1c3BlY3QgdGhlIGxhdHRlciwg
+ZS5nLiwgbWF5YmUgeW91IGhhZCBhbiBleGlzdGluZyBkZXZpY2Ugd2l0aCBjb25uZWN0aW9ucyBh
+bHJlYWR5IG9wZW4sIGFuZCB5b3Ugd2FudCB0byByZXBsYWNlIGl0IHdpdGggYSBuZXcgZGV2aWNl
+DQo+IFdlIGRvIGhhdmUgdG8gcHJlc2VydmUgdGhlIGV4aXN0aW5nIHVzZXIgZXhwZXJpZW5jZSwg
+ZS5nLiwgZGVsYXlzIHRvIGFsbG93IG9wZXJhdG9ycyB0byByZWNvdmVyIGZyb20gbWlzdGFrZW4g
+bGF0Y2ggb3BlbnMgb3IgYnV0dG9uIHByZXNzZXMuICBCdXQgaWYgd2Uga25ldyBtb3JlIGFib3V0
+IHdoYXQgeW91J3JlIHRyeWluZyB0byBkbywgbWF5YmUgd2UgY291bGQgZmlndXJlIG91dCBhbm90
+aGVyIGFwcHJvYWNoLg0KDQpUaGFua3MgZm9yIHlvdXIgcmVwbHkuIEFzIGlzIHNwZWMgcmVxdWly
+ZWQsIHdlIHdvdWxkIHRyeSB0byB3b3JrIGFyb3VuZCBpdC4NCk1hbnkgdGhhbmtzLg0KDQpIYXZl
+IGEgZ29vZCBkYXkuDQpCZXN0IHdpc2hlcy4NCg==
