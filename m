@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFB50C4649B
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jul 2019 10:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBE77C46499
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jul 2019 10:08:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C31032085A
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jul 2019 10:08:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95C9320836
+	for <linux-pci@archiver.kernel.org>; Fri,  5 Jul 2019 10:08:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728159AbfGEKIt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Jul 2019 06:08:49 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:32932 "EHLO inva020.nxp.com"
+        id S1728187AbfGEKHX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 5 Jul 2019 06:07:23 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:32770 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728224AbfGEKH1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Jul 2019 06:07:27 -0400
+        id S1728165AbfGEKHW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 Jul 2019 06:07:22 -0400
 Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 8BAF21A0EAF;
-        Fri,  5 Jul 2019 12:07:24 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id B11401A077B;
+        Fri,  5 Jul 2019 12:07:20 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 0DCC01A0779;
-        Fri,  5 Jul 2019 12:07:16 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 33A1E1A0EB1;
+        Fri,  5 Jul 2019 12:07:12 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 4059E402DF;
-        Fri,  5 Jul 2019 18:07:03 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 546C240305;
+        Fri,  5 Jul 2019 18:06:58 +0800 (SGT)
 From:   Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
@@ -37,9 +37,9 @@ To:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         catalin.marinas@arm.com, will.deacon@arm.com
 Cc:     Mingkai.Hu@nxp.com, Minghuan.Lian@nxp.com, Xiaowei.Bao@nxp.com,
         Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv6 12/28] dt-bindings: PCI: mobiveil: Change gpio_slave and apb_csr to optional
-Date:   Fri,  5 Jul 2019 17:56:40 +0800
-Message-Id: <20190705095656.19191-13-Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv6 09/28] PCI: mobiveil: Move IRQ chained handler setup out of DT parse
+Date:   Fri,  5 Jul 2019 17:56:37 +0800
+Message-Id: <20190705095656.19191-10-Zhiqiang.Hou@nxp.com>
 X-Mailer: git-send-email 2.14.1
 In-Reply-To: <20190705095656.19191-1-Zhiqiang.Hou@nxp.com>
 References: <20190705095656.19191-1-Zhiqiang.Hou@nxp.com>
@@ -49,36 +49,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Change the "gpio_slave" and "apb_csr" to optional, the "gpio_slave"
-is not used in current code, and "apb_csr" is not used by some platforms.
+The irq_set_chained_handler_and_data() call is not dependent on device
+tree firmware so it should be moved out of the DT parsing function for
+clarity.
 
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
-Acked-by: Rob Herring <robh@kernel.org>
+[lorenzo.pieralisi@arm.com: rewritten commit log]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 ---
 V6:
  - Rebased the patch, no functional change.
 
- .../devicetree/bindings/pci/mobiveil-pcie.txt      |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/pci/controller/pcie-mobiveil.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-index a618d47..6415699 100644
---- a/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mobiveil-pcie.txt
-@@ -10,8 +10,10 @@ Required properties:
- 	interrupt source. The value must be 1.
- - compatible: Should contain "mbvl,gpex40-pcie"
- - reg: Should contain PCIe registers location and length
-+	Mandatory:
- 	"config_axi_slave": PCIe controller registers
- 	"csr_axi_slave"	  : Bridge config registers
-+	Optional:
- 	"gpio_slave"	  : GPIO registers to control slot power
- 	"apb_csr"	  : MSI registers
+diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
+index 8f92f05..cdf15cc 100644
+--- a/drivers/pci/controller/pcie-mobiveil.c
++++ b/drivers/pci/controller/pcie-mobiveil.c
+@@ -446,8 +446,6 @@ static int mobiveil_pcie_parse_dt(struct mobiveil_pcie *pcie)
+ 		return -ENODEV;
+ 	}
  
+-	irq_set_chained_handler_and_data(pcie->irq, mobiveil_pcie_isr, pcie);
+-
+ 	return 0;
+ }
+ 
+@@ -872,6 +870,8 @@ static int mobiveil_pcie_probe(struct platform_device *pdev)
+ 		goto error;
+ 	}
+ 
++	irq_set_chained_handler_and_data(pcie->irq, mobiveil_pcie_isr, pcie);
++
+ 	ret = devm_request_pci_bus_resources(dev, &pcie->resources);
+ 	if (ret)
+ 		goto error;
 -- 
 1.7.1
 
