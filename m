@@ -1,280 +1,175 @@
-Return-Path: <SRS0=x2S0=VC=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=bUEI=VE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B0A2C46499
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jul 2019 19:35:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74337C48BDE
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Jul 2019 17:46:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1F12120989
-	for <linux-pci@archiver.kernel.org>; Fri,  5 Jul 2019 19:35:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 442312064B
+	for <linux-pci@archiver.kernel.org>; Sun,  7 Jul 2019 17:46:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JKG9FSVx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727994AbfGETfc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 5 Jul 2019 15:35:32 -0400
-Received: from xes-mad.com ([162.248.234.2]:40891 "EHLO mail.xes-mad.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727984AbfGETfc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 Jul 2019 15:35:32 -0400
-Received: from zimbra.xes-mad.com (zimbra.xes-mad.com [10.52.0.127])
-        by mail.xes-mad.com (Postfix) with ESMTP id 4C779203B0;
-        Fri,  5 Jul 2019 14:35:28 -0500 (CDT)
-Date:   Fri, 5 Jul 2019 14:35:27 -0500 (CDT)
-From:   Aaron Sierra <asierra@xes-inc.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci <linux-pci@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>
-Message-ID: <1300636862.240137.1562355327012.JavaMail.zimbra@xes-inc.com>
-In-Reply-To: <20190702201318.GC128603@google.com>
-References: <20190213213242.21920-1-git-send-email-asierra@xes-inc.com> <20190701204515.23374-1-asierra@xes-inc.com> <20190701204515.23374-3-asierra@xes-inc.com> <20190702201318.GC128603@google.com>
-Subject: Re: [PATCH v4 2/3] PCI/ACPI: Allow _OSC request without ASPM
- support
+        id S1726981AbfGGRq3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 7 Jul 2019 13:46:29 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:45028 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725928AbfGGRq3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 7 Jul 2019 13:46:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=tsh1M3+YIkp/+slPl4drTdVgeXhFHnK+iRmBroB6M24=; b=JKG9FSVxwMXPED30sVVWKeoZN
+        3T3+i/GVWvNpb6NrfWRfYiLy12PElmUZochO7zJlc9zxNE5ZsYdq29SARsHPCSb6Gdbd5+3jHev1M
+        wUSQuBk/pPlNycIMehkFBKaRpwRc7zF8lJjJFfj/3aofrUDKStZnKWB4wEudVxfJu3y8qOjFNqwOg
+        b6P4gbRUMp+DHYo9xbB+1Kh7UEDMZXCiy2OQjrKnp4nEvkORjhUqh6g0oHH0SSCDgswY3vJwmMifU
+        IZe5fBUhG77ddg7ZWfOnET9G85hFI4ShWmRn1M4ToEVXD96TjzLw9a8FN1EGv6btJVn918LjbUQKV
+        3EPTU6L+A==;
+Received: from static-50-53-52-16.bvtn.or.frontiernet.net ([50.53.52.16] helo=midway.dunlab)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
+        id 1hkBF1-0003m8-SC; Sun, 07 Jul 2019 17:46:23 +0000
+Subject: Re: [PATCH v2] PCI: hv: fix pci-hyperv build when SYSFS not enabled
+To:     Haiyang Zhang <haiyangz@microsoft.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Jake Oshins <jakeo@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Sasha Levin <sashal@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        Yuehaibing <yuehaibing@huawei.com>,
+        Stephen Hemminger <stephen@networkplumber.org>
+References: <535f212f-e111-399d-4ad0-82d2ae505e48@infradead.org>
+ <DM6PR21MB13373F2B76558930CC368E17CAFB0@DM6PR21MB1337.namprd21.prod.outlook.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <c1261e6d-84c3-4874-5c32-a3988c5a85d6@infradead.org>
+Date:   Sun, 7 Jul 2019 10:46:22 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <DM6PR21MB13373F2B76558930CC368E17CAFB0@DM6PR21MB1337.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.52.0.127]
-X-Mailer: Zimbra 8.7.5_GA_1764 (ZimbraWebClient - GC72 (Linux)/8.7.5_GA_1764)
-Thread-Topic: PCI/ACPI: Allow _OSC request without ASPM support
-Thread-Index: PtSi79gbAJ5r5mxHlhwuk0wlIzXVfA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
------ Original Message -----
-> From: "Bjorn Helgaas" <helgaas@kernel.org>
-> Sent: Tuesday, July 2, 2019 3:13:18 PM
-
-> On Mon, Jul 01, 2019 at 03:45:14PM -0500, Aaron Sierra wrote:
->> Some use cases favor resiliency over efficiency. In my company's case,
->> the power savings offered by Active State Power Management (ASPM) are
->> entirely secondary to ensuring robust operation. For that same reason we
->> want to stay aware of events reportable via Advanced Error Reporting
->> (AER). We found, on x86 platforms, that AER has an erroneous implicit
->> dependency on ASPM within negotiate_os_control().
->> 
->> This patch updates negotiate_os_control() to be less ASPM-centric in
->> order to allow other features (notably AER) to work without enabling
->> ASPM (either at compile time or at run time).
->> 
->> Signed-off-by: Aaron Sierra <asierra@xes-inc.com>
+On 7/3/19 11:06 AM, Haiyang Zhang wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Randy Dunlap <rdunlap@infradead.org>
+>> Sent: Wednesday, July 3, 2019 12:59 PM
+>> To: LKML <linux-kernel@vger.kernel.org>; linux-pci <linux-
+>> pci@vger.kernel.org>
+>> Cc: Matthew Wilcox <willy@infradead.org>; Jake Oshins
+>> <jakeo@microsoft.com>; KY Srinivasan <kys@microsoft.com>; Haiyang
+>> Zhang <haiyangz@microsoft.com>; Stephen Hemminger
+>> <sthemmin@microsoft.com>; Sasha Levin <sashal@kernel.org>; Bjorn
+>> Helgaas <bhelgaas@google.com>; linux-hyperv@vger.kernel.org; Dexuan
+>> Cui <decui@microsoft.com>; Yuehaibing <yuehaibing@huawei.com>
+>> Subject: [PATCH v2] PCI: hv: fix pci-hyperv build when SYSFS not enabled
+>>
+>> From: Randy Dunlap <rdunlap@infradead.org>
+>>
+>> Fix build of drivers/pci/controller/pci-hyperv.o when
+>> CONFIG_SYSFS is not set/enabled by adding stubs for
+>> pci_create_slot() and pci_destroy_slot().
+>>
+>> Fixes these build errors:
+>>
+>> ERROR: "pci_destroy_slot" [drivers/pci/controller/pci-hyperv.ko] undefined!
+>> ERROR: "pci_create_slot" [drivers/pci/controller/pci-hyperv.ko] undefined!
+>>
+>> Fixes: a15f2c08c708 ("PCI: hv: support reporting serial number as slot
+>> information")
+>>
+>> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+>> Cc: Matthew Wilcox <willy@infradead.org>
+>> Cc: Jake Oshins <jakeo@microsoft.com>
+>> Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+>> Cc: Haiyang Zhang <haiyangz@microsoft.com>
+>> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+>> Cc: Sasha Levin <sashal@kernel.org>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-hyperv@vger.kernel.org
+>> Cc: Dexuan Cui <decui@microsoft.com>
+>> Cc: Yuehaibing <yuehaibing@huawei.com>
 >> ---
->>  drivers/acpi/pci_root.c | 49 +++++++++++++++++++++++++++--------------
->>  1 file changed, 33 insertions(+), 16 deletions(-)
->> 
->> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
->> index 21aa56f9ca54..9b8a44391ea0 100644
->> --- a/drivers/acpi/pci_root.c
->> +++ b/drivers/acpi/pci_root.c
->> @@ -53,9 +53,13 @@ static int acpi_pci_root_scan_dependent(struct acpi_device
->> *adev)
->>  }
->>  
->>  #define ACPI_PCIE_REQ_SUPPORT (OSC_PCI_EXT_CONFIG_SUPPORT \
->> -				| OSC_PCI_ASPM_SUPPORT \
->> -				| OSC_PCI_CLOCK_PM_SUPPORT \
->>  				| OSC_PCI_MSI_SUPPORT)
-
-Bjorn,
-
-Thanks for another review.
-
-> This change so we can use AER even if the OS has no ASPM support makes
-> sense to me.
-> 
-> But Rafael added ACPI_PCIE_REQ_SUPPORT with 415e12b23792 ("PCI/ACPI:
-> Request _OSC control once for each root bridge (v3)") [1], apparently
-> related to a bug [2].  I assume there was some reason for requiring
-> all those things together, so I'd really like his comments.
-> 
-> [1] https://git.kernel.org/linus/415e12b23792
-> [2] https://bugzilla.kernel.org/show_bug.cgi?id=20232
-
-I would really appreciate Rafael's comments, too.
-
->> +#define ACPI_PCIE_ASPM_SUPPORT (ACPI_PCIE_REQ_SUPPORT \
->> +				| OSC_PCI_ASPM_SUPPORT \
->> +				| OSC_PCI_CLOCK_PM_SUPPORT)
->> +#define OSC_CONTROL_BITS_ASPM (OSC_PCI_EXPRESS_CAPABILITY_CONTROL \
->> +				| OSC_PCI_EXPRESS_LTR_CONTROL \
->> +				| OSC_PCI_EXPRESS_PME_CONTROL)
->>  
->>  static const struct acpi_device_id root_device_ids[] = {
->>  	{"PNP0A03", 0},
->> @@ -422,6 +426,11 @@ acpi_status acpi_pci_osc_control_set(acpi_handle handle,
->> u32 *mask, u32 req)
->>  }
->>  EXPORT_SYMBOL(acpi_pci_osc_control_set);
->>  
->> +static inline bool osc_have_support(u32 support, u32 required)
->> +{
->> +	return ((support & required) == required);
+>> v2:
+>> - provide non-CONFIG_SYSFS stubs for pci_create_slot() and
+>>   pci_destroy_slot() [suggested by Matthew Wilcox <willy@infradead.org>]
+>> - use the correct Fixes: tag [Dexuan Cui <decui@microsoft.com>]
+>>
+>>  include/linux/pci.h |   12 ++++++++++--
+>>  1 file changed, 10 insertions(+), 2 deletions(-)
+>>
+>> --- lnx-52-rc7.orig/include/linux/pci.h
+>> +++ lnx-52-rc7/include/linux/pci.h
+>> @@ -25,6 +25,7 @@
+>>  #include <linux/ioport.h>
+>>  #include <linux/list.h>
+>>  #include <linux/compiler.h>
+>> +#include <linux/err.h>
+>>  #include <linux/errno.h>
+>>  #include <linux/kobject.h>
+>>  #include <linux/atomic.h>
+>> @@ -947,14 +948,21 @@ int pci_scan_root_bus_bridge(struct pci_
+>>  struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev
+>> *dev,
+>>  				int busnr);
+>>  void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+>> +#ifdef CONFIG_SYSFS
+>> +void pci_dev_assign_slot(struct pci_dev *dev);
+>>  struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+>>  				 const char *name,
+>>  				 struct hotplug_slot *hotplug);
+>>  void pci_destroy_slot(struct pci_slot *slot);
+>> -#ifdef CONFIG_SYSFS
+>> -void pci_dev_assign_slot(struct pci_dev *dev);
+>>  #else
+>>  static inline void pci_dev_assign_slot(struct pci_dev *dev) { }
+>> +static inline struct pci_slot *pci_create_slot(struct pci_bus *parent,
+>> +					       int slot_nr,
+>> +					       const char *name,
+>> +					       struct hotplug_slot *hotplug) {
+>> +	return ERR_PTR(-EINVAL);
 >> +}
+>> +static inline void pci_destroy_slot(struct pci_slot *slot) { }
+>>  #endif
+>>  int pci_scan_slot(struct pci_bus *bus, int devfn);
+>>  struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn);
+>>
 > 
-> This is used to test both "support" bitmasks and "control" bitmasks,
-> so the name is a little confusing.  Maybe the function could have a
-> more generic name, and the "osc" and "support/control" hints could
-> come from the arguments passed to it?  It actually does nothing
-> _OSC-specific, so we probably don't even need a hint for that.
-
-I agree that a more generic name for this bitmask test function would be better.
-I'm leaning towards has_required_bits(u32 bits, u32 required) at the moment.
- 
-> Maybe it would be overkill, but this could be added with a separate
-> preliminary patch so the "allow AER with ASPM" patch becomes even
-> simpler.
-
-I was hoping that including these changes together would help to highlight
-where "AER without ASPM" had previously been broken. Otherwise, the full impact
-of changing ACPI_PCIE_REQ_SUPPORT isn't as obvious.
-
->>  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
->>  				 bool is_pcie)
->>  {
->> @@ -475,38 +484,47 @@ static void negotiate_os_control(struct acpi_pci_root
->> *root, int *no_aspm,
->>  		return;
->>  	}
->>  
->> -	if ((support & ACPI_PCIE_REQ_SUPPORT) != ACPI_PCIE_REQ_SUPPORT) {
->> +	/*
->> +	 * Require the least restrictive set needed to satisfy at least one
->> +	 * kernel feature.
->> +	 */
->> +	if (!osc_have_support(support, ACPI_PCIE_REQ_SUPPORT)) {
->>  		decode_osc_support(root, "not requesting OS control; OS requires",
->>  				   ACPI_PCIE_REQ_SUPPORT);
->>  		return;
->>  	}
+> The serial number in slot info is used to match VF NIC with Synthetic NIC.
+> Without selecting SYSFS, the SRIOV feature will fail on VM on Hyper-V and
+> Azure. The first version of this patch should be used.
 > 
-> It seems like the changes below could be a separate patch?  Or do they
-> actually depend on the ACPI_PCIE_REQ_SUPPORT change?  Changing
-> ACPI_PCIE_REQ_SUPPORT is fairly significant, so I'd like to isolate it
-> as much as possible.
-
-The utility of the changes below depends on ACPI_PCIE_REQ_SUPPORT being
-modified before or at the same time as them. Otherwise, they would seem
-more like change for the sake of change.
-
-> I think it's fine to pull out the OSC_PCI_EXPRESS_CAPABILITY_CONTROL
-> dependency into each feature that requires it, but theoretically that
-> would be cosmetic with no real functional change, so it could be in
-> its own separate patch.
+> @Stephen Hemminger how do you think?
 > 
->> -	control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL
->> -		| OSC_PCI_EXPRESS_PME_CONTROL;
->> +	control = 0;
->> +
->> +	if (osc_have_support(support, ACPI_PCIE_ASPM_SUPPORT))
->> +		control |= OSC_CONTROL_BITS_ASPM;
-> 
-> I think this would actually be easier to read without the
-> OSC_CONTROL_BITS_ASPM #define because then it would be directly
-> parallel with the other cases below, e.g., as
-> 
->  if (osc_have_support(support, ACPI_PCIE_ASPM_SUPPORT))
->    control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
->               OSC_PCI_EXPRESS_LTR_CONTROL |
->               OSC_PCI_EXPRESS_PME_CONTROL;
+> Thanks,
+> - Haiyang
 
-I would agree with you, except for the later test to make sure that ASPM
-got the control bits that it needs:
 
-   if (osc_have_support(control, OSC_CONTROL_BITS_ASPM)) {
+Hi Stephen,
 
-Would you prefer that I introduce an aspm_control variable to replace the
-define? That should make its definition more visible and still be reusable:
+Please comment on this patch or v1.
+v1:  https://lore.kernel.org/lkml/69c25bc3-da00-2758-92ee-13c82b51fc45@infradead.org/
 
-  if (has_required_bits(support, ACPI_PCIE_ASPM_SUPPORT)) {
-      aspm_control = OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
-                     OSC_PCI_EXPRESS_LTR_CONTROL |
-                     OSC_PCI_EXPRESS_PME_CONTROL;
-      control |= aspm_control;
-  }
-  ...
 
-  if (has_required_bits(control, aspm_control)) {
-
-> Also, since OSC_CONTROL_BITS_ASPM includes both
-> OSC_PCI_EXPRESS_LTR_CONTROL and OSC_PCI_EXPRESS_PME_CONTROL, this
-> change seems to connect PME to ASPM, and I'm not sure why.  Those are
-> two different features, and it seems like we should be able to request
-> PME control even if the OS doesn't have ASPM support.
-> 
-> It seems like maybe the OSC_PCI_EXPRESS_PME_CONTROL part should depend
-> on CONFIG_PCIE_PME, the same way OSC_PCI_EXPRESS_NATIVE_HP_CONTROL
-> depends on CONFIG_HOTPLUG_PCI_PCIE.  That would be a potential
-> behavior change and should be its own separate patch.
-> 
-> Rafael is the PME expert, so maybe he has an opinion on this, too.
-
-I agree that I should not have combined PME into ASPM required support.
-Without encouragement from Rafael, I would prefer to not submit a new
-test based on CONFIG_PCIE_PME change myself. I'll just refactor things
-to preserve the original default control bits.
-
-I hope that won't make my change to include
-OSC_PCI_EXPRESS_CAPABILITY_CONTROL in each test look too redundant. In
-the case of ASPM, it will be a functional change so that we can confirm
-that the control it needs was granted. For the others, it is mostly
-a documentation change.
-
-Aaron
-
->> -	if (IS_ENABLED(CONFIG_PCIEASPM))
->> -		control |= OSC_PCI_EXPRESS_LTR_CONTROL;
->> +	if (!control)
->> +		*no_aspm = 1;
->>  
->>  	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_PCIE))
->> -		control |= OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
->> +		control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
->> +			   OSC_PCI_EXPRESS_NATIVE_HP_CONTROL;
->>  
->>  	if (IS_ENABLED(CONFIG_HOTPLUG_PCI_SHPC))
->> -		control |= OSC_PCI_SHPC_NATIVE_HP_CONTROL;
->> +		control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
->> +			   OSC_PCI_SHPC_NATIVE_HP_CONTROL;
->>  
->>  	if (pci_aer_available()) {
->>  		if (aer_acpi_firmware_first())
->>  			dev_info(&device->dev,
->>  				 "PCIe AER handled by firmware\n");
->>  		else
->> -			control |= OSC_PCI_EXPRESS_AER_CONTROL;
->> +			control |= OSC_PCI_EXPRESS_CAPABILITY_CONTROL |
->> +				   OSC_PCI_EXPRESS_AER_CONTROL;
->>  	}
->>  
->>  	requested = control;
->> -	status = acpi_pci_osc_control_set(handle, &control,
->> -					  OSC_PCI_EXPRESS_CAPABILITY_CONTROL);
->> +	acpi_pci_osc_control_set(handle, &control, 0);
->>  	decode_osc_control(root, "OS requested", requested);
->>  	decode_osc_control(root, "platform granted", control);
->> -	if (ACPI_SUCCESS(status)) {
->> +
->> +	if (osc_have_support(control, OSC_CONTROL_BITS_ASPM)) {
->>  		if (acpi_gbl_FADT.boot_flags & ACPI_FADT_NO_ASPM) {
->>  			/*
->>  			 * We have ASPM control, but the FADT indicates that
->> @@ -516,9 +534,8 @@ static void negotiate_os_control(struct acpi_pci_root *root,
->> int *no_aspm,
->>  			dev_info(&device->dev, "FADT indicates ASPM is unsupported, using BIOS
->>  			configuration\n");
->>  			*no_aspm = 1;
->>  		}
->> -	} else {
->> -		dev_info(&device->dev, "_OSC failed (%s); disabling ASPM\n",
->> -			acpi_format_exception(status));
->> +	} else if (!*no_aspm) {
->> +		dev_info(&device->dev, "_OSC failed; disabling ASPM\n");
->>  
->>  		/*
->>  		 * We want to disable ASPM here, but aspm_disabled
->> --
->> 2.17.1
+thanks.
+-- 
+~Randy
