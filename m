@@ -2,192 +2,83 @@ Return-Path: <SRS0=0Iuk=VG=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50499C73C56
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jul 2019 18:33:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C51B5C73C60
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jul 2019 22:50:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30DA52166E
-	for <linux-pci@archiver.kernel.org>; Tue,  9 Jul 2019 18:33:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9295120844
+	for <linux-pci@archiver.kernel.org>; Tue,  9 Jul 2019 22:50:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1562712656;
+	bh=P28ardbPjLQwbQ/KWfmnoNrvVR0ImwHTN3BQVaR2hAQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=D4HJWJ3einyvzLGu4F5uw9zxcbHlUeSVJzyZudwOWMwiU0uNXk4kRMsoUK71OLAvu
+	 bkvgxR6a5CeC93UL6KSaTAjg5XCbaArPBD7qHU31YmeA0nJ5dbem/L7HJeWb0FwRip
+	 5Kh2wBcavpOy9GWirqAk4c16aHjcdBzcgEc6Y9Zg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729096AbfGISd1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 9 Jul 2019 14:33:27 -0400
-Received: from mga03.intel.com ([134.134.136.65]:7155 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729339AbfGISd0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 9 Jul 2019 14:33:26 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga103.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 09 Jul 2019 11:33:25 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.63,471,1557212400"; 
-   d="scan'208";a="168065130"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga003.jf.intel.com with ESMTP; 09 Jul 2019 11:33:23 -0700
-Received: from [10.54.74.33] (skuppusw-desk.jf.intel.com [10.54.74.33])
-        by linux.intel.com (Postfix) with ESMTP id EF5B75808B9;
-        Tue,  9 Jul 2019 11:33:22 -0700 (PDT)
-Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: Re: [PATCH] PCI/AER: save/restore AER registers during suspend/resume
-To:     "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        'Bjorn Helgaas' <helgaas@kernel.org>
-Cc:     "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>,
-        'Andy Shevchenko' <andriy.shevchenko@linux.intel.com>
-References: <92EBB4272BF81E4089A7126EC1E7B28479A7F14D@IRSMSX101.ger.corp.intel.com>
-From:   sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Organization: Intel
-Message-ID: <1fbfe79b-0123-7305-5fc3-4963599538a3@linux.intel.com>
-Date:   Tue, 9 Jul 2019 11:31:09 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1726318AbfGIWu4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 9 Jul 2019 18:50:56 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:33413 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726133AbfGIWuz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 Jul 2019 18:50:55 -0400
+Received: by mail-io1-f65.google.com with SMTP id z3so601124iog.0;
+        Tue, 09 Jul 2019 15:50:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=UqPnkpAEUlKpVyrsNSV+fc7Kx0vSPNNrsHHUgfNEjus=;
+        b=Xc86xulVRMYuYUj6z/+FFg8nUXg5Ia769QdUKABqF7EfYLv9NJZNZnFn8WlFL+fWyS
+         D98bEEbdXTIP675Ef0Y2hhsJiEFv5rQyLy9fTN3uJx1vWFqXsPfrmGHE383e8IOtYOPs
+         H/zy63h2cSnVn710Tl+xJudYIaP+MoKyC4KuKE3+l3ZZN6m8yfgu5zl9VfgWf1kH8xXS
+         CGzVGQw0Yj/FNr3tu0x1K4utNsB3QdksPoNLa36J1y7i5H9a0Bc4iECg283YYUJpob26
+         bMduGoSiJhYsg4iDLKhqmf3nl5kvQipmZprEsqVKcUQNbHlx9p2nc+npq8rzYkBUZq3r
+         2C5A==
+X-Gm-Message-State: APjAAAXX0XTlRLjXYduKjxVTFLjdTJGSm1sn3NDeyJfcssyWznA/ubzV
+        X21tLRBXjmYUfKcMDcnvgg==
+X-Google-Smtp-Source: APXvYqx6GaFGNFu/Gs8Ct3zM+Thf5p3GPzAn0CoeeaRGIEaKsvMqPDSWW2PRaa//YWXroiwsO+DBDQ==
+X-Received: by 2002:a5d:8411:: with SMTP id i17mr21198926ion.83.1562712654937;
+        Tue, 09 Jul 2019 15:50:54 -0700 (PDT)
+Received: from localhost ([64.188.179.251])
+        by smtp.gmail.com with ESMTPSA id l14sm291821iob.1.2019.07.09.15.50.54
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Tue, 09 Jul 2019 15:50:54 -0700 (PDT)
+Date:   Tue, 9 Jul 2019 16:50:53 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Kefeng Wang <wangkefeng.wang@huawei.com>,
+        Kumar Gala <galak@kernel.crashing.org>
+Subject: Re: [PATCH] dt-bindings: 83xx-512x-pci: Drop cell-index property
+Message-ID: <20190709225053.GA12654@bogus>
+References: <20190622034557.196097-1-wangkefeng.wang@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B28479A7F14D@IRSMSX101.ger.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190622034557.196097-1-wangkefeng.wang@huawei.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 7/9/19 1:00 AM, Patel, Mayurkumar wrote:
-> After system suspend/resume cycle AER registers settings are
-> lost. Not restoring Root Error Command Register bits if it were
-> set, keeps AER interrupts disabled after system resume.
-> Moreover, AER mask and severity registers are also required
-> to be restored back to AER settings prior to system suspend.
->
-> Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
+On Sat, 22 Jun 2019 11:45:57 +0800, Kefeng Wang wrote:
+> 28eac2b74cc7 ("powerpc/fsl: Remove cell-index from PCI nodes"),
+> and for now it is still not used, drop it from doc.
+> 
+> Cc: Kumar Gala <galak@kernel.crashing.org>
+> Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
 > ---
->   drivers/pci/pci.c      |  2 ++
->   drivers/pci/pcie/aer.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
->   include/linux/aer.h    |  4 ++++
->   3 files changed, 55 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 8abc843..40d5507 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1340,6 +1340,7 @@ int pci_save_state(struct pci_dev *dev)
->   
->   	pci_save_ltr_state(dev);
->   	pci_save_dpc_state(dev);
-> +	pci_save_aer_state(dev);
->   	return pci_save_vc_state(dev);
->   }
->   EXPORT_SYMBOL(pci_save_state);
-> @@ -1453,6 +1454,7 @@ void pci_restore_state(struct pci_dev *dev)
->   	pci_restore_dpc_state(dev);
->   
->   	pci_cleanup_aer_error_status_regs(dev);
-> +	pci_restore_aer_state(dev);
->   
->   	pci_restore_config_space(dev);
->   
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index b45bc47..1acc641 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -448,6 +448,54 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->   	return 0;
->   }
->   
-> +void pci_save_aer_state(struct pci_dev *dev)
-> +{
-> +	int pos = 0;
-> +	struct pci_cap_saved_state *save_state;
-> +	u32 *cap;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		return;
-> +
-> +	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ERR);
-> +	if (!save_state)
-> +		return;
-> +
-> +	pos = dev->aer_cap;
-> +	if (!pos)
-> +		return;
-> +
-> +	cap = &save_state->cap.data[0];
-> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, cap++);
-> +	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, cap++);
-> +	pci_read_config_dword(dev, pos + PCI_ERR_COR_MASK, cap++);
-> +	pci_read_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, cap++);
+>  Documentation/devicetree/bindings/pci/83xx-512x-pci.txt | 1 -
+>  1 file changed, 1 deletion(-)
+> 
 
-I don't see AER driver modifying UNCOR_MASK/SEVER/COR_MASK register. If 
-all it has is default value then why do you want to preserve it ?
+Applied, thanks.
 
-Also, any reason for not preserving ECRC settings ?
-
-> +}
-> +
-> +void pci_restore_aer_state(struct pci_dev *dev)
-> +{
-> +	int pos = 0;
-> +	struct pci_cap_saved_state *save_state;
-> +	u32 *cap;
-> +
-> +	if (!pci_is_pcie(dev))
-> +		return;
-> +
-> +	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_ERR);
-> +	if (!save_state)
-> +		return;
-> +
-> +	pos = dev->aer_cap;
-> +	if (!pos)
-> +		return;
-> +
-> +	cap = &save_state->cap.data[0];
-> +	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, *cap++);
-> +	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, *cap++);
-> +	pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, *cap++);
-> +	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, *cap++);
-> +}
-> +
->   void pci_aer_init(struct pci_dev *dev)
->   {
->   	dev->aer_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> @@ -1396,6 +1444,7 @@ static int aer_probe(struct pcie_device *dev)
->   		return status;
->   	}
->   
-> +	pci_add_ext_cap_save_buffer(port, PCI_EXT_CAP_ID_ERR, sizeof(u32) * 4);
->   	aer_enable_rootport(rpc);
->   	pci_info(port, "enabled with IRQ %d\n", dev->irq);
->   	return 0;
-> diff --git a/include/linux/aer.h b/include/linux/aer.h
-> index 514bffa..fa19e01 100644
-> --- a/include/linux/aer.h
-> +++ b/include/linux/aer.h
-> @@ -46,6 +46,8 @@ int pci_enable_pcie_error_reporting(struct pci_dev *dev);
->   int pci_disable_pcie_error_reporting(struct pci_dev *dev);
->   int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev);
->   int pci_cleanup_aer_error_status_regs(struct pci_dev *dev);
-> +void pci_save_aer_state(struct pci_dev *dev);
-> +void pci_restore_aer_state(struct pci_dev *dev);
->   #else
->   static inline int pci_enable_pcie_error_reporting(struct pci_dev *dev)
->   {
-> @@ -63,6 +65,8 @@ static inline int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
->   {
->   	return -EINVAL;
->   }
-> +static inline void pci_save_aer_state(struct pci_dev *dev) {}
-> +static inline void pci_restore_aer_state(struct pci_dev *dev) {}
->   #endif
->   
->   void cper_print_aer(struct pci_dev *dev, int aer_severity,
-
--- 
-Sathyanarayanan Kuppuswamy
-Linux kernel developer
-
+Rob
