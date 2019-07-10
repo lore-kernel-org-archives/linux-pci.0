@@ -2,83 +2,80 @@ Return-Path: <SRS0=Wigf=VH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2E7BC73C64
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jul 2019 11:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53C64C74A26
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jul 2019 14:14:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77F6F2064B
-	for <linux-pci@archiver.kernel.org>; Wed, 10 Jul 2019 11:50:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23744208E4
+	for <linux-pci@archiver.kernel.org>; Wed, 10 Jul 2019 14:14:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1562768081;
+	bh=doOg+rHk2EN9esXNLf9coAoeUka6jalwXBt2NUvawdo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=w0kHyg9XZFIQr47fbO82qV75B0cH1jd2m5vyOVyVo9QmrmQWGRyj0vy/WCWZNcpAd
+	 ZH7LdZj8R7Mwd+VbKciMyY9oMFEHY/Rr7vG3ui/Uz3B/j8hGTu/zPugBw7/2k8xE6V
+	 0+MH7woBZ3zPH+EIjotdCcXY3ItPrrr+K5Cx0tPQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726140AbfGJLuK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 10 Jul 2019 07:50:10 -0400
-Received: from mx2.suse.de ([195.135.220.15]:57324 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726043AbfGJLuK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 Jul 2019 07:50:10 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 83DB6AFF3;
-        Wed, 10 Jul 2019 11:50:09 +0000 (UTC)
-Message-ID: <1562759399.5312.6.camel@suse.com>
-Subject: Re: Titan Ridge xHCI may stop to working after re-plugging the dock
-From:   Oliver Neukum <oneukum@suse.com>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Kent Lin <kent.lin@canonical.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux USB List <linux-usb@vger.kernel.org>
-Date:   Wed, 10 Jul 2019 13:49:59 +0200
-In-Reply-To: <993E78A1-2A60-46D8-AA51-F4CB077E48D1@canonical.com>
-References: <993E78A1-2A60-46D8-AA51-F4CB077E48D1@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.26.6 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1727009AbfGJOOk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 10 Jul 2019 10:14:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39430 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726957AbfGJOOk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 Jul 2019 10:14:40 -0400
+Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9D1D12086D;
+        Wed, 10 Jul 2019 14:14:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1562768079;
+        bh=doOg+rHk2EN9esXNLf9coAoeUka6jalwXBt2NUvawdo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=f47oWhKvnxmeDUYzYhus0hu7jRaCo5u4QFhREAWnendTAZThMO2ePqxaAn9iglU/7
+         3xR//69DOv7HVWwoo6g2fR9Dc8QpzjLtPdja8sHteYZT3Hwm8+v3rKxitPLDWwj5AA
+         fU30c2T8nrtYLZHXdsbauSDj5fgypEiH2xH8ql94=
+Date:   Wed, 10 Jul 2019 09:14:38 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-pci@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: reprobing BAR sizes and capabilities after a FLR?
+Message-ID: <20190710141438.GO128603@google.com>
+References: <20190709154019.GA30673@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190709154019.GA30673@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Am Dienstag, den 09.07.2019, 21:10 +0800 schrieb Kai-Heng Feng:
-> Hi Mika and Mathias,
-> 
-> I’ve filed a bug [1] which renders docking station unusable.
-> 
-> I am not sure it's a bug in PCI, Thunderbolt or xHCI so raise the issue to  
-> you both.
-> 
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=203885
-> 
-> Kai-Heng
-> 
+[+cc Alex]
 
-The issue starts before you unplug. In fact it starts before
-the dock is even detected the first time:
+On Tue, Jul 09, 2019 at 08:40:19AM -0700, Christoph Hellwig wrote:
+> Hi all,
+> 
+> I've just been talking to some firmware developers that were a little
+> surprised that Linux does not reprobe BAR sizes after a FLR.  I looked
+> at our code and we do not reprobe anything at all after a FLR.  Is it
+> a good assumption that a devices comes back in exactly the same state
+> after an FLR?
 
-[   13.171167] rfkill: input handler disabled
-[   19.781905] pcieport 0000:00:1c.0: PME: Spurious native interrupt!
-[   19.781909] pcieport 0000:00:1c.0: PME: Spurious native interrupt!
-[   20.109251] usb 4-1: new SuperSpeedPlus Gen 2 USB device number 2 using xhci_hcd
-[   20.136000] usb 4-1: New USB device found, idVendor=0bda, idProduct=0487, bcdDevice= 1.47
-[   20.136004] usb 4-1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
-[   20.136007] usb 4-1: Product: Dell dock
-[   20.136009] usb 4-1: Manufacturer: Dell Inc.
-[   20.140607] hub 4-1:1.0: USB hub found
-[   20.141004] hub 4-1:1.0: 4 ports detected
-[   20.253025] usb 1-4: new high-speed USB device number 5 using xhci_hcd
-[   20.403520] usb 1-4: New USB device found, idVendor=0bda, idProduct=5487, bcdDevice= 1.47
-[   20.403521] usb 1-4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
-[   20.403522] usb 1-4: Product: Dell dock
-[   20.403522] usb 1-4: Manufacturer: Dell Inc.
-[   20.404348] hub 1-4:1.0: USB hub found
+I am a little nervous about the fact that we don't reprobe devices
+after reset because the reset may cause the device to load new
+firmware, which may cause arbitrary changes (device type, number and
+size of BARs, etc).  FLR is a little more restrictive than
+Conventional Reset, e.g., FLR must not affect the link state, so maybe
+it's safer to assume BAR sizes are unchanged.  But I'm not at all
+confident about that.
 
-This looks like a PCI issue.
-In general, this kind of reporting sucks. We have to guess what you did at 19.781905
+I mooted the idea of reprobing after reset, but that would break higher
+level software that isn't prepared to see hotplug-like events caused by
+reset, so haven't gone that direction (yet).
 
-	Regards
-		Oliver
-
+Bjorn
