@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF1DC742A2
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 22:26:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D8BC742A1
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 22:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B318C21019
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 22:26:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1507214AF
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 22:26:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JcM5L6Gu"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DgShit4p"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728613AbfGKW0P (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Jul 2019 18:26:15 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:35530 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728414AbfGKW0N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2019 18:26:13 -0400
-Received: by mail-io1-f67.google.com with SMTP id m24so16212945ioo.2;
-        Thu, 11 Jul 2019 15:26:12 -0700 (PDT)
+        id S1728955AbfGKW0W (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Jul 2019 18:26:22 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:42813 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728946AbfGKW0V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2019 18:26:21 -0400
+Received: by mail-io1-f66.google.com with SMTP id u19so16098946ior.9;
+        Thu, 11 Jul 2019 15:26:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=BqFBk1FaYQjd5Lzc/850mm3V6XDniUot7IqB9zeZTao=;
-        b=JcM5L6GuN8ncWjv+3WRDFgbZGs1pMOi1cAzotJyME1JgQbkm4tcvyGJ382atCLNTDj
-         kQtZz8an0A/vJCcjYQeB3i2A0J1YQ0+IunvPdMm7A4XHVNnId/M1gwtcWYl9FG6b0M9i
-         C8gA21gINuWZUNk17WFs3F3exotOKJJ6DZw8itU9vM2roTObAQqEM2CcEFFDopW35tnS
-         U7lqrm1PCP/8zUAAq3F1euyodEVQ20d/hMJXIbSI7H10Ht3U7PxFmbNQhVz2SAiUsIjX
-         sR00BrA60UvSMxxokcGDSHQ+rEirvBADOF8XqOOSZIjGnkxDkfCRFxM3Viv/Da0OeQzU
-         7Pzg==
+        bh=Rs/77Ks02ouzvxcSMVSV/vw4rnOl+hQ1vPq1Vy99eWE=;
+        b=DgShit4pGId1J6NNp887ww+CAb0MlNaHTKs9Qmd/u5xt7RHXX4GbCU60yPh7gdqSlR
+         ZQ7XqbShLg0HOqqT/iK97Lm0csRmuBLAi58g8MlHVshloyN3ZkdgFa6R63Y4l1l6YAWZ
+         GcUfKBmWWVsF/B27AanLMHk99sUkDjCqOu6JAAByKcUfkUUziwlA5T8SQFL5bjD1Myt/
+         jPKd0ajhwbx8XsHeq1HHBtCA1v5L/nyjaplYE4KkDMVbcpSkxIN0EkG1gqy7QVo5n5um
+         rR/ZhoZilK+XaaOfTUyuPoux85nlunv/y8vj5KcMFNTuTkmQJTw9YXFyZwq0XifkW/u1
+         Iubg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=BqFBk1FaYQjd5Lzc/850mm3V6XDniUot7IqB9zeZTao=;
-        b=tcIILu4pUBoJx+SHhFz4Ai6rEJ9SKj7kFYinIQgznCxRLKKKQrzfTFLtiROaL391HR
-         vNmDqxvVYrR9Du2FuYreuTdrbXKqDuYRAmX/O2S9ZqebcfPrxQsSaLB8W3RnxzEqb38T
-         GAPHm5ui9nBl0JIqzmd1hm14e/TWznq/DDJqk/rNtFPnHTwfg9spdDqVpRaIdRWYI2rF
-         XYIZp7JeEvf+vtRvJJV97t5t202xNsm85gszTF3o1eAdwoN4FESmOONh0x7ZBwpfvz+u
-         W07sbns2YyUlGAZR0/Byr/nsCRPzLoZzM5H0yZO2jehS4AnTikl3tjFV4Oz1FeX619D/
-         Hetg==
-X-Gm-Message-State: APjAAAUS9y937vvchcpB8eCaq871bGw4KT2SX/PP45fcTII3BTE78Mgx
-        m+X7UEEfG4t2dbioppQoVVbs/avIV1bJpw==
-X-Google-Smtp-Source: APXvYqzbYgulXcThSGIMz/NMbDOKuJMQszIhPvb5qChUfwJv3PxF494BVb5b5byadTNBwnRJaOlrjA==
-X-Received: by 2002:a6b:f114:: with SMTP id e20mr4139658iog.169.1562883972052;
-        Thu, 11 Jul 2019 15:26:12 -0700 (PDT)
+        bh=Rs/77Ks02ouzvxcSMVSV/vw4rnOl+hQ1vPq1Vy99eWE=;
+        b=JvWMIvt4qW0sj6fxBBlMP5xpiClOdFwsoaCHrkp9/witAVLgdMaQvM19iNCg0mQQnj
+         gkW4G+aP4wgujQc0dHGwkvpcBbj3JlP8VMGHRTECBGnCI8GIzuqp9+TzgzZo3Y9Fh4eH
+         c9h3rLxsjwLP2DFVG4kXkuLf4dXNeFWFJ0of4pD3LkPVHko2TduTIOZyJY5jaMlo6SqX
+         pRfSOw/ueYl2pgBWQ6/jFllpePBOCMBI7vTLaEhRe8Z1MH6GF/mdEYW5mVYjw2tCk4pt
+         kqX7OZ6s4q+WAa7JSSq4tyGgN72d9vorR18bd0hdjs0NiBK85c1FNEjfiKbfez/GrEYu
+         ymcg==
+X-Gm-Message-State: APjAAAWSlmRAn4En9wt4zqMIApFN8Y4V5y+h6ZchmADnnkdAgDWm2rNN
+        IHxtt3NO7DbMfsOqbQtYUeMwDls9K57anA==
+X-Google-Smtp-Source: APXvYqwwFxZ4u7zTAnZJyMBxsUUa2L1OhTVEdQawNb4k3T4pRBNZ9TOoN9I4ZK3WZgjS/I1u595VyA==
+X-Received: by 2002:a6b:6611:: with SMTP id a17mr6719902ioc.179.1562883980447;
+        Thu, 11 Jul 2019 15:26:20 -0700 (PDT)
 Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id s2sm4478982ioj.8.2019.07.11.15.26.10
+        by smtp.gmail.com with ESMTPSA id s2sm4478982ioj.8.2019.07.11.15.26.18
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 11 Jul 2019 15:26:11 -0700 (PDT)
+        Thu, 11 Jul 2019 15:26:19 -0700 (PDT)
 From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
 To:     linux-pci@vger.kernel.org, bhelgaas@google.com,
         linux-kernel@vger.kernel.org
 Cc:     skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         skunberg.kelsey@gmail.com
-Subject: [PATCH 01/11] PCI: Move #define PCI_PM_* lines to drivers/pci/pci.h
-Date:   Thu, 11 Jul 2019 16:23:31 -0600
-Message-Id: <20190711222341.111556-2-skunberg.kelsey@gmail.com>
+Subject: [PATCH 07/11] PCI: Move pcie_update_link_speed() to drivers/pci/pci.h
+Date:   Thu, 11 Jul 2019 16:23:37 -0600
+Message-Id: <20190711222341.111556-8-skunberg.kelsey@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190711222341.111556-1-skunberg.kelsey@gmail.com>
 References: <20190711222341.111556-1-skunberg.kelsey@gmail.com>
@@ -74,48 +74,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The #define PCI_PM_* lines are only used within drivers/pci/ and they do not
-need to be seen by the rest of the kernel. Move #define PCI_* to
-drivers/pci/pci.h
+pcie_update_line_speed() is only called within drivers/pci/. Since
+declaration does not need to be visible to the rest of the kernel, move to
+drivers/pci/pci.h.
 
 Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
 ---
- drivers/pci/pci.h   | 5 +++++
- include/linux/pci.h | 5 -----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/pci/pci.h   | 1 +
+ include/linux/pci.h | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 9cb99380c61e..7e30fbde5c84 100644
+index 9b87309f5c12..59321488da03 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -39,6 +39,11 @@ int pci_probe_reset_function(struct pci_dev *dev);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
+@@ -295,6 +295,7 @@ u32 pcie_bandwidth_capable(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			   enum pcie_link_width *width);
+ void __pcie_print_link_status(struct pci_dev *dev, bool verbose);
+ void pcie_report_downtraining(struct pci_dev *dev);
++void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
  
-+#define PCI_PM_D2_DELAY         200
-+#define PCI_PM_D3_WAIT          10
-+#define PCI_PM_D3COLD_WAIT      100
-+#define PCI_PM_BUS_WAIT         50
-+
- /**
-  * struct pci_platform_pm_ops - Firmware PM callbacks
-  *
+ /* Single Root I/O Virtualization */
+ struct pci_sriov {
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index dd436da7eccc..3bda6a87a815 100644
+index 54946423d901..3221d9f61ab4 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -145,11 +145,6 @@ static inline const char *pci_power_name(pci_power_t state)
- 	return pci_power_names[1 + (__force int) state];
- }
- 
--#define PCI_PM_D2_DELAY		200
--#define PCI_PM_D3_WAIT		10
--#define PCI_PM_D3COLD_WAIT	100
--#define PCI_PM_BUS_WAIT		50
--
- /**
-  * The pci_channel state describes connectivity between the CPU and
-  * the PCI device.  If some PCI bus between here and the PCI device
+@@ -938,7 +938,6 @@ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+-void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+ struct pci_slot *pci_create_slot(struct pci_bus *parent, int slot_nr,
+ 				 const char *name,
+ 				 struct hotplug_slot *hotplug);
 -- 
 2.20.1
 
