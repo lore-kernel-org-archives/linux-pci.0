@@ -2,71 +2,86 @@ Return-Path: <SRS0=MrkT=VI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BFDEC742A2
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 22:27:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A1A4C742A2
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 23:44:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D411E21537
-	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 22:27:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C3D9214AF
+	for <linux-pci@archiver.kernel.org>; Thu, 11 Jul 2019 23:44:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WBoEHXu0"
+	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="IGKpfpLd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729162AbfGKW07 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 11 Jul 2019 18:26:59 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:39671 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728757AbfGKW0O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2019 18:26:14 -0400
-Received: by mail-io1-f67.google.com with SMTP id f4so16157226ioh.6;
-        Thu, 11 Jul 2019 15:26:14 -0700 (PDT)
+        id S1729220AbfGKXoU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 11 Jul 2019 19:44:20 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:45081 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729553AbfGKXoT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 Jul 2019 19:44:19 -0400
+Received: by mail-pl1-f193.google.com with SMTP id y8so3815933plr.12
+        for <linux-pci@vger.kernel.org>; Thu, 11 Jul 2019 16:44:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=joelfernandes.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=B7Q+88/1r0u7c2B6QjPHmF5D3UfMD7VkncBOPB4xqnY=;
-        b=WBoEHXu0KZ4DEZnPjfSX+XW+fGJCDiT5qC5+TC0Bw9R3Zg5bndhAmFizc7RNrWVpaX
-         iNkFBOdQTjpiaAijq/F9tfezaY9SICoZZJbCjjCtxwSxyg+6nh+KscU5fv/gEdi6sqCI
-         hAKC28MCHrf8Dr+jXdjUZDlGKj/Lst9vRID1mTykfPEiM2JPoFp3bw0Bbn/4knPZE25K
-         aML2JaHGoZ6pBA2d0qAlnav+RI/dQHe7x9pzLYzEThPBeYKuzFk9tN1QeEFpDE4T2u0h
-         42tzZwlLjwT7ptCTYFHHB03PhMsVh9bqav2+AP5pRVRESUDKD609P2FqAIw6rB26jmJX
-         WBTA==
+        bh=FITTKsy0ccvIyixSPRiCdGiovalZSrd3OHcUD21QK98=;
+        b=IGKpfpLdCh9L199i85cDoWBN2sVOwSD+UtAb3c4qrcAw43wxgeMdcgA9g+jve3LID5
+         6vOOpxemLXJj1CZ79tB3Pje6chjO0HvYbVetcbgPQoCchXFtYur1Efy9Q7vdAWUF4ngJ
+         VBDST6I2Pm3/IeSKN7V5T8vNCOjcm1ESkYOGo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=B7Q+88/1r0u7c2B6QjPHmF5D3UfMD7VkncBOPB4xqnY=;
-        b=rDJvgQTqbrxqkaaacWHNb4yYvwmWpa0dUrcSxn/R5fPu459s7Tel6fkcOJOGDVpSHn
-         RisO4dTqCSM+xchpsNcAEyIxh2gA40PxHNLXJ3NcOPuKCnLMqgvqb4V7irkPX7zT03rB
-         b+xRvnbvMMDE0U8ePAUAyGzJD+EQiQrOA8+5D5yVHSvCV/GpbOPcV+tRn4l8GTW9YIS/
-         jGuGt5/0+wYVYeURWCj5ZaJmadoERFOVzwAPAhShS0gyR2jlbKT8catuRzzbQG8ZCzye
-         8IBPb00gxONTdD2mcf3x3Jqc4pGrcY9A8dLH0iq90JDLT+evICCdob64KSY78L0Bok6j
-         /C0Q==
-X-Gm-Message-State: APjAAAVnLsdkMkyWRU+6ILRbgcmEU8AntyJk2D3OeEPh6awgg5tOY1pt
-        1KoVf41XJ1TqApWBM9lMSHCRC+4V4CZRRg==
-X-Google-Smtp-Source: APXvYqzIOpFYThRbBahecvJaRJQDIcL+OA8MrF+nPbgf4gJ2Cl91cYTYiwTeyF2E0q03szbbyEW5tQ==
-X-Received: by 2002:a6b:641a:: with SMTP id t26mr6958337iog.3.1562883973499;
-        Thu, 11 Jul 2019 15:26:13 -0700 (PDT)
-Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id s2sm4478982ioj.8.2019.07.11.15.26.12
+        bh=FITTKsy0ccvIyixSPRiCdGiovalZSrd3OHcUD21QK98=;
+        b=Y+PQ19JQLx4Qs1wPSCJeuNGY/VvH/LKQKWThRy4s3Ar+d9rprfWC8MByC8gvdY4lIB
+         Z+lgOMKUzKlkclm5mrnMFIoREpF6wQ9IVvh/KO+zpwvlwgCS5cc4RSqJRjAyUysVosBZ
+         oVTSOCEx0LDCmscD3d54V2iI/uekrFX3wr81hVqgkv7LBX8nZh/ib3ITKanIXx6qY2Na
+         FEN6FXzH6SSvp2RVQX7MXfNEpB2gSnkr2zMIneaNiNVif2WwzAsMZZwKO9Lmajvw0bR1
+         LKtTk0FX1EhzD6kAGy7mlxkhQdvFNVv3H/plAE+g1eHQXQIAgoF7bg9m43h8Cf2WLaz3
+         YvXw==
+X-Gm-Message-State: APjAAAUlvNsMzuOxYHNXEN5TYB4AaXfHNpK1suP+t4H9MqQ3g3Sbgzti
+        GWxc9AfRlu2uPvQ+BuOP9U0=
+X-Google-Smtp-Source: APXvYqwozgq75nMKR73qox3f/PRoDIY5soJTLm7wRfHEcQK+usIOeqo0yORbOwCrmC8k4mWWATDhPg==
+X-Received: by 2002:a17:902:e281:: with SMTP id cf1mr7321567plb.271.1562888658619;
+        Thu, 11 Jul 2019 16:44:18 -0700 (PDT)
+Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
+        by smtp.gmail.com with ESMTPSA id t10sm6163450pjr.13.2019.07.11.16.44.15
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Thu, 11 Jul 2019 15:26:12 -0700 (PDT)
-From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
-To:     linux-pci@vger.kernel.org, bhelgaas@google.com,
-        linux-kernel@vger.kernel.org
-Cc:     skhan@linuxfoundation.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        skunberg.kelsey@gmail.com
-Subject: [PATCH 02/11] PCI: Move PME declarations to drivers/pci/pci.h
-Date:   Thu, 11 Jul 2019 16:23:32 -0600
-Message-Id: <20190711222341.111556-3-skunberg.kelsey@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190711222341.111556-1-skunberg.kelsey@gmail.com>
-References: <20190711222341.111556-1-skunberg.kelsey@gmail.com>
+        Thu, 11 Jul 2019 16:44:17 -0700 (PDT)
+From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Borislav Petkov <bp@alien8.de>, c0d1n61at3@gmail.com,
+        "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+        Josh Triplett <josh@joshtriplett.org>, keescook@chromium.org,
+        kernel-hardening@lists.openwall.com,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+        neilb@suse.com, netdev@vger.kernel.org, oleg@redhat.com,
+        "Paul E. McKenney" <paulmck@linux.ibm.com>,
+        Pavel Machek <pavel@ucw.cz>, peterz@infradead.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Rasmus Villemoes <rasmus.villemoes@prevas.dk>,
+        rcu@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>,
+        Tejun Heo <tj@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
+        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
+Subject: [PATCH v1 1/6] rcu: Add support for consolidated-RCU reader checking
+Date:   Thu, 11 Jul 2019 19:43:56 -0400
+Message-Id: <20190711234401.220336-2-joel@joelfernandes.org>
+X-Mailer: git-send-email 2.22.0.410.gd8fdbe21b5-goog
+In-Reply-To: <20190711234401.220336-1-joel@joelfernandes.org>
+References: <20190711234401.220336-1-joel@joelfernandes.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -74,42 +89,161 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_check_pme_status() and pci_pme_wakeup_bus() are only
-called within drivers/pci/. Since declarations do not need to be visible
-to the rest of the kernel, move to drivers/pci/pci.h.
+This patch adds support for checking RCU reader sections in list
+traversal macros. Optionally, if the list macro is called under SRCU or
+other lock/mutex protection, then appropriate lockdep expressions can be
+passed to make the checks pass.
 
-Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
+Existing list_for_each_entry_rcu() invocations don't need to pass the
+optional fourth argument (cond) unless they are under some non-RCU
+protection and needs to make lockdep check pass.
+
+Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
 ---
- drivers/pci/pci.h   | 2 ++
- include/linux/pci.h | 2 --
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ include/linux/rculist.h  | 29 ++++++++++++++++++++++++-----
+ include/linux/rcupdate.h |  7 +++++++
+ kernel/rcu/Kconfig.debug | 11 +++++++++++
+ kernel/rcu/update.c      | 26 ++++++++++++++++++++++++++
+ 4 files changed, 68 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 7e30fbde5c84..800fe8989f48 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -85,6 +85,8 @@ void pci_power_up(struct pci_dev *dev);
- void pci_disable_enabled_device(struct pci_dev *dev);
- int pci_finish_runtime_suspend(struct pci_dev *dev);
- void pcie_clear_root_pme_status(struct pci_dev *dev);
-+bool pci_check_pme_status(struct pci_dev *dev);
-+void pci_pme_wakeup_bus(struct pci_bus *bus);
- int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
- void pci_pme_restore(struct pci_dev *dev);
- bool pci_dev_keep_suspended(struct pci_dev *dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 3bda6a87a815..cedebb08a32d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1187,8 +1187,6 @@ int pci_wake_from_d3(struct pci_dev *dev, bool enable);
- int pci_prepare_to_sleep(struct pci_dev *dev);
- int pci_back_from_sleep(struct pci_dev *dev);
- bool pci_dev_run_wake(struct pci_dev *dev);
--bool pci_check_pme_status(struct pci_dev *dev);
--void pci_pme_wakeup_bus(struct pci_bus *bus);
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
- bool pcie_relaxed_ordering_enabled(struct pci_dev *dev);
+diff --git a/include/linux/rculist.h b/include/linux/rculist.h
+index e91ec9ddcd30..78c15ec6b2c9 100644
+--- a/include/linux/rculist.h
++++ b/include/linux/rculist.h
+@@ -40,6 +40,23 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
+  */
+ #define list_next_rcu(list)	(*((struct list_head __rcu **)(&(list)->next)))
+ 
++/*
++ * Check during list traversal that we are within an RCU reader
++ */
++
++#define SIXTH_ARG(a1, a2, a3, a4, a5, a6, ...) a6
++#define COUNT_VARGS(...) SIXTH_ARG(dummy, ## __VA_ARGS__, 4, 3, 2, 1, 0)
++
++#ifdef CONFIG_PROVE_RCU_LIST
++#define __list_check_rcu(dummy, cond, ...)				\
++	({								\
++	RCU_LOCKDEP_WARN(!cond && !rcu_read_lock_any_held(),		\
++			 "RCU-list traversed in non-reader section!");	\
++	 })
++#else
++#define __list_check_rcu(dummy, cond, ...) ({})
++#endif
++
+ /*
+  * Insert a new entry between two known consecutive entries.
+  *
+@@ -348,9 +365,10 @@ static inline void list_splice_tail_init_rcu(struct list_head *list,
+  * the _rcu list-mutation primitives such as list_add_rcu()
+  * as long as the traversal is guarded by rcu_read_lock().
+  */
+-#define list_for_each_entry_rcu(pos, head, member) \
+-	for (pos = list_entry_rcu((head)->next, typeof(*pos), member); \
+-		&pos->member != (head); \
++#define list_for_each_entry_rcu(pos, head, member, cond...)		\
++	for (__list_check_rcu(dummy, ## cond, 0),			\
++	     pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
++		&pos->member != (head);					\
+ 		pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
+ 
+ /**
+@@ -621,8 +639,9 @@ static inline void hlist_add_behind_rcu(struct hlist_node *n,
+  * the _rcu list-mutation primitives such as hlist_add_head_rcu()
+  * as long as the traversal is guarded by rcu_read_lock().
+  */
+-#define hlist_for_each_entry_rcu(pos, head, member)			\
+-	for (pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
++#define hlist_for_each_entry_rcu(pos, head, member, cond...)		\
++	for (__list_check_rcu(dummy, ## cond, 0),			\
++	     pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
+ 			typeof(*(pos)), member);			\
+ 		pos;							\
+ 		pos = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(\
+diff --git a/include/linux/rcupdate.h b/include/linux/rcupdate.h
+index 922bb6848813..712b464ab960 100644
+--- a/include/linux/rcupdate.h
++++ b/include/linux/rcupdate.h
+@@ -223,6 +223,7 @@ int debug_lockdep_rcu_enabled(void);
+ int rcu_read_lock_held(void);
+ int rcu_read_lock_bh_held(void);
+ int rcu_read_lock_sched_held(void);
++int rcu_read_lock_any_held(void);
+ 
+ #else /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+ 
+@@ -243,6 +244,12 @@ static inline int rcu_read_lock_sched_held(void)
+ {
+ 	return !preemptible();
+ }
++
++static inline int rcu_read_lock_any_held(void)
++{
++	return !preemptible();
++}
++
+ #endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+ 
+ #ifdef CONFIG_PROVE_RCU
+diff --git a/kernel/rcu/Kconfig.debug b/kernel/rcu/Kconfig.debug
+index 0ec7d1d33a14..b20d0e2903d1 100644
+--- a/kernel/rcu/Kconfig.debug
++++ b/kernel/rcu/Kconfig.debug
+@@ -7,6 +7,17 @@ menu "RCU Debugging"
+ config PROVE_RCU
+ 	def_bool PROVE_LOCKING
+ 
++config PROVE_RCU_LIST
++	bool "RCU list lockdep debugging"
++	depends on PROVE_RCU
++	default n
++	help
++	  Enable RCU lockdep checking for list usages. By default it is
++	  turned off since there are several list RCU users that still
++	  need to be converted to pass a lockdep expression. To prevent
++	  false-positive splats, we keep it default disabled but once all
++	  users are converted, we can remove this config option.
++
+ config TORTURE_TEST
+ 	tristate
+ 	default n
+diff --git a/kernel/rcu/update.c b/kernel/rcu/update.c
+index c3bf44ba42e5..9cb30006a5e1 100644
+--- a/kernel/rcu/update.c
++++ b/kernel/rcu/update.c
+@@ -298,6 +298,32 @@ int rcu_read_lock_bh_held(void)
+ }
+ EXPORT_SYMBOL_GPL(rcu_read_lock_bh_held);
+ 
++int rcu_read_lock_any_held(void)
++{
++	int lockdep_opinion = 0;
++
++	if (!debug_lockdep_rcu_enabled())
++		return 1;
++	if (!rcu_is_watching())
++		return 0;
++	if (!rcu_lockdep_current_cpu_online())
++		return 0;
++
++	/* Preemptible RCU flavor */
++	if (lock_is_held(&rcu_lock_map))
++		return 1;
++
++	/* BH flavor */
++	if (in_softirq() || irqs_disabled())
++		return 1;
++
++	/* Sched flavor */
++	if (debug_locks)
++		lockdep_opinion = lock_is_held(&rcu_sched_lock_map);
++	return lockdep_opinion || !preemptible();
++}
++EXPORT_SYMBOL_GPL(rcu_read_lock_any_held);
++
+ #endif /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+ 
+ /**
 -- 
-2.20.1
+2.22.0.410.gd8fdbe21b5-goog
 
