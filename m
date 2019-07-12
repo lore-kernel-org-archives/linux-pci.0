@@ -5,60 +5,60 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E32C742D5
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FA8CC742D1
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:01:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 43DBF216C8
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67B6B20850
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:01:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="PDwA/gZs"
+	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="fH07jTqw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727147AbfGLRA6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Jul 2019 13:00:58 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:34449 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727528AbfGLRA4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2019 13:00:56 -0400
-Received: by mail-pg1-f194.google.com with SMTP id p10so4803059pgn.1
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jul 2019 10:00:56 -0700 (PDT)
+        id S1727582AbfGLRBE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Jul 2019 13:01:04 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:36610 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727573AbfGLRBE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2019 13:01:04 -0400
+Received: by mail-pl1-f194.google.com with SMTP id k8so5064132plt.3
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jul 2019 10:01:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=joelfernandes.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=uLNu1bNfXx9GZiloNUkoMF2osR0IeSD3rZ+ilvr5XTc=;
-        b=PDwA/gZsXG+XYktKswWs/2Gn12cvdpksMcVfhV4f5cQ2amErP4DoEKs+QOyWFDZNEy
-         EhdkxYvI7be/FhngwlDuaBTUmRgc+ML7Qz9l7DKf6SbH3bUAXzcNbcO+1xqzK+xzKSRF
-         CqUS8bkdiHnwIWTF/f5Ak11AwwqHuzEO2jIsI=
+        bh=eTBxLnGTenFE9+XP/mevxUw30LYF4J7nnGDQ6rB2fzk=;
+        b=fH07jTqwL/hokqkrMKxzQmVSmNEeTNgVHxfUizZdRWuBLIdHp5EDtLX/oQGfOUzzsf
+         cDeYRZzLJ7URL9QGlidpTqtiuUDkDdsc8U0Ap/nNRn7DDBs7v08P0les+ltErgSJDWbI
+         nJW++gazD0MQx1M+9W1UojWsmaovMnp4hpbhU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=uLNu1bNfXx9GZiloNUkoMF2osR0IeSD3rZ+ilvr5XTc=;
-        b=kKIP1wjGQ1Nf7z/yltmHkAW856hMNMqS3AtCyIEqqNAH4Dik5E54f5INdr1Ek00ubI
-         Rm0p6Y1aFd9lNhpHvUua/Wr7c/UfmNTk0gVWjJX19il9lyzsFc1IPyoRX2KmPJGdCXPb
-         STya5Nn6oJcSLtDMf65iB6nArqFlKf4j4zd9hRU/H3CepOTrXuoN8PlHt9/0XVDrislQ
-         P/2Bmfvs+r8XHhB3hlf/MZ1TqMFnlR/j+6oOnaHotvIi9U7TqenitjvbvXy3YF5iQm9l
-         3fb6CmHW6zMLAk6SFH891ypS0jvZ3ftUSBf9IaNEnN7Oz0wdg+taWEeQdQQNFxN9cmP2
-         KmfQ==
-X-Gm-Message-State: APjAAAUIaRofI1cDLMRkea2dBPlvvukaawy9znMJxInDJqKiJRRywE8W
-        YisocARwRpq/Q4ilsmyGF0A=
-X-Google-Smtp-Source: APXvYqxo29aUnJsblfaix5vIIyfwEhSW/G6KMDPHxkwFkI02a+GjQdJRmAHZ+ogBqlkPr4JyQ4+nQw==
-X-Received: by 2002:a65:5687:: with SMTP id v7mr12126488pgs.263.1562950854709;
-        Fri, 12 Jul 2019 10:00:54 -0700 (PDT)
+        bh=eTBxLnGTenFE9+XP/mevxUw30LYF4J7nnGDQ6rB2fzk=;
+        b=bhpMs19vLHAzuI1eA1ISAafzkKaLu9LtdrstRSMbBpraYto4onBAOaUOERW3/eNT0p
+         y+0orAPi5VyhGIc0C95Df7fQWw5kGkBv5SC+5p5QRGpc7uS7hvyRDj6mvDI8aUfWHNXN
+         gLOVNjGe5lA0Pa6ukR6hhJemiHDq+UMPc9EV6pxO5pJJKUC94ph0OxEduR2Ave+nZXjL
+         XYFxLt0ybg8r4zCk3tRIWlbrD6E3U3HTsnN/fGd6z53WjLtc4J+UNR12wHGTKSKJnXf/
+         Jk5P+CCkEXnYAJlE7Vdr24wmQUla1Ur/gio8IitYb5si9rVmcSkpegW5iF9FnXpOCe2E
+         c8cw==
+X-Gm-Message-State: APjAAAUFsW3AD5SgBPvRe2cWyJ4VBCrV3osmc4OQt8F+F5wTMUvsOHxv
+        UIkIftDtrH3bltBERvtaTvc=
+X-Google-Smtp-Source: APXvYqw5wjurKNbjLpkDIEgUNPsvw0lxvJGcBLec2mqxF+Z/PtTQcYyk2askr8FOnsLa9DqxCfYLnA==
+X-Received: by 2002:a17:902:24c:: with SMTP id 70mr12539402plc.2.1562950863174;
+        Fri, 12 Jul 2019 10:01:03 -0700 (PDT)
 Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
-        by smtp.gmail.com with ESMTPSA id a15sm7127385pgw.3.2019.07.12.10.00.50
+        by smtp.gmail.com with ESMTPSA id a15sm7127385pgw.3.2019.07.12.10.00.59
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 12 Jul 2019 10:00:53 -0700 (PDT)
+        Fri, 12 Jul 2019 10:01:02 -0700 (PDT)
 From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Borislav Petkov <bp@alien8.de>, c0d1n61at3@gmail.com,
         "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
         "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -79,9 +79,9 @@ Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
         Tejun Heo <tj@kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
         x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
-Subject: [PATCH v2 5/9] driver/core: Convert to use built-in RCU list checking
-Date:   Fri, 12 Jul 2019 13:00:20 -0400
-Message-Id: <20190712170024.111093-6-joel@joelfernandes.org>
+Subject: [PATCH v2 7/9] x86/pci: Pass lockdep condition to pcm_mmcfg_list iterator
+Date:   Fri, 12 Jul 2019 13:00:22 -0400
+Message-Id: <20190712170024.111093-8-joel@joelfernandes.org>
 X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
 In-Reply-To: <20190712170024.111093-1-joel@joelfernandes.org>
 References: <20190712170024.111093-1-joel@joelfernandes.org>
@@ -92,111 +92,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-list_for_each_entry_rcu has built-in RCU and lock checking. Make use of
-it in driver core.
+The pcm_mmcfg_list is traversed with list_for_each_entry_rcu without a
+reader-lock held, because the pci_mmcfg_lock is already held. Make this
+known to the list macro so that it fixes new lockdep warnings that
+trigger due to lockdep checks added to list_for_each_entry_rcu().
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
 ---
- drivers/base/base.h          |  1 +
- drivers/base/core.c          | 10 ++++++++++
- drivers/base/power/runtime.c | 15 ++++++++++-----
- 3 files changed, 21 insertions(+), 5 deletions(-)
+ arch/x86/pci/mmconfig-shared.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/base/base.h b/drivers/base/base.h
-index b405436ee28e..0d32544b6f91 100644
---- a/drivers/base/base.h
-+++ b/drivers/base/base.h
-@@ -165,6 +165,7 @@ static inline int devtmpfs_init(void) { return 0; }
- /* Device links support */
- extern int device_links_read_lock(void);
- extern void device_links_read_unlock(int idx);
-+extern int device_links_read_lock_held(void);
- extern int device_links_check_suppliers(struct device *dev);
- extern void device_links_driver_bound(struct device *dev);
- extern void device_links_driver_cleanup(struct device *dev);
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index fd7511e04e62..6c5ca9685647 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -68,6 +68,11 @@ void device_links_read_unlock(int idx)
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index 7389db538c30..6fa42e9c4e6f 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -29,6 +29,7 @@
+ static bool pci_mmcfg_running_state;
+ static bool pci_mmcfg_arch_init_failed;
+ static DEFINE_MUTEX(pci_mmcfg_lock);
++#define pci_mmcfg_lock_held() lock_is_held(&(pci_mmcfg_lock).dep_map)
+ 
+ LIST_HEAD(pci_mmcfg_list);
+ 
+@@ -54,7 +55,7 @@ static void list_add_sorted(struct pci_mmcfg_region *new)
+ 	struct pci_mmcfg_region *cfg;
+ 
+ 	/* keep list sorted by segment and starting bus number */
+-	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list, pci_mmcfg_lock_held()) {
+ 		if (cfg->segment > new->segment ||
+ 		    (cfg->segment == new->segment &&
+ 		     cfg->start_bus >= new->start_bus)) {
+@@ -118,7 +119,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
  {
- 	srcu_read_unlock(&device_links_srcu, idx);
- }
-+
-+int device_links_read_lock_held(void)
-+{
-+	return srcu_read_lock_held(&device_links_srcu);
-+}
- #else /* !CONFIG_SRCU */
- static DECLARE_RWSEM(device_links_lock);
+ 	struct pci_mmcfg_region *cfg;
  
-@@ -91,6 +96,11 @@ void device_links_read_unlock(int not_used)
- {
- 	up_read(&device_links_lock);
- }
-+
-+int device_links_read_lock_held(void)
-+{
-+	return lock_is_held(&device_links_lock);
-+}
- #endif /* !CONFIG_SRCU */
- 
- /**
-diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
-index 952a1e7057c7..7a10e8379a70 100644
---- a/drivers/base/power/runtime.c
-+++ b/drivers/base/power/runtime.c
-@@ -287,7 +287,8 @@ static int rpm_get_suppliers(struct device *dev)
- {
- 	struct device_link *link;
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node) {
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held()) {
- 		int retval;
- 
- 		if (!(link->flags & DL_FLAG_PM_RUNTIME) ||
-@@ -309,7 +310,8 @@ static void rpm_put_suppliers(struct device *dev)
- {
- 	struct device_link *link;
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node) {
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held()) {
- 		if (READ_ONCE(link->status) == DL_STATE_SUPPLIER_UNBIND)
- 			continue;
- 
-@@ -1640,7 +1642,8 @@ void pm_runtime_clean_up_links(struct device *dev)
- 
- 	idx = device_links_read_lock();
- 
--	list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
-+	list_for_each_entry_rcu(link, &dev->links.consumers, s_node,
-+				device_links_read_lock_held()) {
- 		if (link->flags & DL_FLAG_STATELESS)
- 			continue;
- 
-@@ -1662,7 +1665,8 @@ void pm_runtime_get_suppliers(struct device *dev)
- 
- 	idx = device_links_read_lock();
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held())
- 		if (link->flags & DL_FLAG_PM_RUNTIME) {
- 			link->supplier_preactivated = true;
- 			refcount_inc(&link->rpm_active);
-@@ -1683,7 +1687,8 @@ void pm_runtime_put_suppliers(struct device *dev)
- 
- 	idx = device_links_read_lock();
- 
--	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
-+	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
-+				device_links_read_lock_held())
- 		if (link->supplier_preactivated) {
- 			link->supplier_preactivated = false;
- 			if (refcount_dec_not_one(&link->rpm_active))
+-	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
++	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list, pci_mmcfg_lock_held())
+ 		if (cfg->segment == segment &&
+ 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
+ 			return cfg;
 -- 
 2.22.0.510.g264f2c817a-goog
 
