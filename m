@@ -5,52 +5,52 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FA8CC742D1
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:01:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A087C742D1
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:01:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 67B6B20850
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:01:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2636620651
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:01:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="fH07jTqw"
+	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="UAjbMqka"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727582AbfGLRBE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Jul 2019 13:01:04 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:36610 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727573AbfGLRBE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2019 13:01:04 -0400
-Received: by mail-pl1-f194.google.com with SMTP id k8so5064132plt.3
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jul 2019 10:01:03 -0700 (PDT)
+        id S1727650AbfGLRBO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Jul 2019 13:01:14 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:34470 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727645AbfGLRBM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2019 13:01:12 -0400
+Received: by mail-pg1-f194.google.com with SMTP id p10so4803405pgn.1
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jul 2019 10:01:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=joelfernandes.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=eTBxLnGTenFE9+XP/mevxUw30LYF4J7nnGDQ6rB2fzk=;
-        b=fH07jTqwL/hokqkrMKxzQmVSmNEeTNgVHxfUizZdRWuBLIdHp5EDtLX/oQGfOUzzsf
-         cDeYRZzLJ7URL9QGlidpTqtiuUDkDdsc8U0Ap/nNRn7DDBs7v08P0les+ltErgSJDWbI
-         nJW++gazD0MQx1M+9W1UojWsmaovMnp4hpbhU=
+        bh=/5hJQY7vBLoyimOM3U70MNxFgsc86oXhHYtdVzU5ujQ=;
+        b=UAjbMqka7p1GCxFlNusyg29g1RCPFz9WIMtWvkN7qrcNF+ATnO9YKmLvPnuqPRJWG8
+         01CXWPFPyGYm3lOSoebpREdMbvmnc55dMqjKROvd/t5QxrZ6o7iZwPGUGOYk4Ll55hdr
+         IVAnsP7Rq6Ff+RAPzreODHBCQNzqAghR4nuBM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=eTBxLnGTenFE9+XP/mevxUw30LYF4J7nnGDQ6rB2fzk=;
-        b=bhpMs19vLHAzuI1eA1ISAafzkKaLu9LtdrstRSMbBpraYto4onBAOaUOERW3/eNT0p
-         y+0orAPi5VyhGIc0C95Df7fQWw5kGkBv5SC+5p5QRGpc7uS7hvyRDj6mvDI8aUfWHNXN
-         gLOVNjGe5lA0Pa6ukR6hhJemiHDq+UMPc9EV6pxO5pJJKUC94ph0OxEduR2Ave+nZXjL
-         XYFxLt0ybg8r4zCk3tRIWlbrD6E3U3HTsnN/fGd6z53WjLtc4J+UNR12wHGTKSKJnXf/
-         Jk5P+CCkEXnYAJlE7Vdr24wmQUla1Ur/gio8IitYb5si9rVmcSkpegW5iF9FnXpOCe2E
-         c8cw==
-X-Gm-Message-State: APjAAAUFsW3AD5SgBPvRe2cWyJ4VBCrV3osmc4OQt8F+F5wTMUvsOHxv
-        UIkIftDtrH3bltBERvtaTvc=
-X-Google-Smtp-Source: APXvYqw5wjurKNbjLpkDIEgUNPsvw0lxvJGcBLec2mqxF+Z/PtTQcYyk2askr8FOnsLa9DqxCfYLnA==
-X-Received: by 2002:a17:902:24c:: with SMTP id 70mr12539402plc.2.1562950863174;
-        Fri, 12 Jul 2019 10:01:03 -0700 (PDT)
+        bh=/5hJQY7vBLoyimOM3U70MNxFgsc86oXhHYtdVzU5ujQ=;
+        b=a0Tl3aamMGfwRWO3WSmD/0wibV0NX8AFGil8N8r21wXM5EGJBIXdiQEzjYIONgK1Qw
+         iuAYQH5dXIK/DHgI+SajJo/+Kot1w7Cyq6pjv+7wbAV/xkRwKTESyEjeHHJykqPlLax1
+         /2OV6HE82cnQuM9JtHkbWyVLydEH7IDD4PcOvqRYliyRpYzmxs4wSUEHhq1c5A8SqvKE
+         cM9IToM06DcPoO42LIzidBTFEz4RQGjhx6284gENS3VA6zWfSojTiFJK2rIVpbs5LryU
+         5mvMK24giqog2efd36qIkUtmeBmz6MrsWrLjleBj5yfcdCXjNDIdb2WHvjukz00ooI/4
+         S8Eg==
+X-Gm-Message-State: APjAAAUJAgZ8Y3VaC5vSgJH/OCMaEpZgMWMOzZKdyDcMPjHXc1yhUW69
+        vD/9BGK9e51Jr6HCywrKYPQ=
+X-Google-Smtp-Source: APXvYqysKQjlbPJnzD1SgXu0qrPOgUWrpmjWhJmLr3dLME/oF4p6YcJaiWDgGdC5pNxKNHie+MpwEA==
+X-Received: by 2002:a63:dc56:: with SMTP id f22mr12036675pgj.305.1562950871565;
+        Fri, 12 Jul 2019 10:01:11 -0700 (PDT)
 Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
-        by smtp.gmail.com with ESMTPSA id a15sm7127385pgw.3.2019.07.12.10.00.59
+        by smtp.gmail.com with ESMTPSA id a15sm7127385pgw.3.2019.07.12.10.01.07
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 12 Jul 2019 10:01:02 -0700 (PDT)
+        Fri, 12 Jul 2019 10:01:10 -0700 (PDT)
 From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
@@ -79,9 +79,9 @@ Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
         Tejun Heo <tj@kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
         x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
-Subject: [PATCH v2 7/9] x86/pci: Pass lockdep condition to pcm_mmcfg_list iterator
-Date:   Fri, 12 Jul 2019 13:00:22 -0400
-Message-Id: <20190712170024.111093-8-joel@joelfernandes.org>
+Subject: [PATCH v2 9/9] doc: Update documentation about list_for_each_entry_rcu
+Date:   Fri, 12 Jul 2019 13:00:24 -0400
+Message-Id: <20190712170024.111093-10-joel@joelfernandes.org>
 X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
 In-Reply-To: <20190712170024.111093-1-joel@joelfernandes.org>
 References: <20190712170024.111093-1-joel@joelfernandes.org>
@@ -92,46 +92,65 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The pcm_mmcfg_list is traversed with list_for_each_entry_rcu without a
-reader-lock held, because the pci_mmcfg_lock is already held. Make this
-known to the list macro so that it fixes new lockdep warnings that
-trigger due to lockdep checks added to list_for_each_entry_rcu().
+This patch updates the documentation with information about
+usage of lockdep with list_for_each_entry_rcu().
 
 Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
 ---
- arch/x86/pci/mmconfig-shared.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ Documentation/RCU/lockdep.txt   | 15 +++++++++++----
+ Documentation/RCU/whatisRCU.txt |  9 ++++++++-
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 7389db538c30..6fa42e9c4e6f 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -29,6 +29,7 @@
- static bool pci_mmcfg_running_state;
- static bool pci_mmcfg_arch_init_failed;
- static DEFINE_MUTEX(pci_mmcfg_lock);
-+#define pci_mmcfg_lock_held() lock_is_held(&(pci_mmcfg_lock).dep_map)
+diff --git a/Documentation/RCU/lockdep.txt b/Documentation/RCU/lockdep.txt
+index da51d3068850..3d967df3a801 100644
+--- a/Documentation/RCU/lockdep.txt
++++ b/Documentation/RCU/lockdep.txt
+@@ -96,7 +96,14 @@ other flavors of rcu_dereference().  On the other hand, it is illegal
+ to use rcu_dereference_protected() if either the RCU-protected pointer
+ or the RCU-protected data that it points to can change concurrently.
  
- LIST_HEAD(pci_mmcfg_list);
+-There are currently only "universal" versions of the rcu_assign_pointer()
+-and RCU list-/tree-traversal primitives, which do not (yet) check for
+-being in an RCU read-side critical section.  In the future, separate
+-versions of these primitives might be created.
++Similar to rcu_dereference_protected, The RCU list and hlist traversal
++primitives also check for whether there are called from within a reader
++section. However, an optional lockdep expression can be passed to them as
++the last argument in case they are called under other non-RCU protection.
++
++For example, the workqueue for_each_pwq() macro is implemented as follows.
++It is safe to call for_each_pwq() outside a reader section but under protection
++of wq->mutex:
++#define for_each_pwq(pwq, wq)
++	list_for_each_entry_rcu((pwq), &(wq)->pwqs, pwqs_node,
++				lock_is_held(&(wq->mutex).dep_map))
+diff --git a/Documentation/RCU/whatisRCU.txt b/Documentation/RCU/whatisRCU.txt
+index 981651a8b65d..a08c03735963 100644
+--- a/Documentation/RCU/whatisRCU.txt
++++ b/Documentation/RCU/whatisRCU.txt
+@@ -290,7 +290,7 @@ rcu_dereference()
+ 	at any time, including immediately after the rcu_dereference().
+ 	And, again like rcu_assign_pointer(), rcu_dereference() is
+ 	typically used indirectly, via the _rcu list-manipulation
+-	primitives, such as list_for_each_entry_rcu().
++	primitives, such as list_for_each_entry_rcu() [2].
  
-@@ -54,7 +55,7 @@ static void list_add_sorted(struct pci_mmcfg_region *new)
- 	struct pci_mmcfg_region *cfg;
+ 	[1] The variant rcu_dereference_protected() can be used outside
+ 	of an RCU read-side critical section as long as the usage is
+@@ -305,6 +305,13 @@ rcu_dereference()
+ 	a lockdep splat is emitted.  See RCU/Design/Requirements/Requirements.html
+ 	and the API's code comments for more details and example usage.
  
- 	/* keep list sorted by segment and starting bus number */
--	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list) {
-+	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list, pci_mmcfg_lock_held()) {
- 		if (cfg->segment > new->segment ||
- 		    (cfg->segment == new->segment &&
- 		     cfg->start_bus >= new->start_bus)) {
-@@ -118,7 +119,7 @@ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus)
- {
- 	struct pci_mmcfg_region *cfg;
++	[2] In case the list_for_each_entry_rcu() primitive is intended
++	to be used outside of an RCU reader section such as when
++	protected by a lock, then an additional lockdep expression can be
++	passed as the last argument to it so that RCU lockdep checking code
++	knows that the dereference of the list pointers are safe. If the
++	indicated protection is not provided, a lockdep splat is emitted.
++
+ The following diagram shows how each API communicates among the
+ reader, updater, and reclaimer.
  
--	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
-+	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list, pci_mmcfg_lock_held())
- 		if (cfg->segment == segment &&
- 		    cfg->start_bus <= bus && bus <= cfg->end_bus)
- 			return cfg;
 -- 
 2.22.0.510.g264f2c817a-goog
 
