@@ -2,63 +2,63 @@ Return-Path: <SRS0=xwzY=VJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDAD0C742D5
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E32C742D5
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:00:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B65F20651
-	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:00:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43DBF216C8
+	for <linux-pci@archiver.kernel.org>; Fri, 12 Jul 2019 17:00:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="r+S4YTbr"
+	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="PDwA/gZs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727391AbfGLRAj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 12 Jul 2019 13:00:39 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:35166 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727366AbfGLRAi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2019 13:00:38 -0400
-Received: by mail-pf1-f196.google.com with SMTP id u14so4569131pfn.2
-        for <linux-pci@vger.kernel.org>; Fri, 12 Jul 2019 10:00:38 -0700 (PDT)
+        id S1727147AbfGLRA6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 12 Jul 2019 13:00:58 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:34449 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727528AbfGLRA4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 Jul 2019 13:00:56 -0400
+Received: by mail-pg1-f194.google.com with SMTP id p10so4803059pgn.1
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jul 2019 10:00:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=joelfernandes.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HcJl4MkrcKZUWVrbOFfh0nnEc2FkI1NyULrXND4C1ok=;
-        b=r+S4YTbrFLXAaoxGT4GzejGKAZshIM9bV3jcdcbEAdv0c619zHSqLN4ei3n7OXVNx6
-         n8Mkpq4NMeAreqKp6CxwsDaUWLUdSJGaBd+a1NpA03X4d2w8pRoRmAK3YM7By8+HEacE
-         0fDSDMaBiifV8te0r9UChxgacvAyvBEzMCd4c=
+        bh=uLNu1bNfXx9GZiloNUkoMF2osR0IeSD3rZ+ilvr5XTc=;
+        b=PDwA/gZsXG+XYktKswWs/2Gn12cvdpksMcVfhV4f5cQ2amErP4DoEKs+QOyWFDZNEy
+         EhdkxYvI7be/FhngwlDuaBTUmRgc+ML7Qz9l7DKf6SbH3bUAXzcNbcO+1xqzK+xzKSRF
+         CqUS8bkdiHnwIWTF/f5Ak11AwwqHuzEO2jIsI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HcJl4MkrcKZUWVrbOFfh0nnEc2FkI1NyULrXND4C1ok=;
-        b=d+C0cwHT6J7vFocoMaiZKSyoEd+vo0OOQ7i3daQ6XgBYhAJObDh0NMfAGoRtnQbkZf
-         JaGaG01PtkeKAHzWIJzRwinyy2Te8iSwaCnxueZghv84hCTbhGiZoRu6Ct7Ex4QlOYDC
-         btfX7FbOunNmZS7/0Liv2KiaGRbhhVku+TFWrZ2CNqAv/YKWHMYR3wRgZPWLs+0c663M
-         iKd8HcCgOeT1h4mGni35uymSauY1oxtjgG9TGs82nizvfJn02l7Z/tM8gGwHbswus8kw
-         DUrmDT0Ow6IQyucynBla3izcXJHkSQJQuyhn5ve53TLHkLpHtQ81CDh/QMXr+11HIM8f
-         +F0Q==
-X-Gm-Message-State: APjAAAUF23Q1vDkl+YIeo2gBVmAOApP2gdvYJBEAUI6OKLdZKe8Cw1Bd
-        /PFiBfa5Gmfoao6Eur8GnCU=
-X-Google-Smtp-Source: APXvYqz15AQfC5v0dP6hN1pCpPQdyBrMqETAncc2VKUY67QfxtlC3x1zPGrp7KZtSsMpaH2x5QNcdQ==
-X-Received: by 2002:a17:90b:8c8:: with SMTP id ds8mr13144837pjb.89.1562950837630;
-        Fri, 12 Jul 2019 10:00:37 -0700 (PDT)
+        bh=uLNu1bNfXx9GZiloNUkoMF2osR0IeSD3rZ+ilvr5XTc=;
+        b=kKIP1wjGQ1Nf7z/yltmHkAW856hMNMqS3AtCyIEqqNAH4Dik5E54f5INdr1Ek00ubI
+         Rm0p6Y1aFd9lNhpHvUua/Wr7c/UfmNTk0gVWjJX19il9lyzsFc1IPyoRX2KmPJGdCXPb
+         STya5Nn6oJcSLtDMf65iB6nArqFlKf4j4zd9hRU/H3CepOTrXuoN8PlHt9/0XVDrislQ
+         P/2Bmfvs+r8XHhB3hlf/MZ1TqMFnlR/j+6oOnaHotvIi9U7TqenitjvbvXy3YF5iQm9l
+         3fb6CmHW6zMLAk6SFH891ypS0jvZ3ftUSBf9IaNEnN7Oz0wdg+taWEeQdQQNFxN9cmP2
+         KmfQ==
+X-Gm-Message-State: APjAAAUIaRofI1cDLMRkea2dBPlvvukaawy9znMJxInDJqKiJRRywE8W
+        YisocARwRpq/Q4ilsmyGF0A=
+X-Google-Smtp-Source: APXvYqxo29aUnJsblfaix5vIIyfwEhSW/G6KMDPHxkwFkI02a+GjQdJRmAHZ+ogBqlkPr4JyQ4+nQw==
+X-Received: by 2002:a65:5687:: with SMTP id v7mr12126488pgs.263.1562950854709;
+        Fri, 12 Jul 2019 10:00:54 -0700 (PDT)
 Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
-        by smtp.gmail.com with ESMTPSA id a15sm7127385pgw.3.2019.07.12.10.00.33
+        by smtp.gmail.com with ESMTPSA id a15sm7127385pgw.3.2019.07.12.10.00.50
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 12 Jul 2019 10:00:36 -0700 (PDT)
+        Fri, 12 Jul 2019 10:00:53 -0700 (PDT)
 From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Borislav Petkov <bp@alien8.de>, c0d1n61at3@gmail.com,
         "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
         "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -79,9 +79,9 @@ Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
         Tejun Heo <tj@kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
         x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
-Subject: [PATCH v2 1/9] rcu/update: Remove useless check for debug_locks
-Date:   Fri, 12 Jul 2019 13:00:16 -0400
-Message-Id: <20190712170024.111093-2-joel@joelfernandes.org>
+Subject: [PATCH v2 5/9] driver/core: Convert to use built-in RCU list checking
+Date:   Fri, 12 Jul 2019 13:00:20 -0400
+Message-Id: <20190712170024.111093-6-joel@joelfernandes.org>
 X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
 In-Reply-To: <20190712170024.111093-1-joel@joelfernandes.org>
 References: <20190712170024.111093-1-joel@joelfernandes.org>
@@ -92,38 +92,111 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In rcu_read_lock_sched_held(), debug_locks can never be true at the
-point we check it because we already check debug_locks in
-debug_lockdep_rcu_enabled() in the beginning. Remove the check.
+list_for_each_entry_rcu has built-in RCU and lock checking. Make use of
+it in driver core.
 
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
 ---
- kernel/rcu/update.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/base/base.h          |  1 +
+ drivers/base/core.c          | 10 ++++++++++
+ drivers/base/power/runtime.c | 15 ++++++++++-----
+ 3 files changed, 21 insertions(+), 5 deletions(-)
 
-diff --git a/kernel/rcu/update.c b/kernel/rcu/update.c
-index c3bf44ba42e5..bb961cd89e76 100644
---- a/kernel/rcu/update.c
-+++ b/kernel/rcu/update.c
-@@ -93,17 +93,13 @@ module_param(rcu_normal_after_boot, int, 0);
-  */
- int rcu_read_lock_sched_held(void)
+diff --git a/drivers/base/base.h b/drivers/base/base.h
+index b405436ee28e..0d32544b6f91 100644
+--- a/drivers/base/base.h
++++ b/drivers/base/base.h
+@@ -165,6 +165,7 @@ static inline int devtmpfs_init(void) { return 0; }
+ /* Device links support */
+ extern int device_links_read_lock(void);
+ extern void device_links_read_unlock(int idx);
++extern int device_links_read_lock_held(void);
+ extern int device_links_check_suppliers(struct device *dev);
+ extern void device_links_driver_bound(struct device *dev);
+ extern void device_links_driver_cleanup(struct device *dev);
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index fd7511e04e62..6c5ca9685647 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -68,6 +68,11 @@ void device_links_read_unlock(int idx)
  {
--	int lockdep_opinion = 0;
--
- 	if (!debug_lockdep_rcu_enabled())
- 		return 1;
- 	if (!rcu_is_watching())
- 		return 0;
- 	if (!rcu_lockdep_current_cpu_online())
- 		return 0;
--	if (debug_locks)
--		lockdep_opinion = lock_is_held(&rcu_sched_lock_map);
--	return lockdep_opinion || !preemptible();
-+	return lock_is_held(&rcu_sched_lock_map) || !preemptible();
+ 	srcu_read_unlock(&device_links_srcu, idx);
  }
- EXPORT_SYMBOL(rcu_read_lock_sched_held);
- #endif
++
++int device_links_read_lock_held(void)
++{
++	return srcu_read_lock_held(&device_links_srcu);
++}
+ #else /* !CONFIG_SRCU */
+ static DECLARE_RWSEM(device_links_lock);
+ 
+@@ -91,6 +96,11 @@ void device_links_read_unlock(int not_used)
+ {
+ 	up_read(&device_links_lock);
+ }
++
++int device_links_read_lock_held(void)
++{
++	return lock_is_held(&device_links_lock);
++}
+ #endif /* !CONFIG_SRCU */
+ 
+ /**
+diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
+index 952a1e7057c7..7a10e8379a70 100644
+--- a/drivers/base/power/runtime.c
++++ b/drivers/base/power/runtime.c
+@@ -287,7 +287,8 @@ static int rpm_get_suppliers(struct device *dev)
+ {
+ 	struct device_link *link;
+ 
+-	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node) {
++	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
++				device_links_read_lock_held()) {
+ 		int retval;
+ 
+ 		if (!(link->flags & DL_FLAG_PM_RUNTIME) ||
+@@ -309,7 +310,8 @@ static void rpm_put_suppliers(struct device *dev)
+ {
+ 	struct device_link *link;
+ 
+-	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node) {
++	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
++				device_links_read_lock_held()) {
+ 		if (READ_ONCE(link->status) == DL_STATE_SUPPLIER_UNBIND)
+ 			continue;
+ 
+@@ -1640,7 +1642,8 @@ void pm_runtime_clean_up_links(struct device *dev)
+ 
+ 	idx = device_links_read_lock();
+ 
+-	list_for_each_entry_rcu(link, &dev->links.consumers, s_node) {
++	list_for_each_entry_rcu(link, &dev->links.consumers, s_node,
++				device_links_read_lock_held()) {
+ 		if (link->flags & DL_FLAG_STATELESS)
+ 			continue;
+ 
+@@ -1662,7 +1665,8 @@ void pm_runtime_get_suppliers(struct device *dev)
+ 
+ 	idx = device_links_read_lock();
+ 
+-	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
++	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
++				device_links_read_lock_held())
+ 		if (link->flags & DL_FLAG_PM_RUNTIME) {
+ 			link->supplier_preactivated = true;
+ 			refcount_inc(&link->rpm_active);
+@@ -1683,7 +1687,8 @@ void pm_runtime_put_suppliers(struct device *dev)
+ 
+ 	idx = device_links_read_lock();
+ 
+-	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node)
++	list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
++				device_links_read_lock_held())
+ 		if (link->supplier_preactivated) {
+ 			link->supplier_preactivated = false;
+ 			if (refcount_dec_not_one(&link->rpm_active))
 -- 
 2.22.0.510.g264f2c817a-goog
 
