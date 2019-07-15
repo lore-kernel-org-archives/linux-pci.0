@@ -2,146 +2,111 @@ Return-Path: <SRS0=G7Xz=VM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BDC4C7618F
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14143C76191
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34C5B2067C
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203322;
-	bh=ZS55mG+paP+L29yblX7J5SeVoO5OrFk/y/5CPeKCzEA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=KZCO80+1uvWUxB6BiNgUSLWSJ8i2HuJuBNyxUnu0vmItJ5PavHkylLRwWXc4S10IV
-	 DgLtKiVISHXOhDbslvlfWFkpD9oRPN+Y2yAZZkiwiZeJlwzcKfpV1mHL1v4eTdatgX
-	 oaIa1HPy9Xpo2QjPFgsEQgnxLbAly32+I+ugYxOg=
+	by mail.kernel.org (Postfix) with ESMTP id E807D2054F
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733063AbfGON6F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:58:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37098 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733060AbfGON6E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:58:04 -0400
-Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 19694212F5;
-        Mon, 15 Jul 2019 13:58:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199083;
-        bh=ZS55mG+paP+L29yblX7J5SeVoO5OrFk/y/5CPeKCzEA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Jtgoz4blmGQd9F8M3Jr2xH5MSu/uvveAlxgzsmjvnFXOW2Cjw4h2hiIGjYZhQVrc7
-         Xi556+EWnaW/GyBhfdvN9Iu/ULdODDs1wuzoL4+1f28TVbGPmB0EoI2yeQ10y91kFj
-         6L8/vkFIHGfFj0+Yk4mC6isWtKmhS7MLRvj7kldw=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 185/249] PCI / ACPI: Use cached ACPI device state to get PCI device power state
-Date:   Mon, 15 Jul 2019 09:45:50 -0400
-Message-Id: <20190715134655.4076-185-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
-References: <20190715134655.4076-1-sashal@kernel.org>
+        id S1733048AbfGOPIp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jul 2019 11:08:45 -0400
+Received: from relay6-d.mail.gandi.net ([217.70.183.198]:38991 "EHLO
+        relay6-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733095AbfGOPIo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2019 11:08:44 -0400
+X-Originating-IP: 92.137.69.152
+Received: from windsurf (alyon-656-1-672-152.w92-137.abo.wanadoo.fr [92.137.69.152])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay6-d.mail.gandi.net (Postfix) with ESMTPSA id A1411C0004;
+        Mon, 15 Jul 2019 15:08:41 +0000 (UTC)
+Date:   Mon, 15 Jul 2019 17:08:40 +0200
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     Grzegorz Jaszczyk <jaz@semihalf.com>
+Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        mw@semihalf.com,
+        Russell King - ARM Linux admin <linux@armlinux.org.uk>
+Subject: Re: [PATCH] PCI: aardvark: fix big endian support
+Message-ID: <20190715170840.326acd73@windsurf>
+In-Reply-To: <1563200122-8323-1-git-send-email-jaz@semihalf.com>
+References: <1563200122-8323-1-git-send-email-jaz@semihalf.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Hello Grzegorz,
 
-[ Upstream commit 83a16e3f6d70da99896c7a2639c0b60fff13afb8 ]
+Thanks for this work. I indeed never tested this code on BE platforms,
+and it is very possible that I overlooked endianness issues, so thanks
+for having a look at this and proposing some patches. See some
+questions/comments below.
 
-The ACPI power state returned by acpi_device_get_power() may depend on
-the configuration of ACPI power resources in the system which may change
-any time after acpi_device_get_power() has returned, unless the
-reference counters of the ACPI power resources in question are set to
-prevent that from happening. Thus it is invalid to use acpi_device_get_power()
-in acpi_pci_get_power_state() the way it is done now and the value of
-the ->power.state field in the corresponding struct acpi_device objects
-(which reflects the ACPI power resources reference counting, among other
-things) should be used instead.
+On Mon, 15 Jul 2019 16:15:22 +0200
+Grzegorz Jaszczyk <jaz@semihalf.com> wrote:
 
-As an example where this becomes an issue is Intel Ice Lake where the
-Thunderbolt controller (NHI), two PCIe root ports (RP0 and RP1) and xHCI
-all share the same power resources. The following picture with power
-resources marked with [] shows the topology:
+> Initialise every not-byte wide fields of emulated pci bridge config
+> space with proper cpu_to_le* macro. This is required since the structure
+> describing config space of emulated bridge assumes little-endian
+> convention.
+> 
+> Signed-off-by: Grzegorz Jaszczyk <jaz@semihalf.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index 134e030..06a12749 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -479,8 +479,10 @@ static void advk_sw_pci_bridge_init(struct advk_pcie *pcie)
+>  {
+>  	struct pci_bridge_emul *bridge = &pcie->bridge;
+>  
+> -	bridge->conf.vendor = advk_readl(pcie, PCIE_CORE_DEV_ID_REG) & 0xffff;
+> -	bridge->conf.device = advk_readl(pcie, PCIE_CORE_DEV_ID_REG) >> 16;
+> +	bridge->conf.vendor =
+> +		cpu_to_le16(advk_readl(pcie, PCIE_CORE_DEV_ID_REG) & 0xffff);
+> +	bridge->conf.device =
+> +		cpu_to_le16(advk_readl(pcie, PCIE_CORE_DEV_ID_REG) >> 16);
+>  	bridge->conf.class_revision =
+>  		advk_readl(pcie, PCIE_CORE_DEV_REV_REG) & 0xff;
 
-  Host bridge
-    |
-    +- RP0 ---\
-    +- RP1 ---|--+--> [TBT]
-    +- NHI --/   |
-    |            |
-    |            v
-    +- xHCI --> [D3C]
+So conf.vendor and conf.device and stored as little-endian in the
+emulated config address space, but conf.class_revision is stored in the
+CPU endianness ?
 
-Here TBT and D3C are the shared ACPI power resources. ACPI _PR3() method
-of the devices in question returns either TBT or D3C or both.
+>  
+> @@ -489,8 +491,8 @@ static void advk_sw_pci_bridge_init(struct advk_pcie *pcie)
+>  	bridge->conf.iolimit = PCI_IO_RANGE_TYPE_32;
 
-Say we runtime suspend first the root ports RP0 and RP1, then NHI. Now
-since the TBT power resource is still on when the root ports are runtime
-suspended their dev->current_state is set to D3hot. When NHI is runtime
-suspended TBT is finally turned off but state of the root ports remain
-to be D3hot. Now when the xHCI is runtime suspended D3C gets also turned
-off. PCI core thus has power states of these devices cached in their
-dev->current_state as follows:
+>  
+>  	/* Support 64 bits memory pref */
+> -	bridge->conf.pref_mem_base = PCI_PREF_RANGE_TYPE_64;
+> -	bridge->conf.pref_mem_limit = PCI_PREF_RANGE_TYPE_64;
+> +	bridge->conf.pref_mem_base = cpu_to_le16(PCI_PREF_RANGE_TYPE_64);
+> +	bridge->conf.pref_mem_limit = cpu_to_le16(PCI_PREF_RANGE_TYPE_64);
 
-  RP0 -> D3hot
-  RP1 -> D3hot
-  NHI -> D3cold
-  xHCI -> D3cold
+Same here: why are conf.pref_mem_{base,limit} converted to LE, but not
+conf.iolimit ?
 
-If the user now runs lspci for instance, the result is all 1's like in
-the below output (00:07.0 is the first root port, RP0):
+Also, the advk_pci_bridge_emul_pcie_conf_read() and
+advk_pci_bridge_emul_pcie_conf_write() return values that are in the
+CPU endianness.
 
-00:07.0 PCI bridge: Intel Corporation Device 8a1d (rev ff) (prog-if ff)
-    !!! Unknown header type 7f
-    Kernel driver in use: pcieport
+Am I missing something ?
 
-In short the hardware state is not in sync with the software state
-anymore. The exact same thing happens with the PME polling thread which
-ends up bringing the root ports back into D0 after they are runtime
-suspended.
-
-For this reason, modify acpi_pci_get_power_state() so that it uses the
-ACPI device power state that was cached by the ACPI core. This makes the
-PCI device power state match the ACPI device power state regardless of
-state of the shared power resources which may still be on at this point.
-
-Link: https://lore.kernel.org/r/20190618161858.77834-2-mika.westerberg@linux.intel.com
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/pci-acpi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 1897847ceb0c..b782acac26c5 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -685,7 +685,8 @@ static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
- 	if (!adev || !acpi_device_power_manageable(adev))
- 		return PCI_UNKNOWN;
- 
--	if (acpi_device_get_power(adev, &state) || state == ACPI_STATE_UNKNOWN)
-+	state = adev->power.state;
-+	if (state == ACPI_STATE_UNKNOWN)
- 		return PCI_UNKNOWN;
- 
- 	return state_conv[state];
+Thomas
 -- 
-2.20.1
-
+Thomas Petazzoni, CTO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
