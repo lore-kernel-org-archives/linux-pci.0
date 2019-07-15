@@ -2,298 +2,146 @@ Return-Path: <SRS0=G7Xz=VM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07FC8C76191
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 14:46:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53318C76191
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:02:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB2DA20861
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 14:46:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="IozIr9z+"
+	by mail.kernel.org (Postfix) with ESMTP id 2BB2C2054F
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:02:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1563202931;
+	bh=F0F2Q8KUGLU5KKPw844B94bWHqTSxq4X6WeqvKfZWDU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=sv4lUNPm4ghFK13loXQ9j5SELLN3xl1Zbv0sLlAO4lbgrQ5gfYvo+2UgM+f1mCEeo
+	 X7r1k4vb9kepK/SWmjTDyvY5Z/DoSctKp4IqTuvlkTVCl8tXvFriT3TaM4EtFFEBzU
+	 c74IsdTTWfwQ9YrcGrFc46hieWY+LhE4T9K3EAjA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405136AbfGOOq5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:46:57 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:45708 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404482AbfGOOhX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2019 10:37:23 -0400
-Received: by mail-pl1-f196.google.com with SMTP id y8so8382539plr.12
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jul 2019 07:37:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=joelfernandes.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=CJEwPPrtJyDTV3piEkDE+ONyRMH9m2RDRbmoV5ZEGS8=;
-        b=IozIr9z+GIb5mPdKiPaf5UHiYIz+Oat0gqj58xKeNgOqIcav4VXtm41dS18QhgHWuP
-         08bOfzHsvFlkA1+slmz0mYgCQced6RM3EOenJJaGW8k4oiXykx/eoqvUaynExjS780ga
-         gIRPex9R8tFcEqFj6fn/uCxhibShb2XLfLQao=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=CJEwPPrtJyDTV3piEkDE+ONyRMH9m2RDRbmoV5ZEGS8=;
-        b=SGABz6YIHhXob0WDoUUSWXamYc59GLr0ZOKB9aQGDCZ9ewq01/8oqINZAZvUdBOyeg
-         RziqdDAzbChZ48I3MNfo+i0m0b6v1URSsw5IdZPo5oUZVOiM8qcQjNeLOkSY4iImYeQb
-         J/7GNxhuQqalRolTNT3wZko1BDxbJKattLJS6sRDfN+YzoONkLcBvPR3+093zr6wCR6J
-         1PXoFH1tX+aCEZv+Adc1KhiSvj7hO+xe4A0y7yQ1Z1NPPvSpKzCGDstihmbFW/2+KFz8
-         qF+7Zx8oS9V4WeK3v6iJ5I9YlfgEj40DWBZvwH4Zfg748hmQOn3EatGlURjuP1B6weZN
-         M2Pg==
-X-Gm-Message-State: APjAAAVtLVo5iPjaeqrq5ogiG2LvMsnecgizTPAyDkh9tktP+rjEyg1Y
-        GjKOrcGRq2PEQ0p3kcwqP8M=
-X-Google-Smtp-Source: APXvYqzrTtDshfHRTIApwfR2uw8rmwlBdmV5rfV/lQ/WFFtfVs/RxHxaLHWVf+yG1vS25zf50JO+qA==
-X-Received: by 2002:a17:902:290b:: with SMTP id g11mr28300017plb.26.1563201442188;
-        Mon, 15 Jul 2019 07:37:22 -0700 (PDT)
-Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
-        by smtp.gmail.com with ESMTPSA id s66sm18381852pfs.8.2019.07.15.07.37.18
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Mon, 15 Jul 2019 07:37:21 -0700 (PDT)
-From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Borislav Petkov <bp@alien8.de>, c0d1n61at3@gmail.com,
-        "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Josh Triplett <josh@joshtriplett.org>, keescook@chromium.org,
-        kernel-hardening@lists.openwall.com, kernel-team@android.com,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        neilb@suse.com, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>,
-        "Paul E. McKenney" <paulmck@linux.ibm.com>,
-        Pavel Machek <pavel@ucw.cz>, peterz@infradead.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Rasmus Villemoes <rasmus.villemoes@prevas.dk>,
-        rcu@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>,
-        Tejun Heo <tj@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
-        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
-Subject: [PATCH 2/9] rcu: Add support for consolidated-RCU reader checking (v3)
-Date:   Mon, 15 Jul 2019 10:36:58 -0400
-Message-Id: <20190715143705.117908-3-joel@joelfernandes.org>
-X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
-In-Reply-To: <20190715143705.117908-1-joel@joelfernandes.org>
-References: <20190715143705.117908-1-joel@joelfernandes.org>
+        id S2388955AbfGOONw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jul 2019 10:13:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54604 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388889AbfGOONv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:13:51 -0400
+Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8862D20651;
+        Mon, 15 Jul 2019 14:13:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1563200029;
+        bh=F0F2Q8KUGLU5KKPw844B94bWHqTSxq4X6WeqvKfZWDU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=w8LQ5868JDN1qDcJ6vOppX73KRPP15XOtKhJKjabK6hH6VpzdbIxMPQPn4YwXAAx5
+         wi0NrVIqxqa3ef0i6PSAoeXo74G2HvdkGHC6bBvNS9NgSwLCxAaVyVvCfa2Jvh5UE9
+         SAx58nTAqkDPjZ2JCMb5jU0AwwJ91G5jyjQBxNIk=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.1 163/219] PCI / ACPI: Use cached ACPI device state to get PCI device power state
+Date:   Mon, 15 Jul 2019 10:02:44 -0400
+Message-Id: <20190715140341.6443-163-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
+References: <20190715140341.6443-1-sashal@kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch adds support for checking RCU reader sections in list
-traversal macros. Optionally, if the list macro is called under SRCU or
-other lock/mutex protection, then appropriate lockdep expressions can be
-passed to make the checks pass.
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Existing list_for_each_entry_rcu() invocations don't need to pass the
-optional fourth argument (cond) unless they are under some non-RCU
-protection and needs to make lockdep check pass.
+[ Upstream commit 83a16e3f6d70da99896c7a2639c0b60fff13afb8 ]
 
-Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
+The ACPI power state returned by acpi_device_get_power() may depend on
+the configuration of ACPI power resources in the system which may change
+any time after acpi_device_get_power() has returned, unless the
+reference counters of the ACPI power resources in question are set to
+prevent that from happening. Thus it is invalid to use acpi_device_get_power()
+in acpi_pci_get_power_state() the way it is done now and the value of
+the ->power.state field in the corresponding struct acpi_device objects
+(which reflects the ACPI power resources reference counting, among other
+things) should be used instead.
+
+As an example where this becomes an issue is Intel Ice Lake where the
+Thunderbolt controller (NHI), two PCIe root ports (RP0 and RP1) and xHCI
+all share the same power resources. The following picture with power
+resources marked with [] shows the topology:
+
+  Host bridge
+    |
+    +- RP0 ---\
+    +- RP1 ---|--+--> [TBT]
+    +- NHI --/   |
+    |            |
+    |            v
+    +- xHCI --> [D3C]
+
+Here TBT and D3C are the shared ACPI power resources. ACPI _PR3() method
+of the devices in question returns either TBT or D3C or both.
+
+Say we runtime suspend first the root ports RP0 and RP1, then NHI. Now
+since the TBT power resource is still on when the root ports are runtime
+suspended their dev->current_state is set to D3hot. When NHI is runtime
+suspended TBT is finally turned off but state of the root ports remain
+to be D3hot. Now when the xHCI is runtime suspended D3C gets also turned
+off. PCI core thus has power states of these devices cached in their
+dev->current_state as follows:
+
+  RP0 -> D3hot
+  RP1 -> D3hot
+  NHI -> D3cold
+  xHCI -> D3cold
+
+If the user now runs lspci for instance, the result is all 1's like in
+the below output (00:07.0 is the first root port, RP0):
+
+00:07.0 PCI bridge: Intel Corporation Device 8a1d (rev ff) (prog-if ff)
+    !!! Unknown header type 7f
+    Kernel driver in use: pcieport
+
+In short the hardware state is not in sync with the software state
+anymore. The exact same thing happens with the PME polling thread which
+ends up bringing the root ports back into D0 after they are runtime
+suspended.
+
+For this reason, modify acpi_pci_get_power_state() so that it uses the
+ACPI device power state that was cached by the ACPI core. This makes the
+PCI device power state match the ACPI device power state regardless of
+state of the shared power resources which may still be on at this point.
+
+Link: https://lore.kernel.org/r/20190618161858.77834-2-mika.westerberg@linux.intel.com
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/linux/rculist.h  | 28 ++++++++++++++++++++-----
- include/linux/rcupdate.h |  7 +++++++
- kernel/rcu/Kconfig.debug | 11 ++++++++++
- kernel/rcu/update.c      | 44 ++++++++++++++++++++++++----------------
- 4 files changed, 67 insertions(+), 23 deletions(-)
+ drivers/pci/pci-acpi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/rculist.h b/include/linux/rculist.h
-index e91ec9ddcd30..1048160625bb 100644
---- a/include/linux/rculist.h
-+++ b/include/linux/rculist.h
-@@ -40,6 +40,20 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
-  */
- #define list_next_rcu(list)	(*((struct list_head __rcu **)(&(list)->next)))
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index bf32fde328c2..1591cd82bbc7 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -618,7 +618,8 @@ static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
+ 	if (!adev || !acpi_device_power_manageable(adev))
+ 		return PCI_UNKNOWN;
  
-+/*
-+ * Check during list traversal that we are within an RCU reader
-+ */
-+
-+#ifdef CONFIG_PROVE_RCU_LIST
-+#define __list_check_rcu(dummy, cond, ...)				\
-+	({								\
-+	RCU_LOCKDEP_WARN(!cond && !rcu_read_lock_any_held(),		\
-+			 "RCU-list traversed in non-reader section!");	\
-+	 })
-+#else
-+#define __list_check_rcu(dummy, cond, ...) ({})
-+#endif
-+
- /*
-  * Insert a new entry between two known consecutive entries.
-  *
-@@ -343,14 +357,16 @@ static inline void list_splice_tail_init_rcu(struct list_head *list,
-  * @pos:	the type * to use as a loop cursor.
-  * @head:	the head for your list.
-  * @member:	the name of the list_head within the struct.
-+ * @cond:	optional lockdep expression if called from non-RCU protection.
-  *
-  * This list-traversal primitive may safely run concurrently with
-  * the _rcu list-mutation primitives such as list_add_rcu()
-  * as long as the traversal is guarded by rcu_read_lock().
-  */
--#define list_for_each_entry_rcu(pos, head, member) \
--	for (pos = list_entry_rcu((head)->next, typeof(*pos), member); \
--		&pos->member != (head); \
-+#define list_for_each_entry_rcu(pos, head, member, cond...)		\
-+	for (__list_check_rcu(dummy, ## cond, 0),			\
-+	     pos = list_entry_rcu((head)->next, typeof(*pos), member);	\
-+		&pos->member != (head);					\
- 		pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
+-	if (acpi_device_get_power(adev, &state) || state == ACPI_STATE_UNKNOWN)
++	state = adev->power.state;
++	if (state == ACPI_STATE_UNKNOWN)
+ 		return PCI_UNKNOWN;
  
- /**
-@@ -616,13 +632,15 @@ static inline void hlist_add_behind_rcu(struct hlist_node *n,
-  * @pos:	the type * to use as a loop cursor.
-  * @head:	the head for your list.
-  * @member:	the name of the hlist_node within the struct.
-+ * @cond:	optional lockdep expression if called from non-RCU protection.
-  *
-  * This list-traversal primitive may safely run concurrently with
-  * the _rcu list-mutation primitives such as hlist_add_head_rcu()
-  * as long as the traversal is guarded by rcu_read_lock().
-  */
--#define hlist_for_each_entry_rcu(pos, head, member)			\
--	for (pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
-+#define hlist_for_each_entry_rcu(pos, head, member, cond...)		\
-+	for (__list_check_rcu(dummy, ## cond, 0),			\
-+	     pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
- 			typeof(*(pos)), member);			\
- 		pos;							\
- 		pos = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(\
-diff --git a/include/linux/rcupdate.h b/include/linux/rcupdate.h
-index 8f7167478c1d..f3c29efdf19a 100644
---- a/include/linux/rcupdate.h
-+++ b/include/linux/rcupdate.h
-@@ -221,6 +221,7 @@ int debug_lockdep_rcu_enabled(void);
- int rcu_read_lock_held(void);
- int rcu_read_lock_bh_held(void);
- int rcu_read_lock_sched_held(void);
-+int rcu_read_lock_any_held(void);
- 
- #else /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
- 
-@@ -241,6 +242,12 @@ static inline int rcu_read_lock_sched_held(void)
- {
- 	return !preemptible();
- }
-+
-+static inline int rcu_read_lock_any_held(void)
-+{
-+	return !preemptible();
-+}
-+
- #endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
- 
- #ifdef CONFIG_PROVE_RCU
-diff --git a/kernel/rcu/Kconfig.debug b/kernel/rcu/Kconfig.debug
-index 5ec3ea4028e2..7fbd21dbfcd0 100644
---- a/kernel/rcu/Kconfig.debug
-+++ b/kernel/rcu/Kconfig.debug
-@@ -8,6 +8,17 @@ menu "RCU Debugging"
- config PROVE_RCU
- 	def_bool PROVE_LOCKING
- 
-+config PROVE_RCU_LIST
-+	bool "RCU list lockdep debugging"
-+	depends on PROVE_RCU
-+	default n
-+	help
-+	  Enable RCU lockdep checking for list usages. By default it is
-+	  turned off since there are several list RCU users that still
-+	  need to be converted to pass a lockdep expression. To prevent
-+	  false-positive splats, we keep it default disabled but once all
-+	  users are converted, we can remove this config option.
-+
- config TORTURE_TEST
- 	tristate
- 	default n
-diff --git a/kernel/rcu/update.c b/kernel/rcu/update.c
-index 9dd5aeef6e70..b7a4e3b5fa98 100644
---- a/kernel/rcu/update.c
-+++ b/kernel/rcu/update.c
-@@ -91,14 +91,18 @@ module_param(rcu_normal_after_boot, int, 0);
-  * Similarly, we avoid claiming an SRCU read lock held if the current
-  * CPU is offline.
-  */
-+#define rcu_read_lock_held_common()		\
-+	if (!debug_lockdep_rcu_enabled())	\
-+		return 1;			\
-+	if (!rcu_is_watching())			\
-+		return 0;			\
-+	if (!rcu_lockdep_current_cpu_online())	\
-+		return 0;
-+
- int rcu_read_lock_sched_held(void)
- {
--	if (!debug_lockdep_rcu_enabled())
--		return 1;
--	if (!rcu_is_watching())
--		return 0;
--	if (!rcu_lockdep_current_cpu_online())
--		return 0;
-+	rcu_read_lock_held_common();
-+
- 	return lock_is_held(&rcu_sched_lock_map) || !preemptible();
- }
- EXPORT_SYMBOL(rcu_read_lock_sched_held);
-@@ -257,12 +261,8 @@ NOKPROBE_SYMBOL(debug_lockdep_rcu_enabled);
-  */
- int rcu_read_lock_held(void)
- {
--	if (!debug_lockdep_rcu_enabled())
--		return 1;
--	if (!rcu_is_watching())
--		return 0;
--	if (!rcu_lockdep_current_cpu_online())
--		return 0;
-+	rcu_read_lock_held_common();
-+
- 	return lock_is_held(&rcu_lock_map);
- }
- EXPORT_SYMBOL_GPL(rcu_read_lock_held);
-@@ -284,16 +284,24 @@ EXPORT_SYMBOL_GPL(rcu_read_lock_held);
-  */
- int rcu_read_lock_bh_held(void)
- {
--	if (!debug_lockdep_rcu_enabled())
--		return 1;
--	if (!rcu_is_watching())
--		return 0;
--	if (!rcu_lockdep_current_cpu_online())
--		return 0;
-+	rcu_read_lock_held_common();
-+
- 	return in_softirq() || irqs_disabled();
- }
- EXPORT_SYMBOL_GPL(rcu_read_lock_bh_held);
- 
-+int rcu_read_lock_any_held(void)
-+{
-+	rcu_read_lock_held_common();
-+
-+	if (lock_is_held(&rcu_lock_map) ||
-+	    lock_is_held(&rcu_bh_lock_map) ||
-+	    lock_is_held(&rcu_sched_lock_map))
-+		return 1;
-+	return !preemptible();
-+}
-+EXPORT_SYMBOL_GPL(rcu_read_lock_any_held);
-+
- #endif /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
- 
- /**
+ 	return state_conv[state];
 -- 
-2.22.0.510.g264f2c817a-goog
+2.20.1
 
