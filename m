@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53318C76191
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:02:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BDC4C7618F
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2BB2C2054F
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:02:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34C5B2067C
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 15:08:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563202931;
-	bh=F0F2Q8KUGLU5KKPw844B94bWHqTSxq4X6WeqvKfZWDU=;
+	s=default; t=1563203322;
+	bh=ZS55mG+paP+L29yblX7J5SeVoO5OrFk/y/5CPeKCzEA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sv4lUNPm4ghFK13loXQ9j5SELLN3xl1Zbv0sLlAO4lbgrQ5gfYvo+2UgM+f1mCEeo
-	 X7r1k4vb9kepK/SWmjTDyvY5Z/DoSctKp4IqTuvlkTVCl8tXvFriT3TaM4EtFFEBzU
-	 c74IsdTTWfwQ9YrcGrFc46hieWY+LhE4T9K3EAjA=
+	b=KZCO80+1uvWUxB6BiNgUSLWSJ8i2HuJuBNyxUnu0vmItJ5PavHkylLRwWXc4S10IV
+	 DgLtKiVISHXOhDbslvlfWFkpD9oRPN+Y2yAZZkiwiZeJlwzcKfpV1mHL1v4eTdatgX
+	 oaIa1HPy9Xpo2QjPFgsEQgnxLbAly32+I+ugYxOg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388955AbfGOONw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:13:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54604 "EHLO mail.kernel.org"
+        id S1733063AbfGON6F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jul 2019 09:58:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388889AbfGOONv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:13:51 -0400
+        id S1733060AbfGON6E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 Jul 2019 09:58:04 -0400
 Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8862D20651;
-        Mon, 15 Jul 2019 14:13:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 19694212F5;
+        Mon, 15 Jul 2019 13:58:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563200029;
-        bh=F0F2Q8KUGLU5KKPw844B94bWHqTSxq4X6WeqvKfZWDU=;
+        s=default; t=1563199083;
+        bh=ZS55mG+paP+L29yblX7J5SeVoO5OrFk/y/5CPeKCzEA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=w8LQ5868JDN1qDcJ6vOppX73KRPP15XOtKhJKjabK6hH6VpzdbIxMPQPn4YwXAAx5
-         wi0NrVIqxqa3ef0i6PSAoeXo74G2HvdkGHC6bBvNS9NgSwLCxAaVyVvCfa2Jvh5UE9
-         SAx58nTAqkDPjZ2JCMb5jU0AwwJ91G5jyjQBxNIk=
+        b=Jtgoz4blmGQd9F8M3Jr2xH5MSu/uvveAlxgzsmjvnFXOW2Cjw4h2hiIGjYZhQVrc7
+         Xi556+EWnaW/GyBhfdvN9Iu/ULdODDs1wuzoL4+1f28TVbGPmB0EoI2yeQ10y91kFj
+         6L8/vkFIHGfFj0+Yk4mC6isWtKmhS7MLRvj7kldw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 163/219] PCI / ACPI: Use cached ACPI device state to get PCI device power state
-Date:   Mon, 15 Jul 2019 10:02:44 -0400
-Message-Id: <20190715140341.6443-163-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 185/249] PCI / ACPI: Use cached ACPI device state to get PCI device power state
+Date:   Mon, 15 Jul 2019 09:45:50 -0400
+Message-Id: <20190715134655.4076-185-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
-References: <20190715140341.6443-1-sashal@kernel.org>
+In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
+References: <20190715134655.4076-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -129,10 +129,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index bf32fde328c2..1591cd82bbc7 100644
+index 1897847ceb0c..b782acac26c5 100644
 --- a/drivers/pci/pci-acpi.c
 +++ b/drivers/pci/pci-acpi.c
-@@ -618,7 +618,8 @@ static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
+@@ -685,7 +685,8 @@ static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
  	if (!adev || !acpi_device_power_manageable(adev))
  		return PCI_UNKNOWN;
  
