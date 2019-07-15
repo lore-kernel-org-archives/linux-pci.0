@@ -2,146 +2,123 @@ Return-Path: <SRS0=G7Xz=VM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A08EC76195
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B687EC7618F
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 14:37:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E784E204FD
-	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 14:36:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563201361;
-	bh=rVnbu98XFHmTsDb3iwZ59vX+WiLREQBHvK3D1hCvXqY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=iGCjqEeHXTakk8Pl1lET/IuWbAOO4uo4JeeZTyDyGmWpWZ+Yjzfm3vLqT+rhDVSV7
-	 3hjCZSbLH4OpT7FEilk5dsETf/XasEHxL7w5+eXxUj5LbElGSg1BshBiLhOLmoFuVn
-	 nSKAq0di1xuWCiQlOuDYEeKY5uFkc4FSo5JRKv1s=
+	by mail.kernel.org (Postfix) with ESMTP id 8EE4221872
+	for <linux-pci@archiver.kernel.org>; Mon, 15 Jul 2019 14:37:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=joelfernandes.org header.i=@joelfernandes.org header.b="AUubZl4E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391534AbfGOOf4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 15 Jul 2019 10:35:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50430 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403829AbfGOOd5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 Jul 2019 10:33:57 -0400
-Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6A021204FD;
-        Mon, 15 Jul 2019 14:33:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563201236;
-        bh=rVnbu98XFHmTsDb3iwZ59vX+WiLREQBHvK3D1hCvXqY=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IrioT61QTLhbIRFhVAbHQVmvLz+tUqXVai+5Xomtcf6tv8oqmbUsyNk6Oaq3B+sE2
-         OKYbApXpmgagKX1GLWdzpyONwTkaZ1kVHf9lyU6vjk25h+rG/NuyjRr3YCai0tvIQU
-         ROTCzyMJx/InDuW3oCW3fDLMzPVbUegB1J+yw8TQ=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 086/105] PCI / ACPI: Use cached ACPI device state to get PCI device power state
-Date:   Mon, 15 Jul 2019 10:28:20 -0400
-Message-Id: <20190715142839.9896-86-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715142839.9896-1-sashal@kernel.org>
-References: <20190715142839.9896-1-sashal@kernel.org>
+        id S2404572AbfGOOh1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 15 Jul 2019 10:37:27 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:39251 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404549AbfGOOh1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 Jul 2019 10:37:27 -0400
+Received: by mail-pl1-f195.google.com with SMTP id b7so8397413pls.6
+        for <linux-pci@vger.kernel.org>; Mon, 15 Jul 2019 07:37:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=joelfernandes.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Z+lAujGo7GrSG40jkK2/203/pKxvTLE13nrgeKcOwgI=;
+        b=AUubZl4ETLIsW/m5dgXLBulJXDHc0BCosX1eCwyxi+94m0Nn+UMJmqa85ypsCsZq1j
+         xz0LM9usgNKyVFOetyi7Bh0t5cemvEnRKdil/TVdpWNJXsluRFLQGvr0RhdUuQJTVlAU
+         AAiUQF4zYjdlsdkxFoX9G9U8IN3eAZ1c3LtuQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Z+lAujGo7GrSG40jkK2/203/pKxvTLE13nrgeKcOwgI=;
+        b=aLHPVU8Pl1QT5iafkg9Msu1LLdEOz+luSgCNWrBMJTCA6BUdOn/3Hnk9Udp/gyNBTk
+         JbLMOVKX3JmG9F1kAW1dtIUGFDo+N6M542sfPP04oO5zRk+Qi6hkdnpOj2p8xSnqA9e/
+         WKuDdJbjGEz6B5yOTkLkRK/eE2HuikA7iUInXGSUQ424a7oFCLcnVf9NrIrNvthsH0GO
+         wtB+AcU+BEkEx+HaKO5yOQRRpWTv3grUSBqwDqHJudpwz3gBZn8QeXZ/lVWhyl2I1I4F
+         Ypfz9RV7YVdIIbKkWpr80yz3fCwCgS3i1azxReSksWfCA3fsOWQmNYgVnzBfFbrE+X06
+         O76w==
+X-Gm-Message-State: APjAAAUplGs+OVEGqBO5dqfZGnWTR03SFp/ppha9kwPstkEMFJuOsmlt
+        ifuXKWX9KhOc+SwIffPq8Mo=
+X-Google-Smtp-Source: APXvYqyfIIGoLXgS2oKcW7Wk3sDCdph3kdkFQYwRHA7oKCzkGjxEv3JlpE2AZDMyjbjqgNcrkFD7WQ==
+X-Received: by 2002:a17:902:8649:: with SMTP id y9mr28192780plt.289.1563201446297;
+        Mon, 15 Jul 2019 07:37:26 -0700 (PDT)
+Received: from joelaf.cam.corp.google.com ([2620:15c:6:12:9c46:e0da:efbf:69cc])
+        by smtp.gmail.com with ESMTPSA id s66sm18381852pfs.8.2019.07.15.07.37.22
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Mon, 15 Jul 2019 07:37:25 -0700 (PDT)
+From:   "Joel Fernandes (Google)" <joel@joelfernandes.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     "Joel Fernandes (Google)" <joel@joelfernandes.org>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Borislav Petkov <bp@alien8.de>, c0d1n61at3@gmail.com,
+        "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Josh Triplett <josh@joshtriplett.org>, keescook@chromium.org,
+        kernel-hardening@lists.openwall.com, kernel-team@android.com,
+        Lai Jiangshan <jiangshanlai@gmail.com>,
+        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pm@vger.kernel.org,
+        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+        neilb@suse.com, netdev@vger.kernel.org,
+        "Paul E. McKenney" <paulmck@linux.ibm.com>,
+        Pavel Machek <pavel@ucw.cz>, peterz@infradead.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Rasmus Villemoes <rasmus.villemoes@prevas.dk>,
+        rcu@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>,
+        Tejun Heo <tj@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
+        x86@kernel.org (maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT))
+Subject: [PATCH 3/9] rcu/sync: Remove custom check for reader-section (v2)
+Date:   Mon, 15 Jul 2019 10:36:59 -0400
+Message-Id: <20190715143705.117908-4-joel@joelfernandes.org>
+X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
+In-Reply-To: <20190715143705.117908-1-joel@joelfernandes.org>
+References: <20190715143705.117908-1-joel@joelfernandes.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+The rcu/sync code was doing its own check whether we are in a reader
+section. With RCU consolidating flavors and the generic helper added in
+this series, this is no longer need. We can just use the generic helper
+and it results in a nice cleanup.
 
-[ Upstream commit 83a16e3f6d70da99896c7a2639c0b60fff13afb8 ]
-
-The ACPI power state returned by acpi_device_get_power() may depend on
-the configuration of ACPI power resources in the system which may change
-any time after acpi_device_get_power() has returned, unless the
-reference counters of the ACPI power resources in question are set to
-prevent that from happening. Thus it is invalid to use acpi_device_get_power()
-in acpi_pci_get_power_state() the way it is done now and the value of
-the ->power.state field in the corresponding struct acpi_device objects
-(which reflects the ACPI power resources reference counting, among other
-things) should be used instead.
-
-As an example where this becomes an issue is Intel Ice Lake where the
-Thunderbolt controller (NHI), two PCIe root ports (RP0 and RP1) and xHCI
-all share the same power resources. The following picture with power
-resources marked with [] shows the topology:
-
-  Host bridge
-    |
-    +- RP0 ---\
-    +- RP1 ---|--+--> [TBT]
-    +- NHI --/   |
-    |            |
-    |            v
-    +- xHCI --> [D3C]
-
-Here TBT and D3C are the shared ACPI power resources. ACPI _PR3() method
-of the devices in question returns either TBT or D3C or both.
-
-Say we runtime suspend first the root ports RP0 and RP1, then NHI. Now
-since the TBT power resource is still on when the root ports are runtime
-suspended their dev->current_state is set to D3hot. When NHI is runtime
-suspended TBT is finally turned off but state of the root ports remain
-to be D3hot. Now when the xHCI is runtime suspended D3C gets also turned
-off. PCI core thus has power states of these devices cached in their
-dev->current_state as follows:
-
-  RP0 -> D3hot
-  RP1 -> D3hot
-  NHI -> D3cold
-  xHCI -> D3cold
-
-If the user now runs lspci for instance, the result is all 1's like in
-the below output (00:07.0 is the first root port, RP0):
-
-00:07.0 PCI bridge: Intel Corporation Device 8a1d (rev ff) (prog-if ff)
-    !!! Unknown header type 7f
-    Kernel driver in use: pcieport
-
-In short the hardware state is not in sync with the software state
-anymore. The exact same thing happens with the PME polling thread which
-ends up bringing the root ports back into D0 after they are runtime
-suspended.
-
-For this reason, modify acpi_pci_get_power_state() so that it uses the
-ACPI device power state that was cached by the ACPI core. This makes the
-PCI device power state match the ACPI device power state regardless of
-state of the shared power resources which may still be on at this point.
-
-Link: https://lore.kernel.org/r/20190618161858.77834-2-mika.westerberg@linux.intel.com
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Acked-by: Oleg Nesterov <oleg@redhat.com>
+Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
 ---
- drivers/pci/pci-acpi.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/linux/rcu_sync.h | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index a3cedf8de863..688e195e85b4 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -563,7 +563,8 @@ static pci_power_t acpi_pci_get_power_state(struct pci_dev *dev)
- 	if (!adev || !acpi_device_power_manageable(adev))
- 		return PCI_UNKNOWN;
- 
--	if (acpi_device_get_power(adev, &state) || state == ACPI_STATE_UNKNOWN)
-+	state = adev->power.state;
-+	if (state == ACPI_STATE_UNKNOWN)
- 		return PCI_UNKNOWN;
- 
- 	return state_conv[state];
+diff --git a/include/linux/rcu_sync.h b/include/linux/rcu_sync.h
+index 9b83865d24f9..0027d4c8087c 100644
+--- a/include/linux/rcu_sync.h
++++ b/include/linux/rcu_sync.h
+@@ -31,9 +31,7 @@ struct rcu_sync {
+  */
+ static inline bool rcu_sync_is_idle(struct rcu_sync *rsp)
+ {
+-	RCU_LOCKDEP_WARN(!rcu_read_lock_held() &&
+-			 !rcu_read_lock_bh_held() &&
+-			 !rcu_read_lock_sched_held(),
++	RCU_LOCKDEP_WARN(!rcu_read_lock_any_held(),
+ 			 "suspicious rcu_sync_is_idle() usage");
+ 	return !READ_ONCE(rsp->gp_state); /* GP_IDLE */
+ }
 -- 
-2.20.1
+2.22.0.510.g264f2c817a-goog
 
