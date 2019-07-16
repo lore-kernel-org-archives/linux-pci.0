@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 783ABC7618F
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 18:43:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB3FEC7618F
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 18:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62D602064B
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 18:43:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C27FF2064B
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 18:44:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388294AbfGPSns (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Jul 2019 14:43:48 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39402 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728190AbfGPSnr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2019 14:43:47 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x6GIbNPC014456;
-        Tue, 16 Jul 2019 14:41:23 -0400
+        id S1728608AbfGPSo4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Jul 2019 14:44:56 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:1294 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728366AbfGPSo4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2019 14:44:56 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x6GIfcrQ098988;
+        Tue, 16 Jul 2019 14:43:35 -0400
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2tshy55vjw-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2tsj824pyq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Jul 2019 14:41:22 -0400
-Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x6GIfMS8050544;
-        Tue, 16 Jul 2019 14:41:22 -0400
-Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2tshy55vhk-1
+        Tue, 16 Jul 2019 14:43:34 -0400
+Received: from m0098414.ppops.net (m0098414.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x6GIfguM099589;
+        Tue, 16 Jul 2019 14:43:34 -0400
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2tsj824pxw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Jul 2019 14:41:22 -0400
-Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
-        by ppma01wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x6GIdjf0027347;
-        Tue, 16 Jul 2019 18:41:20 GMT
-Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
-        by ppma01wdc.us.ibm.com with ESMTP id 2tq6x618hu-1
+        Tue, 16 Jul 2019 14:43:34 -0400
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x6GIdjUq031073;
+        Tue, 16 Jul 2019 18:43:33 GMT
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+        by ppma03dal.us.ibm.com with ESMTP id 2tq6x79948-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Jul 2019 18:41:20 +0000
+        Tue, 16 Jul 2019 18:43:33 +0000
 Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
-        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x6GIfKf944630514
+        by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x6GIhWqR45875528
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 Jul 2019 18:41:20 GMT
+        Tue, 16 Jul 2019 18:43:32 GMT
 Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id ECC48B2067;
-        Tue, 16 Jul 2019 18:41:19 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 06C7DB2067;
+        Tue, 16 Jul 2019 18:43:32 +0000 (GMT)
 Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id AA33DB2068;
-        Tue, 16 Jul 2019 18:41:19 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B8068B2065;
+        Tue, 16 Jul 2019 18:43:31 +0000 (GMT)
 Received: from paulmck-ThinkPad-W541 (unknown [9.80.225.134])
         by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
-        Tue, 16 Jul 2019 18:41:19 +0000 (GMT)
+        Tue, 16 Jul 2019 18:43:31 +0000 (GMT)
 Received: by paulmck-ThinkPad-W541 (Postfix, from userid 1000)
-        id B8B1116C8E9B; Tue, 16 Jul 2019 11:41:19 -0700 (PDT)
-Date:   Tue, 16 Jul 2019 11:41:19 -0700
+        id C9CDC16C8E9B; Tue, 16 Jul 2019 11:43:31 -0700 (PDT)
+Date:   Tue, 16 Jul 2019 11:43:31 -0700
 From:   "Paul E. McKenney" <paulmck@linux.ibm.com>
 To:     "Joel Fernandes (Google)" <joel@joelfernandes.org>
 Cc:     linux-kernel@vger.kernel.org,
@@ -82,16 +82,16 @@ Cc:     linux-kernel@vger.kernel.org,
         Tejun Heo <tj@kernel.org>,
         Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
         "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>
-Subject: Re: [PATCH 6/9] workqueue: Convert for_each_wq to use built-in list
- check (v2)
-Message-ID: <20190716184119.GH14271@linux.ibm.com>
+Subject: Re: [PATCH 8/9] acpi: Use built-in RCU list checking for
+ acpi_ioremaps list (v1)
+Message-ID: <20190716184331.GJ14271@linux.ibm.com>
 Reply-To: paulmck@linux.ibm.com
 References: <20190715143705.117908-1-joel@joelfernandes.org>
- <20190715143705.117908-7-joel@joelfernandes.org>
+ <20190715143705.117908-9-joel@joelfernandes.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190715143705.117908-7-joel@joelfernandes.org>
+In-Reply-To: <20190715143705.117908-9-joel@joelfernandes.org>
 User-Agent: Mutt/1.5.21 (2010-09-15)
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-07-16_04:,,
@@ -100,55 +100,64 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorit
  malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
  clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
  mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1907160228
+ scancount=1 engine=8.0.1-1810050000 definitions=main-1907160229
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jul 15, 2019 at 10:37:02AM -0400, Joel Fernandes (Google) wrote:
-> list_for_each_entry_rcu now has support to check for RCU reader sections
-> as well as lock. Just use the support in it, instead of explictly
-> checking in the caller.
+On Mon, Jul 15, 2019 at 10:37:04AM -0400, Joel Fernandes (Google) wrote:
+> list_for_each_entry_rcu has built-in RCU and lock checking. Make use of
+> it for acpi_ioremaps list traversal.
 > 
 > Signed-off-by: Joel Fernandes (Google) <joel@joelfernandes.org>
 
-We need an ack from one of the subsystem maintainers on this one.
+Given that Rafael acked it, this one looks ready.
 
 							Thanx, Paul
 
 > ---
->  kernel/workqueue.c | 10 ++--------
->  1 file changed, 2 insertions(+), 8 deletions(-)
+>  drivers/acpi/osl.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-> index 601d61150b65..e882477ebf6e 100644
-> --- a/kernel/workqueue.c
-> +++ b/kernel/workqueue.c
-> @@ -364,11 +364,6 @@ static void workqueue_sysfs_unregister(struct workqueue_struct *wq);
->  			 !lockdep_is_held(&wq_pool_mutex),		\
->  			 "RCU or wq_pool_mutex should be held")
+> diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> index 9c0edf2fc0dd..2f9d0d20b836 100644
+> --- a/drivers/acpi/osl.c
+> +++ b/drivers/acpi/osl.c
+> @@ -14,6 +14,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/mm.h>
+>  #include <linux/highmem.h>
+> +#include <linux/lockdep.h>
+>  #include <linux/pci.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/kmod.h>
+> @@ -80,6 +81,7 @@ struct acpi_ioremap {
 >  
-> -#define assert_rcu_or_wq_mutex(wq)					\
-> -	RCU_LOCKDEP_WARN(!rcu_read_lock_held() &&			\
-> -			 !lockdep_is_held(&wq->mutex),			\
-> -			 "RCU or wq->mutex should be held")
-> -
->  #define assert_rcu_or_wq_mutex_or_pool_mutex(wq)			\
->  	RCU_LOCKDEP_WARN(!rcu_read_lock_held() &&			\
->  			 !lockdep_is_held(&wq->mutex) &&		\
-> @@ -425,9 +420,8 @@ static void workqueue_sysfs_unregister(struct workqueue_struct *wq);
->   * ignored.
->   */
->  #define for_each_pwq(pwq, wq)						\
-> -	list_for_each_entry_rcu((pwq), &(wq)->pwqs, pwqs_node)		\
-> -		if (({ assert_rcu_or_wq_mutex(wq); false; })) { }	\
-> -		else
-> +	list_for_each_entry_rcu((pwq), &(wq)->pwqs, pwqs_node,		\
-> +				 lock_is_held(&(wq->mutex).dep_map))
+>  static LIST_HEAD(acpi_ioremaps);
+>  static DEFINE_MUTEX(acpi_ioremap_lock);
+> +#define acpi_ioremap_lock_held() lock_is_held(&acpi_ioremap_lock.dep_map)
 >  
->  #ifdef CONFIG_DEBUG_OBJECTS_WORK
+>  static void __init acpi_request_region (struct acpi_generic_address *gas,
+>  	unsigned int length, char *desc)
+> @@ -206,7 +208,7 @@ acpi_map_lookup(acpi_physical_address phys, acpi_size size)
+>  {
+>  	struct acpi_ioremap *map;
 >  
+> -	list_for_each_entry_rcu(map, &acpi_ioremaps, list)
+> +	list_for_each_entry_rcu(map, &acpi_ioremaps, list, acpi_ioremap_lock_held())
+>  		if (map->phys <= phys &&
+>  		    phys + size <= map->phys + map->size)
+>  			return map;
+> @@ -249,7 +251,7 @@ acpi_map_lookup_virt(void __iomem *virt, acpi_size size)
+>  {
+>  	struct acpi_ioremap *map;
+>  
+> -	list_for_each_entry_rcu(map, &acpi_ioremaps, list)
+> +	list_for_each_entry_rcu(map, &acpi_ioremaps, list, acpi_ioremap_lock_held())
+>  		if (map->virt <= virt &&
+>  		    virt + size <= map->virt + map->size)
+>  			return map;
 > -- 
 > 2.22.0.510.g264f2c817a-goog
 > 
