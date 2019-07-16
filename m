@@ -2,155 +2,72 @@ Return-Path: <SRS0=BWIP=VN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 823E9C76188
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 05:41:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A3FC76188
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 06:32:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5814920880
-	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 05:41:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FStmaG2f"
+	by mail.kernel.org (Postfix) with ESMTP id 6CCDA20880
+	for <linux-pci@archiver.kernel.org>; Tue, 16 Jul 2019 06:32:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726619AbfGPFk7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Jul 2019 01:40:59 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:35078 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726558AbfGPFk7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2019 01:40:59 -0400
-Received: by mail-pl1-f194.google.com with SMTP id w24so9501285plp.2;
-        Mon, 15 Jul 2019 22:40:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FBJREbuUcQWvvYEwTt/8v4/mfr5H4JRh9nPtsgNKrFQ=;
-        b=FStmaG2fXrwX5CzFkIZg6EO/YNw+qvDhp92DyCelPa2sJi3LZq5MVUSbeVcSxVQxmc
-         Y1Ot6uNNUSYfk0ZBQtcKNsSZJ1463h1Grj5kZxG2U+bUxidHX3za/l9Pb54SlbNBCzDm
-         3gdic5/FUWKqPDyA/W6iwnzjgxUATLruZ525qiMSLAD9E1O+xc4h+CFBHSYB/JzIHwKZ
-         qSzjyqPEy0APeFMRVOheO6iBLEMR5kQvKmEahCgJixTDHuJcQIqX0DWNRINI2zfEg3DM
-         cEY2uuJheuQa7QpwZmH4CpWrVsrZexkrl9yFx1FVFwloR1sAWH3GNnQjyN4lMi9ZuxB+
-         pQOQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=FBJREbuUcQWvvYEwTt/8v4/mfr5H4JRh9nPtsgNKrFQ=;
-        b=tJbux785XUNPIVVhRejmeKJieitaqQCNUyLDFj9b/J9VHZ1bpaIpo627sJPMAXILiq
-         uhOQugUCYc6JwIVT9WgXjsBCQAOE/xtpw/aoiqafWrMC2UhUdOIBlw4a75Mshc+Elyiq
-         ypvvDFNNy/h2zgK3dBjWK7u7xrcf9pwATyNCUSvGLPuQKL15WQriy24mEtRw9vhmw09A
-         piKYEavdg8F2QlHiHTPmIhAc4yXQMBMcKFLdft2X6syx3PA1Q65dEYibNaO/+V6Ogrso
-         lqxMouZhc1+3Eq9fSCNiBik+/bzdJ86fhvV68vWGn33jVCi6z501fx50H7ElHjcgVZ/6
-         /Mkw==
-X-Gm-Message-State: APjAAAWVBsUtWVE2c2ZX9hPpC7Vmbh7NrJsTVsuODajbjsiCbZ6Grlj9
-        ltsxbRYJWY91ct/Agmel9aY=
-X-Google-Smtp-Source: APXvYqwq+1lfPSWJQECU5s9UXm+3HSo/0MSuFP1nDOLpfciit8pWelaC7M1gUlgCfCljFzHUcWivPQ==
-X-Received: by 2002:a17:902:9a95:: with SMTP id w21mr32672559plp.126.1563255658943;
-        Mon, 15 Jul 2019 22:40:58 -0700 (PDT)
-Received: from localhost.localdomain ([110.227.64.207])
-        by smtp.gmail.com with ESMTPSA id d21sm8842201pgm.75.2019.07.15.22.40.55
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Mon, 15 Jul 2019 22:40:58 -0700 (PDT)
-From:   Nishka Dasgupta <nishkadg.linux@gmail.com>
-To:     thierry.reding@gmail.com, lorenzo.pieralisi@arm.com,
-        bhelgaas@google.com, jonathanh@nvidia.com,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Cc:     Nishka Dasgupta <nishkadg.linux@gmail.com>
-Subject: [PATCH] pci: controller: pci-tegra: Add of_node_put() before return
-Date:   Tue, 16 Jul 2019 11:10:47 +0530
-Message-Id: <20190716054047.2671-1-nishkadg.linux@gmail.com>
-X-Mailer: git-send-email 2.19.1
+        id S1730028AbfGPGcJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 16 Jul 2019 02:32:09 -0400
+Received: from relay10.mail.gandi.net ([217.70.178.230]:56979 "EHLO
+        relay10.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729995AbfGPGcJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2019 02:32:09 -0400
+Received: from windsurf (alyon-656-1-672-152.w92-137.abo.wanadoo.fr [92.137.69.152])
+        (Authenticated sender: thomas.petazzoni@bootlin.com)
+        by relay10.mail.gandi.net (Postfix) with ESMTPSA id C292024000A;
+        Tue, 16 Jul 2019 06:32:05 +0000 (UTC)
+Date:   Tue, 16 Jul 2019 08:32:04 +0200
+From:   Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To:     Russell King - ARM Linux admin <linux@armlinux.org.uk>
+Cc:     Grzegorz Jaszczyk <jaz@semihalf.com>, lorenzo.pieralisi@arm.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, mw@semihalf.com
+Subject: Re: [PATCH] PCI: aardvark: fix big endian support
+Message-ID: <20190716083204.375afc1e@windsurf>
+In-Reply-To: <20190715151016.6amymuikizmmmsph@shell.armlinux.org.uk>
+References: <1563200122-8323-1-git-send-email-jaz@semihalf.com>
+        <20190715170840.326acd73@windsurf>
+        <20190715151016.6amymuikizmmmsph@shell.armlinux.org.uk>
+Organization: Bootlin
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Each iteration of for_each_child_of_node puts the previous node, but in
-the case of a return from the middle of the loop, there is no put, thus
-causing a memory leak.
-Hence store these mid-loop return values in variable err and add a new
-label err_node_put which puts the previous node and returns err. Change
-six mid-loop return statements to point to this new label instead.
+Hello,
 
-Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
----
- drivers/pci/controller/pci-tegra.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+On Mon, 15 Jul 2019 16:10:16 +0100
+Russell King - ARM Linux admin <linux@armlinux.org.uk> wrote:
 
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index 9a917b2456f6..673a1725ef38 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -2237,14 +2237,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		err = of_pci_get_devfn(port);
- 		if (err < 0) {
- 			dev_err(dev, "failed to parse address: %d\n", err);
--			return err;
-+			goto err_node_put;
- 		}
- 
- 		index = PCI_SLOT(err);
- 
- 		if (index < 1 || index > soc->num_ports) {
- 			dev_err(dev, "invalid port number: %d\n", index);
--			return -EINVAL;
-+			err = -EINVAL;
-+			goto err_node_put;
- 		}
- 
- 		index--;
-@@ -2253,12 +2254,13 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		if (err < 0) {
- 			dev_err(dev, "failed to parse # of lanes: %d\n",
- 				err);
--			return err;
-+			goto err_node_put;
- 		}
- 
- 		if (value > 16) {
- 			dev_err(dev, "invalid # of lanes: %u\n", value);
--			return -EINVAL;
-+			err = -EINVAL;
-+			goto err_node_put;
- 		}
- 
- 		lanes |= value << (index << 3);
-@@ -2272,13 +2274,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		lane += value;
- 
- 		rp = devm_kzalloc(dev, sizeof(*rp), GFP_KERNEL);
--		if (!rp)
--			return -ENOMEM;
-+		if (!rp) {
-+			err = -ENOMEM;
-+			goto err_node_put;
-+		}
- 
- 		err = of_address_to_resource(port, 0, &rp->regs);
- 		if (err < 0) {
- 			dev_err(dev, "failed to parse address: %d\n", err);
--			return err;
-+			goto err_node_put;
- 		}
- 
- 		INIT_LIST_HEAD(&rp->list);
-@@ -2330,6 +2334,10 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		return err;
- 
- 	return 0;
-+
-+err_node_put:
-+	of_node_put(port);
-+	return err;
- }
- 
- /*
+> > Also, the advk_pci_bridge_emul_pcie_conf_read() and
+> > advk_pci_bridge_emul_pcie_conf_write() return values that are in the
+> > CPU endianness.
+> > 
+> > Am I missing something ?  
+> 
+> Getting the types correct and then using Sparse to validate the code
+> will help to identify issues exactly like this.
+
+Yes, I absolutely agree with your recommendation on the other thread.
+
+In fact, I am wondering if it really makes sense to store the "fake"
+config space in LE, since anyway the read/write accessors should return
+values in the CPU endianness.
+
+Best regards,
+
+Thomas
 -- 
-2.19.1
-
+Thomas Petazzoni, CTO, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
