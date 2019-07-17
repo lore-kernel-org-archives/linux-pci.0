@@ -2,164 +2,105 @@ Return-Path: <SRS0=C4S9=VO=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E0BC76195
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Jul 2019 00:10:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EACD9C7618F
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Jul 2019 18:24:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 05EDC21880
-	for <linux-pci@archiver.kernel.org>; Wed, 17 Jul 2019 00:10:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F214217F4
+	for <linux-pci@archiver.kernel.org>; Wed, 17 Jul 2019 18:24:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="krxIjMge"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728762AbfGQAKM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 16 Jul 2019 20:10:12 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46304 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728597AbfGQAKM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 Jul 2019 20:10:12 -0400
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x6H07KiH124292;
-        Tue, 16 Jul 2019 20:08:00 -0400
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2tsnmnejq4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Jul 2019 20:07:59 -0400
-Received: from m0098394.ppops.net (m0098394.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x6H07OI6125043;
-        Tue, 16 Jul 2019 20:07:59 -0400
-Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2tsnmnejpc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 16 Jul 2019 20:07:59 -0400
-Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
-        by ppma01wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x6H06MZU032508;
-        Wed, 17 Jul 2019 00:07:57 GMT
-Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
-        by ppma01wdc.us.ibm.com with ESMTP id 2tq6x63b2y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 17 Jul 2019 00:07:57 +0000
-Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
-        by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x6H07vFM39780686
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 17 Jul 2019 00:07:57 GMT
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1A3E4B2065;
-        Wed, 17 Jul 2019 00:07:57 +0000 (GMT)
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C0D28B206E;
-        Wed, 17 Jul 2019 00:07:56 +0000 (GMT)
-Received: from paulmck-ThinkPad-W541 (unknown [9.80.225.134])
-        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
-        Wed, 17 Jul 2019 00:07:56 +0000 (GMT)
-Received: by paulmck-ThinkPad-W541 (Postfix, from userid 1000)
-        id 30CFA16C8E9B; Tue, 16 Jul 2019 17:07:57 -0700 (PDT)
-Date:   Tue, 16 Jul 2019 17:07:57 -0700
-From:   "Paul E. McKenney" <paulmck@linux.ibm.com>
-To:     Joel Fernandes <joel@joelfernandes.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Borislav Petkov <bp@alien8.de>, c0d1n61at3@gmail.com,
-        "David S. Miller" <davem@davemloft.net>, edumazet@google.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Josh Triplett <josh@joshtriplett.org>, keescook@chromium.org,
-        kernel-hardening@lists.openwall.com, kernel-team@android.com,
-        Lai Jiangshan <jiangshanlai@gmail.com>,
-        Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        neilb@suse.com, netdev@vger.kernel.org,
-        Oleg Nesterov <oleg@redhat.com>, Pavel Machek <pavel@ucw.cz>,
-        peterz@infradead.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Rasmus Villemoes <rasmus.villemoes@prevas.dk>,
-        rcu@vger.kernel.org, Steven Rostedt <rostedt@goodmis.org>,
-        Tejun Heo <tj@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>, will@kernel.org,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>
-Subject: Re: [PATCH 2/9] rcu: Add support for consolidated-RCU reader
- checking (v3)
-Message-ID: <20190717000757.GQ14271@linux.ibm.com>
-Reply-To: paulmck@linux.ibm.com
-References: <20190715143705.117908-1-joel@joelfernandes.org>
- <20190715143705.117908-3-joel@joelfernandes.org>
- <20190716183833.GD14271@linux.ibm.com>
- <20190716184649.GA130463@google.com>
- <20190716185303.GM14271@linux.ibm.com>
- <20190716220205.GB172157@google.com>
+        id S1727434AbfGQSYK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 17 Jul 2019 14:24:10 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:46299 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727428AbfGQSYJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 17 Jul 2019 14:24:09 -0400
+Received: by mail-io1-f65.google.com with SMTP id i10so47213949iol.13;
+        Wed, 17 Jul 2019 11:24:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=uf/4ZxPFIqOD9RapY4uAy1qNJPgc//Sy2DxkMi0wzxE=;
+        b=krxIjMge1Y/jwdgZJHPkKyCSOJdzOmEuGKBdQQQYSbNN8g639+uD17I60myNgM1NkW
+         uNRY8Fi3Z5Qm8QM6XSj8EVum+XYgVEQOU9fETb7V785PjvfjkkZrbvQsSxXnsH7Djjws
+         zXa++cJNY6JAPFMPvNn0irdUscSgPInop2C48o+NJh6+Wr24Nd1xGVxhxUjNqbXJNYuo
+         xovtXmnd+dgXPCFK4Pk9AK47Y6oDsOXeWph2KqSqsvs+SNBv2KD+pIJbMBUuKgRGlBlO
+         tEUujRP120KzOKDdXf5I6MvcvTgfXxToWlr+RKxNNCBOjzEy0ekyQ6XRtshw/ffORFYV
+         cJbQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=uf/4ZxPFIqOD9RapY4uAy1qNJPgc//Sy2DxkMi0wzxE=;
+        b=s67WJiy19AQyn0DgDyAtqw2B3xVBwRCgtbGQEfp3ocJhUlihNjUSqtLM6EOOawpSrj
+         teEg5gNfBZfqnq8wU8Lcfde9RtNNSTUCdenIfJ/D9m5FsRCBfMSfTiarpDNAGBqNAuXq
+         cQhBRD+iosCUT4b/tE0KeUPXQh5Dy1vPx3tCCuYgeEYCNz6adjEHu04vO8EEZ7WgPGjA
+         t8D4Hfnti0j+RFhPLrbqCl22PcXoXaL6Z8gfNTFQSSOBz/VJz9hK5ksOfqqk4MtON+eo
+         Vu+9IWcjcXl/SISSFFx0aeWwmIbNh3jpaoTAyb5KeqaptqMIQ8yIBCFC58NIPb3B+LEk
+         sVjg==
+X-Gm-Message-State: APjAAAW8fbYFUf/EAybni+hX+2/qcfcLbxn3fBd/O1uSm3kii83ENSww
+        z1Z6D/GwRcGuJLgv1kVlYwCoatgCgCBKnQ==
+X-Google-Smtp-Source: APXvYqznMC3iKe3XsH51sI6EGKGJn4bbRxG7UsYc3XMuM2UVX6IXm13XQJAw2HEQSq9ouiNQzj7yHw==
+X-Received: by 2002:a02:2245:: with SMTP id o66mr12383247jao.53.1563387848779;
+        Wed, 17 Jul 2019 11:24:08 -0700 (PDT)
+Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
+        by smtp.gmail.com with ESMTPSA id p10sm41190115iob.54.2019.07.17.11.24.07
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Wed, 17 Jul 2019 11:24:07 -0700 (PDT)
+From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
+To:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com
+Cc:     skhan@linuxfoundation.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skunberg.kelsey@gmail.com
+Subject: [PATCH] PCI: Remove unused EXPORT_SYMBOL()s from drivers/pci/bus.c
+Date:   Wed, 17 Jul 2019 12:23:53 -0600
+Message-Id: <20190717182353.45557-1-skunberg.kelsey@gmail.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190716220205.GB172157@google.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-07-16_06:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1810050000 definitions=main-1907160263
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Jul 16, 2019 at 06:02:05PM -0400, Joel Fernandes wrote:
-> On Tue, Jul 16, 2019 at 11:53:03AM -0700, Paul E. McKenney wrote:
-> [snip]
-> > > > A few more things below.
-> > > > > ---
-> > > > >  include/linux/rculist.h  | 28 ++++++++++++++++++++-----
-> > > > >  include/linux/rcupdate.h |  7 +++++++
-> > > > >  kernel/rcu/Kconfig.debug | 11 ++++++++++
-> > > > >  kernel/rcu/update.c      | 44 ++++++++++++++++++++++++----------------
-> > > > >  4 files changed, 67 insertions(+), 23 deletions(-)
-> > > > > 
-> > > > > diff --git a/include/linux/rculist.h b/include/linux/rculist.h
-> > > > > index e91ec9ddcd30..1048160625bb 100644
-> > > > > --- a/include/linux/rculist.h
-> > > > > +++ b/include/linux/rculist.h
-> > > > > @@ -40,6 +40,20 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
-> > > > >   */
-> > > > >  #define list_next_rcu(list)	(*((struct list_head __rcu **)(&(list)->next)))
-> > > > >  
-> > > > > +/*
-> > > > > + * Check during list traversal that we are within an RCU reader
-> > > > > + */
-> > > > > +
-> > > > > +#ifdef CONFIG_PROVE_RCU_LIST
-> > > > 
-> > > > This new Kconfig option is OK temporarily, but unless there is reason to
-> > > > fear malfunction that a few weeks of rcutorture, 0day, and -next won't
-> > > > find, it would be better to just use CONFIG_PROVE_RCU.  The overall goal
-> > > > is to reduce the number of RCU knobs rather than grow them, must though
-> > > > history might lead one to believe otherwise.  :-/
-> > > 
-> > > If you want, we can try to drop this option and just use PROVE_RCU however I
-> > > must say there may be several warnings that need to be fixed in a short
-> > > period of time (even a few weeks may be too short) considering the 1000+
-> > > uses of RCU lists.
-> > Do many people other than me build with CONFIG_PROVE_RCU?  If so, then
-> > that would be a good reason for a temporary CONFIG_PROVE_RCU_LIST,
-> > as in going away in a release or two once the warnings get fixed.
-> 
-> PROVE_RCU is enabled by default with PROVE_LOCKING, so it is used quite
-> heavilty.
-> 
-> > > But I don't mind dropping it and it may just accelerate the fixing up of all
-> > > callers.
-> > 
-> > I will let you decide based on the above question.  But if you have
-> > CONFIG_PROVE_RCU_LIST, as noted below, it needs to depend on RCU_EXPERT.
-> 
-> Ok, will make it depend. But yes for temporary purpose, I will leave it as a
-> config and remove it later.
+pci_bus_get() and pci_bus_put() are not used by a loadable kernel module
+and do not need to be exported. Remove lines exporting pci_bus_get() and
+pci_bus_put().
 
-Very good, thank you!  Plus you got another ack.  ;-)
+Functions were exported in commit fe830ef62ac6 ("PCI: Introduce
+pci_bus_{get|put}() to manage PCI bus reference count"). No found history
+of functions being used by a loadable kernel module.
 
-							Thanx, Paul
+Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
+---
+ drivers/pci/bus.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 495059d923f7..8e40b3e6da77 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -417,11 +417,9 @@ struct pci_bus *pci_bus_get(struct pci_bus *bus)
+ 		get_device(&bus->dev);
+ 	return bus;
+ }
+-EXPORT_SYMBOL(pci_bus_get);
+ 
+ void pci_bus_put(struct pci_bus *bus)
+ {
+ 	if (bus)
+ 		put_device(&bus->dev);
+ }
+-EXPORT_SYMBOL(pci_bus_put);
+-- 
+2.20.1
+
