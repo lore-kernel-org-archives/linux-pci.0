@@ -2,136 +2,230 @@ Return-Path: <SRS0=3xIq=VP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-17.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
+	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A6CBC76191
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jul 2019 09:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 791B1C76195
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jul 2019 19:46:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 411D0217F4
-	for <linux-pci@archiver.kernel.org>; Thu, 18 Jul 2019 09:48:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43E2D2184E
+	for <linux-pci@archiver.kernel.org>; Thu, 18 Jul 2019 19:46:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="ZmXdXszl"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="UJwm5Ga9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389863AbfGRJsL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Jul 2019 05:48:11 -0400
-Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:37394 "EHLO
-        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726649AbfGRJsL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jul 2019 05:48:11 -0400
+        id S2391669AbfGRTot (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Jul 2019 15:44:49 -0400
+Received: from mail-pg1-f202.google.com ([209.85.215.202]:36311 "EHLO
+        mail-pg1-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391658AbfGRTos (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 Jul 2019 15:44:48 -0400
+Received: by mail-pg1-f202.google.com with SMTP id 8so11902010pgl.3
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jul 2019 12:44:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1563443290; x=1594979290;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=sWKyFvHBIDxbEG0LkDFJzh7iNZ7ckThMxb355rVm1NU=;
-  b=ZmXdXszlJm0rcCjOrB+Gv5yBLDiBJMY9YXcmBhCtBHHBZ7vV4P22g+mo
-   evSUY2SPYYSt2U2L8glHWL3ksq2RiA9dSK2BvLkKVzA2ni2qVtRjKND1n
-   J7n/VT/1eUq638YwRzQ1yvuaHQ0Bx74UpNs39MV8lxI/pjYHBsQb+/Mdr
-   k=;
-X-IronPort-AV: E=Sophos;i="5.64,276,1559520000"; 
-   d="scan'208";a="405475072"
-Received: from iad6-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1a-715bee71.us-east-1.amazon.com) ([10.124.125.6])
-  by smtp-border-fw-out-6001.iad6.amazon.com with ESMTP; 18 Jul 2019 09:47:49 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1a-715bee71.us-east-1.amazon.com (Postfix) with ESMTPS id BF02EA01A8;
-        Thu, 18 Jul 2019 09:47:48 +0000 (UTC)
-Received: from EX13D13UWA001.ant.amazon.com (10.43.160.136) by
- EX13MTAUWA001.ant.amazon.com (10.43.160.118) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 18 Jul 2019 09:47:48 +0000
-Received: from u9ff250417f405e.ant.amazon.com (10.43.161.219) by
- EX13D13UWA001.ant.amazon.com (10.43.160.136) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 18 Jul 2019 09:47:42 +0000
-From:   Jonathan Chocron <jonnyc@amazon.com>
-To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>
-CC:     <dwmw@amazon.co.uk>, <benh@kernel.crashing.org>,
-        <alisaidi@amazon.com>, <ronenk@amazon.com>, <barakw@amazon.com>,
-        <talel@amazon.com>, <hanochu@amazon.com>, <hhhawa@amazon.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <jonnyc@amazon.com>
-Subject: [PATCH v2 7/8] PCI: dw: Add validation that PCIe core is set to correct mode
-Date:   Thu, 18 Jul 2019 12:47:17 +0300
-Message-ID: <20190718094718.25083-3-jonnyc@amazon.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190718094531.21423-1-jonnyc@amazon.com>
-References: <20190718094531.21423-1-jonnyc@amazon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.43.161.219]
-X-ClientProxiedBy: EX13D19UWC001.ant.amazon.com (10.43.162.64) To
- EX13D13UWA001.ant.amazon.com (10.43.160.136)
+        d=google.com; s=20161025;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=ae+mrOFMmNbS13ze66pnDjDUvUjQtnZm37VMj80uCqw=;
+        b=UJwm5Ga9g54CaLEdGA8QyuIaY7IBpWCVeyIvfD3G6gpAmd8OrcZQ11NeNOk72vl0Sq
+         6wjmMNJQGYNAg/FeXy9EtrtHU39pYShrIoxJrFoVY4m47FXreOzpUUK4f7/X/3NBgONJ
+         1b5QxDiNZaf3pYVBSWe/DuMy8XvQxZq4wFSboXSkJoESJLktmqQ4I0pfhjJxJnZeuvzd
+         FJJxaVC3uEviIHFt9Dgm8XelmFqp1s8+4Cx2UXUStKJ4NCHHhZUAtPc5P+uEFjkI/ieR
+         kIqHRYyhaPIswURMQ2tKdACCRPDQl5vL/zGmn7y81WvhXMFtGNrm+//pr3sgZ3n1lzwG
+         20Xw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=ae+mrOFMmNbS13ze66pnDjDUvUjQtnZm37VMj80uCqw=;
+        b=Rq9FZkHQO8ZoRjxgmKgTmHhpdo+tToiWFaXbMmFCKT/8FVHc3dH7M6Fh0Dt6ZXS/Mr
+         RyKwHFubWaUo65NZVsMOc3WyAve2ADaOgwEPOxky2fj+g571tWfIhbDA+kR8WTYQIEwx
+         pCl96xVN9NzzDuUTlUn/+Ve1XbK/QC766m6VyE9G9EREXuWpaPBh9v4G9ylvYZdRgkhl
+         sL07DO5Qo8HKSvqiSdLjyJJoA4qDvIBqZXJm6Rk7hXOZ7nXD0T8BkaYOPA/yOXaGqKw+
+         iN7asGbbLOjNboM74kJBMnmznNzkGpzCgYtOs2MBdvEW3NyyKVnAlCpplx5kTFYcx7QA
+         NwIA==
+X-Gm-Message-State: APjAAAWbHfbhkC6OZ7xLWYlVFX8lphKeYNp2QAgjKtGQFweo/o+ITnE0
+        tj6EGKYrpfLUeSWHf4dN/GYwxCLP+ge1MybRuFbQZg==
+X-Google-Smtp-Source: APXvYqwnWbJfvojxAzuHzIjs3CUWwAAI2M+flGyDkNHJ+WHS4jsnxEpbjNH77559e8zqpp6C91BXoFnbfUEFCWk2Gp2pBg==
+X-Received: by 2002:a63:c64b:: with SMTP id x11mr49316460pgg.319.1563479087082;
+ Thu, 18 Jul 2019 12:44:47 -0700 (PDT)
+Date:   Thu, 18 Jul 2019 12:43:57 -0700
+In-Reply-To: <20190718194415.108476-1-matthewgarrett@google.com>
+Message-Id: <20190718194415.108476-12-matthewgarrett@google.com>
+Mime-Version: 1.0
+References: <20190718194415.108476-1-matthewgarrett@google.com>
+X-Mailer: git-send-email 2.22.0.510.g264f2c817a-goog
+Subject: [PATCH V36 11/29] PCI: Lock down BAR access when the kernel is locked down
+From:   Matthew Garrett <matthewgarrett@google.com>
+To:     jmorris@namei.org
+Cc:     linux-security-module@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+        Matthew Garrett <mjg59@srcf.ucam.org>,
+        David Howells <dhowells@redhat.com>,
+        Matthew Garrett <mjg59@google.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kees Cook <keescook@chromium.org>, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some PCIe controllers can be set to either Host or EP according to some
-early boot FW. To make sure there is no discrepancy (e.g. FW configured
-the port to EP mode while the DT specifies it as a host bridge or vice
-versa), a check has been added for each mode.
+From: Matthew Garrett <mjg59@srcf.ucam.org>
 
-Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
+Any hardware that can potentially generate DMA has to be locked down in
+order to avoid it being possible for an attacker to modify kernel code,
+allowing them to circumvent disabled module loading or module signing.
+Default to paranoid - in future we can potentially relax this for
+sufficiently IOMMU-isolated devices.
+
+Signed-off-by: David Howells <dhowells@redhat.com>
+Signed-off-by: Matthew Garrett <mjg59@google.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Kees Cook <keescook@chromium.org>
+cc: linux-pci@vger.kernel.org
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 8 ++++++++
- drivers/pci/controller/dwc/pcie-designware-host.c | 8 ++++++++
- 2 files changed, 16 insertions(+)
+ drivers/pci/pci-sysfs.c      | 16 ++++++++++++++++
+ drivers/pci/proc.c           | 14 ++++++++++++--
+ drivers/pci/syscall.c        |  4 +++-
+ include/linux/security.h     |  1 +
+ security/lockdown/lockdown.c |  1 +
+ 5 files changed, 33 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 2bf5a35c0570..00e59a134b93 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -531,6 +531,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	int ret;
- 	u32 reg;
- 	void *addr;
-+	u8 hdr_type;
- 	unsigned int nbars;
- 	unsigned int offset;
- 	struct pci_epc *epc;
-@@ -543,6 +544,13 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 6d27475e39b2..ec103a7e13fc 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -903,6 +903,11 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+ 	unsigned int size = count;
+ 	loff_t init_off = off;
+ 	u8 *data = (u8 *) buf;
++	int ret;
++
++	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
++	if (ret)
++		return ret;
+ 
+ 	if (off > dev->cfg_size)
+ 		return 0;
+@@ -1164,6 +1169,11 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	int bar = (unsigned long)attr->private;
+ 	enum pci_mmap_state mmap_type;
+ 	struct resource *res = &pdev->resource[bar];
++	int ret;
++
++	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
++	if (ret)
++		return ret;
+ 
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
  		return -EINVAL;
- 	}
- 
-+	hdr_type = dw_pcie_readb_dbi(pci, PCI_HEADER_TYPE);
-+	if (hdr_type != PCI_HEADER_TYPE_NORMAL) {
-+		dev_err(pci->dev, "PCIe controller is not set to EP mode (hdr_type:0x%x)!\n",
-+			hdr_type);
-+		return -EIO;
-+	}
+@@ -1240,6 +1250,12 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+ 				     struct bin_attribute *attr, char *buf,
+ 				     loff_t off, size_t count)
+ {
++	int ret;
 +
- 	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
- 	if (ret < 0) {
- 		dev_err(dev, "Unable to read *num-ib-windows* property\n");
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index f93252d0da5b..d2ca748e4c85 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -323,6 +323,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct pci_bus *child;
- 	struct pci_host_bridge *bridge;
- 	struct resource *cfg_res;
-+	u8 hdr_type;
- 	int ret;
- 
- 	raw_spin_lock_init(&pci->pp.lock);
-@@ -396,6 +397,13 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
-+	hdr_type = dw_pcie_readb_dbi(pci, PCI_HEADER_TYPE);
-+	if (hdr_type != PCI_HEADER_TYPE_BRIDGE) {
-+		dev_err(pci->dev, "PCIe controller is not set to bridge type (hdr_type: 0x%x)!\n",
-+			hdr_type);
-+		return -EIO;
-+	}
++	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
++	if (ret)
++		return ret;
 +
- 	pp->mem_base = pp->mem->start;
+ 	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
+ }
  
- 	if (!pp->va_cfg0_base) {
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 445b51db75b0..e29b0d5ced62 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -13,6 +13,7 @@
+ #include <linux/seq_file.h>
+ #include <linux/capability.h>
+ #include <linux/uaccess.h>
++#include <linux/security.h>
+ #include <asm/byteorder.h>
+ #include "pci.h"
+ 
+@@ -115,7 +116,11 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+ 	struct pci_dev *dev = PDE_DATA(ino);
+ 	int pos = *ppos;
+ 	int size = dev->cfg_size;
+-	int cnt;
++	int cnt, ret;
++
++	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
++	if (ret)
++		return ret;
+ 
+ 	if (pos >= size)
+ 		return 0;
+@@ -196,6 +201,10 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
+ #endif /* HAVE_PCI_MMAP */
+ 	int ret = 0;
+ 
++	ret = security_locked_down(LOCKDOWN_PCI_ACCESS);
++	if (ret)
++		return ret;
++
+ 	switch (cmd) {
+ 	case PCIIOC_CONTROLLER:
+ 		ret = pci_domain_nr(dev->bus);
+@@ -238,7 +247,8 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ 	struct pci_filp_private *fpriv = file->private_data;
+ 	int i, ret, write_combine = 0, res_bit = IORESOURCE_MEM;
+ 
+-	if (!capable(CAP_SYS_RAWIO))
++	if (!capable(CAP_SYS_RAWIO) ||
++	    security_locked_down(LOCKDOWN_PCI_ACCESS))
+ 		return -EPERM;
+ 
+ 	if (fpriv->mmap_state == pci_mmap_io) {
+diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
+index d96626c614f5..31e39558d49d 100644
+--- a/drivers/pci/syscall.c
++++ b/drivers/pci/syscall.c
+@@ -7,6 +7,7 @@
+ 
+ #include <linux/errno.h>
+ #include <linux/pci.h>
++#include <linux/security.h>
+ #include <linux/syscalls.h>
+ #include <linux/uaccess.h>
+ #include "pci.h"
+@@ -90,7 +91,8 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
+ 	u32 dword;
+ 	int err = 0;
+ 
+-	if (!capable(CAP_SYS_ADMIN))
++	if (!capable(CAP_SYS_ADMIN) ||
++	    security_locked_down(LOCKDOWN_PCI_ACCESS))
+ 		return -EPERM;
+ 
+ 	dev = pci_get_domain_bus_and_slot(0, bus, dfn);
+diff --git a/include/linux/security.h b/include/linux/security.h
+index 304a155a5628..8adbd62b7669 100644
+--- a/include/linux/security.h
++++ b/include/linux/security.h
+@@ -107,6 +107,7 @@ enum lockdown_reason {
+ 	LOCKDOWN_DEV_MEM,
+ 	LOCKDOWN_KEXEC,
+ 	LOCKDOWN_HIBERNATION,
++	LOCKDOWN_PCI_ACCESS,
+ 	LOCKDOWN_INTEGRITY_MAX,
+ 	LOCKDOWN_CONFIDENTIALITY_MAX,
+ };
+diff --git a/security/lockdown/lockdown.c b/security/lockdown/lockdown.c
+index a0996f75629f..655fe388e615 100644
+--- a/security/lockdown/lockdown.c
++++ b/security/lockdown/lockdown.c
+@@ -22,6 +22,7 @@ static char *lockdown_reasons[LOCKDOWN_CONFIDENTIALITY_MAX+1] = {
+ 	[LOCKDOWN_DEV_MEM] = "/dev/mem,kmem,port",
+ 	[LOCKDOWN_KEXEC] = "kexec of unsigned images",
+ 	[LOCKDOWN_HIBERNATION] = "hibernation",
++	[LOCKDOWN_PCI_ACCESS] = "direct PCI access",
+ 	[LOCKDOWN_INTEGRITY_MAX] = "integrity",
+ 	[LOCKDOWN_CONFIDENTIALITY_MAX] = "confidentiality",
+ };
 -- 
-2.17.1
+2.22.0.510.g264f2c817a-goog
 
