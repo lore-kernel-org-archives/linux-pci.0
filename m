@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CE4AC76196
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:31:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4B2C76188
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:32:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16A5820873
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:31:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 707E32082E
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:32:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563510662;
-	bh=kr96ZZc2AlQZq4XV7izh+Iz0YIE00T/Y5oun0Dp4WGY=;
+	s=default; t=1563510778;
+	bh=c+iRnZ27tC9FBRyjBCfA8nzhfMEhSdTERTls/ftsW8U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=KhKYXPjLR53VOrx37yCfDCDAiUswfiETzRzl9NVAcBl20kDpLvzeYDQGRobaiiaU/
-	 ulJDILdwxrPSyz8VQ69AZAXYkR1A8lxGwi18PsDPh3zdjQFFcnbleGp3z6JK+ZcSe7
-	 Kg7zxy2gGfgqnFA/G+FkOMWvqrbwsQ21ZzK7eiiI=
+	b=jjpq4EROn6/4moebbpsbvr2/zOoaKS4uK3RAGEBGdGeFRF/HJcU42FcWOGqtt+UpT
+	 VmchDEzrcKtA8DJuyOkabZyrwabPtYax7cFukAZzvN98l8mQHz3+fXYB2NE7km2hEy
+	 NDwsygPbuWioVMaiVwcTKoIIxo2qf4p8LyuX01bM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731084AbfGSEa4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jul 2019 00:30:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37072 "EHLO mail.kernel.org"
+        id S1730473AbfGSEDh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jul 2019 00:03:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35678 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728764AbfGSEEt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jul 2019 00:04:49 -0400
+        id S1730538AbfGSEDg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jul 2019 00:03:36 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D74BA218A3;
-        Fri, 19 Jul 2019 04:04:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 05F9E218BB;
+        Fri, 19 Jul 2019 04:03:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563509089;
-        bh=kr96ZZc2AlQZq4XV7izh+Iz0YIE00T/Y5oun0Dp4WGY=;
+        s=default; t=1563509015;
+        bh=c+iRnZ27tC9FBRyjBCfA8nzhfMEhSdTERTls/ftsW8U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DOyO9hVgFSmhhDq9R4GsZ5ddJg/QRESW1W942h/FjsvQzTxpURPvFDCMQL4yx4vjl
-         Drs+LU4bDnYYohsYE1JtL+2J9j1YAzB1ITW6vZ3zSlRnB61iPBwu9Tg8O/1KTtLwnF
-         bWlx/4KO0YhQdc1oznhjKV0eS3yYMR2Ld02YvY/0=
+        b=e+lR9ZBlzwxJicApcquL9mcDjrtktcJfNitKAng7ZaLhCAvzMNtFZH7Gpw6j9c4Rr
+         RlJpNYQJWpqy9mlAIZPTr1Qc4CIkQINATUnGPgidpeOQCFvgvWtcw5KIz37uBmiZxi
+         fqMXuPm57jS2sUy4NAinK2dHUSMWI4FKqPTVjg+o=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Tejun Heo <tj@kernel.org>, Wolfram Sang <wsa@the-dreams.de>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 062/141] PCI: sysfs: Ignore lockdep for remove attribute
-Date:   Fri, 19 Jul 2019 00:01:27 -0400
-Message-Id: <20190719040246.15945-62-sashal@kernel.org>
+Cc:     Alan Mikhak <alan.mikhak@sifive.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.1 022/141] tools: PCI: Fix broken pcitest compilation
+Date:   Fri, 19 Jul 2019 00:00:47 -0400
+Message-Id: <20190719040246.15945-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190719040246.15945-1-sashal@kernel.org>
 References: <20190719040246.15945-1-sashal@kernel.org>
@@ -62,61 +60,55 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marek Vasut <marek.vasut+renesas@gmail.com>
+From: Alan Mikhak <alan.mikhak@sifive.com>
 
-[ Upstream commit dc6b698a86fe40a50525433eb8e92a267847f6f9 ]
+[ Upstream commit 8a5e0af240e07dd3d4897eb8ff52aab757da7fab ]
 
-With CONFIG_PROVE_LOCKING=y, using sysfs to remove a bridge with a device
-below it causes a lockdep warning, e.g.,
+pcitest is currently broken due to the following compiler error
+and related warning. Fix by changing the run_test() function
+signature to return an integer result.
 
-  # echo 1 > /sys/class/pci_bus/0000:00/device/0000:00:00.0/remove
-  ============================================
-  WARNING: possible recursive locking detected
-  ...
-  pci_bus 0000:01: busn_res: [bus 01] is released
+pcitest.c: In function run_test:
+pcitest.c:143:9: warning: return with a value, in function
+returning void
+  return (ret < 0) ? ret : 1 - ret; /* return 0 if test succeeded */
 
-The remove recursively removes the subtree below the bridge.  Each call
-uses a different lock so there's no deadlock, but the locks were all
-created with the same lockdep key so the lockdep checker can't tell them
-apart.
+pcitest.c: In function main:
+pcitest.c:232:9: error: void value not ignored as it ought to be
+  return run_test(test);
 
-Mark the "remove" sysfs attribute with __ATTR_IGNORE_LOCKDEP() as it is
-safe to ignore the lockdep check between different "remove" kernfs
-instances.
-
-There's discussion about a similar issue in USB at [1], which resulted in
-356c05d58af0 ("sysfs: get rid of some lockdep false positives") and
-e9b526fe7048 ("i2c: suppress lockdep warning on delete_device"), which do
-basically the same thing for USB "remove" and i2c "delete_device" files.
-
-[1] https://lore.kernel.org/r/Pine.LNX.4.44L0.1204251436140.1206-100000@iolanthe.rowland.org
-Link: https://lore.kernel.org/r/20190526225151.3865-1-marek.vasut@gmail.com
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-[bhelgaas: trim commit log, details at above links]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Wolfram Sang <wsa@the-dreams.de>
+Fixes: fef31ecaaf2c ("tools: PCI: Fix compilation warnings")
+Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Paul Walmsley <paul.walmsley@sifive.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tools/pci/pcitest.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 25794c27c7a4..eacf84ecdd0d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -477,7 +477,7 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
- 	return count;
- }
--static struct device_attribute dev_remove_attr = __ATTR(remove,
-+static struct device_attribute dev_remove_attr = __ATTR_IGNORE_LOCKDEP(remove,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, remove_store);
+diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+index ec4d51f3308b..4c5be77c211f 100644
+--- a/tools/pci/pcitest.c
++++ b/tools/pci/pcitest.c
+@@ -47,15 +47,15 @@ struct pci_test {
+ 	unsigned long	size;
+ };
  
+-static void run_test(struct pci_test *test)
++static int run_test(struct pci_test *test)
+ {
+-	long ret;
++	int ret = -EINVAL;
+ 	int fd;
+ 
+ 	fd = open(test->device, O_RDWR);
+ 	if (fd < 0) {
+ 		perror("can't open PCI Endpoint Test device");
+-		return;
++		return -ENODEV;
+ 	}
+ 
+ 	if (test->barnum >= 0 && test->barnum <= 5) {
 -- 
 2.20.1
 
