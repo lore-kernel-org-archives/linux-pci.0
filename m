@@ -7,51 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB597C76195
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:28:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E06F0C76195
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:29:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BFDC2173B
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:28:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAA352082E
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:29:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563510480;
-	bh=leuje/BwHEBKQQl3X8zI1LBJIPhRyKhC/r2bwUoyqkA=;
+	s=default; t=1563510540;
+	bh=zuY25SSnxTlqO2X+VYaatBbwaIjiAAiDI83fxmu47vM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=LoWgXz3rMEv0a3NGydqmp6v3brY3AZymAR5eVv82Imzn+xncC37LVxE0Drilybv+T
-	 OrZtPrZgZGZOSrOmXxZ/lo+beontnEf6drach+B6W3DUNFl/LD1eTQVP/h47MY6l0R
-	 4JgA2hh+4oHvDg6QPIkyWuLTo1CxAZrGNkcpatpc=
+	b=ShYLYwnsWZ/ZxTJFns1DsJyuvYlpX9CNNhwNjYe2XQDjK/1R3O1LSb6UwH32VjC5K
+	 lFaaCzr8Ef0ZTov9PZ3u6ZjdNXlRVBBhJx94p4V4mO+EZaly2MTaS0BxiHtB23rI8W
+	 Wnb+kKc24ofXBLSC7UbcpStATH2oIQElfuOFXD5Q=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732298AbfGSEGl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jul 2019 00:06:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38280 "EHLO mail.kernel.org"
+        id S1732767AbfGSE24 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jul 2019 00:28:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39140 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731908AbfGSEFn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jul 2019 00:05:43 -0400
+        id S1732036AbfGSEGM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jul 2019 00:06:12 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9032E2189F;
-        Fri, 19 Jul 2019 04:05:41 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2EE3C21873;
+        Fri, 19 Jul 2019 04:06:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563509142;
-        bh=leuje/BwHEBKQQl3X8zI1LBJIPhRyKhC/r2bwUoyqkA=;
+        s=default; t=1563509172;
+        bh=zuY25SSnxTlqO2X+VYaatBbwaIjiAAiDI83fxmu47vM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JlgGdfmtsp+EeYDbOzur92rizoqDMeMQq7t7E7gmsoAz0twutmnryW0LlCLXlWosJ
-         efD7K7Sd3IToYKHs/O4tx2CAzXfMSj8gewcHQKbjfK79Fo0pP4KGD+hKlSza/JvxBd
-         tg3zhFh3Ym9w8F3NiocO2Koesk05JG2wOeErZ/DY=
+        b=1ipnEl5OP6paLKLeLvb/z3sIIBkoQn602cwVwtk0Y+r7fQWpPf4Zwd+3H4GpNh6aF
+         7JAephdjSIwKRgvlF5Y/gYOFTaf5oKKSP76zGjzIyKjNB0npY1/e2YC9ZsX1ZKCXNn
+         WIW3TysPWN0jybfI9cIikw6jgKQ8TkngTzuPpGew=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Minghuan Lian <Minghuan.Lian@nxp.com>,
-        Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 094/141] PCI: mobiveil: Initialize Primary/Secondary/Subordinate bus numbers
-Date:   Fri, 19 Jul 2019 00:01:59 -0400
-Message-Id: <20190719040246.15945-94-sashal@kernel.org>
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Sasha Levin <sashal@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.1 105/141] PCI: dwc: pci-dra7xx: Fix compilation when !CONFIG_GPIOLIB
+Date:   Fri, 19 Jul 2019 00:02:10 -0400
+Message-Id: <20190719040246.15945-105-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190719040246.15945-1-sashal@kernel.org>
 References: <20190719040246.15945-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -60,42 +61,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit 6f3ab451aa5c2cbff33197d82fe8489cbd55ad91 ]
+[ Upstream commit 381ed79c8655a40268ee7391f716edd90c5c3a97 ]
 
-The reset value of Primary, Secondary and Subordinate bus numbers is
-zero which is a broken setup.
+If CONFIG_GPIOLIB is not selected the compilation results in the
+following build errors:
 
-Program a sensible default value for Primary/Secondary/Subordinate
-bus numbers.
+drivers/pci/controller/dwc/pci-dra7xx.c:
+ In function dra7xx_pcie_probe:
+drivers/pci/controller/dwc/pci-dra7xx.c:777:10:
+ error: implicit declaration of function devm_gpiod_get_optional;
+ did you mean devm_regulator_get_optional? [-Werror=implicit-function-declaration]
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+  reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
+
+drivers/pci/controller/dwc/pci-dra7xx.c:778:45: error: ‘GPIOD_OUT_HIGH’
+undeclared (first use in this function); did you mean ‘GPIOF_INIT_HIGH’?
+  reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
+                                             ^~~~~~~~~~~~~~
+                                             GPIOF_INIT_HIGH
+
+Fix them by including the appropriate header file.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+[lorenzo.pieralisi@arm.com: commit log]
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-mobiveil.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/pci/controller/dwc/pci-dra7xx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-index 88e9b70081fc..e4a1964e1b43 100644
---- a/drivers/pci/controller/pcie-mobiveil.c
-+++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -501,6 +501,12 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
- 		return err;
- 	}
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index ae84a69ae63a..4ef0a592505c 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -26,6 +26,7 @@
+ #include <linux/types.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/regmap.h>
++#include <linux/gpio/consumer.h>
  
-+	/* setup bus numbers */
-+	value = csr_readl(pcie, PCI_PRIMARY_BUS);
-+	value &= 0xff000000;
-+	value |= 0x00ff0100;
-+	csr_writel(pcie, value, PCI_PRIMARY_BUS);
-+
- 	/*
- 	 * program Bus Master Enable Bit in Command Register in PAB Config
- 	 * Space
+ #include "../../pci.h"
+ #include "pcie-designware.h"
 -- 
 2.20.1
 
