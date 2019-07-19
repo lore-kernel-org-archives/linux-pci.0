@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 785A4C76196
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:38:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95C3FC76195
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:39:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4D75B206DD
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:38:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66B0F2077C
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:39:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563511080;
-	bh=NYLQY7CIaREfcBXHdDoypSwOWFVeme//3LD3XmnDecE=;
+	s=default; t=1563511171;
+	bh=R3UxDjgTbacNgKcJvMdnsgwwpj7qgbnHxLcI0sBnYsw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AhX2HMRa4eAnqN6SFokZDK2DShR6jF3QaXsH3RFvGKLe3ncTEsGQC/FLsp/m6Y03R
-	 i+jZK3hOPkQ0BOu6TBZOLr/hIJSF0H6XAK7G1hrhvl7fzEAjH6ypFD/ubnzOtLZany
-	 cXxpzU1kBYblghZ62E3khQxaLhXRIDwSVuL6x29Y=
+	b=18OX4IAy72uns3YxBustZZSTWWMf9igMu5x4G8jCihu2cQuVfOupd48pRCH0xs2cw
+	 T5+VYZPRYox7v2mFV3E8GqCQDP2lJ6jxCwP7m4PLERlHkZqaCXVZHlKDcC4TzuheJO
+	 UhNeLwFxeLKBPIRXL24uG+jbgH1rEzKrSsbneT7M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728780AbfGSD7g (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Jul 2019 23:59:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59214 "EHLO mail.kernel.org"
+        id S1727012AbfGSD6m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 18 Jul 2019 23:58:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58036 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727552AbfGSD7e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Jul 2019 23:59:34 -0400
+        id S1728206AbfGSD6j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 18 Jul 2019 23:58:39 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6B81D218A6;
-        Fri, 19 Jul 2019 03:59:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0E03D21851;
+        Fri, 19 Jul 2019 03:58:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563508773;
-        bh=NYLQY7CIaREfcBXHdDoypSwOWFVeme//3LD3XmnDecE=;
+        s=default; t=1563508718;
+        bh=R3UxDjgTbacNgKcJvMdnsgwwpj7qgbnHxLcI0sBnYsw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RW+ZnqV3ax8KxK/d4eqen+3jTsW4PZwAXv7QnJ/Sr7i5yv71VOHuzDaC0Yaak4GTq
-         UKRFkxG6f0qYSyPiar8OoSDbQFeOcfnw60X6hXuWs69P8Hk8l6RXvfV20hKS/PHeqM
-         lqGEj1HGoF78AK1DHSQqZOIBZFnKgSIslYhvNgB4=
+        b=CrOBPF4hHcblIC7sFQ8nOU6D6vcoSc/uKhMk6R8CO5/fG/zSkPpoNgJaOFXb8IUP3
+         hg4ysYyoyMXyDm15GpiKvTkfzrJ75x7Ew/Z7P4KjkJPJ7PVFeAM2BuMdhqBCE1+a89
+         mfKvcBMTvkErVR7qL+CUV2F8uNrTBslrMscO/Xvk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Tejun Heo <tj@kernel.org>, Wolfram Sang <wsa@the-dreams.de>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 082/171] PCI: sysfs: Ignore lockdep for remove attribute
-Date:   Thu, 18 Jul 2019 23:55:13 -0400
-Message-Id: <20190719035643.14300-82-sashal@kernel.org>
+Cc:     Alan Mikhak <alan.mikhak@sifive.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linux-riscv@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.2 051/171] PCI: endpoint: Allocate enough space for fixed size BAR
+Date:   Thu, 18 Jul 2019 23:54:42 -0400
+Message-Id: <20190719035643.14300-51-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190719035643.14300-1-sashal@kernel.org>
 References: <20190719035643.14300-1-sashal@kernel.org>
@@ -62,61 +60,47 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marek Vasut <marek.vasut+renesas@gmail.com>
+From: Alan Mikhak <alan.mikhak@sifive.com>
 
-[ Upstream commit dc6b698a86fe40a50525433eb8e92a267847f6f9 ]
+[ Upstream commit f16fb16ed16c7f561e9c41c9ae4107c7f6aa553c ]
 
-With CONFIG_PROVE_LOCKING=y, using sysfs to remove a bridge with a device
-below it causes a lockdep warning, e.g.,
+PCI endpoint test function code should honor the .bar_fixed_size parameter
+from underlying endpoint controller drivers or results may be unexpected.
 
-  # echo 1 > /sys/class/pci_bus/0000:00/device/0000:00:00.0/remove
-  ============================================
-  WARNING: possible recursive locking detected
-  ...
-  pci_bus 0000:01: busn_res: [bus 01] is released
+In pci_epf_test_alloc_space(), check if BAR being used for test
+register space is a fixed size BAR. If so, allocate the required fixed
+size.
 
-The remove recursively removes the subtree below the bridge.  Each call
-uses a different lock so there's no deadlock, but the locks were all
-created with the same lockdep key so the lockdep checker can't tell them
-apart.
-
-Mark the "remove" sysfs attribute with __ATTR_IGNORE_LOCKDEP() as it is
-safe to ignore the lockdep check between different "remove" kernfs
-instances.
-
-There's discussion about a similar issue in USB at [1], which resulted in
-356c05d58af0 ("sysfs: get rid of some lockdep false positives") and
-e9b526fe7048 ("i2c: suppress lockdep warning on delete_device"), which do
-basically the same thing for USB "remove" and i2c "delete_device" files.
-
-[1] https://lore.kernel.org/r/Pine.LNX.4.44L0.1204251436140.1206-100000@iolanthe.rowland.org
-Link: https://lore.kernel.org/r/20190526225151.3865-1-marek.vasut@gmail.com
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-[bhelgaas: trim commit log, details at above links]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Wolfram Sang <wsa@the-dreams.de>
+Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/endpoint/functions/pci-epf-test.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 6d27475e39b2..4e83c347de5d 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -477,7 +477,7 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
- 	return count;
- }
--static struct device_attribute dev_remove_attr = __ATTR(remove,
-+static struct device_attribute dev_remove_attr = __ATTR_IGNORE_LOCKDEP(remove,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, remove_store);
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 27806987e93b..7d41e6684b87 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -434,10 +434,16 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
+ 	int bar;
+ 	enum pci_barno test_reg_bar = epf_test->test_reg_bar;
+ 	const struct pci_epc_features *epc_features;
++	size_t test_reg_size;
  
+ 	epc_features = epf_test->epc_features;
+ 
+-	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
++	if (epc_features->bar_fixed_size[test_reg_bar])
++		test_reg_size = bar_size[test_reg_bar];
++	else
++		test_reg_size = sizeof(struct pci_epf_test_reg);
++
++	base = pci_epf_alloc_space(epf, test_reg_size,
+ 				   test_reg_bar, epc_features->align);
+ 	if (!base) {
+ 		dev_err(dev, "Failed to allocated register space\n");
 -- 
 2.20.1
 
