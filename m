@@ -4,56 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C028C76196
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 982E4C76195
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:20:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA2BE2084C
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:18:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 646C52184E
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:20:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563509916;
-	bh=Hx0H2OSnx0z8kzUUOim/iVZX60jjNHrVvE2IRlb8yyw=;
+	s=default; t=1563510037;
+	bh=B7XcmmDrEYhFQjp6wQGmlqrHF2BJW0to0gwzTZJeFds=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zAhnrkhE70sKXEeFp7jJEoOLfmJTGeaVFV2aYUiv0QfCvHZ/e4i0AqY+IBOy67ipD
-	 bM4m7myN8HCCGODvxKCtqIiDwEHm/yBT2SNfOr30feswC5VXAPoM2Hd69sPNFU05Xk
-	 Vaizfs8wAx9FsA3Bsw9hdZMirwv+nAMenpBUUr58=
+	b=ej0qTuheQQYP0qcVA335VY8+C+ThS8WlPT7DdjIIxHcpxSd1zOKhcC73aw+475dSP
+	 j7cBgjUFE1irmVI8ijZ+vXyxb1D2CHMh4ONydHc4qFhyJGBvs5HuSWIRSy0gMp2JMg
+	 Tqw59cWHR21V/a35d83iWTg4tNHtRSfp5Dw6Lg2g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731919AbfGSESf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jul 2019 00:18:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49628 "EHLO mail.kernel.org"
+        id S1727266AbfGSEU1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jul 2019 00:20:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48160 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389297AbfGSENg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jul 2019 00:13:36 -0400
+        id S1729651AbfGSEMk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jul 2019 00:12:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 056B4218D3;
-        Fri, 19 Jul 2019 04:13:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9ED82218C3;
+        Fri, 19 Jul 2019 04:12:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563509616;
-        bh=Hx0H2OSnx0z8kzUUOim/iVZX60jjNHrVvE2IRlb8yyw=;
+        s=default; t=1563509560;
+        bh=B7XcmmDrEYhFQjp6wQGmlqrHF2BJW0to0gwzTZJeFds=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I3cYsi+CAbFF08RStpKKAarcnTcz1mB0MM/0/QB6n7SL1/ctSJWtEOHfN3FPBmLPV
-         k0CBhnQMYfC/KTG1+d5r6CpRpCvvGqKRxKsW5KRC9AEC3h/K6sVLagwNVv24vlqlGI
-         VlNzzPgk6CKgau1zIe9HYae5xA6IQVcfGjed1fJI=
+        b=hrGS1sMh5IY6DLRdTo6ou4SQfVL53g9KjvS0v/5EgGzPxgmOavmQYdAUyN0YO+EXD
+         IrxyFDfK6LJj1q2GoJc4/Vyv6wZrJ/UwHL2+3g9PJHWjJuiCGQplyxPR4WmhQbF5eO
+         RPX5cDgdijqf5Qp4AOHdB+0Uqkj++o7zgNsEh0wk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Phil Edworthy <phil.edworthy@renesas.com>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Tejun Heo <tj@kernel.org>, Wolfram Sang <wsa@the-dreams.de>,
+Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 19/45] PCI: sysfs: Ignore lockdep for remove attribute
-Date:   Fri, 19 Jul 2019 00:12:38 -0400
-Message-Id: <20190719041304.18849-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 47/60] PCI: dwc: pci-dra7xx: Fix compilation when !CONFIG_GPIOLIB
+Date:   Fri, 19 Jul 2019 00:10:56 -0400
+Message-Id: <20190719041109.18262-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190719041304.18849-1-sashal@kernel.org>
-References: <20190719041304.18849-1-sashal@kernel.org>
+In-Reply-To: <20190719041109.18262-1-sashal@kernel.org>
+References: <20190719041109.18262-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -62,60 +60,50 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Marek Vasut <marek.vasut+renesas@gmail.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit dc6b698a86fe40a50525433eb8e92a267847f6f9 ]
+[ Upstream commit 381ed79c8655a40268ee7391f716edd90c5c3a97 ]
 
-With CONFIG_PROVE_LOCKING=y, using sysfs to remove a bridge with a device
-below it causes a lockdep warning, e.g.,
+If CONFIG_GPIOLIB is not selected the compilation results in the
+following build errors:
 
-  # echo 1 > /sys/class/pci_bus/0000:00/device/0000:00:00.0/remove
-  ============================================
-  WARNING: possible recursive locking detected
-  ...
-  pci_bus 0000:01: busn_res: [bus 01] is released
+drivers/pci/controller/dwc/pci-dra7xx.c:
+ In function dra7xx_pcie_probe:
+drivers/pci/controller/dwc/pci-dra7xx.c:777:10:
+ error: implicit declaration of function devm_gpiod_get_optional;
+ did you mean devm_regulator_get_optional? [-Werror=implicit-function-declaration]
 
-The remove recursively removes the subtree below the bridge.  Each call
-uses a different lock so there's no deadlock, but the locks were all
-created with the same lockdep key so the lockdep checker can't tell them
-apart.
+  reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
 
-Mark the "remove" sysfs attribute with __ATTR_IGNORE_LOCKDEP() as it is
-safe to ignore the lockdep check between different "remove" kernfs
-instances.
+drivers/pci/controller/dwc/pci-dra7xx.c:778:45: error: ‘GPIOD_OUT_HIGH’
+undeclared (first use in this function); did you mean ‘GPIOF_INIT_HIGH’?
+  reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
+                                             ^~~~~~~~~~~~~~
+                                             GPIOF_INIT_HIGH
 
-There's discussion about a similar issue in USB at [1], which resulted in
-356c05d58af0 ("sysfs: get rid of some lockdep false positives") and
-e9b526fe7048 ("i2c: suppress lockdep warning on delete_device"), which do
-basically the same thing for USB "remove" and i2c "delete_device" files.
+Fix them by including the appropriate header file.
 
-[1] https://lore.kernel.org/r/Pine.LNX.4.44L0.1204251436140.1206-100000@iolanthe.rowland.org
-Link: https://lore.kernel.org/r/20190526225151.3865-1-marek.vasut@gmail.com
-Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
-[bhelgaas: trim commit log, details at above links]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms+renesas@verge.net.au>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Wolfram Sang <wsa@the-dreams.de>
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+[lorenzo.pieralisi@arm.com: commit log]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci-sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/dwc/pci-dra7xx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index e5d8e2e2bd30..717540161223 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -371,7 +371,7 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
- 	return count;
- }
--static struct device_attribute dev_remove_attr = __ATTR(remove,
-+static struct device_attribute dev_remove_attr = __ATTR_IGNORE_LOCKDEP(remove,
- 							(S_IWUSR|S_IWGRP),
- 							NULL, remove_store);
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 06eae132aff7..63052c5e5f82 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -29,6 +29,7 @@
+ #include <linux/types.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/regmap.h>
++#include <linux/gpio/consumer.h>
+ 
+ #include "pcie-designware.h"
  
 -- 
 2.20.1
