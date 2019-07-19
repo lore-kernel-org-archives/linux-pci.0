@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F0CC76188
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:29:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B69CC76195
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:29:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D86E2082E
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:29:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45B542082E
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:29:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563510558;
-	bh=ItxFliTD6WeA+ql+n36UYHQERTf9F0u/4k5yMPa57MM=;
+	s=default; t=1563510561;
+	bh=8Qkmo7ezGTUAxtzDgCwqLOTlTxCum23/8/8T9fga8WM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=SSXGTLveoYu6tftDYWr3vuy0ci/8dCK/WaDC+E4NfCFfXVBBWDFAoEwshtQJy/ZFv
-	 PIkJbQjFUFTnVwW0SDnKwfBu73/CmpFHZEy/7yEhVuS9P65SxlfKwghyykHe4fad31
-	 qjy5nPsz8Oc0ORnQOjsRW8YfFGJ+brSajzs34KoM=
+	b=KIY4oe3amJEGlN1/FISOaO+cTqLu32A8jd45Vu+33wq3/tbDSL6I8Y+8WylfaIrjp
+	 7B/66xDLimgdS881q0o8ZKExRuMgMl4m2zcNpICPLtWSy04qpNrkHPbX36JzTXn6Xz
+	 zT9kJEjLx9Uk9498t6cAYa2xiV3t5pUoKD8L0PnA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731558AbfGSE3O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jul 2019 00:29:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38304 "EHLO mail.kernel.org"
+        id S1731807AbfGSEFk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jul 2019 00:05:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38230 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730603AbfGSEFo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jul 2019 00:05:44 -0400
+        id S1730445AbfGSEFk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jul 2019 00:05:40 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BDD7B21873;
-        Fri, 19 Jul 2019 04:05:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5382C218BA;
+        Fri, 19 Jul 2019 04:05:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563509143;
-        bh=ItxFliTD6WeA+ql+n36UYHQERTf9F0u/4k5yMPa57MM=;
+        s=default; t=1563509139;
+        bh=8Qkmo7ezGTUAxtzDgCwqLOTlTxCum23/8/8T9fga8WM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QVH3uwIyovMqL7WvabH8GEOnXO7Ej3zpKXYTkn5eWDDn+/SQcP7ctlkp6UJZ5uZTr
-         CQwGRxETQYhUHiViEz19RLCllatjghEWgYAsANvb2zqRyyYO8U75XuAIa6HzSzsbFs
-         CKg8gXAqVadmSMxKTGu9+Mic+c91KPYP+dA74hQk=
+        b=w4McZ0PCzAChTtHkN5xKqC+eiTVWB501TUs3qxj9dlClu7NHovhv1WeBlYafdXStO
+         OzApVQjYD3h2Zs2g0sJIcciquM10N2urqpqeFv+E5upC6CRGrpiCa8AINpQFVAQBkj
+         0BgrWs8gOkpiI0OUKX/PbLab2d54DFZ2kh6jbSQU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
@@ -45,9 +45,9 @@ Cc:     Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
         Minghuan Lian <Minghuan.Lian@nxp.com>,
         Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.1 095/141] PCI: mobiveil: Use the 1st inbound window for MEM inbound transactions
-Date:   Fri, 19 Jul 2019 00:02:00 -0400
-Message-Id: <20190719040246.15945-95-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 092/141] PCI: mobiveil: Fix the Class Code field
+Date:   Fri, 19 Jul 2019 00:01:57 -0400
+Message-Id: <20190719040246.15945-92-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190719040246.15945-1-sashal@kernel.org>
 References: <20190719040246.15945-1-sashal@kernel.org>
@@ -62,43 +62,51 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-[ Upstream commit f7fee1b42fe4f8171a4b1cad05c61907c33c53f6 ]
+[ Upstream commit 0122af0a08243f344a438f924e5c2486486555b3 ]
 
-The inbound and outbound windows have completely separate control
-registers sets in the host controller MMIO space. Windows control
-register are accessed through an MMIO base address and an offset
-that depends on the window index.
+Fix up the Class Code field in PCI configuration space and set it to
+PCI_CLASS_BRIDGE_PCI.
 
-Since inbound and outbound windows control registers are completely
-separate there is no real need to use different window indexes in the
-inbound/outbound windows initialization routines to prevent clashing.
+Move the Class Code fixup to function mobiveil_host_init() where
+it belongs.
 
-To fix this inconsistency, change the MEM inbound window index to 0,
-mirroring the outbound window set-up.
-
+Fixes: 9af6bcb11e12 ("PCI: mobiveil: Add Mobiveil PCIe Host Bridge IP driver")
 Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-[lorenzo.pieralisi@arm.com: update commit log]
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Reviewed-by: Minghuan Lian <Minghuan.Lian@nxp.com>
 Reviewed-by: Subrahmanya Lingappa <l.subrahmanya@mobiveil.co.in>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-mobiveil.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/pcie-mobiveil.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-mobiveil.c b/drivers/pci/controller/pcie-mobiveil.c
-index e4a1964e1b43..387a20f3c240 100644
+index 03d697b63e2a..88e9b70081fc 100644
 --- a/drivers/pci/controller/pcie-mobiveil.c
 +++ b/drivers/pci/controller/pcie-mobiveil.c
-@@ -546,7 +546,7 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
- 			resource_size(pcie->ob_io_res));
+@@ -558,6 +558,12 @@ static int mobiveil_host_init(struct mobiveil_pcie *pcie)
+ 		}
+ 	}
  
- 	/* memory inbound translation window */
--	program_ib_windows(pcie, WIN_NUM_1, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
-+	program_ib_windows(pcie, WIN_NUM_0, 0, MEM_WINDOW_TYPE, IB_WIN_SIZE);
++	/* fixup for PCIe class register */
++	value = csr_readl(pcie, PAB_INTP_AXI_PIO_CLASS);
++	value &= 0xff;
++	value |= (PCI_CLASS_BRIDGE_PCI << 16);
++	csr_writel(pcie, value, PAB_INTP_AXI_PIO_CLASS);
++
+ 	/* setup MSI hardware registers */
+ 	mobiveil_pcie_enable_msi(pcie);
  
- 	/* Get the I/O and memory ranges from DT */
- 	resource_list_for_each_entry_safe(win, tmp, &pcie->resources) {
+@@ -798,9 +804,6 @@ static int mobiveil_pcie_probe(struct platform_device *pdev)
+ 		goto error;
+ 	}
+ 
+-	/* fixup for PCIe class register */
+-	csr_writel(pcie, 0x060402ab, PAB_INTP_AXI_PIO_CLASS);
+-
+ 	/* initialize the IRQ domains */
+ 	ret = mobiveil_pcie_init_irq_domain(pcie);
+ 	if (ret) {
 -- 
 2.20.1
 
