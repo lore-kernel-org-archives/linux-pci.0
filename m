@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB4EC76195
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 03:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE498C76196
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:03:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2056721852
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 03:58:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88F2321852
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:03:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563508688;
-	bh=Wr3x8ZZZZHuF7Y+/WDvHqqDNEqTCWfNjBXxp0WKNg4Y=;
+	s=default; t=1563509019;
+	bh=nFVThk2UzaEx1dP37v+gAcp+FF4pDG5pQTBTwNz3DKs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=zu6KmufbZyBo5oVeL4EDbssSQW7rj+18C0XXfR5/11ioP7Lkzl+r+X9R8Ve6flqzH
-	 8ZqJxEMFSD2lZlAE3ABGTxclbArBsZ6EFyHlRNwhGqHQocRkVZMTtWu4JJB1d+pH2n
-	 JrOnfyI7Buw9pFn1iHIW6R4r/TGyxmcNI72uGDl0=
+	b=fM/xGCttq2f4LTb9GjQqm0CDFoeIgz5BOHI+e9YqqoIr0Gy0vT7Fqn1urlDOL99Yk
+	 nymS5EoyJqRWYgY/DUKfIvRQmHMvPt7c/GxPaticgT0bGWhFj2O59uVTfCbv2xGa4r
+	 m05MeJIiEACQdogp8N36MgkCF6frDNB38lzM6cYg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727681AbfGSD6F (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 18 Jul 2019 23:58:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57244 "EHLO mail.kernel.org"
+        id S1730567AbfGSEDi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jul 2019 00:03:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35696 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727719AbfGSD6A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 18 Jul 2019 23:58:00 -0400
+        id S1729578AbfGSEDh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jul 2019 00:03:37 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 67DA921851;
-        Fri, 19 Jul 2019 03:57:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 34ECE218A3;
+        Fri, 19 Jul 2019 04:03:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563508680;
-        bh=Wr3x8ZZZZHuF7Y+/WDvHqqDNEqTCWfNjBXxp0WKNg4Y=;
+        s=default; t=1563509016;
+        bh=nFVThk2UzaEx1dP37v+gAcp+FF4pDG5pQTBTwNz3DKs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kVs33hqaaBQokpT314lcFB7Gb50iHuRJGcJ4u/BWvg/MMNnea+hNsJGJfeOgFotza
-         85x/o82uRWsio4RzlnMNnHiVvuPNeUNTLrrhbXviqSy+V+oJzmLqXIK1JnabLLqCLW
-         w8EqvPNIOmqMp5fngiJB5s4inc+jog0A5zQQ57Qk=
+        b=iTwIDLIB9AWnGiNQontVx1x2kwGiyJ8rmowkA4DeiKqL2IBxUGM/yubTSpWUyLxEO
+         pjTm6klgnjgAd8DW1XBTAWQ71aoVxmirj6dvaSH3tTcVuA9HRPXouanLZTUsrMBqKI
+         AYRhpAWL3eO0CXrJfBRt8aveY3sshgAZSJGmmV3Q=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Alex Williamson <alex.williamson@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 031/171] PCI: Return error if cannot probe VF
-Date:   Thu, 18 Jul 2019 23:54:22 -0400
-Message-Id: <20190719035643.14300-31-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 023/141] PCI: Return error if cannot probe VF
+Date:   Fri, 19 Jul 2019 00:00:48 -0400
+Message-Id: <20190719040246.15945-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190719035643.14300-1-sashal@kernel.org>
-References: <20190719035643.14300-1-sashal@kernel.org>
+In-Reply-To: <20190719040246.15945-1-sashal@kernel.org>
+References: <20190719040246.15945-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -85,7 +85,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index ca3793002e2f..74c3df250d9c 100644
+index 71853befd435..da7b82e56c83 100644
 --- a/drivers/pci/pci-driver.c
 +++ b/drivers/pci/pci-driver.c
 @@ -414,6 +414,9 @@ static int pci_device_probe(struct device *dev)
