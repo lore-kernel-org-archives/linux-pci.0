@@ -7,51 +7,52 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F4B2C76188
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:32:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F7A2C76196
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:35:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 707E32082E
-	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:32:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4D742184E
+	for <linux-pci@archiver.kernel.org>; Fri, 19 Jul 2019 04:35:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563510778;
-	bh=c+iRnZ27tC9FBRyjBCfA8nzhfMEhSdTERTls/ftsW8U=;
+	s=default; t=1563510947;
+	bh=eyrz6BQnCnJ6buX2Al9FoEHYMHlPxCOzi3qzeEDLdu0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jjpq4EROn6/4moebbpsbvr2/zOoaKS4uK3RAGEBGdGeFRF/HJcU42FcWOGqtt+UpT
-	 VmchDEzrcKtA8DJuyOkabZyrwabPtYax7cFukAZzvN98l8mQHz3+fXYB2NE7km2hEy
-	 NDwsygPbuWioVMaiVwcTKoIIxo2qf4p8LyuX01bM=
+	b=DKSFK+nCYeDQL+h7CFE825YIfPiLZrU5N94RBqAKYe7jA2Tgz3XdOQFkA0AwiWshI
+	 YnoMPZiavQzRUFVWgTj7bkpGNITpdO6b079BkOMy0+G8zs3Umq77KBNksdU7zlIc0C
+	 2P0v9kJK5QLozVNfXOero4jButPx4wLDp3P0ZeKw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730473AbfGSEDh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 19 Jul 2019 00:03:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35678 "EHLO mail.kernel.org"
+        id S1728245AbfGSEBU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 19 Jul 2019 00:01:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730538AbfGSEDg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 Jul 2019 00:03:36 -0400
+        id S1727372AbfGSEBR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 Jul 2019 00:01:17 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 05F9E218BB;
-        Fri, 19 Jul 2019 04:03:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C738A218B8;
+        Fri, 19 Jul 2019 04:01:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563509015;
-        bh=c+iRnZ27tC9FBRyjBCfA8nzhfMEhSdTERTls/ftsW8U=;
+        s=default; t=1563508876;
+        bh=eyrz6BQnCnJ6buX2Al9FoEHYMHlPxCOzi3qzeEDLdu0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e+lR9ZBlzwxJicApcquL9mcDjrtktcJfNitKAng7ZaLhCAvzMNtFZH7Gpw6j9c4Rr
-         RlJpNYQJWpqy9mlAIZPTr1Qc4CIkQINATUnGPgidpeOQCFvgvWtcw5KIz37uBmiZxi
-         fqMXuPm57jS2sUy4NAinK2dHUSMWI4FKqPTVjg+o=
+        b=eA7xzS1FRiLAL3zbVGltzZYfv557kYD67dRTNeTVjeRas9wFlMhR1ttZsZfB1gKTE
+         TCjiHdoxD7q998BQYmsze9L+MD9iSN+f/Az1bWbHoghIzaNDksDWm2Se78bKO2JBFn
+         fHHzrAm2msx0g+/7zYubzFxXpKasQmSuWAnwZfak=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Alan Mikhak <alan.mikhak@sifive.com>,
+Cc:     YueHaibing <yuehaibing@huawei.com>, Hulk Robot <hulkci@huawei.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.1 022/141] tools: PCI: Fix broken pcitest compilation
-Date:   Fri, 19 Jul 2019 00:00:47 -0400
-Message-Id: <20190719040246.15945-22-sashal@kernel.org>
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Sasha Levin <sashal@kernel.org>, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.2 132/171] PCI: dwc: pci-dra7xx: Fix compilation when !CONFIG_GPIOLIB
+Date:   Thu, 18 Jul 2019 23:56:03 -0400
+Message-Id: <20190719035643.14300-132-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190719040246.15945-1-sashal@kernel.org>
-References: <20190719040246.15945-1-sashal@kernel.org>
+In-Reply-To: <20190719035643.14300-1-sashal@kernel.org>
+References: <20190719035643.14300-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
@@ -60,55 +61,51 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alan Mikhak <alan.mikhak@sifive.com>
+From: YueHaibing <yuehaibing@huawei.com>
 
-[ Upstream commit 8a5e0af240e07dd3d4897eb8ff52aab757da7fab ]
+[ Upstream commit 381ed79c8655a40268ee7391f716edd90c5c3a97 ]
 
-pcitest is currently broken due to the following compiler error
-and related warning. Fix by changing the run_test() function
-signature to return an integer result.
+If CONFIG_GPIOLIB is not selected the compilation results in the
+following build errors:
 
-pcitest.c: In function run_test:
-pcitest.c:143:9: warning: return with a value, in function
-returning void
-  return (ret < 0) ? ret : 1 - ret; /* return 0 if test succeeded */
+drivers/pci/controller/dwc/pci-dra7xx.c:
+ In function dra7xx_pcie_probe:
+drivers/pci/controller/dwc/pci-dra7xx.c:777:10:
+ error: implicit declaration of function devm_gpiod_get_optional;
+ did you mean devm_regulator_get_optional? [-Werror=implicit-function-declaration]
 
-pcitest.c: In function main:
-pcitest.c:232:9: error: void value not ignored as it ought to be
-  return run_test(test);
+  reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
 
-Fixes: fef31ecaaf2c ("tools: PCI: Fix compilation warnings")
-Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
+drivers/pci/controller/dwc/pci-dra7xx.c:778:45: error: ‘GPIOD_OUT_HIGH’
+undeclared (first use in this function); did you mean ‘GPIOF_INIT_HIGH’?
+  reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
+                                             ^~~~~~~~~~~~~~
+                                             GPIOF_INIT_HIGH
+
+Fix them by including the appropriate header file.
+
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+[lorenzo.pieralisi@arm.com: commit log]
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Paul Walmsley <paul.walmsley@sifive.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- tools/pci/pcitest.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pci-dra7xx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-index ec4d51f3308b..4c5be77c211f 100644
---- a/tools/pci/pcitest.c
-+++ b/tools/pci/pcitest.c
-@@ -47,15 +47,15 @@ struct pci_test {
- 	unsigned long	size;
- };
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 419451efd58c..4234ddb4722f 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -26,6 +26,7 @@
+ #include <linux/types.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/regmap.h>
++#include <linux/gpio/consumer.h>
  
--static void run_test(struct pci_test *test)
-+static int run_test(struct pci_test *test)
- {
--	long ret;
-+	int ret = -EINVAL;
- 	int fd;
- 
- 	fd = open(test->device, O_RDWR);
- 	if (fd < 0) {
- 		perror("can't open PCI Endpoint Test device");
--		return;
-+		return -ENODEV;
- 	}
- 
- 	if (test->barnum >= 0 && test->barnum <= 5) {
+ #include "../../pci.h"
+ #include "pcie-designware.h"
 -- 
 2.20.1
 
