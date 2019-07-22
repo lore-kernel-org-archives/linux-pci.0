@@ -2,100 +2,93 @@ Return-Path: <SRS0=wm6w=VT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3BAAC7618F
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jul 2019 21:15:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AE6DC76194
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jul 2019 23:09:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 873162199C
-	for <linux-pci@archiver.kernel.org>; Mon, 22 Jul 2019 21:15:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563830152;
-	bh=AIZzoT5ZYNcjgOzxp5tAPR6+/rNuqLReT3uMdcYoavY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=lOKuJyX27EYnPmiGwJdXU7oE55ZnbWOXbHhpDxxSJcoysZQAiTuh6hau88b/ZEcOd
-	 f/KSDE1EXo9yJqiDrcDG1Udj3WbN1p3suIJrt+NDE/0VdvaULI4rA+DORJgRs68sUd
-	 AveuuUnSAsIYHJGiPrMillw+btagKA4j4JPcgQ2M=
+	by mail.kernel.org (Postfix) with ESMTP id 3D5672229C
+	for <linux-pci@archiver.kernel.org>; Mon, 22 Jul 2019 23:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730957AbfGVVPs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 22 Jul 2019 17:15:48 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35454 "EHLO mail.kernel.org"
+        id S1733283AbfGVXJP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 22 Jul 2019 19:09:15 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:40290 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729697AbfGVVPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 Jul 2019 17:15:46 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1822221955;
-        Mon, 22 Jul 2019 21:15:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563830145;
-        bh=AIZzoT5ZYNcjgOzxp5tAPR6+/rNuqLReT3uMdcYoavY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=iRJji6EcKDZ3rNaenkThR3bEKTYeoPbgWZ5Em5QbX6S3sLNUNEmwShKrkD3Iz3et3
-         fsrBVi68W2MImveoLTFgx5nNRgtbWMIZ1mkJwIql8NEci4tBOmN/WV7j/Dk+txETd1
-         yDQ84WnlNQ4e7tkMX4/PwhqFjwh4AxDCeiZyQqhA=
-Date:   Mon, 22 Jul 2019 16:15:42 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Chocron, Jonathan" <jonnyc@amazon.com>
-Cc:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "Gustavo.Pimentel@synopsys.com" <Gustavo.Pimentel@synopsys.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Woodhouse, David" <dwmw@amazon.co.uk>,
-        "Hanoch, Uri" <hanochu@amazon.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "Wasserstrom, Barak" <barakw@amazon.com>,
-        "Saidi, Ali" <alisaidi@amazon.com>,
-        "Hawa, Hanna" <hhhawa@amazon.com>,
-        "Shenhar, Talel" <talel@amazon.com>,
-        "Krupnik, Ronen" <ronenk@amazon.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>
-Subject: Re: [PATCH v2 6/8] PCI: al: Add support for DW based driver type
-Message-ID: <20190722211542.GB203187@google.com>
-References: <20190718094531.21423-1-jonnyc@amazon.com>
- <20190718094718.25083-2-jonnyc@amazon.com>
- <DM6PR12MB4010913E5408349A600762CADACB0@DM6PR12MB4010.namprd12.prod.outlook.com>
- <d323007c6bf14cb9f90a497a26b66dac151164fc.camel@amazon.com>
+        id S1733236AbfGVXJP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 Jul 2019 19:09:15 -0400
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hphQb-0002k1-Dk; Mon, 22 Jul 2019 17:09:14 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hphQV-0001Qw-TY; Mon, 22 Jul 2019 17:09:03 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Christian Koenig <Christian.Koenig@amd.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Eric Pilmore <epilmore@gigaio.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date:   Mon, 22 Jul 2019 17:08:52 -0600
+Message-Id: <20190722230859.5436-8-logang@deltatee.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190722230859.5436-1-logang@deltatee.com>
+References: <20190722230859.5436-1-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d323007c6bf14cb9f90a497a26b66dac151164fc.camel@amazon.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, bhelgaas@google.com, hch@lst.de, Christian.Koenig@amd.com, jgg@mellanox.com, sagi@grimberg.me, kbusch@kernel.org, axboe@fb.com, dan.j.williams@intel.com, epilmore@gigaio.com, sbates@raithlin.com, logang@deltatee.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH 07/14] PCI/P2PDMA: Add the provider's pci_dev to the dev_pgmap struct
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sun, Jul 21, 2019 at 03:08:18PM +0000, Chocron, Jonathan wrote:
-> On Fri, 2019-07-19 at 08:55 +0000, Gustavo Pimentel wrote:
-> > On Thu, Jul 18, 2019 at 10:47:16, Jonathan Chocron <jonnyc@amazon.com> wrote:
+The provider will be needed to figure out how to properly map a device.
 
-> > > +static int al_pcie_probe(struct platform_device *pdev)
-> > > +{
-> > > +	struct device *dev = &pdev->dev;
-> > > +	struct al_pcie *al_pcie;
-> > > +	struct dw_pcie *pci;
-> > > +	struct resource *dbi_res;
-> > > +	struct resource *controller_res;
-> > > +	struct resource *ecam_res;
-> > > +	int ret;
-> > 
-> > Please sort the variables following the reverse tree order.
-> > 
-> Done. 
-> 
-> I'd think that it would make sense to group variables which have a
-> common characteristic (e.g. resources read from the DT), even if it
-> mildly breaks the convention (as long as the general frame is longest
-> to shortest). Does this sound ok?
-> 
-> BTW, I couldn't find any documentation regarding the reverse-tree
-> convention, do you have a pointer to some?
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/pci/p2pdma.c     | 1 +
+ include/linux/memremap.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-What I personally do is sort declarations in the order they're used.
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 143e11d2a5c3..70c262b7c731 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -168,6 +168,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+ 	pgmap->res.end = pgmap->res.start + size - 1;
+ 	pgmap->res.flags = pci_resource_flags(pdev, bar);
+ 	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
++	pgmap->pci_p2pdma_provider = pdev;
+ 	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
+ 		pci_resource_start(pdev, bar);
+ 
+diff --git a/include/linux/memremap.h b/include/linux/memremap.h
+index f8a5b2a19945..91aee61796bc 100644
+--- a/include/linux/memremap.h
++++ b/include/linux/memremap.h
+@@ -112,6 +112,7 @@ struct dev_pagemap {
+ 	struct device *dev;
+ 	enum memory_type type;
+ 	unsigned int flags;
++	struct pci_dev *pci_p2pdma_provider;
+ 	u64 pci_p2pdma_bus_offset;
+ 	const struct dev_pagemap_ops *ops;
+ };
+-- 
+2.20.1
+
