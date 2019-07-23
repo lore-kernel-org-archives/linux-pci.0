@@ -4,37 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 599CDC76190
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:24:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 146EEC41514
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EFD02253D
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:24:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E26CF229ED
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389086AbfGWUYq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Jul 2019 16:24:46 -0400
+        id S2387481AbfGWUZC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Jul 2019 16:25:02 -0400
 Received: from mga12.intel.com ([192.55.52.136]:31967 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388011AbfGWUYd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jul 2019 16:24:33 -0400
+        id S2387476AbfGWUY3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Jul 2019 16:24:29 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Jul 2019 13:24:31 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Jul 2019 13:24:29 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,300,1559545200"; 
-   d="scan'208";a="369029029"
+   d="scan'208";a="369029010"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga006.fm.intel.com with ESMTP; 23 Jul 2019 13:24:31 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 23 Jul 2019 13:24:29 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v5 7/9] PCI/AER: Allow clearing Error Status Register in FF mode
-Date:   Tue, 23 Jul 2019 13:21:49 -0700
-Message-Id: <3fe03d0be84187d44808f4e3c82a5f0a5f6c434e.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        sathyanarayanan.kuppuswamy@linux.intel.com,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>
+Subject: [PATCH v5 3/9] PCI/ACPI: Expose EDR support via _OSC to BIOS
+Date:   Tue, 23 Jul 2019 13:21:45 -0700
+Message-Id: <c2841a077e304b3173e1c6f95f7fe488d1e15030.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -48,51 +51,52 @@ X-Mailing-List: linux-pci@vger.kernel.org
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
 As per PCI firmware specification r3.2 Downstream Port Containment
-Related Enhancements ECN, sec 4.5.1, table 4-6, Error Disconnect
-Recover (EDR) support allows OS to handle error recovery and
-clearing Error Registers even in FF mode. So remove FF mode checks in
-pci_cleanup_aer_uncorrect_error_status(), pci_aer_clear_fatal_status()
-and pci_cleanup_aer_error_status_regs() functions.
+Related Enhancements ECN, sec 4.5.1, table 4-4, if OS supports EDR,
+it should expose its support to BIOS by setting bit 7 of _OSC Support
+Field.
 
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pcie/aer.c | 9 ---------
- 1 file changed, 9 deletions(-)
+ drivers/acpi/pci_root.c | 3 +++
+ include/linux/acpi.h    | 1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index b45bc47d04fe..ae5eed084ae5 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -383,9 +383,6 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- 	if (!pos)
- 		return -EIO;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 73b08f40b0da..988d09d788b6 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -132,6 +132,7 @@ static struct pci_osc_bit_struct pci_osc_support_bit[] = {
+ 	{ OSC_PCI_CLOCK_PM_SUPPORT, "ClockPM" },
+ 	{ OSC_PCI_SEGMENT_GROUPS_SUPPORT, "Segments" },
+ 	{ OSC_PCI_MSI_SUPPORT, "MSI" },
++	{ OSC_PCI_EDR_SUPPORT, "EDR" },
+ 	{ OSC_PCI_HPX_TYPE_3_SUPPORT, "HPX-Type3" },
+ };
  
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
- 	/* Clear status bits for ERR_NONFATAL errors only */
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
-@@ -406,9 +403,6 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev)
- 	if (!pos)
- 		return;
+@@ -442,6 +443,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+ 	if (pci_msi_enabled())
+ 		support |= OSC_PCI_MSI_SUPPORT;
++	if (IS_ENABLED(CONFIG_PCIE_EDR))
++		support |= OSC_PCI_EDR_SUPPORT;
  
--	if (pcie_aer_get_firmware_first(dev))
--		return;
--
- 	/* Clear status bits for ERR_FATAL errors only */
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
-@@ -430,9 +424,6 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	if (!pos)
- 		return -EIO;
+ 	decode_osc_support(root, "OS supports", support);
+ 	status = acpi_pci_osc_support(root, support);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 8959ed322e15..b6b43da85d26 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -515,6 +515,7 @@ extern bool osc_pc_lpi_support_confirmed;
+ #define OSC_PCI_CLOCK_PM_SUPPORT		0x00000004
+ #define OSC_PCI_SEGMENT_GROUPS_SUPPORT		0x00000008
+ #define OSC_PCI_MSI_SUPPORT			0x00000010
++#define OSC_PCI_EDR_SUPPORT			0x00000080
+ #define OSC_PCI_HPX_TYPE_3_SUPPORT		0x00000100
+ #define OSC_PCI_SUPPORT_MASKS			0x0000011f
  
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
- 	port_type = pci_pcie_type(dev);
- 	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
- 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
 -- 
 2.21.0
 
