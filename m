@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E08F3C76186
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D0AC76186
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C0FB5229EC
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3C75229EC
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732971AbfGWUZC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Jul 2019 16:25:02 -0400
-Received: from mga12.intel.com ([192.55.52.136]:31968 "EHLO mga12.intel.com"
+        id S1731714AbfGWUZM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Jul 2019 16:25:12 -0400
+Received: from mga12.intel.com ([192.55.52.136]:31967 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387477AbfGWUYa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jul 2019 16:24:30 -0400
+        id S1730380AbfGWUY2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Jul 2019 16:24:28 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Jul 2019 13:24:30 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Jul 2019 13:24:28 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,300,1559545200"; 
-   d="scan'208";a="369029014"
+   d="scan'208";a="369029001"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga006.fm.intel.com with ESMTP; 23 Jul 2019 13:24:29 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 23 Jul 2019 13:24:28 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v5 4/9] PCI/DPC: Allow dpc_probe() even if firmware first mode is enabled
-Date:   Tue, 23 Jul 2019 13:21:46 -0700
-Message-Id: <3fbc2b769890718edff2beee1e815bab97156e64.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v5 1/9] PCI/ERR: Update error status after reset_link()
+Date:   Tue, 23 Jul 2019 13:21:43 -0700
+Message-Id: <6be594215ae2ea0935d949537bfb84ff9e656a36.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -48,133 +48,52 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-As per ACPI specification v6.3, sec 5.6.6, Error Disconnect Recover
-(EDR) notification used by firmware to let OS know about the DPC event
-and permit OS to perform error recovery when processing the EDR
-notification. Also, as per PCI firmware specification r3.2 Downstream
-Port Containment Related Enhancements ECN, sec 4.5.1, table 4-6, if DPC
-is controlled by firmware (firmware first mode), it's responsible for
-initializing Downstream Port Containment Extended Capability Structures
-per firmware policy. And, OS is permitted to read or write DPC Control
-and Status registers of a port while processing an Error Disconnect
-Recover (EDR) notification from firmware on that port.
+Commit bdb5ac85777d ("PCI/ERR: Handle fatal error recovery") uses
+reset_link() to recover from fatal errors. But, if the reset is
+successful there is no need to continue the rest of the error recovery
+checks. Also, during fatal error recovery, if the initial value of error
+status is PCI_ERS_RESULT_DISCONNECT or PCI_ERS_RESULT_NO_AER_DRIVER then
+even after successful recovery (using reset_link()) pcie_do_recovery()
+will report the recovery result as failure. So update the status of
+error after reset_link().
 
-Currently, if firmware controls DPC (firmware first mode), OS will not
-create/enumerate DPC PCIe port services. But, if OS supports EDR
-feature, then as mentioned in above spec references, it should permit
-enumeration of DPC driver and also support handling ACPI EDR
-notification. So as first step, allow dpc_probe() to continue even if
-firmware first mode is enabled. Also add appropriate checks to ensure
-device registers are not modified outside EDR notification window in
-firmware first mode. This is a preparatory patch for adding EDR support.
-
+Fixes: bdb5ac85777d ("PCI/ERR: Handle fatal error recovery")
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pcie/dpc.c | 49 +++++++++++++++++++++++++++++++-----------
- 1 file changed, 36 insertions(+), 13 deletions(-)
+ drivers/pci/pcie/err.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index a32ec3487a8d..9717fda012f8 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -22,6 +22,8 @@ struct dpc_dev {
- 	u16			cap_pos;
- 	bool			rp_extensions;
- 	u8			rp_log_size;
-+	/* Set True if DPC is controlled by firmware */
-+	bool			firmware_dpc;
- };
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index 773197a12568..aecec124a829 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -204,9 +204,13 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ 	else
+ 		pci_walk_bus(bus, report_normal_detected, &status);
  
- static const char * const rp_pio_error_string[] = {
-@@ -69,6 +71,9 @@ void pci_save_dpc_state(struct pci_dev *dev)
- 	if (!dpc)
- 		return;
- 
-+	if (dpc->firmware_dpc)
-+		return;
-+
- 	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
- 	if (!save_state)
- 		return;
-@@ -90,6 +95,9 @@ void pci_restore_dpc_state(struct pci_dev *dev)
- 	if (!dpc)
- 		return;
- 
-+	if (dpc->firmware_dpc)
-+		return;
-+
- 	save_state = pci_find_saved_ext_cap(dev, PCI_EXT_CAP_ID_DPC);
- 	if (!save_state)
- 		return;
-@@ -291,9 +299,6 @@ static int dpc_probe(struct pcie_device *dev)
- 	int status;
- 	u16 ctl, cap;
- 
--	if (pcie_aer_get_firmware_first(pdev))
--		return -ENOTSUPP;
--
- 	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
- 	if (!dpc)
- 		return -ENOMEM;
-@@ -302,13 +307,25 @@ static int dpc_probe(struct pcie_device *dev)
- 	dpc->dev = dev;
- 	set_service_data(dev, dpc);
- 
--	status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
--					   dpc_handler, IRQF_SHARED,
--					   "pcie-dpc", dpc);
--	if (status) {
--		pci_warn(pdev, "request IRQ%d failed: %d\n", dev->irq,
--			 status);
--		return status;
-+	if (pcie_aer_get_firmware_first(pdev))
-+		dpc->firmware_dpc = 1;
-+
-+	/*
-+	 * If DPC is handled in firmware and ACPI support is not enabled
-+	 * in OS, skip probe and return error.
-+	 */
-+	if (dpc->firmware_dpc && !IS_ENABLED(CONFIG_ACPI))
-+		return -ENODEV;
-+
-+	if (!dpc->firmware_dpc) {
-+		status = devm_request_threaded_irq(device, dev->irq, dpc_irq,
-+						   dpc_handler, IRQF_SHARED,
-+						   "pcie-dpc", dpc);
-+		if (status) {
-+			pci_warn(pdev, "request IRQ%d failed: %d\n", dev->irq,
-+				 status);
-+			return status;
-+		}
- 	}
- 
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
-@@ -323,9 +340,12 @@ static int dpc_probe(struct pcie_device *dev)
- 			dpc->rp_log_size = 0;
- 		}
- 	}
--
--	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN;
--	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
-+	if (!dpc->firmware_dpc) {
-+		ctl = (ctl & 0xfff4) |
-+			(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
-+		pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL,
-+				      ctl);
+-	if (state == pci_channel_io_frozen &&
+-	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
+-		goto failed;
++	if (state == pci_channel_io_frozen) {
++		status = reset_link(dev, service);
++		if (status != PCI_ERS_RESULT_RECOVERED)
++			goto failed;
++		else
++			goto done;
 +	}
  
- 	pci_info(pdev, "error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
- 		 cap & PCI_EXP_DPC_IRQ, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
-@@ -343,6 +363,9 @@ static void dpc_remove(struct pcie_device *dev)
- 	struct pci_dev *pdev = dev->port;
- 	u16 ctl;
+ 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
+ 		status = PCI_ERS_RESULT_RECOVERED;
+@@ -228,6 +232,7 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+ 	if (status != PCI_ERS_RESULT_RECOVERED)
+ 		goto failed;
  
-+	if (dpc->firmware_dpc)
-+		return;
-+
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
- 	ctl &= ~(PCI_EXP_DPC_CTL_EN_FATAL | PCI_EXP_DPC_CTL_INT_EN);
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
++done:
+ 	pci_dbg(dev, "broadcast resume message\n");
+ 	pci_walk_bus(bus, report_resume, &status);
+ 
 -- 
 2.21.0
 
