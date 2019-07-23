@@ -2,98 +2,167 @@ Return-Path: <SRS0=S0fB=VU=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12D0AC76186
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96E78C76186
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 21:11:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3C75229EC
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:25:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68402229ED
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 21:11:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1563916268;
+	bh=AoX+WdU4hi3SajaebzX866AE/L77/H0R0yqjY+Ea8rw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=jyAeYABCklheavjFiZjVc6N6Vz0pNiZdTr/bI81LhRHNmLxzCF7lMvUgk6g9z8KnG
+	 bVvej1VJl+PzkRVeTwg7qTl4A6OEfJqMq3JyVJu8oAnIq8ZlENO/vp5F+Xi63AuKT0
+	 l2FoKGJW85gwIcF+KTSGO57ZNi7jJgPl/KUAg73E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731714AbfGWUZM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Jul 2019 16:25:12 -0400
-Received: from mga12.intel.com ([192.55.52.136]:31967 "EHLO mga12.intel.com"
+        id S2388912AbfGWVLH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Jul 2019 17:11:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42908 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730380AbfGWUY2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jul 2019 16:24:28 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Jul 2019 13:24:28 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,300,1559545200"; 
-   d="scan'208";a="369029001"
-Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga006.fm.intel.com with ESMTP; 23 Jul 2019 13:24:28 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, keith.busch@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v5 1/9] PCI/ERR: Update error status after reset_link()
-Date:   Tue, 23 Jul 2019 13:21:43 -0700
-Message-Id: <6be594215ae2ea0935d949537bfb84ff9e656a36.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1728921AbfGWVLH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Jul 2019 17:11:07 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8DCB42238C;
+        Tue, 23 Jul 2019 21:11:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1563916266;
+        bh=AoX+WdU4hi3SajaebzX866AE/L77/H0R0yqjY+Ea8rw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=HsYtcMuBXAY+b91QM5TYQxf9CTW6rX5KYSJYp2MVp4mrFlCDwNRrYnDjvWeTZkPyN
+         YDTepnXtw5MPUYipFfNkX21sIogmAkC6m2HzYRPTH1/jzaWjAJ7XMv00ipFCxaTKO5
+         S6pguh4v7xsVrff/Ne48m2US9b9OXej/42mpAsqQ=
+Date:   Tue, 23 Jul 2019 16:11:02 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Nishka Dasgupta <nishkadg.linux@gmail.com>
+Cc:     thierry.reding@gmail.com, lorenzo.pieralisi@arm.com,
+        jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: controller: pci-tegra: Add of_node_put() before
+ return
+Message-ID: <20190723211102.GA9742@google.com>
+References: <20190716054047.2671-1-nishkadg.linux@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190716054047.2671-1-nishkadg.linux@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Thanks for the fix!
 
-Commit bdb5ac85777d ("PCI/ERR: Handle fatal error recovery") uses
-reset_link() to recover from fatal errors. But, if the reset is
-successful there is no need to continue the rest of the error recovery
-checks. Also, during fatal error recovery, if the initial value of error
-status is PCI_ERS_RESULT_DISCONNECT or PCI_ERS_RESULT_NO_AER_DRIVER then
-even after successful recovery (using reset_link()) pcie_do_recovery()
-will report the recovery result as failure. So update the status of
-error after reset_link().
+Please pay attention to the subject line convention and make yours
+match, e.g.,
 
-Fixes: bdb5ac85777d ("PCI/ERR: Handle fatal error recovery")
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
----
- drivers/pci/pcie/err.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+  $ git log --oneline drivers/pci/controller/pci-tegra.c  | head -5
+  7be142caabc4 PCI: tegra: Enable Relaxed Ordering only for Tegra20 & Tegra30
+  4b16a8227907 PCI: tegra: Change link retry log level to debug
+  dbdcc22c845b PCI: tegra: Add support for GPIO based PERST#
+  2d8c7361585f PCI: tegra: Put PEX CLK & BIAS pads in DPD mode
+  adb2653b3d2e PCI: tegra: Add AFI_PEX2_CTRL reg offset as part of SoC struct
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 773197a12568..aecec124a829 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -204,9 +204,13 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 	else
- 		pci_walk_bus(bus, report_normal_detected, &status);
- 
--	if (state == pci_channel_io_frozen &&
--	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
--		goto failed;
-+	if (state == pci_channel_io_frozen) {
-+		status = reset_link(dev, service);
-+		if (status != PCI_ERS_RESULT_RECOVERED)
-+			goto failed;
-+		else
-+			goto done;
-+	}
- 
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
- 		status = PCI_ERS_RESULT_RECOVERED;
-@@ -228,6 +232,7 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
- 
-+done:
- 	pci_dbg(dev, "broadcast resume message\n");
- 	pci_walk_bus(bus, report_resume, &status);
- 
--- 
-2.21.0
+I think this actually fixes a *reference* leak (not a memory leak as
+you say below).  The subject line should mention that.  We can tell by
+looking at the patch that it adds of_node_put(); the subject and
+commit log should tell us *why*.
 
+On Tue, Jul 16, 2019 at 11:10:47AM +0530, Nishka Dasgupta wrote:
+> Each iteration of for_each_child_of_node puts the previous node, but in
+> the case of a return from the middle of the loop, there is no put, thus
+> causing a memory leak.
+> Hence store these mid-loop return values in variable err and add a new
+> label err_node_put which puts the previous node and returns err. Change
+> six mid-loop return statements to point to this new label instead.
+
+This sort of looks like two paragraphs and sort of looks like one.
+Please either rewrap it so it's clearly one paragraph, or add a blank
+line so it's clearly two paragraphs.
+
+s/for_each_child_of_node/for_each_child_of_node()/
+(as you already did for of_node_put() in the subject, thanks for that)
+
+> Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
+> ---
+>  drivers/pci/controller/pci-tegra.c | 22 +++++++++++++++-------
+>  1 file changed, 15 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+> index 9a917b2456f6..673a1725ef38 100644
+> --- a/drivers/pci/controller/pci-tegra.c
+> +++ b/drivers/pci/controller/pci-tegra.c
+> @@ -2237,14 +2237,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>  		err = of_pci_get_devfn(port);
+>  		if (err < 0) {
+>  			dev_err(dev, "failed to parse address: %d\n", err);
+> -			return err;
+> +			goto err_node_put;
+>  		}
+>  
+>  		index = PCI_SLOT(err);
+>  
+>  		if (index < 1 || index > soc->num_ports) {
+>  			dev_err(dev, "invalid port number: %d\n", index);
+> -			return -EINVAL;
+> +			err = -EINVAL;
+> +			goto err_node_put;
+>  		}
+>  
+>  		index--;
+> @@ -2253,12 +2254,13 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>  		if (err < 0) {
+>  			dev_err(dev, "failed to parse # of lanes: %d\n",
+>  				err);
+> -			return err;
+> +			goto err_node_put;
+>  		}
+>  
+>  		if (value > 16) {
+>  			dev_err(dev, "invalid # of lanes: %u\n", value);
+> -			return -EINVAL;
+> +			err = -EINVAL;
+> +			goto err_node_put;
+>  		}
+>  
+>  		lanes |= value << (index << 3);
+> @@ -2272,13 +2274,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>  		lane += value;
+>  
+>  		rp = devm_kzalloc(dev, sizeof(*rp), GFP_KERNEL);
+> -		if (!rp)
+> -			return -ENOMEM;
+> +		if (!rp) {
+> +			err = -ENOMEM;
+> +			goto err_node_put;
+> +		}
+>  
+>  		err = of_address_to_resource(port, 0, &rp->regs);
+>  		if (err < 0) {
+>  			dev_err(dev, "failed to parse address: %d\n", err);
+> -			return err;
+> +			goto err_node_put;
+>  		}
+>  
+>  		INIT_LIST_HEAD(&rp->list);
+> @@ -2330,6 +2334,10 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+>  		return err;
+>  
+>  	return 0;
+> +
+> +err_node_put:
+> +	of_node_put(port);
+> +	return err;
+>  }
+>  
+>  /*
+> -- 
+> 2.19.1
+> 
