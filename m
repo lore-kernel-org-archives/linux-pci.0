@@ -4,37 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8983BC76186
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:24:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7831BC76186
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:24:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FF072253D
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:24:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B712229ED
+	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 20:24:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389058AbfGWUYp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Jul 2019 16:24:45 -0400
-Received: from mga12.intel.com ([192.55.52.136]:31968 "EHLO mga12.intel.com"
+        id S2389100AbfGWUYr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 23 Jul 2019 16:24:47 -0400
+Received: from mga12.intel.com ([192.55.52.136]:31969 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389030AbfGWUYd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jul 2019 16:24:33 -0400
+        id S2387481AbfGWUYb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 Jul 2019 16:24:31 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Jul 2019 13:24:32 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Jul 2019 13:24:30 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,300,1559545200"; 
-   d="scan'208";a="369029037"
+   d="scan'208";a="369029017"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga006.fm.intel.com with ESMTP; 23 Jul 2019 13:24:32 -0700
+  by fmsmga006.fm.intel.com with ESMTP; 23 Jul 2019 13:24:30 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v5 9/9] PCI/DPC: Clear AER registers in EDR mode
-Date:   Tue, 23 Jul 2019 13:21:51 -0700
-Message-Id: <b78e57af266c859134f4c3f1c84f54ccade7348e.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v5 5/9] PCI/DPC: Add dpc_process_error() wrapper function
+Date:   Tue, 23 Jul 2019 13:21:47 -0700
+Message-Id: <13fec83690edb60e913f02cbd53e7cf748210173.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1563912591.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -47,31 +47,47 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-As per PCI firmware specification r3.2 Downstream Port Containment
-Related Enhancements ECN, OS is responsible for clearing the AER
-registers in EDR mode. So clear AER registers in dpc_process_error()
-function.
+With Error Disconnect Recover (EDR) support, we need to support
+processing DPC event either from DPC IRQ or ACPI EDR event. So create
+a wrapper function dpc_process_error() and move common error handling
+code in to it. It will be used to process the DPC event in both DPC IRQ
+and EDR ACPI event contexts.
 
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pcie/dpc.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/pcie/dpc.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index 5d328812aea9..7eff5617d052 100644
+index 9717fda012f8..4137ec7b48cc 100644
 --- a/drivers/pci/pcie/dpc.c
 +++ b/drivers/pci/pcie/dpc.c
-@@ -276,6 +276,10 @@ static void dpc_process_error(struct dpc_dev *dpc)
- 			pci_aer_clear_fatal_status(pdev);
- 	}
+@@ -232,10 +232,9 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+ 	return 1;
+ }
  
-+	/* In EDR mode, OS is responsible for clearing AER registers */
-+	if (dpc->firmware_dpc)
-+		pci_cleanup_aer_error_status_regs(pdev);
+-static irqreturn_t dpc_handler(int irq, void *context)
++static void dpc_process_error(struct dpc_dev *dpc)
+ {
+ 	struct aer_err_info info;
+-	struct dpc_dev *dpc = context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
+ 
+@@ -268,6 +267,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
+ 
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+ 	pcie_do_recovery(pdev, pci_channel_io_frozen, PCIE_PORT_SERVICE_DPC);
++}
 +
- 	/*
- 	 * Irrespective of whether the DPC event is triggered by
- 	 * ERR_FATAL or ERR_NONFATAL, since the link is already down,
++static irqreturn_t dpc_handler(int irq, void *context)
++{
++	struct dpc_dev *dpc = context;
++
++	dpc_process_error(dpc);
+ 
+ 	return IRQ_HANDLED;
+ }
 -- 
 2.21.0
 
