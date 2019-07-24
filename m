@@ -4,23 +4,23 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D94EC7618B
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 06:32:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21C13C7618B
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 06:32:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D276229ED
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 06:32:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 040AD229ED
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 06:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725900AbfGXGcc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jul 2019 02:32:32 -0400
-Received: from verein.lst.de ([213.95.11.211]:48024 "EHLO verein.lst.de"
+        id S1726329AbfGXGcj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jul 2019 02:32:39 -0400
+Received: from verein.lst.de ([213.95.11.211]:48050 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725870AbfGXGcc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 Jul 2019 02:32:32 -0400
+        id S1725870AbfGXGci (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Jul 2019 02:32:38 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 5363368B02; Wed, 24 Jul 2019 08:32:29 +0200 (CEST)
-Date:   Wed, 24 Jul 2019 08:32:29 +0200
+        id 40A0E68C65; Wed, 24 Jul 2019 08:32:36 +0200 (CEST)
+Date:   Wed, 24 Jul 2019 08:32:36 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Logan Gunthorpe <logang@deltatee.com>
 Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -34,33 +34,41 @@ Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Dan Williams <dan.j.williams@intel.com>,
         Eric Pilmore <epilmore@gigaio.com>,
         Stephen Bates <sbates@raithlin.com>
-Subject: Re: [PATCH 07/14] PCI/P2PDMA: Add the provider's pci_dev to the
- dev_pgmap struct
-Message-ID: <20190724063229.GA1804@lst.de>
-References: <20190722230859.5436-1-logang@deltatee.com> <20190722230859.5436-8-logang@deltatee.com>
+Subject: Re: [PATCH 14/14] PCI/P2PDMA: Introduce
+ pci_p2pdma_[un]map_resource()
+Message-ID: <20190724063235.GC1804@lst.de>
+References: <20190722230859.5436-1-logang@deltatee.com> <20190722230859.5436-15-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190722230859.5436-8-logang@deltatee.com>
+In-Reply-To: <20190722230859.5436-15-logang@deltatee.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Jul 22, 2019 at 05:08:52PM -0600, Logan Gunthorpe wrote:
 > diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-> index 143e11d2a5c3..70c262b7c731 100644
+> index baf476039396..20c834cfd2d3 100644
 > --- a/drivers/pci/p2pdma.c
 > +++ b/drivers/pci/p2pdma.c
-> @@ -168,6 +168,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
->  	pgmap->res.end = pgmap->res.start + size - 1;
->  	pgmap->res.flags = pci_resource_flags(pdev, bar);
->  	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
-> +	pgmap->pci_p2pdma_provider = pdev;
->  	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
->  		pci_resource_start(pdev, bar);
+> @@ -874,6 +874,91 @@ void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg_attrs);
+>  
+> +static pci_bus_addr_t pci_p2pdma_phys_to_bus(struct pci_dev *dev,
+> +		phys_addr_t start, size_t size)
+> +{
+> +	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
+> +	phys_addr_t end = start + size;
+> +	struct resource_entry *window;
+> +
+> +	resource_list_for_each_entry(window, &bridge->windows) {
+> +		if (window->res->start <= start && window->res->end >= end)
+> +			return start - window->offset;
+> +	}
+> +
+> +	return DMA_MAPPING_ERROR;
 
-I think we need to bite the bullet and move the PCIe P2P specific
-information out of struct dev_pagemap and into a pci-specific structure
-that embedds struct dev_pagemap.
+This does once again look very expensive for something called in the
+hot path.
