@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 043B1C76186
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:39:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 007F4C76186
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:39:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D0CCD21880
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:39:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD04D218DA
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:39:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W25R1WYe"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CZB+qQZ+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388709AbfGXXjc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jul 2019 19:39:32 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:45974 "EHLO
+        id S1728454AbfGXXjq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jul 2019 19:39:46 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:36553 "EHLO
         mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388699AbfGXXjc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2019 19:39:32 -0400
-Received: by mail-io1-f68.google.com with SMTP id g20so93285072ioc.12;
-        Wed, 24 Jul 2019 16:39:31 -0700 (PDT)
+        with ESMTP id S2388748AbfGXXjg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2019 19:39:36 -0400
+Received: by mail-io1-f68.google.com with SMTP id o9so93396958iom.3;
+        Wed, 24 Jul 2019 16:39:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=qNiVS6KaY4NBAE+rZSVHlFmLJSQHz8WYKfYsVUbOMCM=;
-        b=W25R1WYezOB68dc9K78bpE8OES+u0aPNWsLm0Z/eSuGSyd0/XPQymoibZ4/BQIpcIq
-         Eq3IrnM+oHw+Eh6OmLLt8+VcxYmuU7nbhOPftOr6CUCfGsWZq9kd6MU+KuDYSCr2lTKO
-         97W3ST3Ccjp0sPANSoCmnLWC6kpqmG6IaQnHr44maxuHGR4ryk1xyGo+Wk+1lOSkxNXL
-         UDih0DZ1Xyp4+xltmYYSvYQOzDSm2m3cCP3Fp/o2ZyIuEcCwIs4aPI8LYmnnxHyEVJuP
-         U6Lhd/1lq9BN0VuDudKaKlZrFQ3hgzTlZR7WlT/+jUemIuKhKe2DvVx9o8boR7KYii2E
-         GmiA==
+        bh=+nfQZ2UdcSDgJjCDwmD/o1yYou6zHrnlrDckfQLhv48=;
+        b=CZB+qQZ+IiCjqbrl3pG1VgfoIKlT1esq374rHCiwoSTr+htDGMMdB25C4Kju1ptnOv
+         Sr0vWDqL1QJ8UxaHm3MSMXR8LZpxI8sSOFGwYpaXvbXoOaNpfJfY+8QnxMoy0sD4c5/G
+         7qLcwiTTCg8VwoMBVrIn2Jjo3NIsaxQZU8ASK/EaGVoGZtibG80it6wU6C6lktP9f5Wt
+         sSCIM70yBh8fL8rsrpffoHwj93kjzxv/1zN/Cv647ellh7AJiCG/dPXcCrWpJSP8U2lB
+         tHP4E6gWavTvF+TOL0eTMooXt7XVQ3+ITlWaQuZTNGAIlCyXmIDsZO5E36ET0q1faLPK
+         qv/A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qNiVS6KaY4NBAE+rZSVHlFmLJSQHz8WYKfYsVUbOMCM=;
-        b=tRUDZw7IH4RPePqk0vUJzEV5DE1RnKJ+zOD3cFPpQTpvnRtM6f3ycigE7I+htk5nd7
-         TO+ubNTxfxFZCY9rckwt0GDaRhwtP/8pJXiUM1xOfg07zGnVYJcE0HTXUYhzOerpfqcd
-         sdR6j2XhwPIdNERaeN/WMphQZhtjWyAqwjKWbhbd0qLyKMUx7OEKJjOW4Dw+avd2+PQT
-         JzKwh4+vnONiT8U9iNUvKibnIRRnlzItdhP+bsUTpmAguFoAfugO9XcjGNZ/sWxSppN6
-         VwVmOkP0hHlyPr6WENuvK1FutAL9sZzcYXZnBgm1rDRo+6kGT4V6Iqhnkwu0f3qgpH/l
-         TX7A==
-X-Gm-Message-State: APjAAAX2nmFxT7ywTX30oAGtjL4IrVxTvvVI9j2A52L9yHnsnPAOAFQM
-        4Jeqlwk+htMzMq8vdDyMd4o=
-X-Google-Smtp-Source: APXvYqw9oabF3ab6Yv6x4v9tkcwqQAHiGbRpr88mk5G7RA3GapanX5AoCAwO5O+GaUOM0sxzbT5vIg==
-X-Received: by 2002:a6b:6505:: with SMTP id z5mr76156608iob.295.1564011571550;
-        Wed, 24 Jul 2019 16:39:31 -0700 (PDT)
+        bh=+nfQZ2UdcSDgJjCDwmD/o1yYou6zHrnlrDckfQLhv48=;
+        b=e58DkMqClxTc58FKiC/JFu66D9+cu1JIlmjyhUx7aVSQkUjUzx67el+kxWbQkVBQIC
+         9dk3PMHKCNh70H1O6HutfvEddBbxaoY9tODg0+jnJR7/eswAmFsnGY6sj7IooZITmlJb
+         jhit1cc/nHkRWA8AA/vCp8twUEvJcv0WjbDvjJmf6Ux3ZJ+yQJsZCSJyc15M4vbRsCVl
+         OmiFC3nMBhoAxj3x8b+9hzsEKurUH8O7p+IR0XOFVh11iUu4ycxHgsdDY1/UXRy1XNWw
+         rZAOyvbcOlCk3c4RwUiz1dtEAziYvgQDuOqlYBeJ514NrGkrm5lem5GyHawndpI48gvY
+         fbAg==
+X-Gm-Message-State: APjAAAXNl8uQVG3bnhjntXOZv8PDKNd64pv7MoeTrtbb1ZKUTJgynSIT
+        s/dl7QhvLjrifNap4V+MMhU=
+X-Google-Smtp-Source: APXvYqwz03eSee7Y8W5j7Athc2oOY1acyYH6BBqvdR5E7s99JkIF/tHtBs+1nL70YWEqwyLZFCaI/Q==
+X-Received: by 2002:a6b:2cc7:: with SMTP id s190mr80038806ios.164.1564011576172;
+        Wed, 24 Jul 2019 16:39:36 -0700 (PDT)
 Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id b14sm51612959iod.33.2019.07.24.16.39.30
+        by smtp.gmail.com with ESMTPSA id b14sm51612959iod.33.2019.07.24.16.39.34
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 24 Jul 2019 16:39:30 -0700 (PDT)
+        Wed, 24 Jul 2019 16:39:35 -0700 (PDT)
 From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
 To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     skunberg.kelsey@gmail.com,
         linux-kernel-mentees@lists.linuxfoundation.org,
         skhan@linuxfoundation.org
-Subject: [PATCH v2 08/11] PCI: Move pci_ats_init() to drivers/pci/pci.h
-Date:   Wed, 24 Jul 2019 17:38:45 -0600
-Message-Id: <20190724233848.73327-9-skunberg.kelsey@gmail.com>
+Subject: [PATCH v2 11/11] PCI: Move pci_*_node() declarations to drivers/pci/pci.h
+Date:   Wed, 24 Jul 2019 17:38:48 -0600
+Message-Id: <20190724233848.73327-12-skunberg.kelsey@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190724233848.73327-1-skunberg.kelsey@gmail.com>
 References: <20190711222341.111556-1-skunberg.kelsey@gmail.com>
@@ -75,53 +75,69 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_ats_init() is only called with drivers/pci/. Since declarations do not
-need to be visible to the rest of the kernel, move to drivers/pci/pci.h.
+pci_*_node() is only called from drivers/pci/. Since these declarations do
+not need to be visible to the rest of the kernel, move to
+drivers/pci/pci.h.
 
 Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
 ---
- drivers/pci/pci.h   | 7 ++++---
- include/linux/pci.h | 2 --
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/pci/pci.h   | 9 +++++++++
+ include/linux/pci.h | 8 --------
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index feec29853a44..7c0488b64faf 100644
+index 6cdc3500de15..27089a87dfea 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -439,11 +439,12 @@ static inline void pci_restore_dpc_state(struct pci_dev *dev) {}
- #endif
+@@ -592,6 +592,10 @@ struct device_node;
+ int of_pci_parse_bus_range(struct device_node *node, struct resource *res);
+ int of_get_pci_domain_nr(struct device_node *node);
+ int of_pci_get_max_link_speed(struct device_node *node);
++void pci_set_of_node(struct pci_dev *dev);
++void pci_release_of_node(struct pci_dev *dev);
++void pci_set_bus_of_node(struct pci_bus *bus);
++void pci_release_bus_of_node(struct pci_bus *bus);
  
- #ifdef CONFIG_PCI_ATS
-+/* Address Translation Service */
-+void pci_ats_init(struct pci_dev *dev);
- void pci_restore_ats_state(struct pci_dev *dev);
  #else
--static inline void pci_restore_ats_state(struct pci_dev *dev)
--{
--}
-+static inline void pci_ats_init(struct pci_dev *d) { }
-+static inline void pci_restore_ats_state(struct pci_dev *dev) { }
- #endif /* CONFIG_PCI_ATS */
+ static inline int
+@@ -611,6 +615,11 @@ of_pci_get_max_link_speed(struct device_node *node)
+ {
+ 	return -EINVAL;
+ }
++
++static inline void pci_set_of_node(struct pci_dev *dev) { }
++static inline void pci_release_of_node(struct pci_dev *dev) { }
++static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
++static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+ #endif /* CONFIG_OF */
  
- #ifdef CONFIG_PCI_IOV
+ #if defined(CONFIG_OF_ADDRESS)
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c6a25c32a49a..5760e19cb625 100644
+index a483b7598059..d354fbcee5a7 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1766,13 +1766,11 @@ static inline bool pci_ats_disabled(void) { return true; }
+@@ -2264,10 +2264,6 @@ int pci_vpd_find_info_keyword(const u8 *buf, unsigned int off,
+ #ifdef CONFIG_OF
+ struct device_node;
+ struct irq_domain;
+-void pci_set_of_node(struct pci_dev *dev);
+-void pci_release_of_node(struct pci_dev *dev);
+-void pci_set_bus_of_node(struct pci_bus *bus);
+-void pci_release_bus_of_node(struct pci_bus *bus);
+ struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus);
+ int pci_parse_request_of_pci_ranges(struct device *dev,
+ 				    struct list_head *resources,
+@@ -2277,10 +2273,6 @@ int pci_parse_request_of_pci_ranges(struct device *dev,
+ struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
  
- #ifdef CONFIG_PCI_ATS
- /* Address Translation Service */
--void pci_ats_init(struct pci_dev *dev);
- int pci_enable_ats(struct pci_dev *dev, int ps);
- void pci_disable_ats(struct pci_dev *dev);
- int pci_ats_queue_depth(struct pci_dev *dev);
- int pci_ats_page_aligned(struct pci_dev *dev);
- #else
--static inline void pci_ats_init(struct pci_dev *d) { }
- static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
- static inline void pci_disable_ats(struct pci_dev *d) { }
- static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
+ #else	/* CONFIG_OF */
+-static inline void pci_set_of_node(struct pci_dev *dev) { }
+-static inline void pci_release_of_node(struct pci_dev *dev) { }
+-static inline void pci_set_bus_of_node(struct pci_bus *bus) { }
+-static inline void pci_release_bus_of_node(struct pci_bus *bus) { }
+ static inline struct irq_domain *
+ pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
+ static inline int pci_parse_request_of_pci_ranges(struct device *dev,
 -- 
 2.20.1
 
