@@ -1,89 +1,66 @@
-Return-Path: <SRS0=S0fB=VU=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=Pgd8=VV=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 916C0C76186
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 23:37:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D94EC7618B
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 06:32:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 46D052238C
-	for <linux-pci@archiver.kernel.org>; Tue, 23 Jul 2019 23:37:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563925036;
-	bh=fdHWyEHGRz64s2G2uXhlm5YnUP8y5eicNiu3Xgx/sA0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=jlBpOTMRzJ5N2AdzZwNoBPMJrL2Rjvr92jHTaDwJwIrKKY9aA/Ro5pgkkU7tdzoEH
-	 5uyItcaakJ0kCk4jIaAVmolwSPAFEUolB3KxwADD1SVvmgYxlwrsIjD9sB2pNLMAR8
-	 aayNR6CXfaIMPcigGAnRvXf3deb/kF+U7savn/uc=
+	by mail.kernel.org (Postfix) with ESMTP id 2D276229ED
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 06:32:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727128AbfGWXhP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 23 Jul 2019 19:37:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51038 "EHLO mail.kernel.org"
+        id S1725900AbfGXGcc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jul 2019 02:32:32 -0400
+Received: from verein.lst.de ([213.95.11.211]:48024 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726862AbfGWXhP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 Jul 2019 19:37:15 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B14482184B;
-        Tue, 23 Jul 2019 23:37:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563925034;
-        bh=fdHWyEHGRz64s2G2uXhlm5YnUP8y5eicNiu3Xgx/sA0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=KpntqEg1youWiJ29MD0o8e7OH2NSri60yME0HD/WjPWqkacQgtSJcxNCma9peWMSf
-         mgG51npzA7QY4knTY3bvRFDGvKNzWihkbGQ5bCxcatGNDCJSVk6xE66VPFl4oa1XnX
-         N95rMtgTGuZHMb5SYTuAg26i+yzbHGmzYQ1hhjsI=
-Date:   Tue, 23 Jul 2019 18:37:13 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Kelsey Skunberg <skunberg.kelsey@gmail.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org
-Subject: Re: [Linux-kernel-mentees] [PATCH] PCI: Stop exporting pci_bus_sem
-Message-ID: <20190723233713.GE47047@google.com>
-References: <20190718032951.40188-1-skunberg.kelsey@gmail.com>
+        id S1725870AbfGXGcc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 Jul 2019 02:32:32 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 5363368B02; Wed, 24 Jul 2019 08:32:29 +0200 (CEST)
+Date:   Wed, 24 Jul 2019 08:32:29 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Christian Koenig <Christian.Koenig@amd.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Eric Pilmore <epilmore@gigaio.com>,
+        Stephen Bates <sbates@raithlin.com>
+Subject: Re: [PATCH 07/14] PCI/P2PDMA: Add the provider's pci_dev to the
+ dev_pgmap struct
+Message-ID: <20190724063229.GA1804@lst.de>
+References: <20190722230859.5436-1-logang@deltatee.com> <20190722230859.5436-8-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190718032951.40188-1-skunberg.kelsey@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190722230859.5436-8-logang@deltatee.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Jul 17, 2019 at 09:29:52PM -0600, Kelsey Skunberg wrote:
-> pci_bus_sem is not used by a loadable kernel module and does not need to
-> be exported. Remove line exporting pci_bus_sem.
-> 
-> Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
+On Mon, Jul 22, 2019 at 05:08:52PM -0600, Logan Gunthorpe wrote:
+> diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+> index 143e11d2a5c3..70c262b7c731 100644
+> --- a/drivers/pci/p2pdma.c
+> +++ b/drivers/pci/p2pdma.c
+> @@ -168,6 +168,7 @@ int pci_p2pdma_add_resource(struct pci_dev *pdev, int bar, size_t size,
+>  	pgmap->res.end = pgmap->res.start + size - 1;
+>  	pgmap->res.flags = pci_resource_flags(pdev, bar);
+>  	pgmap->type = MEMORY_DEVICE_PCI_P2PDMA;
+> +	pgmap->pci_p2pdma_provider = pdev;
+>  	pgmap->pci_p2pdma_bus_offset = pci_bus_address(pdev, bar) -
+>  		pci_resource_start(pdev, bar);
 
-Applied to pci/hide for v5.4, thanks!
-
-> ---
->  drivers/pci/search.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index 7f4e65872b8d..bade14002fd8 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -15,7 +15,6 @@
->  #include "pci.h"
->  
->  DECLARE_RWSEM(pci_bus_sem);
-> -EXPORT_SYMBOL_GPL(pci_bus_sem);
->  
->  /*
->   * pci_for_each_dma_alias - Iterate over DMA aliases for a device
-> -- 
-> 2.20.1
-> 
-> _______________________________________________
-> Linux-kernel-mentees mailing list
-> Linux-kernel-mentees@lists.linuxfoundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/linux-kernel-mentees
+I think we need to bite the bullet and move the PCIe P2P specific
+information out of struct dev_pagemap and into a pci-specific structure
+that embedds struct dev_pagemap.
