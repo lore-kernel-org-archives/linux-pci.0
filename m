@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 979E3C76186
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:40:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23077C7618F
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:40:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A8F72189F
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:40:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB4D921880
+	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:40:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="es+L+os4"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eZTuYeJ8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729782AbfGXXj2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jul 2019 19:39:28 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:35806 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388357AbfGXXj1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2019 19:39:27 -0400
-Received: by mail-io1-f68.google.com with SMTP id m24so93359096ioo.2;
-        Wed, 24 Jul 2019 16:39:26 -0700 (PDT)
+        id S1729751AbfGXXjW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 24 Jul 2019 19:39:22 -0400
+Received: from mail-io1-f67.google.com ([209.85.166.67]:46956 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726099AbfGXXjV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2019 19:39:21 -0400
+Received: by mail-io1-f67.google.com with SMTP id i10so93239915iol.13;
+        Wed, 24 Jul 2019 16:39:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=95RnMuH9NZpUhiSkY13+rMKWH0ZloCzPp9W168L3YRE=;
-        b=es+L+os4CRFmEFLfuoxD6vOAhMY+SoXD2dkVv3t4i4waqyfEEMl+Xc67my6gFWi09K
-         Y2DtfsH4CWWCdySWbvbpDJ9y+njJ6vXKaB1/c9TdXjqCv4yb95dJp98UIqLiVoAmek9H
-         ORnRQBrcPOjMxyxsZOvyXGmR7Fa8JMwv/PScV2XllBFIYbHW8RLVjPEmYagXb1gs+YB2
-         jp+y1InuQjpuyp22PeA8mTEhWEl+WctgKMX+SUzWU0NbgvIKYTA5i5m4V72ewqLU5Hst
-         FhVt7BJzcTBA0UQcZp92b6dgDYdmOt45v4OZsDkqm17pgfR4cs2cftIsXpweICi44J8i
-         0S4g==
+        bh=rTecumU7fqxzO8Ey86PtqlrVLlcCU3kye66cW/2pXC8=;
+        b=eZTuYeJ8qQVvAKEkD62gzYhDny70HcUiYsdLFk+5OpmH5r+KGFYbMPfJ5/8tKLOHb9
+         GiPxuuzAJPqrPH/XzeAz7GRHSaROpk21wTu8fHKu0aMKU4tpa66n37AA4gcG3ifx+wyG
+         pMmHyApgoslzLo02xCPrzI5Lv204djJfuMGEVmTSWfzI03WEKWWHCVwzMCtCzmdHptAW
+         svqPPB0MXdIokuerYX0Qy6o6+09hadOdMS8+JEoa1LQIjmxbh051vXTaqjcdHsvLwBwf
+         X0gEbrTtB8Hp1rBTNfYcPOIYHq5/x+HIvNrW1gQlXbP9NENXGnwHDTMM2yPiOb88yRHo
+         0e5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=95RnMuH9NZpUhiSkY13+rMKWH0ZloCzPp9W168L3YRE=;
-        b=S8wSBz+s/kGabGLATPyudKdJwV/cgQKpJ6VciOYUiEt5vhnFihbos5MzOVLDJxaPlA
-         elMDR6SbSyejnw7s3ihONSkl8ioFm8P2vql53cuZITdJGFap8zrEU8BWuFYJt4OIWE96
-         pjwbFzjhjBt6FRE23vnWleg7lSpSRMMzVB5bBMJ1a0t2O9qOEJwoQEH/E/LFSYxxZ3U4
-         ky1b21wrFAQ789qUYfp+tkUX96b9W26BHtdTdnCV3ZVuYuueEbBjNO4bX1wrcS2vv4DL
-         wyJCeCQ2ZPlffNyscZsEn1uOPflXB4X58Vs6BnlJK0quqCDVWVl4aznHz58DFNF2oLLn
-         /vpQ==
-X-Gm-Message-State: APjAAAW7uCFhLx865o0Vx8h/Jpsv86sp/qy+gTvaPXxvoaS0syhq0YnK
-        TF0z73zKabQI2Z244p4aNlQ=
-X-Google-Smtp-Source: APXvYqzGKtiG9iaWb2B4WyrjpjrrOecz14NRtWR2FJfxv4zmwKffdnApTxKY1Nr7UXrBZPwO/S218Q==
-X-Received: by 2002:a6b:7909:: with SMTP id i9mr47728241iop.8.1564011566663;
-        Wed, 24 Jul 2019 16:39:26 -0700 (PDT)
+        bh=rTecumU7fqxzO8Ey86PtqlrVLlcCU3kye66cW/2pXC8=;
+        b=r19wPVpoeP5pxjvwSfKvVOO/1svqPCsw2QkTvrIsi+7fmZATVVFfEf96PHbVrVaAcp
+         VqUflVljr7DTLT2OUm39Jw9wx04YVNbyBMpHP1l+bUVg0ykB20HizLdpBr6wUyuiV8f0
+         5/SMi0zmpa9iUEDS3OxmvbRTCIv5m4RVgvX6sD46gpVyQv50W0c6TsjsonlxjYDMp7Va
+         9Ny3bhfoZ/JB4YW4/NSKvTHJlrMnPy6iEck4Go+EANy4DWQBwA+ZwxQTzSjiQOEauyaP
+         ZfRTbUMJ/QtixvSwegZ3NhZ9EPGje2W2h4uVA68gMxiyuuX8hRtF9ex90U/ne6b2x8Dm
+         lAhQ==
+X-Gm-Message-State: APjAAAW7K74kYb54Drvl/NVM+3BheQNAy+rD3GMAE/7cv/65UZmtRc2q
+        grf7R/bgLQLtjLPnnqNRJe0=
+X-Google-Smtp-Source: APXvYqzB+xtwPRKS3OdbQq9ob76sbkI2BqnmmjjA87AcI1j3FQyAS9p9NljtLYZMxdYHlvIThExx8w==
+X-Received: by 2002:a6b:5103:: with SMTP id f3mr74779419iob.142.1564011560346;
+        Wed, 24 Jul 2019 16:39:20 -0700 (PDT)
 Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id b14sm51612959iod.33.2019.07.24.16.39.25
+        by smtp.gmail.com with ESMTPSA id b14sm51612959iod.33.2019.07.24.16.39.19
         (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 24 Jul 2019 16:39:26 -0700 (PDT)
+        Wed, 24 Jul 2019 16:39:19 -0700 (PDT)
 From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
 To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     skunberg.kelsey@gmail.com,
         linux-kernel-mentees@lists.linuxfoundation.org,
         skhan@linuxfoundation.org
-Subject: [PATCH v2 05/11] PCI: Move pci_hotplug_*_size declarations to drivers/pci/pci.h
-Date:   Wed, 24 Jul 2019 17:38:42 -0600
-Message-Id: <20190724233848.73327-6-skunberg.kelsey@gmail.com>
+Subject: [PATCH v2 01/11] PCI: Move #define PCI_PM_* lines to drivers/pci/pci.h
+Date:   Wed, 24 Jul 2019 17:38:38 -0600
+Message-Id: <20190724233848.73327-2-skunberg.kelsey@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190724233848.73327-1-skunberg.kelsey@gmail.com>
 References: <20190711222341.111556-1-skunberg.kelsey@gmail.com>
@@ -75,45 +75,48 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_hotplug_*_size declarations are only called within drivers/pci/pci/.
-Since declarations do not need to be seen by the rest of the kernel, move
-to drivers/pci/pci.h.
+The #define PCI_PM_* lines are only used within drivers/pci/ and they do
+not need to be seen by the rest of the kernel. Move #define PCI_* to
+drivers/pci/pci.h
 
 Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
 ---
- drivers/pci/pci.h   | 3 +++
- include/linux/pci.h | 4 ----
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/pci/pci.h   | 5 +++++
+ include/linux/pci.h | 5 -----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0eb0fb7ad353..9391330805e9 100644
+index 1be03a97cb92..708413632429 100644
 --- a/drivers/pci/pci.h
 +++ b/drivers/pci/pci.h
-@@ -211,6 +211,9 @@ extern const struct attribute_group *pcibus_groups[];
- extern const struct device_type pci_dev_type;
- extern const struct attribute_group *pci_bus_groups[];
+@@ -39,6 +39,11 @@ int pci_probe_reset_function(struct pci_dev *dev);
+ int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
+ int pci_bus_error_reset(struct pci_dev *dev);
  
-+extern unsigned long pci_hotplug_io_size;
-+extern unsigned long pci_hotplug_mem_size;
-+extern unsigned long pci_hotplug_bus_size;
- 
++#define PCI_PM_D2_DELAY         200
++#define PCI_PM_D3_WAIT          10
++#define PCI_PM_D3COLD_WAIT      100
++#define PCI_PM_BUS_WAIT         50
++
  /**
-  * pci_match_one_device - Tell if a PCI device structure has a matching
+  * struct pci_platform_pm_ops - Firmware PM callbacks
+  *
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d1944e3e7eb2..9c9554906659 100644
+index 9e700d9f9f28..238449460210 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -2015,10 +2015,6 @@ extern unsigned long pci_cardbus_mem_size;
- extern u8 pci_dfl_cache_line_size;
- extern u8 pci_cache_line_size;
+@@ -145,11 +145,6 @@ static inline const char *pci_power_name(pci_power_t state)
+ 	return pci_power_names[1 + (__force int) state];
+ }
  
--extern unsigned long pci_hotplug_io_size;
--extern unsigned long pci_hotplug_mem_size;
--extern unsigned long pci_hotplug_bus_size;
+-#define PCI_PM_D2_DELAY		200
+-#define PCI_PM_D3_WAIT		10
+-#define PCI_PM_D3COLD_WAIT	100
+-#define PCI_PM_BUS_WAIT		50
 -
- /* Architecture-specific versions may override these (weak) */
- void pcibios_disable_device(struct pci_dev *dev);
- void pcibios_set_master(struct pci_dev *dev);
+ /**
+  * typedef pci_channel_state_t
+  *
 -- 
 2.20.1
 
