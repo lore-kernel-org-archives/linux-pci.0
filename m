@@ -1,118 +1,54 @@
-Return-Path: <SRS0=Pgd8=VV=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=w5mv=VW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07D91C76186
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:40:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F25C76194
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Jul 2019 06:02:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEC6A218B8
-	for <linux-pci@archiver.kernel.org>; Wed, 24 Jul 2019 23:40:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aOSQOn4/"
+	by mail.kernel.org (Postfix) with ESMTP id 809C520856
+	for <linux-pci@archiver.kernel.org>; Thu, 25 Jul 2019 06:02:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726099AbfGXXjY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 24 Jul 2019 19:39:24 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:40409 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729765AbfGXXjY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 Jul 2019 19:39:24 -0400
-Received: by mail-io1-f68.google.com with SMTP id h6so6750625iom.7;
-        Wed, 24 Jul 2019 16:39:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=N/20K4zPt1+GF4yWXbg6ZLq7eeYH//zGfwHqy2zNVYY=;
-        b=aOSQOn4/VbZarbVQ9TBvC/kLlR9+ig17cPc19RZAgY3ju3h9sU2E9bCLMF9aVWwhWX
-         UCzDzKlfI/OLyBk29DvOA8QBmlZaBPsDSywTtd0N7XdGNezYXHh0qxRt8X5thTF+hAFs
-         1k0ytUq94dd7vMi8LOFdpKiPPDUKw8U0WhMd3yERILd44+lb5vAwhd71JUbbn+8zeRoL
-         vnkxsv5lLgZTQMMdliCNg/VFTX/WnmnadTsA7SGMNu/l1YoxJtOticz1d6+QM0xJz7hD
-         4omTIi6ZluqqS0r+iN7mH2uV8ZezaUvyz/sri2cg4mqn8mfMxMMKoB3KF6lqXjP/PgU/
-         68uA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=N/20K4zPt1+GF4yWXbg6ZLq7eeYH//zGfwHqy2zNVYY=;
-        b=ODTgvtVFfbD9y6zTyeA0fYbc7wsSFLBn69DCIL4NQi0WyiB03TMpmlmH2bWhaBfV0k
-         0/6y9Rlqm162oDYXCColSJe9RGsJt4+aGxuSTM8PKt7IHsbNPxaqGu0/zXYlADip2y8F
-         XwPyBKCkoB3VuwWkaGzabt/daC21caeQrflJ9lVOrPJAJ+QbFfq/Oj3gtZg5rFLr7BNm
-         JGouOgzyhtOgRuAqWqJh1iq8dqjSZ6aGNTQTWKncNYa+AJlcLndXqW/tpiEf/GcQ6CP7
-         PnrJ+qAjTEF+WUqQd8wcyL6Ds8aoKdnKQJN14MbpgqW+ab+X7Ld1GTWkuA6ZRS4ZkMI2
-         cfvQ==
-X-Gm-Message-State: APjAAAUI+Lj0UT/Ze1kgz2/wC7oHKnQpElhtCOYBDRlPwMaf4pnQE2bu
-        ag02utZ2IoSigHvZfesdCzA=
-X-Google-Smtp-Source: APXvYqzoL1m6fVY1SNoOjtTWL3LkMluHBuASVZZEdYjFzU72/k3CbDeS86JH/4wcaom/JIvCCwL7Qw==
-X-Received: by 2002:a6b:ed01:: with SMTP id n1mr78293304iog.255.1564011563412;
-        Wed, 24 Jul 2019 16:39:23 -0700 (PDT)
-Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id b14sm51612959iod.33.2019.07.24.16.39.21
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Wed, 24 Jul 2019 16:39:22 -0700 (PDT)
-From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
-To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     skunberg.kelsey@gmail.com,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        skhan@linuxfoundation.org
-Subject: [PATCH v2 03/11] PCI: Move *_host_bridge_device() declarations to drivers/pci.pci.h
-Date:   Wed, 24 Jul 2019 17:38:40 -0600
-Message-Id: <20190724233848.73327-4-skunberg.kelsey@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190724233848.73327-1-skunberg.kelsey@gmail.com>
-References: <20190711222341.111556-1-skunberg.kelsey@gmail.com>
- <20190724233848.73327-1-skunberg.kelsey@gmail.com>
+        id S1729315AbfGYGCT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 25 Jul 2019 02:02:19 -0400
+Received: from verein.lst.de ([213.95.11.211]:58417 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726547AbfGYGCT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 Jul 2019 02:02:19 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id C05BD68C65; Thu, 25 Jul 2019 08:02:13 +0200 (CEST)
+Date:   Thu, 25 Jul 2019 08:02:12 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Logan Gunthorpe <logang@deltatee.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Christian Koenig <Christian.Koenig@amd.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Eric Pilmore <epilmore@gigaio.com>,
+        Stephen Bates <sbates@raithlin.com>
+Subject: Re: [PATCH 07/14] PCI/P2PDMA: Add the provider's pci_dev to the
+ dev_pgmap struct
+Message-ID: <20190725060212.GA24875@lst.de>
+References: <20190722230859.5436-1-logang@deltatee.com> <20190722230859.5436-8-logang@deltatee.com> <20190724063229.GA1804@lst.de> <818e465d-3e57-b425-2431-e330a43fe7bd@deltatee.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <818e465d-3e57-b425-2431-e330a43fe7bd@deltatee.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_get_host_bridge_device() and pci_put_host_bridge_device() are only
-called within drivers/pci/pci.h. Since declarations do not need to be
-visible to the rest of the kernel, move to drives/pci/pci.h.
+On Wed, Jul 24, 2019 at 09:50:03AM -0600, Logan Gunthorpe wrote:
+> OK, I was going to do that, but you just removed the p2p specific page
+> map. ;)
 
-Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
----
- drivers/pci/pci.h   | 3 +++
- include/linux/pci.h | 3 ---
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index ad1fe54ab8ee..f41dde136648 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -105,6 +105,9 @@ void pci_free_cap_save_buffers(struct pci_dev *dev);
- bool pci_bridge_d3_possible(struct pci_dev *dev);
- void pci_bridge_d3_update(struct pci_dev *dev);
- 
-+struct device *pci_get_host_bridge_device(struct pci_dev *dev);
-+void pci_put_host_bridge_device(struct device *dev);
-+
- static inline void pci_wakeup_event(struct pci_dev *dev)
- {
- 	/* Wait 100 ms before the system can be put into a sleep state. */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e1f784de459f..cd49427e198e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -644,9 +644,6 @@ static inline struct pci_dev *pci_upstream_bridge(struct pci_dev *dev)
- 	return dev->bus->self;
- }
- 
--struct device *pci_get_host_bridge_device(struct pci_dev *dev);
--void pci_put_host_bridge_device(struct device *dev);
--
- #ifdef CONFIG_PCI_MSI
- static inline bool pci_dev_msi_enabled(struct pci_dev *pci_dev)
- {
--- 
-2.20.1
-
+Only because it was empty at that time..
