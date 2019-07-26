@@ -2,40 +2,44 @@ Return-Path: <SRS0=nurA=VX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A27C7618F
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Jul 2019 21:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC186C7618F
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Jul 2019 21:45:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3318222BF5
-	for <linux-pci@archiver.kernel.org>; Fri, 26 Jul 2019 21:45:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE58522BE8
+	for <linux-pci@archiver.kernel.org>; Fri, 26 Jul 2019 21:45:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728342AbfGZVpu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 26 Jul 2019 17:45:50 -0400
+        id S1728559AbfGZVpv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 26 Jul 2019 17:45:51 -0400
 Received: from mga14.intel.com ([192.55.52.115]:28904 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726999AbfGZVpu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 Jul 2019 17:45:50 -0400
+        id S1728554AbfGZVpv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 Jul 2019 17:45:51 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Jul 2019 14:45:49 -0700
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 26 Jul 2019 14:45:50 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,312,1559545200"; 
-   d="scan'208";a="369671127"
+   d="scan'208";a="369671136"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga005.fm.intel.com with ESMTP; 26 Jul 2019 14:45:49 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 26 Jul 2019 14:45:50 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v6 0/9] Add Error Disconnect Recover (EDR) support
-Date:   Fri, 26 Jul 2019 14:43:10 -0700
-Message-Id: <cover.1564177080.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        sathyanarayanan.kuppuswamy@linux.intel.com,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Len Brown <lenb@kernel.org>
+Subject: [PATCH v6 3/9] PCI/ACPI: Expose EDR support via _OSC to BIOS
+Date:   Fri, 26 Jul 2019 14:43:13 -0700
+Message-Id: <c2841a077e304b3173e1c6f95f7fe488d1e15030.1564177080.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <cover.1564177080.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+References: <cover.1564177080.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -45,63 +49,53 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-This patchset adds support for following features:
+As per PCI firmware specification r3.2 Downstream Port Containment
+Related Enhancements ECN, sec 4.5.1, table 4-4, if OS supports EDR,
+it should expose its support to BIOS by setting bit 7 of _OSC Support
+Field.
 
-1. Error Disconnect Recover (EDR) support.
-2. _OSC based negotiation support for DPC.
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+---
+ drivers/acpi/pci_root.c | 3 +++
+ include/linux/acpi.h    | 1 +
+ 2 files changed, 4 insertions(+)
 
-You can find EDR spec in the following link.
-
-https://members.pcisig.com/wg/PCI-SIG/document/12614
-
-Changes since v5:
- * Addressed Keith's comments.
- * Added additional check for FF mode in pci_aer_init().
- * Updated commit history of "PCI/DPC: Add support for DPC recovery on NON_FATAL errors" patch.
-
-Changes since v4:
- * Rebased on top of v5.3-rc1
- * Fixed lock/unlock issue in edr_handle_event().
- * Merged "Update error status after reset_link()" patch into this patchset.
-
-Changes since v3:
- * Moved EDR related ACPI functions/definitions to pci-acpi.c
- * Modified commit history in few patches to include spec reference.
- * Added support to handle DPC triggered by NON_FATAL errors.
- * Added edr_lock to protect PCI device receiving duplicate EDR notifications.
- * Addressed Bjorn comments.
-
-Changes since v2:
- * Split EDR support patch into multiple patches.
- * Addressed Bjorn comments.
-
-Changes since v1:
- * Rebased on top of v5.1-rc1
-
-Kuppuswamy Sathyanarayanan (9):
-  PCI/ERR: Update error status after reset_link()
-  PCI/ACPI: Add _OSC based negotiation support for DPC
-  PCI/ACPI: Expose EDR support via _OSC to BIOS
-  PCI/DPC: Allow dpc_probe() even if firmware first mode is enabled
-  PCI/DPC: Add dpc_process_error() wrapper function
-  PCI/DPC: Add Error Disconnect Recover (EDR) support
-  PCI/AER: Allow clearing Error Status Register in FF mode
-  PCI/DPC: Update comments related to DPC recovery on NON_FATAL errors
-  PCI/DPC: Clear AER registers in EDR mode
-
- drivers/acpi/pci_root.c         |   9 ++
- drivers/pci/pci-acpi.c          |  91 +++++++++++++++
- drivers/pci/pcie/Kconfig        |  10 ++
- drivers/pci/pcie/aer.c          |  12 +-
- drivers/pci/pcie/dpc.c          | 196 +++++++++++++++++++++++++++++---
- drivers/pci/pcie/err.c          |  11 +-
- drivers/pci/pcie/portdrv_core.c |   8 +-
- drivers/pci/probe.c             |   1 +
- include/linux/acpi.h            |   4 +-
- include/linux/pci-acpi.h        |  11 ++
- include/linux/pci.h             |   2 +-
- 11 files changed, 322 insertions(+), 33 deletions(-)
-
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 73b08f40b0da..988d09d788b6 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -132,6 +132,7 @@ static struct pci_osc_bit_struct pci_osc_support_bit[] = {
+ 	{ OSC_PCI_CLOCK_PM_SUPPORT, "ClockPM" },
+ 	{ OSC_PCI_SEGMENT_GROUPS_SUPPORT, "Segments" },
+ 	{ OSC_PCI_MSI_SUPPORT, "MSI" },
++	{ OSC_PCI_EDR_SUPPORT, "EDR" },
+ 	{ OSC_PCI_HPX_TYPE_3_SUPPORT, "HPX-Type3" },
+ };
+ 
+@@ -442,6 +443,8 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm,
+ 		support |= OSC_PCI_ASPM_SUPPORT | OSC_PCI_CLOCK_PM_SUPPORT;
+ 	if (pci_msi_enabled())
+ 		support |= OSC_PCI_MSI_SUPPORT;
++	if (IS_ENABLED(CONFIG_PCIE_EDR))
++		support |= OSC_PCI_EDR_SUPPORT;
+ 
+ 	decode_osc_support(root, "OS supports", support);
+ 	status = acpi_pci_osc_support(root, support);
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 8959ed322e15..b6b43da85d26 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -515,6 +515,7 @@ extern bool osc_pc_lpi_support_confirmed;
+ #define OSC_PCI_CLOCK_PM_SUPPORT		0x00000004
+ #define OSC_PCI_SEGMENT_GROUPS_SUPPORT		0x00000008
+ #define OSC_PCI_MSI_SUPPORT			0x00000010
++#define OSC_PCI_EDR_SUPPORT			0x00000080
+ #define OSC_PCI_HPX_TYPE_3_SUPPORT		0x00000100
+ #define OSC_PCI_SUPPORT_MASKS			0x0000011f
+ 
 -- 
 2.21.0
 
