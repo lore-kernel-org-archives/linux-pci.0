@@ -6,47 +6,51 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21293C7618B
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jul 2019 10:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C44F7C433FF
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jul 2019 10:14:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBB68206B8
-	for <linux-pci@archiver.kernel.org>; Mon, 29 Jul 2019 10:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2BD42075C
+	for <linux-pci@archiver.kernel.org>; Mon, 29 Jul 2019 10:14:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728152AbfG2KOg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 29 Jul 2019 06:14:36 -0400
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:36328 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726358AbfG2KOg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2019 06:14:36 -0400
-Received: by mail-lf1-f66.google.com with SMTP id q26so41681835lfc.3;
-        Mon, 29 Jul 2019 03:14:34 -0700 (PDT)
+        id S1728304AbfG2KOl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 29 Jul 2019 06:14:41 -0400
+Received: from mail-lf1-f65.google.com ([209.85.167.65]:40629 "EHLO
+        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728260AbfG2KOk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 Jul 2019 06:14:40 -0400
+Received: by mail-lf1-f65.google.com with SMTP id b17so41668809lff.7;
+        Mon, 29 Jul 2019 03:14:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=TmxcCXhXwRYGEoMeDwlU1eEbMiMpwlUebLffY1+PjIY=;
-        b=HWioYTFXekM3wEsxeMggM8LTqCjOmuGnAlfVYr28d1I9tseRen9NBlQZMwslqqYUGN
-         wsYfLEy86WLXT2bccXqyh8ai35sVjLJ4JQNoOWg1NTcnFE9vEqJO01TjF4GgHQOh6Tw+
-         ENNIO2resVRih8TY5U86Bi17JU5mtp2y9zsmykvCjcYzmIujDBANYYO/E3pCEOYlLG/r
-         goa9eK+4Zh2mGLeDkep0PWEMbp3upTERBNWZCHDa0pQb90ER9qjywTWcOL1QAx/xurk2
-         DLX5JX47sL5nYia1hDUDte4ruqH/hvbKDBc+M8ICDlTuZxBXwu5q1PKh1/L7s+6/0S3S
-         MBqA==
-X-Gm-Message-State: APjAAAV0GtM4fJVBJuZcOC7kMlaQUcKGPlIxdM7zxAue0TXeS8OeYvxA
-        BwbeQEeVmb1GUzTJXP/cjUo=
-X-Google-Smtp-Source: APXvYqw0Cu+Xf6R15+Xv9Wzlg3NjXnpW+b+moVSWt5i+0ri2j5GzuRv5Gxey0YhFLKx3hSjrMGvJKA==
-X-Received: by 2002:ac2:4d1c:: with SMTP id r28mr49442744lfi.159.1564395274249;
-        Mon, 29 Jul 2019 03:14:34 -0700 (PDT)
+        bh=BsIPSvfzLwnhnLKtcEHLG5y6k186GA8GW/6JbbfPnA4=;
+        b=Bs6UPJ5AGBfzGCDu1yTlLyiAGy/axf7R5AP8BquIYDJcIDHfPQbNs/uxxXOtgdqbrT
+         +x4q2VfquCtIdRSMCV14uxsQAqELm2Erq/3evaRSL659fACwYgGrjEb2m0f3V5qHjxsA
+         554SEssPzLAnrI/ZnRBvOiJ7KMl+GJS5UKoM8hUiC84MxbRkiEehEdbJ/7mAJwvmPxj9
+         2yzdv9if5oTGUUdVDKdt8mGyek6cOPJ3a+fdLPViRpnFA3+WGBVEEQIdUti/uzOIMijx
+         gKdnym3hmSPhbbE6fuekglwfmvEqHi4HAPUrltBn9JYEe8y/VH85uevVtvrWndfgFs3S
+         gsVQ==
+X-Gm-Message-State: APjAAAVO4XS41fsfxEqFx6QDMyvU3qizS2GaFpA5fDXOaG+B0W6PkbrB
+        5j9RYEhs0IiXdV70ZZfEfmk=
+X-Google-Smtp-Source: APXvYqxAitsCCS/HFPR7uHO4tOhzGp6jjCagTQ9NCr3/Ull+T3hU8+UpiyoxWae7OFM9Qe0aQhN3uA==
+X-Received: by 2002:ac2:5492:: with SMTP id t18mr53096046lfk.41.1564395278677;
+        Mon, 29 Jul 2019 03:14:38 -0700 (PDT)
 Received: from localhost.localdomain (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id y12sm11814834lfy.36.2019.07.29.03.14.33
+        by smtp.googlemail.com with ESMTPSA id y12sm11814834lfy.36.2019.07.29.03.14.37
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 29 Jul 2019 03:14:33 -0700 (PDT)
+        Mon, 29 Jul 2019 03:14:38 -0700 (PDT)
 From:   Denis Efremov <efremov@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Denis Efremov <efremov@linux.com>, Michal Simek <monstr@monstr.eu>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/5] microblaze/PCI: Remove HAVE_ARCH_PCI_RESOURCE_TO_USER
-Date:   Mon, 29 Jul 2019 13:13:58 +0300
-Message-Id: <20190729101401.28068-3-efremov@linux.com>
+Cc:     Denis Efremov <efremov@linux.com>,
+        "Benjamin Herrenschmidt" <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 4/5] powerpc/PCI: Remove HAVE_ARCH_PCI_RESOURCE_TO_USER
+Date:   Mon, 29 Jul 2019 13:14:00 +0300
+Message-Id: <20190729101401.28068-5-efremov@linux.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190729101401.28068-1-efremov@linux.com>
 References: <20190729101401.28068-1-efremov@linux.com>
@@ -58,27 +62,27 @@ List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 The function pci_resource_to_user() was turned to a weak one. Thus,
-microblase-specific version will automatically override the generic
-one and the HAVE_ARCH_PCI_RESOURCE_TO_USER macro should be removed.
+powerpc-specific version will automatically override the generic one
+and the HAVE_ARCH_PCI_RESOURCE_TO_USER macro should be removed.
 
 Signed-off-by: Denis Efremov <efremov@linux.com>
 ---
- arch/microblaze/include/asm/pci.h | 2 --
+ arch/powerpc/include/asm/pci.h | 2 --
  1 file changed, 2 deletions(-)
 
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index 21ddba9188b2..7c4dc5d85f53 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -66,8 +66,6 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 2372d35533ad..327567b8f7d6 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -112,8 +112,6 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
  					 unsigned long size,
  					 pgprot_t prot);
  
 -#define HAVE_ARCH_PCI_RESOURCE_TO_USER
 -
- /* This part of code was originally in xilinx-pci.h */
- #ifdef CONFIG_PCI_XILINX
- extern void __init xilinx_pci_init(void);
+ extern resource_size_t pcibios_io_space_offset(struct pci_controller *hose);
+ extern void pcibios_setup_bus_devices(struct pci_bus *bus);
+ extern void pcibios_setup_bus_self(struct pci_bus *bus);
 -- 
 2.21.0
 
