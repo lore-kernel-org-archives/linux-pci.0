@@ -2,94 +2,69 @@ Return-Path: <SRS0=+1WX=V6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B82EC433FF
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Aug 2019 13:48:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49A77C433FF
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Aug 2019 16:05:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 349B420679
-	for <linux-pci@archiver.kernel.org>; Fri,  2 Aug 2019 13:48:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F8D721726
+	for <linux-pci@archiver.kernel.org>; Fri,  2 Aug 2019 16:05:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1564753684;
-	bh=4iyFp3nxxcgWx4F9Y7pzUkBtSH9YEP6qmfh9a+6HKW4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=ArM75D+zIDjis3c+mOCmUIfO8mYqhF/pJdWnh4suefCjpV9Fa8Jhq2giXs3jeqmd3
-	 MHj6T5OmHe/yfzzj42OyhYbJGsw3HPo1rhiJelD5n1/ESBsKZQ8mrzE6MS5JItJ7De
-	 n944fsTfEw5Zs4SLMlZLQodi3PCYX6codDCLxM78=
+	s=default; t=1564761925;
+	bh=3rMZaXbQ41/dbreVvWj6reoVXIkk+yBfu5l630T1gKY=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=1OXsKQUCwPLkrv1SbyifB++DCkIbUrFUXPwTYG6xYOJYBLat7vXqg6HL5tWpCQT2d
+	 07+nDFwTYgz5kNJqfxA7MjBwfrIShwgoP+tMBUJ4cDgy1DBA4VRntZmvZWEQqi12MK
+	 +Dk1GMlCjZ5RVXnBsdrzPWVV7+WPrjNR2GYLLPOo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730910AbfHBNsD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 2 Aug 2019 09:48:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48528 "EHLO mail.kernel.org"
+        id S2389128AbfHBQFT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 2 Aug 2019 12:05:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44950 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730199AbfHBNsD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Aug 2019 09:48:03 -0400
-Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4DB5A21726;
-        Fri,  2 Aug 2019 13:48:02 +0000 (UTC)
+        id S2388999AbfHBQFO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Aug 2019 12:05:14 -0400
+Subject: Re: [GIT PULL] Power management fix for v5.3-rc3
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1564753682;
-        bh=4iyFp3nxxcgWx4F9Y7pzUkBtSH9YEP6qmfh9a+6HKW4=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=G7AjOhrbuHUU3S7qTwJIDv+cj/TPwsihgyZx5wZiqBX7l4XR9h/N3nJqB+Fwct/sK
-         MbSg/HwLELKa+aWkKep5eWxtP9zRjTuYL3CF2WOSizGzhvtsE2BF6WCyA+VFNWT7NL
-         024wiyagXsobyy76ci31cOpFiGXqo3MjvWaxuoig=
-Date:   Fri, 2 Aug 2019 08:48:01 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] PCI: Mark expected switch fall-through
-Message-ID: <20190802134801.GK151852@google.com>
-References: <20190802012248.GA22622@embeddedor>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190802012248.GA22622@embeddedor>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        s=default; t=1564761913;
+        bh=3rMZaXbQ41/dbreVvWj6reoVXIkk+yBfu5l630T1gKY=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=vEpwfarRPNtcJ/ojIlXH1CthZUvzPjolvFJDkSMPiLq/GgYRbENby6zmo3otakS17
+         xt75TK5D/3MupqGg1hR/wzCPLzFxjNXGpyB1eyzPW7tOWJhQMc/7fn2dk3weoqYrXp
+         pX9+2qEGeAOvanMb7xJhXahtiS/GDSOOEZUIn7RA=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <CAJZ5v0i+ZJEdVw=sZfB1KUuqJFWA=mSfB6jL66c1HFfZN9MR6g@mail.gmail.com>
+References: <CAJZ5v0i+ZJEdVw=sZfB1KUuqJFWA=mSfB6jL66c1HFfZN9MR6g@mail.gmail.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <CAJZ5v0i+ZJEdVw=sZfB1KUuqJFWA=mSfB6jL66c1HFfZN9MR6g@mail.gmail.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm-5.3-rc3
+X-PR-Tracked-Commit-Id: 42787ed79638dc7f0f8d5c164caba1e87bfab50f
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 755f1fed27f4b1d57dd8b2856c06086636cd7284
+Message-Id: <156476191344.27663.6822076135265555352.pr-tracker-bot@kernel.org>
+Date:   Fri, 02 Aug 2019 16:05:13 +0000
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 01, 2019 at 08:22:48PM -0500, Gustavo A. R. Silva wrote:
-> Mark switch cases where we are expecting to fall through.
-> 
-> This patch fixes the following warning (Building: allmodconfig i386):
-> 
-> drivers/pci/hotplug/ibmphp_res.c: In function ‘update_bridge_ranges’:
-> drivers/pci/hotplug/ibmphp_res.c:1943:16: warning: this statement may fall through [-Wimplicit-fallthrough=]
->        function = 0x8;
->        ~~~~~~~~~^~~~~
-> drivers/pci/hotplug/ibmphp_res.c:1944:6: note: here
->       case PCI_HEADER_TYPE_MULTIBRIDGE:
->       ^~~~
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+The pull request you sent on Fri, 2 Aug 2019 11:45:03 +0200:
 
-Applied with Kees' reviewed-by to pci/misc for v5.4, thanks, Gustavo!
+> git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm-5.3-rc3
 
-> ---
->  drivers/pci/hotplug/ibmphp_res.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/hotplug/ibmphp_res.c b/drivers/pci/hotplug/ibmphp_res.c
-> index 5e8caf7a4452..1e1ba66cfd1e 100644
-> --- a/drivers/pci/hotplug/ibmphp_res.c
-> +++ b/drivers/pci/hotplug/ibmphp_res.c
-> @@ -1941,6 +1941,7 @@ static int __init update_bridge_ranges(struct bus_node **bus)
->  						break;
->  					case PCI_HEADER_TYPE_BRIDGE:
->  						function = 0x8;
-> +						/* Fall through */
->  					case PCI_HEADER_TYPE_MULTIBRIDGE:
->  						/* We assume here that only 1 bus behind the bridge
->  						   TO DO: add functionality for several:
-> -- 
-> 2.22.0
-> 
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/755f1fed27f4b1d57dd8b2856c06086636cd7284
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
