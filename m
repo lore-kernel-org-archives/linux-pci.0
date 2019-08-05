@@ -2,49 +2,51 @@ Return-Path: <SRS0=UhFO=WB=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 413C2C433FF
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Aug 2019 12:27:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6AD3C0650F
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Aug 2019 12:34:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1EF7A2086D
-	for <linux-pci@archiver.kernel.org>; Mon,  5 Aug 2019 12:27:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A7482087B
+	for <linux-pci@archiver.kernel.org>; Mon,  5 Aug 2019 12:34:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728724AbfHEM1z (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 5 Aug 2019 08:27:55 -0400
-Received: from mga09.intel.com ([134.134.136.24]:3709 "EHLO mga09.intel.com"
+        id S1727349AbfHEMey (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 5 Aug 2019 08:34:54 -0400
+Received: from mga01.intel.com ([192.55.52.88]:21145 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727349AbfHEM1z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Aug 2019 08:27:55 -0400
-X-Amp-Result: UNSCANNABLE
+        id S1726315AbfHEMey (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Aug 2019 08:34:54 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
 Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 05 Aug 2019 05:27:54 -0700
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 05 Aug 2019 05:34:53 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,349,1559545200"; 
-   d="scan'208";a="192409924"
+   d="scan'208";a="192410973"
 Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.157])
-  by fmsmga001.fm.intel.com with SMTP; 05 Aug 2019 05:27:52 -0700
-Received: by lahna (sSMTP sendmail emulation); Mon, 05 Aug 2019 15:27:51 +0300
-Date:   Mon, 5 Aug 2019 15:27:51 +0300
+  by fmsmga001.fm.intel.com with SMTP; 05 Aug 2019 05:34:50 -0700
+Received: by lahna (sSMTP sendmail emulation); Mon, 05 Aug 2019 15:34:50 +0300
+Date:   Mon, 5 Aug 2019 15:34:50 +0300
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Matthias Andree <matthias.andree@gmx.de>
-Cc:     linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: regression: PCIe resume from suspend stalls I/O and causes
- interrupt storms in Linux 5.3-rc2 (5.2.5, 5.1.20) on Ryzen 7 1700/AMD X370
- MSI board since 5817d78eba34f6c86f5462ae2c5212f80a013357, 5.2/5.3 w/ pcieIRQ
- loop.
-Message-ID: <20190805122751.GL2640@lahna.fi.intel.com>
-References: <935c6fd8-c606-836a-9e59-772b9111d5d6@gmx.de>
+To:     Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: Possible PCI Regression Linux 5.3-rc1
+Message-ID: <20190805123450.GM2640@lahna.fi.intel.com>
+References: <SL2P216MB01878BBCD75F21D882AEEA2880C60@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+ <20190724133814.GA194025@google.com>
+ <SL2P216MB0187E2042E5DB8D9F29E665280C10@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
+ <4f5afb8e-9013-980f-0553-c687d17ed8d5@deltatee.com>
+ <SL2P216MB018719A03F048FFA0F745FED80DB0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <935c6fd8-c606-836a-9e59-772b9111d5d6@gmx.de>
+In-Reply-To: <SL2P216MB018719A03F048FFA0F745FED80DB0@SL2P216MB0187.KORP216.PROD.OUTLOOK.COM>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-pci-owner@vger.kernel.org
@@ -52,53 +54,29 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Aug 02, 2019 at 09:03:06PM +0200, Matthias Andree wrote:
-> Greetings, 
-
 Hi,
 
-> Commit 5817d78eba34f6c86f5462ae2c5212f80a013357 (written by Mika
-> Westerberg) causes regressions on resume from S3 suspend on my MSI X370
-> w/ Ryzen 7 1700, which is, TTBOMK, a PCI Express 3.0 platform.
-> Consequences are hung disk and net I/O although re-login to GNOME works
-> on 5.1.20, albeit very slowly. The machine is unusable after resume from
-> that point.
+On Sun, Aug 04, 2019 at 08:47:43AM +0000, Nicholas Johnson wrote:
+> Reversing the following commit solves the issue:
 > 
-> 5.2.5 and 5.3-rc2 will go into a tight loop of pcieport 0000:00:01.3:
-> PME: Spurious native interrupt! and need to be rebooted.
+> commit c2bf1fc212f7e6f25ace1af8f0b3ac061ea48ba5
+> Author: Mika Westerberg <mika.westerberg@linux.intel.com>
+> PCI: Add missing link delays required by the PCIe spec
 > 
-> bad: v5.3-rc2
-> 
-> good: v5.3-rc2-111-g97b00aff2c45 + "git revert 5817d78eba"
-> 
-> Reverting that commit shown above restores suspend functionality for me,
-> two S3 suspend/resume cycles work.
-> 
-> For details, more information (lspci, versions found) is at:
-> 
-> * Kernel Bugzilla, https://bugzilla.kernel.org/show_bug.cgi?id=204413
-> 
-> * Fedora/Redhat Bugzilla,
-> https://bugzilla.redhat.com/show_bug.cgi?id=1737046
-> 
-> 
-> Same findings for v5.2.5 on stable kernel, reverting the relevant commit
-> (SHA is 5817d78eba34f6c86f5462ae2c5212f80a013357 there) also fixes
-> suspend/resume problems for me.
-> 
-> Let me know if you need me to pull out any further hardware or kernel
-> debug info, but please be specific with instructions - I am not a kernel
-> hacker (although I have been exposed to C for nearly 30 years and
-> Linux/FreeBSD for some 20 years). Pointing me to relevant URLs with
-> debug instructions is fine. I have a Git tree handy and this octocore
-> sitting here compiles a kernel in < 10 minutes.
+> Mika, care to weigh in (assuming you are back from four weeks leave)? 
 
-Are you able to get dmesg after resume or is it completely dead? It
-would help you we could see how long it tries to wait for the downstream
-link by passing "pciepordrv.dyndbg" to the kernel command line.
+I'm back now.
 
-Can you also try to revert 00ebf1348cb332941dab52948f29480592bfbe6a
-("PCI/PME: Replace dev_printk(KERN_DEBUG) with dev_info()") so that it
-does not spam dmesg too much?
+> Clearly this creates delays in "lspci -vt" in some Thunderbolt systems, 
+> but not all - otherwise you would have caught it. You mentioned Ice Lake 
+> in the commit log so perhaps it works fine on Ice Lake.
+
+I also tried it on other systems but it may be that something is
+missing. Can you add "pciepordrv.dyndbg" to the kernel command line (or
+change the dev_dbg() in wait_for_downstream_link() to dev_info() instead
+and attach the dmesg along with full 'sudo lspci -vv' output to the
+following bugzilla (as I think they are the same issue in the end):
+
+  https://bugzilla.kernel.org/show_bug.cgi?id=204413
 
 Thanks!
