@@ -2,131 +2,173 @@ Return-Path: <SRS0=UnlY=WC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF86AC31E40
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 06:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9085C433FF
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 07:24:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B460216F4
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 06:26:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 964D720665
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 07:24:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731814AbfHFGZw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Aug 2019 02:25:52 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:56570 "EHLO inva021.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731576AbfHFGZw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Aug 2019 02:25:52 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 9AFEC200005;
-        Tue,  6 Aug 2019 08:25:49 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 0D5F5200241;
-        Tue,  6 Aug 2019 08:25:38 +0200 (CEST)
-Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id C8109402B5;
-        Tue,  6 Aug 2019 14:25:24 +0800 (SGT)
-From:   Xiaowei Bao <xiaowei.bao@nxp.com>
-To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
-        lorenzo.pieralisi@arm.com, arnd@arndb.de,
-        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
-        mingkai.hu@nxp.com, zhiqiang.hou@nxp.com, roy.zang@nxp.com,
-        kstewart@linuxfoundation.org, pombredanne@nexb.com,
-        shawn.lin@rock-chips.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org
-Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv3 2/3] arm64: dts: ls1028a: Add PCIe controller DT nodes
-Date:   Tue,  6 Aug 2019 14:15:52 +0800
-Message-Id: <20190806061553.19934-2-xiaowei.bao@nxp.com>
-X-Mailer: git-send-email 2.9.5
-In-Reply-To: <20190806061553.19934-1-xiaowei.bao@nxp.com>
-References: <20190806061553.19934-1-xiaowei.bao@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S1731787AbfHFHYb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Aug 2019 03:24:31 -0400
+Received: from bmailout3.hostsharing.net ([176.9.242.62]:58399 "EHLO
+        bmailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731735AbfHFHYb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Aug 2019 03:24:31 -0400
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
+        by bmailout3.hostsharing.net (Postfix) with ESMTPS id A9E27101C06FB;
+        Tue,  6 Aug 2019 09:24:28 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 6ED1FCCB7; Tue,  6 Aug 2019 09:24:28 +0200 (CEST)
+Date:   Tue, 6 Aug 2019 09:24:28 +0200
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Xiongfeng Wang <wangxiongfeng2@huawei.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, yaohongbo@huawei.com,
+        guohanjun@huawei.com, huawei.libin@huawei.com
+Subject: Re: [RFC PATCH] pciehp: use completion to wait irq_thread
+ 'pciehp_ist'
+Message-ID: <20190806072428.2v7k775tvvgkbloh@wunner.de>
+References: <1562226638-54134-1-git-send-email-wangxiongfeng2@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1562226638-54134-1-git-send-email-wangxiongfeng2@huawei.com>
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-LS1028a implements 2 PCIe 3.0 controllers.
+On Thu, Jul 04, 2019 at 03:50:38PM +0800, Xiongfeng Wang wrote:
+> When I use the following command to power on a slot which has been
+> powered off already.
+> echo 1 > /sys/bus/pci/slots/22/power
+> It prints the following error:
+> -bash: echo: write error: No such device
+> But the slot is actually powered on and the devices is probed.
+> 
+> In function 'pciehp_sysfs_enable_slot()', we use 'wait_event()' to wait
+> until 'ctrl->pending_events' is cleared in 'pciehp_ist()'. But in some
+> situation, when 'pciehp_ist()' is woken up on a nearby CPU after
+> 'pciehp_request' is called, 'ctrl->pending_events' is cleared before we
+> go into sleep state. 'wait_event()' will check the condition before
+> going into sleep. So we return immediately and '-ENODEV' is return.
+> 
+> This patch use struct completion to wait until irq_thread 'pciehp_ist'
+> is completed.
 
-Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Thank you, good catch.
+
+Unfortunately your patch still allows the following race AFAICS:
+
+* pciehp_ist() is running (e.g. due to a hotplug operation)
+* a request to disable or enable the slot is submitted via sysfs,
+  the completion is reinitialized
+* pciehp_ist() finishes, signals completion
+* the sysfs request returns to user space prematurely
+* pciehp_ist() is run, handles the sysfs request, signals completion again
+
+I'd suggest something like the below instead, could you give it a whirl
+and see if it reliably fixes the issue for you?
+
+-- >8 --
+
+Subject: [PATCH] PCI: pciehp: Avoid returning prematurely from sysfs requests
+
+A sysfs request to enable or disable a PCIe hotplug slot should not
+return before it has been carried out.  That is sought to be achieved
+by waiting until the controller's "pending_events" have been cleared.
+
+However the IRQ thread pciehp_ist() clears the "pending_events" before
+it acts on them.  If pciehp_sysfs_enable_slot() / _disable_slot() happen
+to check the "pending_events" after they have been cleared but while
+pciehp_ist() is still running, the functions may return prematurely
+with an incorrect return value.
+
+Fix by introducing an "ist_running" flag which must be false before a
+sysfs request is allowed to return.
+
+Fixes: 32a8cef274fe ("PCI: pciehp: Enable/disable exclusively from IRQ thread")
+Link: https://lore.kernel.org/linux-pci/1562226638-54134-1-git-send-email-wangxiongfeng2@huawei.com
+Reported-by: Xiongfeng Wang <wangxiongfeng2@huawei.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org # v4.19+
 ---
-v2:
- - Fix up the legacy INTx allocate failed issue.
-v3:
- - no change.
+ drivers/pci/hotplug/pciehp.h      | 2 ++
+ drivers/pci/hotplug/pciehp_ctrl.c | 6 ++++--
+ drivers/pci/hotplug/pciehp_hpc.c  | 2 ++
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
- arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi | 52 ++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi
-index aef5b06..0b542ed 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi
-@@ -503,6 +503,58 @@
- 			status = "disabled";
- 		};
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 8c51a04b8083..e316bde45c7b 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -72,6 +72,7 @@ extern int pciehp_poll_time;
+  * @reset_lock: prevents access to the Data Link Layer Link Active bit in the
+  *	Link Status register and to the Presence Detect State bit in the Slot
+  *	Status register during a slot reset which may cause them to flap
++ * @ist_running: flag to keep user request waiting while IRQ thread is running
+  * @request_result: result of last user request submitted to the IRQ thread
+  * @requester: wait queue to wake up on completion of user request,
+  *	used for synchronous slot enable/disable request via sysfs
+@@ -101,6 +102,7 @@ struct controller {
  
-+		pcie@3400000 {
-+			compatible = "fsl,ls1028a-pcie";
-+			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
-+			       0x80 0x00000000 0x0 0x00002000>; /* configuration space */
-+			reg-names = "regs", "config";
-+			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
-+			interrupt-names = "pme", "aer";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			dma-coherent;
-+			num-lanes = <4>;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000 0x0 0x00000000 0x80 0x00010000 0x0 0x00010000   /* downstream I/O */
-+				  0x82000000 0x0 0x40000000 0x80 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-+			msi-parent = <&its>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
-+			status = "disabled";
-+		};
-+
-+		pcie@3500000 {
-+			compatible = "fsl,ls1028a-pcie";
-+			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
-+			       0x88 0x00000000 0x0 0x00002000>; /* configuration space */
-+			reg-names = "regs", "config";
-+			interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "pme", "aer";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			dma-coherent;
-+			num-lanes = <4>;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000 0x0 0x00000000 0x88 0x00010000 0x0 0x00010000   /* downstream I/O */
-+				  0x82000000 0x0 0x40000000 0x88 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-+			msi-parent = <&its>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-+			status = "disabled";
-+		};
-+
- 		pcie@1f0000000 { /* Integrated Endpoint Root Complex */
- 			compatible = "pci-host-ecam-generic";
- 			reg = <0x01 0xf0000000 0x0 0x100000>;
+ 	struct hotplug_slot hotplug_slot;	/* hotplug core interface */
+ 	struct rw_semaphore reset_lock;
++	unsigned int ist_running;
+ 	int request_result;
+ 	wait_queue_head_t requester;
+ };
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 631ced0ab28a..1ce9ce335291 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -368,7 +368,8 @@ int pciehp_sysfs_enable_slot(struct hotplug_slot *hotplug_slot)
+ 		ctrl->request_result = -ENODEV;
+ 		pciehp_request(ctrl, PCI_EXP_SLTSTA_PDC);
+ 		wait_event(ctrl->requester,
+-			   !atomic_read(&ctrl->pending_events));
++			   !atomic_read(&ctrl->pending_events) &&
++			   !ctrl->ist_running);
+ 		return ctrl->request_result;
+ 	case POWERON_STATE:
+ 		ctrl_info(ctrl, "Slot(%s): Already in powering on state\n",
+@@ -401,7 +402,8 @@ int pciehp_sysfs_disable_slot(struct hotplug_slot *hotplug_slot)
+ 		mutex_unlock(&ctrl->state_lock);
+ 		pciehp_request(ctrl, DISABLE_SLOT);
+ 		wait_event(ctrl->requester,
+-			   !atomic_read(&ctrl->pending_events));
++			   !atomic_read(&ctrl->pending_events) &&
++			   !ctrl->ist_running);
+ 		return ctrl->request_result;
+ 	case POWEROFF_STATE:
+ 		ctrl_info(ctrl, "Slot(%s): Already in powering off state\n",
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index bd990e3371e3..9e2d7688e8cc 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -608,6 +608,7 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 	irqreturn_t ret;
+ 	u32 events;
+ 
++	ctrl->ist_running = true;
+ 	pci_config_pm_runtime_get(pdev);
+ 
+ 	/* rerun pciehp_isr() if the port was inaccessible on interrupt */
+@@ -654,6 +655,7 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
+ 	up_read(&ctrl->reset_lock);
+ 
+ 	pci_config_pm_runtime_put(pdev);
++	ctrl->ist_running = false;
+ 	wake_up(&ctrl->requester);
+ 	return IRQ_HANDLED;
+ }
 -- 
-2.9.5
+2.20.1
 
