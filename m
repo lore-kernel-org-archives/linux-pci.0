@@ -6,40 +6,39 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD61CC31E40
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:48:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA4B4C31E40
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:51:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8651920818
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:48:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 878C920818
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:51:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725906AbfHFSss (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Aug 2019 14:48:48 -0400
-Received: from mga17.intel.com ([192.55.52.151]:55688 "EHLO mga17.intel.com"
+        id S1726069AbfHFSvi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Aug 2019 14:51:38 -0400
+Received: from mga11.intel.com ([192.55.52.93]:5993 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725798AbfHFSsr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Aug 2019 14:48:47 -0400
+        id S1725948AbfHFSvi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Aug 2019 14:51:38 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Aug 2019 11:48:47 -0700
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Aug 2019 11:51:38 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,353,1559545200"; 
-   d="scan'208";a="165069094"
+   d="scan'208";a="182053414"
 Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.162])
-  by orsmga007.jf.intel.com with ESMTP; 06 Aug 2019 11:48:46 -0700
-Message-ID: <1565118597.2401.116.camel@intel.com>
-Subject: Re: [RFC V1 RESEND 5/6] PCI/MSI: Free MSI-X resources by group
+  by FMSMGA003.fm.intel.com with ESMTP; 06 Aug 2019 11:51:38 -0700
+Message-ID: <1565118769.2401.120.camel@intel.com>
+Subject: Re: [RFC V1 RESEND 0/6] Introduce dynamic allocation/freeing of
+ MSI-X vectors
 From:   Megha Dey <megha.dey@intel.com>
-To:     Thomas Gleixner <tglx@linutronix.de>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, marc.zyngier@arm.com,
-        ashok.raj@intel.com, jacob.jun.pan@linux.intel.com,
-        megha.dey@linux.intel.com
-Date:   Tue, 06 Aug 2019 12:09:57 -0700
-In-Reply-To: <alpine.DEB.2.21.1906291002190.1802@nanos.tec.linutronix.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        tglx@linutronix.de, marc.zyngier@arm.com, ashok.raj@intel.com,
+        jacob.jun.pan@linux.intel.com
+Date:   Tue, 06 Aug 2019 12:12:49 -0700
+In-Reply-To: <20190802002442.GI151852@google.com>
 References: <1561162778-12669-1-git-send-email-megha.dey@linux.intel.com>
-         <1561162778-12669-6-git-send-email-megha.dey@linux.intel.com>
-         <alpine.DEB.2.21.1906291002190.1802@nanos.tec.linutronix.de>
+         <20190802002442.GI151852@google.com>
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.18.5.2-0ubuntu3.2 
 Mime-Version: 1.0
@@ -49,133 +48,93 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Sat, 2019-06-29 at 10:08 +0200, Thomas Gleixner wrote:
-> Megha,
+On Thu, 2019-08-01 at 19:24 -0500, Bjorn Helgaas wrote:
+> Hi Megha,
 > 
-> On Fri, 21 Jun 2019, Megha Dey wrote:
+> On Fri, Jun 21, 2019 at 05:19:32PM -0700, Megha Dey wrote:
 > > 
-> > +static int free_msi_irqs_grp(struct pci_dev *dev, int group_id)
-> > +{
-> > 
-> > +
-> > +	for_each_pci_msi_entry(entry, dev) {
-> > +		if (entry->group_id == group_id && entry->irq)
-> > +			for (i = 0; i < entry->nvec_used; i++)
-> > +				BUG_ON(irq_has_action(entry->irq +
-> > i));
-> BUG_ON is wrong here. This can and must be handled gracefully.
-> 
-
-Hmm, I reused this code from the 'free_msi_irqs' function. I am not
-sure why it is wrong to use BUG_ON here but ok to use it there, please
-let me know.
-
-> > 
-> > +	}
-> > +
-> > +	pci_msi_teardown_msi_irqs_grp(dev, group_id);
-> > +
-> > +	list_for_each_entry_safe(entry, tmp, msi_list, list) {
-> > +		if (entry->group_id == group_id) {
-> > +			clear_bit(entry->msi_attrib.entry_nr, dev-
-> > >entry);
-> > +			list_del(&entry->list);
-> > +			free_msi_entry(entry);
-> > +		}
-> > +	}
-> > +
-> > +	list_for_each_entry_safe(msix_sysfs_entry, tmp_msix,
-> > pci_msix, list) {
-> > +		if (msix_sysfs_entry->group_id == group_id) {
-> Again. Proper group management makes all of that just straight
-> forward and
-> not yet another special case.
-> 
-
-Yeah, the new proposal of having a group_list would get rid of this.
-
-> > 
-> > +			msi_attrs = msix_sysfs_entry-
-> > >msi_irq_group->attrs;
+> > Currently, MSI-X vector enabling and allocation for a PCIe device
+> > is
+> > static i.e. a device driver gets only one chance to enable a
+> > specific
+> > number of MSI-X vectors, usually during device probe. Also, in many
+> > cases, drivers usually reserve more than required number of vectors
+> > anticipating their use, which unnecessarily blocks resources that
+> > could have been made available to other devices. Lastly, there is
+> > no
+> > way for drivers to reserve more vectors, if the MSI-x has already
+> > been
+> > enabled for that device.
 > >  
-> > +static void pci_msix_shutdown_grp(struct pci_dev *dev, int
-> > group_id)
-> > +{
-> > +	struct msi_desc *entry;
-> > +	int grp_present = 0;
-> > +
-> > +	if (pci_dev_is_disconnected(dev)) {
-> > +		dev->msix_enabled = 0;
-> Huch? What's that? I can't figure out why this is needed and of
-> course it
-> completely lacks a comment explaining this. 
+> > Hence, a dynamic MSI-X kernel infrastructure can benefit drivers by
+> > deferring MSI-X allocation to post probe phase, where actual demand
+> > information is available.
+> >  
+> > This patchset enables the dynamic allocation/de-allocation of MSI-X
+> > vectors by introducing 2 new APIs:
+> > pci_alloc_irq_vectors_dyn() and pci_free_irq_vectors_grp():
+> > 
+> > We have had requests from some of the NIC/RDMA users who have lots
+> > of
+> > interrupt resources and would like to allocate them on demand,
+> > instead of using an all or none approach.
+> > 
+> > The APIs are fairly well tested (multiple
+> > allocations/deallocations),
+> > but we have no early adopters yet. Hence, sending this series as an
+> > RFC for review and comments.
+> > 
+> > The patches are based out of Linux 5.2-rc5.
+> > 
+> > Megha Dey (6):
+> >   PCI/MSI: New structures/macros for dynamic MSI-X allocation
+> >   PCI/MSI: Dynamic allocation of MSI-X vectors by group
+> >   x86: Introduce the dynamic teardown function
+> >   PCI/MSI: Introduce new structure to manage MSI-x entries
+> s/MSI-x/MSI-X/
+> If "entries" here means the same as "vectors" above, please use the
+> same word.
 > 
 
-Again, I have reused this code from the pci_msix_shutdown() function.
-So for the group case, this is not required?
+Hi Bjorn,
+
+Well, here entries basically mean the msi_desc entries. I thought MSI
+vectors are used for each address/data pair, hence used the term
+entries. Will update it to vectors to ensure uniformity.
 
 > > 
-> > +		return;
-> > +	}
-> > +
-> > +	/* Return the device with MSI-X masked as initial states
-> > */
-> > +	for_each_pci_msi_entry(entry, dev) {
-> > +		if (entry->group_id == group_id) {
-> > +			/* Keep cached states to be restored */
-> > +			__pci_msix_desc_mask_irq(entry, 1);
-> > +			grp_present = 1;
-> > +		}
-> > +	}
-> > +
-> > +	if (!grp_present) {
-> > +		pci_err(dev, "Group to be disabled not
-> > present\n");
-> > +		return;
-> So you print an error and silently return
+> >   PCI/MSI: Free MSI-X resources by group
+> Is "resources" the same as "vectors"?
 > 
 
-This is a void function, hence no error value can be returned. What do
-you think is the right thing to do if someone wants to delete a group
-which is not present?
+Yes, will update this in V2.
 
 > > 
-> > +	}
-> > +}
-> > +
-> > +int pci_disable_msix_grp(struct pci_dev *dev, int group_id)
-> > +{
-> > +	int num_vecs;
-> > +
-> > +	if (!pci_msi_enable || !dev)
-> > +		return -EINVAL;
-> > +
-> > +	pci_msix_shutdown_grp(dev, group_id);
-> > +	num_vecs = free_msi_irqs_grp(dev, group_id);
-> just to call in another function which has to do the same group_id
-> lookup
-> muck again.
+> >   Documentation: PCI/MSI: Document dynamic MSI-X infrastructure
+> When you post a v2 after addressing Thomas' comments, please make
+> these subject lines imperative sentences beginning with a descriptive
+> verb.  You can run "git log --oneline drivers/pci" to see the style.
 
-Even with the new proposal, we are to have 2 sets of functions: one to
-delete all the msic_desc entries associated with the device, and the
-other to delete those only belonging a 'user specified' group. So we do
-need to pass a group_id to these functions right? Yes, internally the
-deletion would be straightforward with the new approach.
+Sure, I will update the subject lines in V2.
 
+> If you're adding a specific interface or structure, mention it by
+> name
+> in the subject if it's practical.  The "x86" line needs a little more
+> context; I assume it should include "IRQ", "MSI-X", or something.
 > 
+
+True, will change this in V2.
+
 > > 
-> > +
-> > +	return num_vecs;
-> > +}
-> > +EXPORT_SYMBOL(pci_disable_msix_grp);
-> Why is this exposed ?
-> 
-
-As before, I just followed what pci_disable_msix() did <sigh>. Looks
-like pci_disable_msix is called from a variety of drivers, thus it is
-exposed. Currently, no one will use the pci_disable_msix_grp()
-externally, thus it need not be exposed for now.
-
-> Thanks,
-> 
-> 	tglx
+> >  Documentation/PCI/MSI-HOWTO.txt |  38 +++++
+> >  arch/x86/include/asm/x86_init.h |   1 +
+> >  arch/x86/kernel/x86_init.c      |   6 +
+> >  drivers/pci/msi.c               | 363
+> > +++++++++++++++++++++++++++++++++++++---
+> >  drivers/pci/probe.c             |   9 +
+> >  include/linux/device.h          |   3 +
+> >  include/linux/msi.h             |  13 ++
+> >  include/linux/pci.h             |  61 +++++++
+> >  kernel/irq/msi.c                |  34 +++-
+> >  9 files changed, 497 insertions(+), 31 deletions(-)
+> > 
