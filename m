@@ -2,139 +2,276 @@ Return-Path: <SRS0=UnlY=WC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA4B4C31E40
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41634C31E40
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:55:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 878C920818
-	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:51:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 146AF216B7
+	for <linux-pci@archiver.kernel.org>; Tue,  6 Aug 2019 18:55:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565117721;
+	bh=Ustmi3DWOC84tR+WYloqJ/uy/NSHo3QjVpfDl9Z5/dw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=x3V6q4oDh820a6wxwgzkkmDKpulIk4qOnn3LJzyCYmZQp26OCP38dFk+8S5WlRywy
+	 zN1K1bxu1z05m6L4BgXvtFrWv7HWbUJDYKe6ljLHpSijVxrzUYLsyMkEkQI/KGF6wa
+	 Cjuyj4BhRlsesVJLujXK+Ds9sDJOy8tpV/LVXpxE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726069AbfHFSvi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 6 Aug 2019 14:51:38 -0400
-Received: from mga11.intel.com ([192.55.52.93]:5993 "EHLO mga11.intel.com"
+        id S1726460AbfHFSzU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 6 Aug 2019 14:55:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44858 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725948AbfHFSvi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Aug 2019 14:51:38 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Aug 2019 11:51:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,353,1559545200"; 
-   d="scan'208";a="182053414"
-Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.162])
-  by FMSMGA003.fm.intel.com with ESMTP; 06 Aug 2019 11:51:38 -0700
-Message-ID: <1565118769.2401.120.camel@intel.com>
-Subject: Re: [RFC V1 RESEND 0/6] Introduce dynamic allocation/freeing of
- MSI-X vectors
-From:   Megha Dey <megha.dey@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        tglx@linutronix.de, marc.zyngier@arm.com, ashok.raj@intel.com,
-        jacob.jun.pan@linux.intel.com
-Date:   Tue, 06 Aug 2019 12:12:49 -0700
-In-Reply-To: <20190802002442.GI151852@google.com>
-References: <1561162778-12669-1-git-send-email-megha.dey@linux.intel.com>
-         <20190802002442.GI151852@google.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.18.5.2-0ubuntu3.2 
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1725906AbfHFSzU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Aug 2019 14:55:20 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7FD0620C01;
+        Tue,  6 Aug 2019 18:55:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565117718;
+        bh=Ustmi3DWOC84tR+WYloqJ/uy/NSHo3QjVpfDl9Z5/dw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PYXW3iaLX7bl0WxqXKfySdGMJlrCLlFEnaO/X7FZPOF1rZ1IjfT0WepvP3hRYIqzU
+         H+Uiz+TeaEu/O0ortbiAeVps1ZPpbazBEAMJMuSWn1v1qRnWjoCG4QC0oAesVveFP6
+         QtiA4R6AV4IDLq3ZMz/+BPW5vNEl6+JPCQukaqtg=
+Date:   Tue, 6 Aug 2019 13:55:15 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Haiyang Zhang <haiyangz@microsoft.com>
+Cc:     "sashal@kernel.org" <sashal@kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>, vkuznets <vkuznets@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: hv: Detect and fix Hyper-V PCI domain number
+ collision
+Message-ID: <20190806185515.GR151852@google.com>
+References: <1564771954-9181-1-git-send-email-haiyangz@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1564771954-9181-1-git-send-email-haiyangz@microsoft.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, 2019-08-01 at 19:24 -0500, Bjorn Helgaas wrote:
-> Hi Megha,
+On Fri, Aug 02, 2019 at 06:52:56PM +0000, Haiyang Zhang wrote:
+> Due to Azure host agent settings, the device instance ID's bytes 8 and 9
+> are no longer unique. This causes some of the PCI devices not showing up
+> in VMs with multiple passthrough devices, such as GPUs. So, as recommended
+> by Azure host team, we now use the bytes 4 and 5 which usually provide
+> unique numbers.
+
+What does "Azure host agent settings" mean?  Would it be useful to say
+something more specific, so users could ready this and say "oh, I'm
+using the Azure host agent settings mentioned here, so I need this
+patch"?  Is this related to a specific Azure host agent commit or
+release?
+
+"This causes some of the PCI devices ..." is not a sentence.  I think
+I understand what you're saying -- "This sometimes causes device
+passthrough to VMs to fail." Is there something about GPUs that makes
+them more susceptible to this problem?
+
+I think there are really two changes in this patch:
+
+  1) Start with a domain number from bytes 4-5 instead of bytes 8-9.
+
+  2) If the domain number is not unique, allocate another one using
+  the bitmap.
+
+It sounds like part 2) by itself would be enough to solve the problem,
+and including part 1) just reduces the likelihood of having to
+allocate another domain number.
+
+> In the rare cases of collision, we will detect and find another number
+> that is not in use.
+> Thanks to Michael Kelley <mikelley@microsoft.com> for proposing this idea.
+
+This looks like two paragraphs and should have a blank line between
+them.
+
+> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+> ---
+>  drivers/pci/controller/pci-hyperv.c | 91 +++++++++++++++++++++++++++++++------
+>  1 file changed, 78 insertions(+), 13 deletions(-)
 > 
-> On Fri, Jun 21, 2019 at 05:19:32PM -0700, Megha Dey wrote:
-> > 
-> > Currently, MSI-X vector enabling and allocation for a PCIe device
-> > is
-> > static i.e. a device driver gets only one chance to enable a
-> > specific
-> > number of MSI-X vectors, usually during device probe. Also, in many
-> > cases, drivers usually reserve more than required number of vectors
-> > anticipating their use, which unnecessarily blocks resources that
-> > could have been made available to other devices. Lastly, there is
-> > no
-> > way for drivers to reserve more vectors, if the MSI-x has already
-> > been
-> > enabled for that device.
-> >  
-> > Hence, a dynamic MSI-X kernel infrastructure can benefit drivers by
-> > deferring MSI-X allocation to post probe phase, where actual demand
-> > information is available.
-> >  
-> > This patchset enables the dynamic allocation/de-allocation of MSI-X
-> > vectors by introducing 2 new APIs:
-> > pci_alloc_irq_vectors_dyn() and pci_free_irq_vectors_grp():
-> > 
-> > We have had requests from some of the NIC/RDMA users who have lots
-> > of
-> > interrupt resources and would like to allocate them on demand,
-> > instead of using an all or none approach.
-> > 
-> > The APIs are fairly well tested (multiple
-> > allocations/deallocations),
-> > but we have no early adopters yet. Hence, sending this series as an
-> > RFC for review and comments.
-> > 
-> > The patches are based out of Linux 5.2-rc5.
-> > 
-> > Megha Dey (6):
-> >   PCI/MSI: New structures/macros for dynamic MSI-X allocation
-> >   PCI/MSI: Dynamic allocation of MSI-X vectors by group
-> >   x86: Introduce the dynamic teardown function
-> >   PCI/MSI: Introduce new structure to manage MSI-x entries
-> s/MSI-x/MSI-X/
-> If "entries" here means the same as "vectors" above, please use the
-> same word.
+> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+> index 82acd61..6b9cc6e60a 100644
+> --- a/drivers/pci/controller/pci-hyperv.c
+> +++ b/drivers/pci/controller/pci-hyperv.c
+> @@ -37,6 +37,8 @@
+>   * the PCI back-end driver in Hyper-V.
+>   */
+>  
+> +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+> +
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/pci.h>
+> @@ -2507,6 +2509,47 @@ static void put_hvpcibus(struct hv_pcibus_device *hbus)
+>  		complete(&hbus->remove_event);
+>  }
+>  
+> +#define HVPCI_DOM_MAP_SIZE (64 * 1024)
+> +static DECLARE_BITMAP(hvpci_dom_map, HVPCI_DOM_MAP_SIZE);
+> +
+> +/* PCI domain number 0 is used by emulated devices on Gen1 VMs, so define 0
+> + * as invalid for passthrough PCI devices of this driver.
+> + */
+
+Please use the usual multi-line comment style:
+
+  /*
+   * PCI domain number ...
+   */
+
+> +#define HVPCI_DOM_INVALID 0
+> +
+> +/**
+> + * hv_get_dom_num() - Get a valid PCI domain number
+> + * Check if the PCI domain number is in use, and return another number if
+> + * it is in use.
+> + *
+> + * @dom: Requested domain number
+> + *
+> + * return: domain number on success, HVPCI_DOM_INVALID on failure
+> + */
+> +static u16 hv_get_dom_num(u16 dom)
+> +{
+> +	unsigned int i;
+> +
+> +	if (test_and_set_bit(dom, hvpci_dom_map) == 0)
+> +		return dom;
+> +
+> +	for_each_clear_bit(i, hvpci_dom_map, HVPCI_DOM_MAP_SIZE) {
+> +		if (test_and_set_bit(i, hvpci_dom_map) == 0)
+> +			return i;
+> +	}
+> +
+> +	return HVPCI_DOM_INVALID;
+> +}
+> +
+> +/**
+> + * hv_put_dom_num() - Mark the PCI domain number as free
+> + * @dom: Domain number to be freed
+> + */
+> +static void hv_put_dom_num(u16 dom)
+> +{
+> +	clear_bit(dom, hvpci_dom_map);
+> +}
+> +
+>  /**
+>   * hv_pci_probe() - New VMBus channel probe, for a root PCI bus
+>   * @hdev:	VMBus's tracking struct for this root PCI bus
+> @@ -2518,6 +2561,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  			const struct hv_vmbus_device_id *dev_id)
+>  {
+>  	struct hv_pcibus_device *hbus;
+> +	u16 dom_req, dom;
+>  	int ret;
+>  
+>  	/*
+> @@ -2532,19 +2576,32 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	hbus->state = hv_pcibus_init;
+>  
+>  	/*
+> -	 * The PCI bus "domain" is what is called "segment" in ACPI and
+> -	 * other specs.  Pull it from the instance ID, to get something
+> -	 * unique.  Bytes 8 and 9 are what is used in Windows guests, so
+> -	 * do the same thing for consistency.  Note that, since this code
+> -	 * only runs in a Hyper-V VM, Hyper-V can (and does) guarantee
+> -	 * that (1) the only domain in use for something that looks like
+> -	 * a physical PCI bus (which is actually emulated by the
+> -	 * hypervisor) is domain 0 and (2) there will be no overlap
+> -	 * between domains derived from these instance IDs in the same
+> -	 * VM.
+> +	 * The PCI bus "domain" is what is called "segment" in ACPI and other
+> +	 * specs. Pull it from the instance ID, to get something usually
+> +	 * unique. In rare cases of collision, we will find out another number
+> +	 * not in use.
+> +	 * Note that, since this code only runs in a Hyper-V VM, Hyper-V
+> +	 * together with this guest driver can guarantee that (1) The only
+> +	 * domain used by Gen1 VMs for something that looks like a physical
+> +	 * PCI bus (which is actually emulated by the hypervisor) is domain 0.
+> +	 * (2) There will be no overlap between domains (after fixing possible
+> +	 * collisions) in the same VM.
+
+Please use blank lines between paragraphs.
+
+>  	 */
+> -	hbus->sysdata.domain = hdev->dev_instance.b[9] |
+> -			       hdev->dev_instance.b[8] << 8;
+> +	dom_req = hdev->dev_instance.b[5] << 8 | hdev->dev_instance.b[4];
+> +	dom = hv_get_dom_num(dom_req);
+> +
+> +	if (dom == HVPCI_DOM_INVALID) {
+> +		pr_err("Unable to use dom# 0x%hx or other numbers",
+> +		       dom_req);
+> +		ret = -EINVAL;
+> +		goto free_bus;
+> +	}
+> +
+> +	if (dom != dom_req)
+> +		pr_info("PCI dom# 0x%hx has collision, using 0x%hx",
+> +			dom_req, dom);
+
+Can these use "dev_err/info(&hdev->device, ...)" like the other
+message in this function?  It's always nicer to have a specific device
+reference when one is available.  Probably don't need the new pr_fmt()
+definition if you do this.
+
+> +
+> +	hbus->sysdata.domain = dom;
+>  
+>  	hbus->hdev = hdev;
+>  	refcount_set(&hbus->remove_lock, 1);
+> @@ -2559,7 +2616,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  					   hbus->sysdata.domain);
+>  	if (!hbus->wq) {
+>  		ret = -ENOMEM;
+> -		goto free_bus;
+> +		goto free_dom;
+>  	}
+>  
+>  	ret = vmbus_open(hdev->channel, pci_ring_size, pci_ring_size, NULL, 0,
+> @@ -2636,6 +2693,8 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	vmbus_close(hdev->channel);
+>  destroy_wq:
+>  	destroy_workqueue(hbus->wq);
+> +free_dom:
+> +	hv_put_dom_num(hbus->sysdata.domain);
+>  free_bus:
+>  	free_page((unsigned long)hbus);
+>  	return ret;
+> @@ -2717,6 +2776,9 @@ static int hv_pci_remove(struct hv_device *hdev)
+>  	put_hvpcibus(hbus);
+>  	wait_for_completion(&hbus->remove_event);
+>  	destroy_workqueue(hbus->wq);
+> +
+> +	hv_put_dom_num(hbus->sysdata.domain);
+> +
+>  	free_page((unsigned long)hbus);
+>  	return 0;
+>  }
+> @@ -2744,6 +2806,9 @@ static void __exit exit_hv_pci_drv(void)
+>  
+>  static int __init init_hv_pci_drv(void)
+>  {
+> +	/* Set the invalid domain number's bit, so it will not be used */
+> +	set_bit(HVPCI_DOM_INVALID, hvpci_dom_map);
+> +
+>  	return vmbus_driver_register(&hv_pci_drv);
+>  }
+>  
+> -- 
+> 1.8.3.1
 > 
-
-Hi Bjorn,
-
-Well, here entries basically mean the msi_desc entries. I thought MSI
-vectors are used for each address/data pair, hence used the term
-entries. Will update it to vectors to ensure uniformity.
-
-> > 
-> >   PCI/MSI: Free MSI-X resources by group
-> Is "resources" the same as "vectors"?
-> 
-
-Yes, will update this in V2.
-
-> > 
-> >   Documentation: PCI/MSI: Document dynamic MSI-X infrastructure
-> When you post a v2 after addressing Thomas' comments, please make
-> these subject lines imperative sentences beginning with a descriptive
-> verb.  You can run "git log --oneline drivers/pci" to see the style.
-
-Sure, I will update the subject lines in V2.
-
-> If you're adding a specific interface or structure, mention it by
-> name
-> in the subject if it's practical.  The "x86" line needs a little more
-> context; I assume it should include "IRQ", "MSI-X", or something.
-> 
-
-True, will change this in V2.
-
-> > 
-> >  Documentation/PCI/MSI-HOWTO.txt |  38 +++++
-> >  arch/x86/include/asm/x86_init.h |   1 +
-> >  arch/x86/kernel/x86_init.c      |   6 +
-> >  drivers/pci/msi.c               | 363
-> > +++++++++++++++++++++++++++++++++++++---
-> >  drivers/pci/probe.c             |   9 +
-> >  include/linux/device.h          |   3 +
-> >  include/linux/msi.h             |  13 ++
-> >  include/linux/pci.h             |  61 +++++++
-> >  kernel/irq/msi.c                |  34 +++-
-> >  9 files changed, 497 insertions(+), 31 deletions(-)
-> > 
