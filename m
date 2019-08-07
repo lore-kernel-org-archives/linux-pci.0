@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A219C433FF
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Aug 2019 23:01:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46528C433FF
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Aug 2019 23:17:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1FC7D2171F
-	for <linux-pci@archiver.kernel.org>; Wed,  7 Aug 2019 23:01:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 129A221871
+	for <linux-pci@archiver.kernel.org>; Wed,  7 Aug 2019 23:17:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565218915;
-	bh=880CjrWqcw/b0n8e8loUwkiYFlbtOJVJsxG1uGHV1Ps=;
+	s=default; t=1565219839;
+	bh=K1FJY/IQnp3Rp2g6nct/42+G5hsZ3RWLWUgCgs6+SaQ=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=V0ofGQ9cW0WXC/ct9phDuoguyeonW09uEcdYFi09UmedJK/wFfmu/gdDbvcCo/c7E
-	 qL2mHQGj9+M+wltsh3OS4HlCxW0AQuf7I68fhU+Z+hDjXr7z05NDOYaX6M3CdftwD7
-	 GGYrdV97cLabkHyyHNj28w12ddnYPoC1fFqLFGcU=
+	b=JXY8PW8R+LqtfvWta/CrDJ34ymZPbG4lNSfxJX8j5rHvVGIRVAtfdJ8NQjYBt/bdP
+	 UNrI5WrGaHapIgQ1f2qk/wMyPEheRD4HevOtH6Sgp+x8u8WQRtAjqH+E/CE5aG6u2c
+	 GA4VYdBT/EZrBQdMocDejuly3K6jWq27SCqa2ifI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730302AbfHGXBy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 7 Aug 2019 19:01:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39576 "EHLO mail.kernel.org"
+        id S1729960AbfHGXRS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 7 Aug 2019 19:17:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42996 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729960AbfHGXBy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 7 Aug 2019 19:01:54 -0400
+        id S1729219AbfHGXRS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 7 Aug 2019 19:17:18 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0B4882171F;
-        Wed,  7 Aug 2019 23:01:52 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id F0B31217F5;
+        Wed,  7 Aug 2019 23:17:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565218913;
-        bh=880CjrWqcw/b0n8e8loUwkiYFlbtOJVJsxG1uGHV1Ps=;
+        s=default; t=1565219837;
+        bh=K1FJY/IQnp3Rp2g6nct/42+G5hsZ3RWLWUgCgs6+SaQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=BbLvpPEMmpazhnJCMsxKGQMri/b6UwTY2G01eANjdrk1kgPgQjO5BcVdhwrMtdD8Q
-         ZqpwBCoCCS3SkcIdXzMH9Sk8xyumGYznOE02Oaq9WTjmtRmkG6n2jHH4feWHLT9Vie
-         YPBkPOIdMFQ79/+nv6Zs9xYpheC8VcJcyAN7zlnw=
-Date:   Wed, 7 Aug 2019 18:01:49 -0500
+        b=ODbxlCebJsygJ1/G3zlnObtY2Y5GSrOCMNOKt1jzIQGZOvAy8obmibl9XQRf2iCeU
+         uvMLbkRDS0jRDqLlNQgI7ApTT6yVJAl+CkBdJsO0L4UOWN/wHCG8o6Kady5/4131jV
+         KFT6jRwp2ia8DtQvtfkZ+ASyFopRNIAYpP6ZYs7U=
+Date:   Wed, 7 Aug 2019 18:17:13 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Sumit Saxena <sumit.saxena@broadcom.com>
 Cc:     Christian.Koenig@amd.com, linux-pci@vger.kernel.org,
         stable@vger.kernel.org
 Subject: Re: [PATCH V2] PCI: set BAR size bits correctly in Resize BAR
  control register
-Message-ID: <20190807230149.GA151852@google.com>
+Message-ID: <20190807231713.GB151852@google.com>
 References: <20190725192552.24295-1-sumit.saxena@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -80,8 +80,16 @@ On Fri, Jul 26, 2019 at 12:55:52AM +0530, Sumit Saxena wrote:
 > -Simplified calculation of BAR size bits as suggested by Christian Koenig.
 > 
 > CC: stable@vger.kernel.org # v4.16+
+
+Also, d3252ace0bc6 ("PCI: Restore resized BAR state on resume") didn't
+appear until v4.19.  I updated this to "v4.19+"; let me know if that's
+wrong.
+
 > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=203939
 > Fixes: d3252ace0bc652a1a244455556b6a549f969bf99 ("PCI: Restore resized BAR state on resume")
+
+I updated this to conventional format as above (12-char SHA1).
+
 > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 > ---
 >  drivers/pci/pci.c | 2 +-
@@ -97,13 +105,6 @@ On Fri, Jul 26, 2019 at 12:55:52AM +0530, Sumit Saxena wrote:
 >  		res = pdev->resource + bar_idx;
 > -		size = order_base_2((resource_size(res) >> 20) | 1) - 1;
 > +		size = order_base_2(resource_size(res) >> 20);
-
-Since BAR sizes are always powers of 2, wouldn't this be simpler as:
-
-		size = ilog2(resource_size(res)) - 20;
-
-which nicely matches the table in PCIe r5.0, sec 7.8.6.3?
-
 >  		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
 >  		ctrl |= size << PCI_REBAR_CTRL_BAR_SHIFT;
 >  		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
