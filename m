@@ -2,120 +2,86 @@ Return-Path: <SRS0=TU1j=WE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEEDBC433FF
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 10:11:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACFA1C433FF
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 10:14:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AEC7021874
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 10:11:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E41020B7C
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 10:14:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389806AbfHHKKo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Aug 2019 06:10:44 -0400
-Received: from cloudserver094114.home.pl ([79.96.170.134]:45367 "EHLO
-        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389774AbfHHKKo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2019 06:10:44 -0400
-Received: from 79.184.254.29.ipv4.supernova.orange.pl (79.184.254.29) (HELO kreacher.localnet)
- by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.275)
- id b3a161ced17e49cd; Thu, 8 Aug 2019 12:10:41 +0200
-From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To:     linux-nvme <linux-nvme@lists.infradead.org>
-Cc:     Keith Busch <kbusch@kernel.org>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rajat Jain <rajatja@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCH v2 1/2] PCI: PCIe: ASPM: Introduce pcie_aspm_enabled_mask()
-Date:   Thu, 08 Aug 2019 12:06:52 +0200
-Message-ID: <3714448.mG7dE8Q3Fs@kreacher>
-In-Reply-To: <1921165.pTveHRX1Co@kreacher>
-References: <4323ed84dd07474eab65699b4d007aaf@AUSX13MPC105.AMER.DELL.COM> <20190731221956.GB15795@localhost.localdomain> <1921165.pTveHRX1Co@kreacher>
+        id S2389857AbfHHKOC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Aug 2019 06:14:02 -0400
+Received: from foss.arm.com ([217.140.110.172]:59328 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389793AbfHHKOB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Aug 2019 06:14:01 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 152E328;
+        Thu,  8 Aug 2019 03:14:01 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (e121166-lin.cambridge.arm.com [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7D7403F694;
+        Thu,  8 Aug 2019 03:13:59 -0700 (PDT)
+Date:   Thu, 8 Aug 2019 11:13:54 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     Sasha Levin <sashal@kernel.org>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Randy Dunlap <rdunlap@infradead.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Jake Oshins <jakeo@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: Re: [PATCH] PCI: pci-hyperv: fix build errors on non-SYSFS config
+Message-ID: <20190808101354.GA30230@e121166-lin.cambridge.arm.com>
+References: <abbe8012-1e6f-bdea-1454-5c59ccbced3d@infradead.org>
+ <DM6PR21MB133723E9D1FA8BA0006E06FECAF20@DM6PR21MB1337.namprd21.prod.outlook.com>
+ <20190713150353.GF10104@sasha-vm>
+ <20190723212107.GB9742@google.com>
+ <20190807150654.GB16214@e121166-lin.cambridge.arm.com>
+ <20190808012745.GV17747@sasha-vm>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190808012745.GV17747@sasha-vm>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Aug 07, 2019 at 09:27:45PM -0400, Sasha Levin wrote:
+> On Wed, Aug 07, 2019 at 04:06:54PM +0100, Lorenzo Pieralisi wrote:
+> > On Tue, Jul 23, 2019 at 04:21:07PM -0500, Bjorn Helgaas wrote:
+> > > On Sat, Jul 13, 2019 at 11:03:53AM -0400, Sasha Levin wrote:
+> > > > Queued up for hyperv-fixes, thank you!
+> > > 
+> > > What merge strategy do you envision for this?  Previous
+> > > drivers/pci/controller/pci-hyperv.c changes have generally been merged
+> > > by Lorenzo and incorporated into my PCI tree.
+> > > 
+> > > This particular patch doesn't actually touch pci-hyperv.c; it touches
+> > > drivers/pci/Kconfig, so should somehow be coordinated with me.
+> > > 
+> > > Does this need to be tagged for stable?  a15f2c08c708 appeared in
+> > > v4.19, so my first guess is that it's not stable material.
+> > 
+> > AFAIC Bjorn's question still stands. Who will pick this patch up ?
+> 
+> Would it be easier if I just ignored Hyper-V PCI patches?
 
-Add a function returning the mask of currently enabled ASPM link
-states for a given device.
+I think it probably would, yes. Actually this patch does not even
+fall within "Hyper-V CORE AND DRIVERS" maintainers entry.
 
-It will be used by the NVMe driver to decide how to handle the
-device during system suspend.
+As for drivers/pci/controller/pci-hyperv.c, for urgent fixes
+I understand it is easier for you to pull them I would still ask
+you please to sync with me before pulling them.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
--> v2:
-  * Move the PCI/PCIe ASPM changes to a separate patch.
-  * Add the _mask suffix to the new function name.
-  * Add EXPORT_SYMBOL_GPL() to the new function.
-  * Avoid adding an unnecessary blank line.
-
----
- drivers/pci/pcie/aspm.c |   20 ++++++++++++++++++++
- include/linux/pci.h     |    3 +++
- 2 files changed, 23 insertions(+)
-
-Index: linux-pm/drivers/pci/pcie/aspm.c
-===================================================================
---- linux-pm.orig/drivers/pci/pcie/aspm.c
-+++ linux-pm/drivers/pci/pcie/aspm.c
-@@ -1170,6 +1170,26 @@ static int pcie_aspm_get_policy(char *bu
- module_param_call(policy, pcie_aspm_set_policy, pcie_aspm_get_policy,
- 	NULL, 0644);
- 
-+/*
-+ * pcie_aspm_enabled_mask - Return the mask of enabled ASPM link states.
-+ * @pci_device: Target device.
-+ */
-+u32 pcie_aspm_enabled_mask(struct pci_dev *pci_device)
-+{
-+	struct pci_dev *bridge = pci_upstream_bridge(pci_device);
-+	u32 ret;
-+
-+	if (!bridge)
-+		return 0;
-+
-+	mutex_lock(&aspm_lock);
-+	ret = bridge->link_state ? bridge->link_state->aspm_enabled : 0;
-+	mutex_unlock(&aspm_lock);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pcie_aspm_enabled_mask);
-+
- #ifdef CONFIG_PCIEASPM_DEBUG
- static ssize_t link_state_show(struct device *dev,
- 		struct device_attribute *attr,
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -1567,8 +1567,11 @@ extern bool pcie_ports_native;
- 
- #ifdef CONFIG_PCIEASPM
- bool pcie_aspm_support_enabled(void);
-+u32 pcie_aspm_enabled_mask(struct pci_dev *pci_device);
- #else
- static inline bool pcie_aspm_support_enabled(void) { return false; }
-+static inline u32 pcie_aspm_enabled_mask(struct pci_dev *pci_device)
-+{ return 0; }
- #endif
- 
- #ifdef CONFIG_PCIEAER
-
-
-
+Thanks,
+Lorenzo
