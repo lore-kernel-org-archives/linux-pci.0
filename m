@@ -2,135 +2,139 @@ Return-Path: <SRS0=TU1j=WE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63B74C0650F
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 21:47:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B185C433FF
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 21:58:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3523521880
-	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 21:47:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565300854;
-	bh=vG7jKkEd8XcA9+P2LeOF6CIxzYS5OeGuGE45x2CRGSQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=bzGpmA+sIqZ1OORqRpDBeNI0L9GD45BJ+dTCN4fCe2IX5VX477pw1xdYsCFxRh9qd
-	 T/Bo5KcYkCMk7fcC6HC2zhPfr5DOrsx2eE4CDaymHV9I4uDrBUPGQvwrghpvTrSqFr
-	 0jIkbRyXM0EDNR/yhBaHi200NaIGQUmkPjQ5g9hk=
+	by mail.kernel.org (Postfix) with ESMTP id D8E3E2166E
+	for <linux-pci@archiver.kernel.org>; Thu,  8 Aug 2019 21:58:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390361AbfHHVrd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 8 Aug 2019 17:47:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32810 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725535AbfHHVrd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Aug 2019 17:47:33 -0400
-Received: from localhost (unknown [150.199.191.185])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E9BA021874;
-        Thu,  8 Aug 2019 21:47:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565300849;
-        bh=vG7jKkEd8XcA9+P2LeOF6CIxzYS5OeGuGE45x2CRGSQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=opUMVt0G8O9WCbMpvtgG81GcK9OmkTHd8OQ7YfusFWIzrAVFBCybyjtsfn9Uw+7xN
-         Xb1yeoZLxo4lZAHUdD2CMnGhv7CdnbDf2uFzuMrFcXQ3Pf80HWHMbaw+38Bi31odbX
-         abWk6E491TFBB96Ac8IIAIBJ02cp9J3AXMvuiiVg=
-Date:   Thu, 8 Aug 2019 16:47:28 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Paul Walmsley <paul.walmsley@sifive.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-riscv@lists.infradead.org,
-        Wesley Terpstra <wesley@sifive.com>
-Subject: Re: [PATCH v2] pci: Kconfig: select PCI_MSI_IRQ_DOMAIN by default on
- RISC-V
-Message-ID: <20190808214728.GC7302@google.com>
-References: <alpine.DEB.2.21.9999.1907251426450.32766@viisi.sifive.com>
- <20190808195546.GA7302@google.com>
- <alpine.DEB.2.21.9999.1908081349210.6414@viisi.sifive.com>
+        id S1733140AbfHHV64 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 8 Aug 2019 17:58:56 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:50579 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725535AbfHHV64 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Aug 2019 17:58:56 -0400
+Received: from 79.184.254.29.ipv4.supernova.orange.pl (79.184.254.29) (HELO kreacher.localnet)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.275)
+ id 198204becd846193; Thu, 8 Aug 2019 23:58:52 +0200
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     linux-nvme <linux-nvme@lists.infradead.org>
+Cc:     Keith Busch <kbusch@kernel.org>,
+        Mario Limonciello <Mario.Limonciello@dell.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Rajat Jain <rajatja@google.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH v3 2/2] nvme-pci: Allow PCI bus-level PM to be used if ASPM is disabled
+Date:   Thu, 08 Aug 2019 23:58:38 +0200
+Message-ID: <4856352.pThfM6cRGE@kreacher>
+In-Reply-To: <2184247.yL3mcj2FRQ@kreacher>
+References: <4323ed84dd07474eab65699b4d007aaf@AUSX13MPC105.AMER.DELL.COM> <20190731221956.GB15795@localhost.localdomain> <2184247.yL3mcj2FRQ@kreacher>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.9999.1908081349210.6414@viisi.sifive.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 08, 2019 at 01:51:50PM -0700, Paul Walmsley wrote:
-> On Thu, 8 Aug 2019, Bjorn Helgaas wrote:
-> > On Thu, Jul 25, 2019 at 02:28:07PM -0700, Paul Walmsley wrote:
-> > > From: Wesley Terpstra <wesley@sifive.com>
-> > > 
-> > > This is part of adding support for RISC-V systems with PCIe host 
-> > > controllers that support message-signaled interrupts.
-> > > 
-> > > Signed-off-by: Wesley Terpstra <wesley@sifive.com>
-> > > [paul.walmsley@sifive.com: wrote patch description; split this
-> > >  patch from the arch/riscv patch]
-> > > Signed-off-by: Paul Walmsley <paul.walmsley@sifive.com>
-> > > ---
-> > >  drivers/pci/Kconfig | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> > > index 2ab92409210a..beb3408a0272 100644
-> > > --- a/drivers/pci/Kconfig
-> > > +++ b/drivers/pci/Kconfig
-> > > @@ -52,7 +52,7 @@ config PCI_MSI
-> > >  	   If you don't know what to do here, say Y.
-> > >  
-> > >  config PCI_MSI_IRQ_DOMAIN
-> > > -	def_bool ARC || ARM || ARM64 || X86
-> > > +	def_bool ARC || ARM || ARM64 || X86 || RISCV
-> > 
-> > The other arches listed here either supply their own include/asm/msi.h
-> > or generate it:
-> > 
-> >   $ ls arch/*/include/asm/msi.h
-> >   arch/x86/include/asm/msi.h
-> > 
-> >   $ grep msi.h arch/*/include/asm/Kbuild
-> >   arch/arc/include/asm/Kbuild:generic-y += msi.h
-> >   arch/arm64/include/asm/Kbuild:generic-y += msi.h
-> >   arch/arm/include/asm/Kbuild:generic-y += msi.h
-> >   arch/mips/include/asm/Kbuild:generic-y += msi.h
-> >   arch/powerpc/include/asm/Kbuild:generic-y += msi.h
-> >   arch/sparc/include/asm/Kbuild:generic-y += msi.h
-> > 
-> > For example, see
-> > 
-> >   f8430eae9f1b ("PCI/MSI: Enable PCI_MSI_IRQ_DOMAIN support for ARC")
-> >   be091d468a0a ("arm64: PCI/MSI: Use asm-generic/msi.h")
-> >   0ab089c2548c ("ARM: Add msi.h to Kbuild")
-> > 
-> > I didn't look into the details of msi.h generation, but I assume
-> > RISC-V needs to do something similar?  If so, I think that should be
-> > part of this patch to avoid issues.
-> > 
-> > If CONFIG_GENERIC_MSI_IRQ_DOMAIN is defined, include/linux/msi.h
-> > #includes <asm/msi.h> and I don't see where that would come from.
-> 
-> Commit 251a44888183 ("riscv: include generic support for MSI irqdomains") 
-> has been merged upstream for this purpose:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=251a44888183003b0380df184835a2c00bfa39d7
-> 
-> The original patch was split into a RISC-V component and a generic PCI 
-> component to reduce the risk of merge conflicts.
-> 
-> Does that work for you?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Indeed, sorry I missed it.  I generally work based on -rc1, and it
-looks like 251a44888183 was merged after -rc1.
+One of the modifications made by commit d916b1be94b6 ("nvme-pci: use
+host managed power state for suspend") was adding a pci_save_state()
+call to nvme_suspend() so as to instruct the PCI bus type to leave
+devices handled by the nvme driver in D0 during suspend-to-idle.
+That was done with the assumption that ASPM would transition the
+device's PCIe link into a low-power state when the device became
+inactive.  However, if ASPM is disabled for the device, its PCIe
+link will stay in L0 and in that case commit d916b1be94b6 is likely
+to cause the energy used by the system while suspended to increase.
 
-Since we're after the merge window, the default target would be v5.4,
-but I see some post-rc1 pull requests from you, so if you need this in
-v5.3, let me know.
+Namely, if the device in question works in accordance with the PCIe
+specification, putting it into D3hot causes its PCIe link to go to
+L1 or L2/L3 Ready, which is lower-power than L0.  Since the energy
+used by the system while suspended depends on the state of its PCIe
+link (as a general rule, the lower-power the state of the link, the
+less energy the system will use), putting the device into D3hot
+during suspend-to-idle should be more energy-efficient that leaving
+it in D0 with disabled ASPM.
 
-I applied your patch to pci/msi for v5.4 for now.
+For this reason, avoid leaving NVMe devices with disabled ASPM in D0
+during suspend-to-idle.  Instead, shut them down entirely and let
+the PCI bus type put them into D3.
 
-Bjorn
+Fixes: d916b1be94b6 ("nvme-pci: use host managed power state for suspend")
+Link: https://lore.kernel.org/linux-pm/2763495.NmdaWeg79L@kreacher/T/#t
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+v2 -> v3:
+  * Modify the changelog to describe the rationale for this patch in
+    a less confusing and more convincing way.
+
+-> v2:
+  * Move the PCI/PCIe ASPM changes to a separate patch.
+  * Do not add a redundant ndev->last_ps == U32_MAX check in nvme_suspend().
+
+---
+ drivers/nvme/host/pci.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+Index: linux-pm/drivers/nvme/host/pci.c
+===================================================================
+--- linux-pm.orig/drivers/nvme/host/pci.c
++++ linux-pm/drivers/nvme/host/pci.c
+@@ -2846,7 +2846,7 @@ static int nvme_resume(struct device *de
+ 	struct nvme_dev *ndev = pci_get_drvdata(to_pci_dev(dev));
+ 	struct nvme_ctrl *ctrl = &ndev->ctrl;
+ 
+-	if (pm_resume_via_firmware() || !ctrl->npss ||
++	if (ndev->last_ps == U32_MAX ||
+ 	    nvme_set_power_state(ctrl, ndev->last_ps) != 0)
+ 		nvme_reset_ctrl(ctrl);
+ 	return 0;
+@@ -2859,6 +2859,8 @@ static int nvme_suspend(struct device *d
+ 	struct nvme_ctrl *ctrl = &ndev->ctrl;
+ 	int ret = -EBUSY;
+ 
++	ndev->last_ps = U32_MAX;
++
+ 	/*
+ 	 * The platform does not remove power for a kernel managed suspend so
+ 	 * use host managed nvme power settings for lowest idle power if
+@@ -2866,8 +2868,14 @@ static int nvme_suspend(struct device *d
+ 	 * shutdown.  But if the firmware is involved after the suspend or the
+ 	 * device does not support any non-default power states, shut down the
+ 	 * device fully.
++	 *
++	 * If ASPM is not enabled for the device, shut down the device and allow
++	 * the PCI bus layer to put it into D3 in order to take the PCIe link
++	 * down, so as to allow the platform to achieve its minimum low-power
++	 * state (which may not be possible if the link is up).
+ 	 */
+-	if (pm_suspend_via_firmware() || !ctrl->npss) {
++	if (pm_suspend_via_firmware() || !ctrl->npss ||
++	    !pcie_aspm_enabled(pdev)) {
+ 		nvme_dev_disable(ndev, true);
+ 		return 0;
+ 	}
+@@ -2880,7 +2888,6 @@ static int nvme_suspend(struct device *d
+ 	    ctrl->state != NVME_CTRL_ADMIN_ONLY)
+ 		goto unfreeze;
+ 
+-	ndev->last_ps = 0;
+ 	ret = nvme_get_power_state(ctrl, &ndev->last_ps);
+ 	if (ret < 0)
+ 		goto unfreeze;
+
+
+
