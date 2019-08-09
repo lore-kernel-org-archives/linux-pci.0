@@ -2,289 +2,314 @@ Return-Path: <SRS0=qC1o=WF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F20D6C31E40
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Aug 2019 04:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E297C32756
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Aug 2019 04:47:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0E8321783
-	for <linux-pci@archiver.kernel.org>; Fri,  9 Aug 2019 04:47:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565326046;
-	bh=hTAPEGIi1rHhRPOY3ncsOaTkodoHhRTWzQqYvg7NJCA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=DGttMbWk755ZEWTwr6TrSSFbfT+t6F8fsdnwNXlustTqpvR9we+DLu1iPZPtJ9zlq
-	 e0zeK9435oupmV/LgboR4zhfO3fu37E9QZCC29aIlxu3TV4ycaP0Ta5xCSeQS9gMWn
-	 pjJtXnjKM4apcl2fTm4zuzeOG5HTawO+AePszSN8=
+	by mail.kernel.org (Postfix) with ESMTP id ECA1B21874
+	for <linux-pci@archiver.kernel.org>; Fri,  9 Aug 2019 04:47:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="U/V9ocqC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405084AbfHIEr0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 9 Aug 2019 00:47:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55492 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726025AbfHIErZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 9 Aug 2019 00:47:25 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4D9C22171F;
-        Fri,  9 Aug 2019 04:47:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565326044;
-        bh=hTAPEGIi1rHhRPOY3ncsOaTkodoHhRTWzQqYvg7NJCA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=lOoQAKfrVjndl7kGwd5L/STLDwnMsu6L8YiB/DDuctN5GlsX8KOUyj3jmPg/W/Wm+
-         6CnSV+1fv8bKLacwBT1+eIDQsYlVfzt5Mz6mYn/q9ZfKlU5FeGlzHVJlxjUOdo+Bvv
-         5G+k4nK3ld5mN6N+x0ic1JAF6jC1Mawlrmp6Bh2k=
-Date:   Thu, 8 Aug 2019 23:47:13 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-nvme <linux-nvme@lists.infradead.org>,
-        Keith Busch <kbusch@kernel.org>,
-        Mario Limonciello <Mario.Limonciello@dell.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Rajat Jain <rajatja@google.com>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] nvme-pci: Allow PCI bus-level PM to be used if
- ASPM is disabled
-Message-ID: <20190809044713.GD7302@google.com>
-References: <4323ed84dd07474eab65699b4d007aaf@AUSX13MPC105.AMER.DELL.COM>
- <20190731221956.GB15795@localhost.localdomain>
- <1921165.pTveHRX1Co@kreacher>
- <1870928.r7tBYyfqdz@kreacher>
- <20190808134356.GF151852@google.com>
- <CAJZ5v0h=nz8yXwOOGBUB9m1GtJPOqBwtNK7zXPNMJjzPhMWd9w@mail.gmail.com>
- <20190808183954.GG151852@google.com>
- <CAJZ5v0h95m=G2T_i7uSygK4H=VLH4Txte_ffKc5JBA33A=N76Q@mail.gmail.com>
+        id S2405533AbfHIEr2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 9 Aug 2019 00:47:28 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:10141 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726272AbfHIEr1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Aug 2019 00:47:27 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d4cfade0000>; Thu, 08 Aug 2019 21:47:26 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Thu, 08 Aug 2019 21:47:24 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Thu, 08 Aug 2019 21:47:24 -0700
+Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL104.nvidia.com
+ (172.18.146.11) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 9 Aug
+ 2019 04:47:24 +0000
+Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 9 Aug
+ 2019 04:47:23 +0000
+Received: from hqnvemgw01.nvidia.com (172.20.150.20) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Fri, 9 Aug 2019 04:47:23 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5d4cfad60000>; Thu, 08 Aug 2019 21:47:23 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
+        <kishon@ti.com>, <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>
+CC:     <digetx@gmail.com>, <mperttunen@nvidia.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
+Subject: [PATCH V15 10/13] dt-bindings: PCI: tegra: Add device tree support for Tegra194
+Date:   Fri, 9 Aug 2019 10:16:06 +0530
+Message-ID: <20190809044609.20401-11-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190809044609.20401-1-vidyas@nvidia.com>
+References: <20190809044609.20401-1-vidyas@nvidia.com>
+X-NVConfidentiality: public
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJZ5v0h95m=G2T_i7uSygK4H=VLH4Txte_ffKc5JBA33A=N76Q@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1565326046; bh=QOHCpPl/t3NeQpl2EISjzOb/f1tnkGymhyqkCMGS8j8=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
+         Content-Type;
+        b=U/V9ocqCQTNqMvj8j/QuKW1dop4+XHhzn53zu3NwVR0imwHGMwD5AS9zkj8VhcVet
+         CIFtVB0aru2bK1+hJgpEH71vTRzjgOIG+TFdo/wKlAa2xH3614jiFKi1kv21gXsvIY
+         tvfepdACfV3BcbPHKYROcXfnURh/kkFsVL+Lpojz96Bkj2GtrFv1A+eLacjEMBpu3N
+         wn8jw+nRCt9adic9X6qEstomrKiY3lu03T6MnuPTz43BXRJidtd9njW2A9NZWLLexH
+         SruYkbJQqH4C9d84/sM+DSWDC1xZRz7ROFAeFZ90bnA/bqzkqkYL4EpJac0TYIJQJR
+         doS96sdioy5BA==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 08, 2019 at 10:41:56PM +0200, Rafael J. Wysocki wrote:
-> On Thu, Aug 8, 2019, 20:39 Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Thu, Aug 08, 2019 at 04:47:45PM +0200, Rafael J. Wysocki wrote:
-> > > On Thu, Aug 8, 2019 at 3:43 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > On Thu, Aug 08, 2019 at 12:10:06PM +0200, Rafael J. Wysocki wrote:
-> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > >
-> > > > > One of the modifications made by commit d916b1be94b6 ("nvme-pci: use
-> > > > > host managed power state for suspend") was adding a pci_save_state()
-> > > > > call to nvme_suspend() in order to prevent the PCI bus-level PM from
-> > > > > being applied to the suspended NVMe devices, but if ASPM is not
-> > > > > enabled for the target NVMe device, that causes its PCIe link to stay
-> > > > > up and the platform may not be able to get into its optimum low-power
-> > > > > state because of that.
-> > > > >
-> > > > > For example, if ASPM is disabled for the NVMe drive (PC401 NVMe SK
-> > > > > hynix 256GB) in my Dell XPS13 9380, leaving it in D0 during
-> > > > > suspend-to-idle prevents the SoC from reaching package idle states
-> > > > > deeper than PC3, which is way insufficient for system suspend.
-> > > >
-> > > > Just curious: I assume the SoC you reference is some part of the NVMe
-> > > > drive?
-> > >
-> > > No, the SoC is what contains the Intel processor and PCH (formerly "chipset").
-> > >
-> > > > > To address this shortcoming, make nvme_suspend() check if ASPM is
-> > > > > enabled for the target device and fall back to full device shutdown
-> > > > > and PCI bus-level PM if that is not the case.
-> > > > >
-> > > > > Fixes: d916b1be94b6 ("nvme-pci: use host managed power state for suspend")
-> > > > > Link: https://lore.kernel.org/linux-pm/2763495.NmdaWeg79L@kreacher/T/#t
-> > > > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > ---
-> > > > >
-> > > > > -> v2:
-> > > > >   * Move the PCI/PCIe ASPM changes to a separate patch.
-> > > > >   * Do not add a redundant ndev->last_ps == U32_MAX check in nvme_suspend().
-> > > > >
-> > > > > ---
-> > > > >  drivers/nvme/host/pci.c |   13 ++++++++++---
-> > > > >  1 file changed, 10 insertions(+), 3 deletions(-)
-> > > > >
-> > > > > Index: linux-pm/drivers/nvme/host/pci.c
-> > > > > ===================================================================
-> > > > > --- linux-pm.orig/drivers/nvme/host/pci.c
-> > > > > +++ linux-pm/drivers/nvme/host/pci.c
-> > > > > @@ -2846,7 +2846,7 @@ static int nvme_resume(struct device *de
-> > > > >       struct nvme_dev *ndev = pci_get_drvdata(to_pci_dev(dev));
-> > > > >       struct nvme_ctrl *ctrl = &ndev->ctrl;
-> > > > >
-> > > > > -     if (pm_resume_via_firmware() || !ctrl->npss ||
-> > > > > +     if (ndev->last_ps == U32_MAX ||
-> > > > >           nvme_set_power_state(ctrl, ndev->last_ps) != 0)
-> > > > >               nvme_reset_ctrl(ctrl);
-> > > > >       return 0;
-> > > > > @@ -2859,6 +2859,8 @@ static int nvme_suspend(struct device *d
-> > > > >       struct nvme_ctrl *ctrl = &ndev->ctrl;
-> > > > >       int ret = -EBUSY;
-> > > > >
-> > > > > +     ndev->last_ps = U32_MAX;
-> > > > > +
-> > > > >       /*
-> > > > >        * The platform does not remove power for a kernel managed suspend so
-> > > > >        * use host managed nvme power settings for lowest idle power if
-> > > > > @@ -2866,8 +2868,14 @@ static int nvme_suspend(struct device *d
-> > > > >        * shutdown.  But if the firmware is involved after the suspend or the
-> > > > >        * device does not support any non-default power states, shut down the
-> > > > >        * device fully.
-> > > > > +      *
-> > > > > +      * If ASPM is not enabled for the device, shut down the device and allow
-> > > > > +      * the PCI bus layer to put it into D3 in order to take the PCIe link
-> > > > > +      * down, so as to allow the platform to achieve its minimum low-power
-> > > > > +      * state (which may not be possible if the link is up).
-> > > > >        */
-> > > > > -     if (pm_suspend_via_firmware() || !ctrl->npss) {
-> > > > > +     if (pm_suspend_via_firmware() || !ctrl->npss ||
-> > > > > +         !pcie_aspm_enabled_mask(pdev)) {
-> > > >
-> > > > This seems like a layering violation, in the sense that ASPM is
-> > > > supposed to be hardware-autonomous and invisible to software.
-> > >
-> > > But software has to enable it.
-> > >
-> > > If it is not enabled, it will not be used, and that's what the check
-> > > is about.
-> > >
-> > > > IIUC the NVMe device will go to the desired package idle state if
-> > > > the link is in L0s or L1, but not if the link is in L0.  I don't
-> > > > understand that connection; AFAIK that would be something outside
-> > > > the scope of the PCIe spec.
-> > >
-> > > Yes, it is outside of the PCIe spec.
-> > >
-> > > No, this is not about the NVMe device, it is about the Intel SoC
-> > > (System-on-a-Chip) the platform is based on.
-> >
-> > Ah.  So this problem could occur with any device, not just NVMe?  If
-> > so, how do you address that?  Obviously you don't want to patch all
-> > drivers this way.
-> 
-> It could, if the device was left in D0 during suspend, but drivers
-> don't let devices stay in D0 during suspend as a rule, so this is all
-> academic, except for the NVMe driver that has just started to do it in
-> 5.3-rc1.
-> 
-> It has started to do that becasuse of what can be regarded as a
-> hardware issue, but this does not even matter here.
-> 
-> > > The background really is commit d916b1be94b6 and its changelog is
-> > > kind of misleading, unfortunately.  What it did, among other things,
-> > > was to cause the NVMe driver to prevent the PCI bus type from
-> > > applying the standard PCI PM to the devices handled by it in the
-> > > suspend-to-idle flow.
-> >
-> > This is more meaningful to you than to most people because "applying
-> > the standard PCI PM" doesn't tell us what that means in terms of the
-> > device.  Presumably it has something to do with a D-state transition?
-> > I *assume* a suspend might involve the D0 -> D3hot transition you
-> > mention below?
-> 
-> By "standard PCI PM" I mean what pci_prepare_to_sleep() does. And yes,
-> in the vast majority of cases the device goes from D0 to D3hot then.
-> 
-> > > The reason for doing that was a (reportedly) widespread failure to
-> > > take the PCIe link down during D0 -> D3hot transitions of NVMe
-> > > devices,
-> >
-> > I don't know any of the details, but "failure to take the link down
-> > during D0 -> D3hot transitions" is phrased as though it might be a
-> > hardware erratum.  If this *is* related to an NVMe erratum, that would
-> > explain why you only need to patch the nvme driver, and it would be
-> > useful to mention that in the commit log, since otherwise it sounds
-> > like something that might be needed in other drivers, too.
-> 
-> Yes, that can be considered as an NVMe erratum and the NVMe driver has
-> been *already* patched because of that in 5.3-rc1. [That's the commit
-> mentioned in the changelog of the $subject patch.]
-> 
-> It effectively asks the PCI bus type to leave *all* devices handled by
-> it in D0 during suspend-to-idle.  Already today.
-> 
-> I hope that this clarifies the current situation. :-)
-> 
-> > According to PCIe r5.0 sec 5.3.2, the only legal link states for D3hot
-> > are L1, L2/L3 Ready.  So if you put a device in D3hot and its link
-> > stays in L0, that sounds like a defect.  Is that what happens?
-> 
-> For some devices that's what happens. For some other devices the state
-> of the link in D3hot appears to be L1 or L2/L3 Ready (as per the spec)
-> and that's when the $subject patch makes a difference.
-> ...
+Add support for Tegra194 PCIe controllers. These controllers are based
+on Synopsys DesignWare core IP.
 
-> Now, say an NVMe device works in accordance with the spec, so when it
-> goes from D0 to D3hot, its PCIe link goes into L1 or L2/L3 Ready.  As
-> of 5.3-rc1 or later it will be left in D0 during suspend-to-idle
-> (because that's how the NVMe driver works), so its link state will
-> depend on whether or not ASPM is enabled for it.  If ASPM is enabled
-> for it, the final state of its link will depend on how deep ASPM is
-> allowed to go, but if ASPM is not enabled for it, its link will remain
-> in L0.
-> 
-> This means, however, that by allowing that device to go into D3hot
-> when ASPM is not enabled for it, the energy used by the system while
-> suspended can be reduced, because the PCIe link of the device will
-> then go to L1 or L2/L3 Ready.  That's exactly what the $subject patch
-> does.
-> 
-> Is this still not convincing enough?
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Thierry Reding <treding@nvidia.com>
+---
+V15:
+* None
 
-It's not a matter of being convincing, it's a matter of dissecting and
-analyzing this far enough so it makes sense to someone who hasn't
-debugged the problem.  Since we're talking about ASPM being enabled,
-that really means making the connections to specific PCIe situations.
+V14:
+* None
 
-I'm not the nvme maintainer, so my only interest in this is that it
-was really hard for me to figure out how pcie_aspm_enabled() is
-related to pm_suspend_via_firmware() and ctrl->npss.
+V13:
+* None
 
-But I think it has finally percolated through.  Here's my
-understanding; see it has any connection with reality:
+V12:
+* None
 
-  Prior to d916b1be94b6 ("nvme-pci: use host managed power state for
-  suspend"), suspend always put the NVMe device in D3hot.
+V11:
+* None
 
-  After d916b1be94b6, when it's possible, suspend keeps the NVMe
-  device in D0 and uses NVMe-specific power settings because it's
-  faster to change those than to do D0 -> D3hot -> D0 transitions.
+V10:
+* None
 
-  When it's not possible (either the device doesn't support
-  NVMe-specific power settings or platform firmware has to be
-  involved), we use D3hot as before.
+V9:
+* Added Acked-by from Thierry
 
-  So now we have these three cases for suspending an NVMe device:
+V8:
+* Addressed review comments from Thierry
+* Modified DT example to reflect new changes
 
-    1  D0 + no ASPM + NVMe power setting
-    2  D0 +    ASPM + NVMe power setting
-    3  D3hot
+V7:
+* Changed description of the property "nvidia,bpmp".
+* Removed property "nvidia,disable-aspm-states".
 
-  Prior to d916b1be94b6, we always used case 3.  After d916b1be94b6,
-  we used case 1 or 2 whenever possible (we didn't know which).  Case
-  2 seemed acceptable, but the power consumption in case 1 was too
-  high.
+V6:
+* Removed 'max-link-speed' as it is going to be a common sub-system property
+* Removed 'nvidia,init-link-speed' as there isn't much value addition
+* Removed 'nvidia,wake-gpios' for now
+* Addressed review comments from Thierry and Rob in general
 
-  This patch ("nvme-pci: Allow PCI bus-level PM to be used if ASPM is
-  disabled") would replace case 1 with case 3 to reduce power
-  consumption.
+V5:
+* None
 
-AFAICT we don't have a way to compute the relative power consumption
-of these cases.  It's possible that even case 2 would use more power
-than case 3.  You can empirically determine that this patch makes the
-right trade-offs for the controllers you care about, but I don't think
-it's clear that this will *always* be the case, so in that sense I
-think pcie_aspm_enabled() is being used as part of a heuristic.
+V4:
+* None
 
-Bjorn
+V3:
+* Using only 'Cx' (x-being controller number) format to represent a controller
+* Changed to 'value: description' format where applicable
+* Changed 'nvidia,init-speed' to 'nvidia,init-link-speed'
+* Provided more documentation for 'nvidia,init-link-speed' property
+* Changed 'nvidia,pex-wake' to 'nvidia,wake-gpios'
+
+V2:
+* Added documentation for 'power-domains' property
+* Removed 'window1' and 'window2' properties
+* Removed '_clk' and '_rst' from clock and reset names
+* Dropped 'pcie' from phy-names
+* Added entry for BPMP-FW handle
+* Removed offsets for some of the registers and added them in code and would be pickedup based on
+  controller ID
+* Changed 'nvidia,max-speed' to 'max-link-speed' and is made as an optional
+* Changed 'nvidia,disable-clock-request' to 'supports-clkreq' with inverted operation
+* Added more documentation for 'nvidia,update-fc-fixup' property
+* Removed 'nvidia,enable-power-down' and 'nvidia,plat-gpios' properties
+* Added '-us' to all properties that represent time in microseconds
+* Moved P2U documentation to a separate file
+
+ .../bindings/pci/nvidia,tegra194-pcie.txt     | 155 ++++++++++++++++++
+ 1 file changed, 155 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+new file mode 100644
+index 000000000000..674e5adb2895
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+@@ -0,0 +1,155 @@
++NVIDIA Tegra PCIe controller (Synopsys DesignWare Core based)
++
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
++
++Required properties:
++- compatible: For Tegra19x, must contain "nvidia,tegra194-pcie".
++- device_type: Must be "pci"
++- power-domains: A phandle to the node that controls power to the respective
++  PCIe controller and a specifier name for the PCIe controller. Following are
++  the specifiers for the different PCIe controllers
++    TEGRA194_POWER_DOMAIN_PCIEX8B: C0
++    TEGRA194_POWER_DOMAIN_PCIEX1A: C1
++    TEGRA194_POWER_DOMAIN_PCIEX1A: C2
++    TEGRA194_POWER_DOMAIN_PCIEX1A: C3
++    TEGRA194_POWER_DOMAIN_PCIEX4A: C4
++    TEGRA194_POWER_DOMAIN_PCIEX8A: C5
++  these specifiers are defined in
++  "include/dt-bindings/power/tegra194-powergate.h" file.
++- reg: A list of physical base address and length pairs for each set of
++  controller registers. Must contain an entry for each entry in the reg-names
++  property.
++- reg-names: Must include the following entries:
++  "appl": Controller's application logic registers
++  "config": As per the definition in designware-pcie.txt
++  "atu_dma": iATU and DMA registers. This is where the iATU (internal Address
++             Translation Unit) registers of the PCIe core are made available
++             for SW access.
++  "dbi": The aperture where root port's own configuration registers are
++         available
++- interrupts: A list of interrupt outputs of the controller. Must contain an
++  entry for each entry in the interrupt-names property.
++- interrupt-names: Must include the following entries:
++  "intr": The Tegra interrupt that is asserted for controller interrupts
++  "msi": The Tegra interrupt that is asserted when an MSI is received
++- bus-range: Range of bus numbers associated with this controller
++- #address-cells: Address representation for root ports (must be 3)
++  - cell 0 specifies the bus and device numbers of the root port:
++    [23:16]: bus number
++    [15:11]: device number
++  - cell 1 denotes the upper 32 address bits and should be 0
++  - cell 2 contains the lower 32 address bits and is used to translate to the
++    CPU address space
++- #size-cells: Size representation for root ports (must be 2)
++- ranges: Describes the translation of addresses for root ports and standard
++  PCI regions. The entries must be 7 cells each, where the first three cells
++  correspond to the address as described for the #address-cells property
++  above, the fourth and fifth cells are for the physical CPU address to
++  translate to and the sixth and seventh cells are as described for the
++  #size-cells property above.
++  - Entries setup the mapping for the standard I/O, memory and
++    prefetchable PCI regions. The first cell determines the type of region
++    that is setup:
++    - 0x81000000: I/O memory region
++    - 0x82000000: non-prefetchable memory region
++    - 0xc2000000: prefetchable memory region
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
++- #interrupt-cells: Size representation for interrupts (must be 1)
++- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
++- clocks: Must contain an entry for each entry in clock-names.
++  See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++  - core
++- resets: Must contain an entry for each entry in reset-names.
++  See ../reset/reset.txt for details.
++- reset-names: Must include the following entries:
++  - apb
++  - core
++- phys: Must contain a phandle to P2U PHY for each entry in phy-names.
++- phy-names: Must include an entry for each active lane.
++  "p2u-N": where N ranges from 0 to one less than the total number of lanes
++- nvidia,bpmp: Must contain a pair of phandle to BPMP controller node followed
++  by controller-id. Following are the controller ids for each controller.
++    0: C0
++    1: C1
++    2: C2
++    3: C3
++    4: C4
++    5: C5
++- vddio-pex-ctl-supply: Regulator supply for PCIe side band signals
++
++Optional properties:
++- supports-clkreq: Refer to Documentation/devicetree/bindings/pci/pci.txt
++- nvidia,update-fc-fixup: This is a boolean property and needs to be present to
++    improve performance when a platform is designed in such a way that it
++    satisfies at least one of the following conditions thereby enabling root
++    port to exchange optimum number of FC (Flow Control) credits with
++    downstream devices
++    1. If C0/C4/C5 run at x1/x2 link widths (irrespective of speed and MPS)
++    2. If C0/C1/C2/C3/C4/C5 operate at their respective max link widths and
++       a) speed is Gen-2 and MPS is 256B
++       b) speed is >= Gen-3 with any MPS
++- nvidia,aspm-cmrt-us: Common Mode Restore Time for proper operation of ASPM
++   to be specified in microseconds
++- nvidia,aspm-pwr-on-t-us: Power On time for proper operation of ASPM to be
++   specified in microseconds
++- nvidia,aspm-l0s-entrance-latency-us: ASPM L0s entrance latency to be
++   specified in microseconds
++
++Examples:
++=========
++
++Tegra194:
++--------
++
++	pcie@14180000 {
++		compatible = "nvidia,tegra194-pcie", "snps,dw-pcie";
++		power-domains = <&bpmp TEGRA194_POWER_DOMAIN_PCIEX8B>;
++		reg = <0x00 0x14180000 0x0 0x00020000   /* appl registers (128K)      */
++		       0x00 0x38000000 0x0 0x00040000   /* configuration space (256K) */
++		       0x00 0x38040000 0x0 0x00040000>; /* iATU_DMA reg space (256K)  */
++		reg-names = "appl", "config", "atu_dma";
++
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		num-lanes = <8>;
++		linux,pci-domain = <0>;
++
++		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_0>;
++		clock-names = "core";
++
++		resets = <&bpmp TEGRA194_RESET_PEX0_CORE_0_APB>,
++			 <&bpmp TEGRA194_RESET_PEX0_CORE_0>;
++		reset-names = "apb", "core";
++
++		interrupts = <GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>,	/* controller interrupt */
++			     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>;	/* MSI interrupt */
++		interrupt-names = "intr", "msi";
++
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic GIC_SPI 72 IRQ_TYPE_LEVEL_HIGH>;
++
++		nvidia,bpmp = <&bpmp 0>;
++
++		supports-clkreq;
++		nvidia,aspm-cmrt-us = <60>;
++		nvidia,aspm-pwr-on-t-us = <20>;
++		nvidia,aspm-l0s-entrance-latency-us = <3>;
++
++		bus-range = <0x0 0xff>;
++		ranges = <0x81000000 0x0  0x38100000 0x0  0x38100000 0x0 0x00100000    /* downstream I/O (1MB) */
++			  0x82000000 0x0  0x38200000 0x0  0x38200000 0x0 0x01E00000    /* non-prefetchable memory (30MB) */
++			  0xc2000000 0x18 0x00000000 0x18 0x00000000 0x4 0x00000000>;  /* prefetchable memory (16GB) */
++
++		vddio-pex-ctl-supply = <&vdd_1v8ao>;
++
++		phys = <&p2u_hsio_2>, <&p2u_hsio_3>, <&p2u_hsio_4>,
++		       <&p2u_hsio_5>;
++		phy-names = "p2u-0", "p2u-1", "p2u-2", "p2u-3";
++	};
+-- 
+2.17.1
+
