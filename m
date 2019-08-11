@@ -2,55 +2,65 @@ Return-Path: <SRS0=olJ1=WH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30DD4C32757
-	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 13:30:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E747C0650F
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 15:08:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 083F7208C2
-	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 13:30:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AFFD2084C
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 15:08:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726231AbfHKNaD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 11 Aug 2019 09:30:03 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:35787 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726498AbfHKNaD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Aug 2019 09:30:03 -0400
-Received: by mail-wr1-f67.google.com with SMTP id k2so16451854wrq.2;
-        Sun, 11 Aug 2019 06:30:01 -0700 (PDT)
+        id S1726510AbfHKPIY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 11 Aug 2019 11:08:24 -0400
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:40989 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726424AbfHKPIY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Aug 2019 11:08:24 -0400
+Received: by mail-wr1-f66.google.com with SMTP id j16so228138wrr.8;
+        Sun, 11 Aug 2019 08:08:22 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=G7RJjZKxRQxu4CimQzXCh68b+FLqre0DDDhafOZHiPs=;
-        b=L2R4Vy4amndPV5w5qdiaTxE4lgNiT32vGto98AsuciwyPUx8m2pI7Sa3kDidzXaKBP
-         XC0ZFtvChEkMnA5eQGdbQKjXugJE8hH0GfGEczDmCf4qt7WPonJ3+KZ7MFaQxg5BdZM/
-         YnJnfysQAPl3QGEkqaDqjPR8gdSYX07xwMJa+hiMgiaF7hNnclh4zKllCmkCJUjn/Qp0
-         g2xyQ2SHc0FFKCohZjzwMtmHDEABJhiAUp5Wmac5oWxue+ChsXB3x7C/IS6co5g4+5Tp
-         ViWsWP70q7/3xJSwCG740dWVcpeFHEb1tvQH+3Ze2z5B7wG7eAYKdL87e4eRePzQSCMY
-         IK0w==
-X-Gm-Message-State: APjAAAUmAtbZhjuA9zPC2asRlVFu4Afr8QuOQmbuVzakV4Ejyhl0P6jL
-        E8tSfxRh/RfKWiyV46mQ608PnxBc
-X-Google-Smtp-Source: APXvYqz/IB6kwmeqzNMf2TlZgBeUQeqVzzT5hh8T5VV/UUob8b0rIYCl2J88EdKM1vYHPO7aj3JS8Q==
-X-Received: by 2002:a5d:4284:: with SMTP id k4mr31260226wrq.6.1565530201178;
-        Sun, 11 Aug 2019 06:30:01 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=eztnnIti2zE7e0S0pjOphceDUSBj3rZYDgwaHLj9EiY=;
+        b=V/20Cr/g1JzzFMSiYPMIXDrE7vJuebZ6OIFlW1U11OtVN3DT5FToE5wVKS1ws8iKOH
+         WcIgrjZU4zTU5oz1AnTVOdulUBt9dIN8Cj5+TBOMeCIrj929yKajdN0N+4MYPa5AfbFm
+         levHVHwFJRgjK5IabrVzUk5XxYIsDgRPeSln8lZB/Ks2TvUuCS9TTBLYWmhQHknPn8wH
+         T5iZ64b7oO6QigHUpZX0HQBdUEBk/Ocg76JNMlIodm2leBrchKTNQC5hDPESYL2ie7OL
+         3p0P4y+a5Bjy4esl/NoBx+AfU4N21bpPiR1sdy/EozhnSxv29/jGHmVk7U8nJFIV05LB
+         UY7Q==
+X-Gm-Message-State: APjAAAXM1nfD4XVH6N/OuyCUTkE4hJ9TEKdbHqMa+GzD4dqoc1rWQE1+
+        RGGLqrpNCbEQGMeSHDKKiK0=
+X-Google-Smtp-Source: APXvYqxCb++Qr8Ws4Ku93thYOXelVjwJo4E5ulzYs/K33i2U8jE7T9tJe4MIE3h+YcInT3hZfS6yPA==
+X-Received: by 2002:a05:6000:10c9:: with SMTP id b9mr22781411wrx.11.1565536101466;
+        Sun, 11 Aug 2019 08:08:21 -0700 (PDT)
 Received: from localhost.localdomain (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id o16sm13781463wrp.23.2019.08.11.06.30.00
+        by smtp.googlemail.com with ESMTPSA id y16sm227049408wrg.85.2019.08.11.08.08.19
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 11 Aug 2019 06:30:00 -0700 (PDT)
+        Sun, 11 Aug 2019 08:08:20 -0700 (PDT)
 From:   Denis Efremov <efremov@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Denis Efremov <efremov@linux.com>
-Subject: [PATCH 2/4] PCI: pciehp: Switch LED indicators with a single write
-Date:   Sun, 11 Aug 2019 16:29:43 +0300
-Message-Id: <20190811132945.12426-3-efremov@linux.com>
+Cc:     Denis Efremov <efremov@linux.com>,
+        Sebastian Ott <sebott@linux.ibm.com>,
+        Gerald Schaefer <gerald.schaefer@de.ibm.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        Alexandre Bounine <alex.bou9@gmail.com>,
+        Peter Jones <pjones@redhat.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        kvm@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        netdev@vger.kernel.org, x86@kernel.org, linux-s390@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/7] Add definition for the number of standard PCI BARs
+Date:   Sun, 11 Aug 2019 18:07:55 +0300
+Message-Id: <20190811150802.2418-1-efremov@linux.com>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190811132945.12426-1-efremov@linux.com>
-References: <20190811132945.12426-1-efremov@linux.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -58,79 +68,44 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch replaces all consecutive switches of power and attention
-indicators with pciehp_set_indicators() call. Thus, performing only
-single write to a register.
+Code that iterates over all standard PCI BARs typically uses
+PCI_STD_RESOURCE_END, but this is error-prone because it requires
+"i <= PCI_STD_RESOURCE_END" rather than something like
+"i < PCI_STD_NUM_BARS". We could add such a definition and use it the same
+way PCI_SRIOV_NUM_BARS is used. There is already the definition
+PCI_BAR_COUNT for s390 only. Thus, this patchset introduces it globally.
 
-Signed-off-by: Denis Efremov <efremov@linux.com>
----
- drivers/pci/hotplug/pciehp_ctrl.c | 14 +++++---------
- drivers/pci/hotplug/pciehp_hpc.c  |  3 +--
- 2 files changed, 6 insertions(+), 11 deletions(-)
+The patch is splitted into 7 parts for different drivers/subsystems for
+easy readability.
 
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index 631ced0ab28a..258a4060466d 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -42,8 +42,7 @@ static void set_slot_off(struct controller *ctrl)
- 		msleep(1000);
- 	}
- 
--	pciehp_green_led_off(ctrl);
--	pciehp_set_attention_status(ctrl, 1);
-+	pciehp_set_indicators(ctrl, PWR_OFF, ATTN_ON);
- }
- 
- /**
-@@ -90,8 +89,7 @@ static int board_added(struct controller *ctrl)
- 		}
- 	}
- 
--	pciehp_green_led_on(ctrl);
--	pciehp_set_attention_status(ctrl, 0);
-+	pciehp_set_indicators(ctrl, PWR_ON, ATTN_OFF);
- 	return 0;
- 
- err_exit:
-@@ -172,8 +170,7 @@ void pciehp_handle_button_press(struct controller *ctrl)
- 				  slot_name(ctrl));
- 		}
- 		/* blink green LED and turn off amber */
--		pciehp_green_led_blink(ctrl);
--		pciehp_set_attention_status(ctrl, 0);
-+		pciehp_set_indicators(ctrl, PWR_BLINK, ATTN_OFF);
- 		schedule_delayed_work(&ctrl->button_work, 5 * HZ);
- 		break;
- 	case BLINKINGOFF_STATE:
-@@ -187,12 +184,11 @@ void pciehp_handle_button_press(struct controller *ctrl)
- 		cancel_delayed_work(&ctrl->button_work);
- 		if (ctrl->state == BLINKINGOFF_STATE) {
- 			ctrl->state = ON_STATE;
--			pciehp_green_led_on(ctrl);
-+			pciehp_set_indicators(ctrl, PWR_ON, ATTN_OFF);
- 		} else {
- 			ctrl->state = OFF_STATE;
--			pciehp_green_led_off(ctrl);
-+			pciehp_set_indicators(ctrl, PWR_OFF, ATTN_OFF);
- 		}
--		pciehp_set_attention_status(ctrl, 0);
- 		ctrl_info(ctrl, "Slot(%s): Action canceled due to button press\n",
- 			  slot_name(ctrl));
- 		break;
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 027e3864f632..e90cb2152e8f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -687,8 +687,7 @@ static irqreturn_t pciehp_ist(int irq, void *dev_id)
- 	if ((events & PCI_EXP_SLTSTA_PFD) && !ctrl->power_fault_detected) {
- 		ctrl->power_fault_detected = 1;
- 		ctrl_err(ctrl, "Slot(%s): Power fault\n", slot_name(ctrl));
--		pciehp_set_attention_status(ctrl, 1);
--		pciehp_green_led_off(ctrl);
-+		pciehp_set_indicators(ctrl, PWR_OFF, ATTN_ON);
- 	}
- 
- 	/*
+Denis Efremov (7):
+  PCI: Add define for the number of standard PCI BARs
+  s390/pci: Replace PCI_BAR_COUNT with PCI_STD_NUM_BARS
+  x86/PCI: Use PCI_STD_NUM_BARS in loops instead of PCI_STD_RESOURCE_END
+  PCI/net: Use PCI_STD_NUM_BARS in loops instead of PCI_STD_RESOURCE_END
+  rapidio/tsi721: use PCI_STD_NUM_BARS in loops instead of
+    PCI_STD_RESOURCE_END
+  efifb: Use PCI_STD_NUM_BARS in loops instead of PCI_STD_RESOURCE_END
+  vfio_pci: Use PCI_STD_NUM_BARS in loops instead of
+    PCI_STD_RESOURCE_END
+
+ arch/s390/include/asm/pci.h                      |  5 +----
+ arch/s390/include/asm/pci_clp.h                  |  6 +++---
+ arch/s390/pci/pci.c                              | 16 ++++++++--------
+ arch/s390/pci/pci_clp.c                          |  6 +++---
+ arch/x86/pci/common.c                            |  2 +-
+ drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c |  4 ++--
+ drivers/net/ethernet/synopsys/dwc-xlgmac-pci.c   |  2 +-
+ drivers/pci/quirks.c                             |  2 +-
+ drivers/rapidio/devices/tsi721.c                 |  2 +-
+ drivers/vfio/pci/vfio_pci.c                      |  4 ++--
+ drivers/vfio/pci/vfio_pci_config.c               |  2 +-
+ drivers/vfio/pci/vfio_pci_private.h              |  4 ++--
+ drivers/video/fbdev/efifb.c                      |  2 +-
+ include/linux/pci.h                              |  2 +-
+ include/uapi/linux/pci_regs.h                    |  1 +
+ 15 files changed, 29 insertions(+), 31 deletions(-)
+
 -- 
 2.21.0
 
