@@ -6,47 +6,47 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAECBC433FF
-	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 13:30:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94159C0650F
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 13:30:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A3E02173C
-	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 13:30:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CCF4208C2
+	for <linux-pci@archiver.kernel.org>; Sun, 11 Aug 2019 13:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726481AbfHKNaB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 11 Aug 2019 09:30:01 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:42064 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726231AbfHKNaB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Aug 2019 09:30:01 -0400
-Received: by mail-wr1-f65.google.com with SMTP id b16so5586043wrq.9;
-        Sun, 11 Aug 2019 06:29:59 -0700 (PDT)
+        id S1726566AbfHKNaI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 11 Aug 2019 09:30:08 -0400
+Received: from mail-wr1-f43.google.com ([209.85.221.43]:38434 "EHLO
+        mail-wr1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726533AbfHKNaI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Aug 2019 09:30:08 -0400
+Received: by mail-wr1-f43.google.com with SMTP id g17so102289072wrr.5;
+        Sun, 11 Aug 2019 06:30:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0cps42fyqj86V0Z/vrM+UXoEo+pmBq/RuWxL57/l8xY=;
-        b=f6eM9ZFrzd6hlHJxicOHI0mu4gknZhtCAtgMzwPNzSVzdfVmLWq3O3THttkUre3QXo
-         DDByCVZr9ADN6gPC01DM3KqvHcoOgwiKTrXeeoTLgmphbQAUciroT6YPcWKoUiO9NINz
-         ikDz942Kg24AXB3ov6HSRLk+iWRNQuwY3MG4N9Vwuq77PaifjPyD83s3jqs4BfAIr/fX
-         GJMDYTNDbgeHV/rtB+AAuLO7L1a6SIXExunA8Ev7mZUe9L8Tx4GVXbvpD06l2vevHStd
-         7SagmJFdciH7naG6WcOk8E+NkllyrkeKxDmKyxhgV7Xezg+fmJpMN9adaZG2aZ0od+33
-         X+YA==
-X-Gm-Message-State: APjAAAXw8qGlXzty2c0p9Fu1pixr5fT72x7Wf9eN8mB2ef0TbNJzADtm
-        skpXEmSUF8Z2bdTuovf5Yxs=
-X-Google-Smtp-Source: APXvYqwASs9RyHUvT0Z72M67MgnzvJ5pqL0s2YV7utBq6LBBAbQD9u8qOUshNtKE0hmt5F0/TfwHjA==
-X-Received: by 2002:a5d:4b05:: with SMTP id v5mr10255007wrq.208.1565530198922;
-        Sun, 11 Aug 2019 06:29:58 -0700 (PDT)
+        bh=hNVysyJxaR9B9NBma6aE1tC35JgmHy+mk3/bCgcCQws=;
+        b=sa2Yys+RsMyS4Sifw4vBL6psj3wsAbF+YDzBELMLTrxhD4/fD2VQPU94qdcKCHWtQJ
+         IveEmMU55WBeZHRMWFNksKoYBCRIpAeNJ8XjqksnzrYBMFN56laRlaLSGBaFxz0ubU/h
+         5tQUntKEdGUsVIgB890ajZeTMboF5thCumvTAdUFZmsfWE63ExxrfROsGe96JQ2VpoNc
+         +J5HKlUrQXQ0rwg7sLlSHHacwuCSuM8nbZjOaByLAsSK5YgomSYs2ApnaObKtBh63uJD
+         89PCllLwolezQboSFCQ9pu8a/MTp+7S+56kxa80D/etj0j3tnXAhxfC2ltD77mMk++XS
+         ZvTg==
+X-Gm-Message-State: APjAAAUmZly4SdNoD/yZxB1RHU7LyDg1WRPOPKo9PMo79O37lGngWzAZ
+        SaqZGIDOkESNL5WMhgF6GAU=
+X-Google-Smtp-Source: APXvYqzInfGwNUDqfhxDZTIU84GdSNcPLZfAHujuGjCNOLziKaT3z0MjjDExGTpUYLn2OS25HK/mlw==
+X-Received: by 2002:adf:f206:: with SMTP id p6mr36660595wro.216.1565530205528;
+        Sun, 11 Aug 2019 06:30:05 -0700 (PDT)
 Received: from localhost.localdomain (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id o16sm13781463wrp.23.2019.08.11.06.29.58
+        by smtp.googlemail.com with ESMTPSA id o16sm13781463wrp.23.2019.08.11.06.30.04
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 11 Aug 2019 06:29:58 -0700 (PDT)
+        Sun, 11 Aug 2019 06:30:05 -0700 (PDT)
 From:   Denis Efremov <efremov@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Denis Efremov <efremov@linux.com>
-Subject: [PATCH 1/4] PCI: pciehp: Add pciehp_set_indicators() to jointly set LED indicators
-Date:   Sun, 11 Aug 2019 16:29:42 +0300
-Message-Id: <20190811132945.12426-2-efremov@linux.com>
+Subject: [PATCH 4/4] PCI: pciehp: Replace pciehp_green_led_{on,off,blink}()
+Date:   Sun, 11 Aug 2019 16:29:45 +0300
+Message-Id: <20190811132945.12426-5-efremov@linux.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190811132945.12426-1-efremov@linux.com>
 References: <20190811132945.12426-1-efremov@linux.com>
@@ -57,112 +57,92 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This commit adds pciehp_set_indicators() to set power and attention
-indicators with a single register write. enum pciehp_indicator
-introduced to switch between the indicators statuses. Attention
-indicator statuses are explicitly set with values in the enum to
-transparently comply with pciehp_set_attention_status() from
-pciehp_hpc.c and set_attention_status() from pciehp_core.c
+This patch replaces pciehp_green_led_{on,off,blink}() with
+pciehp_set_indicators().
 
 Signed-off-by: Denis Efremov <efremov@linux.com>
 ---
- drivers/pci/hotplug/pciehp.h     | 15 ++++++++++
- drivers/pci/hotplug/pciehp_hpc.c | 49 ++++++++++++++++++++++++++++++++
- 2 files changed, 64 insertions(+)
+ drivers/pci/hotplug/pciehp.h     | 12 ++++++++---
+ drivers/pci/hotplug/pciehp_hpc.c | 36 --------------------------------
+ 2 files changed, 9 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 8c51a04b8083..92ff65132711 100644
+index 01ea095aa533..7ae16ad1a8a7 100644
 --- a/drivers/pci/hotplug/pciehp.h
 +++ b/drivers/pci/hotplug/pciehp.h
-@@ -150,6 +150,18 @@ struct controller {
- #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
- #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
- 
-+enum pciehp_indicator {
-+	// Explicit values to match set_attention_status interface
-+	ATTN_NONE = -1,
-+	ATTN_OFF = 0,
-+	ATTN_ON = 1,
-+	ATTN_BLINK = 2,
-+	PWR_NONE,
-+	PWR_OFF,
-+	PWR_ON,
-+	PWR_BLINK
-+};
-+
- void pciehp_request(struct controller *ctrl, int action);
- void pciehp_handle_button_press(struct controller *ctrl);
- void pciehp_handle_disable_request(struct controller *ctrl);
-@@ -167,6 +179,9 @@ int pciehp_power_on_slot(struct controller *ctrl);
- void pciehp_power_off_slot(struct controller *ctrl);
- void pciehp_get_power_status(struct controller *ctrl, u8 *status);
- 
-+void pciehp_set_indicators(struct controller *ctrl,
-+			   enum pciehp_indicator pwr,
-+			   enum pciehp_indicator attn);
- void pciehp_set_attention_status(struct controller *ctrl, u8 status);
+@@ -184,9 +184,6 @@ void pciehp_set_indicators(struct controller *ctrl,
+ 			   enum pciehp_indicator attn);
  void pciehp_get_latch_status(struct controller *ctrl, u8 *status);
  int pciehp_query_power_fault(struct controller *ctrl);
+-void pciehp_green_led_on(struct controller *ctrl);
+-void pciehp_green_led_off(struct controller *ctrl);
+-void pciehp_green_led_blink(struct controller *ctrl);
+ bool pciehp_card_present(struct controller *ctrl);
+ bool pciehp_card_present_or_link_active(struct controller *ctrl);
+ int pciehp_check_link_status(struct controller *ctrl);
+@@ -203,6 +200,15 @@ int pciehp_get_raw_indicator_status(struct hotplug_slot *h_slot, u8 *status);
+ #define pciehp_set_attention_status(crtl, status) \
+ 	pciehp_set_indicators(ctrl, PWR_NONE, status)
+ 
++#define pciehp_green_led_on(ctrl) \
++	pciehp_set_indicators(ctrl, PWR_ON, ATTN_NONE)
++
++#define pciehp_green_led_off(ctrl) \
++	pciehp_set_indicators(ctrl, PWR_OFF, ATTN_NONE)
++
++#define pciehp_green_led_blink(ctrl) \
++	pciehp_set_indicators(ctrl, PWR_BLINK, ATTN_NONE)
++
+ static inline const char *slot_name(struct controller *ctrl)
+ {
+ 	return hotplug_slot_name(&ctrl->hotplug_slot);
 diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index bd990e3371e3..027e3864f632 100644
+index beff1120afef..13cc417493f8 100644
 --- a/drivers/pci/hotplug/pciehp_hpc.c
 +++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -443,6 +443,55 @@ void pciehp_set_attention_status(struct controller *ctrl, u8 value)
- 		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
+@@ -467,42 +467,6 @@ void pciehp_set_indicators(struct controller *ctrl,
+ 		 cmd);
  }
  
-+void pciehp_set_indicators(struct controller *ctrl,
-+			   enum pciehp_indicator pwr,
-+			   enum pciehp_indicator attn)
-+{
-+	u16 cmd = 0;
-+	bool pwr_none = (pwr == PWR_NONE);
-+	bool attn_none = (attn == ATTN_NONE);
-+	bool pwr_led = PWR_LED(ctrl);
-+	bool attn_led = ATTN_LED(ctrl);
-+
-+	if ((!pwr_led && !attn_led) || (pwr_none && attn_none) ||
-+	    (!attn_led && pwr_none) || (!pwr_led && attn_none))
-+		return;
-+
-+	switch (pwr) {
-+	case PWR_OFF:
-+		cmd = PCI_EXP_SLTCTL_PWR_IND_OFF;
-+		break;
-+	case PWR_ON:
-+		cmd = PCI_EXP_SLTCTL_PWR_IND_ON;
-+		break;
-+	case PWR_BLINK:
-+		cmd = PCI_EXP_SLTCTL_PWR_IND_BLINK;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	switch (attn) {
-+	case ATTN_OFF:
-+		cmd |= PCI_EXP_SLTCTL_ATTN_IND_OFF;
-+		break;
-+	case ATTN_ON:
-+		cmd |= PCI_EXP_SLTCTL_ATTN_IND_ON;
-+		break;
-+	case ATTN_BLINK:
-+		cmd |= PCI_EXP_SLTCTL_ATTN_IND_BLINK;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	pcie_write_cmd_nowait(ctrl, cmd,
-+			      PCI_EXP_SLTCTL_AIC | PCI_EXP_SLTCTL_PIC);
-+	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
-+		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-+		 cmd);
-+}
-+
- void pciehp_green_led_on(struct controller *ctrl)
+-void pciehp_green_led_on(struct controller *ctrl)
+-{
+-	if (!PWR_LED(ctrl))
+-		return;
+-
+-	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON,
+-			      PCI_EXP_SLTCTL_PIC);
+-	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+-		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+-		 PCI_EXP_SLTCTL_PWR_IND_ON);
+-}
+-
+-void pciehp_green_led_off(struct controller *ctrl)
+-{
+-	if (!PWR_LED(ctrl))
+-		return;
+-
+-	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF,
+-			      PCI_EXP_SLTCTL_PIC);
+-	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+-		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+-		 PCI_EXP_SLTCTL_PWR_IND_OFF);
+-}
+-
+-void pciehp_green_led_blink(struct controller *ctrl)
+-{
+-	if (!PWR_LED(ctrl))
+-		return;
+-
+-	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK,
+-			      PCI_EXP_SLTCTL_PIC);
+-	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+-		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+-		 PCI_EXP_SLTCTL_PWR_IND_BLINK);
+-}
+-
+ int pciehp_power_on_slot(struct controller *ctrl)
  {
- 	if (!PWR_LED(ctrl))
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
 -- 
 2.21.0
 
