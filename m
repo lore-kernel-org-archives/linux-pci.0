@@ -6,84 +6,72 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B014DC433FF
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 21:07:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC4CC31E40
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 21:14:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C3BC206C2
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 21:07:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B82CC206C2
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 21:14:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727278AbfHLVHg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Aug 2019 17:07:36 -0400
-Received: from mga06.intel.com ([134.134.136.31]:44251 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726663AbfHLVHg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Aug 2019 17:07:36 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Aug 2019 14:06:33 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,378,1559545200"; 
-   d="scan'208";a="180983819"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga006.jf.intel.com with ESMTP; 12 Aug 2019 14:06:33 -0700
-Received: from [10.54.74.33] (skuppusw-desk.jf.intel.com [10.54.74.33])
-        by linux.intel.com (Postfix) with ESMTP id A6A615806A0;
-        Mon, 12 Aug 2019 14:06:33 -0700 (PDT)
-Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: Re: [PATCH v2 1/4] PCI: pciehp: Add pciehp_set_indicators() to
- jointly set LED indicators
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Denis Efremov <efremov@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        id S1727099AbfHLVOM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Aug 2019 17:14:12 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:46954 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726718AbfHLVOL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Aug 2019 17:14:11 -0400
+Received: by mail-wr1-f68.google.com with SMTP id z1so105825295wru.13;
+        Mon, 12 Aug 2019 14:14:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Bf5EEMuQJ8I7zXlqZc3Yp5KPqhakmwIzRIocebTFYaU=;
+        b=U1Aii+r1L7INEQ4mV1DcH9a1kdVRZt4+F4vbpQgZU0z8irjyHxSCha6XBlzOwq+0hw
+         2KHjlGtr2OUXqO0nnqadVnx9hWDnQ/0TZ7eRpMcZdTEh6arUoclk3TSKsNIASZYh+UHr
+         V0Lrj2/zh+qIQjNURizwMrsHRoHlXzi3grvJR5HLzROv3ijs4paJfYk/E0K5sLssoCOF
+         kSEzFk/YPiw8gkTxl6fmqPKI66I1a4Cx5cqE26oaM2jgawArc7kaRJdKyD7L07Lee6NT
+         BDq7RKU8v8L4sK/3N/oCVIxotlZGif9sgWQoj+BGCNo/mB33UcT3xA9ZYHhdnPW6tSmG
+         q4lQ==
+X-Gm-Message-State: APjAAAWmxFFhjJvNO5OVXGXfKuWFnd9gnkRlCGVM1/mJrZP9IiRdVfbr
+        XeSmxSWnXVspfKenTA1z845lQoQQQc0=
+X-Google-Smtp-Source: APXvYqyHrCg/SBbpcO+GaWIgRY5ig1WwSB3MMB/3Y6y9/oYTpP1qN8QDTx92AfOmZD0bxVCA8BmrBQ==
+X-Received: by 2002:a5d:618d:: with SMTP id j13mr41944410wru.195.1565644449642;
+        Mon, 12 Aug 2019 14:14:09 -0700 (PDT)
+Received: from [10.68.32.192] (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
+        by smtp.gmail.com with ESMTPSA id n14sm209762486wra.75.2019.08.12.14.14.08
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Aug 2019 14:14:09 -0700 (PDT)
+Subject: Re: [PATCH v2 4/4] PCI: pciehp: Replace
+ pciehp_green_led_{on,off,blink}()
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
 References: <20190811195944.23765-1-efremov@linux.com>
- <20190811195944.23765-2-efremov@linux.com>
- <925a00be-c2b6-697d-d46b-a279856105b4@linux.intel.com>
- <d243b4e7-acd9-790f-9332-2654a908cf6e@linux.intel.com>
- <20190812204024.r54ihfwdcbwdj563@wunner.de>
-From:   sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>
-Organization: Intel
-Message-ID: <c9bb5e76-d6f6-9d59-d581-564e1385aa45@linux.intel.com>
-Date:   Mon, 12 Aug 2019 14:03:50 -0700
+ <20190811195944.23765-5-efremov@linux.com>
+ <20190812200330.GH11785@google.com>
+From:   Denis Efremov <efremov@linux.com>
+Message-ID: <b948bc25-e643-a43c-de70-136a041f13b1@linux.com>
+Date:   Tue, 13 Aug 2019 00:14:08 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190812204024.r54ihfwdcbwdj563@wunner.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20190812200330.GH11785@google.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+> You must have a reason, but why didn't you completely remove
+> pciehp_green_led_on(), etc, and change the callers to use
+> pciehp_set_indicators() instead?
 
-On 8/12/19 1:40 PM, Lukas Wunner wrote:
-> On Mon, Aug 12, 2019 at 11:49:23AM -0700, sathyanarayanan kuppuswamy wrote:
->>> On 8/11/19 12:59 PM, Denis Efremov wrote:
->>>> +    if ((!PWR_LED(ctrl)  || pwr  == PWR_NONE) &&
->>>> +        (!ATTN_LED(ctrl) || attn == ATTN_NONE))
->>>> +        return;
->> Also I think this condition needs to expand to handle the case whether pwr
->> != PWR_NONE and !PWR_LED(ctrl) is true.
->>
->> you need to return for case, pwr = PWR_ON, !PWR_LED(ctrl)=true ,
->> !ATTN_LED(ctrl)=false, attn=on
-> Why should we return in that case?  We need to update the Attention
-> Indicator Control to On.
+Well, I don't have the exact reason here. I thought that it would be nice to preserve
+an existing interface and to hide some implementation details (e.g., status of the
+second indicator). I could completely remove pciehp_green_led_{on,off,blink}() and
+pciehp_set_attention_status() in v3 if you prefer.
 
-Attempting to PWR_ON when !PWR_LED(ctrl) is true is incorrect right ? 
-Even if you don't want to return (to handle ATTN part of the function), 
-may be you should skip updating PWR mask and cmd for this case.
-
->
-> Thanks,
->
-> Lukas
->
--- 
-Sathyanarayanan Kuppuswamy
-Linux kernel developer
-
+Thanks, 
+Denis
