@@ -2,101 +2,185 @@ Return-Path: <SRS0=pqED=WI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DEF7C31E40
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:26:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29440C31E40
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:30:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 296CA20673
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:26:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 097252067D
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:30:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726479AbfHLR0v (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Aug 2019 13:26:51 -0400
-Received: from mga09.intel.com ([134.134.136.24]:24983 "EHLO mga09.intel.com"
+        id S1726267AbfHLRa5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Aug 2019 13:30:57 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:37724 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726457AbfHLR0v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Aug 2019 13:26:51 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Aug 2019 10:26:50 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,378,1559545200"; 
-   d="scan'208";a="259864026"
-Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.162])
-  by orsmga001.jf.intel.com with ESMTP; 12 Aug 2019 10:26:50 -0700
-Message-ID: <1565632084.7042.13.camel@intel.com>
-Subject: Re: [RFC V1 RESEND 2/6] PCI/MSI: Dynamic allocation of MSI-X
- vectors by group
-From:   Megha Dey <megha.dey@intel.com>
-To:     Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
-        jacob.jun.pan@linux.intel.com
-Date:   Mon, 12 Aug 2019 10:48:04 -0700
-In-Reply-To: <48a44ffc-4b5b-5eef-73de-020f1710c41e@arm.com>
-References: <1561162778-12669-1-git-send-email-megha.dey@linux.intel.com>
-         <1561162778-12669-3-git-send-email-megha.dey@linux.intel.com>
-         <alpine.DEB.2.21.1906280739100.32342@nanos.tec.linutronix.de>
-         <1565118316.2401.112.camel@intel.com>
-         <alpine.DEB.2.21.1908071525390.24014@nanos.tec.linutronix.de>
-         <48a44ffc-4b5b-5eef-73de-020f1710c41e@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.18.5.2-0ubuntu3.2 
-Mime-Version: 1.0
+        id S1725843AbfHLRa5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Aug 2019 13:30:57 -0400
+Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
+        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.89)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hxE9l-0002sX-OJ; Mon, 12 Aug 2019 11:30:55 -0600
+Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
+        (envelope-from <gunthorp@deltatee.com>)
+        id 1hxE9j-0002PI-2E; Mon, 12 Aug 2019 11:30:51 -0600
+From:   Logan Gunthorpe <logang@deltatee.com>
+To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Christian Koenig <Christian.Koenig@amd.com>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Eric Pilmore <epilmore@gigaio.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>
+Date:   Mon, 12 Aug 2019 11:30:38 -0600
+Message-Id: <20190812173048.9186-5-logang@deltatee.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190812173048.9186-1-logang@deltatee.com>
+References: <20190812173048.9186-1-logang@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 172.16.1.31
+X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, bhelgaas@google.com, hch@lst.de, jgg@mellanox.com, sagi@grimberg.me, kbusch@kernel.org, axboe@fb.com, dan.j.williams@intel.com, epilmore@gigaio.com, sbates@raithlin.com, logang@deltatee.com, Christian.Koenig@amd.com, christian.koenig@amd.com
+X-SA-Exim-Mail-From: gunthorp@deltatee.com
+Subject: [PATCH v3 04/14] PCI/P2PDMA: Factor out __upstream_bridge_distance()
+X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 2019-08-07 at 15:18 +0100, Marc Zyngier wrote:
-> On 07/08/2019 14:56, Thomas Gleixner wrote:
-> > 
-> > Megha,
-> > 
-> > On Tue, 6 Aug 2019, Megha Dey wrote:
-> > > 
-> > > On Sat, 2019-06-29 at 09:59 +0200, Thomas Gleixner wrote:
-> > > > 
-> > > > On Fri, 21 Jun 2019, Megha Dey wrote:
-> > > Totally agreed. The request to add a dynamic MSI-X infrastructure
-> > > came
-> > > from some driver teams internally and currently they do not have
-> > > bandwidth to come up with relevant test cases. <sigh>
-> > Hahahaha.
-> > 
-> > > 
-> > > But we hope that this patch set could serve as a precursor to the
-> > > interrupt message store (IMS) patch set, and we can use this
-> > > patch set
-> > > as the baseline for the IMS patches.
-> > If IMS needs the same functionality, then we need to think about it
-> > slightly differently because IMS is not necessarily tied to PCI.
-> >  
-> > IMS has some similarity to the ARM GIC ITS stuff IIRC, which
-> > already
-> > provides these things outside of PCI. Marc?
-> Indeed. We have MSI-like functionality almost everywhere, and make
-> heavy
-> use of the generic MSI framework. Platform-MSI is probably the most
-> generic example we have (it's the Far West transposed to MSIs).
-> 
-Ok I will have a look at the platform-msi code.
-> > 
-> > We probably need some generic infrastructure for this so PCI and
-> > everything
-> > else can use it.
-> Indeed. Overall, I'd like the concept of MSI on whatever bus to have
-> one
-> single behaviour across the board, as long as it makes sense for that
-> bus (nobody needs another PCI MultiMSI, for example).
+This is a prep patch to create a second level helper. There are no
+functional changes.
 
-Yeah, agreed.
-> 
-> Thanks,
-> 
-> 	M.
+The root complex whitelist code will be moved into this function in a
+subsequent patch.
+
+Link: https://lore.kernel.org/r/20190730163545.4915-5-logang@deltatee.com
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/p2pdma.c | 88 ++++++++++++++++++++++++--------------------
+ 1 file changed, 48 insertions(+), 40 deletions(-)
+
+diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
+index 8f0688201aec..600ba6a7aa11 100644
+--- a/drivers/pci/p2pdma.c
++++ b/drivers/pci/p2pdma.c
+@@ -296,47 +296,8 @@ static bool root_complex_whitelist(struct pci_dev *dev)
+ 	return false;
+ }
+ 
+-/*
+- * Find the distance through the nearest common upstream bridge between
+- * two PCI devices.
+- *
+- * If the two devices are the same device then 0 will be returned.
+- *
+- * If there are two virtual functions of the same device behind the same
+- * bridge port then 2 will be returned (one step down to the PCIe switch,
+- * then one step back to the same device).
+- *
+- * In the case where two devices are connected to the same PCIe switch, the
+- * value 4 will be returned. This corresponds to the following PCI tree:
+- *
+- *     -+  Root Port
+- *      \+ Switch Upstream Port
+- *       +-+ Switch Downstream Port
+- *       + \- Device A
+- *       \-+ Switch Downstream Port
+- *         \- Device B
+- *
+- * The distance is 4 because we traverse from Device A through the downstream
+- * port of the switch, to the common upstream port, back up to the second
+- * downstream port and then to Device B.
+- *
+- * Any two devices that cannot communicate using p2pdma will return
+- * PCI_P2PDMA_MAP_NOT_SUPPORTED.
+- *
+- * Any two devices that have a data path that goes through the host bridge
+- * will consult a whitelist. If the host bridges are on the whitelist,
+- * this function will return PCI_P2PDMA_MAP_THRU_HOST_BRIDGE.
+- *
+- * If either bridge is not on the whitelist this function returns
+- * PCI_P2PDMA_MAP_NOT_SUPPORTED.
+- *
+- * If a bridge which has any ACS redirection bits set is in the path,
+- * acs_redirects will be set to true. In this case, a list of all infringing
+- * bridge addresses will be populated in acs_list (assuming it's non-null)
+- * for printk purposes.
+- */
+ static enum pci_p2pdma_map_type
+-upstream_bridge_distance(struct pci_dev *provider, struct pci_dev *client,
++__upstream_bridge_distance(struct pci_dev *provider, struct pci_dev *client,
+ 		int *dist, bool *acs_redirects, struct seq_buf *acs_list)
+ {
+ 	struct pci_dev *a = provider, *b = client, *bb;
+@@ -416,6 +377,53 @@ upstream_bridge_distance(struct pci_dev *provider, struct pci_dev *client,
+ 	return PCI_P2PDMA_MAP_BUS_ADDR;
+ }
+ 
++/*
++ * Find the distance through the nearest common upstream bridge between
++ * two PCI devices.
++ *
++ * If the two devices are the same device then 0 will be returned.
++ *
++ * If there are two virtual functions of the same device behind the same
++ * bridge port then 2 will be returned (one step down to the PCIe switch,
++ * then one step back to the same device).
++ *
++ * In the case where two devices are connected to the same PCIe switch, the
++ * value 4 will be returned. This corresponds to the following PCI tree:
++ *
++ *     -+  Root Port
++ *      \+ Switch Upstream Port
++ *       +-+ Switch Downstream Port
++ *       + \- Device A
++ *       \-+ Switch Downstream Port
++ *         \- Device B
++ *
++ * The distance is 4 because we traverse from Device A through the downstream
++ * port of the switch, to the common upstream port, back up to the second
++ * downstream port and then to Device B.
++ *
++ * Any two devices that cannot communicate using p2pdma will return
++ * PCI_P2PDMA_MAP_NOT_SUPPORTED.
++ *
++ * Any two devices that have a data path that goes through the host bridge
++ * will consult a whitelist. If the host bridges are on the whitelist,
++ * this function will return PCI_P2PDMA_MAP_THRU_HOST_BRIDGE.
++ *
++ * If either bridge is not on the whitelist this function returns
++ * PCI_P2PDMA_MAP_NOT_SUPPORTED.
++ *
++ * If a bridge which has any ACS redirection bits set is in the path,
++ * acs_redirects will be set to true. In this case, a list of all infringing
++ * bridge addresses will be populated in acs_list (assuming it's non-null)
++ * for printk purposes.
++ */
++static enum pci_p2pdma_map_type
++upstream_bridge_distance(struct pci_dev *provider, struct pci_dev *client,
++		int *dist, bool *acs_redirects, struct seq_buf *acs_list)
++{
++	return __upstream_bridge_distance(provider, client, dist,
++					  acs_redirects, acs_list);
++}
++
+ static enum pci_p2pdma_map_type
+ upstream_bridge_distance_warn(struct pci_dev *provider, struct pci_dev *client,
+ 			      int *dist)
+-- 
+2.20.1
+
