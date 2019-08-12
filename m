@@ -2,183 +2,121 @@ Return-Path: <SRS0=pqED=WI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC497C31E40
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:31:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F1EC433FF
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:34:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EF3721744
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:31:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 750B02067D
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 17:34:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726889AbfHLRbw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Aug 2019 13:31:52 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:37740 "EHLO ale.deltatee.com"
+        id S1727248AbfHLReV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Aug 2019 13:34:21 -0400
+Received: from mga06.intel.com ([134.134.136.31]:26428 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725843AbfHLRa6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Aug 2019 13:30:58 -0400
-Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
-        by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.89)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hxE9l-0002sc-OC; Mon, 12 Aug 2019 11:30:56 -0600
-Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
-        (envelope-from <gunthorp@deltatee.com>)
-        id 1hxE9j-0002PX-Hv; Mon, 12 Aug 2019 11:30:51 -0600
-From:   Logan Gunthorpe <logang@deltatee.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Christian Koenig <Christian.Koenig@amd.com>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@fb.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Eric Pilmore <epilmore@gigaio.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date:   Mon, 12 Aug 2019 11:30:43 -0600
-Message-Id: <20190812173048.9186-10-logang@deltatee.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190812173048.9186-1-logang@deltatee.com>
-References: <20190812173048.9186-1-logang@deltatee.com>
-MIME-Version: 1.0
+        id S1726267AbfHLReV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Aug 2019 13:34:21 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga104.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Aug 2019 10:33:35 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,378,1559545200"; 
+   d="scan'208";a="376025887"
+Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.162])
+  by fmsmga006.fm.intel.com with ESMTP; 12 Aug 2019 10:33:35 -0700
+Message-ID: <1565632489.7042.17.camel@intel.com>
+Subject: Re: [RFC V1 RESEND 2/6] PCI/MSI: Dynamic allocation of MSI-X
+ vectors by group
+From:   Megha Dey <megha.dey@intel.com>
+To:     Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <marc.zyngier@arm.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ashok.raj@intel.com,
+        jacob.jun.pan@linux.intel.com
+Date:   Mon, 12 Aug 2019 10:54:49 -0700
+In-Reply-To: <alpine.DEB.2.21.1908110919310.7324@nanos.tec.linutronix.de>
+References: <1561162778-12669-1-git-send-email-megha.dey@linux.intel.com>
+         <1561162778-12669-3-git-send-email-megha.dey@linux.intel.com>
+         <alpine.DEB.2.21.1906280739100.32342@nanos.tec.linutronix.de>
+         <1565118316.2401.112.camel@intel.com>
+         <alpine.DEB.2.21.1908071525390.24014@nanos.tec.linutronix.de>
+         <48a44ffc-4b5b-5eef-73de-020f1710c41e@arm.com>
+         <alpine.DEB.2.21.1908110919310.7324@nanos.tec.linutronix.de>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.18.5.2-0ubuntu3.2 
+Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 172.16.1.31
-X-SA-Exim-Rcpt-To: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, bhelgaas@google.com, hch@lst.de, Christian.Koenig@amd.com, jgg@mellanox.com, sagi@grimberg.me, kbusch@kernel.org, axboe@fb.com, dan.j.williams@intel.com, epilmore@gigaio.com, sbates@raithlin.com, logang@deltatee.com
-X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v3 09/14] PCI/P2PDMA: Introduce pci_p2pdma_unmap_sg()
-X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add pci_p2pdma_unmap_sg() to the two places that call pci_p2pdma_map_sg().
+On Sun, 2019-08-11 at 09:20 +0200, Thomas Gleixner wrote:
+> On Wed, 7 Aug 2019, Marc Zyngier wrote:
+> > 
+> > On 07/08/2019 14:56, Thomas Gleixner wrote:
+> > > 
+> > > On Tue, 6 Aug 2019, Megha Dey wrote:
+> > > > 
+> > > > On Sat, 2019-06-29 at 09:59 +0200, Thomas Gleixner wrote:
+> > > > > 
+> > > > > On Fri, 21 Jun 2019, Megha Dey wrote:
+> > > > Totally agreed. The request to add a dynamic MSI-X
+> > > > infrastructure came
+> > > > from some driver teams internally and currently they do not
+> > > > have
+> > > > bandwidth to come up with relevant test cases. <sigh>
+> > > Hahahaha.
+> > > 
+> > > > 
+> > > > But we hope that this patch set could serve as a precursor to
+> > > > the
+> > > > interrupt message store (IMS) patch set, and we can use this
+> > > > patch set
+> > > > as the baseline for the IMS patches.
+> > > If IMS needs the same functionality, then we need to think about
+> > > it
+> > > slightly differently because IMS is not necessarily tied to PCI.
+> > >  
+> > > IMS has some similarity to the ARM GIC ITS stuff IIRC, which
+> > > already
+> > > provides these things outside of PCI. Marc?
+> > Indeed. We have MSI-like functionality almost everywhere, and make
+> > heavy
+> > use of the generic MSI framework. Platform-MSI is probably the most
+> > generic example we have (it's the Far West transposed to MSIs).
+> > 
+> > > 
+> > > We probably need some generic infrastructure for this so PCI and
+> > > everything
+> > > else can use it.
+> > Indeed. Overall, I'd like the concept of MSI on whatever bus to
+> > have one
+> > single behaviour across the board, as long as it makes sense for
+> > that
+> > bus (nobody needs another PCI MultiMSI, for example).
+> Right.
+> 
+> @Intel: Is there documentation and perhaps early code for that IMS
+> muck to
+> 	look at?
 
-This is a prep patch to introduce correct mappings for p2pdma transactions
-that go through the root complex.
+Hi Thomas,
 
-Link: https://lore.kernel.org/r/20190730163545.4915-10-logang@deltatee.com
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/infiniband/core/rw.c |  6 ++++--
- drivers/nvme/host/pci.c      |  6 ++++--
- drivers/pci/p2pdma.c         | 18 +++++++++++++++++-
- include/linux/pci-p2pdma.h   | 13 +++++++++++++
- 4 files changed, 38 insertions(+), 5 deletions(-)
+We have some early documentation on IMS which can be found here (part
+of the Scalable I/O Virtualization spec):
 
-diff --git a/drivers/infiniband/core/rw.c b/drivers/infiniband/core/rw.c
-index dce06108c8c3..5337393d4dfe 100644
---- a/drivers/infiniband/core/rw.c
-+++ b/drivers/infiniband/core/rw.c
-@@ -583,8 +583,10 @@ void rdma_rw_ctx_destroy(struct rdma_rw_ctx *ctx, struct ib_qp *qp, u8 port_num,
- 		break;
- 	}
- 
--	/* P2PDMA contexts do not need to be unmapped */
--	if (!is_pci_p2pdma_page(sg_page(sg)))
-+	if (is_pci_p2pdma_page(sg_page(sg)))
-+		pci_p2pdma_unmap_sg(qp->pd->device->dma_device, sg,
-+				    sg_cnt, dir);
-+	else
- 		ib_dma_unmap_sg(qp->pd->device, sg, sg_cnt, dir);
- }
- EXPORT_SYMBOL(rdma_rw_ctx_destroy);
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index f97bb031228a..0f92cca7a860 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -547,8 +547,10 @@ static void nvme_unmap_data(struct nvme_dev *dev, struct request *req)
- 
- 	WARN_ON_ONCE(!iod->nents);
- 
--	/* P2PDMA requests do not need to be unmapped */
--	if (!is_pci_p2pdma_page(sg_page(iod->sg)))
-+	if (is_pci_p2pdma_page(sg_page(iod->sg)))
-+		pci_p2pdma_unmap_sg(dev->dev, iod->sg, iod->nents,
-+				    rq_dma_dir(req));
-+	else
- 		dma_unmap_sg(dev->dev, iod->sg, iod->nents, rq_dma_dir(req));
- 
- 
-diff --git a/drivers/pci/p2pdma.c b/drivers/pci/p2pdma.c
-index 94fbacbcbbd0..1eec7a5ec27e 100644
---- a/drivers/pci/p2pdma.c
-+++ b/drivers/pci/p2pdma.c
-@@ -800,7 +800,8 @@ EXPORT_SYMBOL_GPL(pci_p2pmem_publish);
-  * @dir: DMA direction
-  * @attrs: DMA attributes passed to dma_map_sg() (if called)
-  *
-- * Scatterlists mapped with this function should not be unmapped in any way.
-+ * Scatterlists mapped with this function should be unmapped using
-+ * pci_p2pdma_unmap_sg_attrs().
-  *
-  * Returns the number of SG entries mapped or 0 on error.
-  */
-@@ -834,6 +835,21 @@ int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
- }
- EXPORT_SYMBOL_GPL(pci_p2pdma_map_sg_attrs);
- 
-+/**
-+ * pci_p2pdma_unmap_sg - unmap a PCI peer-to-peer scatterlist that was
-+ *	mapped with pci_p2pdma_map_sg()
-+ * @dev: device doing the DMA request
-+ * @sg: scatter list to map
-+ * @nents: number of elements returned by pci_p2pdma_map_sg()
-+ * @dir: DMA direction
-+ * @attrs: DMA attributes passed to dma_unmap_sg() (if called)
-+ */
-+void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
-+		int nents, enum dma_data_direction dir, unsigned long attrs)
-+{
-+}
-+EXPORT_SYMBOL_GPL(pci_p2pdma_unmap_sg_attrs);
-+
- /**
-  * pci_p2pdma_enable_store - parse a configfs/sysfs attribute store
-  *		to enable p2pdma
-diff --git a/include/linux/pci-p2pdma.h b/include/linux/pci-p2pdma.h
-index 7fd51954f93a..8318a97c9c61 100644
---- a/include/linux/pci-p2pdma.h
-+++ b/include/linux/pci-p2pdma.h
-@@ -32,6 +32,8 @@ void pci_p2pmem_free_sgl(struct pci_dev *pdev, struct scatterlist *sgl);
- void pci_p2pmem_publish(struct pci_dev *pdev, bool publish);
- int pci_p2pdma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
- 		int nents, enum dma_data_direction dir, unsigned long attrs);
-+void pci_p2pdma_unmap_sg_attrs(struct device *dev, struct scatterlist *sg,
-+		int nents, enum dma_data_direction dir, unsigned long attrs);
- int pci_p2pdma_enable_store(const char *page, struct pci_dev **p2p_dev,
- 			    bool *use_p2pdma);
- ssize_t pci_p2pdma_enable_show(char *page, struct pci_dev *p2p_dev,
-@@ -87,6 +89,11 @@ static inline int pci_p2pdma_map_sg_attrs(struct device *dev,
- {
- 	return 0;
- }
-+static inline void pci_p2pdma_unmap_sg_attrs(struct device *dev,
-+		struct scatterlist *sg, int nents, enum dma_data_direction dir,
-+		unsigned long attrs)
-+{
-+}
- static inline int pci_p2pdma_enable_store(const char *page,
- 		struct pci_dev **p2p_dev, bool *use_p2pdma)
- {
-@@ -118,4 +125,10 @@ static inline int pci_p2pdma_map_sg(struct device *dev, struct scatterlist *sg,
- 	return pci_p2pdma_map_sg_attrs(dev, sg, nents, dir, 0);
- }
- 
-+static inline void pci_p2pdma_unmap_sg(struct device *dev,
-+		struct scatterlist *sg, int nents, enum dma_data_direction dir)
-+{
-+	pci_p2pdma_unmap_sg_attrs(dev, sg, nents, dir, 0);
-+}
-+
- #endif /* _LINUX_PCI_P2P_H */
--- 
-2.20.1
+https://software.intel.com/sites/default/files/managed/cc/0e/intel-scal
+able-io-virtualization-technical-specification.pdf
+(Section 3.4.1)
 
+Also, I do have some initial IMS patches that we use internally for
+testing. I will clean it up and send it as an RFC patchset shortly.
+ 
+> 
+> Thanks,
+> 
+> 	tglx
