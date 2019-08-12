@@ -2,155 +2,303 @@ Return-Path: <SRS0=pqED=WI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE46AC433FF
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 13:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81779C31E40
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 14:31:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5B5A206C2
-	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 13:50:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="Iyrstbs2"
+	by mail.kernel.org (Postfix) with ESMTP id 4F9CE206DF
+	for <linux-pci@archiver.kernel.org>; Mon, 12 Aug 2019 14:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727136AbfHLNui (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 12 Aug 2019 09:50:38 -0400
-Received: from mail-eopbgr710137.outbound.protection.outlook.com ([40.107.71.137]:63312
-        "EHLO NAM05-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726703AbfHLNui (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Aug 2019 09:50:38 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eZwGpaqW3SgBGnRpnqQASy5kn1L6yj/aL0RtCopPBiFH6KaMADLNgUyMXXzGokNcPbT1rDNtgaaZ+NSABgXp19TlMM8ZGxgFe6Rvo2jXYL290j6+m/D37y86CDH5Jx3PqqwGy/Urt3cQQvlvbZ44cKZlONWl41k0+c/zuTTlurLcCVA+DePy54ENo6sehNkLZ8Cba+hvFXCv9rjBX8sX8Tf0OFOCcsemaTEuNThaEhMvBCH7lxVeXrgu3kB1aVSL363ghOEyh95uUO7M56zkiBtELeP1iPwtCwIS74vCE/jgXxefyemGYNd0A4DegzXf0o5zrGfQZJybc/1ybZJ6kQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NKwUl+iop+1fNOpIzXHF6+hYJuY8PEvgxiYMLDEmtsM=;
- b=gP/MXZ4YmmDIKotmkqSP5ZfK5bWHnNerOpcWsFSjklW95264gQNHvKurpeFufglABIwQMCDjRTHLBGs6Wc045YPs3h8f6EtOwohXRbxN0DqIfFikFrT1XWV6wR/zpomak+Boq3xigCqpgcbtVuPDkf/EVUouHK3ztHNyyCwxuSC3OiLTAiWBMgxezh9W4+DLbDz4myw21RmnQezvy3jHYb/xmJYfQ1UKdGvjC/nN5CwKZmqzRoFIZU2Jszu+P19uDguayIjmMyE46i1PaZKY0YIdcrqQRJayEajR8jxKEnC0bfnkoVicEQji/jbKLZRyRVn37JzOKr2fISqQj88P+A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=NKwUl+iop+1fNOpIzXHF6+hYJuY8PEvgxiYMLDEmtsM=;
- b=Iyrstbs2tF47TLljC5nVUnaqBI1JnceYTxVi81xjHklqW8QivXyvUJbf53InibFl3/n+eCtjnaQC8m8H5ZajDkDLnz9lFdYDE9WFMpqGsWwUsrBM+XymG0HrvMMj/AWX3KpsxBgHucE47PyJthFlyLH1ZNQ+MpzJMSswu6Wvvds=
-Received: from DM6PR21MB1337.namprd21.prod.outlook.com (20.179.53.80) by
- DM6PR21MB1419.namprd21.prod.outlook.com (10.255.109.83) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2199.4; Mon, 12 Aug 2019 13:50:35 +0000
-Received: from DM6PR21MB1337.namprd21.prod.outlook.com
- ([fe80::257a:6f7f:1126:a61d]) by DM6PR21MB1337.namprd21.prod.outlook.com
- ([fe80::257a:6f7f:1126:a61d%6]) with mapi id 15.20.2178.006; Mon, 12 Aug 2019
- 13:50:35 +0000
-From:   Haiyang Zhang <haiyangz@microsoft.com>
-To:     "sashal@kernel.org" <sashal@kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC:     KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>, vkuznets <vkuznets@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v2] PCI: hv: Detect and fix Hyper-V PCI domain number
- collision
-Thread-Topic: [PATCH v2] PCI: hv: Detect and fix Hyper-V PCI domain number
- collision
-Thread-Index: AQHVTLH3GagQ2bG1NUyV/+P043l1Z6b3j4iA
-Date:   Mon, 12 Aug 2019 13:50:34 +0000
-Message-ID: <DM6PR21MB13379DCB3007D728204A0D8CCAD30@DM6PR21MB1337.namprd21.prod.outlook.com>
-References: <1565135484-31351-1-git-send-email-haiyangz@microsoft.com>
-In-Reply-To: <1565135484-31351-1-git-send-email-haiyangz@microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=haiyangz@microsoft.com;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-08-12T13:50:33.2405330Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
- Information Protection;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=0327dcd0-4e67-4d5d-98c4-e691d1eeb84b;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=haiyangz@microsoft.com; 
-x-originating-ip: [96.61.92.94]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e308908a-44fa-499b-fe00-08d71f2c0cce
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600158)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:DM6PR21MB1419;
-x-ms-traffictypediagnostic: DM6PR21MB1419:|DM6PR21MB1419:
-x-ms-exchange-transport-forked: True
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <DM6PR21MB1419A06A6327F53B67CB1DF0CAD30@DM6PR21MB1419.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-forefront-prvs: 012792EC17
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(376002)(396003)(39860400002)(366004)(346002)(199004)(189003)(13464003)(33656002)(2501003)(8676002)(9686003)(99286004)(7736002)(25786009)(256004)(26005)(2201001)(66446008)(6506007)(66476007)(66946007)(229853002)(53546011)(64756008)(66556008)(86362001)(55016002)(478600001)(53936002)(102836004)(446003)(11346002)(6246003)(305945005)(476003)(76116006)(6116002)(186003)(3846002)(14454004)(486006)(8990500004)(74316002)(316002)(7696005)(2906002)(8936002)(76176011)(10290500003)(22452003)(6436002)(110136005)(10090500001)(52536014)(54906003)(66066001)(81156014)(81166006)(14444005)(5660300002)(4326008)(71190400001)(71200400001);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR21MB1419;H:DM6PR21MB1337.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: +7LK/9RweCkxRgOgeGWeGZ0W8BQZJHJ1j2KfRDlHsxkrdfWAiPNPOg1ySWU0yrAKsumeLuXcUwD9oSFxIolmEEpq9uR7c72fC7AdN0QHfNuQ1sCe3r/CPLQJQsJlzMlVA0P+4ybz2fyH03svuAX77KDodUguwf4msX2CM9J0lAhwqa47H/6QG08/0eBWQC/NvkI0mvLru6QLMqkoLrQ92Nj2gxSWQ0COymRCutT4PREsxSCsMCaLeg1jwf2Gx/wXdE4ptJxDYWjC/K4dzsfdvFach39um3HG4i29bzicV2aKWEt5Dbr2GJ4rzRYpSuJu4g73Cs1qlv0R0555pAMV/DAhG5Pw4GeKjqCwL/Nt4hNsZmr84YUxowh//vmp5LTjKTrHvuAmpX2miXCV2e1Ni05ximfAk6KDTsyXVBC/mcQ=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1726817AbfHLObh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 12 Aug 2019 10:31:37 -0400
+Received: from mga01.intel.com ([192.55.52.88]:37102 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726296AbfHLObh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Aug 2019 10:31:37 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Aug 2019 07:31:37 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,377,1559545200"; 
+   d="scan'208";a="200152174"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga004.fm.intel.com with ESMTP; 12 Aug 2019 07:31:34 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 9604111C; Mon, 12 Aug 2019 17:31:33 +0300 (EEST)
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Frederick Lawler <fred@fredlawl.com>,
+        "Gustavo A . R . Silva" <gustavo@embeddedor.com>,
+        Sinan Kaya <okaya@kernel.org>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/2] PCI: pciehp: Prevent deadlock on disconnect
+Date:   Mon, 12 Aug 2019 17:31:33 +0300
+Message-Id: <20190812143133.75319-2-mika.westerberg@linux.intel.com>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190812143133.75319-1-mika.westerberg@linux.intel.com>
+References: <20190812143133.75319-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e308908a-44fa-499b-fe00-08d71f2c0cce
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Aug 2019 13:50:34.8027
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: U1Xo4KBgVIcO9uCsgX+g+YeBFhxabdv/0Ykw1pfqs9d010S9pXRjmiusfmoCy8o7fhkCxLblXCnYYnu5pE7Nmg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR21MB1419
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+If there are more than one PCIe switch with hotplug downstream ports
+hot-removing them leads to a following deadlock:
 
+ INFO: task irq/126-pciehp:198 blocked for more than 120 seconds.
+ "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+ irq/126-pciehp  D    0   198      2 0x80000000
+ Call Trace:
+  __schedule+0x2a2/0x880
+  schedule+0x2c/0x80
+  schedule_timeout+0x246/0x350
+  ? ttwu_do_activate+0x67/0x90
+  wait_for_completion+0xb7/0x140
+  ? wake_up_q+0x80/0x80
+  kthread_stop+0x49/0x110
+  __free_irq+0x15c/0x2a0
+  free_irq+0x32/0x70
+  pcie_shutdown_notification+0x2f/0x50
+  pciehp_remove+0x27/0x50
+  pcie_port_remove_service+0x36/0x50
+  device_release_driver_internal+0x18c/0x250
+  device_release_driver+0x12/0x20
+  bus_remove_device+0xec/0x160
+  device_del+0x13b/0x350
+  ? pcie_port_find_device+0x60/0x60
+  device_unregister+0x1a/0x60
+  remove_iter+0x1e/0x30
+  device_for_each_child+0x56/0x90
+  pcie_port_device_remove+0x22/0x40
+  pcie_portdrv_remove+0x20/0x60
+  pci_device_remove+0x3e/0xc0
+  device_release_driver_internal+0x18c/0x250
+  device_release_driver+0x12/0x20
+  pci_stop_bus_device+0x6f/0x90
+  pci_stop_bus_device+0x31/0x90
+  pci_stop_and_remove_bus_device+0x12/0x20
+  pciehp_unconfigure_device+0x88/0x140
+  pciehp_disable_slot+0x6a/0x110
+  pciehp_handle_presence_or_link_change+0x263/0x400
+  pciehp_ist+0x1c9/0x1d0
+  ? irq_forced_thread_fn+0x80/0x80
+  irq_thread_fn+0x24/0x60
+  irq_thread+0xeb/0x190
+  ? irq_thread_fn+0x60/0x60
+  kthread+0x120/0x140
+  ? irq_thread_check_affinity+0xf0/0xf0
+  ? kthread_park+0x90/0x90
+  ret_from_fork+0x35/0x40
+ INFO: task irq/190-pciehp:2288 blocked for more than 120 seconds.
+ irq/190-pciehp  D    0  2288      2 0x80000000
+ Call Trace:
+  __schedule+0x2a2/0x880
+  schedule+0x2c/0x80
+  schedule_preempt_disabled+0xe/0x10
+  __mutex_lock.isra.9+0x2e0/0x4d0
+  ? __mutex_lock_slowpath+0x13/0x20
+  __mutex_lock_slowpath+0x13/0x20
+  mutex_lock+0x2c/0x30
+  pci_lock_rescan_remove+0x15/0x20
+  pciehp_unconfigure_device+0x4d/0x140
+  pciehp_disable_slot+0x6a/0x110
+  pciehp_handle_presence_or_link_change+0x263/0x400
+  pciehp_ist+0x1c9/0x1d0
+  ? irq_forced_thread_fn+0x80/0x80
+  irq_thread_fn+0x24/0x60
+  irq_thread+0xeb/0x190
+  ? irq_thread_fn+0x60/0x60
+  kthread+0x120/0x140
+  ? irq_thread_check_affinity+0xf0/0xf0
+  ? kthread_park+0x90/0x90
+  ret_from_fork+0x35/0x40
 
-> -----Original Message-----
-> From: LKML haiyangz <lkmlhyz@microsoft.com> On Behalf Of Haiyang
-> Zhang
-> Sent: Tuesday, August 6, 2019 7:52 PM
-> To: sashal@kernel.org; bhelgaas@google.com; lorenzo.pieralisi@arm.com;
-> linux-hyperv@vger.kernel.org; linux-pci@vger.kernel.org
-> Cc: Haiyang Zhang <haiyangz@microsoft.com>; KY Srinivasan
-> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> olaf@aepfle.de; vkuznets <vkuznets@redhat.com>; linux-
-> kernel@vger.kernel.org
-> Subject: [PATCH v2] PCI: hv: Detect and fix Hyper-V PCI domain number
-> collision
->=20
-> Currently in Azure cloud, for passthrough devices including GPU, the
-> host sets the device instance ID's bytes 8 - 15 to a value derived from
-> the host HWID, which is the same on all devices in a VM. So, the device
-> instance ID's bytes 8 and 9 provided by the host are no longer unique.
->=20
-> This can cause device passthrough to VMs to fail because the bytes 8 and
-> 9 is used as PCI domain number. So, as recommended by Azure host team,
-> we now use the bytes 4 and 5 which usually contain unique numbers as PCI
-> domain. The chance of collision is greatly reduced. In the rare cases of
-> collision, we will detect and find another number that is not in use.
->=20
-> Thanks to Michael Kelley <mikelley@microsoft.com> for proposing this idea=
-.
->=20
-> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
-> Acked-by: Sasha Levin <sashal@kernel.org>
-> ---
->  drivers/pci/controller/pci-hyperv.c | 92
+What happens here is that the whole hierarchy is runtime resumed and the
+parent PCIe downstream port, who got the hot-remove event, starts
+removing devices below it taking pci_lock_rescan_remove() lock. When the
+child PCIe port is runtime resumed it calls pciehp_check_presence()
+which ends up calling pciehp_card_present() and pciehp_check_link_active().
+Both of these read their parts of PCIe config space by calling helper
+function pcie_capability_read_word(). Now, this function notices that
+the underlying device is already gone and returns PCIBIOS_DEVICE_NOT_FOUND
+with the capability value set to 0. When pciehp gets this value it
+thinks that its child device is also hot-removed and schedules its IRQ
+thread to handle the event.
 
-Hi Lorenzo,
+The deadlock happens when the child's IRQ thread runs and tries to
+acquire pci_lock_rescan_remove() which is already taken by the parent
+and the parent waits for the child's IRQ thread to finish.
 
-This patch has been updated based on Bjorn's comments. Do you have any furt=
-her
-comments? Could you take it from your tree?
+We can prevent this from happening by checking the return value of
+pcie_capability_read_word() and if it is PCIBIOS_DEVICE_NOT_FOUND stop
+performing any hot-removal activities.
 
-Thanks,
-- Haiyang
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+No changes from the previous version.
+
+ drivers/pci/hotplug/pciehp.h      |  6 +++---
+ drivers/pci/hotplug/pciehp_core.c | 11 ++++++++---
+ drivers/pci/hotplug/pciehp_ctrl.c |  4 ++--
+ drivers/pci/hotplug/pciehp_hpc.c  | 32 +++++++++++++++++++++++--------
+ 4 files changed, 37 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+index 8c51a04b8083..81c514ab9518 100644
+--- a/drivers/pci/hotplug/pciehp.h
++++ b/drivers/pci/hotplug/pciehp.h
+@@ -173,10 +173,10 @@ int pciehp_query_power_fault(struct controller *ctrl);
+ void pciehp_green_led_on(struct controller *ctrl);
+ void pciehp_green_led_off(struct controller *ctrl);
+ void pciehp_green_led_blink(struct controller *ctrl);
+-bool pciehp_card_present(struct controller *ctrl);
+-bool pciehp_card_present_or_link_active(struct controller *ctrl);
++int pciehp_card_present(struct controller *ctrl);
++int pciehp_card_present_or_link_active(struct controller *ctrl);
+ int pciehp_check_link_status(struct controller *ctrl);
+-bool pciehp_check_link_active(struct controller *ctrl);
++int pciehp_check_link_active(struct controller *ctrl);
+ void pciehp_release_ctrl(struct controller *ctrl);
+ 
+ int pciehp_sysfs_enable_slot(struct hotplug_slot *hotplug_slot);
+diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
+index e9f82afa3773..4c032d75c874 100644
+--- a/drivers/pci/hotplug/pciehp_core.c
++++ b/drivers/pci/hotplug/pciehp_core.c
+@@ -134,10 +134,15 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+ {
+ 	struct controller *ctrl = to_ctrl(hotplug_slot);
+ 	struct pci_dev *pdev = ctrl->pcie->port;
++	int ret;
+ 
+ 	pci_config_pm_runtime_get(pdev);
+-	*value = pciehp_card_present_or_link_active(ctrl);
++	ret = pciehp_card_present_or_link_active(ctrl);
+ 	pci_config_pm_runtime_put(pdev);
++	if (ret < 0)
++		return ret;
++
++	*value = ret;
+ 	return 0;
+ }
+ 
+@@ -153,13 +158,13 @@ static int get_adapter_status(struct hotplug_slot *hotplug_slot, u8 *value)
+  */
+ static void pciehp_check_presence(struct controller *ctrl)
+ {
+-	bool occupied;
++	int occupied;
+ 
+ 	down_read(&ctrl->reset_lock);
+ 	mutex_lock(&ctrl->state_lock);
+ 
+ 	occupied = pciehp_card_present_or_link_active(ctrl);
+-	if ((occupied && (ctrl->state == OFF_STATE ||
++	if ((occupied > 0 && (ctrl->state == OFF_STATE ||
+ 			  ctrl->state == BLINKINGON_STATE)) ||
+ 	    (!occupied && (ctrl->state == ON_STATE ||
+ 			   ctrl->state == BLINKINGOFF_STATE)))
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index 631ced0ab28a..5a433cc8621f 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -221,7 +221,7 @@ void pciehp_handle_disable_request(struct controller *ctrl)
+ 
+ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ {
+-	bool present, link_active;
++	int present, link_active;
+ 
+ 	/*
+ 	 * If the slot is on and presence or link has changed, turn it off.
+@@ -252,7 +252,7 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
+ 	mutex_lock(&ctrl->state_lock);
+ 	present = pciehp_card_present(ctrl);
+ 	link_active = pciehp_check_link_active(ctrl);
+-	if (!present && !link_active) {
++	if (present <= 0 && link_active <= 0) {
+ 		mutex_unlock(&ctrl->state_lock);
+ 		return;
+ 	}
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index bd990e3371e3..1f918b043adb 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -201,13 +201,16 @@ static void pcie_write_cmd_nowait(struct controller *ctrl, u16 cmd, u16 mask)
+ 	pcie_do_write_cmd(ctrl, cmd, mask, false);
+ }
+ 
+-bool pciehp_check_link_active(struct controller *ctrl)
++int pciehp_check_link_active(struct controller *ctrl)
+ {
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 lnk_status;
+-	bool ret;
++	int ret;
++
++	ret = pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++	if (ret == PCIBIOS_DEVICE_NOT_FOUND)
++		return -ENODEV;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+ 	ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
+ 
+ 	if (ret)
+@@ -373,13 +376,17 @@ void pciehp_get_latch_status(struct controller *ctrl, u8 *status)
+ 	*status = !!(slot_status & PCI_EXP_SLTSTA_MRLSS);
+ }
+ 
+-bool pciehp_card_present(struct controller *ctrl)
++int pciehp_card_present(struct controller *ctrl)
+ {
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+ 	u16 slot_status;
++	int ret;
+ 
+-	pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
+-	return slot_status & PCI_EXP_SLTSTA_PDS;
++	ret = pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
++	if (ret == PCIBIOS_DEVICE_NOT_FOUND)
++		return -ENODEV;
++
++	return !!(slot_status & PCI_EXP_SLTSTA_PDS);
+ }
+ 
+ /**
+@@ -390,10 +397,19 @@ bool pciehp_card_present(struct controller *ctrl)
+  * Presence Detect State bit, this helper also returns true if the Link Active
+  * bit is set.  This is a concession to broken hotplug ports which hardwire
+  * Presence Detect State to zero, such as Wilocity's [1ae9:0200].
++ *
++ * Returns: %1 if the slot is occupied and %0 if it is not. If the hotplug
++ *	    port is not present anymore returns %-ENODEV.
+  */
+-bool pciehp_card_present_or_link_active(struct controller *ctrl)
++int pciehp_card_present_or_link_active(struct controller *ctrl)
+ {
+-	return pciehp_card_present(ctrl) || pciehp_check_link_active(ctrl);
++	int ret;
++
++	ret = pciehp_card_present(ctrl);
++	if (ret)
++		return ret;
++
++	return pciehp_check_link_active(ctrl);
+ }
+ 
+ int pciehp_query_power_fault(struct controller *ctrl)
+-- 
+2.20.1
+
