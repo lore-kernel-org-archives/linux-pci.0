@@ -2,251 +2,337 @@ Return-Path: <SRS0=CpGT=WJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C49EAC32750
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 20:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49EBDC32750
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 22:22:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8ED4D20840
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 20:58:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Wxmh8QBc"
+	by mail.kernel.org (Postfix) with ESMTP id 0CA18206C2
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 22:22:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726555AbfHMU5u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Aug 2019 16:57:50 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:43497 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725903AbfHMU5u (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2019 16:57:50 -0400
-Received: by mail-ot1-f66.google.com with SMTP id e12so33067147otp.10;
-        Tue, 13 Aug 2019 13:57:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=CpiXTLPXXQGHgJOKOBWt0ZcsXIMyK8oTJKWg0lsyFmY=;
-        b=Wxmh8QBcva6vlwx0djbFqhijlZgrPF0bHrQVcEWJSggIEU8RLP0goOWe/4PZgNKQcz
-         V/VyPU00sqaRilMUlZl/K12RefjlxP4gEWY3dDZhS3OFUc8eZh3iyna92yb7CTbH5gKQ
-         C4g1pnszZv/xpg//gLup1hgXYiPLTlz3/bqUG4dq7u+K4RAmKJyiiJip/tfOkBqNrNVT
-         9EEERkl+F7N9N7U03YwygXCy/lZo4ZU7WCUjwkt8ndnUik1YdWD6n5KkrMtfd7yhIbmZ
-         YlEwduWmXK0VKpLzsGJouYKikPLjd54pza19B/zTN2zuDzeU7L36Gkoj5XMaIcuQ++xc
-         zaMA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=CpiXTLPXXQGHgJOKOBWt0ZcsXIMyK8oTJKWg0lsyFmY=;
-        b=hqxPNvfT4H6OGRCIP81f8eRWqOU1/4/HAXGE35hfAGz/UZprW48n6C5dFDRoq6GJa/
-         pMo8JX9xXHcS1qykBx98qlyvv11Jd/2/RZL7Tdjwqnu8JFkjZTirGhacE5jSgkTNq/Kp
-         WQW3L14S01Ez8EVwy2jcfwKnhTKahjFG4Jh5U+f/z38WNP+ARSbCKtZ0dW+53sLpvSyN
-         NK+ka7tkpWruuCXMxxzILWPcHqq7NTezOazmYpD6OIOXGRDe0Ca4rCqQkVWG7rFMO4v2
-         RFoHOrkdoEenl6rmNhJ10MiaHbMbpNlFve3AAalTTvi3NTuZAgCy4p9Xlz6IgBpbWN3j
-         pvcQ==
-X-Gm-Message-State: APjAAAWG4Cw0wmQkFaQ10SM8j+ouEEv77lzX1fpr7hcsJZxVF2D79L8c
-        Jrsuibbc44Rab7FhBnRQSMYJ7DZMDz0Xig==
-X-Google-Smtp-Source: APXvYqz0nlvlLWTTUhe3U4BFuHEl5gvUo+d5z+dssFN+VI+a/clRFpxxfizlHcFbwupXZD8Su5LFSw==
-X-Received: by 2002:a5d:994b:: with SMTP id v11mr42293837ios.165.1565729868741;
-        Tue, 13 Aug 2019 13:57:48 -0700 (PDT)
-Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id y25sm12874419iol.59.2019.08.13.13.57.47
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 13 Aug 2019 13:57:48 -0700 (PDT)
-From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
-To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     skhan@linuxfoundation.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        skunberg.kelsey@gmail.com
-Subject: [PATCH v2 1/3] PCI: sysfs: Define device attributes with DEVICE_ATTR*()
-Date:   Tue, 13 Aug 2019 14:45:11 -0600
-Message-Id: <20190813204513.4790-2-skunberg.kelsey@gmail.com>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190813204513.4790-1-skunberg.kelsey@gmail.com>
-References: <20190809195721.34237-1-skunberg.kelsey@gmail.com>
- <20190813204513.4790-1-skunberg.kelsey@gmail.com>
+        id S1726533AbfHMWWn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Aug 2019 18:22:43 -0400
+Received: from mga11.intel.com ([192.55.52.93]:14199 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726275AbfHMWWn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Aug 2019 18:22:43 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 13 Aug 2019 15:22:42 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,382,1559545200"; 
+   d="scan'208";a="194289843"
+Received: from skuppusw-desk.jf.intel.com (HELO skuppusw-desk.amr.corp.intel.com) ([10.54.74.33])
+  by fmsmga001.fm.intel.com with ESMTP; 13 Aug 2019 15:22:42 -0700
+Date:   Tue, 13 Aug 2019 15:19:58 -0700
+From:   Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ashok.raj@intel.com, keith.busch@intel.com
+Subject: Re: [PATCH v5 5/7] PCI/ATS: Add PASID support for PCIe VF devices
+Message-ID: <20190813221958.GA139211@skuppusw-desk.amr.corp.intel.com>
+Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
+References: <cover.1564702313.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <d10b5f08212a42c4a710ec649bffe082599dbb46.1564702313.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20190812200508.GM11785@google.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190812200508.GM11785@google.com>
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Defining device attributes should be done through the helper
-DEVICE_ATTR*(_name, _mode, _show, _store). Change all instances using
-__ATTR*() to now use DEVICE_ATTR*().
+On Mon, Aug 12, 2019 at 03:05:08PM -0500, Bjorn Helgaas wrote:
+> On Thu, Aug 01, 2019 at 05:06:02PM -0700, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
+> > From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> > 
+> > When IOMMU tries to enable PASID for VF device in
+> > iommu_enable_dev_iotlb(), it always fails because PASID support for PCIe
+> > VF device is currently broken in PCIE driver. Current implementation
+> > expects the given PCIe device (PF & VF) to implement PASID capability
+> > before enabling the PASID support. But this assumption is incorrect. As
+> > per PCIe spec r4.0, sec 9.3.7.14, all VFs associated with PF can only
+> > use the PASID of the PF and not implement it.
+> > 
+> > Also, since PASID is a shared resource between PF/VF, following rules
+> > should apply.
+> > 
+> > 1. Use proper locking before accessing/modifying PF resources in VF
+> >    PASID enable/disable call.
+> > 2. Use reference count logic to track the usage of PASID resource.
+> > 3. Disable PASID only if the PASID reference count (pasid_ref_cnt) is zero.
+> > 
+> > Cc: Ashok Raj <ashok.raj@intel.com>
+> > Cc: Keith Busch <keith.busch@intel.com>
+> > Suggested-by: Ashok Raj <ashok.raj@intel.com>
+> > Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> > ---
+> >  drivers/pci/ats.c   | 113 ++++++++++++++++++++++++++++++++++----------
+> >  include/linux/pci.h |   2 +
+> >  2 files changed, 90 insertions(+), 25 deletions(-)
+> > 
+> > diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> > index 079dc5444444..9384afd7d00e 100644
+> > --- a/drivers/pci/ats.c
+> > +++ b/drivers/pci/ats.c
+> > @@ -402,6 +402,8 @@ void pci_pasid_init(struct pci_dev *pdev)
+> >  	if (pdev->is_virtfn)
+> >  		return;
+> >  
+> > +	mutex_init(&pdev->pasid_lock);
+> > +
+> >  	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PASID);
+> >  	if (!pos)
+> >  		return;
+> > @@ -436,32 +438,57 @@ void pci_pasid_init(struct pci_dev *pdev)
+> >  int pci_enable_pasid(struct pci_dev *pdev, int features)
+> >  {
+> >  	u16 control, supported;
+> > +	int ret = 0;
+> > +	struct pci_dev *pf = pci_physfn(pdev);
+> >  
+> > -	if (WARN_ON(pdev->pasid_enabled))
+> > -		return -EBUSY;
+> > +	mutex_lock(&pf->pasid_lock);
+> >  
+> > -	if (!pdev->eetlp_prefix_path)
+> > -		return -EINVAL;
+> > +	if (WARN_ON(pdev->pasid_enabled)) {
+> > +		ret = -EBUSY;
+> > +		goto pasid_unlock;
+> > +	}
+> >  
+> > -	if (!pdev->pasid_cap)
+> > -		return -EINVAL;
+> > +	if (!pdev->eetlp_prefix_path) {
+> > +		ret = -EINVAL;
+> > +		goto pasid_unlock;
+> > +	}
+> >  
+> > -	pci_read_config_word(pdev, pdev->pasid_cap + PCI_PASID_CAP,
+> > -			     &supported);
+> > +	if (!pf->pasid_cap) {
+> > +		ret = -EINVAL;
+> > +		goto pasid_unlock;
+> > +	}
+> > +
+> > +	if (pdev->is_virtfn && pf->pasid_enabled)
+> > +		goto update_status;
+> > +
+> > +	pci_read_config_word(pf, pf->pasid_cap + PCI_PASID_CAP, &supported);
+> >  	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
+> >  
+> >  	/* User wants to enable anything unsupported? */
+> > -	if ((supported & features) != features)
+> > -		return -EINVAL;
+> > +	if ((supported & features) != features) {
+> > +		ret = -EINVAL;
+> > +		goto pasid_unlock;
+> > +	}
+> >  
+> >  	control = PCI_PASID_CTRL_ENABLE | features;
+> > -	pdev->pasid_features = features;
+> > -
+> > +	pf->pasid_features = features;
+> >  	pci_write_config_word(pdev, pdev->pasid_cap + PCI_PASID_CTRL, control);
+> >  
+> > -	pdev->pasid_enabled = 1;
+> > +	/*
+> > +	 * If PASID is not already enabled in PF, increment pasid_ref_cnt
+> > +	 * to count PF PASID usage.
+> > +	 */
+> > +	if (pdev->is_virtfn && !pf->pasid_enabled) {
+> > +		atomic_inc(&pf->pasid_ref_cnt);
+> > +		pf->pasid_enabled = 1;
+> > +	}
+> >  
+> > -	return 0;
+> > +update_status:
+> > +	atomic_inc(&pf->pasid_ref_cnt);
+> > +	pdev->pasid_enabled = 1;
+> > +pasid_unlock:
+> > +	mutex_unlock(&pf->pasid_lock);
+> > +	return ret;
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_enable_pasid);
+> >  
+> > @@ -472,16 +499,29 @@ EXPORT_SYMBOL_GPL(pci_enable_pasid);
+> >  void pci_disable_pasid(struct pci_dev *pdev)
+> >  {
+> >  	u16 control = 0;
+> > +	struct pci_dev *pf = pci_physfn(pdev);
+> > +
+> > +	mutex_lock(&pf->pasid_lock);
+> >  
+> >  	if (WARN_ON(!pdev->pasid_enabled))
+> > -		return;
+> > +		goto pasid_unlock;
+> >  
+> > -	if (!pdev->pasid_cap)
+> > -		return;
+> > +	if (!pf->pasid_cap)
+> > +		goto pasid_unlock;
+> >  
+> > -	pci_write_config_word(pdev, pdev->pasid_cap + PCI_PASID_CTRL, control);
+> > +	atomic_dec(&pf->pasid_ref_cnt);
+> >  
+> > +	if (atomic_read(&pf->pasid_ref_cnt))
+> > +		goto done;
+> > +
+> > +	/* Disable PASID only if pasid_ref_cnt is zero */
+> > +	pci_write_config_word(pf, pf->pasid_cap + PCI_PASID_CTRL, control);
+> > +
+> > +done:
+> >  	pdev->pasid_enabled = 0;
+> > +pasid_unlock:
+> > +	mutex_unlock(&pf->pasid_lock);
+> > +
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_disable_pasid);
+> >  
+> > @@ -492,15 +532,25 @@ EXPORT_SYMBOL_GPL(pci_disable_pasid);
+> >  void pci_restore_pasid_state(struct pci_dev *pdev)
+> >  {
+> >  	u16 control;
+> > +	struct pci_dev *pf = pci_physfn(pdev);
+> >  
+> >  	if (!pdev->pasid_enabled)
+> >  		return;
+> >  
+> > -	if (!pdev->pasid_cap)
+> > +	if (!pf->pasid_cap)
+> >  		return;
+> >  
+> > +	mutex_lock(&pf->pasid_lock);
+> > +
+> > +	pci_read_config_word(pf, pf->pasid_cap + PCI_PASID_CTRL, &control);
+> > +	if (control & PCI_PASID_CTRL_ENABLE)
+> > +		goto pasid_unlock;
+> > +
+> >  	control = PCI_PASID_CTRL_ENABLE | pdev->pasid_features;
+> > -	pci_write_config_word(pdev, pdev->pasid_cap + PCI_PASID_CTRL, control);
+> > +	pci_write_config_word(pf, pf->pasid_cap + PCI_PASID_CTRL, control);
+> > +
+> > +pasid_unlock:
+> > +	mutex_unlock(&pf->pasid_lock);
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_restore_pasid_state);
+> >  
+> > @@ -517,15 +567,22 @@ EXPORT_SYMBOL_GPL(pci_restore_pasid_state);
+> >  int pci_pasid_features(struct pci_dev *pdev)
+> >  {
+> >  	u16 supported;
+> > +	struct pci_dev *pf = pci_physfn(pdev);
+> > +
+> > +	mutex_lock(&pf->pasid_lock);
+> >  
+> > -	if (!pdev->pasid_cap)
+> > +	if (!pf->pasid_cap) {
+> > +		mutex_unlock(&pf->pasid_lock);
+> >  		return -EINVAL;
+> > +	}
+> >  
+> > -	pci_read_config_word(pdev, pdev->pasid_cap + PCI_PASID_CAP,
+> > +	pci_read_config_word(pf, pf->pasid_cap + PCI_PASID_CAP,
+> >  			     &supported);
+> >  
+> >  	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
+> >  
+> > +	mutex_unlock(&pf->pasid_lock);
+> > +
+> >  	return supported;
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_pasid_features);
+> > @@ -579,15 +636,21 @@ EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
+> >  int pci_max_pasids(struct pci_dev *pdev)
+> >  {
+> >  	u16 supported;
+> > +	struct pci_dev *pf = pci_physfn(pdev);
+> > +
+> > +	mutex_lock(&pf->pasid_lock);
+> >  
+> > -	if (!pdev->pasid_cap)
+> > +	if (!pf->pasid_cap) {
+> > +		mutex_unlock(&pf->pasid_lock);
+> >  		return -EINVAL;
+> > +	}
+> >  
+> > -	pci_read_config_word(pdev, pdev->pasid_cap + PCI_PASID_CAP,
+> > -			     &supported);
+> > +	pci_read_config_word(pf, pf->pasid_cap + PCI_PASID_CAP, &supported);
+> >  
+> >  	supported = (supported & PASID_NUMBER_MASK) >> PASID_NUMBER_SHIFT;
+> >  
+> > +	mutex_unlock(&pf->pasid_lock);
+> > +
+> >  	return (1 << supported);
+> >  }
+> >  EXPORT_SYMBOL_GPL(pci_max_pasids);
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 3c9c4c82be27..4bfcca045afd 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -461,8 +461,10 @@ struct pci_dev {
+> >  	atomic_t	pri_ref_cnt;	/* Number of PF/VF PRI users */
+> >  #endif
+> >  #ifdef CONFIG_PCI_PASID
+> > +	struct mutex	pasid_lock;	/* PASID enable lock */
+> 
+> I think these locks are finer-grained than necessary.  I'm not sure
+> it's worth having two mutexes for every device (one for PRI and
+> another for PASID).  Is there really a performance benefit for having
+> two?
+Performance benefit should be minimal. But, PRI and PASID are functionally
+independent. So I don't think its correct to protect its resources with
+a common lock. Let me know your comments.
+> 
+> Do it (or do they) need to be in struct pci_dev?  You only use the PF
+> mutexes, so maybe it could be in the struct pci_sriov, which I think
+> is only one per PF.
+Its possible to move it to pci_sriov structure. But is that the right
+place for it? This lock is only used for protecting PRI and PASID feature
+updates and PRI/PASID are not dependent on IOV feature. Let me know your
+comments.
 
-Example of old:
+If you want to move this lock to pci_sriov structure and use one lock
+for both PRI/PASID, then the implementation would look like following. We
+could create physfn lock/unlock functions in include/linux/pci.h similar
+to pci_physfn() function.
 
-struct device_attribute dev_attr_##_name = __ATTR(_name, _mode, _show,
-						  _store)
+#ifdef CONFIG_PCI_IOV
+static inline void pci_physfn_reslock(struct pci_dev *dev)
+{
+    struct pci_dev *pf = pci_physfn(dev);
 
-Example of new:
+    if (!pf->is_physfn)
+        return;
 
-static DEVICE_ATTR(foo, S_IWUSR | S_IRUGO, show_foo, store_foo)
+    mutex_lock(&pf->sriov->reslock);
 
-Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
----
- drivers/pci/pci-sysfs.c | 59 +++++++++++++++++++----------------------
- 1 file changed, 27 insertions(+), 32 deletions(-)
+}
+#else
+static inline void pci_physfn_reslock(struct pci_dev *dev) {}; 
+#endif
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 965c72104150..8af7944fdccb 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -464,9 +464,7 @@ static ssize_t dev_rescan_store(struct device *dev,
- 	}
- 	return count;
- }
--static struct device_attribute dev_rescan_attr = __ATTR(rescan,
--							(S_IWUSR|S_IWGRP),
--							NULL, dev_rescan_store);
-+static DEVICE_ATTR(rescan, (S_IWUSR | S_IWGRP), NULL, dev_rescan_store);
- 
- static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 			    const char *buf, size_t count)
-@@ -480,9 +478,8 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
- 	return count;
- }
--static struct device_attribute dev_remove_attr = __ATTR_IGNORE_LOCKDEP(remove,
--							(S_IWUSR|S_IWGRP),
--							NULL, remove_store);
-+static DEVICE_ATTR_IGNORE_LOCKDEP(remove, (S_IWUSR | S_IWGRP), NULL,
-+				  remove_store);
- 
- static ssize_t dev_bus_rescan_store(struct device *dev,
- 				    struct device_attribute *attr,
-@@ -504,7 +501,7 @@ static ssize_t dev_bus_rescan_store(struct device *dev,
- 	}
- 	return count;
- }
--static DEVICE_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store);
-+static DEVICE_ATTR(bus_rescan, (S_IWUSR | S_IWGRP), NULL, dev_bus_rescan_store);
- 
- #if defined(CONFIG_PM) && defined(CONFIG_ACPI)
- static ssize_t d3cold_allowed_store(struct device *dev,
-@@ -687,16 +684,14 @@ static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
- 	return count;
- }
- 
--static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
--static struct device_attribute sriov_numvfs_attr =
--		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
--		       sriov_numvfs_show, sriov_numvfs_store);
--static struct device_attribute sriov_offset_attr = __ATTR_RO(sriov_offset);
--static struct device_attribute sriov_stride_attr = __ATTR_RO(sriov_stride);
--static struct device_attribute sriov_vf_device_attr = __ATTR_RO(sriov_vf_device);
--static struct device_attribute sriov_drivers_autoprobe_attr =
--		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
--		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
-+static DEVICE_ATTR_RO(sriov_totalvfs);
-+static DEVICE_ATTR(sriov_numvfs, (S_IRUGO | S_IWUSR | S_IWGRP),
-+				  sriov_numvfs_show, sriov_numvfs_store);
-+static DEVICE_ATTR_RO(sriov_offset);
-+static DEVICE_ATTR_RO(sriov_stride);
-+static DEVICE_ATTR_RO(sriov_vf_device);
-+static DEVICE_ATTR(sriov_drivers_autoprobe, (S_IRUGO | S_IWUSR | S_IWGRP),
-+		   sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
- #endif /* CONFIG_PCI_IOV */
- 
- static ssize_t driver_override_store(struct device *dev,
-@@ -792,7 +787,7 @@ static struct attribute *pcie_dev_attrs[] = {
- };
- 
- static struct attribute *pcibus_attrs[] = {
--	&dev_attr_rescan.attr,
-+	&dev_attr_bus_rescan.attr,
- 	&dev_attr_cpuaffinity.attr,
- 	&dev_attr_cpulistaffinity.attr,
- 	NULL,
-@@ -820,7 +815,7 @@ static ssize_t boot_vga_show(struct device *dev, struct device_attribute *attr,
- 		!!(pdev->resource[PCI_ROM_RESOURCE].flags &
- 		   IORESOURCE_ROM_SHADOW));
- }
--static struct device_attribute vga_attr = __ATTR_RO(boot_vga);
-+static DEVICE_ATTR_RO(boot_vga);
- 
- static ssize_t pci_read_config(struct file *filp, struct kobject *kobj,
- 			       struct bin_attribute *bin_attr, char *buf,
-@@ -1458,7 +1453,7 @@ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
--static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_store);
-+static DEVICE_ATTR(reset, 0200, NULL, reset_store);
- 
- static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- {
-@@ -1468,7 +1463,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- 	pcie_aspm_create_sysfs_dev_files(dev);
- 
- 	if (dev->reset_fn) {
--		retval = device_create_file(&dev->dev, &reset_attr);
-+		retval = device_create_file(&dev->dev, &dev_attr_reset);
- 		if (retval)
- 			goto error;
- 	}
-@@ -1553,7 +1548,7 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
- 	pcie_vpd_remove_sysfs_dev_files(dev);
- 	pcie_aspm_remove_sysfs_dev_files(dev);
- 	if (dev->reset_fn) {
--		device_remove_file(&dev->dev, &reset_attr);
-+		device_remove_file(&dev->dev, &dev_attr_reset);
- 		dev->reset_fn = 0;
- 	}
- }
-@@ -1606,7 +1601,7 @@ static int __init pci_sysfs_init(void)
- late_initcall(pci_sysfs_init);
- 
- static struct attribute *pci_dev_dev_attrs[] = {
--	&vga_attr.attr,
-+	&dev_attr_boot_vga.attr,
- 	NULL,
- };
- 
-@@ -1616,7 +1611,7 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- 	struct device *dev = kobj_to_dev(kobj);
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (a == &vga_attr.attr)
-+	if (a == &dev_attr_boot_vga.attr)
- 		if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
- 			return 0;
- 
-@@ -1624,8 +1619,8 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- }
- 
- static struct attribute *pci_dev_hp_attrs[] = {
--	&dev_remove_attr.attr,
--	&dev_rescan_attr.attr,
-+	&dev_attr_remove.attr,
-+	&dev_attr_rescan.attr,
- 	NULL,
- };
- 
-@@ -1699,12 +1694,12 @@ static const struct attribute_group pci_dev_hp_attr_group = {
- 
- #ifdef CONFIG_PCI_IOV
- static struct attribute *sriov_dev_attrs[] = {
--	&sriov_totalvfs_attr.attr,
--	&sriov_numvfs_attr.attr,
--	&sriov_offset_attr.attr,
--	&sriov_stride_attr.attr,
--	&sriov_vf_device_attr.attr,
--	&sriov_drivers_autoprobe_attr.attr,
-+	&dev_attr_sriov_totalvfs.attr,
-+	&dev_attr_sriov_numvfs.attr,
-+	&dev_attr_sriov_offset.attr,
-+	&dev_attr_sriov_stride.attr,
-+	&dev_attr_sriov_vf_device.attr,
-+	&dev_attr_sriov_drivers_autoprobe.attr,
- 	NULL,
- };
- 
+> 
+> >  	u16		pasid_cap;	/* PASID Capability offset */
+> >  	u16		pasid_features;
+> > +	atomic_t	pasid_ref_cnt;	/* Number of VFs with PASID enabled */
+> >  #endif
+> >  #ifdef CONFIG_PCI_P2PDMA
+> >  	struct pci_p2pdma *p2pdma;
+> > -- 
+> > 2.21.0
+> > 
+
 -- 
-2.20.1
-
+Sathyanarayanan Kuppuswamy
+Linux kernel developer
