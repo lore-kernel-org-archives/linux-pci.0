@@ -2,145 +2,179 @@ Return-Path: <SRS0=CpGT=WJ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89F17C32750
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 12:48:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0427C32757
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 12:56:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54E8020840
-	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 12:48:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BBB2206C2
+	for <linux-pci@archiver.kernel.org>; Tue, 13 Aug 2019 12:56:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GxsdQ6/x"
+	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="hOaQ4PJW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728381AbfHMMsl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 13 Aug 2019 08:48:41 -0400
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:36914 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728346AbfHMMsi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Aug 2019 08:48:38 -0400
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20190813124836euoutp0208e57700f58be3bba8135649a664b4a7~6fFMLSnN80545005450euoutp02X
-        for <linux-pci@vger.kernel.org>; Tue, 13 Aug 2019 12:48:36 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20190813124836euoutp0208e57700f58be3bba8135649a664b4a7~6fFMLSnN80545005450euoutp02X
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1565700516;
-        bh=xJW2N+InaQSTPomm1XVnEng30foi6NAeLOPusdmdIo0=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=GxsdQ6/xYDYAKv4Lkn6CqM/mR7wacUeWb343ooTs+ofvvUZOMiQww7Py5eFAEILRV
-         GPzBjiIHaEzZ2jgFhIbpYfs8gyez4aXFNms19gX/SYqdEEJUxh7uXMXwZD7mlxLiNw
-         Zqqg3uzjBEt964nv5smzdmhUqZPBxVM8eTmzSZgY=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20190813124835eucas1p13cf168bcd18f3c75ed1a5bf426829594~6fFLUKorf3217532175eucas1p1y;
-        Tue, 13 Aug 2019 12:48:35 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 8F.CA.04469.3A1B25D5; Tue, 13
-        Aug 2019 13:48:35 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20190813124834eucas1p16c12b52102e18fd6dcfb02f44a2acd6f~6fFKif5F73225832258eucas1p1-;
-        Tue, 13 Aug 2019 12:48:34 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20190813124834eusmtrp11d974e10d5e764a6e94e70b69bebd531~6fFKSqW4F0418804188eusmtrp1V;
-        Tue, 13 Aug 2019 12:48:34 +0000 (GMT)
-X-AuditID: cbfec7f2-54fff70000001175-3f-5d52b1a3149e
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 9D.32.04166.2A1B25D5; Tue, 13
-        Aug 2019 13:48:34 +0100 (BST)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20190813124834eusmtip26b03372d95c5e25986128063367696a2~6fFJ8r4NG0656706567eusmtip2O;
-        Tue, 13 Aug 2019 12:48:34 +0000 (GMT)
-Subject: Re: [PATCH 6/7] efifb: Use PCI_STD_NUM_BARS in loops instead of
- PCI_STD_RESOURCE_END
-To:     Denis Efremov <efremov@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Peter Jones <pjones@redhat.com>, linux-fbdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <6c4e491c-8afd-92b0-45b5-d915de399ccc@samsung.com>
-Date:   Tue, 13 Aug 2019 14:48:32 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.6.1
-MIME-Version: 1.0
-In-Reply-To: <20190811150802.2418-7-efremov@linux.com>
+        id S1726975AbfHMM4E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 13 Aug 2019 08:56:04 -0400
+Received: from mail-eopbgr730102.outbound.protection.outlook.com ([40.107.73.102]:31442
+        "EHLO NAM05-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726974AbfHMM4E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Aug 2019 08:56:04 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Am+c/gGP2fulvVgpcNsvWqovEhV+aylpN8tMMvOm4y8xXC9bgga4uuJ7s4/XF59lUObJ7s+jqw855D2DfIlD+QxsfbyVtMac4IfyXLY/6R6RBUPbJXGm7XXvqFFDJKVFCcPsIH36g9Nxq4qmsTz9ctXLAmitji0AeDixYL17K6zRgXnMycctxAXuci9ZaTf3qlzSYyQ/MRGL/vmE9BiMFbNarXe8Z6tijhJZpYUci4Gnwbx2C8cFi/iUlG5oHdoaNq6zZHh01B4txXl3rIxks7xrGiXJQiXETuJpCfFj9bHETIMU8YI8NC2RPKux6d2IzBS5yPvNjkgLMCHfGSEePA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZIk0+13FJj+qtW5UGblWzQexpt38toni0ecJfqUfnyE=;
+ b=hQ+OapxZQbGqVnq52Qm+uH6Z1JmHC+VbEJhonceoTdCcTl0v/NTSE4cn7wo0PHhSEFWH5GvwaqsHEfDaLIE3MCSDEYOq8yNbrhsw4k8yUCvDGCYjhbVWzELFVdcgGj5f5GwHZ4FprlbpljcCYofDUCf1T5WfFzAMueK24N25lIzzFHR5pzuyKhYezbwhu2HxaATf7MEwmhYl/ltkQ254eTZhm0uDQwtxf7sOYHTLtW2gMTSP53hxZWsRk0knig67ebQQBrEsDTNSu6wYCILlq4Wiqex7pj2fekkLXMik72REJTE5HoQNKp/WOddRU3GRHhMKmof4IjbrNnRpD5fLyA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZIk0+13FJj+qtW5UGblWzQexpt38toni0ecJfqUfnyE=;
+ b=hOaQ4PJWayGz5Li/5yIbvyHBx954cR5JkrD/1AaJLwRsFwru4AEobyeTswcR61tsdG6s92x+wNhTD4LxkSE3W3Xyh7GuV55U6D9vpyZ8afjsBrAbtIhUFy0YYY2v6H/aKE82NdvwSagdoOAhdKzG+JwE5zntFe8d69dRPtvevo0=
+Received: from DM6PR21MB1337.namprd21.prod.outlook.com (20.179.53.80) by
+ DM6PR21MB1355.namprd21.prod.outlook.com (20.179.53.86) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2157.10; Tue, 13 Aug 2019 12:56:00 +0000
+Received: from DM6PR21MB1337.namprd21.prod.outlook.com
+ ([fe80::257a:6f7f:1126:a61d]) by DM6PR21MB1337.namprd21.prod.outlook.com
+ ([fe80::257a:6f7f:1126:a61d%6]) with mapi id 15.20.2178.006; Tue, 13 Aug 2019
+ 12:56:00 +0000
+From:   Haiyang Zhang <haiyangz@microsoft.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC:     "sashal@kernel.org" <sashal@kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>, vkuznets <vkuznets@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v3] PCI: hv: Detect and fix Hyper-V PCI domain number
+ collision
+Thread-Topic: [PATCH v3] PCI: hv: Detect and fix Hyper-V PCI domain number
+ collision
+Thread-Index: AQHVUTqte27Lajt/EEyKPTfwyVUoz6b43UWAgAAqP0A=
+Date:   Tue, 13 Aug 2019 12:55:59 +0000
+Message-ID: <DM6PR21MB1337D4F34CAA49BE369FB793CAD20@DM6PR21MB1337.namprd21.prod.outlook.com>
+References: <1565634013-19404-1-git-send-email-haiyangz@microsoft.com>
+ <20190813101417.GA14977@e121166-lin.cambridge.arm.com>
+In-Reply-To: <20190813101417.GA14977@e121166-lin.cambridge.arm.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprPKsWRmVeSWpSXmKPExsWy7djP87qLNwbFGvQvEbNY0pRhceXUbkaL
-        E30fWC0u75rDZnF23nE2i66FN9gd2DwWbCr1eHJlOpPH+31X2Tw+b5ILYInisklJzcksSy3S
-        t0vgylj29TNzwTn2ilUfJ7M2MM5m62Lk5JAQMJFo+nGBvYuRi0NIYAWjxMM9/SwQzhdGiYYz
-        p6AynxklFi5Zw9TFyAHWcuqlJUR8OaPE2q3vmSGct0BFmzezg8wVFoiXuPvpOCuILSLgJfF2
-        /y2wfcwC1RJLj24Eq2ETsJKY2L6KEcTmFbCT+HXrAZjNIqAqsWBGB1i9qECExP1jG1ghagQl
-        Ts58wgJicwqYSTT/PcYEMVNc4taT+VC2vMT2t3PADpIQWMQu8WfhbahHXSTm9G9mgbCFJV4d
-        38IOYctInJ7cwwLRsI5R4m/HC6ju7YwSyyf/g+q2ljh8/CIryP/MApoS63fpQ4QdJTq/3mWB
-        BAufxI23ghBH8ElM2jadGSLMK9HRJgRRrSaxYdkGNpi1XTtXMk9gVJqF5LVZSN6ZheSdWQh7
-        FzCyrGIUTy0tzk1PLTbMSy3XK07MLS7NS9dLzs/dxAhMNqf/Hf+0g/HrpaRDjAIcjEo8vBUJ
-        gbFCrIllxZW5hxglOJiVRHgvmQTFCvGmJFZWpRblxxeV5qQWH2KU5mBREuetZngQLSSQnliS
-        mp2aWpBaBJNl4uCUamCU2R94qVNmQZt+bdynpwHsVlw3le69uF517kR5xTu1ouL12w7fvvet
-        32WrKIOD8p9K36hnPN3PN/6yK01d+49n602OgzMrA34pv/E1u/XVN+9G5o0v95ZsTOt0L5A4
-        tC9L5fQxC+lZwmwiTEcTlXXbWd9cus7byZH4jk/7d4jgfYdMwQlp6veVWIozEg21mIuKEwG7
-        qPvzMgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrPIsWRmVeSWpSXmKPExsVy+t/xe7qLNgbFGizrVLBY0pRhceXUbkaL
-        E30fWC0u75rDZnF23nE2i66FN9gd2DwWbCr1eHJlOpPH+31X2Tw+b5ILYInSsynKLy1JVcjI
-        Ly6xVYo2tDDSM7S00DMysdQzNDaPtTIyVdK3s0lJzcksSy3St0vQy1j29TNzwTn2ilUfJ7M2
-        MM5m62Lk4JAQMJE49dKyi5GLQ0hgKaPE9BXXWSHiMhLH15d1MXICmcISf651sUHUvGaUaJ21
-        hAkkISwQL3H303FWEFtEwEvi7f5bYDOZBaolLvRrQ9RvZZR4d7CVHaSGTcBKYmL7KkYQm1fA
-        TuLXrQdgNouAqsSCGR1sILaoQITEmfcrWCBqBCVOznwCZnMKmEk0/z0GtpdZQF3iz7xLzBC2
-        uMStJ/Oh4vIS29/OYZ7AKDQLSfssJC2zkLTMQtKygJFlFaNIamlxbnpusaFecWJucWleul5y
-        fu4mRmBkbTv2c/MOxksbgw8xCnAwKvHwViQExgqxJpYVV+YeYpTgYFYS4b1kEhQrxJuSWFmV
-        WpQfX1Sak1p8iNEU6LmJzFKiyfnAqM8riTc0NTS3sDQ0NzY3NrNQEuftEDgYIySQnliSmp2a
-        WpBaBNPHxMEp1cDo8Svr2Krt0xn9125e/nWTTWLYzJtmwnwfXr4vVPJ62iDpeqLw4L13DoVn
-        596x1+/3/9u674NwhstyodSG1pfKZ8N7Ne16jr2K05iqq1Nuksitc/Xk+nnHYzOWN7Tsf+QS
-        W5Bw+dX7qoNqpz5/eCH09Z2f9gzZvV/qI/bwRb7ti2796MC4w++cEktxRqKhFnNRcSIAf2dF
-        T8ICAAA=
-X-CMS-MailID: 20190813124834eucas1p16c12b52102e18fd6dcfb02f44a2acd6f
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20190811151322epcas3p283d7a3293a12dfac23d13d8a16349d1f
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20190811151322epcas3p283d7a3293a12dfac23d13d8a16349d1f
-References: <20190811150802.2418-1-efremov@linux.com>
-        <CGME20190811151322epcas3p283d7a3293a12dfac23d13d8a16349d1f@epcas3p2.samsung.com>
-        <20190811150802.2418-7-efremov@linux.com>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=haiyangz@microsoft.com;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-08-13T12:55:58.1733042Z;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
+ Information Protection;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=aac06c14-720d-4d87-ab8a-42247b19e931;
+ MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=haiyangz@microsoft.com; 
+x-originating-ip: [96.61.92.94]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0b7ce7f3-357c-4c35-6de7-08d71fed972b
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600158)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:DM6PR21MB1355;
+x-ms-traffictypediagnostic: DM6PR21MB1355:|DM6PR21MB1355:
+x-ms-exchange-transport-forked: True
+x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
+x-microsoft-antispam-prvs: <DM6PR21MB1355DB8D3BDDD5394C37922DCAD20@DM6PR21MB1355.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 01283822F8
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(396003)(346002)(376002)(366004)(39860400002)(136003)(199004)(189003)(13464003)(10090500001)(478600001)(74316002)(53546011)(8990500004)(102836004)(81166006)(5660300002)(305945005)(81156014)(2906002)(6916009)(8936002)(66066001)(316002)(7736002)(6116002)(53936002)(33656002)(4326008)(3846002)(6246003)(22452003)(99286004)(54906003)(229853002)(6436002)(446003)(26005)(7696005)(25786009)(76176011)(6506007)(14454004)(9686003)(71190400001)(11346002)(8676002)(186003)(10290500003)(64756008)(66946007)(14444005)(52536014)(66476007)(66556008)(71200400001)(86362001)(476003)(66446008)(76116006)(256004)(55016002)(486006);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR21MB1355;H:DM6PR21MB1337.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: microsoft.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: EKSJjfBT2J8vJwx1uk1mxj/EvLioj1rUcF0CXiCGKOgVRbVOyp6uAyyyM1g/4lszxBaV4lgC4Js8377/FD5BtzXzsjhd9QAYKgI7iodwSZ3oU9xh3lUafqT1Z158iHKoYVpsSZanUweO4YOx3bxG5nyurDLorJnWNu0BuCK86qZhFzgB2La4JMXFa6jRkHXLciM6OR0c9HBUwVADeQfaxY9xzRyRLFPFwlv5XD4Wziuej0WQQIUERPpN9MYphJi8pomg/zIGa6PIm3hRRnpPr1xyVe3fwXkxanCOzyb8YIIDI3pHBY9p/oi75Qh0WuAUlxuav2kVECXMP4ybeVVM20YGdk9hMjN08daS2FDQ9QbK4DVmcW90C4pjMuW0nUUX+AXBuxIdU5cEEyZT4JjKXTQcUdUIbx+Y4wEiKU2qwkU=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0b7ce7f3-357c-4c35-6de7-08d71fed972b
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Aug 2019 12:55:59.8895
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 7SO6jj6BsEbs8uw2EkHkpGQAZ26tu9PyyARzEYf0KW9d0/pimtunNrDr7ZItpG/ouTC325H54PfxBFaJspZPlw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR21MB1355
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
-On 8/11/19 5:08 PM, Denis Efremov wrote:
-> This patch refactors the loop condition scheme from
-> 'i <= PCI_STD_RESOURCE_END' to 'i < PCI_STD_NUM_BARS'.
-> 
-> Signed-off-by: Denis Efremov <efremov@linux.com>
 
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> -----Original Message-----
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Sent: Tuesday, August 13, 2019 6:14 AM
+> To: Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: sashal@kernel.org; bhelgaas@google.com; linux-
+> hyperv@vger.kernel.org; linux-pci@vger.kernel.org; KY Srinivasan
+> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> olaf@aepfle.de; vkuznets <vkuznets@redhat.com>; linux-
+> kernel@vger.kernel.org
+> Subject: Re: [PATCH v3] PCI: hv: Detect and fix Hyper-V PCI domain number
+> collision
+>=20
+> On Mon, Aug 12, 2019 at 06:20:53PM +0000, Haiyang Zhang wrote:
+> > Currently in Azure cloud, for passthrough devices including GPU, the ho=
+st
+> > sets the device instance ID's bytes 8 - 15 to a value derived from the =
+host
+> > HWID, which is the same on all devices in a VM. So, the device instance
+> > ID's bytes 8 and 9 provided by the host are no longer unique. This can
+> > cause device passthrough to VMs to fail because the bytes 8 and 9 are u=
+sed
+> > as PCI domain number. Collision of domain numbers will cause the second
+> > device with the same domain number fail to load.
+> >
+> > As recommended by Azure host team, the bytes 4, 5 have more uniqueness
+> > (info entropy) than bytes 8, 9. So now we use bytes 4, 5 as the PCI dom=
+ain
+> > numbers. On older hosts, bytes 4, 5 can also be used -- no backward
+> > compatibility issues here. The chance of collision is greatly reduced. =
+In
+> > the rare cases of collision, we will detect and find another number tha=
+t is
+> > not in use.
+>=20
+> I have not explained what I meant correctly. This patch fixes an
+> issue and the "find another number" fallback can be also applied
+> to the current kernel without changing the bytes you use for
+> domain numbers.
+>=20
+> This patch would leave old kernels susceptible to breakage.
+>=20
+> Again, I have no Azure knowledge but it seems better to me to
+> add a fallback "find another number" allocation on top of mainline
+> and send it to stable kernels. Then we can add another patch to
+> change the bytes you use to reduce the number of collision.
+>=20
+> Please let me know what you think, thanks.
 
-> ---
->  drivers/video/fbdev/efifb.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> index 04a22663b4fb..6c72b825e92a 100644
-> --- a/drivers/video/fbdev/efifb.c
-> +++ b/drivers/video/fbdev/efifb.c
-> @@ -668,7 +668,7 @@ static void efifb_fixup_resources(struct pci_dev *dev)
->  	if (!base)
->  		return;
->  
-> -	for (i = 0; i <= PCI_STD_RESOURCE_END; i++) {
-> +	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
->  		struct resource *res = &dev->resource[i];
->  
->  		if (!(res->flags & IORESOURCE_MEM))
+Thanks for your clarification.
+Actually, I hope the stable kernel will be patched to use bytes 4,5 too,
+because host provided numbers are persistent across reboots, we like
+to use them if possible.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+I think we can either --
+1) Apply this patch for mainline and stable kernels as well.
+2) Or, break this patch into two patches, and apply both of them for=20
+Mainline and stable kernels.
+
+Which way do you prefer?
+
+Thanks,
+- Haiyang
+
