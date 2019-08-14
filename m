@@ -2,121 +2,93 @@ Return-Path: <SRS0=jmuj=WK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD30C433FF
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:36:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC429C32753
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:40:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AD362084D
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:36:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 881D8206C2
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:40:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726575AbfHNNgU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Aug 2019 09:36:20 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:33764 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727650AbfHNNgU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2019 09:36:20 -0400
-Received: by mail-ed1-f68.google.com with SMTP id s15so4997275edx.0
-        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2019 06:36:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=68DB8FpNyz/xvwHTz/53FL52+cNRcvVUiqSY+S0JFvo=;
-        b=auoT3hBzLme0aFR2Lj4ZgJH3tijulSIhxHnYrZAIxDFQvKH+vVl2Nd3HVBbSMQBsw1
-         9GJ8HDmlAEsv8FlPPVHkxipUw/2xaPaXqsHOh/EyQAbwTPTavAYcFvStRdAfuAji8Rll
-         0aAimKMRhBdr76GflRtL5tp5RuZJOClgk20Hw80Ax87f0e5M7/OdSmKumGDIwiQfIgWc
-         SyPrzCrwbX+soRKM3OmK6oErKcRoudd/2b5MbeCRCCuUV7EeIWDJpaGJqrEq0K4R42St
-         BMkhZGauMpUsR8DppOGxiiF0lpl2umf9Aw9jh1NrzELrV4owTXaxDp3WJpmSXTaC+RFL
-         mQRg==
-X-Gm-Message-State: APjAAAXioP2UGL0jRm1Im2veBbGsyYsL9Hlj7XfY+eGW1xHJr3K/jwWx
-        cuItTUFRbjxLYTfUzbRP9mkutNKeytg=
-X-Google-Smtp-Source: APXvYqxwHCscSvRHUlb/17nhOuGAT9JAw/bMFkewGIFB9Qbh3GoDo1odWi3rfGE5iQivSL/yoFEOdg==
-X-Received: by 2002:a17:906:b203:: with SMTP id p3mr40149340ejz.223.1565789778436;
-        Wed, 14 Aug 2019 06:36:18 -0700 (PDT)
-Received: from shalem.localdomain (84-106-84-65.cable.dynamic.v4.ziggo.nl. [84.106.84.65])
-        by smtp.gmail.com with ESMTPSA id f24sm24883381edt.82.2019.08.14.06.36.17
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Wed, 14 Aug 2019 06:36:17 -0700 (PDT)
-Subject: Re: AW: [PATCH] usb: xhci-pci: reorder removal to avoid
- use-after-free
-To:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>
-Cc:     "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        id S1726865AbfHNNkB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Aug 2019 09:40:01 -0400
+Received: from esa1.mentor.iphmx.com ([68.232.129.153]:37952 "EHLO
+        esa1.mentor.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726722AbfHNNkB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2019 09:40:01 -0400
+X-Greylist: delayed 426 seconds by postgrey-1.27 at vger.kernel.org; Wed, 14 Aug 2019 09:40:01 EDT
+IronPort-SDR: empYqsDDpfPL0FZ7aLvdd6wptwPOiYVsVjLlHUWTGkFyl/sCNeEipgjT2hqCZHmo5XvHX7oDV3
+ g1J3HayDxo8bMJjNAamalm2+4bxR14MuN6c1WbJJ47sAqxtCVltangW8uQE9RaoWTCp7db24Ye
+ u5IIIaN4OwF0Hte+gCIx1JRyaHV9hIBL2yN/7aeJxfXXE255TQUAProUdGN5QwvbBX441yevGR
+ wIGI41C3BCjOVRGoHGQ064P6TwIrZRTmOnxWe4tCuQcCnqm+h1TpTPqfx+SuwRDgQoFfoN8wPv
+ 62E=
+X-IronPort-AV: E=Sophos;i="5.64,385,1559548800"; 
+   d="scan'208";a="42250322"
+Received: from orw-gwy-02-in.mentorg.com ([192.94.38.167])
+  by esa1.mentor.iphmx.com with ESMTP; 14 Aug 2019 05:32:54 -0800
+IronPort-SDR: Nwk2ypDHsIOB/YPEqXqwelYn4OpbW62jm5Od77HGnrAEpvX43FLJFpxiW859FTR7aoz0Fd5uAj
+ YESTmnNyEX+R1syDRQK5Op/UvRdefB2WJDsGkS37fYjSGmzyHxMkCqtyuXUlDFlyZX4Fszn7zD
+ wBv1kQFyIcpK+3EwJcr2IcFcgemtxpvh3Ak8ROh5nEfCOyuy8/JQ240N5blPzr2fEkdMQX9ROS
+ +ULoJWi9kyjfsMomg86VLmQF/Sz2jmQ3Dz3bpZk+y9Z+i+ia1B4i5ulZyY1nsOfnmY1UgfUzp5
+ mj4=
+From:   "Schmid, Carsten" <Carsten_Schmid@mentor.com>
+To:     Hans de Goede <hdegoede@redhat.com>
+CC:     "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: AW: [PATCH] usb: xhci-pci: reorder removal to avoid use-after-free
+Thread-Topic: [PATCH] usb: xhci-pci: reorder removal to avoid use-after-free
+Thread-Index: AQHVUpSXBvBKq97fNkaS50QUUgX/8qb6iOeAgAAZUcA=
+Date:   Wed, 14 Aug 2019 13:32:49 +0000
+Message-ID: <29aadcf136bb4d5285afb4fc5b500b49@SVR-IES-MBX-03.mgc.mentorg.com>
 References: <1565782781938.37795@mentor.com>
  <15aa45c7-6e45-d03f-9336-4291f8b2dc66@redhat.com>
- <29aadcf136bb4d5285afb4fc5b500b49@SVR-IES-MBX-03.mgc.mentorg.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <662c2014-f52c-a4a7-cbf0-78d43c3a4f22@redhat.com>
-Date:   Wed, 14 Aug 2019 15:36:16 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+In-Reply-To: <15aa45c7-6e45-d03f-9336-4291f8b2dc66@redhat.com>
+Accept-Language: de-DE, en-IE, en-US
+Content-Language: de-DE
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [137.202.0.90]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-In-Reply-To: <29aadcf136bb4d5285afb4fc5b500b49@SVR-IES-MBX-03.mgc.mentorg.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 14-08-19 15:32, Schmid, Carsten wrote:
->>> On driver removal, the platform_device_unregister call
->>> attached through devm_add_action_or_reset was executed
->>> after usb_hcd_pci_remove.
->>> This lead to a use-after-free for the iomem resorce of
->>> the xhci-ext-caps driver in the platform removal
->>> because the parent of the resource was freed earlier.
->>>
->>> Fix this by reordering of the removal sequence.
->>>
->>> Signed-off-by: Carsten Schmid <carsten_schmid@mentor.com>
->>
->> Assuming this has been tested, overal this looks good to me.
-> 
-> Tested on 4.14.129, ported to v5.2.7, compiled there.
-> 
->>
->> But there are 2 things to fix:
->>
->> 1) Maybe pick a more descriptive struct member name then pdev.
->>      pdev with pci-devices often points to a pci_device ...
->>      How about: role_switch_pdev ?
-> 
-> Ok, good point. Had platform dev pdev in mind ...
-> 
->>
->> 2) xhci_ext_cap_init() is not the last call which can fail in
->>      xhci_pci_probe(), since you now no longer use
->> devm_add_action_or_reset
->>      for auto-cleanup, you must now manually cleanup by calling
->>      xhci_ext_cap_remove() when later steps of xhci_pci_probe() fail.
->>      it looks like you will need a new ext_cap_remove error-exit label
->>      for this put above the put_usb3_hcd label and goto this new label
->>      instead of to put_usb3_hcd in all error paths after a successful call
->>      to xhci_ext_cap_init()
-> 
-> Right. Will review this path and correct accordingly.
-> 
-> Maybe an additional label isn't required because pdev is only set when
-> xhci_ext_cap_init created the platform device, and xhci_ext_cap_remove
-> checks for pdev being set.
-> So a call to xhci_ext_cap_remove doesn't harm if pdev is not set up yet.
-> But for readability it might be better to create a label.
-
-Right, when taking a quick look myself I realized that an extra label would
-not be necessary, but not having the extra label will confuse the reader
-of the code, since now we are undoing something which we did not do,
-so I would prefer if you use the extra label.
-
-Regards,
-
-Hans
-
+PiA+IE9uIGRyaXZlciByZW1vdmFsLCB0aGUgcGxhdGZvcm1fZGV2aWNlX3VucmVnaXN0ZXIgY2Fs
+bA0KPiA+IGF0dGFjaGVkIHRocm91Z2ggZGV2bV9hZGRfYWN0aW9uX29yX3Jlc2V0IHdhcyBleGVj
+dXRlZA0KPiA+IGFmdGVyIHVzYl9oY2RfcGNpX3JlbW92ZS4NCj4gPiBUaGlzIGxlYWQgdG8gYSB1
+c2UtYWZ0ZXItZnJlZSBmb3IgdGhlIGlvbWVtIHJlc29yY2Ugb2YNCj4gPiB0aGUgeGhjaS1leHQt
+Y2FwcyBkcml2ZXIgaW4gdGhlIHBsYXRmb3JtIHJlbW92YWwNCj4gPiBiZWNhdXNlIHRoZSBwYXJl
+bnQgb2YgdGhlIHJlc291cmNlIHdhcyBmcmVlZCBlYXJsaWVyLg0KPiA+DQo+ID4gRml4IHRoaXMg
+YnkgcmVvcmRlcmluZyBvZiB0aGUgcmVtb3ZhbCBzZXF1ZW5jZS4NCj4gPg0KPiA+IFNpZ25lZC1v
+ZmYtYnk6IENhcnN0ZW4gU2NobWlkIDxjYXJzdGVuX3NjaG1pZEBtZW50b3IuY29tPg0KPiANCj4g
+QXNzdW1pbmcgdGhpcyBoYXMgYmVlbiB0ZXN0ZWQsIG92ZXJhbCB0aGlzIGxvb2tzIGdvb2QgdG8g
+bWUuDQoNClRlc3RlZCBvbiA0LjE0LjEyOSwgcG9ydGVkIHRvIHY1LjIuNywgY29tcGlsZWQgdGhl
+cmUuDQoNCj4gDQo+IEJ1dCB0aGVyZSBhcmUgMiB0aGluZ3MgdG8gZml4Og0KPiANCj4gMSkgTWF5
+YmUgcGljayBhIG1vcmUgZGVzY3JpcHRpdmUgc3RydWN0IG1lbWJlciBuYW1lIHRoZW4gcGRldi4N
+Cj4gICAgIHBkZXYgd2l0aCBwY2ktZGV2aWNlcyBvZnRlbiBwb2ludHMgdG8gYSBwY2lfZGV2aWNl
+IC4uLg0KPiAgICAgSG93IGFib3V0OiByb2xlX3N3aXRjaF9wZGV2ID8NCg0KT2ssIGdvb2QgcG9p
+bnQuIEhhZCBwbGF0Zm9ybSBkZXYgcGRldiBpbiBtaW5kIC4uLg0KDQo+IA0KPiAyKSB4aGNpX2V4
+dF9jYXBfaW5pdCgpIGlzIG5vdCB0aGUgbGFzdCBjYWxsIHdoaWNoIGNhbiBmYWlsIGluDQo+ICAg
+ICB4aGNpX3BjaV9wcm9iZSgpLCBzaW5jZSB5b3Ugbm93IG5vIGxvbmdlciB1c2UNCj4gZGV2bV9h
+ZGRfYWN0aW9uX29yX3Jlc2V0DQo+ICAgICBmb3IgYXV0by1jbGVhbnVwLCB5b3UgbXVzdCBub3cg
+bWFudWFsbHkgY2xlYW51cCBieSBjYWxsaW5nDQo+ICAgICB4aGNpX2V4dF9jYXBfcmVtb3ZlKCkg
+d2hlbiBsYXRlciBzdGVwcyBvZiB4aGNpX3BjaV9wcm9iZSgpIGZhaWwuDQo+ICAgICBpdCBsb29r
+cyBsaWtlIHlvdSB3aWxsIG5lZWQgYSBuZXcgZXh0X2NhcF9yZW1vdmUgZXJyb3ItZXhpdCBsYWJl
+bA0KPiAgICAgZm9yIHRoaXMgcHV0IGFib3ZlIHRoZSBwdXRfdXNiM19oY2QgbGFiZWwgYW5kIGdv
+dG8gdGhpcyBuZXcgbGFiZWwNCj4gICAgIGluc3RlYWQgb2YgdG8gcHV0X3VzYjNfaGNkIGluIGFs
+bCBlcnJvciBwYXRocyBhZnRlciBhIHN1Y2Nlc3NmdWwgY2FsbA0KPiAgICAgdG8geGhjaV9leHRf
+Y2FwX2luaXQoKQ0KDQpSaWdodC4gV2lsbCByZXZpZXcgdGhpcyBwYXRoIGFuZCBjb3JyZWN0IGFj
+Y29yZGluZ2x5Lg0KDQpNYXliZSBhbiBhZGRpdGlvbmFsIGxhYmVsIGlzbid0IHJlcXVpcmVkIGJl
+Y2F1c2UgcGRldiBpcyBvbmx5IHNldCB3aGVuDQp4aGNpX2V4dF9jYXBfaW5pdCBjcmVhdGVkIHRo
+ZSBwbGF0Zm9ybSBkZXZpY2UsIGFuZCB4aGNpX2V4dF9jYXBfcmVtb3ZlDQpjaGVja3MgZm9yIHBk
+ZXYgYmVpbmcgc2V0Lg0KU28gYSBjYWxsIHRvIHhoY2lfZXh0X2NhcF9yZW1vdmUgZG9lc24ndCBo
+YXJtIGlmIHBkZXYgaXMgbm90IHNldCB1cCB5ZXQuDQpCdXQgZm9yIHJlYWRhYmlsaXR5IGl0IG1p
+Z2h0IGJlIGJldHRlciB0byBjcmVhdGUgYSBsYWJlbC4NCg0KQmVzdCByZWdhcmRzDQpDYXJzdGVu
+DQo=
