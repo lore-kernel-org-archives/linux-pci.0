@@ -2,93 +2,231 @@ Return-Path: <SRS0=jmuj=WK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC429C32753
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:40:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5913EC32753
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 14:32:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 881D8206C2
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:40:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30D1F2083B
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 14:32:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726865AbfHNNkB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Aug 2019 09:40:01 -0400
-Received: from esa1.mentor.iphmx.com ([68.232.129.153]:37952 "EHLO
-        esa1.mentor.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726722AbfHNNkB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2019 09:40:01 -0400
-X-Greylist: delayed 426 seconds by postgrey-1.27 at vger.kernel.org; Wed, 14 Aug 2019 09:40:01 EDT
-IronPort-SDR: empYqsDDpfPL0FZ7aLvdd6wptwPOiYVsVjLlHUWTGkFyl/sCNeEipgjT2hqCZHmo5XvHX7oDV3
- g1J3HayDxo8bMJjNAamalm2+4bxR14MuN6c1WbJJ47sAqxtCVltangW8uQE9RaoWTCp7db24Ye
- u5IIIaN4OwF0Hte+gCIx1JRyaHV9hIBL2yN/7aeJxfXXE255TQUAProUdGN5QwvbBX441yevGR
- wIGI41C3BCjOVRGoHGQ064P6TwIrZRTmOnxWe4tCuQcCnqm+h1TpTPqfx+SuwRDgQoFfoN8wPv
- 62E=
+        id S1726704AbfHNOcw convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Aug 2019 10:32:52 -0400
+Received: from esa3.mentor.iphmx.com ([68.232.137.180]:2401 "EHLO
+        esa3.mentor.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725955AbfHNOcw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2019 10:32:52 -0400
+IronPort-SDR: TC7J2TPCpQq+h5jzUzfERvFAtXZ3JoB9AGYyYLKiqfa+4tRcAtOr+JfmeQkEDqRM+t0ZALOyY1
+ abiIC8qQkBmiIOSCnoyz8/7UJvY252dE/BlasE2x7dKKFY+dP/IMlyHRW4s7zv/CVQeqoRKP4h
+ 3fAd50RZdUkYHXllQcI/sPLt0kKwnyx7rPqP6nQ1YjIubC6hiOSckLNB3AP6VOQtEUhlQwi//F
+ F7mNTACRCNtA/xQVl3HDzLklSc/wkFepMoVtYkOQ84Op8Vvz85KiyhGnJ9CKJpXVJbdYmrYHD1
+ QL0=
 X-IronPort-AV: E=Sophos;i="5.64,385,1559548800"; 
-   d="scan'208";a="42250322"
-Received: from orw-gwy-02-in.mentorg.com ([192.94.38.167])
-  by esa1.mentor.iphmx.com with ESMTP; 14 Aug 2019 05:32:54 -0800
-IronPort-SDR: Nwk2ypDHsIOB/YPEqXqwelYn4OpbW62jm5Od77HGnrAEpvX43FLJFpxiW859FTR7aoz0Fd5uAj
- YESTmnNyEX+R1syDRQK5Op/UvRdefB2WJDsGkS37fYjSGmzyHxMkCqtyuXUlDFlyZX4Fszn7zD
- wBv1kQFyIcpK+3EwJcr2IcFcgemtxpvh3Ak8ROh5nEfCOyuy8/JQ240N5blPzr2fEkdMQX9ROS
- +ULoJWi9kyjfsMomg86VLmQF/Sz2jmQ3Dz3bpZk+y9Z+i+ia1B4i5ulZyY1nsOfnmY1UgfUzp5
- mj4=
+   d="scan'208";a="40450057"
+Received: from orw-gwy-01-in.mentorg.com ([192.94.38.165])
+  by esa3.mentor.iphmx.com with ESMTP; 14 Aug 2019 06:32:51 -0800
+IronPort-SDR: NLYVRwkFwNT7pjSE9ru1OFQVkT4FwXSoOHTzEgFStKGjx/9bs34IRNNtkLWR7ZfltULKTXJauj
+ dWmfBwRJwH1l0CUAs5wvaS/Zx3CfDdsJqGbiWVnRtXcPmj47p3CHmBJtsRxCnaLsRqDaPuLE4T
+ jB9YUhOEW4KGuPEfoZqdZkY3Xc9OIejC/O6FovCWPnkfDWVqKndThjzTdt3ma0CwL3emhMnJK0
+ vm7dfsNmtA4x6LfJfze2vl6bueFMvGOpJGv77S87dFDQUuIwPbSibUiLNe5/ijb9sWmCAwudIv
+ quY=
 From:   "Schmid, Carsten" <Carsten_Schmid@mentor.com>
 To:     Hans de Goede <hdegoede@redhat.com>
 CC:     "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: AW: [PATCH] usb: xhci-pci: reorder removal to avoid use-after-free
-Thread-Topic: [PATCH] usb: xhci-pci: reorder removal to avoid use-after-free
-Thread-Index: AQHVUpSXBvBKq97fNkaS50QUUgX/8qb6iOeAgAAZUcA=
-Date:   Wed, 14 Aug 2019 13:32:49 +0000
-Message-ID: <29aadcf136bb4d5285afb4fc5b500b49@SVR-IES-MBX-03.mgc.mentorg.com>
+Subject: [PATCH v2] usb: xhci-pci: reorder removal to avoid use-after-free
+Thread-Topic: [PATCH v2] usb: xhci-pci: reorder removal to avoid
+ use-after-free
+Thread-Index: AQHVUqy8Nhj3BRvGDEy2Ur9dpf2v1Q==
+Date:   Wed, 14 Aug 2019 14:32:45 +0000
+Message-ID: <1565793165678.11527@mentor.com>
 References: <1565782781938.37795@mentor.com>
  <15aa45c7-6e45-d03f-9336-4291f8b2dc66@redhat.com>
-In-Reply-To: <15aa45c7-6e45-d03f-9336-4291f8b2dc66@redhat.com>
+ <29aadcf136bb4d5285afb4fc5b500b49@SVR-IES-MBX-03.mgc.mentorg.com>,<662c2014-f52c-a4a7-cbf0-78d43c3a4f22@redhat.com>
+In-Reply-To: <662c2014-f52c-a4a7-cbf0-78d43c3a4f22@redhat.com>
 Accept-Language: de-DE, en-IE, en-US
 Content-Language: de-DE
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
+x-ms-exchange-messagesentrepresentingtype: 1
 x-ms-exchange-transport-fromentityheader: Hosted
 x-originating-ip: [137.202.0.90]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PiA+IE9uIGRyaXZlciByZW1vdmFsLCB0aGUgcGxhdGZvcm1fZGV2aWNlX3VucmVnaXN0ZXIgY2Fs
-bA0KPiA+IGF0dGFjaGVkIHRocm91Z2ggZGV2bV9hZGRfYWN0aW9uX29yX3Jlc2V0IHdhcyBleGVj
-dXRlZA0KPiA+IGFmdGVyIHVzYl9oY2RfcGNpX3JlbW92ZS4NCj4gPiBUaGlzIGxlYWQgdG8gYSB1
-c2UtYWZ0ZXItZnJlZSBmb3IgdGhlIGlvbWVtIHJlc29yY2Ugb2YNCj4gPiB0aGUgeGhjaS1leHQt
-Y2FwcyBkcml2ZXIgaW4gdGhlIHBsYXRmb3JtIHJlbW92YWwNCj4gPiBiZWNhdXNlIHRoZSBwYXJl
-bnQgb2YgdGhlIHJlc291cmNlIHdhcyBmcmVlZCBlYXJsaWVyLg0KPiA+DQo+ID4gRml4IHRoaXMg
-YnkgcmVvcmRlcmluZyBvZiB0aGUgcmVtb3ZhbCBzZXF1ZW5jZS4NCj4gPg0KPiA+IFNpZ25lZC1v
-ZmYtYnk6IENhcnN0ZW4gU2NobWlkIDxjYXJzdGVuX3NjaG1pZEBtZW50b3IuY29tPg0KPiANCj4g
-QXNzdW1pbmcgdGhpcyBoYXMgYmVlbiB0ZXN0ZWQsIG92ZXJhbCB0aGlzIGxvb2tzIGdvb2QgdG8g
-bWUuDQoNClRlc3RlZCBvbiA0LjE0LjEyOSwgcG9ydGVkIHRvIHY1LjIuNywgY29tcGlsZWQgdGhl
-cmUuDQoNCj4gDQo+IEJ1dCB0aGVyZSBhcmUgMiB0aGluZ3MgdG8gZml4Og0KPiANCj4gMSkgTWF5
-YmUgcGljayBhIG1vcmUgZGVzY3JpcHRpdmUgc3RydWN0IG1lbWJlciBuYW1lIHRoZW4gcGRldi4N
-Cj4gICAgIHBkZXYgd2l0aCBwY2ktZGV2aWNlcyBvZnRlbiBwb2ludHMgdG8gYSBwY2lfZGV2aWNl
-IC4uLg0KPiAgICAgSG93IGFib3V0OiByb2xlX3N3aXRjaF9wZGV2ID8NCg0KT2ssIGdvb2QgcG9p
-bnQuIEhhZCBwbGF0Zm9ybSBkZXYgcGRldiBpbiBtaW5kIC4uLg0KDQo+IA0KPiAyKSB4aGNpX2V4
-dF9jYXBfaW5pdCgpIGlzIG5vdCB0aGUgbGFzdCBjYWxsIHdoaWNoIGNhbiBmYWlsIGluDQo+ICAg
-ICB4aGNpX3BjaV9wcm9iZSgpLCBzaW5jZSB5b3Ugbm93IG5vIGxvbmdlciB1c2UNCj4gZGV2bV9h
-ZGRfYWN0aW9uX29yX3Jlc2V0DQo+ICAgICBmb3IgYXV0by1jbGVhbnVwLCB5b3UgbXVzdCBub3cg
-bWFudWFsbHkgY2xlYW51cCBieSBjYWxsaW5nDQo+ICAgICB4aGNpX2V4dF9jYXBfcmVtb3ZlKCkg
-d2hlbiBsYXRlciBzdGVwcyBvZiB4aGNpX3BjaV9wcm9iZSgpIGZhaWwuDQo+ICAgICBpdCBsb29r
-cyBsaWtlIHlvdSB3aWxsIG5lZWQgYSBuZXcgZXh0X2NhcF9yZW1vdmUgZXJyb3ItZXhpdCBsYWJl
-bA0KPiAgICAgZm9yIHRoaXMgcHV0IGFib3ZlIHRoZSBwdXRfdXNiM19oY2QgbGFiZWwgYW5kIGdv
-dG8gdGhpcyBuZXcgbGFiZWwNCj4gICAgIGluc3RlYWQgb2YgdG8gcHV0X3VzYjNfaGNkIGluIGFs
-bCBlcnJvciBwYXRocyBhZnRlciBhIHN1Y2Nlc3NmdWwgY2FsbA0KPiAgICAgdG8geGhjaV9leHRf
-Y2FwX2luaXQoKQ0KDQpSaWdodC4gV2lsbCByZXZpZXcgdGhpcyBwYXRoIGFuZCBjb3JyZWN0IGFj
-Y29yZGluZ2x5Lg0KDQpNYXliZSBhbiBhZGRpdGlvbmFsIGxhYmVsIGlzbid0IHJlcXVpcmVkIGJl
-Y2F1c2UgcGRldiBpcyBvbmx5IHNldCB3aGVuDQp4aGNpX2V4dF9jYXBfaW5pdCBjcmVhdGVkIHRo
-ZSBwbGF0Zm9ybSBkZXZpY2UsIGFuZCB4aGNpX2V4dF9jYXBfcmVtb3ZlDQpjaGVja3MgZm9yIHBk
-ZXYgYmVpbmcgc2V0Lg0KU28gYSBjYWxsIHRvIHhoY2lfZXh0X2NhcF9yZW1vdmUgZG9lc24ndCBo
-YXJtIGlmIHBkZXYgaXMgbm90IHNldCB1cCB5ZXQuDQpCdXQgZm9yIHJlYWRhYmlsaXR5IGl0IG1p
-Z2h0IGJlIGJldHRlciB0byBjcmVhdGUgYSBsYWJlbC4NCg0KQmVzdCByZWdhcmRzDQpDYXJzdGVu
-DQo=
+On driver removal, the platform_device_unregister call
+attached through devm_add_action_or_reset was executed
+after usb_hcd_pci_remove.
+This lead to a use-after-free for the iomem resorce of
+the xhci-ext-caps driver in the platform removal
+because the parent of the resource was freed earlier.
+
+Fix this by reordering of the removal sequence.
+
+Signed-off-by: Carsten Schmid <carsten_schmid@mentor.com>
+---
+v2:
+  - more speaking name for private data element
+  - consider failure in driver init sequence
+  - fix minor issues found by checkpatch.pl
+---
+ drivers/usb/host/xhci-ext-caps.c | 25 +++++++++++++++----------
+ drivers/usb/host/xhci-pci.c      |  8 +++++++-
+ drivers/usb/host/xhci-pci.h      | 20 ++++++++++++++++++++
+ drivers/usb/host/xhci.h          |  1 +
+ 4 files changed, 43 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/usb/host/xhci-pci.h
+
+diff --git a/drivers/usb/host/xhci-ext-caps.c b/drivers/usb/host/xhci-ext-caps.c
+index 399113f9fc5c..28a7d53ecf2c 100644
+--- a/drivers/usb/host/xhci-ext-caps.c
++++ b/drivers/usb/host/xhci-ext-caps.c
+@@ -7,21 +7,19 @@
+ 
+ #include <linux/platform_device.h>
+ #include "xhci.h"
++#include "xhci-pci.h"
+ 
+ #define USB_SW_DRV_NAME		"intel_xhci_usb_sw"
+ #define USB_SW_RESOURCE_SIZE	0x400
+ 
+-static void xhci_intel_unregister_pdev(void *arg)
+-{
+-	platform_device_unregister(arg);
+-}
+-
+ static int xhci_create_intel_xhci_sw_pdev(struct xhci_hcd *xhci, u32 cap_offset)
+ {
+ 	struct usb_hcd *hcd = xhci_to_hcd(xhci);
+ 	struct device *dev = hcd->self.controller;
+ 	struct platform_device *pdev;
+ 	struct resource	res = { 0, };
++	struct xhci_pci_priv *priv = (struct xhci_pci_priv *)xhci->priv;
++
+ 	int ret;
+ 
+ 	pdev = platform_device_alloc(USB_SW_DRV_NAME, PLATFORM_DEVID_NONE);
+@@ -52,11 +50,7 @@ static int xhci_create_intel_xhci_sw_pdev(struct xhci_hcd *xhci, u32 cap_offset)
+ 		return ret;
+ 	}
+ 
+-	ret = devm_add_action_or_reset(dev, xhci_intel_unregister_pdev, pdev);
+-	if (ret) {
+-		dev_err(dev, "couldn't add unregister action for intel_xhci_usb_sw pdev\n");
+-		return ret;
+-	}
++	priv->role_switch_pdev = pdev;
+ 
+ 	return 0;
+ }
+@@ -88,3 +82,14 @@ int xhci_ext_cap_init(struct xhci_hcd *xhci)
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(xhci_ext_cap_init);
++
++void xhci_ext_cap_remove(struct xhci_hcd *xhci)
++{
++	struct xhci_pci_priv *priv = (struct xhci_pci_priv *)xhci->priv;
++
++	if (priv->role_switch_pdev) {
++		platform_device_unregister(priv->role_switch_pdev);
++		priv->role_switch_pdev = NULL;
++	}
++}
++EXPORT_SYMBOL_GPL(xhci_ext_cap_remove);
+diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+index c2fe218e051f..f2201f380c17 100644
+--- a/drivers/usb/host/xhci-pci.c
++++ b/drivers/usb/host/xhci-pci.c
+@@ -14,6 +14,7 @@
+ #include <linux/acpi.h>
+ 
+ #include "xhci.h"
++#include "xhci-pci.h"
+ #include "xhci-trace.h"
+ 
+ #define SSIC_PORT_NUM		2
+@@ -62,6 +63,7 @@ static struct hc_driver __read_mostly xhci_pci_hc_driver;
+ static int xhci_pci_setup(struct usb_hcd *hcd);
+ 
+ static const struct xhci_driver_overrides xhci_pci_overrides __initconst = {
++	.extra_priv_size = sizeof(struct xhci_pci_priv),
+ 	.reset = xhci_pci_setup,
+ };
+ 
+@@ -350,7 +352,7 @@ static int xhci_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	retval = usb_add_hcd(xhci->shared_hcd, dev->irq,
+ 			IRQF_SHARED);
+ 	if (retval)
+-		goto put_usb3_hcd;
++		goto remove_ext_cap;
+ 	/* Roothub already marked as USB 3.0 speed */
+ 
+ 	if (!(xhci->quirks & XHCI_BROKEN_STREAMS) &&
+@@ -368,6 +370,8 @@ static int xhci_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 	return 0;
+ 
++remove_ext_cap:
++	xhci_ext_cap_remove(xhci);
+ put_usb3_hcd:
+ 	usb_put_hcd(xhci->shared_hcd);
+ dealloc_usb2_hcd:
+@@ -393,6 +397,8 @@ static void xhci_pci_remove(struct pci_dev *dev)
+ 		xhci->shared_hcd = NULL;
+ 	}
+ 
++	xhci_ext_cap_remove(xhci);
++
+ 	/* Workaround for spurious wakeups at shutdown with HSW */
+ 	if (xhci->quirks & XHCI_SPURIOUS_WAKEUP)
+ 		pci_set_power_state(dev, PCI_D3hot);
+diff --git a/drivers/usb/host/xhci-pci.h b/drivers/usb/host/xhci-pci.h
+new file mode 100644
+index 000000000000..fc0cde231679
+--- /dev/null
++++ b/drivers/usb/host/xhci-pci.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0
++ *
++ * xhci-pci.h - xHCI extended capability handling platform Glue.
++ *
++ * Copyright (C) 2019 Mentor Graphics (Deutschland) GmbH
++ * Derived from xhci-plat.h
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ */
++
++#ifndef _XHCI_PCI_H
++#define _XHCI_PCI_H
++
++struct xhci_pci_priv {
++	struct platform_device *role_switch_pdev;
++};
++
++#endif	/* _XHCI_PCI_H */
+diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
+index fabbce1c542a..847d2021fc2c 100644
+--- a/drivers/usb/host/xhci.h
++++ b/drivers/usb/host/xhci.h
+@@ -2052,6 +2052,7 @@ void xhci_init_driver(struct hc_driver *drv,
+ 		      const struct xhci_driver_overrides *over);
+ int xhci_disable_slot(struct xhci_hcd *xhci, u32 slot_id);
+ int xhci_ext_cap_init(struct xhci_hcd *xhci);
++void xhci_ext_cap_remove(struct xhci_hcd *xhci);
+ 
+ int xhci_suspend(struct xhci_hcd *xhci, bool do_wakeup);
+ int xhci_resume(struct xhci_hcd *xhci, bool hibernated);
+-- 
+2.17.1
