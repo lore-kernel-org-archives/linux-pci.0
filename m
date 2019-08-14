@@ -2,229 +2,85 @@ Return-Path: <SRS0=jmuj=WK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BD21C41514
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 12:54:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1105C32757
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:32:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2CDC3206C1
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 12:54:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8B22206C1
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 13:32:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727697AbfHNMyn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Aug 2019 08:54:43 -0400
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:38970 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726365AbfHNMyf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2019 08:54:35 -0400
-Received: by mail-ed1-f66.google.com with SMTP id g8so767762edm.6
-        for <linux-pci@vger.kernel.org>; Wed, 14 Aug 2019 05:54:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=VhOtcUs6qecW9A5Ku6t6s7+WyBSfMvyZ0VSLJHIcnmU=;
-        b=D9tUU0YEFBXMadGDx0nLZflssJymUfZhkienHx+Qp/YN21+vDs2uPYDe3dnmpXBtF1
-         qnkel4+FS65uyPrpL1uSAkt7hR8p0hqgCQqeH/X8iU3GB2XfC0V39X/2PGyDA5Mkb1+V
-         Z46P6jag271R/W0WzRSMDD0BawX3vjNdN4bZ8GopZfQCF/RN7I/y+kEpXIw6DmKAejZ7
-         7c5sQNQHv90KHws+ltGFFM7pgskbNUWBQL5Fr/cILbhx7Z6uJwYO2r2hgIk9EdvDNy1f
-         Ma8CwPRbVCANigt+oMtcSmbsKo7LC/EdTusyjh5CgNuFF25Q+3tJOvqZTewDyLmw+Kd7
-         PWUQ==
-X-Gm-Message-State: APjAAAVQmJbDqY19EzSl9PGIoLR8k3gwW8MmcjyQH1UQUgoKOQrQUC/H
-        fVfWfSDhhZPTV3vZseW9wuitolPQ4n0=
-X-Google-Smtp-Source: APXvYqwHMa7CKohDcZxGXolr6aOboQawDOqzt7xdmk0Fs4g+/LFuohCkiGITZ0UNicDhSJh1b747Vw==
-X-Received: by 2002:a50:fb82:: with SMTP id e2mr2969241edq.15.1565787272521;
-        Wed, 14 Aug 2019 05:54:32 -0700 (PDT)
-Received: from shalem.localdomain (84-106-84-65.cable.dynamic.v4.ziggo.nl. [84.106.84.65])
-        by smtp.gmail.com with ESMTPSA id ng6sm10794969ejb.13.2019.08.14.05.54.31
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Wed, 14 Aug 2019 05:54:31 -0700 (PDT)
-Subject: Re: [PATCH] usb: xhci-pci: reorder removal to avoid use-after-free
-To:     "Schmid, Carsten" <Carsten_Schmid@mentor.com>
-Cc:     "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1565782781938.37795@mentor.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <15aa45c7-6e45-d03f-9336-4291f8b2dc66@redhat.com>
-Date:   Wed, 14 Aug 2019 14:54:31 +0200
+        id S1728100AbfHNNcs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Aug 2019 09:32:48 -0400
+Received: from mga04.intel.com ([192.55.52.120]:10031 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727558AbfHNNcr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Aug 2019 09:32:47 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Aug 2019 06:32:47 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,385,1559545200"; 
+   d="scan'208";a="178157851"
+Received: from mattu-haswell.fi.intel.com (HELO [10.237.72.164]) ([10.237.72.164])
+  by fmsmga007.fm.intel.com with ESMTP; 14 Aug 2019 06:32:44 -0700
+Subject: Re: Titan Ridge xHCI may stop to working after re-plugging the dock
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc:     Felipe Balbi <felipe.balbi@linux.intel.com>,
+        Oliver Neukum <oneukum@suse.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Kent Lin <kent.lin@canonical.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux USB List <linux-usb@vger.kernel.org>
+References: <993E78A1-2A60-46D8-AA51-F4CB077E48D1@canonical.com>
+ <1562759399.5312.6.camel@suse.com> <87pnm6sd10.fsf@linux.intel.com>
+ <77580193-D67B-48B1-8528-03ED4E7E8D64@canonical.com>
+ <87blxqs3fh.fsf@linux.intel.com>
+ <749516DB-65B6-4D59-8C77-7883649D1F25@canonical.com>
+ <8113f4a4-e96e-9b73-cd7a-1dbb800d68bb@linux.intel.com>
+ <203745C2-85AF-4A37-8628-636632D14564@canonical.com>
+ <78466959-E500-4AA0-8440-CBF80DBFE260@canonical.com>
+From:   Mathias Nyman <mathias.nyman@linux.intel.com>
+Message-ID: <9f05b78d-7b28-1e8c-bdf9-22d0c148c719@linux.intel.com>
+Date:   Wed, 14 Aug 2019 16:34:34 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <1565782781938.37795@mentor.com>
+In-Reply-To: <78466959-E500-4AA0-8440-CBF80DBFE260@canonical.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 14-08-19 13:39, Schmid, Carsten wrote:
-> On driver removal, the platform_device_unregister call
-> attached through devm_add_action_or_reset was executed
-> after usb_hcd_pci_remove.
-> This lead to a use-after-free for the iomem resorce of
-> the xhci-ext-caps driver in the platform removal
-> because the parent of the resource was freed earlier.
+On 13.8.2019 9.50, Kai-Heng Feng wrote:
+> Hi Mathias,
 > 
-> Fix this by reordering of the removal sequence.
+> at 21:24, Kai-Heng Feng <kai.heng.feng@canonical.com> wrote:
 > 
-> Signed-off-by: Carsten Schmid <carsten_schmid@mentor.com>
-
-Assuming this has been tested, overal this looks good to me.
-
-But there are 2 things to fix:
-
-1) Maybe pick a more descriptive struct member name then pdev.
-    pdev with pci-devices often points to a pci_device ...
-    How about: role_switch_pdev ?
-
-2) xhci_ext_cap_init() is not the last call which can fail in
-    xhci_pci_probe(), since you now no longer use devm_add_action_or_reset
-    for auto-cleanup, you must now manually cleanup by calling
-    xhci_ext_cap_remove() when later steps of xhci_pci_probe() fail.
-    it looks like you will need a new ext_cap_remove error-exit label
-    for this put above the put_usb3_hcd label and goto this new label
-    instead of to put_usb3_hcd in all error paths after a successful call
-    to xhci_ext_cap_init()
-
-Regards,
-
-Hans
-
-
-> ---
->   drivers/usb/host/xhci-ext-caps.c | 22 ++++++++++++----------
->   drivers/usb/host/xhci-pci.c      |  4 ++++
->   drivers/usb/host/xhci-pci.h      | 19 +++++++++++++++++++
->   drivers/usb/host/xhci.h          |  1 +
->   4 files changed, 36 insertions(+), 10 deletions(-)
->   create mode 100644 drivers/usb/host/xhci-pci.h
+>> at 22:45, Mathias Nyman <mathias.nyman@linux.intel.com> wrote:
 > 
-> diff --git a/drivers/usb/host/xhci-ext-caps.c b/drivers/usb/host/xhci-ext-caps.c
-> index 399113f9fc5c..d2ab1e2a39c0 100644
-> --- a/drivers/usb/host/xhci-ext-caps.c
-> +++ b/drivers/usb/host/xhci-ext-caps.c
-> @@ -7,21 +7,19 @@
->   
->   #include <linux/platform_device.h>
->   #include "xhci.h"
-> +#include "xhci-pci.h"
->   
->   #define USB_SW_DRV_NAME		"intel_xhci_usb_sw"
->   #define USB_SW_RESOURCE_SIZE	0x400
->   
-> -static void xhci_intel_unregister_pdev(void *arg)
-> -{
-> -	platform_device_unregister(arg);
-> -}
-> -
->   static int xhci_create_intel_xhci_sw_pdev(struct xhci_hcd *xhci, u32 cap_offset)
->   {
->   	struct usb_hcd *hcd = xhci_to_hcd(xhci);
->   	struct device *dev = hcd->self.controller;
->   	struct platform_device *pdev;
->   	struct resource	res = { 0, };
-> +	struct xhci_pci_priv *priv = (struct xhci_pci_priv *)xhci->priv;
-> +
->   	int ret;
->   
->   	pdev = platform_device_alloc(USB_SW_DRV_NAME, PLATFORM_DEVID_NONE);
-> @@ -52,11 +50,7 @@ static int xhci_create_intel_xhci_sw_pdev(struct xhci_hcd *xhci, u32 cap_offset)
->   		return ret;
->   	}
->   
-> -	ret = devm_add_action_or_reset(dev, xhci_intel_unregister_pdev, pdev);
-> -	if (ret) {
-> -		dev_err(dev, "couldn't add unregister action for intel_xhci_usb_sw pdev\n");
-> -		return ret;
-> -	}
-> +	priv->pdev = pdev;
->   
->   	return 0;
->   }
-> @@ -88,3 +82,11 @@ int xhci_ext_cap_init(struct xhci_hcd *xhci)
->   	return 0;
->   }
->   EXPORT_SYMBOL_GPL(xhci_ext_cap_init);
-> +
-> +void xhci_ext_cap_remove(struct xhci_hcd *xhci)
-> +{
-> +	struct xhci_pci_priv *priv = (struct xhci_pci_priv *)xhci->priv;
-> +	if (priv->pdev)
-> +		platform_device_unregister(priv->pdev);
-> +}
-> +EXPORT_SYMBOL_GPL(xhci_ext_cap_remove);
-> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-> index c2fe218e051f..a4d094df56f7 100644
-> --- a/drivers/usb/host/xhci-pci.c
-> +++ b/drivers/usb/host/xhci-pci.c
-> @@ -14,6 +14,7 @@
->   #include <linux/acpi.h>
->   
->   #include "xhci.h"
-> +#include "xhci-pci.h"
->   #include "xhci-trace.h"
->   
->   #define SSIC_PORT_NUM		2
-> @@ -62,6 +63,7 @@ static struct hc_driver __read_mostly xhci_pci_hc_driver;
->   static int xhci_pci_setup(struct usb_hcd *hcd);
->   
->   static const struct xhci_driver_overrides xhci_pci_overrides __initconst = {
-> +	.extra_priv_size = sizeof(struct xhci_pci_priv),
->   	.reset = xhci_pci_setup,
->   };
->   
-> @@ -393,6 +395,8 @@ static void xhci_pci_remove(struct pci_dev *dev)
->   		xhci->shared_hcd = NULL;
->   	}
->   
-> +	xhci_ext_cap_remove(xhci);
-> +
->   	/* Workaround for spurious wakeups at shutdown with HSW */
->   	if (xhci->quirks & XHCI_SPURIOUS_WAKEUP)
->   		pci_set_power_state(dev, PCI_D3hot);
-> diff --git a/drivers/usb/host/xhci-pci.h b/drivers/usb/host/xhci-pci.h
-> new file mode 100644
-> index 000000000000..ead9618d7368
-> --- /dev/null
-> +++ b/drivers/usb/host/xhci-pci.h
-> @@ -0,0 +1,19 @@
-> +/*
-> + * xhci-pci.h - xHCI extended capability handling platform Glue.
-> + *
-> + * Copyright (C) 2019 Mentor Graphics (Deutschland) GmbH
-> + * Derived from xhci-plat.h
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * version 2 as published by the Free Software Foundation.
-> + */
-> +
-> +#ifndef _XHCI_PCI_H
-> +#define _XHCI_PCI_H
-> +
-> +struct xhci_pci_priv {
-> +	struct platform_device *pdev;
-> +};
-> +
-> +#endif	/* _XHCI_PCI_H */
-> diff --git a/drivers/usb/host/xhci.h b/drivers/usb/host/xhci.h
-> index fabbce1c542a..847d2021fc2c 100644
-> --- a/drivers/usb/host/xhci.h
-> +++ b/drivers/usb/host/xhci.h
-> @@ -2052,6 +2052,7 @@ void xhci_init_driver(struct hc_driver *drv,
->   		      const struct xhci_driver_overrides *over);
->   int xhci_disable_slot(struct xhci_hcd *xhci, u32 slot_id);
->   int xhci_ext_cap_init(struct xhci_hcd *xhci);
-> +void xhci_ext_cap_remove(struct xhci_hcd *xhci);
->   
->   int xhci_suspend(struct xhci_hcd *xhci, bool do_wakeup);
->   int xhci_resume(struct xhci_hcd *xhci, bool hibernated);
+> [snipped]
 > 
+>> Yes, disabling runtime PM can workaround this issue.
+> 
+> What’s next step here? Is it a firmware bug?
+> 
+
+Can't say.
+ From xhci driver point of view the 39:00.0 xHC controller isn't accessible after dock
+is plugged back in. Looks like PCI side has issues getting the controller back to D3
+after it was runtime suspended to D0 at dock unplug:
+
+[  346.455568] pci_raw_set_power_state: 25 callbacks suppressed
+[  346.455574] xhci_hcd 0000:39:00.0: Refused to change power state, currently in D3
+
+As Mika suggested in the bug take a look at PCI side, especially the PCI status before
+a failing dock replug.
+
+-Mathias
