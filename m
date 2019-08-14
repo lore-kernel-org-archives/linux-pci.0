@@ -2,228 +2,245 @@ Return-Path: <SRS0=jmuj=WK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93838C433FF
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 20:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B263EC433FF
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 23:14:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E63A216F4
-	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 20:42:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68E5E2064A
+	for <linux-pci@archiver.kernel.org>; Wed, 14 Aug 2019 23:14:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Mellanox.com header.i=@Mellanox.com header.b="hfFyAFzX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fyNob6e0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729691AbfHNUmZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 14 Aug 2019 16:42:25 -0400
-Received: from mail-eopbgr70050.outbound.protection.outlook.com ([40.107.7.50]:50753
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726505AbfHNUmY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Aug 2019 16:42:24 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=fNmSjqVE0sR//cT/cFVxYuCKp97BwVv04MeaVgQczENbrj9vCsW3MCPe4/3sq1qpYTyWf4tuqQJ2udsSFnTR96q2EkwCiscQTkM0IgwMf7vATaf6E2LIIRXAVhKcfsQKah/aiRam9Qj2li/asZlKVYMkf2OPZM7PT4GN6qNIDpqVL5IdI8UFB26JMx/AKnXepSpDE5ozasxpUeMv8p8/Iljm4p1P17axpFgS4O3PxdAc09mkj2BmehGVufPbNUYtdz7wWztIHDOaeI2up3Gpf9MHxNdl24IjN+5JW5/V6tTd6K2Rn7sbwRmyEOAeE7mxE1BLf12Gk0gCVFndztELsg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JGzR2SXPwNVGGpWgQ9zjS8EUSuhaTjiVs4UE/KOXtfc=;
- b=VQjFN/+0C2JMNFV30lZ4xRpEnsP7PUwbi5aiHbOHnh/8+PCK5FS+7pcnz4pK/9Nz4+dWAQI3+Yq4KqGBVvzleMXTql1oaUyLpFX8e7uKjPO6zGff5c0VCxKqPCReZOXkPhg/tSr/VfE9iRQZg4nXJd7JoVDlEFw93visnrRz+6+0lBvGrZJ+GagSOpSklcGpiniHYBb52tCG486KmtFUrobsAaMIBH7WsEMTUt5Ift00hVSNu2j1QiKHtC1Ay8XaXI/Cfg8x1zvz15scCXk97VYtRAr34jEUokrbrDe4t/vsrtrDe6hCitrIbtMbfRdzjFS7DUF9NRwEwLMNdRzT/A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mellanox.com; dmarc=pass action=none header.from=mellanox.com;
- dkim=pass header.d=mellanox.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Mellanox.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JGzR2SXPwNVGGpWgQ9zjS8EUSuhaTjiVs4UE/KOXtfc=;
- b=hfFyAFzXB7ccpHtqlbHH+f/XfQpla5zylXO3PNn18kRbiUR1Rg1WrvoJF3crsiMvYz3aS0DvaVXM+ccLTB/m0RLfrFGrQdj9IXW4qASTKt+JDu1G0LKFdbsbrjM2YHgyQU+V+0XKICAir14NLOdeoazFkenG4R8IwGNHcqMCtnw=
-Received: from VI1PR05MB3342.eurprd05.prod.outlook.com (10.170.238.143) by
- VI1PR05MB5616.eurprd05.prod.outlook.com (20.177.203.92) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2157.20; Wed, 14 Aug 2019 20:41:48 +0000
-Received: from VI1PR05MB3342.eurprd05.prod.outlook.com
- ([fe80::3195:8043:2057:2780]) by VI1PR05MB3342.eurprd05.prod.outlook.com
- ([fe80::3195:8043:2057:2780%6]) with mapi id 15.20.2157.022; Wed, 14 Aug 2019
- 20:41:48 +0000
-From:   Mark Bloch <markb@mellanox.com>
-To:     haiyangz <haiyangz@microsoft.com>,
-        "sashal@kernel.org" <sashal@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        "leon@kernel.org" <leon@kernel.org>,
-        Eran Ben Elisha <eranbe@mellanox.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC:     kys <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH net-next, 5/6] net/mlx5: Add HV VHCA control agent
-Thread-Topic: [PATCH net-next, 5/6] net/mlx5: Add HV VHCA control agent
-Thread-Index: AQHVUtPKYcl91WlxIUe+WkiPBDYfFqb7G66A
-Date:   Wed, 14 Aug 2019 20:41:47 +0000
-Message-ID: <745f663e-0c56-84d0-a02b-106f788e3e8f@mellanox.com>
-References: <1565809632-39138-1-git-send-email-haiyangz@microsoft.com>
- <1565809632-39138-6-git-send-email-haiyangz@microsoft.com>
-In-Reply-To: <1565809632-39138-6-git-send-email-haiyangz@microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: MWHPR04CA0049.namprd04.prod.outlook.com
- (2603:10b6:300:6c::11) To VI1PR05MB3342.eurprd05.prod.outlook.com
- (2603:10a6:802:1d::15)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=markb@mellanox.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [208.186.24.68]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 07bf0941-93e3-43c1-2e22-08d720f7d3af
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(7168020)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:VI1PR05MB5616;
-x-ms-traffictypediagnostic: VI1PR05MB5616:
-x-ld-processed: a652971c-7d2e-4d9b-a6a4-d149256f461b,ExtAddr
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <VI1PR05MB5616399C0D9EF0C23026C4D0D2AD0@VI1PR05MB5616.eurprd05.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:6790;
-x-forefront-prvs: 01294F875B
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(376002)(136003)(366004)(396003)(346002)(39860400002)(199004)(189003)(6506007)(7416002)(110136005)(256004)(76176011)(14454004)(55236004)(25786009)(386003)(6116002)(54906003)(53546011)(2201001)(14444005)(4326008)(86362001)(52116002)(36756003)(6486002)(31686004)(186003)(229853002)(53936002)(6436002)(3846002)(81156014)(6246003)(66066001)(316002)(102836004)(31696002)(26005)(478600001)(81166006)(305945005)(8936002)(7736002)(11346002)(8676002)(486006)(2616005)(71190400001)(71200400001)(1511001)(64756008)(2906002)(2501003)(446003)(5660300002)(99286004)(66556008)(476003)(66476007)(66446008)(66946007)(6512007)(921003)(1121003);DIR:OUT;SFP:1101;SCL:1;SRVR:VI1PR05MB5616;H:VI1PR05MB3342.eurprd05.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-received-spf: None (protection.outlook.com: mellanox.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: cVNmo5Pe9R0t9Vulg0D4edjIZgRb9YoeN86Vtfnj5w7BR2c4NhdqUAQkfqYRi0D7TGsUsZSOTjP9/S5uoL2czGaxKuSDYgXIthtUBdABtWCkCJN83ZD+kekjopT4xqIkqjsaIdPyUokjzi4oltXNmTRGI2iLFNEVhZBLiYKjLHLLb90UyIhErl4cLsKNn+RpkxYqEnwoBPR2lVrHU1gnrREsFeSRuC+vfY6dL6qOch8wfanPpaQwB3b5GXJFXjK4N0QvLrrt+GN1lb7UcLGCGHL1/JP6PaHo+UUm99NOtgPzUiogzur+pMmOG/t+87yxVOpshqB53wWWNK43PU0ZHYpFxDlUoRwzFkv/jYdT9+V3EK1nWgfLHYtSDqyS5yA+VDQp9wukEg5iLCLhNb4RO6vWz1M9t7rU2YbKwmmyuuI=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <1A5248BD66B1734BAD3564EB460A9703@eurprd05.prod.outlook.com>
-Content-Transfer-Encoding: base64
+        id S1727848AbfHNXOc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 14 Aug 2019 19:14:32 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:38507 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726490AbfHNXOc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Aug 2019 19:14:32 -0400
+Received: by mail-ot1-f68.google.com with SMTP id r20so2046266ota.5;
+        Wed, 14 Aug 2019 16:14:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=HHq+oxQ+RcU0cpnKyr/UwNvGamPQ9xWpmgS+w5o7uPg=;
+        b=fyNob6e0SmKDM/Sf2JROj1no5CMDOJcQ/r3Fhyttou8SMF38hkOzsjNV5SnVaIrmYg
+         sldSWXgxREyRGwAxTWAm7Ijg+2HoP2+dscBLK+PIxcIutdRVrY89CGBmsrMDlv+4B3N4
+         jNaNtyYduM9lGN8I8JTBu5sdCbIzHy1zqea5jGkoXCtIoaHypKunY+pc9J8OasXNhJyF
+         CyzPhh4N1VU1GXuORyy1CJ1QU/zpH21gMCfGrtkofd5GHSFLKNJRVMtaFd72ym7+u5hs
+         68v5OCijBqE7B3jusYMc4I2aJG0CboFnEVhUUc/50MwzSR7yovYjRycH/Syp1yHjBb30
+         0dZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=HHq+oxQ+RcU0cpnKyr/UwNvGamPQ9xWpmgS+w5o7uPg=;
+        b=p0GiED/cWmI//FooiY3IwBdYscJd0QIIhjJtJxcU/WKOzxI7v0uTC296+IDJx9/15B
+         RZUuWCiP/WovOnsXhya2+rTpRdB+HVZTXJa2+hPUFVlefnT0eMUKWdiVYiLN7pblkt/B
+         2SJQ1sLP1Bh5gJSKrFCjPs3WyY3HQjePVoT8RNoVKbmN5UILJtogHFHvWHY/xmbWa/zO
+         GJARpVR1X+DIloiu4XyWjPE8+8q96BeVJIPfKzLDEu8Ls1gnWato71r84MShfE+n36Lg
+         sAWl2ilp5SRdzE4r1CLCIz57c9DqZcPSeIY4Ku0q2zZGxwo+6rmjF5X2FuSj4ggdNOth
+         JZZw==
+X-Gm-Message-State: APjAAAW8h1B/w/+FTa+rWOW1sjkIIT9qDWHAK/0FBnVtnCOmj+BRza+Y
+        ESKwJyC8y1WQ7lgwwC8PDnhAJ72ezv/caA==
+X-Google-Smtp-Source: APXvYqyDYueuD9QDZ+Rja/eGcDBvqaevTYEMGzYx861bh4J2sL2u6/qjE1LBMT4Vd8nXY6l+6oJ24g==
+X-Received: by 2002:a5d:924e:: with SMTP id e14mr483473iol.215.1565824470948;
+        Wed, 14 Aug 2019 16:14:30 -0700 (PDT)
+Received: from JATN (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
+        by smtp.gmail.com with ESMTPSA id 8sm1434519ion.26.2019.08.14.16.14.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Aug 2019 16:14:30 -0700 (PDT)
+Date:   Wed, 14 Aug 2019 17:14:27 -0600
+From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
+To:     Greg KH <gregkh@linuxfoundation.org>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org
+Subject: Re: [Linux-kernel-mentees] [PATCH v2 1/3] PCI: sysfs: Define device
+ attributes with DEVICE_ATTR*()
+Message-ID: <20190814231427.GC110786@JATN>
+References: <20190809195721.34237-1-skunberg.kelsey@gmail.com>
+ <20190813204513.4790-1-skunberg.kelsey@gmail.com>
+ <20190813204513.4790-2-skunberg.kelsey@gmail.com>
+ <20190814075220.GA4067@kroah.com>
 MIME-Version: 1.0
-X-OriginatorOrg: Mellanox.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 07bf0941-93e3-43c1-2e22-08d720f7d3af
-X-MS-Exchange-CrossTenant-originalarrivaltime: 14 Aug 2019 20:41:47.8707
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a652971c-7d2e-4d9b-a6a4-d149256f461b
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: hbK4S4DWCFBv1d+JZzYIscoTCq7RfCQpmSqiRe4q9uTxdc5K9UOdj3iWNF00DlimyZfZgS9R/emxCZLSSfoPyA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR05MB5616
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190814075220.GA4067@kroah.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-DQoNCk9uIDgvMTQvMTkgMTI6MDkgUE0sIEhhaXlhbmcgWmhhbmcgd3JvdGU6DQo+IEZyb206IEVy
-YW4gQmVuIEVsaXNoYSA8ZXJhbmJlQG1lbGxhbm94LmNvbT4NCj4gDQo+IENvbnRyb2wgYWdlbnQg
-aXMgcmVzcG9uc2libGUgb3ZlciBvZiB0aGUgY29udHJvbCBibG9jayAoSUQgMCkuIEl0IHNob3Vs
-ZA0KPiB1cGRhdGUgdGhlIFBGIHZpYSB0aGlzIGJsb2NrIGFib3V0IGV2ZXJ5IGNhcGFiaWxpdHkg
-Y2hhbmdlLiBJbiBhZGRpdGlvbiwNCj4gdXBvbiBibG9jayAwIGludmFsaWRhdGUsIGl0IHNob3Vs
-ZCBhY3RpdmF0ZSBhbGwgb3RoZXIgc3VwcG9ydGVkIGFnZW50cw0KPiB3aXRoIGRhdGEgcmVxdWVz
-dHMgZnJvbSB0aGUgUEYuDQo+IA0KPiBVcG9uIGFnZW50IGNyZWF0ZS9kZXN0cm95LCB0aGUgaW52
-YWxpZGF0ZSBjYWxsYmFjayBvZiB0aGUgY29udHJvbCBhZ2VudA0KPiBpcyBiZWluZyBjYWxsZWQg
-aW4gb3JkZXIgdG8gdXBkYXRlIHRoZSBQRiBkcml2ZXIgYWJvdXQgdGhpcyBjaGFuZ2UuDQo+IA0K
-PiBUaGUgY29udHJvbCBhZ2VudCBpcyBhbiBpbnRlZ3JhbCBwYXJ0IG9mIEhWIFZIQ0EgYW5kIHdp
-bGwgYmUgY3JlYXRlZA0KPiBhbmQgZGVzdHJveSBhcyBwYXJ0IG9mIHRoZSBIViBWSENBIGluaXQv
-Y2xlYW51cCBmbG93Lg0KPiANCj4gU2lnbmVkLW9mZi1ieTogRXJhbiBCZW4gRWxpc2hhIDxlcmFu
-YmVAbWVsbGFub3guY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBTYWVlZCBNYWhhbWVlZCA8c2FlZWRt
-QG1lbGxhbm94LmNvbT4NCj4gLS0tDQo+ICAuLi4vbmV0L2V0aGVybmV0L21lbGxhbm94L21seDUv
-Y29yZS9saWIvaHZfdmhjYS5jICB8IDEyMiArKysrKysrKysrKysrKysrKysrKy0NCj4gIC4uLi9u
-ZXQvZXRoZXJuZXQvbWVsbGFub3gvbWx4NS9jb3JlL2xpYi9odl92aGNhLmggIHwgICAxICsNCj4g
-IDIgZmlsZXMgY2hhbmdlZCwgMTIxIGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQo+IA0K
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvZXRoZXJuZXQvbWVsbGFub3gvbWx4NS9jb3JlL2xp
-Yi9odl92aGNhLmMgYi9kcml2ZXJzL25ldC9ldGhlcm5ldC9tZWxsYW5veC9tbHg1L2NvcmUvbGli
-L2h2X3ZoY2EuYw0KPiBpbmRleCBiMmVlYmRmLi4zYzdmZmZhIDEwMDY0NA0KPiAtLS0gYS9kcml2
-ZXJzL25ldC9ldGhlcm5ldC9tZWxsYW5veC9tbHg1L2NvcmUvbGliL2h2X3ZoY2EuYw0KPiArKysg
-Yi9kcml2ZXJzL25ldC9ldGhlcm5ldC9tZWxsYW5veC9tbHg1L2NvcmUvbGliL2h2X3ZoY2EuYw0K
-PiBAQCAtMTEwLDIyICsxMTAsMTMxIEBAIHZvaWQgbWx4NV9odl92aGNhX2ludmFsaWRhdGUodm9p
-ZCAqY29udGV4dCwgdTY0IGJsb2NrX21hc2spDQo+ICAJcXVldWVfd29yayhodl92aGNhLT53b3Jr
-X3F1ZXVlLCAmd29yay0+aW52YWxpZGF0ZV93b3JrKTsNCj4gIH0NCj4gIA0KPiArI2RlZmluZSBB
-R0VOVF9NQVNLKHR5cGUpICh0eXBlID8gQklUKHR5cGUgLSAxKSA6IDAgLyogY29udHJvbCAqLykN
-Cj4gKw0KPiArc3RhdGljIHZvaWQgbWx4NV9odl92aGNhX2FnZW50c19jb250cm9sKHN0cnVjdCBt
-bHg1X2h2X3ZoY2EgKmh2X3ZoY2EsDQo+ICsJCQkJCXN0cnVjdCBtbHg1X2h2X3ZoY2FfY29udHJv
-bF9ibG9jayAqYmxvY2spDQo+ICt7DQo+ICsJaW50IGk7DQo+ICsNCj4gKwlmb3IgKGkgPSAwOyBp
-IDwgTUxYNV9IVl9WSENBX0FHRU5UX01BWDsgaSsrKSB7DQo+ICsJCXN0cnVjdCBtbHg1X2h2X3Zo
-Y2FfYWdlbnQgKmFnZW50ID0gaHZfdmhjYS0+YWdlbnRzW2ldOw0KPiArDQo+ICsJCWlmICghYWdl
-bnQgfHwgIWFnZW50LT5jb250cm9sKQ0KPiArCQkJY29udGludWU7DQo+ICsNCj4gKwkJaWYgKCEo
-QUdFTlRfTUFTSyhhZ2VudC0+dHlwZSkgJiBibG9jay0+Y29udHJvbCkpDQo+ICsJCQljb250aW51
-ZTsNCj4gKw0KPiArCQlhZ2VudC0+Y29udHJvbChhZ2VudCwgYmxvY2spOw0KPiArCX0NCj4gK30N
-Cj4gKw0KPiArc3RhdGljIHZvaWQgbWx4NV9odl92aGNhX2NhcGFiaWxpdGllcyhzdHJ1Y3QgbWx4
-NV9odl92aGNhICpodl92aGNhLA0KPiArCQkJCSAgICAgIHUzMiAqY2FwYWJpbGl0aWVzKQ0KPiAr
-ew0KPiArCWludCBpOw0KPiArDQo+ICsJZm9yIChpID0gMDsgaSA8IE1MWDVfSFZfVkhDQV9BR0VO
-VF9NQVg7IGkrKykgew0KPiArCQlzdHJ1Y3QgbWx4NV9odl92aGNhX2FnZW50ICphZ2VudCA9IGh2
-X3ZoY2EtPmFnZW50c1tpXTsNCj4gKw0KPiArCQlpZiAoYWdlbnQpDQo+ICsJCQkqY2FwYWJpbGl0
-aWVzIHw9IEFHRU5UX01BU0soYWdlbnQtPnR5cGUpOw0KPiArCX0NCj4gK30NCj4gKw0KPiArc3Rh
-dGljIHZvaWQNCj4gK21seDVfaHZfdmhjYV9jb250cm9sX2FnZW50X2ludmFsaWRhdGUoc3RydWN0
-IG1seDVfaHZfdmhjYV9hZ2VudCAqYWdlbnQsDQo+ICsJCQkJICAgICAgdTY0IGJsb2NrX21hc2sp
-DQo+ICt7DQo+ICsJc3RydWN0IG1seDVfaHZfdmhjYSAqaHZfdmhjYSA9IGFnZW50LT5odl92aGNh
-Ow0KPiArCXN0cnVjdCBtbHg1X2NvcmVfZGV2ICpkZXYgPSBodl92aGNhLT5kZXY7DQo+ICsJc3Ry
-dWN0IG1seDVfaHZfdmhjYV9jb250cm9sX2Jsb2NrICpibG9jazsNCj4gKwl1MzIgY2FwYWJpbGl0
-aWVzID0gMDsNCj4gKwlpbnQgZXJyOw0KPiArDQo+ICsJYmxvY2sgPSBremFsbG9jKHNpemVvZigq
-YmxvY2spLCBHRlBfS0VSTkVMKTsNCj4gKwlpZiAoIWJsb2NrKQ0KPiArCQlyZXR1cm47DQo+ICsN
-Cj4gKwllcnIgPSBtbHg1X2h2X3JlYWRfY29uZmlnKGRldiwgYmxvY2ssIHNpemVvZigqYmxvY2sp
-LCAwKTsNCj4gKwlpZiAoZXJyKQ0KPiArCQlnb3RvIGZyZWVfYmxvY2s7DQo+ICsNCj4gKwltbHg1
-X2h2X3ZoY2FfY2FwYWJpbGl0aWVzKGh2X3ZoY2EsICZjYXBhYmlsaXRpZXMpOw0KPiArDQo+ICsJ
-LyogSW4gY2FzZSBubyBjYXBhYmlsaXRpZXMsIHNlbmQgZW1wdHkgYmxvY2sgaW4gcmV0dXJuICov
-DQo+ICsJaWYgKCFjYXBhYmlsaXRpZXMpIHsNCj4gKwkJbWVtc2V0KGJsb2NrLCAwLCBzaXplb2Yo
-KmJsb2NrKSk7DQo+ICsJCWdvdG8gd3JpdGU7DQo+ICsJfQ0KPiArDQo+ICsJaWYgKGJsb2NrLT5j
-YXBhYmlsaXRpZXMgIT0gY2FwYWJpbGl0aWVzKQ0KPiArCQlibG9jay0+Y2FwYWJpbGl0aWVzID0g
-Y2FwYWJpbGl0aWVzOw0KPiArDQo+ICsJaWYgKGJsb2NrLT5jb250cm9sICYgfmNhcGFiaWxpdGll
-cykNCj4gKwkJZ290byBmcmVlX2Jsb2NrOw0KPiArDQo+ICsJbWx4NV9odl92aGNhX2FnZW50c19j
-b250cm9sKGh2X3ZoY2EsIGJsb2NrKTsNCj4gKwlibG9jay0+Y29tbWFuZF9hY2sgPSBibG9jay0+
-Y29tbWFuZDsNCj4gKw0KPiArd3JpdGU6DQo+ICsJbWx4NV9odl93cml0ZV9jb25maWcoZGV2LCBi
-bG9jaywgc2l6ZW9mKCpibG9jayksIDApOw0KPiArDQo+ICtmcmVlX2Jsb2NrOg0KPiArCWtmcmVl
-KGJsb2NrKTsNCj4gK30NCj4gKw0KPiArc3RhdGljIHN0cnVjdCBtbHg1X2h2X3ZoY2FfYWdlbnQg
-Kg0KPiArbWx4NV9odl92aGNhX2NvbnRyb2xfYWdlbnRfY3JlYXRlKHN0cnVjdCBtbHg1X2h2X3Zo
-Y2EgKmh2X3ZoY2EpDQo+ICt7DQo+ICsJcmV0dXJuIG1seDVfaHZfdmhjYV9hZ2VudF9jcmVhdGUo
-aHZfdmhjYSwgTUxYNV9IVl9WSENBX0FHRU5UX0NPTlRST0wsDQo+ICsJCQkJCSBOVUxMLA0KPiAr
-CQkJCQkgbWx4NV9odl92aGNhX2NvbnRyb2xfYWdlbnRfaW52YWxpZGF0ZSwNCj4gKwkJCQkJIE5V
-TEwsIE5VTEwpOw0KPiArfQ0KPiArDQo+ICtzdGF0aWMgdm9pZCBtbHg1X2h2X3ZoY2FfY29udHJv
-bF9hZ2VudF9kZXN0cm95KHN0cnVjdCBtbHg1X2h2X3ZoY2FfYWdlbnQgKmFnZW50KQ0KPiArew0K
-PiArCW1seDVfaHZfdmhjYV9hZ2VudF9kZXN0cm95KGFnZW50KTsNCj4gK30NCj4gKw0KPiAgaW50
-IG1seDVfaHZfdmhjYV9pbml0KHN0cnVjdCBtbHg1X2h2X3ZoY2EgKmh2X3ZoY2EpDQo+ICB7DQo+
-ICsJc3RydWN0IG1seDVfaHZfdmhjYV9hZ2VudCAqYWdlbnQ7DQo+ICsJaW50IGVycjsNCj4gKw0K
-PiAgCWlmIChJU19FUlJfT1JfTlVMTChodl92aGNhKSkNCj4gIAkJcmV0dXJuIElTX0VSUl9PUl9O
-VUxMKGh2X3ZoY2EpOw0KPiAgDQo+IC0JcmV0dXJuIG1seDVfaHZfcmVnaXN0ZXJfaW52YWxpZGF0
-ZShodl92aGNhLT5kZXYsIGh2X3ZoY2EsDQo+IC0JCQkJCSAgIG1seDVfaHZfdmhjYV9pbnZhbGlk
-YXRlKTsNCj4gKwllcnIgPSBtbHg1X2h2X3JlZ2lzdGVyX2ludmFsaWRhdGUoaHZfdmhjYS0+ZGV2
-LCBodl92aGNhLA0KPiArCQkJCQkgIG1seDVfaHZfdmhjYV9pbnZhbGlkYXRlKTsNCj4gKwlpZiAo
-ZXJyKQ0KPiArCQlyZXR1cm4gZXJyOw0KPiArDQo+ICsJYWdlbnQgPSBtbHg1X2h2X3ZoY2FfY29u
-dHJvbF9hZ2VudF9jcmVhdGUoaHZfdmhjYSk7DQo+ICsJaWYgKElTX0VSUl9PUl9OVUxMKGFnZW50
-KSkgew0KPiArCQltbHg1X2h2X3VucmVnaXN0ZXJfaW52YWxpZGF0ZShodl92aGNhLT5kZXYpOw0K
-PiArCQlyZXR1cm4gSVNfRVJSX09SX05VTEwoYWdlbnQpOw0KPiArCX0NCj4gKw0KPiArCWh2X3Zo
-Y2EtPmFnZW50c1tNTFg1X0hWX1ZIQ0FfQUdFTlRfQ09OVFJPTF0gPSBhZ2VudDsNCj4gKw0KPiAr
-CXJldHVybiAwOw0KPiAgfQ0KPiAgDQo+ICB2b2lkIG1seDVfaHZfdmhjYV9jbGVhbnVwKHN0cnVj
-dCBtbHg1X2h2X3ZoY2EgKmh2X3ZoY2EpDQo+ICB7DQo+ICsJc3RydWN0IG1seDVfaHZfdmhjYV9h
-Z2VudCAqYWdlbnQ7DQo+ICAJaW50IGk7DQo+ICANCj4gIAlpZiAoSVNfRVJSX09SX05VTEwoaHZf
-dmhjYSkpDQo+ICAJCXJldHVybjsNCj4gIA0KPiArCWFnZW50ID0gaHZfdmhjYS0+YWdlbnRzW01M
-WDVfSFZfVkhDQV9BR0VOVF9DT05UUk9MXTsNCj4gKwlpZiAoIUlTX0VSUl9PUl9OVUxMKGFnZW50
-KSkNCj4gKwkJbWx4NV9odl92aGNhX2NvbnRyb2xfYWdlbnRfZGVzdHJveShhZ2VudCk7DQoNCkNh
-biB0aGUgYWdlbnQgYmUgZXJyIHB0ciBoZXJlPw0KDQo+ICsNCj4gIAltdXRleF9sb2NrKCZodl92
-aGNhLT5hZ2VudHNfbG9jayk7DQo+ICAJZm9yIChpID0gMDsgaSA8IE1MWDVfSFZfVkhDQV9BR0VO
-VF9NQVg7IGkrKykNCj4gIAkJV0FSTl9PTihodl92aGNhLT5hZ2VudHNbaV0pOw0KDQpXaXRoIHRo
-ZSBjb21tZW50IGFib3ZlIGluIG1pbmQsIGhlcmUgeW91IGNoZWNrIG9ubHkgZm9yIG5vdCBudWxs
-DQoNCj4gQEAgLTEzNSw2ICsyNDQsMTEgQEAgdm9pZCBtbHg1X2h2X3ZoY2FfY2xlYW51cChzdHJ1
-Y3QgbWx4NV9odl92aGNhICpodl92aGNhKQ0KPiAgCW1seDVfaHZfdW5yZWdpc3Rlcl9pbnZhbGlk
-YXRlKGh2X3ZoY2EtPmRldik7DQo+ICB9DQo+ICANCj4gK3N0YXRpYyB2b2lkIG1seDVfaHZfdmhj
-YV9hZ2VudHNfdXBkYXRlKHN0cnVjdCBtbHg1X2h2X3ZoY2EgKmh2X3ZoY2EpDQo+ICt7DQo+ICsJ
-bWx4NV9odl92aGNhX2ludmFsaWRhdGUoaHZfdmhjYSwgQklUKE1MWDVfSFZfVkhDQV9BR0VOVF9D
-T05UUk9MKSk7DQo+ICt9DQo+ICsNCj4gIHN0cnVjdCBtbHg1X2h2X3ZoY2FfYWdlbnQgKg0KPiAg
-bWx4NV9odl92aGNhX2FnZW50X2NyZWF0ZShzdHJ1Y3QgbWx4NV9odl92aGNhICpodl92aGNhLA0K
-PiAgCQkJICBlbnVtIG1seDVfaHZfdmhjYV9hZ2VudF90eXBlIHR5cGUsDQo+IEBAIC0xNjgsNiAr
-MjgyLDggQEAgc3RydWN0IG1seDVfaHZfdmhjYV9hZ2VudCAqDQo+ICAJaHZfdmhjYS0+YWdlbnRz
-W3R5cGVdID0gYWdlbnQ7DQo+ICAJbXV0ZXhfdW5sb2NrKCZodl92aGNhLT5hZ2VudHNfbG9jayk7
-DQo+ICANCj4gKwltbHg1X2h2X3ZoY2FfYWdlbnRzX3VwZGF0ZShodl92aGNhKTsNCj4gKw0KPiAg
-CXJldHVybiBhZ2VudDsNCj4gIH0NCj4gIA0KPiBAQCAtMTg5LDYgKzMwNSw4IEBAIHZvaWQgbWx4
-NV9odl92aGNhX2FnZW50X2Rlc3Ryb3koc3RydWN0IG1seDVfaHZfdmhjYV9hZ2VudCAqYWdlbnQp
-DQo+ICAJCWFnZW50LT5jbGVhbnVwKGFnZW50KTsNCj4gIA0KPiAgCWtmcmVlKGFnZW50KTsNCj4g
-Kw0KPiArCW1seDVfaHZfdmhjYV9hZ2VudHNfdXBkYXRlKGh2X3ZoY2EpOw0KPiAgfQ0KPiAgDQo+
-ICBzdGF0aWMgaW50IG1seDVfaHZfdmhjYV9kYXRhX2Jsb2NrX3ByZXBhcmUoc3RydWN0IG1seDVf
-aHZfdmhjYV9hZ2VudCAqYWdlbnQsDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC9ldGhlcm5l
-dC9tZWxsYW5veC9tbHg1L2NvcmUvbGliL2h2X3ZoY2EuaCBiL2RyaXZlcnMvbmV0L2V0aGVybmV0
-L21lbGxhbm94L21seDUvY29yZS9saWIvaHZfdmhjYS5oDQo+IGluZGV4IGZhN2VlODUuLjZmNGJm
-YjEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L2V0aGVybmV0L21lbGxhbm94L21seDUvY29y
-ZS9saWIvaHZfdmhjYS5oDQo+ICsrKyBiL2RyaXZlcnMvbmV0L2V0aGVybmV0L21lbGxhbm94L21s
-eDUvY29yZS9saWIvaHZfdmhjYS5oDQo+IEBAIC0xMiw2ICsxMiw3IEBADQo+ICBzdHJ1Y3QgbWx4
-NV9odl92aGNhX2NvbnRyb2xfYmxvY2s7DQo+ICANCj4gIGVudW0gbWx4NV9odl92aGNhX2FnZW50
-X3R5cGUgew0KPiArCU1MWDVfSFZfVkhDQV9BR0VOVF9DT05UUk9MID0gMCwNCg0KTm8gbmVlZCB0
-byBzdGFydCB2YWx1ZQ0KDQo+ICAJTUxYNV9IVl9WSENBX0FHRU5UX01BWCA9IDMyLA0KPiAgfTsN
-Cj4gIA0KPiANCg0KTWFyaw0K
+On Wed, Aug 14, 2019 at 09:52:20AM +0200, Greg KH wrote:
+> On Tue, Aug 13, 2019 at 02:45:11PM -0600, Kelsey Skunberg wrote:
+> > Defining device attributes should be done through the helper
+> > DEVICE_ATTR*(_name, _mode, _show, _store). Change all instances using
+> > __ATTR*() to now use DEVICE_ATTR*().
+> > 
+> > Example of old:
+> > 
+> > struct device_attribute dev_attr_##_name = __ATTR(_name, _mode, _show,
+> > 						  _store)
+> > 
+> > Example of new:
+> > 
+> > static DEVICE_ATTR(foo, S_IWUSR | S_IRUGO, show_foo, store_foo)
+> 
+> Why not DEVICE_ATTR_RO() and DEVICE_ATTR_RW() and friends?  "Raw"
+> DEVICE_ATTR() should almost never be used unless the files have a very
+> strange mode setting.  And if that is true, they should be audited to
+> find out why their permissions are so strange from the rest of the
+> kernel defaults.
+>
+
+This makes sense. I'll put together a patch to change the DEVICE_ATTR()
+applicable to be changed. Thank you, Greg!
+
+-Kelsey
+
+> > 
+> > Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
+> > ---
+> >  drivers/pci/pci-sysfs.c | 59 +++++++++++++++++++----------------------
+> >  1 file changed, 27 insertions(+), 32 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 965c72104150..8af7944fdccb 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -464,9 +464,7 @@ static ssize_t dev_rescan_store(struct device *dev,
+> >  	}
+> >  	return count;
+> >  }
+> > -static struct device_attribute dev_rescan_attr = __ATTR(rescan,
+> > -							(S_IWUSR|S_IWGRP),
+> > -							NULL, dev_rescan_store);
+> > +static DEVICE_ATTR(rescan, (S_IWUSR | S_IWGRP), NULL, dev_rescan_store);
+> 
+> DEVICE_ATTR_WO()?
+> 
+> >  static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
+> >  			    const char *buf, size_t count)
+> > @@ -480,9 +478,8 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
+> >  		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
+> >  	return count;
+> >  }
+> > -static struct device_attribute dev_remove_attr = __ATTR_IGNORE_LOCKDEP(remove,
+> > -							(S_IWUSR|S_IWGRP),
+> > -							NULL, remove_store);
+> > +static DEVICE_ATTR_IGNORE_LOCKDEP(remove, (S_IWUSR | S_IWGRP), NULL,
+> > +				  remove_store);
+> 
+> DEVICE_ATTR_WO()?
+> 
+> Ugh, no lockdep?  ick, ok, leave this as-is, crazy "remove" files...
+> 
+> >  
+> >  static ssize_t dev_bus_rescan_store(struct device *dev,
+> >  				    struct device_attribute *attr,
+> > @@ -504,7 +501,7 @@ static ssize_t dev_bus_rescan_store(struct device *dev,
+> >  	}
+> >  	return count;
+> >  }
+> > -static DEVICE_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store);
+> > +static DEVICE_ATTR(bus_rescan, (S_IWUSR | S_IWGRP), NULL, dev_bus_rescan_store);
+> 
+> DEVICE_ATTR_WO()?
+> 
+> >  
+> >  #if defined(CONFIG_PM) && defined(CONFIG_ACPI)
+> >  static ssize_t d3cold_allowed_store(struct device *dev,
+> > @@ -687,16 +684,14 @@ static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+> >  	return count;
+> >  }
+> >  
+> > -static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+> > -static struct device_attribute sriov_numvfs_attr =
+> > -		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+> > -		       sriov_numvfs_show, sriov_numvfs_store);
+> > -static struct device_attribute sriov_offset_attr = __ATTR_RO(sriov_offset);
+> > -static struct device_attribute sriov_stride_attr = __ATTR_RO(sriov_stride);
+> > -static struct device_attribute sriov_vf_device_attr = __ATTR_RO(sriov_vf_device);
+> > -static struct device_attribute sriov_drivers_autoprobe_attr =
+> > -		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
+> > -		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
+> > +static DEVICE_ATTR_RO(sriov_totalvfs);
+> > +static DEVICE_ATTR(sriov_numvfs, (S_IRUGO | S_IWUSR | S_IWGRP),
+> > +				  sriov_numvfs_show, sriov_numvfs_store);
+> 
+> DEVICE_ATTR_RW()?
+> 
+> > +static DEVICE_ATTR_RO(sriov_offset);
+> > +static DEVICE_ATTR_RO(sriov_stride);
+> > +static DEVICE_ATTR_RO(sriov_vf_device);
+> > +static DEVICE_ATTR(sriov_drivers_autoprobe, (S_IRUGO | S_IWUSR | S_IWGRP),
+> > +		   sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
+> 
+> DEVICE_ATTR_RW()?
+> 
+> >  #endif /* CONFIG_PCI_IOV */
+> >  
+> >  static ssize_t driver_override_store(struct device *dev,
+> > @@ -792,7 +787,7 @@ static struct attribute *pcie_dev_attrs[] = {
+> >  };
+> >  
+> >  static struct attribute *pcibus_attrs[] = {
+> > -	&dev_attr_rescan.attr,
+> > +	&dev_attr_bus_rescan.attr,
+> >  	&dev_attr_cpuaffinity.attr,
+> >  	&dev_attr_cpulistaffinity.attr,
+> >  	NULL,
+> > @@ -820,7 +815,7 @@ static ssize_t boot_vga_show(struct device *dev, struct device_attribute *attr,
+> >  		!!(pdev->resource[PCI_ROM_RESOURCE].flags &
+> >  		   IORESOURCE_ROM_SHADOW));
+> >  }
+> > -static struct device_attribute vga_attr = __ATTR_RO(boot_vga);
+> > +static DEVICE_ATTR_RO(boot_vga);
+> >  
+> >  static ssize_t pci_read_config(struct file *filp, struct kobject *kobj,
+> >  			       struct bin_attribute *bin_attr, char *buf,
+> > @@ -1458,7 +1453,7 @@ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
+> >  	return count;
+> >  }
+> >  
+> > -static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_store);
+> > +static DEVICE_ATTR(reset, 0200, NULL, reset_store);
+> 
+> DEVICE_ATTR_WO()?  Hm, root only, maybe not :(
+> 
+> >  
+> >  static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+> >  {
+> > @@ -1468,7 +1463,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+> >  	pcie_aspm_create_sysfs_dev_files(dev);
+> >  
+> >  	if (dev->reset_fn) {
+> > -		retval = device_create_file(&dev->dev, &reset_attr);
+> > +		retval = device_create_file(&dev->dev, &dev_attr_reset);
+> 
+> odds are this needs to be fixed up later to use attribute groups
+> properly.  But that's better left for another patch.
+> 
+> >  		if (retval)
+> >  			goto error;
+> >  	}
+> > @@ -1553,7 +1548,7 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
+> >  	pcie_vpd_remove_sysfs_dev_files(dev);
+> >  	pcie_aspm_remove_sysfs_dev_files(dev);
+> >  	if (dev->reset_fn) {
+> > -		device_remove_file(&dev->dev, &reset_attr);
+> > +		device_remove_file(&dev->dev, &dev_attr_reset);
+> 
+> Same here, attribute groups will handle this.
+> 
+> thanks,
+> 
+> greg k-h
