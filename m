@@ -2,71 +2,72 @@ Return-Path: <SRS0=qLqV=WL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E9F7C433FF
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 05:42:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C80AEC433FF
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 08:47:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E7CD22086C
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 05:42:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7E2121BA1
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 08:47:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730266AbfHOFmn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Aug 2019 01:42:43 -0400
-Received: from mga11.intel.com ([192.55.52.93]:36134 "EHLO mga11.intel.com"
+        id S1731134AbfHOIr6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Aug 2019 04:47:58 -0400
+Received: from inva021.nxp.com ([92.121.34.21]:60676 "EHLO inva021.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730066AbfHOFmm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Aug 2019 01:42:42 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 14 Aug 2019 22:42:42 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,388,1559545200"; 
-   d="scan'208";a="352145415"
-Received: from linux.intel.com ([10.54.29.200])
-  by orsmga005.jf.intel.com with ESMTP; 14 Aug 2019 22:42:42 -0700
-Received: from [10.226.39.52] (ekotax-mobl.gar.corp.intel.com [10.226.39.52])
-        by linux.intel.com (Postfix) with ESMTP id B729F580238;
-        Wed, 14 Aug 2019 22:42:40 -0700 (PDT)
-Subject: Re: [PATCH] PCI: dwc: Add map irq callback
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andriy.shevchenko@intel.com
-References: <333e87c8ea92cd7442fbe874fc8c9eccabc62f58.1565763869.git.eswara.kota@linux.intel.com>
- <20190814073605.GA31526@infradead.org>
- <fe722a89-37e7-9ef6-042b-a9584f234740@linux.intel.com>
- <20190814105922.GA11568@infradead.org>
-From:   Dilip Kota <eswara.kota@linux.intel.com>
-Message-ID: <65eec679-5781-a444-3951-97f3bd6fcd81@linux.intel.com>
-Date:   Thu, 15 Aug 2019 13:42:39 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.6.0
-MIME-Version: 1.0
-In-Reply-To: <20190814105922.GA11568@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+        id S1731122AbfHOIr6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Aug 2019 04:47:58 -0400
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3246820027E;
+        Thu, 15 Aug 2019 10:47:56 +0200 (CEST)
+Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 7B448200442;
+        Thu, 15 Aug 2019 10:47:47 +0200 (CEST)
+Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 737324031E;
+        Thu, 15 Aug 2019 16:47:36 +0800 (SGT)
+From:   Xiaowei Bao <xiaowei.bao@nxp.com>
+To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
+        lorenzo.pieralisi@arm.com, arnd@arndb.de,
+        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org
+Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: [PATCH 08/10] dt-bindings: PCI: Add the pf-offset property
+Date:   Thu, 15 Aug 2019 16:37:14 +0800
+Message-Id: <20190815083716.4715-8-xiaowei.bao@nxp.com>
+X-Mailer: git-send-email 2.9.5
+In-Reply-To: <20190815083716.4715-1-xiaowei.bao@nxp.com>
+References: <20190815083716.4715-1-xiaowei.bao@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add the pf-offset property for multiple PF.
 
-On 8/14/2019 6:59 PM, Christoph Hellwig wrote:
-> On Wed, Aug 14, 2019 at 04:31:14PM +0800, Dilip Kota wrote:
->>> callback.
->> pp->map_irq() must assign the callback along with the platform specific
->> configuration.
->> In Intel PCIe driver pp->map_irq() does the same. (Driver is not yet present
->> in mainline, i will submit for review once this change is approved).
-> And that's what I meant.  The standard procedure is to submit your
-> core changes together with the user, not separately.
-Sure, will submit the driver change along with this change. Sorry for 
-missing it.
+Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+---
+ Documentation/devicetree/bindings/pci/designware-pcie.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Dilip
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 5561a1c..d658687 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -43,6 +43,7 @@ RC mode:
+ 
+ EP mode:
+ - max-functions: maximum number of functions that can be configured
++- pf-offset: the offset of each PF's config space
+ 
+ Example configuration:
+ 
+-- 
+2.9.5
 
