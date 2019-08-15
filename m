@@ -8,53 +8,53 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B84C3A589
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 15:37:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F4B5C3A589
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 15:37:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 950CB2084D
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 15:37:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31150206C1
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 15:37:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q6dQWxOE"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lSWKA0zw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730462AbfHOPhO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Aug 2019 11:37:14 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:42576 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730457AbfHOPhO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Aug 2019 11:37:14 -0400
-Received: by mail-ot1-f68.google.com with SMTP id j7so6780576ota.9;
-        Thu, 15 Aug 2019 08:37:13 -0700 (PDT)
+        id S1730623AbfHOPhS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Aug 2019 11:37:18 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:33029 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730615AbfHOPhR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Aug 2019 11:37:17 -0400
+Received: by mail-ot1-f66.google.com with SMTP id q20so6013842otl.0;
+        Thu, 15 Aug 2019 08:37:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=paJogaN2g7AgODh9piCj/36tY2xkyxkFF55qGn68PeQ=;
-        b=q6dQWxOE5D2qxkT8ULjQfFafTOXH74FE3EyuA4jhZHhMS1f7vRBG+hM2CjcCwk05Qh
-         rAv+QME/Qj50ER7xYCUaUNSJba2y+cfvRPVyUehx22ANlHg0toRk80oUkjE3VZ1K8acC
-         sCMhcSnUCwqQ3/CeuTgSnokiJqNF6eDNjdoamIhglgajqnGpeJ3nBc9xeSYPU8P3oyar
-         rGy5F+qxRmK1ID+EH+zg5HE3FHFSLJe0oppIedlmdi17EYheXsnSiPVLYYawXdZwLwGc
-         O1TLsji/SbsPAliO8yMelmgpeT3csbixw41+1h1BQHMyQ8/OKTu8tCvsn3uQzb/ekUWY
-         6h4w==
+        bh=SUsN0QwHDmbEHHRKk4pco8mBmCePwPfyNjCuipsrWdc=;
+        b=lSWKA0zwap+NdGEaQzseRqkIS32OAqT+2HmP3Ydx50pwvDUIi4VuiRO99gyIDUiJZf
+         w2xGFdIGzBzHLPl4GgyrofcF1dYQchpyLjvxevAd9xOQwPZ/hRupbu+Npb1pdKgk1QYq
+         RfUzm+XU1ZPZuaBMNCfM5jve172cD+Js1lZMvpj3dahr5NOepGjNlZSNscZSRXgvII7W
+         4cQMQCuz/3vGDl6ZjEUlDkletuR02fm/rz3VuT7FI96EQC9wNRbVkTbyTE2IT/oQ1EQM
+         fHhs3pHYaSaGhEHLHqQdwGvyCiwcrxqaHmfX9+RB1n7weHBOJixep33moTFqE8OG6PEt
+         AO6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=paJogaN2g7AgODh9piCj/36tY2xkyxkFF55qGn68PeQ=;
-        b=oMB0H3E2PsP+xKjRP1s/WHJG6EIxLLpTMOkm/XwutvH73Zidzu7sWEl6Djuf1HyhIF
-         MDEmSBFs81MHonkIM1PqjrsrCQRCOJCYjFVXEOIqQtElHMzs7+treAQOC4uPL0R5nnuj
-         6CTTiaePTemfWfzKUZMPVmbam7QcAEB5t1ZA5I3G1aZDNtMZ+qjxiDFM7LShaiacYdG6
-         exf2GmBp7SdVg+bnvFDrTbnpZTnUETEPYdRRerh9uWZLtktHtQw6tVlhs9g8YSXdmryp
-         5ee8NmH74mFZGHae8ys8L1iS8kk1UQILe7q8YZb99fnVyG+r1qJoLNxa4fFUfpZ6qVdY
-         pfSA==
-X-Gm-Message-State: APjAAAXRgORDPOJlL6i0vXOLywBOqSyFO0+wQCguSydMknYKUUSePNSM
-        7Qf+j9sLElAgHZ+oNM38wy0=
-X-Google-Smtp-Source: APXvYqxESYSEpXSfVcLhgtuZ5w+iJwJ9dwTJob+NN1meynL+nTTmip6H+sm8t2vP3u/tcOpfyExo8g==
-X-Received: by 2002:a6b:3784:: with SMTP id e126mr3758450ioa.8.1565883432600;
-        Thu, 15 Aug 2019 08:37:12 -0700 (PDT)
+        bh=SUsN0QwHDmbEHHRKk4pco8mBmCePwPfyNjCuipsrWdc=;
+        b=RiX29YECkfmJP6c1bR73JVc6/gXJRxUvQdGudpXexvnP7xxDVnsJLrlC0KtJy5yn/b
+         Kuro8zR6dBEKiQPg1CUHtuOgLmqa3sxXB9O7k/g3c7eNn6MbZ9t0KgRj3GPTmG9mHp4b
+         AZ2/y7rPfy89JBwFTPc0Y9gMFIfN+nnsDk7CGHUSaJ07/hwGu1gp1uFZ0tEpg5MFrL+d
+         HH3eouhpOOg+E6UHVJryUAEyEMcj6aR+KyBqsH4zPLmQtkDYMq58WlcjlN1aFYt28+SQ
+         U91A7auCJAXC6Ujcfz+4CgduSFpFl/avVn+ix7++VmznVEF+xILPPzoMzznk3Yq1RqsD
+         XneA==
+X-Gm-Message-State: APjAAAWaAFB67h5sCQVSyfgyanKCHNyoZwAxw8iaCRWyP3JpcdjWvSwo
+        /1CV1XKeOHSKn30HKq4v1Zw=
+X-Google-Smtp-Source: APXvYqxFXh8Sa1R3TgWpaLQFVGiQiN+KNZIBtgoaVYyT43L0UX3Iozm7X9rMdPSk72w3wFZhXTsHmQ==
+X-Received: by 2002:a5e:c802:: with SMTP id y2mr6161245iol.134.1565883436769;
+        Thu, 15 Aug 2019 08:37:16 -0700 (PDT)
 Received: from localhost.localdomain (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id c18sm1491856iod.19.2019.08.15.08.37.11
+        by smtp.gmail.com with ESMTPSA id c18sm1491856iod.19.2019.08.15.08.37.15
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Aug 2019 08:37:11 -0700 (PDT)
+        Thu, 15 Aug 2019 08:37:16 -0700 (PDT)
 From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
 To:     bhelgaas@google.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
@@ -62,9 +62,9 @@ Cc:     skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         bodong@mellanox.com, ddutile@redhat.com,
         gregkh@linuxfoundation.org, skunberg.kelsey@gmail.com
-Subject: [PATCH v3 1/4] PCI: sysfs: Define device attributes with DEVICE_ATTR*
-Date:   Thu, 15 Aug 2019 09:33:50 -0600
-Message-Id: <20190815153352.86143-2-skunberg.kelsey@gmail.com>
+Subject: [PATCH v3 4/4] PCI/IOV: Move sysfs SR-IOV functions to iov.c
+Date:   Thu, 15 Aug 2019 09:33:53 -0600
+Message-Id: <20190815153352.86143-5-skunberg.kelsey@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190813204513.4790-1-skunberg.kelsey@gmail.com>
 References: <20190813204513.4790-1-skunberg.kelsey@gmail.com>
@@ -75,177 +75,400 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Defining device attributes should be done through the helper
-DEVICE_ATTR_RO(), DEVICE_ATTR_WO(), or similar. Change all instances using
-__ATTR* to now use its equivalent DEVICE_ATTR*.
-
-Example of old:
-
-static struct device_attribute dev_name_##_attr=__ATTR_RO(_name);
-
-Example of new:
-
-static DEVICE_ATTR_RO(_name);
+The sysfs SR-IOV functions are for an optional feature and will be better
+organized to keep with the feature's code. Move the sysfs SR-IOV functions
+to /pci/iov.c.
 
 Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
 ---
- drivers/pci/pci-sysfs.c | 59 +++++++++++++++++++----------------------
- 1 file changed, 27 insertions(+), 32 deletions(-)
+ drivers/pci/iov.c       | 168 ++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci-sysfs.c | 173 ----------------------------------------
+ drivers/pci/pci.h       |   2 +-
+ 3 files changed, 169 insertions(+), 174 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 965c72104150..8af7944fdccb 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -464,9 +464,7 @@ static ssize_t dev_rescan_store(struct device *dev,
- 	}
- 	return count;
- }
--static struct device_attribute dev_rescan_attr = __ATTR(rescan,
--							(S_IWUSR|S_IWGRP),
--							NULL, dev_rescan_store);
-+static DEVICE_ATTR(rescan, (S_IWUSR | S_IWGRP), NULL, dev_rescan_store);
- 
- static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 			    const char *buf, size_t count)
-@@ -480,9 +478,8 @@ static ssize_t remove_store(struct device *dev, struct device_attribute *attr,
- 		pci_stop_and_remove_bus_device_locked(to_pci_dev(dev));
- 	return count;
- }
--static struct device_attribute dev_remove_attr = __ATTR_IGNORE_LOCKDEP(remove,
--							(S_IWUSR|S_IWGRP),
--							NULL, remove_store);
-+static DEVICE_ATTR_IGNORE_LOCKDEP(remove, (S_IWUSR | S_IWGRP), NULL,
-+				  remove_store);
- 
- static ssize_t dev_bus_rescan_store(struct device *dev,
- 				    struct device_attribute *attr,
-@@ -504,7 +501,7 @@ static ssize_t dev_bus_rescan_store(struct device *dev,
- 	}
- 	return count;
- }
--static DEVICE_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store);
-+static DEVICE_ATTR(bus_rescan, (S_IWUSR | S_IWGRP), NULL, dev_bus_rescan_store);
- 
- #if defined(CONFIG_PM) && defined(CONFIG_ACPI)
- static ssize_t d3cold_allowed_store(struct device *dev,
-@@ -687,16 +684,14 @@ static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
- 	return count;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 9b48818ced01..b335db21c85e 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -240,6 +240,174 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
+ 	pci_dev_put(dev);
  }
  
--static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
--static struct device_attribute sriov_numvfs_attr =
--		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
--		       sriov_numvfs_show, sriov_numvfs_store);
--static struct device_attribute sriov_offset_attr = __ATTR_RO(sriov_offset);
--static struct device_attribute sriov_stride_attr = __ATTR_RO(sriov_stride);
--static struct device_attribute sriov_vf_device_attr = __ATTR_RO(sriov_vf_device);
--static struct device_attribute sriov_drivers_autoprobe_attr =
--		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
--		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
++static ssize_t sriov_totalvfs_show(struct device *dev,
++				   struct device_attribute *attr,
++				   char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
++}
++
++static ssize_t sriov_numvfs_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pdev->sriov->num_VFs);
++}
++
++/*
++ * num_vfs > 0; number of VFs to enable
++ * num_vfs = 0; disable all VFs
++ *
++ * Note: SRIOV spec does not allow partial VF
++ *	 disable, so it's all or none.
++ */
++static ssize_t sriov_numvfs_store(struct device *dev,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	int ret;
++	u16 num_vfs;
++
++	ret = kstrtou16(buf, 0, &num_vfs);
++	if (ret < 0)
++		return ret;
++
++	if (num_vfs > pci_sriov_get_totalvfs(pdev))
++		return -ERANGE;
++
++	device_lock(&pdev->dev);
++
++	if (num_vfs == pdev->sriov->num_VFs)
++		goto exit;
++
++	/* is PF driver loaded w/callback */
++	if (!pdev->driver || !pdev->driver->sriov_configure) {
++		pci_info(pdev, "Driver does not support SRIOV configuration via sysfs\n");
++		ret = -ENOENT;
++		goto exit;
++	}
++
++	if (num_vfs == 0) {
++		/* disable VFs */
++		ret = pdev->driver->sriov_configure(pdev, 0);
++		goto exit;
++	}
++
++	/* enable VFs */
++	if (pdev->sriov->num_VFs) {
++		pci_warn(pdev, "%d VFs already enabled. Disable before enabling %d VFs\n",
++			 pdev->sriov->num_VFs, num_vfs);
++		ret = -EBUSY;
++		goto exit;
++	}
++
++	ret = pdev->driver->sriov_configure(pdev, num_vfs);
++	if (ret < 0)
++		goto exit;
++
++	if (ret != num_vfs)
++		pci_warn(pdev, "%d VFs requested; only %d enabled\n",
++			 num_vfs, ret);
++
++exit:
++	device_unlock(&pdev->dev);
++
++	if (ret < 0)
++		return ret;
++
++	return count;
++}
++
++static ssize_t sriov_offset_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pdev->sriov->offset);
++}
++
++static ssize_t sriov_stride_show(struct device *dev,
++				 struct device_attribute *attr,
++				 char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pdev->sriov->stride);
++}
++
++static ssize_t sriov_vf_device_show(struct device *dev,
++				    struct device_attribute *attr,
++				    char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%x\n", pdev->sriov->vf_device);
++}
++
++static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
++					    struct device_attribute *attr,
++					    char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pdev->sriov->drivers_autoprobe);
++}
++
++static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
++					     struct device_attribute *attr,
++					     const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	bool drivers_autoprobe;
++
++	if (kstrtobool(buf, &drivers_autoprobe) < 0)
++		return -EINVAL;
++
++	pdev->sriov->drivers_autoprobe = drivers_autoprobe;
++
++	return count;
++}
++
 +static DEVICE_ATTR_RO(sriov_totalvfs);
-+static DEVICE_ATTR(sriov_numvfs, (S_IRUGO | S_IWUSR | S_IWGRP),
-+				  sriov_numvfs_show, sriov_numvfs_store);
++static DEVICE_ATTR(sriov_numvfs, 0664, sriov_numvfs_show, sriov_numvfs_store);
 +static DEVICE_ATTR_RO(sriov_offset);
 +static DEVICE_ATTR_RO(sriov_stride);
 +static DEVICE_ATTR_RO(sriov_vf_device);
-+static DEVICE_ATTR(sriov_drivers_autoprobe, (S_IRUGO | S_IWUSR | S_IWGRP),
-+		   sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
- #endif /* CONFIG_PCI_IOV */
- 
- static ssize_t driver_override_store(struct device *dev,
-@@ -792,7 +787,7 @@ static struct attribute *pcie_dev_attrs[] = {
- };
- 
- static struct attribute *pcibus_attrs[] = {
--	&dev_attr_rescan.attr,
-+	&dev_attr_bus_rescan.attr,
- 	&dev_attr_cpuaffinity.attr,
- 	&dev_attr_cpulistaffinity.attr,
- 	NULL,
-@@ -820,7 +815,7 @@ static ssize_t boot_vga_show(struct device *dev, struct device_attribute *attr,
- 		!!(pdev->resource[PCI_ROM_RESOURCE].flags &
- 		   IORESOURCE_ROM_SHADOW));
- }
--static struct device_attribute vga_attr = __ATTR_RO(boot_vga);
-+static DEVICE_ATTR_RO(boot_vga);
- 
- static ssize_t pci_read_config(struct file *filp, struct kobject *kobj,
- 			       struct bin_attribute *bin_attr, char *buf,
-@@ -1458,7 +1453,7 @@ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
- 	return count;
- }
- 
--static struct device_attribute reset_attr = __ATTR(reset, 0200, NULL, reset_store);
-+static DEVICE_ATTR(reset, 0200, NULL, reset_store);
- 
- static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- {
-@@ -1468,7 +1463,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- 	pcie_aspm_create_sysfs_dev_files(dev);
- 
- 	if (dev->reset_fn) {
--		retval = device_create_file(&dev->dev, &reset_attr);
-+		retval = device_create_file(&dev->dev, &dev_attr_reset);
- 		if (retval)
- 			goto error;
- 	}
-@@ -1553,7 +1548,7 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
- 	pcie_vpd_remove_sysfs_dev_files(dev);
- 	pcie_aspm_remove_sysfs_dev_files(dev);
- 	if (dev->reset_fn) {
--		device_remove_file(&dev->dev, &reset_attr);
-+		device_remove_file(&dev->dev, &dev_attr_reset);
- 		dev->reset_fn = 0;
- 	}
- }
-@@ -1606,7 +1601,7 @@ static int __init pci_sysfs_init(void)
- late_initcall(pci_sysfs_init);
- 
- static struct attribute *pci_dev_dev_attrs[] = {
--	&vga_attr.attr,
-+	&dev_attr_boot_vga.attr,
- 	NULL,
- };
- 
-@@ -1616,7 +1611,7 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- 	struct device *dev = kobj_to_dev(kobj);
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (a == &vga_attr.attr)
-+	if (a == &dev_attr_boot_vga.attr)
- 		if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
- 			return 0;
- 
-@@ -1624,8 +1619,8 @@ static umode_t pci_dev_attrs_are_visible(struct kobject *kobj,
- }
- 
- static struct attribute *pci_dev_hp_attrs[] = {
--	&dev_remove_attr.attr,
--	&dev_rescan_attr.attr,
-+	&dev_attr_remove.attr,
-+	&dev_attr_rescan.attr,
- 	NULL,
- };
- 
-@@ -1699,12 +1694,12 @@ static const struct attribute_group pci_dev_hp_attr_group = {
- 
- #ifdef CONFIG_PCI_IOV
- static struct attribute *sriov_dev_attrs[] = {
--	&sriov_totalvfs_attr.attr,
--	&sriov_numvfs_attr.attr,
--	&sriov_offset_attr.attr,
--	&sriov_stride_attr.attr,
--	&sriov_vf_device_attr.attr,
--	&sriov_drivers_autoprobe_attr.attr,
++static DEVICE_ATTR(sriov_drivers_autoprobe, 0664, sriov_drivers_autoprobe_show,
++		   sriov_drivers_autoprobe_store);
++
++static struct attribute *sriov_dev_attrs[] = {
 +	&dev_attr_sriov_totalvfs.attr,
 +	&dev_attr_sriov_numvfs.attr,
 +	&dev_attr_sriov_offset.attr,
 +	&dev_attr_sriov_stride.attr,
 +	&dev_attr_sriov_vf_device.attr,
 +	&dev_attr_sriov_drivers_autoprobe.attr,
- 	NULL,
++	NULL,
++};
++
++static umode_t sriov_attrs_are_visible(struct kobject *kobj,
++				       struct attribute *a, int n)
++{
++	struct device *dev = kobj_to_dev(kobj);
++
++	if (!dev_is_pf(dev))
++		return 0;
++
++	return a->mode;
++}
++
++const struct attribute_group sriov_dev_attr_group = {
++	.attrs = sriov_dev_attrs,
++	.is_visible = sriov_attrs_are_visible,
++};
++
+ int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ {
+ 	return 0;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5bb301efec98..868e35109284 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -548,151 +548,6 @@ static ssize_t devspec_show(struct device *dev,
+ static DEVICE_ATTR_RO(devspec);
+ #endif
+ 
+-#ifdef CONFIG_PCI_IOV
+-static ssize_t sriov_totalvfs_show(struct device *dev,
+-				   struct device_attribute *attr,
+-				   char *buf)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	return sprintf(buf, "%u\n", pci_sriov_get_totalvfs(pdev));
+-}
+-
+-
+-static ssize_t sriov_numvfs_show(struct device *dev,
+-				 struct device_attribute *attr,
+-				 char *buf)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	return sprintf(buf, "%u\n", pdev->sriov->num_VFs);
+-}
+-
+-/*
+- * num_vfs > 0; number of VFs to enable
+- * num_vfs = 0; disable all VFs
+- *
+- * Note: SRIOV spec doesn't allow partial VF
+- *       disable, so it's all or none.
+- */
+-static ssize_t sriov_numvfs_store(struct device *dev,
+-				  struct device_attribute *attr,
+-				  const char *buf, size_t count)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	int ret;
+-	u16 num_vfs;
+-
+-	ret = kstrtou16(buf, 0, &num_vfs);
+-	if (ret < 0)
+-		return ret;
+-
+-	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+-		return -ERANGE;
+-
+-	device_lock(&pdev->dev);
+-
+-	if (num_vfs == pdev->sriov->num_VFs)
+-		goto exit;
+-
+-	/* is PF driver loaded w/callback */
+-	if (!pdev->driver || !pdev->driver->sriov_configure) {
+-		pci_info(pdev, "Driver doesn't support SRIOV configuration via sysfs\n");
+-		ret = -ENOENT;
+-		goto exit;
+-	}
+-
+-	if (num_vfs == 0) {
+-		/* disable VFs */
+-		ret = pdev->driver->sriov_configure(pdev, 0);
+-		goto exit;
+-	}
+-
+-	/* enable VFs */
+-	if (pdev->sriov->num_VFs) {
+-		pci_warn(pdev, "%d VFs already enabled. Disable before enabling %d VFs\n",
+-			 pdev->sriov->num_VFs, num_vfs);
+-		ret = -EBUSY;
+-		goto exit;
+-	}
+-
+-	ret = pdev->driver->sriov_configure(pdev, num_vfs);
+-	if (ret < 0)
+-		goto exit;
+-
+-	if (ret != num_vfs)
+-		pci_warn(pdev, "%d VFs requested; only %d enabled\n",
+-			 num_vfs, ret);
+-
+-exit:
+-	device_unlock(&pdev->dev);
+-
+-	if (ret < 0)
+-		return ret;
+-
+-	return count;
+-}
+-
+-static ssize_t sriov_offset_show(struct device *dev,
+-				 struct device_attribute *attr,
+-				 char *buf)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	return sprintf(buf, "%u\n", pdev->sriov->offset);
+-}
+-
+-static ssize_t sriov_stride_show(struct device *dev,
+-				 struct device_attribute *attr,
+-				 char *buf)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	return sprintf(buf, "%u\n", pdev->sriov->stride);
+-}
+-
+-static ssize_t sriov_vf_device_show(struct device *dev,
+-				    struct device_attribute *attr,
+-				    char *buf)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	return sprintf(buf, "%x\n", pdev->sriov->vf_device);
+-}
+-
+-static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
+-					    struct device_attribute *attr,
+-					    char *buf)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-
+-	return sprintf(buf, "%u\n", pdev->sriov->drivers_autoprobe);
+-}
+-
+-static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+-					     struct device_attribute *attr,
+-					     const char *buf, size_t count)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	bool drivers_autoprobe;
+-
+-	if (kstrtobool(buf, &drivers_autoprobe) < 0)
+-		return -EINVAL;
+-
+-	pdev->sriov->drivers_autoprobe = drivers_autoprobe;
+-
+-	return count;
+-}
+-
+-static DEVICE_ATTR_RO(sriov_totalvfs);
+-static DEVICE_ATTR(sriov_numvfs, 0664, sriov_numvfs_show, sriov_numvfs_store);
+-static DEVICE_ATTR_RO(sriov_offset);
+-static DEVICE_ATTR_RO(sriov_stride);
+-static DEVICE_ATTR_RO(sriov_vf_device);
+-static DEVICE_ATTR(sriov_drivers_autoprobe, 0664, sriov_drivers_autoprobe_show,
+-		   sriov_drivers_autoprobe_store);
+-#endif /* CONFIG_PCI_IOV */
+-
+ static ssize_t driver_override_store(struct device *dev,
+ 				     struct device_attribute *attr,
+ 				     const char *buf, size_t count)
+@@ -1691,34 +1546,6 @@ static const struct attribute_group pci_dev_hp_attr_group = {
+ 	.is_visible = pci_dev_hp_attrs_are_visible,
  };
  
+-#ifdef CONFIG_PCI_IOV
+-static struct attribute *sriov_dev_attrs[] = {
+-	&dev_attr_sriov_totalvfs.attr,
+-	&dev_attr_sriov_numvfs.attr,
+-	&dev_attr_sriov_offset.attr,
+-	&dev_attr_sriov_stride.attr,
+-	&dev_attr_sriov_vf_device.attr,
+-	&dev_attr_sriov_drivers_autoprobe.attr,
+-	NULL,
+-};
+-
+-static umode_t sriov_attrs_are_visible(struct kobject *kobj,
+-				       struct attribute *a, int n)
+-{
+-	struct device *dev = kobj_to_dev(kobj);
+-
+-	if (!dev_is_pf(dev))
+-		return 0;
+-
+-	return a->mode;
+-}
+-
+-static const struct attribute_group sriov_dev_attr_group = {
+-	.attrs = sriov_dev_attrs,
+-	.is_visible = sriov_attrs_are_visible,
+-};
+-#endif /* CONFIG_PCI_IOV */
+-
+ static const struct attribute_group pci_dev_attr_group = {
+ 	.attrs = pci_dev_dev_attrs,
+ 	.is_visible = pci_dev_attrs_are_visible,
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 61bbfd611140..7e3c6c8ae6f9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -455,7 +455,7 @@ void pci_iov_update_resource(struct pci_dev *dev, int resno);
+ resource_size_t pci_sriov_resource_alignment(struct pci_dev *dev, int resno);
+ void pci_restore_iov_state(struct pci_dev *dev);
+ int pci_iov_bus_range(struct pci_bus *bus);
+-
++extern const struct attribute_group sriov_dev_attr_group;
+ #else
+ static inline int pci_iov_init(struct pci_dev *dev)
+ {
 -- 
 2.20.1
 
