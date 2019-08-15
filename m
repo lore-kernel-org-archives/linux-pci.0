@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE41C433FF
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 08:48:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22619C433FF
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 08:48:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7F4821BF1
-	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 08:48:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0412521952
+	for <linux-pci@archiver.kernel.org>; Thu, 15 Aug 2019 08:48:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730959AbfHOIru (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 15 Aug 2019 04:47:50 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:60408 "EHLO inva021.nxp.com"
+        id S1731071AbfHOIsR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 15 Aug 2019 04:48:17 -0400
+Received: from inva021.nxp.com ([92.121.34.21]:60338 "EHLO inva021.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730932AbfHOIru (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Aug 2019 04:47:50 -0400
+        id S1730456AbfHOIrs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Aug 2019 04:47:48 -0400
 Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 51A0320044A;
-        Thu, 15 Aug 2019 10:47:48 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id E0D4320028A;
+        Thu, 15 Aug 2019 10:47:46 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 9CE3A2001EB;
-        Thu, 15 Aug 2019 10:47:39 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 36078200035;
+        Thu, 15 Aug 2019 10:47:38 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 35B84402EC;
-        Thu, 15 Aug 2019 16:47:29 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 60F3C40313;
+        Thu, 15 Aug 2019 16:47:27 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
@@ -38,9 +38,9 @@ To:     jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH 04/10] dt-bindings: pci: layerscape-pci: add compatible strings for ls1088a and ls2088a
-Date:   Thu, 15 Aug 2019 16:37:10 +0800
-Message-Id: <20190815083716.4715-4-xiaowei.bao@nxp.com>
+Subject: [PATCH 03/10] PCI: designware-ep: Move the function of getting MSI capability forward
+Date:   Thu, 15 Aug 2019 16:37:09 +0800
+Message-Id: <20190815083716.4715-3-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.9.5
 In-Reply-To: <20190815083716.4715-1-xiaowei.bao@nxp.com>
 References: <20190815083716.4715-1-xiaowei.bao@nxp.com>
@@ -50,29 +50,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add compatible strings for ls1088a and ls2088a.
+Move the function of getting MSI capability to the front of init
+function, because the init function of the EP platform driver will use
+the return value by the function of getting MSI capability.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 ---
- Documentation/devicetree/bindings/pci/layerscape-pci.txt | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index e20ceaa..16f592e 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -22,7 +22,10 @@ Required properties:
-         "fsl,ls1043a-pcie"
-         "fsl,ls1012a-pcie"
-   EP mode:
--	"fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep"
-+	"fsl,ls-pcie-ep"
-+	"fsl,ls1046a-pcie-ep"
-+	"fsl,ls1088a-pcie-ep"
-+	"fsl,ls2088a-pcie-ep"
- - reg: base addresses and lengths of the PCIe controller register blocks.
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index e3a7cdf..0c27c7b 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -631,6 +631,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	if (ret < 0)
+ 		epc->pf_offset = 0;
+ 
++	ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
++
++	ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
++
+ 	if (ep->ops->ep_init)
+ 		ep->ops->ep_init(ep);
+ 
+@@ -647,9 +651,6 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 		dev_err(dev, "Failed to reserve memory for MSI/MSI-X\n");
+ 		return -ENOMEM;
+ 	}
+-	ep->msi_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSI);
+-
+-	ep->msix_cap = dw_pcie_ep_find_capability(pci, PCI_CAP_ID_MSIX);
+ 
+ 	offset = dw_pcie_ep_find_ext_capability(pci, PCI_EXT_CAP_ID_REBAR);
+ 	if (offset) {
 -- 
 2.9.5
 
