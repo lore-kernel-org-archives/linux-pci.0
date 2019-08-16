@@ -2,170 +2,108 @@ Return-Path: <SRS0=QF+3=WM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86CADC3A59C
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D69DC3A59D
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:52:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54156205F4
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:52:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="D58NfWon"
+	by mail.kernel.org (Postfix) with ESMTP id 45C0A205F4
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:52:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727154AbfHPKwK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 06:52:10 -0400
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:50056 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727110AbfHPKwJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Aug 2019 06:52:09 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x7GApdHN004849;
-        Fri, 16 Aug 2019 05:51:39 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1565952699;
-        bh=hn8fy2leOOJ2v5vDgwq8C00AfqgX3leZ0vhsRcjx8Kc=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=D58NfWon6bgolsIr719N63cAQowNbSydh3J9Dt6vskmGUNY9McMH6xZEFtYU9Y/jE
-         qoCCFFrtaTIcdYpaXFj7CjGEoLDXrQRX9u58x+iEOvDnyh9mHsFQ2aY5gVb/NWhB+1
-         r2AVDLGnnEqvOkAaq8NvlRSISc/GpIWJZcYskhM8=
-Received: from DFLE110.ent.ti.com (dfle110.ent.ti.com [10.64.6.31])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x7GApdDJ001483
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 16 Aug 2019 05:51:39 -0500
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE110.ent.ti.com
- (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Fri, 16
- Aug 2019 05:51:39 -0500
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Fri, 16 Aug 2019 05:51:39 -0500
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id x7GApXr5015579;
-        Fri, 16 Aug 2019 05:51:34 -0500
-Subject: Re: [PATCH 02/10] PCI: designware-ep: Add the doorbell mode of MSI-X
- in EP mode
-To:     Xiaowei Bao <xiaowei.bao@nxp.com>,
-        Andrew Murray <andrew.murray@arm.com>
-CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "shawnguo@kernel.org" <shawnguo@kernel.org>,
-        Leo Li <leoyang.li@nxp.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "Z.q. Hou" <zhiqiang.hou@nxp.com>
-References: <20190815083716.4715-1-xiaowei.bao@nxp.com>
- <20190815083716.4715-2-xiaowei.bao@nxp.com>
- <20190815115340.GG43882@e119886-lin.cambridge.arm.com>
- <AM5PR04MB329973845D6396624AFDE547F5AF0@AM5PR04MB3299.eurprd04.prod.outlook.com>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <02cf2f3d-336c-85bb-1fb5-a141c5a9cf79@ti.com>
-Date:   Fri, 16 Aug 2019 16:19:37 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726981AbfHPKwb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Aug 2019 06:52:31 -0400
+Received: from foss.arm.com ([217.140.110.172]:54962 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725897AbfHPKwb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Aug 2019 06:52:31 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id BE7E228;
+        Fri, 16 Aug 2019 03:52:30 -0700 (PDT)
+Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id D6FDC3F706;
+        Fri, 16 Aug 2019 03:52:29 -0700 (PDT)
+Date:   Fri, 16 Aug 2019 11:52:27 +0100
+From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To:     marek.vasut@gmail.com
+Cc:     linux-pci@vger.kernel.org,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH V3 1/3] PCI: rcar: Move the inbound index check
+Message-ID: <20190816105227.GB23677@e121166-lin.cambridge.arm.com>
+References: <20190809175741.7066-1-marek.vasut@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AM5PR04MB329973845D6396624AFDE547F5AF0@AM5PR04MB3299.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset="gbk"
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809175741.7066-1-marek.vasut@gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi,
-
-On 16/08/19 8:28 AM, Xiaowei Bao wrote:
+On Fri, Aug 09, 2019 at 07:57:39PM +0200, marek.vasut@gmail.com wrote:
+> From: Marek Vasut <marek.vasut+renesas@gmail.com>
 > 
+> Since the $idx variable value is stored across multiple calls to
+> rcar_pcie_inbound_ranges() function, and the $idx value is used to
+> index registers which are written, subsequent calls might cause
+> the $idx value to be high enough to trigger writes into nonexistent
+> registers.
+
+Can this really happen ? 'index' is initialized to 0 in
+rcar_pci_parse_map_dma_ranges() and, through rcar_pcie_inbound_ranges()
+return value, it bails out on idx overrun, we can argue this patch
+improves robustness but I do not think it is fixing anything.
+
+Lorenzo
+
+> Fix this by moving the $idx value check to the beginning of the loop.
 > 
->> -----Original Message-----
->> From: Andrew Murray <andrew.murray@arm.com>
->> Sent: 2019Äê8ÔÂ15ÈÕ 19:54
->> To: Xiaowei Bao <xiaowei.bao@nxp.com>
->> Cc: jingoohan1@gmail.com; gustavo.pimentel@synopsys.com;
->> bhelgaas@google.com; robh+dt@kernel.org; mark.rutland@arm.com;
->> shawnguo@kernel.org; Leo Li <leoyang.li@nxp.com>; kishon@ti.com;
->> lorenzo.pieralisi@arm.com; arnd@arndb.de; gregkh@linuxfoundation.org;
->> M.h. Lian <minghuan.lian@nxp.com>; Mingkai Hu <mingkai.hu@nxp.com>;
->> Roy Zang <roy.zang@nxp.com>; linux-pci@vger.kernel.org;
->> devicetree@vger.kernel.org; linux-kernel@vger.kernel.org;
->> linux-arm-kernel@lists.infradead.org; linuxppc-dev@lists.ozlabs.org
->> Subject: Re: [PATCH 02/10] PCI: designware-ep: Add the doorbell mode of
->> MSI-X in EP mode
->>
->> On Thu, Aug 15, 2019 at 04:37:08PM +0800, Xiaowei Bao wrote:
->>> Add the doorbell mode of MSI-X in EP mode.
->>>
->>> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
->>> ---
->>>  drivers/pci/controller/dwc/pcie-designware-ep.c | 14 ++++++++++++++
->>>  drivers/pci/controller/dwc/pcie-designware.h    | 14 ++++++++++++++
->>>  2 files changed, 28 insertions(+)
->>>
->>> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c
->>> b/drivers/pci/controller/dwc/pcie-designware-ep.c
->>> index 75e2955..e3a7cdf 100644
->>> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
->>> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
->>> @@ -454,6 +454,20 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep
->> *ep, u8 func_no,
->>>  	return 0;
->>>  }
->>>
->>> +int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8
->> func_no,
->>> +				       u16 interrupt_num)
->>> +{
->>> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
->>> +	u32 msg_data;
->>> +
->>> +	msg_data = (func_no << PCIE_MSIX_DOORBELL_PF_SHIFT) |
->>> +		   (interrupt_num - 1);
->>> +
->>> +	dw_pcie_writel_dbi(pci, PCIE_MSIX_DOORBELL, msg_data);
->>> +
->>> +	return 0;
->>> +}
->>> +
->>>  int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
->>>  			      u16 interrupt_num)
->>
->> Have I understood correctly that the hardware provides an alternative
->> mechanism that allows for raising MSI-X interrupts without the bother of
->> reading the capabilities registers?
-> Yes, the hardware provide two way to MSI-X, please check the page 492 of 
-> DWC_pcie_dm_registers_4.30 Menu.
-> MSIX_DOORBELL_OFF on page 492 0x948 Description: MSI-X Doorbell Register....>
->>
->> If so is there any good reason to keep dw_pcie_ep_raise_msix_irq? (And thus
->> use it in dw_plat_pcie_ep_raise_irq also)?
-> I am not sure, but I think the dw_pcie_ep_raise_msix_irq function is not correct, 
-> because I think we can't get the MSIX table from the address ep->phys_base + tbl_addr, 
-> but I also don't know where I can get the correct MSIX table.
-
-Sometime back when I tried raising MSI-X from EP, it was failing. It's quite
-possible dw_pcie_ep_raise_msix_irq function is not correct.
-
-MSI-X table can be obtained from the inbound ATU corresponding to the MSIX bar.
-IMO MSI-X support in EP mode needs rework. For instance set_msix should also
-take BAR number as input to be configured in the MSI-X capability. The function
-driver (pci-epf-test.c) should allocate memory taking into account the MSI-X table.
-
-Thanks
-Kishon
+> Signed-off-by: Marek Vasut <marek.vasut+renesas@gmail.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Wolfram Sang <wsa@the-dreams.de>
+> Cc: linux-renesas-soc@vger.kernel.org
+> To: linux-pci@vger.kernel.org
+> ---
+> V2: New patch
+> V3: Adjust the check to idx >= MAX_NR_INBOUND_MAPS - 1
+> ---
+>  drivers/pci/controller/pcie-rcar.c | 9 ++++-----
+>  1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+> index f6a669a9af41..56a6433eb70b 100644
+> --- a/drivers/pci/controller/pcie-rcar.c
+> +++ b/drivers/pci/controller/pcie-rcar.c
+> @@ -1048,6 +1048,10 @@ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
+>  	mask &= ~0xf;
+>  
+>  	while (cpu_addr < cpu_end) {
+> +		if (idx >= MAX_NR_INBOUND_MAPS - 1) {
+> +			dev_err(pcie->dev, "Failed to map inbound regions!\n");
+> +			return -EINVAL;
+> +		}
+>  		/*
+>  		 * Set up 64-bit inbound regions as the range parser doesn't
+>  		 * distinguish between 32 and 64-bit types.
+> @@ -1067,11 +1071,6 @@ static int rcar_pcie_inbound_ranges(struct rcar_pcie *pcie,
+>  		pci_addr += size;
+>  		cpu_addr += size;
+>  		idx += 2;
+> -
+> -		if (idx > MAX_NR_INBOUND_MAPS) {
+> -			dev_err(pcie->dev, "Failed to map inbound regions!\n");
+> -			return -EINVAL;
+> -		}
+>  	}
+>  	*index = idx;
+>  
+> -- 
+> 2.20.1
+> 
