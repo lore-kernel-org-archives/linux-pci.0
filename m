@@ -2,99 +2,137 @@ Return-Path: <SRS0=QF+3=WM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28207C3A59C
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1877C3A59C
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:51:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 092EB21655
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:45:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D295021655
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 10:51:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727099AbfHPKpS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 06:45:18 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:1594 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727092AbfHPKpS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Aug 2019 06:45:18 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7GAfNXO138637
-        for <linux-pci@vger.kernel.org>; Fri, 16 Aug 2019 06:45:17 -0400
-Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2udtech7c6-1
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Fri, 16 Aug 2019 06:45:17 -0400
-Received: from localhost
-        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <sebott@linux.ibm.com>;
-        Fri, 16 Aug 2019 11:45:14 +0100
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (9.149.109.197)
-        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
-        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Fri, 16 Aug 2019 11:45:11 +0100
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7GAjAUG38404308
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Aug 2019 10:45:10 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A2043A405E;
-        Fri, 16 Aug 2019 10:45:10 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 62662A404D;
-        Fri, 16 Aug 2019 10:45:10 +0000 (GMT)
-Received: from dyn-9-152-212-30.boeblingen.de.ibm.com (unknown [9.152.212.30])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Fri, 16 Aug 2019 10:45:10 +0000 (GMT)
-Date:   Fri, 16 Aug 2019 12:45:09 +0200 (CEST)
-From:   Sebastian Ott <sebott@linux.ibm.com>
-X-X-Sender: sebott@schleppi
+        id S1727020AbfHPKvc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Aug 2019 06:51:32 -0400
+Received: from foss.arm.com ([217.140.110.172]:54910 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725897AbfHPKvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Aug 2019 06:51:32 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id C4E9B28;
+        Fri, 16 Aug 2019 03:51:30 -0700 (PDT)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 1F1073F706;
+        Fri, 16 Aug 2019 03:51:30 -0700 (PDT)
+Date:   Fri, 16 Aug 2019 11:51:28 +0100
+From:   Andrew Murray <andrew.murray@arm.com>
 To:     Denis Efremov <efremov@linux.com>
-cc:     Bjorn Helgaas <bhelgaas@google.com>,
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Sebastian Ott <sebott@linux.ibm.com>,
         Gerald Schaefer <gerald.schaefer@de.ibm.com>,
-        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 02/10] s390/pci: Loop using PCI_STD_NUM_BARS
-In-Reply-To: <20190816092437.31846-3-efremov@linux.com>
-References: <20190816092437.31846-1-efremov@linux.com> <20190816092437.31846-3-efremov@linux.com>
-User-Agent: Alpine 2.21 (LFD 202 2017-01-01)
-Organization: =?ISO-8859-15?Q?=22IBM_Deutschland_Research_&_Development_GmbH?=
- =?ISO-8859-15?Q?_=2F_Vorsitzende_des_Aufsichtsrats=3A_Matthias?=
- =?ISO-8859-15?Q?_Hartmann_Gesch=E4ftsf=FChrung=3A_Dirk_Wittkopp?=
- =?ISO-8859-15?Q?_Sitz_der_Gesellschaft=3A_B=F6blingen_=2F_Reg?=
- =?ISO-8859-15?Q?istergericht=3A_Amtsgericht_Stuttgart=2C_HRB_2432?=
- =?ISO-8859-15?Q?94=22?=
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Alexandre Torgue <alexandre.torgue@st.com>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        Alexandre Bounine <alex.bou9@gmail.com>,
+        Peter Jones <pjones@redhat.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Jose Abreu <Jose.Abreu@synopsys.com>, kvm@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, netdev@vger.kernel.org,
+        x86@kernel.org, linux-s390@vger.kernel.org
+Subject: Re: [PATCH v2 00/10] Add definition for the number of standard PCI
+ BARs
+Message-ID: <20190816105128.GD14111@e119886-lin.cambridge.arm.com>
+References: <20190816092437.31846-1-efremov@linux.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-TM-AS-GCONF: 00
-x-cbid: 19081610-0012-0000-0000-0000033F5BAB
-X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19081610-0013-0000-0000-00002179752A
-Message-Id: <alpine.LFD.2.21.1908161244060.1860@schleppi>
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-16_05:,,
- signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=3 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
- mlxlogscore=465 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1906280000 definitions=main-1908160111
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190816092437.31846-1-efremov@linux.com>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, 16 Aug 2019, Denis Efremov wrote:
-> Refactor loops to use 'i < PCI_STD_NUM_BARS' instead of
-> 'i <= PCI_STD_RESOURCE_END'.
+On Fri, Aug 16, 2019 at 12:24:27PM +0300, Denis Efremov wrote:
+> Code that iterates over all standard PCI BARs typically uses
+> PCI_STD_RESOURCE_END, but this is error-prone because it requires
+> "i <= PCI_STD_RESOURCE_END" rather than something like
+> "i < PCI_STD_NUM_BARS". We could add such a definition and use it the same
+> way PCI_SRIOV_NUM_BARS is used. There is already the definition
+> PCI_BAR_COUNT for s390 only. Thus, this patchset introduces it globally.
 > 
-> Signed-off-by: Denis Efremov <efremov@linux.com>
-> ---
->  arch/s390/include/asm/pci.h     |  5 +----
->  arch/s390/include/asm/pci_clp.h |  6 +++---
->  arch/s390/pci/pci.c             | 16 ++++++++--------
->  arch/s390/pci/pci_clp.c         |  6 +++---
->  4 files changed, 15 insertions(+), 18 deletions(-)
+> Changes in v2:
+>   - Reverse checks in pci_iomap_range,pci_iomap_wc_range.
+>   - Refactor loops in vfio_pci to keep PCI_STD_RESOURCES.
+>   - Add 2 new patches to replace the magic constant with new define.
+>   - Split net patch in v1 to separate stmmac and dwc-xlgmac patches.
 > 
+> Denis Efremov (10):
+>   PCI: Add define for the number of standard PCI BARs
+>   s390/pci: Loop using PCI_STD_NUM_BARS
+>   x86/PCI: Loop using PCI_STD_NUM_BARS
+>   stmmac: pci: Loop using PCI_STD_NUM_BARS
+>   net: dwc-xlgmac: Loop using PCI_STD_NUM_BARS
+>   rapidio/tsi721: Loop using PCI_STD_NUM_BARS
+>   efifb: Loop using PCI_STD_NUM_BARS
+>   vfio_pci: Loop using PCI_STD_NUM_BARS
+>   PCI: hv: Use PCI_STD_NUM_BARS
+>   PCI: Use PCI_STD_NUM_BARS
+> 
+>  arch/s390/include/asm/pci.h                      |  5 +----
+>  arch/s390/include/asm/pci_clp.h                  |  6 +++---
+>  arch/s390/pci/pci.c                              | 16 ++++++++--------
+>  arch/s390/pci/pci_clp.c                          |  6 +++---
+>  arch/x86/pci/common.c                            |  2 +-
+>  drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c |  4 ++--
+>  drivers/net/ethernet/synopsys/dwc-xlgmac-pci.c   |  2 +-
+>  drivers/pci/controller/pci-hyperv.c              | 10 +++++-----
+>  drivers/pci/pci.c                                | 11 ++++++-----
+>  drivers/pci/quirks.c                             |  4 ++--
+>  drivers/rapidio/devices/tsi721.c                 |  2 +-
+>  drivers/vfio/pci/vfio_pci.c                      | 11 +++++++----
+>  drivers/vfio/pci/vfio_pci_config.c               | 10 ++++++----
+>  drivers/vfio/pci/vfio_pci_private.h              |  4 ++--
+>  drivers/video/fbdev/efifb.c                      |  2 +-
+>  include/linux/pci.h                              |  2 +-
+>  include/uapi/linux/pci_regs.h                    |  1 +
+>  17 files changed, 51 insertions(+), 47 deletions(-)
 
-Acked-by: Sebastian Ott <sebott@linux.ibm.com>
+I've come across a few more places where this change can be made. There
+may be multiple instances in the same file, but only the first is shown
+below:
 
+drivers/misc/pci_endpoint_test.c:       for (bar = BAR_0; bar <= BAR_5; bar++) {
+drivers/net/ethernet/intel/e1000/e1000_main.c:          for (i = BAR_1; i <= BAR_5; i++) {
+drivers/net/ethernet/intel/ixgb/ixgb_main.c:    for (i = BAR_1; i <= BAR_5; i++) {
+drivers/pci/controller/dwc/pci-dra7xx.c:        for (bar = BAR_0; bar <= BAR_5; bar++)
+drivers/pci/controller/dwc/pci-layerscape-ep.c: for (bar = BAR_0; bar <= BAR_5; bar++)
+drivers/pci/controller/dwc/pcie-artpec6.c:      for (bar = BAR_0; bar <= BAR_5; bar++)
+drivers/pci/controller/dwc/pcie-designware-plat.c:      for (bar = BAR_0; bar <= BAR_5; bar++)
+drivers/pci/endpoint/functions/pci-epf-test.c:  for (bar = BAR_0; bar <= BAR_5; bar++) {
+include/linux/pci-epc.h:        u64     bar_fixed_size[BAR_5 + 1];
+drivers/scsi/pm8001/pm8001_hwi.c:       for (bar = 0; bar < 6; bar++) {
+drivers/scsi/pm8001/pm8001_init.c:      for (bar = 0; bar < 6; bar++) {
+drivers/ata/sata_nv.c:  for (bar = 0; bar < 6; bar++)
+drivers/video/fbdev/core/fbmem.c:       for (idx = 0, bar = 0; bar < PCI_ROM_RESOURCE; bar++) {
+drivers/staging/gasket/gasket_core.c:   for (i = 0; i < GASKET_NUM_BARS; i++) {
+drivers/tty/serial/8250/8250_pci.c:     for (i = 0; i < PCI_NUM_BAR_RESOURCES; i++) { <-----------
+
+It looks like BARs are often iterated with PCI_NUM_BAR_RESOURCES, there
+are a load of these too found with:
+
+git grep PCI_ROM_RESOURCE | grep "< "
+
+I'm happy to share patches if preferred.
+
+Thanks,
+
+Andrew Murray
+
+> 
+> -- 
+> 2.21.0
+> 
