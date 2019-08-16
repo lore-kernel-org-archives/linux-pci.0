@@ -2,193 +2,136 @@ Return-Path: <SRS0=QF+3=WM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E47B2C3A59C
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68DFFC3A59D
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 17:31:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BA022077C
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="nMJ6VWve"
+	by mail.kernel.org (Postfix) with ESMTP id 3A0032086C
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 17:31:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565976674;
+	bh=pCq0siwRZY1QgHtPHpJZgOOHgVYfdlVGKRVR33bsDN4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=qrMemdJh+P6yvJAyvVtvw5zpUQ+svmx3Z2P0JrTL256sBA3mME4eC57Z/V2r5eB7p
+	 qeaQ6JAu0+9cZ3dUfX8OVgs/K73yNuo+hguGgodKe4UDtxK4U/HdtonBYFgbg9gbu8
+	 Mq9kusgxCYMXc0uenQcEoU4IKERkqcDRTuwL3vqA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727095AbfHPQvT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 12:51:19 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:51338 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727034AbfHPQvS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Aug 2019 12:51:18 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 2796D42EFA;
-        Fri, 16 Aug 2019 16:51:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received; s=mta-01; t=
-        1565974276; x=1567788677; bh=XwCH87qcjfQweodBeJ8twB4J3I00QimuAOp
-        SLYokm0g=; b=nMJ6VWve08AFQxdKtw+XqhPOJQJFHvzo/D+IG8kGdUwMy+xBBrW
-        nLCjPOOQTM9RG1/nLs9XKUKu1Lge+qLT+71jOuqBtzXaaFlBIesUBkWF7f/J23dL
-        5TXrRKxR7IzQoGU2FjLGp1mtIIGAEa35hP1peFmB39dPTNR2POBF66B8=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id pLEjScs2-ULA; Fri, 16 Aug 2019 19:51:16 +0300 (MSK)
-Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        id S1727437AbfHPRbN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Aug 2019 13:31:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53198 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727067AbfHPRbN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Aug 2019 13:31:13 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 58E7242ED7;
-        Fri, 16 Aug 2019 19:51:11 +0300 (MSK)
-Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
- (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 16
- Aug 2019 19:51:10 +0300
-From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
-CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v5 12/23] PCI: hotplug: movable BARs: Compute limits for relocated bridge windows
-Date:   Fri, 16 Aug 2019 19:50:50 +0300
-Message-ID: <20190816165101.911-13-s.miroshnichenko@yadro.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190816165101.911-1-s.miroshnichenko@yadro.com>
-References: <20190816165101.911-1-s.miroshnichenko@yadro.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 73EBC2086C;
+        Fri, 16 Aug 2019 17:31:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565976672;
+        bh=pCq0siwRZY1QgHtPHpJZgOOHgVYfdlVGKRVR33bsDN4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=H5a+BuYqbw23LQknyMoPh7AlkC+dco33MPK0CvNHF+1i0WeDWTA6pIv7/hNRT6FIP
+         keBG2N2SEr2wu92hdRLxmSMuHQGoDBZXXxQnajDoRjdX1tjQBT5JW6naCGrOokdIw9
+         jjwOUfMpUKcZpayozatSDhtoor1RabQDyf/mRC3E=
+Date:   Fri, 16 Aug 2019 12:31:08 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        ashok.raj@intel.com, keith.busch@intel.com
+Subject: Re: [PATCH v5 2/7] PCI/ATS: Initialize PRI in pci_ats_init()
+Message-ID: <20190816173108.GP253360@google.com>
+References: <cover.1564702313.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <3dd8c36177ac52d9a87655badb000d11785a5a4a.1564702313.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+ <20190815044657.GD253360@google.com>
+ <20190815173003.GB139211@skuppusw-desk.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [172.17.15.60]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-02.corp.yadro.com (172.17.10.102)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190815173003.GB139211@skuppusw-desk.amr.corp.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With enabled movable BARs, bridge windows are recalculated during each pci
-rescan. Some of the BARs below the bridge may be fixed/immovable: these
-areas are represented by the .immovable_range field in struct pci_bus.
+On Thu, Aug 15, 2019 at 10:30:03AM -0700, Kuppuswamy Sathyanarayanan wrote:
+> On Wed, Aug 14, 2019 at 11:46:57PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Aug 01, 2019 at 05:05:59PM -0700, sathyanarayanan.kuppuswamy@linux.intel.com wrote:
+> > > From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> > > 
+> > > Currently, PRI Capability checks are repeated across all PRI API's.
+> > > Instead, cache the capability check result in pci_pri_init() and use it
+> > > in other PRI API's. Also, since PRI is a shared resource between PF/VF,
+> > > initialize default values for common PRI features in pci_pri_init().
+> > > 
+> > > Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+> > > ---
+> > >  drivers/pci/ats.c       | 80 ++++++++++++++++++++++++++++-------------
+> > >  include/linux/pci-ats.h |  5 +++
+> > >  include/linux/pci.h     |  1 +
+> > >  3 files changed, 61 insertions(+), 25 deletions(-)
+> > > 
+> > 
+> > > diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> > > index cdd936d10f68..280be911f190 100644
+> > > --- a/drivers/pci/ats.c
+> > > +++ b/drivers/pci/ats.c
+> > 
+> > > @@ -28,6 +28,8 @@ void pci_ats_init(struct pci_dev *dev)
+> > >  		return;
+> > >  
+> > >  	dev->ats_cap = pos;
+> > > +
+> > > +	pci_pri_init(dev);
+> > >  }
+> > >  
+> > >  /**
+> > > @@ -170,36 +172,72 @@ int pci_ats_page_aligned(struct pci_dev *pdev)
+> > >  EXPORT_SYMBOL_GPL(pci_ats_page_aligned);
+> > >  
+> > >  #ifdef CONFIG_PCI_PRI
+> > > +
+> > > +void pci_pri_init(struct pci_dev *pdev)
+> > > +{
+> > > ...
+> > > +}
+> > 
+> > > diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+> > > index 1a0bdaee2f32..33653d4ca94f 100644
+> > > --- a/include/linux/pci-ats.h
+> > > +++ b/include/linux/pci-ats.h
+> > > @@ -6,6 +6,7 @@
+> > >  
+> > >  #ifdef CONFIG_PCI_PRI
+> > >  
+> > > +void pci_pri_init(struct pci_dev *pdev);
+> > 
+> > pci_pri_init() is implemented and called in drivers/pci/ats.c.  Unless
+> > there's a need to call this from outside ats.c, it should be static
+> > and should not be declared here.
+> > 
+> > If you can make it static, please also reorder the code so you don't
+> > need a forward declaration in ats.c.
 
-If a bridge window size is equal to its immovable range, it can only be
-assigned to the start of this range. But if a bridge window size is larger,
-and this difference in size is denoted as "delta", the window can start
-from (immovable_range.start - delta) to (immovable_range.start), and it can
-end from (immovable_range.end) to (immovable_range.end + delta). This range
-(the new .realloc_range field in struct pci_bus) must then be compared with
-immovable ranges of neighbouring bridges to guarantee no intersections.
+> Initially I did implement it as static function in drivers/pci/ats.c
+> and protected the calling of pci_pri_init() with #ifdef CONFIG_PCI_PRI.
+> But Keith did not like the implementation using #ifdefs and asked me to
+> define empty functions. That's the reason for moving it to header file.
 
-This patch only calculates valid ranges for reallocated bridges during pci
-rescan, and the next one will make use of these values during allocation.
+Defining empty functions doesn't mean it has to be in a header file.
+It's only needed inside ats.c, so the whole thing should be static
+there.  You can easily #ifdef the implementation, e.g., do the
+following in ats.c:
 
-Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
----
- drivers/pci/setup-bus.c | 67 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |  6 ++++
- 2 files changed, 73 insertions(+)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 420510a1a257..586aaa9578b2 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1819,6 +1819,72 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- }
- #endif
- 
-+/*
-+ * Calculate the address margins where the bridge windows may be allocated to fit all
-+ * the fixed and immovable BARs beneath.
-+ */
-+static void pci_bus_update_realloc_range(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *parent = bus->parent;
-+	int idx;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->subordinate)
-+			pci_bus_update_realloc_range(dev->subordinate);
-+
-+	if (!parent || !bus->self)
-+		return;
-+
-+	for (idx = 0; idx < PCI_BRIDGE_RESOURCE_NUM; ++idx) {
-+		struct resource *immovable_range = &bus->immovable_range[idx];
-+		resource_size_t window_size = resource_size(bus->resource[idx]);
-+		resource_size_t realloc_start, realloc_end;
-+
-+		bus->realloc_range[idx].start = 0;
-+		bus->realloc_range[idx].end = 0;
-+
-+		/* Check if there any immovable BARs under the bridge */
-+		if (immovable_range->start >= immovable_range->end)
-+			continue;
-+
-+		/* The lowest possible address where the bridge window can start */
-+		realloc_start = immovable_range->end - window_size + 1;
-+		/* The highest possible address where the bridge window can end */
-+		realloc_end = immovable_range->start + window_size - 1;
-+
-+		if (realloc_start > immovable_range->start)
-+			realloc_start = immovable_range->start;
-+
-+		if (realloc_end < immovable_range->end)
-+			realloc_end = immovable_range->end;
-+
-+		/*
-+		 * Check that realloc range doesn't intersect with hard fixed ranges
-+		 * of neighboring bridges
-+		 */
-+		list_for_each_entry(dev, &parent->devices, bus_list) {
-+			struct pci_bus *neighbor = dev->subordinate;
-+			struct resource *n_imm_range;
-+
-+			if (!neighbor || neighbor == bus)
-+				continue;
-+
-+			n_imm_range = &neighbor->immovable_range[idx];
-+
-+			if (n_imm_range->start >= n_imm_range->end)
-+				continue;
-+
-+			if (n_imm_range->end < immovable_range->start &&
-+			    n_imm_range->end > realloc_start)
-+				realloc_start = n_imm_range->end;
-+		}
-+
-+		bus->realloc_range[idx].start = realloc_start;
-+		bus->realloc_range[idx].end = realloc_end;
-+	}
-+}
-+
- /*
-  * First try will not touch PCI bridge res.
-  * Second and later try will clear small leaf bridge res.
-@@ -1838,6 +1904,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 
- 	if (pci_movable_bars_enabled()) {
- 		__pci_bus_size_bridges(bus, NULL);
-+		pci_bus_update_realloc_range(bus);
- 		__pci_bus_assign_resources(bus, NULL, NULL);
- 
- 		goto dump;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index efafbf816fe6..bf6638cf2525 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -587,6 +587,12 @@ struct pci_bus {
- 	 */
- 	struct resource immovable_range[PCI_BRIDGE_RESOURCE_NUM];
- 
-+	/*
-+	 * Acceptable address range, where the bridge window may reside, considering its
-+	 * size, so it will cover all the fixed and immovable BARs below.
-+	 */
-+	struct resource realloc_range[PCI_BRIDGE_RESOURCE_NUM];
-+
- 	struct pci_ops	*ops;		/* Configuration access functions */
- 	struct msi_controller *msi;	/* MSI controller */
- 	void		*sysdata;	/* Hook for sys-specific extension */
--- 
-2.21.0
-
+  static void pci_pri_init(struct pci_dev *pdev)
+  {
+  #ifdef CONFIG_PCI_PRI
+    ...
+  #endif
+  }
