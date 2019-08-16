@@ -2,56 +2,56 @@ Return-Path: <SRS0=QF+3=WM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B38B2C3A59D
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E47B2C3A59C
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D7372077C
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BA022077C
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="c+BFc0L0"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="nMJ6VWve"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726976AbfHPQvP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 12:51:15 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:51326 "EHLO mta-01.yadro.com"
+        id S1727095AbfHPQvT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Aug 2019 12:51:19 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:51338 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726550AbfHPQvO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Aug 2019 12:51:14 -0400
+        id S1727034AbfHPQvS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Aug 2019 12:51:18 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id B1A2442001;
-        Fri, 16 Aug 2019 16:51:12 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 2796D42EFA;
+        Fri, 16 Aug 2019 16:51:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1565974271; x=1567788672; bh=mKBbR82Srtto2VpJamxciNYssUs4Y4yDFRb
-        U7JWpUgg=; b=c+BFc0L0m+Qv/QlRbpX9tDaskY5kIMdSNcNHmYIiWfbB34veWtD
-        8ehXeCB0ECgNnK0j4YlAo6Na5Z6CGIyNgKGdUckvEgCqVMNrAlmV+1AikNcSxuUj
-        cp2+p1GRSFKZdBl3Xay7V/WwsLy4/BLLi1Bj801LbW8Jhq6S9GEbw8IU=
+        1565974276; x=1567788677; bh=XwCH87qcjfQweodBeJ8twB4J3I00QimuAOp
+        SLYokm0g=; b=nMJ6VWve08AFQxdKtw+XqhPOJQJFHvzo/D+IG8kGdUwMy+xBBrW
+        nLCjPOOQTM9RG1/nLs9XKUKu1Lge+qLT+71jOuqBtzXaaFlBIesUBkWF7f/J23dL
+        5TXrRKxR7IzQoGU2FjLGp1mtIIGAEa35hP1peFmB39dPTNR2POBF66B8=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 0mtgKAkvT17A; Fri, 16 Aug 2019 19:51:11 +0300 (MSK)
+        with ESMTP id pLEjScs2-ULA; Fri, 16 Aug 2019 19:51:16 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 861AC411F8;
-        Fri, 16 Aug 2019 19:51:10 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 58E7242ED7;
+        Fri, 16 Aug 2019 19:51:11 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 16
- Aug 2019 19:51:09 +0300
+ Aug 2019 19:51:10 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v5 04/23] PCI: Define PCI-specific version of the release_child_resources()
-Date:   Fri, 16 Aug 2019 19:50:42 +0300
-Message-ID: <20190816165101.911-5-s.miroshnichenko@yadro.com>
+Subject: [PATCH v5 12/23] PCI: hotplug: movable BARs: Compute limits for relocated bridge windows
+Date:   Fri, 16 Aug 2019 19:50:50 +0300
+Message-ID: <20190816165101.911-13-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190816165101.911-1-s.miroshnichenko@yadro.com>
 References: <20190816165101.911-1-s.miroshnichenko@yadro.com>
@@ -66,94 +66,129 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-If release the bridge resources with standard release_child_resources(), it
-drops the .start field of children's BARs to zero, but with the STARTALIGN
-flag remaining set, which makes the resource invalid for reassignment.
+With enabled movable BARs, bridge windows are recalculated during each pci
+rescan. Some of the BARs below the bridge may be fixed/immovable: these
+areas are represented by the .immovable_range field in struct pci_bus.
 
-Some resources must preserve their offset and size: those marked with the
-PCI_FIXED and the immovable ones - which are bound by drivers without
-support of the movable BARs feature.
+If a bridge window size is equal to its immovable range, it can only be
+assigned to the start of this range. But if a bridge window size is larger,
+and this difference in size is denoted as "delta", the window can start
+from (immovable_range.start - delta) to (immovable_range.start), and it can
+end from (immovable_range.end) to (immovable_range.end + delta). This range
+(the new .realloc_range field in struct pci_bus) must then be compared with
+immovable ranges of neighbouring bridges to guarantee no intersections.
 
-Add the pci_release_child_resources() to replace release_child_resources()
-in handling the described PCI-specific cases.
+This patch only calculates valid ranges for reallocated bridges during pci
+rescan, and the next one will make use of these values during allocation.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/setup-bus.c | 54 ++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 53 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 67 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  6 ++++
+ 2 files changed, 73 insertions(+)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 79b1fa6519be..6cb8b293c576 100644
+index 420510a1a257..586aaa9578b2 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1482,6 +1482,55 @@ static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
- 	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
- 	 IORESOURCE_MEM_64)
+@@ -1819,6 +1819,72 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
+ }
+ #endif
  
 +/*
-+ * Similar to generic release_child_resources(), but aware of immovable BARs and
-+ * PCI_FIXED and STARTALIGN flags
++ * Calculate the address margins where the bridge windows may be allocated to fit all
++ * the fixed and immovable BARs beneath.
 + */
-+static void pci_release_child_resources(struct pci_bus *bus, struct resource *r)
++static void pci_bus_update_realloc_range(struct pci_bus *bus)
 +{
 +	struct pci_dev *dev;
++	struct pci_bus *parent = bus->parent;
++	int idx;
 +
-+	if (!bus || !r)
++	list_for_each_entry(dev, &bus->devices, bus_list)
++		if (dev->subordinate)
++			pci_bus_update_realloc_range(dev->subordinate);
++
++	if (!parent || !bus->self)
 +		return;
 +
-+	if (r->flags & IORESOURCE_PCI_FIXED)
-+		return;
++	for (idx = 0; idx < PCI_BRIDGE_RESOURCE_NUM; ++idx) {
++		struct resource *immovable_range = &bus->immovable_range[idx];
++		resource_size_t window_size = resource_size(bus->resource[idx]);
++		resource_size_t realloc_start, realloc_end;
 +
-+	r->child = NULL;
++		bus->realloc_range[idx].start = 0;
++		bus->realloc_range[idx].end = 0;
 +
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		int i;
++		/* Check if there any immovable BARs under the bridge */
++		if (immovable_range->start >= immovable_range->end)
++			continue;
 +
-+		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-+			struct resource *tmp = &dev->resource[i];
-+			resource_size_t size = resource_size(tmp);
++		/* The lowest possible address where the bridge window can start */
++		realloc_start = immovable_range->end - window_size + 1;
++		/* The highest possible address where the bridge window can end */
++		realloc_end = immovable_range->start + window_size - 1;
 +
-+			if (!tmp->flags || tmp->parent != r)
++		if (realloc_start > immovable_range->start)
++			realloc_start = immovable_range->start;
++
++		if (realloc_end < immovable_range->end)
++			realloc_end = immovable_range->end;
++
++		/*
++		 * Check that realloc range doesn't intersect with hard fixed ranges
++		 * of neighboring bridges
++		 */
++		list_for_each_entry(dev, &parent->devices, bus_list) {
++			struct pci_bus *neighbor = dev->subordinate;
++			struct resource *n_imm_range;
++
++			if (!neighbor || neighbor == bus)
 +				continue;
 +
-+			tmp->parent = NULL;
-+			tmp->sibling = NULL;
++			n_imm_range = &neighbor->immovable_range[idx];
 +
-+			pci_release_child_resources(dev->subordinate, tmp);
-+
-+			if ((tmp->flags & IORESOURCE_PCI_FIXED) ||
-+			    !pci_dev_movable_bars_supported(dev)) {
-+				pci_dbg(dev, "release immovable %pR (%s), keep its flags, base and size\n",
-+					tmp, tmp->name);
++			if (n_imm_range->start >= n_imm_range->end)
 +				continue;
-+			}
 +
-+			pci_dbg(dev, "release %pR (%s)\n", tmp, tmp->name);
-+
-+			tmp->start = 0;
-+			tmp->end = size - 1;
-+
-+			tmp->flags &= ~IORESOURCE_STARTALIGN;
-+			tmp->flags |= IORESOURCE_SIZEALIGN;
++			if (n_imm_range->end < immovable_range->start &&
++			    n_imm_range->end > realloc_start)
++				realloc_start = n_imm_range->end;
 +		}
++
++		bus->realloc_range[idx].start = realloc_start;
++		bus->realloc_range[idx].end = realloc_end;
 +	}
 +}
 +
- static void pci_bridge_release_resources(struct pci_bus *bus,
- 					 unsigned long type)
- {
-@@ -1522,7 +1571,10 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 		return;
+ /*
+  * First try will not touch PCI bridge res.
+  * Second and later try will clear small leaf bridge res.
+@@ -1838,6 +1904,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
  
- 	/* If there are children, release them all */
--	release_child_resources(r);
-+	if (pci_movable_bars_enabled())
-+		pci_release_child_resources(bus, r);
-+	else
-+		release_child_resources(r);
- 	if (!release_resource(r)) {
- 		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
- 		pci_info(dev, "resource %d %pR released\n",
+ 	if (pci_movable_bars_enabled()) {
+ 		__pci_bus_size_bridges(bus, NULL);
++		pci_bus_update_realloc_range(bus);
+ 		__pci_bus_assign_resources(bus, NULL, NULL);
+ 
+ 		goto dump;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index efafbf816fe6..bf6638cf2525 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -587,6 +587,12 @@ struct pci_bus {
+ 	 */
+ 	struct resource immovable_range[PCI_BRIDGE_RESOURCE_NUM];
+ 
++	/*
++	 * Acceptable address range, where the bridge window may reside, considering its
++	 * size, so it will cover all the fixed and immovable BARs below.
++	 */
++	struct resource realloc_range[PCI_BRIDGE_RESOURCE_NUM];
++
+ 	struct pci_ops	*ops;		/* Configuration access functions */
+ 	struct msi_controller *msi;	/* MSI controller */
+ 	void		*sysdata;	/* Hook for sys-specific extension */
 -- 
 2.21.0
 
