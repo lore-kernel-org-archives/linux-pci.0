@@ -7,51 +7,52 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06DD0C3A5A0
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEE0AC3A5A0
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C50DA2171F
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C0932077C
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="RsHkPpfP"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="DE2kQ8gz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727286AbfHPQvX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 12:51:23 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:51416 "EHLO mta-01.yadro.com"
+        id S1727302AbfHPQvZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Aug 2019 12:51:25 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:51484 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727167AbfHPQvV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Aug 2019 12:51:21 -0400
+        id S1727067AbfHPQvY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Aug 2019 12:51:24 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 0005D42F00;
-        Fri, 16 Aug 2019 16:51:20 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 5298742F04;
+        Fri, 16 Aug 2019 16:51:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1565974280; x=1567788681; bh=IN5b5Qn4YOfjjhc2HeOGh69GpubPK0lp6La
-        cAfDIsp8=; b=RsHkPpfP10fB0OIGyjKQmpEB0VxN54q4zqe2x229zAHldjhHRli
-        Y3pC4Hj/oe8xUAH+GRnQXsTPtxqNDQlGs8sUek8Od5cLDhLro5jlixmeZdHDBkmC
-        g0R209KsQ4Z9g1Xa0lfXotkC8wm8Q98/EDiAnSZwskNYbu8oWeI25Y10=
+        1565974281; x=1567788682; bh=Wvr/G5+MCulC+fzeKgzpPc5JueFBdqSVqZ/
+        r8VC32lw=; b=DE2kQ8gzLAqhowh2HemKFf/A2xmFpKpjxsAlinl7UjemCfPuIRq
+        pG8bHWEdYBcxD+WHnhrEMlIZuqV5/QSVbgQQavMH6PeqXMAOtl5H8U4a1TcpmnDL
+        E/NxJ8FcNoCau5OZyie/t71V1c6ipEFwuGeyb5CRXbkI9fznSkbnQihk=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id xq5yIa6CELzD; Fri, 16 Aug 2019 19:51:20 +0300 (MSK)
+        with ESMTP id PKREUo0eCtq5; Fri, 16 Aug 2019 19:51:21 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 2746D42EEA;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 8D1FA42EEC;
         Fri, 16 Aug 2019 19:51:13 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 16
- Aug 2019 19:51:12 +0300
+ Aug 2019 19:51:13 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
-        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v5 19/23] PCI: hotplug: Configure MPS for hot-added bridges during bus rescan
-Date:   Fri, 16 Aug 2019 19:50:57 +0300
-Message-ID: <20190816165101.911-20-s.miroshnichenko@yadro.com>
+        Sergey Miroshnichenko <s.miroshnichenko@yadro.com>,
+        <linux-nvme@lists.infradead.org>, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v5 21/23] nvme-pci: Handle movable BARs
+Date:   Fri, 16 Aug 2019 19:50:59 +0300
+Message-ID: <20190816165101.911-22-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190816165101.911-1-s.miroshnichenko@yadro.com>
 References: <20190816165101.911-1-s.miroshnichenko@yadro.com>
@@ -66,39 +67,93 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Assure that MPS settings are set up for bridges which are discovered
-during manually triggered rescan via sysfs. This sequence of bridge
-init (using pci_rescan_bus()) will be used for pciehp hot-add events
-when BARs are movable.
+Hotplugged devices can affect the existing ones by moving their BARs. The
+PCI subsystem will inform the NVME driver about this by invoking the
+.rescan_prepare() and .rescan_done() hooks, so the BARs can by re-mapped.
 
+Tested under the "randrw" mode of the fio tool. Before the hotplugging:
+
+  % sudo cat /proc/iomem
+  ...
+                3fe800000000-3fe8007fffff : PCI Bus 0020:0b
+                  3fe800000000-3fe8007fffff : PCI Bus 0020:18
+                    3fe800000000-3fe8000fffff : 0020:18:00.0
+                      3fe800000000-3fe8000fffff : nvme
+                    3fe800100000-3fe80017ffff : 0020:18:00.0
+  ...
+
+, then another NVME drive was hot-added, so BARs of the 0020:18:00.0 are
+moved:
+
+  % sudo cat /proc/iomem
+    ...
+                3fe800000000-3fe800ffffff : PCI Bus 0020:0b
+                  3fe800000000-3fe8007fffff : PCI Bus 0020:10
+                    3fe800000000-3fe800003fff : 0020:10:00.0
+                      3fe800000000-3fe800003fff : nvme
+                    3fe800010000-3fe80001ffff : 0020:10:00.0
+                  3fe800800000-3fe800ffffff : PCI Bus 0020:18
+                    3fe800800000-3fe8008fffff : 0020:18:00.0
+                      3fe800800000-3fe8008fffff : nvme
+                    3fe800900000-3fe80097ffff : 0020:18:00.0
+    ...
+
+During the rescanning, both READ and WRITE speeds drop to zero for a while
+due to driver's pause, then restore.
+
+Cc: linux-nvme@lists.infradead.org
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/probe.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/nvme/host/pci.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5f52a19738aa..4bb10d27cb3a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -3688,7 +3688,7 @@ static void pci_reassign_root_bus_resources(struct pci_bus *root)
- unsigned int pci_rescan_bus(struct pci_bus *bus)
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index db160cee42ad..a805d80082ca 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -1645,7 +1645,7 @@ static int nvme_remap_bar(struct nvme_dev *dev, unsigned long size)
  {
- 	unsigned int max;
--	struct pci_bus *root = bus;
-+	struct pci_bus *root = bus, *child;
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
  
- 	while (!pci_is_root_bus(root))
- 		root = root->parent;
-@@ -3708,6 +3708,9 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
- 		pci_assign_unassigned_bus_resources(bus);
- 	}
+-	if (size <= dev->bar_mapped_size)
++	if (dev->bar && size <= dev->bar_mapped_size)
+ 		return 0;
+ 	if (size > pci_resource_len(pdev, 0))
+ 		return -ENOMEM;
+@@ -2980,6 +2980,23 @@ static void nvme_error_resume(struct pci_dev *pdev)
+ 	flush_work(&dev->ctrl.reset_work);
+ }
  
-+	list_for_each_entry(child, &root->children, node)
-+		pcie_bus_configure_settings(child);
++static void nvme_rescan_prepare(struct pci_dev *pdev)
++{
++	struct nvme_dev *dev = pci_get_drvdata(pdev);
 +
- 	pci_bus_add_devices(bus);
++	nvme_dev_disable(dev, false);
++	nvme_dev_unmap(dev);
++	dev->bar = NULL;
++}
++
++static void nvme_rescan_done(struct pci_dev *pdev)
++{
++	struct nvme_dev *dev = pci_get_drvdata(pdev);
++
++	nvme_dev_map(dev);
++	nvme_reset_ctrl_sync(&dev->ctrl);
++}
++
+ static const struct pci_error_handlers nvme_err_handler = {
+ 	.error_detected	= nvme_error_detected,
+ 	.slot_reset	= nvme_slot_reset,
+@@ -3049,6 +3066,8 @@ static struct pci_driver nvme_driver = {
+ #endif
+ 	.sriov_configure = pci_sriov_configure_simple,
+ 	.err_handler	= &nvme_err_handler,
++	.rescan_prepare	= nvme_rescan_prepare,
++	.rescan_done	= nvme_rescan_done,
+ };
  
- 	return max;
+ static int __init nvme_init(void)
 -- 
 2.21.0
 
