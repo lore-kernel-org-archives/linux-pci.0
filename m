@@ -4,54 +4,54 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B23D3C3A5A0
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E667EC3A59C
 	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8DDAB21743
-	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA3AD2171F
+	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="gah3lltG"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="o5TMjxJQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726839AbfHPQvR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 12:51:17 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:51316 "EHLO mta-01.yadro.com"
+        id S1726550AbfHPQvP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Aug 2019 12:51:15 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:51338 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727005AbfHPQvQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Aug 2019 12:51:16 -0400
+        id S1725956AbfHPQvO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Aug 2019 12:51:14 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id EFF9C42EF5;
-        Fri, 16 Aug 2019 16:51:15 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 972BB42EED;
+        Fri, 16 Aug 2019 16:51:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1565974275; x=1567788676; bh=a/KVS6F95f4wnugwa0rxD+nie5EQCGw1iAw
-        tHzLpoOg=; b=gah3lltGGI1J6eXGT3PqwJFT9pj4rqmlD0H00d7LOqbynExRcmu
-        VJ/EcQhbRR+5CZPWitpdpN6a5H2BksmYQ7xLz3TFo1zU/AauT3wWPMsSHUX+NH9B
-        qokaR/+iNJVui8C5VEwaedoiKm5W7J/JWoUi0pEEs6bcA1V3tehU+Cws=
+        1565974272; x=1567788673; bh=UUdHgJhxaQgfi4cl/ddzHCHCSLhs0rYnkXJ
+        xePQqKTs=; b=o5TMjxJQxe2kEbdyHgVWbT+anifvu1C6KqBVPFnITzDf5sq1gWn
+        ZTmnaiKdO8XH8yIOlGFbbvcekOlaXtWoJ+TCvd0SDo4yCboWobCWhc6nkKSeZIYA
+        7cidBZFdwINyGE5cHeTxfUyQquJn4R7W8QzPyvbR+hq+5JWUWYWf6nB4=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id J0U8zbx7AfAP; Fri, 16 Aug 2019 19:51:15 +0300 (MSK)
+        with ESMTP id HKy2jYnnkb5n; Fri, 16 Aug 2019 19:51:12 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id EC8E042ED3;
+        by mta-01.yadro.com (Postfix) with ESMTPS id 8DFED42ECB;
         Fri, 16 Aug 2019 19:51:10 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 16
- Aug 2019 19:51:10 +0300
+ Aug 2019 19:51:09 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v5 10/23] PCI: hotplug: movable BARs: Try to assign unassigned resources only once
-Date:   Fri, 16 Aug 2019 19:50:48 +0300
-Message-ID: <20190816165101.911-11-s.miroshnichenko@yadro.com>
+Subject: [PATCH v5 05/23] PCI: hotplug: movable BARs: Fix reassigning the released bridge windows
+Date:   Fri, 16 Aug 2019 19:50:43 +0300
+Message-ID: <20190816165101.911-6-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190816165101.911-1-s.miroshnichenko@yadro.com>
 References: <20190816165101.911-1-s.miroshnichenko@yadro.com>
@@ -66,37 +66,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With enabled BAR movement, BARs and bridge windows can only be assigned to
-their direct parents, so there can be only one variant of resource tree,
-thus every retry within the pci_assign_unassigned_root_bus_resources() will
-result in the same tree, and it is enough to try just once.
+When a bridge window is temporarily released during the rescan, its old
+size is not relevant anymore - it will be recreated from pbus_size_*(), so
+it's start value should be zero.
 
-In case of failures the pci_reassign_root_bus_resources() disables BARs for
-one of the hotplugged devices and tries the assignment again.
+If such window can't be reassigned, don't apply reset_resource(), so the
+next retry may succeed.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/setup-bus.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/pci/setup-bus.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index aee330047121..33f709095675 100644
+index 6cb8b293c576..7c2c57f77c6f 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1819,6 +1819,13 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	int pci_try_num = 1;
- 	enum enable_type enable_local;
+@@ -295,7 +295,8 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 						    0 /* don't care */,
+ 						    0 /* don't care */);
+ 			}
+-			reset_resource(res);
++			if (!pci_movable_bars_enabled())
++				reset_resource(res);
+ 		}
+ 	}
+ }
+@@ -1579,8 +1580,8 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
+ 		pci_info(dev, "resource %d %pR released\n",
+ 			 PCI_BRIDGE_RESOURCES + idx, r);
+-		/* Keep the old size */
+-		r->end = resource_size(r) - 1;
++		/* Don't keep the old size if the bridge will be recalculated */
++		r->end = pci_movable_bars_enabled() ? 0 : (resource_size(r) - 1);
+ 		r->start = 0;
+ 		r->flags = 0;
  
-+	if (pci_movable_bars_enabled()) {
-+		__pci_bus_size_bridges(bus, NULL);
-+		__pci_bus_assign_resources(bus, NULL, NULL);
-+
-+		goto dump;
-+	}
-+
- 	/* Don't realloc if asked to do so */
- 	enable_local = pci_realloc_detect(bus, pci_realloc_enable);
- 	if (pci_realloc_enabled(enable_local)) {
 -- 
 2.21.0
 
