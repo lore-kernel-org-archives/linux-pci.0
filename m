@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F715C3A59F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87E2FC3A5A1
 	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C25E2077C
+	by mail.kernel.org (Postfix) with ESMTP id 61D5421721
 	for <linux-pci@archiver.kernel.org>; Fri, 16 Aug 2019 16:51:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="iAasaNqo"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="Vi1j512r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727032AbfHPQvQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726345AbfHPQvQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Fri, 16 Aug 2019 12:51:16 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:51342 "EHLO mta-01.yadro.com"
+Received: from mta-02.yadro.com ([89.207.88.252]:51338 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726345AbfHPQvQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1726839AbfHPQvQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 16 Aug 2019 12:51:16 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id C61A342ECB;
-        Fri, 16 Aug 2019 16:51:13 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id C0A8C42EF3;
+        Fri, 16 Aug 2019 16:51:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1565974272; x=1567788673; bh=BJFN/GI/KntO7wMlGqrMXAQaRUhb2OOfNPC
-        26t3z61E=; b=iAasaNqorP9V0Ny9KkdAJMj5+iAkMBKhWxLykG0pkd2+N8IF/ah
-        aUlRQ9CPKk1DXJqU6kCqcOlkOeCI3mhTvgw0GQdQ7cRy4dh2nLihXGZimLmu6QAD
-        IhErlwyIM+ifNwgZZGbYkHj18abfEiG8+nP18gIR4mFEI2WEYSu3uxFo=
+        1565974274; x=1567788675; bh=kub9kFo40DhaU3JHJRULNGlExW4BAfTjWiH
+        IJegjDRI=; b=Vi1j512rMHhMMocEblI+bUBxmczAvExHmh2Qtmdn5ZiWDWOKU9e
+        nDpwqGq39RBIzMkAPOXgu3CS+0EAndI3anCyfD+NVJXVPIQzObZa8LvMZnl9gdcn
+        8/s9z1OmqeD5EQpDH7pQLIvo2l6Y6G9pmGAAJIixiA7PSpR9Cu1YM5dk=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id SaXNuS75WM6f; Fri, 16 Aug 2019 19:51:12 +0300 (MSK)
+        with ESMTP id uTAXHYZF1kWA; Fri, 16 Aug 2019 19:51:14 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 9234F42ECD;
+        by mta-01.yadro.com (Postfix) with ESMTPS id BBC9242ED2;
         Fri, 16 Aug 2019 19:51:10 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.60) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 16
- Aug 2019 19:51:09 +0300
+ Aug 2019 19:51:10 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v5 06/23] PCI: hotplug: movable BARs: Recalculate all bridge windows during rescan
-Date:   Fri, 16 Aug 2019 19:50:44 +0300
-Message-ID: <20190816165101.911-7-s.miroshnichenko@yadro.com>
+Subject: [PATCH v5 09/23] PCI: Prohibit assigning BARs and bridge windows to non-direct parents
+Date:   Fri, 16 Aug 2019 19:50:47 +0300
+Message-ID: <20190816165101.911-10-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190816165101.911-1-s.miroshnichenko@yadro.com>
 References: <20190816165101.911-1-s.miroshnichenko@yadro.com>
@@ -66,105 +66,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-When the movable BARs feature is enabled and a rescan has been requested,
-release all the bridge windows and recalculate them from scratch, taking
-into account all kinds for BARs: fixed, immovable, movable, new.
-
-This increases the chances to find a memory space to fit BARs for newly
-hotplugged devices, especially if no/not enough gaps were reserved by the
-BIOS/bootloader/firmware.
-
-The last step of writing the recalculated windows to the bridges is done
-by the new pci_setup_bridges() function.
+When movable BARs are enabled, the feature of resource relocating from
+commit 2bbc6942273b5 ("PCI : ability to relocate assigned pci-resources")
+is not used. Instead, inability to assign a resource is used as a signal
+to retry BAR assignment with other configuration of bridge windows.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/pci.h       |  1 +
- drivers/pci/probe.c     | 22 ++++++++++++++++++++++
- drivers/pci/setup-bus.c | 16 ++++++++++++++++
- 3 files changed, 39 insertions(+)
+ drivers/pci/setup-bus.c |  2 ++
+ drivers/pci/setup-res.c | 12 ++++++++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index be7acc477c64..a0ec696512eb 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -253,6 +253,7 @@ void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
-+void pci_bus_release_root_bridge_resources(struct pci_bus *bus);
- 
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
- void pci_disable_bridge_window(struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 60e3b48d2251..a26bf740e9ab 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -3474,6 +3474,25 @@ static void pci_bus_rescan_done(struct pci_bus *bus)
- 		pci_config_pm_runtime_put(bus->self);
- }
- 
-+static void pci_setup_bridges(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list) {
-+		struct pci_bus *child;
-+
-+		if (!pci_dev_is_added(dev) || pci_dev_is_ignored(dev))
-+			continue;
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pci_setup_bridges(child);
-+	}
-+
-+	if (bus->self)
-+		pci_setup_bridge(bus);
-+}
-+
- /**
-  * pci_rescan_bus - Scan a PCI bus for devices
-  * @bus: PCI bus to scan
-@@ -3495,8 +3514,11 @@ unsigned int pci_rescan_bus(struct pci_bus *bus)
- 		pci_bus_rescan_prepare(root);
- 
- 		max = pci_scan_child_bus(root);
-+
-+		pci_bus_release_root_bridge_resources(root);
- 		pci_assign_unassigned_root_bus_resources(root);
- 
-+		pci_setup_bridges(root);
- 		pci_bus_rescan_done(root);
- 	} else {
- 		max = pci_scan_child_bus(bus);
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7c2c57f77c6f..04f626e1ac18 100644
+index 2c250efca512..aee330047121 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1635,6 +1635,22 @@ static void pci_bus_release_bridge_resources(struct pci_bus *bus,
- 		pci_bridge_release_resources(bus, type);
+@@ -1356,6 +1356,8 @@ static void pdev_assign_fixed_resources(struct pci_dev *dev)
+ 		while (b && !r->parent) {
+ 			assign_fixed_resource_on_bus(b, r);
+ 			b = b->parent;
++			if (!r->parent && pci_movable_bars_enabled())
++				break;
+ 		}
+ 	}
  }
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index d8ca40a97693..732d18f60f1b 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -298,6 +298,18 @@ static int _pci_assign_resource(struct pci_dev *dev, int resno,
  
-+void pci_bus_release_root_bridge_resources(struct pci_bus *root_bus)
-+{
-+	int i;
-+	struct resource *r;
+ 	bus = dev->bus;
+ 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
++		if (pci_movable_bars_enabled()) {
++			if (resno >= PCI_BRIDGE_RESOURCES &&
++			    resno <= PCI_BRIDGE_RESOURCE_END) {
++				struct resource *res = dev->resource + resno;
 +
-+	pci_bus_release_bridge_resources(root_bus, IORESOURCE_IO, whole_subtree);
-+	pci_bus_release_bridge_resources(root_bus, IORESOURCE_MEM, whole_subtree);
-+	pci_bus_release_bridge_resources(root_bus,
-+					 IORESOURCE_MEM_64 | IORESOURCE_PREFETCH,
-+					 whole_subtree);
++				res->start = 0;
++				res->end = 0;
++				res->flags = 0;
++			}
++			break;
++		}
 +
-+	pci_bus_for_each_resource(root_bus, r, i) {
-+		pci_release_child_resources(root_bus, r);
-+	}
-+}
-+
- static void pci_bus_dump_res(struct pci_bus *bus)
- {
- 	struct resource *res;
+ 		if (!bus->parent || !bus->self->transparent)
+ 			break;
+ 		bus = bus->parent;
 -- 
 2.21.0
 
