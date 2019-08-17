@@ -2,132 +2,117 @@ Return-Path: <SRS0=qZU7=WN=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF8BC3A59D
-	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 00:14:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFD0C3A59B
+	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 11:52:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC0202077C
-	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 00:14:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27D9C2077C
+	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 11:52:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MjUzhZtI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725911AbfHQAN7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 20:13:59 -0400
-Received: from mga05.intel.com ([192.55.52.43]:12917 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725937AbfHQANY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Aug 2019 20:13:24 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Aug 2019 17:13:22 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,395,1559545200"; 
-   d="scan'208";a="168194998"
-Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by orsmga007.jf.intel.com with ESMTP; 16 Aug 2019 17:13:22 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, keith.busch@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v6 1/8] PCI/ATS: Fix pci_prg_resp_pasid_required() dependency issues
-Date:   Fri, 16 Aug 2019 17:10:15 -0700
-Message-Id: <56d8055230a9a79907dffa29b59707b417642256.1565997310.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1565997310.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1565997310.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1725925AbfHQLwX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 17 Aug 2019 07:52:23 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:41098 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725832AbfHQLwX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Aug 2019 07:52:23 -0400
+Received: by mail-wr1-f67.google.com with SMTP id j16so4019290wrr.8;
+        Sat, 17 Aug 2019 04:52:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=Bjg3d+ReGnHwJhKycmU6EiBnA2dCiOLyBl8G9lc4YXw=;
+        b=MjUzhZtIvOWuMwEXuUvrcyL500MH6X249sn8yuDg3Jztsn7xnUBOA3ny9lVWOCnyDD
+         vMidcwz/w6EFcT8DrmV8MXvVTMwJOnik2k2q8JYu4SNGO2xSaBWF5oP4gSGFjZDkIjdl
+         ZM6CIP2jQzohed+N43Xg3PFl6GHApP0TTMjPsdN8YfRTUYh3aEzvWZUf1C6ywpmJ15Qu
+         TDP39Y7cJw7Z+6fcJv8LXo0fCtFs1ziYzxow2pvur3ZBe2q643urBBtneGEOWM3eL1fK
+         HROQyijGZ/Lapeoolj7cvwWQNwEn1QCT5Ky9M4yhQIWUJhgBHmEahrMjmkTSC6eRwG1z
+         6vSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Bjg3d+ReGnHwJhKycmU6EiBnA2dCiOLyBl8G9lc4YXw=;
+        b=NvO/naQLPDtireEjxZpehDvoWLrYWF76vV0EsKPxKkPPyMPiTvcIY09Q+9AxZYaEI3
+         wLbuICUWvgWEUrgOTekx6gCjo8fNQeWpFlwoOC3U5xAShxf3sXLMTzCOv1znznmVtppp
+         oAO+Jd5vl43pqup7xpP+qL9s552zy+9pIwDHHELL913ybCl4Gxfo6G6e4RoxEaV9STZ6
+         TW9Upt1U851eKt+ReHKIVZCtibtlZAehkOv549OjBqpFq5qdjNuZTvChqUfnBq9Gz7DT
+         kBuAsnXnDkEc0pI432IG4fKzluhTHv0H8bBfR+fJuBcQpk4GYdoC96czkbvQhFsrsZLW
+         oXlQ==
+X-Gm-Message-State: APjAAAVsG5J33cRyzWlE8tnChGU2JjfpuEWwiwhcmKzYP79Pr+5/0UCc
+        RCGUYlCkITdyqkR/WoM9fLpakH/C3vHXLg==
+X-Google-Smtp-Source: APXvYqzZGaXfbTdF9IJFmQZYlA2ZtB5E21tF4WhfAav5Dl5+SeKgbR1m2pIUL4fbVFn660E3bcIsSQ==
+X-Received: by 2002:adf:e750:: with SMTP id c16mr16322899wrn.199.1566042740898;
+        Sat, 17 Aug 2019 04:52:20 -0700 (PDT)
+Received: from localhost ([165.22.121.176])
+        by smtp.gmail.com with ESMTPSA id o9sm10352285wrm.88.2019.08.17.04.52.19
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 17 Aug 2019 04:52:20 -0700 (PDT)
+From:   hexin <hexin.op@gmail.com>
+X-Google-Original-From: hexin <hexin15@baidu.com>
+To:     Alex Williamson <alex.williamson@redhat.com>, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     hexin <hexin15@baidu.com>, Liu Qi <liuqi16@baidu.com>,
+        Zhang Yu <zhangyu31@baidu.com>
+Subject: [PATCH v2] vfio_pci: Replace pci_try_reset_function() with __pci_reset_function_locked() to ensure that the pci device configuration space is restored to its original state
+Date:   Sat, 17 Aug 2019 19:51:03 +0800
+Message-Id: <1566042663-16694-1-git-send-email-hexin15@baidu.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+In vfio_pci_enable(), save the device's initial configuration information
+and then restore the configuration in vfio_pci_disable(). However, the
+execution result is not the same. Since the pci_try_reset_function()
+function saves the current state before resetting, the configuration
+information restored by pci_load_and_free_saved_state() will be
+overwritten. The __pci_reset_function_locked() function can be used
+to prevent the configuration space from being overwritten.
 
-Since pci_prg_resp_pasid_required() function has dependency on both
-PASID and PRI, define it only if both CONFIG_PCI_PRI and
-CONFIG_PCI_PASID config options are enabled.
-
-Fixes: e5567f5f6762 ("PCI/ATS: Add pci_prg_resp_pasid_required()
-interface.")
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Fixes: 890ed578df82 ("vfio-pci: Use pci "try" reset interface")
+Signed-off-by: hexin <hexin15@baidu.com>
+Signed-off-by: Liu Qi <liuqi16@baidu.com>
+Signed-off-by: Zhang Yu <zhangyu31@baidu.com>
 ---
- drivers/pci/ats.c       | 10 ++++++----
- include/linux/pci-ats.h | 12 +++++++++---
- 2 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/vfio/pci/vfio_pci.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index e18499243f84..cdd936d10f68 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -395,6 +395,8 @@ int pci_pasid_features(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_pasid_features);
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 703948c..0220616 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -438,11 +438,20 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 	pci_write_config_word(pdev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
  
-+#ifdef CONFIG_PCI_PRI
-+
- /**
-  * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
-  *				 status.
-@@ -402,10 +404,8 @@ EXPORT_SYMBOL_GPL(pci_pasid_features);
-  *
-  * Returns 1 if PASID is required in PRG Response Message, 0 otherwise.
-  *
-- * Even though the PRG response PASID status is read from PRI Status
-- * Register, since this API will mainly be used by PASID users, this
-- * function is defined within #ifdef CONFIG_PCI_PASID instead of
-- * CONFIG_PCI_PRI.
-+ * Since this API has dependency on both PRI and PASID, protect it
-+ * with both CONFIG_PCI_PRI and CONFIG_PCI_PASID.
-  */
- int pci_prg_resp_pasid_required(struct pci_dev *pdev)
- {
-@@ -425,6 +425,8 @@ int pci_prg_resp_pasid_required(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
+ 	/*
+-	 * Try to reset the device.  The success of this is dependent on
+-	 * being able to lock the device, which is not always possible.
++	 * Try to get the locks ourselves to prevent a deadlock. The
++	 * success of this is dependent on being able to lock the device,
++	 * which is not always possible.
++	 * We can not use the "try" reset interface here, which will
++	 * overwrite the previously restored configuration information.
+ 	 */
+-	if (vdev->reset_works && !pci_try_reset_function(pdev))
+-		vdev->needs_reset = false;
++	if (vdev->reset_works && pci_cfg_access_trylock(pdev)) {
++		if (device_trylock(&pdev->dev)) {
++			if (!__pci_reset_function_locked(pdev))
++				vdev->needs_reset = false;
++			device_unlock(&pdev->dev);
++		}
++		pci_cfg_access_unlock(pdev);
++	}
  
-+#endif
-+
- #define PASID_NUMBER_SHIFT	8
- #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
- /**
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 1ebb88e7c184..1a0bdaee2f32 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -40,7 +40,6 @@ void pci_disable_pasid(struct pci_dev *pdev);
- void pci_restore_pasid_state(struct pci_dev *pdev);
- int pci_pasid_features(struct pci_dev *pdev);
- int pci_max_pasids(struct pci_dev *pdev);
--int pci_prg_resp_pasid_required(struct pci_dev *pdev);
- 
- #else  /* CONFIG_PCI_PASID */
- 
-@@ -67,11 +66,18 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
- 	return -EINVAL;
- }
- 
-+#endif /* CONFIG_PCI_PASID */
-+
-+#if defined(CONFIG_PCI_PRI) && defined(CONFIG_PCI_PASID)
-+
-+int pci_prg_resp_pasid_required(struct pci_dev *pdev);
-+
-+#else /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
-+
- static inline int pci_prg_resp_pasid_required(struct pci_dev *pdev)
- {
- 	return 0;
- }
--#endif /* CONFIG_PCI_PASID */
--
-+#endif
- 
- #endif /* LINUX_PCI_ATS_H*/
+ 	pci_restore_state(pdev);
+ out:
 -- 
-2.21.0
+1.8.3.1
 
