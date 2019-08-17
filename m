@@ -4,28 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3767DC3A59D
-	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 00:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA5FFC3A59D
+	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 00:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0DD922145D
-	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 00:13:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF5E52077C
+	for <linux-pci@archiver.kernel.org>; Sat, 17 Aug 2019 00:13:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726089AbfHQANY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 16 Aug 2019 20:13:24 -0400
-Received: from mga05.intel.com ([192.55.52.43]:12918 "EHLO mga05.intel.com"
+        id S1726047AbfHQANp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 16 Aug 2019 20:13:45 -0400
+Received: from mga14.intel.com ([192.55.52.115]:6694 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726032AbfHQANY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1725938AbfHQANY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Fri, 16 Aug 2019 20:13:24 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Aug 2019 17:13:23 -0700
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Aug 2019 17:13:23 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,395,1559545200"; 
-   d="scan'208";a="168195001"
+   d="scan'208";a="168195010"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
   by orsmga007.jf.intel.com with ESMTP; 16 Aug 2019 17:13:22 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
@@ -33,9 +32,9 @@ To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v6 2/8] PCI/ATS: Cache PRI capability check result
-Date:   Fri, 16 Aug 2019 17:10:16 -0700
-Message-Id: <9e4ed11d29d3af4df7420a88f37e6dfed12eac86.1565997310.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v6 5/8] PCI/ATS: Add PRI support for PCIe VF devices
+Date:   Fri, 16 Aug 2019 17:10:19 -0700
+Message-Id: <06f7a6bb9fca94fa8731e5225e91a14a676d07ca.1565997310.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1565997310.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1565997310.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -48,173 +47,248 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Currently, PRI capability checks are repeated across all PRI API's.
-Instead, cache the capability check result in pci_pri_init() and use it
-in other PRI API's.
+When IOMMU tries to enable Page Request Interface (PRI) for VF device
+in iommu_enable_dev_iotlb(), it always fails because PRI support for
+PCIe VF device is currently broken. Current implementation expects
+the given PCIe device (PF & VF) to implement PRI capability before
+enabling the PRI support. But this assumption is incorrect. As per PCIe
+spec r4.0, sec 9.3.7.11, all VFs associated with PF can only use the
+PRI of the PF and not implement it. Hence we need to create exception
+for handling the PRI support for PCIe VF device.
 
+Also, since PRI is a shared resource between PF/VF, following rules
+should apply.
+
+1. Use proper locking before accessing/modifying PF resources in VF
+   PRI enable/disable call.
+2. Use reference count logic to track the usage of PRI resource.
+3. Disable PRI only if the PRI reference count (pri_ref_cnt) is zero.
+
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Suggested-by: Ashok Raj <ashok.raj@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/ats.c   | 56 +++++++++++++++++++++++++--------------------
- include/linux/pci.h |  1 +
- 2 files changed, 32 insertions(+), 25 deletions(-)
+ drivers/pci/ats.c   | 121 ++++++++++++++++++++++++++++++++++----------
+ include/linux/pci.h |   1 +
+ 2 files changed, 95 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index cdd936d10f68..b863562b6702 100644
+index 022698a85c98..e71187d83401 100644
 --- a/drivers/pci/ats.c
 +++ b/drivers/pci/ats.c
-@@ -16,6 +16,19 @@
+@@ -21,6 +21,15 @@ static void pci_pri_init(struct pci_dev *pdev)
+ #ifdef CONFIG_PCI_PRI
+ 	int pos;
  
- #include "pci.h"
- 
-+static void pci_pri_init(struct pci_dev *pdev)
-+{
-+#ifdef CONFIG_PCI_PRI
-+	int pos;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-+	if (!pos)
++	/*
++	 * As per PCIe r4.0, sec 9.3.7.11, only PF is permitted to
++	 * implement PRI and all associated VFs can only use it.
++	 * Since PF already initialized the PRI parameters there is
++	 * no need to proceed further.
++	 */
++	if (pdev->is_virtfn)
 +		return;
 +
-+	pdev->pri_cap = pos;
-+#endif
-+}
-+
- void pci_ats_init(struct pci_dev *dev)
- {
- 	int pos;
-@@ -28,6 +41,8 @@ void pci_ats_init(struct pci_dev *dev)
+ 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+ 	if (!pos)
  		return;
- 
- 	dev->ats_cap = pos;
-+
-+	pci_pri_init(dev);
- }
- 
- /**
-@@ -180,26 +195,25 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
+@@ -208,31 +217,55 @@ EXPORT_SYMBOL_GPL(pci_ats_page_aligned);
+  */
+ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
  {
- 	u16 control, status;
+-	u16 control, status;
++	u16 status;
  	u32 max_requests;
--	int pos;
++	int ret = 0;
++	struct pci_dev *pf = pci_physfn(pdev);
  
  	if (WARN_ON(pdev->pri_enabled))
  		return -EBUSY;
  
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
-+	if (!pdev->pri_cap)
+-	if (!pdev->pri_cap)
++	if (!pf->pri_cap)
  		return -EINVAL;
  
--	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-+	pci_read_config_word(pdev, pdev->pri_cap + PCI_PRI_STATUS, &status);
- 	if (!(status & PCI_PRI_STATUS_STOPPED))
- 		return -EBUSY;
+-	pci_read_config_word(pdev, pdev->pri_cap + PCI_PRI_STATUS, &status);
+-	if (!(status & PCI_PRI_STATUS_STOPPED))
+-		return -EBUSY;
++	pci_physfn_reslock(pdev);
++
++	if (pdev->is_virtfn && pf->pri_enabled)
++		goto update_status;
  
--	pci_read_config_dword(pdev, pos + PCI_PRI_MAX_REQ, &max_requests);
-+	pci_read_config_dword(pdev, pdev->pri_cap + PCI_PRI_MAX_REQ,
-+			      &max_requests);
+-	pci_read_config_dword(pdev, pdev->pri_cap + PCI_PRI_MAX_REQ,
+-			      &max_requests);
++	/*
++	 * Before updating PRI registers, make sure there is no
++	 * outstanding PRI requests.
++	 */
++	pci_read_config_word(pf, pf->pri_cap + PCI_PRI_STATUS, &status);
++	if (!(status & PCI_PRI_STATUS_STOPPED)) {
++		ret = -EBUSY;
++		goto done;
++	}
++
++	pci_read_config_dword(pf, pf->pri_cap + PCI_PRI_MAX_REQ, &max_requests);
  	reqs = min(max_requests, reqs);
- 	pdev->pri_reqs_alloc = reqs;
--	pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
-+	pci_write_config_dword(pdev, pdev->pri_cap + PCI_PRI_ALLOC_REQ, reqs);
+-	pdev->pri_reqs_alloc = reqs;
+-	pci_write_config_dword(pdev, pdev->pri_cap + PCI_PRI_ALLOC_REQ, reqs);
++	pf->pri_reqs_alloc = reqs;
++	pci_write_config_dword(pf, pf->pri_cap + PCI_PRI_ALLOC_REQ, reqs);
  
- 	control = PCI_PRI_CTRL_ENABLE;
--	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
-+	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
+-	control = PCI_PRI_CTRL_ENABLE;
+-	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
++	pci_write_config_word(pf, pf->pri_cap + PCI_PRI_CTRL,
++			      PCI_PRI_CTRL_ENABLE);
  
- 	pdev->pri_enabled = 1;
+-	pdev->pri_enabled = 1;
++	/*
++	 * If PRI is not already enabled in PF, increment the PF
++	 * pri_ref_cnt to track the usage of PRI interface.
++	 */
++	if (pdev->is_virtfn && !pf->pri_enabled) {
++		atomic_inc(&pf->pri_ref_cnt);
++		pf->pri_enabled = 1;
++	}
  
-@@ -216,18 +230,16 @@ EXPORT_SYMBOL_GPL(pci_enable_pri);
+-	return 0;
++update_status:
++	atomic_inc(&pf->pri_ref_cnt);
++	pdev->pri_enabled = 1;
++done:
++	pci_physfn_resunlock(pdev);
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(pci_enable_pri);
+ 
+@@ -245,18 +278,32 @@ EXPORT_SYMBOL_GPL(pci_enable_pri);
  void pci_disable_pri(struct pci_dev *pdev)
  {
  	u16 control;
--	int pos;
++	struct pci_dev *pf = pci_physfn(pdev);
  
  	if (WARN_ON(!pdev->pri_enabled))
  		return;
  
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
-+	if (!pdev->pri_cap)
+-	if (!pdev->pri_cap)
++	if (!pf->pri_cap)
  		return;
  
--	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
-+	pci_read_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, &control);
+-	pci_read_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, &control);
++	pci_physfn_reslock(pdev);
++
++	atomic_dec(&pf->pri_ref_cnt);
++
++	/*
++	 * If pri_ref_cnt is not zero, then don't modify hardware
++	 * registers.
++	 */
++	if (atomic_read(&pf->pri_ref_cnt))
++		goto done;
++
++	pci_read_config_word(pf, pf->pri_cap + PCI_PRI_CTRL, &control);
  	control &= ~PCI_PRI_CTRL_ENABLE;
--	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
-+	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
+-	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
++	pci_write_config_word(pf, pf->pri_cap + PCI_PRI_CTRL, control);
  
++done:
  	pdev->pri_enabled = 0;
++	pci_physfn_resunlock(pdev);
  }
-@@ -241,17 +253,15 @@ void pci_restore_pri_state(struct pci_dev *pdev)
+ EXPORT_SYMBOL_GPL(pci_disable_pri);
+ 
+@@ -266,17 +313,29 @@ EXPORT_SYMBOL_GPL(pci_disable_pri);
+  */
+ void pci_restore_pri_state(struct pci_dev *pdev)
  {
- 	u16 control = PCI_PRI_CTRL_ENABLE;
- 	u32 reqs = pdev->pri_reqs_alloc;
--	int pos;
+-	u16 control = PCI_PRI_CTRL_ENABLE;
+-	u32 reqs = pdev->pri_reqs_alloc;
++	u16 control;
++	struct pci_dev *pf = pci_physfn(pdev);
  
  	if (!pdev->pri_enabled)
  		return;
  
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
-+	if (!pdev->pri_cap)
+-	if (!pdev->pri_cap)
++	if (!pf->pri_cap)
  		return;
  
--	pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
--	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
-+	pci_write_config_dword(pdev, pdev->pri_cap + PCI_PRI_ALLOC_REQ, reqs);
-+	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
+-	pci_write_config_dword(pdev, pdev->pri_cap + PCI_PRI_ALLOC_REQ, reqs);
+-	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
++	pci_physfn_reslock(pdev);
++
++	/* If PRI is already enabled by other VF's or PF, return */
++	pci_read_config_word(pf, pf->pri_cap + PCI_PRI_CTRL, &control);
++	if (control & PCI_PRI_CTRL_ENABLE)
++		goto done;
++
++	pci_write_config_dword(pf, pf->pri_cap + PCI_PRI_ALLOC_REQ,
++			       pf->pri_reqs_alloc);
++	pci_write_config_word(pf, pf->pri_cap + PCI_PRI_CTRL,
++			      PCI_PRI_CTRL_ENABLE);
++
++done:
++	pci_physfn_resunlock(pdev);
  }
  EXPORT_SYMBOL_GPL(pci_restore_pri_state);
  
-@@ -265,17 +275,15 @@ EXPORT_SYMBOL_GPL(pci_restore_pri_state);
+@@ -289,17 +348,24 @@ EXPORT_SYMBOL_GPL(pci_restore_pri_state);
+  */
  int pci_reset_pri(struct pci_dev *pdev)
  {
- 	u16 control;
--	int pos;
+-	u16 control;
++	struct pci_dev *pf = pci_physfn(pdev);
  
  	if (WARN_ON(pdev->pri_enabled))
  		return -EBUSY;
  
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
-+	if (!pdev->pri_cap)
+-	if (!pdev->pri_cap)
++	if (!pf->pri_cap)
  		return -EINVAL;
  
- 	control = PCI_PRI_CTRL_RESET;
--	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
-+	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
+-	control = PCI_PRI_CTRL_RESET;
+-	pci_write_config_word(pdev, pdev->pri_cap + PCI_PRI_CTRL, control);
++	pci_physfn_reslock(pdev);
++
++	/* If PRI is already enabled in PF, skip reset and return */
++	if (pf->pri_enabled)
++		goto done;
  
++	pci_write_config_word(pf, pf->pri_cap + PCI_PRI_CTRL,
++			      PCI_PRI_CTRL_RESET);
++done:
++	pci_physfn_resunlock(pdev);
  	return 0;
  }
-@@ -410,13 +418,11 @@ EXPORT_SYMBOL_GPL(pci_pasid_features);
+ EXPORT_SYMBOL_GPL(pci_reset_pri);
+@@ -427,11 +493,12 @@ EXPORT_SYMBOL_GPL(pci_pasid_features);
  int pci_prg_resp_pasid_required(struct pci_dev *pdev)
  {
  	u16 status;
--	int pos;
++	struct pci_dev *pf = pci_physfn(pdev);
  
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
-+	if (!pdev->pri_cap)
+-	if (!pdev->pri_cap)
++	if (!pf->pri_cap)
  		return 0;
  
--	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-+	pci_read_config_word(pdev, pdev->pri_cap + PCI_PRI_STATUS, &status);
+-	pci_read_config_word(pdev, pdev->pri_cap + PCI_PRI_STATUS, &status);
++	pci_read_config_word(pf, pf->pri_cap + PCI_PRI_STATUS, &status);
  
  	if (status & PCI_PRI_STATUS_PASID)
  		return 1;
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9e700d9f9f28..56b55db099fc 100644
+index 27224c0db849..cd07b2d071c1 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -455,6 +455,7 @@ struct pci_dev {
- 	atomic_t	ats_ref_cnt;	/* Number of VFs with ATS enabled */
- #endif
+@@ -457,6 +457,7 @@ struct pci_dev {
  #ifdef CONFIG_PCI_PRI
-+	u16		pri_cap;	/* PRI Capability offset */
+ 	u16		pri_cap;	/* PRI Capability offset */
  	u32		pri_reqs_alloc; /* Number of PRI requests allocated */
++	atomic_t	pri_ref_cnt;	/* Number of PF/VF PRI users */
  #endif
  #ifdef CONFIG_PCI_PASID
+ 	u16		pasid_cap;	/* PASID Capability offset */
 -- 
 2.21.0
 
