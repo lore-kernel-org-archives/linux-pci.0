@@ -2,62 +2,61 @@ Return-Path: <SRS0=zrLO=WR=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3174BC3A59E
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Aug 2019 18:19:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77465C3A59E
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Aug 2019 18:19:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03CFE22DD3
-	for <linux-pci@archiver.kernel.org>; Wed, 21 Aug 2019 18:19:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C29E22DD3
+	for <linux-pci@archiver.kernel.org>; Wed, 21 Aug 2019 18:19:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sE1ZITFo"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eRN7mOfP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728700AbfHUSTA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 21 Aug 2019 14:19:00 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:43402 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728386AbfHUSTA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2019 14:19:00 -0400
-Received: by mail-wr1-f66.google.com with SMTP id y8so2927635wrn.10
-        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2019 11:18:58 -0700 (PDT)
+        id S1728694AbfHUSTB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 21 Aug 2019 14:19:01 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:50335 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728679AbfHUSTB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Aug 2019 14:19:01 -0400
+Received: by mail-wm1-f68.google.com with SMTP id v15so3088119wml.0
+        for <linux-pci@vger.kernel.org>; Wed, 21 Aug 2019 11:18:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=dk/6LfmE1oX8xh4qZCF6iNA2M7CxlYcaWLLLz9LpGWU=;
-        b=sE1ZITFoLaXnVvOf00ZCcBprI80GZcyK6+BjLcyxxOoX3OEXh+qUtA2VYbJc+Bf35f
-         xQioq0aWHGCIAU9AWoFn3f8umoi3FcobCdFgODDqwd/8yZ9KY2MwKvQIMv3u5g5N1h9a
-         c5v6tk3NXz5xplIixP5VdeYRcEyOX00/ZCIWEFY1Iw2xwIOCoaS+c3qaVfqTsCT8KBtD
-         GoduqrVe2ZAXndtCkOlNY5TDGuJkmOLH0OKW6P7mtYVnjSAAcwOoKFeYN/zp6nnzwqcS
-         jFhCzi90NsWwzH2XPTmC15dtL83zfQyMqpcQBsokjd31sHHlFEt93lPxFno1lkXGvQgf
-         lgZw==
+        bh=rVtfzdrmRFBQnHI9A6IJKPt4rgOl7HXVD+rwCQXJ+08=;
+        b=eRN7mOfPs/ZjrdqQGpfH90j/fgv0WSpIpKF9tLgiAdy2a5mQuSTwqj2HiMriNZaYVy
+         kxlLEcnQYEaMd06uv9/E2wMNtIeiXM/ZjeskdP825hV/m1yAyJQTy4S75mqv+ytHUlaS
+         ykFhCA40FMbKZFcBZwvPKhoAFoBdirXQc/H4eQggFpUy6SpC/Dymrdr5mE+soPpTlGwZ
+         LkSfx8WqwpoBRwmY6f/8L8D4omeLHWQ7W4BDCXC+NkPM6CfrF1mx2Iel8FrvfVHC++C6
+         yUtE86f+YgzLwKeoW8DL8xTPSEVc4pw11gPHk2bJW7MA7nXv9lJ6mhYZO7YGZ0xxateL
+         bz3g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=dk/6LfmE1oX8xh4qZCF6iNA2M7CxlYcaWLLLz9LpGWU=;
-        b=AdfGzJzU2mUY5wLTo83+tfsIKTpNoFqk+GlGs7D2D3yTD4a0wBnPddjTjCANj2ys/b
-         xE9tW6lgWshKp6uYu4xGba4gqZyYQfsB0yjAX3W3/8ZoIZjWmA2rC2tMRw05zq9U6JTN
-         L2Ob06TzWsXYFaluFyXD3gL0Gp/FhX/7xFoo6aIZDypcnJVQuGcDDFnuFiyVYGvvO5lj
-         gohClgUR2jYbPrtjT0z3RSwQnIbc8XQQ69F9Bx0x/ZA8MVF0i5DU0H9JuHPx32BYCnuZ
-         A7Cz59giDZys/v3m450OcboZ7e3abWXpJOpHylHhKMzEmny+/xFOmSmCZCMH04Z1gmmS
-         JE/w==
-X-Gm-Message-State: APjAAAU0EjyQpcSWKG1+ug4XrQcF42704wBXnqIO4EqBbQe0eHJya9C6
-        ey59Fct7rLGVBgkA8DdaukyEKRET
-X-Google-Smtp-Source: APXvYqwrhZIN8S/Zy4D1JUDpmQvu42E0UJiuK0ahISA2XNMziho9gIa42/ud7ao44D9JfnsZpf2msw==
-X-Received: by 2002:adf:91c2:: with SMTP id 60mr44581140wri.334.1566411537593;
-        Wed, 21 Aug 2019 11:18:57 -0700 (PDT)
+        bh=rVtfzdrmRFBQnHI9A6IJKPt4rgOl7HXVD+rwCQXJ+08=;
+        b=QIXlrOKCWGdFv0sUKf/Bypt3o8nCFy7vco1kcVY8Ylz9nrXQkDaeQLA4luVmE8qhN2
+         GDe4502Umzt+qZhQUHh593If8vmmxncz182iO2E0GY3f4UP+pSDih3b0FyZKMxgRHqcs
+         yeskRdldpFPnj0eNbN1Fs/ptpGV0wXm8RNSiUIB7vErnvVAgbMARrbTgCB9mN/kZgGjY
+         p5r68s3+DbN7CNcLv6ZNz5prXDHONM+Y+mw57qgpkFocH6LB02V+vjqS8hZMeP1C9T4D
+         U+q96rja1YOS+V3Gfaowvz7A1x46IZ9iTKJVjqmDbnsiASZ3zQUJprd3/4PvbCttt3OH
+         DFSg==
+X-Gm-Message-State: APjAAAVAHV+vx5EKpXBXg64EW22wYBF902Qeyt2qBAuD680NDuc++4ic
+        iMQYK/JvOLD0ctCU97c1RRG5/SP6
+X-Google-Smtp-Source: APXvYqzWb9OReeF74w2r2jgvfC38duPte83a330OAiVam894mm3QsDcB435poFjG2sIaXRzdWLGjCw==
+X-Received: by 2002:a05:600c:228e:: with SMTP id 14mr1558378wmf.101.1566411538865;
+        Wed, 21 Aug 2019 11:18:58 -0700 (PDT)
 Received: from ?IPv6:2003:ea:8f04:7c00:3d5d:5315:9e29:1daf? (p200300EA8F047C003D5D53159E291DAF.dip0.t-ipconnect.de. [2003:ea:8f04:7c00:3d5d:5315:9e29:1daf])
-        by smtp.googlemail.com with ESMTPSA id g65sm1922108wma.21.2019.08.21.11.18.56
+        by smtp.googlemail.com with ESMTPSA id b4sm1082563wma.5.2019.08.21.11.18.58
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 21 Aug 2019 11:18:56 -0700 (PDT)
-Subject: [PATCH v2 1/3] PCI/ASPM: add L1 sub-state support to
- pci_disable_link_state
+        Wed, 21 Aug 2019 11:18:58 -0700 (PDT)
+Subject: [PATCH v2 2/3] PCI/ASPM: allow to re-enable Clock PM
 From:   Heiner Kallweit <hkallweit1@gmail.com>
 To:     Frederick Lawler <fred@fredlawl.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -65,8 +64,8 @@ To:     Frederick Lawler <fred@fredlawl.com>,
         Rajat Jain <rajatja@google.com>
 Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 References: <b4b1518a-d0e8-9534-5211-115107e770e1@gmail.com>
-Message-ID: <caa2c135-1fb3-f19e-a2e9-66edaf79b73e@gmail.com>
-Date:   Wed, 21 Aug 2019 20:17:05 +0200
+Message-ID: <d100911d-9cb1-e970-1f99-323d70ccdb7f@gmail.com>
+Date:   Wed, 21 Aug 2019 20:17:43 +0200
 User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
@@ -79,62 +78,66 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for disabling states L1.1 and L1.2 to
-pci_disable_link_state. Allow separate control of
-ASPM and PCI PM L1 sub-states.
+So far Clock PM can't be re-enabled once it has been disabled with
+a call to pci_disable_link_state(). Reason is that clkpm_capable
+is reset. Change this by adding a clkpm_disable field similar to
+aspm_disable.
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
-v2:
-- allow separate control of ASPM and PCI PM L1 sub-states
----
- drivers/pci/pcie/aspm.c  | 11 ++++++++++-
- include/linux/pci-aspm.h | 10 +++++++---
- 2 files changed, 17 insertions(+), 4 deletions(-)
+ drivers/pci/pcie/aspm.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 464f8f926..1c1b9b7d6 100644
+index 1c1b9b7d6..149b876c9 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -1095,7 +1095,16 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
- 	if (state & PCIE_LINK_STATE_L0S)
- 		link->aspm_disable |= ASPM_STATE_L0S;
- 	if (state & PCIE_LINK_STATE_L1)
--		link->aspm_disable |= ASPM_STATE_L1;
-+		/* sub-states require L1 */
-+		link->aspm_disable |= ASPM_STATE_L1 | ASPM_STATE_L1SS;
-+	if (state & PCIE_LINK_STATE_L1_1)
-+		link->aspm_disable |= ASPM_STATE_L1_1;
-+	if (state & PCIE_LINK_STATE_L1_2)
-+		link->aspm_disable |= ASPM_STATE_L1_2;
-+	if (state & PCIE_LINK_STATE_L1_1_PCIPM)
-+		link->aspm_disable |= ASPM_STATE_L1_1_PCIPM;
-+	if (state & PCIE_LINK_STATE_L1_2_PCIPM)
-+		link->aspm_disable |= ASPM_STATE_L1_2_PCIPM;
+@@ -65,6 +65,7 @@ struct pcie_link_state {
+ 	u32 clkpm_capable:1;		/* Clock PM capable? */
+ 	u32 clkpm_enabled:1;		/* Current Clock PM state */
+ 	u32 clkpm_default:1;		/* Default Clock PM state by BIOS */
++	u32 clkpm_disable:1;		/* Clock PM disabled */
+ 
+ 	/* Exit latencies */
+ 	struct aspm_latency latency_up;	/* Upstream direction exit latency */
+@@ -162,8 +163,11 @@ static void pcie_set_clkpm_nocheck(struct pcie_link_state *link, int enable)
+ 
+ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
+ {
+-	/* Don't enable Clock PM if the link is not Clock PM capable */
+-	if (!link->clkpm_capable)
++	/*
++	 * Don't enable Clock PM if the link is not Clock PM capable
++	 * or Clock PM is disabled
++	 */
++	if (!link->clkpm_capable || link->clkpm_disable)
+ 		enable = 0;
+ 	/* Need nothing if the specified equals to current state */
+ 	if (link->clkpm_enabled == enable)
+@@ -193,7 +197,8 @@ static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	}
+ 	link->clkpm_enabled = enabled;
+ 	link->clkpm_default = enabled;
+-	link->clkpm_capable = (blacklist) ? 0 : capable;
++	link->clkpm_capable = capable;
++	link->clkpm_disable = blacklist ? 1 : 0;
+ }
+ 
+ static bool pcie_retrain_link(struct pcie_link_state *link)
+@@ -1107,10 +1112,9 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 		link->aspm_disable |= ASPM_STATE_L1_2_PCIPM;
  	pcie_config_aspm_link(link, policy_to_aspm_state(link));
  
- 	if (state & PCIE_LINK_STATE_CLKPM) {
-diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
-index 67064145d..f635cbdff 100644
---- a/include/linux/pci-aspm.h
-+++ b/include/linux/pci-aspm.h
-@@ -19,9 +19,13 @@
- 
- #include <linux/pci.h>
- 
--#define PCIE_LINK_STATE_L0S	1
--#define PCIE_LINK_STATE_L1	2
--#define PCIE_LINK_STATE_CLKPM	4
-+#define PCIE_LINK_STATE_L0S		BIT(0)
-+#define PCIE_LINK_STATE_L1		BIT(1)
-+#define PCIE_LINK_STATE_CLKPM		BIT(2)
-+#define PCIE_LINK_STATE_L1_1		BIT(3)
-+#define PCIE_LINK_STATE_L1_2		BIT(4)
-+#define PCIE_LINK_STATE_L1_1_PCIPM	BIT(5)
-+#define PCIE_LINK_STATE_L1_2_PCIPM	BIT(6)
- 
- #ifdef CONFIG_PCIEASPM
- int pci_disable_link_state(struct pci_dev *pdev, int state);
+-	if (state & PCIE_LINK_STATE_CLKPM) {
+-		link->clkpm_capable = 0;
+-		pcie_set_clkpm(link, 0);
+-	}
++	if (state & PCIE_LINK_STATE_CLKPM)
++		link->clkpm_disable = 1;
++	pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	mutex_unlock(&aspm_lock);
+ 	if (sem)
+ 		up_read(&pci_bus_sem);
 -- 
 2.23.0
 
