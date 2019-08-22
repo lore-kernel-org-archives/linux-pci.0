@@ -2,127 +2,115 @@ Return-Path: <SRS0=DRQQ=WS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3893BC3A5A1
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F48EC3A5A1
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:41:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13DB1233FD
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E02FD233FE
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:41:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388068AbfHVLc4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Aug 2019 07:32:56 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:34662 "EHLO inva020.nxp.com"
+        id S1731979AbfHVLlu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Aug 2019 07:41:50 -0400
+Received: from foss.arm.com ([217.140.110.172]:44554 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731777AbfHVLc4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Aug 2019 07:32:56 -0400
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 0B6251A02CA;
-        Thu, 22 Aug 2019 13:32:54 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 2BE101A0229;
-        Thu, 22 Aug 2019 13:32:44 +0200 (CEST)
-Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 1B545402A2;
-        Thu, 22 Aug 2019 19:32:32 +0800 (SGT)
-From:   Xiaowei Bao <xiaowei.bao@nxp.com>
-To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
-        lorenzo.pieralisi@arm.co, arnd@arndb.de,
-        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
-        mingkai.hu@nxp.com, roy.zang@nxp.com, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, andrew.murray@arm.com
-Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH v2 02/10] PCI: designware-ep: Add the doorbell mode of MSI-X in EP mode
-Date:   Thu, 22 Aug 2019 19:22:34 +0800
-Message-Id: <20190822112242.16309-2-xiaowei.bao@nxp.com>
-X-Mailer: git-send-email 2.9.5
-In-Reply-To: <20190822112242.16309-1-xiaowei.bao@nxp.com>
-References: <20190822112242.16309-1-xiaowei.bao@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S1726844AbfHVLlu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Aug 2019 07:41:50 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 3084B337;
+        Thu, 22 Aug 2019 04:41:49 -0700 (PDT)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 7D49F3F246;
+        Thu, 22 Aug 2019 04:41:48 -0700 (PDT)
+Date:   Thu, 22 Aug 2019 12:41:47 +0100
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Jonathan Chocron <jonnyc@amazon.com>
+Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, dwmw@amazon.co.uk,
+        benh@kernel.crashing.org, alisaidi@amazon.com, ronenk@amazon.com,
+        barakw@amazon.com, talel@amazon.com, hanochu@amazon.com,
+        hhhawa@amazon.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 3/7] PCI/VPD: Add VPD release quirk for Amazon's
+ Annapurna Labs Root Port
+Message-ID: <20190822114146.GP23903@e119886-lin.cambridge.arm.com>
+References: <20190821153545.17635-1-jonnyc@amazon.com>
+ <20190821153545.17635-4-jonnyc@amazon.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190821153545.17635-4-jonnyc@amazon.com>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the doorbell mode of MSI-X in EP mode.
+On Wed, Aug 21, 2019 at 06:35:43PM +0300, Jonathan Chocron wrote:
+> The Amazon Annapurna Labs PCIe Root Port exposes the VPD capability,
+> but there is no actual support for it.
+> 
+> The reason for not using the already existing quirk_blacklist_vpd()
+> is that, although this fails pci_vpd_read/write, the 'vpd' sysfs
+> entry still exists. When running lspci -vv, for example, this
+> results in the following error:
+> 
+> pcilib: sysfs_read_vpd: read failed: Input/output error
 
-Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
----
-v2:
- - Remove the macro of no used.
+Oh that's not nice. It's probably triggered by the -EIO in pci_vpd_read.
+A quick search online seems to show that other people have experienced
+this too - though from as far as I can tell this just gives you a
+warning and pcilib will continnue to give other output?
 
- drivers/pci/controller/dwc/pcie-designware-ep.c | 14 ++++++++++++++
- drivers/pci/controller/dwc/pcie-designware.h    | 12 ++++++++++++
- 2 files changed, 26 insertions(+)
+I guess every vpd blacklist'd driver will have the same issue. And for
+this reason I don't think that this patch is the right solution - as
+otherwise all the other blacklisted drivers could follow your lead.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 3e2b740..b8388f8 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -480,6 +480,20 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	return 0;
- }
- 
-+int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
-+				       u16 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 msg_data;
-+
-+	msg_data = (func_no << PCIE_MSIX_DOORBELL_PF_SHIFT) |
-+		   (interrupt_num - 1);
-+
-+	dw_pcie_writel_dbi(pci, PCIE_MSIX_DOORBELL, msg_data);
-+
-+	return 0;
-+}
-+
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			      u16 interrupt_num)
- {
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index a0fdbf7..895a9ef 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -88,6 +88,9 @@
- #define PCIE_MISC_CONTROL_1_OFF		0x8BC
- #define PCIE_DBI_RO_WR_EN		BIT(0)
- 
-+#define PCIE_MSIX_DOORBELL		0x948
-+#define PCIE_MSIX_DOORBELL_PF_SHIFT	24
-+
- /*
-  * iATU Unroll-specific register definitions
-  * From 4.80 core version the address translation will be made by unroll
-@@ -400,6 +403,8 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u8 interrupt_num);
- int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 			     u16 interrupt_num);
-+int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
-+				       u16 interrupt_num);
- void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
- #else
- static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
-@@ -432,6 +437,13 @@ static inline int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	return 0;
- }
- 
-+static inline int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep,
-+						     u8 func_no,
-+						     u16 interrupt_num)
-+{
-+	return 0;
-+}
-+
- static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
- {
- }
--- 
-2.9.5
+I don't think you need to fix this specifically for the AL driver and so
+I'd suggest that you can probably drop this patch. (Ideally pciutils
+could be updated to not warn for this specific use-case).
 
+Thanks,
+
+Andrew Murray
+
+> 
+> This quirk removes the sysfs entry, which avoids the error print.
+> 
+> Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
+> Reviewed-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+>  drivers/pci/vpd.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+> index 4963c2e2bd4c..c23a8ec08db9 100644
+> --- a/drivers/pci/vpd.c
+> +++ b/drivers/pci/vpd.c
+> @@ -644,4 +644,20 @@ static void quirk_chelsio_extend_vpd(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>  			quirk_chelsio_extend_vpd);
+>  
+> +static void quirk_al_vpd_release(struct pci_dev *dev)
+> +{
+> +	if (dev->vpd) {
+> +		pci_vpd_release(dev);
+> +		dev->vpd = NULL;
+> +		pci_warn(dev, FW_BUG "Releasing VPD capability (No support for VPD read/write transactions)\n");
+> +	}
+> +}
+> +
+> +/*
+> + * The 0031 device id is reused for other non Root Port device types,
+> + * therefore the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
+> + */
+> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS, 0x0031,
+> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_al_vpd_release);
+> +
+>  #endif
+> -- 
+> 2.17.1
+> 
