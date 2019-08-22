@@ -6,27 +6,27 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29C97C3A5A3
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3893BC3A5A1
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE1E123400
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13DB1233FD
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730488AbfHVLdl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Aug 2019 07:33:41 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:34750 "EHLO inva020.nxp.com"
+        id S2388068AbfHVLc4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Aug 2019 07:32:56 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:34662 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388192AbfHVLc7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Aug 2019 07:32:59 -0400
+        id S1731777AbfHVLc4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Aug 2019 07:32:56 -0400
 Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C69D31A05E3;
-        Thu, 22 Aug 2019 13:32:57 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 0B6251A02CA;
+        Thu, 22 Aug 2019 13:32:54 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id E9F731A02E3;
-        Thu, 22 Aug 2019 13:32:47 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 2BE101A0229;
+        Thu, 22 Aug 2019 13:32:44 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id D290B40318;
-        Thu, 22 Aug 2019 19:32:35 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 1B545402A2;
+        Thu, 22 Aug 2019 19:32:32 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
@@ -38,9 +38,9 @@ To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
         linux-arm-kernel@lists.infradead.org,
         linuxppc-dev@lists.ozlabs.org, andrew.murray@arm.com
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH v2 04/10] dt-bindings: pci: layerscape-pci: add compatible strings for ls1088a and ls2088a
-Date:   Thu, 22 Aug 2019 19:22:36 +0800
-Message-Id: <20190822112242.16309-4-xiaowei.bao@nxp.com>
+Subject: [PATCH v2 02/10] PCI: designware-ep: Add the doorbell mode of MSI-X in EP mode
+Date:   Thu, 22 Aug 2019 19:22:34 +0800
+Message-Id: <20190822112242.16309-2-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.9.5
 In-Reply-To: <20190822112242.16309-1-xiaowei.bao@nxp.com>
 References: <20190822112242.16309-1-xiaowei.bao@nxp.com>
@@ -50,32 +50,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add compatible strings for ls1088a and ls2088a.
+Add the doorbell mode of MSI-X in EP mode.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 ---
 v2:
- - No change.
+ - Remove the macro of no used.
 
- Documentation/devicetree/bindings/pci/layerscape-pci.txt | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 14 ++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h    | 12 ++++++++++++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index e20ceaa..16f592e 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -22,7 +22,10 @@ Required properties:
-         "fsl,ls1043a-pcie"
-         "fsl,ls1012a-pcie"
-   EP mode:
--	"fsl,ls1046a-pcie-ep", "fsl,ls-pcie-ep"
-+	"fsl,ls-pcie-ep"
-+	"fsl,ls1046a-pcie-ep"
-+	"fsl,ls1088a-pcie-ep"
-+	"fsl,ls2088a-pcie-ep"
- - reg: base addresses and lengths of the PCIe controller register blocks.
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 3e2b740..b8388f8 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -480,6 +480,20 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	return 0;
+ }
+ 
++int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
++				       u16 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	u32 msg_data;
++
++	msg_data = (func_no << PCIE_MSIX_DOORBELL_PF_SHIFT) |
++		   (interrupt_num - 1);
++
++	dw_pcie_writel_dbi(pci, PCIE_MSIX_DOORBELL, msg_data);
++
++	return 0;
++}
++
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			      u16 interrupt_num)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index a0fdbf7..895a9ef 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -88,6 +88,9 @@
+ #define PCIE_MISC_CONTROL_1_OFF		0x8BC
+ #define PCIE_DBI_RO_WR_EN		BIT(0)
+ 
++#define PCIE_MSIX_DOORBELL		0x948
++#define PCIE_MSIX_DOORBELL_PF_SHIFT	24
++
+ /*
+  * iATU Unroll-specific register definitions
+  * From 4.80 core version the address translation will be made by unroll
+@@ -400,6 +403,8 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u8 interrupt_num);
+ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 			     u16 interrupt_num);
++int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep, u8 func_no,
++				       u16 interrupt_num);
+ void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar);
+ #else
+ static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
+@@ -432,6 +437,13 @@ static inline int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	return 0;
+ }
+ 
++static inline int dw_pcie_ep_raise_msix_irq_doorbell(struct dw_pcie_ep *ep,
++						     u8 func_no,
++						     u16 interrupt_num)
++{
++	return 0;
++}
++
+ static inline void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
+ {
+ }
 -- 
 2.9.5
 
