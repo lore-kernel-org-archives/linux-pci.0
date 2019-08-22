@@ -2,372 +2,147 @@ Return-Path: <SRS0=DRQQ=WS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FAB8C3A5A2
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 05:06:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B58CC3A59D
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 07:54:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03FC3233A0
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 05:06:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="LJSQO+uY"
+	by mail.kernel.org (Postfix) with ESMTP id E59AE206BB
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 07:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731133AbfHVFF6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Aug 2019 01:05:58 -0400
-Received: from mail-eopbgr810109.outbound.protection.outlook.com ([40.107.81.109]:28619
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731265AbfHVFF6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Aug 2019 01:05:58 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=TkPtwYFnYZI/Tw4k7pPQtxCvNqnyyON489wgbNGDI4jV+JLfNPEWztCdk6Ui4j0tM+Tay7vr4Oi/eZtI6YNGcZcgUtrUnw7WkL3sDGiZw4h636wbwiFCPWXf6a6LnWfXBei5ilfpsJDu0fYvrqM+7SF2Xb9BFXgEMXMlEAYvZHnMqV8kRCqeNnZZqlWsBgOVQ4hUKdx+v4dj+gKOKzpeQQ7Yz1BM7EbJQIBT3FwqHLqAkd066GZTRU9suBSff3yrgbtdBR+1xbndQ4/Th4iOHY7BJQIzfm528ZenNivK1+kRGpwcaqd1ThYxnq2Nw/JEndYGsCAXSpqJVW4B9ekicg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=49pCCLY0UQGnJr+msFhZ/lhUbgof+155r2+qubA1C+M=;
- b=jDoBaVB25UbAHKXDbaMS/agrHDlkKxo9EizbOS3w9cp8acb5OPGxn/QBboR4NLXPVLhmWqECsUEhFYZwftwWv8WRVr8gvs0G5Il/vzd74lLwjv32baK9C3ZdC96SlFzfeGVsxMtZnaz5WdM264tpQsHIpapOQnB7QcG/2hrebrFEYEcH17QCNTjrOJmPyvf1eAkka9sPnrJgA40lFXaa/zYZ4r7rLxvqR9ABCE56FDVko92Lj34sjOeY8c1yZAxIl9qMbuiNOVnuh5Ptq6hzkQ2exfx/oYlB9l9Ip/e1TLWQV7y9jtHF2H29hBHztjgctqQ1F4dItZvaDwFAtl55lw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=49pCCLY0UQGnJr+msFhZ/lhUbgof+155r2+qubA1C+M=;
- b=LJSQO+uYHJpdU/1w7GHsK3EaRQe99OQFpEF7x57EbR5z7QfUltwzd2sRqVfH+frDVGUAFfF7Q5U44TqNHYVYgW+SJRI5wiP3uT070qsL3+aFrh0BrwOjgmPV4ktLnSXaImGJURCDHCakCgcAqO4//G8o3q+nvo8wYU5z1pPBSmY=
-Received: from MN2PR21MB1248.namprd21.prod.outlook.com (20.179.20.225) by
- MN2PR21MB1279.namprd21.prod.outlook.com (20.179.21.91) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2220.4; Thu, 22 Aug 2019 05:05:41 +0000
-Received: from MN2PR21MB1248.namprd21.prod.outlook.com
- ([fe80::147a:ea1f:326d:832e]) by MN2PR21MB1248.namprd21.prod.outlook.com
- ([fe80::147a:ea1f:326d:832e%3]) with mapi id 15.20.2199.011; Thu, 22 Aug 2019
- 05:05:41 +0000
-From:   Haiyang Zhang <haiyangz@microsoft.com>
-To:     "sashal@kernel.org" <sashal@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "saeedm@mellanox.com" <saeedm@mellanox.com>,
-        "leon@kernel.org" <leon@kernel.org>,
-        "eranbe@mellanox.com" <eranbe@mellanox.com>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC:     Haiyang Zhang <haiyangz@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH net-next,v4, 2/6] PCI: hv: Add a Hyper-V PCI interface driver
- for software backchannel interface
-Thread-Topic: [PATCH net-next,v4, 2/6] PCI: hv: Add a Hyper-V PCI interface
- driver for software backchannel interface
-Thread-Index: AQHVWKc+GNFRZDxadEKTuhFzjn601Q==
-Date:   Thu, 22 Aug 2019 05:05:41 +0000
-Message-ID: <1566450236-36757-3-git-send-email-haiyangz@microsoft.com>
-References: <1566450236-36757-1-git-send-email-haiyangz@microsoft.com>
-In-Reply-To: <1566450236-36757-1-git-send-email-haiyangz@microsoft.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: MWHPR14CA0039.namprd14.prod.outlook.com
- (2603:10b6:300:12b::25) To MN2PR21MB1248.namprd21.prod.outlook.com
- (2603:10b6:208:3b::33)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=lkmlhyz@microsoft.com; 
-x-ms-exchange-messagesentrepresentingtype: 2
-x-mailer: git-send-email 1.8.3.1
-x-originating-ip: [13.77.154.182]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6cc3dabc-c434-4b75-a945-08d726be60fb
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600158)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:MN2PR21MB1279;
-x-ms-traffictypediagnostic: MN2PR21MB1279:|MN2PR21MB1279:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <MN2PR21MB1279BADAEE59C4AD531A7106ACA50@MN2PR21MB1279.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
-x-forefront-prvs: 01371B902F
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(396003)(136003)(366004)(376002)(346002)(189003)(199004)(71200400001)(71190400001)(186003)(446003)(66066001)(2616005)(4326008)(36756003)(6392003)(6436002)(256004)(53936002)(7846003)(7416002)(6512007)(26005)(6486002)(11346002)(316002)(2906002)(2201001)(110136005)(22452003)(54906003)(10090500001)(476003)(25786009)(386003)(7736002)(64756008)(81156014)(66946007)(66446008)(8936002)(10290500003)(478600001)(66476007)(2501003)(102836004)(4720700003)(6116002)(3846002)(6506007)(305945005)(5660300002)(486006)(99286004)(66556008)(81166006)(14454004)(50226002)(8676002)(52116002)(76176011)(142933001)(921003)(1121003);DIR:OUT;SFP:1102;SCL:1;SRVR:MN2PR21MB1279;H:MN2PR21MB1248.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 72v0/CFGN8vThzVMTEhTdEdxs/E/tKB6nRzM6iykUNo4cEGmzfBkG9uF25cFTlpQBf7pgSjHhbE73mEExtYpLJPOAx+uYf4s2e/TZ17OPQiIjrlj2eV/78M9hY8DN09KhP/cXSQQc9KhsyIm9qiiHm5++wH+2WBITzUBp58mGRNPKpXMHmvsHlX3k5HEx/Bk3KcWX8XqOwddGHeVWpQTMD+bS3F/7luEjeYEjQUYcYkywg9mf+LLodiqZT35KcA0Eqkuv8sQK5PRaHHYK7JDMRIney95HOrsjVbnSBrqaQmxbbT9gz8ZdlQWacYoCMXFCHe/DRDDploZAWPVL+x+zOrDJ5B/vFCd5e/aKe5xm9/h+puwY4erTioe4Ard4OshjHTxPwl2JcSJLpzF6sP8672jC9JZy/HeZJ2oCN+OPik=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+        id S1729349AbfHVHyN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Aug 2019 03:54:13 -0400
+Received: from foss.arm.com ([217.140.110.172]:40530 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726197AbfHVHyN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Aug 2019 03:54:13 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 5216E344;
+        Thu, 22 Aug 2019 00:54:12 -0700 (PDT)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9E94F3F706;
+        Thu, 22 Aug 2019 00:54:11 -0700 (PDT)
+Date:   Thu, 22 Aug 2019 08:54:10 +0100
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Jonathan Chocron <jonnyc@amazon.com>
+Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
+        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, dwmw@amazon.co.uk,
+        benh@kernel.crashing.org, alisaidi@amazon.com, ronenk@amazon.com,
+        barakw@amazon.com, talel@amazon.com, hanochu@amazon.com,
+        hhhawa@amazon.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 4/7] PCI: Add quirk to disable MSI-X support for
+ Amazon's Annapurna Labs Root Port
+Message-ID: <20190822075409.GK23903@e119886-lin.cambridge.arm.com>
+References: <20190821153545.17635-1-jonnyc@amazon.com>
+ <20190821153545.17635-5-jonnyc@amazon.com>
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6cc3dabc-c434-4b75-a945-08d726be60fb
-X-MS-Exchange-CrossTenant-originalarrivaltime: 22 Aug 2019 05:05:41.1020
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: TaUir6IjTJRJOpq7UNeP5OJE0+rky/6WYXoU0LxdrcCIgK3zTTLhYb+hFOCFUP3ESxTrOyN1zw3kAKEWegWTqA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR21MB1279
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190821153545.17635-5-jonnyc@amazon.com>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This interface driver is a helper driver allows other drivers to
-have a common interface with the Hyper-V PCI frontend driver.
+On Wed, Aug 21, 2019 at 06:35:44PM +0300, Jonathan Chocron wrote:
+> The Root Port (identified by [1c36:0031]) doesn't support MSI-X. On some
+> platforms it is configured to not advertise the capability at all, while
+> on others it (mistakenly) does. This causes a panic during
+> initialization by the pcieport driver, since it tries to configure the
+> MSI-X capability. Specifically, when trying to access the MSI-X table
+> a "non-existing addr" exception occurs.
+> 
+> Example stacktrace snippet:
+> 
+> [    1.632363] SError Interrupt on CPU2, code 0xbf000000 -- SError
+> [    1.632364] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.2.0-rc1-Jonny-14847-ge76f1d4a1828-dirty #33
+> [    1.632365] Hardware name: Annapurna Labs Alpine V3 EVP (DT)
+> [    1.632365] pstate: 80000005 (Nzcv daif -PAN -UAO)
+> [    1.632366] pc : __pci_enable_msix_range+0x4e4/0x608
+> [    1.632367] lr : __pci_enable_msix_range+0x498/0x608
+> [    1.632367] sp : ffffff80117db700
+> [    1.632368] x29: ffffff80117db700 x28: 0000000000000001
+> [    1.632370] x27: 0000000000000001 x26: 0000000000000000
+> [    1.632372] x25: ffffffd3e9d8c0b0 x24: 0000000000000000
+> [    1.632373] x23: 0000000000000000 x22: 0000000000000000
+> [    1.632375] x21: 0000000000000001 x20: 0000000000000000
+> [    1.632376] x19: ffffffd3e9d8c000 x18: ffffffffffffffff
+> [    1.632378] x17: 0000000000000000 x16: 0000000000000000
+> [    1.632379] x15: ffffff80116496c8 x14: ffffffd3e9844503
+> [    1.632380] x13: ffffffd3e9844502 x12: 0000000000000038
+> [    1.632382] x11: ffffffffffffff00 x10: 0000000000000040
+> [    1.632384] x9 : ffffff801165e270 x8 : ffffff801165e268
+> [    1.632385] x7 : 0000000000000002 x6 : 00000000000000b2
+> [    1.632387] x5 : ffffffd3e9d8c2c0 x4 : 0000000000000000
+> [    1.632388] x3 : 0000000000000000 x2 : 0000000000000000
+> [    1.632390] x1 : 0000000000000000 x0 : ffffffd3e9844680
+> [    1.632392] Kernel panic - not syncing: Asynchronous SError Interrupt
+> [    1.632393] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 5.2.0-rc1-Jonny-14847-ge76f1d4a1828-dirty #33
+> [    1.632394] Hardware name: Annapurna Labs Alpine V3 EVP (DT)
+> [    1.632394] Call trace:
+> [    1.632395]  dump_backtrace+0x0/0x140
+> [    1.632395]  show_stack+0x14/0x20
+> [    1.632396]  dump_stack+0xa8/0xcc
+> [    1.632396]  panic+0x140/0x334
+> [    1.632397]  nmi_panic+0x6c/0x70
+> [    1.632398]  arm64_serror_panic+0x74/0x88
+> [    1.632398]  __pte_error+0x0/0x28
+> [    1.632399]  el1_error+0x84/0xf8
+> [    1.632400]  __pci_enable_msix_range+0x4e4/0x608
+> [    1.632400]  pci_alloc_irq_vectors_affinity+0xdc/0x150
+> [    1.632401]  pcie_port_device_register+0x2b8/0x4e0
+> [    1.632402]  pcie_portdrv_probe+0x34/0xf0
+> 
+> Notice that this quirk also disables MSI (which may work, but hasn't
+> been tested nor has a current use case), since currently there is no
+> standard way to disable only MSI-X.
+> 
+> Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
+> Reviewed-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+> ---
+>  drivers/pci/quirks.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 23672680dba7..b6e6e7df3f7b 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2925,6 +2925,24 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x10a1,
+>  			quirk_msi_intx_disable_qca_bug);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0xe091,
+>  			quirk_msi_intx_disable_qca_bug);
+> +
+> +/*
+> + * Amazon's Annapurna Labs 1c36:0031 Root Ports don't support MSI-X, so it
+> + * should be disabled on platforms where the device (mistakenly) advertises it.
+> + *
+> + * Notice that this quirk also disables MSI (which may work, but hasn't been
+> + * tested), since currently there is no standard way to disable only MSI-X.
 
-Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
-Signed-off-by: Saeed Mahameed <saeedm@mellanox.com>
----
- MAINTAINERS                              |  1 +
- drivers/pci/Kconfig                      |  1 +
- drivers/pci/controller/Kconfig           |  7 ++++
- drivers/pci/controller/Makefile          |  1 +
- drivers/pci/controller/pci-hyperv-intf.c | 67 ++++++++++++++++++++++++++++=
-++++
- drivers/pci/controller/pci-hyperv.c      | 12 ++++--
- include/linux/hyperv.h                   | 30 ++++++++++----
- 7 files changed, 108 insertions(+), 11 deletions(-)
- create mode 100644 drivers/pci/controller/pci-hyperv-intf.c
+Thanks for adding this.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a406947..9860853 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7469,6 +7469,7 @@ F:	drivers/hid/hid-hyperv.c
- F:	drivers/hv/
- F:	drivers/input/serio/hyperv-keyboard.c
- F:	drivers/pci/controller/pci-hyperv.c
-+F:	drivers/pci/controller/pci-hyperv-intf.c
- F:	drivers/net/hyperv/
- F:	drivers/scsi/storvsc_drv.c
- F:	drivers/uio/uio_hv_generic.c
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 2ab9240..c313de9 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -182,6 +182,7 @@ config PCI_LABEL
- config PCI_HYPERV
-         tristate "Hyper-V PCI Frontend"
-         depends on X86 && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN && X86_6=
-4
-+	select PCI_HYPERV_INTERFACE
-         help
-           The PCI device frontend driver allows the kernel to import arbit=
-rary
-           PCI devices from a PCI backend to support PCI driver domains.
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfi=
-g
-index fe9f9f1..70e0782 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -281,5 +281,12 @@ config VMD
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called vmd.
-=20
-+config PCI_HYPERV_INTERFACE
-+	tristate "Hyper-V PCI Interface"
-+	depends on X86 && HYPERV && PCI_MSI && PCI_MSI_IRQ_DOMAIN && X86_64
-+	help
-+	  The Hyper-V PCI Interface is a helper driver allows other drivers to
-+	  have a common interface with the Hyper-V PCI frontend driver.
-+
- source "drivers/pci/controller/dwc/Kconfig"
- endmenu
-diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makef=
-ile
-index d56a507..a2a22c9 100644
---- a/drivers/pci/controller/Makefile
-+++ b/drivers/pci/controller/Makefile
-@@ -4,6 +4,7 @@ obj-$(CONFIG_PCIE_CADENCE_HOST) +=3D pcie-cadence-host.o
- obj-$(CONFIG_PCIE_CADENCE_EP) +=3D pcie-cadence-ep.o
- obj-$(CONFIG_PCI_FTPCI100) +=3D pci-ftpci100.o
- obj-$(CONFIG_PCI_HYPERV) +=3D pci-hyperv.o
-+obj-$(CONFIG_PCI_HYPERV_INTERFACE) +=3D pci-hyperv-intf.o
- obj-$(CONFIG_PCI_MVEBU) +=3D pci-mvebu.o
- obj-$(CONFIG_PCI_AARDVARK) +=3D pci-aardvark.o
- obj-$(CONFIG_PCI_TEGRA) +=3D pci-tegra.o
-diff --git a/drivers/pci/controller/pci-hyperv-intf.c b/drivers/pci/control=
-ler/pci-hyperv-intf.c
-new file mode 100644
-index 0000000..cc96be4
---- /dev/null
-+++ b/drivers/pci/controller/pci-hyperv-intf.c
-@@ -0,0 +1,67 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) Microsoft Corporation.
-+ *
-+ * Author:
-+ *   Haiyang Zhang <haiyangz@microsoft.com>
-+ *
-+ * This small module is a helper driver allows other drivers to
-+ * have a common interface with the Hyper-V PCI frontend driver.
-+ */
-+
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/hyperv.h>
-+
-+struct hyperv_pci_block_ops hvpci_block_ops;
-+EXPORT_SYMBOL_GPL(hvpci_block_ops);
-+
-+int hyperv_read_cfg_blk(struct pci_dev *dev, void *buf, unsigned int buf_l=
-en,
-+			unsigned int block_id, unsigned int *bytes_returned)
-+{
-+	if (!hvpci_block_ops.read_block)
-+		return -EOPNOTSUPP;
-+
-+	return hvpci_block_ops.read_block(dev, buf, buf_len, block_id,
-+					  bytes_returned);
-+}
-+EXPORT_SYMBOL_GPL(hyperv_read_cfg_blk);
-+
-+int hyperv_write_cfg_blk(struct pci_dev *dev, void *buf, unsigned int len,
-+			 unsigned int block_id)
-+{
-+	if (!hvpci_block_ops.write_block)
-+		return -EOPNOTSUPP;
-+
-+	return hvpci_block_ops.write_block(dev, buf, len, block_id);
-+}
-+EXPORT_SYMBOL_GPL(hyperv_write_cfg_blk);
-+
-+int hyperv_reg_block_invalidate(struct pci_dev *dev, void *context,
-+				void (*block_invalidate)(void *context,
-+							 u64 block_mask))
-+{
-+	if (!hvpci_block_ops.reg_blk_invalidate)
-+		return -EOPNOTSUPP;
-+
-+	return hvpci_block_ops.reg_blk_invalidate(dev, context,
-+						  block_invalidate);
-+}
-+EXPORT_SYMBOL_GPL(hyperv_reg_block_invalidate);
-+
-+static void __exit exit_hv_pci_intf(void)
-+{
-+}
-+
-+static int __init init_hv_pci_intf(void)
-+{
-+	return 0;
-+}
-+
-+module_init(init_hv_pci_intf);
-+module_exit(exit_hv_pci_intf);
-+
-+MODULE_DESCRIPTION("Hyper-V PCI Interface");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/p=
-ci-hyperv.c
-index 57adeca..9c93ac2 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -983,7 +983,6 @@ int hv_read_config_block(struct pci_dev *pdev, void *bu=
-f, unsigned int len,
- 	*bytes_returned =3D comp_pkt.bytes_returned;
- 	return 0;
- }
--EXPORT_SYMBOL(hv_read_config_block);
-=20
- /**
-  * hv_pci_write_config_compl() - Invoked when a response packet for a writ=
-e
-@@ -1070,7 +1069,6 @@ int hv_write_config_block(struct pci_dev *pdev, void =
-*buf, unsigned int len,
-=20
- 	return 0;
- }
--EXPORT_SYMBOL(hv_write_config_block);
-=20
- /**
-  * hv_register_block_invalidate() - Invoked when a config block invalidati=
-on
-@@ -1101,7 +1099,6 @@ int hv_register_block_invalidate(struct pci_dev *pdev=
-, void *context,
- 	return 0;
-=20
- }
--EXPORT_SYMBOL(hv_register_block_invalidate);
-=20
- /* Interrupt management hooks */
- static void hv_int_desc_free(struct hv_pci_dev *hpdev,
-@@ -3045,10 +3042,19 @@ static int hv_pci_remove(struct hv_device *hdev)
- static void __exit exit_hv_pci_drv(void)
- {
- 	vmbus_driver_unregister(&hv_pci_drv);
-+
-+	hvpci_block_ops.read_block =3D NULL;
-+	hvpci_block_ops.write_block =3D NULL;
-+	hvpci_block_ops.reg_blk_invalidate =3D NULL;
- }
-=20
- static int __init init_hv_pci_drv(void)
- {
-+	/* Initialize PCI block r/w interface */
-+	hvpci_block_ops.read_block =3D hv_read_config_block;
-+	hvpci_block_ops.write_block =3D hv_write_config_block;
-+	hvpci_block_ops.reg_blk_invalidate =3D hv_register_block_invalidate;
-+
- 	return vmbus_driver_register(&hv_pci_drv);
- }
-=20
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index 9d37f8c..2afe6fd 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1579,18 +1579,32 @@ struct vmpacket_descriptor *
- 	    pkt =3D hv_pkt_iter_next(channel, pkt))
-=20
- /*
-- * Functions for passing data between SR-IOV PF and VF drivers.  The VF dr=
-iver
-+ * Interface for passing data between SR-IOV PF and VF drivers. The VF dri=
-ver
-  * sends requests to read and write blocks. Each block must be 128 bytes o=
-r
-  * smaller. Optionally, the VF driver can register a callback function whi=
-ch
-  * will be invoked when the host says that one or more of the first 64 blo=
-ck
-  * IDs is "invalid" which means that the VF driver should reread them.
-  */
- #define HV_CONFIG_BLOCK_SIZE_MAX 128
--int hv_read_config_block(struct pci_dev *dev, void *buf, unsigned int buf_=
-len,
--			 unsigned int block_id, unsigned int *bytes_returned);
--int hv_write_config_block(struct pci_dev *dev, void *buf, unsigned int len=
-,
--			  unsigned int block_id);
--int hv_register_block_invalidate(struct pci_dev *dev, void *context,
--				 void (*block_invalidate)(void *context,
--							  u64 block_mask));
-+
-+int hyperv_read_cfg_blk(struct pci_dev *dev, void *buf, unsigned int buf_l=
-en,
-+			unsigned int block_id, unsigned int *bytes_returned);
-+int hyperv_write_cfg_blk(struct pci_dev *dev, void *buf, unsigned int len,
-+			 unsigned int block_id);
-+int hyperv_reg_block_invalidate(struct pci_dev *dev, void *context,
-+				void (*block_invalidate)(void *context,
-+							 u64 block_mask));
-+
-+struct hyperv_pci_block_ops {
-+	int (*read_block)(struct pci_dev *dev, void *buf, unsigned int buf_len,
-+			  unsigned int block_id, unsigned int *bytes_returned);
-+	int (*write_block)(struct pci_dev *dev, void *buf, unsigned int len,
-+			   unsigned int block_id);
-+	int (*reg_blk_invalidate)(struct pci_dev *dev, void *context,
-+				  void (*block_invalidate)(void *context,
-+							   u64 block_mask));
-+};
-+
-+extern struct hyperv_pci_block_ops hvpci_block_ops;
-+
- #endif /* _HYPERV_H */
---=20
-1.8.3.1
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 
+
+> + *
+> + * The 0031 device id is reused for other non Root Port device types,
+> + * therefore the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
+> + */
+> +static void quirk_al_msi_disable(struct pci_dev *dev)
+> +{
+> +	dev->no_msi = 1;
+> +	pci_warn(dev, "Disabling MSI/MSI-X\n");
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS, 0x0031,
+> +			      PCI_CLASS_BRIDGE_PCI, 8, quirk_al_msi_disable);
+>  #endif /* CONFIG_PCI_MSI */
+>  
+>  /*
+> -- 
+> 2.17.1
+> 
