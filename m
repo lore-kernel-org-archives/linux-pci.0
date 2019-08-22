@@ -2,46 +2,43 @@ Return-Path: <SRS0=DRQQ=WS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF63AC41514
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E941C3A5A2
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C06A3233FD
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D0D7233A2
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389805AbfHVQKR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Aug 2019 12:10:17 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:47828 "EHLO ale.deltatee.com"
+        id S2389694AbfHVQKQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Aug 2019 12:10:16 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:47820 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730354AbfHVQKQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1725934AbfHVQKQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 22 Aug 2019 12:10:16 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1i0pfC-00079G-H0; Thu, 22 Aug 2019 10:10:16 -0600
+        id 1i0pfC-00079E-EJ; Thu, 22 Aug 2019 10:10:15 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1i0pfC-0001RG-CY; Thu, 22 Aug 2019 10:10:14 -0600
+        id 1i0pfC-0001RB-5F; Thu, 22 Aug 2019 10:10:14 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 22 Aug 2019 10:10:12 -0600
-Message-Id: <20190822161013.5481-3-logang@deltatee.com>
+Date:   Thu, 22 Aug 2019 10:10:10 -0600
+Message-Id: <20190822161013.5481-1-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190822161013.5481-1-logang@deltatee.com>
-References: <20190822161013.5481-1-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 2/3] PCI: Move pci_[get|set]_resource_alignment_param() into their callers
+Subject: [PATCH v2 0/3] Cleanup resource_alignment parameter
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -49,73 +46,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Both the functions pci_get_resource_alignment_param() and
-pci_set_resource_alignment_param() are now only called in one place:
-resource_alignment_show() and resource_alignment_store() respectively.
+As requested, this is a refresh of this series. I rebased it on v5.3-rc5
+without any other changes.
 
-There is no value in this extra set of functions so we move both into
-their callers respectively.
+This is a cleanup of the resource_alignment parameter after finding
+an improved way to handle the static buffer for the disable_acs_redir
+parameter. So this patchset allows us to drop a significant chunk
+of static data.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c | 30 ++++++++++--------------------
- 1 file changed, 10 insertions(+), 20 deletions(-)
+Thanks,
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 489fff757833..5e00371149b1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6108,39 +6108,29 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	}
- }
- 
--static ssize_t pci_set_resource_alignment_param(const char *buf, size_t count)
--{
--	spin_lock(&resource_alignment_lock);
--
--	kfree(resource_alignment_param);
--	resource_alignment_param = kstrndup(buf, count, GFP_KERNEL);
--
--	spin_unlock(&resource_alignment_lock);
--
--	return resource_alignment_param ? count : -ENOMEM;
--}
--
--static ssize_t pci_get_resource_alignment_param(char *buf, size_t size)
-+static ssize_t resource_alignment_show(struct bus_type *bus, char *buf)
- {
- 	size_t count = 0;
- 
- 	spin_lock(&resource_alignment_lock);
- 	if (resource_alignment_param)
--		count = snprintf(buf, size, "%s", resource_alignment_param);
-+		count = snprintf(buf, PAGE_SIZE, "%s", resource_alignment_param);
- 	spin_unlock(&resource_alignment_lock);
- 
- 	return count;
- }
- 
--static ssize_t resource_alignment_show(struct bus_type *bus, char *buf)
--{
--	return pci_get_resource_alignment_param(buf, PAGE_SIZE);
--}
--
- static ssize_t resource_alignment_store(struct bus_type *bus,
- 					const char *buf, size_t count)
- {
--	return pci_set_resource_alignment_param(buf, count);
-+	spin_lock(&resource_alignment_lock);
-+
-+	kfree(resource_alignment_param);
-+	resource_alignment_param = kstrndup(buf, count, GFP_KERNEL);
-+
-+	spin_unlock(&resource_alignment_lock);
-+
-+	return resource_alignment_param ? count : -ENOMEM;
- }
- 
- static BUS_ATTR_RW(resource_alignment);
--- 
+Logan
+
+--
+
+Logan Gunthorpe (3):
+  PCI: Clean up resource_alignment parameter to not require static
+    buffer
+  PCI: Move pci_[get|set]_resource_alignment_param() into their callers
+  PCI: Force trailing new line to resource_alignment_param in sysfs
+
+ drivers/pci/pci.c | 65 +++++++++++++++++++++++++----------------------
+ 1 file changed, 35 insertions(+), 30 deletions(-)
+
+--
 2.20.1
-
