@@ -2,41 +2,42 @@ Return-Path: <SRS0=DRQQ=WS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFEB8C3A5A1
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 20:06:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B6EC3A5A4
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 20:06:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 80EBE23402
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 20:06:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF1E923401
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 20:06:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1566504361;
-	bh=E+RM8lcOXSVIMYx4+rXzzGMSVrhC1b6YIQ0v0hDRtG4=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=2j7Dc4gr8WOyn7QIrJWHcY3zSrqDBv1Iu2473rdiJmJI7/Z2Jp0KNRFMCnF9L7gx9
-	 c9aBbKVoqKQ1wQHS5qi0tLaFP9c5eVRVpk9FRSPyhD/MHexrBXTF7PizzYwDywZ2Vw
-	 mYVAvitOa2tG84OEaVQ/8cgXtX1HQBIfIUtoZ6ZY=
+	s=default; t=1566504367;
+	bh=wnzWCTX3n1Kd3FzpTcGUaCEZFXaVUTDLNV9GdS+XwYs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=emlobJGGmoJynDGNLXwOVBrO4DKYDC3wizCDf7j3/7JvLbcpSU+e4/gkC2/DcV8bo
+	 B1rMLcR/yQS+KS0pZeKc7VKWEGXbXVFj2ukM1xArPvA1kz8Wo4Ca+ZDk20x4w4RXBu
+	 TJteYr7zqg7St5ofP65h0ThLoAR5nNDI+GR6U3ic=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392582AbfHVUGA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Aug 2019 16:06:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57916 "EHLO mail.kernel.org"
+        id S2392630AbfHVUGG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Aug 2019 16:06:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58024 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387738AbfHVUGA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Aug 2019 16:06:00 -0400
+        id S2387738AbfHVUGE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Aug 2019 16:06:04 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3463423400;
-        Thu, 22 Aug 2019 20:05:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id EE06923402;
+        Thu, 22 Aug 2019 20:06:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1566504359;
-        bh=E+RM8lcOXSVIMYx4+rXzzGMSVrhC1b6YIQ0v0hDRtG4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=gEi5ksaa9IiQKCO40DUHyjA4t8hhezRyG4yFoVnlCwlS2OzU6PtiMBv4Q8C5C0EiR
-         Xb2cGtGYsiuDwF8yl5xp7I6QqeJNJl5DQyoJ8wXfjmgsVdYTELkfnLuoxmycnfv41b
-         mGOH0VBhCsjTJS6mkFr20D1ToX/qo7gS9DQ4EWyU=
+        s=default; t=1566504363;
+        bh=wnzWCTX3n1Kd3FzpTcGUaCEZFXaVUTDLNV9GdS+XwYs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=b+H0HWdglpI3rlytE8qsK5lNIN6PHf7qEkYXLl/bQGlqtXVXHUdZAnJQKf3BSlZRB
+         8MK/zEh7+z0vK06sH5sc99Oj4NSwtB0KsTbX7ci2E2FC/8CaEazgQE8uWEr/aMiMKY
+         HrG+H2oa6x1YY21eNHBcM22BY/e7aCvtgT0WBMjw=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
@@ -45,11 +46,14 @@ Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 0/3] PCI: Add PCI_ERROR_RESPONSE, check for errors
-Date:   Thu, 22 Aug 2019 15:05:48 -0500
-Message-Id: <20190822200551.129039-1-helgaas@kernel.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>
+Subject: [PATCH 2/3] PCI / PM: Decode D3cold power state correctly
+Date:   Thu, 22 Aug 2019 15:05:50 -0500
+Message-Id: <20190822200551.129039-3-helgaas@kernel.org>
 X-Mailer: git-send-email 2.23.0.187.g17f5b7556c-goog
+In-Reply-To: <20190822200551.129039-1-helgaas@kernel.org>
+References: <20190822200551.129039-1-helgaas@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -59,63 +63,59 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Reads from a PCI device may fail if the device has been turned off (put
-into D3cold), removed, or if some other error occurs.  The PCI host bridge
-typically fabricates ~0 data to complete the CPU's read.
+Use pci_power_name() to print pci_power_t correctly.  This changes:
 
-We check for that in a few places, but not in a consistent way.  This
-series adds a PCI_ERROR_RESPONSE definition to make the checks more
-consistent and easier to find.  Note that ~0 may indicate a PCI error, but
-it may also be valid read data, so you need more information (such as
-knowing that a register can never contain ~0) before concluding that it's
-an error.
+  "state 0" or "D0"   to   "D0"
+  "state 1" or "D1"   to   "D1"
+  "state 2" or "D2"   to   "D2"
+  "state 3" or "D3"   to   "D3hot"
+  "state 4" or "D4"   to   "D3cold"
 
-This series also adds a new check for PCI_ERROR_RESPONSE in the power
-management code because that code frequently encounters devices in D3cold,
-where we previously misinterpreted ~0 data.  It also uses pci_power_name()
-to print D-state names more consistently.
+Changes dmesg logging only, no other functional change intended.
 
-Rafael, I didn't add your Reviewed-by to "PCI / PM: Return error when
-changing power state from D3cold" because I made small changes to try to
-make the messages more consistent, and I didn't want to presume they'd be
-OK with you.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-Changes since v1:
-  - Add Rafael's Reviewed-By to the first two patches
-  - Drop "PCI / PM: Check for error when reading PME status" because Rafael
-    pointed out that some devices can signal PME even when in D3cold, so
-    this would require additional rework
-  - Drop "PCI / PM: Check for error when reading Power State" because
-    Rafael thinks it's mostly redundant
-
-Bjorn Helgaas (3):
-  PCI: Add PCI_ERROR_RESPONSE definition
-  PCI / PM: Decode D3cold power state correctly
-  PCI / PM: Return error when changing power state from D3cold
-
- drivers/pci/access.c                          | 13 ++++----
- .../pci/controller/dwc/pcie-designware-host.c |  2 +-
- drivers/pci/controller/pci-aardvark.c         |  2 +-
- drivers/pci/controller/pci-mvebu.c            |  4 +--
- drivers/pci/controller/pci-thunder-ecam.c     | 20 ++++++------
- drivers/pci/controller/pci-thunder-pem.c      |  2 +-
- drivers/pci/controller/pcie-altera.c          |  2 +-
- drivers/pci/controller/pcie-iproc.c           |  2 +-
- drivers/pci/controller/pcie-mediatek.c        |  4 +--
- drivers/pci/controller/pcie-rcar.c            |  2 +-
- drivers/pci/controller/pcie-rockchip-host.c   |  2 +-
- drivers/pci/controller/vmd.c                  |  2 +-
- drivers/pci/hotplug/cpqphp_ctrl.c             | 12 +++----
- drivers/pci/hotplug/cpqphp_pci.c              | 20 ++++++------
- drivers/pci/hotplug/pciehp_hpc.c              |  6 ++--
- drivers/pci/pci.c                             | 31 ++++++++++++-------
- drivers/pci/pcie/dpc.c                        |  3 +-
- drivers/pci/pcie/pme.c                        |  4 +--
- drivers/pci/probe.c                           |  4 +--
- drivers/pci/quirks.c                          |  2 +-
- include/linux/pci.h                           |  7 +++++
- 21 files changed, 81 insertions(+), 65 deletions(-)
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index bfc739dc6ada..5f0a3145c3f2 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -834,14 +834,16 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 		return -EINVAL;
+ 
+ 	/*
+-	 * Validate current state:
+-	 * Can enter D0 from any state, but if we can only go deeper
+-	 * to sleep if we're already in a low power state
++	 * Validate transition: We can enter D0 from any state, but if
++	 * we're already in a low-power state, we can only go deeper.  E.g.,
++	 * we can go from D1 to D3, but we can't go directly from D3 to D1;
++	 * we'd have to go from D3 to D0, then to D1.
+ 	 */
+ 	if (state != PCI_D0 && dev->current_state <= PCI_D3cold
+ 	    && dev->current_state > state) {
+-		pci_err(dev, "invalid power transition (from state %d to %d)\n",
+-			dev->current_state, state);
++		pci_err(dev, "invalid power transition (from %s to %s)\n",
++			pci_power_name(dev->current_state),
++			pci_power_name(state));
+ 		return -EINVAL;
+ 	}
+ 
+@@ -891,8 +893,8 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+ 	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+ 	if (dev->current_state != state && printk_ratelimit())
+-		pci_info(dev, "Refused to change power state, currently in D%d\n",
+-			 dev->current_state);
++		pci_info(dev, "refused to change power state (currently %s)\n",
++			 pci_power_name(dev->current_state));
+ 
+ 	/*
+ 	 * According to section 5.4.1 of the "PCI BUS POWER MANAGEMENT
 -- 
 2.23.0.187.g17f5b7556c-goog
 
