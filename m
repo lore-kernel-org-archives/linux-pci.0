@@ -2,141 +2,87 @@ Return-Path: <SRS0=DRQQ=WS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B540C3A59D
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:15:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9860FC3A5A1
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0579A233FE
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:15:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7028223405
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 11:33:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731723AbfHVLPm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Aug 2019 07:15:42 -0400
-Received: from foss.arm.com ([217.140.110.172]:44146 "EHLO foss.arm.com"
+        id S2388219AbfHVLdC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Aug 2019 07:33:02 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:34814 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726844AbfHVLPm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Aug 2019 07:15:42 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 21DAE344;
-        Thu, 22 Aug 2019 04:15:41 -0700 (PDT)
-Received: from localhost (unknown [10.37.6.20])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 6EC6F3F246;
-        Thu, 22 Aug 2019 04:15:40 -0700 (PDT)
-Date:   Thu, 22 Aug 2019 12:15:39 +0100
-From:   Andrew Murray <andrew.murray@arm.com>
-To:     Jonathan Chocron <jonnyc@amazon.com>
-Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, dwmw@amazon.co.uk,
-        benh@kernel.crashing.org, alisaidi@amazon.com, ronenk@amazon.com,
-        barakw@amazon.com, talel@amazon.com, hanochu@amazon.com,
-        hhhawa@amazon.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 5/7] dt-bindings: PCI: Add Amazon's Annapurna Labs
- PCIe host bridge binding
-Message-ID: <20190822111537.GO23903@e119886-lin.cambridge.arm.com>
-References: <20190821153545.17635-1-jonnyc@amazon.com>
- <20190821154745.31834-1-jonnyc@amazon.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190821154745.31834-1-jonnyc@amazon.com>
-User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
+        id S2388204AbfHVLdB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Aug 2019 07:33:01 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id B425D1A02CA;
+        Thu, 22 Aug 2019 13:32:59 +0200 (CEST)
+Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id D37281A022F;
+        Thu, 22 Aug 2019 13:32:49 +0200 (CEST)
+Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id B98464031D;
+        Thu, 22 Aug 2019 19:32:37 +0800 (SGT)
+From:   Xiaowei Bao <xiaowei.bao@nxp.com>
+To:     bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
+        lorenzo.pieralisi@arm.co, arnd@arndb.de,
+        gregkh@linuxfoundation.org, minghuan.Lian@nxp.com,
+        mingkai.hu@nxp.com, roy.zang@nxp.com, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, andrew.murray@arm.com
+Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Subject: [PATCH v2 05/10] PCI: layerscape: Fix some format issue of the code
+Date:   Thu, 22 Aug 2019 19:22:37 +0800
+Message-Id: <20190822112242.16309-5-xiaowei.bao@nxp.com>
+X-Mailer: git-send-email 2.9.5
+In-Reply-To: <20190822112242.16309-1-xiaowei.bao@nxp.com>
+References: <20190822112242.16309-1-xiaowei.bao@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 06:47:43PM +0300, Jonathan Chocron wrote:
-> Document Amazon's Annapurna Labs PCIe host bridge.
-> 
-> Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
-> ---
->  .../devicetree/bindings/pci/pcie-al.txt       | 46 +++++++++++++++++++
->  MAINTAINERS                                   |  3 +-
->  2 files changed, 48 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/pcie-al.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pcie-al.txt b/Documentation/devicetree/bindings/pci/pcie-al.txt
-> new file mode 100644
-> index 000000000000..557a5089229d
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/pcie-al.txt
-> @@ -0,0 +1,46 @@
-> +* Amazon Annapurna Labs PCIe host bridge
-> +
-> +Amazon's Annapurna Labs PCIe Host Controller is based on the Synopsys DesignWare
-> +PCI core. It inherits common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pcie.txt.
-> +
-> +Properties of the host controller node that differ from it are:
-> +
-> +- compatible:
-> +	Usage: required
-> +	Value type: <stringlist>
-> +	Definition: Value should contain
-> +			- "amazon,al-alpine-v2-pcie" for alpine_v2
-> +			- "amazon,al-alpine-v3-pcie" for alpine_v3
-> +
-> +- reg:
-> +	Usage: required
-> +	Value type: <prop-encoded-array>
-> +	Definition: Register ranges as listed in the reg-names property
-> +
-> +- reg-names:
-> +	Usage: required
-> +	Value type: <stringlist>
-> +	Definition: Must include the following entries
-> +			- "config"	PCIe ECAM space
-> +			- "controller"	AL proprietary registers
-> +			- "dbi"		Designware PCIe registers
-> +
-> +Example:
-> +
-> +	pcie-external0: pcie@fb600000 {
-> +		compatible = "amazon,al-alpine-v3-pcie";
-> +		reg = <0x0 0xfb600000 0x0 0x00100000
-> +		       0x0 0xfd800000 0x0 0x00010000
-> +		       0x0 0xfd810000 0x0 0x00001000>;
-> +		reg-names = "config", "controller", "dbi";
-> +		bus-range = <0 255>;
-> +		device_type = "pci";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		#interrupt-cells = <1>;
-> +		interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
-> +		interrupt-map-mask = <0x00 0 0 7>;
-> +		interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>; /* INTa */
-> +		ranges = <0x02000000 0x0 0xc0010000 0x0 0xc0010000 0x0 0x07ff0000>;
-> +	};
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 783569e3c4b4..d200b16fa95c 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -12448,10 +12448,11 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
->  S:	Supported
->  F:	drivers/pci/controller/
->  
-> -PCIE DRIVER FOR ANNAPURNA LABS
-> +PCIE DRIVER FOR AMAZON ANNAPURNA LABS
->  M:	Jonathan Chocron <jonnyc@amazon.com>
->  L:	linux-pci@vger.kernel.org
->  S:	Maintained
-> +F:	Documentation/devicetree/bindings/pci/pcie-al.txt
->  F:	drivers/pci/controller/dwc/pcie-al.c
->  
->  PCIE DRIVER FOR AMLOGIC MESON
+Fix some format issue of the code in EP driver.
 
-I'm not sure if you need to split out the DT part of this patch, perhaps
-others will comment.
+Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+---
+v2:
+ - No change.
 
-But for both:
+ drivers/pci/controller/dwc/pci-layerscape-ep.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+index be61d96..4e92a95 100644
+--- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
++++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+@@ -62,7 +62,7 @@ static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
+ }
+ 
+ static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-				  enum pci_epc_irq_type type, u16 interrupt_num)
++				enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+@@ -86,7 +86,7 @@ static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ };
+ 
+ static int __init ls_add_pcie_ep(struct ls_pcie_ep *pcie,
+-					struct platform_device *pdev)
++				 struct platform_device *pdev)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+-- 
+2.9.5
 
-> -- 
-> 2.17.1
-> 
