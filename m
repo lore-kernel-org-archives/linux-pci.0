@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC74C3A5A1
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABD29C3A5A2
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EACF121743
-	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80CDF21743
+	for <linux-pci@archiver.kernel.org>; Thu, 22 Aug 2019 16:10:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730805AbfHVQKQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 22 Aug 2019 12:10:16 -0400
-Received: from ale.deltatee.com ([207.54.116.67]:47824 "EHLO ale.deltatee.com"
+        id S1726610AbfHVQKR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 22 Aug 2019 12:10:17 -0400
+Received: from ale.deltatee.com ([207.54.116.67]:47832 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726610AbfHVQKQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Aug 2019 12:10:16 -0400
+        id S1725934AbfHVQKR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Aug 2019 12:10:17 -0400
 Received: from cgy1-donard.priv.deltatee.com ([172.16.1.31])
         by ale.deltatee.com with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.89)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1i0pfC-00079F-EJ; Thu, 22 Aug 2019 10:10:15 -0600
+        id 1i0pfC-00079K-KT; Thu, 22 Aug 2019 10:10:16 -0600
 Received: from gunthorp by cgy1-donard.priv.deltatee.com with local (Exim 4.92)
         (envelope-from <gunthorp@deltatee.com>)
-        id 1i0pfC-0001RD-8T; Thu, 22 Aug 2019 10:10:14 -0600
+        id 1i0pfC-0001RJ-FF; Thu, 22 Aug 2019 10:10:14 -0600
 From:   Logan Gunthorpe <logang@deltatee.com>
 To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 Cc:     Bjorn Helgaas <bhelgaas@google.com>,
         Logan Gunthorpe <logang@deltatee.com>
-Date:   Thu, 22 Aug 2019 10:10:11 -0600
-Message-Id: <20190822161013.5481-2-logang@deltatee.com>
+Date:   Thu, 22 Aug 2019 10:10:13 -0600
+Message-Id: <20190822161013.5481-4-logang@deltatee.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190822161013.5481-1-logang@deltatee.com>
 References: <20190822161013.5481-1-logang@deltatee.com>
@@ -40,7 +40,7 @@ Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 172.16.1.31
 X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, bhelgaas@google.com, logang@deltatee.com
 X-SA-Exim-Mail-From: gunthorp@deltatee.com
-Subject: [PATCH v2 1/3] PCI: Clean up resource_alignment parameter to not require static buffer
+Subject: [PATCH v2 3/3] PCI: Force trailing new line to resource_alignment_param in sysfs
 X-SA-Exim-Version: 4.2.1 (built Tue, 02 Aug 2016 21:08:31 +0000)
 X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 Sender: linux-pci-owner@vger.kernel.org
@@ -48,112 +48,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Clean up the 'resource_alignment' parameter code to use kstrdup
-in the initcall routine instead of a static buffer that wastes memory
-regardless of whether the feature is used.  This allows us to drop
-'COMMAND_LINE_SIZE' bytes (typically 256-4096 depending on architecture)
-of static data.
+When 'pci=resource_alignment=' is specified on the command line, there
+is no trailing new line.  Then, when it's read through the corresponding
+sysfs attribute, there will be no newline and a cat command will not
+show correctly in a shell. If the parameter is set through sysfs
+a new line will be stored and it will 'cat' correctly.
 
-This is similar to what has been done for the 'disable_acs_redir'
-parameter.
+To solve this, append a new line character in the show function if
+one does not already exist.
 
 Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c | 41 +++++++++++++++++++++++------------------
- 1 file changed, 23 insertions(+), 18 deletions(-)
+ drivers/pci/pci.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1b27b5af3d55..489fff757833 100644
+index 5e00371149b1..4748362d6a49 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -5923,8 +5923,7 @@ resource_size_t __weak pcibios_default_alignment(void)
- 	return 0;
- }
- 
--#define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
--static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
-+static char *resource_alignment_param;
- static DEFINE_SPINLOCK(resource_alignment_lock);
- 
- /**
-@@ -5945,7 +5944,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
--	if (!*p && !align)
-+	if (!p || !*p)
- 		goto out;
- 	if (pci_has_flag(PCI_PROBE_ONLY)) {
- 		align = 0;
-@@ -6111,21 +6110,25 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 
- static ssize_t pci_set_resource_alignment_param(const char *buf, size_t count)
- {
--	if (count > RESOURCE_ALIGNMENT_PARAM_SIZE - 1)
--		count = RESOURCE_ALIGNMENT_PARAM_SIZE - 1;
- 	spin_lock(&resource_alignment_lock);
--	strncpy(resource_alignment_param, buf, count);
--	resource_alignment_param[count] = '\0';
-+
-+	kfree(resource_alignment_param);
-+	resource_alignment_param = kstrndup(buf, count, GFP_KERNEL);
-+
+@@ -6117,6 +6117,16 @@ static ssize_t resource_alignment_show(struct bus_type *bus, char *buf)
+ 		count = snprintf(buf, PAGE_SIZE, "%s", resource_alignment_param);
  	spin_unlock(&resource_alignment_lock);
--	return count;
-+
-+	return resource_alignment_param ? count : -ENOMEM;
- }
  
- static ssize_t pci_get_resource_alignment_param(char *buf, size_t size)
- {
--	size_t count;
-+	size_t count = 0;
-+
- 	spin_lock(&resource_alignment_lock);
--	count = snprintf(buf, size, "%s", resource_alignment_param);
-+	if (resource_alignment_param)
-+		count = snprintf(buf, size, "%s", resource_alignment_param);
- 	spin_unlock(&resource_alignment_lock);
++	/*
++	 * When set by the command line, resource_alignment_param will not
++	 * have a trailing line feed, which is ugly. So conditionally add
++	 * it here.
++	 */
++	if (count >= 2 && buf[count - 2] != '\n' && count < PAGE_SIZE - 1) {
++		buf[count - 1] = '\n';
++		buf[count++] = 0;
++	}
 +
  	return count;
  }
  
-@@ -6266,8 +6269,7 @@ static int __init pci_setup(char *str)
- 			} else if (!strncmp(str, "cbmemsize=", 10)) {
- 				pci_cardbus_mem_size = memparse(str + 10, &str);
- 			} else if (!strncmp(str, "resource_alignment=", 19)) {
--				pci_set_resource_alignment_param(str + 19,
--							strlen(str + 19));
-+				resource_alignment_param = str + 19;
- 			} else if (!strncmp(str, "ecrc=", 5)) {
- 				pcie_ecrc_get_policy(str + 5);
- 			} else if (!strncmp(str, "hpiosize=", 9)) {
-@@ -6302,15 +6304,18 @@ static int __init pci_setup(char *str)
- early_param("pci", pci_setup);
- 
- /*
-- * 'disable_acs_redir_param' is initialized in pci_setup(), above, to point
-- * to data in the __initdata section which will be freed after the init
-- * sequence is complete. We can't allocate memory in pci_setup() because some
-- * architectures do not have any memory allocation service available during
-- * an early_param() call. So we allocate memory and copy the variable here
-- * before the init section is freed.
-+ * 'resource_alignment_param' and 'disable_acs_redir_param' are initialized
-+ * in pci_setup(), above, to point to data in the __initdata section which
-+ * will be freed after the init sequence is complete. We can't allocate memory
-+ * in pci_setup() because some architectures do not have any memory allocation
-+ * service available during an early_param() call. So we allocate memory and
-+ * copy the variable here before the init section is freed.
-+ *
-  */
- static int __init pci_realloc_setup_params(void)
- {
-+	resource_alignment_param = kstrdup(resource_alignment_param,
-+					   GFP_KERNEL);
- 	disable_acs_redir_param = kstrdup(disable_acs_redir_param, GFP_KERNEL);
- 
- 	return 0;
 -- 
 2.20.1
 
