@@ -4,38 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 157CFC3A5A2
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 23:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6B8C3A5A3
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 23:27:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E964020578
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 23:27:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A24A21019
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 23:27:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727326AbfHWX1O (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Aug 2019 19:27:14 -0400
-Received: from mga11.intel.com ([192.55.52.93]:21141 "EHLO mga11.intel.com"
+        id S1727370AbfHWX1U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Aug 2019 19:27:20 -0400
+Received: from mga11.intel.com ([192.55.52.93]:21160 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727065AbfHWX1O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Aug 2019 19:27:14 -0400
+        id S1727355AbfHWX1T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Aug 2019 19:27:19 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Aug 2019 16:27:14 -0700
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Aug 2019 16:27:19 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,422,1559545200"; 
-   d="scan'208";a="187009634"
+   d="scan'208";a="187009657"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by FMSMGA003.fm.intel.com with ESMTP; 23 Aug 2019 16:27:14 -0700
+  by FMSMGA003.fm.intel.com with ESMTP; 23 Aug 2019 16:27:19 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v7 1/8] PCI/ERR: Update error status after reset_link()
-Date:   Fri, 23 Aug 2019 16:24:06 -0700
-Message-Id: <b97351999ec2f0f178523d8200ef61b3a1725eb9.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v7 3/8] PCI/DPC: Add dpc_process_error() wrapper function
+Date:   Fri, 23 Aug 2019 16:24:08 -0700
+Message-Id: <d96b0ccc01b0db85a19c168d45ecaebbbd39a570.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <cover.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 References: <cover.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
@@ -48,52 +47,48 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-Commit bdb5ac85777d ("PCI/ERR: Handle fatal error recovery") uses
-reset_link() to recover from fatal errors. But, if the reset is
-successful there is no need to continue the rest of the error recovery
-checks. Also, during fatal error recovery, if the initial value of error
-status is PCI_ERS_RESULT_DISCONNECT or PCI_ERS_RESULT_NO_AER_DRIVER then
-even after successful recovery (using reset_link()) pcie_do_recovery()
-will report the recovery result as failure. So update the status of
-error after reset_link().
+With Error Disconnect Recover (EDR) support, we need to support
+processing DPC event either from DPC IRQ or ACPI EDR event. So create
+a wrapper function dpc_process_error() and move common error handling
+code in to it. It will be used to process the DPC event in both DPC IRQ
+and EDR ACPI event contexts.
 
-Fixes: bdb5ac85777d ("PCI/ERR: Handle fatal error recovery")
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Keith Busch <keith.busch@intel.com>
 Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 Acked-by: Keith Busch <keith.busch@intel.com>
 ---
- drivers/pci/pcie/err.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/pci/pcie/dpc.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 773197a12568..c3e883d47675 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -204,9 +204,12 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 	else
- 		pci_walk_bus(bus, report_normal_detected, &status);
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 9717fda012f8..4137ec7b48cc 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -232,10 +232,9 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+ 	return 1;
+ }
  
--	if (state == pci_channel_io_frozen &&
--	    reset_link(dev, service) != PCI_ERS_RESULT_RECOVERED)
--		goto failed;
-+	if (state == pci_channel_io_frozen) {
-+		status = reset_link(dev, service);
-+		if (status != PCI_ERS_RESULT_RECOVERED)
-+			goto failed;
-+		goto done;
-+	}
+-static irqreturn_t dpc_handler(int irq, void *context)
++static void dpc_process_error(struct dpc_dev *dpc)
+ {
+ 	struct aer_err_info info;
+-	struct dpc_dev *dpc = context;
+ 	struct pci_dev *pdev = dpc->dev->port;
+ 	u16 cap = dpc->cap_pos, status, source, reason, ext_reason;
  
- 	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
- 		status = PCI_ERS_RESULT_RECOVERED;
-@@ -228,6 +231,7 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
- 	if (status != PCI_ERS_RESULT_RECOVERED)
- 		goto failed;
+@@ -268,6 +267,13 @@ static irqreturn_t dpc_handler(int irq, void *context)
  
-+done:
- 	pci_dbg(dev, "broadcast resume message\n");
- 	pci_walk_bus(bus, report_resume, &status);
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+ 	pcie_do_recovery(pdev, pci_channel_io_frozen, PCIE_PORT_SERVICE_DPC);
++}
++
++static irqreturn_t dpc_handler(int irq, void *context)
++{
++	struct dpc_dev *dpc = context;
++
++	dpc_process_error(dpc);
  
+ 	return IRQ_HANDLED;
+ }
 -- 
 2.21.0
 
