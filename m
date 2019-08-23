@@ -2,129 +2,154 @@ Return-Path: <SRS0=Hfoz=WT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68C31C3A5A2
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 08:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A634C3A5A2
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 09:44:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4148D22CE3
-	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 08:37:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36A1B233A0
+	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 09:44:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393016AbfHWIhC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Aug 2019 04:37:02 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:35862 "EHLO inva020.nxp.com"
+        id S2388349AbfHWJo2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Aug 2019 05:44:28 -0400
+Received: from foss.arm.com ([217.140.110.172]:58694 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2392980AbfHWIg6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Aug 2019 04:36:58 -0400
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C73C71A0004;
-        Fri, 23 Aug 2019 10:36:55 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 6A8041A003E;
-        Fri, 23 Aug 2019 10:36:47 +0200 (CEST)
-Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id CE418402E1;
-        Fri, 23 Aug 2019 16:36:37 +0800 (SGT)
-From:   Xiaowei Bao <xiaowei.bao@nxp.com>
-To:     robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org,
-        leoyang.li@nxp.com, minghuan.Lian@nxp.com, mingkai.hu@nxp.com,
-        roy.zang@nxp.com, lorenzo.pieralisi@arm.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linuxppc-dev@lists.ozlabs.org, zhiqiang.hou@nxp.com
-Cc:     bhelgaas@google.com, Xiaowei Bao <xiaowei.bao@nxp.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCH v4 2/3] arm64: dts: ls1028a: Add PCIe controller DT nodes
-Date:   Fri, 23 Aug 2019 16:26:42 +0800
-Message-Id: <20190823082643.10903-2-xiaowei.bao@nxp.com>
-X-Mailer: git-send-email 2.9.5
-In-Reply-To: <20190823082643.10903-1-xiaowei.bao@nxp.com>
-References: <20190823082643.10903-1-xiaowei.bao@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S2387777AbfHWJo2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Aug 2019 05:44:28 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 6FB50337;
+        Fri, 23 Aug 2019 02:44:27 -0700 (PDT)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E259E3F246;
+        Fri, 23 Aug 2019 02:44:26 -0700 (PDT)
+Date:   Fri, 23 Aug 2019 10:44:25 +0100
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        Leo Li <leoyang.li@nxp.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>
+Subject: Re: [PATCHv2 0/4] Layerscape: Remove num-lanes property from PCIe
+ nodes
+Message-ID: <20190823094424.GB14582@e119886-lin.cambridge.arm.com>
+References: <20190820073022.24217-1-Zhiqiang.Hou@nxp.com>
+ <20190822164815.GA12855@e121166-lin.cambridge.arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190822164815.GA12855@e121166-lin.cambridge.arm.com>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-LS1028a implements 2 PCIe 3.0 controllers.
+On Thu, Aug 22, 2019 at 05:48:15PM +0100, Lorenzo Pieralisi wrote:
+> On Tue, Aug 20, 2019 at 07:28:37AM +0000, Z.q. Hou wrote:
+> > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> > 
+> > On FSL Layerscape SoCs, the number of lanes assigned to PCIe
+> > controller is not fixed, it is determined by the selected
+> > SerDes protocol. The current num-lanes indicates the max lanes
+> > PCIe controller can support up to, instead of the lanes assigned
+> > to the PCIe controller. This can result in PCIe link training fail
+> > after hot-reset.
+> > 
+> > Hou Zhiqiang (4):
+> >   dt-bindings: PCI: designware: Remove the num-lanes from Required
+> >     properties
+> >   PCI: dwc: Return directly when num-lanes is not found
+> >   ARM: dts: ls1021a: Remove num-lanes property from PCIe nodes
+> >   arm64: dts: fsl: Remove num-lanes property from PCIe nodes
+> > 
+> >  Documentation/devicetree/bindings/pci/designware-pcie.txt | 1 -
+> >  arch/arm/boot/dts/ls1021a.dtsi                            | 2 --
+> >  arch/arm64/boot/dts/freescale/fsl-ls1012a.dtsi            | 1 -
+> >  arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi            | 3 ---
+> >  arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi            | 6 ------
+> >  arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi            | 3 ---
+> >  arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi            | 4 ----
+> >  drivers/pci/controller/dwc/pcie-designware.c              | 6 ++++--
+> >  8 files changed, 4 insertions(+), 22 deletions(-)
+> 
+> What a mess.
+> 
+> I am going to apply these but first if anyone can explain to
+> me what commit 907fce090253 was _supposed_ to to I would
+> be grateful, I read it multiple times but I still have not
+> understood it. This series does the right thing but why things
 
-Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
-v2:
- - Fix up the legacy INTx allocate failed issue.
-v3:
- - No change.
-v4:
- - Remove the num-lanes proparty.
-depends on: https://patchwork.kernel.org/project/linux-pci/list/?series=162215
+The DWC controller drivers all implement a .host_init callback -
+some of the drivers choose to call dw_pcie_setup_rc from their
+callback which, amongst other things will set up/train the link.
 
- arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi | 50 ++++++++++++++++++++++++++
- 1 file changed, 50 insertions(+)
+As far as I can tell, dw_pcie_setup_rc is the only user of pp->lanes.
+Therefore for hardware where the link is already set up by firmware
+and thus dw_pcie_setup_rc is never called - it is unnecessary to
+read the DT value for pp->lanes. So the first hunk in 907fce090253
+gets rid of the error and makes the num-lanes property optional.
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi
-index 72b9a75..a25f9d9 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1028a.dtsi
-@@ -625,6 +625,56 @@
- 			};
- 		};
- 
-+		pcie@3400000 {
-+			compatible = "fsl,ls1028a-pcie";
-+			reg = <0x00 0x03400000 0x0 0x00100000   /* controller registers */
-+			       0x80 0x00000000 0x0 0x00002000>; /* configuration space */
-+			reg-names = "regs", "config";
-+			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>, /* PME interrupt */
-+				     <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>; /* aer interrupt */
-+			interrupt-names = "pme", "aer";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			dma-coherent;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000 0x0 0x00000000 0x80 0x00010000 0x0 0x00010000   /* downstream I/O */
-+				  0x82000000 0x0 0x40000000 0x80 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-+			msi-parent = <&its>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
-+			status = "disabled";
-+		};
-+
-+		pcie@3500000 {
-+			compatible = "fsl,ls1028a-pcie";
-+			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
-+			       0x88 0x00000000 0x0 0x00002000>; /* configuration space */
-+			reg-names = "regs", "config";
-+			interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "pme", "aer";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			dma-coherent;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000 0x0 0x00000000 0x88 0x00010000 0x0 0x00010000   /* downstream I/O */
-+				  0x82000000 0x0 0x40000000 0x88 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-+			msi-parent = <&its>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0000 0 0 1 &gic 0 0 GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic 0 0 GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic 0 0 GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic 0 0 GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-+			status = "disabled";
-+		};
-+
- 		pcie@1f0000000 { /* Integrated Endpoint Root Complex */
- 			compatible = "pci-host-ecam-generic";
- 			reg = <0x01 0xf0000000 0x0 0x100000>;
--- 
-2.9.5
+However this opens up the possibility of a DT misconfiguration for
+other controllers that do call dw_pcie_setup_rc, i.e. they set
+num-lanes to 0 when it is required. Therefore the second hunk
+ensures that an error is emitted when num-lanes was needed but not
+provided.
 
+> are they way they are in the mainline honestly I have no
+> idea, this does not make any sense in the slightest:
+> 
+> ret = of_property_read_u32(np, "num-lanes", &lanes);
+> if (ret)
+> 	lanes = 0;
+
+Please note that the code below is in a different function to the
+code above.
+
+> 
+> /* Set the number of lanes */
+> val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
+> val &= ~PORT_LINK_MODE_MASK;
+> switch (lanes) {
+> case 1:
+> 	val |= PORT_LINK_MODE_1_LANES;
+> 	break;
+> case 2:
+> 	val |= PORT_LINK_MODE_2_LANES;
+> 	break;
+> case 4:
+> 	val |= PORT_LINK_MODE_4_LANES;
+> 	break;
+> case 8:
+> 	val |= PORT_LINK_MODE_8_LANES;
+> 	break;
+> default:
+> 	dev_err(pci->dev, "num-lanes %u: invalid value\n", lanes);
+> 	return;
+> }
+> 
+> why do we need to set lanes to 0 if num-lanes is not present ? To print
+> an error message ?
+
+At this point in time, the controller is trying to train the link but
+it doesn't know how many lanes, so we need to error. We don't error when
+reading the device tree earlier - because at that point in time we don't
+know if num-lanes is optional or not.
+
+Thanks,
+
+Andrew Murray
+
+> 
+> I really do not understand this code.
+> 
+> Lorenzo
