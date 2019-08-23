@@ -2,43 +2,40 @@ Return-Path: <SRS0=Hfoz=WT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D30C3A5A2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 958BCC3A5A4
 	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 23:27:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0FE2B21019
+	by mail.kernel.org (Postfix) with ESMTP id 6CF2220578
 	for <linux-pci@archiver.kernel.org>; Fri, 23 Aug 2019 23:27:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727632AbfHWX1r (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 23 Aug 2019 19:27:47 -0400
-Received: from mga11.intel.com ([192.55.52.93]:21160 "EHLO mga11.intel.com"
+        id S1727216AbfHWX1N (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 23 Aug 2019 19:27:13 -0400
+Received: from mga11.intel.com ([192.55.52.93]:21141 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727362AbfHWX1U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 23 Aug 2019 19:27:20 -0400
+        id S1727065AbfHWX1M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 23 Aug 2019 19:27:12 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Aug 2019 16:27:19 -0700
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Aug 2019 16:27:12 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,422,1559545200"; 
-   d="scan'208";a="187009680"
+   d="scan'208";a="187009630"
 Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by FMSMGA003.fm.intel.com with ESMTP; 23 Aug 2019 16:27:19 -0700
+  by FMSMGA003.fm.intel.com with ESMTP; 23 Aug 2019 16:27:12 -0700
 From:   sathyanarayanan.kuppuswamy@linux.intel.com
 To:     bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         ashok.raj@intel.com, keith.busch@intel.com,
         sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v7 7/8] PCI/DPC: Clear AER registers in EDR mode
-Date:   Fri, 23 Aug 2019 16:24:12 -0700
-Message-Id: <488a4234f356a2eddcb1ab64e322b182351142a6.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+Subject: [PATCH v7 0/8] Add Error Disconnect Recover (EDR) support
+Date:   Fri, 23 Aug 2019 16:24:05 -0700
+Message-Id: <cover.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1566602170.git.sathyanarayanan.kuppuswamy@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -48,32 +45,66 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
-As per PCI firmware specification r3.2 Downstream Port Containment
-Related Enhancements ECN, OS is responsible for clearing the AER
-registers in EDR mode. So clear AER registers in dpc_process_error()
-function.
+This patchset adds support for following features:
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Acked-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/dpc.c | 4 ++++
- 1 file changed, 4 insertions(+)
+1. Error Disconnect Recover (EDR) support.
+2. _OSC based negotiation support for DPC.
 
-diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
-index fafc55c00fe0..de2d892bc7c4 100644
---- a/drivers/pci/pcie/dpc.c
-+++ b/drivers/pci/pcie/dpc.c
-@@ -275,6 +275,10 @@ static void dpc_process_error(struct dpc_dev *dpc)
- 		pci_aer_clear_fatal_status(pdev);
- 	}
- 
-+	/* In EDR mode, OS is responsible for clearing AER registers */
-+	if (dpc->firmware_dpc)
-+		pci_cleanup_aer_error_status_regs(pdev);
-+
- 	/*
- 	 * Irrespective of whether the DPC event is triggered by
- 	 * ERR_FATAL or ERR_NONFATAL, since the link is already down,
+You can find EDR spec in the following link.
+
+https://members.pcisig.com/wg/PCI-SIG/document/12614
+
+Changes since v6:
+ * Modified the order of patches to enable EDR only after all necessary support is added in kernel.
+ * Addressed Bjorn comments.
+
+Changes since v5:
+ * Addressed Keith's comments.
+ * Added additional check for FF mode in pci_aer_init().
+ * Updated commit history of "PCI/DPC: Add support for DPC recovery on NON_FATAL errors" patch.
+
+Changes since v4:
+ * Rebased on top of v5.3-rc1
+ * Fixed lock/unlock issue in edr_handle_event().
+ * Merged "Update error status after reset_link()" patch into this patchset.
+
+Changes since v3:
+ * Moved EDR related ACPI functions/definitions to pci-acpi.c
+ * Modified commit history in few patches to include spec reference.
+ * Added support to handle DPC triggered by NON_FATAL errors.
+ * Added edr_lock to protect PCI device receiving duplicate EDR notifications.
+ * Addressed Bjorn comments.
+
+Changes since v2:
+ * Split EDR support patch into multiple patches.
+ * Addressed Bjorn comments.
+
+Changes since v1:
+ * Rebased on top of v5.1-rc1
+
+Kuppuswamy Sathyanarayanan (8):
+  PCI/ERR: Update error status after reset_link()
+  PCI/DPC: Allow dpc_probe() even if firmware first mode is enabled
+  PCI/DPC: Add dpc_process_error() wrapper function
+  PCI/DPC: Add Error Disconnect Recover (EDR) support
+  PCI/AER: Allow clearing Error Status Register in FF mode
+  PCI/DPC: Update comments related to DPC recovery on NON_FATAL errors
+  PCI/DPC: Clear AER registers in EDR mode
+  PCI/ACPI: Enable EDR support
+
+ drivers/acpi/pci_root.c         |   9 ++
+ drivers/pci/pci-acpi.c          |  91 +++++++++++++++
+ drivers/pci/pcie/Kconfig        |  10 ++
+ drivers/pci/pcie/aer.c          |  12 +-
+ drivers/pci/pcie/dpc.c          | 194 +++++++++++++++++++++++++++++---
+ drivers/pci/pcie/err.c          |  10 +-
+ drivers/pci/pcie/portdrv_core.c |   8 +-
+ drivers/pci/probe.c             |   1 +
+ include/linux/acpi.h            |   6 +-
+ include/linux/pci-acpi.h        |  11 ++
+ include/linux/pci.h             |   3 +-
+ 11 files changed, 321 insertions(+), 34 deletions(-)
+
 -- 
 2.21.0
 
