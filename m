@@ -2,50 +2,41 @@ Return-Path: <SRS0=srx4=WX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08F5EC3A5A3
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 22:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17693C3A5A3
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 22:53:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEC2321883
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 22:53:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1566946403;
-	bh=ztNhzpKmoCCrgIixuWgyFrkkh96q7FgJ2/rvxJTHs2I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=BigPpbKGfBUwZMoIxpthlpcpK8GuASw690kNFkpvp9GVkjxNfvBFh27fNSY+PpJvI
-	 cVTW1UFpd0M9oDW76cBxKKxroyOw4mjp5V/T0xdzWYW9bx0BtxUZfWuVutOpD+IKPJ
-	 bUyBK1Jz8qaTlwSgvtOpxAGS+59Ugsc5sgMUH+eQ=
+	by mail.kernel.org (Postfix) with ESMTP id E790D21883
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 22:53:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726025AbfH0WxX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Aug 2019 18:53:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36742 "EHLO mail.kernel.org"
+        id S1726095AbfH0Wxz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Aug 2019 18:53:55 -0400
+Received: from mga05.intel.com ([192.55.52.43]:54664 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725997AbfH0WxX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Aug 2019 18:53:23 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 577C1217F5;
-        Tue, 27 Aug 2019 22:53:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1566946402;
-        bh=ztNhzpKmoCCrgIixuWgyFrkkh96q7FgJ2/rvxJTHs2I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=kt/tKufBYETsPrEwOF771ye7LBLZPIMIm3GmhvCvX+4GnTL0fq/rsLke1RAiygxS4
-         sZltuEeJAyo5b3nAEOBQSqa/XNvRu+fuuwEuTXNY0LCywJWQfV2sNwpqfV2g+Z19pK
-         lfq9+22iL8szRvRqILjHnFKOi/xCQrkhyTwCzjgg=
-Date:   Tue, 27 Aug 2019 17:53:19 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Denis Efremov <efremov@linux.com>
-Cc:     Lukas Wunner <lukas@wunner.de>,
-        sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        id S1725997AbfH0Wxz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Aug 2019 18:53:55 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Aug 2019 15:53:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,439,1559545200"; 
+   d="scan'208";a="181840162"
+Received: from skuppusw-desk.jf.intel.com (HELO skuppusw-desk.amr.corp.intel.com) ([10.54.74.33])
+  by fmsmga007.fm.intel.com with ESMTP; 27 Aug 2019 15:53:54 -0700
+Date:   Tue, 27 Aug 2019 15:50:58 -0700
+From:   Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Denis Efremov <efremov@linux.com>, Lukas Wunner <lukas@wunner.de>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v3 0/4] Simplify PCIe hotplug indicator control
-Message-ID: <20190827225319.GE9987@google.com>
+Message-ID: <20190827225058.GG28404@skuppusw-desk.amr.corp.intel.com>
+Reply-To: sathyanarayanan.kuppuswamy@linux.intel.com
 References: <20190819160643.27998-1-efremov@linux.com>
  <2f4c857e-a7cc-58da-8be5-cba581c56d9f@linux.com>
  <20190827223254.GC9987@google.com>
@@ -53,7 +44,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20190827223254.GC9987@google.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
@@ -93,21 +84,9 @@ On Tue, Aug 27, 2019 at 05:32:54PM -0500, Bjorn Helgaas wrote:
 > 
 > Anybody want to review these?
 
-Unrelated, but if anybody is looking at pciehp, is there value in
-having pciehp split across five files?
+Except for one nitpick in [PATCH v3 1/4], rest seems fine to me.
 
-  drivers/pci/hotplug/pciehp.h
-  drivers/pci/hotplug/pciehp_core.c
-  drivers/pci/hotplug/pciehp_ctrl.c
-  drivers/pci/hotplug/pciehp_hpc.c
-  drivers/pci/hotplug/pciehp_pci.c
-
-To me, it just makes things harder because when I'm browsing for
-something in pciehp and I don't know the exact name of it, I have to
-guess which file it's in, and I'm invariably wrong.
-
-It seems like it would be much simpler if everything were in a single
-pciehp.c file.  Then we could also get rid of the header and make
-several more things static.
-
-Bjorn
+-- 
+-- 
+Sathyanarayanan Kuppuswamy
+Linux kernel developer
