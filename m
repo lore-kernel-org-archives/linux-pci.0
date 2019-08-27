@@ -2,43 +2,68 @@ Return-Path: <SRS0=srx4=WX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3DE7C3A5A6
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 17:33:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E22F4C3A5A3
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 18:01:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F0FE22CBB
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 17:33:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD76520644
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 18:01:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=sifive.com header.i=@sifive.com header.b="NBEZ1Xpt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726871AbfH0RdJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Aug 2019 13:33:09 -0400
-Received: from mga18.intel.com ([134.134.136.126]:62460 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730339AbfH0Rck (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Aug 2019 13:32:40 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 27 Aug 2019 10:32:38 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,438,1559545200"; 
-   d="scan'208";a="171269805"
-Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by orsmga007.jf.intel.com with ESMTP; 27 Aug 2019 10:32:38 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, keith.busch@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v8 5/8] PCI/AER: Allow clearing Error Status Register in FF mode
-Date:   Tue, 27 Aug 2019 10:29:27 -0700
-Message-Id: <7d641d35fe98cd95e92c0236bd151fa779be4ab6.1566865502.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1566865502.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1566865502.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1727401AbfH0SBS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Aug 2019 14:01:18 -0400
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:40670 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727064AbfH0SBR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2019 14:01:17 -0400
+Received: by mail-yw1-f68.google.com with SMTP id z64so8196451ywe.7
+        for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2019 11:01:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sifive.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=buRd+oaYTniBe098opDcjSma8LR23N54U7H6uBYOk28=;
+        b=NBEZ1XptxSKUz1z0TH3DnNeYuNzrjdDvrIqpIsyOdkWR1qilCZew88ogpUNAZl598D
+         XIx4f8EQU2etJVEKNV8PJuH44DTZ2K5Ie8WrQK/buvYnNUQNC2OPdB6VYEReG1fMc24m
+         B575wuW4rV51rfz7FcyhND/KemilkRxByI+uz2MKXAJf1ZeXGge3pVxeukXic7/iiqyR
+         s/IApE8/XPIsGu+OthvMeKOSZ8WzlX7zDXtb+AQY2BR+coQZiEXC33fNFq2G1RY6dOIT
+         oXRzZ59oiAK1Kg85nbJomzCX5LaQN1c2VFSsnugjPPy8sNp+e4h1dKgxhdS2YQDv93Gf
+         IcxA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=buRd+oaYTniBe098opDcjSma8LR23N54U7H6uBYOk28=;
+        b=DozAY7YezR6Xl79XgEM4Lcnag6G930/Us8bWEIS+Kp4P6Ct0VCZ99zeZW6EksACTwW
+         AFgFjQIjlpyCK5kkmdA0qkRtMksxSNQ3555ufGe1ECU5272WOboatEHogpcu4pu+sApX
+         zbVBNyz7Dw87+kIAQKhuH2DqhaQolfd5rokTBRIGhlOoZxtwY3NHyhZQ2VBbnjd8Ybpa
+         EHATSLEvyPlSFb6DOhvI22clEyroBjY1R76C68XnCgK3LGx2G54Ns10hkHBQM2cPH/YE
+         yrUf1cwyYXNYzMAVDc/OCcjjGnSZ4KYdfq7Awv/1+ahSQfB05chZNkcPwbo/U035OaNf
+         mQRg==
+X-Gm-Message-State: APjAAAUS8rYzcxa71DvuZ0gP0nicDCyeo2rKRM9jB+j29oIM4CdxdHuN
+        IiV/63fqcZQrtOZ4fEj7+xKS6A==
+X-Google-Smtp-Source: APXvYqyGs7zSbCiHYXBhl+PwQTlmoQwUJvXULrhhIj4PQBor38VhVFPYMVwSYToPtJrNJvKuVV/K+w==
+X-Received: by 2002:a81:4854:: with SMTP id v81mr133927ywa.412.1566928876193;
+        Tue, 27 Aug 2019 11:01:16 -0700 (PDT)
+Received: from jaxon.localdomain ([152.3.43.56])
+        by smtp.gmail.com with ESMTPSA id z9sm3121956ywj.84.2019.08.27.11.01.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 27 Aug 2019 11:01:15 -0700 (PDT)
+From:   Haotian Wang <haotian.wang@sifive.com>
+To:     kishon@ti.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com
+Cc:     mst@redhat.com, jasowang@redhat.com, linux-pci@vger.kernel.org,
+        haotian.wang@duke.edu
+Subject: Re: [PATCH] pci: endpoint: functions: Add a virtnet EP function
+Date:   Tue, 27 Aug 2019 14:01:14 -0400
+Message-Id: <20190827180114.5979-1-haotian.wang@sifive.com>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <442f91a5-be7f-c4c2-dd24-81c510aab86b@ti.com>
+References: <442f91a5-be7f-c4c2-dd24-81c510aab86b@ti.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -46,65 +71,111 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Hi Kishon,
 
-As per PCI firmware specification r3.2 Downstream Port Containment
-Related Enhancements ECN, sec 4.5.1, table 4-6, Error Disconnect
-Recover (EDR) support allows OS to handle error recovery and
-clearing Error Registers even in FF mode. So remove FF mode checks in
-pci_cleanup_aer_uncorrect_error_status(), pci_aer_clear_fatal_status()
-and pci_cleanup_aer_error_status_regs() functions.
+On Tue, Aug 27, 2019 at 4:13 AM Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> >>> +CONFIG_PCI_HOST_LITTLE_ENDIAN must be set at COMPILE TIME. Toggle it on to build
+> >>> +the module with the PCI host being in little endianness.
+> >> It would be better if we could get the endianness of the host at runtime. That
+> >> way irrespective of the host endianness we could use the same kernel image in
+> >> endpoint.
+> > There are two ways I can imagine of achieving this. The first is to
+> > change the whole endpoint function into using modern virtio interfaces,
+> > because those specify little endianness to be used in all of __virtio16,
+> > __virtio32 etc. I didn't take that path because the development platform
+> > did not allow me to access some PCI configuration space registers, such
+> > as the vendor-specific capabilities. These were required to configure a
+> > virtio_device representing the PCI host.
+> 
+> I would prefer this approach.
+> Do you need any vendor specific capabilities for virtio_device?
+The virtio modern interfaces write addresses of virtqueues, queue
+selections and some other important notification into the
+vendor-specific capabilities chain registers, while the legacy
+interfaces simply write to some offset of address stored in BAR 0.
 
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Acked-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/pcie/aer.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+> >>> +/*
+> >>> + * Initializes the virtio_pci and virtio_net config space that will be exposed
+> >>> + * to the remote virtio_pci and virtio_net modules on the PCI host. This
+> >>> + * includes setting up feature negotiation and default config setup etc.
+> >>> + *
+> >>> + * @epf_virtio: epf_virtio handler
+> >>> + */
+> >>> +static void pci_epf_virtio_init_cfg_legacy(struct pci_epf_virtio *epf_virtio)
+> >>> +{
+> >>> +	const u32 dev_feature =
+> >>> +		generate_dev_feature32(features, ARRAY_SIZE(features));
+> >>> +	struct virtio_legacy_cfg *const legacy_cfg = epf_virtio->reg[BAR_0];
+> >>
+> >> virtio_reg_bar instead of BAR_0
+> > The dilemma was that the virtio_pci on PCI host will only write to BAR
+> > 0. I may need to throw an error if the first free bar is not BAR 0.
+> 
+> hmm.. We need a better way to handle it. Just having
+> PCI_VENDOR_ID_REDHAT_QUMRANET in virtio_pci may not be sufficient then.
+Sorry I did not get the connection between these two issues. One is
+about the bar number used, the other is about satisfying the triggering
+the probe function of virtio_pci on the host side.
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index b45bc47d04fe..e1509bb900c5 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -383,9 +383,6 @@ int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
- 	if (!pos)
- 		return -EIO;
- 
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
- 	/* Clear status bits for ERR_NONFATAL errors only */
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
-@@ -406,9 +403,6 @@ void pci_aer_clear_fatal_status(struct pci_dev *dev)
- 	if (!pos)
- 		return;
- 
--	if (pcie_aer_get_firmware_first(dev))
--		return;
--
- 	/* Clear status bits for ERR_FATAL errors only */
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_STATUS, &status);
- 	pci_read_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, &sev);
-@@ -430,9 +424,6 @@ int pci_cleanup_aer_error_status_regs(struct pci_dev *dev)
- 	if (!pos)
- 		return -EIO;
- 
--	if (pcie_aer_get_firmware_first(dev))
--		return -EIO;
--
- 	port_type = pci_pcie_type(dev);
- 	if (port_type == PCI_EXP_TYPE_ROOT_PORT) {
- 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &status);
-@@ -455,7 +446,8 @@ void pci_aer_init(struct pci_dev *dev)
- 	if (dev->aer_cap)
- 		dev->aer_stats = kzalloc(sizeof(struct aer_stats), GFP_KERNEL);
- 
--	pci_cleanup_aer_error_status_regs(dev);
-+	if (!pcie_aer_get_firmware_first(dev))
-+		pci_cleanup_aer_error_status_regs(dev);
- }
- 
- void pci_aer_exit(struct pci_dev *dev)
--- 
-2.21.0
+As a reference, the code on the host side legacy probe is:
 
+vp_dev->ioaddr = pci_iomap(pci_dev, 0, 0);
+if (!vp_dev->ioaddr)
+	goto err_iomap;
+
+That's why only BAR 0 is used.
+
+> >> Please add a description for each of these structures.
+> > I had to copy these structures exactly as they were from virtio_ring.c
+> > unfortunately, because they were not exposed via any header file. If
+> > virtio_ring.c has some struct changes, this endpoint function will have
+> > to change accordingly.
+> 
+> Some of the structures are exposed in virtio_ring.h. We probably need to use
+> that instead of using the structures from virtio_ring.c.
+struct vring_virtqueue is not present in include/linux/virtio_ring.h or
+include/uapi/linux/virtio_ring.h. struct virtnet_info is not present in
+include/linux/virtio_net.h or include/uapi/linux/virtio_net.h. These two
+structures are only present in .c files, but they are necessary to this
+endpoint function.
+
+vring_virtqueue is a critical struct used by virtio_ring, and epf_virtio
+relies entirely on the vanilla virtio_ring for doing its work. Therefore
+all the memory allocation and field offsets must be exactly the same. I
+do not see an easy solution to this.
+
+virtnet_info on the other hand is used in only one line in epf_virtio:
+
+netdev = ((struct virtnet_info *)epf_vdev->vdev.priv)->dev;
+while (!(READ_ONCE(netdev->flags) & IFF_UP))
+	schedule();
+
+The local virtual net_device is created by virtio_net and the only way
+to access it is through virtnet_info. I need this net_device because I
+cannot start handling the two transfer handler threads before the
+net_device is brought up by `ifconfig eth0 up` in the userspace on the
+endpoint.
+
+> Great work in attempting to add virtnet driver.
+> How many hours are you planning to spend working on kernel? I'm interested in
+> seeing this completed and getting merged in kernel.
+Thank you! Honestly I cannot give an exact number of hours I can work.
+One reason is because now I have to deal with some school stuff. The
+other is simply that I do not have access to the FPGA anymore. I may
+have to rely on the goodwill of colleagues to do the testing on hardware
+for me. That's why I am a bit unsure about how to make major changes to
+the patch, such as modifying vhost, adding more layers, or switching to
+virtio modern interfaces (which will probably require talking to the
+hardware team at my previous company).
+
+> > Thank you so much for taking time to review this patch. Now that I came
+> > back to university and continued my undergrad study, my kernel
+> > development work will probably slow down a lot. The heavy-lifting work
+> 
+> Good luck with your studies :-)
+Thank you so much! Good luck with your work.
+
+What's your feedback on the dma engine?
+
+Cheers,
+Haotian
