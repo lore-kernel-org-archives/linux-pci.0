@@ -2,91 +2,103 @@ Return-Path: <SRS0=srx4=WX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2405DC3A5A3
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 23:25:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C875C3A5A3
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 23:25:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E5AFA20856
-	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 23:25:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BFSqj6OU"
+	by mail.kernel.org (Postfix) with ESMTP id 3647120856
+	for <linux-pci@archiver.kernel.org>; Tue, 27 Aug 2019 23:25:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1566948322;
+	bh=LjeKtcL+tre8T5+8STXYq7fJxwH9y7GRM/bKzsvNuTw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=F5187JS8O482TR9g5YZeoDXfQig0XZJV1YgZP6Dch45jqKEPtvcF5LXHYXsjCzsYc
+	 vEPivEwVr0ZDmblBp0HY0ZSV+tRsAbPGitmQdwn/+VMxa7QhENH0elpQTDmrW4pXN7
+	 LAALufSNug4mk6neNeHHuD38BYjIFnlx7cgtbEsw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726331AbfH0XZE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 27 Aug 2019 19:25:04 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:37875 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725997AbfH0XZD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Aug 2019 19:25:03 -0400
-Received: by mail-io1-f66.google.com with SMTP id q12so1487372iog.4;
-        Tue, 27 Aug 2019 16:25:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=AZp/zzBtS0EBiyMSUURJW6iNqR0pfIGhZlkgvULPVEo=;
-        b=BFSqj6OUgdwftYzzYXGPwUNHC8vNVsa9r2ChznpC7RkSDp2KTGdC7fe9DguD1V+tVQ
-         K8cBTkp5rHqDqGdxqDjclgASr4iyEILJq6x3Ke3xuU2apjbZ8fOLTtx5sl1GHS/8Syj9
-         pbjqo0PJE1BJaEOmruxYMsyErKfh0xuWO6kS/8smjDMKCiC1lQPC2Q44cBw5HBlau/3p
-         34bbDWG/ezWukZfefTBGNZ0qbiHF75LLsmHOiT/44ZTZ/aVNHXUAYlrmhThjmq98uqJo
-         Y/gEb7LzkZ9gOLIDhtDLPjAGApXtQrYV+df0XvyjjDp3Sj/jZUKO6RbpORLBDdMICg9d
-         lkxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=AZp/zzBtS0EBiyMSUURJW6iNqR0pfIGhZlkgvULPVEo=;
-        b=o8Kg8cGM9SEyCDkNeNPhjf0dmXUrbFlCxvdCtUvdEoxdvBiJ+ypadx4bCvojbhjeYh
-         CNuJS2dhQoUCBgp4xs0ptu7JiWb9bHhZ2em7tqNW7c9c/LIZIyzsosG7yu93AL51bMmy
-         OLqhk69ThwbtQ5O2M/ULL/EwmkJnae5opPoLvEP55MUEIMxIUwjcxH/SNbWvs1jizO68
-         6EYuhmRVH9WxwFwsrfV2L9+cnGeqLCkxu0RC2cUNz6kuLesUypThW2Xb853XkLbA9Qax
-         pcZly/+Oqm8GnC5gUcgU1rmEAGMwo/gPpqHDQGeFWfaBDzWdvGhwBw1lq96TxDrO/KnI
-         Iy9A==
-X-Gm-Message-State: APjAAAXE0f/0lw7ywwLtwyusQ64Rdqj0s8fNu4sPWmdLgetA5vCE87wk
-        Z/i7edZFIwCb/PeI6tjwTpqZK0EMTUX1wu++BVA=
-X-Google-Smtp-Source: APXvYqyqSKNPjI3RqbHeyiPci/pb0qWE5PUDPxcELs94FqcSKNQOerajwYEUx+YZEhYXfNcva0enU+Mb4DAGP/p0KKs=
-X-Received: by 2002:a5d:9b02:: with SMTP id y2mr1072981ion.146.1566948302443;
- Tue, 27 Aug 2019 16:25:02 -0700 (PDT)
+        id S1726181AbfH0XZV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 27 Aug 2019 19:25:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45080 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725997AbfH0XZV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Aug 2019 19:25:21 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 212D920856;
+        Tue, 27 Aug 2019 23:25:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1566948320;
+        bh=LjeKtcL+tre8T5+8STXYq7fJxwH9y7GRM/bKzsvNuTw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=gSNjuAXIFwhvRADXCP9CPSUPjfyvhsFiElfke5de4cJ5F5ouiV/SafluRTPSJ/w/w
+         ImTPnLT8hWXiSH2KDim39hKj4lKxmI76wU2WmvL+h06DFMTGtkKm42zivYKanB0S5b
+         MrI0mZ8u92wPK+bFMf7TZ2ltweWn4VRDuP52yzy8=
+Date:   Tue, 27 Aug 2019 18:25:18 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Krzysztof Wilczynski <kw@linux.com>
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Remove the use of printk_ratelimit() in pci.c
+Message-ID: <20190827232518.GJ9987@google.com>
+References: <20190825224616.8021-1-kw@linux.com>
 MIME-Version: 1.0
-References: <20190819160643.27998-1-efremov@linux.com> <20190819160643.27998-2-efremov@linux.com>
- <9cbb34b0-d6be-fbba-9992-9b6939018e5d@linux.com>
-In-Reply-To: <9cbb34b0-d6be-fbba-9992-9b6939018e5d@linux.com>
-From:   "Oliver O'Halloran" <oohall@gmail.com>
-Date:   Wed, 28 Aug 2019 09:24:51 +1000
-Message-ID: <CAOSf1CH7KHmViRQUYBvEtTQz0vMV5oE4SXOHp_E_a69Xew90gw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/4] PCI: pciehp: Add pciehp_set_indicators() to
- jointly set LED indicators
-To:     efremov@linux.com
-Cc:     sathyanarayanan kuppuswamy 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190825224616.8021-1-kw@linux.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Aug 20, 2019 at 2:17 AM Denis Efremov <efremov@linux.com> wrote:
->
-> Hi,
->
-> On 8/19/19 7:06 PM, Denis Efremov wrote:
-> On 8/12/19 11:25 AM, sathyanarayanan kuppuswamy wrote:
-> > Do we need to switch case here ? if (pwr > 0) {} should work right ?
->
-> I saved the switch here from v2. I think switch makes the inputs check more
-> precise and filters-out all non-valid values. Maybe this check is too strict?
+On Mon, Aug 26, 2019 at 12:46:16AM +0200, Krzysztof Wilczynski wrote:
+> Do not use printk_ratelimit() in drivers/pci/pci.c as it shares the
+> rate limiting state with all other callers to the printk_ratelimit().
+> 
+> Add pci_info_ratelimited macro similar to pci_notice_ratelimited
+> added in the commit a88a7b3eb076 ("vfio: Use dev_printk() when
+> possible") and use it instead of pr_info inside the if-statement.
+> 
+> Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
 
-Sounds like you're overthinking it tbh. If want to catch programming
-errors then a WARN_ON_ONCE() in the default case would be better than
-silently ignoring invalid values, but it's pretty hard to care.
+Applied to pci/misc for v5.4, thanks!
 
-> We could use mask here ON|OFF|BLINK for the check, but I don't know how hardware
-> will handle a case, for example, pwr == ON|BLINK.
-
-ON|BLINK is the same as OFF
+> ---
+>  drivers/pci/pci.c   | 4 ++--
+>  include/linux/pci.h | 3 +++
+>  2 files changed, 5 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index f20a3de57d21..e3d190d003c5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -890,8 +890,8 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  
+>  	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+>  	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+> -	if (dev->current_state != state && printk_ratelimit())
+> -		pci_info(dev, "Refused to change power state, currently in D%d\n",
+> +	if (dev->current_state != state)
+> +		pci_info_ratelimited(dev, "Refused to change power state, currently in D%d\n",
+>  			 dev->current_state);
+>  
+>  	/*
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 463486016290..73ce8d908322 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2367,4 +2367,7 @@ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
+>  #define pci_notice_ratelimited(pdev, fmt, arg...) \
+>  	dev_notice_ratelimited(&(pdev)->dev, fmt, ##arg)
+>  
+> +#define pci_info_ratelimited(pdev, fmt, arg...) \
+> +	dev_info_ratelimited(&(pdev)->dev, fmt, ##arg)
+> +
+>  #endif /* LINUX_PCI_H */
+> -- 
+> 2.22.1
+> 
