@@ -2,49 +2,52 @@ Return-Path: <SRS0=6piv=WY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0233C3A5A1
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 14:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24535C3A5A6
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 14:15:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A9BE2339E
+	by mail.kernel.org (Postfix) with ESMTP id EDDFF2339E
 	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 14:15:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="suUi86Ws"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tVTEMnR6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726617AbfH1OO5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Aug 2019 10:14:57 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:34104 "EHLO
+        id S1726916AbfH1OPN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Aug 2019 10:15:13 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:34106 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726315AbfH1OO4 (ORCPT
+        with ESMTP id S1726603AbfH1OO4 (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2019 10:14:56 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=6rDsAjXtgHuoENe2BDRKRs4vEoPiD7Zi5fpWyf81iqE=; b=suUi86WsP4Cg2rN2Vo+u+2OHE
-        J8vy9p1eaA1Oew6VTAjT8CCrTFxU5g8fq37tY9DskhJKF/nlZA3q9vxu87LaV3kVlbCk9HRD6Ti+q
-        0QdJbvBwNZ8sV59cGXt4XML08AHjMkuBuC3xO7IUE33Qppl1w9qLFRy0iveSAHvqL2ccwi04MqU/W
-        S4q4Hud6bgCQmn4yYEhI+gSisfnAUsgS4ruvRMgX3/7nq78ZT0dR6oTXwHWNiRbFBkSlhDeCgZMv4
-        lztj5I3kT2eWZ2D0ULjCPCnH5KJw4B6XkWB6LWScmQ2GhdT8E69jn4v8Hp2b1Q+EoO/SkTZU5+stE
-        BollTDDAA==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=UNjIsinlE8oqmYbJQIBJBGpyXDrDsScP7b7RPAv/kKo=; b=tVTEMnR6Tawd9xPItwcMznNdoQ
+        X1NerjCg6JvnvZf7533qsVt7aY1aTCGMgGKKghHrdNqssZoJxTVOL6jHKE1mcz8EKhMJykYxqYvSS
+        CDRc/f+tCAk8MLGnNsiJ/IBvados3y1TFHuKyyplAqexJWvvl5IaSAX5ht7R1Nlxx8oO49k9QLFiA
+        Ff0y8jD1a0zgugBp2GBZldMcmEOAWOllb+D7Uanl6KDNIiKvKZEgCXt9eTlgyXrRDoJxOmt39ZLfk
+        AU2hVLdlna1LnE73c9GncpIHICs4zPi35W7h5ySnphUhOlCJfrz48Qe2nVwXrYirRBkS3pwMacF33
+        uVsssEmw==;
 Received: from [2001:4bb8:180:3f4c:863:2ead:e9d4:da9f] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1i2yij-0000T4-P7; Wed, 28 Aug 2019 14:14:46 +0000
+        id 1i2yis-0000Tf-Hu; Wed, 28 Aug 2019 14:14:55 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Keith Busch <kbusch@kernel.org>,
         "Derrick, Jonathan" <jonathan.derrick@intel.com>
 Cc:     x86@kernel.org, joro@8bytes.org, linux-pci@vger.kernel.org,
         bhelgaas@google.com, dwmw2@infradead.org,
         iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
-Subject: stop overriding dma_ops in vmd v2
-Date:   Wed, 28 Aug 2019 16:14:38 +0200
-Message-Id: <20190828141443.5253-1-hch@lst.de>
+Subject: [PATCH 2/5] x86/pci: Add a to_pci_sysdata helper
+Date:   Wed, 28 Aug 2019 16:14:40 +0200
+Message-Id: <20190828141443.5253-3-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190828141443.5253-1-hch@lst.de>
+References: <20190828141443.5253-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -53,11 +56,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+Various helpers need the pci_sysdata just to dereference a single field
+in it.  Add a little helper that returns the properly typed sysdata
+pointer to require a little less boilerplate code.
 
-this is a new version of the vmd dma_map_ops removal, which does not
-require vmd to be built in.  Instead we slightly expand the vmd-specific
-field in the x86 pci_sysdata to cover that information.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ arch/x86/include/asm/pci.h | 28 +++++++++++++---------------
+ 1 file changed, 13 insertions(+), 15 deletions(-)
 
-Note that I do not have a vmd-enable system, so some testing by the
-maintainers would be welcome.
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 6fa846920f5f..75fe28492290 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -35,12 +35,15 @@ extern int noioapicreroute;
+ 
+ #ifdef CONFIG_PCI
+ 
++static inline struct pci_sysdata *to_pci_sysdata(struct pci_bus *bus)
++{
++	return bus->sysdata;
++}
++
+ #ifdef CONFIG_PCI_DOMAINS
+ static inline int pci_domain_nr(struct pci_bus *bus)
+ {
+-	struct pci_sysdata *sd = bus->sysdata;
+-
+-	return sd->domain;
++	return to_pci_sysdata(bus)->domain;
+ }
+ 
+ static inline int pci_proc_domain(struct pci_bus *bus)
+@@ -52,23 +55,20 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+ {
+-	struct pci_sysdata *sd = bus->sysdata;
+-
+-	return sd->fwnode;
++	return to_pci_sysdata(bus)->fwnode;
+ }
+ 
+ #define pci_root_bus_fwnode	_pci_root_bus_fwnode
+ #endif
+ 
++#if IS_ENABLED(CONFIG_VMD)
+ static inline bool is_vmd(struct pci_bus *bus)
+ {
+-#if IS_ENABLED(CONFIG_VMD)
+-	struct pci_sysdata *sd = bus->sysdata;
+-
+-	return sd->vmd_domain;
++	return to_pci_sysdata(bus)->vmd_domain;
++}
+ #else
+-	return false;
+-#endif
++#define is_vmd(bus)		false
++#endif /* CONFIG_VMD */
+ }
+ 
+ /* Can be used to override the logic in pci_scan_bus for skipping
+@@ -128,9 +128,7 @@ void native_restore_msi_irqs(struct pci_dev *dev);
+ /* Returns the node based on pci bus */
+ static inline int __pcibus_to_node(const struct pci_bus *bus)
+ {
+-	const struct pci_sysdata *sd = bus->sysdata;
+-
+-	return sd->node;
++	return to_pci_sysdata(bus)->node;
+ }
+ 
+ static inline const struct cpumask *
+-- 
+2.20.1
+
