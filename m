@@ -2,131 +2,137 @@ Return-Path: <SRS0=6piv=WY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4B05C3A5A1
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 22:18:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C3F0C41514
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 22:18:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 839692339E
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 22:18:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 207252339E
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 22:18:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PzPFLhXr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726941AbfH1WSh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Aug 2019 18:18:37 -0400
-Received: from mga17.intel.com ([192.55.52.151]:11611 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726839AbfH1WSG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Aug 2019 18:18:06 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 28 Aug 2019 15:18:05 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,442,1559545200"; 
-   d="scan'208";a="197662405"
-Received: from skuppusw-desk.jf.intel.com ([10.54.74.33])
-  by fmsmga001.fm.intel.com with ESMTP; 28 Aug 2019 15:18:06 -0700
-From:   sathyanarayanan.kuppuswamy@linux.intel.com
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        ashok.raj@intel.com, keith.busch@intel.com,
-        sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH v7 1/7] PCI/ATS: Fix pci_prg_resp_pasid_required() dependency issues
-Date:   Wed, 28 Aug 2019 15:14:01 -0700
-Message-Id: <ef40dbdc4eae32490caec47bed5b57eeb438dd80.1567029860.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <cover.1567029860.git.sathyanarayanan.kuppuswamy@linux.intel.com>
-References: <cover.1567029860.git.sathyanarayanan.kuppuswamy@linux.intel.com>
+        id S1726953AbfH1WSv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Aug 2019 18:18:51 -0400
+Received: from mail-wm1-f65.google.com ([209.85.128.65]:50184 "EHLO
+        mail-wm1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726839AbfH1WSv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2019 18:18:51 -0400
+Received: by mail-wm1-f65.google.com with SMTP id v15so1655978wml.0;
+        Wed, 28 Aug 2019 15:18:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=EAM+t57qqYuwniU8bRaWennUhmMsaEkJJTB53gDhRV0=;
+        b=PzPFLhXrn053PrK+Im4s20CBgdlwWdD5vf7c2qvmraHFMtcRNGOax3ZxrfVOJLsNi3
+         RJxiH4tXGWBYfSPw6+3I8vtZeTD9tB4tL0CWcferER8wbL3pZmfcEHByNB++kckMWtm1
+         II4sQzdAzkx/TuyjLqLbRum/n+kGKqk1HoLpww7xpOX4pesNCxdw87AVciQtgsL0JmzZ
+         xmvPJQu0b6mL3cjmfkbnKxZMnd2hgW6BydXPxjMO+te/8BKnN0g44Zl5h0htIrgf01KB
+         5ohsIvfvswNN96W6dWfQD6sl2Iq0UoM2C4aBYqAqPzwEO1SQ/4UmYLuhm+PIBFWs/e7p
+         L2SQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :in-reply-to:references:mime-version:content-transfer-encoding;
+        bh=EAM+t57qqYuwniU8bRaWennUhmMsaEkJJTB53gDhRV0=;
+        b=Shz/4ZIcs2eHXJcpaJQEO9tnJpU9DEZTExq+ZtmeeJzoo8VRUAkPFQcpfAzgE23nn1
+         dlOOWo2n+XnFqV+Xl8ZHHiyirXiEICBBa5DwjAl4w3GKKiYoMsVnvmwiJLIgGMA9ER6+
+         nokJIZwEAGzSw0RKAMJElivz6/TFKFsfXSv/5OMw91DMHcXpZRSPYXBeY8iNzgh82UsJ
+         0tAjQCzkOGpNz9sToXruanMG4CRoVRWlBm7Zu189PKkTMQ/s29q37W/PXnLVWYwCOKUN
+         TgSojQVEg40ER5/l39CZW6nVrIHzhlhWhl8kc+vwYf7EIC0kJ9SWYt6Rdrxz4gylcqpr
+         IhKA==
+X-Gm-Message-State: APjAAAW9TUFMuZULABqMlaH+ZpjkfOrv9s0tWRTZ5mhBI8GdL0B8yzhb
+        J6792m8AF3e6k8m3TuWwyUA=
+X-Google-Smtp-Source: APXvYqytiyMA527g+v36HgxoxNOILeUCUvgDIlxBt4nYEzP9HjFrZBhYtT/kswy2sO7/NmcFjIJFGg==
+X-Received: by 2002:a1c:f910:: with SMTP id x16mr7122619wmh.69.1567030729551;
+        Wed, 28 Aug 2019 15:18:49 -0700 (PDT)
+Received: from localhost.localdomain (ip5b4096c3.dynamic.kabel-deutschland.de. [91.64.150.195])
+        by smtp.gmail.com with ESMTPSA id 7sm411012wmj.46.2019.08.28.15.18.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 28 Aug 2019 15:18:48 -0700 (PDT)
+From:   Krzysztof Wilczynski <kw@linux.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sasha Levin <sashal@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hyperv@vger.kernel.org
+Subject: [PATCH v2] PCI: hv: Make functions only used locally static in pci-hyperv.c
+Date:   Thu, 29 Aug 2019 00:18:46 +0200
+Message-Id: <20190828221846.6672-1-kw@linux.com>
+X-Mailer: git-send-email 2.22.1
+In-Reply-To: <20190826154159.9005-1-kw@linux.com>
+References: <20190826154159.9005-1-kw@linux.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Functions hv_read_config_block(), hv_write_config_block()
+and hv_register_block_invalidate() are not used anywhere
+else and are local to drivers/pci/controller/pci-hyperv.c,
+and do not need to be in global scope, so make these static.
 
-Since pci_prg_resp_pasid_required() function has dependency on both
-PASID and PRI, define it only if both CONFIG_PCI_PRI and
-CONFIG_PCI_PASID config options are enabled.
+Resolve following compiler warning that can be seen when
+building with warnings enabled (W=1):
 
-Fixes: e5567f5f6762 ("PCI/ATS: Add pci_prg_resp_pasid_required()
-interface.")
-Signed-off-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+drivers/pci/controller/pci-hyperv.c:933:5: warning: no previous prototype for ‘hv_read_config_block’ [-Wmissing-prototypes]
+ int hv_read_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+     ^
+drivers/pci/controller/pci-hyperv.c:1013:5: warning: no previous prototype for ‘hv_write_config_block’ [-Wmissing-prototypes]
+ int hv_write_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+     ^
+drivers/pci/controller/pci-hyperv.c:1082:5: warning: no previous prototype for ‘hv_register_block_invalidate’ [-Wmissing-prototypes]
+ int hv_register_block_invalidate(struct pci_dev *pdev, void *context,
+     ^
+Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
 ---
- drivers/pci/ats.c       | 10 ++++++----
- include/linux/pci-ats.h | 12 +++++++++---
- 2 files changed, 15 insertions(+), 7 deletions(-)
+Changes in v2:
+  Update commit message to include compiler warning.
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index e18499243f84..cdd936d10f68 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -395,6 +395,8 @@ int pci_pasid_features(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_pasid_features);
- 
-+#ifdef CONFIG_PCI_PRI
-+
- /**
-  * pci_prg_resp_pasid_required - Return PRG Response PASID Required bit
-  *				 status.
-@@ -402,10 +404,8 @@ EXPORT_SYMBOL_GPL(pci_pasid_features);
+ drivers/pci/controller/pci-hyperv.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
+index f1f300218fab..c9642e429c2d 100644
+--- a/drivers/pci/controller/pci-hyperv.c
++++ b/drivers/pci/controller/pci-hyperv.c
+@@ -930,7 +930,7 @@ static void hv_pci_read_config_compl(void *context, struct pci_response *resp,
   *
-  * Returns 1 if PASID is required in PRG Response Message, 0 otherwise.
-  *
-- * Even though the PRG response PASID status is read from PRI Status
-- * Register, since this API will mainly be used by PASID users, this
-- * function is defined within #ifdef CONFIG_PCI_PASID instead of
-- * CONFIG_PCI_PRI.
-+ * Since this API has dependency on both PRI and PASID, protect it
-+ * with both CONFIG_PCI_PRI and CONFIG_PCI_PASID.
+  * Return: 0 on success, -errno on failure
   */
- int pci_prg_resp_pasid_required(struct pci_dev *pdev)
+-int hv_read_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
++static int hv_read_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+ 			 unsigned int block_id, unsigned int *bytes_returned)
  {
-@@ -425,6 +425,8 @@ int pci_prg_resp_pasid_required(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_prg_resp_pasid_required);
- 
-+#endif
-+
- #define PASID_NUMBER_SHIFT	8
- #define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
- /**
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 1ebb88e7c184..1a0bdaee2f32 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -40,7 +40,6 @@ void pci_disable_pasid(struct pci_dev *pdev);
- void pci_restore_pasid_state(struct pci_dev *pdev);
- int pci_pasid_features(struct pci_dev *pdev);
- int pci_max_pasids(struct pci_dev *pdev);
--int pci_prg_resp_pasid_required(struct pci_dev *pdev);
- 
- #else  /* CONFIG_PCI_PASID */
- 
-@@ -67,11 +66,18 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
- 	return -EINVAL;
- }
- 
-+#endif /* CONFIG_PCI_PASID */
-+
-+#if defined(CONFIG_PCI_PRI) && defined(CONFIG_PCI_PASID)
-+
-+int pci_prg_resp_pasid_required(struct pci_dev *pdev);
-+
-+#else /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
-+
- static inline int pci_prg_resp_pasid_required(struct pci_dev *pdev)
+ 	struct hv_pcibus_device *hbus =
+@@ -1010,7 +1010,7 @@ static void hv_pci_write_config_compl(void *context, struct pci_response *resp,
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-int hv_write_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
++static int hv_write_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+ 			  unsigned int block_id)
  {
- 	return 0;
- }
--#endif /* CONFIG_PCI_PASID */
--
-+#endif
- 
- #endif /* LINUX_PCI_ATS_H*/
+ 	struct hv_pcibus_device *hbus =
+@@ -1079,7 +1079,7 @@ int hv_write_config_block(struct pci_dev *pdev, void *buf, unsigned int len,
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-int hv_register_block_invalidate(struct pci_dev *pdev, void *context,
++static int hv_register_block_invalidate(struct pci_dev *pdev, void *context,
+ 				 void (*block_invalidate)(void *context,
+ 							  u64 block_mask))
+ {
 -- 
-2.21.0
+2.22.1
 
