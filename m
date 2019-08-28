@@ -2,80 +2,72 @@ Return-Path: <SRS0=6piv=WY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49248C3A5A1
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 20:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDDE4C3A5A1
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 21:04:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 197712339E
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 20:52:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E2A422DA7
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 21:04:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567025576;
-	bh=MxTUwvguZO0iDTfR/W0BUhqZMLEuD0P6DX4yPt254ss=;
+	s=default; t=1567026297;
+	bh=TJNgnj2hdoueFoeSJjtsLew01E0Lu+5GDGze89PUlkY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=irTVbBXNM0FgzuL8R1tUQjKs5gFy739S1mMzywWL/v9qwjAMy715gxvfRrhzFtL/b
-	 yVlIphD04jOxHrNhzNJ2FoUrKyeDQ/Wo/YdF2WDTS+24IVr+uy6a2PD964o7hk6GWS
-	 KHoYZpBdzVxTFgL+kGy7aoiaENhg0xZzL26MeZo4=
+	b=mujfADDBQf7RUYcLU+ENiq39dwQeUfxoqdg9tx5yVh9DwtKkbTBE+BAnWm3jC7mlv
+	 QjVYOfBknMI5jNVDn7O/5WkppM0gRmGnPpefN8K9DsS4qOYyZRI7/B/D8JKYLAOrRV
+	 A8Cy0ywk7MX6Wfhm5e/3x8O87RufvfbHkYdeo6wI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726713AbfH1Uwz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Aug 2019 16:52:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57942 "EHLO mail.kernel.org"
+        id S1726713AbfH1VE5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Aug 2019 17:04:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33864 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726618AbfH1Uwz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Aug 2019 16:52:55 -0400
-Received: from localhost (unknown [69.71.4.100])
+        id S1726583AbfH1VE5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Aug 2019 17:04:57 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1914F217F5;
-        Wed, 28 Aug 2019 20:52:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 802D522CF8;
+        Wed, 28 Aug 2019 21:04:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567025574;
-        bh=MxTUwvguZO0iDTfR/W0BUhqZMLEuD0P6DX4yPt254ss=;
+        s=default; t=1567026296;
+        bh=TJNgnj2hdoueFoeSJjtsLew01E0Lu+5GDGze89PUlkY=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=2owBKQd5EHl+vrpuDZl7Puk+Tsy+UUt72HaLYwdKYqk77pXKIwBikn+hizWKD9NGw
-         mj0h5qgs2oVfaDVovVOLOrNX6dHgnITZ2QtaHO9vzxVMkTgq3+5k0fi+HMeg66jRzX
-         y8vHGjBmjPkG2CDRdjVLGvaFvml1FdyYj7gS7iZ4=
-Date:   Wed, 28 Aug 2019 15:52:27 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Logan Gunthorpe <logang@deltatee.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 0/3] Cleanup resource_alignment parameter
-Message-ID: <20190828205227.GD7013@google.com>
-References: <20190822161013.5481-1-logang@deltatee.com>
+        b=MzGy1sXZcPVNgmIhe0pqXZhuLoece8Imu2jO8KK7xWN2c5Hda1tME0+f9U0J1bFKm
+         qfak7rd97WUqRunS0p52U6esPSwIWsHw8RIS9gUVYLjDs5xim2P30ac1oByQ9GdRsL
+         krAzA7QPaqpwHhkBpakRLYbsW3BBmkxYYDO/rLmY=
+Date:   Wed, 28 Aug 2019 23:04:53 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Heiner Kallweit <hkallweit1@gmail.com>
+Cc:     Frederick Lawler <fred@fredlawl.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v4 3/4] PCI/ASPM: add sysfs attributes for controlling
+ ASPM link states
+Message-ID: <20190828210453.GA27791@kroah.com>
+References: <3797de51-0135-07b6-9566-a1ce8cf3f24e@gmail.com>
+ <36db4d65-9a38-03aa-bad1-22b15ebb06c2@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190822161013.5481-1-logang@deltatee.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <36db4d65-9a38-03aa-bad1-22b15ebb06c2@gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Aug 22, 2019 at 10:10:10AM -0600, Logan Gunthorpe wrote:
-> As requested, this is a refresh of this series. I rebased it on v5.3-rc5
-> without any other changes.
+On Sat, Aug 24, 2019 at 05:41:27PM +0200, Heiner Kallweit wrote:
+> Background of this extension is a problem with the r8169 network driver.
+> Several combinations of board chipsets and network chip versions have
+> problems if ASPM is enabled, therefore we have to disable ASPM per default.
+> However especially on notebooks ASPM can provide significant power-saving,
+> therefore we want to give users the option to enable ASPM. With the new sysfs
+> attributes users can control which ASPM link-states are enabled/disabled.
 > 
-> This is a cleanup of the resource_alignment parameter after finding
-> an improved way to handle the static buffer for the disable_acs_redir
-> parameter. So this patchset allows us to drop a significant chunk
-> of static data.
-> 
-> Thanks,
-> 
-> Logan
-> 
-> --
-> 
-> Logan Gunthorpe (3):
->   PCI: Clean up resource_alignment parameter to not require static
->     buffer
->   PCI: Move pci_[get|set]_resource_alignment_param() into their callers
->   PCI: Force trailing new line to resource_alignment_param in sysfs
-> 
->  drivers/pci/pci.c | 65 +++++++++++++++++++++++++----------------------
->  1 file changed, 35 insertions(+), 30 deletions(-)
+> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 
-Applied to pci/misc for v5.4, thanks!
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
