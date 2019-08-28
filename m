@@ -7,137 +7,84 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 966E4C3A5A1
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 13:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBE05C3A5A1
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 14:14:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6937A2339E
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 13:53:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EDDA2189D
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 14:14:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Va6yPQwZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZMIM2nWG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726394AbfH1Nx1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Aug 2019 09:53:27 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:53795 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726368AbfH1Nx0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2019 09:53:26 -0400
-Received: by mail-wm1-f68.google.com with SMTP id 10so145750wmp.3;
-        Wed, 28 Aug 2019 06:53:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=plD+U4OvjrYOKzQ6oSYh9TJp58BExko+i26dUsMFbeg=;
-        b=Va6yPQwZ+88Bvnq4I3HEtLD3cD9u04oSgJCgRuznJEvMXVPKfJ7HkDxyRYJ55VNbR0
-         UQ7vkk9bF0R+zmiLb0D4/V8YyLYkD2/soBEWfZxLzn2UyzZsr+IOjAGv7mc7C2E7UZgb
-         eXCzjD+iU2yN/WLv1gSzaN7jCYD78pAz34IHdGYwWhzjVkIUryBqKxyjUU31QJjijfcy
-         +OtVMP3r6nK509N+eJUkoQ+wcMvycU+mE3AqcdONpfm73bsvhxy1fGYBLQeVlKZwTXQC
-         MCONnGZzLXV4/O5kIAeVT2O0pJU9o3qyJKn8Xl4ATKofhFTSSjpETwbOJ0ygMi3linXO
-         Tb9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=plD+U4OvjrYOKzQ6oSYh9TJp58BExko+i26dUsMFbeg=;
-        b=NNAi6Ez7J3Y39QzU7Vn6R96d8xl67HMDtfxenqiHxRDIR897bLuCP1243hYs3+afgJ
-         3zp0Znmw5oJS0jGPFXp25mVNcdOJgWfQcR7fpnt7X0gTuFar9FTFCoYzVFJcz8Fz9NEe
-         cPqQDE4K4McoplxlkyhPMNgAi4pKdSLWDVr6gatl5boNRly1Jw4FTrYqbrDtPz3eVvKB
-         Yd3QzErDX8aMr5UyFc1n2DObWxU1RxcWNfMdgyk/h+ClJXNzkkkm+CP72h0NyQtCKjT8
-         5wYGBdgEDmfVLNwiCbmp2H/aR2W3M8a1I+vj+IwpS3FVHdyOU6+5sTz7STeLmL4Gya3v
-         0IrQ==
-X-Gm-Message-State: APjAAAUK4jtwQRLfRYS/Zn956RynS5kyH9U68vEWvincEvWcT3jeE0Kv
-        I70g7vLdVV/ErtuZcZJ7ZLnqYMgc1bM9Og==
-X-Google-Smtp-Source: APXvYqzSIvLd0r1JejO7RzegjYLYXNJNBpoNkCrdhViUbUydhzpfXu5seZgNG09JGaJ5eQxktoFUpw==
-X-Received: by 2002:a05:600c:48b:: with SMTP id d11mr5180877wme.55.1567000404508;
-        Wed, 28 Aug 2019 06:53:24 -0700 (PDT)
-Received: from localhost.localdomain (ip5b4096c3.dynamic.kabel-deutschland.de. [91.64.150.195])
-        by smtp.gmail.com with ESMTPSA id f13sm624529wrq.3.2019.08.28.06.53.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 28 Aug 2019 06:53:23 -0700 (PDT)
-From:   Krzysztof Wilczynski <kw@linux.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Daniel J Blueman <daniel@numascale.com>, x86@kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] x86/PCI: Correct warnings about missing or incorrect SPDX license headers.
-Date:   Wed, 28 Aug 2019 15:53:22 +0200
-Message-Id: <20190828135322.10370-1-kw@linux.com>
-X-Mailer: git-send-email 2.22.1
-In-Reply-To: <20190819060624.17305-1-kw@linux.com>
-References: <20190819060624.17305-1-kw@linux.com>
+        id S1726341AbfH1OO4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Aug 2019 10:14:56 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:34094 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726315AbfH1OOz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2019 10:14:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=6ZfA2t0V1DsXTcYJTI/PW4o+4h9V1E2c8O8ixWWPKp4=; b=ZMIM2nWGQT7ao/o3bSPXDNhdXd
+        CCsYN6Sn11RqqUTEuIuAy+lZ9tJp7rrJbndUY1/HGuZyUUamoeTz6aHyT4BIT2n91cEedwlEhs1Zn
+        8OqW5mwR2iwa6CM68DzwYsRYjEOjlRRyl8Zh8yhTrdJmug+Jiq9tYqb6uQWhNc5+3ZlbfhLsdCxht
+        wGNvpYpUyWBSuhJoNvU5ONwHZOg36J7PIJbG0ziTH+4FJ4hUJdNsftcGWAREfKcBjbvy4xnluyh3n
+        HR14xELs8owXLAkCzYe/HvdaoVal7fi9WJu+Mx5wuyrBVkcDorVPqMYsttNJckrJvKosnRZidfoU4
+        DWwe3E0w==;
+Received: from [2001:4bb8:180:3f4c:863:2ead:e9d4:da9f] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
+        id 1i2yim-0000T7-Ay; Wed, 28 Aug 2019 14:14:52 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Keith Busch <kbusch@kernel.org>,
+        "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Cc:     x86@kernel.org, joro@8bytes.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, dwmw2@infradead.org,
+        iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/5] x86/pci: Remove an ifdef __KERNEL__ from pci.h
+Date:   Wed, 28 Aug 2019 16:14:39 +0200
+Message-Id: <20190828141443.5253-2-hch@lst.de>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190828141443.5253-1-hch@lst.de>
+References: <20190828141443.5253-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the missing "SPDX-License-Identifier" license header
-to the arch/x86/pci/numachip.c (use the GPL-2.0 identifier
-derived using the comment mentioning license from the
-top of the file), and remove license boilerplate as per
-a similar commit 8cfab3cf63cf ("PCI: Add SPDX GPL-2.0 to
-replace GPL v2 boilerplate").
+Non-UAPI headers can't be included by userspace, so remove the
+pointless ifdef.
 
-Correct existing SPDX license header in the files
-drivers/pci/controller/pcie-cadence.h and
-drivers/pci/controller/pcie-rockchip.h to use
-correct comment style as per the section 2 "Style"
-of the "Linux kernel licensing rules" (see:
-Documentation/process/license-rules.rst).
-
-Both changes will resolve the following checkpatch.pl
-script warning:
-
-WARNING: Missing or malformed SPDX-License-Identifier tag in line 1
-
-Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-Changes in v2:
-  Update wording and mention checkpatch.pl script warnings.
-  Add two C header files to which the fix also applies.
+ arch/x86/include/asm/pci.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
- arch/x86/pci/numachip.c                | 5 +----
- drivers/pci/controller/pcie-cadence.h  | 2 +-
- drivers/pci/controller/pcie-rockchip.h | 2 +-
- 3 files changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/arch/x86/pci/numachip.c b/arch/x86/pci/numachip.c
-index 2e565e65c893..01a085d9135a 100644
---- a/arch/x86/pci/numachip.c
-+++ b/arch/x86/pci/numachip.c
-@@ -1,8 +1,5 @@
-+// SPDX-License-Identifier: GPL-2.0
- /*
-- * This file is subject to the terms and conditions of the GNU General Public
-- * License.  See the file "COPYING" in the main directory of this archive
-- * for more details.
-- *
-  * Numascale NumaConnect-specific PCI code
-  *
-  * Copyright (C) 2012 Numascale AS. All rights reserved.
-diff --git a/drivers/pci/controller/pcie-cadence.h b/drivers/pci/controller/pcie-cadence.h
-index ae6bf2a2b3d3..f1cba3931b99 100644
---- a/drivers/pci/controller/pcie-cadence.h
-+++ b/drivers/pci/controller/pcie-cadence.h
-@@ -1,4 +1,4 @@
--// SPDX-License-Identifier: GPL-2.0
-+/* SPDX-License-Identifier: GPL-2.0 */
- // Copyright (c) 2017 Cadence
- // Cadence PCIe controller driver.
- // Author: Cyrille Pitchen <cyrille.pitchen@free-electrons.com>
-diff --git a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
-index 8e87a059ce73..53e4f9e59624 100644
---- a/drivers/pci/controller/pcie-rockchip.h
-+++ b/drivers/pci/controller/pcie-rockchip.h
-@@ -1,4 +1,4 @@
--// SPDX-License-Identifier: GPL-2.0+
-+/* SPDX-License-Identifier: GPL-2.0+ */
- /*
-  * Rockchip AXI PCIe controller driver
-  *
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index e662f987dfa2..6fa846920f5f 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -12,8 +12,6 @@
+ #include <asm/pat.h>
+ #include <asm/x86_init.h>
+ 
+-#ifdef __KERNEL__
+-
+ struct pci_sysdata {
+ 	int		domain;		/* PCI domain */
+ 	int		node;		/* NUMA node */
+@@ -118,7 +116,6 @@ void native_restore_msi_irqs(struct pci_dev *dev);
+ #define native_setup_msi_irqs		NULL
+ #define native_teardown_msi_irq		NULL
+ #endif
+-#endif  /* __KERNEL__ */
+ 
+ #ifdef CONFIG_X86_64
+ #include <asm/pci_64.h>
 -- 
-2.22.1
+2.20.1
 
