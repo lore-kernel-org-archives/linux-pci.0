@@ -2,120 +2,103 @@ Return-Path: <SRS0=6piv=WY=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C066C3A5A1
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 13:06:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 834C8C3A5A1
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 13:15:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 012FA233A1
-	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 13:06:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1566997601;
-	bh=lAavAO3u2s7xbBO8bMVVg5vr1RXGF8RDf50uj1HCBrE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=A5WxYbCnPFyJdepFY4Ok2HkDotqFwD12vka21B8OPKUXs77W/FnmnZeAtoClnF81m
-	 EGxlRJLqDQGmsnvHFEcMNwkJs+RttWFH0947qhYmJgaIBsgncmqyKZJMwbscphsYX2
-	 i/ijrIcf60FrLBh4xzpP6NfNMjlTIpJ57ld+zBTY=
+	by mail.kernel.org (Postfix) with ESMTP id 58E3622CED
+	for <linux-pci@archiver.kernel.org>; Wed, 28 Aug 2019 13:15:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="bNPPEbcr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726395AbfH1NGk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 28 Aug 2019 09:06:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726382AbfH1NGk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Aug 2019 09:06:40 -0400
-Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1D68E2339E;
-        Wed, 28 Aug 2019 13:06:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1566997599;
-        bh=lAavAO3u2s7xbBO8bMVVg5vr1RXGF8RDf50uj1HCBrE=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=h0i96Urizaj+kGQP9kbnIpDXRLVGD+u+UH2BZ0cUrGzg4ypdA8rGKCIniUjOHeh31
-         YbaZgP8fLY81Uz/p3wB3xqS4ILTfVw1ZVVkqxtQTF3I3L6Gxx9YkEXDzr6JoZLc5PV
-         flTPyqoZxQPNQGBLeZDrWp001ktRLMei4Mt6XRTo=
-Date:   Wed, 28 Aug 2019 08:06:38 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Heiner Kallweit <hkallweit1@gmail.com>
-Cc:     Frederick Lawler <fred@fredlawl.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Rajat Jain <rajatja@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 0/4] PCI/ASPM: add sysfs attributes for controlling
- ASPM
-Message-ID: <20190828130638.GB4550@google.com>
-References: <3797de51-0135-07b6-9566-a1ce8cf3f24e@gmail.com>
- <20190827233541.GL9987@google.com>
- <4eace423-8727-2957-79ab-bf954a050e20@gmail.com>
- <acfcbedc-4019-95b8-71a3-4fb5d1185a92@gmail.com>
+        id S1726475AbfH1NPQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 28 Aug 2019 09:15:16 -0400
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:16239 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726394AbfH1NPP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Aug 2019 09:15:15 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d667e650000>; Wed, 28 Aug 2019 06:15:17 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Wed, 28 Aug 2019 06:15:15 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Wed, 28 Aug 2019 06:15:15 -0700
+Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 28 Aug
+ 2019 13:15:14 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Wed, 28 Aug 2019 13:15:14 +0000
+Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5d667e5e0000>; Wed, 28 Aug 2019 06:15:14 -0700
+From:   Vidya Sagar <vidyas@nvidia.com>
+To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>, <thierry.reding@gmail.com>,
+        <jonathanh@nvidia.com>, <andrew.murray@arm.com>
+CC:     <kishon@ti.com>, <gustavo.pimentel@synopsys.com>,
+        <digetx@gmail.com>, <mperttunen@nvidia.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
+        <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
+Subject: [PATCH V2 0/6] PCI: tegra: Enable PCIe C5 controller of Tegra194 in p2972-0000 platform
+Date:   Wed, 28 Aug 2019 18:44:59 +0530
+Message-ID: <20190828131505.28475-1-vidyas@nvidia.com>
+X-Mailer: git-send-email 2.17.1
+X-NVConfidentiality: public
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <acfcbedc-4019-95b8-71a3-4fb5d1185a92@gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1566998117; bh=6gE8JO5jHpwhTw643om2gL+eYxt+1gqjrcc+vk+Bz10=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         X-NVConfidentiality:MIME-Version:Content-Type;
+        b=bNPPEbcr+r+cMKTDSkKzK3gEmx4poL2ucpuWpuvcSkyCpliAvdeHrpF7CZCU93/Gk
+         uNNAyIh++t4R+FhG6gtUGfEdQebatulERdWJgs/gXLzVas5YZ+WKyPB7ic0qalJf0r
+         Ajk1uHov8kWYYmTZTXO1eKBtuXqRu7bGT6GxLF6v4125OboMyt8wbRCsaF8MhDdN8A
+         yYEABiCfN+R7vPXJCJ4tHtKDo/sxtfeXyMR5xuutDSM7cnd5ber/qpl0OermQfS14V
+         JA7wX9USzmLh2pcWZZC3zTLHPjd6rx4SF3kLV0Vd1LSWJzLHwRDCBjhvaTte6km5V7
+         gbe/mLMYwCnLw==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 28, 2019 at 07:48:18AM +0200, Heiner Kallweit wrote:
-> On 28.08.2019 07:40, Heiner Kallweit wrote:
-> > On 28.08.2019 01:35, Bjorn Helgaas wrote:
-> >> On Sat, Aug 24, 2019 at 05:39:37PM +0200, Heiner Kallweit wrote:
-> >>> Background of this extension is a problem with the r8169 network driver.
-> >>> Several combinations of board chipsets and network chip versions have
-> >>> problems if ASPM is enabled, therefore we have to disable ASPM per
-> >>> default. However especially on notebooks ASPM can provide significant
-> >>> power-saving, therefore we want to give users the option to enable
-> >>> ASPM. With the new sysfs attributes users can control which ASPM
-> >>> link-states are disabled.
-> >>>
-> >>> v2:
-> >>> - use a dedicated sysfs attribute per link state
-> >>> - allow separate control of ASPM and PCI PM L1 sub-states
-> >>>
-> >>> v3:
-> >>> - patch 3: statically allocate the attribute group
-> >>> - patch 3: replace snprintf with printf
-> >>> - add patch 4
-> >>>
-> >>> v4:
-> >>> - patch 3: add call to sysfs_update_group because is_visible callback
-> >>>            returns false always at file creation time
-> >>> - patch 3: simplify code a little
-> >>>
-> >>> Heiner Kallweit (4):
-> >>>   PCI/ASPM: add L1 sub-state support to pci_disable_link_state
-> >>>   PCI/ASPM: allow to re-enable Clock PM
-> >>>   PCI/ASPM: add sysfs attributes for controlling ASPM link states
-> >>>   PCI/ASPM: remove Kconfig option PCIEASPM_DEBUG and related code
-> >>>
-> >>>  Documentation/ABI/testing/sysfs-bus-pci |  13 ++
-> >>>  drivers/pci/pci-sysfs.c                 |  10 +-
-> >>>  drivers/pci/pci.h                       |  12 +-
-> >>>  drivers/pci/pcie/Kconfig                |   7 -
-> >>>  drivers/pci/pcie/aspm.c                 | 236 ++++++++++++++++--------
-> >>>  include/linux/pci-aspm.h                |  10 +-
-> >>>  6 files changed, 195 insertions(+), 93 deletions(-)
-> >>
-> >> I can fix this if you don't get to it, but this doesn't apply cleanly
-> >> to either my "master" branch (v5.3-rc1) or my "next" branch.  I always
-> >> prefer series based on my "master" branch when possible.
-> >>
-> > I based it on top of linux-next, can rebase it to your master branch.
+This patch series enables Tegra194's C5 controller which owns x16 slot in
+p2972-0000 platform. C5 controller's PERST# and CLKREQ# are not configured as
+output and bi-directional signals by default and hence they need to be
+configured explicitly. Also, x16 slot's 3.3V and 12V supplies are controlled
+through GPIOs and hence they need to be enabled through regulator framework.
+This patch series adds required infrastructural support to address both the
+aforementioned requirements.
+Testing done on p2972-0000 platform
+- Able to enumerate devices connected to x16 slot (owned by C5 controller)
+- Enumerated device's functionality verified
+- Suspend-Resume sequence is verified with device connected to x16 slot
 
-That'd be great.  linux-next is a moving target, so I never apply
-patches based directly on that.
+V2:
+* Changed the order of patches in the series for easy merging
+* Addressed review comments from Thierry Reding and Andrew Murray
 
-> Ah, one more point:
-> This series has a dependency on Mika Westerberg's
-> "PCI: Make pcie_downstream_port() available outside of access.c"
-> that is sitting in your inbox. How do you want to deal with this?
+Vidya Sagar (6):
+  dt-bindings: PCI: tegra: Add sideband pins configuration entries
+  dt-bindings: PCI: tegra: Add PCIe slot supplies regulator entries
+  PCI: tegra: Add support to configure sideband pins
+  PCI: tegra: Add support to enable slot regulators
+  arm64: tegra: Add configuration for PCIe C5 sideband signals
+  arm64: tegra: Add PCIe slot supply information in p2972-0000 platform
 
-Just mention the dependency in the cover letter and I'll take care of
-it.
+ .../bindings/pci/nvidia,tegra194-pcie.txt     | 16 ++++
+ .../arm64/boot/dts/nvidia/tegra194-p2888.dtsi | 24 +++++
+ .../boot/dts/nvidia/tegra194-p2972-0000.dts   |  4 +-
+ arch/arm64/boot/dts/nvidia/tegra194.dtsi      | 38 +++++++-
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 91 ++++++++++++++++++-
+ 5 files changed, 169 insertions(+), 4 deletions(-)
 
-Thanks!
+-- 
+2.17.1
+
