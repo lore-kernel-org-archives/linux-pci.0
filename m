@@ -6,32 +6,32 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8C74C3A59F
-	for <linux-pci@archiver.kernel.org>; Sat, 31 Aug 2019 06:58:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A19C3A5A6
+	for <linux-pci@archiver.kernel.org>; Sat, 31 Aug 2019 12:46:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2F532343A
-	for <linux-pci@archiver.kernel.org>; Sat, 31 Aug 2019 06:58:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52BAD2342C
+	for <linux-pci@archiver.kernel.org>; Sat, 31 Aug 2019 12:46:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726130AbfHaG6h (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 31 Aug 2019 02:58:37 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:50750 "EHLO huawei.com"
+        id S1727833AbfHaMq0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 31 Aug 2019 08:46:26 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5262 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725903AbfHaG6h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 31 Aug 2019 02:58:37 -0400
-Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 43B8B21F62B63874339A;
-        Sat, 31 Aug 2019 14:58:35 +0800 (CST)
+        id S1727672AbfHaMq0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 31 Aug 2019 08:46:26 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 87588B85DC32BEBC8C29;
+        Sat, 31 Aug 2019 20:46:24 +0800 (CST)
 Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
- 14.3.439.0; Sat, 31 Aug 2019 14:58:28 +0800
-From:   Wei Yongjun <weiyongjun1@huawei.com>
+ DGGEMS407-HUB.china.huawei.com (10.3.19.207) with Microsoft SMTP Server id
+ 14.3.439.0; Sat, 31 Aug 2019 20:46:13 +0800
+From:   YueHaibing <yuehaibing@huawei.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Logan Gunthorpe <logang@deltatee.com>
-CC:     Wei Yongjun <weiyongjun1@huawei.com>, <linux-pci@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>
-Subject: [PATCH -next] PCI: Use GFP_ATOMIC under spin lock
-Date:   Sat, 31 Aug 2019 07:01:47 +0000
-Message-ID: <20190831070147.25607-1-weiyongjun1@huawei.com>
+CC:     YueHaibing <yuehaibing@huawei.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
+Subject: [PATCH -next] PCI: Use GFP_ATOMIC in resource_alignment_store()
+Date:   Sat, 31 Aug 2019 12:49:32 +0000
+Message-ID: <20190831124932.18759-1-yuehaibing@huawei.com>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Type:   text/plain; charset=US-ASCII
@@ -43,10 +43,11 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-A spin lock is taken here so we should use GFP_ATOMIC.
+When allocating memory, the GFP_KERNEL cannot be used during the
+spin_lock period. It may cause scheduling when holding spin_lock.
 
-Fixes: 41b5ef225daa ("PCI: Clean up resource_alignment parameter to not require static buffer")
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Fixes: f13755318675 ("PCI: Move pci_[get|set]_resource_alignment_param() into their callers")
+Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 ---
  drivers/pci/pci.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
