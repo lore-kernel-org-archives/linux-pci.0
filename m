@@ -2,31 +2,32 @@ Return-Path: <SRS0=886L=W5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A264C3A59B
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 03:27:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 766B6C3A59B
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 03:28:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDBA122D6D
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 03:27:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 534282184D
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 03:28:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729259AbfIBD1i (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 1 Sep 2019 23:27:38 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:47644 "EHLO inva021.nxp.com"
+        id S1729425AbfIBD16 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 1 Sep 2019 23:27:58 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:33086 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729239AbfIBD1h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 1 Sep 2019 23:27:37 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id F18AD20067B;
-        Mon,  2 Sep 2019 05:27:35 +0200 (CEST)
+        id S1729422AbfIBD15 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 1 Sep 2019 23:27:57 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id A56901A063F;
+        Mon,  2 Sep 2019 05:27:55 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 739B020067A;
-        Mon,  2 Sep 2019 05:27:27 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id EB04B1A0006;
+        Mon,  2 Sep 2019 05:27:46 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id CC7B0402B7;
-        Mon,  2 Sep 2019 11:27:16 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id AC363402B7;
+        Mon,  2 Sep 2019 11:27:36 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org,
         leoyang.li@nxp.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
@@ -37,43 +38,43 @@ To:     robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org,
         linuxppc-dev@lists.ozlabs.org
 Cc:     arnd@arndb.de, gregkh@linuxfoundation.org, zhiqiang.hou@nxp.com,
         Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH v3 00/11] *** SUBJECT HERE ***
-Date:   Mon,  2 Sep 2019 11:17:05 +0800
-Message-Id: <20190902031716.43195-1-xiaowei.bao@nxp.com>
+Subject: [PATCH v3 11/11] misc: pci_endpoint_test: Add LS1088a in pci_device_id table
+Date:   Mon,  2 Sep 2019 11:17:16 +0800
+Message-Id: <20190902031716.43195-12-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.9.5
+In-Reply-To: <20190902031716.43195-1-xiaowei.bao@nxp.com>
+References: <20190902031716.43195-1-xiaowei.bao@nxp.com>
 X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-*** BLURB HERE ***
+Add LS1088a in pci_device_id table so that pci-epf-test can be used
+for testing PCIe EP in LS1088a.
 
-Xiaowei Bao (11):
-  PCI: designware-ep: Add multiple PFs support for DWC
-  PCI: designware-ep: Add the doorbell mode of MSI-X in EP mode
-  PCI: designware-ep: Move the function of getting MSI capability
-    forward
-  PCI: designware-ep: Modify MSI and MSIX CAP way of finding
-  dt-bindings: pci: layerscape-pci: add compatible strings for ls1088a
-    and ls2088a
-  PCI: layerscape: Fix some format issue of the code
-  PCI: layerscape: Modify the way of getting capability with different
-    PEX
-  PCI: layerscape: Modify the MSIX to the doorbell mode
-  PCI: layerscape: Add EP mode support for ls1088a and ls2088a
-  arm64: dts: layerscape: Add PCIe EP node for ls1088a
-  misc: pci_endpoint_test: Add LS1088a in pci_device_id table
+Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+---
+v2:
+ - No change.
+v3:
+ - No change.
+ 
+ drivers/misc/pci_endpoint_test.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- .../devicetree/bindings/pci/layerscape-pci.txt     |   4 +-
- arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi     |  31 +++
- drivers/misc/pci_endpoint_test.c                   |   1 +
- drivers/pci/controller/dwc/pci-layerscape-ep.c     | 100 ++++++--
- drivers/pci/controller/dwc/pcie-designware-ep.c    | 255 +++++++++++++++++----
- drivers/pci/controller/dwc/pcie-designware.c       |  59 +++--
- drivers/pci/controller/dwc/pcie-designware.h       |  48 +++-
- 7 files changed, 404 insertions(+), 94 deletions(-)
-
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 6e208a0..d531951 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -793,6 +793,7 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x81c0) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, 0x80c0) },
+ 	{ PCI_DEVICE_DATA(SYNOPSYS, EDDA, NULL) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM654),
+ 	  .driver_data = (kernel_ulong_t)&am654_data
 -- 
 2.9.5
 
