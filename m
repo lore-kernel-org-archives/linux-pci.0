@@ -4,27 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B29F2C3A59E
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 10:40:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4364C3A5A7
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 10:41:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B1B6217D7
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 10:40:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DCB8217F4
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Sep 2019 10:41:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730021AbfIBKkN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Sep 2019 06:40:13 -0400
-Received: from foss.arm.com ([217.140.110.172]:51832 "EHLO foss.arm.com"
+        id S1730013AbfIBKlM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Sep 2019 06:41:12 -0400
+Received: from foss.arm.com ([217.140.110.172]:51862 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727951AbfIBKkN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 2 Sep 2019 06:40:13 -0400
+        id S1730233AbfIBKlL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 2 Sep 2019 06:41:11 -0400
 Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 9EB6028;
-        Mon,  2 Sep 2019 03:40:12 -0700 (PDT)
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 123DC28;
+        Mon,  2 Sep 2019 03:41:11 -0700 (PDT)
 Received: from localhost (unknown [10.37.6.20])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id E197F3F246;
-        Mon,  2 Sep 2019 03:40:11 -0700 (PDT)
-Date:   Mon, 2 Sep 2019 11:40:10 +0100
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 563FF3F246;
+        Mon,  2 Sep 2019 03:41:10 -0700 (PDT)
+Date:   Mon, 2 Sep 2019 11:41:08 +0100
 From:   Andrew Murray <andrew.murray@arm.com>
 To:     Vidya Sagar <vidyas@nvidia.com>
 Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com, robh+dt@kernel.org,
@@ -34,24 +34,25 @@ Cc:     lorenzo.pieralisi@arm.com, bhelgaas@google.com, robh+dt@kernel.org,
         devicetree@vger.kernel.org, linux-tegra@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         kthota@nvidia.com, mmaddireddy@nvidia.com, sagar.tv@gmail.com
-Subject: Re: [PATCH V3 1/6] dt-bindings: PCI: tegra: Add sideband pins
- configuration entries
-Message-ID: <20190902104009.GB9720@e119886-lin.cambridge.arm.com>
+Subject: Re: [PATCH V3 2/6] dt-bindings: PCI: tegra: Add PCIe slot supplies
+ regulator entries
+Message-ID: <20190902104108.GC9720@e119886-lin.cambridge.arm.com>
 References: <20190828172850.19871-1-vidyas@nvidia.com>
- <20190828172850.19871-2-vidyas@nvidia.com>
+ <20190828172850.19871-3-vidyas@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190828172850.19871-2-vidyas@nvidia.com>
+In-Reply-To: <20190828172850.19871-3-vidyas@nvidia.com>
 User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Aug 28, 2019 at 10:58:45PM +0530, Vidya Sagar wrote:
-> Add optional bindings "pinctrl-names" and "pinctrl-0" to describe pin
-> configuration information of a particular PCIe controller.
+On Wed, Aug 28, 2019 at 10:58:46PM +0530, Vidya Sagar wrote:
+> Add optional bindings "vpcie3v3-supply" and "vpcie12v-supply" to describe
+> regulators of a PCIe slot's supplies 3.3V and 12V provided the platform
+> is designed to have regulator controlled slot supplies.
 > 
 > Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
 
@@ -68,31 +69,31 @@ Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 >  1 file changed, 8 insertions(+)
 > 
 > diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-> index 674e5adb2895..0ac1b867ac24 100644
+> index 0ac1b867ac24..b739f92da58e 100644
 > --- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
 > +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
-> @@ -83,6 +83,11 @@ Required properties:
->  - vddio-pex-ctl-supply: Regulator supply for PCIe side band signals
+> @@ -104,6 +104,12 @@ Optional properties:
+>     specified in microseconds
+>  - nvidia,aspm-l0s-entrance-latency-us: ASPM L0s entrance latency to be
+>     specified in microseconds
+> +- vpcie3v3-supply: A phandle to the regulator node that supplies 3.3V to the slot
+> +  if the platform has one such slot. (Ex:- x16 slot owned by C5 controller
+> +  in p2972-0000 platform).
+> +- vpcie12v-supply: A phandle to the regulator node that supplies 12V to the slot
+> +  if the platform has one such slot. (Ex:- x16 slot owned by C5 controller
+> +  in p2972-0000 platform).
 >  
->  Optional properties:
-> +- pinctrl-names: A list of pinctrl state names.
-> +  It is mandatory for C5 controller and optional for other controllers.
-> +  - "default": Configures PCIe I/O for proper operation.
-> +- pinctrl-0: phandle for the 'default' state of pin configuration.
-> +  It is mandatory for C5 controller and optional for other controllers.
->  - supports-clkreq: Refer to Documentation/devicetree/bindings/pci/pci.txt
->  - nvidia,update-fc-fixup: This is a boolean property and needs to be present to
->      improve performance when a platform is designed in such a way that it
-> @@ -120,6 +125,9 @@ Tegra194:
->  		num-lanes = <8>;
->  		linux,pci-domain = <0>;
+>  Examples:
+>  =========
+> @@ -156,6 +162,8 @@ Tegra194:
+>  			  0xc2000000 0x18 0x00000000 0x18 0x00000000 0x4 0x00000000>;  /* prefetchable memory (16GB) */
 >  
-> +		pinctrl-names = "default";
-> +		pinctrl-0 = <&pex_rst_c5_out_state>, <&clkreq_c5_bi_dir_state>;
-> +
->  		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_0>;
->  		clock-names = "core";
+>  		vddio-pex-ctl-supply = <&vdd_1v8ao>;
+> +		vpcie3v3-supply = <&vdd_3v3_pcie>;
+> +		vpcie12v-supply = <&vdd_12v_pcie>;
 >  
+>  		phys = <&p2u_hsio_2>, <&p2u_hsio_3>, <&p2u_hsio_4>,
+>  		       <&p2u_hsio_5>;
 > -- 
 > 2.17.1
 > 
