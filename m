@@ -2,102 +2,67 @@ Return-Path: <SRS0=pntK=W6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D64BC3A5A5
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 12:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C520BC3A5A2
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 13:14:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0160723402
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 12:53:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DCD52053B
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 13:14:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dGHwRhNc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jeFvzny2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728860AbfICMxO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Sep 2019 08:53:14 -0400
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:38565 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729255AbfICMxO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2019 08:53:14 -0400
-Received: by mail-lj1-f196.google.com with SMTP id h3so9060845ljb.5;
-        Tue, 03 Sep 2019 05:53:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SEZthYw524yVcJR/0nWXghYNjoOOpe+Twe/N3MC7BsU=;
-        b=dGHwRhNcCRm2RuYWrzGQbdU0QOFB6cskl4jxwYgbQUSJKWCB7a0Yh5i6KQNYUGD3k9
-         CrPcANF1TKqyqFbRuEWiRz3r/MhDhfGLYnNwOccAuoDBtA7s3hCzWZiWw9op9Wwmh5Aw
-         cMeZTzFC7Ya1VV9CdqdjswusVnnldfaJFkPJQ4xAh6T5oySe0xQL93jte/krorO8J1Xh
-         5wdd5lQ8nq6ptFyMdfkMaX6JjaNPngcUts1j2wGlsrQVKf2XfrSpeVN5PBI0+CdPHcOb
-         dJV4EhK7MggwWmq2OOmDZqz+Y1gc6KtNEfTYVoiPknkAGF2gPijh2v/eoIAH5NghAZii
-         /cYw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SEZthYw524yVcJR/0nWXghYNjoOOpe+Twe/N3MC7BsU=;
-        b=OhGUe9hGHMoRR5sc/RqJAH47M1uiDjW9OOT8W7IzGKuCN7jAgUlgcVfXmydaboKsQz
-         rLGxYDIpYtPS51Y6+Gn9nXZnY5ufCpQqTyIfTNiFnTBwCWnc4StTk8ak0J2sARH6ezum
-         RTfM3a8ircq9ZFCsIGdoh8tAVIKnKimoVOvHjbXAxT6ebR3cR8d1pJKlknHSDdyhg05i
-         Htshkd6y220KXLTPiHI16MqzdhKX7pPknuVgCVZnRNLZ9szckxhX7+4H90APLJPvVPxL
-         FVbGqRe1DhmgaXIUlcidVj3N2bdiqekyizlKEK8ID2bLc74VDs9geCsqJD8UuGU+IbPa
-         etmw==
-X-Gm-Message-State: APjAAAURBxTG2g8mYk/3jkzBIcwITUnqYtgq0G2etyzYMXRTP2KxvG7V
-        5WmiNxJXMtCqm3bvqiWaML8=
-X-Google-Smtp-Source: APXvYqxX8GaR3Tgn3fK7mMSvyl0/rvSNlrXhvq24Tmm6N0Z4610MsOOhUJdJdbGb8S88MQu7J1iu5g==
-X-Received: by 2002:a2e:9dc7:: with SMTP id x7mr4875440ljj.189.1567515191984;
-        Tue, 03 Sep 2019 05:53:11 -0700 (PDT)
-Received: from SKHMSE-04.hynixad.com ([86.57.146.226])
-        by smtp.gmail.com with ESMTPSA id k6sm246364lja.78.2019.09.03.05.53.11
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 03 Sep 2019 05:53:11 -0700 (PDT)
-From:   Andrei Leonvikov <andreil499@gmail.com>
-X-Google-Original-From: Andrei Leonvikov
-To:     bhelgaas@google.com
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Andrei Leonchikov <andreil499@gmail.com>
-Subject: [PATCH 1/1] Fix ARI enabling for a NVME devices
-Date:   Tue,  3 Sep 2019 12:53:15 +0000
-Message-Id: <20190903125315.10349-1-andreil499@gmail.com>
-X-Mailer: git-send-email 2.21.0
+        id S1728576AbfICNOS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Sep 2019 09:14:18 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:56926 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728571AbfICNOR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2019 09:14:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=6h394cWq1+4srtB43ScQN+6skk/Nc2LDPA6V/gdTlrs=; b=jeFvzny2fL/AzCDPmn9DLAhqH
+        hYdFmRjfm73A6y5ti7DfnB1GKdxfB6d7JIcX9XTV/ify68EeJsyw9OOswNnXv5s3ZQXTFzzAHkdH7
+        XlGntZAGI/K5u4wjBmWmqv3mAV05XgKr0N9xeckACY6KUXXF7eTdnWrPpFfcoMY9PjZ/CadKyeNhx
+        olRNL+4ey/qoWliwc65DtCbX/COSvbdKRL2HBeMIXByh1OSt02GayGxqf9aEB7McTJiJct3sFvdPY
+        oCo9rdmSmvSzFgn0lTsFuiGUu/amUw+45mXgtxT6qNwIbOfe4WopDgk1zUSiOxiLoiirl2a5gQD2q
+        k4nGC7qHw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i58dU-0007MJ-Rz; Tue, 03 Sep 2019 13:14:16 +0000
+Date:   Tue, 3 Sep 2019 06:14:16 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Andrei Leonvikov <andreil499@gmail.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] Fix ARI enabling for a NVME devices
+Message-ID: <20190903131416.GA26756@infradead.org>
+References: <20190903125315.10349-1-andreil499@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190903125315.10349-1-andreil499@gmail.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Andrei Leonchikov <andreil499@gmail.com>
+On Tue, Sep 03, 2019 at 12:53:15PM +0000, Andrei Leonvikov wrote:
+> +	if ((dev->driver != NULL) && (strncmp(dev->driver->name, "nvme", 4) == 0)) {
+> +		// for NVME device this field always zero, but ARI can be enabled
+> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+> +		if (!(cap & PCI_EXP_DEVCAP2_ARI))
+> +			return;
+> +	}
 
-Signed-off-by: Andrei Leonchikov <andreil499@gmail.com>
----
- drivers/pci/pci.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+Besides the missing patch description, all the obvious style issues, and
+the fact that you can't just check a driver name a here:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 1b27b5af3..ed5f0888c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3149,9 +3149,12 @@ void pci_configure_ari(struct pci_dev *dev)
- 	if (!bridge)
- 		return;
- 
--	pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
--	if (!(cap & PCI_EXP_DEVCAP2_ARI))
--		return;
-+	if ((dev->driver != NULL) && (strncmp(dev->driver->name, "nvme", 4) == 0)) {
-+		// for NVME device this field always zero, but ARI can be enabled
-+		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-+		if (!(cap & PCI_EXP_DEVCAP2_ARI))
-+			return;
-+	}
- 
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
- 		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
--- 
-2.21.0
-
+There are plenty NVMe drives that support the ARI capability, and I
+don't know of any standard saying nvme device should be treated special.
