@@ -2,59 +2,75 @@ Return-Path: <SRS0=pntK=W6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E01A1C3A5A2
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 11:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA1BC41514
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 11:31:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFDBC2341F
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 11:11:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6952322CF8
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 11:31:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rxQ0A7gL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728883AbfICLKv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Sep 2019 07:10:51 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:42337 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728838AbfICLKv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2019 07:10:51 -0400
-Received: by mail-wr1-f67.google.com with SMTP id b16so16991381wrq.9;
-        Tue, 03 Sep 2019 04:10:49 -0700 (PDT)
+        id S1727005AbfICLbF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Sep 2019 07:31:05 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:40188 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726631AbfICLbE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2019 07:31:04 -0400
+Received: by mail-wm1-f66.google.com with SMTP id t9so17802760wmi.5;
+        Tue, 03 Sep 2019 04:31:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=2Ekc0W7zJk5w+9GqjfFzhlAJ4FiN+oEvkKnq/TUY/UA=;
+        b=rxQ0A7gL/rvUTRgFS/x6Jhz66KR/9EtqdUj00Gi6qx2X2kvUeehgUkd8+p67o1zAdh
+         jhHPTILE48XYrnwg8UBBO258FnM17/u/jy7Djy7SpVAb0P8pFAoTW1qOfpfAwfNjhJAT
+         DgMvezl32n1VEXVXQNQbjeAq4GqCIpmC++6kN/xbkwj+u+PUgbKIgQ1Llm24sLydd5ao
+         LKeszXIV4Hr0QQP3BUctE8YxTL4jz9rRJTA4f8AjNqEOacNNW1CVAeZAN2slkCI5Hcqh
+         2/OS+iB6IzU6RSZYWkyMRuB5kD1XX6OEaiVdFvsFPUttT5lL/m20kyhe/Hpi4gYMB5ti
+         fqDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=uNN831oAcxJIf6qZK0bKvNkU4fX+CR0u9Z6WK9p3j/Y=;
-        b=sq8N1Fha0022AHVDkqIwtk3foG4WLpFJSILS/jijJ4bzZ1+w8SL3D9TITuXQgJeWwu
-         Cf7+Wyk1eFDEGDPYIc0uOQ3dQvdGiz0uOMq0BJ0lHhTIaEycBSZW5FHx6naHjNDUCFGE
-         KP2dhDQhvRNoS75Zdm7Ee1lmCkKKP+iY9BQpGEnRPiVpwjKhyS7O2ZwwX4REYGi+3N5u
-         qLfL0cxNvrUb3KV94DpNRplBSXiYf8TpYbx/Lo/MhPMBA0m9RiwIEufNNn3Fi8FleN2F
-         0g6lNC01rTgYAKaXf25FISBMLCEem4Aa/2V06MC+kdqC6NMc4+eGt74orcwRwpDvrAgX
-         zChg==
-X-Gm-Message-State: APjAAAUdyhsK1NaxjjFpfdiSDfABYXobK4JgeVyPmwxr+tOlVbm18+7W
-        eo5q+23K8vEsEM7BxtcwqBw=
-X-Google-Smtp-Source: APXvYqzNyGzht6qwN8mEr0ZTZC6Gb/u9QgAk9j8A7nsnpaqmaiNK2LPY8hG+J+EtpYpFhNWCd2fLyQ==
-X-Received: by 2002:adf:ee4a:: with SMTP id w10mr27197684wro.138.1567509049162;
-        Tue, 03 Sep 2019 04:10:49 -0700 (PDT)
-Received: from black.home (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id w12sm4363572wrg.47.2019.09.03.04.10.47
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :in-reply-to:references:mime-version:content-transfer-encoding;
+        bh=2Ekc0W7zJk5w+9GqjfFzhlAJ4FiN+oEvkKnq/TUY/UA=;
+        b=tDxBYroz5O57qM5WaSrjNVg1DVHNtNoxn4coX1hza0V+YMxqRBI+1jUNy1WRa8tAy5
+         JJOy1tK3MQ4uisSzvX3K4QBSxMWbTbqsmdRctHGbRCOv53fyMM+1JCqkz+BnrVzGstX3
+         WTTul8zMefWMMcYnSUWbvaexcRl+EBzNf5GSK5dOX3pNHG2E2ZkBhbqKXbzpdzDiUGxV
+         AVp4E/xKMZM5KNZi9lO/Qb5UOvedjWFAhrqmAXKjvb2RU77aj5R+jPtTsrqW6B8eCSZt
+         nqlnIXfhlp/aN+hCuTaXzH8HymZZxV+cARc5DgTDsKIbjgHwbK4w6CJzYnWcMVFOtgnQ
+         YmVQ==
+X-Gm-Message-State: APjAAAUTkOj5utBNld4ujSBjBsQYT/KRzA/HzPnKzkAGNIRIOfRrR1yn
+        0YH17IVIbEvB68Tum4CG6xMtVLV3QZa0iA==
+X-Google-Smtp-Source: APXvYqziAyX3arV2k8bnfEcXOZ1Bh4SmqiEN1nono5tsDY7ufXY/SqE/5xUTbeQQ6Nd5YaemyR+OCQ==
+X-Received: by 2002:a1c:1d85:: with SMTP id d127mr29102252wmd.14.1567510261446;
+        Tue, 03 Sep 2019 04:31:01 -0700 (PDT)
+Received: from localhost.localdomain (ip5b4096c3.dynamic.kabel-deutschland.de. [91.64.150.195])
+        by smtp.gmail.com with ESMTPSA id l2sm19455074wme.36.2019.09.03.04.31.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Sep 2019 04:10:48 -0700 (PDT)
-From:   Denis Efremov <efremov@linux.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Denis Efremov <efremov@linux.com>, Lukas Wunner <lukas@wunner.de>,
-        linux-pci@vger.kernel.org,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v4 3/4] PCI: pciehp: Remove pciehp_set_attention_status()
-Date:   Tue,  3 Sep 2019 14:10:20 +0300
-Message-Id: <20190903111021.1559-4-efremov@linux.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190903111021.1559-1-efremov@linux.com>
-References: <20190903111021.1559-1-efremov@linux.com>
+        Tue, 03 Sep 2019 04:31:00 -0700 (PDT)
+From:   Krzysztof Wilczynski <kw@linux.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Joerg Roedel <joro@8bytes.org>, Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org
+Subject: [PATCH v2] PCI: Remove unused includes and superfluous struct declaration
+Date:   Tue,  3 Sep 2019 13:30:59 +0200
+Message-Id: <20190903113059.2901-1-kw@linux.com>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <20190901112506.8469-1-kw@linux.com>
+References: <20190901112506.8469-1-kw@linux.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -62,97 +78,142 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Remove pciehp_set_attention_status() and use pciehp_set_indicators()
-instead, since the code is mostly the same.
+Remove <linux/pci.h> and <linux/msi.h> from being included
+directly as part of the include/linux/of_pci.h, and remove
+superfluous declaration of struct of_phandle_args.
 
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Signed-off-by: Denis Efremov <efremov@linux.com>
+Move users of include <linux/of_pci.h> to include <linux/pci.h>
+and <linux/msi.h> directly rather than rely on both being
+included transitively through <linux/of_pci.h>.
+
+Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
 ---
- drivers/pci/hotplug/pciehp.h      |  1 -
- drivers/pci/hotplug/pciehp_core.c |  7 ++++++-
- drivers/pci/hotplug/pciehp_hpc.c  | 25 -------------------------
- include/uapi/linux/pci_regs.h     |  1 +
- 4 files changed, 7 insertions(+), 27 deletions(-)
+ drivers/iommu/of_iommu.c                          | 2 ++
+ drivers/irqchip/irq-gic-v2m.c                     | 1 +
+ drivers/irqchip/irq-gic-v3-its-pci-msi.c          | 1 +
+ drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
+ drivers/pci/controller/pci-aardvark.c             | 1 +
+ drivers/pci/controller/pci-thunder-pem.c          | 1 +
+ drivers/pci/pci.c                                 | 1 +
+ drivers/pci/probe.c                               | 1 +
+ include/linux/of_pci.h                            | 5 ++---
+ 9 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-index 0214e09e91a4..cf59f70a33cc 100644
---- a/drivers/pci/hotplug/pciehp.h
-+++ b/drivers/pci/hotplug/pciehp.h
-@@ -172,7 +172,6 @@ void pciehp_get_power_status(struct controller *ctrl, u8 *status);
- #define PCI_EXP_SLTCTL_PWR_IND_NONE  -1 /* Power Indicator noop */
- void pciehp_set_indicators(struct controller *ctrl, int pwr, int attn);
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 614a93aa5305..026ad2b29dcd 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -8,6 +8,8 @@
+ #include <linux/export.h>
+ #include <linux/iommu.h>
+ #include <linux/limits.h>
++#include <linux/pci.h>
++#include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_iommu.h>
+ #include <linux/of_pci.h>
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index e88e75c22b6a..fbec07d634ad 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -17,6 +17,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
++#include <linux/pci.h>
+ #include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+diff --git a/drivers/irqchip/irq-gic-v3-its-pci-msi.c b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+index 229d586c3d7a..87711e0f8014 100644
+--- a/drivers/irqchip/irq-gic-v3-its-pci-msi.c
++++ b/drivers/irqchip/irq-gic-v3-its-pci-msi.c
+@@ -5,6 +5,7 @@
+  */
  
--void pciehp_set_attention_status(struct controller *ctrl, u8 status);
- void pciehp_get_latch_status(struct controller *ctrl, u8 *status);
- int pciehp_query_power_fault(struct controller *ctrl);
- void pciehp_green_led_on(struct controller *ctrl);
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index 6ad0d86762cb..7a86ea90ed94 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -102,8 +102,13 @@ static int set_attention_status(struct hotplug_slot *hotplug_slot, u8 status)
- 	struct controller *ctrl = to_ctrl(hotplug_slot);
- 	struct pci_dev *pdev = ctrl->pcie->port;
+ #include <linux/acpi_iort.h>
++#include <linux/pci.h>
+ #include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index d3156446ff27..7a9bef993e57 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -10,6 +10,7 @@
  
-+	if (status)
-+		status <<= PCI_EXP_SLTCTL_ATTN_IND_SHIFT;
-+	else
-+		status = PCI_EXP_SLTCTL_ATTN_IND_OFF;
-+
- 	pci_config_pm_runtime_get(pdev);
--	pciehp_set_attention_status(ctrl, status);
-+	pciehp_set_indicators(ctrl, PCI_EXP_SLTCTL_PWR_IND_NONE, status);
- 	pci_config_pm_runtime_put(pdev);
- 	return 0;
- }
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index d2c60d844d30..eeac2e704c75 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -418,31 +418,6 @@ int pciehp_set_raw_indicator_status(struct hotplug_slot *hotplug_slot,
- 	return 0;
- }
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci_regs.h>
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index fc0fe4d4de49..3a05f6ca95b0 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -16,6 +16,7 @@
+ #include <linux/pci.h>
+ #include <linux/init.h>
+ #include <linux/platform_device.h>
++#include <linux/msi.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
  
--void pciehp_set_attention_status(struct controller *ctrl, u8 value)
--{
--	u16 slot_cmd;
--
--	if (!ATTN_LED(ctrl))
--		return;
--
--	switch (value) {
--	case 0:		/* turn off */
--		slot_cmd = PCI_EXP_SLTCTL_ATTN_IND_OFF;
--		break;
--	case 1:		/* turn on */
--		slot_cmd = PCI_EXP_SLTCTL_ATTN_IND_ON;
--		break;
--	case 2:		/* turn blink */
--		slot_cmd = PCI_EXP_SLTCTL_ATTN_IND_BLINK;
--		break;
--	default:
--		return;
--	}
--	pcie_write_cmd_nowait(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
--	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
--		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
--}
--
- void pciehp_set_indicators(struct controller *ctrl, int pwr, int attn)
- {
- 	u16 cmd = 0, mask = 0;
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index f28e562d7ca8..de3e58afc564 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -591,6 +591,7 @@
- #define  PCI_EXP_SLTCTL_CCIE	0x0010	/* Command Completed Interrupt Enable */
- #define  PCI_EXP_SLTCTL_HPIE	0x0020	/* Hot-Plug Interrupt Enable */
- #define  PCI_EXP_SLTCTL_AIC	0x00c0	/* Attention Indicator Control */
-+#define  PCI_EXP_SLTCTL_ATTN_IND_SHIFT 6      /* Attention Indicator shift */
- #define  PCI_EXP_SLTCTL_ATTN_IND_ON    0x0040 /* Attention Indicator on */
- #define  PCI_EXP_SLTCTL_ATTN_IND_BLINK 0x0080 /* Attention Indicator blinking */
- #define  PCI_EXP_SLTCTL_ATTN_IND_OFF   0x00c0 /* Attention Indicator off */
+diff --git a/drivers/pci/controller/pci-thunder-pem.c b/drivers/pci/controller/pci-thunder-pem.c
+index f127ce8bd4ef..9491e266b1ea 100644
+--- a/drivers/pci/controller/pci-thunder-pem.c
++++ b/drivers/pci/controller/pci-thunder-pem.c
+@@ -6,6 +6,7 @@
+ #include <linux/bitfield.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/pci.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci-acpi.h>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 484e35349565..571e7e00984b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -13,6 +13,7 @@
+ #include <linux/delay.h>
+ #include <linux/dmi.h>
+ #include <linux/init.h>
++#include <linux/msi.h>
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 169943f17a4c..11b11a652d18 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -7,6 +7,7 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/msi.h>
+ #include <linux/of_device.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci_hotplug.h>
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 21a89c4880fa..29658c0ee71f 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -2,11 +2,10 @@
+ #ifndef __OF_PCI_H
+ #define __OF_PCI_H
+ 
+-#include <linux/pci.h>
+-#include <linux/msi.h>
++#include <linux/types.h>
++#include <linux/errno.h>
+ 
+ struct pci_dev;
+-struct of_phandle_args;
+ struct device_node;
+ 
+ #if IS_ENABLED(CONFIG_OF) && IS_ENABLED(CONFIG_PCI)
 -- 
-2.21.0
+2.23.0
 
