@@ -2,105 +2,98 @@ Return-Path: <SRS0=pntK=W6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75204C3A5A8
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 16:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E6D4C3A5A2
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 17:20:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 445A523400
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 16:35:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 42B7E22CF8
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 17:20:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567528527;
-	bh=j6ahewoxJK4BYyuBALFxGPGvZ7IjzlhY2rPpaa/CAvE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yLs/YSMLgbndhaCd5e9RRmYaL6/zjc7kAZpENAADaSFesyd1KuetYStpmKA2hU+y5
-	 EVP+1s3O8aN6ExjlQrX9VblxRjrHtkoG31S1tvqrkzNVFPGFL92Be9ceGgqwlgeOH4
-	 oo+Dx0jIB8+D9z1b5ugSuYQPYVs7CvYzUET/6W4U=
+	s=default; t=1567531216;
+	bh=qvFsCRgKgh5ADPL1mu3UHu+wcd5jVJx/3dVzpGxE5Ls=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=P3nnW67Z7a9DKqIv8cbigQ7Bp5J+0nU0/EzJHZ1G0Qycq0YQR6ZaNSehzI0bVMGK+
+	 2aMtmVmWpxeuBVPjTvD01VOMNnVI/UaDLQcAgnL7QCZmcqA4/huvx7edsR05RkH/Rw
+	 PD58LtkVjMg4WIoBL4WjVVV0kc+FY8ux7D9QWmGg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730452AbfICQfV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Sep 2019 12:35:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49266 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730949AbfICQ1s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 3 Sep 2019 12:27:48 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3D09B23789;
-        Tue,  3 Sep 2019 16:27:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567528068;
-        bh=j6ahewoxJK4BYyuBALFxGPGvZ7IjzlhY2rPpaa/CAvE=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ijo06llXVgpPjhyFtepr0bFmv5Ueu9zbKL/7BJkSwe2OHpOnP0jYVu7Y8dtRWSN9u
-         XG57Lytv6OsaVlgrcn9OrJzjgpw8zSpdiTZokyNMkZb4WwLi7tvedIFzmbG9RiwDDy
-         xpy5iVA4e+u/4aI0KF9u07s8Qx0zB/TXLLUCH4tY=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Andersson <bjorn.andersson@linaro.org>,
+        id S1729602AbfICRUP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Sep 2019 13:20:15 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:33154 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728854AbfICRUP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2019 13:20:15 -0400
+Received: by mail-wr1-f68.google.com with SMTP id u16so18368221wrr.0;
+        Tue, 03 Sep 2019 10:20:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=rar4+uC5q12KPtiyVYMv+PjJypYyOCyJrBGvZDXzi2k=;
+        b=GGmG9O3WqKE+O+cfhWFrCy4Zl9a1IwKnoMIcs4y4V6L/lpE7DKS9n4H85/cEHsqoM1
+         250VEhWOgfJO1QTyt4aFScWXLX4f0SEQ5bsBksj5FQ9UVAcxJgpsGgafXCBD+EA+Js9L
+         k6/zVpINrtxu9OkzNm80vdY2JVjLgyYGIc9XYIi4Jt1/gm3ugkTNz7KN4VxIpjFR/aHF
+         pgxJ3lGrQFeA7GSw1CQrl7LZ6ADUAVAW8oReDxGjSXdDkFHmFsy4eK5rwxBhbTYgO/Yx
+         Yh5oDTboYPV3zS0TGzgUGc3Z6z4VkRSuFB6IXYy8vb71YdUF6S+n1Cs7XzgP8oDbLW9e
+         O4OA==
+X-Gm-Message-State: APjAAAXkHB+Ae391EBWINSyF/v6ugdhqrRFPEMXes/o38oHFdgObkDcC
+        tD3YhqzpZjlelFWllKo9bA==
+X-Google-Smtp-Source: APXvYqyjkukxdrT5Es1J9haZ+DcUHsFn8ngRxdUl3OZDcQKy38QGzV98Fy3y/684yQ4P6QtkGLVBdA==
+X-Received: by 2002:adf:c613:: with SMTP id n19mr24481531wrg.109.1567531212863;
+        Tue, 03 Sep 2019 10:20:12 -0700 (PDT)
+Received: from localhost ([176.12.107.132])
+        by smtp.gmail.com with ESMTPSA id f10sm14511981wrm.31.2019.09.03.10.20.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Sep 2019 10:20:12 -0700 (PDT)
+Date:   Tue, 3 Sep 2019 18:20:10 +0100
+From:   Rob Herring <robh@kernel.org>
+To:     Krzysztof Wilczynski <kw@linux.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Frank Rowand <frowand.list@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Sasha Levin <sashal@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 082/167] PCI: qcom: Don't deassert reset GPIO during probe
-Date:   Tue,  3 Sep 2019 12:23:54 -0400
-Message-Id: <20190903162519.7136-82-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190903162519.7136-1-sashal@kernel.org>
-References: <20190903162519.7136-1-sashal@kernel.org>
+        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Remove unused includes and superfluous struct
+ declaration
+Message-ID: <20190903172010.GA26505@bogus>
+References: <20190901112506.8469-1-kw@linux.com>
+ <20190903113059.2901-1-kw@linux.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190903113059.2901-1-kw@linux.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
+On Tue, Sep 03, 2019 at 01:30:59PM +0200, Krzysztof Wilczynski wrote:
+> Remove <linux/pci.h> and <linux/msi.h> from being included
+> directly as part of the include/linux/of_pci.h, and remove
+> superfluous declaration of struct of_phandle_args.
+> 
+> Move users of include <linux/of_pci.h> to include <linux/pci.h>
+> and <linux/msi.h> directly rather than rely on both being
+> included transitively through <linux/of_pci.h>.
+> 
+> Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
+> ---
+>  drivers/iommu/of_iommu.c                          | 2 ++
+>  drivers/irqchip/irq-gic-v2m.c                     | 1 +
+>  drivers/irqchip/irq-gic-v3-its-pci-msi.c          | 1 +
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
+>  drivers/pci/controller/pci-aardvark.c             | 1 +
+>  drivers/pci/controller/pci-thunder-pem.c          | 1 +
+>  drivers/pci/pci.c                                 | 1 +
+>  drivers/pci/probe.c                               | 1 +
+>  include/linux/of_pci.h                            | 5 ++---
+>  9 files changed, 11 insertions(+), 3 deletions(-)
 
-[ Upstream commit 02b485e31d98265189b91f3e69c43df2ed50610c ]
-
-Acquiring the reset GPIO low means that reset is being deasserted, this
-is followed almost immediately with qcom_pcie_host_init() asserting it,
-initializing it and then finally deasserting it again, for the link to
-come up.
-
-Some PCIe devices requires a minimum time between the initial deassert
-and subsequent reset cycles. In a platform that boots with the reset
-GPIO asserted this requirement is being violated by this deassert/assert
-pulse.
-
-Acquire the reset GPIO high to prevent this situation by matching the
-state to the subsequent asserted state.
-
-Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-[lorenzo.pieralisi@arm.com: updated commit log]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 79f06c76ae071..e292801fff7fd 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1230,7 +1230,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- 	pcie->ops = of_device_get_match_data(dev);
- 
--	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_LOW);
-+	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
- 	if (IS_ERR(pcie->reset)) {
- 		ret = PTR_ERR(pcie->reset);
- 		goto err_pm_runtime_put;
--- 
-2.20.1
-
+Reviewed-by: Rob Herring <robh@kernel.org>
