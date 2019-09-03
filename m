@@ -2,87 +2,180 @@ Return-Path: <SRS0=pntK=W6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36F8AC3A5A5
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 16:33:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06F56C3A5A5
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 16:33:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 055E12339D
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 16:33:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gXA92M+q"
+	by mail.kernel.org (Postfix) with ESMTP id D326623789
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 16:33:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1567528438;
+	bh=9hITkvwS7RUR+NOyuSsEcOigWPALmP3ru1eoSEaWVu0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=xn7qax9/43DpAVyEyOTTY8WjBZB3sS9XnZyHoMV6jdviKXY45+w/63PjHliDrVi7R
+	 4FeMtGQ/qM83cPGs6GN+QQ/YO0zT/KZKdn3eactNb4B2+FnNwPBjD6RZrkxh6nn8+P
+	 USwPYBT8hf0+t+12IWDYDdc9wBrkQJ2z60bYR/PM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730714AbfICQde (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Sep 2019 12:33:34 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:38984 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730823AbfICQdc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2019 12:33:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
-        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-        Sender:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=E7M5OHCPCFGvSidMPlknkuDvFUT36qFbZFw1uswvZFM=; b=gXA92M+qRj1oJOmfHj6Hbgihwb
-        cXmqRb2s7gGx0C3dDRwlGKMVyI6YboNSetcl7skx30OYn1TxPXw1SYH1oVICQI+ywmWooxbiZ7GMF
-        QJg1x4zpoXkD7fjvz5f5bU9LLFTSO4JXBhcAt+N2PBRJBPrl76Ifgm7fAL5ZUIe8cfQ0el5gFkSqS
-        6hUqq3sLNdf68QBmQPzxIA1u1VMnfMiyGe9mCq8q/wPxumMAvikntDCAkUnnoku6Te9C4D1SdlDu9
-        ZA9J1RytDuqMtBsvyAbh0aQOBCUoe5358UC5SYyR9PqdJHoSR6tVDOGYCGzmS99eScsOwkm+2z9cO
-        HKkGg5rA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i5BkJ-0003C9-U1; Tue, 03 Sep 2019 16:33:31 +0000
-Date:   Tue, 3 Sep 2019 09:33:31 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     =?utf-8?B?0JDQvdC00YDQtdC5INCb0LXQvtC90YfQuNC60L7Qsg==?= 
-        <andreil499@gmail.com>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Andrei Leonchikov <andreil499@gmail.com>
-Subject: Re: [PATCH 1/1] Fix ARI enabling for a NVME devices
-Message-ID: <20190903163331.GA32703@infradead.org>
-References: <20190903125315.10349-1-andreil499@gmail.com>
- <20190903131416.GA26756@infradead.org>
- <CA+kE0xQ+z4f8xQ=8oRVcTMC-VsU5dyqVUWxuDamTy59_HTYOeg@mail.gmail.com>
+        id S1730135AbfICQdy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Sep 2019 12:33:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50036 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731068AbfICQ2P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Sep 2019 12:28:15 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 98AE62343A;
+        Tue,  3 Sep 2019 16:28:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1567528094;
+        bh=9hITkvwS7RUR+NOyuSsEcOigWPALmP3ru1eoSEaWVu0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VMdJoln4t0/ssmwLXtcysSY4uJyat4IGu3tSASucMvwMEPxLYfSn9ghU+BKVPLq8S
+         xTklqDU3CqBQMBUZw76wCkf6qtcpTRLy6CGV6kaLpJpPowB1Px7fe5DhX+LsK6LtnS
+         RA6zvstvN2uCTOVmW0rrMqjLI6IXIHHjyVpgU4DY=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 103/167] PCI: Add macro for Switchtec quirk declarations
+Date:   Tue,  3 Sep 2019 12:24:15 -0400
+Message-Id: <20190903162519.7136-103-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190903162519.7136-1-sashal@kernel.org>
+References: <20190903162519.7136-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+kE0xQ+z4f8xQ=8oRVcTMC-VsU5dyqVUWxuDamTy59_HTYOeg@mail.gmail.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[adding back the Cc list]
+From: Logan Gunthorpe <logang@deltatee.com>
 
-On Tue, Sep 03, 2019 at 07:24:15PM +0300, Андрей Леончиков wrote:
-> All drives has ARI capability, but everywhere the PCI_EXP_DEVCAP2_ARI
-> in the DEVCAP2 register is reset (see NVMe specification, bit 5).
-> At the same time, when the device is initialized, the DEVSAP register is
-> requested and this bit is checked. And if it is reset, ARI will never turn
-> on.
-> Because of this, it will be impossible to correctly initialize more than 8
-> functions per interface (1 physical and 7 virtual).
-> At the moment we are developing a disk, one of the requirements for
-> which is the correct operation of up to 128 virtual functions on one
-> interface.
-> During testing of this device, this behavior was noticed.
+[ Upstream commit 01d5d7fa8376c6b5acda86e16fcad22de6bba486 ]
 
-Looking at the PCIe spec this bit actually means "ARI forwarding
-supported" and isn't the actual ARI support.  And the PCIe spec says
-about that:
+Add SWITCHTEC_QUIRK() to reduce redundancy in declaring devices that use
+quirk_switchtec_ntb_dma_alias().
 
-"Applicable only to Switch
-Downstream Ports and Root Ports; must be 0b for other
-Function types. This bit must be set to 1b if a Switch
-Downstream Port or Root Port supports this optional capability.
-See Section 6.13 for additional details."
+By itself, this is no functional change, but a subsequent patch updates
+SWITCHTEC_QUIRK() to fix ad281ecf1c7d ("PCI: Add DMA alias quirk for
+Microsemi Switchtec NTB").
 
-So I don't see how we'd ever see this bit set on an actual NVMe device.
+Fixes: ad281ecf1c7d ("PCI: Add DMA alias quirk for Microsemi Switchtec NTB")
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+[bhelgaas: split to separate patch]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/quirks.c | 90 +++++++++++++++++---------------------------
+ 1 file changed, 34 insertions(+), 56 deletions(-)
 
-And yes, the name for our define is a little misnamed.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 28c64f84bfe72..6cda8b7ecc821 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5082,59 +5082,37 @@ static void quirk_switchtec_ntb_dma_alias(struct pci_dev *pdev)
+ 	pci_iounmap(pdev, mmio);
+ 	pci_disable_device(pdev);
+ }
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8531,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8532,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8533,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8534,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8535,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8536,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8543,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8544,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8545,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8546,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8551,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8552,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8553,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8554,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8555,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8556,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8561,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8562,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8563,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8564,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8565,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8566,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8571,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8572,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8573,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8574,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8575,
+-			quirk_switchtec_ntb_dma_alias);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, 0x8576,
+-			quirk_switchtec_ntb_dma_alias);
++#define SWITCHTEC_QUIRK(vid) \
++	DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, vid, \
++				quirk_switchtec_ntb_dma_alias)
++
++SWITCHTEC_QUIRK(0x8531);  /* PFX 24xG3 */
++SWITCHTEC_QUIRK(0x8532);  /* PFX 32xG3 */
++SWITCHTEC_QUIRK(0x8533);  /* PFX 48xG3 */
++SWITCHTEC_QUIRK(0x8534);  /* PFX 64xG3 */
++SWITCHTEC_QUIRK(0x8535);  /* PFX 80xG3 */
++SWITCHTEC_QUIRK(0x8536);  /* PFX 96xG3 */
++SWITCHTEC_QUIRK(0x8541);  /* PSX 24xG3 */
++SWITCHTEC_QUIRK(0x8542);  /* PSX 32xG3 */
++SWITCHTEC_QUIRK(0x8543);  /* PSX 48xG3 */
++SWITCHTEC_QUIRK(0x8544);  /* PSX 64xG3 */
++SWITCHTEC_QUIRK(0x8545);  /* PSX 80xG3 */
++SWITCHTEC_QUIRK(0x8546);  /* PSX 96xG3 */
++SWITCHTEC_QUIRK(0x8551);  /* PAX 24XG3 */
++SWITCHTEC_QUIRK(0x8552);  /* PAX 32XG3 */
++SWITCHTEC_QUIRK(0x8553);  /* PAX 48XG3 */
++SWITCHTEC_QUIRK(0x8554);  /* PAX 64XG3 */
++SWITCHTEC_QUIRK(0x8555);  /* PAX 80XG3 */
++SWITCHTEC_QUIRK(0x8556);  /* PAX 96XG3 */
++SWITCHTEC_QUIRK(0x8561);  /* PFXL 24XG3 */
++SWITCHTEC_QUIRK(0x8562);  /* PFXL 32XG3 */
++SWITCHTEC_QUIRK(0x8563);  /* PFXL 48XG3 */
++SWITCHTEC_QUIRK(0x8564);  /* PFXL 64XG3 */
++SWITCHTEC_QUIRK(0x8565);  /* PFXL 80XG3 */
++SWITCHTEC_QUIRK(0x8566);  /* PFXL 96XG3 */
++SWITCHTEC_QUIRK(0x8571);  /* PFXI 24XG3 */
++SWITCHTEC_QUIRK(0x8572);  /* PFXI 32XG3 */
++SWITCHTEC_QUIRK(0x8573);  /* PFXI 48XG3 */
++SWITCHTEC_QUIRK(0x8574);  /* PFXI 64XG3 */
++SWITCHTEC_QUIRK(0x8575);  /* PFXI 80XG3 */
++SWITCHTEC_QUIRK(0x8576);  /* PFXI 96XG3 */
+-- 
+2.20.1
+
