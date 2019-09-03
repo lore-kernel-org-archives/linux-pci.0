@@ -2,67 +2,75 @@ Return-Path: <SRS0=pntK=W6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C520BC3A5A2
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 13:14:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BBDEC3A5A2
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 14:09:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8DCD52053B
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 13:14:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jeFvzny2"
+	by mail.kernel.org (Postfix) with ESMTP id 01D2323431
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Sep 2019 14:09:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728576AbfICNOS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Sep 2019 09:14:18 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56926 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728571AbfICNOR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Sep 2019 09:14:17 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=6h394cWq1+4srtB43ScQN+6skk/Nc2LDPA6V/gdTlrs=; b=jeFvzny2fL/AzCDPmn9DLAhqH
-        hYdFmRjfm73A6y5ti7DfnB1GKdxfB6d7JIcX9XTV/ify68EeJsyw9OOswNnXv5s3ZQXTFzzAHkdH7
-        XlGntZAGI/K5u4wjBmWmqv3mAV05XgKr0N9xeckACY6KUXXF7eTdnWrPpFfcoMY9PjZ/CadKyeNhx
-        olRNL+4ey/qoWliwc65DtCbX/COSvbdKRL2HBeMIXByh1OSt02GayGxqf9aEB7McTJiJct3sFvdPY
-        oCo9rdmSmvSzFgn0lTsFuiGUu/amUw+45mXgtxT6qNwIbOfe4WopDgk1zUSiOxiLoiirl2a5gQD2q
-        k4nGC7qHw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i58dU-0007MJ-Rz; Tue, 03 Sep 2019 13:14:16 +0000
-Date:   Tue, 3 Sep 2019 06:14:16 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Andrei Leonvikov <andreil499@gmail.com>
-Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] Fix ARI enabling for a NVME devices
-Message-ID: <20190903131416.GA26756@infradead.org>
-References: <20190903125315.10349-1-andreil499@gmail.com>
+        id S1727941AbfICOJw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Sep 2019 10:09:52 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:5734 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727667AbfICOJw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 3 Sep 2019 10:09:52 -0400
+Received: from DGGEMS407-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 50AF157CBA547659F7F6;
+        Tue,  3 Sep 2019 22:09:48 +0800 (CST)
+Received: from [127.0.0.1] (10.202.227.238) by DGGEMS407-HUB.china.huawei.com
+ (10.3.19.207) with Microsoft SMTP Server id 14.3.439.0; Tue, 3 Sep 2019
+ 22:09:41 +0800
+From:   John Garry <john.garry@huawei.com>
+Subject: PCI/kernel msi code vs GIC ITS driver conflict?
+To:     Marc Zyngier <maz@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "Bjorn Helgaas" <bhelgaas@google.com>
+CC:     Linux PCI <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "luojiaxing@huawei.com" <luojiaxing@huawei.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Message-ID: <f5e948aa-e32f-3f74-ae30-31fee06c2a74@huawei.com>
+Date:   Tue, 3 Sep 2019 15:09:36 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190903125315.10349-1-andreil499@gmail.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.238]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 12:53:15PM +0000, Andrei Leonvikov wrote:
-> +	if ((dev->driver != NULL) && (strncmp(dev->driver->name, "nvme", 4) == 0)) {
-> +		// for NVME device this field always zero, but ARI can be enabled
-> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
-> +		if (!(cap & PCI_EXP_DEVCAP2_ARI))
-> +			return;
-> +	}
+Hi Marc, Bjorn, Thomas,
 
-Besides the missing patch description, all the obvious style issues, and
-the fact that you can't just check a driver name a here:
+We've come across a conflict with the kernel/pci msi code and GIC ITS 
+driver on our arm64 system, whereby we can't unbind and re-bind a PCI 
+device driver under special conditions. I'll explain...
 
-There are plenty NVMe drives that support the ARI capability, and I
-don't know of any standard saying nvme device should be treated special.
+Our PCI device support 32 MSIs. The driver attempts to allocate msi 
+vectors with min msi=17, max msi = 32, and affd.pre vectors = 16. For 
+our test we make nr_cpus = 1 (just anything less than 16).
+
+We find that the pci/kernel msi code gives us 17 vectors, but the GIC 
+ITS code reserves 32 lpi maps in its_irq_domain_alloc(). The problem 
+then occurs when unbinding the driver in its_irq_domain_free() call, 
+where we only clear bits for 17 vectors. So if we unbind the driver and 
+then attempt to bind again, it fails.
+
+Where the fault lies, I can't say. Maybe the kernel msi code should 
+always give power of 2 vectors - as I understand, the PCI spec mandates 
+this. Or maybe the GIC ITS driver has a problem in the free path, as 
+above. Or maybe the PCI driver should not be allowed to request !power 
+of 2 min/max vectors.
+
+Opinion?
+
+Thanks in advance,
+John
+
