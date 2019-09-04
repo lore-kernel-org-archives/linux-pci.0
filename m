@@ -2,120 +2,122 @@ Return-Path: <SRS0=oPgm=W7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39BD1C3A5A7
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 15:32:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13069C3A5A8
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 16:03:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1905A22CF7
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 15:32:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E076A22CF5
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 16:03:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="N8gFXNfw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730011AbfIDPcQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Sep 2019 11:32:16 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:56100 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729773AbfIDPcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 4 Sep 2019 11:32:16 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D5B2830A76A2;
-        Wed,  4 Sep 2019 15:32:15 +0000 (UTC)
-Received: from [10.3.116.78] (ovpn-116-78.phx2.redhat.com [10.3.116.78])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id DBABD60606;
-        Wed,  4 Sep 2019 15:32:14 +0000 (UTC)
-Subject: Re: [Linux-kernel-mentees] [PATCH v2 2/3] PCI: sysfs: Change
- permissions from symbolic to octal
-To:     Kelsey Skunberg <skunberg.kelsey@gmail.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        Bodong Wang <bodong@mellanox.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20190809195721.34237-1-skunberg.kelsey@gmail.com>
- <20190813204513.4790-1-skunberg.kelsey@gmail.com>
- <20190813204513.4790-3-skunberg.kelsey@gmail.com>
- <20190814053846.GA253360@google.com>
- <b4c0d5b4-7243-ba96-96d1-041a264ac499@redhat.com>
- <20190904062229.GA66871@JATN>
-From:   Don Dutile <ddutile@redhat.com>
-Message-ID: <a7865a6a-4359-e989-7ef5-77d9a8135ae3@redhat.com>
-Date:   Wed, 4 Sep 2019 11:32:14 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1733077AbfIDQDu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Sep 2019 12:03:50 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:39067 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731693AbfIDQDu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2019 12:03:50 -0400
+Received: by mail-lf1-f68.google.com with SMTP id l11so16396287lfk.6
+        for <linux-pci@vger.kernel.org>; Wed, 04 Sep 2019 09:03:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qdkpjv/bZ2lIEk5X+tFdEgL+mJhBRPFpnDdvWwMX9Xc=;
+        b=N8gFXNfwqngfpITkERemx7Ltu0Dlkimbs/trkm5uy96D6tIWPHX+pNnCgQH1JxBihu
+         IUrf7jLBw1JFSWWDRnalf9mB+yNxxdG069bZzIjwJ4zwb/qe7WxIcKRgxPPfGKgR6AGk
+         4cnEy7ibBSOP6zo70HU5OxGp7HUKh81yvJsJ2YsMSEHK6/LXkPSokNqCrVMYSD3+bB4e
+         kS75lVIGNArGDrvZt0feVALLQxuzWS+xVJQxen3vpDfiaItT/4Y+cy1RBN1sxFZ96kAI
+         E9/nkH2UsoZHaIdiXJmDlCysFakZHUVnixHRNlY6m99sKIXP1K2Iej7CxYqjC5k4ZoQJ
+         d98g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=qdkpjv/bZ2lIEk5X+tFdEgL+mJhBRPFpnDdvWwMX9Xc=;
+        b=G99xnJ10S/CDpcjZwk1aahauQPq0pJ6yHCmu3+6vLLo1DV7UE0XBUxpZ5v6EDkmIrj
+         ttTOR1JlVLYLM3XD9ISdG68xayLr2j36/kBAG9qUIm9VLd5PrslaCaXXfC1fdQsPD2BM
+         T0GC6k6HZXEPJ2xKvWEBQnbjMmITi0Ccg3Q5oDeMh/kQPzOPb+C5Ad0sgVpEvbwbUNtW
+         /qBgPvRExD8d9a6Qs8pLbcof4IRG2p48EsROHBh7VYGDnkdJsTRnEsZB5WA3igkNMGak
+         v8BB2pBKwHqUJnMGhoNpLUIETmH+6abNeMolufaY4bOX0Mjxbl0wetXTGK3ZwMttFGkp
+         oldA==
+X-Gm-Message-State: APjAAAXGrTJYegCRSYJ92GA1noYj4MxBcCEVIM9TXiUK8AZKU0MIOxkM
+        k5j9CwnqVW41HRRMpuaSgoKuhNnIW5E=
+X-Google-Smtp-Source: APXvYqxcl6N2Os+hsM2CmBabXDD2UjVXYfZOm8va/9JhvYkTJcOmfYODnBTLkrUxHpBd/2Gc/balpg==
+X-Received: by 2002:a19:6549:: with SMTP id c9mr3188567lfj.99.1567613027790;
+        Wed, 04 Sep 2019 09:03:47 -0700 (PDT)
+Received: from localhost.localdomain (ua-84-219-138-247.bbcust.telenor.se. [84.219.138.247])
+        by smtp.gmail.com with ESMTPSA id r8sm556064lfm.71.2019.09.04.09.03.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Sep 2019 09:03:47 -0700 (PDT)
+From:   Niklas Cassel <niklas.cassel@linaro.org>
+To:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Cc:     Niklas Cassel <niklas.cassel@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: dwc: fix find_next_bit() usage
+Date:   Wed,  4 Sep 2019 18:03:38 +0200
+Message-Id: <20190904160339.2800-1-niklas.cassel@linaro.org>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-In-Reply-To: <20190904062229.GA66871@JATN>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.47]); Wed, 04 Sep 2019 15:32:16 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 09/04/2019 02:22 AM, Kelsey Skunberg wrote:
-> On Thu, Aug 15, 2019 at 10:37:13AM -0400, Don Dutile wrote:
->> On 08/14/2019 01:38 AM, Bjorn Helgaas wrote:
->>> [+cc Bodong, Don, Greg for permission question]
->>>
->>> On Tue, Aug 13, 2019 at 02:45:12PM -0600, Kelsey Skunberg wrote:
->>>> Symbolic permissions such as "(S_IWUSR | S_IWGRP)" are not
->>>> preferred and octal permissions should be used instead. Change all
->>>> symbolic permissions to octal permissions.
->>>>
->>>> Example of old:
->>>>
->>>> "(S_IWUSR | S_IWGRP)"
->>>>
->>>> Example of new:
->>>>
->>>> "0220"
->>>
->>>
->>>>    static DEVICE_ATTR_RO(sriov_totalvfs);
->>>> -static DEVICE_ATTR(sriov_numvfs, (S_IRUGO | S_IWUSR | S_IWGRP),
->>>> -				  sriov_numvfs_show, sriov_numvfs_store);
->>>> +static DEVICE_ATTR(sriov_numvfs, 0664, sriov_numvfs_show, sriov_numvfs_store);
->>>>    static DEVICE_ATTR_RO(sriov_offset);
->>>>    static DEVICE_ATTR_RO(sriov_stride);
->>>>    static DEVICE_ATTR_RO(sriov_vf_device);
->>>> -static DEVICE_ATTR(sriov_drivers_autoprobe, (S_IRUGO | S_IWUSR | S_IWGRP),
->>>> -		   sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
->>>> +static DEVICE_ATTR(sriov_drivers_autoprobe, 0664, sriov_drivers_autoprobe_show,
->>>> +		   sriov_drivers_autoprobe_store);
->>>
->>> Greg noticed that sriov_numvfs and sriov_drivers_autoprobe have
->>> "unusual" permissions.  These were added by:
->>>
->>>     0e7df22401a3 ("PCI: Add sysfs sriov_drivers_autoprobe to control VF driver binding")
->>>     1789382a72a5 ("PCI: SRIOV control and status via sysfs")
->>>
->>> Kelsey's patch correctly preserves the existing permissions, but we
->>> should double-check that they are the permissions they want, and
->>> possibly add a comment about why they're different from the rest.
->>>
->>> Bjorn
->>>
-> 
-> Hi Don,
-> 
->> The rest being? ... 0644 vs 0664 ?
->> The file is read & written, thus the (first) 6; I'll have to dig through very old (7 yr) notes to see if the second 6 is needed for libvirt (so it doesn't have to be root to enable).
->>
->> -dd
->>
-> 
-> Were you able to see if the unusual permissions (0664) are needed for
-> libvirt? I appreciate your help!
-> 
-> -Kelsey
-> 
-Asking libvirt team in RH; will get back as soon as I hear back.
-LPC time sink may delay the response.
+find_next_bit() takes a parameter of size long, and performs arithmetic
+that assumes that the argument is of size long.
 
--dd
+Therefore we cannot pass a u32, since this will cause find_next_bit()
+to read outside the stack buffer and will produce the following print:
+BUG: KASAN: stack-out-of-bounds in find_next_bit+0x38/0xb0
+
+Fixes: 1b497e6493c4 ("PCI: dwc: Fix uninitialized variable in dw_handle_msi_irq()")
+Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index d3156446ff27..45f21640c977 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -78,7 +78,8 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+ 	int i, pos, irq;
+-	u32 val, num_ctrls;
++	unsigned long val;
++	u32 status, num_ctrls;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+ 	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+@@ -86,14 +87,14 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 	for (i = 0; i < num_ctrls; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
+ 					(i * MSI_REG_CTRL_BLOCK_SIZE),
+-				    4, &val);
+-		if (!val)
++				    4, &status);
++		if (!status)
+ 			continue;
+ 
+ 		ret = IRQ_HANDLED;
++		val = status;
+ 		pos = 0;
+-		while ((pos = find_next_bit((unsigned long *) &val,
+-					    MAX_MSI_IRQS_PER_CTRL,
++		while ((pos = find_next_bit(&val, MAX_MSI_IRQS_PER_CTRL,
+ 					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
+ 			irq = irq_find_mapping(pp->irq_domain,
+ 					       (i * MAX_MSI_IRQS_PER_CTRL) +
+-- 
+2.21.0
 
