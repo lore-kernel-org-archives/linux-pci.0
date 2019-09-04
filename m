@@ -2,67 +2,83 @@ Return-Path: <SRS0=oPgm=W7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A36C3A5AA
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 16:06:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4994C3A5AA
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 16:47:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F08D82070C
-	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 16:06:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83C6622CED
+	for <linux-pci@archiver.kernel.org>; Wed,  4 Sep 2019 16:47:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mev.co.uk header.i=@mev.co.uk header.b="c6QDhRp9"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="iIiZLF14"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731519AbfIDQGm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 4 Sep 2019 12:06:42 -0400
-Received: from smtp122.ord1c.emailsrvr.com ([108.166.43.122]:46646 "EHLO
-        smtp122.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731900AbfIDQGm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2019 12:06:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mev.co.uk;
-        s=20190130-41we5z8j; t=1567612789;
-        bh=Kva2ujk4tlH3H9vBbavWY5VkbDF1WFrWyZNost4mZxI=;
-        h=To:From:Subject:Date:From;
-        b=c6QDhRp9jDiVwe+WUiRmdN4+BdPIkSMfbId8/D/8VrQ8sN3JAVtVLeOnrI1PSzLvv
-         MQdQHAVJYQdzY+4+bpMlDgHMjFAAZ21T1TXjDwPSE0ZkliupznSKQr3FzwIlWVCJRq
-         RZg+/JA7p4EdffLKiz/2iHyNuvoEOb4UEHnl1T2Y=
-X-Auth-ID: abbotti@mev.co.uk
-Received: by smtp24.relay.ord1c.emailsrvr.com (Authenticated sender: abbotti-AT-mev.co.uk) with ESMTPSA id 0869E60326;
-        Wed,  4 Sep 2019 11:59:48 -0400 (EDT)
-X-Sender-Id: abbotti@mev.co.uk
-Received: from [10.0.0.173] (remote.quintadena.com [81.133.34.160])
-        (using TLSv1.2 with cipher AES128-SHA)
-        by 0.0.0.0:465 (trex/5.7.12);
-        Wed, 04 Sep 2019 11:59:49 -0400
-To:     linux-security-module@vger.kernel.org
-Cc:     linux-pci@vger.kernel.org
-From:   Ian Abbott <abbotti@mev.co.uk>
-Subject: Should PCI "new_id" support be disabled when kernel is locked down?
-Organization: MEV Ltd.
-Message-ID: <cf90a8aa-536e-f4df-0b2f-60724e4034fb@mev.co.uk>
-Date:   Wed, 4 Sep 2019 16:59:47 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1732324AbfIDQro (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 4 Sep 2019 12:47:44 -0400
+Received: from mail-io1-f48.google.com ([209.85.166.48]:33679 "EHLO
+        mail-io1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731985AbfIDQrn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 4 Sep 2019 12:47:43 -0400
+Received: by mail-io1-f48.google.com with SMTP id m11so13715557ioo.0
+        for <linux-pci@vger.kernel.org>; Wed, 04 Sep 2019 09:47:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sFnr7zgJe+61oG4oqxymDnM4izKIkBVQkyb90hB3S+I=;
+        b=iIiZLF14sOBStDzF/zd5qvQJo3HPHJzWwvCAMo/xC62V6+aBfDX2kCYoBGGFUL3io9
+         mWteVTYIKwVmcppcgjI1Gz1JAjVVCiH8X54EIkWjj6U27wYnJiIYrUt3pXw9gVP7wPn/
+         4tuIZY8AfhSpnphPjvx4Hgk9KszlkdMQOFMlLTO2Ebh9fCM+JJRVD6JJgeiTgVNJqYQa
+         JR8hQpqmlmA+DIrPW9H61r1U6ESB3m1BaWvc1rcuGx7tUZlmPqVnJO9VdyK1rpiMSxuY
+         FVQxbLlmDI5xjHezuh8ZT8KOGWtLHQUqteGreVrFv/CpWVoh3ir59di5coFcOFJIy+Zh
+         AfkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sFnr7zgJe+61oG4oqxymDnM4izKIkBVQkyb90hB3S+I=;
+        b=CQ+tHHFU58SIJvEDbFMhe+BOpEuiDm68W/fONUEKllJAbqzo4eZDpGzfKVO7Fp9TNL
+         lfvebH+4GPWv0u7akaVsW7J3WS0CZxX63PMpSgoakWmFzqAVfS6t9aF+nEqQjEzrVnyN
+         N87L963hmGCeXSxNlmlUf303Tfv/66cwfAGUfIn9++t4+CN4SYlneJAE4gQvrS0KJgeY
+         rrtBqSAqc5oPAKaE14Vv0pmVeSNSm6D0vD8QD8AWLJNAdu5slkbaoEvH/Qesozn51eQj
+         fEgStJmOeDKOZA4vhipMUjdqdfyWn7SxBPlkb9i6szJQ46dBsPAMGLc6qxVK8iH8l+94
+         W5og==
+X-Gm-Message-State: APjAAAWa3+6R3nuOhgttiVZgj8xNCgBTGLhZs6wl4j7qqFdRGkbHiqF/
+        kwU2glamKgbo0hnQig+sdiG1h0Hm6G8udZPhtKHa8efCu7w=
+X-Google-Smtp-Source: APXvYqxSl27LcKurdt2fQvWY+lSxjaoKv1CHvidnAFxG8QO4wPpbzVxnVi7kqXp7e40rk4a0QrrOJkCYYK+1aHl5iSo=
+X-Received: by 2002:a02:6a17:: with SMTP id l23mr5941298jac.102.1567615662334;
+ Wed, 04 Sep 2019 09:47:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+References: <cf90a8aa-536e-f4df-0b2f-60724e4034fb@mev.co.uk>
+In-Reply-To: <cf90a8aa-536e-f4df-0b2f-60724e4034fb@mev.co.uk>
+From:   Matthew Garrett <mjg59@google.com>
+Date:   Wed, 4 Sep 2019 09:47:30 -0700
+Message-ID: <CACdnJuumhcFw2394J-ymAq1VVAGXpknhdd1T8x565pcU6eAU-w@mail.gmail.com>
+Subject: Re: Should PCI "new_id" support be disabled when kernel is locked down?
+To:     Ian Abbott <abbotti@mev.co.uk>
+Cc:     LSM List <linux-security-module@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+On Wed, Sep 4, 2019 at 9:12 AM Ian Abbott <abbotti@mev.co.uk> wrote:
+>
+> Hello,
+>
+> The "new_id" PCI driver sysfs attribute can be used to make an arbitrary
+> PCI driver match an arbitrary PCI vendor/device ID.  That could easily
+> crash the kernel or at least make it do weird things if used
+> inappropriately.  Is this scenario in scope for the "lockdown" security
+> module?
 
-The "new_id" PCI driver sysfs attribute can be used to make an arbitrary 
-PCI driver match an arbitrary PCI vendor/device ID.  That could easily 
-crash the kernel or at least make it do weird things if used 
-inappropriately.  Is this scenario in scope for the "lockdown" security 
-module?
-
--- 
--=( Ian Abbott <abbotti@mev.co.uk> || Web: www.mev.co.uk )=-
--=( MEV Ltd. is a company registered in England & Wales. )=-
--=( Registered number: 02862268.  Registered address:    )=-
--=( 15 West Park Road, Bramhall, STOCKPORT, SK7 3JZ, UK. )=-
+Crashing the kernel isn't really a concern - the issue is more whether
+it's possible to get a driver to perform a sufficient number of writes
+to a device that it can in turn cause the device to overwrite the
+kernel in a controlled manner. This seems theoretically possible, but
+I think I'm inclined to leave it as is unless someone demonstrates
+that it's more than theoretical.
