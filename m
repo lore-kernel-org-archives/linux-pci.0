@@ -2,40 +2,40 @@ Return-Path: <SRS0=lgne=XA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD724C3A5A5
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 10:46:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 740C3C3A5A5
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 10:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92D6722CF5
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 10:46:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49CB42339D
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 10:46:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="h7w1/lHC"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="QQl8WkpU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731418AbfIEKqH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Sep 2019 06:46:07 -0400
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:9996 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727900AbfIEKqG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 06:46:06 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d70e770000a>; Thu, 05 Sep 2019 03:46:08 -0700
+        id S1733222AbfIEKqJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Sep 2019 06:46:09 -0400
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:17798 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727900AbfIEKqI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 06:46:08 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d70e7720002>; Thu, 05 Sep 2019 03:46:11 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Thu, 05 Sep 2019 03:46:06 -0700
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Thu, 05 Sep 2019 03:46:07 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Thu, 05 Sep 2019 03:46:06 -0700
-Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL111.nvidia.com
- (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 5 Sep
- 2019 10:46:01 +0000
-Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL111.nvidia.com
- (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Thu, 5 Sep 2019 10:46:01 +0000
+        by hqpgpgate101.nvidia.com on Thu, 05 Sep 2019 03:46:07 -0700
+Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 5 Sep
+ 2019 10:46:06 +0000
+Received: from hqnvemgw02.nvidia.com (172.16.227.111) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Thu, 5 Sep 2019 10:46:07 +0000
 Received: from vidyas-desktop.nvidia.com (Not Verified[10.24.37.38]) by hqnvemgw02.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5d70e7630002>; Thu, 05 Sep 2019 03:46:00 -0700
+        id <B5d70e76a0000>; Thu, 05 Sep 2019 03:46:06 -0700
 From:   Vidya Sagar <vidyas@nvidia.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <robh+dt@kernel.org>, <thierry.reding@gmail.com>,
@@ -46,65 +46,77 @@ CC:     <kishon@ti.com>, <gustavo.pimentel@synopsys.com>,
         <linux-tegra@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <kthota@nvidia.com>,
         <mmaddireddy@nvidia.com>, <vidyas@nvidia.com>, <sagar.tv@gmail.com>
-Subject: [PATCH V4 0/6] PCI: tegra: Enable PCIe C5 controller of Tegra194 in p2972-0000 platform
-Date:   Thu, 5 Sep 2019 16:15:47 +0530
-Message-ID: <20190905104553.2884-1-vidyas@nvidia.com>
+Subject: [PATCH V4 1/6] dt-bindings: PCI: tegra: Add sideband pins configuration entries
+Date:   Thu, 5 Sep 2019 16:15:48 +0530
+Message-ID: <20190905104553.2884-2-vidyas@nvidia.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190905104553.2884-1-vidyas@nvidia.com>
+References: <20190905104553.2884-1-vidyas@nvidia.com>
 X-NVConfidentiality: public
 MIME-Version: 1.0
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1567680368; bh=YC2A14ccqRxtxcn75mXI1dozxpBOosnoSmsvsyfnYmk=;
+        t=1567680371; bh=7marwzx0rlKDxIvDyAZhpOJl9XZi3qeL7058e2xIxPM=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         X-NVConfidentiality:MIME-Version:Content-Type;
-        b=h7w1/lHCXzCaLLHTK+O6GLMLqzoa0L15XNlxklPoeAIAYlTPo9qnb/TgA8+RA6/NK
-         LwSSZLM2y+oVs2bqt/8rIsiBUuUJbb+YoQHJNEkRTMvI6jvX9M6+LGLXg/H+N8s1p1
-         kg/uW2AvO2Q/c3BW9k/cRB+IzuptrKaSxvtLoA2LvKzh4B8gqeTozPht2ap29Zgz35
-         PYtYAAX+yOqcHKI5WXHr90tO30NgWCvbVZus/+PHd6KZwyz3Ye2Ml3VjFDD6h99R6n
-         G2g2gMD9fNjx27Wce/pUOCbhWV2SManYwaj5TScqus+Uw3v9IyIbmI9aJte9qfA3eu
-         vUkmUjfg7BEOQ==
+         In-Reply-To:References:X-NVConfidentiality:MIME-Version:
+         Content-Type;
+        b=QQl8WkpUTOLsWia7lHK4Vnwc50g9DF7RN8eEpYNH/0euF5615y3637pAWhzVlRmC6
+         K+g6giDUQKpn5fc8YBbiztPHysMhYE88GUAn808yOchwk22SLK1k4227Xn5G6UFfIF
+         YxLALsXFi0BT9syhXWf+p59ttOemvevjEw6ZDQwQewchirdbzohSGZVKCQU0QGdL3w
+         3zuIGJkd5jghGHc/aQY0hes0AteNUF75RYZbP7vYk66dZIm+x9UkF+yF4y724N1efv
+         /zQdRXRjylrGOBgdZq8dN9taTrxSgvMnjdXW5Sz1HWLZ4DSU2XyeMqvBhJ0xJM0VXf
+         th7HOCQVmVtnQ==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series enables Tegra194's C5 controller which owns x16 slot in
-p2972-0000 platform. C5 controller's PERST# and CLKREQ# are not configured as
-output and bi-directional signals by default and hence they need to be
-configured explicitly. Also, x16 slot's 3.3V and 12V supplies are controlled
-through GPIOs and hence they need to be enabled through regulator framework.
-This patch series adds required infrastructural support to address both the
-aforementioned requirements.
-Testing done on p2972-0000 platform
-- Able to enumerate devices connected to x16 slot (owned by C5 controller)
-- Enumerated device's functionality verified
-- Suspend-Resume sequence is verified with device connected to x16 slot
+Add optional bindings "pinctrl-names" and "pinctrl-0" to describe pin
+configuration information of a particular PCIe controller.
 
+Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Acked-by: Thierry Reding <treding@nvidia.com>
+---
 V4:
-* Rebased (Patch-4/6 particularly) on top of Lorenzo's pci/tegra branch
+* None
 
 V3:
-* Addressed some more review comments from Andrew Murray and Thierry Reding
+* None
 
 V2:
-* Changed the order of patches in the series for easy merging
-* Addressed review comments from Thierry Reding and Andrew Murray
+* None
 
-Vidya Sagar (6):
-  dt-bindings: PCI: tegra: Add sideband pins configuration entries
-  dt-bindings: PCI: tegra: Add PCIe slot supplies regulator entries
-  PCI: tegra: Add support to configure sideband pins
-  PCI: tegra: Add support to enable slot regulators
-  arm64: tegra: Add configuration for PCIe C5 sideband signals
-  arm64: tegra: Add PCIe slot supply information in p2972-0000 platform
+ .../devicetree/bindings/pci/nvidia,tegra194-pcie.txt      | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
- .../bindings/pci/nvidia,tegra194-pcie.txt     | 16 ++++
- .../arm64/boot/dts/nvidia/tegra194-p2888.dtsi | 24 +++++
- .../boot/dts/nvidia/tegra194-p2972-0000.dts   |  4 +-
- arch/arm64/boot/dts/nvidia/tegra194.dtsi      | 38 +++++++-
- drivers/pci/controller/dwc/pcie-tegra194.c    | 94 ++++++++++++++++++-
- 5 files changed, 172 insertions(+), 4 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+index 674e5adb2895..0ac1b867ac24 100644
+--- a/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/nvidia,tegra194-pcie.txt
+@@ -83,6 +83,11 @@ Required properties:
+ - vddio-pex-ctl-supply: Regulator supply for PCIe side band signals
+ 
+ Optional properties:
++- pinctrl-names: A list of pinctrl state names.
++  It is mandatory for C5 controller and optional for other controllers.
++  - "default": Configures PCIe I/O for proper operation.
++- pinctrl-0: phandle for the 'default' state of pin configuration.
++  It is mandatory for C5 controller and optional for other controllers.
+ - supports-clkreq: Refer to Documentation/devicetree/bindings/pci/pci.txt
+ - nvidia,update-fc-fixup: This is a boolean property and needs to be present to
+     improve performance when a platform is designed in such a way that it
+@@ -120,6 +125,9 @@ Tegra194:
+ 		num-lanes = <8>;
+ 		linux,pci-domain = <0>;
+ 
++		pinctrl-names = "default";
++		pinctrl-0 = <&pex_rst_c5_out_state>, <&clkreq_c5_bi_dir_state>;
++
+ 		clocks = <&bpmp TEGRA194_CLK_PEX0_CORE_0>;
+ 		clock-names = "core";
+ 
 -- 
 2.17.1
 
