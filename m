@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEAADC43331
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0EFFC43140
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:18:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 846BF2145D
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:18:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EA2120870
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:18:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RAocJqNu"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HL27V+NY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733174AbfIEQSD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Sep 2019 12:18:03 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:44762 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733104AbfIEQSD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 12:18:03 -0400
-Received: by mail-pg1-f195.google.com with SMTP id i18so1664539pgl.11
-        for <linux-pci@vger.kernel.org>; Thu, 05 Sep 2019 09:18:02 -0700 (PDT)
+        id S2388468AbfIEQSQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Sep 2019 12:18:16 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:40860 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388460AbfIEQSQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 12:18:16 -0400
+Received: by mail-pl1-f194.google.com with SMTP id y10so1520836pll.7
+        for <linux-pci@vger.kernel.org>; Thu, 05 Sep 2019 09:18:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=LOcyk2Tlmy2C4zqKtlXcXvj1dEhOW89Bxfs+xhia+Lc=;
-        b=RAocJqNuFAo+8EWLGQowOck0TpzPvE7OJtl5QzpsxoyoNf9Ngy0QrVRD8QbNLan0SK
-         3atzqgCHL9vl7ujJipFG5mstF8vo8Cqw+J5f1YEz6GGZT2/PAdLdz7nI6i6jXlOhirHF
-         s+zLL4x57Pv/j2bnLfroXzBT8ECnmG7bWvVFun5AEwZ8nHcWWz6+lasnvBgrzIAVU7RZ
-         vO5xw8QOCOUZrUAHJcYqap8Q1iL7RIYViGVCWgaLpc0EWEHznv31BLWRVEeSeirK+C72
-         4z451i7BQb96tTMghJ2Erm9bY0f74GAzJxLfVWq4p3mQV8fTbc8fi617kBInlSo8dIoz
-         vCvg==
+        bh=8QjjqDFW2as8gsE3MNwHPLPN76USmssxyGkKOBC9D3E=;
+        b=HL27V+NYul1f+O0bmc6YkYSMF5euNDbYJl3hh04CdtFtjxmvNCYdhhn4rVKZ4mtbnC
+         haoz4ZuRykOa1EVcbKBLOnulQom5g/1qMM4K3pUJqI9gyl8+8M7gUP3hdV27jiyNhaLP
+         o/VZfks/pnLsAsEemsNEwt2UAy9aH5QMHPRsXyteaLVX8yuXtIU8Q7J3Kt0GHRGIjeu+
+         6uqwAVSO0rrjztAQNUcFDtt/AS9X6aQBAlsAr+yR2VeRxvHvm5f4PTxaab1YLr0ySVHa
+         WGR7mnvK9yLWmfNAcVoLZFMGqTS8ZaLoVAcycwWbcXSXF16pUzOt3ohlbzYqLRrORRPt
+         DjoQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=LOcyk2Tlmy2C4zqKtlXcXvj1dEhOW89Bxfs+xhia+Lc=;
-        b=Dw/Nb17XkJZtBxqx77FngUZm14TYoGtIHVddIRdttxi8xbu1uohjEefPxVVXUrzWDq
-         jVQ7PRmBIDVXLI9l/qswQ/SHjgRt+ve6zhxnSpXxYh0/Vrk11oUA3tM5Ie7tgtCqH3u2
-         0dw2VwfroPf62UmgIhdE6U0Blus4gPW5MybGunGKa5FmwJtt2tDrEgJHXFc80xYHvNIN
-         XpnGVOWMHpFLF7Q95SrmXAwJwtBoTznYu2l2OaY/bvGZwOba64SLd7fI0HT9gXTTstIt
-         0CaTYpDgNrr/j3/nOMQbN1etIwf0c6EuJybbivOvBeK1FCce4fR5uOu9esxB8zy0EzsL
-         DTYw==
-X-Gm-Message-State: APjAAAWLLLAzcrCV6KwoY7dGsd1bEvP6mkggU2WKy9nAk29rPqHuj8mO
-        DfkHkzynhi2SOKl4oGOSkF7RpQ==
-X-Google-Smtp-Source: APXvYqyMgjxfkjP3YNECcB58WCY+NHLygBK/D+S4VWMd6L7YO3gjUZq9S9Du5KS72s1N8hLa4mIKqA==
-X-Received: by 2002:a63:db45:: with SMTP id x5mr3885637pgi.293.1567700282371;
-        Thu, 05 Sep 2019 09:18:02 -0700 (PDT)
+        bh=8QjjqDFW2as8gsE3MNwHPLPN76USmssxyGkKOBC9D3E=;
+        b=oFjZ7ESFWzezOvUSp4atyEkuJRkVhQ1rFuhob3aoZlfDGXrGtwT6M4/uGZFO90Eez+
+         hOn36Y+5G4JS+Du2smBPeTwDIqroJrrB1P21doul6UaK5gXZWzJ8vaEDJAoYXWwdG9uD
+         yubuPB3zvllMrG1A56eTkclo586ppkodf4tTHfrMou4Q5p1Q8DrNPzrApy5Q8qkl0BI9
+         dAmwzwJiTgU0QcHqYuu1Wo0n5PDh91mNQrg7gvrGcCF6bs3Ab9j821qLSyM4wX6zNalV
+         LLQIQAWxYYN2q5O/HEQf+/jv4L/IrWbbBJGwsaley+IsTNGWjaW2TlShKNDeJPdQsQ81
+         kEbg==
+X-Gm-Message-State: APjAAAX/txS0IEPW1JuPZP3HdXikcbSoPERrDeic9IBLXBDRPDqpNc89
+        qJptLc5Cnkkk1wPl6rAQ5sKbJQ==
+X-Google-Smtp-Source: APXvYqyin58dfoGmkrcR+0oj6G4rVylfKjqkSHZX5WE/1JHerRC2GQAUjkfl3U9yKFWbfii5zbbXyA==
+X-Received: by 2002:a17:902:8a87:: with SMTP id p7mr4384259plo.240.1567700295503;
+        Thu, 05 Sep 2019 09:18:15 -0700 (PDT)
 Received: from xps15.cg.shawcable.net (S0106002369de4dac.cg.shawcable.net. [68.147.8.254])
-        by smtp.gmail.com with ESMTPSA id m129sm6324005pga.39.2019.09.05.09.18.01
+        by smtp.gmail.com with ESMTPSA id m129sm6324005pga.39.2019.09.05.09.18.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2019 09:18:01 -0700 (PDT)
+        Thu, 05 Sep 2019 09:18:14 -0700 (PDT)
 From:   Mathieu Poirier <mathieu.poirier@linaro.org>
 To:     stable@vger.kernel.org
 Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pm@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-omap@vger.kernel.org, linux-i2c@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-mtd@lists.infradead.org
-Subject: [BACKPORT 4.14.y 01/18] PCI: designware-ep: Fix find_first_zero_bit() usage
-Date:   Thu,  5 Sep 2019 10:17:42 -0600
-Message-Id: <20190905161759.28036-2-mathieu.poirier@linaro.org>
+Subject: [BACKPORT 4.14.y 12/18] mailbox: reset txdone_method TXDONE_BY_POLL if client knows_txdone
+Date:   Thu,  5 Sep 2019 10:17:53 -0600
+Message-Id: <20190905161759.28036-13-mathieu.poirier@linaro.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190905161759.28036-1-mathieu.poirier@linaro.org>
 References: <20190905161759.28036-1-mathieu.poirier@linaro.org>
@@ -70,154 +70,89 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Niklas Cassel <niklas.cassel@axis.com>
+From: Sudeep Holla <sudeep.holla@arm.com>
 
-commit ad4a5becc689c3f32bbbc2b37eff89efe19dc2f9 upstream
+commit 33cd7123ac0ba5360656ae27db453de5b9aa711f upstream
 
-find_first_zero_bit()'s parameter 'size' is defined in bits,
-not in bytes.
+Currently the mailbox framework sets txdone_method to TXDONE_BY_POLL if
+the controller sets txdone_by_poll. However some clients can have a
+mechanism to do TXDONE_BY_ACK which they can specify by knows_txdone.
+However, we endup setting both TXDONE_BY_POLL and TXDONE_BY_ACK in that
+case. In such scenario, we may end up with below warnings as the tx
+ticker is run both by mailbox framework and the client.
 
-find_first_zero_bit() is called with size in bytes rather than bits,
-which thus defines a too low upper limit, causing
-dw_pcie_ep_inbound_atu() to assign iatu index #4 to both bar 4
-and bar 5, which makes bar 5 overwrite the settings set by bar 4.
+WARNING: CPU: 1 PID: 0 at kernel/time/hrtimer.c:805 hrtimer_forward+0x88/0xd8
+CPU: 1 PID: 0 Comm: swapper/1 Not tainted 4.12.0-rc5 #242
+Hardware name: ARM LTD ARM Juno Development Platform
+task: ffff8009768ca700 task.stack: ffff8009768f8000
+PC is at hrtimer_forward+0x88/0xd8
+LR is at txdone_hrtimer+0xd4/0xf8
+Call trace:
+ hrtimer_forward+0x88/0xd8
+ __hrtimer_run_queues+0xe4/0x158
+ hrtimer_interrupt+0xa4/0x220
+ arch_timer_handler_phys+0x30/0x40
+ handle_percpu_devid_irq+0x78/0x130
+ generic_handle_irq+0x24/0x38
+ __handle_domain_irq+0x5c/0xb8
+ gic_handle_irq+0x54/0xa8
 
-Since the sizes of the bitmaps are known, dynamically allocate the
-bitmaps, and use the correct size when calling find_first_zero_bit().
+This patch fixes the issue by resetting TXDONE_BY_POLL if client has set
+knows_txdone.
 
-Additionally, make sure that ep->num_ob_windows and ep->num_ib_windows,
-which are obtained from device tree, are smaller than the maximum number
-of iATUs (MAX_IATU_IN/MAX_IATU_OUT).
-
-Fixes: f8aed6ec624f ("PCI: dwc: designware: Add EP mode support")
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Alexey Klimov <alexey.klimov@arm.com>
+Signed-off-by: Sudeep Holla <sudeep.holla@arm.com>
+Signed-off-by: Jassi Brar <jaswinder.singh@linaro.org>
 Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
 ---
- drivers/pci/dwc/pcie-designware-ep.c | 34 +++++++++++++++++++++-------
- drivers/pci/dwc/pcie-designware.h    |  8 +++++--
- 2 files changed, 32 insertions(+), 10 deletions(-)
+ drivers/mailbox/mailbox.c | 4 ++--
+ drivers/mailbox/pcc.c     | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index abcbf0770358..71795db41261 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -74,8 +74,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 	u32 free_win;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+diff --git a/drivers/mailbox/mailbox.c b/drivers/mailbox/mailbox.c
+index 44b49a2676f0..055c90b8253c 100644
+--- a/drivers/mailbox/mailbox.c
++++ b/drivers/mailbox/mailbox.c
+@@ -351,7 +351,7 @@ struct mbox_chan *mbox_request_channel(struct mbox_client *cl, int index)
+ 	init_completion(&chan->tx_complete);
  
--	free_win = find_first_zero_bit(&ep->ib_window_map,
--				       sizeof(ep->ib_window_map));
-+	free_win = find_first_zero_bit(ep->ib_window_map, ep->num_ib_windows);
- 	if (free_win >= ep->num_ib_windows) {
- 		dev_err(pci->dev, "no free inbound window\n");
- 		return -EINVAL;
-@@ -89,7 +88,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
- 	}
+ 	if (chan->txdone_method	== TXDONE_BY_POLL && cl->knows_txdone)
+-		chan->txdone_method |= TXDONE_BY_ACK;
++		chan->txdone_method = TXDONE_BY_ACK;
  
- 	ep->bar_to_atu[bar] = free_win;
--	set_bit(free_win, &ep->ib_window_map);
-+	set_bit(free_win, ep->ib_window_map);
+ 	spin_unlock_irqrestore(&chan->lock, flags);
  
- 	return 0;
- }
-@@ -100,8 +99,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 	u32 free_win;
- 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+@@ -420,7 +420,7 @@ void mbox_free_channel(struct mbox_chan *chan)
+ 	spin_lock_irqsave(&chan->lock, flags);
+ 	chan->cl = NULL;
+ 	chan->active_req = NULL;
+-	if (chan->txdone_method == (TXDONE_BY_POLL | TXDONE_BY_ACK))
++	if (chan->txdone_method == TXDONE_BY_ACK)
+ 		chan->txdone_method = TXDONE_BY_POLL;
  
--	free_win = find_first_zero_bit(&ep->ob_window_map,
--				       sizeof(ep->ob_window_map));
-+	free_win = find_first_zero_bit(ep->ob_window_map, ep->num_ob_windows);
- 	if (free_win >= ep->num_ob_windows) {
- 		dev_err(pci->dev, "no free outbound window\n");
- 		return -EINVAL;
-@@ -110,7 +108,7 @@ static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
- 	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
- 				  phys_addr, pci_addr, size);
+ 	module_put(chan->mbox->dev->driver->owner);
+diff --git a/drivers/mailbox/pcc.c b/drivers/mailbox/pcc.c
+index 9b7005e1345e..27c2294be51a 100644
+--- a/drivers/mailbox/pcc.c
++++ b/drivers/mailbox/pcc.c
+@@ -266,7 +266,7 @@ struct mbox_chan *pcc_mbox_request_channel(struct mbox_client *cl,
+ 	init_completion(&chan->tx_complete);
  
--	set_bit(free_win, &ep->ob_window_map);
-+	set_bit(free_win, ep->ob_window_map);
- 	ep->outbound_addr[free_win] = phys_addr;
+ 	if (chan->txdone_method == TXDONE_BY_POLL && cl->knows_txdone)
+-		chan->txdone_method |= TXDONE_BY_ACK;
++		chan->txdone_method = TXDONE_BY_ACK;
  
- 	return 0;
-@@ -125,7 +123,7 @@ static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
- 	dw_pcie_ep_reset_bar(pci, bar);
+ 	spin_unlock_irqrestore(&chan->lock, flags);
  
- 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
--	clear_bit(atu_index, &ep->ib_window_map);
-+	clear_bit(atu_index, ep->ib_window_map);
- }
+@@ -312,7 +312,7 @@ void pcc_mbox_free_channel(struct mbox_chan *chan)
+ 	spin_lock_irqsave(&chan->lock, flags);
+ 	chan->cl = NULL;
+ 	chan->active_req = NULL;
+-	if (chan->txdone_method == (TXDONE_BY_POLL | TXDONE_BY_ACK))
++	if (chan->txdone_method == TXDONE_BY_ACK)
+ 		chan->txdone_method = TXDONE_BY_POLL;
  
- static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
-@@ -181,7 +179,7 @@ static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
- 		return;
- 
- 	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
--	clear_bit(atu_index, &ep->ob_window_map);
-+	clear_bit(atu_index, ep->ob_window_map);
- }
- 
- static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
-@@ -302,12 +300,32 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 		dev_err(dev, "unable to read *num-ib-windows* property\n");
- 		return ret;
- 	}
-+	if (ep->num_ib_windows > MAX_IATU_IN) {
-+		dev_err(dev, "invalid *num-ib-windows*\n");
-+		return -EINVAL;
-+	}
- 
- 	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
- 	if (ret < 0) {
- 		dev_err(dev, "unable to read *num-ob-windows* property\n");
- 		return ret;
- 	}
-+	if (ep->num_ob_windows > MAX_IATU_OUT) {
-+		dev_err(dev, "invalid *num-ob-windows*\n");
-+		return -EINVAL;
-+	}
-+
-+	ep->ib_window_map = devm_kzalloc(dev, sizeof(long) *
-+					 BITS_TO_LONGS(ep->num_ib_windows),
-+					 GFP_KERNEL);
-+	if (!ep->ib_window_map)
-+		return -ENOMEM;
-+
-+	ep->ob_window_map = devm_kzalloc(dev, sizeof(long) *
-+					 BITS_TO_LONGS(ep->num_ob_windows),
-+					 GFP_KERNEL);
-+	if (!ep->ob_window_map)
-+		return -ENOMEM;
- 
- 	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
- 			    GFP_KERNEL);
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 5af29d125c7e..ba9dedc31bfa 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -114,6 +114,10 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
- 
-+/* Maximum number of inbound/outbound iATUs */
-+#define MAX_IATU_IN			256
-+#define MAX_IATU_OUT			256
-+
- struct pcie_port;
- struct dw_pcie;
- struct dw_pcie_ep;
-@@ -193,8 +197,8 @@ struct dw_pcie_ep {
- 	size_t			page_size;
- 	u8			bar_to_atu[6];
- 	phys_addr_t		*outbound_addr;
--	unsigned long		ib_window_map;
--	unsigned long		ob_window_map;
-+	unsigned long		*ib_window_map;
-+	unsigned long		*ob_window_map;
- 	u32			num_ib_windows;
- 	u32			num_ob_windows;
- };
+ 	spin_unlock_irqrestore(&chan->lock, flags);
 -- 
 2.17.1
 
