@@ -2,158 +2,94 @@ Return-Path: <SRS0=lgne=XA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A3BC3A5A5
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 04:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6936BC3A5A5
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 04:32:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F0E3217D7
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 04:04:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 323452082E
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 04:32:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V7VsEvi/"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=anastas.io header.i=@anastas.io header.b="jWXbsz+q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726115AbfIEEEh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Sep 2019 00:04:37 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:45962 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725290AbfIEEEh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 00:04:37 -0400
-Received: by mail-io1-f67.google.com with SMTP id f12so1505208iog.12;
-        Wed, 04 Sep 2019 21:04:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=M+IGfEYSGyyuOm2Prrx3ef40BKfyapHE5e/ScRcmzZ4=;
-        b=V7VsEvi/mTFLoVUoQ8JLQj1QujYpPOCL9e787N9xm/AzDYh+OHJL3axrAjBWP9MT/d
-         JGq20Sh718b741p8V1bPov0ywDuoE0aYrf58KXcjIh6nUAjNOPspMFghC2V9Uc1v+MiI
-         ZzcW3Ssp/w1hnmqU6i3U1FeJqtJw0elEYzIavAomftnsumWK1z6kzzfqKHJpsIEiuc41
-         s1KlGOmvVNZ0FLMrP3NJ/1i3l72CxOlFzSMOCXv1PWQiM1SgmZZz7uFmDxnQmOx0pjzl
-         oW7RvjMuf2YgOqE3/Ibe4sB4OPsx0VEBWkWIZxGXzfJ83H1oQUP8pgomcQxTprxMveJq
-         9y4Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to:user-agent;
-        bh=M+IGfEYSGyyuOm2Prrx3ef40BKfyapHE5e/ScRcmzZ4=;
-        b=XDmjX66GoMrqVzy9mLIoq0zUJMmNfiT2UuKoldXqMieMB8AAqwiOfaSo3o4wFprqiy
-         HCtLGdIdPQQ1MDgroxViyHiWIsN3qQWr3HONcBtvvLBHNeyCFrz+jcW/0tLOfRVP3mz9
-         c9G6e90IINt04HJwyxdRGgJOBXQwBn4qXx6FHdOYfCSB/Wyom3+5iSKhIFXAug16qlt4
-         unpPU6E7GmG/JoV/PxjhKSesRpVLUKiCegCHIvfM/Q+/iNu7qyyj6Qzs+XUE/57j5VRu
-         TWgkQ1Qg2Jgr7H+IT7UOtlNd2j0xN9M/Y7GYkCUIWlSy2cJhOhmVVOnpqeMeJ6PpaeKS
-         Hf8w==
-X-Gm-Message-State: APjAAAXiFkq5KyG6L/7QCVwwyu9V6mYPsRelrT74eRQsp7ofkox134JJ
-        NLFAoRmSF5Eb10HP6tWu12lZsPqFNqY=
-X-Google-Smtp-Source: APXvYqwTBzAOGP++Zt5gDzo0QxhcCRLghE7yC41c3bvkCvuDJODZ35HCgyCv3A0si3LLgXSQEJfnqA==
-X-Received: by 2002:a5d:8cc1:: with SMTP id k1mr1785446iot.286.1567656276246;
-        Wed, 04 Sep 2019 21:04:36 -0700 (PDT)
-Received: from JATN (c-73-243-191-173.hsd1.co.comcast.net. [73.243.191.173])
-        by smtp.gmail.com with ESMTPSA id m67sm2047286iof.21.2019.09.04.21.04.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Sep 2019 21:04:35 -0700 (PDT)
-Date:   Wed, 4 Sep 2019 22:04:33 -0600
-From:   Kelsey Skunberg <skunberg.kelsey@gmail.com>
-To:     Don Dutile <ddutile@redhat.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        Bodong Wang <bodong@mellanox.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [Linux-kernel-mentees] [PATCH v2 2/3] PCI: sysfs: Change
- permissions from symbolic to octal
-Message-ID: <20190905040433.GA117297@JATN>
-References: <20190809195721.34237-1-skunberg.kelsey@gmail.com>
- <20190813204513.4790-1-skunberg.kelsey@gmail.com>
- <20190813204513.4790-3-skunberg.kelsey@gmail.com>
- <20190814053846.GA253360@google.com>
- <b4c0d5b4-7243-ba96-96d1-041a264ac499@redhat.com>
- <20190904062229.GA66871@JATN>
- <850cf536-0b72-d78c-efaf-855dcb391087@redhat.com>
+        id S1726115AbfIEEcR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Sep 2019 00:32:17 -0400
+Received: from alpha.anastas.io ([104.248.188.109]:43491 "EHLO
+        alpha.anastas.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725935AbfIEEcR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 00:32:17 -0400
+X-Greylist: delayed 580 seconds by postgrey-1.27 at vger.kernel.org; Thu, 05 Sep 2019 00:32:17 EDT
+Received: from authenticated-user (alpha.anastas.io [104.248.188.109])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
+        (No client certificate requested)
+        by alpha.anastas.io (Postfix) with ESMTPSA id 7047184B9D;
+        Wed,  4 Sep 2019 23:22:38 -0500 (CDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=anastas.io; s=mail;
+        t=1567657359; bh=EmICgee2nNUFVTp9r6uhX6GMoMfnTqEaFNlse3ssPuc=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=jWXbsz+qQlJDwPgeEAudXQxT2TUqfzpY3dno5FjhVl+ySQe2k4YPNyAJiizFaGOW8
+         30eusimYMGDWVV7N5VurXjBJTEyl9yrF8DKNx07OkJqUG2CdXRF3XRiveqkvL/Agu/
+         R6S4+HhElHqIKVI/so6TWwk0f1gVazk4YZXazlJ55PF1irrgDOBWGOUXfsQIvvVwHJ
+         7j3xsXfcQuaVRbQMPLQRFFCKtF3+qi+oI/7z5Fdxia2KRbzsq1y0cm4CcmwenSb1pV
+         4P4WG4fVojFNGuUYaAN1N+DR6BxczBQEEjiY2rmffJyPKAxGrybqVtkVYodtVYRY/i
+         SAbsgciFBr2aA==
+From:   Shawn Anastasio <shawn@anastas.io>
+To:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc:     bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
+        benh@kernel.crashing.org, sbobroff@linux.ibm.com, oohall@gmail.com
+Subject: [PATCH 2/2] powerpc/pci: Fix IOMMU setup for hotplugged devices on pseries
+Date:   Wed,  4 Sep 2019 23:22:15 -0500
+Message-Id: <20190905042215.3974-3-shawn@anastas.io>
+In-Reply-To: <20190905042215.3974-1-shawn@anastas.io>
+References: <20190905042215.3974-1-shawn@anastas.io>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <850cf536-0b72-d78c-efaf-855dcb391087@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 04, 2019 at 02:33:44PM -0400, Don Dutile wrote:
-> On 09/04/2019 02:22 AM, Kelsey Skunberg wrote:
-> > On Thu, Aug 15, 2019 at 10:37:13AM -0400, Don Dutile wrote:
-> > > On 08/14/2019 01:38 AM, Bjorn Helgaas wrote:
-> > > > [+cc Bodong, Don, Greg for permission question]
-> > > > 
-> > > > On Tue, Aug 13, 2019 at 02:45:12PM -0600, Kelsey Skunberg wrote:
-> > > > > Symbolic permissions such as "(S_IWUSR | S_IWGRP)" are not
-> > > > > preferred and octal permissions should be used instead. Change all
-> > > > > symbolic permissions to octal permissions.
-> > > > > 
-> > > > > Example of old:
-> > > > > 
-> > > > > "(S_IWUSR | S_IWGRP)"
-> > > > > 
-> > > > > Example of new:
-> > > > > 
-> > > > > "0220"
-> > > > 
-> > > > 
-> > > > >    static DEVICE_ATTR_RO(sriov_totalvfs);
-> > > > > -static DEVICE_ATTR(sriov_numvfs, (S_IRUGO | S_IWUSR | S_IWGRP),
-> > > > > -				  sriov_numvfs_show, sriov_numvfs_store);
-> > > > > +static DEVICE_ATTR(sriov_numvfs, 0664, sriov_numvfs_show, sriov_numvfs_store);
-> > > > >    static DEVICE_ATTR_RO(sriov_offset);
-> > > > >    static DEVICE_ATTR_RO(sriov_stride);
-> > > > >    static DEVICE_ATTR_RO(sriov_vf_device);
-> > > > > -static DEVICE_ATTR(sriov_drivers_autoprobe, (S_IRUGO | S_IWUSR | S_IWGRP),
-> > > > > -		   sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
-> > > > > +static DEVICE_ATTR(sriov_drivers_autoprobe, 0664, sriov_drivers_autoprobe_show,
-> > > > > +		   sriov_drivers_autoprobe_store);
-> > > > 
-> > > > Greg noticed that sriov_numvfs and sriov_drivers_autoprobe have
-> > > > "unusual" permissions.  These were added by:
-> > > > 
-> > > >     0e7df22401a3 ("PCI: Add sysfs sriov_drivers_autoprobe to control VF driver binding")
-> > > >     1789382a72a5 ("PCI: SRIOV control and status via sysfs")
-> > > > 
-> > > > Kelsey's patch correctly preserves the existing permissions, but we
-> > > > should double-check that they are the permissions they want, and
-> > > > possibly add a comment about why they're different from the rest.
-> > > > 
-> > > > Bjorn
-> > > > 
-> > 
-> > Hi Don,
-> > 
-> > > The rest being? ... 0644 vs 0664 ?
-> > > The file is read & written, thus the (first) 6; I'll have to dig through very old (7 yr) notes to see if the second 6 is needed for libvirt (so it doesn't have to be root to enable).
-> > > 
-> > > -dd
-> > > 
-> > 
-> > Were you able to see if the unusual permissions (0664) are needed for
-> > libvirt? I appreciate your help!
-> > 
-> > -Kelsey
-> > 
-> Daniel Berrangé reported that libvirt runs as root when dealing with anything PCI, and chowns files for qemu needs, so there is no need for the 664 permission.
-> For all I know, it's a simple typo that was allowed to creep in. :-/
-> 
-> Feel free to modify to 644.
-> 
-> -dd
->
+Move PCI device setup from pcibios_add_device() to pcibios_fixup_dev().
+This ensures that platform-specific DMA and IOMMU setup occurs after the
+device has been registered in sysfs, which is a requirement for IOMMU group
+assignment to work.
 
-Thank you for checking into this and getting back so quick! I'll cc you in
-the patch. :)
+This fixes IOMMU group assignment for hotplugged devices on pseries, where
+the existing behavior results in IOMMU assignment before registration.
 
-Thanks again!
+Signed-off-by: Shawn Anastasio <shawn@anastas.io>
+---
+ arch/powerpc/kernel/pci-common.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
--Kelsey
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index f627e15bb43c..21b4761bb0ed 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -987,15 +987,14 @@ static void pcibios_setup_device(struct pci_dev *dev)
+ 		ppc_md.pci_irq_fixup(dev);
+ }
+ 
+-int pcibios_add_device(struct pci_dev *dev)
++void pcibios_fixup_dev(struct pci_dev *dev)
+ {
+-	/*
+-	 * We can only call pcibios_setup_device() after bus setup is complete,
+-	 * since some of the platform specific DMA setup code depends on it.
+-	 */
+-	if (dev->bus->is_added)
+-		pcibios_setup_device(dev);
++	/* Device is registered in sysfs and ready to be set up */
++	pcibios_setup_device(dev);
++}
+ 
++int pcibios_add_device(struct pci_dev *dev)
++{
+ #ifdef CONFIG_PCI_IOV
+ 	if (ppc_md.pcibios_fixup_sriov)
+ 		ppc_md.pcibios_fixup_sriov(dev);
+-- 
+2.20.1
+
