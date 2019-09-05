@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29697C00306
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE2AC00306
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:19:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CBE092082E
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0E3B2082E
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:19:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HI5tWkpk"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="B+cZWsZu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387925AbfIEQSJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Sep 2019 12:18:09 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:37714 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387845AbfIEQSI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 12:18:08 -0400
-Received: by mail-pf1-f196.google.com with SMTP id y9so2078547pfl.4
-        for <linux-pci@vger.kernel.org>; Thu, 05 Sep 2019 09:18:07 -0700 (PDT)
+        id S2387742AbfIEQSH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Sep 2019 12:18:07 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:33534 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387640AbfIEQSH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 12:18:07 -0400
+Received: by mail-pg1-f196.google.com with SMTP id n190so1698288pgn.0
+        for <linux-pci@vger.kernel.org>; Thu, 05 Sep 2019 09:18:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=3Bt6nNLlt+xUVNaG8TogY6q5T68efSQtUAFTBH8Xlsg=;
-        b=HI5tWkpkgDB2JApLY2ATp8wEzTgsgI7cUXG07/am8F65CP7VSB3lI0NXxyns+DWiX2
-         gaWTANI3zq2OwmaBZXn99DM6sZThpLtoRKLYi5a2I85zG/SH7P8SCjVgftKwhY5ktFuA
-         vJO992gbVyS1qZ7VJYG2btuxuSIAhhpNXMIqEzmVfiiabSsH0Mel1mVFYnYEbX7WVla8
-         tN7UFY3JcIVURcYH4ZeeV0a1XoRM7rgtLWf0/zDA5+VHxMm9oxNpGTujIBcQCjB7dge2
-         mpkITrf0/86JuXKn9lS53c6lBD7zg0AWMotgCzvCXmzDoFROpRfyCy8gCpdWJAq9a8Hw
-         RNtw==
+        bh=oxweDnammrNyIt2aaQLCe6r9vThCpXKTK19Q9yGm1E4=;
+        b=B+cZWsZuXFEQB01N9qcY/nKk7nFveM0bQSkHouQZ+2v8KRCDItQu12g91o55OqiDIl
+         SQnnn5r6vvZTn3KSmZR9+5rl9wxcTUw4H96aAEmGDnjJxx3uKAFfio+dNp5I+wQr3Vwe
+         gbXWR4hTOwsV+tXvAEB+6kyHio5Z54rthgV5q6RE89zhMs4lr/LJm01282eHycMXzU0z
+         U9a2VMJKcYvCVPouURNHnaM7gNG9pAlCnZKkh1Y0vrCEBkYcoJQ5dlKEJOS6mj8Rfcf/
+         3BOqGGxylR2E7voPViPNnWEY2QFJ0exUKtekqdkZckIcT8g6oOqpENw3lQbrUEfCQSqK
+         d4Uw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=3Bt6nNLlt+xUVNaG8TogY6q5T68efSQtUAFTBH8Xlsg=;
-        b=Y8IlHr8NXEo24hDZPKIv+KOx0hk/sgpdGjaSdxBvTYwOy1kmpMguS2su/LjKYNdgRt
-         DvKgzy123zfOitvgYkPC1KDCaGViHGRDdSeqi9B+D4wtIltGzd8/n5wlSOwvmct67TP7
-         DPRslZNnnTXduAZ+IiOyyWlarGijFQFI4Jle1N1UFo2H5St6JL11fZOTANawpr6WqxJC
-         QCnUp23L8T0zB3m19ZI1ekqSJuG+9UocxCinyqRmTj6NmpjAeji8mhb+OWeAT57gfCyH
-         JrEl89CX0ljpA7PdWrD00m90MnvH5SV0Q1XwRO6ZMAhinQViqNCmCDTDuN9lij4tH3IO
-         4cZA==
-X-Gm-Message-State: APjAAAUNiRR6UT/PLTUpzLyytZgVrJIM6p/TrIQknH5kcyRetCXba9gY
-        x6F06tQP8/grPXrwcYzYg8HM9A==
-X-Google-Smtp-Source: APXvYqyeuaXfpPcMY8LL3N9SzaC/DWAxU9D1agyzvWDKKPe/Or/72DzL6TV62pYkRSpSy8AT7z2T/g==
-X-Received: by 2002:a63:6686:: with SMTP id a128mr3841760pgc.361.1567700287353;
-        Thu, 05 Sep 2019 09:18:07 -0700 (PDT)
+        bh=oxweDnammrNyIt2aaQLCe6r9vThCpXKTK19Q9yGm1E4=;
+        b=TqrdGlBvZBGMt23gE/Q7vnLTkxPmGMMLk9dzYB1P0Phut8YsZbmVTzkiqD+sg+RVDU
+         vwLnAN5laRyhNvUx6ETTWp9UMxTZSq9sxY/QfWBgs0rCn5Or2AUSuPKYcZigfrUcAQXr
+         SgdBtvdBDEMubiB8HKvEMpgU2po03tM3jeFRcstjVAcRBaJgoqciOKgmM3osnoueN2Y0
+         MGK8jToEHFYp31kotWarlYbC2f2+06zNm6Le+dU1/WrwT5aFeRG4LQoYiGRbRj0LfAi/
+         TU6JpGJlzHXgGIVj1XoQm2m6hLTyeZa2jmSqcR8uhjM4giW8Zm23tfktx4tYnEz0aab4
+         ci+Q==
+X-Gm-Message-State: APjAAAUUF1ehA2mi+3N27LCrXsvGSWDrCGQ0UIL/pw1kezV5z0E/L23P
+        8Tzaaf494jHv3iSmQmMKsGpq8j6JKt8=
+X-Google-Smtp-Source: APXvYqztrUm14X1kqPalVQhtzDPhMyl9ZuipQZ2gB9IH4meo0O8XJPRIpaw1CUbOHUi6IeHE59j1dQ==
+X-Received: by 2002:a17:90a:303:: with SMTP id 3mr4750663pje.124.1567700285921;
+        Thu, 05 Sep 2019 09:18:05 -0700 (PDT)
 Received: from xps15.cg.shawcable.net (S0106002369de4dac.cg.shawcable.net. [68.147.8.254])
-        by smtp.gmail.com with ESMTPSA id m129sm6324005pga.39.2019.09.05.09.18.05
+        by smtp.gmail.com with ESMTPSA id m129sm6324005pga.39.2019.09.05.09.18.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2019 09:18:06 -0700 (PDT)
+        Thu, 05 Sep 2019 09:18:05 -0700 (PDT)
 From:   Mathieu Poirier <mathieu.poirier@linaro.org>
 To:     stable@vger.kernel.org
 Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-pm@vger.kernel.org, dri-devel@lists.freedesktop.org,
         linux-omap@vger.kernel.org, linux-i2c@vger.kernel.org,
         linux-pci@vger.kernel.org, linux-mtd@lists.infradead.org
-Subject: [BACKPORT 4.14.y 05/18] mfd: palmas: Assign the right powerhold mask for tps65917
-Date:   Thu,  5 Sep 2019 10:17:46 -0600
-Message-Id: <20190905161759.28036-6-mathieu.poirier@linaro.org>
+Subject: [BACKPORT 4.14.y 04/18] usb: dwc3: Allow disabling of metastability workaround
+Date:   Thu,  5 Sep 2019 10:17:45 -0600
+Message-Id: <20190905161759.28036-5-mathieu.poirier@linaro.org>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190905161759.28036-1-mathieu.poirier@linaro.org>
 References: <20190905161759.28036-1-mathieu.poirier@linaro.org>
@@ -70,65 +70,110 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Keerthy <j-keerthy@ti.com>
+From: Roger Quadros <rogerq@ti.com>
 
-commit 572ff4d560be3784205b224cd67d6715620092d7 upstream
+commit 42bf02ec6e420e541af9a47437d0bdf961ca2972 upstream
 
-The powerhold mask for TPS65917 is different when comapred to
-the other palmas versions. Hence assign the right mask that enables
-power off of tps65917 pmic correctly.
+Some platforms (e.g. TI's DRA7 USB2 instance) have more trouble
+with the metastability workaround as it supports only
+a High-Speed PHY and the PHY can enter into an Erratic state [1]
+when the controller is set in SuperSpeed mode as part of
+the metastability workaround.
 
-Signed-off-by: Keerthy <j-keerthy@ti.com>
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
+This causes upto 2 seconds delay in enumeration on DRA7's USB2
+instance in gadget mode.
+
+If these platforms can be better off without the workaround,
+provide a device tree property to suggest that so the workaround
+is avoided.
+
+[1] Device mode enumeration trace showing PHY Erratic Error.
+     irq/90-dwc3-969   [000] d...    52.323145: dwc3_event: event (00000901): Erratic Error [U0]
+     irq/90-dwc3-969   [000] d...    52.560646: dwc3_event: event (00000901): Erratic Error [U0]
+     irq/90-dwc3-969   [000] d...    52.798144: dwc3_event: event (00000901): Erratic Error [U0]
+
+Signed-off-by: Roger Quadros <rogerq@ti.com>
+Signed-off-by: Felipe Balbi <felipe.balbi@linux.intel.com>
 Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
 ---
- drivers/mfd/palmas.c       | 10 +++++++++-
- include/linux/mfd/palmas.h |  3 +++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/usb/dwc3.txt | 2 ++
+ drivers/usb/dwc3/core.c                        | 3 +++
+ drivers/usb/dwc3/core.h                        | 3 +++
+ drivers/usb/dwc3/gadget.c                      | 6 ++++--
+ 4 files changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mfd/palmas.c b/drivers/mfd/palmas.c
-index 3922a93f9f92..663a2398b6b1 100644
---- a/drivers/mfd/palmas.c
-+++ b/drivers/mfd/palmas.c
-@@ -430,6 +430,7 @@ static void palmas_power_off(void)
- {
- 	unsigned int addr;
- 	int ret, slave;
-+	u8 powerhold_mask;
- 	struct device_node *np = palmas_dev->dev->of_node;
+diff --git a/Documentation/devicetree/bindings/usb/dwc3.txt b/Documentation/devicetree/bindings/usb/dwc3.txt
+index 52fb41046b34..44e8bab159ad 100644
+--- a/Documentation/devicetree/bindings/usb/dwc3.txt
++++ b/Documentation/devicetree/bindings/usb/dwc3.txt
+@@ -47,6 +47,8 @@ Optional properties:
+ 			from P0 to P1/P2/P3 without delay.
+  - snps,dis-tx-ipgap-linecheck-quirk: when set, disable u2mac linestate check
+ 			during HS transmit.
++ - snps,dis_metastability_quirk: when set, disable metastability workaround.
++			CAUTION: use only if you are absolutely sure of it.
+  - snps,is-utmi-l1-suspend: true when DWC3 asserts output signal
+ 			utmi_l1_suspend_n, false when asserts utmi_sleep_n
+  - snps,hird-threshold: HIRD threshold
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index 945330ea8d5c..9b093978bd24 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -1115,6 +1115,9 @@ static void dwc3_get_properties(struct dwc3 *dwc)
+ 	device_property_read_u32(dev, "snps,quirk-frame-length-adjustment",
+ 				 &dwc->fladj);
  
- 	if (of_property_read_bool(np, "ti,palmas-override-powerhold")) {
-@@ -437,8 +438,15 @@ static void palmas_power_off(void)
- 					  PALMAS_PRIMARY_SECONDARY_PAD2);
- 		slave = PALMAS_BASE_TO_SLAVE(PALMAS_PU_PD_OD_BASE);
- 
-+		if (of_device_is_compatible(np, "ti,tps65917"))
-+			powerhold_mask =
-+				TPS65917_PRIMARY_SECONDARY_PAD2_GPIO_5_MASK;
-+		else
-+			powerhold_mask =
-+				PALMAS_PRIMARY_SECONDARY_PAD2_GPIO_7_MASK;
++	dwc->dis_metastability_quirk = device_property_read_bool(dev,
++				"snps,dis_metastability_quirk");
 +
- 		ret = regmap_update_bits(palmas_dev->regmap[slave], addr,
--				PALMAS_PRIMARY_SECONDARY_PAD2_GPIO_7_MASK, 0);
-+					 powerhold_mask, 0);
- 		if (ret)
- 			dev_err(palmas_dev->dev,
- 				"Unable to write PRIMARY_SECONDARY_PAD2 %d\n",
-diff --git a/include/linux/mfd/palmas.h b/include/linux/mfd/palmas.h
-index 6dec43826303..cffb23b8bd70 100644
---- a/include/linux/mfd/palmas.h
-+++ b/include/linux/mfd/palmas.h
-@@ -3733,6 +3733,9 @@ enum usb_irq_events {
- #define TPS65917_REGEN3_CTRL_MODE_ACTIVE			0x01
- #define TPS65917_REGEN3_CTRL_MODE_ACTIVE_SHIFT			0x00
+ 	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
+ 	dwc->tx_de_emphasis = tx_de_emphasis;
  
-+/* POWERHOLD Mask field for PRIMARY_SECONDARY_PAD2 register */
-+#define TPS65917_PRIMARY_SECONDARY_PAD2_GPIO_5_MASK		0xC
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index abd1142c9e4d..40bf0e0768d9 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -869,6 +869,7 @@ struct dwc3_scratchpad_array {
+  * 	1	- -3.5dB de-emphasis
+  * 	2	- No de-emphasis
+  * 	3	- Reserved
++ * @dis_metastability_quirk: set to disable metastability quirk.
+  * @imod_interval: set the interrupt moderation interval in 250ns
+  *                 increments or 0 to disable.
+  */
+@@ -1025,6 +1026,8 @@ struct dwc3 {
+ 	unsigned		tx_de_emphasis_quirk:1;
+ 	unsigned		tx_de_emphasis:2;
+ 
++	unsigned		dis_metastability_quirk:1;
 +
- /* Registers for function RESOURCE */
- #define TPS65917_REGEN1_CTRL					0x2
- #define TPS65917_PLLEN_CTRL					0x3
+ 	u16			imod_interval;
+ };
+ 
+diff --git a/drivers/usb/dwc3/gadget.c b/drivers/usb/dwc3/gadget.c
+index 1b99d44e52b9..5916340c4162 100644
+--- a/drivers/usb/dwc3/gadget.c
++++ b/drivers/usb/dwc3/gadget.c
+@@ -2034,7 +2034,8 @@ static void dwc3_gadget_set_speed(struct usb_gadget *g,
+ 	 * STAR#9000525659: Clock Domain Crossing on DCTL in
+ 	 * USB 2.0 Mode
+ 	 */
+-	if (dwc->revision < DWC3_REVISION_220A) {
++	if (dwc->revision < DWC3_REVISION_220A &&
++	    !dwc->dis_metastability_quirk) {
+ 		reg |= DWC3_DCFG_SUPERSPEED;
+ 	} else {
+ 		switch (speed) {
+@@ -3265,7 +3266,8 @@ int dwc3_gadget_init(struct dwc3 *dwc)
+ 	 * is less than super speed because we don't have means, yet, to tell
+ 	 * composite.c that we are USB 2.0 + LPM ECN.
+ 	 */
+-	if (dwc->revision < DWC3_REVISION_220A)
++	if (dwc->revision < DWC3_REVISION_220A &&
++	    !dwc->dis_metastability_quirk)
+ 		dev_info(dwc->dev, "changing max_speed on rev %08x\n",
+ 				dwc->revision);
+ 
 -- 
 2.17.1
 
