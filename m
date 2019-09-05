@@ -2,120 +2,100 @@ Return-Path: <SRS0=lgne=XA=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC195C43331
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:20:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B0B2C43331
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8B3242082E
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:20:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="O3tNCt/W"
+	by mail.kernel.org (Postfix) with ESMTP id 1044C207E0
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Sep 2019 16:24:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730250AbfIEQUG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Sep 2019 12:20:06 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:38506 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733192AbfIEQSE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Sep 2019 12:18:04 -0400
-Received: by mail-pg1-f196.google.com with SMTP id d10so1683687pgo.5
-        for <linux-pci@vger.kernel.org>; Thu, 05 Sep 2019 09:18:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=MSiwBcSQD+D+YdS5Q0qHybng0VxB5Rm8vXeXQFjLMZc=;
-        b=O3tNCt/W9wLVtkbdnd5ZHoteegcojqCr7hKVqHkZxaUlxVn/YzfA6HZZ40nBdnkoAO
-         ZhrB0iw1Uc7D91gKUNEFUts4aaIwRfLc9HFFMibqH7dcc8fRUXz52KMfGwZDlccDJJiE
-         RKX9AyFqS2JsIHjGGXMBX/BZ1YMB9oSdcvYb1l/YwNtkOv1/bY7a0taZGatIUTZLB8B5
-         qoHjnHc9HvsJyTbTAEzBV36syWkgm7Xqp77PJV2mZ8WayBu5mJr3U5qaAjISS8G7GYPD
-         EdmiI92amAdqbvyv4IrbpfYnerC9XFLioXTmFRbJMwAJ7YCYhVi9YGHLHFzUt0cn8dd8
-         c2lQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=MSiwBcSQD+D+YdS5Q0qHybng0VxB5Rm8vXeXQFjLMZc=;
-        b=PNhKdGkCF2Gq1Nb2OoKBuIa7iLRx1uQ54dw7zgw/W6ndNCejsGLFbZjg/ZCropGaI6
-         CDH3zTmOCSgN9VV2BPrIlSknDHjVGYU7Fq1KR8IkNBuooAUIEIVnEVK5sAIiIYSiPqDK
-         wrtGWKUvfIC2zQ8dgXRBd3cuZvdH1+eGBq6ZvRwTH3EAqG1d3OhKudRTawX3AUBUKtBG
-         o9d+rlG6Bz7dWZxnebXKpdd2T6IawaqvXS/rEXG9Nen5cq3i2ncVirm4UFM4NfyZqylt
-         CiSCY/n/9NPqGYMaz4SoOpzhdswc2TqrQvQDeUBlWOnCMoNOfphp3uwuPU5NebALEgUi
-         EN5Q==
-X-Gm-Message-State: APjAAAXDOopjX+JRDpHME+davL58GlLfoaRlaLvLLLWr6Kt0bacAzNRq
-        pwcRsWXFcXxJJ5FXv4gXW72/0Q==
-X-Google-Smtp-Source: APXvYqwx6+407C9x94FJoPzSVHCP0t2Zdj+mPwGij0zS69UFxmlYHwYXWRRcMX8TRc0mw6jEYgImGw==
-X-Received: by 2002:a65:684c:: with SMTP id q12mr3654124pgt.405.1567700283561;
-        Thu, 05 Sep 2019 09:18:03 -0700 (PDT)
-Received: from xps15.cg.shawcable.net (S0106002369de4dac.cg.shawcable.net. [68.147.8.254])
-        by smtp.gmail.com with ESMTPSA id m129sm6324005pga.39.2019.09.05.09.18.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Sep 2019 09:18:03 -0700 (PDT)
-From:   Mathieu Poirier <mathieu.poirier@linaro.org>
-To:     stable@vger.kernel.org
-Cc:     linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-omap@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-mtd@lists.infradead.org
-Subject: [BACKPORT 4.14.y 02/18] PCI: dra7xx: Fix legacy INTD IRQ handling
-Date:   Thu,  5 Sep 2019 10:17:43 -0600
-Message-Id: <20190905161759.28036-3-mathieu.poirier@linaro.org>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190905161759.28036-1-mathieu.poirier@linaro.org>
-References: <20190905161759.28036-1-mathieu.poirier@linaro.org>
+        id S1726008AbfIEQYV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Sep 2019 12:24:21 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56400 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725945AbfIEQYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 5 Sep 2019 12:24:21 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 4075210F23F6;
+        Thu,  5 Sep 2019 16:24:21 +0000 (UTC)
+Received: from [10.3.116.78] (ovpn-116-78.phx2.redhat.com [10.3.116.78])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D05C660BE1;
+        Thu,  5 Sep 2019 16:24:19 +0000 (UTC)
+Subject: Re: [PATCH] PCI/IOV: Make SR-IOV attributes with mode 0664 use 0644
+To:     Kelsey Skunberg <skunberg.kelsey@gmail.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     bodong@mellanox.com, gregkh@linuxfoundation.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, berrange@redhat.com,
+        sathyanarayanan.kuppuswamy@linux.intel.com
+References: <20190905063226.43269-1-skunberg.kelsey@gmail.com>
+From:   Don Dutile <ddutile@redhat.com>
+Message-ID: <37736cd8-fc9f-5896-030a-d7957cc68113@redhat.com>
+Date:   Thu, 5 Sep 2019 12:24:19 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
+MIME-Version: 1.0
+In-Reply-To: <20190905063226.43269-1-skunberg.kelsey@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.66]); Thu, 05 Sep 2019 16:24:21 +0000 (UTC)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Vignesh R <vigneshr@ti.com>
+On 09/05/2019 02:32 AM, Kelsey Skunberg wrote:
+> sriov_numvfs and sriov_drivers_autoprobe have "unusual" permissions (0664)
+> with no reported or found reason for allowing group write permissions.
+> libvirt runs as root when dealing with PCI, and chowns files for qemu
+> needs. There is not a need for the "0664" permissions.
+> 
+> sriov_numvfs was introduced in:
+> 	commit 1789382a72a5 ("PCI: SRIOV control and status via sysfs")
+> 
+> sriov_drivers_autoprobe was introduced in:
+> 	commit 0e7df22401a3 ("PCI: Add sysfs sriov_drivers_autoprobe to
+> 			      control VF driver binding")
+> 
+> Change sriov_numvfs and sriov_drivers_autoprobe from "0664" permissions to
+> "0644" permissions.
+> 
+> Exchange DEVICE_ATTR() with DEVICE_ATTR_RW() which sets the mode to "0644".
+> DEVICE_ATTR() should only be used for "unusual" permissions.
+> 
+> Signed-off-by: Kelsey Skunberg <skunberg.kelsey@gmail.com>
+> ---
+>   drivers/pci/iov.c | 5 ++---
+>   1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index b335db21c85e..b3f972e8cfed 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -375,12 +375,11 @@ static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+>   }
+>   
+>   static DEVICE_ATTR_RO(sriov_totalvfs);
+> -static DEVICE_ATTR(sriov_numvfs, 0664, sriov_numvfs_show, sriov_numvfs_store);
+> +static DEVICE_ATTR_RW(sriov_numvfs);
+>   static DEVICE_ATTR_RO(sriov_offset);
+>   static DEVICE_ATTR_RO(sriov_stride);
+>   static DEVICE_ATTR_RO(sriov_vf_device);
+> -static DEVICE_ATTR(sriov_drivers_autoprobe, 0664, sriov_drivers_autoprobe_show,
+> -		   sriov_drivers_autoprobe_store);
+> +static DEVICE_ATTR_RW(sriov_drivers_autoprobe);
+>   
+>   static struct attribute *sriov_dev_attrs[] = {
+>   	&dev_attr_sriov_totalvfs.attr,
+> 
+Thanks again for the cleanup.
 
-commit 524d59f6e30aab5b618da55e604c802ccd83e708 upstream
-
-Legacy INTD IRQ handling is broken on dra7xx due to fact that driver
-uses hwirq in range of 1-4 for INTA, INTD whereas IRQ domain is of size
-4 which is numbered 0-3. Therefore when INTD IRQ line is used with
-pci-dra7xx driver following warning is seen:
-
-       WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:342 irq_domain_associate+0x12c/0x1c4
-       error: hwirq 0x4 is too large for dummy
-
-Fix this by using pci_irqd_intx_xlate() helper to translate the INTx 1-4
-range into the 0-3 as done in other PCIe drivers.
-
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Reported-by: Chris Welch <Chris.Welch@viavisolutions.com>
-Signed-off-by: Vignesh R <vigneshr@ti.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
----
- drivers/pci/dwc/pci-dra7xx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 63052c5e5f82..7f5dfa169d0f 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -227,6 +227,7 @@ static int dra7xx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 
- static const struct irq_domain_ops intx_domain_ops = {
- 	.map = dra7xx_pcie_intx_map,
-+	.xlate = pci_irqd_intx_xlate,
- };
- 
- static int dra7xx_pcie_init_irq_domain(struct pcie_port *pp)
-@@ -270,7 +271,7 @@ static irqreturn_t dra7xx_pcie_msi_irq_handler(int irq, void *arg)
- 	case INTC:
- 	case INTD:
- 		generic_handle_irq(irq_find_mapping(dra7xx->irq_domain,
--						    ffs(reg)));
-+						    ffs(reg) - 1));
- 		break;
- 	}
- 
--- 
-2.17.1
+Acked-by: Donald Dutile <ddutile@redhat.com>
 
