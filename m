@@ -2,48 +2,48 @@ Return-Path: <SRS0=JEK6=XH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DF6C47404
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:03:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2035C47404
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:03:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5FE82084D
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:03:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74ED0214DA
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:03:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="g6S0hKWU"
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="OlAQGPUp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731695AbfILNDB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Sep 2019 09:03:01 -0400
-Received: from smtp-fw-4101.amazon.com ([72.21.198.25]:42982 "EHLO
-        smtp-fw-4101.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731626AbfILNDB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2019 09:03:01 -0400
+        id S1731814AbfILNDR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Sep 2019 09:03:17 -0400
+Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:47725 "EHLO
+        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731626AbfILNDR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2019 09:03:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1568293380; x=1599829380;
+  t=1568293396; x=1599829396;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version;
-  bh=mtcExX1DvgKeY32dgd0YJY2ICHMN8S9nv5NWZ+RR3o4=;
-  b=g6S0hKWU7tePF40Twz7NEo0CrhjfR13c+EMwFIYi8LLJTSQ0IsP0mN6e
-   xO9uPmGTac8lFezHLOkOPfvhs78hv10wtMKaRAGgUzqQX5UpEcJB+vbQA
-   6cvSN3KF+M4Vny3yzNTiGXLlBDVaIh/8w3vW2Gm2ZQw5btZdx8ZK+ksnf
-   Y=;
+  bh=YCI9/8/j431HdcQDOyry7Imqjc6V2OFviDdWb/2L/qc=;
+  b=OlAQGPUpoGNvz9JhHW3M2IFOBN+nv8Evi8xAUa3cfD5HqVxF6ikL6EuM
+   nfEYymKYFLFgfUuWGQ69ZZTinSMxB7Tool5BlNSK/blP1lpObUaq4qZLp
+   JlEUBQMdlUCCMqlRo6/gGRjZBDZUtd0cqPqEZOO+XI8RSUaJIUiSRMrux
+   w=;
 X-IronPort-AV: E=Sophos;i="5.64,497,1559520000"; 
-   d="scan'208";a="784613477"
-Received: from iad6-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1e-c7c08562.us-east-1.amazon.com) ([10.124.125.6])
-  by smtp-border-fw-out-4101.iad4.amazon.com with ESMTP; 12 Sep 2019 13:02:58 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1e-c7c08562.us-east-1.amazon.com (Postfix) with ESMTPS id 049C924A8F2;
-        Thu, 12 Sep 2019 13:02:57 +0000 (UTC)
+   d="scan'208";a="414911959"
+Received: from iad6-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1e-62350142.us-east-1.amazon.com) ([10.124.125.6])
+  by smtp-border-fw-out-6001.iad6.amazon.com with ESMTP; 12 Sep 2019 13:03:13 +0000
+Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan3.iad.amazon.com [10.40.159.166])
+        by email-inbound-relay-1e-62350142.us-east-1.amazon.com (Postfix) with ESMTPS id BB0CBA1DA2;
+        Thu, 12 Sep 2019 13:03:09 +0000 (UTC)
 Received: from EX13D13UWA001.ant.amazon.com (10.43.160.136) by
  EX13MTAUWA001.ant.amazon.com (10.43.160.58) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 12 Sep 2019 13:02:57 +0000
+ id 15.0.1367.3; Thu, 12 Sep 2019 13:03:09 +0000
 Received: from u9ff250417f405e.ant.amazon.com (10.43.161.99) by
  EX13D13UWA001.ant.amazon.com (10.43.160.136) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 12 Sep 2019 13:02:51 +0000
+ id 15.0.1367.3; Thu, 12 Sep 2019 13:03:03 +0000
 From:   Jonathan Chocron <jonnyc@amazon.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
@@ -54,9 +54,9 @@ CC:     <andrew.murray@arm.com>, <dwmw@amazon.co.uk>,
         <hanochu@amazon.com>, <hhhawa@amazon.com>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <jonnyc@amazon.com>
-Subject: [PATCH v6 5/7] dt-bindings: PCI: Add Amazon's Annapurna Labs PCIe host bridge binding
-Date:   Thu, 12 Sep 2019 16:02:36 +0300
-Message-ID: <20190912130238.15682-1-jonnyc@amazon.com>
+Subject: [PATCH v6 7/7] PCI: dwc: Add validation that PCIe core is set to correct mode
+Date:   Thu, 12 Sep 2019 16:02:38 +0300
+Message-ID: <20190912130238.15682-3-jonnyc@amazon.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190912130042.14597-1-jonnyc@amazon.com>
 References: <20190912130042.14597-1-jonnyc@amazon.com>
@@ -70,86 +70,79 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Document Amazon's Annapurna Labs PCIe host bridge.
+Some PCIe controllers can be set to either Host or EP according to some
+early boot FW. To make sure there is no discrepancy (e.g. FW configured
+the port to EP mode while the DT specifies it as a host bridge or vice
+versa), a check has been added for each mode.
 
 Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
+Acked-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Reviewed-by: Andrew Murray <andrew.murray@arm.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- .../devicetree/bindings/pci/pcie-al.txt       | 46 +++++++++++++++++++
- MAINTAINERS                                   |  3 +-
- 2 files changed, 48 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-al.txt
+ drivers/pci/controller/dwc/pcie-designware-ep.c  |  8 ++++++++
+ .../pci/controller/dwc/pcie-designware-host.c    | 16 ++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/pcie-al.txt b/Documentation/devicetree/bindings/pci/pcie-al.txt
-new file mode 100644
-index 000000000000..557a5089229d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pcie-al.txt
-@@ -0,0 +1,46 @@
-+* Amazon Annapurna Labs PCIe host bridge
-+
-+Amazon's Annapurna Labs PCIe Host Controller is based on the Synopsys DesignWare
-+PCI core. It inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pcie.txt.
-+
-+Properties of the host controller node that differ from it are:
-+
-+- compatible:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Value should contain
-+			- "amazon,al-alpine-v2-pcie" for alpine_v2
-+			- "amazon,al-alpine-v3-pcie" for alpine_v3
-+
-+- reg:
-+	Usage: required
-+	Value type: <prop-encoded-array>
-+	Definition: Register ranges as listed in the reg-names property
-+
-+- reg-names:
-+	Usage: required
-+	Value type: <stringlist>
-+	Definition: Must include the following entries
-+			- "config"	PCIe ECAM space
-+			- "controller"	AL proprietary registers
-+			- "dbi"		Designware PCIe registers
-+
-+Example:
-+
-+	pcie-external0: pcie@fb600000 {
-+		compatible = "amazon,al-alpine-v3-pcie";
-+		reg = <0x0 0xfb600000 0x0 0x00100000
-+		       0x0 0xfd800000 0x0 0x00010000
-+		       0x0 0xfd810000 0x0 0x00001000>;
-+		reg-names = "config", "controller", "dbi";
-+		bus-range = <0 255>;
-+		device_type = "pci";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		#interrupt-cells = <1>;
-+		interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-map-mask = <0x00 0 0 7>;
-+		interrupt-map = <0x0000 0 0 1 &gic GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>; /* INTa */
-+		ranges = <0x02000000 0x0 0xc0010000 0x0 0xc0010000 0x0 0x07ff0000>;
-+	};
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 783569e3c4b4..d200b16fa95c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12448,10 +12448,11 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/pci.git/
- S:	Supported
- F:	drivers/pci/controller/
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 65f479250087..3dd2e2697294 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -498,6 +498,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	int ret;
+ 	u32 reg;
+ 	void *addr;
++	u8 hdr_type;
+ 	unsigned int nbars;
+ 	unsigned int offset;
+ 	struct pci_epc *epc;
+@@ -562,6 +563,13 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	if (ep->ops->ep_init)
+ 		ep->ops->ep_init(ep);
  
--PCIE DRIVER FOR ANNAPURNA LABS
-+PCIE DRIVER FOR AMAZON ANNAPURNA LABS
- M:	Jonathan Chocron <jonnyc@amazon.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/pcie-al.txt
- F:	drivers/pci/controller/dwc/pcie-al.c
++	hdr_type = dw_pcie_readb_dbi(pci, PCI_HEADER_TYPE);
++	if (hdr_type != PCI_HEADER_TYPE_NORMAL) {
++		dev_err(pci->dev, "PCIe controller is not set to EP mode (hdr_type:0x%x)!\n",
++			hdr_type);
++		return -EIO;
++	}
++
+ 	ret = of_property_read_u8(np, "max-functions", &epc->max_functions);
+ 	if (ret < 0)
+ 		epc->max_functions = 1;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index d3156446ff27..0f36a926059a 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -323,6 +323,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct pci_bus *child;
+ 	struct pci_host_bridge *bridge;
+ 	struct resource *cfg_res;
++	u32 hdr_type;
+ 	int ret;
  
- PCIE DRIVER FOR AMLOGIC MESON
+ 	raw_spin_lock_init(&pci->pp.lock);
+@@ -464,6 +465,21 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			goto err_free_msi;
+ 	}
+ 
++	ret = dw_pcie_rd_own_conf(pp, PCI_HEADER_TYPE, 1, &hdr_type);
++	if (ret != PCIBIOS_SUCCESSFUL) {
++		dev_err(pci->dev, "Failed reading PCI_HEADER_TYPE cfg space reg (ret: 0x%x)\n",
++			ret);
++		ret = pcibios_err_to_errno(ret);
++		goto err_free_msi;
++	}
++	if (hdr_type != PCI_HEADER_TYPE_BRIDGE) {
++		dev_err(pci->dev,
++			"PCIe controller is not set to bridge type (hdr_type: 0x%x)!\n",
++			hdr_type);
++		ret = -EIO;
++		goto err_free_msi;
++	}
++
+ 	pp->root_bus_nr = pp->busn->start;
+ 
+ 	bridge->dev.parent = dev;
 -- 
 2.17.1
 
