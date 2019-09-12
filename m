@@ -2,47 +2,48 @@ Return-Path: <SRS0=JEK6=XH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEA4AC4CEC5
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:01:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2CE3C47404
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:01:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85C212075C
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:01:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7909021479
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:01:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="vu5ODvkm"
+	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="RE3m/EJv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731814AbfILNBk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Sep 2019 09:01:40 -0400
-Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:28222 "EHLO
+        id S1731816AbfILNB4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Sep 2019 09:01:56 -0400
+Received: from smtp-fw-6002.amazon.com ([52.95.49.90]:28313 "EHLO
         smtp-fw-6002.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730454AbfILNBk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2019 09:01:40 -0400
+        with ESMTP id S1730454AbfILNBz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2019 09:01:55 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
   d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1568293298; x=1599829298;
-  h=from:to:cc:subject:date:message-id:mime-version;
-  bh=5vMnttMVn1m3hZniO4vh6FvR91fgQ2Rf01D6DZD1UBk=;
-  b=vu5ODvkm4RTFnqNVsEe3Gl1Q7ynW5saSNfTJ7aicsoEreE89+Wfm0Gov
-   3UaJVfK/ubTDiWJohe1CAwIdIpj/9/nJEwuEgzJnePC0CZBjdTIsnq+OU
-   LRnCxgvZHphTNInogmuUV5KBTsh/YpoaFLD0fMfnN9s7bTqQjlAD9PwnL
-   4=;
+  t=1568293315; x=1599829315;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version;
+  bh=jct20q5lVCpJ9JMjhtyUVKj8GV6yFUouYDE9nzby1vo=;
+  b=RE3m/EJvQTzrG6937LGLAqE+skCRJxW/f8RgfYGAWL3XBK3Zx37mgmhQ
+   3PPbTaCtCM/66/zr9RLNX2CphvVhwAILlpo1JlzXOPEZCQfmhp0V0JZe3
+   Bmmhc9nSAyPUSNSjmJzoGyo9W2TVt3gUdqw67xHflJBfRwPvmQVg8LE5a
+   Q=;
 X-IronPort-AV: E=Sophos;i="5.64,497,1559520000"; 
-   d="scan'208";a="420818728"
-Received: from iad6-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1a-715bee71.us-east-1.amazon.com) ([10.124.125.6])
-  by smtp-border-fw-out-6002.iad6.amazon.com with ESMTP; 12 Sep 2019 13:01:37 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1a-715bee71.us-east-1.amazon.com (Postfix) with ESMTPS id 42812A2403;
-        Thu, 12 Sep 2019 13:01:33 +0000 (UTC)
+   d="scan'208";a="420818798"
+Received: from iad6-co-svc-p1-lb1-vlan3.amazon.com (HELO email-inbound-relay-1d-2c665b5d.us-east-1.amazon.com) ([10.124.125.6])
+  by smtp-border-fw-out-6002.iad6.amazon.com with ESMTP; 12 Sep 2019 13:01:54 +0000
+Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan3.iad.amazon.com [10.40.159.166])
+        by email-inbound-relay-1d-2c665b5d.us-east-1.amazon.com (Postfix) with ESMTPS id F035BA2240;
+        Thu, 12 Sep 2019 13:01:50 +0000 (UTC)
 Received: from EX13D13UWA001.ant.amazon.com (10.43.160.136) by
  EX13MTAUWA001.ant.amazon.com (10.43.160.58) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 12 Sep 2019 13:01:33 +0000
+ id 15.0.1367.3; Thu, 12 Sep 2019 13:01:50 +0000
 Received: from u9ff250417f405e.ant.amazon.com (10.43.161.82) by
  EX13D13UWA001.ant.amazon.com (10.43.160.136) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 12 Sep 2019 13:01:27 +0000
+ id 15.0.1367.3; Thu, 12 Sep 2019 13:01:44 +0000
 From:   Jonathan Chocron <jonnyc@amazon.com>
 To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
         <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
@@ -53,10 +54,12 @@ CC:     <andrew.murray@arm.com>, <dwmw@amazon.co.uk>,
         <hanochu@amazon.com>, <hhhawa@amazon.com>,
         <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <devicetree@vger.kernel.org>, <jonnyc@amazon.com>
-Subject: [PATCH v6 0/7] Amazon's Annapurna Labs DT-based PCIe host controller driver
-Date:   Thu, 12 Sep 2019 16:00:38 +0300
-Message-ID: <20190912130042.14597-1-jonnyc@amazon.com>
+Subject: [PATCH v6 3/7] PCI/VPD: Prevent VPD access for Amazon's Annapurna Labs Root Port
+Date:   Thu, 12 Sep 2019 16:00:41 +0300
+Message-ID: <20190912130042.14597-4-jonnyc@amazon.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190912130042.14597-1-jonnyc@amazon.com>
+References: <20190912130042.14597-1-jonnyc@amazon.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.43.161.82]
@@ -67,87 +70,39 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds support for Amazon's Annapurna Labs DT-based PCIe host
-controller driver.
-Additionally, it adds 3 quirks (ACS, VPD and MSI-X) and 2 generic DWC patches.
+The Amazon Annapurna Labs PCIe Root Port exposes the VPD capability,
+but there is no actual support for it.
 
-Changes since v5:
-- Modified commit subject of PATCH 6/7
-- Removed timestamps from commit message of PATCH 4/7
-- Modified ACS quirk according to Bjorn's comments
+Trying to access the VPD (for example, as part of lspci -vv or when
+reading the vpd sysfs file), results in the following warning print:
 
-Changes since v4:
-- Moved the HEADER_TYPE validations to after pp->ops->host_init() and
-  ep->ops->ep_init()
-- Changed to dw_pcie_rd_own_conf() instead of dw_pcie_readb_dbi() for
-  reading the HEADER_TYPE
-- Used existing quirk_blacklist_vpd() instead of quirk_al_vpd_release()
-- Added a newline in ACS quirk comment
+  pcieport 0001:00:00.0: VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update
 
-Changes since v3:
-- Removed PATCH 8/8 since the usage of the PCI flags will be discussed
-  in the upcoming LPC
-- Align commit subject with the folder convention
-- Added explanation regarding ECAM "overload" mechanism
-- Switched to read/write{_relaxed} APIs
-- Modified a dev_err to dev_dbg
-- Removed unnecessary variable
-- Removed driver details from dt-binding description
-- Changed to SoC specific compatibles
-- Fixed typo in a commit message
-- Added comment regarding MSI in the MSI-X quirk
+Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
+Reviewed-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/vpd.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Changes since v2:
-- Added al_pcie_controller_readl/writel() wrappers
-- Reorganized local vars in several functions according to reverse
-  tree structure
-- Removed unnecessary check of ret value
-- Changed return type of al_pcie_config_prepare() from int to void
-- Removed check if link is up from probe() [done internally in
-  dw_pcie_rd/wr_conf()]
-
-Changes since v1:
-- Added comment regarding 0x0031 being used as a dev_id for non root-port devices as well
-- Fixed different message/comment/print wordings
-- Added panic stacktrace to commit message of MSI-x quirk patch
-- Changed to pci_warn() instead of dev_warn()
-- Added unit_address after node_name in dt-binding
-- Updated Kconfig help description
-- Used GENMASK and FIELD_PREP/GET where appropriate
-- Removed leftover field from struct al_pcie and moved all ptrs to
-  the beginning
-- Re-wrapped function definitions and invocations to use fewer lines
-- Change %p to %px in dbg prints in rd/wr_conf() functions
-- Removed validation that the port is configured to RC mode (as this is
-  added generically in PATCH 7/8)
-- Removed unnecessary variable initializations
-- Switched to %pR for printing resources
-
-
-Ali Saidi (1):
-  PCI: Add ACS quirk for Amazon Annapurna Labs root ports
-
-Jonathan Chocron (6):
-  PCI: Add Amazon's Annapurna Labs vendor ID
-  PCI/VPD: Prevent VPD access for Amazon's Annapurna Labs Root Port
-  PCI: Add quirk to disable MSI-X support for Amazon's Annapurna Labs
-    Root Port
-  dt-bindings: PCI: Add Amazon's Annapurna Labs PCIe host bridge binding
-  PCI: dwc: al: Add Amazon Annapurna Labs PCIe controller driver
-  PCI: dwc: Add validation that PCIe core is set to correct mode
-
- .../devicetree/bindings/pci/pcie-al.txt       |  46 +++
- MAINTAINERS                                   |   3 +-
- drivers/pci/controller/dwc/Kconfig            |  12 +
- drivers/pci/controller/dwc/pcie-al.c          | 365 ++++++++++++++++++
- .../pci/controller/dwc/pcie-designware-ep.c   |   8 +
- .../pci/controller/dwc/pcie-designware-host.c |  16 +
- drivers/pci/quirks.c                          |  38 ++
- drivers/pci/vpd.c                             |   6 +
- include/linux/pci_ids.h                       |   2 +
- 9 files changed, 495 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-al.txt
-
+diff --git a/drivers/pci/vpd.c b/drivers/pci/vpd.c
+index 4963c2e2bd4c..7915d10f9aa1 100644
+--- a/drivers/pci/vpd.c
++++ b/drivers/pci/vpd.c
+@@ -571,6 +571,12 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
+ 		quirk_blacklist_vpd);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_QLOGIC, 0x2261, quirk_blacklist_vpd);
++/*
++ * The Amazon Annapurna Labs 0x0031 device id is reused for other non Root Port
++ * device types, so the quirk is registered for the PCI_CLASS_BRIDGE_PCI class.
++ */
++DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS, 0x0031,
++			      PCI_CLASS_BRIDGE_PCI, 8, quirk_blacklist_vpd);
+ 
+ /*
+  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
 -- 
 2.17.1
 
