@@ -2,489 +2,99 @@ Return-Path: <SRS0=JEK6=XH=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB36EC47404
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:03:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D80F7C47404
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:04:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD1BB21479
-	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:03:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=amazon.com header.i=@amazon.com header.b="pgzOcZMF"
+	by mail.kernel.org (Postfix) with ESMTP id B53A12075C
+	for <linux-pci@archiver.kernel.org>; Thu, 12 Sep 2019 13:04:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731801AbfILNDt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Sep 2019 09:03:49 -0400
-Received: from smtp-fw-9102.amazon.com ([207.171.184.29]:34003 "EHLO
-        smtp-fw-9102.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731320AbfILNDs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 12 Sep 2019 09:03:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1568293428; x=1599829428;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version;
-  bh=OzsoqQgy3Dnv2BuQUsXFN/SxvypzCIsAGqbDYlDt7uU=;
-  b=pgzOcZMF2GArTK4vW+grugbBYbHy/tngbuYY23D8jeA4xWoqPMShqERA
-   URVbPw7omlcLYGEAzzoviNUFeR16/11ANPLbz3tiD0vI4VKANL87nvXwG
-   5qc1yOm9jLMdpCdrZivZsdK4wGgZAOSc2aDPvnbQkLK0/wAE2vkYZ7pbN
-   Y=;
-X-IronPort-AV: E=Sophos;i="5.64,497,1559520000"; 
-   d="scan'208";a="702155949"
-Received: from sea3-co-svc-lb6-vlan3.sea.amazon.com (HELO email-inbound-relay-1e-a70de69e.us-east-1.amazon.com) ([10.47.22.38])
-  by smtp-border-fw-out-9102.sea19.amazon.com with ESMTP; 12 Sep 2019 13:03:11 +0000
-Received: from EX13MTAUWA001.ant.amazon.com (iad55-ws-svc-p15-lb9-vlan2.iad.amazon.com [10.40.159.162])
-        by email-inbound-relay-1e-a70de69e.us-east-1.amazon.com (Postfix) with ESMTPS id B8737A2366;
-        Thu, 12 Sep 2019 13:03:04 +0000 (UTC)
-Received: from EX13D13UWA001.ant.amazon.com (10.43.160.136) by
- EX13MTAUWA001.ant.amazon.com (10.43.160.58) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 12 Sep 2019 13:03:03 +0000
-Received: from u9ff250417f405e.ant.amazon.com (10.43.161.99) by
- EX13D13UWA001.ant.amazon.com (10.43.160.136) with Microsoft SMTP Server (TLS)
- id 15.0.1367.3; Thu, 12 Sep 2019 13:02:57 +0000
-From:   Jonathan Chocron <jonnyc@amazon.com>
-To:     <lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>
-CC:     <andrew.murray@arm.com>, <dwmw@amazon.co.uk>,
-        <benh@kernel.crashing.org>, <alisaidi@amazon.com>,
-        <ronenk@amazon.com>, <barakw@amazon.com>, <talel@amazon.com>,
-        <hanochu@amazon.com>, <hhhawa@amazon.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <jonnyc@amazon.com>
-Subject: [PATCH v6 6/7] PCI: dwc: al: Add Amazon Annapurna Labs PCIe controller driver
-Date:   Thu, 12 Sep 2019 16:02:37 +0300
-Message-ID: <20190912130238.15682-2-jonnyc@amazon.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190912130042.14597-1-jonnyc@amazon.com>
-References: <20190912130042.14597-1-jonnyc@amazon.com>
+        id S1731818AbfILNEe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Sep 2019 09:04:34 -0400
+Received: from foss.arm.com ([217.140.110.172]:33958 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731320AbfILNEd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Sep 2019 09:04:33 -0400
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 2AAF628;
+        Thu, 12 Sep 2019 06:04:33 -0700 (PDT)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 9684F3F71F;
+        Thu, 12 Sep 2019 06:04:32 -0700 (PDT)
+Date:   Thu, 12 Sep 2019 14:04:30 +0100
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Niklas Cassel <niklas.cassel@linaro.org>
+Cc:     Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: fix find_next_bit() usage
+Message-ID: <20190912130430.GG9720@e119886-lin.cambridge.arm.com>
+References: <20190904160339.2800-1-niklas.cassel@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.43.161.99]
-X-ClientProxiedBy: EX13D07UWB003.ant.amazon.com (10.43.161.66) To
- EX13D13UWA001.ant.amazon.com (10.43.160.136)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190904160339.2800-1-niklas.cassel@linaro.org>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This driver is DT based and utilizes the DesignWare APIs.
+On Wed, Sep 04, 2019 at 06:03:38PM +0200, Niklas Cassel wrote:
+> find_next_bit() takes a parameter of size long, and performs arithmetic
+> that assumes that the argument is of size long.
+> 
+> Therefore we cannot pass a u32, since this will cause find_next_bit()
+> to read outside the stack buffer and will produce the following print:
+> BUG: KASAN: stack-out-of-bounds in find_next_bit+0x38/0xb0
+> 
+> Fixes: 1b497e6493c4 ("PCI: dwc: Fix uninitialized variable in dw_handle_msi_irq()")
+> Signed-off-by: Niklas Cassel <niklas.cassel@linaro.org>
+> ---
 
-It allows using a smaller ECAM range for a larger bus range -
-usually an entire bus uses 1MB of address space, but the driver
-can use it for a larger number of buses. This is achieved by using a HW
-mechanism which allows changing the BUS part of the "final" outgoing
-config transaction. There are 2 HW regs, one which is basically a
-bitmask determining which bits to take from the AXI transaction itself
-and another which holds the complementary part programmed by the
-driver.
-
-All link initializations are handled by the boot FW.
-
-Signed-off-by: Jonathan Chocron <jonnyc@amazon.com>
-Reviewed-by: Gustavo Pimentel <gustavo.pimentel@synopsys.com>
 Reviewed-by: Andrew Murray <andrew.murray@arm.com>
----
- drivers/pci/controller/dwc/Kconfig   |  12 +
- drivers/pci/controller/dwc/pcie-al.c | 365 +++++++++++++++++++++++++++
- 2 files changed, 377 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index 4fada2e93285..0ba988b5b5bc 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -256,4 +256,16 @@ config PCIE_UNIPHIER
- 	  Say Y here if you want PCIe controller support on UniPhier SoCs.
- 	  This driver supports LD20 and PXs3 SoCs.
- 
-+config PCIE_AL
-+	bool "Amazon Annapurna Labs PCIe controller"
-+	depends on OF && (ARM64 || COMPILE_TEST)
-+	depends on PCI_MSI_IRQ_DOMAIN
-+	select PCIE_DW_HOST
-+	help
-+	  Say Y here to enable support of the Amazon's Annapurna Labs PCIe
-+	  controller IP on Amazon SoCs. The PCIe controller uses the DesignWare
-+	  core plus Annapurna Labs proprietary hardware wrappers. This is
-+	  required only for DT-based platforms. ACPI platforms with the
-+	  Annapurna Labs PCIe controller don't need to enable this.
-+
- endmenu
-diff --git a/drivers/pci/controller/dwc/pcie-al.c b/drivers/pci/controller/dwc/pcie-al.c
-index 3ab58f0584a8..1eeda2f6371f 100644
---- a/drivers/pci/controller/dwc/pcie-al.c
-+++ b/drivers/pci/controller/dwc/pcie-al.c
-@@ -91,3 +91,368 @@ struct pci_ecam_ops al_pcie_ops = {
- };
- 
- #endif /* defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS) */
-+
-+#ifdef CONFIG_PCIE_AL
-+
-+#include <linux/of_pci.h>
-+#include "pcie-designware.h"
-+
-+#define AL_PCIE_REV_ID_2	2
-+#define AL_PCIE_REV_ID_3	3
-+#define AL_PCIE_REV_ID_4	4
-+
-+#define AXI_BASE_OFFSET		0x0
-+
-+#define DEVICE_ID_OFFSET	0x16c
-+
-+#define DEVICE_REV_ID			0x0
-+#define DEVICE_REV_ID_DEV_ID_MASK	GENMASK(31, 16)
-+
-+#define DEVICE_REV_ID_DEV_ID_X4		0
-+#define DEVICE_REV_ID_DEV_ID_X8		2
-+#define DEVICE_REV_ID_DEV_ID_X16	4
-+
-+#define OB_CTRL_REV1_2_OFFSET	0x0040
-+#define OB_CTRL_REV3_5_OFFSET	0x0030
-+
-+#define CFG_TARGET_BUS			0x0
-+#define CFG_TARGET_BUS_MASK_MASK	GENMASK(7, 0)
-+#define CFG_TARGET_BUS_BUSNUM_MASK	GENMASK(15, 8)
-+
-+#define CFG_CONTROL			0x4
-+#define CFG_CONTROL_SUBBUS_MASK		GENMASK(15, 8)
-+#define CFG_CONTROL_SEC_BUS_MASK	GENMASK(23, 16)
-+
-+struct al_pcie_reg_offsets {
-+	unsigned int ob_ctrl;
-+};
-+
-+struct al_pcie_target_bus_cfg {
-+	u8 reg_val;
-+	u8 reg_mask;
-+	u8 ecam_mask;
-+};
-+
-+struct al_pcie {
-+	struct dw_pcie *pci;
-+	void __iomem *controller_base; /* base of PCIe unit (not DW core) */
-+	struct device *dev;
-+	resource_size_t ecam_size;
-+	unsigned int controller_rev_id;
-+	struct al_pcie_reg_offsets reg_offsets;
-+	struct al_pcie_target_bus_cfg target_bus_cfg;
-+};
-+
-+#define PCIE_ECAM_DEVFN(x)		(((x) & 0xff) << 12)
-+
-+#define to_al_pcie(x)		dev_get_drvdata((x)->dev)
-+
-+static inline u32 al_pcie_controller_readl(struct al_pcie *pcie, u32 offset)
-+{
-+	return readl_relaxed(pcie->controller_base + offset);
-+}
-+
-+static inline void al_pcie_controller_writel(struct al_pcie *pcie, u32 offset,
-+					     u32 val)
-+{
-+	writel_relaxed(val, pcie->controller_base + offset);
-+}
-+
-+static int al_pcie_rev_id_get(struct al_pcie *pcie, unsigned int *rev_id)
-+{
-+	u32 dev_rev_id_val;
-+	u32 dev_id_val;
-+
-+	dev_rev_id_val = al_pcie_controller_readl(pcie, AXI_BASE_OFFSET +
-+						  DEVICE_ID_OFFSET +
-+						  DEVICE_REV_ID);
-+	dev_id_val = FIELD_GET(DEVICE_REV_ID_DEV_ID_MASK, dev_rev_id_val);
-+
-+	switch (dev_id_val) {
-+	case DEVICE_REV_ID_DEV_ID_X4:
-+		*rev_id = AL_PCIE_REV_ID_2;
-+		break;
-+	case DEVICE_REV_ID_DEV_ID_X8:
-+		*rev_id = AL_PCIE_REV_ID_3;
-+		break;
-+	case DEVICE_REV_ID_DEV_ID_X16:
-+		*rev_id = AL_PCIE_REV_ID_4;
-+		break;
-+	default:
-+		dev_err(pcie->dev, "Unsupported dev_id_val (0x%x)\n",
-+			dev_id_val);
-+		return -EINVAL;
-+	}
-+
-+	dev_dbg(pcie->dev, "dev_id_val: 0x%x\n", dev_id_val);
-+
-+	return 0;
-+}
-+
-+static int al_pcie_reg_offsets_set(struct al_pcie *pcie)
-+{
-+	switch (pcie->controller_rev_id) {
-+	case AL_PCIE_REV_ID_2:
-+		pcie->reg_offsets.ob_ctrl = OB_CTRL_REV1_2_OFFSET;
-+		break;
-+	case AL_PCIE_REV_ID_3:
-+	case AL_PCIE_REV_ID_4:
-+		pcie->reg_offsets.ob_ctrl = OB_CTRL_REV3_5_OFFSET;
-+		break;
-+	default:
-+		dev_err(pcie->dev, "Unsupported controller rev_id: 0x%x\n",
-+			pcie->controller_rev_id);
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static inline void al_pcie_target_bus_set(struct al_pcie *pcie,
-+					  u8 target_bus,
-+					  u8 mask_target_bus)
-+{
-+	u32 reg;
-+
-+	reg = FIELD_PREP(CFG_TARGET_BUS_MASK_MASK, mask_target_bus) |
-+	      FIELD_PREP(CFG_TARGET_BUS_BUSNUM_MASK, target_bus);
-+
-+	al_pcie_controller_writel(pcie, AXI_BASE_OFFSET +
-+				  pcie->reg_offsets.ob_ctrl + CFG_TARGET_BUS,
-+				  reg);
-+}
-+
-+static void __iomem *al_pcie_conf_addr_map(struct al_pcie *pcie,
-+					   unsigned int busnr,
-+					   unsigned int devfn)
-+{
-+	struct al_pcie_target_bus_cfg *target_bus_cfg = &pcie->target_bus_cfg;
-+	unsigned int busnr_ecam = busnr & target_bus_cfg->ecam_mask;
-+	unsigned int busnr_reg = busnr & target_bus_cfg->reg_mask;
-+	struct pcie_port *pp = &pcie->pci->pp;
-+	void __iomem *pci_base_addr;
-+
-+	pci_base_addr = (void __iomem *)((uintptr_t)pp->va_cfg0_base +
-+					 (busnr_ecam << 20) +
-+					 PCIE_ECAM_DEVFN(devfn));
-+
-+	if (busnr_reg != target_bus_cfg->reg_val) {
-+		dev_dbg(pcie->pci->dev, "Changing target bus busnum val from 0x%x to 0x%x\n",
-+			target_bus_cfg->reg_val, busnr_reg);
-+		target_bus_cfg->reg_val = busnr_reg;
-+		al_pcie_target_bus_set(pcie,
-+				       target_bus_cfg->reg_val,
-+				       target_bus_cfg->reg_mask);
-+	}
-+
-+	return pci_base_addr;
-+}
-+
-+static int al_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-+				 unsigned int devfn, int where, int size,
-+				 u32 *val)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct al_pcie *pcie = to_al_pcie(pci);
-+	unsigned int busnr = bus->number;
-+	void __iomem *pci_addr;
-+	int rc;
-+
-+	pci_addr = al_pcie_conf_addr_map(pcie, busnr, devfn);
-+
-+	rc = dw_pcie_read(pci_addr + where, size, val);
-+
-+	dev_dbg(pci->dev, "%d-byte config read from %04x:%02x:%02x.%d offset 0x%x (pci_addr: 0x%px) - val:0x%x\n",
-+		size, pci_domain_nr(bus), bus->number,
-+		PCI_SLOT(devfn), PCI_FUNC(devfn), where,
-+		(pci_addr + where), *val);
-+
-+	return rc;
-+}
-+
-+static int al_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-+				 unsigned int devfn, int where, int size,
-+				 u32 val)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct al_pcie *pcie = to_al_pcie(pci);
-+	unsigned int busnr = bus->number;
-+	void __iomem *pci_addr;
-+	int rc;
-+
-+	pci_addr = al_pcie_conf_addr_map(pcie, busnr, devfn);
-+
-+	rc = dw_pcie_write(pci_addr + where, size, val);
-+
-+	dev_dbg(pci->dev, "%d-byte config write to %04x:%02x:%02x.%d offset 0x%x (pci_addr: 0x%px) - val:0x%x\n",
-+		size, pci_domain_nr(bus), bus->number,
-+		PCI_SLOT(devfn), PCI_FUNC(devfn), where,
-+		(pci_addr + where), val);
-+
-+	return rc;
-+}
-+
-+static void al_pcie_config_prepare(struct al_pcie *pcie)
-+{
-+	struct al_pcie_target_bus_cfg *target_bus_cfg;
-+	struct pcie_port *pp = &pcie->pci->pp;
-+	unsigned int ecam_bus_mask;
-+	u32 cfg_control_offset;
-+	u8 subordinate_bus;
-+	u8 secondary_bus;
-+	u32 cfg_control;
-+	u32 reg;
-+
-+	target_bus_cfg = &pcie->target_bus_cfg;
-+
-+	ecam_bus_mask = (pcie->ecam_size >> 20) - 1;
-+	if (ecam_bus_mask > 255) {
-+		dev_warn(pcie->dev, "ECAM window size is larger than 256MB. Cutting off at 256\n");
-+		ecam_bus_mask = 255;
-+	}
-+
-+	/* This portion is taken from the transaction address */
-+	target_bus_cfg->ecam_mask = ecam_bus_mask;
-+	/* This portion is taken from the cfg_target_bus reg */
-+	target_bus_cfg->reg_mask = ~target_bus_cfg->ecam_mask;
-+	target_bus_cfg->reg_val = pp->busn->start & target_bus_cfg->reg_mask;
-+
-+	al_pcie_target_bus_set(pcie, target_bus_cfg->reg_val,
-+			       target_bus_cfg->reg_mask);
-+
-+	secondary_bus = pp->busn->start + 1;
-+	subordinate_bus = pp->busn->end;
-+
-+	/* Set the valid values of secondary and subordinate buses */
-+	cfg_control_offset = AXI_BASE_OFFSET + pcie->reg_offsets.ob_ctrl +
-+			     CFG_CONTROL;
-+
-+	cfg_control = al_pcie_controller_readl(pcie, cfg_control_offset);
-+
-+	reg = cfg_control &
-+	      ~(CFG_CONTROL_SEC_BUS_MASK | CFG_CONTROL_SUBBUS_MASK);
-+
-+	reg |= FIELD_PREP(CFG_CONTROL_SUBBUS_MASK, subordinate_bus) |
-+	       FIELD_PREP(CFG_CONTROL_SEC_BUS_MASK, secondary_bus);
-+
-+	al_pcie_controller_writel(pcie, cfg_control_offset, reg);
-+}
-+
-+static int al_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct al_pcie *pcie = to_al_pcie(pci);
-+	int rc;
-+
-+	rc = al_pcie_rev_id_get(pcie, &pcie->controller_rev_id);
-+	if (rc)
-+		return rc;
-+
-+	rc = al_pcie_reg_offsets_set(pcie);
-+	if (rc)
-+		return rc;
-+
-+	al_pcie_config_prepare(pcie);
-+
-+	return 0;
-+}
-+
-+static const struct dw_pcie_host_ops al_pcie_host_ops = {
-+	.rd_other_conf = al_pcie_rd_other_conf,
-+	.wr_other_conf = al_pcie_wr_other_conf,
-+	.host_init = al_pcie_host_init,
-+};
-+
-+static int al_add_pcie_port(struct pcie_port *pp,
-+			    struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	int ret;
-+
-+	pp->ops = &al_pcie_host_ops;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+};
-+
-+static int al_pcie_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct resource *controller_res;
-+	struct resource *ecam_res;
-+	struct resource *dbi_res;
-+	struct al_pcie *al_pcie;
-+	struct dw_pcie *pci;
-+
-+	al_pcie = devm_kzalloc(dev, sizeof(*al_pcie), GFP_KERNEL);
-+	if (!al_pcie)
-+		return -ENOMEM;
-+
-+	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	pci->dev = dev;
-+	pci->ops = &dw_pcie_ops;
-+
-+	al_pcie->pci = pci;
-+	al_pcie->dev = dev;
-+
-+	dbi_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_res);
-+	if (IS_ERR(pci->dbi_base)) {
-+		dev_err(dev, "couldn't remap dbi base %pR\n", dbi_res);
-+		return PTR_ERR(pci->dbi_base);
-+	}
-+
-+	ecam_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
-+	if (!ecam_res) {
-+		dev_err(dev, "couldn't find 'config' reg in DT\n");
-+		return -ENOENT;
-+	}
-+	al_pcie->ecam_size = resource_size(ecam_res);
-+
-+	controller_res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+						      "controller");
-+	al_pcie->controller_base = devm_ioremap_resource(dev, controller_res);
-+	if (IS_ERR(al_pcie->controller_base)) {
-+		dev_err(dev, "couldn't remap controller base %pR\n",
-+			controller_res);
-+		return PTR_ERR(al_pcie->controller_base);
-+	}
-+
-+	dev_dbg(dev, "From DT: dbi_base: %pR, controller_base: %pR\n",
-+		dbi_res, controller_res);
-+
-+	platform_set_drvdata(pdev, al_pcie);
-+
-+	return al_add_pcie_port(&pci->pp, pdev);
-+}
-+
-+static const struct of_device_id al_pcie_of_match[] = {
-+	{ .compatible = "amazon,al-alpine-v2-pcie",
-+	},
-+	{ .compatible = "amazon,al-alpine-v3-pcie",
-+	},
-+	{},
-+};
-+
-+static struct platform_driver al_pcie_driver = {
-+	.driver = {
-+		.name	= "al-pcie",
-+		.of_match_table = al_pcie_of_match,
-+		.suppress_bind_attrs = true,
-+	},
-+	.probe = al_pcie_probe,
-+};
-+builtin_platform_driver(al_pcie_driver);
-+
-+#endif /* CONFIG_PCIE_AL*/
--- 
-2.17.1
-
+>  drivers/pci/controller/dwc/pcie-designware-host.c | 11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index d3156446ff27..45f21640c977 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -78,7 +78,8 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>  {
+>  	int i, pos, irq;
+> -	u32 val, num_ctrls;
+> +	unsigned long val;
+> +	u32 status, num_ctrls;
+>  	irqreturn_t ret = IRQ_NONE;
+>  
+>  	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+> @@ -86,14 +87,14 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>  	for (i = 0; i < num_ctrls; i++) {
+>  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS +
+>  					(i * MSI_REG_CTRL_BLOCK_SIZE),
+> -				    4, &val);
+> -		if (!val)
+> +				    4, &status);
+> +		if (!status)
+>  			continue;
+>  
+>  		ret = IRQ_HANDLED;
+> +		val = status;
+>  		pos = 0;
+> -		while ((pos = find_next_bit((unsigned long *) &val,
+> -					    MAX_MSI_IRQS_PER_CTRL,
+> +		while ((pos = find_next_bit(&val, MAX_MSI_IRQS_PER_CTRL,
+>  					    pos)) != MAX_MSI_IRQS_PER_CTRL) {
+>  			irq = irq_find_mapping(pp->irq_domain,
+>  					       (i * MAX_MSI_IRQS_PER_CTRL) +
+> -- 
+> 2.21.0
+> 
