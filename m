@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3527EC4CEC6
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Sep 2019 01:15:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22567C4CEC6
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Sep 2019 01:15:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 09F9D20856
-	for <linux-pci@archiver.kernel.org>; Fri, 13 Sep 2019 01:15:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EED58206A4
+	for <linux-pci@archiver.kernel.org>; Fri, 13 Sep 2019 01:15:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725775AbfIMBO5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 12 Sep 2019 21:14:57 -0400
+        id S1728521AbfIMBOr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 12 Sep 2019 21:14:47 -0400
 Received: from mga12.intel.com ([192.55.52.136]:29376 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727518AbfIMBOr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 12 Sep 2019 21:14:47 -0400
+        id S1725775AbfIMBOo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 12 Sep 2019 21:14:44 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
 Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Sep 2019 18:14:47 -0700
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Sep 2019 18:14:43 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,492,1559545200"; 
-   d="scan'208";a="197403712"
+   d="scan'208";a="197403699"
 Received: from megha-z97x-ud7-th.sc.intel.com ([143.183.85.162])
-  by orsmga002.jf.intel.com with ESMTP; 12 Sep 2019 18:14:46 -0700
+  by orsmga002.jf.intel.com with ESMTP; 12 Sep 2019 18:14:43 -0700
 From:   Megha Dey <megha.dey@linux.intel.com>
 To:     linux-kernel@vger.kernel.org, x86@kernel.org,
         linux-pci@vger.kernel.org, maz@kernel.org, bhelgaas@google.com,
@@ -37,213 +37,269 @@ Cc:     ashok.raj@intel.com, megha.dey@intel.com, jacob.jun.pan@intel.com,
         Megha Dey <megha.dey@linux.intel.com>,
         Jacob Pan <jacob.jun.pan@linux.intel.com>,
         Sanjay Kumar <sanjay.k.kumar@intel.com>
-Subject: [RFC V1 5/7] x86/ims: Introduce x86_ims_ops
-Date:   Thu, 12 Sep 2019 18:32:06 -0700
-Message-Id: <1568338328-22458-6-git-send-email-megha.dey@linux.intel.com>
+Subject: [RFC V1 2/7] drivers/base: Introduce callbacks for IMS interrupt domain
+Date:   Thu, 12 Sep 2019 18:32:03 -0700
+Message-Id: <1568338328-22458-3-git-send-email-megha.dey@linux.intel.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1568338328-22458-1-git-send-email-megha.dey@linux.intel.com>
 References: <1568338328-22458-1-git-send-email-megha.dey@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch introduces an x86 specific indirect mechanism to setup the
-interrupt message storage. The IMS specific functions (setup, teardown,
-restore) become function pointers in an x86_ims_ops struct, that
-defaults to their implementations in ims.c and ims-msi.c.
+This patch serves as a preparatory patch to introduce a new IMS
+(Interrupt Message Store) domain. It consists of APIs which would
+be used as callbacks to the IRQ chip associated with the IMS domain.
+
+The APIs introduced in this patch are:
+dev_ims_mask_irq - Generic irq chip callback to mask IMS interrupts
+dev_ims_unmask_irq - Generic irq chip callback to unmask IMS interrupts
+dev_ims_domain_write_msg - Helper to write MSI message to Device IMS
+
+It also introduces IMS specific structures namely:
+dev_ims_ops - Callbacks for IMS domain ops
+dev_ims_desc - Device specific IMS msi descriptor data
+dev_ims_priv_data - Internal data structure containing a unique devid
+and a pointer to the IMS domain ops
+
+Lastly, it adds a new config option MSI_IMS which must be enabled by
+any driver who would want to use the IMS infrastructure.
+
+Since IMS is not PCI compliant (like platform-msi), most of the code is
+similar to platform-msi.c.
+
+TODO: Conclude if ims-msi.c and platform-msi.c can be merged.
 
 Cc: Jacob Pan <jacob.jun.pan@linux.intel.com>
 Signed-off-by: Sanjay Kumar <sanjay.k.kumar@intel.com>
 Signed-off-by: Megha Dey <megha.dey@linux.intel.com>
 ---
- arch/x86/include/asm/pci.h      |  4 ++++
- arch/x86/include/asm/x86_init.h | 10 ++++++++++
- arch/x86/kernel/apic/ims.c      | 18 ++++++++++++++++++
- arch/x86/kernel/x86_init.c      | 23 +++++++++++++++++++++++
- drivers/base/ims-msi.c          | 34 ++++++++++++++++++++++++++++++++++
- include/linux/msi.h             |  6 ++++++
- 6 files changed, 95 insertions(+)
+ drivers/base/Kconfig   |  7 ++++
+ drivers/base/Makefile  |  1 +
+ drivers/base/ims-msi.c | 94 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/msi.h    | 35 ++++++++++++++++++-
+ 4 files changed, 136 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/base/ims-msi.c
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index e662f98..2ef513f 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -114,6 +114,10 @@ struct msi_desc;
- int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
-+#ifdef CONFIG_MSI_IMS
-+int native_setup_ims_irqs(struct device *dev, int nvec);
-+#endif
-+
- #else
- #define native_setup_msi_irqs		NULL
- #define native_teardown_msi_irq		NULL
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index ac09341..9c2cbbb 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -287,6 +287,15 @@ struct x86_msi_ops {
- 	void (*restore_msi_irqs)(struct pci_dev *dev);
- };
+diff --git a/drivers/base/Kconfig b/drivers/base/Kconfig
+index dc40449..038fabd 100644
+--- a/drivers/base/Kconfig
++++ b/drivers/base/Kconfig
+@@ -206,3 +206,10 @@ config GENERIC_ARCH_TOPOLOGY
+ 	  runtime.
  
-+struct device;
+ endmenu
 +
-+struct x86_ims_ops {
-+	int (*setup_ims_irqs)(struct device *dev, int nvec);
-+	void (*teardown_ims_irq)(unsigned int irq);
-+	void (*teardown_ims_irqs)(struct device *dev);
-+	void (*restore_ims_irqs)(struct device *dev);
-+};
-+
- struct x86_apic_ops {
- 	unsigned int	(*io_apic_read)   (unsigned int apic, unsigned int reg);
- 	void		(*restore)(void);
-@@ -297,6 +306,7 @@ extern struct x86_cpuinit_ops x86_cpuinit;
- extern struct x86_platform_ops x86_platform;
- extern struct x86_msi_ops x86_msi;
- extern struct x86_apic_ops x86_apic_ops;
-+extern struct x86_ims_ops x86_ims;
++config MSI_IMS
++	bool "Device Specific Interrupt Message Storage (IMS)"
++	select GENERIC_MSI_IRQ
++	help
++	  This allows device drivers to enable device specific
++	  interrupt message storage (IMS) besides standard MSI-X interrupts.
+diff --git a/drivers/base/Makefile b/drivers/base/Makefile
+index 1574520..659b9b0 100644
+--- a/drivers/base/Makefile
++++ b/drivers/base/Makefile
+@@ -22,6 +22,7 @@ obj-$(CONFIG_SOC_BUS) += soc.o
+ obj-$(CONFIG_PINCTRL) += pinctrl.o
+ obj-$(CONFIG_DEV_COREDUMP) += devcoredump.o
+ obj-$(CONFIG_GENERIC_MSI_IRQ_DOMAIN) += platform-msi.o
++obj-$(CONFIG_MSI_IMS) += ims-msi.o
+ obj-$(CONFIG_GENERIC_ARCH_TOPOLOGY) += arch_topology.o
  
- extern void x86_early_init_platform_quirks(void);
- extern void x86_init_noop(void);
-diff --git a/arch/x86/kernel/apic/ims.c b/arch/x86/kernel/apic/ims.c
-index d9808a5..a539666 100644
---- a/arch/x86/kernel/apic/ims.c
-+++ b/arch/x86/kernel/apic/ims.c
-@@ -9,6 +9,7 @@
- #include <linux/irq.h>
- #include <linux/mdev.h>
- #include <linux/pci.h>
-+#include <asm/irq_remapping.h>
- 
- /*
-  * Determine if a dev is mdev or not. Return NULL if not mdev device.
-@@ -45,6 +46,23 @@ static struct pci_dev *ims_get_pci_dev(struct device *dev)
- 	return pdev;
- }
- 
-+int native_setup_ims_irqs(struct device *dev, int nvec)
-+{
-+	struct irq_domain *domain;
-+	struct irq_alloc_info info;
-+	struct pci_dev *pdev = ims_get_pci_dev(dev);
-+
-+	init_irq_alloc_info(&info, NULL);
-+	info.type = X86_IRQ_ALLOC_TYPE_MSIX;
-+	info.msi_dev = pdev;
-+
-+	domain = irq_remapping_get_ims_irq_domain(&info);
-+	if (!domain)
-+		return -ENOSYS;
-+
-+	return msi_domain_alloc_irqs(domain, dev, nvec);
-+}
-+
- int dev_ims_prepare(struct irq_domain *domain, struct device *dev, int nvec,
- 		    msi_alloc_info_t *arg)
- {
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index 1bef687..3ce42d4 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -153,6 +153,29 @@ void arch_restore_msi_irqs(struct pci_dev *dev)
- }
- #endif
- 
-+#if defined(CONFIG_MSI_IMS)
-+struct x86_ims_ops x86_ims __ro_after_init = {
-+	.setup_ims_irqs		= native_setup_ims_irqs,
-+	.teardown_ims_irqs	= dev_ims_teardown_irqs,
-+	.restore_ims_irqs	= dev_ims_restore_irqs,
-+};
-+
-+int arch_setup_ims_irqs(struct device *dev, int nvec)
-+{
-+	return x86_ims.setup_ims_irqs(dev, nvec);
-+}
-+
-+void arch_teardown_ims_irqs(struct device *dev)
-+{
-+	x86_ims.teardown_ims_irqs(dev);
-+}
-+
-+void arch_restore_ims_irqs(struct device *dev)
-+{
-+	x86_ims.restore_ims_irqs(dev);
-+}
-+#endif
-+
- struct x86_apic_ops x86_apic_ops __ro_after_init = {
- 	.io_apic_read	= native_io_apic_read,
- 	.restore	= native_restore_boot_irq_mode,
+ obj-y			+= test/
 diff --git a/drivers/base/ims-msi.c b/drivers/base/ims-msi.c
-index 68dc10f..df28ee2 100644
---- a/drivers/base/ims-msi.c
+new file mode 100644
+index 0000000..68dc10f
+--- /dev/null
 +++ b/drivers/base/ims-msi.c
-@@ -92,3 +92,37 @@ void dev_ims_write_msg(struct irq_data *data, struct msi_msg *msg)
- 	__dev_write_ims_msg(desc, msg);
- }
- EXPORT_SYMBOL_GPL(dev_ims_write_msg);
+@@ -0,0 +1,94 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright © 2019 Intel Corporation.
++ *
++ * Author: Megha Dey <megha.dey@intel.com>
++ */
 +
-+void dev_ims_teardown_irqs(struct device *dev)
++#include <linux/device.h>
++#include <linux/export.h>
++#include <linux/irq.h>
++#include <linux/msi.h>
++
++struct dev_ims_priv_data {
++	struct device		*dev;
++	msi_alloc_info_t	arg;
++	int			devid;
++	struct dev_ims_ops	*ims_ops;
++};
++
++u32 __dev_ims_desc_mask_irq(struct msi_desc *desc, u32 flag)
 +{
-+	struct msi_desc *entry;
-+
-+	for_each_msi_entry(entry, dev)
-+		if (entry->irq && entry->tag == IRQ_MSI_TAG_IMS)
-+			arch_teardown_msi_irq(entry->irq);
-+}
-+
-+static void dev_ims_restore_irq(struct device *dev, int irq)
-+{
-+	struct msi_desc *entry = NULL;
++	u32 mask_bits = desc->dev_ims.masked;
 +	struct dev_ims_ops *ops;
 +
-+	for_each_msi_entry(entry, dev)
-+		if (irq == entry->irq && entry->tag == IRQ_MSI_TAG_IMS)
-+			break;
++	ops = desc->dev_ims.priv->ims_ops;
++	if (!ops)
++		return 0;
 +
-+	if (entry) {
-+		ops = entry->dev_ims.priv->ims_ops;
-+		if (ops && ops->irq_write_msi_msg)
-+			ops->irq_write_msi_msg(entry, &entry->msg);
++	if (flag) {
++		if (ops->irq_mask)
++			mask_bits = ops->irq_mask(desc);
++	} else {
++		if (ops->irq_unmask)
++			mask_bits = ops->irq_unmask(desc);
 +	}
++
++	return mask_bits;
 +}
 +
-+void dev_ims_restore_irqs(struct device *dev)
++static void ims_mask_irq(struct msi_desc *desc, u32 flag)
 +{
-+	struct msi_desc *entry;
-+
-+	for_each_msi_entry(entry, dev)
-+		if (entry->tag == IRQ_MSI_TAG_IMS)
-+			dev_ims_restore_irq(dev, entry->irq);
++	desc->dev_ims.masked = __dev_ims_desc_mask_irq(desc, flag);
 +}
++
++static void ims_set_mask_bit(struct irq_data *data, u32 flag)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++
++	ims_mask_irq(desc, flag);
++}
++
++static void __dev_write_ims_msg(struct msi_desc *desc, struct msi_msg *msg)
++{
++	struct dev_ims_ops *ops;
++
++	ops = desc->dev_ims.priv->ims_ops;
++	if (ops && ops->irq_write_msi_msg)
++		ops->irq_write_msi_msg(desc, msg);
++
++	desc->msg = *msg;
++}
++
++/**
++ * dev_ims_mask_irq - Generic irq chip callback to mask IMS interrupts
++ * @data: pointer to irqdata associated to that interrupt
++ */
++void dev_ims_mask_irq(struct irq_data *data)
++{
++	ims_set_mask_bit(data, 1);
++}
++EXPORT_SYMBOL_GPL(dev_ims_mask_irq);
++
++/**
++ * dev_msi_unmask_irq - Generic irq chip callback to unmask IMS interrupts
++ * @data: pointer to irqdata associated to that interrupt
++ */
++void dev_ims_unmask_irq(struct irq_data *data)
++{
++	ims_set_mask_bit(data, 0);
++}
++EXPORT_SYMBOL_GPL(dev_ims_unmask_irq);
++
++/**
++ * dev_ims_write_msg - Helper to write MSI message to Device IMS
++ * @irq_data: Pointer to interrupt data of the MSI interrupt
++ * @msg:      Pointer to the message
++ */
++void dev_ims_write_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct msi_desc *desc = irq_data_get_msi_desc(data);
++
++	__dev_write_ims_msg(desc, msg);
++}
++EXPORT_SYMBOL_GPL(dev_ims_write_msg);
 diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 246285a..37070bf 100644
+index 22591b6..246285a 100644
 --- a/include/linux/msi.h
 +++ b/include/linux/msi.h
-@@ -233,6 +233,8 @@ void pci_msi_unmask_irq(struct irq_data *data);
- void dev_ims_unmask_irq(struct irq_data *data);
- void dev_ims_mask_irq(struct irq_data *data);
- void dev_ims_write_msg(struct irq_data *data, struct msi_msg *msg);
-+void dev_ims_teardown_irqs(struct device *dev);
-+void dev_ims_restore_irqs(struct device *dev);
+@@ -17,6 +17,7 @@ struct irq_data;
+ struct msi_desc;
+ struct pci_dev;
+ struct platform_msi_priv_data;
++struct dev_ims_priv_data;
+ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ #ifdef CONFIG_GENERIC_MSI_IRQ
+ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+@@ -40,6 +41,31 @@ struct platform_msi_desc {
+ };
  
+ /**
++ * dev_ims_ops - Callbacks for IMS domain ops
++ * @irq_mask:		mask an interrupt source
++ * @irq_unmask:		unmask an interrupt source
++ * @irq_write_msi_msg:	write message content
++ */
++struct dev_ims_ops {
++	unsigned int	(*irq_mask)(struct msi_desc *desc);
++	unsigned int	(*irq_unmask)(struct msi_desc *desc);
++	void		(*irq_write_msi_msg)(struct msi_desc *desc,
++						struct msi_msg *msg);
++};
++
++/**
++ * dev_ims_desc - Device specific interrupt message storage msi desc data
++ * @ims_priv_data:	Pointer to device private data
++ * @ims_index:		The index of the MSI descriptor
++ * @masked:		mask bits
++ */
++struct dev_ims_desc {
++	struct dev_ims_priv_data	*priv;
++	u16				ims_index;
++	u32				masked;
++};
++
++/**
+  * fsl_mc_msi_desc - FSL-MC device specific msi descriptor data
+  * @msi_index:		The index of the MSI descriptor
+  */
+@@ -90,6 +116,7 @@ enum msi_desc_tags {
+  * @platform:	[platform]  Platform device specific msi descriptor data
+  * @fsl_mc:	[fsl-mc]    FSL MC device specific msi descriptor data
+  * @inta:	[INTA]	    TISCI based INTA specific msi descriptor data
++ * @dev_ims:	[dev_ims]   Device specific IMS msi descriptor data
+  */
+ struct msi_desc {
+ 	/* Shared device/bus type independent data */
+@@ -136,6 +163,7 @@ struct msi_desc {
+ 		struct platform_msi_desc platform;
+ 		struct fsl_mc_msi_desc fsl_mc;
+ 		struct ti_sci_inta_msi_desc inta;
++		struct dev_ims_desc dev_ims;
+ 	};
+ };
+ 
+@@ -180,6 +208,7 @@ static inline void msi_desc_set_iommu_cookie(struct msi_desc *desc,
+ struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc);
+ void *msi_desc_to_pci_sysdata(struct msi_desc *desc);
+ void pci_write_msi_msg(unsigned int irq, struct msi_msg *msg);
++
+ #else /* CONFIG_PCI_MSI */
+ static inline void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ {
+@@ -201,6 +230,10 @@ u32 __pci_msi_desc_mask_irq(struct msi_desc *desc, u32 mask, u32 flag);
+ void pci_msi_mask_irq(struct irq_data *data);
+ void pci_msi_unmask_irq(struct irq_data *data);
+ 
++void dev_ims_unmask_irq(struct irq_data *data);
++void dev_ims_mask_irq(struct irq_data *data);
++void dev_ims_write_msg(struct irq_data *data, struct msi_msg *msg);
++
  /*
   * The arch hooks to setup up msi irqs. Those functions are
-@@ -245,6 +247,10 @@ int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
- void arch_teardown_msi_irqs(struct pci_dev *dev);
- void arch_restore_msi_irqs(struct pci_dev *dev);
+  * implemented as weak symbols so that they /can/ be overriden by
+@@ -228,7 +261,7 @@ struct msi_controller {
+ 	void (*teardown_irq)(struct msi_controller *chip, unsigned int irq);
+ };
  
-+int arch_setup_ims_irqs(struct device *dev, int nvec);
-+void arch_teardown_ims_irqs(struct device *dev);
-+void arch_restore_ims_irqs(struct device *dev);
-+
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
+-#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
++#if defined(CONFIG_GENERIC_MSI_IRQ_DOMAIN) || defined(CONFIG_MSI_IMS)
  
+ #include <linux/irqhandler.h>
+ #include <asm/msi.h>
 -- 
 2.7.4
 
