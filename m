@@ -1,237 +1,148 @@
-Return-Path: <SRS0=DErA=XJ=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=aQFd=XK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AECEAC4CECA
-	for <linux-pci@archiver.kernel.org>; Sat, 14 Sep 2019 21:30:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5D22C4CECC
+	for <linux-pci@archiver.kernel.org>; Sun, 15 Sep 2019 16:34:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6ADF420692
-	for <linux-pci@archiver.kernel.org>; Sat, 14 Sep 2019 21:30:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E80F214AF
+	for <linux-pci@archiver.kernel.org>; Sun, 15 Sep 2019 16:34:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rBHFcDUV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="papHXAhz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726206AbfINVai (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 14 Sep 2019 17:30:38 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:50444 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725835AbfINVai (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 14 Sep 2019 17:30:38 -0400
-Received: by mail-wm1-f68.google.com with SMTP id 5so266018wmg.0;
-        Sat, 14 Sep 2019 14:30:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=JczHJPwUxUzfOEXYUhaXp6IF33XabnHLSQIw2Wsc7cs=;
-        b=rBHFcDUVTF6LyVbsOVorK0zcjJtIn3M8QWjapCf7afTdmcA/UVamzLy8YUxJ/M6djK
-         z4jMHb06Jsq4mhHqMNZygdi7GYudRtABrXCcBudAiUzcyVKGcFJUmvL7cnswZVB9pv9G
-         cMdj769mPjA1kpaL6BoIyCmSCtZ0pD7mYms68IWw/xm2UgmTZUTGo3n/udnA+kcRRYW+
-         LvgTVdumRbcJT58FyPuBybyypznDxm8mfUvV6927HQrT+mcwScSwCcJoMpDyGMFCQPjs
-         xHNtSBlI0AiBFHX+EVbuBXDtGFCe+TP/lubL7QAXCLz48fASvwII8+8XESxr7l8VfQm5
-         MYFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :mime-version:content-transfer-encoding;
-        bh=JczHJPwUxUzfOEXYUhaXp6IF33XabnHLSQIw2Wsc7cs=;
-        b=Ty+daNWtCayOGAE3s5BL2JECY9AccilQiBIxwinuk66pa4WbeTCJ/XcqgRILxnrOuB
-         iZ18oCvnawhj5Ihc7+VhBG+Ls9IbJLIZUAoCJdz0XnJEGFRBnpuLo1WymDPDRBGUAg/O
-         oyJpglisVL1fz7pN86oUkLwjx0Md22ibpIMSGk3vWQj3N5rb3ba6MuR/xjvuw4LzaZ+4
-         M2tgkjlzxNzBHqiJmP+FyHNXQBYKSi3YZopgUkGOwN7+nGYIIkthbM8kPpM/lZoh+vFo
-         MAcI6mmSFYAiIwvmqfKYar4uN4j7zNCXcJPLsCGYr7DwkGh6ez5F9kkJxjkHB4T6sccR
-         p6aw==
-X-Gm-Message-State: APjAAAUBgv4SdkHaevjFyDw21bmRZvMoqrI/Q0rFKFHg3PBSkDdBoFRE
-        +XWiNvy7Fz6tvy3eNlbN5Rc=
-X-Google-Smtp-Source: APXvYqyoI9Bd7zagG6mqoF/9LiGGwkJQTi/MZwR+3veRaOYS7SFkGAa6sdRzwsnDPSV8HNp/DlKglg==
-X-Received: by 2002:a1c:1b14:: with SMTP id b20mr7780590wmb.122.1568496635033;
-        Sat, 14 Sep 2019 14:30:35 -0700 (PDT)
-Received: from localhost.localdomain (ip5b4096c3.dynamic.kabel-deutschland.de. [91.64.150.195])
-        by smtp.gmail.com with ESMTPSA id s10sm14403728wmf.48.2019.09.14.14.30.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 14 Sep 2019 14:30:34 -0700 (PDT)
-From:   Krzysztof Wilczynski <kw@linux.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: Move ATS declarations to linux/pci-ats.h
-Date:   Sat, 14 Sep 2019 23:30:32 +0200
-Message-Id: <20190914213032.22314-1-kw@linux.com>
-X-Mailer: git-send-email 2.23.0
+        id S2388100AbfIOQel (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 15 Sep 2019 12:34:41 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:38952 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729949AbfIOQel (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Sep 2019 12:34:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=Tqxgl1GXmiRxMEjAk3Bu0fH3492cxMOoJoDu4VCbZ08=; b=papHXAhzVbiaFdkN3lIRadTkN
+        s+qvInAlc1RJDF4W9iycPitnpGBg7bm/Eab3YhCsx/itoxPnk2uhLJn+chTaRaBCT9q43fsFnc6K4
+        s3rX8DEDudbRNs+mdmHsnpBtg6RiaiMITn5u8cZLnyTdvekF38NB5W1UHSMq6ABUhUufS6hB33SMZ
+        ctnWPCE3nuSgJMMNS+P/PhFhPyLzwRXTt49KswKmLOfjeYultf/24BrM/anoBh5phDkROXGiMM2ic
+        NLleO8FcspojXqAPxo+UL357MY6Qs+GV7eh6uJWlCjCct4Pv8OkWhnHM5A4FFML3TR3se16FJRCVQ
+        Tbl2t/MPw==;
+Received: from [2601:1c0:6280:3f0::9a1f]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
+        id 1i9XTy-0001uQ-8F; Sun, 15 Sep 2019 16:34:38 +0000
+To:     linux-pci <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Subject: pci: endpoint test BUG
+Message-ID: <5d9eda26-fb92-063e-f84d-7dfafe5d6b29@infradead.org>
+Date:   Sun, 15 Sep 2019 09:34:37 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Move ATS function prototypes from include/linux/pci.h
-to include/linux/pci-ats.h as the ATS, PRI, and PASID
-interfaces are related, and are used only by the IOMMU
-drivers.  This effecively reverts the change done in
-commit ff9bee895c4d ("PCI: Move ATS declarations to
-linux/pci.h so they're all together").
+Kernel is 5.3-rc8 on x86_64.
 
-Also, remove surplus forward declaration of struct pci_ats
-from include/linux/pci.h, as it is no longer needed, since
-the struct pci_ats has been embedded directly into struct
-pci_dev in the commit d544d75ac96a ("PCI: Embed ATS info
-directly into struct pci_dev").
+Loading and removing the pci-epf-test module causes a BUG.
 
-No functional changes intended.
 
-Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
----
-Related:
-  https://lore.kernel.org/r/20190902211100.GH7013@google.com
-  https://lore.kernel.org/r/20190724233848.73327-9-skunberg.kelsey@gmail.com
+[40928.435755] calling  pci_epf_test_init+0x0/0x1000 [pci_epf_test] @ 12132
+[40928.436717] initcall pci_epf_test_init+0x0/0x1000 [pci_epf_test] returned 0 after 891 usecs
+[40936.996081] ==================================================================
+[40936.996125] BUG: KASAN: use-after-free in pci_epf_remove_cfs+0x1ae/0x1f0
+[40936.996153] Write of size 8 at addr ffff88810a22a068 by task rmmod/12139
 
- include/linux/pci-ats.h | 76 +++++++++++++++--------------------------
- include/linux/pci.h     | 14 --------
- 2 files changed, 28 insertions(+), 62 deletions(-)
+[40936.996193] CPU: 2 PID: 12139 Comm: rmmod Not tainted 5.3.0-rc8 #3
+[40936.996217] Hardware name: TOSHIBA PORTEGE R835/Portable PC, BIOS Version 4.10   01/08/2013
+[40936.996247] Call Trace:
+[40936.996265]  dump_stack+0x7b/0xb5
+[40936.996288]  print_address_description+0x6e/0x470
+[40936.996316]  __kasan_report+0x11a/0x198
+[40936.996337]  ? pci_epf_remove_cfs+0x1ae/0x1f0
+[40936.996362]  ? pci_epf_remove_cfs+0x1ae/0x1f0
+[40936.996384]  kasan_report+0x12/0x20
+[40936.996404]  __asan_report_store8_noabort+0x17/0x20
+[40936.996427]  pci_epf_remove_cfs+0x1ae/0x1f0
+[40936.996452]  pci_epf_unregister_driver+0xd/0x20
+[40936.996476]  pci_epf_test_exit+0x10/0x19 [pci_epf_test]
+[40936.996500]  __x64_sys_delete_module+0x329/0x490
+[40936.996523]  ? __ia32_sys_delete_module+0x490/0x490
+[40936.996549]  ? _raw_spin_unlock_irq+0x22/0x40
+[40936.996582]  do_syscall_64+0xaa/0x380
+[40936.996601]  ? prepare_exit_to_usermode+0xad/0x1b0
+[40936.996625]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[40936.996648] RIP: 0033:0x7fb84c88d187
+[40936.996667] Code: 73 01 c3 48 8b 0d 11 ad 2b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 b8 b0 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d e1 ac 2b 00 f7 d8 64 89 01 48
+[40936.996724] RSP: 002b:00007ffc1c5c7b38 EFLAGS: 00000206 ORIG_RAX: 00000000000000b0
+[40936.996753] RAX: ffffffffffffffda RBX: 00007ffc1c5c7b98 RCX: 00007fb84c88d187
+[40936.996780] RDX: 000000000000000a RSI: 0000000000000800 RDI: 0000556838f1c7d8
+[40936.996806] RBP: 0000556838f1c770 R08: 00007ffc1c5c6ab1 R09: 0000000000000000
+[40936.996833] R10: 00007fb84c8fc5e0 R11: 0000000000000206 R12: 00007ffc1c5c7d60
+[40936.996859] R13: 00007ffc1c5c975c R14: 0000556838f1c260 R15: 0000556838f1c770
 
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 1ebb88e7c184..a2001673d445 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -4,74 +4,54 @@
- 
- #include <linux/pci.h>
- 
--#ifdef CONFIG_PCI_PRI
-+#ifdef CONFIG_PCI_ATS
-+/* Address Translation Service */
-+int pci_enable_ats(struct pci_dev *dev, int ps);
-+void pci_disable_ats(struct pci_dev *dev);
-+int pci_ats_queue_depth(struct pci_dev *dev);
-+int pci_ats_page_aligned(struct pci_dev *dev);
-+#else /* CONFIG_PCI_ATS */
-+static inline int pci_enable_ats(struct pci_dev *d, int ps)
-+{ return -ENODEV; }
-+static inline void pci_disable_ats(struct pci_dev *d) { }
-+static inline int pci_ats_queue_depth(struct pci_dev *d)
-+{ return -ENODEV; }
-+static inline int pci_ats_page_aligned(struct pci_dev *dev)
-+{ return 0; }
-+#endif /* CONFIG_PCI_ATS */
- 
-+#ifdef CONFIG_PCI_PRI
- int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
- void pci_disable_pri(struct pci_dev *pdev);
- void pci_restore_pri_state(struct pci_dev *pdev);
- int pci_reset_pri(struct pci_dev *pdev);
--
- #else /* CONFIG_PCI_PRI */
--
- static inline int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
--{
--	return -ENODEV;
--}
--
--static inline void pci_disable_pri(struct pci_dev *pdev)
--{
--}
--
--static inline void pci_restore_pri_state(struct pci_dev *pdev)
--{
--}
--
-+{ return -ENODEV; }
-+static inline void pci_disable_pri(struct pci_dev *pdev) { }
-+static inline void pci_restore_pri_state(struct pci_dev *pdev) { }
- static inline int pci_reset_pri(struct pci_dev *pdev)
--{
--	return -ENODEV;
--}
--
-+{ return -ENODEV; }
- #endif /* CONFIG_PCI_PRI */
- 
- #ifdef CONFIG_PCI_PASID
--
- int pci_enable_pasid(struct pci_dev *pdev, int features);
- void pci_disable_pasid(struct pci_dev *pdev);
- void pci_restore_pasid_state(struct pci_dev *pdev);
- int pci_pasid_features(struct pci_dev *pdev);
- int pci_max_pasids(struct pci_dev *pdev);
- int pci_prg_resp_pasid_required(struct pci_dev *pdev);
--
--#else  /* CONFIG_PCI_PASID */
--
-+#else /* CONFIG_PCI_PASID */
- static inline int pci_enable_pasid(struct pci_dev *pdev, int features)
--{
--	return -EINVAL;
--}
--
--static inline void pci_disable_pasid(struct pci_dev *pdev)
--{
--}
--
--static inline void pci_restore_pasid_state(struct pci_dev *pdev)
--{
--}
--
-+{ return -EINVAL; }
-+static inline void pci_disable_pasid(struct pci_dev *pdev) { }
-+static inline void pci_restore_pasid_state(struct pci_dev *pdev) { }
- static inline int pci_pasid_features(struct pci_dev *pdev)
--{
--	return -EINVAL;
--}
--
-+{ return -EINVAL; }
- static inline int pci_max_pasids(struct pci_dev *pdev)
--{
--	return -EINVAL;
--}
--
-+{ return -EINVAL; }
- static inline int pci_prg_resp_pasid_required(struct pci_dev *pdev)
--{
--	return 0;
--}
-+{ return 0; }
- #endif /* CONFIG_PCI_PASID */
- 
--
--#endif /* LINUX_PCI_ATS_H*/
-+#endif /* LINUX_PCI_ATS_H */
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 56767f50ad96..5f2ae580bd19 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -284,7 +284,6 @@ struct irq_affinity;
- struct pcie_link_state;
- struct pci_vpd;
- struct pci_sriov;
--struct pci_ats;
- struct pci_p2pdma;
- 
- /* The pci_dev structure describes PCI devices */
-@@ -1764,19 +1763,6 @@ static inline const struct pci_device_id *pci_match_id(const struct pci_device_i
- static inline bool pci_ats_disabled(void) { return true; }
- #endif /* CONFIG_PCI */
- 
--#ifdef CONFIG_PCI_ATS
--/* Address Translation Service */
--int pci_enable_ats(struct pci_dev *dev, int ps);
--void pci_disable_ats(struct pci_dev *dev);
--int pci_ats_queue_depth(struct pci_dev *dev);
--int pci_ats_page_aligned(struct pci_dev *dev);
--#else
--static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
--static inline void pci_disable_ats(struct pci_dev *d) { }
--static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
--static inline int pci_ats_page_aligned(struct pci_dev *dev) { return 0; }
--#endif
--
- /* Include architecture-dependent settings and functions */
- 
- #include <asm/pci.h>
+[40936.996910] Allocated by task 12132:
+[40936.996929]  save_stack+0x21/0x90
+[40936.996947]  __kasan_kmalloc.constprop.8+0xa7/0xd0
+[40936.996968]  kasan_kmalloc+0x9/0x10
+[40936.996988]  configfs_register_default_group+0x63/0xe0
+[40936.997010]  pci_ep_cfs_add_epf_group+0x20/0x50
+[40936.997031]  __pci_epf_register_driver+0x2b2/0x410
+[40936.997052]  0xffffffffc1c9004a
+[40936.997070]  do_one_initcall+0xab/0x2d5
+[40936.997089]  do_init_module+0x1c7/0x582
+[40936.997107]  load_module+0x4efa/0x5f30
+[40936.997126]  __do_sys_finit_module+0x12a/0x1b0
+[40936.997146]  __x64_sys_finit_module+0x6e/0xb0
+[40936.997166]  do_syscall_64+0xaa/0x380
+[40936.997185]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+[40936.997218] Freed by task 12139:
+[40936.997235]  save_stack+0x21/0x90
+[40936.997253]  __kasan_slab_free+0x137/0x190
+[40936.997281]  kasan_slab_free+0xe/0x10
+[40936.997301]  kfree+0xb8/0x210
+[40936.997320]  configfs_unregister_default_group+0x15/0x20
+[40936.997344]  pci_ep_cfs_remove_epf_group+0x17/0x20
+[40936.997367]  pci_epf_remove_cfs+0x8e/0x1f0
+[40936.997389]  pci_epf_unregister_driver+0xd/0x20
+[40936.997419]  pci_epf_test_exit+0x10/0x19 [pci_epf_test]
+[40936.997441]  __x64_sys_delete_module+0x329/0x490
+[40936.997462]  do_syscall_64+0xaa/0x380
+[40936.997480]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+[40936.997513] The buggy address belongs to the object at ffff88810a229fe8
+                which belongs to the cache kmalloc-192 of size 192
+[40936.997557] The buggy address is located 128 bytes inside of
+                192-byte region [ffff88810a229fe8, ffff88810a22a0a8)
+[40936.997597] The buggy address belongs to the page:
+[40936.997619] page:ffffea0004288a00 refcount:1 mapcount:0 mapping:ffff888107c10f40 index:0x0 compound_mapcount: 0
+[40936.997655] flags: 0x17ffc000010200(slab|head)
+[40936.997677] raw: 0017ffc000010200 ffffea0004992e08 ffff888107c036b0 ffff888107c10f40
+[40936.997706] raw: 0000000000000000 00000000001e001e 00000001ffffffff 0000000000000000
+[40936.997734] page dumped because: kasan: bad access detected
+
+[40936.997767] Memory state around the buggy address:
+[40936.997789]  ffff88810a229f00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+[40936.997816]  ffff88810a229f80: fc fc fc fc fc fc fc fc fc fc fc fc fc fb fb fb
+[40936.997843] >ffff88810a22a000: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[40936.997869]                                                           ^
+[40936.997895]  ffff88810a22a080: fb fb fb fb fb fc fc fc fc fc fc fc fc fc fc fc
+[40936.997922]  ffff88810a22a100: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+[40936.997948] ==================================================================
+
+
 -- 
-2.23.0
-
+~Randy
