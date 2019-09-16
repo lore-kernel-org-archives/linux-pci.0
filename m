@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8E60C4CECD
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B22C4CECE
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8BCD206A4
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8EDB206A4
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728218AbfIPUr4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Sep 2019 16:47:56 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:39084 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732405AbfIPUr4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2019 16:47:56 -0400
-Received: by mail-wr1-f67.google.com with SMTP id r3so837246wrj.6;
-        Mon, 16 Sep 2019 13:47:54 -0700 (PDT)
+        id S2391681AbfIPUru (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Sep 2019 16:47:50 -0400
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:36822 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391655AbfIPUrt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2019 16:47:49 -0400
+Received: by mail-wm1-f68.google.com with SMTP id t3so716561wmj.1;
+        Mon, 16 Sep 2019 13:47:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=9mHQn9yr9ukPszYJrf03cNkjP7/MXLX6PUP4ZK8/EQw=;
-        b=AsNs4BJ22RLrJfUZLd5+zl7vDYpqTPyLlH7LNo55QbbAsSiba41+32EkMl1y4WHyNL
-         6jlotrJlCm5cfCqhqbz/idlPtwRQ6GS09BpA5e6om8X7KYyzNfx4mzUzOHkKvw1F6Osu
-         VVH1coUrLZ9fLkAXDqKqq5WR2z9wxyFAbj5jXBc7l0EZdWUeMebBxxqGlsmhYf2ykmtI
-         rTFdyJj4OJzD/bA7nZTScnpe43EcCO/LvOU9d5ryPX1GPj0Rsdx8l+WBntVXt1tN6r/H
-         nr82aT5ja7eW9CO1Mk01B14gqZ57MnojzU3SLJF4DrtwBavqz6nM+oBd9XUMjlZqzvLz
-         6hag==
-X-Gm-Message-State: APjAAAV8wXlW/AvnFTZ43mBJhF9ure9i8yogRmcd5gNDf8/eYjN2C8Xs
-        yhKZNK1JYlDBVrWPKtxOQ7A=
-X-Google-Smtp-Source: APXvYqx33KDcFK0Om4/tnCLMJ86ojpQA68+cViMbTRgcRz3yunFkKYXsiLmKSzvLZ+f1yeXDeqcFuA==
-X-Received: by 2002:adf:e7c2:: with SMTP id e2mr166037wrn.319.1568666874026;
-        Mon, 16 Sep 2019 13:47:54 -0700 (PDT)
+        bh=jRXIYYCqTzf80wPMvUGVQBZL1Q1d4vGLXXoDHnC/zIQ=;
+        b=qp/sC5unG5ESbvaTRsJ7m6SuOgxTQQ8ptk6BtJaCJOi/z2Drew6QEZ3u6tBxFH0dXW
+         CNHsR1nohingnN7POvKiQpN0MLFQJB9ELBF1uuNACbQB+312oSM3HPhrflvPDsfRcyh3
+         Jkjv6fPfJe3Z8adxBhREj+jaZEHDc8KXtHjVLvnW+/HEk9t5iAc+6PURQzQ/3/MBglFs
+         xCrs0ROx+VFSA7gFlfE3pLXPUQh5xGpUwigFGTt6+LvrL1uTtw/++WSnlVCMCl6g94fF
+         WNKBbpP5GzS4lLYcnP1ciJbt8ebHeEzlJERuKg1iXi3QisxICDwXGI+SV/qxkGaisIZ4
+         hvAA==
+X-Gm-Message-State: APjAAAVNGSKoiSmoN4cR1lJ+C/D+SqHNC5koJvE+4/jzaFpCS9WhatZb
+        JYAKh140ffiyFnRr9fLfCDk=
+X-Google-Smtp-Source: APXvYqwTkEolBF+4/h20FKyB+xWEOb8/ZOCtjD6dCrukuPGeL6pmmum3arJeC1C9cYldAM8ty7ZNwQ==
+X-Received: by 2002:a1c:9ecb:: with SMTP id h194mr645276wme.35.1568666867296;
+        Mon, 16 Sep 2019 13:47:47 -0700 (PDT)
 Received: from black.home (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id x6sm231437wmf.38.2019.09.16.13.47.53
+        by smtp.googlemail.com with ESMTPSA id x6sm231437wmf.38.2019.09.16.13.47.46
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Sep 2019 13:47:53 -0700 (PDT)
+        Mon, 16 Sep 2019 13:47:46 -0700 (PDT)
 From:   Denis Efremov <efremov@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Denis Efremov <efremov@linux.com>, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
+        linux-usb@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v3 26/26] devres: use PCI_STD_NUM_BARS
-Date:   Mon, 16 Sep 2019 23:41:58 +0300
-Message-Id: <20190916204158.6889-27-efremov@linux.com>
+Subject: [PATCH v3 24/26] USB: core: Use PCI_STD_NUM_BARS
+Date:   Mon, 16 Sep 2019 23:41:56 +0300
+Message-Id: <20190916204158.6889-25-efremov@linux.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190916204158.6889-1-efremov@linux.com>
 References: <20190916204158.6889-1-efremov@linux.com>
@@ -65,22 +66,22 @@ PCI BARs.
 Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Denis Efremov <efremov@linux.com>
 ---
- lib/devres.c | 2 +-
+ drivers/usb/core/hcd-pci.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/lib/devres.c b/lib/devres.c
-index 6a0e9bd6524a..ab75d73122b8 100644
---- a/lib/devres.c
-+++ b/lib/devres.c
-@@ -262,7 +262,7 @@ EXPORT_SYMBOL(devm_ioport_unmap);
- /*
-  * PCI iomap devres
-  */
--#define PCIM_IOMAP_MAX	PCI_ROM_RESOURCE
-+#define PCIM_IOMAP_MAX	PCI_STD_NUM_BARS
+diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
+index 7537681355f6..3a79e8623d66 100644
+--- a/drivers/usb/core/hcd-pci.c
++++ b/drivers/usb/core/hcd-pci.c
+@@ -234,7 +234,7 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 		/* UHCI */
+ 		int	region;
  
- struct pcim_iomap_devres {
- 	void __iomem *table[PCIM_IOMAP_MAX];
+-		for (region = 0; region < PCI_ROM_RESOURCE; region++) {
++		for (region = 0; region < PCI_STD_NUM_BARS; region++) {
+ 			if (!(pci_resource_flags(dev, region) &
+ 					IORESOURCE_IO))
+ 				continue;
 -- 
 2.21.0
 
