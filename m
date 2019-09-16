@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B22C4CECE
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30CD0C49ED7
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8EDB206A4
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03231206A4
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391681AbfIPUru (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Sep 2019 16:47:50 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:36822 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391655AbfIPUrt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2019 16:47:49 -0400
-Received: by mail-wm1-f68.google.com with SMTP id t3so716561wmj.1;
-        Mon, 16 Sep 2019 13:47:47 -0700 (PDT)
+        id S2391649AbfIPUrn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Sep 2019 16:47:43 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:36811 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727971AbfIPUrm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2019 16:47:42 -0400
+Received: by mail-wm1-f67.google.com with SMTP id t3so716328wmj.1;
+        Mon, 16 Sep 2019 13:47:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=jRXIYYCqTzf80wPMvUGVQBZL1Q1d4vGLXXoDHnC/zIQ=;
-        b=qp/sC5unG5ESbvaTRsJ7m6SuOgxTQQ8ptk6BtJaCJOi/z2Drew6QEZ3u6tBxFH0dXW
-         CNHsR1nohingnN7POvKiQpN0MLFQJB9ELBF1uuNACbQB+312oSM3HPhrflvPDsfRcyh3
-         Jkjv6fPfJe3Z8adxBhREj+jaZEHDc8KXtHjVLvnW+/HEk9t5iAc+6PURQzQ/3/MBglFs
-         xCrs0ROx+VFSA7gFlfE3pLXPUQh5xGpUwigFGTt6+LvrL1uTtw/++WSnlVCMCl6g94fF
-         WNKBbpP5GzS4lLYcnP1ciJbt8ebHeEzlJERuKg1iXi3QisxICDwXGI+SV/qxkGaisIZ4
-         hvAA==
-X-Gm-Message-State: APjAAAVNGSKoiSmoN4cR1lJ+C/D+SqHNC5koJvE+4/jzaFpCS9WhatZb
-        JYAKh140ffiyFnRr9fLfCDk=
-X-Google-Smtp-Source: APXvYqwTkEolBF+4/h20FKyB+xWEOb8/ZOCtjD6dCrukuPGeL6pmmum3arJeC1C9cYldAM8ty7ZNwQ==
-X-Received: by 2002:a1c:9ecb:: with SMTP id h194mr645276wme.35.1568666867296;
-        Mon, 16 Sep 2019 13:47:47 -0700 (PDT)
+        bh=IOS2e0UepoELcBHR5ni67YDdvRavbzFfhcVGtDlKQTM=;
+        b=XuITJ9/tp8KJKAOzlxh+TZajIZPbu3WOS+0GYuDCdB1P6CCJwR427RVA3O7p30prmn
+         vfSAg7YXYnqaTnFS9wx3Rbybi4a7eLo7sXrxNwCS3JBzfq0nnCxZwtHaLLTgc6jLtgL9
+         eXOjlpkr45umzNYfnvSEcfh6jexgaKDZl+e7RsmIWSqX3RO8+YBZ48VtbF4MC5QaaM7L
+         XOdGvEynhthhfaDyewdsJyhguGFGTRwgPG5STf0db4sVmOdC1/t4Vkgg1GyjAVnvugIp
+         gP5CByKEyjlomYJ8eecNEuEBtxuJcmRx61QQ2Pjew0bCVX8Od/usrvizNu3e2wJopX+O
+         jlnQ==
+X-Gm-Message-State: APjAAAXJ3IeFtAZAFL1Red45Fi5S3r2Mg9weE48nqhXVvNIa1YlODHQF
+        waGsMAL19QQZO3hXIRv/tUU=
+X-Google-Smtp-Source: APXvYqyX7XAbGO/BUSR5X35Cw9AHSwDhRRkjMy4wE0zfriRWnFmzs7vmkDcxj9/qRp/WecFZalwX9Q==
+X-Received: by 2002:a1c:bcd6:: with SMTP id m205mr631830wmf.129.1568666860528;
+        Mon, 16 Sep 2019 13:47:40 -0700 (PDT)
 Received: from black.home (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id x6sm231437wmf.38.2019.09.16.13.47.46
+        by smtp.googlemail.com with ESMTPSA id x6sm231437wmf.38.2019.09.16.13.47.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Sep 2019 13:47:46 -0700 (PDT)
+        Mon, 16 Sep 2019 13:47:40 -0700 (PDT)
 From:   Denis Efremov <efremov@linux.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Denis Efremov <efremov@linux.com>, linux-kernel@vger.kernel.org,
         linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
-        linux-usb@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v3 24/26] USB: core: Use PCI_STD_NUM_BARS
-Date:   Mon, 16 Sep 2019 23:41:56 +0300
-Message-Id: <20190916204158.6889-25-efremov@linux.com>
+        linux-ide@vger.kernel.org,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>
+Subject: [PATCH v3 22/26] pata_atp867x: Use PCI_STD_NUM_BARS
+Date:   Mon, 16 Sep 2019 23:41:54 +0300
+Message-Id: <20190916204158.6889-23-efremov@linux.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190916204158.6889-1-efremov@linux.com>
 References: <20190916204158.6889-1-efremov@linux.com>
@@ -63,25 +64,26 @@ X-Mailing-List: linux-pci@vger.kernel.org
 Use define PCI_STD_NUM_BARS instead of PCI_ROM_RESOURCE for the number of
 PCI BARs.
 
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Denis Efremov <efremov@linux.com>
 ---
- drivers/usb/core/hcd-pci.c | 2 +-
+ drivers/ata/pata_atp867x.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
-index 7537681355f6..3a79e8623d66 100644
---- a/drivers/usb/core/hcd-pci.c
-+++ b/drivers/usb/core/hcd-pci.c
-@@ -234,7 +234,7 @@ int usb_hcd_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 		/* UHCI */
- 		int	region;
+diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
+index 2b9ed4ddef8d..019198eb7099 100644
+--- a/drivers/ata/pata_atp867x.c
++++ b/drivers/ata/pata_atp867x.c
+@@ -422,7 +422,7 @@ static int atp867x_ata_pci_sff_init_host(struct ata_host *host)
+ #ifdef	ATP867X_DEBUG
+ 	atp867x_check_res(pdev);
  
--		for (region = 0; region < PCI_ROM_RESOURCE; region++) {
-+		for (region = 0; region < PCI_STD_NUM_BARS; region++) {
- 			if (!(pci_resource_flags(dev, region) &
- 					IORESOURCE_IO))
- 				continue;
+-	for (i = 0; i < PCI_ROM_RESOURCE; i++)
++	for (i = 0; i < PCI_STD_NUM_BARS; i++)
+ 		printk(KERN_DEBUG "ATP867X: iomap[%d]=0x%llx\n", i,
+ 			(unsigned long long)(host->iomap[i]));
+ #endif
 -- 
 2.21.0
 
