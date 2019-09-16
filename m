@@ -2,57 +2,41 @@ Return-Path: <SRS0=OhUz=XL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=DATE_IN_PAST_06_12,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 686F4C4CECE
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6967FC49ED7
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:52:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 45D31214AF
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A36C214AF
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 20:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391441AbfIPUrd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Sep 2019 16:47:33 -0400
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:39044 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727971AbfIPUrd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2019 16:47:33 -0400
-Received: by mail-wr1-f66.google.com with SMTP id r3so836298wrj.6;
-        Mon, 16 Sep 2019 13:47:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=epEuwg1xdHKPnwPm1RSe5GQMDsYIT9iwwxBPtEKOzsY=;
-        b=VH/BPBRoJc2UtuPBlt6h893+Rb9g0zeYgYN+IGMRAoi1+e2d3EHKAr6Fgwk6fPENN6
-         +JXy+fEBrgtbId09z3/S3BKJQlr9XkHysn+cSrq6PhRt+U4M1Zc35IAHaw3vUxEBBubV
-         42C4P60Q1W2jLtiP7sr5ehVCMMbsbRqk4z10rpMJLNEgAmHjuzlEGvKxsFhx9SnTCNUV
-         3WSfIpOrOWzpGv/VJTKLZOCaaK4PnPtCNHQCc2Q9lgD0lSXq12TVRTBbr4VpDTWZ7Pcq
-         1G8ETfuPaAguNOwm8rGNfH10nJ6B1SgxyIAFevQsQ1zgaaVYZZ/0L7z7tOyuvSDC80hr
-         EN7g==
-X-Gm-Message-State: APjAAAXK8slm0U3Uqb+VDWcqAMxFffDwPR+YAsnYrM6CkeqTRK+35g6s
-        KU2jr7jm3dwEEhuOFTEMHZg=
-X-Google-Smtp-Source: APXvYqzUQ8ilo7HfmXcpWyMR/2qbH1CpYDfMJItElWXHm2aMMFZcq3bt10sbQbWR1+fPh2AtB2M7Mw==
-X-Received: by 2002:adf:ab0b:: with SMTP id q11mr212288wrc.336.1568666851199;
-        Mon, 16 Sep 2019 13:47:31 -0700 (PDT)
-Received: from black.home (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id x6sm231437wmf.38.2019.09.16.13.47.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Sep 2019 13:47:30 -0700 (PDT)
-From:   Denis Efremov <efremov@linux.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Denis Efremov <efremov@linux.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
-        linux-scsi@vger.kernel.org, Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 18/26] scsi: pm80xx: Use PCI_STD_NUM_BARS
-Date:   Mon, 16 Sep 2019 23:41:50 +0300
-Message-Id: <20190916204158.6889-19-efremov@linux.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190916204158.6889-1-efremov@linux.com>
-References: <20190916204158.6889-1-efremov@linux.com>
+        id S1727635AbfIPUwo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Sep 2019 16:52:44 -0400
+Received: from mga09.intel.com ([134.134.136.24]:26116 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726074AbfIPUwo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Sep 2019 16:52:44 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Sep 2019 13:52:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,514,1559545200"; 
+   d="scan'208";a="187254868"
+Received: from unknown (HELO debian-vmd.lm.intel.com) ([10.232.112.42])
+  by fmsmga007.fm.intel.com with ESMTP; 16 Sep 2019 13:52:40 -0700
+From:   Jon Derrick <jonathan.derrick@intel.com>
+To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Keith Busch <keith.busch@intel.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: vmd: Expose oob management window to users
+Date:   Mon, 16 Sep 2019 08:51:28 -0600
+Message-Id: <20190916145128.5243-1-jonathan.derrick@intel.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -60,43 +44,243 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Replace the magic constant (6) with define PCI_STD_NUM_BARS representing
-the number of PCI BARs.
+Some VMD devices provide a management window within MEMBAR2 that is used
+to communicate out-of-band with child devices. This patch creates a
+binary file for interacting with the interface.
 
-Cc: Jack Wang <jinpu.wang@cloud.ionos.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Signed-off-by: Denis Efremov <efremov@linux.com>
+OOB Reads/Writes are bounds-checked by sysfs_fs_bin_{read,write}
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c  | 2 +-
- drivers/scsi/pm8001/pm8001_init.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Depends on https://lore.kernel.org/linux-pci/20190916135435.5017-1-jonathan.derrick@intel.com/T/#t
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 68a8217032d0..1a3661d6be06 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1186,7 +1186,7 @@ static void pm8001_hw_chip_rst(struct pm8001_hba_info *pm8001_ha)
- void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha)
- {
- 	s8 bar, logical = 0;
--	for (bar = 0; bar < 6; bar++) {
-+	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
- 		/*
- 		** logical BARs for SPC:
- 		** bar 0 and 1 - logical BAR0
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 3374f553c617..aca913490eb5 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -401,7 +401,7 @@ static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
+ drivers/pci/controller/vmd.c | 128 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 117 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index a35d3f3996d7..b13954cf9c96 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -33,6 +33,8 @@
  
- 	pdev = pm8001_ha->pdev;
- 	/* map pci mem (PMC pci base 0-3)*/
--	for (bar = 0; bar < 6; bar++) {
-+	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
- 		/*
- 		** logical BARs for SPC:
- 		** bar 0 and 1 - logical BAR0
+ #define MB2_SHADOW_OFFSET	0x2000
+ #define MB2_SHADOW_SIZE		16
++#define MB2_OOB_WINDOW_OFFSET	0x2010
++#define MB2_OOB_WINDOW_SIZE	128
+ 
+ enum vmd_features {
+ 	/*
+@@ -47,6 +49,12 @@ enum vmd_features {
+ 	 * bus numbering
+ 	 */
+ 	VMD_FEAT_HAS_BUS_RESTRICTIONS	= (1 << 1),
++
++	/*
++	 * Device may provide an out-of-band management interface through a
++	 * read/write window
++	 */
++	VMD_FEAT_HAS_OOB_WINDOW		= (1 << 2),
+ };
+ 
+ /*
+@@ -101,6 +109,10 @@ struct vmd_dev {
+ 
+ 	struct dma_map_ops	dma_ops;
+ 	struct dma_domain	dma_domain;
++
++	spinlock_t		oob_lock;
++	char __iomem		*oob_addr;
++	struct bin_attribute	*oob_attr;
+ };
+ 
+ static inline struct vmd_dev *vmd_from_bus(struct pci_bus *bus)
+@@ -543,6 +555,68 @@ static void vmd_detach_resources(struct vmd_dev *vmd)
+ 	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
+ }
+ 
++static ssize_t vmd_oob_read(struct file *filp, struct kobject *kobj,
++			    struct bin_attribute *attr, char *buf,
++			    loff_t off, size_t count)
++{
++	struct vmd_dev *vmd = attr->private;
++	unsigned long flags;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	spin_lock_irqsave(&vmd->oob_lock, flags);
++	memcpy_fromio(&buf[off], &vmd->oob_addr[off], count);
++	spin_unlock_irqrestore(&vmd->oob_lock, flags);
++
++	return count;
++}
++
++static ssize_t vmd_oob_write(struct file *filp, struct kobject *kobj,
++			     struct bin_attribute *attr, char *buf,
++			     loff_t off, size_t count)
++{
++	struct vmd_dev *vmd = attr->private;
++	unsigned long flags;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	spin_lock_irqsave(&vmd->oob_lock, flags);
++	memcpy_toio(&vmd->oob_addr[off], &buf[off], count);
++	spin_unlock_irqrestore(&vmd->oob_lock, flags);
++
++	return count;
++}
++
++static int vmd_create_oob_file(struct vmd_dev *vmd)
++{
++	struct pci_dev *dev = vmd->dev;
++	struct bin_attribute *oob_attr;
++
++	oob_attr = devm_kzalloc(&vmd->dev->dev, sizeof(*oob_attr), GFP_ATOMIC);
++	if (!oob_attr)
++		return -ENOMEM;
++
++	spin_lock_init(&vmd->oob_lock);
++	sysfs_bin_attr_init(oob_attr);
++	vmd->oob_attr = oob_attr;
++	oob_attr->attr.name = "oob";
++	oob_attr->attr.mode = S_IRUSR | S_IWUSR;
++	oob_attr->size = MB2_OOB_WINDOW_SIZE;
++	oob_attr->read = vmd_oob_read;
++	oob_attr->write = vmd_oob_write;
++	oob_attr->private = (void *)vmd;
++
++	return sysfs_create_bin_file(&dev->dev.kobj, oob_attr);
++}
++
++static void vmd_destroy_oob_file(struct vmd_dev *vmd)
++{
++	if (vmd->oob_attr)
++		sysfs_remove_bin_file(&vmd->dev->dev.kobj, vmd->oob_attr);
++}
++
+ /*
+  * VMD domains start at 0x10000 to not clash with ACPI _SEG domains.
+  * Per ACPI r6.0, sec 6.5.6,  _SEG returns an integer, of which the lower
+@@ -570,6 +644,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	resource_size_t offset[2] = {0};
+ 	resource_size_t membar2_offset = 0x2000;
+ 	struct pci_bus *child;
++	int ret;
+ 
+ 	/*
+ 	 * Shadow registers may exist in certain VMD device ids which allow
+@@ -579,7 +654,6 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	 */
+ 	if (features & VMD_FEAT_HAS_MEMBAR_SHADOW) {
+ 		u32 vmlock;
+-		int ret;
+ 
+ 		membar2_offset = MB2_SHADOW_OFFSET + MB2_SHADOW_SIZE;
+ 		ret = pci_read_config_dword(vmd->dev, PCI_REG_VMLOCK, &vmlock);
+@@ -614,6 +688,24 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 			vmd->busn_start = 128;
+ 	}
+ 
++	/*
++	 * Certain VMD devices provide a window for communicating with child
++	 * devices through a management interface
++	 */
++	if (features & VMD_FEAT_HAS_OOB_WINDOW) {
++		membar2_offset = MB2_OOB_WINDOW_OFFSET + MB2_OOB_WINDOW_SIZE;
++		vmd->oob_addr = devm_ioremap(&vmd->dev->dev,
++					vmd->dev->resource[VMD_MEMBAR2].start +
++					MB2_OOB_WINDOW_OFFSET,
++					MB2_OOB_WINDOW_SIZE);
++		if (!vmd->oob_addr)
++			return -ENOMEM;
++
++		ret = vmd_create_oob_file(vmd);
++		if (ret)
++			return ret;
++	}
++
+ 	res = &vmd->dev->resource[VMD_CFGBAR];
+ 	vmd->resources[0] = (struct resource) {
+ 		.name  = "VMD CFGBAR",
+@@ -667,20 +759,26 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 
+ 	sd->vmd_domain = true;
+ 	sd->domain = vmd_find_free_domain();
+-	if (sd->domain < 0)
+-		return sd->domain;
++	if (sd->domain < 0) {
++		ret = sd->domain;
++		goto destroy_oob_file;
++	}
+ 
+ 	sd->node = pcibus_to_node(vmd->dev->bus);
+ 
+ 	fn = irq_domain_alloc_named_id_fwnode("VMD-MSI", vmd->sysdata.domain);
+-	if (!fn)
+-		return -ENODEV;
++	if (!fn) {
++		ret = -ENODEV;
++		goto destroy_oob_file;
++	}
+ 
+ 	vmd->irq_domain = pci_msi_create_irq_domain(fn, &vmd_msi_domain_info,
+ 						    x86_vector_domain);
+ 	irq_domain_free_fwnode(fn);
+-	if (!vmd->irq_domain)
+-		return -ENODEV;
++	if (!vmd->irq_domain) {
++		ret = -ENODEV;
++		goto destroy_oob_file;
++	}
+ 
+ 	pci_add_resource(&resources, &vmd->resources[0]);
+ 	pci_add_resource_offset(&resources, &vmd->resources[1], offset[0]);
+@@ -689,9 +787,8 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	vmd->bus = pci_create_root_bus(&vmd->dev->dev, vmd->busn_start,
+ 				       &vmd_ops, sd, &resources);
+ 	if (!vmd->bus) {
+-		pci_free_resource_list(&resources);
+-		irq_domain_remove(vmd->irq_domain);
+-		return -ENODEV;
++		ret = -ENODEV;
++		goto remove_irq_domain;
+ 	}
+ 
+ 	vmd_attach_resources(vmd);
+@@ -714,6 +811,13 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
+ 	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
+ 			       "domain"), "Can't create symlink to domain\n");
+ 	return 0;
++
++remove_irq_domain:
++	pci_free_resource_list(&resources);
++	irq_domain_remove(vmd->irq_domain);
++destroy_oob_file:
++	vmd_destroy_oob_file(vmd);
++	return ret;
+ }
+ 
+ static irqreturn_t vmd_irq(int irq, void *data)
+@@ -807,6 +911,7 @@ static void vmd_remove(struct pci_dev *dev)
+ 	struct vmd_dev *vmd = pci_get_drvdata(dev);
+ 
+ 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
++	vmd_destroy_oob_file(vmd);
+ 	pci_stop_root_bus(vmd->bus);
+ 	pci_remove_root_bus(vmd->bus);
+ 	vmd_cleanup_srcu(vmd);
+@@ -853,7 +958,8 @@ static const struct pci_device_id vmd_ids[] = {
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_201D),},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_VMD_28C0),
+ 		.driver_data = VMD_FEAT_HAS_MEMBAR_SHADOW |
+-				VMD_FEAT_HAS_BUS_RESTRICTIONS,},
++				VMD_FEAT_HAS_BUS_RESTRICTIONS |
++				VMD_FEAT_HAS_OOB_WINDOW,},
+ 	{0,}
+ };
+ MODULE_DEVICE_TABLE(pci, vmd_ids);
 -- 
-2.21.0
+2.20.1
 
