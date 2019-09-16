@@ -4,56 +4,56 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C9BFC4CECE
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 12:50:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99632C49ED7
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 12:50:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D94F8218AC
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 12:50:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62681218AE
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 12:50:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20150623.gappssmtp.com header.i=@baylibre-com.20150623.gappssmtp.com header.b="FwV6HXM0"
+	dkim=pass (2048-bit key) header.d=baylibre-com.20150623.gappssmtp.com header.i=@baylibre-com.20150623.gappssmtp.com header.b="Q5FawH7T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732826AbfIPMub (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Sep 2019 08:50:31 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:45205 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732832AbfIPMub (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2019 08:50:31 -0400
-Received: by mail-wr1-f67.google.com with SMTP id r5so4780483wrm.12
-        for <linux-pci@vger.kernel.org>; Mon, 16 Sep 2019 05:50:29 -0700 (PDT)
+        id S1732832AbfIPMug (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Sep 2019 08:50:36 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:39534 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732862AbfIPMuf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 16 Sep 2019 08:50:35 -0400
+Received: by mail-wr1-f68.google.com with SMTP id r3so8604426wrj.6
+        for <linux-pci@vger.kernel.org>; Mon, 16 Sep 2019 05:50:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=baylibre-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=v37YRUaZlEabq7YVJ6vC/oIxKBbvZ5ttPDUZlrXerbs=;
-        b=FwV6HXM0xB9Sh5RDBNWs3vbJHkS4oiOfhW7BDcNZBH7xC46IXYZrUs/HdYuFS1JlL9
-         1bJL1V5fydViQpgtBBuhmSylQakstrzh4srNFkHZZpfS+/2HTPO16PTOzGVUpKOta+Ga
-         dA036vTgnAfozK02GiTzbDHqg+/igLznRXI1ocDxmXlJV2L9d21hdCtwPeAMhrhQSRYP
-         f1GxLOwj09j+Dw1oVbvk59VzqVo5LbQZmBP8SKKLLhEQNo3475PM6Z1GZ1b1xIc9VxQ8
-         wcFbdA0BQ5Uo9Cd8vVwewOY1LDEfiJXkWdXa0T37QX22JsuqbOFbMz8gGodVvM98HZV8
-         qHlw==
+        bh=0ns66tHOzGfsnxVB+ZKZBcG/oWmkd/W2Vsc0YmaMU/U=;
+        b=Q5FawH7TmHcmrJMh2wE4030BW9z4wCiBaYDKiZhIPjYFlog4b2prFnps+OkHchwF7B
+         BWaCDWNrTbJbIX814Z2D5h+TTDekIF+hP8siamR1zpqAsqaDndamaHt0IGu+EMO6/dYu
+         kBr37SZfWSxMuk+5Ejt54g735tjeiHuL7VfMSlZ7T1CWYUKhX2yqW2d+mGDA/7tFbW6Y
+         jnQRPe+AsdsSdkd5du+0Y0gaxXti/Ck5pwYY6PpS3duyfFoBcg40g0xAVqvY9U8wnuVu
+         BEGFw1H8sRxGF+XTyY970TQ0P3g0H/hpDVGNynPHd1JgNQE0/YFv7oR87w9IHARbttZo
+         xfKw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=v37YRUaZlEabq7YVJ6vC/oIxKBbvZ5ttPDUZlrXerbs=;
-        b=GG5uoMqBWjazx0P+Qz4O4RFcUX2FqgLsL2eJ5k/IFljW7FOYua2PPlboyGGCnMo9Zk
-         KjQ9diLKwLyjqwpxx2ExGvZlBdFR4t4Er18CbPa1YDkGIxqcKind0Bdd/YIY+0eusXMS
-         GWLrtHXq22RhcnJFMhNviO2wcFAzPpfEyoeBCpn7bZDk+xLMxx6gwWVVxHiC80zsAFTN
-         Hdwqz9jEIzgfgUXX9kXj1aOK8hwYOUJAv4axEwEV7LRP5PWmGkN5eq2CirKLzNJVwQqx
-         kydEI87YS5ueofFImZ0S36E+gMTCRXXOx9aXcbM5hKx6u1a/4H3Pdm1GSEAh0Ku+kfb4
-         GfSA==
-X-Gm-Message-State: APjAAAUz4mp/B82d6f9EYBRrcOtvXspyEb4oiiPWfikNJrCsh4FCjOkC
-        H2AK/2WpMEmBiqVdB0fQ/pUxEg==
-X-Google-Smtp-Source: APXvYqxqo0DsebMgSsfjoDkyv3+h2AlrRYOajCRyv1V+zM8U63v4xh8a32dBZWvtCncxQqLL5AOSzQ==
-X-Received: by 2002:a5d:668d:: with SMTP id l13mr8313545wru.279.1568638228805;
-        Mon, 16 Sep 2019 05:50:28 -0700 (PDT)
+        bh=0ns66tHOzGfsnxVB+ZKZBcG/oWmkd/W2Vsc0YmaMU/U=;
+        b=ZRnwbK5WavE/IsTFt6hWUrdX0Nh7jupJID5Z2I6BhrbPZpxld5RF5X/w2nGcl5k2RA
+         lliB3llmIkjC0QOHINFG8t2gFKFPQGMjWX58hNy2pqdAxXd5Hrwr14W4z2LCZkntwYiS
+         r++UAprjvfkdvayQ2wS23ee9lorSuJqIHajiHudNrEbxiwSpEb2CqVd3TQfslpFBVDEE
+         PYYst/VjYsjd4o6M27D2Hy1FplrXKTL8gqz7+Sq0yW/QHX0xKJ14A6cyyaHQmMr8ck90
+         CuFBhg/DA1/TNBe4sZOVNurC2UAAVXyQ2C5eloD9pw2MVUmi+fHYqRu1mduVUG4c4RJx
+         BbRw==
+X-Gm-Message-State: APjAAAULobpRv8uJkrb8epAnGpUJb3QxCD+oAe2l33GlBuhoAeP3apb7
+        16S0tgduWiF4gvU1iWjPI+IScw==
+X-Google-Smtp-Source: APXvYqzsfq/BuIwBYdAXlk/1o8lD0CLh/RoZ6Boua1yJWfbbATvUH6je8biFkwHt0aM1SZeaCwPcHQ==
+X-Received: by 2002:a5d:4f8c:: with SMTP id d12mr10731444wru.150.1568638231062;
+        Mon, 16 Sep 2019 05:50:31 -0700 (PDT)
 Received: from bender.baylibre.local (lmontsouris-657-1-212-31.w90-63.abo.wanadoo.fr. [90.63.244.31])
-        by smtp.gmail.com with ESMTPSA id o12sm15109960wrm.23.2019.09.16.05.50.27
+        by smtp.gmail.com with ESMTPSA id o12sm15109960wrm.23.2019.09.16.05.50.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Sep 2019 05:50:28 -0700 (PDT)
+        Mon, 16 Sep 2019 05:50:30 -0700 (PDT)
 From:   Neil Armstrong <narmstrong@baylibre.com>
 To:     khilman@baylibre.com, lorenzo.pieralisi@arm.com, kishon@ti.com,
         bhelgaas@google.com, andrew.murray@arm.com
@@ -62,9 +62,9 @@ Cc:     Neil Armstrong <narmstrong@baylibre.com>,
         linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         yue.wang@Amlogic.com, maz@kernel.org, repk@triplefau.lt,
         nick@khadas.com, gouwa@khadas.com
-Subject: [PATCH v2 4/6] phy: meson-g12a-usb3-pcie: Add support for PCIe mode
-Date:   Mon, 16 Sep 2019 14:50:20 +0200
-Message-Id: <20190916125022.10754-5-narmstrong@baylibre.com>
+Subject: [PATCH v2 6/6] arm64: dts: khadas-vim3: add commented support for PCIe
+Date:   Mon, 16 Sep 2019 14:50:22 +0200
+Message-Id: <20190916125022.10754-7-narmstrong@baylibre.com>
 X-Mailer: git-send-email 2.22.0
 In-Reply-To: <20190916125022.10754-1-narmstrong@baylibre.com>
 References: <20190916125022.10754-1-narmstrong@baylibre.com>
@@ -75,137 +75,144 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This adds extended PCIe PHY functions for the Amlogic G12A
-USB3+PCIE Combo PHY to support reset, power_on and power_off for
-PCIe exclusively.
+The VIM3 on-board  MCU can mux the PCIe/USB3.0 shared differential
+lines using a FUSB340TMX USB 3.1 SuperSpeed Data Switch between
+an USB3.0 Type A connector and a M.2 Key M slot.
+The PHY driving these differential lines is shared between
+the USB3.0 controller and the PCIe Controller, thus only
+a single controller can use it.
 
-With these callbacks, we can handle all the needed operations of the
-Amlogic PCIe controller driver.
+The needed DT configuration when the MCU is configured to mux
+the PCIe/USB3.0 differential lines to the M.2 Key M slot is
+added commented and may be uncommented to disable USB3.0 from the
+USB Complex and enable the PCIe controller.
+
+The End User is not expected to uncomment the following except for
+testing purposes, but instead rely on the firmware/bootloader to
+update these nodes accordingly if PCIe mode is selected by the MCU.
 
 Signed-off-by: Neil Armstrong <narmstrong@baylibre.com>
 ---
- .../phy/amlogic/phy-meson-g12a-usb3-pcie.c    | 70 ++++++++++++++++---
- 1 file changed, 61 insertions(+), 9 deletions(-)
+ .../amlogic/meson-g12b-a311d-khadas-vim3.dts  | 25 +++++++++++++++++++
+ .../amlogic/meson-g12b-s922x-khadas-vim3.dts  | 25 +++++++++++++++++++
+ .../boot/dts/amlogic/meson-khadas-vim3.dtsi   |  4 +++
+ .../dts/amlogic/meson-sm1-khadas-vim3l.dts    | 25 +++++++++++++++++++
+ 4 files changed, 79 insertions(+)
 
-diff --git a/drivers/phy/amlogic/phy-meson-g12a-usb3-pcie.c b/drivers/phy/amlogic/phy-meson-g12a-usb3-pcie.c
-index ac322d643c7a..08e322789e59 100644
---- a/drivers/phy/amlogic/phy-meson-g12a-usb3-pcie.c
-+++ b/drivers/phy/amlogic/phy-meson-g12a-usb3-pcie.c
-@@ -50,6 +50,8 @@
- 	#define PHY_R5_PHY_CR_ACK				BIT(16)
- 	#define PHY_R5_PHY_BS_OUT				BIT(17)
- 
-+#define PCIE_RESET_DELAY					500
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3.dts
+index 3a6a1e0c1e32..124a80901084 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-a311d-khadas-vim3.dts
+@@ -14,3 +14,28 @@
+ / {
+ 	compatible = "khadas,vim3", "amlogic,a311d", "amlogic,g12b";
+ };
 +
- struct phy_g12a_usb3_pcie_priv {
- 	struct regmap		*regmap;
- 	struct regmap		*regmap_cr;
-@@ -196,6 +198,10 @@ static int phy_g12a_usb3_init(struct phy *phy)
- 	struct phy_g12a_usb3_pcie_priv *priv = phy_get_drvdata(phy);
- 	int data, ret;
- 
-+	ret = reset_control_reset(priv->reset);
-+	if (ret)
-+		return ret;
++/*
++ * The VIM3 on-board  MCU can mux the PCIe/USB3.0 shared differential
++ * lines using a FUSB340TMX USB 3.1 SuperSpeed Data Switch between
++ * an USB3.0 Type A connector and a M.2 Key M slot.
++ * The PHY driving these differential lines is shared between
++ * the USB3.0 controller and the PCIe Controller, thus only
++ * a single controller can use it.
++ * If the MCU is configured to mux the PCIe/USB3.0 differential lines
++ * to the M.2 Key M slot, uncomment the following block to disable
++ * USB3.0 from the USB Complex and enable the PCIe controller.
++ * The End User is not expected to uncomment the following except for
++ * testing purposes, but instead rely on the firmware/bootloader to
++ * update these nodes accordingly if PCIe mode is selected by the MCU.
++ */
++/*
++&pcie {
++	status = "okay";
++};
 +
- 	/* Switch PHY to USB3 */
- 	/* TODO figure out how to handle when PCIe was set in the bootloader */
- 	regmap_update_bits(priv->regmap, PHY_R0,
-@@ -272,24 +278,64 @@ static int phy_g12a_usb3_init(struct phy *phy)
- 	return 0;
- }
- 
--static int phy_g12a_usb3_pcie_init(struct phy *phy)
-+static int phy_g12a_usb3_pcie_power_on(struct phy *phy)
-+{
-+	struct phy_g12a_usb3_pcie_priv *priv = phy_get_drvdata(phy);
++&usb {
++	phys = <&usb2_phy0>, <&usb2_phy1>;
++	phy-names = "usb2-phy0", "usb2-phy1";
++};
++ */
+diff --git a/arch/arm64/boot/dts/amlogic/meson-g12b-s922x-khadas-vim3.dts b/arch/arm64/boot/dts/amlogic/meson-g12b-s922x-khadas-vim3.dts
+index b73deb282120..bba98f982ad6 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-g12b-s922x-khadas-vim3.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-g12b-s922x-khadas-vim3.dts
+@@ -14,3 +14,28 @@
+ / {
+ 	compatible = "khadas,vim3", "amlogic,s922x", "amlogic,g12b";
+ };
 +
-+	if (priv->mode == PHY_TYPE_USB3)
-+		return 0;
++/*
++ * The VIM3 on-board  MCU can mux the PCIe/USB3.0 shared differential
++ * lines using a FUSB340TMX USB 3.1 SuperSpeed Data Switch between
++ * an USB3.0 Type A connector and a M.2 Key M slot.
++ * The PHY driving these differential lines is shared between
++ * the USB3.0 controller and the PCIe Controller, thus only
++ * a single controller can use it.
++ * If the MCU is configured to mux the PCIe/USB3.0 differential lines
++ * to the M.2 Key M slot, uncomment the following block to disable
++ * USB3.0 from the USB Complex and enable the PCIe controller.
++ * The End User is not expected to uncomment the following except for
++ * testing purposes, but instead rely on the firmware/bootloader to
++ * update these nodes accordingly if PCIe mode is selected by the MCU.
++ */
++/*
++&pcie {
++	status = "okay";
++};
 +
-+	regmap_update_bits(priv->regmap, PHY_R0,
-+			   PHY_R0_PCIE_POWER_STATE,
-+			   FIELD_PREP(PHY_R0_PCIE_POWER_STATE, 0x1c));
-+
-+	return 0;
-+}
-+
-+static int phy_g12a_usb3_pcie_power_off(struct phy *phy)
-+{
-+	struct phy_g12a_usb3_pcie_priv *priv = phy_get_drvdata(phy);
-+
-+	if (priv->mode == PHY_TYPE_USB3)
-+		return 0;
-+
-+	regmap_update_bits(priv->regmap, PHY_R0,
-+			   PHY_R0_PCIE_POWER_STATE,
-+			   FIELD_PREP(PHY_R0_PCIE_POWER_STATE, 0x1d));
-+
-+	return 0;
-+}
-+
-+static int phy_g12a_usb3_pcie_reset(struct phy *phy)
- {
- 	struct phy_g12a_usb3_pcie_priv *priv = phy_get_drvdata(phy);
- 	int ret;
- 
--	ret = reset_control_reset(priv->reset);
-+	if (priv->mode == PHY_TYPE_USB3)
-+		return 0;
-+
-+	ret = reset_control_assert(priv->reset);
- 	if (ret)
- 		return ret;
- 
-+	udelay(PCIE_RESET_DELAY);
-+
-+	ret = reset_control_deassert(priv->reset);
-+	if (ret)
-+		return ret;
-+
-+	udelay(PCIE_RESET_DELAY);
-+
-+	return 0;
-+}
-+
-+static int phy_g12a_usb3_pcie_init(struct phy *phy)
-+{
-+	struct phy_g12a_usb3_pcie_priv *priv = phy_get_drvdata(phy);
-+
- 	if (priv->mode == PHY_TYPE_USB3)
- 		return phy_g12a_usb3_init(phy);
- 
--	/* Power UP PCIE */
--	/* TODO figure out when the bootloader has set USB3 mode before */
--	regmap_update_bits(priv->regmap, PHY_R0,
--			   PHY_R0_PCIE_POWER_STATE,
--			   FIELD_PREP(PHY_R0_PCIE_POWER_STATE, 0x1c));
--
- 	return 0;
- }
- 
-@@ -297,7 +343,10 @@ static int phy_g12a_usb3_pcie_exit(struct phy *phy)
- {
- 	struct phy_g12a_usb3_pcie_priv *priv = phy_get_drvdata(phy);
- 
--	return reset_control_reset(priv->reset);
-+	if (priv->mode == PHY_TYPE_USB3)
-+		return reset_control_reset(priv->reset);
-+
-+	return 0;
- }
- 
- static struct phy *phy_g12a_usb3_pcie_xlate(struct device *dev,
-@@ -326,6 +375,9 @@ static struct phy *phy_g12a_usb3_pcie_xlate(struct device *dev,
- static const struct phy_ops phy_g12a_usb3_pcie_ops = {
- 	.init		= phy_g12a_usb3_pcie_init,
- 	.exit		= phy_g12a_usb3_pcie_exit,
-+	.power_on	= phy_g12a_usb3_pcie_power_on,
-+	.power_off	= phy_g12a_usb3_pcie_power_off,
-+	.reset		= phy_g12a_usb3_pcie_reset,
- 	.owner		= THIS_MODULE,
++&usb {
++	phys = <&usb2_phy0>, <&usb2_phy1>;
++	phy-names = "usb2-phy0", "usb2-phy1";
++};
++ */
+diff --git a/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi b/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi
+index 4fe7d33ebe8a..90815fa25ec6 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi
++++ b/arch/arm64/boot/dts/amlogic/meson-khadas-vim3.dtsi
+@@ -246,6 +246,10 @@
+ 	linux,rc-map-name = "rc-khadas";
  };
  
++&pcie {
++	reset-gpios = <&gpio GPIOA_8 GPIO_ACTIVE_LOW>;
++};
++
+ &pwm_ef {
+         status = "okay";
+         pinctrl-0 = <&pwm_e_pins>;
+diff --git a/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts b/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts
+index 5233bd7cacfb..dbbf29a0dbf6 100644
+--- a/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts
++++ b/arch/arm64/boot/dts/amlogic/meson-sm1-khadas-vim3l.dts
+@@ -68,3 +68,28 @@
+ 	clock-names = "clkin1";
+ 	status = "okay";
+ };
++
++/*
++ * The VIM3 on-board  MCU can mux the PCIe/USB3.0 shared differential
++ * lines using a FUSB340TMX USB 3.1 SuperSpeed Data Switch between
++ * an USB3.0 Type A connector and a M.2 Key M slot.
++ * The PHY driving these differential lines is shared between
++ * the USB3.0 controller and the PCIe Controller, thus only
++ * a single controller can use it.
++ * If the MCU is configured to mux the PCIe/USB3.0 differential lines
++ * to the M.2 Key M slot, uncomment the following block to disable
++ * USB3.0 from the USB Complex and enable the PCIe controller.
++ * The End User is not expected to uncomment the following except for
++ * testing purposes, but instead rely on the firmware/bootloader to
++ * update these nodes accordingly if PCIe mode is selected by the MCU.
++ */
++/*
++&pcie {
++	status = "okay";
++};
++
++&usb {
++	phys = <&usb2_phy0>, <&usb2_phy1>;
++	phy-names = "usb2-phy0", "usb2-phy1";
++};
++ */
 -- 
 2.22.0
 
