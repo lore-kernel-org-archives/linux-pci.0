@@ -2,110 +2,102 @@ Return-Path: <SRS0=OhUz=XL=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47526C4CECF
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 02:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EC96C4CEC7
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 02:58:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2797021479
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 02:28:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F47D206C2
+	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 02:58:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Q5znqb7F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729460AbfIPC21 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 15 Sep 2019 22:28:27 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:48990 "EHLO inva021.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727857AbfIPC21 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 15 Sep 2019 22:28:27 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 4124A200512;
-        Mon, 16 Sep 2019 04:28:25 +0200 (CEST)
-Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 2D4AD200513;
-        Mon, 16 Sep 2019 04:28:18 +0200 (CEST)
-Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id B1612402CA;
-        Mon, 16 Sep 2019 10:28:09 +0800 (SGT)
-From:   Xiaowei Bao <xiaowei.bao@nxp.com>
-To:     Zhiqiang.Hou@nxp.com, bhelgaas@google.com, robh+dt@kernel.org,
-        mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com,
-        kishon@ti.com, lorenzo.pieralisi@arm.com, Minghuan.Lian@nxp.com,
-        andrew.murray@arm.com, mingkai.hu@nxp.com,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH 2/6] dt-bindings: Add DT binding for PCIE GEN4 EP of the layerscape
-Date:   Mon, 16 Sep 2019 10:17:38 +0800
-Message-Id: <20190916021742.22844-3-xiaowei.bao@nxp.com>
-X-Mailer: git-send-email 2.9.5
-In-Reply-To: <20190916021742.22844-1-xiaowei.bao@nxp.com>
-References: <20190916021742.22844-1-xiaowei.bao@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+        id S1726024AbfIPC63 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 15 Sep 2019 22:58:29 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:44282 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725980AbfIPC63 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Sep 2019 22:58:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=GVblmzz3plDyZtzevh+6JM/SYfAETob1wlVIQfguZMY=; b=Q5znqb7FLZyKO6G3Fd8YkzOdS
+        gBtErLvRHK6K+fuDcQ14TIKk2mS3fqbsPc/9fXX0DONyfDqzCj4uoVnNlvOQG160mZSF2N/SH/Mod
+        HqKkcPLzsabRH0rBKg+uK2CprPJX7X/iiEbCkYPcNRSAWZSMjEaPApVHQnwX11ThyYUzx4d0C2mXu
+        RnFzj2P4/alRvj8v0W16o7fuZJHK8CMi+2mEowU/0J7v2SD+DKsAtc6GhSRHyJe3ox4MIDrN35IjB
+        IpUi3OmrODCCyA/jA967/spy6CIXR1FJ76yxQ7Jhg/5GQbpymTgtRinUgmPTB+JpvgiR7W8fOs91y
+        LLUylJDBQ==;
+Received: from [2601:1c0:6280:3f0::9a1f]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
+        id 1i9hDc-00080R-Eq; Mon, 16 Sep 2019 02:58:24 +0000
+Subject: Re: pci: endpoint test BUG
+To:     Hillf Danton <hdanton@sina.com>
+Cc:     linux-pci <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Al Viro <viro@ZenIV.linux.org.uk>
+References: <20190916020630.1584-1-hdanton@sina.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <fc884b12-c083-2d9f-0ec5-95c293931ed2@infradead.org>
+Date:   Sun, 15 Sep 2019 19:58:22 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <20190916020630.1584-1-hdanton@sina.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the documentation for the Device Tree binding of the layerscape
-PCIe GEN4 controller with EP mode.
+On 9/15/19 7:06 PM, Hillf Danton wrote:
+> 
+> On Sun, 15 Sep 2019 09:34:37 -0700
+>>
+>> Kernel is 5.3-rc8 on x86_64.
+>>
+>> Loading and removing the pci-epf-test module causes a BUG.
+>>
+>>
+>> [40928.435755] calling  pci_epf_test_init+0x0/0x1000 [pci_epf_test] @ 12132
+>> [40928.436717] initcall pci_epf_test_init+0x0/0x1000 [pci_epf_test] returned 0 after 891 usecs
+>> [40936.996081] ==================================================================
+>> [40936.996125] BUG: KASAN: use-after-free in pci_epf_remove_cfs+0x1ae/0x1f0
+>> [40936.996153] Write of size 8 at addr ffff88810a22a068 by task rmmod/12139
+> 
+> Fix fb0de5b8dcc6 and ef1433f717a2 if the current group::group_entry
+> used by pci epf does not break how configfs uses it.
+> 
+> --- a/drivers/pci/endpoint/pci-epf-core.c
+> +++ b/drivers/pci/endpoint/pci-epf-core.c
+> @@ -153,9 +153,11 @@ static void pci_epf_remove_cfs(struct pc
+>  		return;
+>  
+>  	mutex_lock(&pci_epf_mutex);
+> -	list_for_each_entry_safe(group, tmp, &driver->epf_group, group_entry)
+> +	list_for_each_entry_safe(group, tmp, &driver->epf_group,
+> +							group_entry) {
+> +		list_del_init(&group->group_entry);
+>  		pci_ep_cfs_remove_epf_group(group);
+> -	list_del(&driver->epf_group);
+> +	}
+>  	mutex_unlock(&pci_epf_mutex);
+>  }
+>  
+> 
 
-Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
----
- .../bindings/pci/layerscape-pcie-gen4.txt          | 28 +++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+Fixes the problem for me.  Thanks.
+Tested-by: Randy Dunlap <rdunlap@infradead.org>
 
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt b/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
-index b40fb5d..414a86c 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
-@@ -3,6 +3,8 @@ NXP Layerscape PCIe Gen4 controller
- This PCIe controller is based on the Mobiveil PCIe IP and thus inherits all
- the common properties defined in mobiveil-pcie.txt.
- 
-+HOST MODE
-+=========
- Required properties:
- - compatible: should contain the platform identifier such as:
-   "fsl,lx2160a-pcie"
-@@ -23,7 +25,20 @@ Required properties:
- - msi-parent : See the generic MSI binding described in
-   Documentation/devicetree/bindings/interrupt-controller/msi.txt.
- 
--Example:
-+DEVICE MODE
-+=========
-+Required properties:
-+- compatible: should contain the platform identifier such as:
-+  "fsl,lx2160a-pcie-ep"
-+- reg: base addresses and lengths of the PCIe controller register blocks.
-+  "regs": PCIe controller registers.
-+  "addr_space" EP device CPU address.
-+- apio-wins: number of requested apio outbound windows.
-+
-+Optional Property:
-+- max-functions: Maximum number of functions that can be configured (default 1).
-+
-+RC Example:
- 
- 	pcie@3400000 {
- 		compatible = "fsl,lx2160a-pcie";
-@@ -50,3 +65,14 @@ Example:
- 				<0000 0 0 3 &gic 0 0 GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>,
- 				<0000 0 0 4 &gic 0 0 GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
- 	};
-+
-+EP Example:
-+
-+	pcie_ep@3400000 {
-+		compatible = "fsl,lx2160a-pcie-ep";
-+		reg = <0x00 0x03400000 0x0 0x00100000
-+		       0x80 0x00000000 0x8 0x00000000>;
-+		reg-names = "regs", "addr_space";
-+		apio-wins = <8>;
-+		status = "disabled";
-+	};
+Please make a proper patch.
+
 -- 
-2.9.5
-
+~Randy
