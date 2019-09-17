@@ -2,118 +2,65 @@ Return-Path: <SRS0=+N4N=XM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16084C4CECD
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Sep 2019 05:41:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D627C4CECD
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Sep 2019 08:04:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97CD420678
-	for <linux-pci@archiver.kernel.org>; Tue, 17 Sep 2019 05:41:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14F3E21881
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Sep 2019 08:04:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="rPP77/dr"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="njJ8oAn0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728034AbfIQFlL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 17 Sep 2019 01:41:11 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:37974 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725922AbfIQFlL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2019 01:41:11 -0400
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8H5etax020871;
-        Tue, 17 Sep 2019 00:40:55 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1568698855;
-        bh=KrUGt79L9HyCReyRHy+1q7weFGZYycU7t3SvXD8FMjo=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=rPP77/drpjX80wevN/uf2h4aL9EqqnnWsRtm8KsqulnHb+cV5MXs2Uvn/1ROtP1p2
-         WwDwPYzkADTc7nj95BnK+fb4xuN4sl9AnLjIvT0NgsNUAjT+KAAbTsKFuIGFNVHAzv
-         7anpduu0AStmrvwfpZftm3YumoWYMc2Dq5lUzr7M=
-Received: from DFLE110.ent.ti.com (dfle110.ent.ti.com [10.64.6.31])
-        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8H5etfQ075764
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 17 Sep 2019 00:40:55 -0500
-Received: from DFLE107.ent.ti.com (10.64.6.28) by DFLE110.ent.ti.com
- (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Tue, 17
- Sep 2019 00:40:52 -0500
-Received: from fllv0040.itg.ti.com (10.64.41.20) by DFLE107.ent.ti.com
- (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Tue, 17 Sep 2019 00:40:52 -0500
-Received: from [172.24.190.233] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by fllv0040.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8H5ep9o094511;
-        Tue, 17 Sep 2019 00:40:52 -0500
-Subject: Re: pci: endpoint test BUG
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hillf Danton <hdanton@sina.com>
-CC:     Randy Dunlap <rdunlap@infradead.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20190916020630.1584-1-hdanton@sina.com>
- <20190916112246.GA6693@e121166-lin.cambridge.arm.com>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <815ad936-8b98-0931-89f7-b97922a7c77d@ti.com>
-Date:   Tue, 17 Sep 2019 11:10:37 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S2404598AbfIQIEj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 17 Sep 2019 04:04:39 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:60164 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728049AbfIQIEj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 17 Sep 2019 04:04:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=ziG7cDWoOX8EG+PCQ4I/+FlUlyi7v/uDNlT777ESW0w=; b=njJ8oAn0sujUXkubrNOwwuj9t
+        ki59KxhtBrgcyb6IxGRAnCYQEevecvAEBktvZrWo5tpq6q4LtWdVFpIQMyoNf/1vBDAbJJgL24gbR
+        BxbWbSqIRHQGLFHJURqMsVzfdzz3UEsczrNO0H9dc2wWR0p7eZPvzHbA2pspTt2r0NPIN5o+jigVY
+        1Hpt0jUMwjF4m1gTbNdTF++aJ0udXefcjgE0OVj+GSb13ChLGPJysufJJCLSA3KEDlY58VD48c3Fe
+        gXqfP91lFVg2xYTo69Fe1ctccQz0M0PZJGD1jNooiDrhH5wOAY6sNLg10iTVgFdoc6PM+f3vmrB4f
+        Kvb055D/g==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
+        id 1iA8TT-0001W0-Fa; Tue, 17 Sep 2019 08:04:35 +0000
+Date:   Tue, 17 Sep 2019 01:04:35 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jon Derrick <jonathan.derrick@intel.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: vmd: Expose oob management window to users
+Message-ID: <20190917080435.GA5666@infradead.org>
+References: <20190916145128.5243-1-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20190916112246.GA6693@e121166-lin.cambridge.arm.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190916145128.5243-1-jonathan.derrick@intel.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-On 16/09/19 4:52 PM, Lorenzo Pieralisi wrote:
-> On Mon, Sep 16, 2019 at 10:06:30AM +0800, Hillf Danton wrote:
->>
->> On Sun, 15 Sep 2019 09:34:37 -0700
->>>
->>> Kernel is 5.3-rc8 on x86_64.
->>>
->>> Loading and removing the pci-epf-test module causes a BUG.
->>>
->>>
->>> [40928.435755] calling  pci_epf_test_init+0x0/0x1000 [pci_epf_test] @ 12132
->>> [40928.436717] initcall pci_epf_test_init+0x0/0x1000 [pci_epf_test] returned 0 after 891 usecs
->>> [40936.996081] ==================================================================
->>> [40936.996125] BUG: KASAN: use-after-free in pci_epf_remove_cfs+0x1ae/0x1f0
->>> [40936.996153] Write of size 8 at addr ffff88810a22a068 by task rmmod/12139
->>
->> Fix fb0de5b8dcc6 and ef1433f717a2 if the current group::group_entry
->> used by pci epf does not break how configfs uses it.
->>
->> --- a/drivers/pci/endpoint/pci-epf-core.c
->> +++ b/drivers/pci/endpoint/pci-epf-core.c
->> @@ -153,9 +153,11 @@ static void pci_epf_remove_cfs(struct pc
->>  		return;
->>  
->>  	mutex_lock(&pci_epf_mutex);
->> -	list_for_each_entry_safe(group, tmp, &driver->epf_group, group_entry)
->> +	list_for_each_entry_safe(group, tmp, &driver->epf_group,
->> +							group_entry) {
->> +		list_del_init(&group->group_entry);
->>  		pci_ep_cfs_remove_epf_group(group);
->> -	list_del(&driver->epf_group);
->> +	}
->>  	mutex_unlock(&pci_epf_mutex);
->>  }
-
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-
+On Mon, Sep 16, 2019 at 08:51:28AM -0600, Jon Derrick wrote:
+> Some VMD devices provide a management window within MEMBAR2 that is used
+> to communicate out-of-band with child devices. This patch creates a
+> binary file for interacting with the interface.
 > 
-> Thank you Hillf. Kishon, can you confirm that's the proper fix for
-> this bug please ? I would like to turn this into a patch and merge
-> it in the upcoming merge window PR so it ought to be fairly quick,
-> please let me know asap.
-> 
-> Lorenzo
-> 
+> OOB Reads/Writes are bounds-checked by sysfs_fs_bin_{read,write}
+
+I don't think this is a reasonable interface.  If the OOB interfae
+is useful please provide an actual kernel driver for it.
