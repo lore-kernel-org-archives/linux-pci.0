@@ -1,196 +1,250 @@
-Return-Path: <SRS0=OhUz=XL=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=+N4N=XM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC86EC4CECE
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 21:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2147BC49ED7
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Sep 2019 02:23:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 82A712067B
-	for <linux-pci@archiver.kernel.org>; Mon, 16 Sep 2019 21:19:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=microsoft.com header.i=@microsoft.com header.b="PqUhJoOj"
+	by mail.kernel.org (Postfix) with ESMTP id E79D9206A1
+	for <linux-pci@archiver.kernel.org>; Tue, 17 Sep 2019 02:23:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388048AbfIPVTO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 16 Sep 2019 17:19:14 -0400
-Received: from mail-eopbgr680119.outbound.protection.outlook.com ([40.107.68.119]:22599
-        "EHLO NAM04-BN3-obe.outbound.protection.outlook.com"
+        id S1731656AbfIQCXT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 16 Sep 2019 22:23:19 -0400
+Received: from szxga08-in.huawei.com ([45.249.212.255]:55728 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2387825AbfIPVTN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 16 Sep 2019 17:19:13 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=j3E0r3S46gA/0DQiuai3N+4/WK6QP+H2szrVUx0hqecJj74nlQ54JGFqWNc2I3T3G9V7rZQ8ke1MnaiMXYHrSrfYrifo5kx8Kt0aoMYHuq+UK5zLFBm7+1EtO7A1ewojgpYfWA+EditIhGUpnGdABGwAS/9USAF4jIwYpVcA3+uZVKUvzKr0rjEGm4F15xfQpYEeY6AiH+NR++pnJZ/lcJiymF8PRBYIUA1HwjoEbo/8vRdI0ue/XNyYAdSuwq5pG+uCYbgWq7NZxnAi/wQeGViG10IMjVOVSGVmBqe49Wall5pgOLh4UdEY5lstzOqBkpzV/FrCpGfnNJmlBDsXRQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aBkIH2sCMLDhsm87o3O2Iza/8/fo4JBesVzF8XXU72M=;
- b=bzaWPjs+zMWNsr783YuMQ6YsLZG3hOzaub2OQ6nOanI0rl5AaJTem21WMSOa/4HFT1VZPQ4v745d5xSr2kCqOx1SW9uDxccwIg0nhOKPHRubvTXuNxw+bntgkor2TnLfoYfoRaDK6APFgiS99wR8Dyknqanfqj9cG/3l3sudwW5lWQnwUMrKDhqZc2l7G/deUXBOnnn8atOxM1RNQzeV+4QdJT69URH6opWzOYhIgZIbCwjUmTqCHucV8paPlu2syiudy/k2VD7WV1rso4nygAgqIDINUoU20vBc5E6udSXQniV1TakRxk+Bxcms/37cP8qq7KiZ6rwN+A8rFCG4SQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aBkIH2sCMLDhsm87o3O2Iza/8/fo4JBesVzF8XXU72M=;
- b=PqUhJoOjRcNjg99QWv/d7Na5irouCrtP5fbUeaFmESL6LxG0tNSLvm+k41dSC5QkIcj36k7tOA63tc+8826oa5/7hKYju5jZik5GC+mgAz4Ea1u1fSYcWLlAOonUgsR0m5sOaA35iCHq+dJy6z/oC3SO4kCUdUEgoMU36Sm/Lc0=
-Received: from DM6PR21MB1337.namprd21.prod.outlook.com (20.179.53.80) by
- DM6PR21MB1451.namprd21.prod.outlook.com (20.180.23.16) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2263.10; Mon, 16 Sep 2019 21:19:09 +0000
-Received: from DM6PR21MB1337.namprd21.prod.outlook.com
- ([fe80::2cde:35d7:e09a:5639]) by DM6PR21MB1337.namprd21.prod.outlook.com
- ([fe80::2cde:35d7:e09a:5639%6]) with mapi id 15.20.2263.005; Mon, 16 Sep 2019
- 21:19:09 +0000
-From:   Haiyang Zhang <haiyangz@microsoft.com>
-To:     Denis Efremov <efremov@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Andrew Murray <andrew.murray@arm.com>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sasha Levin <sashal@kernel.org>
-Subject: RE: [PATCH v3 02/26] PCI: hv: Use PCI_STD_NUM_BARS
-Thread-Topic: [PATCH v3 02/26] PCI: hv: Use PCI_STD_NUM_BARS
-Thread-Index: AQHVbM9rTh2Y2PUhrEqo6UXJiPJtiacuzuKA
-Date:   Mon, 16 Sep 2019 21:19:08 +0000
-Message-ID: <DM6PR21MB1337B733B179578DAEA555DFCA8C0@DM6PR21MB1337.namprd21.prod.outlook.com>
-References: <20190916204158.6889-1-efremov@linux.com>
- <20190916204158.6889-3-efremov@linux.com>
-In-Reply-To: <20190916204158.6889-3-efremov@linux.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=True;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Owner=haiyangz@microsoft.com;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2019-09-16T21:19:07.7862893Z;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=General;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Application=Microsoft Azure
- Information Protection;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=8230eaa9-5501-49ca-8f5c-b5c6c7145f5d;
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Extended_MSFT_Method=Automatic
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=haiyangz@microsoft.com; 
-x-originating-ip: [96.61.92.94]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 552841b3-1635-489f-fe8a-08d73aeb8349
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600167)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:DM6PR21MB1451;
-x-ms-traffictypediagnostic: DM6PR21MB1451:|DM6PR21MB1451:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <DM6PR21MB1451F797BAFEDA038459198CCA8C0@DM6PR21MB1451.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:3968;
-x-forefront-prvs: 0162ACCC24
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(136003)(376002)(366004)(39860400002)(396003)(346002)(13464003)(189003)(199004)(110136005)(10290500003)(102836004)(53546011)(446003)(14454004)(66946007)(316002)(486006)(7736002)(66476007)(66556008)(64756008)(478600001)(476003)(4326008)(25786009)(6506007)(6246003)(186003)(26005)(86362001)(11346002)(8990500004)(66446008)(76116006)(33656002)(10090500001)(74316002)(5660300002)(6116002)(3846002)(6436002)(99286004)(52536014)(256004)(53936002)(2906002)(8676002)(229853002)(7696005)(76176011)(81156014)(8936002)(9686003)(66066001)(305945005)(22452003)(55016002)(71190400001)(71200400001)(81166006)(54906003);DIR:OUT;SFP:1102;SCL:1;SRVR:DM6PR21MB1451;H:DM6PR21MB1337.namprd21.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: microsoft.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: 26r7DxL73h4QMx3BKKHeRTK6QSj9Au8ddcTyk9RMcdmZ3i6z+8BhP9B3p6X4E7eLEXt6gOGkneJfK5WT4XD9mq76Bdla45LLCqMChxzdvNFBhOvq9Cjsftaqijjb6KHxPKG+x75fXkJitBrYlJK3kHz3k8NLVyzsFja3ov3688eUgV29HYfqnbFv4mBeLEjEJrThKECwjn54AqSEZpNFkGHE4/WLjdnQBGs//HeOCaFoJ/Ls01yxTGnZT0LvaCSbqAqqs22/Y0eHW9v/b3D8fA57ArL8mZLyAqoppOId592XQdMkRrjCrcN0WCNZUvb48nZAN5h6OoJqOfvV6InlroxgyBpHcCkjjLA/FQZsU2hY62cSOSElLw5XO8dEdToOOuMZ8P3o5B9fYHOh+XyXoBJW0klN4YoT67Tz6cOa4pE=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S1728639AbfIQCXT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 16 Sep 2019 22:23:19 -0400
+Received: from DGGEMM403-HUB.china.huawei.com (unknown [172.30.72.54])
+        by Forcepoint Email with ESMTP id 9B3063A5AE8D90C37CC6;
+        Tue, 17 Sep 2019 10:23:16 +0800 (CST)
+Received: from dggeme758-chm.china.huawei.com (10.3.19.104) by
+ DGGEMM403-HUB.china.huawei.com (10.3.20.211) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Tue, 17 Sep 2019 10:23:16 +0800
+Received: from [127.0.0.1] (10.40.49.11) by dggeme758-chm.china.huawei.com
+ (10.3.19.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1591.10; Tue, 17
+ Sep 2019 10:23:16 +0800
+Subject: Re: [PATCH] PCI/AER: Fix AER/sysfs sriov_numvfs deadlock in
+ pcie_do_recovery()
+To:     <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>, <linuxarm@huawei.com>
+References: <1567737238-48866-1-git-send-email-f.fangjian@huawei.com>
+From:   Jay Fang <f.fangjian@huawei.com>
+Message-ID: <82c141d3-6346-c4a3-9ebb-41046ef42dfa@huawei.com>
+Date:   Tue, 17 Sep 2019 10:23:41 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.5.2
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 552841b3-1635-489f-fe8a-08d73aeb8349
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Sep 2019 21:19:08.8932
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: qdp/FCbcOSuvErRbTNUxyeqgufub3MAno+ZeNEQMpaHqSTe+XDjlvsxv9pT9DiyEfzLeijCUEFFeiK/gJF+6vA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR21MB1451
+In-Reply-To: <1567737238-48866-1-git-send-email-f.fangjian@huawei.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.40.49.11]
+X-ClientProxiedBy: dggeme711-chm.china.huawei.com (10.1.199.107) To
+ dggeme758-chm.china.huawei.com (10.3.19.104)
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Kindly Ping...
 
 
-> -----Original Message-----
-> From: Denis Efremov <efremov@linux.com>
-> Sent: Monday, September 16, 2019 4:42 PM
-> To: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Denis Efremov <efremov@linux.com>; linux-kernel@vger.kernel.org;
-> linux-pci@vger.kernel.org; Andrew Murray <andrew.murray@arm.com>;
-> linux-hyperv@vger.kernel.org; KY Srinivasan <kys@microsoft.com>; Haiyang
-> Zhang <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; Sasha Levin <sashal@kernel.org>
-> Subject: [PATCH v3 02/26] PCI: hv: Use PCI_STD_NUM_BARS
->=20
-> Replace the magic constant (6) with define PCI_STD_NUM_BARS
-> representing the number of PCI BARs.
->=20
-> Cc: "K. Y. Srinivasan" <kys@microsoft.com>
-> Cc: Haiyang Zhang <haiyangz@microsoft.com>
-> Cc: Stephen Hemminger <sthemmin@microsoft.com>
-> Cc: Sasha Levin <sashal@kernel.org>
-> Signed-off-by: Denis Efremov <efremov@linux.com>
+
+Best Regards,
+Jay
+
+
+On 2019/9/6 10:33, Jay Fang wrote:
+> A deadlock triggered by a NONFATAL AER event during a sysfs "sriov_numvfs"
+> operation:
+> 
+>   enable one VF
+>   # echo 1 > /sys/devices/pci0000:74/0000:74:00.0/0000:75:00.0/sriov_numvfs
+> 
+>   The sysfs "sriov_numvfs" side is:
+> 
+>     sriov_numvfs_store
+>       device_lock                         # hold the device_lock
+>         ...
+>         pci_enable_sriov
+>           sriov_enable
+>             ...
+>             pci_device_add
+>               down_write(&pci_bus_sem)    # wait for the pci_bus_sem
+> 
+>   The AER side is:
+> 
+>     pcie_do_recovery
+>       pci_walk_bus
+>         down_read(&pci_bus_sem)           # hold the pci_bus_sem
+>           report_resume
+>             device_lock                   # wait for device_unlock()
+> 
+> The calltrace is as below:
+> [  258.411464] INFO: task kworker/0:1:13 blocked for more than 120 seconds.
+> [  258.418139]       Tainted: G         C O      5.1.0-rc1-ge2e3ca0 #1
+> [  258.424379] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  258.432172] kworker/0:1     D    0    13      2 0x00000028
+> [  258.437640] Workqueue: events aer_recover_work_func
+> [  258.442496] Call trace:
+> [  258.444933]  __switch_to+0xb4/0x1b8
+> [  258.448409]  __schedule+0x1ec/0x720
+> [  258.451884]  schedule+0x38/0x90
+> [  258.455012]  schedule_preempt_disabled+0x20/0x38
+> [  258.459610]  __mutex_lock.isra.1+0x150/0x518
+> [  258.463861]  __mutex_lock_slowpath+0x10/0x18
+> [  258.468112]  mutex_lock+0x34/0x40
+> [  258.471413]  report_resume+0x1c/0x78
+> [  258.474973]  pci_walk_bus+0x58/0xb0
+> [  258.478451]  pcie_do_recovery+0x18c/0x248
+> [  258.482445]  aer_recover_work_func+0xe0/0x118
+> [  258.486783]  process_one_work+0x1e4/0x468
+> [  258.490776]  worker_thread+0x40/0x450
+> [  258.494424]  kthread+0x128/0x130
+> [  258.497639]  ret_from_fork+0x10/0x1c
+> [  258.501329] INFO: task flr.sh:4534 blocked for more than 120 seconds.
+> [  258.507742]       Tainted: G         C O      5.1.0-rc1-ge2e3ca0 #1
+> [  258.513980] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> [  258.521774] flr.sh          D    0  4534   4504 0x00000000
+> [  258.527235] Call trace:
+> [  258.529671]  __switch_to+0xb4/0x1b8
+> [  258.533146]  __schedule+0x1ec/0x720
+> [  258.536619]  schedule+0x38/0x90
+> [  258.539749]  rwsem_down_write_failed+0x14c/0x210
+> [  258.544347]  down_write+0x48/0x60
+> [  258.547648]  pci_device_add+0x1a0/0x290
+> [  258.551469]  pci_iov_add_virtfn+0x190/0x358
+> [  258.555633]  sriov_enable+0x24c/0x480
+> [  258.559279]  pci_enable_sriov+0x14/0x28
+> [  258.563101]  hisi_zip_sriov_configure+0x64/0x100 [hisi_zip]
+> [  258.568649]  sriov_numvfs_store+0xc4/0x190
+> [  258.572728]  dev_attr_store+0x18/0x28
+> [  258.576375]  sysfs_kf_write+0x3c/0x50
+> [  258.580024]  kernfs_fop_write+0x114/0x1d8
+> [  258.584018]  __vfs_write+0x18/0x38
+> [  258.587404]  vfs_write+0xa4/0x1b0
+> [  258.590705]  ksys_write+0x60/0xd8
+> [  258.594007]  __arm64_sys_write+0x18/0x20
+> [  258.597914]  el0_svc_common+0x5c/0x100
+> [  258.601646]  el0_svc_handler+0x2c/0x80
+> [  258.605381]  el0_svc+0x8/0xc
+> [  379.243461] INFO: task kworker/0:1:13 blocked for more than 241 seconds.
+> [  379.250134]       Tainted: G         C O      5.1.0-rc1-ge2e3ca0 #1
+> [  379.256373] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> 
+> Using the same locking order is a good way to solve this AB->BA kind of
+> deadlock. Adjust the locking order of the AER side, taking device_lock
+> firstly and then the pci_bus_sem, to make sure it's locking order is the
+> same as the sriov side. This patch solves the above deadlock issue only
+> with little changes.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=203981
+> Signed-off-by: Jay Fang <f.fangjian@huawei.com>
 > ---
->  drivers/pci/controller/pci-hyperv.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller=
-/pci-
-> hyperv.c
-> index 40b625458afa..1665c23b649f 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -307,7 +307,7 @@ struct pci_bus_relations {  struct
-> pci_q_res_req_response {
->  	struct vmpacket_descriptor hdr;
->  	s32 status;			/* negative values are failures */
-> -	u32 probed_bar[6];
-> +	u32 probed_bar[PCI_STD_NUM_BARS];
->  } __packed;
->=20
->  struct pci_set_power {
-> @@ -503,7 +503,7 @@ struct hv_pci_dev {
->  	 * What would be observed if one wrote 0xFFFFFFFF to a BAR and
-> then
->  	 * read it back, for each of the BAR offsets within config space.
->  	 */
-> -	u32 probed_bar[6];
-> +	u32 probed_bar[PCI_STD_NUM_BARS];
->  };
->=20
->  struct hv_pci_compl {
-> @@ -1327,7 +1327,7 @@ static void survey_child_resources(struct
-> hv_pcibus_device *hbus)
->  	 * so it's sufficient to just add them up without tracking alignment.
->  	 */
->  	list_for_each_entry(hpdev, &hbus->children, list_entry) {
-> -		for (i =3D 0; i < 6; i++) {
-> +		for (i =3D 0; i < PCI_STD_NUM_BARS; i++) {
->  			if (hpdev->probed_bar[i] &
-> PCI_BASE_ADDRESS_SPACE_IO)
->  				dev_err(&hbus->hdev->device,
->  					"There's an I/O BAR in this list!\n");
-> @@ -1401,7 +1401,7 @@ static void prepopulate_bars(struct
-> hv_pcibus_device *hbus)
->  	/* Pick addresses for the BARs. */
->  	do {
->  		list_for_each_entry(hpdev, &hbus->children, list_entry) {
-> -			for (i =3D 0; i < 6; i++) {
-> +			for (i =3D 0; i < PCI_STD_NUM_BARS; i++) {
->  				bar_val =3D hpdev->probed_bar[i];
->  				if (bar_val =3D=3D 0)
->  					continue;
-> @@ -1558,7 +1558,7 @@ static void q_resource_requirements(void
-> *context, struct pci_response *resp,
->  			"query resource requirements failed: %x\n",
->  			resp->status);
->  	} else {
-> -		for (i =3D 0; i < 6; i++) {
-> +		for (i =3D 0; i < PCI_STD_NUM_BARS; i++) {
->  			completion->hpdev->probed_bar[i] =3D
->  				q_res_req->probed_bar[i];
->  		}
+>  drivers/pci/pcie/err.c | 12 ++++--------
+>  1 file changed, 4 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 773197a..dcc8638 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -50,7 +50,6 @@ static int report_error_detected(struct pci_dev *dev,
+> 	pci_ers_result_t vote;
+> 	const struct pci_error_handlers *err_handler;
+> 
+> -	device_lock(&dev->dev);
+> 	if (!pci_dev_set_io_state(dev, state) ||
+> 		!dev->driver ||
+> 		!dev->driver->err_handler ||
+> @@ -71,7 +70,6 @@ static int report_error_detected(struct pci_dev *dev,
+> 	}
+> 	pci_uevent_ers(dev, vote);
+> 	*result = merge_result(*result, vote);
+> -	device_unlock(&dev->dev);
+> 	return 0;
+>  }
+> 
+> @@ -90,7 +88,6 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
+> 	pci_ers_result_t vote, *result = data;
+> 	const struct pci_error_handlers *err_handler;
+> 
+> -	device_lock(&dev->dev);
+> 	if (!dev->driver ||
+> 		!dev->driver->err_handler ||
+> 		!dev->driver->err_handler->mmio_enabled)
+> @@ -100,7 +97,6 @@ static int report_mmio_enabled(struct pci_dev *dev, void *data)
+> 	vote = err_handler->mmio_enabled(dev);
+> 	*result = merge_result(*result, vote);
+>  out:
+> -	device_unlock(&dev->dev);
+> 	return 0;
+>  }
+> 
+> @@ -109,7 +105,6 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+> 	pci_ers_result_t vote, *result = data;
+> 	const struct pci_error_handlers *err_handler;
+> 
+> -	device_lock(&dev->dev);
+> 	if (!dev->driver ||
+> 		!dev->driver->err_handler ||
+> 		!dev->driver->err_handler->slot_reset)
+> @@ -119,7 +114,6 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+> 	vote = err_handler->slot_reset(dev);
+> 	*result = merge_result(*result, vote);
+>  out:
+> -	device_unlock(&dev->dev);
+> 	return 0;
+>  }
+> 
+> @@ -127,7 +121,6 @@ static int report_resume(struct pci_dev *dev, void *data)
+>  {
+> 	const struct pci_error_handlers *err_handler;
+> 
+> -	device_lock(&dev->dev);
+> 	if (!pci_dev_set_io_state(dev, pci_channel_io_normal) ||
+> 		!dev->driver ||
+> 		!dev->driver->err_handler ||
+> @@ -138,7 +131,6 @@ static int report_resume(struct pci_dev *dev, void *data)
+> 	err_handler->resume(dev);
+>  out:
+> 	pci_uevent_ers(dev, PCI_ERS_RESULT_RECOVERED);
+> -	device_unlock(&dev->dev);
+> 	return 0;
+>  }
+> 
+> @@ -198,6 +190,8 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+> 		dev = dev->bus->self;
+> 	bus = dev->subordinate;
+> 
+> +	device_lock(&dev->dev);
+> +
+> 	pci_dbg(dev, "broadcast error_detected message\n");
+> 	if (state == pci_channel_io_frozen)
+> 		pci_walk_bus(bus, report_frozen_detected, &status);
+> @@ -231,12 +225,14 @@ void pcie_do_recovery(struct pci_dev *dev, enum pci_channel_state state,
+> 	pci_dbg(dev, "broadcast resume message\n");
+> 	pci_walk_bus(bus, report_resume, &status);
+> 
+> +	device_unlock(&dev->dev);
+> 	pci_aer_clear_device_status(dev);
+> 	pci_cleanup_aer_uncorrect_error_status(dev);
+> 	pci_info(dev, "AER: Device recovery successful\n");
+> 	return;
+> 
+>  failed:
+> +	device_unlock(&dev->dev);
+> 	pci_uevent_ers(dev, PCI_ERS_RESULT_DISCONNECT);
+> 
+> 	/* TODO: Should kernel panic here? */
+> --
+> 2.8.1
+> 
+> .
+> 
 
-Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
-Thanks.
