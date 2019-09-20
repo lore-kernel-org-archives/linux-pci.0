@@ -2,177 +2,122 @@ Return-Path: <SRS0=IIMo=XP=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DDCEC49ED7
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Sep 2019 11:23:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DA8C49ED7
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Sep 2019 13:04:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A29220B7C
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Sep 2019 11:23:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB48D208C0
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Sep 2019 13:04:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bGKFJCNS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393616AbfITLXf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Sep 2019 07:23:35 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:45685 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2393566AbfITLXf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Sep 2019 07:23:35 -0400
-Received: from mail-ot1-f72.google.com ([209.85.210.72])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1iBH0f-0002aN-C7
-        for linux-pci@vger.kernel.org; Fri, 20 Sep 2019 11:23:33 +0000
-Received: by mail-ot1-f72.google.com with SMTP id z24so3432490otq.6
-        for <linux-pci@vger.kernel.org>; Fri, 20 Sep 2019 04:23:33 -0700 (PDT)
+        id S1726953AbfITNEz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Sep 2019 09:04:55 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:36132 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726628AbfITNEy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Sep 2019 09:04:54 -0400
+Received: by mail-wr1-f68.google.com with SMTP id y19so6724642wrd.3
+        for <linux-pci@vger.kernel.org>; Fri, 20 Sep 2019 06:04:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:reply-to:from:date:message-id:subject:to;
+        bh=jJ8kGTBYtlb/umVW1iRDm0Nvvm+8UUzgzphkr+DF4mg=;
+        b=bGKFJCNSZqbhRGQSYk+8nFZ5d5ZK2pv1I4QQAb234fugjY/gLAPEbEsCtPJliIo/wy
+         pTD4duXYhQxw8pulxxxq5q2JBbPF1kXWfuyXMoMTeGR3Yuy5Ufq4kRB76QX68aImudsW
+         xtvbNCS7T6QuDC3BSCeKuLrcMcrxgFutBRdY5J6DcZaeuvmx476uj600rVkVorbZgeG7
+         PIDBIewl/T9CGhFJ5LRY3KiGWz1UTKF8BrZ3dlYm+NqvRQ4pcYM7f0eOhkk1QQH66bTc
+         dvl08NpOO0qVsJydwrKNBV5P0L/mQpE0AyOpNcfM2Fkh/NKTdbtVixbVyZ5nLPS6mgMS
+         bXgA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=iV27nI8Jtkumr2nEeO8gy6V9pQ8fT+/smrbZCaOLJgg=;
-        b=gUaxiSqO69nbiqK5Jz3nTxFtdl3d5SDVW8Ob8CA5ztXRtXAWMigiHA8bICwFldM6mR
-         ceAVx7zIBR//dil9Pn53byp+7DxsjK0duOVg/3LqzLJ1w/TmRM2clFo6bb+02FkFbHcz
-         WkkVOzbZYJN+Mu0deiEuP7Scd9ej4p9dCpw6VMk8v5WDrTWTWdv86qnAFG9/tGNU4Cvd
-         V+KclFUo8t6fR6WQSFOzt/uq0NTQXiC5nVcvyo+E6V0goJ4Ova/Xt7P6xtRCX4eUeTT7
-         COcXQKoOy3BnppjCYqd9fJfIkYP7wRvyR6wMsJe6C7DLieZ/YtQaQGEV/h4svnsduh/q
-         Bx6w==
-X-Gm-Message-State: APjAAAXOYCHor6917AsEmIVRDr6r0TRV7NSq6dwMuPwMBEUVVHXTwtIs
-        /6mIPJkiDmafM69umJFwjuYf4Ft4Rg5QUkDfX0kQX/DcfX5D6OPqJMJ2vnw1xXp9yzIuVgKtd+c
-        j1eujtkDx0jc3ZonB1t/gxP/NNzb+A5ACayC6kyHeG2rUN+EfDgSPEA==
-X-Received: by 2002:aca:d9c3:: with SMTP id q186mr2385457oig.53.1568978612344;
-        Fri, 20 Sep 2019 04:23:32 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqxGE0CXP73wztiKAwRdZskwBr2gJgJJW4tcjb56ypIA/roYner5Ad1WU7kgluJgxuZoVUwvadLKzGua+CFsLXU=
-X-Received: by 2002:aca:d9c3:: with SMTP id q186mr2385434oig.53.1568978612029;
- Fri, 20 Sep 2019 04:23:32 -0700 (PDT)
+        h=x-gm-message-state:mime-version:reply-to:from:date:message-id
+         :subject:to;
+        bh=jJ8kGTBYtlb/umVW1iRDm0Nvvm+8UUzgzphkr+DF4mg=;
+        b=YW+VITXQEiPBTmrXNBQ5cPq/10YIm9iIuwh5f9vBvSPSQrtAPlhUCqeRRkCrPQjwHw
+         5fUxo8jYhI0COpdK7qTsu46/tz6kDeMTUgHc25RUd+s7HMB95bQAO7s3z0GpMf47X2Du
+         T9bx2MqOcHaxX4YoFX4OyLcg8U5qq8JeLCPQ6jhj2buPaD0vgcgcZVrMoCyR0Q4WzJLI
+         7JNLaocfHfzE3jmkxIKZhFgSLuVUV86iRVtV9K3UtrWSiy7SLc0qAog5PsRwZPYl1a+M
+         gno0XO4KFeHfbIOiIMe42u8QYiDqmXUhWsGtEfP1rAwlTwn2sP2svDASdjcXmoOerLku
+         23wg==
+X-Gm-Message-State: APjAAAX/GcROHbk2Kmiq52XkFNf38KiP7AMd13lXrGJ98g7PHZOI5KBV
+        strVSS3nfmHTEF+faON/7WLrwDHAusqclXIBkRWsV37vUEE=
+X-Google-Smtp-Source: APXvYqyKBHZKlOa6ILBGqAK0H4D0k1agN2n6BoqXcfqABnWmeW++MBtSeko2LSzepEHq7gbUBltmUh8tpt+E4XoVwYM=
+X-Received: by 2002:adf:f404:: with SMTP id g4mr11057703wro.353.1568984692670;
+ Fri, 20 Sep 2019 06:04:52 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190827134756.10807-1-kai.heng.feng@canonical.com> <20190909114129.GT103977@google.com>
-In-Reply-To: <20190909114129.GT103977@google.com>
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date:   Fri, 20 Sep 2019 13:23:20 +0200
-Message-ID: <CAAd53p4mc0tgCBiwfZRowr4os_bqDP+7Ko=d+do8OW2aH1Whzg@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: Add a helper to check Power Resource
- Requirements _PR3 existence
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     tiwai@suse.com, Linux PCI <linux-pci@vger.kernel.org>,
-        alsa-devel@alsa-project.org, LKML <linux-kernel@vger.kernel.org>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Fri, 20 Sep 2019 15:04:39 +0200
+Message-ID: <CA+icZUWyihryeijbre3wVxpGoSPohcPJq3LwN6gktZrgLccMUQ@mail.gmail.com>
+Subject: [dmidecode] Crucial SODIMM-DDR3 RAM and Manufacturer: 859B
+To:     linux-pci@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
+[ Please CC me I am not subscribed to this ML ]
 
-I didn't find your reply in my mailbox earlier.
+Hi,
 
-On Mon, Sep 9, 2019 at 1:41 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> Maybe:
->
->   PCI: Add pci_pr3_present() to check for Power Resources for D3hot
+not sure if linux-pci ML is the correct place to ask my question.
 
-Ok, this is a good title.
+I wonder how I can teach dmidecode to give me the correct Manufacturer name.
 
->
-> On Tue, Aug 27, 2019 at 09:47:55PM +0800, Kai-Heng Feng wrote:
-> > A driver may want to know the existence of _PR3, to choose different
-> > runtime suspend behavior. A user will be add in next patch.
->
-> Maybe include something like this in the commit lot?
->
->   Add pci_pr3_present() to check whether the platform supplies _PR3 to
->   tell us which power resources the device depends on when in D3hot.
+root@iniza:~# dmidecode --handle 0x0036
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.6 present.
+63 structures occupying 2524 bytes.
+Table at 0x000E0840.
 
-Ok.
+Handle 0x0036, DMI type 17, 28 bytes
+Memory Device
+        Array Handle: 0x0033
+        Error Information Handle: Not Provided
+        Total Width: 64 bits
+        Data Width: 64 bits
+        Size: 4096 MB
+        Form Factor: SODIMM
+        Set: None
+        Locator: ChannelB-DIMM0
+        Bank Locator: BANK 2
+        Type: DDR3
+        Type Detail: Synchronous
+        Speed: 1333 MT/s
+        Manufacturer: 859B
+        Serial Number: E0FBCF01
+        Asset Tag: 9876543210
+        Part Number: CT51264BF160B.C16F
+        Rank: Unknown
 
->
-> > This is mostly the same as nouveau_pr3_present().
-> >
-> > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> > ---
-> >  drivers/pci/pci.c   | 20 ++++++++++++++++++++
-> >  include/linux/pci.h |  2 ++
-> >  2 files changed, 22 insertions(+)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 1b27b5af3d55..776af15b92c2 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -5856,6 +5856,26 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
-> >       return 0;
-> >  }
-> >
-> > +bool pci_pr3_present(struct pci_dev *pdev)
-> > +{
-> > +     struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
-> > +     struct acpi_device *parent_adev;
-> > +
-> > +     if (acpi_disabled)
-> > +             return false;
-> > +
-> > +     if (!parent_pdev)
-> > +             return false;
-> > +
-> > +     parent_adev = ACPI_COMPANION(&parent_pdev->dev);
-> > +     if (!parent_adev)
-> > +             return false;
-> > +
-> > +     return parent_adev->power.flags.power_resources &&
-> > +             acpi_has_method(parent_adev->handle, "_PR3");
->
-> I think this is generally OK, but it doesn't actually check whether
-> *pdev* has a _PR3; it checks whether pdev's *parent* does.  So does
-> that mean this is dependent on the GPU topology, i.e., does it assume
-> that there is an upstream bridge and that power for everything under
-> that bridge can be managed together?
+I upgraded my local PCI-IDs via 'update-pciids' tool from pciutils
+Debian/buster AMD64 package.
 
-Yes, the power resource is managed by its upstream port.
+I tried...
 
->
-> I'm wondering whether the "parent_pdev = pci_upstream_bridge()" part
-> should be in the caller rather than in pci_pr3_present()?
+root@iniza:~# diff /usr/share/misc/pci.ids /usr/share/misc/pci.ids.dileks
+31390a31391
+> 959B  Crucial Technology
 
-This will make the function more align to its name, but needs more
-work from caller side.
-How about rename the function to pci_upstream_pr3_present()?
+Under Windows-7 with the SIW tool I can see...
 
->
-> I can't connect any of the dots from _PR3 through to
-> "need_eld_notify_link" (whatever "eld" is :)) and the uses of
-> hda_intel.need_eld_notify_link (and needs_eld_notify_link()).
->
-> But that's beyond the scope of *this* patch and it makes sense that
-> you do want to discover the _PR3 existence, so I'm fine with this once
-> we figure out the pdev vs parent question.
+Memory Information;
+Device Locator || Memory Type || Capacity || Manufacturer || Model
+Slot 1 || DDR3 [PC3-12800] || 4096 MBytes || Crucial Technology ||
+CT51264BF160B.C16F
 
-Thanks for your review.
+How can I handle this correctly in Linux?
 
-Kai-Heng
+Thanks in advance.
 
->
-> > +}
-> > +EXPORT_SYMBOL_GPL(pci_pr3_present);
-> > +
-> >  /**
-> >   * pci_add_dma_alias - Add a DMA devfn alias for a device
-> >   * @dev: the PCI device for which alias is added
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 82e4cd1b7ac3..9b6f7b67fac9 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -2348,9 +2348,11 @@ struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus);
-> >
-> >  void
-> >  pci_msi_register_fwnode_provider(struct fwnode_handle *(*fn)(struct device *));
-> > +bool pci_pr3_present(struct pci_dev *pdev);
-> >  #else
-> >  static inline struct irq_domain *
-> >  pci_host_bridge_acpi_msi_domain(struct pci_bus *bus) { return NULL; }
-> > +static bool pci_pr3_present(struct pci_dev *pdev) { return false; }
-> >  #endif
-> >
-> >  #ifdef CONFIG_EEH
-> > --
-> > 2.17.1
-> >
+Regards,
+- Sedat -
