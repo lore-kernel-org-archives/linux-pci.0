@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83491C4740C
-	for <linux-pci@archiver.kernel.org>; Sun, 22 Sep 2019 19:15:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D92E7C3A5A2
+	for <linux-pci@archiver.kernel.org>; Sun, 22 Sep 2019 19:23:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 533FE20882
-	for <linux-pci@archiver.kernel.org>; Sun, 22 Sep 2019 19:15:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A80B620869
+	for <linux-pci@archiver.kernel.org>; Sun, 22 Sep 2019 19:23:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569179726;
-	bh=QJorBsuu7/I+O7IoyuxkA/c3Do8nJw9lZYvwg/ZsupQ=;
+	s=default; t=1569180229;
+	bh=1qcIqWVNgDnORZDuw7aMihN8tv/7ZLu/i1Km/FS0zBg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=monSdSQbfnqbdFmBTi0FRXhZxordp9LV3yatV9TH9kaaCk7WnFnw53tlPBdoAEz+l
-	 FXBd3bxNXje/IE96PtTZIfF9dWfT4QpUeFqNgOLQHX4Y+FRRBB8n5mWbf0vTUSUoI6
-	 HMQcSdPJS+zC8PC8eE7YY8Rasgxr0A/qnGbb1aaQ=
+	b=wbLj6w2YDI+u7TdzuXZ/JgceupYQ/Tbs6CqXFebOwd4aS+KQkS/oDXgrIWA2S6mXt
+	 mwdyPWPYpUEVhAerPLszOMf6sIJsH2wHWgOaOvT2XZbvUj7X1UR3T8tBv5KtufT5Uo
+	 1oitfsTvfBx1XMGzMRXc0oxznUkkmR7NqfSii0So=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730763AbfIVTPU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 22 Sep 2019 15:15:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58804 "EHLO mail.kernel.org"
+        id S1725877AbfIVTXo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 22 Sep 2019 15:23:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53084 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2408215AbfIVS4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 22 Sep 2019 14:56:37 -0400
+        id S2394047AbfIVSxU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 22 Sep 2019 14:53:20 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1C6182190F;
-        Sun, 22 Sep 2019 18:56:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1F7F021D79;
+        Sun, 22 Sep 2019 18:53:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569178596;
-        bh=QJorBsuu7/I+O7IoyuxkA/c3Do8nJw9lZYvwg/ZsupQ=;
+        s=default; t=1569178399;
+        bh=1qcIqWVNgDnORZDuw7aMihN8tv/7ZLu/i1Km/FS0zBg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0o0TmClmDwmtnUUkAGyd3VRzgCHsK0DHHLA20K02W/dqomsT0SQTyL7u8Z3mFo/NB
-         n6438/R6Q/8XPfgTEM0VusS7mhAv2UKkgpO1SU9pNNcV5zPWArLm23HAOxG5KRAKxX
-         iaK+9r0oc86uqRz8eBGuyPKWpDAabrAdy4tuOngU=
+        b=RymK96/G1z/81o8uRuhXxXsJTY/sxd+mI9XaUVFW65Caws/r2HNXLRS5KAFdVi23L
+         LibaKTwwspPsnvMrqUxxx6jRBJWHv2haLtLUj+0rDPFKE5P9GHproyHESQa5JXcuhr
+         mfvT42oSto9cgFXBWKIVZdwHqCN1+B+0MBcyVk9Y=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Wenwen Wang <wenwen@cs.uga.edu>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
         linux-acpi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 101/128] ACPI / PCI: fix acpi_pci_irq_enable() memory leak
-Date:   Sun, 22 Sep 2019 14:53:51 -0400
-Message-Id: <20190922185418.2158-101-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 143/185] ACPI / PCI: fix acpi_pci_irq_enable() memory leak
+Date:   Sun, 22 Sep 2019 14:48:41 -0400
+Message-Id: <20190922184924.32534-143-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190922185418.2158-1-sashal@kernel.org>
-References: <20190922185418.2158-1-sashal@kernel.org>
+In-Reply-To: <20190922184924.32534-1-sashal@kernel.org>
+References: <20190922184924.32534-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,10 +77,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index c576a6fe4ebb3..94ded9513c73b 100644
+index d2549ae65e1b6..dea8a60e18a4c 100644
 --- a/drivers/acpi/pci_irq.c
 +++ b/drivers/acpi/pci_irq.c
-@@ -462,8 +462,10 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+@@ -449,8 +449,10 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
  		 * No IRQ known to the ACPI subsystem - maybe the BIOS /
  		 * driver reported one, then use it. Exit in any case.
  		 */
