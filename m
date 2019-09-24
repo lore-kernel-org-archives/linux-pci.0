@@ -7,57 +7,54 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAD33C4320D
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33B2CC432C1
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC62220872
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 016AE20872
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569361598;
-	bh=AbCKjE5uyeTBvLhgYJXdd40Ck8F7P/Vg3O5Jw4X1SqY=;
+	s=default; t=1569361600;
+	bh=kDhUSy+NoDxxNSRlcy40uwKtHrcGrKUp5JYokPQleig=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=QI8/+QQ8vhDn/K45lTQA+mSu8MbedkR3GGkd0uQclC5aG6TI14kV1ZxsSQ60RULF8
-	 aNu/2cOyRz0p6ZR8B92wWGorM/LV1m1LLbduirnKomU/yJYGdogoYeg8cDkMkH/hkE
-	 A6FSaWuDt9v7SclmyiEZnuRlOTGJPo8RKsmfN9KA=
+	b=mxvmvm/dNy/7liIlNLTYb5SnLR3BFgkQ45PVGWiTXG3QL9LP1uCnaDf3ui7Ad0Gur
+	 lzPm/izQjy07hEeWEiy2EfiFquNwejSg7wjglcmQHUIavRf4tKz5kp9g1LXPRO1Fgs
+	 09vNec5mcYxGa8v3JYozzykPwAriGFtB+5+4sYwI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388161AbfIXVqi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Sep 2019 17:46:38 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:41525 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731709AbfIXVqi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2019 17:46:38 -0400
-Received: by mail-oi1-f194.google.com with SMTP id w17so3057387oiw.8
-        for <linux-pci@vger.kernel.org>; Tue, 24 Sep 2019 14:46:36 -0700 (PDT)
+        id S2394047AbfIXVqj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Sep 2019 17:46:39 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:34149 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388524AbfIXVqj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2019 17:46:39 -0400
+Received: by mail-oi1-f196.google.com with SMTP id 83so3067903oii.1
+        for <linux-pci@vger.kernel.org>; Tue, 24 Sep 2019 14:46:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=/wVIw1f2smG+KiMsq60d1sORCIiJA/kLz197I7JlBzY=;
-        b=WNuiHIZ15rsx6rXeIOOOqQnIQVY8jSisbSsMIa4Qfxo9y1AM3bQ3unrMog23BRJ12M
-         /AZN7Y4/ETLFNgVNJvbPCgTStrJp3yRJMiFITC/UqD59fyCJFkl33IfpQwFUXmGNzOL6
-         Md7L7rGA6ZXDEuMs1uvL408PfmWWJ6P6aWC/qb6elvh2k4z2TZsaXDrORx83ia0Ru3ia
-         QHnxiXp0Fg3OwmF5k8pLQSLH1XZb92MMD2MiosuCc+BPH/wFrSCOArpgp8+6AuSL+1T2
-         Lfu/N5HowCq345daTj4CUYrLvh037POJaylsJmQ+EdEQyUV9Slk33P5FqwUaS82JS4Tz
-         pvUQ==
-X-Gm-Message-State: APjAAAVDjx3mhFta0v3FURnhT/9EcOcCTIn0aTksDxyaEQTHw5AMF9zU
-        v4pUFopGkgL9uaIV3YxDRpWOW7c=
-X-Google-Smtp-Source: APXvYqzgYNEE3gUf+o08Ng0AlLUa3mPB8wGVERLGSanOdvwRKgqozOW0fsc0NAwikm4smG7KH7Xr/Q==
-X-Received: by 2002:aca:5ac4:: with SMTP id o187mr1987548oib.116.1569361595731;
-        Tue, 24 Sep 2019 14:46:35 -0700 (PDT)
+        bh=JFGVP1gTb36lMoxSPHjuhPE/KeYNGUEeUXlv9JWR1dI=;
+        b=t+9Il7XrKSmtyqMrEl4UTFcIGVYtzCkqN7mSNqWxPfF9lM38jqud2mYI5P2UquTXg1
+         FOlKs5w1IVhd/orTepaz7hKY+iI5UBDNV/D5rHciu05SgZNs3BOJsimBRONtirdyp4Ya
+         A6DZ2FP3f4bFT73bEWfORSmRMU/yuvgQvJPkeDxw0kEIRKpiASVSpmR05T4+VmbcraOq
+         +iZWUnue5czVXp3gTwoxMQDoeiKMmKb5u0IoOxjjKYCqiDbpOtrj/N/2uEj26sQVFZuW
+         VbDYKfOd2Kw98NK9yHn1gEEIZhJ5vCuiL35YNCUexypGGlxfaUFGzv6jkY4So1Ev+PXY
+         CikQ==
+X-Gm-Message-State: APjAAAWeqkT91uEd/ShyJ7aygo2zUNfMKg9FeTIUV6Z5Ola8xtzGK54c
+        kw/ZwDzf5sckeY8ob5P2Fo5SzOE=
+X-Google-Smtp-Source: APXvYqxzmL05Q/VVNyaKHOpBcnC2Byr6GGa7fArDJxSh7BTq5kENGbIQ1jSGPDjT/+961bZtkS/6nQ==
+X-Received: by 2002:aca:5254:: with SMTP id g81mr2094149oib.67.1569361597595;
+        Tue, 24 Sep 2019 14:46:37 -0700 (PDT)
 Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id s66sm976787otb.65.2019.09.24.14.46.34
+        by smtp.googlemail.com with ESMTPSA id s66sm976787otb.65.2019.09.24.14.46.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Sep 2019 14:46:35 -0700 (PDT)
+        Tue, 24 Sep 2019 14:46:36 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        Ryder Lee <ryder.lee@mediatek.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH 03/11] PCI: mediatek: Use pci_parse_request_of_pci_ranges()
-Date:   Tue, 24 Sep 2019 16:46:22 -0500
-Message-Id: <20190924214630.12817-4-robh@kernel.org>
+Cc:     linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 05/11] PCI: versatile: Use pci_parse_request_of_pci_ranges()
+Date:   Tue, 24 Sep 2019 16:46:24 -0500
+Message-Id: <20190924214630.12817-6-robh@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190924214630.12817-1-robh@kernel.org>
 References: <20190924214630.12817-1-robh@kernel.org>
@@ -68,100 +65,103 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert Mediatek host bridge to use the common
+Convert ARM Versatile host bridge to use the common
 pci_parse_request_of_pci_ranges().
 
-Cc: Ryder Lee <ryder.lee@mediatek.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>
-Cc: linux-mediatek@lists.infradead.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pcie-mediatek.c | 47 ++++++++++----------------
- 1 file changed, 17 insertions(+), 30 deletions(-)
+ drivers/pci/controller/pci-versatile.c | 62 +++++---------------------
+ 1 file changed, 11 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
-index 80601e1b939e..cea4112b5309 100644
---- a/drivers/pci/controller/pcie-mediatek.c
-+++ b/drivers/pci/controller/pcie-mediatek.c
-@@ -211,7 +211,6 @@ struct mtk_pcie {
- 	void __iomem *base;
- 	struct clk *free_ck;
+diff --git a/drivers/pci/controller/pci-versatile.c b/drivers/pci/controller/pci-versatile.c
+index f59ad2728c0b..237b1abb26f2 100644
+--- a/drivers/pci/controller/pci-versatile.c
++++ b/drivers/pci/controller/pci-versatile.c
+@@ -62,60 +62,12 @@ static struct pci_ops pci_versatile_ops = {
+ 	.write	= pci_generic_config_write,
+ };
  
--	struct resource mem;
- 	struct list_head ports;
- 	const struct mtk_pcie_soc *soc;
- 	unsigned int busnr;
-@@ -658,11 +657,23 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
- static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
- {
- 	struct mtk_pcie *pcie = port->pcie;
--	struct resource *mem = &pcie->mem;
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
-+	struct resource *mem = NULL;
-+	struct resource_entry *entry;
- 	const struct mtk_pcie_soc *soc = port->pcie->soc;
- 	u32 val;
- 	int err;
- 
-+	resource_list_for_each_entry(entry, &host->windows) {
-+		if (resource_type(entry->res) != IORESOURCE_MEM)
-+			continue;
-+
-+		mem = entry->res;
-+		break;
-+	}
-+	if (!mem)
-+		return -EINVAL;
-+
- 	/* MT7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
- 	if (pcie->base) {
- 		val = readl(pcie->base + PCIE_SYS_CFG_V2);
-@@ -1017,39 +1028,15 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
- 	struct mtk_pcie_port *port, *tmp;
- 	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
- 	struct list_head *windows = &host->windows;
--	struct resource_entry *win, *tmp_win;
--	resource_size_t io_base;
-+	struct resource *bus;
- 	int err;
- 
--	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
--						    windows, &io_base);
-+	err = pci_parse_request_of_pci_ranges(dev, windows,
-+					      &bus);
- 	if (err)
- 		return err;
- 
--	err = devm_request_pci_bus_resources(dev, windows);
--	if (err < 0)
+-static int versatile_pci_parse_request_of_pci_ranges(struct device *dev,
+-						     struct list_head *res)
+-{
+-	int err, mem = 1, res_valid = 0;
+-	resource_size_t iobase;
+-	struct resource_entry *win, *tmp;
+-
+-	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff, res, &iobase);
+-	if (err)
 -		return err;
 -
--	/* Get the I/O and memory ranges from DT */
--	resource_list_for_each_entry_safe(win, tmp_win, windows) {
--		switch (resource_type(win->res)) {
+-	err = devm_request_pci_bus_resources(dev, res);
+-	if (err)
+-		goto out_release_res;
+-
+-	resource_list_for_each_entry_safe(win, tmp, res) {
+-		struct resource *res = win->res;
+-
+-		switch (resource_type(res)) {
 -		case IORESOURCE_IO:
--			err = devm_pci_remap_iospace(dev, win->res, io_base);
+-			err = devm_pci_remap_iospace(dev, res, iobase);
 -			if (err) {
 -				dev_warn(dev, "error %d: failed to map resource %pR\n",
--					 err, win->res);
+-					 err, res);
 -				resource_list_destroy_entry(win);
 -			}
 -			break;
 -		case IORESOURCE_MEM:
--			memcpy(&pcie->mem, win->res, sizeof(*win->res));
--			pcie->mem.name = "non-prefetchable";
--			break;
--		case IORESOURCE_BUS:
--			pcie->busnr = win->res->start;
+-			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+-
+-			writel(res->start >> 28, PCI_IMAP(mem));
+-			writel(PHYS_OFFSET >> 28, PCI_SMAP(mem));
+-			mem++;
+-
 -			break;
 -		}
 -	}
-+	pcie->busnr = bus->start;
+-
+-	if (res_valid)
+-		return 0;
+-
+-	dev_err(dev, "non-prefetchable memory resource required\n");
+-	err = -EINVAL;
+-
+-out_release_res:
+-	pci_free_resource_list(res);
+-	return err;
+-}
+-
+ static int versatile_pci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct resource *res;
+-	int ret, i, myslot = -1;
++	struct resource_entry *entry;
++	int ret, i, myslot = -1, mem = 0;
+ 	u32 val;
+ 	void __iomem *local_pci_cfg_base;
+ 	struct pci_bus *bus, *child;
+@@ -141,10 +93,18 @@ static int versatile_pci_probe(struct platform_device *pdev)
+ 	if (IS_ERR(versatile_cfg_base[1]))
+ 		return PTR_ERR(versatile_cfg_base[1]);
  
- 	for_each_available_child_of_node(node, child) {
- 		int slot;
+-	ret = versatile_pci_parse_request_of_pci_ranges(dev, &pci_res);
++	ret = pci_parse_request_of_pci_ranges(dev, &pci_res, NULL);
+ 	if (ret)
+ 		return ret;
+ 
++	resource_list_for_each_entry(entry, &pci_res) {
++		if (resource_type(entry->res) == IORESOURCE_MEM) {
++			writel(entry->res->start >> 28, PCI_IMAP(mem));
++			writel(PHYS_OFFSET >> 28, PCI_SMAP(mem));
++			mem++;
++		}
++	}
++
+ 	/*
+ 	 * We need to discover the PCI core first to configure itself
+ 	 * before the main PCI probing is performed
 -- 
 2.20.1
 
