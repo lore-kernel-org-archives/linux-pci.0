@@ -2,145 +2,136 @@ Return-Path: <SRS0=XLrH=XT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A7AC4320D
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 17:02:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22474C432C1
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D3622054F
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 17:02:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569344536;
-	bh=11lJkN1wtJ5AhK02O4kXnVotVpGg6k+q3v4S5ecZOKU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Pb3EP3OEfpBu2Nznv0UYQys4bJpkzr79jCuUNOtAdVh8nRXWBK8wmCZih5asUnd60
-	 PzxX39RmZbruZT+O2Hlvd7wkYcu0G0JUfow2ljdPJvPbMbjsnNNdq9JDUEaesTm+Gb
-	 nPlf/N/t8vocJYUDLz70OdY+8OSfktWXQTyQAfjQ=
+	by mail.kernel.org (Postfix) with ESMTP id 085AB217D9
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727538AbfIXRCP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Sep 2019 13:02:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59492 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2632839AbfIXQmz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Sep 2019 12:42:55 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 87A4921D7C;
-        Tue, 24 Sep 2019 16:42:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569343374;
-        bh=11lJkN1wtJ5AhK02O4kXnVotVpGg6k+q3v4S5ecZOKU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PidovqNm5s+w0fwzzyCyuzKZ6mVysu3j7Ka6jh3HoI6KEs2LmtiqzBMDN7msk7ZjY
-         couvC094OK92Dvl6RcOqoajwLuN/5h5R+pU0cvpMfp6w4Li2yYPreHmW7rOjwZBHrg
-         J9fXaEZEE9L4XXZIPUyQNZwrItE21Cvwcuh55j5M=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Joel Savitz <jsavitz@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 5.3 24/87] PCI: rpaphp: Avoid a sometimes-uninitialized warning
-Date:   Tue, 24 Sep 2019 12:40:40 -0400
-Message-Id: <20190924164144.25591-24-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190924164144.25591-1-sashal@kernel.org>
-References: <20190924164144.25591-1-sashal@kernel.org>
+        id S2501898AbfIXSM7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Sep 2019 14:12:59 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44010 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2393831AbfIXSM4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Sep 2019 14:12:56 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id E4980AEF8;
+        Tue, 24 Sep 2019 18:12:53 +0000 (UTC)
+From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, dmaengine@vger.kernel.org,
+        etnaviv@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        xen-devel@lists.xenproject.org, linux-tegra@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org
+Cc:     mbrugger@suse.com, robin.murphy@arm.com, f.fainelli@gmail.com,
+        james.quinlan@broadcom.com, wahrenst@gmx.net,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Subject: [PATCH 03/11] of: address: use parent DT node in bus->count_cells()
+Date:   Tue, 24 Sep 2019 20:12:34 +0200
+Message-Id: <20190924181244.7159-4-nsaenzjulienne@suse.de>
+X-Mailer: git-send-email 2.23.0
+In-Reply-To: <20190924181244.7159-1-nsaenzjulienne@suse.de>
+References: <20190924181244.7159-1-nsaenzjulienne@suse.de>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+The function provides the cell sizes for a specific bus type. Instead of
+passing it the device DT node sitting on top of that bus we directly
+pass its parent which is the actual node the function will start looking
+from.
 
-[ Upstream commit 0df3e42167caaf9f8c7b64de3da40a459979afe8 ]
-
-When building with -Wsometimes-uninitialized, clang warns:
-
-drivers/pci/hotplug/rpaphp_core.c:243:14: warning: variable 'fndit' is
-used uninitialized whenever 'for' loop exits because its condition is
-false [-Wsometimes-uninitialized]
-        for (j = 0; j < entries; j++) {
-                    ^~~~~~~~~~~
-drivers/pci/hotplug/rpaphp_core.c:256:6: note: uninitialized use occurs
-here
-        if (fndit)
-            ^~~~~
-drivers/pci/hotplug/rpaphp_core.c:243:14: note: remove the condition if
-it is always true
-        for (j = 0; j < entries; j++) {
-                    ^~~~~~~~~~~
-drivers/pci/hotplug/rpaphp_core.c:233:14: note: initialize the variable
-'fndit' to silence this warning
-        int j, fndit;
-                    ^
-                     = 0
-
-fndit is only used to gate a sprintf call, which can be moved into the
-loop to simplify the code and eliminate the local variable, which will
-fix this warning.
-
-Fixes: 2fcf3ae508c2 ("hotplug/drc-info: Add code to search ibm,drc-info property")
-Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Acked-by: Joel Savitz <jsavitz@redhat.com>
-Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-Link: https://github.com/ClangBuiltLinux/linux/issues/504
-Link: https://lore.kernel.org/r/20190603221157.58502-1-natechancellor@gmail.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 ---
- drivers/pci/hotplug/rpaphp_core.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index bcd5d357ca238..c3899ee1db995 100644
---- a/drivers/pci/hotplug/rpaphp_core.c
-+++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
- 	struct of_drc_info drc;
- 	const __be32 *value;
- 	char cell_drc_name[MAX_DRC_NAME_LEN];
--	int j, fndit;
-+	int j;
+ drivers/of/address.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 0f898756199d..9c1e638fa8ea 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -14,6 +14,8 @@
+ #include <linux/slab.h>
+ #include <linux/string.h>
  
- 	info = of_find_property(dn->parent, "ibm,drc-info", NULL);
- 	if (info == NULL)
-@@ -245,17 +245,13 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
++#include "of_private.h"
++
+ /* Max address size we deal with */
+ #define OF_MAX_ADDR_CELLS	4
+ #define OF_CHECK_ADDR_COUNT(na)	((na) > 0 && (na) <= OF_MAX_ADDR_CELLS)
+@@ -42,7 +44,7 @@ struct of_bus {
+ 	const char	*name;
+ 	const char	*addresses;
+ 	int		(*match)(struct device_node *parent);
+-	void		(*count_cells)(struct device_node *child,
++	void		(*count_cells)(struct device_node *parent,
+ 				       int *addrc, int *sizec);
+ 	u64		(*map)(__be32 *addr, const __be32 *range,
+ 				int na, int ns, int pna);
+@@ -54,13 +56,13 @@ struct of_bus {
+  * Default translator (generic bus)
+  */
  
- 		/* Should now know end of current entry */
+-static void of_bus_default_count_cells(struct device_node *dev,
++static void of_bus_default_count_cells(struct device_node *parent,
+ 				       int *addrc, int *sizec)
+ {
+ 	if (addrc)
+-		*addrc = of_n_addr_cells(dev);
++		*addrc = __of_n_addr_cells_parent(parent);
+ 	if (sizec)
+-		*sizec = of_n_size_cells(dev);
++		*sizec = __of_n_size_cells_parent(parent);
+ }
  
--		if (my_index > drc.last_drc_index)
--			continue;
--
--		fndit = 1;
--		break;
-+		/* Found it */
-+		if (my_index <= drc.last_drc_index) {
-+			sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
-+				my_index);
-+			break;
-+		}
+ static u64 of_bus_default_map(__be32 *addr, const __be32 *range,
+@@ -192,7 +194,7 @@ const __be32 *of_get_pci_address(struct device_node *dev, int bar_no, u64 *size,
+ 		of_node_put(parent);
+ 		return NULL;
  	}
--	/* Found it */
--
--	if (fndit)
--		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix, 
--			my_index);
+-	bus->count_cells(dev, &na, &ns);
++	bus->count_cells(parent, &na, &ns);
+ 	of_node_put(parent);
+ 	if (!OF_CHECK_ADDR_COUNT(na))
+ 		return NULL;
+@@ -592,7 +594,7 @@ static u64 __of_translate_address(struct device_node *dev,
+ 	bus = of_match_bus(parent);
  
- 	if (((drc_name == NULL) ||
- 	     (drc_name && !strcmp(drc_name, cell_drc_name))) &&
+ 	/* Count address cells & copy address locally */
+-	bus->count_cells(dev, &na, &ns);
++	bus->count_cells(parent, &na, &ns);
+ 	if (!OF_CHECK_COUNTS(na, ns)) {
+ 		pr_debug("Bad cell count for %pOF\n", dev);
+ 		goto bail;
+@@ -634,7 +636,7 @@ static u64 __of_translate_address(struct device_node *dev,
+ 
+ 		/* Get new parent bus and counts */
+ 		pbus = of_match_bus(parent);
+-		pbus->count_cells(dev, &pna, &pns);
++		pbus->count_cells(parent, &pna, &pns);
+ 		if (!OF_CHECK_COUNTS(pna, pns)) {
+ 			pr_err("Bad cell count for %pOF\n", dev);
+ 			break;
+@@ -726,7 +728,7 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ 	if (parent == NULL)
+ 		return NULL;
+ 	bus = of_match_bus(parent);
+-	bus->count_cells(dev, &na, &ns);
++	bus->count_cells(parent, &na, &ns);
+ 	of_node_put(parent);
+ 	if (!OF_CHECK_ADDR_COUNT(na))
+ 		return NULL;
 -- 
-2.20.1
+2.23.0
 
