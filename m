@@ -7,27 +7,27 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9867CC432C2
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 02:30:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE5BEC432C1
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 02:30:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6D82C20882
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 02:30:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C694B21783
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 02:30:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408657AbfIXC3t (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Sep 2019 22:29:49 -0400
-Received: from inva021.nxp.com ([92.121.34.21]:57874 "EHLO inva021.nxp.com"
+        id S2408645AbfIXC3q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Sep 2019 22:29:46 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:39034 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2408639AbfIXC3s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 23 Sep 2019 22:29:48 -0400
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 24CBA200186;
-        Tue, 24 Sep 2019 04:29:46 +0200 (CEST)
+        id S2408585AbfIXC3q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 23 Sep 2019 22:29:46 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id E575E1A0389;
+        Tue, 24 Sep 2019 04:29:44 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 54545200386;
-        Tue, 24 Sep 2019 04:29:38 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 249F71A09F9;
+        Tue, 24 Sep 2019 04:29:37 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id D001B402B4;
-        Tue, 24 Sep 2019 10:29:25 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 88B5C4031C;
+        Tue, 24 Sep 2019 10:29:22 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org,
         leoyang.li@nxp.com, kishon@ti.com, lorenzo.pieralisi@arm.com,
@@ -37,9 +37,9 @@ To:     robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org,
         linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH v4 08/11] PCI: layerscape: Modify the MSIX to the doorbell mode
-Date:   Tue, 24 Sep 2019 10:18:46 +0800
-Message-Id: <20190924021849.3185-9-xiaowei.bao@nxp.com>
+Subject: [PATCH v4 06/11] PCI: layerscape: Fix some format issue of the code
+Date:   Tue, 24 Sep 2019 10:18:44 +0800
+Message-Id: <20190924021849.3185-7-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.9.5
 In-Reply-To: <20190924021849.3185-1-xiaowei.bao@nxp.com>
 References: <20190924021849.3185-1-xiaowei.bao@nxp.com>
@@ -49,40 +49,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-dw_pcie_ep_raise_msix_irq was never called in the exisitng driver
-before, because the ls1046a platform don't support the MSIX feature
-and msix_capable was always set to false.
-Now that add the ls1088a platform with MSIX support, but the existing
-dw_pcie_ep_raise_msix_irq doesn't work, so use the doorbell method to
-support the MSIX feature.
+Fix some format issue of the code in EP driver.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 ---
-v2: 
- - No change
+v2:
+ - No change.
 v3:
- - Modify the commit message make it clearly.
-v4: 
- - No change
+ - No change.
+v4:
+ - No change.
 
- drivers/pci/controller/dwc/pci-layerscape-ep.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pci-layerscape-ep.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-index 1e07287..5f0cb99 100644
+index ca9aa45..a9c552e 100644
 --- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
 +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-@@ -79,7 +79,8 @@ static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
- 	case PCI_EPC_IRQ_MSI:
- 		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
- 	case PCI_EPC_IRQ_MSIX:
--		return dw_pcie_ep_raise_msix_irq(ep, func_no, interrupt_num);
-+		return dw_pcie_ep_raise_msix_irq_doorbell(ep, func_no,
-+							  interrupt_num);
- 	default:
- 		dev_err(pci->dev, "UNKNOWN IRQ type\n");
- 		return -EINVAL;
+@@ -63,7 +63,7 @@ static void ls_pcie_ep_init(struct dw_pcie_ep *ep)
+ }
+ 
+ static int ls_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+-				  enum pci_epc_irq_type type, u16 interrupt_num)
++				enum pci_epc_irq_type type, u16 interrupt_num)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+ 
+@@ -87,7 +87,7 @@ static const struct dw_pcie_ep_ops pcie_ep_ops = {
+ };
+ 
+ static int __init ls_add_pcie_ep(struct ls_pcie_ep *pcie,
+-					struct platform_device *pdev)
++				 struct platform_device *pdev)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
 -- 
 2.9.5
 
