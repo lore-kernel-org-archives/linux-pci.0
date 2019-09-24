@@ -7,22 +7,22 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15273C432C1
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B2F6C432C1
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFA3B21655
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64F68214DA
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 18:13:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393985AbfIXSNF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Sep 2019 14:13:05 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44098 "EHLO mx1.suse.de"
+        id S2505073AbfIXSNE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Sep 2019 14:13:04 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44168 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2439771AbfIXSNE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2439739AbfIXSNE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 24 Sep 2019 14:13:04 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 93C9FAEF1;
-        Tue, 24 Sep 2019 18:13:02 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 4A5C4ABBD;
+        Tue, 24 Sep 2019 18:13:01 +0000 (UTC)
 From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
         frowand.list@gmail.com, linux-arm-kernel@lists.infradead.org,
@@ -30,13 +30,15 @@ To:     robh+dt@kernel.org, devicetree@vger.kernel.org,
         linux-arm-msm@vger.kernel.org, dmaengine@vger.kernel.org,
         etnaviv@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
         xen-devel@lists.xenproject.org, linux-tegra@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+        Shawn Guo <shawnguo@kernel.org>, Li Yang <leoyang.li@nxp.com>
 Cc:     mbrugger@suse.com, robin.murphy@arm.com, f.fainelli@gmail.com,
         james.quinlan@broadcom.com, wahrenst@gmx.net,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Subject: [PATCH 09/11] of: device: remove comment in of_dma_configure()
-Date:   Tue, 24 Sep 2019 20:12:40 +0200
-Message-Id: <20190924181244.7159-10-nsaenzjulienne@suse.de>
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH 08/11] dts: arm64: layerscape: add dma-ranges property to pcie nodes
+Date:   Tue, 24 Sep 2019 20:12:39 +0200
+Message-Id: <20190924181244.7159-9-nsaenzjulienne@suse.de>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20190924181244.7159-1-nsaenzjulienne@suse.de>
 References: <20190924181244.7159-1-nsaenzjulienne@suse.de>
@@ -47,30 +49,52 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-It's not longer advised to use notifiers in order to setup custom DMA
-ops.
+The bus behind the board's PCIe core has DMA addressing limitations. Add
+an empty 'dma-ranges' property on all PCIe bus descriptions to inform
+the OF core that a translation is due further down the line.
 
 Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
 ---
 
- drivers/of/device.c | 4 ----
- 1 file changed, 4 deletions(-)
+ arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 267b509df517..018c52688546 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -81,10 +81,6 @@ int of_device_add(struct platform_device *ofdev)
-  *
-  * Try to get devices's DMA configuration from DT and update it
-  * accordingly.
-- *
-- * If platform code needs to use its own special DMA configuration, it
-- * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
-- * to fix up DMA configuration.
-  */
- int of_dma_configure(struct device *dev, struct device_node *np, bool force_dma)
- {
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+index fd6036b7865c..2c41cfc66bb9 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls208xa.dtsi
+@@ -640,6 +640,7 @@
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+ 			dma-coherent;
++			dma-ranges;
+ 			num-viewport = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			msi-parent = <&its>;
+@@ -661,6 +662,7 @@
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+ 			dma-coherent;
++			dma-ranges;
+ 			num-viewport = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			msi-parent = <&its>;
+@@ -682,6 +684,7 @@
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+ 			dma-coherent;
++			dma-ranges;
+ 			num-viewport = <256>;
+ 			bus-range = <0x0 0xff>;
+ 			msi-parent = <&its>;
+@@ -703,6 +706,7 @@
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+ 			dma-coherent;
++			dma-ranges;
+ 			num-viewport = <6>;
+ 			bus-range = <0x0 0xff>;
+ 			msi-parent = <&its>;
 -- 
 2.23.0
 
