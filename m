@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ACE3C432C2
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 16:59:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57A7AC4320D
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 17:02:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4FDA22054F
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 16:59:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D3622054F
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 17:02:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569344395;
+	s=default; t=1569344536;
 	bh=11lJkN1wtJ5AhK02O4kXnVotVpGg6k+q3v4S5ecZOKU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=moDf9cYRFkmF5pIdchxQuEUvbOnWEPxnlOKMem/qWbDAwLsV5EvO1V3n+KTbsiqCV
-	 WxMW3xeezw4el0OSSq1p5QV1OPsOdjs4lFBbeiRfkgyBbt/mPz2ws72T1uF+Xp56sY
-	 CRvaAWHDoc4twpiUqllT26AOFhKSyz2mQidX5vaY=
+	b=Pb3EP3OEfpBu2Nznv0UYQys4bJpkzr79jCuUNOtAdVh8nRXWBK8wmCZih5asUnd60
+	 PzxX39RmZbruZT+O2Hlvd7wkYcu0G0JUfow2ljdPJvPbMbjsnNNdq9JDUEaesTm+Gb
+	 nPlf/N/t8vocJYUDLz70OdY+8OSfktWXQTyQAfjQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2633229AbfIXQqc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Sep 2019 12:46:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37170 "EHLO mail.kernel.org"
+        id S1727538AbfIXRCP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Sep 2019 13:02:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59492 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406156AbfIXQqb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Sep 2019 12:46:31 -0400
+        id S2632839AbfIXQmz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 24 Sep 2019 12:42:55 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 39C4121D82;
-        Tue, 24 Sep 2019 16:46:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 87A4921D7C;
+        Tue, 24 Sep 2019 16:42:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569343590;
+        s=default; t=1569343374;
         bh=11lJkN1wtJ5AhK02O4kXnVotVpGg6k+q3v4S5ecZOKU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UZMIUdCyU+CRU+yZbSTPmGlFHjDvAUiY7/pEuFw9LTbVpNxTa/YLdkOh5YEt5e5XC
-         P9cHa9RPRHPEHWl37Zypss9Y2d1VEcFP1K2gOecC6bCcW5OWy70KLcP5Tv8KC4Ou1n
-         xz3Zb9uNN4sJCTSqqt7lIm9jn440yiSbqYtuNJhQ=
+        b=PidovqNm5s+w0fwzzyCyuzKZ6mVysu3j7Ka6jh3HoI6KEs2LmtiqzBMDN7msk7ZjY
+         couvC094OK92Dvl6RcOqoajwLuN/5h5R+pU0cvpMfp6w4Li2yYPreHmW7rOjwZBHrg
+         J9fXaEZEE9L4XXZIPUyQNZwrItE21Cvwcuh55j5M=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Nathan Chancellor <natechancellor@gmail.com>,
@@ -45,14 +45,14 @@ Cc:     Nathan Chancellor <natechancellor@gmail.com>,
         Tyrel Datwyler <tyreld@linux.ibm.com>,
         Joel Savitz <jsavitz@redhat.com>,
         Michael Ellerman <mpe@ellerman.id.au>,
-        Sasha Levin <sashal@kernel.org>, linuxppc-dev@lists.ozlabs.org,
-        linux-pci@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 5.2 17/70] PCI: rpaphp: Avoid a sometimes-uninitialized warning
-Date:   Tue, 24 Sep 2019 12:44:56 -0400
-Message-Id: <20190924164549.27058-17-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, clang-built-linux@googlegroups.com
+Subject: [PATCH AUTOSEL 5.3 24/87] PCI: rpaphp: Avoid a sometimes-uninitialized warning
+Date:   Tue, 24 Sep 2019 12:40:40 -0400
+Message-Id: <20190924164144.25591-24-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190924164549.27058-1-sashal@kernel.org>
-References: <20190924164549.27058-1-sashal@kernel.org>
+In-Reply-To: <20190924164144.25591-1-sashal@kernel.org>
+References: <20190924164144.25591-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
