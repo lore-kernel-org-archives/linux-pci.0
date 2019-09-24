@@ -2,145 +2,133 @@ Return-Path: <SRS0=XLrH=XT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E581AC432C1
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 16:49:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 869FFC432C1
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 16:56:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA9C521971
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 16:49:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569343748;
-	bh=hYVt0RUpuwd8TcWj9uwviXzVdy6fGVwf5peNzZMmb6c=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=FeTVjUgd8YK5M0HqgXtYRWsul1DygziJhNIuU1Gx3liY3o7VIKhAEMxpbBBpxj4YY
-	 ZViiCWCeSMnFDonJoO553o+Y5XKiPVFFZA45XQh/6S9Deqf/unYJgTkM1j5csBSIxC
-	 ke0Fp5i1+JirHBsGtQ0hcSktSF9iy+8gH8/+Ghkc=
+	by mail.kernel.org (Postfix) with ESMTP id 4C99B20665
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 16:56:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="Pth/OiJM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2410238AbfIXQtI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Sep 2019 12:49:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41204 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2410228AbfIXQtG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 24 Sep 2019 12:49:06 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CD59B21D6C;
-        Tue, 24 Sep 2019 16:49:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569343745;
-        bh=hYVt0RUpuwd8TcWj9uwviXzVdy6fGVwf5peNzZMmb6c=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ihvCSFqIIj/GPL8hMTrhxTwJ3izH1FR8eT/1oYUQaryQvQvp4kKc66CuSVedRIjE1
-         1lKfJOiXMIrSNrWp4JL0NNCE6fv3UGZw8zZpLCrTYZFj3oKVB9jPxxetd61H1QEaGx
-         tYMlklKkU3qEop3hBwPuR7ckX0qtjh1THs8y+nT0=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nathan Chancellor <natechancellor@gmail.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Joel Savitz <jsavitz@redhat.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.19 11/50] PCI: rpaphp: Avoid a sometimes-uninitialized warning
-Date:   Tue, 24 Sep 2019 12:48:08 -0400
-Message-Id: <20190924164847.27780-11-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190924164847.27780-1-sashal@kernel.org>
-References: <20190924164847.27780-1-sashal@kernel.org>
+        id S1727095AbfIXQ4M (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Sep 2019 12:56:12 -0400
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:43272 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2410116AbfIXQtz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2019 12:49:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
+        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=5p3njTKWFRYupYw459OU2KEBGMe4KVPB8kNFlMTX+bc=; b=Pth/OiJMOveJCcFuddDEm0HpW
+        4Yh3FrHr8zb6gXGvfKJnx09Z6yIZLxFUFxvLZxhXyJ43W+XdJSPTNF49lQelgnYCVhovfM+5CBXK0
+        coDKyxLrfnGpLLi+IStI8D6XraT3hSWV43coFMrvNMKz/DtLfAg6KjVAys1X0f2AeVxU8c652KDLI
+        M3BO3+8QY7gMNgeR0nQUa8zb460X1YXJuDx0VK0gpIyXuN0cmjiGNjc59bSn26mUgksRbgJxfhYnz
+        +5AacAbswG+2yAq+zxyrjE+5ycvMAVdE2UL9aT9cR8j0aPkdTi3HWcJg0c2BgHOb+rdZfYZJ/Lgp9
+        2IBYMkVng==;
+Received: from shell.armlinux.org.uk ([2002:4e20:1eda:1:5054:ff:fe00:4ec]:43574)
+        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
+        (Exim 4.90_1)
+        (envelope-from <linux@armlinux.org.uk>)
+        id 1iCo0Q-0002zh-1B; Tue, 24 Sep 2019 17:49:38 +0100
+Received: from linux by shell.armlinux.org.uk with local (Exim 4.92)
+        (envelope-from <linux@shell.armlinux.org.uk>)
+        id 1iCo0I-0001QH-GV; Tue, 24 Sep 2019 17:49:30 +0100
+Date:   Tue, 24 Sep 2019 17:49:30 +0100
+From:   Russell King - ARM Linux admin <linux@armlinux.org.uk>
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     Zhiqiang.Hou@nxp.com, bhelgaas@google.com, robh+dt@kernel.org,
+        mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com,
+        kishon@ti.com, lorenzo.pieralisi@arm.com, Minghuan.Lian@nxp.com,
+        andrew.murray@arm.com, mingkai.hu@nxp.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4/6] PCI: mobiveil: Add workaround for unsupported
+ request error
+Message-ID: <20190924164930.GZ25745@shell.armlinux.org.uk>
+References: <20190916021742.22844-1-xiaowei.bao@nxp.com>
+ <20190916021742.22844-5-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190916021742.22844-5-xiaowei.bao@nxp.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Nathan Chancellor <natechancellor@gmail.com>
+On Mon, Sep 16, 2019 at 10:17:40AM +0800, Xiaowei Bao wrote:
+> Errata: unsupported request error on inbound posted write
+> transaction, PCIe controller reports advisory error instead
+> of uncorrectable error message to RC.
+> 
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> ---
+>  drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c | 13 +++++++++++++
+>  drivers/pci/controller/mobiveil/pcie-mobiveil.h           |  4 ++++
+>  2 files changed, 17 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c
+> index 7bfec51..5bc9ed7 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c
+> +++ b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c
+> @@ -49,6 +49,19 @@ static void ls_pcie_g4_ep_init(struct mobiveil_pcie_ep *ep)
+>  	struct mobiveil_pcie *mv_pci = to_mobiveil_pcie_from_ep(ep);
+>  	int win_idx;
+>  	u8 bar;
+> +	u32 val;
+> +
+> +	/*
+> +	 * Errata: unsupported request error on inbound posted write
+> +	 * transaction, PCIe controller reports advisory error instead
+> +	 * of uncorrectable error message to RC.
+> +	 * workaround: set the bit20(unsupported_request_Error_severity) with
+> +	 * value 1 in uncorrectable_Error_Severity_Register, make the
+> +	 * unsupported request error generate the fatal error.
+> +	 */
+> +	val =  csr_readl(mv_pci, CFG_UNCORRECTABLE_ERROR_SEVERITY);
+> +	val |= 1 << UNSUPPORTED_REQUEST_ERROR_SHIFT;
 
-[ Upstream commit 0df3e42167caaf9f8c7b64de3da40a459979afe8 ]
+	       BIT(UNSUPPORTED_REQUEST_ERROR_SHIFT) ?
 
-When building with -Wsometimes-uninitialized, clang warns:
+> +	csr_writel(mv_pci, val, CFG_UNCORRECTABLE_ERROR_SEVERITY);
+>  
+>  	ep->bar_num = PCIE_LX2_BAR_NUM;
+>  
+> diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> index 7308fa4..a40707e 100644
+> --- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> +++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+> @@ -123,6 +123,10 @@
+>  #define GPEX_BAR_SIZE_UDW		0x4DC
+>  #define GPEX_BAR_SELECT			0x4E0
+>  
+> +#define CFG_UNCORRECTABLE_ERROR_SEVERITY	0x10c
+> +#define UNSUPPORTED_REQUEST_ERROR_SHIFT		20
+> +#define CFG_UNCORRECTABLE_ERROR_MASK		0x108
+> +
+>  /* starting offset of INTX bits in status register */
+>  #define PAB_INTX_START			5
+>  
+> -- 
+> 2.9.5
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
 
-drivers/pci/hotplug/rpaphp_core.c:243:14: warning: variable 'fndit' is
-used uninitialized whenever 'for' loop exits because its condition is
-false [-Wsometimes-uninitialized]
-        for (j = 0; j < entries; j++) {
-                    ^~~~~~~~~~~
-drivers/pci/hotplug/rpaphp_core.c:256:6: note: uninitialized use occurs
-here
-        if (fndit)
-            ^~~~~
-drivers/pci/hotplug/rpaphp_core.c:243:14: note: remove the condition if
-it is always true
-        for (j = 0; j < entries; j++) {
-                    ^~~~~~~~~~~
-drivers/pci/hotplug/rpaphp_core.c:233:14: note: initialize the variable
-'fndit' to silence this warning
-        int j, fndit;
-                    ^
-                     = 0
-
-fndit is only used to gate a sprintf call, which can be moved into the
-loop to simplify the code and eliminate the local variable, which will
-fix this warning.
-
-Fixes: 2fcf3ae508c2 ("hotplug/drc-info: Add code to search ibm,drc-info property")
-Suggested-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
-Acked-by: Joel Savitz <jsavitz@redhat.com>
-Signed-off-by: Michael Ellerman <mpe@ellerman.id.au>
-Link: https://github.com/ClangBuiltLinux/linux/issues/504
-Link: https://lore.kernel.org/r/20190603221157.58502-1-natechancellor@gmail.com
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/hotplug/rpaphp_core.c | 18 +++++++-----------
- 1 file changed, 7 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index 857c358b727b8..cc860c5f7d26f 100644
---- a/drivers/pci/hotplug/rpaphp_core.c
-+++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -230,7 +230,7 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
- 	struct of_drc_info drc;
- 	const __be32 *value;
- 	char cell_drc_name[MAX_DRC_NAME_LEN];
--	int j, fndit;
-+	int j;
- 
- 	info = of_find_property(dn->parent, "ibm,drc-info", NULL);
- 	if (info == NULL)
-@@ -245,17 +245,13 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
- 
- 		/* Should now know end of current entry */
- 
--		if (my_index > drc.last_drc_index)
--			continue;
--
--		fndit = 1;
--		break;
-+		/* Found it */
-+		if (my_index <= drc.last_drc_index) {
-+			sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
-+				my_index);
-+			break;
-+		}
- 	}
--	/* Found it */
--
--	if (fndit)
--		sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix, 
--			my_index);
- 
- 	if (((drc_name == NULL) ||
- 	     (drc_name && !strcmp(drc_name, cell_drc_name))) &&
 -- 
-2.20.1
-
+RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
+According to speedtest.net: 11.9Mbps down 500kbps up
