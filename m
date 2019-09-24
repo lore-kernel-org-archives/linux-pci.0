@@ -4,58 +4,57 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB598C432C1
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ECF4C432C1
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9CD8220872
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 672F720872
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Sep 2019 21:46:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569361596;
-	bh=368JKVJPcae31YALsLz9ho9G/JxGd9Jp5q4pO44NdUg=;
+	s=default; t=1569361598;
+	bh=Ir0tSYpz47qQnRyzsESTzvWyyLk42H6e4lYTo7bz25w=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WktqWBmYpwn9nto5JJvW7h1nWT4ZF3ZkbiDjGgaOXfDxyoWO6TGJhrRD/J9nhsAqT
-	 x/U+PyrjH4pNtQDcS6P9P0iuAsn8/QSHzHD/k3fDNY/fYyq0vhE5D0UOUTSFdfbpib
-	 CaVqH2Lmr5qZbs7i0ST9vbzv5rKuTKXgxtJpy6R4=
+	b=rpjlhg2EgfouTYvmtsDSoCiPNep1SvKDPL+NA2ESvXd3bQ584QpOAuVEfqQLEDxsD
+	 O9a2h6qlceIAkblLcDNhi+JTOpTY/ytt1vxkiZCiy5h58OGDDWXrbajscOhvexj8nQ
+	 EyvnE1O+crkO1hkYYPvQrfZYlGsSuQdZzhJSlMZo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731622AbfIXVqg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Sep 2019 17:46:36 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:40501 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730387AbfIXVqf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2019 17:46:35 -0400
-Received: by mail-oi1-f194.google.com with SMTP id k9so3056368oib.7
-        for <linux-pci@vger.kernel.org>; Tue, 24 Sep 2019 14:46:35 -0700 (PDT)
+        id S1731714AbfIXVqh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Sep 2019 17:46:37 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:46651 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730387AbfIXVqh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Sep 2019 17:46:37 -0400
+Received: by mail-ot1-f68.google.com with SMTP id f21so2876244otl.13
+        for <linux-pci@vger.kernel.org>; Tue, 24 Sep 2019 14:46:37 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=//h/OxzQrbFvZbG2t2Yg6Jg8Wa0hSEoVjKepOuIzhVo=;
-        b=QdcNRWOmikEB0WXQrUJJW3rqj+5d6D5iePotMbL1tGj1d62H5MIx72H3hvHpz5Qn9r
-         HnTbG7zZqz4/rBvoNr7giMgG15ljX1kSFABRRHc5FjQoc9aBaDH3Cr2L2tTjRngPC30p
-         oA5VTFgQyF1FQOAQGic5WvfzvhMpCMBMWDBrqOgbnKdEC8LXIqXxygCFFsbPvTbeiiKK
-         MlyP7vj6sHsDiHQcbsNQXLUXhwSS6KeNCO6S4IP0w4XnTvdGoOqXwiWRo45P5lpwQsbw
-         nfgCJdNMeRBgdP1NZEGj2x7CWueeVvbmFBme2Vf2s1qHrdlEX1RX0uDdlUvgL0lBekv/
-         mxzQ==
-X-Gm-Message-State: APjAAAVrUagDAB28zUYPEY3LvtKjcf4abO6npHUDOOtmggDqZsfnFP9N
-        2EWD+3begwiiQ4CBEklNbDUiuTs=
-X-Google-Smtp-Source: APXvYqxl9MzHk9KICSl5mCZBeGMuFnuTeQOIA/uFntXG9yZg7dp6GjNzV/dG2YNqwJRwgtOUA/zTQQ==
-X-Received: by 2002:a54:4105:: with SMTP id l5mr2014401oic.2.1569361594676;
-        Tue, 24 Sep 2019 14:46:34 -0700 (PDT)
+        bh=nUMQJjbKdzG8fJovseyEjJTdZDpiXcUeaTLwPOLfwVY=;
+        b=RQuMKbyqXLEgRcmiPO6t/OJEcUnzJPvGH91v4LKVvt9lBHYy5CYNDmBVMF40QWLlh7
+         GFpSsrkTs/9Jf0Wy+j/6nic2plSUhBqbIZW2EOj8nVksFldXewcopITQ05F9Njt+dbH3
+         l9Vs+glOvB7CjcP1Pp4VddjQboWQq8kUCZiaO6pvRZ7IPGUNMFzgSQGWFq6OMuCeHPBe
+         QBmKbZReZUqgH3viI8k01oHEgHmq/oxfSDWxiGAvpeOdOA1Hh7E9B5iVmumR+AYZcBbK
+         RqoYJV+q+YqU22W6KXFj6LU8w3in7BK6xRa7AHSgZeIwtnxTwgIc6S7O61kPfpWhBJdF
+         nObA==
+X-Gm-Message-State: APjAAAU5AdbuNAr6ZXQKL+n3zto4R7Md9VQP6zK98byjohge5cLyLok6
+        eXvWpSKE7Y7+F1jTcNJYkqlIjuE=
+X-Google-Smtp-Source: APXvYqyg7yvUFOkUsVxlA7key/e9KBKgkSIx3+rHguO4P9+U7CNTQzvdx4bwLQPOpg+DK1Jj4MZmnw==
+X-Received: by 2002:a9d:6c4d:: with SMTP id g13mr3465796otq.95.1569361596591;
+        Tue, 24 Sep 2019 14:46:36 -0700 (PDT)
 Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id s66sm976787otb.65.2019.09.24.14.46.33
+        by smtp.googlemail.com with ESMTPSA id s66sm976787otb.65.2019.09.24.14.46.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Sep 2019 14:46:33 -0700 (PDT)
+        Tue, 24 Sep 2019 14:46:36 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     linux-arm-kernel@lists.infradead.org,
-        Ley Foon Tan <lftan@altera.com>, rfi@lists.rocketboards.org
-Subject: [PATCH 02/11] PCI: altera: Use pci_parse_request_of_pci_ranges()
-Date:   Tue, 24 Sep 2019 16:46:21 -0500
-Message-Id: <20190924214630.12817-3-robh@kernel.org>
+Cc:     linux-arm-kernel@lists.infradead.org
+Subject: [PATCH 04/11] PCI: versatile: Enable COMPILE_TEST
+Date:   Tue, 24 Sep 2019 16:46:23 -0500
+Message-Id: <20190924214630.12817-5-robh@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190924214630.12817-1-robh@kernel.org>
 References: <20190924214630.12817-1-robh@kernel.org>
@@ -66,74 +65,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Convert altera host bridge to use the common
-pci_parse_request_of_pci_ranges().
+Since commit a574795bc383 ("PCI: generic,versatile: Remove unused
+pci_sys_data structures") the build dependency on ARM is gone, so let's
+enable COMPILE_TEST for versatile.
 
-Cc: Ley Foon Tan <lftan@altera.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: rfi@lists.rocketboards.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/pcie-altera.c | 38 ++--------------------------
- 1 file changed, 2 insertions(+), 36 deletions(-)
+ drivers/pci/controller/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pcie-altera.c b/drivers/pci/controller/pcie-altera.c
-index d2497ca43828..2ed00babff5a 100644
---- a/drivers/pci/controller/pcie-altera.c
-+++ b/drivers/pci/controller/pcie-altera.c
-@@ -670,39 +670,6 @@ static void altera_pcie_isr(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
- }
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index fe9f9f13ce11..14836229357e 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -135,7 +135,7 @@ config PCI_V3_SEMI
  
--static int altera_pcie_parse_request_of_pci_ranges(struct altera_pcie *pcie)
--{
--	int err, res_valid = 0;
--	struct device *dev = &pcie->pdev->dev;
--	struct resource_entry *win;
--
--	err = devm_of_pci_get_host_bridge_resources(dev, 0, 0xff,
--						    &pcie->resources, NULL);
--	if (err)
--		return err;
--
--	err = devm_request_pci_bus_resources(dev, &pcie->resources);
--	if (err)
--		goto out_release_res;
--
--	resource_list_for_each_entry(win, &pcie->resources) {
--		struct resource *res = win->res;
--
--		if (resource_type(res) == IORESOURCE_MEM)
--			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
--	}
--
--	if (res_valid)
--		return 0;
--
--	dev_err(dev, "non-prefetchable memory resource required\n");
--	err = -EINVAL;
--
--out_release_res:
--	pci_free_resource_list(&pcie->resources);
--	return err;
--}
--
- static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
- {
- 	struct device *dev = &pcie->pdev->dev;
-@@ -833,9 +800,8 @@ static int altera_pcie_probe(struct platform_device *pdev)
- 		return ret;
- 	}
+ config PCI_VERSATILE
+ 	bool "ARM Versatile PB PCI controller"
+-	depends on ARCH_VERSATILE
++	depends on ARCH_VERSATILE || COMPILE_TEST
  
--	INIT_LIST_HEAD(&pcie->resources);
--
--	ret = altera_pcie_parse_request_of_pci_ranges(pcie);
-+	ret = pci_parse_request_of_pci_ranges(dev, &pcie->resources,
-+					      NULL);
- 	if (ret) {
- 		dev_err(dev, "Failed add resources\n");
- 		return ret;
+ config PCIE_IPROC
+ 	tristate
 -- 
 2.20.1
 
