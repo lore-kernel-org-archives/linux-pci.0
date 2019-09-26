@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DD93C432C2
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19A07C4360C
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33256222CB
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1951222C0
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="YGXT/KoG"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="gh0FdGaI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726856AbfIZLcB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Sep 2019 07:32:01 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:51166 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726833AbfIZLb6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:31:58 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVnbN042719;
-        Thu, 26 Sep 2019 06:31:49 -0500
+        id S1726325AbfIZLcJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Sep 2019 07:32:09 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:50262 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726902AbfIZLcH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:32:07 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVvmd026123;
+        Thu, 26 Sep 2019 06:31:57 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1569497509;
-        bh=ng+JuiPXXN1Km6Y2NxLN6mT9lfjCEFK/4Th3ibsGWNo=;
+        s=ti-com-17Q1; t=1569497517;
+        bh=uF0byY1IfglseGEElkZaZLGLoF4whqdkbdVKcK/38gk=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=YGXT/KoG0ajeWU0IS8FfMsJSAVt2C8/VDEQ3cKAygxGb1dT/DJzrLOqwUNe+gyvhB
-         sl4IET9fTvQUFGaFsi/IMTFOobQIE4Tp8HTRBdTGWSq6GD0aDtjIl1negMOEuRn0iI
-         glocfiQ8Z5+LNqoCx4zCAgYQaOu3pSAVKl2hwfek=
-Received: from DFLE101.ent.ti.com (dfle101.ent.ti.com [10.64.6.22])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVnO3014516;
-        Thu, 26 Sep 2019 06:31:49 -0500
-Received: from DFLE108.ent.ti.com (10.64.6.29) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+        b=gh0FdGaIO4IIqh/23ZK8bi8JcqiDKTkAIsO6MKe9qwyBe8oVPBCgcbwxq4ShW7GU9
+         z5qRg5PgkK+GbMcqjwsoMuC0fchE8dtHF+Y6qDsn2AsILR9xfqX8hWcA3NZ5hoBKOe
+         EZx4uO+f6nCvgsW90QERGDXF1m9LEKZj3VDSs+S8=
+Received: from DFLE106.ent.ti.com (dfle106.ent.ti.com [10.64.6.27])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8QBVv3X032399
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 26 Sep 2019 06:31:57 -0500
+Received: from DFLE104.ent.ti.com (10.64.6.25) by DFLE106.ent.ti.com
+ (10.64.6.27) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Thu, 26
- Sep 2019 06:31:49 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE108.ent.ti.com
- (10.64.6.29) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2019 06:31:57 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Thu, 26 Sep 2019 06:31:41 -0500
+ Frontend Transport; Thu, 26 Sep 2019 06:31:57 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTkB069017;
-        Thu, 26 Sep 2019 06:31:45 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTkD069017;
+        Thu, 26 Sep 2019 06:31:53 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -56,9 +57,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>, <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-ntb@googlegroups.com>
-Subject: [RFC PATCH 18/21] PCI: endpoint: Add EP function driver to provide NTB functionality
-Date:   Thu, 26 Sep 2019 16:59:30 +0530
-Message-ID: <20190926112933.8922-19-kishon@ti.com>
+Subject: [RFC PATCH 20/21] NTB: Add support for EPF PCI-Express Non-Transparent Bridge
+Date:   Thu, 26 Sep 2019 16:59:32 +0530
+Message-ID: <20190926112933.8922-21-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190926112933.8922-1-kishon@ti.com>
 References: <20190926112933.8922-1-kishon@ti.com>
@@ -70,1193 +71,716 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a new endpoint function driver to provide NTB functionality
-using multiple PCIe endpoint instances.
+Add support for EPF PCI-Express Non-Transparent Bridge (NTB) device.
+This driver is platform independent and could be used by any platform
+which have multiple PCIe endpoint instances configured using the
+pci-epf-ntb driver. The driver connnects to the standard NTB sub-system
+interface. The EPF NTB device has configurable number of memory windows
+(Max 4), configurable number of doorbell (Max 32), and configurable
+number of scratch-pad registers.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/functions/Kconfig       |   12 +
- drivers/pci/endpoint/functions/Makefile      |    1 +
- drivers/pci/endpoint/functions/pci-epf-ntb.c | 1143 ++++++++++++++++++
- 3 files changed, 1156 insertions(+)
- create mode 100644 drivers/pci/endpoint/functions/pci-epf-ntb.c
+ drivers/ntb/hw/Kconfig          |   1 +
+ drivers/ntb/hw/Makefile         |   1 +
+ drivers/ntb/hw/epf/Kconfig      |   5 +
+ drivers/ntb/hw/epf/Makefile     |   1 +
+ drivers/ntb/hw/epf/ntb_hw_epf.c | 648 ++++++++++++++++++++++++++++++++
+ 5 files changed, 656 insertions(+)
+ create mode 100644 drivers/ntb/hw/epf/Kconfig
+ create mode 100644 drivers/ntb/hw/epf/Makefile
+ create mode 100644 drivers/ntb/hw/epf/ntb_hw_epf.c
 
-diff --git a/drivers/pci/endpoint/functions/Kconfig b/drivers/pci/endpoint/functions/Kconfig
-index 8820d0f7ec77..55ac7bb2d469 100644
---- a/drivers/pci/endpoint/functions/Kconfig
-+++ b/drivers/pci/endpoint/functions/Kconfig
-@@ -12,3 +12,15 @@ config PCI_EPF_TEST
- 	   for PCI Endpoint.
- 
- 	   If in doubt, say "N" to disable Endpoint test driver.
-+
-+config PCI_EPF_NTB
-+	tristate "PCI Endpoint NTB driver"
-+	depends on PCI_ENDPOINT
-+	help
-+	   Select this configuration option to enable the NTB driver
-+	   for PCI Endpoint. NTB driver implements NTB controller
-+	   functionality using multiple PCIe endpoint instances. It
-+	   can support NTB endpoint function devices created using
-+	   device tree.
-+
-+	   If in doubt, say "N" to disable Endpoint NTB driver.
-diff --git a/drivers/pci/endpoint/functions/Makefile b/drivers/pci/endpoint/functions/Makefile
-index d6fafff080e2..96ab932a537a 100644
---- a/drivers/pci/endpoint/functions/Makefile
-+++ b/drivers/pci/endpoint/functions/Makefile
-@@ -4,3 +4,4 @@
- #
- 
- obj-$(CONFIG_PCI_EPF_TEST)		+= pci-epf-test.o
-+obj-$(CONFIG_PCI_EPF_NTB)		+= pci-epf-ntb.o
-diff --git a/drivers/pci/endpoint/functions/pci-epf-ntb.c b/drivers/pci/endpoint/functions/pci-epf-ntb.c
+diff --git a/drivers/ntb/hw/Kconfig b/drivers/ntb/hw/Kconfig
+index e51b581fd102..623d43a2bec0 100644
+--- a/drivers/ntb/hw/Kconfig
++++ b/drivers/ntb/hw/Kconfig
+@@ -1,4 +1,5 @@
+ source "drivers/ntb/hw/amd/Kconfig"
+ source "drivers/ntb/hw/idt/Kconfig"
+ source "drivers/ntb/hw/intel/Kconfig"
++source "drivers/ntb/hw/epf/Kconfig"
+ source "drivers/ntb/hw/mscc/Kconfig"
+diff --git a/drivers/ntb/hw/Makefile b/drivers/ntb/hw/Makefile
+index 923c442db750..48f672ca857a 100644
+--- a/drivers/ntb/hw/Makefile
++++ b/drivers/ntb/hw/Makefile
+@@ -1,4 +1,5 @@
+ obj-$(CONFIG_NTB_AMD)	+= amd/
+ obj-$(CONFIG_NTB_IDT)	+= idt/
+ obj-$(CONFIG_NTB_INTEL)	+= intel/
++obj-$(CONFIG_NTB_EPF)	+= epf/
+ obj-$(CONFIG_NTB_SWITCHTEC) += mscc/
+diff --git a/drivers/ntb/hw/epf/Kconfig b/drivers/ntb/hw/epf/Kconfig
 new file mode 100644
-index 000000000000..14b3862fc780
+index 000000000000..314485574bf8
 --- /dev/null
-+++ b/drivers/pci/endpoint/functions/pci-epf-ntb.c
-@@ -0,0 +1,1143 @@
++++ b/drivers/ntb/hw/epf/Kconfig
+@@ -0,0 +1,5 @@
++config NTB_EPF
++	tristate "Generic EPF Non-Transparent Bridge support"
++	help
++	  This driver supports EPF NTB on configurable endpoint.
++	  If unsure, say N.
+diff --git a/drivers/ntb/hw/epf/Makefile b/drivers/ntb/hw/epf/Makefile
+new file mode 100644
+index 000000000000..2f560a422bc6
+--- /dev/null
++++ b/drivers/ntb/hw/epf/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_NTB_EPF) += ntb_hw_epf.o
+diff --git a/drivers/ntb/hw/epf/ntb_hw_epf.c b/drivers/ntb/hw/epf/ntb_hw_epf.c
+new file mode 100644
+index 000000000000..fba3d88886f2
+--- /dev/null
++++ b/drivers/ntb/hw/epf/ntb_hw_epf.c
+@@ -0,0 +1,648 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/**
-+ * Endpoint Function Driver to implement Non-Transparent Bridge functionality
++ * Host side endpoint driver to implement Non-Transparent Bridge functionality
 + *
 + * Copyright (C) 2019 Texas Instruments
 + * Author: Kishon Vijay Abraham I <kishon@ti.com>
 + */
 +
 +#include <linux/delay.h>
-+#include <linux/io.h>
 +#include <linux/module.h>
++#include <linux/pci.h>
 +#include <linux/slab.h>
++#include <linux/ntb.h>
 +
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
++#define NTB_EPF_COMMAND		0x0
++#define CMD_CONFIGURE_DOORBELL	1
++#define CMD_CONFIGURE_MW	2
++#define CMD_LINK_UP		3
 +
-+static struct workqueue_struct *kpcintb_workqueue;
++#define NTB_EPF_ARGUMENT	0x4
 +
-+#define COMMAND_CONFIGURE_DOORBELL	1
-+#define COMMAND_CONFIGURE_MW		2
-+#define COMMAND_LINK_UP			3
++#define NTB_EPF_STATUS		0x8
++#define COMMAND_STATUS_OK	BIT(0)
++#define LINK_STATUS_UP		BIT(1)
 +
-+#define COMMAND_STATUS_OK		BIT(0)
-+#define LINK_STATUS_UP			BIT(1)
++#define NTB_EPF_TOPOLOGY	0xc
++#define NTB_EPF_ADDR		0x10
++#define NTB_EPF_SIZE		0x18
++#define NTB_EPF_MW1_OFFSET	0x1c
++#define NTB_EPF_MW_COUNT	0x20
++#define NTB_EPF_SPAD_OFFSET	0x24
++#define NTB_EPF_SPAD_COUNT	0x28
++#define NTB_EPF_DB_ENTRY_SIZE	0x2c
++#define NTB_EPF_DB_DATA(n)	(0x30 + (n) * 4)
 +
-+#define SPAD_COUNT			64
-+#define DB_COUNT			4
-+#define NTB_MW_OFFSET			2
-+#define DB_COUNT_MASK			GENMASK(15, 0)
-+#define MSIX_ENABLE			BIT(16)
-+#define MAX_DB_COUNT			32
-+#define MAX_MW				4
++#define NTB_MIN_DB_COUNT	2
++#define NTB_MAX_DB_COUNT	32
++#define NTB_MW_OFFSET		2
 +
-+enum epf_ntb_bar {
-+	BAR_CONFIG,
-+	BAR_PEER_SPAD,
-+	BAR_DB_MW1,
-+	BAR_MW2,
-+	BAR_MW3,
-+	BAR_MW4,
++enum pci_barno {
++	BAR_0,
++	BAR_1,
++	BAR_2,
++	BAR_3,
++	BAR_4,
++	BAR_5,
 +};
 +
-+struct epf_ntb {
-+	u32 num_mws;
-+	u32 *mws_size;
-+	u32 db_count;
-+	u32 spad_count;
-+	struct pci_epf *epf;
-+	struct epf_ntb_epc *epc[2];
++struct ntb_epf_dev {
++	struct ntb_dev ntb;
++
++	enum pci_barno ctrl_reg_bar;
++	enum pci_barno peer_spad_reg_bar;
++	enum pci_barno db_reg_bar;
++
++	unsigned int mw_count;
++	unsigned int spad_count;
++	unsigned int db_count;
++
++	void __iomem *ctrl_reg;
++	void __iomem *db_reg;
++	void __iomem *peer_spad_reg;
++
++	unsigned int self_spad;
++	unsigned int peer_spad;
++
++	int db_val;
++	u64 db_valid_mask;
 +};
 +
-+struct epf_ntb_epc {
-+	u8 func_no;
-+	u8 vfunc_no;
-+	bool linkup;
-+	u32 spad_size;
-+	struct pci_epc *epc;
-+	struct epf_ntb *epf_ntb;
-+	void __iomem *mw_addr[6];
-+	struct epf_ntb_ctrl *reg;
-+	struct pci_epf_bar *epf_bar;
-+	enum pci_barno epf_ntb_bar[6];
-+	struct delayed_work cmd_handler;
-+	enum pci_epc_interface_type type;
-+	const struct pci_epc_features *epc_features;
++#define ntb_ndev(__ntb) container_of(__ntb, struct ntb_epf_dev, ntb)
++
++struct ntb_epf_data {
++	/* BAR that contains both control region and self spad region */
++	enum pci_barno ctrl_reg_bar;
++	/* BAR that contains peer spad region */
++	enum pci_barno peer_spad_reg_bar;
++	/* BAR that contains Doorbell region and Memory window '1' */
++	enum pci_barno db_reg_bar;
 +};
 +
-+struct epf_ntb_ctrl {
-+	u32	command;
-+	u32	argument;
-+	u32	status;
-+	u32	topology;
-+	u64	addr;
-+	u32	size;
-+	u32	mw1_offset;
-+	u32	num_mws;
-+	u32	spad_offset;
-+	u32	spad_count;
-+	u32	db_entry_size;
-+	u32	db_data[MAX_DB_COUNT];
-+} __packed;
-+
-+static struct pci_epf_header epf_ntb_header = {
-+	.vendorid	= PCI_ANY_ID,
-+	.deviceid	= PCI_ANY_ID,
-+	.baseclass_code	= PCI_BASE_CLASS_MEMORY,
-+	.interrupt_pin	= PCI_INTERRUPT_INTA,
-+};
-+
-+static void epf_ntb_link_up(struct epf_ntb *ntb)
++static inline u32 ntb_epf_ctrl_readl(struct ntb_epf_dev *ndev, u32 offset)
 +{
-+	enum pci_epc_interface_type type;
-+	struct epf_ntb_epc *ntb_epc;
-+	struct epf_ntb_ctrl *ctrl;
-+	u8 vfunc_no, func_no;
-+
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		ntb_epc = ntb->epc[type];
-+		func_no = ntb_epc->func_no;
-+		vfunc_no = ntb_epc->vfunc_no;
-+		ctrl = ntb_epc->reg;
-+		ctrl->status |= LINK_STATUS_UP;
-+		pci_epc_raise_irq(ntb_epc->epc, func_no, vfunc_no,
-+				  PCI_EPC_IRQ_MSI, 1);
-+	}
++	return readl(ndev->ctrl_reg + offset);
 +}
 +
-+static void
-+epf_ntb_configure_mw(struct epf_ntb *ntb, enum pci_epc_interface_type type,
-+		     u32 mw)
++static inline void ntb_epf_ctrl_writel(struct ntb_epf_dev *ndev, u32 offset,
++				       u32 val)
 +{
-+	struct epf_ntb_epc *peer_ntb_epc;
-+	struct pci_epf_bar *peer_epf_bar;
-+	struct epf_ntb_epc *ntb_epc;
-+	enum pci_barno peer_barno;
-+	struct epf_ntb_ctrl *ctrl;
-+	phys_addr_t phys_addr;
-+	u8 vfunc_no, func_no;
-+	struct pci_epc *epc;
-+	u64 addr;
-+	u32 size;
++	return writel(val, ndev->ctrl_reg + offset);
++}
++
++static int ntb_epf_send_command(struct ntb_epf_dev *ndev, u32 command,
++				u32 argument)
++{
++	ktime_t timeout;
++	bool timedout;
++	u32 status;
++
++	ntb_epf_ctrl_writel(ndev, NTB_EPF_ARGUMENT, argument);
++	ntb_epf_ctrl_writel(ndev, NTB_EPF_COMMAND, command);
++
++	/* wait 50ms */
++	timeout = ktime_add_ms(ktime_get(), 50);
++	while (1) {
++		timedout = ktime_after(ktime_get(), timeout);
++		status = ntb_epf_ctrl_readl(ndev, NTB_EPF_STATUS);
++
++		if (status & COMMAND_STATUS_OK)
++			break;
++
++		if (WARN_ON(timedout))
++			return -ETIMEDOUT;
++
++		usleep_range(5, 10);
++	}
++
++	ntb_epf_ctrl_writel(ndev, NTB_EPF_STATUS, status & ~COMMAND_STATUS_OK);
++
++	return 0;
++}
++
++static int ntb_epf_mw_to_bar(struct ntb_epf_dev *ndev, int idx)
++{
++	if (idx < 0 || idx > ndev->mw_count)
++		return -EINVAL;
++
++	return idx + 2;
++}
++
++static int ntb_epf_mw_count(struct ntb_dev *ntb, int pidx)
++{
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	return ntb_ndev(ntb)->mw_count;
++}
++
++static int ntb_epf_mw_get_align(struct ntb_dev *ntb, int pidx, int idx,
++				resource_size_t *addr_align,
++				resource_size_t *size_align,
++				resource_size_t *size_max)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	int bar;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	bar = ntb_epf_mw_to_bar(ndev, idx);
++	if (bar < 0)
++		return bar;
++
++	if (addr_align)
++		*addr_align = SZ_4K;
++
++	if (size_align)
++		*size_align = 1;
++
++	if (size_max)
++		*size_max = pci_resource_len(ndev->ntb.pdev, bar);
++
++	return 0;
++}
++
++static u64 ntb_epf_link_is_up(struct ntb_dev *ntb,
++			      enum ntb_speed *speed,
++			      enum ntb_width *width)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	u32 status;
++
++	status = ntb_epf_ctrl_readl(ndev, NTB_EPF_STATUS);
++
++	return !!(status & LINK_STATUS_UP);
++}
++
++static u32 ntb_epf_spad_read(struct ntb_dev *ntb, int idx)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	u32 offset;
++
++	if (idx < 0 || idx >= ndev->spad_count)
++		return 0;
++
++	offset = ntb_epf_ctrl_readl(ndev, NTB_EPF_SPAD_OFFSET);
++	offset += (idx << 2);
++
++	return ntb_epf_ctrl_readl(ndev, offset);
++}
++
++static int ntb_epf_spad_write(struct ntb_dev *ntb,
++			      int idx, u32 val)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	u32 offset;
++
++	if (idx < 0 || idx >= ndev->spad_count)
++		return -EINVAL;
++
++	offset = ntb_epf_ctrl_readl(ndev, NTB_EPF_SPAD_OFFSET);
++	offset += (idx << 2);
++	ntb_epf_ctrl_writel(ndev, offset, val);
++
++	return 0;
++}
++
++static u32 ntb_epf_peer_spad_read(struct ntb_dev *ntb, int pidx, int idx)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	u32 offset;
++
++	if (idx < 0 || idx >= ndev->spad_count)
++		return -EINVAL;
++
++	offset = (idx << 2);
++	return readl(ndev->peer_spad_reg + offset);
++}
++
++static int ntb_epf_peer_spad_write(struct ntb_dev *ntb, int pidx,
++				   int idx, u32 val)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	u32 offset;
++
++	if (idx < 0 || idx >= ndev->spad_count)
++		return -EINVAL;
++
++	offset = (idx << 2);
++	writel(val, ndev->peer_spad_reg + offset);
++
++	return 0;
++}
++
++static int ntb_epf_link_enable(struct ntb_dev *ntb,
++			       enum ntb_speed max_speed,
++			       enum ntb_width max_width)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	struct device *dev = &ntb->pdev->dev;
 +	int ret;
 +
-+	ntb_epc = ntb->epc[type];
-+	epc = ntb_epc->epc;
++	ret = ntb_epf_send_command(ndev, CMD_LINK_UP, 0);
++	if (ret) {
++		dev_err(dev, "Fail to enable link\n");
++		return ret;
++	}
 +
-+	peer_ntb_epc = ntb->epc[!type];
-+	peer_barno = peer_ntb_epc->epf_ntb_bar[mw + NTB_MW_OFFSET];
-+	peer_epf_bar = &peer_ntb_epc->epf_bar[peer_barno];
-+
-+	phys_addr = peer_epf_bar->phys_addr;
-+	ctrl = ntb_epc->reg;
-+	addr = ctrl->addr;
-+	size = ctrl->size;
-+	if (mw + NTB_MW_OFFSET == BAR_DB_MW1)
-+		phys_addr += ctrl->mw1_offset;
-+
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+
-+	ret = pci_epc_map_addr(epc, func_no, vfunc_no, phys_addr, addr, size);
-+	WARN(ret < 0, "%s intf: Failed to map memory window %d address\n",
-+	     pci_epc_interface_string(type), mw);
++	return 0;
 +}
 +
-+static void
-+epf_ntb_configure_db(struct epf_ntb *ntb, enum pci_epc_interface_type type,
-+		     u16 db_count, bool msix)
++static int ntb_epf_link_disable(struct ntb_dev *ntb)
 +{
-+	struct epf_ntb_epc *peer_ntb_epc;
-+	struct pci_epf_bar *peer_epf_bar;
-+	struct epf_ntb_ctrl *peer_ctrl;
-+	struct epf_ntb_epc *ntb_epc;
-+	enum pci_barno peer_barno;
-+	phys_addr_t phys_addr;
-+	u8 vfunc_no, func_no;
-+	struct pci_epc *epc;
++	return 0;
++}
++
++static irqreturn_t ndev_vec_isr(int irq, void *dev)
++{
++	struct ntb_epf_dev *ndev = dev;
++	int irq_no;
++
++	irq_no = irq - ndev->ntb.pdev->irq;
++	ndev->db_val = irq_no + 1;
++
++	if (irq_no == 0)
++		ntb_link_event(&ndev->ntb);
++	else
++		ntb_db_event(&ndev->ntb, irq_no);
++
++	return IRQ_HANDLED;
++}
++
++static int ntb_epf_init_isr(struct ntb_epf_dev *ndev, int msi_min, int msi_max)
++{
++	struct pci_dev *pdev = ndev->ntb.pdev;
++	struct device *dev = &pdev->dev;
++	int irq;
++	int ret;
++	int i;
++
++	irq = pci_alloc_irq_vectors(pdev, msi_min, msi_max, PCI_IRQ_MSI);
++	if (irq < 0) {
++		dev_err(dev, "Failed to get MSI interrupts\n");
++		return irq;
++	}
++
++	for (i = 0; i < irq; i++) {
++		ret = devm_request_irq(&pdev->dev, pci_irq_vector(pdev, i),
++				       ndev_vec_isr, IRQF_SHARED, "ntb_epf",
++				       ndev);
++		if (ret) {
++			dev_err(dev, "Failed to request irq\n");
++			goto err_request_irq;
++		}
++	}
++
++	ndev->db_count = irq;
++
++	ret = ntb_epf_send_command(ndev, CMD_CONFIGURE_DOORBELL, irq);
++	if (ret) {
++		dev_err(dev, "Failed to configure doorbell\n");
++		goto err_request_irq;
++	}
++
++	return 0;
++
++err_request_irq:
++	pci_free_irq_vectors(pdev);
++
++	return ret;
++}
++
++static int ntb_epf_peer_mw_count(struct ntb_dev *ntb)
++{
++	return ntb_ndev(ntb)->mw_count;
++}
++
++static int ntb_epf_spad_count(struct ntb_dev *ntb)
++{
++	return ntb_ndev(ntb)->spad_count;
++}
++
++static u64 ntb_epf_db_valid_mask(struct ntb_dev *ntb)
++{
++	return ntb_ndev(ntb)->db_valid_mask;
++}
++
++static int ntb_epf_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int ntb_epf_mw_set_trans(struct ntb_dev *ntb, int pidx, int idx,
++				dma_addr_t addr, resource_size_t size)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	struct device *dev = &ntb->pdev->dev;
++	resource_size_t mw_size;
++	int bar;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	bar = idx + NTB_MW_OFFSET;
++
++	mw_size = pci_resource_len(ntb->pdev, bar);
++
++	if (size > mw_size) {
++		dev_err(dev, "Size is greater than the MW size\n");
++		return -EINVAL;
++	}
++
++	ntb_epf_ctrl_writel(ndev, NTB_EPF_ADDR, addr);
++	ntb_epf_ctrl_writel(ndev, NTB_EPF_SIZE, size);
++	ntb_epf_send_command(ndev, CMD_CONFIGURE_MW, idx);
++
++	return 0;
++}
++
++static int ntb_epf_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
++				    phys_addr_t *base, resource_size_t *size)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	u32 offset = 0;
++	int bar;
++
++	if (idx == 0)
++		offset = ntb_epf_ctrl_readl(ndev, NTB_EPF_MW1_OFFSET);
++
++	bar = idx + NTB_MW_OFFSET;
++
++	if (base)
++		*base = pci_resource_start(ndev->ntb.pdev, bar) + offset;
++
++	if (size)
++		*size = pci_resource_len(ndev->ntb.pdev, bar) - offset;
++
++	return 0;
++}
++
++static int ntb_epf_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++	u32 interrupt_num = ffs(db_bits) + 1;
 +	u32 db_entry_size;
 +	u32 db_data;
-+	int ret, i;
 +
-+	ntb_epc = ntb->epc[type];
-+	epc = ntb_epc->epc;
-+
-+	peer_ntb_epc = ntb->epc[!type];
-+	peer_barno = peer_ntb_epc->epf_ntb_bar[BAR_DB_MW1];
-+	peer_epf_bar = &peer_ntb_epc->epf_bar[peer_barno];
-+	peer_ctrl = peer_ntb_epc->reg;
-+	db_entry_size = peer_ctrl->db_entry_size;
-+
-+	phys_addr = peer_epf_bar->phys_addr;
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+
-+	ret = pci_epc_map_msi_irq(epc, func_no, vfunc_no, phys_addr, db_count,
-+				  db_entry_size, &db_data);
-+	WARN(ret < 0, "%s intf: Failed to map MSI IRQ\n",
-+	     pci_epc_interface_string(type));
-+	for (i = 0; i < db_count; i++)
-+		peer_ctrl->db_data[i] = db_data | i;
-+}
-+
-+static void epf_ntb_cmd_handler(struct work_struct *work)
-+{
-+	enum pci_epc_interface_type type;
-+	struct epf_ntb_epc *ntb_epc;
-+	struct epf_ntb_ctrl *ctrl;
-+	u32 command, argument;
-+	struct epf_ntb *ntb;
-+	struct device *dev;
-+	u16 db_count;
-+	bool is_msix;
-+
-+	ntb_epc = container_of(work, struct epf_ntb_epc, cmd_handler.work);
-+	ctrl = ntb_epc->reg;
-+	command = ctrl->command;
-+	if (!command)
-+		goto reset_handler;
-+	argument = ctrl->argument;
-+
-+	ctrl->command = 0;
-+	ctrl->argument = 0;
-+
-+	ctrl = ntb_epc->reg;
-+	type = ntb_epc->type;
-+	ntb = ntb_epc->epf_ntb;
-+	dev = &ntb->epf->dev;
-+
-+	switch (command) {
-+	case COMMAND_CONFIGURE_DOORBELL:
-+		db_count = argument & DB_COUNT_MASK;
-+		is_msix = argument & MSIX_ENABLE;
-+		epf_ntb_configure_db(ntb, type, db_count, is_msix);
-+		ctrl->status |= COMMAND_STATUS_OK;
-+		break;
-+	case COMMAND_CONFIGURE_MW:
-+		epf_ntb_configure_mw(ntb, type, argument);
-+		ctrl->status |= COMMAND_STATUS_OK;
-+		break;
-+	case COMMAND_LINK_UP:
-+		ntb_epc->linkup = true;
-+		if (ntb->epc[PRIMARY_INTERFACE]->linkup &&
-+		    ntb->epc[SECONDARY_INTERFACE]->linkup)
-+			epf_ntb_link_up(ntb);
-+		ctrl->status |= COMMAND_STATUS_OK;
-+		break;
-+	default:
-+		dev_err(dev, "UNKNOWN command: %d\n", command);
-+		break;
-+	}
-+
-+reset_handler:
-+	queue_delayed_work(kpcintb_workqueue, &ntb_epc->cmd_handler,
-+			   msecs_to_jiffies(5));
-+}
-+
-+static void epf_ntb_peer_spad_bar_clear(struct epf_ntb_epc *ntb_epc)
-+{
-+	struct pci_epf_bar *epf_bar;
-+	enum pci_barno barno;
-+	u8 vfunc_no, func_no;
-+	struct pci_epc *epc;
-+
-+	epc = ntb_epc->epc;
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+	barno = ntb_epc->epf_ntb_bar[BAR_PEER_SPAD];
-+	epf_bar = &ntb_epc->epf_bar[barno];
-+	pci_epc_clear_bar(epc, func_no, vfunc_no, epf_bar);
-+}
-+
-+static int
-+epf_ntb_peer_spad_bar_set(struct epf_ntb *ntb, enum pci_epc_interface_type type)
-+{
-+	struct epf_ntb_epc *peer_ntb_epc;
-+	struct pci_epf_bar *peer_epf_bar;
-+	struct epf_ntb_epc *ntb_epc;
-+	struct pci_epf_bar *epf_bar;
-+	enum pci_barno peer_barno;
-+	u32 peer_spad_offset;
-+	enum pci_barno barno;
-+	u8 vfunc_no, func_no;
-+	struct pci_epc *epc;
-+	struct device *dev;
-+	int ret;
-+
-+	dev = &ntb->epf->dev;
-+
-+	peer_ntb_epc = ntb->epc[!type];
-+	peer_barno = peer_ntb_epc->epf_ntb_bar[BAR_CONFIG];
-+	peer_epf_bar = &peer_ntb_epc->epf_bar[peer_barno];
-+
-+	ntb_epc = ntb->epc[type];
-+	barno = ntb_epc->epf_ntb_bar[BAR_PEER_SPAD];
-+	epf_bar = &ntb_epc->epf_bar[barno];
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+	epc = ntb_epc->epc;
-+
-+	peer_spad_offset = peer_ntb_epc->reg->spad_offset;
-+	epf_bar->phys_addr = peer_epf_bar->phys_addr + peer_spad_offset;
-+	epf_bar->size = peer_ntb_epc->spad_size;
-+	epf_bar->barno = barno;
-+	epf_bar->flags = PCI_BASE_ADDRESS_MEM_TYPE_32;
-+
-+	ret = pci_epc_set_bar(ntb_epc->epc, func_no, vfunc_no, epf_bar);
-+	if (ret) {
-+		dev_err(dev, "%s intf: peer SPAD BAR set failed\n",
-+			pci_epc_interface_string(type));
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void epf_ntb_config_sspad_bar_clear(struct epf_ntb_epc *ntb_epc)
-+{
-+	struct pci_epf_bar *epf_bar;
-+	u8 vfunc_no, func_no;
-+	enum pci_barno barno;
-+	struct pci_epc *epc;
-+
-+	epc = ntb_epc->epc;
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+	barno = ntb_epc->epf_ntb_bar[BAR_CONFIG];
-+	epf_bar = &ntb_epc->epf_bar[barno];
-+	pci_epc_clear_bar(epc, func_no, vfunc_no, epf_bar);
-+}
-+
-+static int epf_ntb_config_sspad_bar_set(struct epf_ntb_epc *ntb_epc)
-+{
-+	struct pci_epf_bar *epf_bar;
-+	enum pci_barno barno;
-+	u8 vfunc_no, func_no;
-+	struct epf_ntb *ntb;
-+	struct pci_epc *epc;
-+	struct device *dev;
-+	int ret;
-+
-+	ntb = ntb_epc->epf_ntb;
-+	dev = &ntb->epf->dev;
-+
-+	epc = ntb_epc->epc;
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+	barno = ntb_epc->epf_ntb_bar[BAR_CONFIG];
-+	epf_bar = &ntb_epc->epf_bar[barno];
-+
-+	ret = pci_epc_set_bar(epc, func_no, vfunc_no, epf_bar);
-+	if (ret) {
-+		dev_err(dev, "%s inft: Config/Status/SPAD BAR set failed\n",
-+			pci_epc_interface_string(ntb_epc->type));
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void epf_ntb_config_spad_bar_free(struct epf_ntb *ntb)
-+{
-+	enum pci_epc_interface_type type;
-+	struct epf_ntb_epc *ntb_epc;
-+	enum pci_barno barno;
-+	struct pci_epf *epf;
-+
-+	epf = ntb->epf;
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		ntb_epc = ntb->epc[type];
-+		barno = ntb_epc->epf_ntb_bar[BAR_CONFIG];
-+		if (ntb_epc->reg)
-+			pci_epf_free_space(epf, ntb_epc->reg, barno, type);
-+	}
-+}
-+
-+static int
-+epf_ntb_config_spad_bar_alloc_interface(struct epf_ntb *ntb,
-+					enum pci_epc_interface_type type)
-+{
-+	const struct pci_epc_features *peer_epc_features;
-+	const struct pci_epc_features *epc_features;
-+	struct epf_ntb_epc *peer_ntb_epc;
-+	struct epf_ntb_epc *ntb_epc;
-+	struct epf_ntb_ctrl *ctrl;
-+	enum pci_barno peer_barno;
-+	struct device_node *node;
-+	u32 spad_size, ctrl_size;
-+	enum pci_barno barno;
-+	u64 size, peer_size;
-+	struct pci_epc *epc;
-+	struct pci_epf *epf;
-+	struct device *dev;
-+	u32 spad_count;
-+	size_t align;
-+	void *base;
-+
-+	epf = ntb->epf;
-+	node = epf->node;
-+	dev = &epf->dev;
-+	ntb_epc = ntb->epc[type];
-+	epc = ntb_epc->epc;
-+
-+	epc_features = ntb_epc->epc_features;
-+	barno = ntb_epc->epf_ntb_bar[BAR_CONFIG];
-+	size = epc_features->bar_fixed_size[barno];
-+	align = epc_features->align;
-+
-+	peer_ntb_epc = ntb->epc[!type];
-+	peer_epc_features = peer_ntb_epc->epc_features;
-+	peer_barno = ntb_epc->epf_ntb_bar[BAR_PEER_SPAD];
-+	peer_size = peer_epc_features->bar_fixed_size[barno];
-+
-+	/* Check if epc_features is populated incorrectly */
-+	if ((!IS_ALIGNED(size, align)))
++	if (interrupt_num > ndev->db_count)
 +		return -EINVAL;
 +
-+	spad_count = SPAD_COUNT;
-+	of_property_read_u32(node, "spad-count", &spad_count);
++	db_entry_size = ntb_epf_ctrl_readl(ndev, NTB_EPF_DB_ENTRY_SIZE);
 +
-+	ctrl_size = sizeof(struct epf_ntb_ctrl);
-+	spad_size = spad_count * 4;
-+
-+	if (!align) {
-+		ctrl_size = roundup_pow_of_two(ctrl_size);
-+		spad_size = roundup_pow_of_two(spad_size);
-+	} else {
-+		ctrl_size = ALIGN(ctrl_size, align);
-+		spad_size = ALIGN(spad_size, align);
-+	}
-+
-+	if (peer_size) {
-+		if (peer_size < spad_size)
-+			spad_count = peer_size / 4;
-+		spad_size = peer_size;
-+	}
-+
-+	/*
-+	 * In order to make sure SPAD offset is aligned to its size,
-+	 * expand control region size to the size of SPAD if SPAD size
-+	 * is greater than control region size.
-+	 */
-+	if (spad_size > ctrl_size)
-+		ctrl_size = spad_size;
-+
-+	if (!size)
-+		size = ctrl_size + spad_size;
-+	else if (size < ctrl_size + spad_size)
-+		return -EINVAL;
-+
-+	base = pci_epf_alloc_space(epf, size, barno, align, type);
-+	if (!base) {
-+		dev_err(dev, "%s intf: Config/Status/SPAD alloc region fail\n",
-+			pci_epc_interface_string(type));
-+		return -ENOMEM;
-+	}
-+
-+	ntb_epc->reg = base;
-+
-+	ctrl = ntb_epc->reg;
-+	ctrl->spad_offset = ctrl_size;
-+	ctrl->spad_count = spad_count;
-+	ctrl->num_mws = ntb->num_mws;
-+	ctrl->db_entry_size = align ? align : 4;
-+	ntb_epc->spad_size = spad_size;
++	db_data = readl(ndev->ctrl_reg + NTB_EPF_DB_DATA(interrupt_num));
++	writel(db_data, ndev->db_reg + (db_entry_size * interrupt_num));
 +
 +	return 0;
 +}
 +
-+static int epf_ntb_config_spad_bar_alloc(struct epf_ntb *ntb)
++static u64 ntb_epf_db_read(struct ntb_dev *ntb)
 +{
-+	enum pci_epc_interface_type type;
-+	struct device *dev;
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++
++	return ndev->db_val;
++}
++
++static int ntb_epf_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int ntb_epf_db_clear(struct ntb_dev *ntb, u64 db_bits)
++{
++	struct ntb_epf_dev *ndev = ntb_ndev(ntb);
++
++	ndev->db_val = 0;
++
++	return 0;
++}
++
++static const struct ntb_dev_ops ntb_epf_ops = {
++	.mw_count		= ntb_epf_mw_count,
++	.spad_count		= ntb_epf_spad_count,
++	.peer_mw_count		= ntb_epf_peer_mw_count,
++	.db_valid_mask		= ntb_epf_db_valid_mask,
++	.db_set_mask		= ntb_epf_db_set_mask,
++	.mw_set_trans		= ntb_epf_mw_set_trans,
++	.peer_mw_get_addr	= ntb_epf_peer_mw_get_addr,
++	.link_enable		= ntb_epf_link_enable,
++	.spad_read		= ntb_epf_spad_read,
++	.spad_write		= ntb_epf_spad_write,
++	.peer_spad_read		= ntb_epf_peer_spad_read,
++	.peer_spad_write	= ntb_epf_peer_spad_write,
++	.peer_db_set		= ntb_epf_peer_db_set,
++	.db_read		= ntb_epf_db_read,
++	.mw_get_align		= ntb_epf_mw_get_align,
++	.link_is_up		= ntb_epf_link_is_up,
++	.db_clear_mask		= ntb_epf_db_clear_mask,
++	.db_clear		= ntb_epf_db_clear,
++	.link_disable		= ntb_epf_link_disable,
++};
++
++static inline void ntb_epf_init_struct(struct ntb_epf_dev *ndev,
++				       struct pci_dev *pdev)
++{
++	ndev->ntb.pdev = pdev;
++	ndev->ntb.topo = NTB_TOPO_NONE;
++	ndev->ntb.ops = &ntb_epf_ops;
++}
++
++static int ntb_epf_init_dev(struct ntb_epf_dev *ndev)
++{
++	struct pci_dev *pdev = ndev->ntb.pdev;
++	struct device *dev = &pdev->dev;
 +	int ret;
 +
-+	dev = &ntb->epf->dev;
++	ret = ntb_epf_init_isr(ndev, NTB_MIN_DB_COUNT, NTB_MAX_DB_COUNT);
++	if (ret) {
++		dev_err(dev, "Failed to init ISR\n");
++		return ret;
++	}
 +
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		ret = epf_ntb_config_spad_bar_alloc_interface(ntb, type);
++	ndev->db_valid_mask = BIT_ULL(ndev->db_count) - 1;
++	ndev->mw_count = ntb_epf_ctrl_readl(ndev, NTB_EPF_MW_COUNT);
++	ndev->spad_count = ntb_epf_ctrl_readl(ndev, NTB_EPF_SPAD_COUNT);
++
++	return 0;
++}
++
++static int ntb_epf_init_pci(struct ntb_epf_dev *ndev,
++			    struct pci_dev *pdev)
++{
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	pci_set_drvdata(pdev, ndev);
++
++	ret = pci_enable_device(pdev);
++	if (ret) {
++		dev_err(dev, "Cannot enable PCI device\n");
++		goto err_pci_enable;
++	}
++
++	ret = pci_request_regions(pdev, "ntb");
++	if (ret) {
++		dev_err(dev, "Cannot obtain PCI resources\n");
++		goto err_pci_regions;
++	}
++
++	pci_set_master(pdev);
++
++	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
++	if (ret) {
++		ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
 +		if (ret) {
-+			dev_err(dev, "%s intf: Config/SPAD BAR alloc failed\n",
-+				pci_epc_interface_string(type));
-+			goto err_config_spad_bar_alloc;
++			dev_err(dev, "Cannot set DMA mask\n");
++			goto err_dma_mask;
 +		}
++		dev_warn(&pdev->dev, "Cannot DMA highmem\n");
++	}
++
++	ret = dma_coerce_mask_and_coherent(&ndev->ntb.dev,
++					   dma_get_mask(&pdev->dev));
++	if (ret) {
++		dev_err(dev, "Cannot set DMA mask\n");
++		goto err_dma_mask;
++	}
++
++	ndev->ctrl_reg = pci_iomap(pdev, 0, 0);
++	if (!ndev->ctrl_reg) {
++		ret = -EIO;
++		goto err_dma_mask;
++	}
++
++	ndev->peer_spad_reg = pci_iomap(pdev, 1, 0);
++	if (!ndev->peer_spad_reg) {
++		ret = -EIO;
++		goto err_dma_mask;
++	}
++
++	ndev->db_reg = pci_iomap(pdev, 2, 0);
++	if (!ndev->db_reg) {
++		ret = -EIO;
++		goto err_dma_mask;
 +	}
 +
 +	return 0;
 +
-+err_config_spad_bar_alloc:
-+	epf_ntb_config_spad_bar_free(ntb);
++err_dma_mask:
++	pci_clear_master(pdev);
++
++err_pci_regions:
++	pci_disable_device(pdev);
++
++err_pci_enable:
++	pci_set_drvdata(pdev, NULL);
 +
 +	return ret;
 +}
 +
-+static void epf_ntb_free_peer_mem(struct epf_ntb_epc *ntb_epc)
++static void ntb_epf_deinit_pci(struct ntb_epf_dev *ndev)
 +{
-+	struct pci_epf_bar *epf_bar;
-+	void __iomem *mw_addr;
-+	phys_addr_t phys_addr;
-+	enum epf_ntb_bar bar;
-+	enum pci_barno barno;
-+	struct pci_epc *epc;
-+	size_t size;
++	struct pci_dev *pdev = ndev->ntb.pdev;
 +
-+	epc = ntb_epc->epc;
++	pci_iounmap(pdev, ndev->ctrl_reg);
++	pci_iounmap(pdev, ndev->peer_spad_reg);
++	pci_iounmap(pdev, ndev->db_reg);
 +
-+	for (bar = BAR_DB_MW1; bar < BAR_MW4; bar++) {
-+		barno = ntb_epc->epf_ntb_bar[bar];
-+		mw_addr = ntb_epc->mw_addr[barno];
-+		epf_bar = &ntb_epc->epf_bar[barno];
-+		phys_addr = epf_bar->phys_addr;
-+		size = epf_bar->size;
-+		if (mw_addr) {
-+			pci_epc_mem_free_addr(epc, phys_addr, mw_addr, size);
-+			ntb_epc->mw_addr[barno] = NULL;
-+		}
-+	}
++	pci_clear_master(pdev);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
++	pci_set_drvdata(pdev, NULL);
 +}
 +
-+static void epf_ntb_db_mw_bar_clear(struct epf_ntb_epc *ntb_epc)
++static int ntb_epf_pci_probe(struct pci_dev *pdev,
++			     const struct pci_device_id *id)
 +{
-+	struct pci_epf_bar *epf_bar;
-+	enum epf_ntb_bar bar;
-+	enum pci_barno barno;
-+	u8 vfunc_no, func_no;
-+	struct pci_epc *epc;
-+
-+	epc = ntb_epc->epc;
-+
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+
-+	for (bar = BAR_DB_MW1; bar < BAR_MW4; bar++) {
-+		barno = ntb_epc->epf_ntb_bar[bar];
-+		epf_bar = &ntb_epc->epf_bar[barno];
-+		pci_epc_clear_bar(epc, func_no, vfunc_no, epf_bar);
-+	}
-+}
-+
-+static void epf_ntb_db_mw_bar_cleanup(struct epf_ntb_epc *ntb_epc,
-+				      struct epf_ntb_epc *peer_ntb_epc)
-+{
-+	epf_ntb_db_mw_bar_clear(ntb_epc);
-+	epf_ntb_free_peer_mem(peer_ntb_epc);
-+}
-+
-+static int
-+epf_ntb_alloc_peer_mem(struct device *dev, struct epf_ntb_epc *ntb_epc,
-+		       enum epf_ntb_bar bar, struct epf_ntb_epc *peer_ntb_epc,
-+		       size_t size)
-+{
-+	const struct pci_epc_features *epc_features;
-+	struct pci_epf_bar *epf_bar;
-+	struct pci_epc *peer_epc;
-+	phys_addr_t phys_addr;
-+	void __iomem *mw_addr;
-+	enum pci_barno barno;
-+	size_t align;
-+
-+	epc_features = ntb_epc->epc_features;
-+	align = epc_features->align;
-+
-+	if (size < 128)
-+		size = 128;
-+
-+	if (align)
-+		size = ALIGN(size, align);
-+	else
-+		size = roundup_pow_of_two(size);
-+
-+	peer_epc = peer_ntb_epc->epc;
-+	mw_addr = pci_epc_mem_alloc_addr(peer_epc, &phys_addr, size);
-+	if (!mw_addr) {
-+		dev_err(dev, "%s intf: Failed to allocate OB address\n",
-+			pci_epc_interface_string(peer_ntb_epc->type));
-+		return -ENOMEM;
-+	}
-+
-+	barno = ntb_epc->epf_ntb_bar[bar];
-+	epf_bar = &ntb_epc->epf_bar[barno];
-+	ntb_epc->mw_addr[barno] = mw_addr;
-+
-+	epf_bar->phys_addr = phys_addr;
-+	epf_bar->size = size;
-+	epf_bar->barno = barno;
-+	epf_bar->flags = PCI_BASE_ADDRESS_MEM_TYPE_32;
-+
-+	return 0;
-+}
-+
-+static int epf_ntb_configure_interrupt(struct epf_ntb *ntb,
-+				       enum pci_epc_interface_type type)
-+{
-+	const struct pci_epc_features *epc_features;
-+	bool msix_capable, msi_capable;
-+	struct epf_ntb_epc *ntb_epc;
-+	struct device_node *node;
-+	u8 vfunc_no, func_no;
-+	struct pci_epc *epc;
-+	struct device *dev;
-+	u32 db_count;
++	enum pci_barno peer_spad_reg_bar = BAR_1;
++	enum pci_barno ctrl_reg_bar = BAR_0;
++	enum pci_barno db_reg_bar = BAR_2;
++	struct device *dev = &pdev->dev;
++	struct ntb_epf_data *data;
++	struct ntb_epf_dev *ndev;
 +	int ret;
 +
-+	ntb_epc = ntb->epc[type];
-+	dev = &ntb->epf->dev;
-+	node = ntb->epf->node;
-+
-+	epc_features = ntb_epc->epc_features;
-+	msix_capable = epc_features->msix_capable;
-+	msi_capable = epc_features->msi_capable;
-+
-+	if (!(msix_capable || msi_capable)) {
-+		dev_err(dev, "MSI or MSI-X is required for doorbell\n");
-+		return -EINVAL;
-+	}
-+
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+
-+	db_count = DB_COUNT;
-+	of_property_read_u32(node, "db-count", &db_count);
-+	if (db_count > MAX_DB_COUNT) {
-+		dev_err(dev, "DB count cannot be more than %d\n", MAX_DB_COUNT);
-+		return -EINVAL;
-+	}
-+
-+	ntb->db_count = db_count;
-+	epc = ntb_epc->epc;
-+
-+	if (msi_capable) {
-+		ret = pci_epc_set_msi(epc, func_no, vfunc_no, db_count);
-+		if (ret) {
-+			dev_err(dev, "%s intf: MSI configuration failed\n",
-+				pci_epc_interface_string(type));
-+			return ret;
-+		}
-+	}
-+
-+	if (msix_capable) {
-+		ret = pci_epc_set_msix(epc, func_no, vfunc_no, db_count);
-+		if (ret) {
-+			dev_err(dev, "MSI configuration failed\n");
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int epf_ntb_db_mw_bar_init(struct epf_ntb *ntb,
-+				  enum pci_epc_interface_type type)
-+{
-+	const struct pci_epc_features *epc_features;
-+	struct epf_ntb_epc *peer_ntb_epc;
-+	struct epf_ntb_epc *ntb_epc;
-+	struct pci_epf_bar *epf_bar;
-+	struct epf_ntb_ctrl *ctrl;
-+	enum epf_ntb_bar bar;
-+	u8 vfunc_no, func_no;
-+	enum pci_barno barno;
-+	struct pci_epc *epc;
-+	struct device *dev;
-+	u32 num_mws, size;
-+	u32 db_count;
-+	size_t align;
-+	int ret;
-+	int i;
-+
-+	ntb_epc = ntb->epc[type];
-+	peer_ntb_epc = ntb->epc[!type];
-+
-+	dev = &ntb->epf->dev;
-+	epc_features = ntb_epc->epc_features;
-+	align = epc_features->align;
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+	epc = ntb_epc->epc;
-+	num_mws = ntb->num_mws;
-+	db_count = ntb->db_count;
-+
-+	for (bar = BAR_DB_MW1, i = 0; i < num_mws; bar++, i++) {
-+		if (bar == BAR_DB_MW1) {
-+			align = align ? align : 4;
-+			size = db_count * align;
-+			size = ALIGN(size, ntb->mws_size[i]);
-+			ctrl = ntb_epc->reg;
-+			ctrl->mw1_offset = size;
-+			size += ntb->mws_size[i];
-+		} else {
-+			size = ntb->mws_size[i];
-+		}
-+
-+		ret = epf_ntb_alloc_peer_mem(dev, ntb_epc, bar,
-+					     peer_ntb_epc, size);
-+		if (ret)
-+			goto err_alloc_peer_mem;
-+
-+		barno = ntb_epc->epf_ntb_bar[bar];
-+		epf_bar = &ntb_epc->epf_bar[barno];
-+
-+		ret = pci_epc_set_bar(epc, func_no, vfunc_no, epf_bar);
-+		if (ret) {
-+			dev_err(dev, "%s intf: DoorBell BAR set failed\n",
-+				pci_epc_interface_string(type));
-+			goto err_alloc_peer_mem;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_alloc_peer_mem:
-+	epf_ntb_db_mw_bar_cleanup(ntb_epc, peer_ntb_epc);
-+
-+	return ret;
-+}
-+
-+static void epf_ntb_epc_destroy(struct epf_ntb *ntb)
-+{
-+	enum pci_epc_interface_type type;
-+	struct epf_ntb_epc *ntb_epc;
-+	struct pci_epc *epc;
-+	struct pci_epf *epf;
-+
-+	epf = ntb->epf;
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		ntb_epc = ntb->epc[type];
-+		if (!ntb_epc)
-+			return;
-+		epc = ntb_epc->epc;
-+		pci_epc_remove_epf(epc, epf, type);
-+		pci_epc_put(epc);
-+	}
-+}
-+
-+static int
-+epf_ntb_epc_create_interface(struct epf_ntb *ntb, struct pci_epc *epc,
-+			     enum pci_epc_interface_type type)
-+{
-+	const struct pci_epc_features *epc_features;
-+	struct pci_epf_bar *epf_bar;
-+	struct epf_ntb_epc *ntb_epc;
-+	u8 vfunc_no, func_no;
-+	struct pci_epf *epf;
-+	struct device *dev;
-+
-+	dev = &ntb->epf->dev;
-+
-+	ntb_epc = devm_kzalloc(dev, sizeof(*ntb_epc), GFP_KERNEL);
-+	if (!ntb_epc)
++	ndev = devm_kzalloc(dev, sizeof(*ndev), GFP_KERNEL);
++	if (!ndev)
 +		return -ENOMEM;
 +
-+	epf = ntb->epf;
-+	if (type == PRIMARY_INTERFACE) {
-+		func_no = epf->func_no;
-+		vfunc_no = epf->vfunc_no;
-+		epf_bar = epf->bar;
-+	} else {
-+		func_no = epf->sec_epc_func_no;
-+		vfunc_no = epf->sec_epc_vfunc_no;
-+		epf_bar = epf->sec_epc_bar;
++	data = (struct ntb_epf_data *)id->driver_data;
++	if (data) {
++		if (data->peer_spad_reg_bar)
++			peer_spad_reg_bar = data->peer_spad_reg_bar;
++		if (data->ctrl_reg_bar)
++			ctrl_reg_bar = data->ctrl_reg_bar;
++		if (data->db_reg_bar)
++			db_reg_bar = data->db_reg_bar;
 +	}
 +
-+	ntb_epc->linkup = false;
-+	ntb_epc->epc = epc;
-+	ntb_epc->func_no = func_no;
-+	ntb_epc->vfunc_no = vfunc_no;
-+	ntb_epc->type = type;
-+	ntb_epc->epf_bar = epf_bar;
-+	ntb_epc->epf_ntb = ntb;
++	ndev->peer_spad_reg_bar = peer_spad_reg_bar;
++	ndev->ctrl_reg_bar = ctrl_reg_bar;
++	ndev->db_reg_bar = db_reg_bar;
 +
-+	epc_features = pci_epc_get_features(epc, func_no, vfunc_no);
-+	ntb_epc->epc_features = epc_features;
++	ntb_epf_init_struct(ndev, pdev);
 +
-+	ntb->epc[type] = ntb_epc;
++	ret = ntb_epf_init_pci(ndev, pdev);
++	if (ret) {
++		dev_err(dev, "Failed to init PCI\n");
++		return ret;
++	}
 +
-+	return 0;
-+}
++	ret = ntb_epf_init_dev(ndev);
++	if (ret) {
++		dev_err(dev, "Failed to init device\n");
++		goto err_init_dev;
++	}
 +
-+static int epf_ntb_epc_create(struct epf_ntb *ntb)
-+{
-+	enum pci_epc_interface_type type;
-+	struct device_node *node;
-+	const char *epc_name;
-+	struct pci_epc *epc;
-+	struct pci_epf *epf;
-+	struct device *dev;
-+	int ret;
-+
-+	epf = ntb->epf;
-+	node = epf->node;
-+	dev = &epf->dev;
-+
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		epc_name = pci_epc_interface_string(type);
-+
-+		epc = of_pci_epc_get_by_name(node, epc_name);
-+		if (IS_ERR(epc)) {
-+			if (PTR_ERR(epc) != -EPROBE_DEFER)
-+				dev_err(dev, "%s intf: Failed to get EPC\n",
-+					epc_name);
-+			ret = PTR_ERR(epc);
-+			goto err_epc_get;
-+		}
-+
-+		ret = pci_epc_add_epf(epc, epf, type);
-+		if (ret) {
-+			dev_err(dev, "%s intf: Fail to add EPF to EPC\n",
-+				epc_name);
-+			goto err_epc_get;
-+		}
-+
-+		ret = epf_ntb_epc_create_interface(ntb, epc, type);
-+		if (ret) {
-+			dev_err(dev, "%s intf: Fail to create NTB EPC\n",
-+				epc_name);
-+			goto err_epc_get;
-+		}
++	ret = ntb_register_device(&ndev->ntb);
++	if (ret) {
++		dev_err(dev, "Failed to register NTB device\n");
++		goto err_register_dev;
 +	}
 +
 +	return 0;
 +
-+err_epc_get:
-+	epf_ntb_epc_destroy(ntb);
++err_register_dev:
++	pci_free_irq_vectors(pdev);
++
++err_init_dev:
++	ntb_epf_deinit_pci(ndev);
 +
 +	return ret;
 +}
 +
-+static int epf_ntb_init_epc_bar_interface(struct epf_ntb *ntb,
-+					  enum pci_epc_interface_type type)
++static void ntb_epf_pci_remove(struct pci_dev *pdev)
 +{
-+	const struct pci_epc_features *epc_features;
-+	struct epf_ntb_epc *ntb_epc;
-+	enum pci_barno barno;
-+	enum epf_ntb_bar bar;
-+	struct device *dev;
-+	u32 num_mws;
-+	int i;
++	struct ntb_epf_dev *ndev = pci_get_drvdata(pdev);
 +
-+	barno = BAR_0;
-+	ntb_epc = ntb->epc[type];
-+	num_mws = ntb->num_mws;
-+	dev = &ntb->epf->dev;
-+	epc_features = ntb_epc->epc_features;
-+
-+	/* These are required BARs which are mandatory for NTB functionality */
-+	for (bar = BAR_CONFIG; bar <= BAR_DB_MW1; bar++, barno++) {
-+		barno = pci_epc_get_next_free_bar(epc_features, barno);
-+		if (barno < 0) {
-+			dev_err(dev, "%s intf: Fail to get NTB function BAR\n",
-+				pci_epc_interface_string(type));
-+			return barno;
-+		}
-+		ntb_epc->epf_ntb_bar[bar] = barno;
-+	}
-+
-+	/* These are optional BARs which doesn't impact NTB functionality */
-+	for (bar = BAR_MW2, i = 1; i < num_mws; bar++, barno++, i++) {
-+		barno = pci_epc_get_next_free_bar(epc_features, barno);
-+		if (barno < 0) {
-+			ntb->num_mws = i;
-+			dev_dbg(dev, "BAR not available for > MW%d\n", i + 1);
-+		}
-+		ntb_epc->epf_ntb_bar[bar] = barno;
-+	}
-+
-+	return 0;
++	ntb_unregister_device(&ndev->ntb);
++	pci_free_irq_vectors(pdev);
++	kfree(ndev);
 +}
 +
-+static int epf_ntb_init_epc_bar(struct epf_ntb *ntb)
-+{
-+	enum pci_epc_interface_type type;
-+	struct device *dev;
-+	int ret;
++static const struct ntb_epf_data j721e_data = {
++	.ctrl_reg_bar = BAR_0,
++	.peer_spad_reg_bar = BAR_1,
++	.db_reg_bar = BAR_2,
++};
 +
-+	dev = &ntb->epf->dev;
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		ret = epf_ntb_init_epc_bar_interface(ntb, type);
-+		if (ret) {
-+			dev_err(dev, "Fail to init EPC bar for %s interface\n",
-+				pci_epc_interface_string(type));
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int epf_ntb_epc_init_interface(struct epf_ntb *ntb,
-+				      enum pci_epc_interface_type type)
-+{
-+	struct epf_ntb_epc *ntb_epc;
-+	u8 vfunc_no, func_no;
-+	struct pci_epc *epc;
-+	struct pci_epf *epf;
-+	struct device *dev;
-+	int ret;
-+
-+	ntb_epc = ntb->epc[type];
-+	epf = ntb->epf;
-+	dev = &epf->dev;
-+	epc = ntb_epc->epc;
-+	func_no = ntb_epc->func_no;
-+	vfunc_no = ntb_epc->vfunc_no;
-+
-+	ret = epf_ntb_config_sspad_bar_set(ntb->epc[type]);
-+	if (ret) {
-+		dev_err(dev, "%s intf: Config/self SPAD BAR init failed\n",
-+			pci_epc_interface_string(type));
-+		return ret;
-+	}
-+
-+	ret = epf_ntb_peer_spad_bar_set(ntb, type);
-+	if (ret) {
-+		dev_err(dev, "%s intf: Peer SPAD BAR init failed\n",
-+			pci_epc_interface_string(type));
-+		goto err_peer_spad_bar_init;
-+	}
-+
-+	ret = epf_ntb_configure_interrupt(ntb, type);
-+	if (ret) {
-+		dev_err(dev, "%s intf: Interrupt configuration failed\n",
-+			pci_epc_interface_string(type));
-+		goto err_peer_spad_bar_init;
-+	}
-+
-+	ret = epf_ntb_db_mw_bar_init(ntb, type);
-+	if (ret) {
-+		dev_err(dev, "%s intf: DB/MW BAR init failed\n",
-+			pci_epc_interface_string(type));
-+		goto err_db_mw_bar_init;
-+	}
-+
-+	ret = pci_epc_write_header(epc, func_no, vfunc_no, epf->header);
-+	if (ret) {
-+		dev_err(dev, "%s intf: Configuration header write failed\n",
-+			pci_epc_interface_string(type));
-+		goto err_write_header;
-+	}
-+
-+	INIT_DELAYED_WORK(&ntb->epc[type]->cmd_handler, epf_ntb_cmd_handler);
-+	queue_work(kpcintb_workqueue, &ntb->epc[type]->cmd_handler.work);
-+
-+	return 0;
-+
-+err_write_header:
-+	epf_ntb_db_mw_bar_cleanup(ntb->epc[type], ntb->epc[!type]);
-+
-+err_db_mw_bar_init:
-+	epf_ntb_peer_spad_bar_clear(ntb->epc[type]);
-+
-+err_peer_spad_bar_init:
-+	epf_ntb_config_sspad_bar_clear(ntb->epc[type]);
-+
-+	return ret;
-+}
-+
-+static void epf_ntb_epc_cleanup(struct epf_ntb *ntb)
-+{
-+	enum pci_epc_interface_type type;
-+	struct epf_ntb_epc *peer_ntb_epc;
-+	struct epf_ntb_epc *ntb_epc;
-+
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		ntb_epc = ntb->epc[type];
-+		peer_ntb_epc = ntb->epc[!type];
-+		cancel_delayed_work(&ntb_epc->cmd_handler);
-+		epf_ntb_db_mw_bar_cleanup(ntb_epc, peer_ntb_epc);
-+		epf_ntb_peer_spad_bar_clear(ntb_epc);
-+		epf_ntb_config_sspad_bar_clear(ntb_epc);
-+	}
-+}
-+
-+static int epf_ntb_epc_init(struct epf_ntb *ntb)
-+{
-+	enum pci_epc_interface_type type;
-+	struct device *dev;
-+	int ret;
-+
-+	dev = &ntb->epf->dev;
-+
-+	for (type = PRIMARY_INTERFACE; type <= SECONDARY_INTERFACE; type++) {
-+		ret = epf_ntb_epc_init_interface(ntb, type);
-+		if (ret) {
-+			dev_err(dev, "%s intf: Failed to initialize\n",
-+				pci_epc_interface_string(type));
-+			goto err_init_type;
-+		}
-+	}
-+
-+	return 0;
-+
-+err_init_type:
-+	epf_ntb_epc_cleanup(ntb);
-+
-+	return ret;
-+}
-+
-+static int epf_ntb_of_parse_mw(struct epf_ntb *ntb, struct device_node *node)
-+{
-+	struct device *dev;
-+	u32 *mws_size;
-+	u32 num_mws;
-+	int ret;
-+
-+	dev = &ntb->epf->dev;
-+	ret = of_property_read_u32(node, "num-mws", &num_mws);
-+	if (ret) {
-+		dev_err(dev, "Failed to get num-mws dt property\n");
-+		return ret;
-+	}
-+
-+	if (num_mws > MAX_MW) {
-+		dev_err(dev, "Cannot support more than 4 memory window\n");
-+		return ret;
-+	}
-+
-+	mws_size = devm_kzalloc(dev, sizeof(*mws_size) * num_mws, GFP_KERNEL);
-+	if (!mws_size)
-+		return -ENOMEM;
-+
-+	ret = of_property_read_u32_array(node, "mws-size", mws_size,
-+					 num_mws);
-+	if (ret) {
-+		dev_err(dev, "Failed to get mws-size dt property\n");
-+		return ret;
-+	}
-+
-+	ntb->num_mws = num_mws;
-+	ntb->mws_size = mws_size;
-+
-+	return 0;
-+}
-+
-+static int pci_epf_ntb_of_parse(struct epf_ntb *ntb)
-+{
-+	struct device_node *node;
-+	struct pci_epf *epf;
-+	struct device *dev;
-+	int ret;
-+
-+	epf = ntb->epf;
-+	node = epf->node;
-+	dev = &epf->dev;
-+
-+	epf->header = &epf_ntb_header;
-+	pci_epc_of_parse_header(node, epf->header);
-+
-+	ret = epf_ntb_of_parse_mw(ntb, node);
-+	if (ret) {
-+		dev_err(dev, "Invalid memory window configuration in DT\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pci_epf_ntb_probe(struct pci_epf *epf)
-+{
-+	struct epf_ntb *ntb;
-+	struct device *dev;
-+	int ret;
-+
-+	dev = &epf->dev;
-+
-+	ntb = devm_kzalloc(dev, sizeof(*ntb), GFP_KERNEL);
-+	if (!ntb)
-+		return -ENOMEM;
-+
-+	ntb->epf = epf;
-+
-+	ret = pci_epf_ntb_of_parse(ntb);
-+	if (ret) {
-+		dev_err(dev, "Failed to parse NTB DT node\n");
-+		return ret;
-+	}
-+
-+	ret = epf_ntb_epc_create(ntb);
-+	if (ret) {
-+		dev_err(dev, "Failed to create NTB EPC\n");
-+		return ret;
-+	}
-+
-+	ret = epf_ntb_init_epc_bar(ntb);
-+	if (ret) {
-+		dev_err(dev, "Failed to create NTB EPC\n");
-+		goto err_bar_init;
-+	}
-+
-+	ret = epf_ntb_config_spad_bar_alloc(ntb);
-+	if (ret) {
-+		dev_err(dev, "Failed to allocate BAR memory\n");
-+		goto err_bar_init;
-+	}
-+
-+	ret = epf_ntb_epc_init(ntb);
-+	if (ret) {
-+		dev_err(dev, "Failed to initialize EPC\n");
-+		goto err_epc_init;
-+	}
-+
-+	epf_set_drvdata(epf, ntb);
-+
-+	return 0;
-+
-+err_epc_init:
-+	epf_ntb_config_spad_bar_free(ntb);
-+
-+err_bar_init:
-+	epf_ntb_epc_destroy(ntb);
-+
-+	return ret;
-+}
-+
-+static int pci_epf_ntb_remove(struct pci_epf *epf)
-+{
-+	struct epf_ntb *ntb = epf_get_drvdata(epf);
-+
-+	epf_ntb_epc_cleanup(ntb);
-+	epf_ntb_config_spad_bar_free(ntb);
-+	epf_ntb_epc_destroy(ntb);
-+
-+	return 0;
-+}
-+
-+static const struct pci_epf_device_id pci_epf_ntb_ids[] = {
++static const struct pci_device_id ntb_epf_pci_tbl[] = {
 +	{
-+		.name = "pci-epf-ntb",
++		PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
++		.driver_data = (kernel_ulong_t)&j721e_data,
 +	},
-+	{},
++	{ },
 +};
++MODULE_DEVICE_TABLE(pci, ntb_epf_pci_tbl);
 +
-+static struct pci_epf_driver epf_ntb_driver = {
-+	.driver.name	= "pci_epf_ntb",
-+	.probe		= pci_epf_ntb_probe,
-+	.remove		= pci_epf_ntb_remove,
-+	.id_table	= pci_epf_ntb_ids,
-+	.owner		= THIS_MODULE,
++static struct pci_driver ntb_epf_pci_driver = {
++	.name		= KBUILD_MODNAME,
++	.id_table	= ntb_epf_pci_tbl,
++	.probe		= ntb_epf_pci_probe,
++	.remove		= ntb_epf_pci_remove,
 +};
++module_pci_driver(ntb_epf_pci_driver);
 +
-+static int __init pci_epf_ntb_init(void)
-+{
-+	int ret;
-+
-+	kpcintb_workqueue = alloc_workqueue("kpcintb", WQ_MEM_RECLAIM |
-+					    WQ_HIGHPRI, 0);
-+	ret = pci_epf_register_driver(&epf_ntb_driver);
-+	if (ret) {
-+		pr_err("Failed to register pci epf ntb driver --> %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+module_init(pci_epf_ntb_init);
-+
-+static void __exit pci_epf_ntb_exit(void)
-+{
-+	pci_epf_unregister_driver(&epf_ntb_driver);
-+}
-+module_exit(pci_epf_ntb_exit);
-+
-+MODULE_DESCRIPTION("PCI EPF NTB DRIVER");
++MODULE_DESCRIPTION("PCI ENDPOINT NTB HOST DRIVER");
 +MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
 +MODULE_LICENSE("GPL v2");
 -- 
