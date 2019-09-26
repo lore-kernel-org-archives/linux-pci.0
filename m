@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B70C4360C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7825C47E48
 	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EFA53222C0
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 945FA222C0
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="B5a+RGTk"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="BDmf43rN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725992AbfIZLbw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Sep 2019 07:31:52 -0400
-Received: from fllv0016.ext.ti.com ([198.47.19.142]:53026 "EHLO
-        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726014AbfIZLbv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:31:51 -0400
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVffv016260;
-        Thu, 26 Sep 2019 06:31:41 -0500
+        id S1726865AbfIZLcB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Sep 2019 07:32:01 -0400
+Received: from lelv0142.ext.ti.com ([198.47.23.249]:50232 "EHLO
+        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725787AbfIZLcB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:32:01 -0400
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVrtj026112;
+        Thu, 26 Sep 2019 06:31:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1569497501;
-        bh=NsBIGvSBpp7lUk2avEDthRUDCLoNlQ7B/MXYwZ1hE5A=;
+        s=ti-com-17Q1; t=1569497513;
+        bh=Ba73hC2payjMjY03QA69XQlD3F4Pdv4g16+/XfFLTUM=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=B5a+RGTkuOC1CLJiLCiAVIJcE7HlSJuBgKSlVVgBJZZ5yP3cv1LebqLJhNi3Lb+k3
-         Fui+vfi4UONozDcjlyXFFY7e42pU3FlxZeeiCLtxe+4GTirYzqRtM8OAwr7o4V/nWT
-         cM89+LDDSawlxV+n6Wny0Grt2E6OKihR6+d40GTM=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8QBVfmw050949
+        b=BDmf43rNJSaHQkluwVqBGE1qfkyvb890yrFOLNyTfWcm9X+2UXBpfkctm+ZKH4zMd
+         PQt8BrVqPcvsKnXooOQyA5INTn5E6YFYQ/adpHH6omH/Sga0IkDZqSyR3vQhgnPNOh
+         wsNT62/a4VoErlLYpuZ465bUoxSgEbt8M2r6n2nY=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8QBVrE4032357
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 26 Sep 2019 06:31:41 -0500
-Received: from DFLE101.ent.ti.com (10.64.6.22) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 26 Sep 2019 06:31:53 -0500
+Received: from DLEE108.ent.ti.com (157.170.170.38) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Thu, 26
- Sep 2019 06:31:33 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE101.ent.ti.com
- (10.64.6.22) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2019 06:31:45 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Thu, 26 Sep 2019 06:31:40 -0500
+ Frontend Transport; Thu, 26 Sep 2019 06:31:45 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTk9069017;
-        Thu, 26 Sep 2019 06:31:37 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTkC069017;
+        Thu, 26 Sep 2019 06:31:49 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -57,9 +57,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>, <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-ntb@googlegroups.com>
-Subject: [RFC PATCH 16/21] PCI: endpoint: Fix missing mutex_unlock in error case
-Date:   Thu, 26 Sep 2019 16:59:28 +0530
-Message-ID: <20190926112933.8922-17-kishon@ti.com>
+Subject: [RFC PATCH 19/21] PCI: Add TI J721E device to pci ids
+Date:   Thu, 26 Sep 2019 16:59:31 +0530
+Message-ID: <20190926112933.8922-20-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190926112933.8922-1-kishon@ti.com>
 References: <20190926112933.8922-1-kishon@ti.com>
@@ -71,51 +71,26 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There is a missing mutex_unlock() in pci_epc_add_epf() in one of the
-error scenarios. Fix it here.
+Add TI J721E device to the pci id database. Since this device has
+a configurable PCIe endpoint, it could be used with different
+drivers.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-epc-core.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ include/linux/pci_ids.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 797e5d323998..33c745546a42 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -686,6 +686,7 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
- {
- 	struct list_head *list;
- 	u32 func_no = 0;
-+	int ret = 0;
- 
- 	if (epf->is_vf)
- 		return -EINVAL;
-@@ -705,8 +706,10 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
- 	mutex_lock(&epc->lock);
- 	func_no = find_first_zero_bit(&epc->function_num_map,
- 				      BITS_PER_LONG);
--	if (func_no >= BITS_PER_LONG)
--		return -EINVAL;
-+	if (func_no >= BITS_PER_LONG) {
-+		ret = -EINVAL;
-+		goto err;
-+	}
- 
- 	set_bit(func_no, &epc->function_num_map);
- 	if (type == PRIMARY_INTERFACE) {
-@@ -720,9 +723,11 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf,
- 	}
- 
- 	list_add_tail(list, &epc->pci_epf);
-+
-+err:
- 	mutex_unlock(&epc->lock);
- 
--	return 0;
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(pci_epc_add_epf);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d157983b84cf..b2820a834a5e 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -868,6 +868,7 @@
+ #define PCI_DEVICE_ID_TI_X620		0xac8d
+ #define PCI_DEVICE_ID_TI_X420		0xac8e
+ #define PCI_DEVICE_ID_TI_XX20_FM	0xac8f
++#define PCI_DEVICE_ID_TI_J721E		0xb00d
+ #define PCI_DEVICE_ID_TI_DRA74x		0xb500
+ #define PCI_DEVICE_ID_TI_DRA72x		0xb501
  
 -- 
 2.17.1
