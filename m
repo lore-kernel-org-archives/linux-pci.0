@@ -5,47 +5,47 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49C44C432C2
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5772CC4360C
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16BA7222C4
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FB5D222C0
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="eyZNqkD+"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="EKRJWt69"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726932AbfIZLcN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Sep 2019 07:32:13 -0400
-Received: from lelv0143.ext.ti.com ([198.47.23.248]:57298 "EHLO
-        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725787AbfIZLcJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:32:09 -0400
+        id S1726586AbfIZLb2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Sep 2019 07:31:28 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:52970 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726573AbfIZLb1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:31:27 -0400
 Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBW1d1026527;
-        Thu, 26 Sep 2019 06:32:01 -0500
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVKGg016189;
+        Thu, 26 Sep 2019 06:31:20 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1569497521;
-        bh=88Xv9IRV7+oNSxAgr2jq3XB2+SHFQvDvj39xR9Z58mQ=;
+        s=ti-com-17Q1; t=1569497480;
+        bh=5g6TwgnGUlfofXhn+QvD8y+MT6lDfC7QwOU9sIuCmvU=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=eyZNqkD+oH2zsbe88+Ktakn1JXraKUrcBJUMmBPftF8+Ry1V36N0LmBeo8NhyMzsr
-         NsqdZJ9Cbl3tcy85cp1uGVuJ5vkqfLZ4abIP2F+abI4YsOJ0NPn4skrL4ro/kBCybP
-         VFuPC3aepTsuTunrzfK/bKrjRW8jkJwx7chGJ4Pc=
-Received: from DLEE100.ent.ti.com (dlee100.ent.ti.com [157.170.170.30])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8QBW1NA032455
+        b=EKRJWt69th/MO9ynM8MWbD0RpM+vv+pbGpzNW/t2BbTlgvntevwY28WOnN0R7ex8a
+         a5wDsuZXuiwtzpMZ8CC5I8iCPB82iH7dxOEqoZ3LIceK1RCgiYfJZInqAwJz1AYA96
+         q9/IMij7CgtySeLwZK/EbKAHKsd3xn40AnOesDYU=
+Received: from DLEE105.ent.ti.com (dlee105.ent.ti.com [157.170.170.35])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8QBVK37031817
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 26 Sep 2019 06:32:01 -0500
-Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE100.ent.ti.com
- (157.170.170.30) with Microsoft SMTP Server (version=TLS1_2,
+        Thu, 26 Sep 2019 06:31:20 -0500
+Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE105.ent.ti.com
+ (157.170.170.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Thu, 26
- Sep 2019 06:32:01 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE102.ent.ti.com
- (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2019 06:31:12 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE114.ent.ti.com
+ (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Thu, 26 Sep 2019 06:31:54 -0500
+ Frontend Transport; Thu, 26 Sep 2019 06:31:12 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTkE069017;
-        Thu, 26 Sep 2019 06:31:57 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTk4069017;
+        Thu, 26 Sep 2019 06:31:16 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -57,9 +57,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>, <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-ntb@googlegroups.com>
-Subject: [RFC PATCH 21/21] NTB: tool: Enable the NTB/PCIe link on the local or remote side of bridge
-Date:   Thu, 26 Sep 2019 16:59:33 +0530
-Message-ID: <20190926112933.8922-22-kishon@ti.com>
+Subject: [RFC PATCH 11/21] PCI: endpoint: Add helper API to populate header with values from DT
+Date:   Thu, 26 Sep 2019 16:59:23 +0530
+Message-ID: <20190926112933.8922-12-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190926112933.8922-1-kishon@ti.com>
 References: <20190926112933.8922-1-kishon@ti.com>
@@ -71,26 +71,63 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Invoke ntb_link_enable() to enable the NTB/PCIe link on the local
-or remote side of the bridge.
+Add helper API pci_epc_of_parse_header() to populate header with
+values from device tree. These values will be written to the
+configuration space header in the endpoint controller.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/ntb/test/ntb_tool.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/endpoint/pci-epc-core.c | 23 +++++++++++++++++++++++
+ include/linux/pci-epc.h             |  2 ++
+ 2 files changed, 25 insertions(+)
 
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-index d592c0ffbd19..04138e6a371b 100644
---- a/drivers/ntb/test/ntb_tool.c
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -1638,6 +1638,7 @@ static int tool_probe(struct ntb_client *self, struct ntb_dev *ntb)
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 49bdff217777..98acadbfc934 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -31,6 +31,29 @@ static int devm_pci_epc_match(struct device *dev, void *res, void *match_data)
+ 	return *epc == match_data;
+ }
  
- 	tool_setup_dbgfs(tc);
- 
-+	ntb_link_enable(ntb, NTB_SPEED_AUTO, NTB_WIDTH_AUTO);
- 	return 0;
- 
- err_clear_mws:
++/**
++ * pci_epc_of_parse_header() - parse the device tree to get PCI config space
++ *                             header
++ * @node: The device tree node (of endpoint function) which has the PCI config
++ *        space header values
++ * @header: standard configuration space header fields that has to be populated
++ *
++ * Invoke to populate *header* with the PCI configuration space values populated
++ * in device tree.
++ */
++void pci_epc_of_parse_header(struct device_node *node,
++			     struct pci_epf_header *header)
++{
++	of_property_read_u16(node, "vendor-id", &header->vendorid);
++	of_property_read_u16(node, "device-id", &header->deviceid);
++	of_property_read_u8(node, "baseclass-code", &header->baseclass_code);
++	of_property_read_u8(node, "subclass-code", &header->subclass_code);
++	of_property_read_u16(node, "subsys-vendor-id",
++			     &header->subsys_vendor_id);
++	of_property_read_u16(node, "subsys-id", &header->subsys_id);
++}
++EXPORT_SYMBOL_GPL(pci_epc_of_parse_header);
++
+ /**
+  * pci_epc_put() - release the PCI endpoint controller
+  * @epc: epc returned by pci_epc_get()
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 993b1a55a239..18fff589a881 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -196,6 +196,8 @@ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+ 		      enum pci_epc_irq_type type, u16 interrupt_num);
+ int pci_epc_start(struct pci_epc *epc);
+ void pci_epc_stop(struct pci_epc *epc);
++void pci_epc_of_parse_header(struct device_node *node,
++			     struct pci_epf_header *header);
+ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+ 						    u8 func_no, u8 vfunc_no);
+ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
 -- 
 2.17.1
 
