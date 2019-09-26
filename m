@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82950C4360C
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB326C432C2
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 568F3222C0
-	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 938F1222C0
+	for <linux-pci@archiver.kernel.org>; Thu, 26 Sep 2019 11:32:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Sc6WLz/r"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="oJoWYIr7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726549AbfIZLb0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 26 Sep 2019 07:31:26 -0400
-Received: from fllv0015.ext.ti.com ([198.47.19.141]:51028 "EHLO
-        fllv0015.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726030AbfIZLbX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:31:23 -0400
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-        by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVGt5042493;
-        Thu, 26 Sep 2019 06:31:16 -0500
+        id S1726480AbfIZLbR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 26 Sep 2019 07:31:17 -0400
+Received: from lelv0143.ext.ti.com ([198.47.23.248]:57180 "EHLO
+        lelv0143.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726435AbfIZLbQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 07:31:16 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id x8QBV7V5026389;
+        Thu, 26 Sep 2019 06:31:07 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1569497476;
-        bh=E2GTTExAvbZbBjqJm7peVu26RwtsAEY0HmYYy9aUZio=;
+        s=ti-com-17Q1; t=1569497467;
+        bh=1Pg02YjtJWenOS8TSc+kZXfjbcewS60naZ8ogDPEpQ0=;
         h=From:To:CC:Subject:Date:In-Reply-To:References;
-        b=Sc6WLz/rgCEjTalAjHyyN/dl7vJRBPT5G+xMCus7Zdk+xUmOS/jli4Wl1k39juA5g
-         NqqLx7JqQXazDe/Uwihqes0fkvz0VlyzEoKmz7611/wgXt1IJjHEjjIhu9ci208c0R
-         K0uutCj06xnxsrpSCNJxwnjOpoe43EMooUR/B+is=
-Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
-        by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBVGH3013966;
-        Thu, 26 Sep 2019 06:31:16 -0500
-Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+        b=oJoWYIr7EsDX2IEqmzdUO07/fyqW/bTeExyro+qKR3oV9FgpHXuNnBT1HRnq9vv3m
+         GUNHuTI5N98HjIZvjbO2c2fAgHYBiPDNsza3/tzRMfH6ch6+JQmvUpr03KIrsj/arT
+         RFtsW2mTTMr+24QZb2QClokOA/91cAhcvRViDiRk=
+Received: from DLEE104.ent.ti.com (dlee104.ent.ti.com [157.170.170.34])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x8QBV7st050327
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 26 Sep 2019 06:31:07 -0500
+Received: from DLEE103.ent.ti.com (157.170.170.33) by DLEE104.ent.ti.com
+ (157.170.170.34) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Thu, 26
- Sep 2019 06:31:15 -0500
-Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE114.ent.ti.com
- (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2019 06:31:00 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE103.ent.ti.com
+ (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
- Frontend Transport; Thu, 26 Sep 2019 06:31:08 -0500
+ Frontend Transport; Thu, 26 Sep 2019 06:30:59 -0500
 Received: from a0393678ub.india.ti.com (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTk3069017;
-        Thu, 26 Sep 2019 06:31:12 -0500
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x8QBUTk1069017;
+        Thu, 26 Sep 2019 06:31:03 -0500
 From:   Kishon Vijay Abraham I <kishon@ti.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -56,9 +57,9 @@ CC:     Mark Rutland <mark.rutland@arm.com>, <kishon@ti.com>,
         <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-ntb@googlegroups.com>
-Subject: [RFC PATCH 10/21] PCI: endpoint: Make pci_epf_driver ops optional
-Date:   Thu, 26 Sep 2019 16:59:22 +0530
-Message-ID: <20190926112933.8922-11-kishon@ti.com>
+Subject: [RFC PATCH 08/21] PCI: endpoint: Make *_get_first_free_bar() take into account 64 bit BAR
+Date:   Thu, 26 Sep 2019 16:59:20 +0530
+Message-ID: <20190926112933.8922-9-kishon@ti.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20190926112933.8922-1-kishon@ti.com>
 References: <20190926112933.8922-1-kishon@ti.com>
@@ -70,36 +71,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-pci_epf_driver had two ops for bind and unbind which will be invoked
-when an endpoint controller is bound to an endpoint function (using
-configfs). Now that endpoint core has support to define an endpoint
-function using device tree alone, the bind and unbind ops can be
-optional. Make pci_epf_driver ops optional here.
+pci_epc_get_first_free_bar() uses only "reserved_bar" member in
+epc_features to get the first unreserved BAR. However if the
+reserved BAR is also a 64-bit BAR, then the next BAR shouldn't be
+returned (since 64-bit BAR uses two BARs).
+
+Make pci_epc_get_first_free_bar() take into account 64 bit BAR while
+returning the first free unreserved BAR.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/endpoint/pci-epf-core.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/pci/endpoint/pci-epc-core.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index c74c7cc6d8bd..67015c66d09f 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -446,11 +446,9 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 0c2fdd39090c..7eae7dcaebf9 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -153,12 +153,20 @@ EXPORT_SYMBOL_GPL(of_pci_epc_get_by_name);
+ unsigned int pci_epc_get_first_free_bar(const struct pci_epc_features
+ 					*epc_features)
  {
- 	int ret;
+-	int free_bar;
++	unsigned long free_bar;
  
--	if (!driver->ops)
--		return -EINVAL;
--
--	if (!driver->ops->bind || !driver->ops->unbind)
--		return -EINVAL;
-+	if (!driver->ops || !driver->ops->bind || !driver->ops->unbind)
-+		pr_debug("%s: Supports only pci_epf device created using DT\n",
-+			 driver->driver.name);
+ 	if (!epc_features)
+ 		return 0;
  
- 	driver->driver.bus = &pci_epf_bus_type;
- 	driver->driver.owner = owner;
+-	free_bar = ffz(epc_features->reserved_bar);
++	/* Find if the reserved BAR is also a 64-bit BAR */
++	free_bar = epc_features->reserved_bar & epc_features->bar_fixed_64bit;
++
++	/* Set the adjacent bit if the reserved BAR is also a 64-bit BAR */
++	free_bar <<= 1;
++	free_bar |= epc_features->reserved_bar;
++
++	/* Now find the free BAR */
++	free_bar = ffz(free_bar);
+ 	if (free_bar > 5)
+ 		return 0;
+ 
 -- 
 2.17.1
 
