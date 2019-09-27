@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 265FFC352A9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44FBBC352AC
 	for <linux-pci@archiver.kernel.org>; Fri, 27 Sep 2019 00:25:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E336220872
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Sep 2019 00:25:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B71321D56
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Sep 2019 00:25:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1569543918;
-	bh=9/NP/wZv/cipKjgXcy8j3h5UkUORhxltJpAOwhHW56Y=;
+	bh=6qoA07OIW8RH23zhkZZfOhsC7wpaGKGZRjf9OKHFSyU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=NZlMclsaj8G9PoXOE92Yq9Guuau527kdzMjMyh7eE3oq63P8QYw2ml8pi7Vhv0bew
-	 dPzCEl3qtb1cUuoGq2XidEXYZSD3W+dF2YP2unk3CwFgvvSbw7u31sooRBve+J4GJg
-	 xDrNA+m7Yb+7TvuZjJrxdIYC9Y2EaPnQMYUhjCTo=
+	b=A91WWNeybuvbSZMRJhds9yI2e2q3yOXDuhJ5NAecniWLu6bWxbMlcu2IdrNsCUoKA
+	 E0pnhKsPnIcaISXRfieU5ju6NolCvu3kVLXIQm6szgJmkZ8krnZJX22v3exzIg8Fn8
+	 8A5YiVWbafjP8TjRfnILIF3kXzUetE6TLQAo+99o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728036AbfI0AZP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1728075AbfI0AZP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 26 Sep 2019 20:25:15 -0400
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:33271 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728003AbfI0AZO (ORCPT
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:45140 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727999AbfI0AZO (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Thu, 26 Sep 2019 20:25:14 -0400
-Received: by mail-oi1-f195.google.com with SMTP id e18so3767601oii.0;
-        Thu, 26 Sep 2019 17:25:13 -0700 (PDT)
+Received: by mail-ot1-f68.google.com with SMTP id 41so745907oti.12;
+        Thu, 26 Sep 2019 17:25:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KvE1OjQp2Eo5TOhHCna2F9pDoURrQBiIlsatoh/ojtA=;
-        b=KqYGlp4pnmNRkjgrtDJgECRHf1rpz2lNXLgnDrdZTmWoQOC+25/QKZtUkGcGBZ2MuG
-         +1x0fm1hlBsfW5UNwdciNVoIxhvFoLj0slGnorylKWqjR960G+fgqUfylYBaBtnLrEK8
-         BvA59sYp08yFmC61qmHiujPvI4aGdJVivsF9vnZVGiqLtWYG3zATyAsQwn8JPze4b1hS
-         4tKA94mxv/Vvpk32tlwmP1JpQnKx5PpNRlnHP5/TnMfxIaHNZ4RaOqo0JBU8AdntxtTn
-         hNXqTSnwdep+F+QLxG4vFvSPHt3XQerAcY+9zpnPZ84CFKIdzhyQPDxSXGViljO2oB6b
-         85aQ==
-X-Gm-Message-State: APjAAAXIHkETXzCMwxGJlQpNnmK+FX7+eCBnqF/zKARK2svJyUm2/YtN
-        QPEXH1JaPw0RNhjzMgz3OPEqBrs=
-X-Google-Smtp-Source: APXvYqymzzkGngPSfklXZDXctIqAbqktZ7y7sWXPpqKuwMptW/o1ke/+OGivC0alJNA1OSSWMEbpfg==
-X-Received: by 2002:a05:6808:b0d:: with SMTP id s13mr4936115oij.52.1569543912890;
-        Thu, 26 Sep 2019 17:25:12 -0700 (PDT)
+        bh=JSIM/mVNAQUFTI8poYL0tbeVsabT6n06A8LUKfKixqE=;
+        b=UwbwatXpaojKG2T+EF0sCiKPxLZzbRNJCRU/1l4Hdor8K7puYEzz/EjhB7MA6hB/Vb
+         ReCpYSa12FvcLXDltZ458bNPHiGhEJ60H7BzzDWz7/VbBISP0kKMDqtaHQDL+CYjSnEx
+         CfG1OhLDFNtj0XErLDT8KuDFudbktd1zwRaDwS7TwRsaJKMaVxXlgBFdCCQ+gFUwxUIX
+         a2EcA1dMw8jmt8OkSkfgzLGNfUfyiidQRMFzXg7aCORwIRV5ynfL1byMsDfSLwbgffJg
+         PrZqSH7tRcNwks6UQx+iWY6mmluHTHmJH3dsilME2nj3vR+wx56WlNOuSMP8eHRpNux/
+         sE0g==
+X-Gm-Message-State: APjAAAUy1TlVx2uo3KNBAj+rUIhzBoC3oIn7MeXs57P+5B3928O1fBYU
+        /kG3dRY49RfZzU4+92MeJMfS6Xs=
+X-Google-Smtp-Source: APXvYqz+gt7zD0g7DVclnrzC6AFnTepOJfcgHAqg8BRkcLS/bgxsfuL2h2LiMFlwEq9ILoaJHvmz+w==
+X-Received: by 2002:a9d:6d0a:: with SMTP id o10mr991391otp.221.1569543911563;
+        Thu, 26 Sep 2019 17:25:11 -0700 (PDT)
 Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id j11sm339866otk.80.2019.09.26.17.25.11
+        by smtp.googlemail.com with ESMTPSA id j11sm339866otk.80.2019.09.26.17.25.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Sep 2019 17:25:12 -0700 (PDT)
+        Thu, 26 Sep 2019 17:25:11 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
@@ -62,9 +62,9 @@ Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         Simon Horman <horms+renesas@verge.net.au>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Oza Pawandeep <oza.oza@broadcom.com>
-Subject: [PATCH 11/11] of/address: Fix of_pci_range_parser_one translation of DMA addresses
-Date:   Thu, 26 Sep 2019 19:24:55 -0500
-Message-Id: <20190927002455.13169-12-robh@kernel.org>
+Subject: [PATCH 10/11] of/address: Translate 'dma-ranges' for parent nodes missing 'dma-ranges'
+Date:   Thu, 26 Sep 2019 19:24:54 -0500
+Message-Id: <20190927002455.13169-11-robh@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190927002455.13169-1-robh@kernel.org>
 References: <20190927002455.13169-1-robh@kernel.org>
@@ -75,70 +75,38 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-of_pci_range_parser_one() has a bug when parsing dma-ranges. When it
-translates the parent address (aka cpu address in the code), 'ranges' is
-always being used. This happens to work because most users are just 1:1
-translation.
+'dma-ranges' frequently exists without parent nodes having 'dma-ranges'.
+While this is an error for 'ranges', this is fine because DMA capable
+devices always have a translatable DMA address. Also, with no
+'dma-ranges' at all, the assumption is that DMA addresses are 1:1 with
+no restrictions unless perhaps the device itself has implicit
+restrictions.
 
 Cc: Robin Murphy <robin.murphy@arm.com>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/of/address.c       | 15 ++++++++++++---
- include/linux/of_address.h |  1 +
- 2 files changed, 13 insertions(+), 3 deletions(-)
+ drivers/of/address.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 5b835d332709..54011a355b81 100644
+index e918001c7798..5b835d332709 100644
 --- a/drivers/of/address.c
 +++ b/drivers/of/address.c
-@@ -243,6 +243,7 @@ static int parser_init(struct of_pci_range_parser *parser,
- 	parser->node = node;
- 	parser->pna = of_n_addr_cells(node);
- 	parser->np = parser->pna + na + ns;
-+	parser->dma = !strcmp(name, "dma-ranges");
- 
- 	parser->range = of_get_property(node, name, &rlen);
- 	if (parser->range == NULL)
-@@ -281,7 +282,11 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
- 	range->pci_space = be32_to_cpup(parser->range);
- 	range->flags = of_bus_pci_get_flags(parser->range);
- 	range->pci_addr = of_read_number(parser->range + 1, ns);
--	range->cpu_addr = of_translate_address(parser->node,
-+	if (parser->dma)
-+		range->cpu_addr = of_translate_dma_address(parser->node,
-+				parser->range + na);
-+	else
-+		range->cpu_addr = of_translate_address(parser->node,
- 				parser->range + na);
- 	range->size = of_read_number(parser->range + parser->pna + na, ns);
- 
-@@ -294,8 +299,12 @@ struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
- 
- 		flags = of_bus_pci_get_flags(parser->range);
- 		pci_addr = of_read_number(parser->range + 1, ns);
--		cpu_addr = of_translate_address(parser->node,
--				parser->range + na);
-+		if (parser->dma)
-+			cpu_addr = of_translate_dma_address(parser->node,
-+					parser->range + na);
-+		else
-+			cpu_addr = of_translate_address(parser->node,
-+					parser->range + na);
- 		size = of_read_number(parser->range + parser->pna + na, ns);
- 
- 		if (flags != range->flags)
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index ddda3936039c..eac7ab109df4 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -12,6 +12,7 @@ struct of_pci_range_parser {
- 	const __be32 *end;
- 	int np;
- 	int pna;
-+	bool dma;
- };
- 
- struct of_pci_range {
+@@ -519,9 +519,13 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
+ 	 *
+ 	 * As far as we know, this damage only exists on Apple machines, so
+ 	 * This code is only enabled on powerpc. --gcl
++	 *
++	 * This quirk also applies for 'dma-ranges' which frequently exist in
++	 * child nodes without 'dma-ranges' in the parent nodes. --RobH
+ 	 */
+ 	ranges = of_get_property(parent, rprop, &rlen);
+-	if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
++	if (ranges == NULL && !of_empty_ranges_quirk(parent) &&
++	    strcmp(rprop, "dma-ranges")) {
+ 		pr_debug("no ranges; cannot translate\n");
+ 		return 1;
+ 	}
 -- 
 2.20.1
 
