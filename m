@@ -4,52 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2964EC352A9
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:40:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09DA4C47404
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:41:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0281D21D7F
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:40:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D030C2086A
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:41:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569778848;
-	bh=E69jPBhERz8zrUisDraYKLSEfmvI3riaLDoldYjcMW4=;
+	s=default; t=1569778880;
+	bh=fmz5hC3yBNgy6dgTbMASSrGRRvVOVbS1qhdGVdbjLH0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=LaCHM5IrhDUQ4aawLelLOYkZRL3LveFjKGA7/Xsstt8jwi3Jnv4E1WsTwCOB97d/L
-	 17xSWN+UHDaF7Z8JFBCn151L+E1bujXN5m4Ch5p+3Rbf56898mMgFNEumrmySfkIZA
-	 uQbJ5YgkccBnttH66Emj0Fq/T8WHkXS6WmE3qYZE=
+	b=FH4868IQBdsixPmOHp5Qw8Hh6BZOokGESlDfN6FFgTNwEBt45DfMP47rVGLmxbSos
+	 XeHsjuHQLQYaPzeWaiGHMnx2YaWkrci1m6N6HhVHNoePC3xR3ARsb1alUjgpxJUtir
+	 SQlxiYKBF7/Afk6CpqCJsf5DNoE5ligkfBZpU0xc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730407AbfI2Rei (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 29 Sep 2019 13:34:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46644 "EHLO mail.kernel.org"
+        id S1730145AbfI2Rdm (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 Sep 2019 13:33:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45048 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730403AbfI2Reh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Sep 2019 13:34:37 -0400
+        id S1730139AbfI2Rdl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 29 Sep 2019 13:33:41 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 61C4221928;
-        Sun, 29 Sep 2019 17:34:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3CC1221906;
+        Sun, 29 Sep 2019 17:33:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569778477;
-        bh=E69jPBhERz8zrUisDraYKLSEfmvI3riaLDoldYjcMW4=;
+        s=default; t=1569778421;
+        bh=fmz5hC3yBNgy6dgTbMASSrGRRvVOVbS1qhdGVdbjLH0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JRbw39HCNLXllpG7UsQaOE3jEvFPx4qibskLstarVNVZQqiLIZCUNMq3oiOIjau8p
-         sXTXj5FuWVCDn3Vpg7MNZUiLdBEE2wXRIaA+u9CCfV4m2m8woo8uXB/4Uv0I+BhJ3o
-         g7/P2Y8eoVz+u40eqVFqwSP3uLwrsNg4KllyGW9Y=
+        b=B3+bScjrf4JYskavGGE1TcWaPa95T3KSCYm0R81jkOW3/9igVuTJBkRCylSl+pOe1
+         zk/QF8ix00tKVYmlcstzayZuEI0iFOzeDfGRcK7CK5kcLFwbdlLJfjOHNPYB1IQv00
+         7lzn49rPMqXnvEzeTHVAjz5euz3jy4NTLt2qDQUU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Nishka Dasgupta <nishkadg.linux@gmail.com>,
+Cc:     Thierry Reding <treding@nvidia.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Sasha Levin <sashal@kernel.org>, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 06/33] PCI: tegra: Fix OF node reference leak
-Date:   Sun, 29 Sep 2019 13:33:54 -0400
-Message-Id: <20190929173424.9361-6-sashal@kernel.org>
+        Andrew Murray <andrew.murray@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.2 27/42] PCI: exynos: Propagate errors for optional PHYs
+Date:   Sun, 29 Sep 2019 13:32:26 -0400
+Message-Id: <20190929173244.8918-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190929173424.9361-1-sashal@kernel.org>
-References: <20190929173424.9361-1-sashal@kernel.org>
+In-Reply-To: <20190929173244.8918-1-sashal@kernel.org>
+References: <20190929173244.8918-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -59,99 +62,46 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Nishka Dasgupta <nishkadg.linux@gmail.com>
+From: Thierry Reding <treding@nvidia.com>
 
-[ Upstream commit 9e38e690ace3e7a22a81fc02652fc101efb340cf ]
+[ Upstream commit ddd6960087d4b45759434146d681a94bbb1c54ad ]
 
-Each iteration of for_each_child_of_node() executes of_node_put() on the
-previous node, but in some return paths in the middle of the loop
-of_node_put() is missing thus causing a reference leak.
+devm_of_phy_get() can fail for a number of reasons besides probe
+deferral. It can for example return -ENOMEM if it runs out of memory as
+it tries to allocate devres structures. Propagating only -EPROBE_DEFER
+is problematic because it results in these legitimately fatal errors
+being treated as "PHY not specified in DT".
 
-Hence stash these mid-loop return values in a variable 'err' and add a
-new label err_node_put which executes of_node_put() on the previous node
-and returns 'err' on failure.
+What we really want is to ignore the optional PHYs only if they have not
+been specified in DT. devm_of_phy_get() returns -ENODEV in this case, so
+that's the special case that we need to handle. So we propagate all
+errors, except -ENODEV, so that real failures will still cause the
+driver to fail probe.
 
-Change mid-loop return statements to point to jump to this label to
-fix the reference leak.
-
-Issue found with Coccinelle.
-
-Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
-[lorenzo.pieralisi@arm.com: rewrote commit log]
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Kukjin Kim <kgene@kernel.org>
+Cc: Krzysztof Kozlowski <krzk@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pci-tegra.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+ drivers/pci/controller/dwc/pci-exynos.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index f4f53d092e005..976eaa9a9f266 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -1975,14 +1975,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		err = of_pci_get_devfn(port);
- 		if (err < 0) {
- 			dev_err(dev, "failed to parse address: %d\n", err);
--			return err;
-+			goto err_node_put;
- 		}
+diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
+index cee5f2f590e2d..14a6ba4067fbe 100644
+--- a/drivers/pci/controller/dwc/pci-exynos.c
++++ b/drivers/pci/controller/dwc/pci-exynos.c
+@@ -465,7 +465,7 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
  
- 		index = PCI_SLOT(err);
+ 	ep->phy = devm_of_phy_get(dev, np, NULL);
+ 	if (IS_ERR(ep->phy)) {
+-		if (PTR_ERR(ep->phy) == -EPROBE_DEFER)
++		if (PTR_ERR(ep->phy) != -ENODEV)
+ 			return PTR_ERR(ep->phy);
  
- 		if (index < 1 || index > soc->num_ports) {
- 			dev_err(dev, "invalid port number: %d\n", index);
--			return -EINVAL;
-+			err = -EINVAL;
-+			goto err_node_put;
- 		}
- 
- 		index--;
-@@ -1991,12 +1992,13 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		if (err < 0) {
- 			dev_err(dev, "failed to parse # of lanes: %d\n",
- 				err);
--			return err;
-+			goto err_node_put;
- 		}
- 
- 		if (value > 16) {
- 			dev_err(dev, "invalid # of lanes: %u\n", value);
--			return -EINVAL;
-+			err = -EINVAL;
-+			goto err_node_put;
- 		}
- 
- 		lanes |= value << (index << 3);
-@@ -2010,13 +2012,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		lane += value;
- 
- 		rp = devm_kzalloc(dev, sizeof(*rp), GFP_KERNEL);
--		if (!rp)
--			return -ENOMEM;
-+		if (!rp) {
-+			err = -ENOMEM;
-+			goto err_node_put;
-+		}
- 
- 		err = of_address_to_resource(port, 0, &rp->regs);
- 		if (err < 0) {
- 			dev_err(dev, "failed to parse address: %d\n", err);
--			return err;
-+			goto err_node_put;
- 		}
- 
- 		INIT_LIST_HEAD(&rp->list);
-@@ -2043,6 +2047,10 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		return err;
- 
- 	return 0;
-+
-+err_node_put:
-+	of_node_put(port);
-+	return err;
- }
- 
- /*
+ 		ep->phy = NULL;
 -- 
 2.20.1
 
