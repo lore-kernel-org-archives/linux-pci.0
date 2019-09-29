@@ -7,52 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D3DC4360C
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5C19C32793
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:38:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE28521906
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:38:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 90B2B21906
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:38:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569778713;
-	bh=rqIDfpoejZDcFJ9Lx/ILUg+s18yzaiLxAcuONLtaes8=;
+	s=default; t=1569778716;
+	bh=Ul1IQzv9UVldGMU3yhp2umsQMRA6lOxZbadI+W5eHfI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aXCbptVsYGn50Hp6+TYb/Z563YDZfDKjbLURFM+CZO7Gceko7av2VoMPY3FEgYQF1
-	 FQwdVHGh9tfYQXxBIssE35Je/u3TZ+gMWSq6efKvj+42qK44rDH6bMcepF1HhFHasb
-	 qaUoHamKMT0CkQG9690UYSh0R6q3pA/AwoO+Erlc=
+	b=qiDZo7sO2oDjqg9xYRC7l4L4mv01y1cP3OHeyjcT/akSUrjBbmS/ycZC8JMPKg3mo
+	 4pFuG9QVIdltaKiQSxshe+jYHAjghyuiSwojrvNGutP7XPCKjpFmeXvJt+c2o4OMED
+	 Ejp26za4AnKTsLc5JJAHbcO3ZR3w5s96ct55ZoTo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730712AbfI2RgF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 29 Sep 2019 13:36:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48408 "EHLO mail.kernel.org"
+        id S1730720AbfI2RgC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 Sep 2019 13:36:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48312 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730729AbfI2RgE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Sep 2019 13:36:04 -0400
+        id S1730712AbfI2RgC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 29 Sep 2019 13:36:02 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D05662196E;
-        Sun, 29 Sep 2019 17:36:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DE68321906;
+        Sun, 29 Sep 2019 17:35:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569778564;
-        bh=rqIDfpoejZDcFJ9Lx/ILUg+s18yzaiLxAcuONLtaes8=;
+        s=default; t=1569778560;
+        bh=Ul1IQzv9UVldGMU3yhp2umsQMRA6lOxZbadI+W5eHfI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OwnmGl+Yz4ZEDSdo/fVJ+uDpusnuH1t3Naz/kZgnVhShWw1a0qDexUCIgQorhQXBu
-         FW2U8IB4hO7Fu2boDLV2G3oVBjhBcvappWF2T1OF6829miO4voZBDAG1G+yRiQU4fo
-         aqhEBCYkHJ3R4fC4xocavm+2/piUlVsxLe8j13Dw=
+        b=ys7bFR2f+BiJFkp7j59p7ebdZAVljQPmgjUwIl6XMVLBGOVtLNftC/5rPUv3R4mkS
+         oeEq2mUbkWE5B8FcZZpi8kfRz4OLH+Af1CRKgeXWMrIMDLN5qyp4+j4ZpT4ssHxmPY
+         mElwRLb2NeQ6BgCUeegIXyUg5bYHkN5s6cJdIrFI=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Thierry Reding <treding@nvidia.com>,
+        Heiko Stuebner <heiko@sntech.de>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <andrew.murray@arm.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>, kernel@pengutronix.de,
-        linux-imx@nxp.com, Sasha Levin <sashal@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 14/23] PCI: imx6: Propagate errors for optional regulators
-Date:   Sun, 29 Sep 2019 13:35:24 -0400
-Message-Id: <20190929173535.9744-14-sashal@kernel.org>
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        linux-rockchip@lists.infradead.org,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 13/23] PCI: rockchip: Propagate errors for optional regulators
+Date:   Sun, 29 Sep 2019 13:35:23 -0400
+Message-Id: <20190929173535.9744-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190929173535.9744-1-sashal@kernel.org>
 References: <20190929173535.9744-1-sashal@kernel.org>
@@ -67,7 +64,7 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Thierry Reding <treding@nvidia.com>
 
-[ Upstream commit 2170a09fb4b0f66e06e5bcdcbc98c9ccbf353650 ]
+[ Upstream commit 0e3ff0ac5f71bdb6be2a698de0ed0c7e6e738269 ]
 
 regulator_get_optional() can fail for a number of reasons besides probe
 deferral. It can for example return -ENOMEM if it runs out of memory as
@@ -81,34 +78,60 @@ in this case, so that's the special case that we need to handle. So we
 propagate all errors, except -ENODEV, so that real failures will still
 cause the driver to fail probe.
 
+Tested-by: Heiko Stuebner <heiko@sntech.de>
 Signed-off-by: Thierry Reding <treding@nvidia.com>
 Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Reviewed-by: Andrew Murray <andrew.murray@arm.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Shawn Guo <shawnguo@kernel.org>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: kernel@pengutronix.de
-Cc: linux-imx@nxp.com
+Reviewed-by: Heiko Stuebner <heiko@sntech.de>
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Heiko Stuebner <heiko@sntech.de>
+Cc: linux-rockchip@lists.infradead.org
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/dwc/pci-imx6.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/host/pcie-rockchip.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index 1f1069b70e45a..5509b6e2de94b 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -827,8 +827,8 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 9051c6c8fea49..d3f9e7d247275 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1129,29 +1129,29 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
  
- 	imx6_pcie->vpcie = devm_regulator_get_optional(&pdev->dev, "vpcie");
- 	if (IS_ERR(imx6_pcie->vpcie)) {
--		if (PTR_ERR(imx6_pcie->vpcie) == -EPROBE_DEFER)
+ 	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
+ 	if (IS_ERR(rockchip->vpcie12v)) {
+-		if (PTR_ERR(rockchip->vpcie12v) == -EPROBE_DEFER)
 -			return -EPROBE_DEFER;
-+		if (PTR_ERR(imx6_pcie->vpcie) != -ENODEV)
-+			return PTR_ERR(imx6_pcie->vpcie);
- 		imx6_pcie->vpcie = NULL;
++		if (PTR_ERR(rockchip->vpcie12v) != -ENODEV)
++			return PTR_ERR(rockchip->vpcie12v);
+ 		dev_info(dev, "no vpcie12v regulator found\n");
+ 	}
+ 
+ 	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
+ 	if (IS_ERR(rockchip->vpcie3v3)) {
+-		if (PTR_ERR(rockchip->vpcie3v3) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
++		if (PTR_ERR(rockchip->vpcie3v3) != -ENODEV)
++			return PTR_ERR(rockchip->vpcie3v3);
+ 		dev_info(dev, "no vpcie3v3 regulator found\n");
+ 	}
+ 
+ 	rockchip->vpcie1v8 = devm_regulator_get_optional(dev, "vpcie1v8");
+ 	if (IS_ERR(rockchip->vpcie1v8)) {
+-		if (PTR_ERR(rockchip->vpcie1v8) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
++		if (PTR_ERR(rockchip->vpcie1v8) != -ENODEV)
++			return PTR_ERR(rockchip->vpcie1v8);
+ 		dev_info(dev, "no vpcie1v8 regulator found\n");
+ 	}
+ 
+ 	rockchip->vpcie0v9 = devm_regulator_get_optional(dev, "vpcie0v9");
+ 	if (IS_ERR(rockchip->vpcie0v9)) {
+-		if (PTR_ERR(rockchip->vpcie0v9) == -EPROBE_DEFER)
+-			return -EPROBE_DEFER;
++		if (PTR_ERR(rockchip->vpcie0v9) != -ENODEV)
++			return PTR_ERR(rockchip->vpcie0v9);
+ 		dev_info(dev, "no vpcie0v9 regulator found\n");
  	}
  
 -- 
