@@ -4,55 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4304C4360C
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD876C352A9
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:41:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FFF42086A
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:41:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0C612086A
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:41:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569778891;
-	bh=mzZzbvSR0cnLcFpKkLpjIj9DLeE+vyS5ObE5/GHzwbc=;
+	s=default; t=1569778898;
+	bh=hkctlvyNTnBfIMJFghBmAj+o0d3mrZHtRkI+IrQdr+g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=BJg/nsVnrqBojrG6SedhiGCWxJxzBZtCLRv2tAw/aN/qU0G/WLwR2K4QdIPlUe0aZ
-	 dWTZi6c+bS605WUgtvflbt2e+mjjU19KIS7fDWXMYdpeH+hmafL0tKV7L6beqbwDYa
-	 WrXvZ3PpIc8m5eVdZww6r7o8iQ8L/KcBoqWm3qDI=
+	b=vYXXvhGJPrb/jhIQZdmWDgk5yYxPCVW+Jpig+SH2/o/Jiqvj9geRPKoR83LHNbFGp
+	 79BnPA/sPdmEN7sWIVbbGHVPJNDgLh9ofYRj5R/VVYXDBSoOe4dQne/1M557TKeVlI
+	 /D1kUlvacAW/RRwFLlZoNrg1s2IKPGZ9d38BZxtc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729789AbfI2RlV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 29 Sep 2019 13:41:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45004 "EHLO mail.kernel.org"
+        id S1730138AbfI2Rld (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 Sep 2019 13:41:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44896 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730131AbfI2Rdk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Sep 2019 13:33:40 -0400
+        id S1730093AbfI2Rdf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 29 Sep 2019 13:33:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 78A8221928;
-        Sun, 29 Sep 2019 17:33:38 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AF98A21A4C;
+        Sun, 29 Sep 2019 17:33:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569778419;
-        bh=mzZzbvSR0cnLcFpKkLpjIj9DLeE+vyS5ObE5/GHzwbc=;
+        s=default; t=1569778414;
+        bh=hkctlvyNTnBfIMJFghBmAj+o0d3mrZHtRkI+IrQdr+g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HJbK1WI5Jmcxj5oN2NEkyfkasncnt5edFdIsb/bsMgf1EHgJCG4P+0ZS1X6PHqz03
-         tBD7raO0FOHK2a5te7vt7dNMLPPd6KQ/+UJpc5zS0z+pzp9REcjDg6+ssgi1TNKq0w
-         0edsFWCm9p3qPMG8NCg7pUUQSDAEPo0xB/8Z+XAs=
+        b=1Q8uY+6o8VguyrbJ6JIMG3iqjnQI9Yr654JhCIxz7dFz5lWefHxcP/TFoFxm3WpPb
+         W6mw3w/4ZsJgRoPxIT1fRlxM8vN6dgWRa6a87GmDqPA52sUvHKeO2DFFtyxIdoigfF
+         M2Ay8ARzoWBzY1ewS+R6aan08dpA+LOuYx84gkwY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Thierry Reding <treding@nvidia.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Shawn Guo <shawnguo@kernel.org>,
-        Sascha Hauer <s.hauer@pengutronix.de>,
-        Fabio Estevam <festevam@gmail.com>, kernel@pengutronix.de,
-        linux-imx@nxp.com, Sasha Levin <sashal@kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 26/42] PCI: imx6: Propagate errors for optional regulators
-Date:   Sun, 29 Sep 2019 13:32:25 -0400
-Message-Id: <20190929173244.8918-26-sashal@kernel.org>
+Cc:     Krzysztof Wilczynski <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.2 22/42] PCI: Add pci_info_ratelimited() to ratelimit PCI separately
+Date:   Sun, 29 Sep 2019 13:32:21 -0400
+Message-Id: <20190929173244.8918-22-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190929173244.8918-1-sashal@kernel.org>
 References: <20190929173244.8918-1-sashal@kernel.org>
@@ -65,52 +58,53 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Thierry Reding <treding@nvidia.com>
+From: Krzysztof Wilczynski <kw@linux.com>
 
-[ Upstream commit 2170a09fb4b0f66e06e5bcdcbc98c9ccbf353650 ]
+[ Upstream commit 7f1c62c443a453deb6eb3515e3c05650ffe0dcf0 ]
 
-regulator_get_optional() can fail for a number of reasons besides probe
-deferral. It can for example return -ENOMEM if it runs out of memory as
-it tries to allocate data structures. Propagating only -EPROBE_DEFER is
-problematic because it results in these legitimately fatal errors being
-treated as "regulator not specified in DT".
+Do not use printk_ratelimit() in drivers/pci/pci.c as it shares the rate
+limiting state with all other callers to the printk_ratelimit().
 
-What we really want is to ignore the optional regulators only if they
-have not been specified in DT. regulator_get_optional() returns -ENODEV
-in this case, so that's the special case that we need to handle. So we
-propagate all errors, except -ENODEV, so that real failures will still
-cause the driver to fail probe.
+Add pci_info_ratelimited() (similar to pci_notice_ratelimited() added in
+the commit a88a7b3eb076 ("vfio: Use dev_printk() when possible")) and use
+it instead of printk_ratelimit() + pci_info().
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Andrew Murray <andrew.murray@arm.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Shawn Guo <shawnguo@kernel.org>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Fabio Estevam <festevam@gmail.com>
-Cc: kernel@pengutronix.de
-Cc: linux-imx@nxp.com
+Link: https://lore.kernel.org/r/20190825224616.8021-1-kw@linux.com
+Signed-off-by: Krzysztof Wilczynski <kw@linux.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/pci.c   | 4 ++--
+ include/linux/pci.h | 3 +++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 9b5cb5b703890..aabf22eaa6b91 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -1173,8 +1173,8 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 088fcdc8d2b4d..f2ab112c0a71f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -884,8 +884,8 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
  
- 	imx6_pcie->vpcie = devm_regulator_get_optional(&pdev->dev, "vpcie");
- 	if (IS_ERR(imx6_pcie->vpcie)) {
--		if (PTR_ERR(imx6_pcie->vpcie) == -EPROBE_DEFER)
--			return -EPROBE_DEFER;
-+		if (PTR_ERR(imx6_pcie->vpcie) != -ENODEV)
-+			return PTR_ERR(imx6_pcie->vpcie);
- 		imx6_pcie->vpcie = NULL;
- 	}
+ 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+ 	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+-	if (dev->current_state != state && printk_ratelimit())
+-		pci_info(dev, "Refused to change power state, currently in D%d\n",
++	if (dev->current_state != state)
++		pci_info_ratelimited(dev, "Refused to change power state, currently in D%d\n",
+ 			 dev->current_state);
  
+ 	/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index dd436da7eccc1..9feb59ac85507 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2375,4 +2375,7 @@ void pci_uevent_ers(struct pci_dev *pdev, enum  pci_ers_result err_type);
+ #define pci_notice_ratelimited(pdev, fmt, arg...) \
+ 	dev_notice_ratelimited(&(pdev)->dev, fmt, ##arg)
+ 
++#define pci_info_ratelimited(pdev, fmt, arg...) \
++	dev_info_ratelimited(&(pdev)->dev, fmt, ##arg)
++
+ #endif /* LINUX_PCI_H */
 -- 
 2.20.1
 
