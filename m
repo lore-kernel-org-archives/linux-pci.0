@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6093C4360C
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C1D4C352A9
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:38:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C03D52196E
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB09A21925
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:38:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569778551;
-	bh=+z1/bSBIpzw/6DQYOinfkUhl+ECxEW75rghM58TcE+o=;
+	s=default; t=1569778688;
+	bh=FQnyGHniUWZ8WUPvO966/aKiYAgXuWbjg5v6j5e9C98=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=s9nsby0/QaaTpdj/rIZqt8dZCle+dN0Yd7raf9tSxsvVoX/xIWz0Q40oE6qDIDNQT
-	 pVWwisEx8v74b/uTyjwPg5IVDiShHIo0zDXO2GQdkCfBG1ysI0KICBDYkF/r+UPkyK
-	 AvfPRmHuO/ND3zNdNce8lSSlmzH9BzT09rGS1sAw=
+	b=2Sjeeqhmtrv4O9N7ceOFiBAVhUvigaNGY+m1ayD5RBEvW+Ekey+g8U5WttLYn6XmN
+	 A4jkwVVLROPs6ylG+IRL/xSmBuM7NWeTtPB06fcBPiALfkSetV84v0Xq44qHzKIcdT
+	 jx9QoWlFYTi/w/k2Ha4sYxiIT9zmEHcYdkKCxKCU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730642AbfI2Rfr (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 29 Sep 2019 13:35:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47974 "EHLO mail.kernel.org"
+        id S1726149AbfI2Rgh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 Sep 2019 13:36:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49204 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729743AbfI2Rfq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Sep 2019 13:35:46 -0400
+        id S1729874AbfI2Rgf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 29 Sep 2019 13:36:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4341E2196E;
-        Sun, 29 Sep 2019 17:35:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5A8E621A4C;
+        Sun, 29 Sep 2019 17:36:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569778546;
-        bh=+z1/bSBIpzw/6DQYOinfkUhl+ECxEW75rghM58TcE+o=;
+        s=default; t=1569778595;
+        bh=FQnyGHniUWZ8WUPvO966/aKiYAgXuWbjg5v6j5e9C98=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=yfZThi30ledzbo5pTnq1CGvVfiGn3P7uRvc1rCMGj9E0THrVAxg5yEjNJ0SjzNDpL
-         ileudGevUb/k8T8+f7P9gMJLH3YKmk2Ngzy8E4yIatHarbYN2VE2U32q/jxKeacpYJ
-         g4RuNVe4Fg/rh5JvXk09kG4ucgTqHMl17uq5cUao=
+        b=cJXYAW2RPtZD6GNWgWu63uWK6KqU5NjH1P4mynAHwJK4koaM/aTXnsjYkaEq7eVzT
+         SsGuNboTApwoUmjUximiMM0yw95euKisPXcRF1gIxuNxmBuZQ1wUPIB0BPMtE40Ev9
+         +jn3Q4JLYTyK0XXaeI32uaz2Kx0IxpWqXxSzla6s=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Nishka Dasgupta <nishkadg.linux@gmail.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org,
         linux-tegra@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 05/23] PCI: tegra: Fix OF node reference leak
-Date:   Sun, 29 Sep 2019 13:35:15 -0400
-Message-Id: <20190929173535.9744-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 04/13] PCI: tegra: Fix OF node reference leak
+Date:   Sun, 29 Sep 2019 13:36:14 -0400
+Message-Id: <20190929173625.10003-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190929173535.9744-1-sashal@kernel.org>
-References: <20190929173535.9744-1-sashal@kernel.org>
+In-Reply-To: <20190929173625.10003-1-sashal@kernel.org>
+References: <20190929173625.10003-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -85,10 +85,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 15 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 1987fec1f126f..8efd086c57c96 100644
+index 8dfccf7332411..8e101b19c4d6f 100644
 --- a/drivers/pci/host/pci-tegra.c
 +++ b/drivers/pci/host/pci-tegra.c
-@@ -1910,14 +1910,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+@@ -1898,14 +1898,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
  		err = of_pci_get_devfn(port);
  		if (err < 0) {
  			dev_err(dev, "failed to parse address: %d\n", err);
@@ -106,7 +106,7 @@ index 1987fec1f126f..8efd086c57c96 100644
  		}
  
  		index--;
-@@ -1926,12 +1927,13 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+@@ -1914,12 +1915,13 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
  		if (err < 0) {
  			dev_err(dev, "failed to parse # of lanes: %d\n",
  				err);
@@ -122,7 +122,7 @@ index 1987fec1f126f..8efd086c57c96 100644
  		}
  
  		lanes |= value << (index << 3);
-@@ -1945,13 +1947,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+@@ -1933,13 +1935,15 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
  		lane += value;
  
  		rp = devm_kzalloc(dev, sizeof(*rp), GFP_KERNEL);
@@ -141,7 +141,7 @@ index 1987fec1f126f..8efd086c57c96 100644
  		}
  
  		INIT_LIST_HEAD(&rp->list);
-@@ -1978,6 +1982,10 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+@@ -1966,6 +1970,10 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
  		return err;
  
  	return 0;
