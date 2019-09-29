@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9D98C32793
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC380C4360C
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:33:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B503D21835
-	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:32:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86D9421925
+	for <linux-pci@archiver.kernel.org>; Sun, 29 Sep 2019 17:33:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569778320;
-	bh=kZEPCmBzfnruGMTP4vMPzELIRnJc++Rbxcjejt8mrIU=;
+	s=default; t=1569778426;
+	bh=aZliCapHq0JTn6jAEA0jo5fj/W6N/vFQStGVfGggpZg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=yIqESVvJQqHm2ZnZjtTfXRncr3/ZZWsSTM//UCGsmgKoIXCu6NNeRN/60zILjBHZg
-	 KVG765kcWXI+WmilmrzFReqK+YO/LmE+MqvldZBZYYTzqfQyisie1fRzd0W5ELYxGi
-	 9vkOwLQr7Plv1lZFKWb7R+vcY2tFQ45o7Ap6oQa8=
+	b=0JlQysjeEeGhwy9i9Ig2K/+09FmmPQmBHmuu7U/3fIsYdNqwR+YBmI0OGIXbwDVVj
+	 Pm/nP1wiyeXPQU51UV7x0/qIWD2t2QQiM5ALdKP8oLWWFKtwN9zcLXZ1wJbdwnu3CC
+	 sOUuoiiy5LHy2WgEYvktCO7PHxpEZ4QC52uhr1CI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729561AbfI2Rb4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 29 Sep 2019 13:31:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42606 "EHLO mail.kernel.org"
+        id S1730164AbfI2Rdp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 29 Sep 2019 13:33:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45086 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729547AbfI2Rb4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 29 Sep 2019 13:31:56 -0400
+        id S1730158AbfI2Rdo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 29 Sep 2019 13:33:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3539C21D7C;
-        Sun, 29 Sep 2019 17:31:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AF84E2196E;
+        Sun, 29 Sep 2019 17:33:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569778316;
-        bh=kZEPCmBzfnruGMTP4vMPzELIRnJc++Rbxcjejt8mrIU=;
+        s=default; t=1569778423;
+        bh=aZliCapHq0JTn6jAEA0jo5fj/W6N/vFQStGVfGggpZg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FLHYu64U6DklqKKxtnl8uwnXg930oS2e/YaIw1h785cK8qm0Z3USup6pnzWuoVLnn
-         SKLR5bQ+/1pmHregJGU5PpvOt0I1rHq5SUj5Fv80svTXUucynrFuP64TVjRa/NffRI
-         n3CjITuhUxQA+R39OTC5VPHC05O8IqS9z/Emws3U=
+        b=o0yRDewAoSMcalus0QJ7xEAUm25cNg08pBAza03Zl4KHEZLKPOMtjtAgNnQxS+KYG
+         KDdOfR9JrUO9CSP0DirRACxmotdsSQttV8T9FlOXnGAdghcJ557jrisCYEY3ULK8o8
+         vRXJeXMI8wRbMBX0vWZCyLygXuQyOtApvTYORzag=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Krzysztof Wilczynski <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.3 32/49] PCI: Use static const struct, not const static struct
-Date:   Sun, 29 Sep 2019 13:30:32 -0400
-Message-Id: <20190929173053.8400-32-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 29/42] PCI: Use static const struct, not const static struct
+Date:   Sun, 29 Sep 2019 13:32:28 -0400
+Message-Id: <20190929173244.8918-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190929173053.8400-1-sashal@kernel.org>
-References: <20190929173053.8400-1-sashal@kernel.org>
+In-Reply-To: <20190929173244.8918-1-sashal@kernel.org>
+References: <20190929173244.8918-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -88,7 +88,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-bridge-emul.c b/drivers/pci/pci-bridge-emul.c
-index 06083b86d4f45..5fd90105510d9 100644
+index 83fb077d0b41f..702966e4fcaa4 100644
 --- a/drivers/pci/pci-bridge-emul.c
 +++ b/drivers/pci/pci-bridge-emul.c
 @@ -38,7 +38,7 @@ struct pci_bridge_reg_behavior {
