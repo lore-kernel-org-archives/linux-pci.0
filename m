@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0218EECDFB6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BD2FC388F3
 	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 06:12:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D10A5206BB
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 06:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46AA8206BB
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 06:12:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731869AbfJAGMe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1732037AbfJAGMe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 1 Oct 2019 02:12:34 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:3176 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732037AbfJAGMd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2019 02:12:33 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x9168ICl122434;
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39476 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731717AbfJAGMe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2019 02:12:34 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x9168E7S031289;
         Tue, 1 Oct 2019 02:12:27 -0400
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2vbx57vpn8-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2vbyueaaa6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
         Tue, 01 Oct 2019 02:12:27 -0400
-Received: from m0098399.ppops.net (m0098399.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x9168dks123512;
-        Tue, 1 Oct 2019 02:12:27 -0400
+Received: from m0098419.ppops.net (m0098419.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x91694C4033724;
+        Tue, 1 Oct 2019 02:12:26 -0400
 Received: from ppma01dal.us.ibm.com (83.d6.3fa9.ip4.static.sl-reverse.com [169.63.214.131])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2vbx57vpn1-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2vbyueaa9v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 01 Oct 2019 02:12:27 -0400
+        Tue, 01 Oct 2019 02:12:26 -0400
 Received: from pps.filterd (ppma01dal.us.ibm.com [127.0.0.1])
-        by ppma01dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x916A4vW005191;
-        Tue, 1 Oct 2019 06:12:26 GMT
-Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
-        by ppma01dal.us.ibm.com with ESMTP id 2v9y5972v6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 01 Oct 2019 06:12:26 +0000
-Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
-        by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x916CPtN48628098
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        by ppma01dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x916A4ku005198;
         Tue, 1 Oct 2019 06:12:25 GMT
+Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
+        by ppma01dal.us.ibm.com with ESMTP id 2v9y5972v2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 01 Oct 2019 06:12:25 +0000
+Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
+        by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x916CO5852560380
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 1 Oct 2019 06:12:24 GMT
 Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5B602112067;
-        Tue,  1 Oct 2019 06:12:25 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B9C9C112061;
+        Tue,  1 Oct 2019 06:12:24 +0000 (GMT)
 Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id D9B26112061;
+        by IMSVA (Postfix) with ESMTP id 433A9112062;
         Tue,  1 Oct 2019 06:12:24 +0000 (GMT)
 Received: from ltcalpine2-lp18.aus.stglabs.ibm.com (unknown [9.40.195.201])
         by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
@@ -56,9 +56,9 @@ From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     mpe@ellerman.id.au, bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
         nathanl@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [RFC PATCH 9/9] powerpc: Enable support for ibm,drc-info property
-Date:   Tue,  1 Oct 2019 01:12:14 -0500
-Message-Id: <1569910334-5972-10-git-send-email-tyreld@linux.ibm.com>
+Subject: [RFC PATCH 8/9] PCI: rpaphp: correctly match ibm,my-drc-index to drc-name when using drc-info
+Date:   Tue,  1 Oct 2019 01:12:13 -0500
+Message-Id: <1569910334-5972-9-git-send-email-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1569910334-5972-1-git-send-email-tyreld@linux.ibm.com>
 References: <1569910334-5972-1-git-send-email-tyreld@linux.ibm.com>
@@ -75,27 +75,40 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Advertise client support for the PAPR architected ibm,drc-info device
-tree property during CAS handshake.
+The newer ibm,drc-info property is a condensed description of the old
+ibm,drc-* properties (ie. names, types, indexes, and power-domains).
+When matching a drc-index to a drc-name we need to verify that the
+index is within the start and last drc-index range and map it to a
+drc-name using the drc-name-prefix and logical index.
+
+Fix the mapping by checking that the index is within the range of the
+current drc-info entry, and build the name form the drc-name-prefix
+and by adding the starting drc-name-suffix value with the sequential
+index of subtracting ibm,my-drc-index from this entries
+drc-start-index.
 
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- arch/powerpc/kernel/prom_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/hotplug/rpaphp_core.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/arch/powerpc/kernel/prom_init.c b/arch/powerpc/kernel/prom_init.c
-index a4e7762..2ca9966 100644
---- a/arch/powerpc/kernel/prom_init.c
-+++ b/arch/powerpc/kernel/prom_init.c
-@@ -1053,7 +1053,7 @@ static const struct ibm_arch_vec ibm_architecture_vec_template __initconst = {
- 		.reserved2 = 0,
- 		.reserved3 = 0,
- 		.subprocessors = 1,
--		.byte22 = OV5_FEAT(OV5_DRMEM_V2),
-+		.byte22 = OV5_FEAT(OV5_DRMEM_V2) | OV5_FEAT(OV5_DRC_INFO),
- 		.intarch = 0,
- 		.mmu = 0,
- 		.hash_ext = 0,
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+index eabc0c51..5327606 100644
+--- a/drivers/pci/hotplug/rpaphp_core.c
++++ b/drivers/pci/hotplug/rpaphp_core.c
+@@ -248,9 +248,10 @@ static int rpaphp_check_drc_props_v2(struct device_node *dn, char *drc_name,
+ 		/* Should now know end of current entry */
+ 
+ 		/* Found it */
+-		if (my_index <= drc.last_drc_index) {
++		if (my_index >= drc.drc_index_start && my_index <= drc.last_drc_index) {
++			int index = my_index - drc.drc_index_start;
+ 			sprintf(cell_drc_name, "%s%d", drc.drc_name_prefix,
+-				my_index);
++				drc.drc_name_suffix_start + index);
+ 			break;
+ 		}
+ 	}
 -- 
 2.7.4
 
