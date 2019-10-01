@@ -2,72 +2,70 @@ Return-Path: <SRS0=Tigv=X2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86AD2C388F3
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 06:12:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD0B3ECE588
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 06:12:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62CDB206BB
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 06:12:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 868FC206BB
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 06:12:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730309AbfJAGMc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Oct 2019 02:12:32 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56794 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731717AbfJAGMc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2019 02:12:32 -0400
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x9168Pvs097050;
-        Tue, 1 Oct 2019 02:12:26 -0400
+        id S1732140AbfJAGMd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Oct 2019 02:12:33 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36196 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731869AbfJAGMd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2019 02:12:33 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x9168E4e031291;
+        Tue, 1 Oct 2019 02:12:22 -0400
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2vbsjsb93n-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2vbyueaa7p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 01 Oct 2019 02:12:25 -0400
-Received: from m0187473.ppops.net (m0187473.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x9168hgS097611;
-        Tue, 1 Oct 2019 02:12:25 -0400
+        Tue, 01 Oct 2019 02:12:22 -0400
+Received: from m0098419.ppops.net (m0098419.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id x916BQQg039555;
+        Tue, 1 Oct 2019 02:12:22 -0400
 Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2vbsjsb937-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2vbyueaa75-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 01 Oct 2019 02:12:25 -0400
+        Tue, 01 Oct 2019 02:12:21 -0400
 Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x916A3eh015654;
-        Tue, 1 Oct 2019 06:12:24 GMT
-Received: from b01cxnp23032.gho.pok.ibm.com (b01cxnp23032.gho.pok.ibm.com [9.57.198.27])
-        by ppma03dal.us.ibm.com with ESMTP id 2v9y57y3ku-1
+        by ppma03dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id x916A5bl015866;
+        Tue, 1 Oct 2019 06:12:21 GMT
+Received: from b01cxnp22033.gho.pok.ibm.com (b01cxnp22033.gho.pok.ibm.com [9.57.198.23])
+        by ppma03dal.us.ibm.com with ESMTP id 2v9y57y3kh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 01 Oct 2019 06:12:24 +0000
+        Tue, 01 Oct 2019 06:12:21 +0000
 Received: from b01ledav004.gho.pok.ibm.com (b01ledav004.gho.pok.ibm.com [9.57.199.109])
-        by b01cxnp23032.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x916CNx951511754
+        by b01cxnp22033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x916CJq449152488
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 1 Oct 2019 06:12:23 GMT
+        Tue, 1 Oct 2019 06:12:19 GMT
 Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 80890112062;
-        Tue,  1 Oct 2019 06:12:23 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id B410B112063;
+        Tue,  1 Oct 2019 06:12:19 +0000 (GMT)
 Received: from b01ledav004.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 0A73A112061;
-        Tue,  1 Oct 2019 06:12:23 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 3E0EF112061;
+        Tue,  1 Oct 2019 06:12:19 +0000 (GMT)
 Received: from ltcalpine2-lp18.aus.stglabs.ibm.com (unknown [9.40.195.201])
         by b01ledav004.gho.pok.ibm.com (Postfix) with ESMTP;
-        Tue,  1 Oct 2019 06:12:22 +0000 (GMT)
+        Tue,  1 Oct 2019 06:12:19 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     mpe@ellerman.id.au, bhelgaas@google.com
 Cc:     linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
         nathanl@linux.ibm.com, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [RFC PATCH 6/9] PCI: rpaphp: add drc-info support for hotplug slot registration
-Date:   Tue,  1 Oct 2019 01:12:11 -0500
-Message-Id: <1569910334-5972-7-git-send-email-tyreld@linux.ibm.com>
+Subject: [RFC PATCH 0/9] Fixes and Enablement of ibm,drc-info property
+Date:   Tue,  1 Oct 2019 01:12:05 -0500
+Message-Id: <1569910334-5972-1-git-send-email-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1569910334-5972-1-git-send-email-tyreld@linux.ibm.com>
-References: <1569910334-5972-1-git-send-email-tyreld@linux.ibm.com>
 X-TM-AS-GCONF: 00
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-10-01_03:,,
  signatures=0
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
  malwarescore=0 suspectscore=0 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
  mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
  scancount=1 engine=8.0.1-1908290000 definitions=main-1910010060
 Sender: linux-pci-owner@vger.kernel.org
@@ -75,129 +73,42 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Split physical PCI slot registration scanning into seperate routines
-that support the old ibm,drc-* properties and one that supports the
-new compressed ibm,drc-info property.
+There was an initial previous effort yo add support for the PAPR
+architected ibm,drc-info property. This property provides a more
+memory compact representation of a paritions Dynamic Reconfig
+Connectors (DRC). These can otherwise be thought of the currently
+partitioned, or available, but yet to be partitioned, system resources
+such as cpus, memory, and physical/logical IOA devices.
 
-Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
----
- drivers/pci/hotplug/rpaphp_core.c | 89 ++++++++++++++++++++++++++++++---------
- 1 file changed, 69 insertions(+), 20 deletions(-)
+The initial implementation proved buggy and was fully turned of by
+disabling the bit in the appropriate CAS support vector. We now have
+PowerVM firmware in the field that supports this new property, and 
+further to suppport partitions with 24TB+ or possible memory this
+property is required to perform platform migration.
 
-diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-index e18e9a0..75d5771 100644
---- a/drivers/pci/hotplug/rpaphp_core.c
-+++ b/drivers/pci/hotplug/rpaphp_core.c
-@@ -328,23 +328,48 @@ static int is_php_dn(struct device_node *dn, const int **indexes,
- 	return 1;
- }
- 
--/**
-- * rpaphp_add_slot -- declare a hotplug slot to the hotplug subsystem.
-- * @dn: device node of slot
-- *
-- * This subroutine will register a hotpluggable slot with the
-- * PCI hotplug infrastructure. This routine is typically called
-- * during boot time, if the hotplug slots are present at boot time,
-- * or is called later, by the dlpar add code, if the slot is
-- * being dynamically added during runtime.
-- *
-- * If the device node points at an embedded (built-in) slot, this
-- * routine will just return without doing anything, since embedded
-- * slots cannot be hotplugged.
-- *
-- * To remove a slot, it suffices to call rpaphp_deregister_slot().
-- */
--int rpaphp_add_slot(struct device_node *dn)
-+static int rpaphp_drc_info_add_slot(struct device_node *dn)
-+{
-+	struct slot *slot;
-+	struct property *info;
-+	struct of_drc_info drc;
-+	char drc_name[MAX_DRC_NAME_LEN];
-+	const __be32 *cur;
-+	u32 count;
-+	int retval = 0;
-+
-+	info = of_find_property(dn, "ibm,drc-info", NULL);
-+	if (!info)
-+		return 0;
-+
-+	cur = of_prop_next_u32(info, NULL, &count);
-+	if (cur)
-+		cur++;
-+	else
-+		return 0;
-+
-+	of_read_drc_info_cell(&info, &cur, &drc);
-+	if (!is_php_type(drc.drc_type))
-+		return 0;
-+
-+	sprintf(drc_name, "%s%d", drc.drc_name_prefix, drc.drc_name_suffix_start);
-+
-+	slot = alloc_slot_struct(dn, drc.drc_index_start, drc_name, drc.drc_power_domain);
-+	if (!slot)
-+		return -ENOMEM;
-+
-+	slot->type = simple_strtoul(drc.drc_type, NULL, 10);
-+	retval = rpaphp_enable_slot(slot);
-+	if (!retval)
-+		retval = rpaphp_register_slot(slot);
-+
-+	if (retval)
-+		dealloc_slot_struct(slot);
-+
-+	return retval;
-+}
-+
-+static int rpaphp_drc_add_slot(struct device_node *dn)
- {
- 	struct slot *slot;
- 	int retval = 0;
-@@ -352,9 +377,6 @@ int rpaphp_add_slot(struct device_node *dn)
- 	const int *indexes, *names, *types, *power_domains;
- 	char *name, *type;
- 
--	if (!dn->name || strcmp(dn->name, "pci"))
--		return 0;
--
- 	/* If this is not a hotplug slot, return without doing anything. */
- 	if (!is_php_dn(dn, &indexes, &names, &types, &power_domains))
- 		return 0;
-@@ -393,6 +415,33 @@ int rpaphp_add_slot(struct device_node *dn)
- 	/* XXX FIXME: reports a failure only if last entry in loop failed */
- 	return retval;
- }
-+
-+/**
-+ * rpaphp_add_slot -- declare a hotplug slot to the hotplug subsystem.
-+ * @dn: device node of slot
-+ *
-+ * This subroutine will register a hotpluggable slot with the
-+ * PCI hotplug infrastructure. This routine is typically called
-+ * during boot time, if the hotplug slots are present at boot time,
-+ * or is called later, by the dlpar add code, if the slot is
-+ * being dynamically added during runtime.
-+ *
-+ * If the device node points at an embedded (built-in) slot, this
-+ * routine will just return without doing anything, since embedded
-+ * slots cannot be hotplugged.
-+ *
-+ * To remove a slot, it suffices to call rpaphp_deregister_slot().
-+ */
-+int rpaphp_add_slot(struct device_node *dn)
-+{
-+	if (!dn->name || strcmp(dn->name, "pci"))
-+		return 0;
-+
-+	if (of_find_property(dn, "ibm,drc-info", NULL))
-+		return rpaphp_drc_info_add_slot(dn);
-+	else
-+		return rpaphp_drc_add_slot(dn);
-+}
- EXPORT_SYMBOL_GPL(rpaphp_add_slot);
- 
- static void __exit cleanup_slots(void)
+This serious fixup the short comings of the previous implementation
+in the areas of general implementation, cpu hotplug, and IOA hotplug.
+
+Tyrel Datwyler (9):
+  powerpc/pseries: add cpu DLPAR support for drc-info property
+  powerpc/pseries: fix bad drc_index_start value parsing of drc-info
+    entry
+  powerpc/pseries: fix drc-info mappings of logical cpus to drc-index
+  PCI: rpaphp: fix up pointer to first drc-info entry
+  PCI: rpaphp: don't rely on firmware feature to imply drc-info support
+  PCI: rpaphp: add drc-info support for hotplug slot registration
+  PCI: rpaphp: annotate and correctly byte swap DRC properties
+  PCI: rpaphp: correctly match ibm,my-drc-index to drc-name when using
+    drc-info
+  powerpc: Enable support for ibm,drc-info property
+
+ arch/powerpc/kernel/prom_init.c                 |   2 +-
+ arch/powerpc/platforms/pseries/hotplug-cpu.c    | 117 ++++++++++++++++------
+ arch/powerpc/platforms/pseries/of_helpers.c     |   8 +-
+ arch/powerpc/platforms/pseries/pseries_energy.c |  23 ++---
+ drivers/pci/hotplug/rpaphp_core.c               | 124 +++++++++++++++++-------
+ 5 files changed, 191 insertions(+), 83 deletions(-)
+
 -- 
 2.7.4
 
