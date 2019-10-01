@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF4E2C352AA
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97B42C352AA
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F18421D79
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 718DE21D71
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726109AbfJAK3Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Oct 2019 06:29:16 -0400
-Received: from mga18.intel.com ([134.134.136.126]:12065 "EHLO mga18.intel.com"
+        id S1730556AbfJAK3U (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Oct 2019 06:29:20 -0400
+Received: from mga17.intel.com ([192.55.52.151]:22449 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730006AbfJAK3K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 Oct 2019 06:29:10 -0400
+        id S1730006AbfJAK3T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 Oct 2019 06:29:19 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 Oct 2019 03:29:10 -0700
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 Oct 2019 03:29:10 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,570,1559545200"; 
-   d="scan'208";a="191418908"
+   d="scan'208";a="194490173"
 Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga007.fm.intel.com with ESMTP; 01 Oct 2019 03:29:06 -0700
+  by orsmga003.jf.intel.com with ESMTP; 01 Oct 2019 03:29:06 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 2C12A234; Tue,  1 Oct 2019 13:29:06 +0300 (EEST)
+        id 1214F130; Tue,  1 Oct 2019 13:29:06 +0300 (EEST)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     Andreas Noever <andreas.noever@gmail.com>,
@@ -41,9 +41,9 @@ Cc:     Andreas Noever <andreas.noever@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 3/3] thunderbolt: Drop unnecessary read when writing LC command in Ice Lake
-Date:   Tue,  1 Oct 2019 13:29:05 +0300
-Message-Id: <20191001102905.21680-4-mika.westerberg@linux.intel.com>
+Subject: [PATCH 1/3] thunderbolt: Read DP IN adapter first two dwords in one go
+Date:   Tue,  1 Oct 2019 13:29:03 +0300
+Message-Id: <20191001102905.21680-2-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191001102905.21680-1-mika.westerberg@linux.intel.com>
 References: <20191001102905.21680-1-mika.westerberg@linux.intel.com>
@@ -54,28 +54,87 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The read is not needed as we overwrite the returned value in the next
-line anyway so drop it.
+When we discover existing DP tunnels the code checks whether DP IN
+adapter port is enabled by calling tb_dp_port_is_enabled() before it
+continues the discovery process. On Light Ridge (gen 1) controller
+reading only the first dword of the DP IN config space causes subsequent
+access to the same DP IN port path config space to fail or return
+invalid data as can be seen in the below splat:
 
-Fixes: 3cdb9446a117 ("thunderbolt: Add support for Intel Ice Lake")
-Reported-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+  thunderbolt 0000:07:00.0: CFG_ERROR(0:d): Invalid config space or offset
+  Call Trace:
+   tb_cfg_read+0xb9/0xd0
+   __tb_path_deactivate_hop+0x98/0x210
+   tb_path_activate+0x228/0x7d0
+   tb_tunnel_restart+0x95/0x200
+   tb_handle_hotplug+0x30e/0x630
+   process_one_work+0x1b4/0x340
+   worker_thread+0x44/0x3d0
+   kthread+0xeb/0x120
+   ? process_one_work+0x340/0x340
+   ? kthread_park+0xa0/0xa0
+   ret_from_fork+0x1f/0x30
+
+If both DP In adapter config dwords are read in one go the issue does
+not reproduce. This is likely firmware bug but we can work it around by
+always reading the two dwords in one go. There should be no harm for
+other controllers either so can do it unconditionally.
+
+Link: https://lkml.org/lkml/2019/8/28/160
+Reported-by: Brad Campbell <lists2009@fnarfbargle.com>
 Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/thunderbolt/nhi_ops.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/thunderbolt/switch.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/thunderbolt/nhi_ops.c b/drivers/thunderbolt/nhi_ops.c
-index 61cd09cef943..6795851aac95 100644
---- a/drivers/thunderbolt/nhi_ops.c
-+++ b/drivers/thunderbolt/nhi_ops.c
-@@ -80,7 +80,6 @@ static void icl_nhi_lc_mailbox_cmd(struct tb_nhi *nhi, enum icl_lc_mailbox_cmd c
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 410bf1bceeee..8e712fbf8233 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -896,12 +896,13 @@ int tb_dp_port_set_hops(struct tb_port *port, unsigned int video,
+  */
+ bool tb_dp_port_is_enabled(struct tb_port *port)
  {
- 	u32 data;
+-	u32 data;
++	u32 data[2];
  
--	pci_read_config_dword(nhi->pdev, VS_CAP_19, &data);
- 	data = (cmd << VS_CAP_19_CMD_SHIFT) & VS_CAP_19_CMD_MASK;
- 	pci_write_config_dword(nhi->pdev, VS_CAP_19, data | VS_CAP_19_VALID);
+-	if (tb_port_read(port, &data, TB_CFG_PORT, port->cap_adap, 1))
++	if (tb_port_read(port, data, TB_CFG_PORT, port->cap_adap,
++			 ARRAY_SIZE(data)))
+ 		return false;
+ 
+-	return !!(data & (TB_DP_VIDEO_EN | TB_DP_AUX_EN));
++	return !!(data[0] & (TB_DP_VIDEO_EN | TB_DP_AUX_EN));
  }
+ 
+ /**
+@@ -914,19 +915,21 @@ bool tb_dp_port_is_enabled(struct tb_port *port)
+  */
+ int tb_dp_port_enable(struct tb_port *port, bool enable)
+ {
+-	u32 data;
++	u32 data[2];
+ 	int ret;
+ 
+-	ret = tb_port_read(port, &data, TB_CFG_PORT, port->cap_adap, 1);
++	ret = tb_port_read(port, data, TB_CFG_PORT, port->cap_adap,
++			   ARRAY_SIZE(data));
+ 	if (ret)
+ 		return ret;
+ 
+ 	if (enable)
+-		data |= TB_DP_VIDEO_EN | TB_DP_AUX_EN;
++		data[0] |= TB_DP_VIDEO_EN | TB_DP_AUX_EN;
+ 	else
+-		data &= ~(TB_DP_VIDEO_EN | TB_DP_AUX_EN);
++		data[0] &= ~(TB_DP_VIDEO_EN | TB_DP_AUX_EN);
+ 
+-	return tb_port_write(port, &data, TB_CFG_PORT, port->cap_adap, 1);
++	return tb_port_write(port, data, TB_CFG_PORT, port->cap_adap,
++			     ARRAY_SIZE(data));
+ }
+ 
+ /* switch utility functions */
 -- 
 2.23.0
 
