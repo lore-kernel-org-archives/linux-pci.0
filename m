@@ -2,21 +2,21 @@ Return-Path: <SRS0=Tigv=X2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CC64C352AA
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF4E2C352AA
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0731121D79
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F18421D79
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 10:29:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730314AbfJAK3K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Oct 2019 06:29:10 -0400
+        id S1726109AbfJAK3Q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Oct 2019 06:29:16 -0400
 Received: from mga18.intel.com ([134.134.136.126]:12065 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726109AbfJAK3K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1730006AbfJAK3K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Tue, 1 Oct 2019 06:29:10 -0400
 X-Amp-Result: SKIPPED(no attachment in message)
 X-Amp-File-Uploaded: False
@@ -24,11 +24,11 @@ Received: from fmsmga007.fm.intel.com ([10.253.24.52])
   by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 01 Oct 2019 03:29:10 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,570,1559545200"; 
-   d="scan'208";a="191418906"
+   d="scan'208";a="191418908"
 Received: from black.fi.intel.com ([10.237.72.28])
   by fmsmga007.fm.intel.com with ESMTP; 01 Oct 2019 03:29:06 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 0219D1AD; Tue,  1 Oct 2019 13:29:05 +0300 (EEST)
+        id 2C12A234; Tue,  1 Oct 2019 13:29:06 +0300 (EEST)
 From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     Andreas Noever <andreas.noever@gmail.com>,
@@ -41,10 +41,12 @@ Cc:     Andreas Noever <andreas.noever@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
         linux-pci@vger.kernel.org
-Subject: [PATCH 0/3] thunderbolt: Fixes for few reported issues
-Date:   Tue,  1 Oct 2019 13:29:02 +0300
-Message-Id: <20191001102905.21680-1-mika.westerberg@linux.intel.com>
+Subject: [PATCH 3/3] thunderbolt: Drop unnecessary read when writing LC command in Ice Lake
+Date:   Tue,  1 Oct 2019 13:29:05 +0300
+Message-Id: <20191001102905.21680-4-mika.westerberg@linux.intel.com>
 X-Mailer: git-send-email 2.23.0
+In-Reply-To: <20191001102905.21680-1-mika.westerberg@linux.intel.com>
+References: <20191001102905.21680-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -52,28 +54,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi all,
+The read is not needed as we overwrite the returned value in the next
+line anyway so drop it.
 
-This series includes fixes for a couple of issues people have reported:
+Fixes: 3cdb9446a117 ("thunderbolt: Add support for Intel Ice Lake")
+Reported-by: Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/thunderbolt/nhi_ops.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-  - Discovering DP path fails on Light Ridge based iMac with two devices
-    (monitors) connected.
-
-  - There is a lockdep splat on Dominik's system when plugging in Thunderbolt
-    dock.
-
-  - Nicholas spotted that we do unnecessary PCI config space read when
-    issuing LC mailbox command on ICL.
-
-Mika Westerberg (3):
-  thunderbolt: Read DP IN adapter first two dwords in one go
-  thunderbolt: Fix lockdep circular locking depedency warning
-  thunderbolt: Drop unnecessary read when writing LC command in Ice Lake
-
- drivers/thunderbolt/nhi_ops.c |  1 -
- drivers/thunderbolt/switch.c  | 28 +++++++++++-----------------
- 2 files changed, 11 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/thunderbolt/nhi_ops.c b/drivers/thunderbolt/nhi_ops.c
+index 61cd09cef943..6795851aac95 100644
+--- a/drivers/thunderbolt/nhi_ops.c
++++ b/drivers/thunderbolt/nhi_ops.c
+@@ -80,7 +80,6 @@ static void icl_nhi_lc_mailbox_cmd(struct tb_nhi *nhi, enum icl_lc_mailbox_cmd c
+ {
+ 	u32 data;
+ 
+-	pci_read_config_dword(nhi->pdev, VS_CAP_19, &data);
+ 	data = (cmd << VS_CAP_19_CMD_SHIFT) & VS_CAP_19_CMD_MASK;
+ 	pci_write_config_dword(nhi->pdev, VS_CAP_19, data | VS_CAP_19_VALID);
+ }
 -- 
 2.23.0
 
