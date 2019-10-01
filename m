@@ -2,112 +2,138 @@ Return-Path: <SRS0=Tigv=X2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7A32C352AA
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 21:14:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3EDBC352AA
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 21:36:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F89B21906
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 21:14:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5D232168B
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 21:36:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="V3l2bPvo"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KeYi0UB+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727558AbfJAVOg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Oct 2019 17:14:36 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:37103 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725941AbfJAVOg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2019 17:14:36 -0400
-Received: by mail-ot1-f66.google.com with SMTP id k32so12864994otc.4;
-        Tue, 01 Oct 2019 14:14:35 -0700 (PDT)
+        id S1727910AbfJAVg0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Oct 2019 17:36:26 -0400
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:42068 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727454AbfJAVgZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Oct 2019 17:36:25 -0400
+Received: by mail-ot1-f65.google.com with SMTP id c10so12904293otd.9;
+        Tue, 01 Oct 2019 14:36:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=Z0lBrmztwlwxdokvs5UrPzWHos9na8KnNzUa662Ki4U=;
-        b=V3l2bPvomwEApGeIC42xksfM35fLkzstnuS71yvaINL1JdB8yQvqgm+kz6WMZCaAQS
-         NlOXRoJ4pMF0XkvcDF6JzGNl7eO+bHQ1RYFEsiaS1MxlhtdbaNTM7qnYTZHGA0iGnU03
-         Jl79tbxt9SDJUVjCO+TiXV4yRy7tXVIt+hBLs6J8twUrL/0v0csI1A55CTfCvHlTNWHw
-         U0MrJiQH+37vQ55hrvcSaR7LM+3KhP4EZa3YdNarWcZpjbmWS+510yQfKENj3XQ/Z3+4
-         r9VgPXXepOAMDgBX/WYoeZW6RbAqTUdU6mnewLdgwg3BqUExdnWuAPvJNWbNrg13pMC9
-         f64Q==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=DScLBuYNMomTfF9E2WDmfHDBerwYWf96njCU9HqGGhc=;
+        b=KeYi0UB+7u6MHCFYw50DUyqf9p9mDNKVS+aEk8I+bFgEulqJFetnll9VvodCCnrhkh
+         RLz7wkaNQEfT3kK7ZVMfGViD9DDhgRU2gVffvAdukn6OVgbEitR+tRq2IGJcltcG1VeW
+         Y/xMm0DeY7vASciZswqo1rweSC8alJpcGrAG0ZN1FdFJ97cjVuieVOMd0riPNUY4CyIS
+         3CgUpx6Pnj3zcB+bf3dD/Fws8eK91zphXjyO8XAnvH6LX5KedRXnHQE9ydSlpGUje4n4
+         5nHv5cFT4VCk4TXpdLcGv9pYEMEz0LMsH07vDc6nTBIfxnccUi0y29QYLKjvClcPSuhD
+         lp+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=Z0lBrmztwlwxdokvs5UrPzWHos9na8KnNzUa662Ki4U=;
-        b=haX7XTRerAmTrjBfW74UajXllisfUQ2p2jyM/PkdCTaRWjwrn5/EsaP17OIZjN0UYJ
-         garc8ngYSQkDBrSAMa98xLMs0awfgrk0h6RVWPHScn9r40ZWMa7T4gbJi7tlq7fl16vO
-         1MGMlCCEv80AgAMqGJzuZDO9/J1CQJNFSfvDtd8Yh86iVRD+O+GvCfYR8DEZocSuqKDg
-         HzDnk4k46bXd2YqEcxsxdRPQLn6W7jPmR1gcb/NUHfIa8UfWgS05CCUSZ7/sj97otGYb
-         BtS5ba1hQj0sAYfMduJ969KZ5Fn5Ede3dfEGqDOm3ZHATjYra+0d1Aa5bUnt4izE+A3U
-         iC8A==
-X-Gm-Message-State: APjAAAWLlhinm/X1Qj1tKOYBqAyiSX1YxbxqcoxKHnDRxfExbjz3iv9d
-        tEiRtqd1vDJYuxkSf96bGRQ=
-X-Google-Smtp-Source: APXvYqyOyExxFkyt6iQmzMQZq4YBsCHZSfeeiKuGCJZp4623JJplHFZn/pKU1kaAC3y+JwjBE8eqOg==
-X-Received: by 2002:a05:6830:14c5:: with SMTP id t5mr35420otq.112.1569964475039;
-        Tue, 01 Oct 2019 14:14:35 -0700 (PDT)
-Received: from localhost.localdomain ([143.166.81.254])
-        by smtp.gmail.com with ESMTPSA id o23sm5220073ote.67.2019.10.01.14.14.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Oct 2019 14:14:34 -0700 (PDT)
-From:   Stuart Hayes <stuart.w.hayes@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=DScLBuYNMomTfF9E2WDmfHDBerwYWf96njCU9HqGGhc=;
+        b=a6L3+cJdUvbn31VOElde7tT8oj+Ldq0qmlT7PEEW42aWsojatoKkbtB3E1KoQtnXQD
+         vFrYfN0eOszbQIAC0s0uUXiX3fa/TA3R5A32fkcVDsMj8SFaSnVxNSHpB/fGJVZJ0Ito
+         j4xiY2eZngCj54kAkWExvYBWtbv4p2wQGOJJZVSBgX+YgaVYI1hpqeuJu1uGej8JMF6h
+         yL5s0NER+WPFNy4mHKD0tLjh2EAR1Rl0D4TK0AnWDTm2MiVVsOKRArvK1a8d4W8Dzs4X
+         Ys3pMDTLqkrDWRJYjs4G15cUz0k5icGhn5uQ5g0NV+cAw6iZOn1Lu/f1EJ3g/IYaZ5Bi
+         lgZw==
+X-Gm-Message-State: APjAAAVhzjidbu1U6UamnT+39uSnzlyXrZvxvumu/JT0UjWGaqrMx/lS
+        EQ2DhPXtF3AR/uW+2UuXJdA=
+X-Google-Smtp-Source: APXvYqxqMmACY4eAFBh69a1f1ZhgR8xIEWVojxC+3odUJ51o+BwxIDlpNdwx8dtgJvFNu+z1Fh5FSw==
+X-Received: by 2002:a9d:6642:: with SMTP id q2mr87331otm.250.1569965784571;
+        Tue, 01 Oct 2019 14:36:24 -0700 (PDT)
+Received: from nuclearis2-1.gtech (c-98-195-139-126.hsd1.tx.comcast.net. [98.195.139.126])
+        by smtp.gmail.com with ESMTPSA id i47sm5337543ota.1.2019.10.01.14.36.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Oct 2019 14:36:23 -0700 (PDT)
+Subject: Re: [PATCH 3/3] PCI: pciehp: Add dmi table for in-band presence
+ disabled
+To:     Stuart Hayes <stuart.w.hayes@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Austin Bolen <austin_bolen@dell.com>, keith.busch@intel.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
         Andy Shevchenko <andy.shevchenko@gmail.com>,
         "Gustavo A . R . Silva" <gustavo@embeddedor.com>,
         Sinan Kaya <okaya@kernel.org>,
         Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lukas@wunner.de,
-        Stuart Hayes <stuart.w.hayes@gmail.com>
-Subject: [PATCH 0/3] PCI: pciehp: Do not turn off slot if presence comes up after link
-Date:   Tue,  1 Oct 2019 17:14:16 -0400
-Message-Id: <20191001211419.11245-1-stuart.w.hayes@gmail.com>
-X-Mailer: git-send-email 2.18.1
+        linux-kernel@vger.kernel.org, lukas@wunner.de
+References: <20191001211419.11245-1-stuart.w.hayes@gmail.com>
+ <20191001211419.11245-4-stuart.w.hayes@gmail.com>
+From:   "Alex G." <mr.nuke.me@gmail.com>
+Message-ID: <b37c8640-9f48-8d0d-9e2e-80920c1e19e7@gmail.com>
+Date:   Tue, 1 Oct 2019 16:36:22 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
+MIME-Version: 1.0
+In-Reply-To: <20191001211419.11245-4-stuart.w.hayes@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In older PCIe specs, PDS (presence detect) would come up when the
-"in-band" presence detect pin connected, and would be up before DLLLA
-(link active).
 
-In PCIe 4.0 (as an ECN) and in PCIe 5.0, there is a new bit to show if
-in-band presence detection can be disabled for the slot, and another bit
-that disables it--and a recommendation that it should be disabled if it
-can be. In addition, certain OEMs disable in-band presence detection
-without implementing these bits.
 
-This means it is possible to get a "card present" interrupt after the
-link is up and the driver is loaded.  This causes an erroneous removal
-of the device driver, followed by an immediate re-probing.
+On 10/1/19 4:14 PM, Stuart Hayes wrote:
+> Some systems have in-band presence detection disabled for hot-plug PCI slots,
+> but do not report this in the slot capabilities 2 (SLTCAP2) register.  On
+> these systems, presence detect can become active well after the link is
+> reported to be active, which can cause the slots to be disabled after a
+> device is connected.
+> 
+> Add a dmi table to flag these systems as having in-band presence disabled.
+> 
+> Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
+> ---
+>   drivers/pci/hotplug/pciehp_hpc.c | 14 ++++++++++++++
+>   1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 1282641c6458..1dd01e752587 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -14,6 +14,7 @@
+>   
+>   #define dev_fmt(fmt) "pciehp: " fmt
+>   
+> +#include <linux/dmi.h>
+>   #include <linux/kernel.h>
+>   #include <linux/types.h>
+>   #include <linux/jiffies.h>
+> @@ -26,6 +27,16 @@
+>   #include "../pci.h"
+>   #include "pciehp.h"
+>   
+> +static const struct dmi_system_id inband_presence_disabled_dmi_table[] = {
+> +	{
+> +		.ident = "Dell System",
+> +		.matches = {
+> +			DMI_MATCH(DMI_SYS_VENDOR, "Dell Inc"),
+> +		},
+> +	},
+> +	{}
+> +};
+> +
 
-This patch set defines these new bits, uses them to disable in-band
-presence detection if it can be, waits for PDS to go up if in-band
-presence detection is disabled, and adds a DMI table that will let us
-know if we should assume in-band presence is disabled on a system.
+I'm not sure that all Dell systems that were ever made or will be made 
+have in-band presence disabled on all their hotplug slots.
 
-This patch set is based on a patch set [1] submitted many months ago by
-Alexandru Gagniuc, who is no longer working on it.
+This was a problem with the NVMe hot-swap bays on 14G servers. I can't 
+guarantee that any other slot or machine will need this workaround. The 
+best way I found to implement this is to check for the PCI-ID of the 
+switches behind the port.
 
-[1] https://patchwork.kernel.org/cover/10909167/
-    [v3,0/4] PCI: pciehp: Do not turn off slot if presence comes up after link
-
-Stuart Hayes (3):
-  PCI: pciehp: Add support for disabling in-band presence
-  PCI: pciehp: Wait for PDS when in-band presence is disabled
-  PCI: pciehp: Add dmi table for systems with in-band presence disabled
-
- drivers/pci/hotplug/pciehp.h     |  1 +
- drivers/pci/hotplug/pciehp_hpc.c | 45 +++++++++++++++++++++++++++++++-
- include/uapi/linux/pci_regs.h    |  2 ++
- 3 files changed, 47 insertions(+), 1 deletion(-)
-
--- 
-2.18.1
-
+Alex
