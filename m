@@ -2,131 +2,105 @@ Return-Path: <SRS0=Tigv=X2=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80C03C352AA
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 12:50:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6469EECE58A
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 13:27:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 503FC21920
-	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 12:50:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C1FF20842
+	for <linux-pci@archiver.kernel.org>; Tue,  1 Oct 2019 13:27:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569934213;
-	bh=/fWs0Dn9H5ufh6uVeJFS5qzH9dfJHbHa3AsDZ9j3174=;
+	s=default; t=1569936444;
+	bh=hvuSU/zgSxL7X5McKtfL/85CgXAWQjA1PQjtADmotiw=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=oYP5JT7H/bNuxLjHy5CoHOk8mRbZRF16IV45/UvahLvzJS/ceibQBZuXl1zc1OKih
-	 PQRb5VHIE6WUbVipqITzq0w6X7tAOTbYamu9SqaD3qVTTDb1QpxrxvEdohxsuUkiir
-	 V7zvr8roCrg6eNo245D9yWqiDXYJIHXk3ls08mQs=
+	b=y8u4THtqSQPcai0+2I/WQgSwwZMJYNOhd3FBcpxH74bJGZaeTZyM1OrwNCLAMm5O7
+	 W3iAgW0ekv7XSNmbE3XjjTuCGDEx4/3FtJqxYAgc8sB79zHy7nBi9ZODOQ5w065erR
+	 PjxxDRA31g3Psjo/Kle7RY/FI9vd4QKwFRsLGVts=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726638AbfJAMuM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 1 Oct 2019 08:50:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42322 "EHLO mail.kernel.org"
+        id S2388365AbfJAN1X (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 1 Oct 2019 09:27:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57580 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725821AbfJAMuM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 Oct 2019 08:50:12 -0400
+        id S2388261AbfJAN1X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 Oct 2019 09:27:23 -0400
 Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8E5192190F;
-        Tue,  1 Oct 2019 12:50:11 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 74D8A205F4;
+        Tue,  1 Oct 2019 13:27:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569934211;
-        bh=/fWs0Dn9H5ufh6uVeJFS5qzH9dfJHbHa3AsDZ9j3174=;
+        s=default; t=1569936442;
+        bh=hvuSU/zgSxL7X5McKtfL/85CgXAWQjA1PQjtADmotiw=;
         h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=nKYjehPUKg3g4VuLaS02T4X7cS2ykVhYOWudr134ZsfhvjqoOu+BaEcs1d5tHta4+
-         hxzx34lRga0pnp12ZYb++KbuAeSDjoFqO67Rz7OpRozH0VdSLf8/6uZwzF58Ltb7R7
-         LUd4puYZrupigG9yimYXFv7YLnTUoOLIdQl/WDLI=
-Date:   Tue, 1 Oct 2019 07:50:10 -0500
+        b=PVl8ichgRH2Kry9emAcsBbZ3LVJ+BXT3BKBgqVD7LlciVOm0Yy/aHX7MX1Rjp1MC+
+         txtKjbJ6YDnqZQPdw+SBr8J/Hw6rzAM1gCdbOzNkFgzG9wKOHKa064QGC0f4zR5Mq/
+         gohadmur2spYz1z4zJEil6lV6/IG6t4VzozqcEAA=
+Date:   Tue, 1 Oct 2019 08:27:21 -0500
 From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Tiezhu Yang <yangtiezhu@loongson.cn>
-Cc:     Andrew Murray <andrew.murray@arm.com>, zenglu@loongson.cn,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Loongson vendor ID and device IDs
-Message-ID: <20191001125010.GA38575@google.com>
+To:     Karol Herbst <kherbst@redhat.com>
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Lyude Paul <lyude@redhat.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        nouveau <nouveau@lists.freedesktop.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>
+Subject: Re: [RFC PATCH] pci: prevent putting pcie devices into lower device
+ states on certain intel bridges
+Message-ID: <20191001132721.GA46491@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d3cde609-7918-6b1c-940d-29ecaf7e5cbb@loongson.cn>
+In-Reply-To: <CACO55tuk4SA6-xUtJ-oRePy8MPXYAp2cfmSPxwW3J5nQuX3y2g@mail.gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 01, 2019 at 10:53:44AM +0800, Tiezhu Yang wrote:
-> On 09/30/2019 10:02 PM, Andrew Murray wrote:
-> > On Mon, Sep 30, 2019 at 12:55:20PM +0800, Tiezhu Yang wrote:
-> > > Add the Loongson vendor ID and device IDs to pci_ids.h
-> > > to be used in the future.
-> > > 
-> > > The Loongson IDs can be found at the following link:
-> > > https://git.kernel.org/pub/scm/utils/pciutils/pciutils.git/tree/pci.ids
-> > > 
-> > > Co-developed-by: Lu Zeng <zenglu@loongson.cn>
-> > > Signed-off-by: Lu Zeng <zenglu@loongson.cn>
-> > > Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
-> > > ---
-> > >   include/linux/pci_ids.h | 19 +++++++++++++++++++
-> > >   1 file changed, 19 insertions(+)
-> > > 
-> > > diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> > > index 21a5724..119639d 100644
-> > > --- a/include/linux/pci_ids.h
-> > > +++ b/include/linux/pci_ids.h
-> > > @@ -3111,4 +3111,23 @@
-> > > 
-> > >   #define PCI_VENDOR_ID_NCUBE            0x10ff
-> > > 
-> > > +#define PCI_VENDOR_ID_LOONGSON                 0x0014
-> > > +#define PCI_DEVICE_ID_LOONGSON_HT              0x7a00
-> > > +#define PCI_DEVICE_ID_LOONGSON_APB             0x7a02
-> > > +#define PCI_DEVICE_ID_LOONGSON_GMAC            0x7a03
-> > > +#define PCI_DEVICE_ID_LOONGSON_OTG             0x7a04
-> > > +#define PCI_DEVICE_ID_LOONGSON_GPU_2K1000      0x7a05
-> > > +#define PCI_DEVICE_ID_LOONGSON_DC              0x7a06
-> > > +#define PCI_DEVICE_ID_LOONGSON_HDA             0x7a07
-> > > +#define PCI_DEVICE_ID_LOONGSON_SATA            0x7a08
-> > > +#define PCI_DEVICE_ID_LOONGSON_PCIE_X1         0x7a09
-> > > +#define PCI_DEVICE_ID_LOONGSON_SPI             0x7a0b
-> > > +#define PCI_DEVICE_ID_LOONGSON_LPC             0x7a0c
-> > > +#define PCI_DEVICE_ID_LOONGSON_DMA             0x7a0f
-> > > +#define PCI_DEVICE_ID_LOONGSON_EHCI            0x7a14
-> > > +#define PCI_DEVICE_ID_LOONGSON_GPU_7A1000      0x7a15
-> > > +#define PCI_DEVICE_ID_LOONGSON_PCIE_X4         0x7a19
-> > > +#define PCI_DEVICE_ID_LOONGSON_OHCI            0x7a24
-> > > +#define PCI_DEVICE_ID_LOONGSON_PCIE_X8         0x7a29
-> > Hi Tiezhu,
-> > 
-> > Thanks for the patch - however it is preferred to provide new PCI
-> > definitions along with the drivers that use them. They don't
-> > provide any useful value without drivers that use them.
+On Mon, Sep 30, 2019 at 06:36:12PM +0200, Karol Herbst wrote:
+> On Mon, Sep 30, 2019 at 6:30 PM Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> >
+> > On Mon, Sep 30, 2019 at 06:05:14PM +0200, Karol Herbst wrote:
+> > > still happens with your patch applied. The machine simply gets shut down.
+> > >
+> > > dmesg can be found here:
+> > > https://gist.githubusercontent.com/karolherbst/40eb091c7b7b33ef993525de660f1a3b/raw/2380e31f566e93e5ba7c87ef545420965d4c492c/gistfile1.txt
+> >
+> > Looking your dmesg:
+> >
+> > Sep 30 17:24:27 kernel: nouveau 0000:01:00.0: DRM: DCB version 4.1
+> > Sep 30 17:24:27 kernel: nouveau 0000:01:00.0: DRM: MM: using COPY for buffer copies
+> > Sep 30 17:24:27 kernel: [drm] Initialized nouveau 1.3.1 20120801 for 0000:01:00.0 on minor 1
+> >
+> > I would assume it runtime suspends here. Then it wakes up because of PCI
+> > access from userspace:
+> >
+> > Sep 30 17:24:42 kernel: pci_raw_set_power_state: 56 callbacks suppressed
+> >
+> > and for some reason it does not get resumed properly. There are also few
+> > warnings from ACPI that might be relevant:
+> >
+> > Sep 30 17:24:27 kernel: ACPI Warning: \_SB.PCI0.GFX0._DSM: Argument #4 type mismatch - Found [Buffer], ACPI requires [Package] (20190509/nsarguments-59)
+> > Sep 30 17:24:27 kernel: ACPI Warning: \_SB.PCI0.PEG0.PEGP._DSM: Argument #4 type mismatch - Found [Buffer], ACPI requires [Package] (20190509/nsarguments-59)
 > 
-> Thanks for your reply. This is the first step of the Loongson kernel
-> team, we will submit other related individual driver patches step by
-> step in the near future, these small patches make an easily
-> understood change that can be verified by reviewers.
+> afaik this is the case for essentially every laptop out there.
 
-There are two opposing goals here:
+I think we should look into this a little bit.
+acpi_ns_check_argument_types() checks the argument type and prints
+this message, but AFAICT it doesn't actually fix anything or prevent
+execution of the method, so I have no idea what happens when we
+actually execute the _DSM.
 
-  1) The "publish early, publish often" idea that posting small things
-  early helps get useful feedback.
+If we execute this _DSM as part of power management, and the _DSM
+doesn't work right, it would be no surprise that we have problems.
 
-  2) The idea of waiting until things can be published in logical
-  units so readers can see context and how things fit together.
+Maybe we could learn something by turning on ACPI_DB_PARSE output (see
+Documentation/firmware-guide/acpi/debug.rst).
 
-I think Andrew's point (which I agree with) is that an individual
-trivial patch like this is not enough to give meaningful feedback.  I
-think you'll get better feedback if you wait and collect things until
-you can post a series that actually fixes a bug or adds a small
-feature.  It also makes it easier for me to track patches if I can
-deal with a whole series at once instead of trying to figure out which
-individual patches are related.
-
-So I'd encourage you to think in terms of a series of 3-10 patches
-that are all related and together produce something useful.  That's
-easier for readers to digest than the same patches posted
-incrementally over several days or weeks.
-
-Bjorn
+You must have an acpidump already from all your investigation.  Can
+you put it somewhere, e.g., bugzilla.kernel.org, and include a URL?
