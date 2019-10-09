@@ -2,100 +2,95 @@ Return-Path: <SRS0=1eKq=YC=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B74ECE58C
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 17:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD62ECE58D
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 19:14:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98BF320B7C
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 17:07:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=sifive.com header.i=@sifive.com header.b="eWSMm4RG"
+	by mail.kernel.org (Postfix) with ESMTP id DAF3821920
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 19:14:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731636AbfJIRHM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Oct 2019 13:07:12 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:35097 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730546AbfJIRHL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2019 13:07:11 -0400
-Received: by mail-pl1-f196.google.com with SMTP id c3so1356146plo.2
-        for <linux-pci@vger.kernel.org>; Wed, 09 Oct 2019 10:07:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sifive.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=fa9xrD4T1rxzQNwYuOjdLGG0r9pM+goY6z40NA+UpNk=;
-        b=eWSMm4RGsYvvraPfWPNbhEvXx67CRd+v1lzqeVnY4XCqgS3cNk+xkxmVVBvM4XQYg0
-         rXBiQuhNKFbx+5xo+tJc8EWRV8qgU3eFQTerVRsnfsf5Z1TOnpHsEaABH2VpNcy8WiAh
-         RSfds7USbSSZTFSezm6bh4LLU2pODq7gxz1yAcPtl0O3CATiThpWHCsL/Sm0gKKWXtH/
-         aieAhKj4ZyFoIaHM+l5aGuYQMKHeqH9YF5km1RnzXa47MKTp4uD16JLKwF6MDKLwu0NF
-         AlLlKdRoyeINr0rXk+pQcOCZaO2LPWHKB5cqGgx4OPYp7EfXS3IDpHhV9SFY+henXQ/T
-         c0Tw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=fa9xrD4T1rxzQNwYuOjdLGG0r9pM+goY6z40NA+UpNk=;
-        b=Jg4+gdupFCnZ8QQISMQOntfqKzM9O6qmS8jtWuUiPIXDCxUnftBchjhK5nlI/jYW+5
-         ZW5+dtLx1tvZ/XZumJgOFvg6pmZ09BPfFS4079csLZv3bYi4qAcb/0uCTFu9sJoFBV0V
-         WWgxK3+Cl1f9fw68eIBS2/ynqipxmw3ZrtNhzuWHq51Wu6kAuRZw5WnnhuFgHv6kgN2Q
-         jWd/GtPk+mqaQJaqredOo9ZwIiOXxX2BcueUocAezFbTzKd9HvFuOr5BVkwpzR/kgTe7
-         Gd77APZYNSabsMv/fnwC2DU8weL98LM5NRzRgRE4H2E+62zkI5tv1lDPq9igjnxiivc/
-         tsWg==
-X-Gm-Message-State: APjAAAWzvDYxoliHmSUu0UbvT1ST91UW/g6UTZulaIlkpu4x2LQvYpdF
-        1rLYlq6clbLgjM98hJE2MYHqZw==
-X-Google-Smtp-Source: APXvYqwU3BiVtACu8/3nQCuMz7hVtGkewUXexz+BseY1XRM0b2PGsn0yw5Dh/+dDAuPNWl2bKxAGMQ==
-X-Received: by 2002:a17:902:a988:: with SMTP id bh8mr4277629plb.303.1570640831326;
-        Wed, 09 Oct 2019 10:07:11 -0700 (PDT)
-Received: from nuc7.sifive.com ([12.206.222.5])
-        by smtp.gmail.com with ESMTPSA id x20sm3417640pfp.120.2019.10.09.10.07.10
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 09 Oct 2019 10:07:10 -0700 (PDT)
-From:   Alan Mikhak <alan.mikhak@sifive.com>
-X-Google-Original-From: Alan Mikhak < alan.mikhak@sifive.com >
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        kishon@ti.com, lorenzo.pieralisi@arm.com, bhelgaas@google.com,
-        palmer@sifive.com, paul.walmsley@sifive.com
-Cc:     Alan Mikhak <alan.mikhak@sifive.com>
-Subject: [PATCH v2] PCI: endpoint: Cast the page number to phys_addr_t
-Date:   Wed,  9 Oct 2019 10:06:56 -0700
-Message-Id: <1570640816-5390-1-git-send-email-alan.mikhak@sifive.com>
-X-Mailer: git-send-email 2.7.4
+        id S1732477AbfJITOH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Oct 2019 15:14:07 -0400
+Received: from mout.kundenserver.de ([212.227.126.130]:53061 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731879AbfJITLR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2019 15:11:17 -0400
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue011 [212.227.15.129]) with ESMTPA (Nemesis) id
+ 1N79hs-1i1wmF0d9o-017TFD; Wed, 09 Oct 2019 21:11:15 +0200
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     Al Viro <viro@zeniv.linux.org.uk>
+Cc:     linux-kernel@vger.kernel.org, y2038@lists.linaro.org,
+        linux-fsdevel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v6 25/43] compat_ioctl: remove PCI ioctl translation
+Date:   Wed,  9 Oct 2019 21:10:25 +0200
+Message-Id: <20191009191044.308087-25-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
+In-Reply-To: <20191009190853.245077-1-arnd@arndb.de>
+References: <20191009190853.245077-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:A90z5qH3xuPEjD4JyPp3z+Nx3vYUYPAv74/jTKDarhYH9Ubga2o
+ tDJ31p/Pflrla1qflW4JN1R01F4hWVjTdt6qDXFL0I2ae/P3yovVK//bT2AumB4jhaSSdKw
+ A71F5hj00vYezGngiMh1wCFtzXM+vvbd+4P/7g21owwJqvwf9Y49gbdpslFJaXX6cwa2o3o
+ oM5Dkwev3RZHEndKV/5tw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:YVgb4nM+fyU=:/C0Cg3j3BiaQHBhgm5/Nbd
+ 0SMKT/pjwKkle2mq4YCy2rrGNBhQJmWR8se4qCM0VVsz8u6Umtki/Qe9vQrV3RGFkLhCmrc5c
+ yM8RoEk/D0n4ufbSHIs/RuS+tE0RFO0j+83bxqLiEcX3giTswTqGvZDbpUe7oi7EX2Don9AEL
+ Djru6rVJdMBhCQjMTDyPcVXVEMkxnZdz17S/dQcqhk2NDP63iWsyXrXfZmky+O5J13ExugnI2
+ OHJsZM9EU6UlNkUfJ82a7BZiK1IH9+PdJBq5i/28yrd6mAmIpO+7KSWyJSt9TOsnh0dH74tfC
+ 8fMszqsIkGoyn7W3zgSQcy0SoeTKBeJs4kKvFkmDhWdwwjtPxpAmyQ4wL/PVFd/WHEF8KSPLq
+ 0+ISTd+Hhhtb83MyYskSQKdsCl10bQMdxsdxRwiUrGPx2mFMvjI7aCU+u9mHlYKm85CGskIy5
+ nNvP/E00n4D5vi5+F3ptIikIMMnLH81Xj2St74TkmvGlInjczcrzMi6A1Zln0KgtD/2a8SFcu
+ SBMyI26LzXQJieDdVS2DP68GnYufiLa+eM46vwLchxDMBo6cOjPQfhV4eY5nNZdT7/lnebxrF
+ QC3oXrax6wT1Y+QPRMN5ptZU8g6m8pGQRePYJX9pwdzL2Ge7GyqBBW4gSzpNqIDdd7c5cJkDL
+ dJWwsQ7AhaxuLW2xBAH4eST8H3igq8mTppshQ9IGaQ8oXnWtrrDwE6k/EtwcB4DtRQfq1V9l3
+ pDQktmDDBzOyWwFxVgE2nsV0I+ioTBpkb+/qFipXzgnyf3lK16Xe5yfcynTL8dZwGKOL6Sg+y
+ +gyUOzv3gbup4ML2aOCYgTVDKV0QPn1VZNvooe53S+HH5z8NXXyJAxnmmy4nMQnRSVgmVY1DV
+ pQQGm/27Zf2dP8QMETgQ==
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alan Mikhak <alan.mikhak@sifive.com>
+The /proc/pci/ implementation already handles these just fine, so
+the entries in the table are not needed any more.
 
-Modify pci_epc_mem_alloc_addr() to cast the variable 'pageno'
-from type 'int' to 'phys_addr_t' before shifting left. This
-cast is needed to avoid treating bit 31 of 'pageno' as the
-sign bit which would otherwise get sign-extended to produce
-a negative value. When added to the base address of PCI memory
-space, the negative value would produce an invalid physical
-address which falls before the start of the PCI memory space.
-
-Signed-off-by: Alan Mikhak <alan.mikhak@sifive.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/pci/endpoint/pci-epc-mem.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/compat_ioctl.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epc-mem.c b/drivers/pci/endpoint/pci-epc-mem.c
-index 2bf8bd1f0563..d2b174ce15de 100644
---- a/drivers/pci/endpoint/pci-epc-mem.c
-+++ b/drivers/pci/endpoint/pci-epc-mem.c
-@@ -134,7 +134,7 @@ void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- 	if (pageno < 0)
- 		return NULL;
+diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+index a214ae052596..37f45644528a 100644
+--- a/fs/compat_ioctl.c
++++ b/fs/compat_ioctl.c
+@@ -29,7 +29,6 @@
+ #include <linux/vt_kern.h>
+ #include <linux/raw.h>
+ #include <linux/blkdev.h>
+-#include <linux/pci.h>
+ #include <linux/serial.h>
+ #include <linux/ctype.h>
+ #include <linux/syscalls.h>
+@@ -437,11 +436,6 @@ COMPATIBLE_IOCTL(WDIOC_SETTIMEOUT)
+ COMPATIBLE_IOCTL(WDIOC_GETTIMEOUT)
+ COMPATIBLE_IOCTL(WDIOC_SETPRETIMEOUT)
+ COMPATIBLE_IOCTL(WDIOC_GETPRETIMEOUT)
+-/* Misc. */
+-COMPATIBLE_IOCTL(PCIIOC_CONTROLLER)
+-COMPATIBLE_IOCTL(PCIIOC_MMAP_IS_IO)
+-COMPATIBLE_IOCTL(PCIIOC_MMAP_IS_MEM)
+-COMPATIBLE_IOCTL(PCIIOC_WRITE_COMBINE)
+ };
  
--	*phys_addr = mem->phys_base + (pageno << page_shift);
-+	*phys_addr = mem->phys_base + ((phys_addr_t)pageno << page_shift);
- 	virt_addr = ioremap(*phys_addr, size);
- 	if (!virt_addr)
- 		bitmap_release_region(mem->bitmap, pageno, order);
+ /*
 -- 
-2.7.4
+2.20.0
 
