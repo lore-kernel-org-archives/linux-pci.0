@@ -5,55 +5,55 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B64D5C47404
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 20:05:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B9E9ECE58C
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 20:05:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8882F206B6
-	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 20:05:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1119C21D56
+	for <linux-pci@archiver.kernel.org>; Wed,  9 Oct 2019 20:05:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aJ7iUfQL"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BXzcJOi0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728804AbfJIUFi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 9 Oct 2019 16:05:38 -0400
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:40703 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731751AbfJIUFh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2019 16:05:37 -0400
-Received: by mail-oi1-f193.google.com with SMTP id k9so2863334oib.7;
-        Wed, 09 Oct 2019 13:05:35 -0700 (PDT)
+        id S1731819AbfJIUFn (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 9 Oct 2019 16:05:43 -0400
+Received: from mail-oi1-f195.google.com ([209.85.167.195]:45197 "EHLO
+        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731581AbfJIUFg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Oct 2019 16:05:36 -0400
+Received: by mail-oi1-f195.google.com with SMTP id o205so2844462oib.12;
+        Wed, 09 Oct 2019 13:05:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=6Uxm0TX5vGTMd3DyNdjqMCnLsY8aWV4rFP4cSXY0jjU=;
-        b=aJ7iUfQLOJZ1J/TZtBsydyKqUMJpk15S9ecWVwtjcdXfsZ3gZjKWZBDOs1CXHE7+Uq
-         jRHL+7ARH92CB+F1izM5UXSJjf363b2JMOQk+n/qhdn9eozVrZjaLWyI/RnAd43FBNed
-         kRqc9xej9yhtatMZWs29YLeJlH3lWouNmF8ztA44L7qX1XXwKXShb8WMohU13x8yB6jL
-         5xCoTKwUzPIpNG1afGvryKuugbwKy1AsdCukooJudEW6vtYNYmfCSRZRoOYwRSYsUbgl
-         Da1r68IiYRFoDhL0LFsW4Jeht/i8wsAZZHKNBusBTnFDgfqp82LlnVApNV194XSx2E6i
-         r0xQ==
+        bh=d+6hFZoHACGNLzXY4zt7VjE/7ALYWlPRw2g+xMBt8zU=;
+        b=BXzcJOi0VBbyw8HsGC4b5rLu43Ha89Jm3OU4Lhqj+hlFY9FO6OB5WUp4Mvp6Xq6N2z
+         mzl4szDU+BbK4s0ye7Zb0/pw+E9LQKmPajuzUMbP9uaixRU/cWjEmH955wtTjzVZ4lba
+         iAYaAOJJYu2xQczpAVxlVjQHcl/+apZwCZO35Jvd2AYvqm1tIOUIKcCMdf9ZxhRh2jpn
+         i0Sdp/o7ncNVaxy3Gr3oiz08NMQiWiHcKJvvLXHgKUbGvTGC30Iz+bcwDLJxP+IR1xmn
+         cZTNrADoId4wf+RTMpSZIzSabg4RV1k8QhHi+kpnzVnHytlAADEDV1c6w7xu8apdNoLU
+         +w7g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=6Uxm0TX5vGTMd3DyNdjqMCnLsY8aWV4rFP4cSXY0jjU=;
-        b=tDHcrjkXjYMe3CGJSqM/ElBrdLsAMIqPAeJIaO1o145Xu5h4dd/QfuC/e5PBVxTLBk
-         s8UG8lX9Rl2kw1fxmVvMW4q9iPI1VVsbJoVC8uoif27cvOOm5E0a+bLq/lG2M5/o9ULb
-         nlZb+tJrexcWq6HzqRL1QU6Sg5idqGKPyJ0ONa5oKZLiMfRQ0nEkw5jCdGGUlS9/W1mx
-         dIvyt0Y+ux+yqADySF0BtNwP5PNCTaIaBbq02Ry+cLFgpk7nbtNwcDTbuJ2texsU6rJN
-         CKSEWVNXyV59mmY6ZEtgPeTrE2T1cDWLU5TePCQ0DJovXMCi1QkPcXJDoF3tDD7cy4vg
-         ksrg==
-X-Gm-Message-State: APjAAAVxNFVkq37uzELvemFIwz9ohE1HUkgOKzGGyogAg7VDRNYfgdoT
-        isi4Z9oNwe1ZgZHrR89reTzsYun1SlfJxA==
-X-Google-Smtp-Source: APXvYqxbWsgq7cVNGUpBi4KQ4X/R9gCkTZmXY55Lvl0IKTG9RxuBrUlkvhwbEZu7nqFq5xDAwTxROw==
-X-Received: by 2002:a54:4483:: with SMTP id v3mr1208620oiv.111.1570651535411;
-        Wed, 09 Oct 2019 13:05:35 -0700 (PDT)
-Received: from localhost.localdomain ([143.166.81.254])
-        by smtp.gmail.com with ESMTPSA id b5sm976883oia.20.2019.10.09.13.05.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=d+6hFZoHACGNLzXY4zt7VjE/7ALYWlPRw2g+xMBt8zU=;
+        b=SmikYJZGOK8k7X2jq/TIf0cgIA3S6Z6Z1/2NRLNsCuHRXqL+ZCXQh5ADCdkOe9TRei
+         R8JttRt1qgjGRs1OhaZL06OVUBlkkwL+7ZC8WE4pvU2HoEn6qnzJbfIHSxXmP4M1JYNg
+         AVWTbDCDKrcWLJaAJ8Gx06+3bpqKtBxgmy5XzpraeimvK8k2Iheg7s6KsO8LSIt9GmtZ
+         Rwa7P/LVB+kMMim9pIatiYD90rpzXs76oD1c6SGz6VWfGBNjgYSzO+ddfnp90oMdSl6L
+         n/Ectj13QIrfhiuPncFTJ9b2dhiBReUZ31hFDJO83FuHHhUGqDq8W2Z2LZ84wY8Yfv6P
+         hLXQ==
+X-Gm-Message-State: APjAAAVydcfHY+0AcFbvCArMsVBcAcrT/a0JSen0YwRWZhTM7AnnK/Xg
+        EjTBRZqD1ARUm6oGULK0mOg=
+X-Google-Smtp-Source: APXvYqzg6pDmQSDrh2PPmjHffNPx2FnYSrC8a9qremp6+ETBwyqhP4mJTmI6123FL5xbWuOq7G9PAw==
+X-Received: by 2002:aca:b841:: with SMTP id i62mr3884441oif.123.1570651534124;
         Wed, 09 Oct 2019 13:05:34 -0700 (PDT)
+Received: from localhost.localdomain ([143.166.81.254])
+        by smtp.gmail.com with ESMTPSA id b5sm976883oia.20.2019.10.09.13.05.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 09 Oct 2019 13:05:33 -0700 (PDT)
 From:   Stuart Hayes <stuart.w.hayes@gmail.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>
 Cc:     Austin Bolen <austin_bolen@dell.com>, keith.busch@intel.com,
@@ -66,9 +66,9 @@ Cc:     Austin Bolen <austin_bolen@dell.com>, keith.busch@intel.com,
         Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org, lukas@wunner.de,
         Stuart Hayes <stuart.w.hayes@gmail.com>
-Subject: [PATCH 3/3] PCI: pciehp: Add dmi table for in-band presence disabled
-Date:   Wed,  9 Oct 2019 16:05:23 -0400
-Message-Id: <20191009200523.8436-4-stuart.w.hayes@gmail.com>
+Subject: [PATCH 2/3] PCI: pciehp: Wait for PDS if in-band presence is disabled
+Date:   Wed,  9 Oct 2019 16:05:22 -0400
+Message-Id: <20191009200523.8436-3-stuart.w.hayes@gmail.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20191009200523.8436-1-stuart.w.hayes@gmail.com>
 References: <20191009200523.8436-1-stuart.w.hayes@gmail.com>
@@ -77,58 +77,65 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Some systems have in-band presence detection disabled for hot-plug PCI
-slots, but do not report this in the slot capabilities 2 (SLTCAP2) register.
-On these systems, presence detect can become active well after the link is
-reported to be active, which can cause the slots to be disabled after a
-device is connected.
+From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 
-Add a dmi table to flag these systems as having in-band presence disabled.
+When inband presence is disabled, PDS may come up at any time, or not
+at all. PDS being low may indicate that the card is still mating, and
+we could expect contact bounce to bring down the link as well.
 
+It is reasonable to assume that most cards will mate in a hotplug slot
+in about a second. Thus, when we know PDS only reflects out-of-band
+presence, it's worthwhile to wait the extra second or so to make sure
+the card is properly mated before loading the driver, and to prevent
+the hotplug code from disabling a device if the presence detect change
+goes active after the device is enabled.
+
+Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
 Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/pci/hotplug/pciehp_hpc.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
 diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index 1282641c6458..cabd745b844e 100644
+index dc109d521f30..1282641c6458 100644
 --- a/drivers/pci/hotplug/pciehp_hpc.c
 +++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -14,6 +14,7 @@
+@@ -242,6 +242,25 @@ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
+ 	return found;
+ }
  
- #define dev_fmt(fmt) "pciehp: " fmt
- 
-+#include <linux/dmi.h>
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/jiffies.h>
-@@ -26,6 +27,16 @@
- #include "../pci.h"
- #include "pciehp.h"
- 
-+static const struct dmi_system_id inband_presence_disabled_dmi_table[] = {
-+	{
-+		.ident = "Dell System",
-+		.matches = {
-+			DMI_MATCH(DMI_OEM_STRING, "Dell System"),
-+		},
-+	},
-+	{}
-+};
++static void pcie_wait_for_presence(struct pci_dev *pdev)
++{
++	int timeout = 1250;
++	bool pds;
++	u16 slot_status;
 +
- static inline struct pci_dev *ctrl_dev(struct controller *ctrl)
++	while (true) {
++		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
++		pds = !!(slot_status & PCI_EXP_SLTSTA_PDS);
++		if (pds || timeout <= 0)
++			break;
++		msleep(10);
++		timeout -= 10;
++	}
++
++	if (!pds)
++		pci_info(pdev, "Presence Detect state not set in 1250 msec\n");
++}
++
+ int pciehp_check_link_status(struct controller *ctrl)
  {
- 	return ctrl->pcie->port;
-@@ -898,6 +909,9 @@ struct controller *pcie_init(struct pcie_device *dev)
- 		ctrl->inband_presence_disabled = 1;
- 	}
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+@@ -251,6 +270,9 @@ int pciehp_check_link_status(struct controller *ctrl)
+ 	if (!pcie_wait_for_link(pdev, true))
+ 		return -1;
  
-+	if (dmi_first_match(inband_presence_disabled_dmi_table))
-+		ctrl->inband_presence_disabled = 1;
++	if (ctrl->inband_presence_disabled)
++		pcie_wait_for_presence(pdev);
 +
- 	/*
- 	 * If empty slot's power status is on, turn power off.  The IRQ isn't
- 	 * requested yet, so avoid triggering a notification with this command.
+ 	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
+ 					PCI_DEVFN(0, 0));
+ 
 -- 
 2.18.1
 
