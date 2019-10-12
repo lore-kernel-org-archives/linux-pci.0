@@ -1,142 +1,117 @@
-Return-Path: <SRS0=SVWb=YE=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=0YOV=YF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B684ECE598
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Oct 2019 20:51:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE39ECE58C
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Oct 2019 06:18:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1DA720673
-	for <linux-pci@archiver.kernel.org>; Fri, 11 Oct 2019 20:51:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fsMT7Qe/"
+	by mail.kernel.org (Postfix) with ESMTP id 37C6021D7C
+	for <linux-pci@archiver.kernel.org>; Sat, 12 Oct 2019 06:18:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728543AbfJKUvp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 11 Oct 2019 16:51:45 -0400
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:33085 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728474AbfJKUvn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Oct 2019 16:51:43 -0400
-Received: by mail-oi1-f193.google.com with SMTP id a15so9167521oic.0;
-        Fri, 11 Oct 2019 13:51:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Ekvb9hwciZsFblbrWPgDDMrLEPgh+uaA9L5HRYts70w=;
-        b=fsMT7Qe/FUAjy53VDOFtKHx66TBDR81g1UuU+qXdOCD67tmpTu1YNVFwRDGTw2cGVi
-         aHPTid0mIVA3dGpvXh6Qs5MqWg2MJmKbUEPzDJEibRA5umin1LcEdx5hAWtAWY+uJCsp
-         GT7yyR2I3paJnEhdQNkO984z1L+yjAKLAgOtaUkL9fOMws7EiE4yaawHvEZeJxJv38rM
-         eEBzsdIMfwKVWu9vKBeQB9J/ig+1sEZbyD9ARmTRcXZETz3SWhsj8es7eMhMIlNQoSlD
-         5P8jNnR3ETkAE1sQRR3mDQvNKamEXc5hfip9qMMv7wXy5LwXN5xShqrnKE2p5xeO4kDG
-         be8A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=Ekvb9hwciZsFblbrWPgDDMrLEPgh+uaA9L5HRYts70w=;
-        b=O9Wcrnyq/8tWwG/4t3YdIHW8V3mM2Dv+81RggW3gTG0N+G0XbB5Jq0T0VvfCseqTKQ
-         Wfwlu2PKwRPJIvWak3oh0qZ15K8P29zkwrc/Q8vJu+ve7ZuZBHkd+N9uwn9HA7oFeYGZ
-         iS0bQeADMdcTYxo5zTzutnlOfDsqAHMvWhxZa00D//kBhi2pcWEC5JueOJvQbqX3T/5L
-         aURLIk0lbfhP8W4wcDGAf9bK+BpXju4UCboeICPIJIjfr+iwKVNFxCa5ydCW3SP8p/Ls
-         uPAY/rH9CzYuRBDIbh4x8mTpXkzolYevfzgJrK4sgKZ6hWpvmpFCrmg6rvvUwP4wzXBg
-         p9zQ==
-X-Gm-Message-State: APjAAAV8h1BFo8ogBiPZN2zn4oi5AmLUR3zjR/hDthv7BtPmhM7pCATK
-        IpdyKKUEE9Ci3FY90eW1M+w=
-X-Google-Smtp-Source: APXvYqxL+AwebmGoUV7EqKIYhumdybfA4YDxr1/horQ6QpOBL7path94wTLD39lUs+pupDT9CYEaNA==
-X-Received: by 2002:aca:d19:: with SMTP id 25mr13134297oin.64.1570827102519;
-        Fri, 11 Oct 2019 13:51:42 -0700 (PDT)
-Received: from localhost.localdomain ([143.166.81.254])
-        by smtp.gmail.com with ESMTPSA id i5sm2900875otk.10.2019.10.11.13.51.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Oct 2019 13:51:42 -0700 (PDT)
-From:   Stuart Hayes <stuart.w.hayes@gmail.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Austin Bolen <austin_bolen@dell.com>, keith.busch@intel.com,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        "Gustavo A . R . Silva" <gustavo@embeddedor.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Oza Pawandeep <poza@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, lukas@wunner.de,
-        Stuart Hayes <stuart.w.hayes@gmail.com>
-Subject: [PATCH v2 2/3] PCI: pciehp: Wait for PDS if in-band presence is disabled
-Date:   Fri, 11 Oct 2019 16:51:26 -0400
-Message-Id: <20191011205127.4884-3-stuart.w.hayes@gmail.com>
-X-Mailer: git-send-email 2.18.1
-In-Reply-To: <20191011205127.4884-1-stuart.w.hayes@gmail.com>
-References: <20191011205127.4884-1-stuart.w.hayes@gmail.com>
+        id S1728940AbfJLGR6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 12 Oct 2019 02:17:58 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:50222 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726947AbfJLGR5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 12 Oct 2019 02:17:57 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 3323C80206F36887AE0D;
+        Sat, 12 Oct 2019 14:17:54 +0800 (CST)
+Received: from [127.0.0.1] (10.74.191.121) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.439.0; Sat, 12 Oct 2019
+ 14:17:52 +0800
+Subject: Re: [PATCH v6] numa: make node_to_cpumask_map() NUMA_NO_NODE aware
+To:     Peter Zijlstra <peterz@infradead.org>
+CC:     Michal Hocko <mhocko@kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>, <catalin.marinas@arm.com>,
+        <will@kernel.org>, <mingo@redhat.com>, <bp@alien8.de>,
+        <rth@twiddle.net>, <ink@jurassic.park.msu.ru>,
+        <mattst88@gmail.com>, <benh@kernel.crashing.org>,
+        <paulus@samba.org>, <mpe@ellerman.id.au>,
+        <heiko.carstens@de.ibm.com>, <gor@linux.ibm.com>,
+        <borntraeger@de.ibm.com>, <ysato@users.sourceforge.jp>,
+        <dalias@libc.org>, <davem@davemloft.net>, <ralf@linux-mips.org>,
+        <paul.burton@mips.com>, <jhogan@kernel.org>,
+        <jiaxun.yang@flygoat.com>, <chenhc@lemote.com>,
+        <akpm@linux-foundation.org>, <rppt@linux.ibm.com>,
+        <anshuman.khandual@arm.com>, <tglx@linutronix.de>, <cai@lca.pw>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <hpa@zytor.com>, <x86@kernel.org>,
+        <dave.hansen@linux.intel.com>, <luto@kernel.org>,
+        <len.brown@intel.com>, <axboe@kernel.dk>, <dledford@redhat.com>,
+        <jeffrey.t.kirsher@intel.com>, <linux-alpha@vger.kernel.org>,
+        <naveen.n.rao@linux.vnet.ibm.com>, <mwb@linux.vnet.ibm.com>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-s390@vger.kernel.org>,
+        <linux-sh@vger.kernel.org>, <sparclinux@vger.kernel.org>,
+        <tbogendoerfer@suse.de>, <linux-mips@vger.kernel.org>,
+        <rafael@kernel.org>, <gregkh@linuxfoundation.org>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>, <lenb@kernel.org>,
+        <linux-acpi@vger.kernel.org>
+References: <20190924124325.GQ2349@hirez.programming.kicks-ass.net>
+ <20190924125936.GR2349@hirez.programming.kicks-ass.net>
+ <20190924131939.GS23050@dhcp22.suse.cz>
+ <1adcbe68-6753-3497-48a0-cc84ac503372@huawei.com>
+ <20190925104108.GE4553@hirez.programming.kicks-ass.net>
+ <47fa4cee-8528-7c23-c7de-7be1b65aa2ae@huawei.com>
+ <bec80499-86d9-bf1f-df23-9044a8099992@arm.com>
+ <a5f0fc80-8e88-b781-77ce-1213e5d62125@huawei.com>
+ <20191010073212.GB18412@dhcp22.suse.cz>
+ <6cc94f9b-0d79-93a8-5ec2-4f6c21639268@huawei.com>
+ <20191011111539.GX2311@hirez.programming.kicks-ass.net>
+From:   Yunsheng Lin <linyunsheng@huawei.com>
+Message-ID: <7fad58d6-5126-e8b8-a7d8-a91814da53ba@huawei.com>
+Date:   Sat, 12 Oct 2019 14:17:26 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.0
+MIME-Version: 1.0
+In-Reply-To: <20191011111539.GX2311@hirez.programming.kicks-ass.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.74.191.121]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Alexandru Gagniuc <mr.nuke.me@gmail.com>
+add pci and acpi maintainer
+cc linux-pci@vger.kernel.org and linux-acpi@vger.kernel.org
 
-When inband presence is disabled, PDS may come up at any time, or not
-at all. PDS being low may indicate that the card is still mating, and
-we could expect contact bounce to bring down the link as well.
+On 2019/10/11 19:15, Peter Zijlstra wrote:
+> On Fri, Oct 11, 2019 at 11:27:54AM +0800, Yunsheng Lin wrote:
+>> But I failed to see why the above is related to making node_to_cpumask_map()
+>> NUMA_NO_NODE aware?
+> 
+> Your initial bug is for hns3, which is a PCI device, which really _MUST_
+> have a node assigned.
+> 
+> It not having one, is a straight up bug. We must not silently accept
+> NO_NODE there, ever.
+> 
 
-It is reasonable to assume that most cards will mate in a hotplug slot
-in about a second. Thus, when we know PDS only reflects out-of-band
-presence, it's worthwhile to wait the extra second or so to make sure
-the card is properly mated before loading the driver, and to prevent
-the hotplug code from disabling a device if the presence detect change
-goes active after the device is enabled.
+I suppose you mean reporting a lack of affinity when the node of a pcie
+device is not set by "not silently accept NO_NODE".
 
-Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-Signed-off-by: Stuart Hayes <stuart.w.hayes@gmail.com>
----
-v2:
-  replace while(true) loop with do...while
+As Greg has asked about in [1]:
+what is a user to do when the user sees the kernel reporting that?
 
- drivers/pci/hotplug/pciehp_hpc.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+We may tell user to contact their vendor for info or updates about
+that when they do not know about their system well enough, but their
+vendor may get away with this by quoting ACPI spec as the spec
+considering this optional. Should the user believe this is indeed a
+fw bug or a misreport from the kernel?
 
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index dc109d521f30..db5c7b082fda 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -242,6 +242,23 @@ static bool pci_bus_check_dev(struct pci_bus *bus, int devfn)
- 	return found;
- }
- 
-+static void pcie_wait_for_presence(struct pci_dev *pdev)
-+{
-+	int timeout = 1250;
-+	bool pds;
-+	u16 slot_status;
-+
-+	do {
-+		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
-+		if (!!(slot_status & PCI_EXP_SLTSTA_PDS))
-+			return;
-+		msleep(10);
-+		timeout -= 10;
-+	} while (timeout > 0);
-+
-+	pci_info(pdev, "Presence Detect state not set in 1250 msec\n");
-+}
-+
- int pciehp_check_link_status(struct controller *ctrl)
- {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
-@@ -251,6 +268,9 @@ int pciehp_check_link_status(struct controller *ctrl)
- 	if (!pcie_wait_for_link(pdev, true))
- 		return -1;
- 
-+	if (ctrl->inband_presence_disabled)
-+		pcie_wait_for_presence(pdev);
-+
- 	found = pci_bus_check_dev(ctrl->pcie->port->subordinate,
- 					PCI_DEVFN(0, 0));
- 
--- 
-2.18.1
+If this kind of reporting is common pratice and will not cause any
+misunderstanding, then maybe we can report that.
+
+[1] https://lore.kernel.org/lkml/20190905055727.GB23826@kroah.com/
+
+> .
+> 
 
