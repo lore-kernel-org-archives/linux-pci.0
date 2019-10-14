@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10390C4CECE
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Oct 2019 23:02:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E7BCC4CECE
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Oct 2019 23:02:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D866021A49
-	for <linux-pci@archiver.kernel.org>; Mon, 14 Oct 2019 23:02:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06BE221835
+	for <linux-pci@archiver.kernel.org>; Mon, 14 Oct 2019 23:02:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571094128;
-	bh=8d8h/+mvd5XsMBxMGLCeuGPUppFk4H1Hca/+Tehjdrg=;
+	s=default; t=1571094132;
+	bh=OTdm4D5QsUvEdMjHsLdj8VxjE2uHi2PlTnEpkKDjENw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ANxG41mKukbimuzoWSjlygVdpvsxdz+9CLlye6YNkYcBW7WX/S6WuV/GRixDTLrI6
-	 FaVzkmSfVEZW0ZDaIpwCLNC3vGN/JCcLL+nwQO9IAYbNTym4+IUZYJ1H+dt0pTdHMB
-	 muY5lja3imCq28TrvsA/nuKXpMpvKFh9rHPab5Sc=
+	b=SX6qwjiwBI9WV2FRkLQDs/WjeTuO11ihLlUffJcD8Sif4OXZBJrjmSywA2c6Ek9Pn
+	 qyuulnd+IXkuxmRa2nvNbCEtb6w4g7lZuuoYeFRwjc7ogeojpR3smCyONMT6asXJJ7
+	 WaViyH/CsuN2jx9Ha58rAmtifaQKsbS6VJ6ddtKI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726372AbfJNXCI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 14 Oct 2019 19:02:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52386 "EHLO mail.kernel.org"
+        id S1726366AbfJNXCK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 14 Oct 2019 19:02:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52584 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726366AbfJNXCF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Oct 2019 19:02:05 -0400
+        id S1726393AbfJNXCJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Oct 2019 19:02:09 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2C27C21835;
-        Mon, 14 Oct 2019 23:02:03 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2007421882;
+        Mon, 14 Oct 2019 23:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571094124;
-        bh=8d8h/+mvd5XsMBxMGLCeuGPUppFk4H1Hca/+Tehjdrg=;
+        s=default; t=1571094129;
+        bh=OTdm4D5QsUvEdMjHsLdj8VxjE2uHi2PlTnEpkKDjENw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=il/L9pC+73O9Ib+OPXA+++8AwZ6uJFWVcbgIOplFlrFLXw3AzdxBfqDrPgtFl5ia3
-         I0Hu2EH8zAgSq0dG3rlra3HW3/2eF908RpHkqeYilGrmcOek37GNo+9Zov6eNCLxA/
-         GePRY+f3zR2EE3CP78MI7Jp9K2A5bK0+JQGwuctw=
+        b=qJpX+DtDtGu93cjz7aWAU+r0YiZOe+OmJdsx+pga9hftMJB73le99HTNGE7z14IOV
+         JbvHPPe4J5+N6hMG9cWFCjhvVk/ee3JgHPYCr984TO4fMLtdTjflhGh324x65w/Sw3
+         UvKsgBnky2lpCKVk0YkUH5ARDnXg8K3KYkqL2GRY=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Dexuan Cui <decui@microsoft.com>
 Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
@@ -53,9 +53,9 @@ Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         linux-kernel@vger.kernel.org,
         driverdev-devel@linuxdriverproject.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 5/7] PCI/PM: Make power management op coding style consistent
-Date:   Mon, 14 Oct 2019 18:00:14 -0500
-Message-Id: <20191014230016.240912-6-helgaas@kernel.org>
+Subject: [PATCH 7/7] PCI/MSI: Move power state check out of pci_msi_supported()
+Date:   Mon, 14 Oct 2019 18:00:16 -0500
+Message-Id: <20191014230016.240912-8-helgaas@kernel.org>
 X-Mailer: git-send-email 2.23.0.700.g56cf767bdb-goog
 In-Reply-To: <20191014230016.240912-1-helgaas@kernel.org>
 References: <20191014230016.240912-1-helgaas@kernel.org>
@@ -68,259 +68,54 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Some of the power management ops use this style:
+27e20603c54b ("PCI/MSI: Move D0 check into pci_msi_check_device()")
+moved the power state check into pci_msi_check_device(), which was
+subsequently renamed to pci_msi_supported().  This didn't change the
+behavior, since both callers checked the power state.
 
-  struct device_driver *drv = dev->driver;
-  if (drv && drv->pm && drv->pm->prepare(dev))
-    drv->pm->prepare(dev);
+However, it doesn't fit the current "pci_msi_supported()" name, which
+should return what the device is capable of, independent of the power
+state.
 
-while others use this:
-
-  const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-  if (pm && pm->runtime_resume)
-    pm->runtime_resume(dev);
-
-Convert the first style to the second so they're all consistent.  Remove
-local "error" variables when unnecessary.  No functional change intended.
+Move the power state check back into the callers for readability.  No
+functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci-driver.c | 76 +++++++++++++++++++---------------------
- 1 file changed, 36 insertions(+), 40 deletions(-)
+ drivers/pci/msi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 55acb658273f..abbf5c39cb9c 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -679,11 +679,11 @@ static bool pci_has_legacy_pm_support(struct pci_dev *pci_dev)
- 
- static int pci_pm_prepare(struct device *dev)
- {
--	struct device_driver *drv = dev->driver;
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
--	if (drv && drv->pm && drv->pm->prepare) {
--		int error = drv->pm->prepare(dev);
-+	if (pm && pm->prepare) {
-+		int error = pm->prepare(dev);
- 		if (error < 0)
- 			return error;
- 
-@@ -917,8 +917,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- static int pci_pm_resume_noirq(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	struct device_driver *drv = dev->driver;
--	int error = 0;
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
- 	if (dev_pm_may_skip_resume(dev))
- 		return 0;
-@@ -946,17 +945,16 @@ static int pci_pm_resume_noirq(struct device *dev)
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume_early(dev);
- 
--	if (drv && drv->pm && drv->pm->resume_noirq)
--		error = drv->pm->resume_noirq(dev);
-+	if (pm && pm->resume_noirq)
-+		return pm->resume_noirq(dev);
- 
--	return error;
-+	return 0;
- }
- 
- static int pci_pm_resume(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
--	int error = 0;
- 
- 	/*
- 	 * This is necessary for the suspend error path in which resume is
-@@ -972,12 +970,12 @@ static int pci_pm_resume(struct device *dev)
- 
- 	if (pm) {
- 		if (pm->resume)
--			error = pm->resume(dev);
-+			return pm->resume(dev);
- 	} else {
- 		pci_pm_reenable_device(pci_dev);
- 	}
- 
--	return error;
-+	return 0;
- }
- 
- #else /* !CONFIG_SUSPEND */
-@@ -1038,16 +1036,16 @@ static int pci_pm_freeze(struct device *dev)
- static int pci_pm_freeze_noirq(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	struct device_driver *drv = dev->driver;
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_suspend_late(dev, PMSG_FREEZE);
- 
--	if (drv && drv->pm && drv->pm->freeze_noirq) {
-+	if (pm && pm->freeze_noirq) {
- 		int error;
- 
--		error = drv->pm->freeze_noirq(dev);
--		suspend_report_result(drv->pm->freeze_noirq, error);
-+		error = pm->freeze_noirq(dev);
-+		suspend_report_result(pm->freeze_noirq, error);
- 		if (error)
- 			return error;
- 	}
-@@ -1066,8 +1064,8 @@ static int pci_pm_freeze_noirq(struct device *dev)
- static int pci_pm_thaw_noirq(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	struct device_driver *drv = dev->driver;
--	int error = 0;
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	int error;
- 
- 	if (pcibios_pm_ops.thaw_noirq) {
- 		error = pcibios_pm_ops.thaw_noirq(dev);
-@@ -1091,10 +1089,10 @@ static int pci_pm_thaw_noirq(struct device *dev)
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume_early(dev);
- 
--	if (drv && drv->pm && drv->pm->thaw_noirq)
--		error = drv->pm->thaw_noirq(dev);
-+	if (pm && pm->thaw_noirq)
-+		return pm->thaw_noirq(dev);
- 
--	return error;
-+	return 0;
- }
- 
- static int pci_pm_thaw(struct device *dev)
-@@ -1165,24 +1163,24 @@ static int pci_pm_poweroff_late(struct device *dev)
- static int pci_pm_poweroff_noirq(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	struct device_driver *drv = dev->driver;
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
- 
- 	if (dev_pm_smart_suspend_and_suspended(dev))
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 0884bedcfc7a..20e9c729617c 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -861,7 +861,7 @@ static int pci_msi_supported(struct pci_dev *dev, int nvec)
+ 	if (!pci_msi_enable)
  		return 0;
  
--	if (pci_has_legacy_pm_support(to_pci_dev(dev)))
-+	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_suspend_late(dev, PMSG_HIBERNATE);
- 
--	if (!drv || !drv->pm) {
-+	if (!pm) {
- 		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
+-	if (!dev || dev->no_msi || dev->current_state != PCI_D0)
++	if (!dev || dev->no_msi)
  		return 0;
- 	}
- 
--	if (drv->pm->poweroff_noirq) {
-+	if (pm->poweroff_noirq) {
- 		int error;
- 
--		error = drv->pm->poweroff_noirq(dev);
--		suspend_report_result(drv->pm->poweroff_noirq, error);
-+		error = pm->poweroff_noirq(dev);
-+		suspend_report_result(pm->poweroff_noirq, error);
- 		if (error)
- 			return error;
- 	}
-@@ -1208,8 +1206,8 @@ static int pci_pm_poweroff_noirq(struct device *dev)
- static int pci_pm_restore_noirq(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
--	struct device_driver *drv = dev->driver;
--	int error = 0;
-+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	int error;
- 
- 	if (pcibios_pm_ops.restore_noirq) {
- 		error = pcibios_pm_ops.restore_noirq(dev);
-@@ -1223,17 +1221,16 @@ static int pci_pm_restore_noirq(struct device *dev)
- 	if (pci_has_legacy_pm_support(pci_dev))
- 		return pci_legacy_resume_early(dev);
- 
--	if (drv && drv->pm && drv->pm->restore_noirq)
--		error = drv->pm->restore_noirq(dev);
-+	if (pm && pm->restore_noirq)
-+		return pm->restore_noirq(dev);
- 
--	return error;
-+	return 0;
- }
- 
- static int pci_pm_restore(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
--	int error = 0;
  
  	/*
- 	 * This is necessary for the hibernation error path in which restore is
-@@ -1249,12 +1246,12 @@ static int pci_pm_restore(struct device *dev)
+@@ -972,7 +972,7 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+ 	int nr_entries;
+ 	int i, j;
  
- 	if (pm) {
- 		if (pm->restore)
--			error = pm->restore(dev);
-+			return pm->restore(dev);
- 	} else {
- 		pci_pm_reenable_device(pci_dev);
- 	}
+-	if (!pci_msi_supported(dev, nvec))
++	if (!pci_msi_supported(dev, nvec) || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
--	return error;
-+	return 0;
- }
+ 	nr_entries = pci_msix_vec_count(dev);
+@@ -1058,7 +1058,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 	int nvec;
+ 	int rc;
  
- #else /* !CONFIG_HIBERNATE_CALLBACKS */
-@@ -1330,9 +1327,9 @@ static int pci_pm_runtime_suspend(struct device *dev)
+-	if (!pci_msi_supported(dev, minvec))
++	if (!pci_msi_supported(dev, minvec) || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
- static int pci_pm_runtime_resume(struct device *dev)
- {
--	int rc = 0;
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	int error = 0;
- 
- 	/*
- 	 * Restoring config space is necessary even if the device is not bound
-@@ -1348,18 +1345,17 @@ static int pci_pm_runtime_resume(struct device *dev)
- 	pci_pm_default_resume(pci_dev);
- 
- 	if (pm && pm->runtime_resume)
--		rc = pm->runtime_resume(dev);
-+		error = pm->runtime_resume(dev);
- 
- 	pci_dev->runtime_d3cold = false;
- 
--	return rc;
-+	return error;
- }
- 
- static int pci_pm_runtime_idle(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
--	int ret = 0;
- 
- 	/*
- 	 * If pci_dev->driver is not set (unbound), the device should
-@@ -1372,9 +1368,9 @@ static int pci_pm_runtime_idle(struct device *dev)
- 		return -ENOSYS;
- 
- 	if (pm->runtime_idle)
--		ret = pm->runtime_idle(dev);
-+		return pm->runtime_idle(dev);
- 
--	return ret;
-+	return 0;
- }
- 
- static const struct dev_pm_ops pci_dev_pm_ops = {
+ 	/* Check whether driver already requested MSI-X IRQs */
 -- 
 2.23.0.700.g56cf767bdb-goog
 
