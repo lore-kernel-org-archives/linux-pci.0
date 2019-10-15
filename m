@@ -4,29 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1089BECE595
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F41ECE58F
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E4A9721927
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A24EC2089C
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729479AbfJOIsQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Oct 2019 04:48:16 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:59618 "EHLO inva020.nxp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729390AbfJOIsP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S1729468AbfJOIsP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 15 Oct 2019 04:48:15 -0400
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 10B311A0A1F;
-        Tue, 15 Oct 2019 10:48:13 +0200 (CEST)
+Received: from inva021.nxp.com ([92.121.34.21]:38194 "EHLO inva021.nxp.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729424AbfJOIsM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Oct 2019 04:48:12 -0400
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id E791820045E;
+        Tue, 15 Oct 2019 10:48:10 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 383401A07D5;
-        Tue, 15 Oct 2019 10:48:06 +0200 (CEST)
+        by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 171A1200449;
+        Tue, 15 Oct 2019 10:48:04 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id EC4EF40314;
-        Tue, 15 Oct 2019 16:47:56 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 7436C4030B;
+        Tue, 15 Oct 2019 16:47:55 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     Zhiqiang.Hou@nxp.com, bhelgaas@google.com, robh+dt@kernel.org,
         mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com,
@@ -35,9 +36,9 @@ To:     Zhiqiang.Hou@nxp.com, bhelgaas@google.com, robh+dt@kernel.org,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH v2 5/6] arm64: dts: lx2160a: Add PCIe EP node
-Date:   Tue, 15 Oct 2019 16:37:01 +0800
-Message-Id: <20191015083702.21792-6-xiaowei.bao@nxp.com>
+Subject: [PATCH v2 4/6] PCI: mobiveil: Add workaround for unsupported request error
+Date:   Tue, 15 Oct 2019 16:37:00 +0800
+Message-Id: <20191015083702.21792-5-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.9.5
 In-Reply-To: <20191015083702.21792-1-xiaowei.bao@nxp.com>
 References: <20191015083702.21792-1-xiaowei.bao@nxp.com>
@@ -47,117 +48,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add the LX2160A PCIe EP node.
+Errata: unsupported request error on inbound posted write
+transaction, PCIe controller reports advisory error instead
+of uncorrectable error message to RC.
 
 Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
 ---
-v2: 
- - No change.
+v3: 
+ - Use BIT replce the expression.
 
- arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 56 ++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+ drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c | 13 +++++++++++++
+ drivers/pci/controller/mobiveil/pcie-mobiveil.h           |  4 ++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-index f60e5ac..18330df 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-@@ -1005,6 +1005,15 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3400000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03400000 0x0 0x00100000
-+			       0x80 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			apio-wins = <8>;
-+			status = "disabled";
-+		};
+diff --git a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c
+index 56603ea..82bb38d 100644
+--- a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c
++++ b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c
+@@ -49,6 +49,19 @@ static void ls_pcie_g4_ep_init(struct mobiveil_pcie_ep *ep)
+ 	struct mobiveil_pcie *mv_pci = to_mobiveil_pcie_from_ep(ep);
+ 	int win_idx;
+ 	u8 bar;
++	u32 val;
 +
- 		pcie@3500000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
-@@ -1032,6 +1041,15 @@
- 			status = "disabled";
- 		};
++	/*
++	 * Errata: unsupported request error on inbound posted write
++	 * transaction, PCIe controller reports advisory error instead
++	 * of uncorrectable error message to RC.
++	 * workaround: set the bit20(unsupported_request_Error_severity) with
++	 * value 1 in uncorrectable_Error_Severity_Register, make the
++	 * unsupported request error generate the fatal error.
++	 */
++	val =  csr_readl(mv_pci, CFG_UNCORRECTABLE_ERROR_SEVERITY);
++	val |= BIT(UNSUPPORTED_REQUEST_ERROR_SHIFT);
++	csr_writel(mv_pci, val, CFG_UNCORRECTABLE_ERROR_SEVERITY);
  
-+		pcie_ep@3500000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03500000 0x0 0x00100000
-+			       0x88 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			apio-wins = <8>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3600000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
-@@ -1059,6 +1077,16 @@
- 			status = "disabled";
- 		};
+ 	ep->bar_num = PCIE_LX2_BAR_NUM;
  
-+		pcie_ep@3600000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03600000 0x0 0x00100000
-+			       0x90 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			apio-wins = <256>;
-+			max-functions = /bits/ 8 <2>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3700000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
-@@ -1086,6 +1114,15 @@
- 			status = "disabled";
- 		};
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+index 7308fa4..a40707e 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+@@ -123,6 +123,10 @@
+ #define GPEX_BAR_SIZE_UDW		0x4DC
+ #define GPEX_BAR_SELECT			0x4E0
  
-+		pcie_ep@3700000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03700000 0x0 0x00100000
-+			       0x98 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			apio-wins = <8>;
-+			status = "disabled";
-+		};
++#define CFG_UNCORRECTABLE_ERROR_SEVERITY	0x10c
++#define UNSUPPORTED_REQUEST_ERROR_SHIFT		20
++#define CFG_UNCORRECTABLE_ERROR_MASK		0x108
 +
- 		pcie@3800000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03800000 0x0 0x00100000   /* controller registers */
-@@ -1113,6 +1150,16 @@
- 			status = "disabled";
- 		};
+ /* starting offset of INTX bits in status register */
+ #define PAB_INTX_START			5
  
-+		pcie_ep@3800000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03800000 0x0 0x00100000
-+			       0xa0 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			apio-wins = <256>;
-+			max-functions = /bits/ 8 <2>;
-+			status = "disabled";
-+		};
-+
- 		pcie@3900000 {
- 			compatible = "fsl,lx2160a-pcie";
- 			reg = <0x00 0x03900000 0x0 0x00100000   /* controller registers */
-@@ -1140,5 +1187,14 @@
- 			status = "disabled";
- 		};
- 
-+		pcie_ep@3900000 {
-+			compatible = "fsl,lx2160a-pcie-ep";
-+			reg = <0x00 0x03900000 0x0 0x00100000
-+			       0xa8 0x00000000 0x8 0x00000000>;
-+			reg-names = "regs", "addr_space";
-+			apio-wins = <8>;
-+			status = "disabled";
-+		};
-+
- 	};
- };
 -- 
 2.9.5
 
