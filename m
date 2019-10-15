@@ -2,31 +2,31 @@ Return-Path: <SRS0=CLTA=YI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 174BBC10F14
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1089BECE595
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1BCA2089C
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4A9721927
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 08:48:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729156AbfJOIsH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Oct 2019 04:48:07 -0400
-Received: from inva020.nxp.com ([92.121.34.13]:59346 "EHLO inva020.nxp.com"
+        id S1729479AbfJOIsQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Oct 2019 04:48:16 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:59618 "EHLO inva020.nxp.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726430AbfJOIsH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Oct 2019 04:48:07 -0400
+        id S1729390AbfJOIsP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Oct 2019 04:48:15 -0400
 Received: from inva020.nxp.com (localhost [127.0.0.1])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id D22B51A07CA;
-        Tue, 15 Oct 2019 10:48:04 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 10B311A0A1F;
+        Tue, 15 Oct 2019 10:48:13 +0200 (CEST)
 Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
-        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 03A8E1A0460;
-        Tue, 15 Oct 2019 10:47:58 +0200 (CEST)
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 383401A07D5;
+        Tue, 15 Oct 2019 10:48:06 +0200 (CEST)
 Received: from titan.ap.freescale.net (TITAN.ap.freescale.net [10.192.208.233])
-        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 613E5402B3;
-        Tue, 15 Oct 2019 16:47:49 +0800 (SGT)
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id EC4EF40314;
+        Tue, 15 Oct 2019 16:47:56 +0800 (SGT)
 From:   Xiaowei Bao <xiaowei.bao@nxp.com>
 To:     Zhiqiang.Hou@nxp.com, bhelgaas@google.com, robh+dt@kernel.org,
         mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com,
@@ -35,45 +35,129 @@ To:     Zhiqiang.Hou@nxp.com, bhelgaas@google.com, robh+dt@kernel.org,
         linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc:     Xiaowei Bao <xiaowei.bao@nxp.com>
-Subject: [PATCH v2 0/6] Add the Mobiveil EP and Layerscape Gen4 EP driver support
-Date:   Tue, 15 Oct 2019 16:36:56 +0800
-Message-Id: <20191015083702.21792-1-xiaowei.bao@nxp.com>
+Subject: [PATCH v2 5/6] arm64: dts: lx2160a: Add PCIe EP node
+Date:   Tue, 15 Oct 2019 16:37:01 +0800
+Message-Id: <20191015083702.21792-6-xiaowei.bao@nxp.com>
 X-Mailer: git-send-email 2.9.5
+In-Reply-To: <20191015083702.21792-1-xiaowei.bao@nxp.com>
+References: <20191015083702.21792-1-xiaowei.bao@nxp.com>
 X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch set are for adding Mobiveil EP driver and adding PCIe Gen4
-EP driver of NXP Layerscape platform.
+Add the LX2160A PCIe EP node.
 
-This patch set depends on:
-https://patchwork.kernel.org/project/linux-pci/list/?series=159139
+Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+---
+v2: 
+ - No change.
 
-Xiaowei Bao (6):
-  PCI: mobiveil: Add the EP driver support
-  dt-bindings: Add DT binding for PCIE GEN4 EP of the layerscape
-  PCI: mobiveil: Add PCIe Gen4 EP driver for NXP Layerscape SoCs
-  PCI: mobiveil: Add workaround for unsupported request error
-  arm64: dts: lx2160a: Add PCIe EP node
-  misc: pci_endpoint_test: Add the layerscape PCIe GEN4 EP device
-    support
+ arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi | 56 ++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
- .../bindings/pci/layerscape-pcie-gen4.txt          |  27 +-
- MAINTAINERS                                        |   3 +
- arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi     |  56 ++
- drivers/misc/pci_endpoint_test.c                   |   2 +
- drivers/pci/controller/mobiveil/Kconfig            |  22 +-
- drivers/pci/controller/mobiveil/Makefile           |   2 +
- .../controller/mobiveil/pcie-layerscape-gen4-ep.c  | 169 ++++++
- drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c | 569 +++++++++++++++++++++
- drivers/pci/controller/mobiveil/pcie-mobiveil.c    |  99 +++-
- drivers/pci/controller/mobiveil/pcie-mobiveil.h    |  72 +++
- 10 files changed, 1009 insertions(+), 12 deletions(-)
- create mode 100644 drivers/pci/controller/mobiveil/pcie-layerscape-gen4-ep.c
- create mode 100644 drivers/pci/controller/mobiveil/pcie-mobiveil-ep.c
-
+diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+index f60e5ac..18330df 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+@@ -1005,6 +1005,15 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3400000 {
++			compatible = "fsl,lx2160a-pcie-ep";
++			reg = <0x00 0x03400000 0x0 0x00100000
++			       0x80 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			apio-wins = <8>;
++			status = "disabled";
++		};
++
+ 		pcie@3500000 {
+ 			compatible = "fsl,lx2160a-pcie";
+ 			reg = <0x00 0x03500000 0x0 0x00100000   /* controller registers */
+@@ -1032,6 +1041,15 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3500000 {
++			compatible = "fsl,lx2160a-pcie-ep";
++			reg = <0x00 0x03500000 0x0 0x00100000
++			       0x88 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			apio-wins = <8>;
++			status = "disabled";
++		};
++
+ 		pcie@3600000 {
+ 			compatible = "fsl,lx2160a-pcie";
+ 			reg = <0x00 0x03600000 0x0 0x00100000   /* controller registers */
+@@ -1059,6 +1077,16 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3600000 {
++			compatible = "fsl,lx2160a-pcie-ep";
++			reg = <0x00 0x03600000 0x0 0x00100000
++			       0x90 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			apio-wins = <256>;
++			max-functions = /bits/ 8 <2>;
++			status = "disabled";
++		};
++
+ 		pcie@3700000 {
+ 			compatible = "fsl,lx2160a-pcie";
+ 			reg = <0x00 0x03700000 0x0 0x00100000   /* controller registers */
+@@ -1086,6 +1114,15 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3700000 {
++			compatible = "fsl,lx2160a-pcie-ep";
++			reg = <0x00 0x03700000 0x0 0x00100000
++			       0x98 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			apio-wins = <8>;
++			status = "disabled";
++		};
++
+ 		pcie@3800000 {
+ 			compatible = "fsl,lx2160a-pcie";
+ 			reg = <0x00 0x03800000 0x0 0x00100000   /* controller registers */
+@@ -1113,6 +1150,16 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3800000 {
++			compatible = "fsl,lx2160a-pcie-ep";
++			reg = <0x00 0x03800000 0x0 0x00100000
++			       0xa0 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			apio-wins = <256>;
++			max-functions = /bits/ 8 <2>;
++			status = "disabled";
++		};
++
+ 		pcie@3900000 {
+ 			compatible = "fsl,lx2160a-pcie";
+ 			reg = <0x00 0x03900000 0x0 0x00100000   /* controller registers */
+@@ -1140,5 +1187,14 @@
+ 			status = "disabled";
+ 		};
+ 
++		pcie_ep@3900000 {
++			compatible = "fsl,lx2160a-pcie-ep";
++			reg = <0x00 0x03900000 0x0 0x00100000
++			       0xa8 0x00000000 0x8 0x00000000>;
++			reg-names = "regs", "addr_space";
++			apio-wins = <8>;
++			status = "disabled";
++		};
++
+ 	};
+ };
 -- 
 2.9.5
 
