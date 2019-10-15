@@ -2,151 +2,142 @@ Return-Path: <SRS0=CLTA=YI=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15E7BECE588
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 16:56:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E288ECE588
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 17:15:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E8C7B21848
-	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 16:56:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 537B42086A
+	for <linux-pci@archiver.kernel.org>; Tue, 15 Oct 2019 17:15:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727306AbfJOQ4x (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 15 Oct 2019 12:56:53 -0400
-Received: from foss.arm.com ([217.140.110.172]:43382 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726360AbfJOQ4w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Oct 2019 12:56:52 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id D4DFA337;
-        Tue, 15 Oct 2019 09:56:51 -0700 (PDT)
-Received: from e121166-lin.cambridge.arm.com (unknown [10.1.196.255])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id B74A23F68E;
-        Tue, 15 Oct 2019 09:56:49 -0700 (PDT)
-Date:   Tue, 15 Oct 2019 17:56:47 +0100
-From:   Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To:     Markus Elfring <Markus.Elfring@web.de>
-Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org,
-        linux-amlogic@lists.infradead.org,
-        Binghui Wang <wangbinghui@hisilicon.com>,
+        id S1726520AbfJORPu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 15 Oct 2019 13:15:50 -0400
+Received: from cloudserver094114.home.pl ([79.96.170.134]:41103 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726277AbfJORPu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Oct 2019 13:15:50 -0400
+Received: from 79.184.254.38.ipv4.supernova.orange.pl (79.184.254.38) (HELO kreacher.localnet)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.292)
+ id 167685bb2f0fdbb3; Tue, 15 Oct 2019 19:15:46 +0200
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Dexuan Cui <decui@microsoft.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        Sasha Levin <Alexander.Levin@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>, olaf@aepfle.de,
+        apw@canonical.com, jasowang@redhat.com, vkuznets@redhat.com,
+        marcelo.cerri@canonical.com, jackm@mellanox.com,
+        linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        driverdev-devel@linuxdriverproject.org,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Kukjin Kim <kgene@kernel.org>, Yue Wang <yue.wang@Amlogic.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org,
-        YueHaibing <yuehaibing@huawei.com>,
-        zhong jiang <zhongjiang@huawei.com>
-Subject: Re: [PATCH] PCI: dwc: Use PTR_ERR_OR_ZERO() in five functions
-Message-ID: <20191015165647.GD25674@e121166-lin.cambridge.arm.com>
-References: <95c9dfae-af81-82ad-e989-1fdf5f29808e@web.de>
+        Linux PM <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH 1/7] PCI/PM: Always return devices to D0 when thawing
+Date:   Tue, 15 Oct 2019 19:15:46 +0200
+Message-ID: <15877028.U7HUqG5fmY@kreacher>
+In-Reply-To: <20191014230016.240912-2-helgaas@kernel.org>
+References: <20191014230016.240912-1-helgaas@kernel.org> <20191014230016.240912-2-helgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <95c9dfae-af81-82ad-e989-1fdf5f29808e@web.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Sep 06, 2019 at 08:50:07PM +0200, Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Fri, 6 Sep 2019 20:40:06 +0200
+On Tuesday, October 15, 2019 1:00:10 AM CEST Bjorn Helgaas wrote:
+> From: Dexuan Cui <decui@microsoft.com>
 > 
-> Simplify these function implementations by using a known function.
+> pci_pm_thaw_noirq() is supposed to return the device to D0 and restore its
+> configuration registers, but previously it only did that for devices whose
+> drivers implemented the new power management ops.
 > 
-> Generated by: scripts/coccinelle/api/ptr_ret.cocci
+> Hibernation, e.g., via "echo disk > /sys/power/state", involves freezing
+> devices, creating a hibernation image, thawing devices, writing the image,
+> and powering off.  The fact that thawing did not return devices with legacy
+> power management to D0 caused errors, e.g., in this path:
 > 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+>   pci_pm_thaw_noirq
+>     if (pci_has_legacy_pm_support(pci_dev)) # true for Mellanox VF driver
+>       return pci_legacy_resume_early(dev)   # ... legacy PM skips the rest
+>     pci_set_power_state(pci_dev, PCI_D0)
+>     pci_restore_state(pci_dev)
+>   pci_pm_thaw
+>     if (pci_has_legacy_pm_support(pci_dev))
+>       pci_legacy_resume
+> 	drv->resume
+> 	  mlx4_resume
+> 	    ...
+> 	      pci_enable_msix_range
+> 	        ...
+> 		  if (dev->current_state != PCI_D0)  # <---
+> 		    return -EINVAL;
+> 
+> which caused these warnings:
+> 
+>   mlx4_core a6d1:00:02.0: INTx is not supported in multi-function mode, aborting
+>   PM: dpm_run_callback(): pci_pm_thaw+0x0/0xd7 returns -95
+>   PM: Device a6d1:00:02.0 failed to thaw: error -95
+> 
+> Return devices to D0 and restore config registers for all devices, not just
+> those whose drivers support new power management.
+> 
+> [bhelgaas: also call pci_restore_state() before pci_legacy_resume_early(),
+> update comment, add stable tag, commit log]
+> Link: https://lore.kernel.org/r/KU1P153MB016637CAEAD346F0AA8E3801BFAD0@KU1P153MB0166.APCP153.PROD.OUTLOOK.COM
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: stable@vger.kernel.org	# v4.13+
+
+No issues found, so
+
+Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
 > ---
->  drivers/pci/controller/dwc/pci-exynos.c |  5 +----
->  drivers/pci/controller/dwc/pci-meson.c  | 10 ++--------
->  drivers/pci/controller/dwc/pcie-kirin.c | 10 ++--------
->  3 files changed, 5 insertions(+), 20 deletions(-)
+>  drivers/pci/pci-driver.c | 17 +++++++++++------
+>  1 file changed, 11 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index a8124e47bf6e..d4ac8ce8c1f9 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1076,17 +1076,22 @@ static int pci_pm_thaw_noirq(struct device *dev)
+>  			return error;
+>  	}
+>  
+> -	if (pci_has_legacy_pm_support(pci_dev))
+> -		return pci_legacy_resume_early(dev);
+> -
+>  	/*
+> -	 * pci_restore_state() requires the device to be in D0 (because of MSI
+> -	 * restoration among other things), so force it into D0 in case the
+> -	 * driver's "freeze" callbacks put it into a low-power state directly.
+> +	 * Both the legacy ->resume_early() and the new pm->thaw_noirq()
+> +	 * callbacks assume the device has been returned to D0 and its
+> +	 * config state has been restored.
+> +	 *
+> +	 * In addition, pci_restore_state() restores MSI-X state in MMIO
+> +	 * space, which requires the device to be in D0, so return it to D0
+> +	 * in case the driver's "freeze" callbacks put it into a low-power
+> +	 * state.
+>  	 */
+>  	pci_set_power_state(pci_dev, PCI_D0);
+>  	pci_restore_state(pci_dev);
+>  
+> +	if (pci_has_legacy_pm_support(pci_dev))
+> +		return pci_legacy_resume_early(dev);
+> +
+>  	if (drv && drv->pm && drv->pm->thaw_noirq)
+>  		error = drv->pm->thaw_noirq(dev);
+>  
+> 
 
-https://lore.kernel.org/linux-pci/20190527140952.GB7202@ulmo/
 
-Dropped, sorry.
 
-Lorenzo
 
-> diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
-> index cee5f2f590e2..b6ab1cc5d895 100644
-> --- a/drivers/pci/controller/dwc/pci-exynos.c
-> +++ b/drivers/pci/controller/dwc/pci-exynos.c
-> @@ -92,10 +92,7 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
-> 
->  	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->  	ep->mem_res->elbi_base = devm_ioremap_resource(dev, res);
-> -	if (IS_ERR(ep->mem_res->elbi_base))
-> -		return PTR_ERR(ep->mem_res->elbi_base);
-> -
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(ep->mem_res->elbi_base);
->  }
-> 
->  static int exynos5440_pcie_get_clk_resources(struct exynos_pcie *ep)
-> diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-> index e35e9eaa50ee..713059918002 100644
-> --- a/drivers/pci/controller/dwc/pci-meson.c
-> +++ b/drivers/pci/controller/dwc/pci-meson.c
-> @@ -182,10 +182,7 @@ static int meson_pcie_get_mems(struct platform_device *pdev,
-> 
->  	/* Meson SoC has two PCI controllers use same phy register*/
->  	mp->mem_res.phy_base = meson_pcie_get_mem_shared(pdev, mp, "phy");
-> -	if (IS_ERR(mp->mem_res.phy_base))
-> -		return PTR_ERR(mp->mem_res.phy_base);
-> -
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(mp->mem_res.phy_base);
->  }
-> 
->  static void meson_pcie_power_on(struct meson_pcie *mp)
-> @@ -259,10 +256,7 @@ static int meson_pcie_probe_clocks(struct meson_pcie *mp)
->  		return PTR_ERR(res->general_clk);
-> 
->  	res->clk = meson_pcie_probe_clock(dev, "pcie", 0);
-> -	if (IS_ERR(res->clk))
-> -		return PTR_ERR(res->clk);
-> -
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(res->clk);
->  }
-> 
->  static inline void meson_elb_writel(struct meson_pcie *mp, u32 val, u32 reg)
-> diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-> index c19617a912bd..75b1f1dde747 100644
-> --- a/drivers/pci/controller/dwc/pcie-kirin.c
-> +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-> @@ -138,10 +138,7 @@ static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
->  		return PTR_ERR(kirin_pcie->apb_sys_clk);
-> 
->  	kirin_pcie->pcie_aclk = devm_clk_get(dev, "pcie_aclk");
-> -	if (IS_ERR(kirin_pcie->pcie_aclk))
-> -		return PTR_ERR(kirin_pcie->pcie_aclk);
-> -
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(kirin_pcie->pcie_aclk);
->  }
-> 
->  static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
-> @@ -174,10 +171,7 @@ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
-> 
->  	kirin_pcie->sysctrl =
->  		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-sctrl");
-> -	if (IS_ERR(kirin_pcie->sysctrl))
-> -		return PTR_ERR(kirin_pcie->sysctrl);
-> -
-> -	return 0;
-> +	return PTR_ERR_OR_ZERO(kirin_pcie->sysctrl);
->  }
-> 
->  static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
-> --
-> 2.23.0
-> 
