@@ -6,47 +6,55 @@ X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E19ECE599
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 06:28:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02E80C4360C
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 06:52:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 768F52168B
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 06:28:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CADA92067D
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 06:52:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YihJJmR+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GpyqjUPu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728241AbfJPG2e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Oct 2019 02:28:34 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:43374 "EHLO
+        id S1732011AbfJPGwf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Oct 2019 02:52:35 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:48166 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727444AbfJPG2e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2019 02:28:34 -0400
+        with ESMTP id S1726372AbfJPGwf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2019 02:52:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Ub26c8z5A9JfTFPI6SxDoFbuRhH0FWEJLyq04FuxNLU=; b=YihJJmR+AwWlBY07w47sBvJnO
-        BNctRzzWJJNu7akowzBygWkDFrIRBDcnmryja6kX2DQm1+EsB0U3E1ca5vy7fvzkOqMhPMmu+I2E2
-        /lJFlk64Qjm81ofdI+mrO62q/MTaD4GQHFHXdjruZOhCF/l3ieILlVT8ATvoYdlEVf9OM29XRDwR5
-        vo4aHuZG/+ljQLi7eg2Db1U/Lh+68EeVD3up1lCdmakAgeyLOQcsSK8tfsHAQgneJnA5ceVJEzoYN
-        HmfIUcWHO4E81jBV+mBXwEz37mwx1Hk1MlDWiZxKmzmRbJeNXHN/bAYfwZ3SM/X1MnJ630U/RMLPO
-        tHtTlCblA==;
+         bh=uMAZZRys5GkzQMBlqs8w/J6ZliGfuWbMK7Pk12sLaUw=; b=GpyqjUPum5gD6lqhhmAKF9cBC
+        GX/YKd8exF9pGkmAoBwrCiaWKufls/xApL1uDV/uul9f3KpM+0kqCbT6hIyPQCjgNnGIJTZl07Lw/
+        jYZR6yJdsUgxb+mveZlQt+00clzw1/lgUN4/SehVlz+HL2C5Nx2Qn6Bm2YrzQVjcCZlfWnIHvzcR3
+        FoOKhpJ9kNM97ARiXodDohQA/wDPfnlnoWJp84+b4ppCmSvqHJ4+igh64kfHSCF8tR/cxlDzH0+9u
+        Qh6XQdHpJCRJ9AKLMUuKR41/BdwXyO1syMRkQmE2XTOV2njok98kn1Hz5+zzH8mkJsSLe1NsBqAMo
+        GhJECqXPQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iKcnP-0001ju-F0; Wed, 16 Oct 2019 06:28:31 +0000
-Date:   Tue, 15 Oct 2019 23:28:31 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Ben Dooks <ben.dooks@codethink.co.uk>
-Cc:     linux-kernel@lists.codethink.co.uk,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: sysfs: remove pci_bridge_groups and pcie_dev_groups
-Message-ID: <20191016062831.GB6537@infradead.org>
-References: <20191015140059.18660-1-ben.dooks@codethink.co.uk>
+        id 1iKdAg-000227-1j; Wed, 16 Oct 2019 06:52:34 +0000
+Date:   Tue, 15 Oct 2019 23:52:34 -0700
+From:   'Christoph Hellwig' <hch@infradead.org>
+To:     Pankaj Dubey <pankaj.dubey@samsung.com>
+Cc:     'Christoph Hellwig' <hch@infradead.org>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        andrew.murray@arm.com, lorenzo.pieralisi@arm.com,
+        gustavo.pimentel@synopsys.com, jingoohan1@gmail.com,
+        vidyas@nvidia.com, 'Anvesh Salveru' <anvesh.s@samsung.com>
+Subject: Re: [PATCH v3] PCI: dwc: Add support to add GEN3 related
+ equalization quirks
+Message-ID: <20191016065234.GA6825@infradead.org>
+References: <CGME20191015025933epcas5p1f0891dacc13648559ed8e037e49ee5b1@epcas5p1.samsung.com>
+ <1571108362-25962-1-git-send-email-pankaj.dubey@samsung.com>
+ <20191015081620.GA28204@infradead.org>
+ <068001d58336$a76ed970$f64c8c50$@samsung.com>
+ <20191015090547.GA7199@infradead.org>
+ <000e01d5836b$ac871190$059534b0$@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191015140059.18660-1-ben.dooks@codethink.co.uk>
+In-Reply-To: <000e01d5836b$ac871190$059534b0$@samsung.com>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
@@ -54,13 +62,13 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 15, 2019 at 03:00:59PM +0100, Ben Dooks wrote:
-> The pci_bridge_groups and pcie_dev_groups objects are
-> not exported and not used at-all, so remove them to
-> fix the following warnings from sparse:
-> 
-> drivers/pci/pci-sysfs.c:1546:30: warning: symbol 'pci_bridge_groups' was not declared. Should it be static?
-> drivers/pci/pci-sysfs.c:1555:30: warning: symbol 'pcie_dev_groups' was not declared. Should it be static?
+On Tue, Oct 15, 2019 at 08:47:32PM +0530, Pankaj Dubey wrote:
+> OK, but do we think the current driver has only code which is being used by
+> some user?
 
-But now pci_bridge_group is unused, and if you remove that the
-attributes, etc..
+That is at least the intent of how we do kernel development. 
+
+> At least I can see current driver has some features which is not being used
+> by any current driver.  
+
+Please send patches to remove them.
