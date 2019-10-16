@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8C0FA372B
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 20:07:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46290FA372B
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 20:07:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75A2C20663
-	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 20:07:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23C6621D7A
+	for <linux-pci@archiver.kernel.org>; Wed, 16 Oct 2019 20:07:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571256445;
-	bh=pFoDjTEuEEpyyD3X8H+Sqa7I0z8XIMd7pU0hob0G5+w=;
+	s=default; t=1571256449;
+	bh=TPw9FVqSp2vCme6iGlQkoO8qY0OGK4pipx59v6MmggM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=TL3n7/nUz454xT6418xj8O1zM5wTaBrkEoDMUwtE8fV/aL05sUoQ0s8rOsVuQ2rls
-	 yhydRTGG4+CkT0w2TUHKb/B/ni4XahbcnmWr5ah569BCuhyIXs7wK0t538y51NPUgB
-	 5i33dEbaf7HjWSX1GDUtxCrRi/aqjs2kkc2TTFZU=
+	b=Mwj9ZmieUrfpc4OF/fX1ZYs9DqzxM/FBr4yEF0cySdm32qCjVhM/H+e2gF25zRCY2
+	 3SN4xEa0NF4yzusKpUCt/gO2Tnjd9DtnM1E9xycl6oPzOTmgZhtIvBebdb2bEUQZ/v
+	 1yK+j+2QL3b7PW8P9VsUKgmXUTJH5LwtkD/U/DF0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733065AbfJPUHZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 16 Oct 2019 16:07:25 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:36267 "EHLO
+        id S1733222AbfJPUH2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 16 Oct 2019 16:07:28 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:37391 "EHLO
         mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733045AbfJPUHY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2019 16:07:24 -0400
-Received: by mail-ot1-f66.google.com with SMTP id 67so21295036oto.3;
-        Wed, 16 Oct 2019 13:07:24 -0700 (PDT)
+        with ESMTP id S1733109AbfJPUH2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Oct 2019 16:07:28 -0400
+Received: by mail-ot1-f66.google.com with SMTP id k32so21293222otc.4;
+        Wed, 16 Oct 2019 13:07:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=3EQHmxhtyQ0FW8KKG3OU1ZuRq6/S0PaAKIhLXxkbZok=;
-        b=qsYHomGqKvvPem5ys0uHAId0lV68lPbmQ2Q3aWDaC5MuKQR31Zjf7ERXXK+N4N8IA2
-         ar9kghol6BTp/lUIGf56FmYk7meTxIFhDgzQ0yfTvMTatb1Kwu06+6NvgR0osM/59rBD
-         vfD28hfYZbmS2y9tPjorUHn4/B9QAZxgBYvjtIbQlo2ltWx/I8PmkVwVSgRy7BxHmean
-         Xj7gRcuw2AM0K3HwtlnI7JG3EBrJKvfcgW8QsRlv53aJMdfxTUuxxvWZZLAE0F9j+3h6
-         Lxuv5SI0Kqd7b9r9SYIS0wLi9JdzS1dsrSpi/vzzpmlqovjM268nCwEaYaD7O9f3xfAx
-         K16g==
-X-Gm-Message-State: APjAAAVcLUirK7zqqqpd1TF1pC85ndD3NrB9G9MxGSPIIRCF11Mig23k
-        XvL+r327dKMK3+3NFzg+ZQ==
-X-Google-Smtp-Source: APXvYqxfy07UxT1e2YWP1cod5gpc4Orw7/BMqXRZOexcKu0FIf+wZSpdoyf29cKC7t3/8xf0Exrt8g==
-X-Received: by 2002:a05:6830:12d6:: with SMTP id a22mr47577otq.146.1571256443835;
-        Wed, 16 Oct 2019 13:07:23 -0700 (PDT)
+        bh=XzKyx3hGWss5OyYjnaux42GwkpReDhw7ttXIKJ3XApk=;
+        b=gTxQi2P+y09QAqXQxD5bZysoBpJdSshVmQLS4HIBgEVMDRNpi/kTRZ1iVDmtBe8rEY
+         5XHiGhGfYnVjOZl8aKhyK7Aj1wjJOJZE+pQ4nIRbeFhsr/vVxeLWDggWpykxm6AaYCQh
+         7JQPfaQfLMwzbmtRHS1vafn/EqNgPk/swT6j9iHFgz2seztJ5Fs0Jpc1BJ1Gfj7bMd6J
+         6/WTogsNdQeqCqPkKoy//O2/o4EilLozeRAF+DbUlQE7x9zC2U6Ar8oO+9SoLZte74b8
+         1nvWvE8PIYXEDypIu/46sTLz/42+ZjvLTbgYrrbKmLNeVE9GmnEQNBrDSSFPyWpInFzY
+         UIQg==
+X-Gm-Message-State: APjAAAVq9RowHnLZ58/nTBJ0MIQV9fTahRIfjOp/PHgaT3f18RNmm9Mp
+        DlcbLSWD+u6U0izBlosfXw==
+X-Google-Smtp-Source: APXvYqzuOOI5O9nPE4chqz7q1M50UXLGHgUlkPl19eYyojabF8hEv3WJogI/0IUIWHhrDxD1NedNKw==
+X-Received: by 2002:a05:6830:1e59:: with SMTP id e25mr36910otj.342.1571256447566;
+        Wed, 16 Oct 2019 13:07:27 -0700 (PDT)
 Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id a9sm7412463oie.7.2019.10.16.13.07.22
+        by smtp.googlemail.com with ESMTPSA id a9sm7412463oie.7.2019.10.16.13.07.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Oct 2019 13:07:23 -0700 (PDT)
+        Wed, 16 Oct 2019 13:07:26 -0700 (PDT)
 From:   Rob Herring <robh@kernel.org>
 To:     Andrew Murray <andrew.murray@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -75,9 +75,9 @@ Cc:     linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
         Toan Le <toan@os.amperecomputing.com>,
         Tom Joseph <tjoseph@cadence.com>, Will Deacon <will@kernel.org>
-Subject: [PATCH v2 18/25] PCI: versatile: Enable COMPILE_TEST
-Date:   Wed, 16 Oct 2019 15:06:40 -0500
-Message-Id: <20191016200647.32050-19-robh@kernel.org>
+Subject: [PATCH v2 20/25] PCI: ftpci100: Use inbound resources for setup
+Date:   Wed, 16 Oct 2019 15:06:42 -0500
+Message-Id: <20191016200647.32050-21-robh@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191016200647.32050-1-robh@kernel.org>
 References: <20191016200647.32050-1-robh@kernel.org>
@@ -88,31 +88,80 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since commit a574795bc383 ("PCI: generic,versatile: Remove unused
-pci_sys_data structures") the build dependency on ARM is gone, so let's
-enable COMPILE_TEST for versatile.
+Now that the helpers provide the inbound resources in the host bridge
+'dma_ranges' resource list, convert Faraday ftpci100 host bridge to use
+the resource list to setup the inbound addresses.
 
-Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Andrew Murray <andrew.murray@arm.com>
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/controller/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/pci-ftpci100.c | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 70e078238899..f5de9119e8d3 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -135,7 +135,7 @@ config PCI_V3_SEMI
+diff --git a/drivers/pci/controller/pci-ftpci100.c b/drivers/pci/controller/pci-ftpci100.c
+index 5824913e311b..e6b498de35e1 100644
+--- a/drivers/pci/controller/pci-ftpci100.c
++++ b/drivers/pci/controller/pci-ftpci100.c
+@@ -375,12 +375,11 @@ static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
+ 	return 0;
+ }
  
- config PCI_VERSATILE
- 	bool "ARM Versatile PB PCI controller"
--	depends on ARCH_VERSATILE
-+	depends on ARCH_VERSATILE || COMPILE_TEST
+-static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
+-					    struct device_node *np)
++static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p)
+ {
+-	struct of_pci_range range;
+-	struct of_pci_range_parser parser;
+ 	struct device *dev = p->dev;
++	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(p);
++	struct resource_entry *entry;
+ 	u32 confreg[3] = {
+ 		FARADAY_PCI_MEM1_BASE_SIZE,
+ 		FARADAY_PCI_MEM2_BASE_SIZE,
+@@ -389,19 +388,12 @@ static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
+ 	int i = 0;
+ 	u32 val;
  
- config PCIE_IPROC
- 	tristate
+-	if (of_pci_dma_range_parser_init(&parser, np)) {
+-		dev_err(dev, "missing dma-ranges property\n");
+-		return -EINVAL;
+-	}
+-
+-	/*
+-	 * Get the dma-ranges from the device tree
+-	 */
+-	for_each_of_pci_range(&parser, &range) {
+-		u64 end = range.pci_addr + range.size - 1;
++	resource_list_for_each_entry(entry, &bridge->dma_ranges) {
++		u64 pci_addr = entry->res->start - entry->offset;
++		u64 end = entry->res->end - entry->offset;
+ 		int ret;
+ 
+-		ret = faraday_res_to_memcfg(range.pci_addr, range.size, &val);
++		ret = faraday_res_to_memcfg(pci_addr, resource_size(entry->res), &val);
+ 		if (ret) {
+ 			dev_err(dev,
+ 				"DMA range %d: illegal MEM resource size\n", i);
+@@ -409,7 +401,7 @@ static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
+ 		}
+ 
+ 		dev_info(dev, "DMA MEM%d BASE: 0x%016llx -> 0x%016llx config %08x\n",
+-			 i + 1, range.pci_addr, end, val);
++			 i + 1, pci_addr, end, val);
+ 		if (i <= 2) {
+ 			faraday_raw_pci_write_config(p, 0, 0, confreg[i],
+ 						     4, val);
+@@ -539,7 +531,7 @@ static int faraday_pci_probe(struct platform_device *pdev)
+ 			cur_bus_speed = PCI_SPEED_66MHz;
+ 	}
+ 
+-	ret = faraday_pci_parse_map_dma_ranges(p, dev->of_node);
++	ret = faraday_pci_parse_map_dma_ranges(p);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
 2.20.1
 
