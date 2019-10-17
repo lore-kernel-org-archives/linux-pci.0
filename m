@@ -2,69 +2,142 @@ Return-Path: <SRS0=EFs6=YK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32663ECE58E
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53E63ECE58D
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 19:03:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 11487222BD
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 271822089C
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 19:03:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1571338994;
+	bh=Vtu7WXkjJrPIStuetaO4zchHi6KEh01fITCJxciZv14=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=UREyFR6Jqde503xbmLSroGY/cptwgzBlWEsVnCRCVFkAIJ8vQYuX8CpXuMk8i6QTF
+	 IaT0VkrBtzbLwUCT6A2tTfK/y7Yjgs4Wyc5JLXk6WNIJWfIAIOVvvnOTYiX46Uuy16
+	 6wvPsW7X/IjlnL/lsTZrpIxWI8Z7DViCQHu70yHc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503286AbfJQSWb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Oct 2019 14:22:31 -0400
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:38539 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2503283AbfJQSWb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2019 14:22:31 -0400
-Received: by mail-pg1-f178.google.com with SMTP id w3so1823596pgt.5
-        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2019 11:22:30 -0700 (PDT)
+        id S2407138AbfJQTDN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Oct 2019 15:03:13 -0400
+Received: from mail-ot1-f68.google.com ([209.85.210.68]:46659 "EHLO
+        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728796AbfJQTDN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2019 15:03:13 -0400
+Received: by mail-ot1-f68.google.com with SMTP id 89so2809374oth.13;
+        Thu, 17 Oct 2019 12:03:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:date:message-id:mime-version
-         :content-transfer-encoding:cc:from:to;
-        bh=qJ6/zX4CJXyT8jN+BKjWcB5Fc+YC0TUGB76PLX5dDk8=;
-        b=p8mMOA3DkFppamq6uK5IB/cW/vnj4DDtLTXFU/yjYZUNoCWxVCTcVxI8dDyqe2+sVD
-         dK5bRTN2AXNTjgM+Eoe03Fiwbd+3w7xl2MVmmap1zKLVJHH2oIEpX5a7ApTrxc+ze+fE
-         dblge3X0/gUS7VnPvcBEHEaetzOD5cNR8bh73bvH8VsRnd/8enll+mxPqcoPoWlk1wHo
-         hGBaegezM3weoOtwWYFyDPdEHpEl0jcoRV/6amg36/GJR1V23Rwp2/od8V3hQCOOwJ5O
-         crQxtz3HngDFoyaUZIYpMb5evMSjySVnJjdbhBDV4RdtvZjh7x+aTgXgoTn72NRiLdW8
-         JjEg==
-X-Gm-Message-State: APjAAAUwQ411OR3FBY0H11dTOMmFNkA0eIiDPfgSEcx4wFsbAeixSTvm
-        5CmIZ3hOd/Fh0QeeEP4f84ptvw==
-X-Google-Smtp-Source: APXvYqyJNHvaSBqrZiRuB0+cioJyGR8wen484kCJG+fmxEESVRjqBPiqSzXAunoRqzPXJMJEDNhhdA==
-X-Received: by 2002:a62:b504:: with SMTP id y4mr1684760pfe.198.1571336549961;
-        Thu, 17 Oct 2019 11:22:29 -0700 (PDT)
-Received: from localhost ([12.206.222.5])
-        by smtp.gmail.com with ESMTPSA id p190sm3078797pfb.160.2019.10.17.11.22.29
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=+qxiN1i8NgnAmFnuqifw0bfYtiKy3k77tTLRGy5BhP4=;
+        b=O/Oo1gEpAcxCAUaEZll3xiDTGBUIoSZ1NVehn4WYIm1NtaLjVvATVLLo6pFsC3h4Zs
+         zM85mFFFlMqweP1HA9fTcrfhtrtjBmhbltqaTsC67MGqL+DNXveEIi1USe1PgW3jEFtc
+         Nq4EMSJ1o8G5YTZzljQZb18LpRwz/S6CD/L6TSHaNYSUIhEQnsh3O194wPuGc/qJbeVH
+         tP/T/sk89Fv4/+w1ixzjV7skQd7jcU7bSS92CqNfgxbVoMhAiLhcEVdIYimW6PNCw/kv
+         MvKBwCMpWdxtO3w8iw93TMu5I0a9HdGHhB7tdGjq3qN0WgMtyd+x5qBW4S97S1/bSeqa
+         cwmg==
+X-Gm-Message-State: APjAAAWDSNyhpevYkqiMq33+xeGuTSj6STCH0GZBD/+kUaNpsbNQz5wd
+        lmjgWm9VaDBVgk2cJaPIrQ==
+X-Google-Smtp-Source: APXvYqwfC0xQT9R4BEm53I1uAtAHkdVvYNYiviZLIvLVL5SP8gE5++QtXNV/rJ83zRkat6VY30bZIw==
+X-Received: by 2002:a9d:6c0a:: with SMTP id f10mr4511862otq.155.1571338992427;
+        Thu, 17 Oct 2019 12:03:12 -0700 (PDT)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id m14sm799068otl.26.2019.10.17.12.03.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Oct 2019 11:22:29 -0700 (PDT)
-Subject: PCI/MSI: Remove the PCI_MSI_IRQ_DOMAIN architecture whitelist
-Date:   Thu, 17 Oct 2019 11:19:34 -0700
-Message-Id: <20191017181937.7004-1-palmer@sifive.com>
-X-Mailer: git-send-email 2.21.0
+        Thu, 17 Oct 2019 12:03:10 -0700 (PDT)
+Date:   Thu, 17 Oct 2019 14:03:10 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     Zhiqiang.Hou@nxp.com, bhelgaas@google.com, mark.rutland@arm.com,
+        shawnguo@kernel.org, leoyang.li@nxp.com, kishon@ti.com,
+        lorenzo.pieralisi@arm.com, Minghuan.Lian@nxp.com,
+        andrew.murray@arm.com, mingkai.hu@nxp.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 2/6] dt-bindings: Add DT binding for PCIE GEN4 EP of
+ the layerscape
+Message-ID: <20191017190310.GA32063@bogus>
+References: <20191015083702.21792-1-xiaowei.bao@nxp.com>
+ <20191015083702.21792-3-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Cc:     tony.luck@intel.com, fenghua.yu@intel.com,
-        heiko.carstens@de.ibm.com, gor@linux.ibm.com,
-        borntraeger@de.ibm.com, bhelgaas@google.com, will@kernel.org,
-        Greg KH <gregkh@linuxfoundation.org>,
-        Palmer Dabbelt <palmer@sifive.com>,
-        kstewart@linuxfoundation.org, pbonzini@redhat.com,
-        firoz.khan@linaro.org, yamada.masahiro@socionext.com,
-        longman@redhat.com, mingo@kernel.org, peterz@infradead.org,
-        linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
-From:   Palmer Dabbelt <palmer@sifive.com>
-To:     Christoph Hellwig <hch@infradead.org>, michal.simek@xilinx.com,
-        helgaas@kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191015083702.21792-3-xiaowei.bao@nxp.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This came up in the context of the microblaze port, where a patch was
-recently posted to extend the whitelist.
+On Tue, Oct 15, 2019 at 04:36:58PM +0800, Xiaowei Bao wrote:
+> Add the documentation for the Device Tree binding of the layerscape
+> PCIe GEN4 controller with EP mode.
+> 
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> ---
+> v2: 
+>  - remove the status entry in EP Example.
+> 
+>  .../bindings/pci/layerscape-pcie-gen4.txt          | 27 +++++++++++++++++++++-
+>  1 file changed, 26 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt b/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
+> index b40fb5d..06f9309 100644
+> --- a/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
+> +++ b/Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
+> @@ -3,6 +3,8 @@ NXP Layerscape PCIe Gen4 controller
+>  This PCIe controller is based on the Mobiveil PCIe IP and thus inherits all
+>  the common properties defined in mobiveil-pcie.txt.
+>  
+> +HOST MODE
+> +=========
+>  Required properties:
+>  - compatible: should contain the platform identifier such as:
+>    "fsl,lx2160a-pcie"
+> @@ -23,7 +25,20 @@ Required properties:
+>  - msi-parent : See the generic MSI binding described in
+>    Documentation/devicetree/bindings/interrupt-controller/msi.txt.
+>  
+> -Example:
+> +DEVICE MODE
+> +=========
+> +Required properties:
+> +- compatible: should contain the platform identifier such as:
+> +  "fsl,lx2160a-pcie-ep"
+> +- reg: base addresses and lengths of the PCIe controller register blocks.
+> +  "regs": PCIe controller registers.
+> +  "addr_space" EP device CPU address.
+> +- apio-wins: number of requested apio outbound windows.
+> +
+> +Optional Property:
+> +- max-functions: Maximum number of functions that can be configured (default 1).
+> +
+> +RC Example:
+>  
+>  	pcie@3400000 {
+>  		compatible = "fsl,lx2160a-pcie";
+> @@ -50,3 +65,13 @@ Example:
+>  				<0000 0 0 3 &gic 0 0 GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>,
+>  				<0000 0 0 4 &gic 0 0 GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
+>  	};
+> +
+> +EP Example:
+> +
+> +	pcie_ep@3400000 {
 
+To repeat my previous comment:
 
+pcie-endpoint@...
+
+> +		compatible = "fsl,lx2160a-pcie-ep";
+> +		reg = <0x00 0x03400000 0x0 0x00100000
+> +		       0x80 0x00000000 0x8 0x00000000>;
+> +		reg-names = "regs", "addr_space";
+> +		apio-wins = <8>;
+> +	};
+> -- 
+> 2.9.5
+> 
