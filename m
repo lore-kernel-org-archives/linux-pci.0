@@ -4,46 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4A44ECE58E
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8392FECE58E
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C892521A49
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C31720854
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503325AbfJQSWk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Oct 2019 14:22:40 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:38156 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2503310AbfJQSWf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2019 14:22:35 -0400
-Received: by mail-pf1-f194.google.com with SMTP id h195so2170075pfe.5
-        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2019 11:22:34 -0700 (PDT)
+        id S2503306AbfJQSWp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Oct 2019 14:22:45 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:41231 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2503288AbfJQSWc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2019 14:22:32 -0400
+Received: by mail-pg1-f196.google.com with SMTP id t3so1815221pga.8
+        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2019 11:22:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding:cc:from:to;
-        bh=Vl0993kFOVCbFbBd0f73Vm2bgxp+dYjZuoT4X6x3qbo=;
-        b=nLk8WQ6M/i1RttpNO761kmYwJQNLkbQ3KcAyCX3ZwFkCbfbyZC8f2NVTFcOZTjMKaC
-         0T1jrWxLh92705bPzggbKG+MisV0hQIka0pNwS/KYHBFFrgxVl8G9HUS8ZRyLJZVRyxo
-         yil8GpvjVworm57GJREBJICJ34bOhG7uBiQpKkwDtgtmgQXdXyy5fpLQ+BDQr6NFGxnR
-         B+rRWMFEC6FEL4HfB95h9jdptVtAlqM3HD6s68cgRVz6DFUHcS2oPONMuLYZba2UIv5H
-         JdS6Dhwr4lNEZhcldwyKbOYzM3iXVDxtD/h5qWK65luZ9xhcKHcgkhndPJ6ZZwKHzfO8
-         LYBw==
-X-Gm-Message-State: APjAAAXqwdy7xfGS+QHRwKIVh5vexbif9ipbtoVsnf9YO3jFz7xD9szM
-        mNbI6+H1xXnBxebndnyaiD5gLg==
-X-Google-Smtp-Source: APXvYqynD9rVIS1o3qWTvaQTxl9H6HgwDspwax1m/MNQ8kaTqQ6suPLQuCl8IkuSxv3eFErDBkUQ1g==
-X-Received: by 2002:a17:90a:1b49:: with SMTP id q67mr6162405pjq.115.1571336554301;
-        Thu, 17 Oct 2019 11:22:34 -0700 (PDT)
+        bh=2KT/1Ua4Ne08bIcLoxtdMsARQdKvdiD630BlGhWeLtw=;
+        b=WiyD9wrMewk1bCixmcryiXhlClNvfNp4VyOFw4YtPVwgbO728G03De9Rlez8om1rlR
+         SNK1h0z6J1x6htUKhwaP0fZIsXLXHh24C+Fqr1TrIbCIGBtwppcSISlO+KSJIqGm1XAQ
+         Dn8QvqXCW/kjAkn67ogIeHQciKaAEvoTKPpV7hErN4ct7tiRVfXXOLxabqzbuNRilbzw
+         dvVlZA/tRcWiqeVD3EcAfOk5L0vTBGXLZKuSCAXdDVdpA2RL/vZh9vCYqJcjxe8OKDo6
+         mPGyMoXPOJMo7BOloFuA1a+ic1eaCXC1ZKjeRGzwvUeLehDY38/raz8ryUgr1eWE4UTx
+         PypA==
+X-Gm-Message-State: APjAAAU7UHhCRWdD3zU+tcnk6wPUDSEq52EBJ69qQ+YYhnhBOoFK5lPj
+        Pi7F8pUd3qLH7y17JECzqQtWJQ==
+X-Google-Smtp-Source: APXvYqzRFMnoGzdJ2pTmCdShwyvvireoh2sq3hfvaMP0TW/8NOqgFYu+GU8GpPpVrwDdC5UWEBAmzA==
+X-Received: by 2002:a63:5423:: with SMTP id i35mr5812604pgb.128.1571336551338;
+        Thu, 17 Oct 2019 11:22:31 -0700 (PDT)
 Received: from localhost ([12.206.222.5])
-        by smtp.gmail.com with ESMTPSA id s36sm3153399pgk.84.2019.10.17.11.22.33
+        by smtp.gmail.com with ESMTPSA id u5sm4007226pfl.25.2019.10.17.11.22.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Oct 2019 11:22:33 -0700 (PDT)
-Subject: [PATCH 3/3] pci: Default to PCI_MSI_IRQ_DOMAIN
-Date:   Thu, 17 Oct 2019 11:19:37 -0700
-Message-Id: <20191017181937.7004-4-palmer@sifive.com>
+        Thu, 17 Oct 2019 11:22:30 -0700 (PDT)
+Subject: [PATCH 1/3] ia64: Use the generic msi.h
+Date:   Thu, 17 Oct 2019 11:19:35 -0700
+Message-Id: <20191017181937.7004-2-palmer@sifive.com>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20191017181937.7004-1-palmer@sifive.com>
 References: <20191017181937.7004-1-palmer@sifive.com>
@@ -67,29 +66,32 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-As far as I can tell, the only reason there was an architecture
-whitelist for PCI_MSI_IRQ_DOMAIN is because it requires msi.h.  I've
-built this for all the architectures that play nice with make.cross, but
-I haven't boot tested it anywhere.
+Without this I can't enable PCI_MSI_IRQ_DOMAIN, which as far as I can
+tell only depends on generic functionality provided by msi.h.
+PCI_MSI_IRQ_DOMAIN has historically had a whitelist of supported
+architectures, but that list is getting long enough that it's cleaner to
+just enable it everywhere.
+
+This builds with an ia64 defconfig, but I have no access to ia64 and
+therefor can't even boot test it.
 
 Signed-off-by: Palmer Dabbelt <palmer@sifive.com>
 ---
- drivers/pci/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/ia64/include/asm/Kbuild | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index a304f5ea11b9..77c1428cd945 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -52,7 +52,7 @@ config PCI_MSI
- 	   If you don't know what to do here, say Y.
- 
- config PCI_MSI_IRQ_DOMAIN
--	def_bool ARC || ARM || ARM64 || X86 || RISCV
-+	def_bool y
- 	depends on PCI_MSI
- 	select GENERIC_MSI_IRQ_DOMAIN
- 
+diff --git a/arch/ia64/include/asm/Kbuild b/arch/ia64/include/asm/Kbuild
+index 390393667d3b..22d6dbefa7d7 100644
+--- a/arch/ia64/include/asm/Kbuild
++++ b/arch/ia64/include/asm/Kbuild
+@@ -6,6 +6,7 @@ generic-y += irq_work.h
+ generic-y += kvm_para.h
+ generic-y += mcs_spinlock.h
+ generic-y += mm-arch-hooks.h
++generic-y += msi.h
+ generic-y += preempt.h
+ generic-y += trace_clock.h
+ generic-y += vtime.h
 -- 
 2.21.0
 
