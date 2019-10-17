@@ -2,177 +2,96 @@ Return-Path: <SRS0=EFs6=YK=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7728FECE58E
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 15:01:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5839ECE58E
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 47A1721835
-	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 15:01:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XKEY2z+9"
+	by mail.kernel.org (Postfix) with ESMTP id AFF4621A49
+	for <linux-pci@archiver.kernel.org>; Thu, 17 Oct 2019 18:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2409420AbfJQPBd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 17 Oct 2019 11:01:33 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:46247 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731768AbfJQPBd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2019 11:01:33 -0400
-Received: by mail-wr1-f68.google.com with SMTP id o18so2710750wrv.13;
-        Thu, 17 Oct 2019 08:01:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=rPrR6jLmExayGLjzUJ+1X2I2i+nxJQ6cJru8S2n0YGE=;
-        b=XKEY2z+9NUaFx+epe00hL3NEtw2A0m77/3pA5mWSX4B1X1zG4vqgw4tnBvWjuo2SCe
-         IB7BnhknNc6gHfOOGn6zwOGRIdN+Z9BlDF8MoO4xpz3Rknt6Ic3gWWKrWMNn2XZmUddg
-         96zgCy2kr34oLdicP8oT0nKY+zVOuUq9cJLCy0UrKKTrvUXh4rDT4J7Z8o2j7KFZemE0
-         yTvMwJ6LEFc6v/pWvrh9a+9bt1fcgj3h3xY7aid3Gbx9TwhLwvjq7p19P6SmE0I8GBcE
-         vQQFdSmbnnTkoh8XWs+wkKXSZ4dLE2f0yomSb3snKt66IKbLMF1E8JVEKTJeC4ak5Dps
-         7ulA==
+        id S2503312AbfJQSWf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 17 Oct 2019 14:22:35 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42661 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2503305AbfJQSWe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Oct 2019 14:22:34 -0400
+Received: by mail-pg1-f195.google.com with SMTP id f14so1807980pgi.9
+        for <linux-pci@vger.kernel.org>; Thu, 17 Oct 2019 11:22:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=rPrR6jLmExayGLjzUJ+1X2I2i+nxJQ6cJru8S2n0YGE=;
-        b=migcLxH01HerDTOtmFnOlAFLYf2RTwjfRE5IQOSDn+zLqCvbm4RtxYUb42gDdp8Qz2
-         Xsm0lzLkXUFj5oegtCfPA3PSIfmFhEXjNezlcelr5VvFKQy4XlEgqBI5LkXpPZnxckqh
-         jMUSczsQJtu9/Jm2qC5YmJof9VTkBsfYoR3OUQ5Plnd29Z8JXyk8AdQfE1wva1fQyJFN
-         +nL+70wmricndWKp7PXvVBEEow0DYh80UTGUTiyocybdM6yygjnPfIDB0McZZ3m9+1xk
-         4BuxozzOlivznoUpaDzIrueS20N1y5vhWlpeBnAf2RPR8HjJzKZzHDf2mzyRakziI5Wq
-         270g==
-X-Gm-Message-State: APjAAAVO4a/kv5BWiAjEkYYd2eGGbxUcCZDFNDYK8klNKQohyFmy1pJT
-        Ze5B03nb9CaxcGAWCDd9+TKsHSWg
-X-Google-Smtp-Source: APXvYqxgirmv6RHXW2ZaXtoOFIbaujB6C4m9d5azJuRjAboLzesmBwnqshGT8rlvyaNzechziWxwBw==
-X-Received: by 2002:a5d:4108:: with SMTP id l8mr3310654wrp.391.1571324488434;
-        Thu, 17 Oct 2019 08:01:28 -0700 (PDT)
-Received: from [192.168.1.4] (ip-86-49-35-8.net.upcbroadband.cz. [86.49.35.8])
-        by smtp.gmail.com with ESMTPSA id a9sm3252107wmf.14.2019.10.17.08.01.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Oct 2019 08:01:27 -0700 (PDT)
-Subject: Re: [PATCH V3 2/3] PCI: rcar: Do not abort on too many inbound
- dma-ranges
-To:     Rob Herring <robh@kernel.org>
-Cc:     Robin Murphy <robin.murphy@arm.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        PCI <linux-pci@vger.kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Wolfram Sang <wsa@the-dreams.de>,
-        "open list:MEDIA DRIVERS FOR RENESAS - FCP" 
-        <linux-renesas-soc@vger.kernel.org>
-References: <20190809175741.7066-1-marek.vasut@gmail.com>
- <20191016150001.GA7457@e121166-lin.cambridge.arm.com>
- <c4353d63-6f78-92b3-91c9-acc9327e1d80@gmail.com>
- <20191016152601.GB7457@e121166-lin.cambridge.arm.com>
- <75fb3519-80eb-fec2-d3eb-cc1b884fef25@gmail.com>
- <20191016161846.GC7457@e121166-lin.cambridge.arm.com>
- <CAL_JsqL2c-ODMkOo1tAJh8JeF0VRXahCq2zF2fX8dZV8wpQj+Q@mail.gmail.com>
- <c835701d-ff0e-f1b8-af16-fe53febe5519@gmail.com>
- <CAL_Jsq+4uaFJzk5jUPw+KssZvnji0WDh+QcFMok99XXntEhNTQ@mail.gmail.com>
- <88099c4f-4fb4-626e-f66f-3eb8861dfb2c@gmail.com>
- <CAL_JsqLzmk5dfn0Re3y7VjY5ehE29vKLOV-2tM5B_jPbB2YiPQ@mail.gmail.com>
- <06d093b2-dcc2-a01f-fce0-5db0bc47325e@gmail.com>
- <CAMuHMdXjZs6Gvar3o7wXd2-1tkPtpt3qxZLG5vzDfrCG4d9SeQ@mail.gmail.com>
- <ca16e883-27d3-2cd0-7d71-fa9b169dcccd@gmail.com>
- <ccf8a4f9-1758-bafc-797c-714f06810db3@arm.com>
- <6af92fb1-a154-3e03-d239-0417da5a5094@gmail.com>
- <CAL_JsqKEjzO3s=bBf_TxTAXTzLTcX=8ccFXLfowhPOHWzNET9A@mail.gmail.com>
-From:   Marek Vasut <marek.vasut@gmail.com>
-Message-ID: <5a19fcd3-2071-334a-1c4a-59d07f4a387d@gmail.com>
-Date:   Thu, 17 Oct 2019 17:01:26 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        h=x-gm-message-state:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding:cc:from:to;
+        bh=DgBlxGGOySK3PLbEB8KobplGmb/95tE64KOi4eUuQBM=;
+        b=OuoRmbRd5Brb4bOa+KJONgu47E33OaUmWxD6R3fi07253VF/TvXYdisloB1V/BpX4S
+         MsCCbpuYvnycOiSFaiKP32u5/XHu+M5oP5YHL2xKsaN1xhviziBZJP4HZwL8BYE6ewi4
+         673IpIK4oYSa5u5eWUD5YEIF35i26IIYZlXLcZTCfL5QjMtDlLI6Y04NhUKGtUYe5S1l
+         MzZouP2YGz72xiTQFJMOzZJ+qjbvJrii9cCTfO356PEg9JwTinXLv1vmA3CagXRkZ0Jq
+         dy0bkJo7AUZMzYZjwh2oGk9j5MNOG3v4Mr63kwxZs89HqgYuJ8AZTsiUU39GfLzGnBqh
+         puvQ==
+X-Gm-Message-State: APjAAAW6CsxtZX7J9Jx3psQ/wtbeFOXqfzTn8b+J6+n5dlQOVjq250lg
+        Dcz3WrNzmqjtU9CmiteD/+WV4g==
+X-Google-Smtp-Source: APXvYqybdVbJNTvuzOcVhsPQif36O+YC/nFlezJzYkDdm19blzh9K6d8ez4kplshP0Xrf/0pwtO9Ew==
+X-Received: by 2002:a62:cf42:: with SMTP id b63mr1721635pfg.33.1571336553006;
+        Thu, 17 Oct 2019 11:22:33 -0700 (PDT)
+Received: from localhost ([12.206.222.5])
+        by smtp.gmail.com with ESMTPSA id s5sm2751586pjn.24.2019.10.17.11.22.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Oct 2019 11:22:32 -0700 (PDT)
+Subject: [PATCH 2/3] s390: Use the generic msi.h
+Date:   Thu, 17 Oct 2019 11:19:36 -0700
+Message-Id: <20191017181937.7004-3-palmer@sifive.com>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20191017181937.7004-1-palmer@sifive.com>
+References: <20191017181937.7004-1-palmer@sifive.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqKEjzO3s=bBf_TxTAXTzLTcX=8ccFXLfowhPOHWzNET9A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Cc:     tony.luck@intel.com, fenghua.yu@intel.com,
+        heiko.carstens@de.ibm.com, gor@linux.ibm.com,
+        borntraeger@de.ibm.com, bhelgaas@google.com, will@kernel.org,
+        Greg KH <gregkh@linuxfoundation.org>,
+        Palmer Dabbelt <palmer@sifive.com>,
+        kstewart@linuxfoundation.org, pbonzini@redhat.com,
+        firoz.khan@linaro.org, yamada.masahiro@socionext.com,
+        longman@redhat.com, mingo@kernel.org, peterz@infradead.org,
+        linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-pci@vger.kernel.org
+From:   Palmer Dabbelt <palmer@sifive.com>
+To:     Christoph Hellwig <hch@infradead.org>, michal.simek@xilinx.com,
+        helgaas@kernel.org
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 10/17/19 4:36 PM, Rob Herring wrote:
-[...]>>>>> The PCI device will trigger transactions to memory only when
-instructed
->>>>> to do so by Linux, right?  Hence if Linux takes into account
->>>>> chosen/memory
->>>>> and dma-ranges, there is no problem?
->>>>
->>>> Unless of course the remote device initiates a transfer. And if the
->>>> controller is programmed such that accesses to the missing DRAM in the
->>>> holes are not filtered out by the controller, then the controller will
->>>> gladly let the transaction through. Do we really want to let this
->>>> happen ?
->>>
->>> If you've got devices making random unsolicited accesses then who's to
->>> say they wouldn't also hit valid windows and corrupt memory? If it's
->>> happening at all you've already lost.
->>
->> Not necessarily. If your controller is programmed correctly with just
->> the ranges that are valid, then it will filter out at least the accesses
->> outside of valid memory. If it is programmed incorrectly, as you
->> suggest, then the accesses will go through, causing undefined behavior.
->>
->> And note that there is such weird buggy PCI hardware. A slightly
->> unrelated example are some of the ath9k, which are generating spurious
->> MSIs even if they are in legacy PCI IRQ mode. If the controller is
->> configured correctly, even those buggy cards work, because it can filter
->> the spurious MSIs out. If not, they do not.
-> 
-> How do those devices work on h/w without inbound window configuration
-> or they don't?
+Without this I can't enable PCI_MSI_IRQ_DOMAIN, which as far as I can
+tell only depends on generic functionality provided by msi.h.
+PCI_MSI_IRQ_DOMAIN has historically had a whitelist of supported
+architectures, but that list is getting long enough that it's cleaner to
+just enable it everywhere.
 
-With legacy IRQs.
+This builds with an s390 defconfig, but I have no access to s390 and
+therefor can't even boot test it.
 
-> How do the spurious MSIs only go to invalid addresses and not valid addresses?
+Signed-off-by: Palmer Dabbelt <palmer@sifive.com>
+---
+ arch/s390/include/asm/Kbuild | 1 +
+ 1 file changed, 1 insertion(+)
 
-They do not, the point was, there is such broken hardware so the
-controller should be programmed correctly.
-
->> That's why I would prefer to configure the controller correctly, not
->> just hope that nothing bad will come out of misconfiguring it slightly.
-> 
-> Again, just handling the first N dma-ranges entries and ignoring the
-> rest is not 'configure the controller correctly'.
-
-It's the best effort thing to do. It's well possible the next generation
-of the controller will have more windows, so could accommodate the whole
-list of ranges.
-
-Thinking about this further, this patch should be OK either way, if
-there is a DT which defines more DMA ranges than the controller can
-handle, handling some is better than failing outright -- a PCI which
-works with a subset of memory is better than PCI that does not work at all.
-
->>> And realistically, if the address
->>> isn't valid then it's not going to make much difference anyway - in
->>> probably 99% of cases, either the transaction doesn't hit a window and
->>> the host bridge returns a completer abort, or it does hit a window, the
->>> AXI side returns DECERR or SLVERR, and the host bridge translates that
->>> into a completer abort. Consider also that many PCI IPs don't have
->>> discrete windows and just map the entirety of PCI mem space directly to
->>> the system PA space.
->>
->> And in that 1% of cases, we are OK with failure which could have been
->> easily prevented if the controller was programmed correctly ? That does
->> not look like a good thing.
-> 
-> You don't need dma-ranges if you want to handle holes in DRAM. Use
-> memblock to get this information. Then it will work if you boot using
-> UEFI too.
-
-Do you have any further details about this ?
-
-> dma-ranges at the PCI bridge should be restrictions in the PCI bridge,
-> not ones somewhere else in the system.
-
+diff --git a/arch/s390/include/asm/Kbuild b/arch/s390/include/asm/Kbuild
+index 2531f673f099..afd35e55b358 100644
+--- a/arch/s390/include/asm/Kbuild
++++ b/arch/s390/include/asm/Kbuild
+@@ -21,6 +21,7 @@ generic-y += local64.h
+ generic-y += mcs_spinlock.h
+ generic-y += mm-arch-hooks.h
+ generic-y += mmiowb.h
++generic-y += msi.h
+ generic-y += trace_clock.h
+ generic-y += unaligned.h
+ generic-y += word-at-a-time.h
 -- 
-Best regards,
-Marek Vasut
+2.21.0
+
