@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06371CA9EA9
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Oct 2019 22:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAEB4CA9EA0
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Oct 2019 22:20:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C4C2820854
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Oct 2019 22:16:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8650E222D2
+	for <linux-pci@archiver.kernel.org>; Fri, 18 Oct 2019 22:20:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571436982;
-	bh=eB8OcREBndT+A5hyfQrTyGkWl3QxuRF+jZflQikaaIU=;
+	s=default; t=1571437241;
+	bh=tpAVAnK71TJcLRF8HNao0iOpJMcL5f3JdlcazgJy7vs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=GOU/kb45X4V/0jT9UFYBurYOVHb4zcJJq+pFeQRPtRAMxMUoTP7newj2ur7GzWesl
-	 3Z8fF7RKWcr1HGB/SOZ3Hz+jY1dfJI1sMKasuNoU/jzbCsVPIonB+JYfjSKCv2Ot3t
-	 L/y1+11o5HUaY7hfcikspATrF3aH3tAWAMj9oYew=
+	b=IjvBqGR6Qqv9P7v9F16LDLbwVCEsUq4OZ8/9CksjtR7MaVYAEaEIl4KKT6U+YEhVh
+	 L/T8ZB1SRggJLYpCVyh0108WVZvRlkwk4+eRbVR/mumV4X4vV+OVHTnUNy8Q5NJ4ZT
+	 erVdGmy2BP3DEOMR5/tpObpVN+ieiGayxroTk0CM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387786AbfJRWI1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Oct 2019 18:08:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40856 "EHLO mail.kernel.org"
+        id S2389316AbfJRWUg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 18 Oct 2019 18:20:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38574 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387759AbfJRWI0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Oct 2019 18:08:26 -0400
+        id S1731782AbfJRWGh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 18 Oct 2019 18:06:37 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AD3442245C;
-        Fri, 18 Oct 2019 22:08:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C832A20679;
+        Fri, 18 Oct 2019 22:06:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571436505;
-        bh=eB8OcREBndT+A5hyfQrTyGkWl3QxuRF+jZflQikaaIU=;
+        s=default; t=1571436397;
+        bh=tpAVAnK71TJcLRF8HNao0iOpJMcL5f3JdlcazgJy7vs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0tqOiDE0sKqrvGZcosVqo3EHIat64BeZ7tRzUvQTeO3DJHixqyEdPovHsuzz0dXYK
-         v6x0xpkNBC334pQC/fdduaA94ZpDVk7hsl81X0PJOJA/iivZmbjVXkfq+V/K357l2Q
-         MqsQZER4Cq85vIlyuUMPnPqtbAAn1HdpW3eHoUbQ=
+        b=CmJ/r5PpizURRKdf+d6v0qVjSZdlSg3La+EY1kyVPBD8t9N6vq38s5/ixD0+R+85K
+         0ht9ID+vkTL6J5wC1foZkJbUHIqbnjRyvmecc2ekvo8pUlXOKf1A31LQPjeOPr6phJ
+         xax7o8U9IgVDlz4WGfTJ+gD7n4DrCN6yt5isfWUY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Sven Van Asbroeck <thesven73@gmail.com>,
@@ -49,12 +49,12 @@ Cc:     Sven Van Asbroeck <thesven73@gmail.com>,
         Keith Busch <keith.busch@intel.com>,
         "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 17/56] PCI/PME: Fix possible use-after-free on remove
-Date:   Fri, 18 Oct 2019 18:07:14 -0400
-Message-Id: <20191018220753.10002-17-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 047/100] PCI/PME: Fix possible use-after-free on remove
+Date:   Fri, 18 Oct 2019 18:04:32 -0400
+Message-Id: <20191018220525.9042-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191018220753.10002-1-sashal@kernel.org>
-References: <20191018220753.10002-1-sashal@kernel.org>
+In-Reply-To: <20191018220525.9042-1-sashal@kernel.org>
+References: <20191018220525.9042-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -86,10 +86,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index c2e6e3d1073f8..5500660bbb104 100644
+index e85c5a8206c43..6ac17f0c40775 100644
 --- a/drivers/pci/pcie/pme.c
 +++ b/drivers/pci/pcie/pme.c
-@@ -441,6 +441,7 @@ static void pcie_pme_remove(struct pcie_device *srv)
+@@ -437,6 +437,7 @@ static void pcie_pme_remove(struct pcie_device *srv)
  
  	pcie_pme_disable_interrupt(srv->port, data);
  	free_irq(srv->irq, srv);
