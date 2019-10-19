@@ -1,111 +1,97 @@
-Return-Path: <SRS0=TaNj=YL=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=qnmi=YM=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0723CA9EA0
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Oct 2019 22:22:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E1D6CA9EAD
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Oct 2019 06:48:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FB9C20872
-	for <linux-pci@archiver.kernel.org>; Fri, 18 Oct 2019 22:22:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1571437357;
-	bh=0gUaHbmUNWSuBhVlbrDOsK+zcamryfNCf/wCRKeD/t8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=J2D4sHb6g7hji1255kS59Kx8GG2L1W1ZFLZdlvG0sLQx3RoTTvi6qTBh8uqRzVfId
-	 ji0SvsFTF81F8n3Tuxv2bRUfipPHyG86Cyrx2+gOFx8jm/CxVTXYxTfTRnV7lKYxX3
-	 yaACKBZY4ZSlYD/HpHg4Vjd7Ztp/XJ7Umch6pOfo=
+	by mail.kernel.org (Postfix) with ESMTP id 2C52C20854
+	for <linux-pci@archiver.kernel.org>; Sat, 19 Oct 2019 06:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730474AbfJRWWg (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 18 Oct 2019 18:22:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37804 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730173AbfJRWFt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Oct 2019 18:05:49 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2FC4E222C2;
-        Fri, 18 Oct 2019 22:05:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1571436349;
-        bh=0gUaHbmUNWSuBhVlbrDOsK+zcamryfNCf/wCRKeD/t8=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AxgC6pSAKzvDghxnrySDCuCHNivuNPikBsS8SXr71GqI1LpNkgPJGXg1UJZQAVT6v
-         Pz75PMbdEq5PkpItrAFO8VKxGvMdlZ09Ht6d3RiclWab5Hl6F2184KXbX54tI/d5tj
-         s1ruE018QY5dEbad5hpcxWyq1EI8G1M27kuRbp3w=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Logan Gunthorpe <logang@deltatee.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Doug Meyer <dmeyer@gigaio.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 014/100] PCI: Fix Switchtec DMA aliasing quirk dmesg noise
-Date:   Fri, 18 Oct 2019 18:03:59 -0400
-Message-Id: <20191018220525.9042-14-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191018220525.9042-1-sashal@kernel.org>
-References: <20191018220525.9042-1-sashal@kernel.org>
+        id S1727827AbfJSGsk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 19 Oct 2019 02:48:40 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:53114 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726939AbfJSGsk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 19 Oct 2019 02:48:40 -0400
+Received: from DGGEMS410-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 32D2A64B5132D11857F5;
+        Sat, 19 Oct 2019 14:48:37 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS410-HUB.china.huawei.com (10.3.19.210) with Microsoft SMTP Server id
+ 14.3.439.0; Sat, 19 Oct 2019 14:48:34 +0800
+From:   Yunsheng Lin <linyunsheng@huawei.com>
+To:     <bhelgaas@google.com>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <mhocko@kernel.org>, <peterz@infradead.org>,
+        <robin.murphy@arm.com>, <geert@linux-m68k.org>,
+        <gregkh@linuxfoundation.org>, <paul.burton@mips.com>
+Subject: [PATCH] PCI: Warn about host bridge device when its numa node is NO_NODE
+Date:   Sat, 19 Oct 2019 14:45:43 +0800
+Message-ID: <1571467543-26125-1-git-send-email-linyunsheng@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Logan Gunthorpe <logang@deltatee.com>
+As the disscusion in [1]:
+A PCI device really _MUST_ have a node assigned. It is possible to
+have a PCI bridge shared between two nodes, such that the PCI
+devices have equidistance. But the moment you scale this out, you
+either get devices that are 'local' to a package while having
+multiple packages, or if you maintain a single bridge in a big
+system, things become so slow it all doesn't matter anyway.
+Assigning a node (one of the shared) is, in the generic ase of
+multiple packages, the better solution over assigning all nodes.
 
-[ Upstream commit 742bbe1ee35b5699c092541f97c7cec326556bb1 ]
+As pci_device_add() will assign the pci device' node according to
+the bus the device is on, which is decided by pcibus_to_node().
+Currently different arch may implement the pcibus_to_node() based
+on bus->sysdata or bus device' node, which has the same node as
+the bridge device.
 
-Currently the Switchtec quirk runs on all endpoints in the switch,
-including all the upstream and downstream ports.  These other functions do
-not contain BARs, so the quirk fails when trying to map the BAR and prints
-the error "Cannot iomap Switchtec device".  The user will see a few of
-these useless and scary errors, one for each port in the switch.
+And for devices behind another bridge case, the child bus device
+is setup with proper parent bus device and inherit its parent'
+sysdata in pci_alloc_child_bus(), so the pcie device under the
+child bus should have the same node as the parent bridge when
+device_add() is called, which will set the node to its parent's
+node when the child device' node is NUMA_NO_NODE.
 
-At most, the quirk should only run on either a management endpoint
-(PCI_CLASS_MEMORY_OTHER) or an NTB endpoint (PCI_CLASS_BRIDGE_OTHER).
-However, the quirk is useless except in NTB applications, so we will
-only run it when the class is PCI_CLASS_BRIDGE_OTHER.
+So this patch only warns about the case when a host bridge device
+is registered with a node of NO_NODE in pci_register_host_bridge().
+And it only warns about that when there are more than one numa
+nodes in the system.
 
-Switch to using DECLARE_PCI_FIXUP_CLASS_FINAL and only match
-PCI_CLASS_BRIDGE_OTHER.
+[1] https://lore.kernel.org/lkml/1568724534-146242-1-git-send-email-linyunsheng@huawei.com/
 
-Reported-by: Stephen Bates <sbates@raithlin.com>
-Fixes: ad281ecf1c7d ("PCI: Add DMA alias quirk for Microsemi Switchtec NTB")
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-[bhelgaas: split SWITCHTEC_QUIRK() introduction to separate patch]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Doug Meyer <dmeyer@gigaio.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Yunsheng Lin <linyunsheng@huawei.com>
 ---
- drivers/pci/quirks.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/probe.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 06be52912dcdb..64933994f7722 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5083,8 +5083,8 @@ static void quirk_switchtec_ntb_dma_alias(struct pci_dev *pdev)
- 	pci_disable_device(pdev);
- }
- #define SWITCHTEC_QUIRK(vid) \
--	DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSEMI, vid, \
--				quirk_switchtec_ntb_dma_alias)
-+	DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_MICROSEMI, vid, \
-+		PCI_CLASS_BRIDGE_OTHER, 8, quirk_switchtec_ntb_dma_alias)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 3d5271a..22be96a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -927,6 +927,9 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ 	list_add_tail(&bus->node, &pci_root_buses);
+ 	up_write(&pci_bus_sem);
  
- SWITCHTEC_QUIRK(0x8531);  /* PFX 24xG3 */
- SWITCHTEC_QUIRK(0x8532);  /* PFX 32xG3 */
++	if (nr_node_ids > 1 && dev_to_node(bus->bridge) == NUMA_NO_NODE)
++		dev_err(bus->bridge, FW_BUG "No node assigned on NUMA capable HW by BIOS. Please contact your vendor for updates.\n");
++
+ 	return 0;
+ 
+ unregister:
 -- 
-2.20.1
+2.8.1
 
