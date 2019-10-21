@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0776CA9EAF
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Oct 2019 00:38:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 039B9CA9EAE
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Oct 2019 00:39:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 73DD121D80
-	for <linux-pci@archiver.kernel.org>; Mon, 21 Oct 2019 00:38:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEAAA222C2
+	for <linux-pci@archiver.kernel.org>; Mon, 21 Oct 2019 00:39:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="p21Noq3C"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bKfda/5l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726655AbfJUAif (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 20 Oct 2019 20:38:35 -0400
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:43550 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726200AbfJUAif (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 20 Oct 2019 20:38:35 -0400
-Received: by mail-lj1-f196.google.com with SMTP id n14so11366062ljj.10
-        for <linux-pci@vger.kernel.org>; Sun, 20 Oct 2019 17:38:34 -0700 (PDT)
+        id S1726610AbfJUAjZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 20 Oct 2019 20:39:25 -0400
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:44540 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726597AbfJUAjZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 20 Oct 2019 20:39:25 -0400
+Received: by mail-lj1-f193.google.com with SMTP id m13so11355402ljj.11
+        for <linux-pci@vger.kernel.org>; Sun, 20 Oct 2019 17:39:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=cUqtT92AZ9lrnd20Di/UpzfjLJC1pbg37G7/c5IKKgY=;
-        b=p21Noq3CV55U0A8VkoqX9m278rUiKa/xxLlh7wdB854lwoLBsD/p2++t0xmNEycGIK
-         ANYQQ14P9emosdRn1GHlGds1elZqSmc61JQxwsOk+HFpvm/lrsd1yD/4YJTzbmMzt+Q5
-         KTMY/zdvQSJLiuV3K6AQ1QGcIBpkc4R37ftWyRLh9IAm8FQQEHlxsp1q6SfVBobY10Xw
-         7AExxFLYrCcP18tEtj8tAyDAm0jUCs4v0IoD/0RrJvvr1mMcc/9hWRivKyNDU07OfqMx
-         gzbCsW2jvKPzSCUdmmeSrghFYS3dB0zTeJxQvDHXdK684lBmD+LdrJJQqxko/+eHauF9
-         /HVg==
+        bh=9FExjd8Mw+5S7YMEqY/A4+by9kWereoTqCBatm9VlSY=;
+        b=bKfda/5lV6mWSWAiZpVxxNgMPBVwZY2DPWmhX6/nmnzg2UVxlImBP+/CfiJfb0DiYB
+         w9AfDMSY2xb7TJKWzJ0+yMgQCi8J1xBfKrV90PGs/IEDPvEiqamNKpZqVWxgVnPWKGYm
+         VN/CkYJn3XGCMykhmOivjJ0NuoUfJFVlSmhq7Xl76tAXV8UZroBJtxN4TpJwd1ySaSUC
+         AaUBJg36OCzkyyf51aFEd1O4z9D+UjGo/4Y2R/zIT6yqBY2hyQ2lWAyh03UyWv4Mk6X2
+         lSmCEqBEonc5NP58z1JO+HSpRadEiRVD11I6IW2n1nbWguPbe6WtLVRLwW/8m44zqXMN
+         cG7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=cUqtT92AZ9lrnd20Di/UpzfjLJC1pbg37G7/c5IKKgY=;
-        b=AuNhChcSTlwlwLQjJU7k2M/IQrN2izrDjHaEb1LD9KEsERlnrfBHBjHlUpx/qbDEz/
-         /3dAqcX1kSIliqD8dDlcYIsKG/ML1R6idM3LFR0blhjVMkgqqYBSKaVbgrQH62HKwmVJ
-         HryK2mqNUXa69rcfNvH7ZaSDjvYzP8yYudybrX2D9EOxp65QSrLz7mVszSooHyipcU/3
-         cuoWMj+fOTfPsc8cwnC85Cpp9deCqkEnTAn8+eTofY3OtFPmrGWEsz6R6HNujlwObI4D
-         tXDriClvx/i+aMtb1BbKzerjh2XGnLa5Gt6ca44DgRxEEYTugqM0zU8WL0Hz6Nge+vz5
-         +iEA==
-X-Gm-Message-State: APjAAAWct8Vz0Q1PA9XmitgxRXOnFgAbtJz++S0cZfVimCYikAQAmGSi
-        jp2k65pivF5ThR+hGUN9fBEXqGmACbF3fygr+0Ip6A==
-X-Google-Smtp-Source: APXvYqx+Sv2qws2AyWYB+jVZthwdqV3ztSd28/13A632cZQGo2Czb2JB4I8085joST3g83E93e5BoQ6uVRT+sDP11QY=
-X-Received: by 2002:a2e:9f4d:: with SMTP id v13mr12883755ljk.183.1571618313283;
- Sun, 20 Oct 2019 17:38:33 -0700 (PDT)
+        bh=9FExjd8Mw+5S7YMEqY/A4+by9kWereoTqCBatm9VlSY=;
+        b=fYRmw4U4uRbEOPPC/Q0vn8pAF3rI8Z0vJ07uBSN8vEk/R/ehHkRsLwgU5XpnYtURet
+         eyN6iNTnMfUbG6XXV0GnwuIT+hBxyZY+ZS0LKlqCh0AZRhc6GaDKL03pOzSTI8ZVKguT
+         Nsb4czuMG9gCh3jT3KcA0Ltv4Y9tD8TPKKCphmI8AXjN7tiFeT4yNXAouE0Ng4ZTapip
+         JJC7Mf8bVQMHWPzSZklhTv7+n9JBS65C4jHABt48Fpa3A6c7POlGFvOWqhkY1juJd/lJ
+         5GpKlepZReS5tr2+CzeA3n9bNX1jToJ/VHC7M9NdUTOynkuDlV4BPrbtYR9mL9dohA2d
+         eE6g==
+X-Gm-Message-State: APjAAAWieqI/L05fIIeBquHZVsk5iWC9LTi1EELXmtLDavIupz86hr3b
+        dNEnEymaBeDKyYSVfkZ9qO9GH63ZGCrc9RdhjIZBoA==
+X-Google-Smtp-Source: APXvYqzWOeDq45DqnffOCq2/ChHGoqMhScnvErLh5JbufOO4hYwyRCMdCCsjftBVaXnakQZF8XtaUFolXzMPZX14iKU=
+X-Received: by 2002:a05:651c:1202:: with SMTP id i2mr6489156lja.218.1571618361501;
+ Sun, 20 Oct 2019 17:39:21 -0700 (PDT)
 MIME-Version: 1.0
-References: <20191016200647.32050-1-robh@kernel.org> <20191016200647.32050-13-robh@kernel.org>
-In-Reply-To: <20191016200647.32050-13-robh@kernel.org>
+References: <20191016200647.32050-1-robh@kernel.org> <20191016200647.32050-17-robh@kernel.org>
+In-Reply-To: <20191016200647.32050-17-robh@kernel.org>
 From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Mon, 21 Oct 2019 02:38:20 +0200
-Message-ID: <CACRpkdaxm-mdULkgm3NwncizELJ14SgLAnGLVy6UE+dUXN2ynQ@mail.gmail.com>
-Subject: Re: [PATCH v2 12/25] PCI: v3-semi: Use pci_parse_request_of_pci_ranges()
+Date:   Mon, 21 Oct 2019 02:39:07 +0200
+Message-ID: <CACRpkdYjY0JZCCfb9r9A2GKmO03hHXNCqGmy6qqBkLfOdZZdEQ@mail.gmail.com>
+Subject: Re: [PATCH v2 16/25] PCI: versatile: Use pci_parse_request_of_pci_ranges()
 To:     Rob Herring <robh@kernel.org>
 Cc:     Andrew Murray <andrew.murray@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -93,17 +93,19 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 On Wed, Oct 16, 2019 at 10:07 PM Rob Herring <robh@kernel.org> wrote:
 
-> Convert V3 host bridge to use the common
+> Convert ARM Versatile host bridge to use the common
 > pci_parse_request_of_pci_ranges().
 >
-> Cc: Linus Walleij <linus.walleij@linaro.org>
+> There's no need to assign the resources to a temporary list first. Just
+> use bridge->windows directly and remove all the temporary list handling.
+>
 > Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Andrew Murray <andrew.murray@arm.com>
 > Cc: Bjorn Helgaas <bhelgaas@google.com>
 > Signed-off-by: Rob Herring <robh@kernel.org>
 > ---
 > v2:
-> - New patch
+> - Fix 'mem' initial value to 1
+> - Remove temporary resource list
 
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
