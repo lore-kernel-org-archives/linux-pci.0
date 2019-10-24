@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13619CA9EBC
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A58FCA9EBE
 	for <linux-pci@archiver.kernel.org>; Thu, 24 Oct 2019 17:12:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA39421906
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Oct 2019 17:12:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 116E821925
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Oct 2019 17:12:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="GNC1o+1P"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="eMZ8xTmG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436863AbfJXRMu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S2436801AbfJXRMu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Thu, 24 Oct 2019 13:12:50 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:48808 "EHLO mta-01.yadro.com"
+Received: from mta-02.yadro.com ([89.207.88.252]:48798 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2436801AbfJXRMu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        id S2436814AbfJXRMu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
         Thu, 24 Oct 2019 13:12:50 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 76E9A42F15;
-        Thu, 24 Oct 2019 17:12:48 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id 7EABA42F14;
+        Thu, 24 Oct 2019 17:12:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1571937167; x=1573751568; bh=dEtonO9WGVanX91lx4CEaG6vqwfmZCpSHvc
-        P/eimQVM=; b=GNC1o+1PVFrShivoThk3yWRC/OSQCwMVc7QEIRUYlbyTP66iOh8
-        cc+mRyvYyMGPFrT2kBOz8f4PZSj25H549+b22cmVBCP5NMOtEEAQz+tMMFkGvLmo
-        by3QJ1DOee63CqgOo/OUTzm1nc6SwQF2BMBRQXmRmdUYm3CO5aCiHvIs=
+        1571937168; x=1573751569; bh=DbrmeTcNhYv3PGM/IbnlLPxMlO1jbQU8BpP
+        Nc0UZMas=; b=eMZ8xTmGQYPYhkqlqcQJLz+BLrCEu8qFNTEj1tA4ukc6tFVVH0a
+        niKDYehTl3Bez70j4Sxz1WOCmDh6sKzd9Az+Arta0VJZtUBQoC8fvpKPXxlEQ2yJ
+        TbkniqMEo+c/TpyLPVki1HgO1DE7LytJCg0e1b3gEHTl3lrX3lMKLSTM=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id LVn_oPmCl1r7; Thu, 24 Oct 2019 20:12:47 +0300 (MSK)
+        with ESMTP id NE8yWUUPu1cu; Thu, 24 Oct 2019 20:12:48 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id A0E9E43130;
-        Thu, 24 Oct 2019 20:12:41 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 1C7B443B4E;
+        Thu, 24 Oct 2019 20:12:42 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 24
@@ -49,9 +49,9 @@ From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH v6 13/30] PCI: hotplug: movable BARs: Compute limits for relocated bridge windows
-Date:   Thu, 24 Oct 2019 20:12:11 +0300
-Message-ID: <20191024171228.877974-14-s.miroshnichenko@yadro.com>
+Subject: [PATCH v6 15/30] PCI: Fix assigning the fixed prefetchable resources
+Date:   Thu, 24 Oct 2019 20:12:13 +0300
+Message-ID: <20191024171228.877974-16-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191024171228.877974-1-s.miroshnichenko@yadro.com>
 References: <20191024171228.877974-1-s.miroshnichenko@yadro.com>
@@ -66,129 +66,43 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With enabled movable BARs, bridge windows are recalculated during each pci
-rescan. Some of the BARs below the bridge may be fixed/immovable: these
-areas are represented by the .immovable_range field in struct pci_bus.
-
-If a bridge window size is equal to its immovable range, it can only be
-assigned to the start of this range. But if a bridge window size is larger,
-and this difference in size is denoted as "delta", the window can start
-from (immovable_range.start - delta) to (immovable_range.start), and it can
-end from (immovable_range.end) to (immovable_range.end + delta). This range
-(the new .realloc_range field in struct pci_bus) must then be compared with
-immovable ranges of neighbouring bridges to guarantee no intersections.
-
-This patch only calculates valid ranges for reallocated bridges during pci
-rescan, and the next one will make use of these values during allocation.
+Allow matching IORESOURCE_PCI_FIXED prefetchable BARs to non-prefetchable
+windows, so they follow the same rules as immovable BARs.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- drivers/pci/setup-bus.c | 67 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |  6 ++++
- 2 files changed, 73 insertions(+)
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a7546e02ea7c..653ba4d5f191 100644
+index 653ba4d5f191..c7365998fbd6 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1819,6 +1819,72 @@ static enum enable_type pci_realloc_detect(struct pci_bus *bus,
- }
- #endif
+@@ -1339,15 +1339,20 @@ static void assign_fixed_resource_on_bus(struct pci_bus *b, struct resource *r)
+ {
+ 	int i;
+ 	struct resource *parent_r;
+-	unsigned long mask = IORESOURCE_IO | IORESOURCE_MEM |
+-			     IORESOURCE_PREFETCH;
++	unsigned long mask = IORESOURCE_TYPE_BITS;
  
-+/*
-+ * Calculate the address margins where the bridge windows may be allocated to fit all
-+ * the fixed and immovable BARs beneath.
-+ */
-+static void pci_bus_update_realloc_range(struct pci_bus *bus)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *parent = bus->parent;
-+	int idx;
-+
-+	list_for_each_entry(dev, &bus->devices, bus_list)
-+		if (dev->subordinate)
-+			pci_bus_update_realloc_range(dev->subordinate);
-+
-+	if (!parent || !bus->self)
-+		return;
-+
-+	for (idx = 0; idx < PCI_BRIDGE_RESOURCE_NUM; ++idx) {
-+		struct resource *immovable_range = &bus->immovable_range[idx];
-+		resource_size_t window_size = resource_size(bus->resource[idx]);
-+		resource_size_t realloc_start, realloc_end;
-+
-+		bus->realloc_range[idx].start = 0;
-+		bus->realloc_range[idx].end = 0;
-+
-+		/* Check if there any immovable BARs under the bridge */
-+		if (immovable_range->start >= immovable_range->end)
+ 	pci_bus_for_each_resource(b, parent_r, i) {
+ 		if (!parent_r)
+ 			continue;
+ 
+-		if ((r->flags & mask) == (parent_r->flags & mask) &&
+-		    resource_contains(parent_r, r))
++		if ((r->flags & mask) != (parent_r->flags & mask))
 +			continue;
 +
-+		/* The lowest possible address where the bridge window can start */
-+		realloc_start = immovable_range->end - window_size + 1;
-+		/* The highest possible address where the bridge window can end */
-+		realloc_end = immovable_range->start + window_size - 1;
++		if (parent_r->flags & IORESOURCE_PREFETCH &&
++		    !(r->flags & IORESOURCE_PREFETCH))
++			continue;
 +
-+		if (realloc_start > immovable_range->start)
-+			realloc_start = immovable_range->start;
-+
-+		if (realloc_end < immovable_range->end)
-+			realloc_end = immovable_range->end;
-+
-+		/*
-+		 * Check that realloc range doesn't intersect with hard fixed ranges
-+		 * of neighboring bridges
-+		 */
-+		list_for_each_entry(dev, &parent->devices, bus_list) {
-+			struct pci_bus *neighbor = dev->subordinate;
-+			struct resource *n_imm_range;
-+
-+			if (!neighbor || neighbor == bus)
-+				continue;
-+
-+			n_imm_range = &neighbor->immovable_range[idx];
-+
-+			if (n_imm_range->start >= n_imm_range->end)
-+				continue;
-+
-+			if (n_imm_range->end < immovable_range->start &&
-+			    n_imm_range->end > realloc_start)
-+				realloc_start = n_imm_range->end;
-+		}
-+
-+		bus->realloc_range[idx].start = realloc_start;
-+		bus->realloc_range[idx].end = realloc_end;
-+	}
-+}
-+
- /*
-  * First try will not touch PCI bridge res.
-  * Second and later try will clear small leaf bridge res.
-@@ -1838,6 +1904,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 
- 	if (pci_can_move_bars) {
- 		__pci_bus_size_bridges(bus, NULL);
-+		pci_bus_update_realloc_range(bus);
- 		__pci_bus_assign_resources(bus, NULL, NULL);
- 
- 		goto dump;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ef41be0ce082..e1edcb3fad31 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -587,6 +587,12 @@ struct pci_bus {
- 	 */
- 	struct resource immovable_range[PCI_BRIDGE_RESOURCE_NUM];
- 
-+	/*
-+	 * Acceptable address range, where the bridge window may reside, considering its
-+	 * size, so it will cover all the fixed and immovable BARs below.
-+	 */
-+	struct resource realloc_range[PCI_BRIDGE_RESOURCE_NUM];
-+
- 	struct pci_ops	*ops;		/* Configuration access functions */
- 	struct msi_controller *msi;	/* MSI controller */
- 	void		*sysdata;	/* Hook for sys-specific extension */
++		if (resource_contains(parent_r, r))
+ 			request_resource(parent_r, r);
+ 	}
+ }
 -- 
 2.23.0
 
