@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC9AACA9EBD
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Oct 2019 17:22:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8CEACA9EBB
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Oct 2019 17:22:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97AAB2166E
-	for <linux-pci@archiver.kernel.org>; Thu, 24 Oct 2019 17:22:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C028F2166E
+	for <linux-pci@archiver.kernel.org>; Thu, 24 Oct 2019 17:22:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="ElPypuDL"
+	dkim=pass (1024-bit key) header.d=yadro.com header.i=@yadro.com header.b="HOlyiJZl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503450AbfJXRWK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 24 Oct 2019 13:22:10 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:49510 "EHLO mta-01.yadro.com"
+        id S2503553AbfJXRWM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 24 Oct 2019 13:22:12 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:49496 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2440030AbfJXRWJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Oct 2019 13:22:09 -0400
+        id S2503467AbfJXRWM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Oct 2019 13:22:12 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id A5F5A42F14;
-        Thu, 24 Oct 2019 17:22:08 +0000 (UTC)
+        by mta-01.yadro.com (Postfix) with ESMTP id BB6C3437F8;
+        Thu, 24 Oct 2019 17:22:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1571937727; x=1573752128; bh=vyz6eYyJqPZgaHNDYBpoQrHsS/fKfuLAlcp
-        X0Sq71NU=; b=ElPypuDLevzApI78T+K1DC4GjG51NTtHTt/SNfSqqOvzu8epBxy
-        Pku+3CdZVD79pWi4jXHfSTZ1ueZhtWg7m+5Sk3QgHqvFhQqt1o+pW7Gdn7PeNmZm
-        8SUl4AbPtS8XXylbVBVeJzns7mHlGDAXNzaRVGiJ8D0ePcizPVMXTiaE=
+        1571937729; x=1573752130; bh=+567eQd9BAxyVv0ZptWpcxxV5MHCVDgjHwB
+        rbG2xjoM=; b=HOlyiJZlnVQYrkxf2NxbndwsTxVpG8v6VKuBO6h4JvGeXVEgWzh
+        +A29JYZb8687uSdx0cbZdpLJkyewl0OlnDqlg7otEbRYz48bN9qoKuTaHfCN4gSP
+        rYMvlH6+mKRaPj1p/4SAAj5YzqSk+V6HLVvmqOqxOFMyfSd9qBTLjm4Y=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id QGi8usQSkGY4; Thu, 24 Oct 2019 20:22:07 +0300 (MSK)
+        with ESMTP id bLzeJ6S6QrYD; Thu, 24 Oct 2019 20:22:09 +0300 (MSK)
 Received: from T-EXCH-02.corp.yadro.com (t-exch-02.corp.yadro.com [172.17.10.102])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id BB9F042F15;
-        Thu, 24 Oct 2019 20:22:05 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 61630438D1;
+        Thu, 24 Oct 2019 20:22:06 +0300 (MSK)
 Received: from NB-148.yadro.com (172.17.15.136) by T-EXCH-02.corp.yadro.com
  (172.17.10.102) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 24
- Oct 2019 20:22:05 +0300
+ Oct 2019 20:22:06 +0300
 From:   Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 To:     <linux-pci@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>
 CC:     Bjorn Helgaas <helgaas@kernel.org>, <linux@yadro.com>,
         Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: [PATCH RFC 07/11] powerpc/pci: Don't reduce the host bridge bus range
-Date:   Thu, 24 Oct 2019 20:21:53 +0300
-Message-ID: <20191024172157.878735-8-s.miroshnichenko@yadro.com>
+Subject: [PATCH RFC 10/11] PCI: hotplug: movable bus numbers: rename proc and sysfs entries
+Date:   Thu, 24 Oct 2019 20:21:56 +0300
+Message-ID: <20191024172157.878735-11-s.miroshnichenko@yadro.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191024172157.878735-1-s.miroshnichenko@yadro.com>
 References: <20191024172157.878735-1-s.miroshnichenko@yadro.com>
@@ -66,29 +66,168 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Currently the last possible bus number of the PHB is set to the last
-used bus number during the boot. So when hotplugging a bridge later,
-no new buses can be allocated because they are limited by this value.
+Changing the number of a bus (therefore changing addresses of this bus, of
+its children and all the buses next in the tree) invalidates entries in
+/sys/devices/pci*, /proc/bus/pci/* and symlinks in /sys/bus/pci/devices/*
+for all the renamed devices and buses.
 
-Let the host bridge contain any number of buses up to 255.
+Remove the affected proc and sysfs entries and symlinks before renaming the
+bus, then created them back.
 
 Signed-off-by: Sergey Miroshnichenko <s.miroshnichenko@yadro.com>
 ---
- arch/powerpc/kernel/pci-common.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/pci/probe.c | 105 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 104 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 1c448cf25506..5877ef7a39a0 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1631,7 +1631,6 @@ void pcibios_scan_phb(struct pci_controller *hose)
- 	if (mode == PCI_PROBE_NORMAL) {
- 		pci_bus_update_busn_res_end(bus, 255);
- 		hose->last_busno = pci_scan_child_bus(bus);
--		pci_bus_update_busn_res_end(bus, hose->last_busno);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index be9e5754cac7..fe9bf012ef33 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1096,12 +1096,99 @@ static void pci_enable_crs(struct pci_dev *pdev)
+ 					 PCI_EXP_RTCTL_CRSSVE);
+ }
+ 
++static void pci_buses_remove_sysfs(int domain, int busnr, int max_bus_number)
++{
++	struct pci_bus *bus;
++	struct pci_dev *dev = NULL;
++
++	bus = pci_find_bus(domain, busnr);
++	if (!bus)
++		return;
++
++	if (busnr < max_bus_number)
++		pci_buses_remove_sysfs(domain, busnr + 1, max_bus_number);
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		device_remove_class_symlinks(&dev->dev);
++		pci_remove_sysfs_dev_files(dev);
++		pci_proc_detach_device(dev);
++		bus_disconnect_device(&dev->dev);
++	}
++
++	device_remove_class_symlinks(&bus->dev);
++	pci_proc_detach_bus(bus);
++}
++
++static void pci_buses_create_sysfs(int domain, int busnr, int max_bus_number)
++{
++	struct pci_bus *bus;
++	struct pci_dev *dev = NULL;
++
++	bus = pci_find_bus(domain, busnr);
++	if (!bus)
++		return;
++
++	device_add_class_symlinks(&bus->dev);
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		bus_add_device(&dev->dev);
++		if (pci_dev_is_added(dev)) {
++			pci_proc_attach_device(dev);
++			pci_create_sysfs_dev_files(dev);
++			device_add_class_symlinks(&dev->dev);
++		}
++	}
++
++	if (busnr < max_bus_number)
++		pci_buses_create_sysfs(domain, busnr + 1, max_bus_number);
++}
++
++static void pci_rename_bus(struct pci_bus *bus, const char *new_bus_name)
++{
++	struct class *class;
++	int err;
++
++	class = bus->dev.class;
++	bus->dev.class = NULL;
++	err = device_rename(&bus->dev, new_bus_name);
++	bus->dev.class = class;
++}
++
++static void pci_rename_bus_devices(struct pci_bus *bus, const int domain,
++				   const int new_busnr)
++{
++	struct pci_dev *dev = NULL;
++
++	list_for_each_entry(dev, &bus->devices, bus_list) {
++		char old_name[64];
++		char new_name[64];
++		struct class *class;
++		int err;
++		int i;
++
++		strncpy(old_name, dev_name(&dev->dev), sizeof(old_name));
++		sprintf(new_name, "%04x:%02x:%02x.%d", domain, new_busnr,
++			PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
++		class = dev->dev.class;
++		dev->dev.class = NULL;
++		err = device_rename(&dev->dev, new_name);
++		dev->dev.class = class;
++
++		for (i = 0; i < PCI_BRIDGE_RESOURCES; i++)
++			dev->resource[i].name = pci_name(dev);
++	}
++}
++
+ static void pci_do_move_buses(const int domain, int busnr, int first_moved_busnr,
+ 			      int delta, const struct resource *valid_range)
+ {
+ 	struct pci_bus *bus;
+-	int subordinate;
++	int subordinate, old_primary;
+ 	u32 old_buses, buses;
++	char old_bus_name[64];
++	char new_bus_name[64];
++	struct resource old_res;
++	int new_busnr = busnr + delta;
+ 
+ 	if (busnr < valid_range->start || busnr > valid_range->end)
+ 		return;
+@@ -1110,11 +1197,21 @@ static void pci_do_move_buses(const int domain, int busnr, int first_moved_busnr
+ 	if (!bus)
+ 		return;
+ 
++	old_primary = bus->primary;
++	strncpy(old_bus_name, dev_name(&bus->dev), sizeof(old_bus_name));
++	sprintf(new_bus_name, "%04x:%02x", domain, new_busnr);
++
+ 	if (delta > 0) {
+ 		pci_do_move_buses(domain, busnr + 1, first_moved_busnr,
+ 				  delta, valid_range);
++		pci_rename_bus_devices(bus, domain, new_busnr);
++		pci_rename_bus(bus, new_bus_name);
++	} else {
++		pci_rename_bus(bus, new_bus_name);
++		pci_rename_bus_devices(bus, domain, new_busnr);
  	}
  
- 	/* Platform gets a chance to do some global fixups before
++	memcpy(&old_res, &bus->busn_res, sizeof(old_res));
+ 	bus->number += delta;
+ 	bus->busn_res.start += delta;
+ 
+@@ -1132,6 +1229,10 @@ static void pci_do_move_buses(const int domain, int busnr, int first_moved_busnr
+ 	buses |= (unsigned int)(subordinate << 16);
+ 	pci_write_config_dword(bus->self, PCI_PRIMARY_BUS, buses);
+ 
++	dev_warn(&bus->dev, "Renamed bus %s (%02x-%pR) to %s (%02x-%pR)\n",
++		 old_bus_name, old_primary, &old_res,
++		 new_bus_name, bus->primary, &bus->busn_res);
++
+ 	if (delta < 0)
+ 		pci_do_move_buses(domain, busnr + 1, first_moved_busnr,
+ 				  delta, valid_range);
+@@ -1192,8 +1293,10 @@ static int pci_move_buses(int domain, int busnr, int delta,
+ 		}
+ 	}
+ 
++	pci_buses_remove_sysfs(domain, busnr, valid_range->end);
+ 	pci_do_move_buses(domain, busnr, busnr,
+ 			  delta, valid_range);
++	pci_buses_create_sysfs(domain, busnr + delta, valid_range->end);
+ 
+ 	return 0;
+ }
 -- 
 2.23.0
 
