@@ -2,96 +2,85 @@ Return-Path: <SRS0=uEhh=YS=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48BB4CA9EA0
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 12:51:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C72FCA9EBD
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 13:11:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 173CE21D82
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 12:51:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572007912;
-	bh=DkytY8BjiI5AuxDb93s0p3G3TrO2dW16u+ibmJS95to=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=VDp8zt7TxgJd/MwuzJu8i4b0mwiPf4HzD8IPLp3PHs9GUcI8tgNVk6tN6wOINoBGu
-	 PlNMQf5sTdALLlodghuwZss5OF+Q7cXcPPJ0y2PyZ61nD6ANEAcC11ZwH6XOVn5PXZ
-	 CtJ4mabYELduTJJd+VzJS9SDa05wVEmXU72qcQRo=
+	by mail.kernel.org (Postfix) with ESMTP id 3275721D81
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 13:11:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504490AbfJYMvv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Oct 2019 08:51:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51126 "EHLO mail.kernel.org"
+        id S2393643AbfJYNLa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Oct 2019 09:11:30 -0400
+Received: from mga12.intel.com ([192.55.52.136]:52736 "EHLO mga12.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2501908AbfJYMvv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Oct 2019 08:51:51 -0400
-Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3B01C21929;
-        Fri, 25 Oct 2019 12:51:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572007910;
-        bh=DkytY8BjiI5AuxDb93s0p3G3TrO2dW16u+ibmJS95to=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=cKqUEzicNGW8uGkWlTJhD41jYzBXgSndhzFJO8s5hVkCjJH+p7csxTgoldhgESkto
-         CwPvmDbaBr4i0FPA0CFbbXfDjWoq0mwEbZgB1Vmsm5/dJlJhO2m9xfEWQ36PTg7Ux7
-         KjYUsQo19Momi8Pg+L06D68WwnGiK9E7T/vcGaBw=
-Date:   Fri, 25 Oct 2019 07:51:47 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Robin Murphy <robin.murphy@arm.com>
-Cc:     Yunsheng Lin <linyunsheng@huawei.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mhocko@kernel.org,
-        peterz@infradead.org, geert@linux-m68k.org,
-        gregkh@linuxfoundation.org, paul.burton@mips.com
-Subject: Re: [PATCH] PCI: Warn about host bridge device when its numa node is
- NO_NODE
-Message-ID: <20191025125147.GA124662@google.com>
+        id S2388485AbfJYNLa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Oct 2019 09:11:30 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Oct 2019 06:11:29 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.68,228,1569308400"; 
+   d="scan'208";a="198019323"
+Received: from lkp-server01.sh.intel.com (HELO lkp-server01) ([10.239.97.150])
+  by fmsmga007.fm.intel.com with ESMTP; 25 Oct 2019 06:11:27 -0700
+Received: from kbuild by lkp-server01 with local (Exim 4.89)
+        (envelope-from <lkp@intel.com>)
+        id 1iNzNH-0005AV-1v; Fri, 25 Oct 2019 21:11:27 +0800
+Date:   Fri, 25 Oct 2019 21:11:26 +0800
+From:   kbuild test robot <lkp@intel.com>
+To:     Dilip Kota <eswara.kota@linux.intel.com>
+Cc:     kbuild-all@lists.01.org, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, lorenzo.pieralisi@arm.com,
+        andrew.murray@arm.com, robh@kernel.org,
+        martin.blumenstingl@googlemail.com, linux-pci@vger.kernel.org,
+        hch@infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, andriy.shevchenko@intel.com,
+        cheol.yong.kim@intel.com, chuanhua.lei@linux.intel.com,
+        qi-ming.wu@intel.com, Dilip Kota <eswara.kota@linux.intel.com>
+Subject: [RFC PATCH] dwc: PCI: intel: intel_pcie_msi_init() can be static
+Message-ID: <20191025131126.pp3k6nnwp7ee5mnb@4978f4969bb8>
+References: <c46ba3f4187fe53807948b4f10996b89a75c492c.1571638827.git.eswara.kota@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a33e01bd-3054-a2c4-c206-f893e7373e65@arm.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <c46ba3f4187fe53807948b4f10996b89a75c492c.1571638827.git.eswara.kota@linux.intel.com>
+X-Patchwork-Hint: ignore
+User-Agent: NeoMutt/20170113 (1.7.2)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 24, 2019 at 11:16:41AM +0100, Robin Murphy wrote:
-> On 2019-10-23 6:10 pm, Bjorn Helgaas wrote:
 
-> >      PCI: Warn if no host bridge NUMA node info
-> >      In pci_call_probe(), we try to run driver probe functions on the node where
-> >      the device is attached.  If we don't know which node the device is attached
-> >      to, the driver will likely run on the wrong node.  This will still work,
-> >      but performance will not be as good as it could be.
-> 
-> Is it guaranteed to be purely a performance issue? In other words, is there
-> definitely no way a physical node could be disabled via idle/hotplug/etc.
-> such that unattributed devices can silently disappear while still in use?
+Fixes: 3686a0f46840 ("dwc: PCI: intel: PCIe RC controller driver")
+Signed-off-by: kbuild test robot <lkp@intel.com>
+---
+ pcie-intel-gw.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I think so.  At least, if it's more than a performance issue, I have
-no idea what sort of problem might happen or how to deal with it.
-
-> > @@ -897,6 +897,9 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
-> >   	else
-> >   		pr_info("PCI host bridge to bus %s\n", name);
-> > +	if (nr_node_ids > 1 && pcibus_to_node(bus) == NUMA_NO_NODE)
-> > +		dev_warn(&bus->dev, "Unknown NUMA node; performance will be reduced\n");
-> 
-> I think this still deserves the FW_BUG prefix.
-
-Putting the warning here in pci_register_host_bridge() is convenient
-for now but doesn't seem like the ideal place.
-
-I'd rather have the warning at the point where we get the node number,
-e.g., in pci_acpi_root_get_node() or of_node_to_nid(), where we would
-know what's actually required by spec and we could point to the
-specific ACPI device or DT device node that's broken.  Then I think
-we'd have a better case for using FW_BUG.
-
-I'm a little hesitant to use FW_BUG here in pci_register_host_bridge()
-because we don't know where the node number was supposed to come from,
-so we can't reliably determine that the lack of one is a bug.
-
-Bjorn
+diff --git a/drivers/pci/controller/dwc/pcie-intel-gw.c b/drivers/pci/controller/dwc/pcie-intel-gw.c
+index 9142c70db8085..352d0d03171b2 100644
+--- a/drivers/pci/controller/dwc/pcie-intel-gw.c
++++ b/drivers/pci/controller/dwc/pcie-intel-gw.c
+@@ -494,13 +494,13 @@ static int intel_pcie_rc_init(struct pcie_port *pp)
+ 	return intel_pcie_host_setup(lpp);
+ }
+ 
+-int intel_pcie_msi_init(struct pcie_port *pp)
++static int intel_pcie_msi_init(struct pcie_port *pp)
+ {
+ 	/* PCIe MSI/MSIx is handled by MSI in x86 processor */
+ 	return 0;
+ }
+ 
+-u64 intel_pcie_cpu_addr(struct dw_pcie *pcie, u64 cpu_addr)
++static u64 intel_pcie_cpu_addr(struct dw_pcie *pcie, u64 cpu_addr)
+ {
+ 	return cpu_addr + BUS_IATU_OFFS;
+ }
