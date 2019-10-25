@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FFF5CA9EA0
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 13:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B04F3CA9EBC
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 13:58:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E2A16222D0
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 13:58:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B5C8222CE
+	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 13:58:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572011886;
-	bh=47t+Nnmbk++aVQPPcj57svH35Wds3MJ6qI0wsT4LmTE=;
+	s=default; t=1572011927;
+	bh=3SoKi6IzLISdFNp1aPaetavHCeQsuyyi5mZ5Hv6IBRs=;
 	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=bD9gt62JR1j7PciGzY4hrT+c/QkmFtaAraQNnKYhYUtMMdztmtwgMsab6+2fx19CV
-	 3xNOYuUS61WQrj/xQKUJY2mR/ye3ZUsumKKyeK7NGmqxzR6Miw6+9UreGyIt9hCvoT
-	 vZLQ9lLdaFKHtTo/oEVuqqUZRcu46M4Do/ks/S64=
+	b=oAFz59A51EMFoHr9eS0voyYJBc+gZuSGv1BAiPcg/h87pfRWBpGvH/wqaFE/T+s9I
+	 hARayqyDrI0MMu5+G7E9QwaSdeSlI5QyTKgUaUj+7LOMPUYDtiLdbYqFOlxwWDI4zc
+	 XGvWiRy3vsLsB3tESOvU2kQG59x29HI2dXFL0va4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394837AbfJYN6E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Oct 2019 09:58:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53228 "EHLO mail.kernel.org"
+        id S2410375AbfJYN6q (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Oct 2019 09:58:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54284 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389701AbfJYN6E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Oct 2019 09:58:04 -0400
+        id S2410372AbfJYN6o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Oct 2019 09:58:44 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0EE23222C2;
-        Fri, 25 Oct 2019 13:58:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9C18421E6F;
+        Fri, 25 Oct 2019 13:58:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572011883;
-        bh=47t+Nnmbk++aVQPPcj57svH35Wds3MJ6qI0wsT4LmTE=;
+        s=default; t=1572011924;
+        bh=3SoKi6IzLISdFNp1aPaetavHCeQsuyyi5mZ5Hv6IBRs=;
         h=From:To:Cc:Subject:Date:From;
-        b=1d27D0O609ZMBBRZPWFnlaMK7yVfvPh27IEOnkiVgBPpRN4yW/HQmdAO6S/tGBcmN
-         +W0t6pPjDFtKM0BuJ6iRDuWIla8/5hAiIeB9beg7g9cpvy74Fb7LaKQ5WSpSNLwP1Y
-         b8GygqRg/pFh6SbUaZWT6TvPHojTnpoBdCsDeH0U=
+        b=o81kMqQevv3otWh0HExWlM8yQPaP5lxATU2QwymNr+aNCteBiFsJNH35tpwBEoHgT
+         NUbD29Q2LujDrKaid7uxpv0sbkn2eCGwz9aRMLsNhgegvGR9KefEkZzuhDASJ/eBea
+         IrlRNlZtb/WLoDfcQj2thmzfD/ROJ6DVvv0/xvE4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Patrick Talbert <ptalbert@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 01/20] PCI/ASPM: Do not initialize link state when aspm_disabled is set
-Date:   Fri, 25 Oct 2019 09:57:41 -0400
-Message-Id: <20191025135801.25739-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 01/16] PCI/ASPM: Do not initialize link state when aspm_disabled is set
+Date:   Fri, 25 Oct 2019 09:58:25 -0400
+Message-Id: <20191025135842.25977-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 X-stable: review
@@ -83,10 +83,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index b12fe65d07f82..f69a9180c5ffd 100644
+index c6a012b5ba390..6cc073f1d2d15 100644
 --- a/drivers/pci/pcie/aspm.c
 +++ b/drivers/pci/pcie/aspm.c
-@@ -581,7 +581,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+@@ -560,7 +560,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
  	struct pcie_link_state *link;
  	int blacklist = !!pcie_aspm_sanity_check(pdev);
  
