@@ -1,83 +1,68 @@
-Return-Path: <SRS0=uEhh=YS=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=IV1D=YT=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B31D4CA9EA0
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 21:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E28CA9EA0
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Oct 2019 01:36:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FA2321872
-	for <linux-pci@archiver.kernel.org>; Fri, 25 Oct 2019 21:42:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="corvTpm1"
+	by mail.kernel.org (Postfix) with ESMTP id 68A8C21872
+	for <linux-pci@archiver.kernel.org>; Sat, 26 Oct 2019 01:36:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725865AbfJYVmQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 25 Oct 2019 17:42:16 -0400
-Received: from mail-wr1-f50.google.com ([209.85.221.50]:35611 "EHLO
-        mail-wr1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725811AbfJYVmQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 25 Oct 2019 17:42:16 -0400
-Received: by mail-wr1-f50.google.com with SMTP id l10so3934614wrb.2
-        for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2019 14:42:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=GNJc1rR1j79hhkXaFdZUlmiWSIF64yC4QKn+617csog=;
-        b=corvTpm1tnK+SOj4ko+AJFC0ohUtwqVkB2GPwKagd6DMv79Y1KfODZIkI2HTbA50dk
-         t+emLftvQBsh6jy6TXfbRFNdIR4bsQ///3kezULLZsyxcyIQe3Imj9FM+H+hEO8eAZE1
-         TeVNoeOTn7UeI8b+EgJu8L2Za5YvWRBQQV9bc1y1U6Jr9XMvXSvis/dnOJK4hwWCcw+4
-         6KNkOe66IKIutXeqKoKfKgXdcye9oiFYAazPshP7YD4qKZYlZFu5YlPaTBEFp7EuK8Nv
-         9h/JyUuHPIfP4Zv09cvx/+xGfDiELk87hcUv0fMFz5e8ulavQ+VYH/AOuC+RxVLTctTv
-         RLbw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=GNJc1rR1j79hhkXaFdZUlmiWSIF64yC4QKn+617csog=;
-        b=dxA62Bu6CJmYKsbmF8U04tgL5OhIa1Y5LNXdS2z2V3WHKplLfnuktYJXPevW0+iP5k
-         +rX8cvL5/uaTokKcmIbg3rx0snG+3PHo7Hs+kwDUsXeTN+MqSDgUWa8QzqPolLu1ziF7
-         vOpSJLP0QTGgPytJnwCIDO3LC9REkxKnS1AieLuitDzfTUggYx9oLNc3TC8TkZzX0/+m
-         t9Bc5IZL/vOxCBKsJ8zFKp0V+7SCU0qyF3L9eIfFPNI6FvwXmYTz8qmCBHIHzQkE0ndB
-         /PCdYi6FozlkMND3n+wmz2wkqM2uJSF/BNNU2B86wRsmwcNLqqBo2zatW1J3ZJ49++S6
-         FVDQ==
-X-Gm-Message-State: APjAAAVJG9CeLEl/VUiWQgoB+OnvxZQwGH8ZSaaxBukoF7JiQR7vqW0v
-        FLoPckoLu94ejew/2zg1WalyUtrv
-X-Google-Smtp-Source: APXvYqwd9MyN8Nx8BXezJZQuk5OayHXGKeK3LB19oLYBK3SqM61uNbbYc5jCKQD0/TosCF2rxv0t0A==
-X-Received: by 2002:a5d:5704:: with SMTP id a4mr5124871wrv.281.1572039734557;
-        Fri, 25 Oct 2019 14:42:14 -0700 (PDT)
-Received: from ?IPv6:2003:ea:8f26:6400:adc9:ea2:903e:e65d? (p200300EA8F266400ADC90EA2903EE65D.dip0.t-ipconnect.de. [2003:ea:8f26:6400:adc9:ea2:903e:e65d])
-        by smtp.googlemail.com with ESMTPSA id u10sm4395034wmj.0.2019.10.25.14.42.13
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 25 Oct 2019 14:42:14 -0700 (PDT)
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: Drop Kconfig option PCIEASPM?
-Message-ID: <1f784101-fe7a-becf-d855-ddc6d03a3f92@gmail.com>
-Date:   Fri, 25 Oct 2019 23:42:06 +0200
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1726150AbfJZBgG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 25 Oct 2019 21:36:06 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:4765 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725899AbfJZBgG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 25 Oct 2019 21:36:06 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 49649363F6A0788F56DD;
+        Sat, 26 Oct 2019 09:36:04 +0800 (CST)
+Received: from huawei.com (10.175.104.225) by DGGEMS408-HUB.china.huawei.com
+ (10.3.19.208) with Microsoft SMTP Server id 14.3.439.0; Sat, 26 Oct 2019
+ 09:35:54 +0800
+From:   Hewenliang <hewenliang4@huawei.com>
+To:     <kishon@ti.com>, <lorenzo.pieralisi@arm.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <bhelgaas@google.com>
+CC:     <linfeilong@huawei.com>, <hewenliang4@huawei.com>
+Subject: [PATCH] tools: PCI: Fix fd leakage
+Date:   Fri, 25 Oct 2019 21:35:55 -0400
+Message-ID: <20191026013555.61016-1-hewenliang4@huawei.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.104.225]
+X-CFilter-Loop: Reflected
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-I wonder whether anybody actually wants to disable ASPM support.
-In an old Kconfig commit message is mentioned that it may help
-to reduce kernel size of embedded systems. However I would
-think that on embedded systems ASPM is quite useful as it
-saves significant power and may result in a lower system
-temperature therefore.
-W/o ASPM support we have to live with devices coming up
-in whatever mode boot loader or firmware configure.
+We should close fd before the return of run_test.
 
-Heiner
+Fixes: 3f2ed8134834 ("tools: PCI: Add a userspace tool to test PCI endpoint")
+Signed-off-by: Hewenliang <hewenliang4@huawei.com>
+---
+ tools/pci/pcitest.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+index cb1e51fcc84e..32b7c6f9043d 100644
+--- a/tools/pci/pcitest.c
++++ b/tools/pci/pcitest.c
+@@ -129,6 +129,7 @@ static int run_test(struct pci_test *test)
+ 	}
+ 
+ 	fflush(stdout);
++	close(fd);
+ 	return (ret < 0) ? ret : 1 - ret; /* return 0 if test succeeded */
+ }
+ 
+-- 
+2.19.1
+
