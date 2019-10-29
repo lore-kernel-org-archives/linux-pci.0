@@ -2,148 +2,97 @@ Return-Path: <SRS0=bDcD=YW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A58FCA9EAE
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 17:00:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65EADCA9EAE
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 17:02:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B21C20874
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 17:00:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AA3721479
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 17:02:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1572368577;
+	bh=uRow4DFq01/iQXmseqOfm0lJg6W4SSyElcj46INIcUs=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=dZmZRBGncRNQspF8vqV6kErWPIB4d8ZUpwqoXb/zkN+UkrjrRTLNnub2InsCWR8eJ
+	 4NpQ+ndov432eO9i7qO0ABTMEcDbH7Ie/oqxR+byHRYecwm5HFalC6p6QbLCfGxUnl
+	 iKdWQKPzV5Xj3CunZHhJ9y0xwxoiiWZP8sZPzyVU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726225AbfJ2RAi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Oct 2019 13:00:38 -0400
-Received: from mga09.intel.com ([134.134.136.24]:18562 "EHLO mga09.intel.com"
+        id S2390488AbfJ2RCx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Oct 2019 13:02:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43520 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390436AbfJ2RAi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 29 Oct 2019 13:00:38 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga102.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Oct 2019 10:00:37 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,244,1569308400"; 
-   d="scan'208";a="203620873"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga006.jf.intel.com with ESMTP; 29 Oct 2019 10:00:23 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 023B7109; Tue, 29 Oct 2019 19:00:22 +0200 (EET)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        "Gustavo A . R . Silva" <gustavo@embeddedor.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 1/2] PCI: pciehp: Do not disable interrupt twice on suspend
-Date:   Tue, 29 Oct 2019 20:00:21 +0300
-Message-Id: <20191029170022.57528-1-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.23.0
+        id S1727279AbfJ2RCx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Oct 2019 13:02:53 -0400
+Received: from localhost (unknown [69.71.4.100])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 93AD520656;
+        Tue, 29 Oct 2019 17:02:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1572368573;
+        bh=uRow4DFq01/iQXmseqOfm0lJg6W4SSyElcj46INIcUs=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=JxGocHmgHuhGaFAIOYYHZP6jO38X2g9p0rDpJrEy7DLJQ+M1Cr57XwP1R9DzHgUX+
+         /QcHgkWxbWBXlYSQoR+PP7mEpKUZrKuKnZfBolIILWAUnPQHOFPPm+7zTqB+H1UiD0
+         I2DR9s4009EVXChMlP+FyzhEabrMXQtaknEFpZk8=
+Date:   Tue, 29 Oct 2019 12:02:50 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Michael ." <keltoiboy@gmail.com>
+Cc:     Dominik Brodowski <linux@dominikbrodowski.net>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Trevor Jacobs <trevor_jacobs@aol.com>,
+        Kris Cleveland <tridentperfusion@yahoo.com>,
+        Jeff <bluerocksaddles@willitsonline.com>,
+        Morgan Klym <moklym@gmail.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Philip Langdale <philipl@overt.org>,
+        Pierre Ossman <pierre@ossman.eu>,
+        Maxim Levitsky <maximlevitsky@gmail.com>,
+        linux-mmc@vger.kernel.org
+Subject: Re: PCI device function not being enumerated [Was: PCMCIA not
+ working on Panasonic Toughbook CF-29]
+Message-ID: <20191029170250.GA43972@google.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAFjuqNihuEb4_5Lny5X7vA258c0ogemVg8pQ5Y_ANgOsqhSXhg@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-We try to keep PCIe hotplug ports runtime suspended when entering system
-suspend. Due to the fact that the PCIe portdrv sets NEVER_SKIP driver PM
-flag the PM core always calls system suspend/resume hooks even if the
-device is left runtime suspended. Since PCIe hotplug driver re-uses the
-same function for both it ends up disabling hotplug interrupt twice and
-the second time following is printed:
+[+cc Ulf, Philip, Pierre, Maxim, linux-mmc; see [1] for beginning of
+thread, [2] for problem report and the patch Michael tested]
 
-  pciehp 0000:03:01.0:pcie204: pcie_do_write_cmd: no response from device
+On Tue, Oct 29, 2019 at 07:58:27PM +1100, Michael . wrote:
+> Bjorn and Dominik.
+> I am happy to let you know the patch did the trick, it compiled well
+> on 5.4-rc4 and my friends in the CC list have tested the modified
+> kernel and confirmed that both slots are now working as they should.
+> As a group of dedicated Toughbook users and Linux users please accept
+> our thanks your efforts and assistance is greatly appreciated.
+> 
+> Now that we know this patch works what kernel do you think it will be
+> released in? Will it make 5.4 or will it be put into 5.5 development
+> for further testing?
 
-Prevent this from happening by checking whether the device is already
-runtime suspended when system suspend hook is called.
+That patch was not intended to be a fix; it was just to test my guess
+that the quirk might be related.
 
-Fixes: 9c62f0bfb832 ("PCI: pciehp: Implement runtime PM callbacks")
-Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Tested-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-No changes from previous version.
+Removing the quirk solved the problem *you're* seeing, but the quirk
+was added in the first place to solve some other problem, and if we
+simply remove the quirk, we may reintroduce the original problem.
 
- drivers/pci/hotplug/pciehp_core.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+So we have to look at the history and figure out some way to solve
+both problems.  I cc'd some people who might have insight.  Here are
+some commits that look relevant:
 
-diff --git a/drivers/pci/hotplug/pciehp_core.c b/drivers/pci/hotplug/pciehp_core.c
-index b3122c151b80..56daad828c9e 100644
---- a/drivers/pci/hotplug/pciehp_core.c
-+++ b/drivers/pci/hotplug/pciehp_core.c
-@@ -253,7 +253,7 @@ static bool pme_is_native(struct pcie_device *dev)
- 	return pcie_ports_native || host->native_pme;
- }
- 
--static int pciehp_suspend(struct pcie_device *dev)
-+static void pciehp_disable_interrupt(struct pcie_device *dev)
- {
- 	/*
- 	 * Disable hotplug interrupt so that it does not trigger
-@@ -261,7 +261,19 @@ static int pciehp_suspend(struct pcie_device *dev)
- 	 */
- 	if (pme_is_native(dev))
- 		pcie_disable_interrupt(get_service_data(dev));
-+}
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int pciehp_suspend(struct pcie_device *dev)
-+{
-+	/*
-+	 * If the port is already runtime suspended we can keep it that
-+	 * way.
-+	 */
-+	if (dev_pm_smart_suspend_and_suspended(&dev->port->dev))
-+		return 0;
-+
-+	pciehp_disable_interrupt(dev);
- 	return 0;
- }
- 
-@@ -279,6 +291,7 @@ static int pciehp_resume_noirq(struct pcie_device *dev)
- 
- 	return 0;
- }
-+#endif
- 
- static int pciehp_resume(struct pcie_device *dev)
- {
-@@ -292,6 +305,12 @@ static int pciehp_resume(struct pcie_device *dev)
- 	return 0;
- }
- 
-+static int pciehp_runtime_suspend(struct pcie_device *dev)
-+{
-+	pciehp_disable_interrupt(dev);
-+	return 0;
-+}
-+
- static int pciehp_runtime_resume(struct pcie_device *dev)
- {
- 	struct controller *ctrl = get_service_data(dev);
-@@ -318,10 +337,12 @@ static struct pcie_port_service_driver hpdriver_portdrv = {
- 	.remove		= pciehp_remove,
- 
- #ifdef	CONFIG_PM
-+#ifdef	CONFIG_PM_SLEEP
- 	.suspend	= pciehp_suspend,
- 	.resume_noirq	= pciehp_resume_noirq,
- 	.resume		= pciehp_resume,
--	.runtime_suspend = pciehp_suspend,
-+#endif
-+	.runtime_suspend = pciehp_runtime_suspend,
- 	.runtime_resume	= pciehp_runtime_resume,
- #endif	/* PM */
- };
--- 
-2.23.0
+  5ae70296c85f ("mmc: Disabler for Ricoh MMC controller")
+  03cd8f7ebe0c ("ricoh_mmc: port from driver to pci quirk")
 
+
+[1] https://lore.kernel.org/r/CAFjuqNi+knSb9WVQOahCVFyxsiqoGgwoM7Z1aqDBebNzp_-jYw@mail.gmail.com/
+[2] https://lore.kernel.org/r/20191021160952.GA229204@google.com/
