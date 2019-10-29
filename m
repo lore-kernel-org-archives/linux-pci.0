@@ -2,134 +2,122 @@ Return-Path: <SRS0=bDcD=YW=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FD4ECA9EAE
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 11:50:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A89B6CA9EC4
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 12:36:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0171222CD
-	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 11:50:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=mobiveil.co.in header.i=@mobiveil.co.in header.b="i6/QQI9F"
+	by mail.kernel.org (Postfix) with ESMTP id 7DCAA21A49
+	for <linux-pci@archiver.kernel.org>; Tue, 29 Oct 2019 12:36:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1572352575;
+	bh=QMnsZceNxEcrN9tSFrRt4Xg3wuFc/x194NzA1aT85TE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=CWLwdKfp4MGPkmrSJq8KaYhB/geJEaa9iS2L674V+rNXMPvX9JaN2vY9ZnA13UeKe
+	 V+DySLRybzuTAX/Nb81O56dfhiLD/+A3S9RkmW5pfjY0XLCLidzjQsqIyJVaRlfTRQ
+	 z48FgGiKBrkFJ/b/t/A2gw9L3um9uJbYVRYd/VRg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727082AbfJ2Lu4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 29 Oct 2019 07:50:56 -0400
-Received: from mail-lf1-f54.google.com ([209.85.167.54]:45422 "EHLO
-        mail-lf1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732175AbfJ2Lu4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 29 Oct 2019 07:50:56 -0400
-Received: by mail-lf1-f54.google.com with SMTP id v8so10269111lfa.12
-        for <linux-pci@vger.kernel.org>; Tue, 29 Oct 2019 04:50:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mobiveil.co.in; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Ssi6f/Qfkb56NhEW1iOk+0+bDUsP8ulwyb6JfSgT3YQ=;
-        b=i6/QQI9FPJD7MH7kkWe7FTmt7Fdfz9Dm53Iv6zfGHULrDPqRMZPKpGg9TVCMowmSyh
-         PH2O+TX4n4E2Iq/DGwkYW3chwB9VnSbz0sxecqbNXCScsbpEVbQIBKT12WYM0MfjVbXP
-         uxxz1uQvgVjQw9IxY4kjCSiGobKYmXJRJVjlk=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=Ssi6f/Qfkb56NhEW1iOk+0+bDUsP8ulwyb6JfSgT3YQ=;
-        b=IfAhqCjRRCjvylBSC3aTBzDfoy14zQzPfCR4xjuo3l0Oy9jZxvZmhO1XkEI6/qNoRR
-         Xb4xHswXxZsikuv6/nejlctl1o/SeRJJCO1Rp1GWAQu3cLZmo2WXeBbx9JmlhjK4qYnK
-         BjXUxvFehhL0uLoDLpYz3jJVIVrmL8aU/nS/9qSXj4l+ttZoapFgoo2XnJDdR+L7iIZO
-         Kt/4TliaCxkt+crpHwh0+VzLRZ0xgUBpqNyFZjbONV2noYXRHT5thj4FpE4k5yc2XMDT
-         AxqMg/zC5oB69v4oVqqB6LHJb52Wkd6a/kTLwTkHpiNjqYn29RQgEeEjRU+eCnbrgBUv
-         zYcA==
-X-Gm-Message-State: APjAAAUb4evjI1Br3p6Rb0M50hgCa8RPzhyYYdEgC7upT1z8S8upmE1i
-        W//rscV1buxLTgsmVadPPuBI/goayGaYT9Xge9bEjK3eggJ20SSEzUnAW4K3TKl3IMoKGJENtIZ
-        80pj1Z4O4MfR4k9LjyZxjcckPH4t8Ww==
-X-Google-Smtp-Source: APXvYqwyVYOYbTmkqxvyHrGGVuVjOk5ytdnpqvDypuse+anjxDu/UUPNIi6rpitRppGfFaEeyt8LslnWnMbsClXrGUc=
-X-Received: by 2002:a19:6d19:: with SMTP id i25mr2181919lfc.178.1572349853828;
- Tue, 29 Oct 2019 04:50:53 -0700 (PDT)
+        id S1728237AbfJ2MgL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 29 Oct 2019 08:36:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39020 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728004AbfJ2MgL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 29 Oct 2019 08:36:11 -0400
+Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 67FEF214B2;
+        Tue, 29 Oct 2019 12:36:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1572352569;
+        bh=QMnsZceNxEcrN9tSFrRt4Xg3wuFc/x194NzA1aT85TE=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=w7aeQo1gk4oNam6lA+XYvRDr51NU3KISOEbXw/o1Y528ZLW/pEAeRNptnu8aIvH1G
+         otckF6bUBfLsqHmH199BEfwPJjrc89B5U1NQn+IyzSuB7qZbiEJYH8CXhhg3qirGZp
+         oYq1n4+lXs/VPTKhwqYV1MmY8eX2gxxyUAq313o4=
+Date:   Tue, 29 Oct 2019 07:36:07 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     Dilip Kota <eswara.kota@linux.intel.com>,
+        Andrew Murray <andrew.murray@arm.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        gustavo.pimentel@synopsys.com,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>,
+        martin.blumenstingl@googlemail.com,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
+        cheol.yong.kim@intel.com, chuanhua.lei@linux.intel.com,
+        qi-ming.wu@intel.com, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Heiner Kallweit <hkallweit1@gmail.com>
+Subject: Re: [PATCH v4 3/3] pci: intel: Add sysfs attributes to configure
+ pcie link
+Message-ID: <20191029123607.GA33916@google.com>
 MIME-Version: 1.0
-References: <20191016103156.GC22848@e121166-lin.cambridge.arm.com> <DB8PR04MB67470C5AD54BC91BA5E2294F84610@DB8PR04MB6747.eurprd04.prod.outlook.com>
-In-Reply-To: <DB8PR04MB67470C5AD54BC91BA5E2294F84610@DB8PR04MB6747.eurprd04.prod.outlook.com>
-From:   Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>
-Date:   Tue, 29 Oct 2019 17:20:41 +0530
-Message-ID: <CAKnKUHG2bNZoaLp2OBsnzC9O6vNoLEv8b4ThGee9a0FUckLGGw@mail.gmail.com>
-Subject: Re: Mobiveil legacy IRQ binding erroneous interrupt-map
-To:     "Z.q. Hou" <zhiqiang.hou@nxp.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAJZ5v0jdxR4roEUC_Hs3puCzGY4ThdLsi_XcxfBUUxqruP4z7A@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi  Lorenzo, Zhiqiang,
-        Thanks, will check and fix.
+[+cc Heiner for ASPM conversation]
 
-On Tue, Oct 29, 2019 at 5:08 PM Z.q. Hou <zhiqiang.hou@nxp.com> wrote:
->
-> Hi Lorenzo,
->
-> The Mobiveil INTx controller is not used on NXP's platform, so I cannot v=
-erify this feature.
->
-> Karthikeyan, please have a look on this issue.
->
-> Thanks,
-> Zhiqiang
->
-> > -----Original Message-----
-> > From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Sent: 2019=E5=B9=B410=E6=9C=8816=E6=97=A5 18:32
-> > To: Z.q. Hou <zhiqiang.hou@nxp.com>; Karthikeyan Mitran
-> > <m.karthikeyan@mobiveil.co.in>
-> > Cc: linux-pci@vger.kernel.org
-> > Subject: Mobiveil legacy IRQ binding erroneous interrupt-map
+On Tue, Oct 29, 2019 at 11:42:53AM +0100, Rafael J. Wysocki wrote:
+> On Tue, Oct 22, 2019 at 2:59 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
 > >
-> > Hi Hou, Karthikeyan,
+> > [+cc Rafael, linux-pm, beginning of discussion at
+> > https://lore.kernel.org/r/d8574605f8e70f41ce1e88ccfb56b63c8f85e4df.1571638827.git.eswara.kota@linux.intel.com]
 > >
-> > I have just noticed the mobiveil interrupt-map DT bindings example is w=
-rong:
+> > On Tue, Oct 22, 2019 at 05:27:38PM +0800, Dilip Kota wrote:
+> > > On 10/22/2019 1:18 AM, Bjorn Helgaas wrote:
+> > > > On Mon, Oct 21, 2019 at 02:38:50PM +0100, Andrew Murray wrote:
+> > > > > On Mon, Oct 21, 2019 at 02:39:20PM +0800, Dilip Kota wrote:
+> > > > > > PCIe RC driver on Intel Gateway SoCs have a requirement
+> > > > > > of changing link width and speed on the fly.
+> > > > Please add more details about why this is needed.  Since you're adding
+> > > > sysfs files, it sounds like it's not actually the *driver* that needs
+> > > > this; it's something in userspace?
 > >
-> > This:
+> > > We have use cases to change the link speed and width on the fly.
+> > > One is EMI check and other is power saving.  Some battery backed
+> > > applications have to switch PCIe link from higher GEN to GEN1 and
+> > > width to x1. During the cases like external power supply got
+> > > disconnected or broken. Once external power supply is connected then
+> > > switch PCIe link to higher GEN and width.
 > >
-> > interrupt-map =3D <0 0 0 0 &pci_express 0>,
-> >               <0 0 0 1 &pci_express 1>,
-> >               <0 0 0 2 &pci_express 2>,
-> >               <0 0 0 3 &pci_express 3>;
+> > That sounds plausible, but of course nothing there is specific to the
+> > Intel Gateway, so we should implement this generically so it would
+> > work on all hardware.
 > >
-> > should be:
-> >
-> > interrupt-map =3D <0 0 0 1 &pci_express 0>,
-> >               <0 0 0 2 &pci_express 1>,
-> >               <0 0 0 3 &pci_express 2>,
-> >               <0 0 0 4 &pci_express 3>;
-> >
-> > Legacy IRQs Interrupt pins map this way:
-> >
-> > {{1, INTA}, {2, INTB}, {3,INTC}, {4,INTD}}
-> >
-> > (as read from Interrupt pin register in the config space header) (ie re=
-fer to
-> > PCI local bus specification 3.0), please fix it as soon as possible.
-> >
-> > Lorenzo
+> > I'm not sure what the interface should look like -- should it be a
+> > low-level interface as you propose where userspace would have to
+> > identify each link of interest, or is there some system-wide
+> > power/performance knob that could tune all links?  Cc'd Rafael and
+> > linux-pm in case they have ideas.
+> 
+> Frankly, I need some time to think about this and, in case you are
+> wondering about whether or not it has been discussed with me already,
+> it hasn't.
+> 
+> At this point I can only say that since we have an ASPM interface,
+> which IMO is not fantastic, it may be good to come up with a common
+> link management interface.
 
+The ASPM interface hasn't been merged yet, so if you have better
+ideas, now is the time.  That one is definitely very low-level, partly
+because the first use case is working around defects in a specific
+device.
 
+Some sort of unification of link management does sound like a good
+idea.
 
---=20
-Thanks,
-Regards,
-Karthikeyan Mitran
-
---=20
-Mobiveil INC., CONFIDENTIALITY NOTICE: This e-mail message, including any=
-=20
-attachments, is for the sole use of the intended recipient(s) and may=20
-contain proprietary confidential or privileged information or otherwise be=
-=20
-protected by law. Any unauthorized review, use, disclosure or distribution=
-=20
-is prohibited. If you are not the intended recipient, please notify the=20
-sender and destroy all copies and the original message.
+Bjorn
