@@ -2,40 +2,41 @@ Return-Path: <SRS0=PrTz=YX=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D96ECA9EC5
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Oct 2019 14:00:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C213ACA9EC9
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Oct 2019 14:01:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D579C20874
-	for <linux-pci@archiver.kernel.org>; Wed, 30 Oct 2019 14:00:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99C9C21734
+	for <linux-pci@archiver.kernel.org>; Wed, 30 Oct 2019 14:01:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=flygoat.com header.i=@flygoat.com header.b="wJKmPGOa"
+	dkim=pass (1024-bit key) header.d=flygoat.com header.i=@flygoat.com header.b="IOw2lJSL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726425AbfJ3OAu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 30 Oct 2019 10:00:50 -0400
-Received: from forward104o.mail.yandex.net ([37.140.190.179]:44833 "EHLO
-        forward104o.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726322AbfJ3OAt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2019 10:00:49 -0400
-Received: from mxback17j.mail.yandex.net (mxback17j.mail.yandex.net [IPv6:2a02:6b8:0:1619::93])
-        by forward104o.mail.yandex.net (Yandex) with ESMTP id 610D59411F7;
-        Wed, 30 Oct 2019 16:54:14 +0300 (MSK)
+        id S1726578AbfJ3OBd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 30 Oct 2019 10:01:33 -0400
+Received: from forward106j.mail.yandex.net ([5.45.198.249]:33401 "EHLO
+        forward106j.mail.yandex.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726261AbfJ3OBc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Oct 2019 10:01:32 -0400
+X-Greylist: delayed 411 seconds by postgrey-1.27 at vger.kernel.org; Wed, 30 Oct 2019 10:01:29 EDT
+Received: from mxback10j.mail.yandex.net (mxback10j.mail.yandex.net [IPv6:2a02:6b8:0:1619::113])
+        by forward106j.mail.yandex.net (Yandex) with ESMTP id 3135A11A1F94;
+        Wed, 30 Oct 2019 16:54:46 +0300 (MSK)
 Received: from iva8-e1a842234f87.qloud-c.yandex.net (iva8-e1a842234f87.qloud-c.yandex.net [2a02:6b8:c0c:77a0:0:640:e1a8:4223])
-        by mxback17j.mail.yandex.net (nwsmtp/Yandex) with ESMTP id bs174B8v8y-sDv0nwPT;
-        Wed, 30 Oct 2019 16:54:14 +0300
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flygoat.com; s=mail; t=1572443654;
-        bh=LZfCzRmnU5GvSwNDTZRMxa1XSUXSuYUhaw6ApIP4riQ=;
+        by mxback10j.mail.yandex.net (nwsmtp/Yandex) with ESMTP id V5E8gqFvMo-sjkCoBaY;
+        Wed, 30 Oct 2019 16:54:46 +0300
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=flygoat.com; s=mail; t=1572443686;
+        bh=gWEa5FRcTgUF0nhJEpPZLRQAybGIQLvAfMzmy9iALuU=;
         h=In-Reply-To:Subject:To:From:Cc:References:Date:Message-Id;
-        b=wJKmPGOanSsEV3K2e5hMdIEowzXiw1PWxSyTsNtDsr4nD8frEBBMnSq10gVgRZ6gy
-         b7rxmrO+px7aZFw0iuONaHAvy/SJJviVqjFrlPz5gGnBQotilCPv/kVng8S4LpbZZR
-         za2bNj+TMDDRlyYOYtr6GAqcjI0t6rlebs+abm+Y=
-Authentication-Results: mxback17j.mail.yandex.net; dkim=pass header.i=@flygoat.com
-Received: by iva8-e1a842234f87.qloud-c.yandex.net (nwsmtp/Yandex) with ESMTPSA id iQ85YfuBaZ-s6UuMBEg;
-        Wed, 30 Oct 2019 16:54:12 +0300
+        b=IOw2lJSLcgJgAiZbMTlg7+x1VaooTXAwE6jj0gMZGk7J5MyHLNqfW94LJLIM1z+/z
+         mIzcq7YoUGpgeAZI3GH1NjqAojg2Pwszjmy9Gm1Xx1whBV/VImBVTSbc9iuYA6Aziy
+         zCietABTtDDeDm9ZHK0BvlcREke9RmEz6WyJUc7I=
+Authentication-Results: mxback10j.mail.yandex.net; dkim=pass header.i=@flygoat.com
+Received: by iva8-e1a842234f87.qloud-c.yandex.net (nwsmtp/Yandex) with ESMTPSA id iQ85YfuBaZ-sbUu9RH8;
+        Wed, 30 Oct 2019 16:54:43 +0300
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits))
         (Client certificate not present)
 From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
@@ -45,9 +46,9 @@ Cc:     davem@davemloft.net, robh+dt@kernel.org, mark.rutland@arm.com,
         joabreu@synopsys.com, bhelgaas@google.com, netdev@vger.kernel.org,
         devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-pci@vger.kernel.org, Jiaxun Yang <jiaxun.yang@flygoat.com>
-Subject: [PATCH 1/5] PCI: pci_ids: Add Loongson IDs
-Date:   Wed, 30 Oct 2019 21:53:43 +0800
-Message-Id: <20191030135347.3636-2-jiaxun.yang@flygoat.com>
+Subject: [PATCH 4/5] dt-bindings: net: document loongson.pci-gmac
+Date:   Wed, 30 Oct 2019 21:53:46 +0800
+Message-Id: <20191030135347.3636-5-jiaxun.yang@flygoat.com>
 X-Mailer: git-send-email 2.23.0
 In-Reply-To: <20191030135347.3636-1-jiaxun.yang@flygoat.com>
 References: <20191030135347.3636-1-jiaxun.yang@flygoat.com>
@@ -58,28 +59,92 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add Loongson device IDs that will be used by drivers later.
+This binding will provide extra information for PCI enabled
+device.
 
 Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
 ---
- include/linux/pci_ids.h | 4 ++++
- 1 file changed, 4 insertions(+)
+ .../net/wireless/loongson,pci-gmac.yaml       | 71 +++++++++++++++++++
+ 1 file changed, 71 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 21a572469a4e..75f3336116eb 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -148,6 +148,10 @@
- 
- /* Vendors and devices.  Sort key: vendor first, device next. */
- 
-+#define PCI_VENDOR_ID_LOONGSON		0x0014
-+#define PCI_DEVICE_ID_LOONGSON_GMAC	0x7a03
-+#define PCI_DEVICE_ID_LOONGSON_AHCI	0x7a08
+diff --git a/Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml b/Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml
+new file mode 100644
+index 000000000000..5f764bd46735
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml
+@@ -0,0 +1,71 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/net/allwinner,sun7i-a20-gmac.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
- #define PCI_VENDOR_ID_TTTECH		0x0357
- #define PCI_DEVICE_ID_TTTECH_MC322	0x000a
- 
++title: Loongson PCI GMAC Device Tree Bindings
++
++allOf:
++  - $ref: "snps,dwmac.yaml#"
++
++maintainers:
++  - Jiaxun Yang <jiaxun.yang@flygoat.com>
++
++properties:
++  compatible:
++    const: loongson,pci-gmac
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    minItems: 1
++    maxItems: 3
++    items:
++      - description: Combined signal for various interrupt events
++      - description: The interrupt to manage the remote wake-up packet detection
++      - description: The interrupt that occurs when Rx exits the LPI state
++
++  interrupt-names:
++    minItems: 1
++    maxItems: 3
++    items:
++      - const: macirq
++      - const: eth_wake_irq
++      - const: eth_lpi
++
++  clocks:
++    items:
++      - description: GMAC main clock
++
++  clock-names:
++    items:
++      - const: stmmaceth
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - interrupt-names
++  - clocks
++  - clock-names
++  - phy-mode
++
++examples:
++  - |
++    gmac: ethernet@ {
++        compatible = "loongson,pci-irq";
++        reg = <0x00001800 0 0 0 0>;
++        interrupts = <12>, <13>;
++        interrupt-names = "macirq", "eth_lpi";
++        clocks =  <&clk_pch_gmac>;
++        clock-names = "stmmaceth";
++        phy-mode = "rgmii";
++    };
++
++# FIXME: We should set it, but it would report all the generic
++# properties as additional properties.
++# additionalProperties: false
++
++...
 -- 
 2.23.0
 
