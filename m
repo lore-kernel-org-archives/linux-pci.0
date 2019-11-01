@@ -7,45 +7,45 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6FCCCA9ED1
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 20:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0024BCA9ECF
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 20:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A1328218DE
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 20:46:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBA8321906
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 20:46:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572641197;
-	bh=TCp0l1jH9H1lbEk8p88U/LHDGbUuuVhCEFyPIpUQiNs=;
+	s=default; t=1572641205;
+	bh=R7go2cekJOh0q8Qziha8jZKepmAyBufTxO3bA4KzDBg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=E+ZKbnoZvX5hA3lLieij/+VAOQT2OhKpgRhFgdkCBPBjO2LW1xAxo9JG0787VS7wa
-	 gGrWHtefMy2Aw/Ug5u3dL5h2mWGp0O8Tih51CWMTT81Z5P1j8u4Bk2A6uGUTOlWlaw
-	 7wSt3JZV+GZgZ3haTcA02HenOx8woSHXpW418u4U=
+	b=jIBSsX1Cp17xJltIbGQEckhuSlwy5kjVVUExGqREacGMZ/UJEN8aJhTlms2DMXbxP
+	 03LpClv8UmnJUnqtsToftorMwibfRAAmdi8LomGoyRvv6icPGRgr5jXHVKWURp7gPl
+	 tVT4OAxGDqNZPp+zwRGadBdxf74P5t8s3DYvbBzY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726477AbfKAUqh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Nov 2019 16:46:37 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55388 "EHLO mail.kernel.org"
+        id S1727874AbfKAUqp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Nov 2019 16:46:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55578 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727874AbfKAUqh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Nov 2019 16:46:37 -0400
+        id S1727517AbfKAUqp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 1 Nov 2019 16:46:45 -0400
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 296B3217D9;
-        Fri,  1 Nov 2019 20:46:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 04D48217D9;
+        Fri,  1 Nov 2019 20:46:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572641196;
-        bh=TCp0l1jH9H1lbEk8p88U/LHDGbUuuVhCEFyPIpUQiNs=;
+        s=default; t=1572641204;
+        bh=R7go2cekJOh0q8Qziha8jZKepmAyBufTxO3bA4KzDBg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FJJVklLmffG1e2WqY/JuLruwMrGeInDMpbAnrVeEiihp9VbUcr15VqezHanPZSAJU
-         /IOzzWegGrgcbDfE4hG38Pq3odAHfQAfUpr0G89TgAlY+tg3Mh9ygxNcJpFb4DZWiB
-         Wvh37lSCTWpLozIibjYfwAj7ZDOLCAILtovR4QDE=
+        b=xTjQcIJm4BZf9SrqjFqlgY6f3rfgm/eMIyQkURGUWR+0YjoZwAPb7VCYFsTV4OqgF
+         aBpcAKxgigcSSr5eVKyRF93tONOrjR+HuzLjGu336YGCuo4FQJg2jbFzYd+agNkBAA
+         xtLWRJB/V+NqGkse2arjLppp2A3hJfK1DkpFB+Cc=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
         linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/6] PCI/PM: Expand PM reset messages to mention D3hot (not just D3)
-Date:   Fri,  1 Nov 2019 15:45:54 -0500
-Message-Id: <20191101204558.210235-3-helgaas@kernel.org>
+Subject: [PATCH 3/6] PCI/PM: Simplify pci_set_power_state()
+Date:   Fri,  1 Nov 2019 15:45:55 -0500
+Message-Id: <20191101204558.210235-4-helgaas@kernel.org>
 X-Mailer: git-send-email 2.24.0.rc1.363.gb1bccd3e3d-goog
 In-Reply-To: <20191101204558.210235-1-helgaas@kernel.org>
 References: <20191101204558.210235-1-helgaas@kernel.org>
@@ -58,28 +58,41 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-pci_pm_reset() resets a device by putting it in D3hot and bringing it back
-to D0.  Clarify related messages to mention "D3hot" explicitly instead of
-just "D3".
+Check for the PCI_DEV_FLAGS_NO_D3 quirk early, before calling
+__pci_start_power_transition().  This way all the cases where we don't need
+to do anything at all are checked up front.
+
+This doesn't fix anything because if the caller requested D3hot or D3cold,
+__pci_start_power_transition() is a no-op.  But calling it is pointless and
+makes the code harder to analyze.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index cd96874ae76d..a9d3653ef960 100644
+index a9d3653ef960..281bc8fc51b3 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -4605,7 +4605,7 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, csr);
- 	pci_dev_d3_sleep(dev);
+@@ -1130,8 +1130,6 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 	if (dev->current_state == state)
+ 		return 0;
  
--	return pci_dev_wait(dev, "PM D3->D0", PCIE_RESET_READY_POLL_MS);
-+	return pci_dev_wait(dev, "PM D3hot->D0", PCIE_RESET_READY_POLL_MS);
- }
- /**
-  * pcie_wait_for_link - Wait until link is active or inactive
+-	__pci_start_power_transition(dev, state);
+-
+ 	/*
+ 	 * This device is quirked not to be put into D3, so don't put it in
+ 	 * D3
+@@ -1139,6 +1137,8 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ 	if (state >= PCI_D3hot && (dev->dev_flags & PCI_DEV_FLAGS_NO_D3))
+ 		return 0;
+ 
++	__pci_start_power_transition(dev, state);
++
+ 	/*
+ 	 * To put device in D3cold, we put device into D3hot in native
+ 	 * way, then put device into D3cold with platform ops
 -- 
 2.24.0.rc1.363.gb1bccd3e3d-goog
 
