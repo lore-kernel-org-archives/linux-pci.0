@@ -2,167 +2,86 @@ Return-Path: <SRS0=mg7z=YZ=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB752CA9ECF
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 05:47:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 602CECA9ECF
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 06:31:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 809BB217D9
-	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 05:47:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3899C208E3
+	for <linux-pci@archiver.kernel.org>; Fri,  1 Nov 2019 06:31:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728309AbfKAFrq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 1 Nov 2019 01:47:46 -0400
-Received: from mga18.intel.com ([134.134.136.126]:60353 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725280AbfKAFrq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 1 Nov 2019 01:47:46 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 31 Oct 2019 22:47:45 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,254,1569308400"; 
-   d="scan'208";a="199738011"
-Received: from linux.intel.com ([10.54.29.200])
-  by fmsmga007.fm.intel.com with ESMTP; 31 Oct 2019 22:47:44 -0700
-Received: from [10.226.39.46] (unknown [10.226.39.46])
-        by linux.intel.com (Postfix) with ESMTP id 59030580499;
-        Thu, 31 Oct 2019 22:47:40 -0700 (PDT)
-Subject: Re: [PATCH v4 3/3] pci: intel: Add sysfs attributes to configure pcie
- link
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Andrew Murray <andrew.murray@arm.com>, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, lorenzo.pieralisi@arm.com,
-        robh@kernel.org, martin.blumenstingl@googlemail.com,
-        linux-pci@vger.kernel.org, hch@infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        andriy.shevchenko@intel.com, cheol.yong.kim@intel.com,
-        chuanhua.lei@linux.intel.com, qi-ming.wu@intel.com,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>,
-        Heiner Kallweit <hkallweit1@gmail.com>
-References: <20191031132228.GA44315@google.com>
-From:   Dilip Kota <eswara.kota@linux.intel.com>
-Message-ID: <33585725-51c7-6fe5-5d92-1e7fe77ca106@linux.intel.com>
-Date:   Fri, 1 Nov 2019 13:47:39 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <20191031132228.GA44315@google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+        id S1725936AbfKAGbc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 1 Nov 2019 02:31:32 -0400
+Received: from relmlor2.renesas.com ([210.160.252.172]:38780 "EHLO
+        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725798AbfKAGbc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 1 Nov 2019 02:31:32 -0400
+X-IronPort-AV: E=Sophos;i="5.68,254,1569250800"; 
+   d="scan'208";a="30388548"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie6.idc.renesas.com with ESMTP; 01 Nov 2019 15:31:30 +0900
+Received: from localhost.localdomain (unknown [10.166.17.210])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id C03A340104DD;
+        Fri,  1 Nov 2019 15:31:30 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org
+Cc:     linux-renesas-soc@vger.kernel.org, stable@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v2 1/2] Revert "PCI: rcar: Fix missing MACCTLR register setting in rcar_pcie_hw_init()"
+Date:   Fri,  1 Nov 2019 15:31:29 +0900
+Message-Id: <1572589890-8903-2-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1572589890-8903-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+References: <1572589890-8903-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+This reverts commit 175cc093888ee74a17c4dd5f99ba9a6bc86de5be.
 
-On 10/31/2019 9:22 PM, Bjorn Helgaas wrote:
-> On Thu, Oct 31, 2019 at 06:47:10PM +0800, Dilip Kota wrote:
->> On 10/31/2019 6:14 AM, Bjorn Helgaas wrote:
->>> On Tue, Oct 29, 2019 at 05:31:18PM +0800, Dilip Kota wrote:
->>>> On 10/22/2019 8:59 PM, Bjorn Helgaas wrote:
->>>>> [+cc Rafael, linux-pm, beginning of discussion at
->>>>> https://lore.kernel.org/r/d8574605f8e70f41ce1e88ccfb56b63c8f85e4df.1571638827.git.eswara.kota@linux.intel.com]
->>>>>
->>>>> On Tue, Oct 22, 2019 at 05:27:38PM +0800, Dilip Kota wrote:
->>>>>> On 10/22/2019 1:18 AM, Bjorn Helgaas wrote:
->>>>>>> On Mon, Oct 21, 2019 at 02:38:50PM +0100, Andrew Murray wrote:
->>>>>>>> On Mon, Oct 21, 2019 at 02:39:20PM +0800, Dilip Kota wrote:
->>>>>>>>> PCIe RC driver on Intel Gateway SoCs have a requirement
->>>>>>>>> of changing link width and speed on the fly.
->>>>>>> Please add more details about why this is needed.  Since
->>>>>>> you're adding sysfs files, it sounds like it's not
->>>>>>> actually the *driver* that needs this; it's something in
->>>>>>> userspace?
->>>>>> We have use cases to change the link speed and width on the fly.
->>>>>> One is EMI check and other is power saving.  Some battery backed
->>>>>> applications have to switch PCIe link from higher GEN to GEN1 and
->>>>>> width to x1. During the cases like external power supply got
->>>>>> disconnected or broken. Once external power supply is connected then
->>>>>> switch PCIe link to higher GEN and width.
->>>>> That sounds plausible, but of course nothing there is specific to the
->>>>> Intel Gateway, so we should implement this generically so it would
->>>>> work on all hardware.
->>>> Agree.
->>>>> I'm not sure what the interface should look like -- should it be a
->>>>> low-level interface as you propose where userspace would have to
->>>>> identify each link of interest, or is there some system-wide
->>>>> power/performance knob that could tune all links?  Cc'd Rafael and
->>>>> linux-pm in case they have ideas.
->>>> To my knowledge sysfs is the appropriate way to go.
->>>> If there are any other best possible knobs, will be helpful.
->>> I agree sysfs is the right place for it; my question was whether we
->>> should have files like:
->>>
->>>     /sys/.../0000:00:1f.3/pcie_speed
->>>     /sys/.../0000:00:1f.3/pcie_width
->>>
->>> as I think this patch would add (BTW, please include sample paths like
->>> the above in the commit log), or whether there should be a more global
->>> thing that would affect all the links in the system.
->> Sure, i will add them.
->>> I think the low-level files like you propose would be better because
->>> one might want to tune link performance differently for different
->>> types of devices and workloads.
->>>
->>> We also have to decide if these files should be associated with the
->>> device at the upstream or downstream end of the link.  For ASPM, the
->>> current proposal [1] has the files at the downstream end on the theory
->>> that the GPU, NIC, NVMe device, etc is the user-recognizable one.
->>> Also, neither ASPM nor link speed/width make any sense unless there
->>> *is* a device at the downstream end, so putting them there
->>> automatically makes them visible only when they're useful.
->> This patch places the speed and width in the host controller directory.
->> /sys/.../xxx.pcie/pcie_speed
->> /sys/.../xxx.pcie/pcie_width
->>
->> I agree with you partially,  because i am having couple of points
->> making me to keep speed and width change entries in controller
->> directory:
->>
->> -- For changing the speed/width with device node, software ends up
->>     traversing to the controller from the device and do the
->>     operations.
->> -- Change speed and width are performed at controller level,
-> The controller is effectively a Root Complex, which may contain
-> several Root Ports.  I have the impression that the Synopsys
-> controller only supports a single Root Port, but that's just a detail
-> of the Synopsys implementation.  I think it should be possible to
-> configure the width/speed of each Root Port individually.
->
->> -- Keeping speed and width in controller gives a perspective (to the
->>     user) of changing them only once irrespective of no. of devices.
-> What if there's a switch?  If we change the width/speed of the link
-> between the Root Port and the Switch Upstream Port, that doesn't do
-> anything about the links from the Switch Downstream Ports.
-I missed to evaluate the multiple root port and switch scenarios, thanks 
-for pointing it.
-Then, placing the link speed and width change entries in the device node 
-will be appropriate.
-Software will traverse to the respective port or bus through the device 
-node and does the changes.
->
->> -- For speed and link change in Synopsys PCIe controller, specific
->>     registers need to be configured.  This prevents or complicates
->>     adding the speed and width change functionality in pci-sysfs or
->>     pci framework.
-> Don't the Link Control and related registers in PCIe spec give us
-> enough control to manage the link width/speed of *all* links,
-> including those from Root Ports and Switch Downstream Ports?
->
-> If the Synopsys controller requires controller-specific registers,
-> that sounds to me like it doesn't quite conform to the spec.  Maybe
-> that means we would need some sort of quirk or controller callback?
-Yes, Synopsys has specific registers configuration for link width 
-resizing and speed change.
-I will evaluate the possible mechanism for plugging in the controller 
-specific changes to the framework.
+The commit description/code don't follow the manual accurately,
+it's difficult to understand. So, this patch reverts the commit.
 
-Regards,
-Dilip
->
-> Bjorn
+Fixes: 175cc093888e ("PCI: rcar: Fix missing MACCTLR register setting in rcar_pcie_hw_init()"
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ drivers/pci/controller/pcie-rcar.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+index 0dadccb..40d8c54 100644
+--- a/drivers/pci/controller/pcie-rcar.c
++++ b/drivers/pci/controller/pcie-rcar.c
+@@ -91,7 +91,6 @@
+ #define  LINK_SPEED_2_5GTS	(1 << 16)
+ #define  LINK_SPEED_5_0GTS	(2 << 16)
+ #define MACCTLR			0x011058
+-#define  MACCTLR_RESERVED	BIT(0)
+ #define  SPEED_CHANGE		BIT(24)
+ #define  SCRAMBLE_DISABLE	BIT(27)
+ #define PMSR			0x01105c
+@@ -614,8 +613,6 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		rcar_pci_write_reg(pcie, 0x801f0000, PCIEMSITXR);
+ 
+-	rcar_rmw32(pcie, MACCTLR, MACCTLR_RESERVED, 0);
+-
+ 	/* Finish initialization - establish a PCI Express link */
+ 	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
+ 
+@@ -1238,7 +1235,6 @@ static int rcar_pcie_resume_noirq(struct device *dev)
+ 		return 0;
+ 
+ 	/* Re-establish the PCIe link */
+-	rcar_rmw32(pcie, MACCTLR, MACCTLR_RESERVED, 0);
+ 	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
+ 	return rcar_pcie_wait_for_dl(pcie);
+ }
+-- 
+2.7.4
+
