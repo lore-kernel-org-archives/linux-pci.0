@@ -6,63 +6,65 @@ X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F92CCA9ED0
-	for <linux-pci@archiver.kernel.org>; Sun,  3 Nov 2019 08:23:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDA9ECA9EB0
+	for <linux-pci@archiver.kernel.org>; Sun,  3 Nov 2019 08:24:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 258EE21928
-	for <linux-pci@archiver.kernel.org>; Sun,  3 Nov 2019 08:23:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3827214D8
+	for <linux-pci@archiver.kernel.org>; Sun,  3 Nov 2019 08:24:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572769384;
-	bh=fQa6LAKvOllTgETSlnkQSyfyu7NyoN82hGUQbLNq9/M=;
+	s=default; t=1572769465;
+	bh=5IEVQj3h1my6W68t/E/f9AvLtMG9EA38dgk0RrCQans=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=2QT0vp0q3iPxzQjneMH/EWBezVC5d2oUYxf/QAJrDOA1VnFOtEVVanMv8lw6EWrCB
-	 dvi0aa7/zG0hjWJlxQnMeppwZENYI3DdBuJVtGVuv+eRlX2iuJ7ZVz+J9XYs+zwGTC
-	 1mVLW6aFVPnGFsty5wcr4AabBVbltyb2emb6cCCA=
+	b=sJ+RT/fCZRRN3spdh7pK3duo7VtmhXji6ghbCP3E1C5Re0U0chUX5xn62O9HSl5xS
+	 bGszGo71HG831NSnDhWuaHoEZII99A2BqKIfFkL7YDc1p9jB69Irkg1R9Fdf3MLry/
+	 /w0V58A0r6/dyhAaO37QEMBYtUOiGE+jNPPQiMtk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727444AbfKCIXD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 3 Nov 2019 03:23:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48982 "EHLO mail.kernel.org"
+        id S1727377AbfKCIYW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 3 Nov 2019 03:24:22 -0500
+Received: from mail.kernel.org ([198.145.29.99]:50032 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726546AbfKCIXD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 3 Nov 2019 03:23:03 -0500
+        id S1726546AbfKCIYW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 3 Nov 2019 03:24:22 -0500
 Received: from localhost (unknown [106.206.31.209])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0D818214D8;
-        Sun,  3 Nov 2019 08:23:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 176C8214D8;
+        Sun,  3 Nov 2019 08:24:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572769382;
-        bh=fQa6LAKvOllTgETSlnkQSyfyu7NyoN82hGUQbLNq9/M=;
+        s=default; t=1572769461;
+        bh=5IEVQj3h1my6W68t/E/f9AvLtMG9EA38dgk0RrCQans=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=u7nhhYU41sn0I36OpljX0c29ks9Do6JU+cVRLl5EfwOolwVObo/GuG/30XcPPwmt0
-         qfDGg9cZeuRkqPoKKNN662eoPLSmw9oZSe62MmxUNmlyF8Qcmr+JHTex2wVaUwgE5F
-         dy6PbxwdqRei+bTT3T/bGpaIlWFtte9SvXo3Xk0Y=
-Date:   Sun, 3 Nov 2019 13:52:54 +0530
+        b=eehpZHA37tm66Ez/yW7hilASfXVS758laVKFfR2Bo49GZ67iyKiaLt5XzsFCpDzh9
+         68/jj5VY/9E7A4g3BoOxRrCCByzMlwhzHwPoQYX9Rei04dnMD7h1L81OazpiB7C71j
+         5rfWoHYpGt0kdBgzUyHTS672V2N2MlOMrfWLBEVA=
+Date:   Sun, 3 Nov 2019 13:54:15 +0530
 From:   Vinod Koul <vkoul@kernel.org>
 To:     Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Fix the fixup of PCI_VENDOR_ID_QCOM
-Message-ID: <20191103082254.GP2695@vkoul-mobl.Dlink>
-References: <20191102002420.4091061-1-bjorn.andersson@linaro.org>
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] PCI: qcom: Add support for SDM845 PCIe
+Message-ID: <20191103082415.GQ2695@vkoul-mobl.Dlink>
+References: <20191102002721.4091180-1-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191102002420.4091061-1-bjorn.andersson@linaro.org>
+In-Reply-To: <20191102002721.4091180-1-bjorn.andersson@linaro.org>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On 01-11-19, 17:24, Bjorn Andersson wrote:
-> There exists non-bridge PCIe devices with PCI_VENDOR_ID_QCOM, so limit
-> the fixup to only affect the PCIe 2.0 (0x106) and PCIe 3.0 (0x107)
-> bridges.
+On 01-11-19, 17:27, Bjorn Andersson wrote:
+> This second iteration of the patch series fixes review comments on v1 and has
+> been tested with both PCIe controllers found on the Qualcomm SDM845.
 
 Reviewed-by: Vinod Koul <vkoul@kernel.org>
 
