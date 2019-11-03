@@ -1,51 +1,70 @@
-Return-Path: <SRS0=hcUF=Y2=vger.kernel.org=linux-pci-owner@kernel.org>
+Return-Path: <SRS0=wiHL=Y3=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1345DCA9EC7
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Nov 2019 13:44:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F92CCA9ED0
+	for <linux-pci@archiver.kernel.org>; Sun,  3 Nov 2019 08:23:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9608214AF
-	for <linux-pci@archiver.kernel.org>; Sat,  2 Nov 2019 13:44:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 258EE21928
+	for <linux-pci@archiver.kernel.org>; Sun,  3 Nov 2019 08:23:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1572769384;
+	bh=fQa6LAKvOllTgETSlnkQSyfyu7NyoN82hGUQbLNq9/M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=2QT0vp0q3iPxzQjneMH/EWBezVC5d2oUYxf/QAJrDOA1VnFOtEVVanMv8lw6EWrCB
+	 dvi0aa7/zG0hjWJlxQnMeppwZENYI3DdBuJVtGVuv+eRlX2iuJ7ZVz+J9XYs+zwGTC
+	 1mVLW6aFVPnGFsty5wcr4AabBVbltyb2emb6cCCA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727148AbfKBNoU (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sat, 2 Nov 2019 09:44:20 -0400
-Received: from [211.53.128.215] ([211.53.128.215]:36679 "EHLO MAIL.isd.co.kr"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727090AbfKBNoU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 2 Nov 2019 09:44:20 -0400
-X-Greylist: delayed 351 seconds by postgrey-1.27 at vger.kernel.org; Sat, 02 Nov 2019 09:44:20 EDT
-Received: from 192.168.1.163 (217.217.179.17) by MAIL.isd.co.kr (10.10.10.22)
- with Microsoft SMTP Server id 14.3.123.3; Sat, 2 Nov 2019 22:38:25 +0900
-Date:   Sat, 2 Nov 2019 14:38:21 +0100
-From:   Peter Wong <choimj@isd.co.kr>
-Reply-To: Peter Wong <pw178484@gmail.com>
-To:     <linux-pci@vger.kernel.org>
-Message-ID: <23649905.38082.1572701903682.JavaMail.cash@webmail.isd.co.kr>
-Subject: Your opportunity
+        id S1727444AbfKCIXD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 3 Nov 2019 03:23:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48982 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726546AbfKCIXD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 3 Nov 2019 03:23:03 -0500
+Received: from localhost (unknown [106.206.31.209])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0D818214D8;
+        Sun,  3 Nov 2019 08:23:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1572769382;
+        bh=fQa6LAKvOllTgETSlnkQSyfyu7NyoN82hGUQbLNq9/M=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=u7nhhYU41sn0I36OpljX0c29ks9Do6JU+cVRLl5EfwOolwVObo/GuG/30XcPPwmt0
+         qfDGg9cZeuRkqPoKKNN662eoPLSmw9oZSe62MmxUNmlyF8Qcmr+JHTex2wVaUwgE5F
+         dy6PbxwdqRei+bTT3T/bGpaIlWFtte9SvXo3Xk0Y=
+Date:   Sun, 3 Nov 2019 13:52:54 +0530
+From:   Vinod Koul <vkoul@kernel.org>
+To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc:     Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Andrew Murray <andrew.murray@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Fix the fixup of PCI_VENDOR_ID_QCOM
+Message-ID: <20191103082254.GP2695@vkoul-mobl.Dlink>
+References: <20191102002420.4091061-1-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [217.217.179.17]
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191102002420.4091061-1-bjorn.andersson@linaro.org>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Greetings,
+On 01-11-19, 17:24, Bjorn Andersson wrote:
+> There exists non-bridge PCIe devices with PCI_VENDOR_ID_QCOM, so limit
+> the fixup to only affect the PCIe 2.0 (0x106) and PCIe 3.0 (0x107)
+> bridges.
 
-Find this mail very confidential. reply for more details
+Reviewed-by: Vinod Koul <vkoul@kernel.org>
 
-Thanks.
-Peter Wong
-
-
-
-
-----------------------------------------------------
-This email was sent by the shareware version of Postman Professional.
-
+-- 
+~Vinod
