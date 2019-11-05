@@ -2,38 +2,34 @@ Return-Path: <SRS0=Ym/o=Y5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4633EC010A9
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2156C010A2
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2870821D7C
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0C61206BA
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388465AbfKEKc0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Nov 2019 05:32:26 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:44247 "EHLO
+        id S2388700AbfKEKcb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Nov 2019 05:32:31 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:46888 "EHLO
         cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388583AbfKEKcY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:32:24 -0500
+        with ESMTP id S2388710AbfKEKca (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:32:30 -0500
 Received: from 79.184.254.83.ipv4.supernova.orange.pl (79.184.254.83) (HELO kreacher.localnet)
  by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.292)
- id 31dc8ebde46860d1; Tue, 5 Nov 2019 11:32:21 +0100
+ id 23d75754915946f2; Tue, 5 Nov 2019 11:32:28 +0100
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     LKML <linux-kernel@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>,
         Linux PM <linux-pm@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        amd-gfx@lists.freedesktop.org
-Subject: [PATCH 4/5] PCI: PM: Avoid exporting __pci_complete_power_transition()
-Date:   Tue, 05 Nov 2019 11:30:36 +0100
-Message-ID: <1731661.ykamz2Tiuf@kreacher>
-In-Reply-To: <2771503.n70vfTtcVb@kreacher>
-References: <2771503.n70vfTtcVb@kreacher>
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 0/5] PCI: PM: Cleanups related to power state changes
+Date:   Tue, 05 Nov 2019 11:11:57 +0100
+Message-ID: <2771503.n70vfTtcVb@kreacher>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -42,88 +38,16 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi,
 
-Notice that radeon_set_suspend(), which is the only caller of
-__pci_complete_power_transition() outside of pci.c, really only
-cares about the pci_platform_power_transition() invoked by it,
-so export the latter instead of it, update the radeon driver to
-call pci_platform_power_transition() directly and make
-__pci_complete_power_transition() static.
+This series rearranges some PCI power management code to make it somewhat
+easier to follow and explicitly consolidate the power-up (transitions to
+D0) code path.
 
-Code rearrangement, no intentional functional impact.
+It is not intended to change the functionality of the code.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci.c                   |    6 +++---
- drivers/video/fbdev/aty/radeon_pm.c |    2 +-
- include/linux/pci.h                 |    2 +-
- 3 files changed, 5 insertions(+), 5 deletions(-)
-
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -963,7 +963,7 @@ void pci_refresh_power_state(struct pci_
-  * @dev: PCI device to handle.
-  * @state: State to put the device into.
-  */
--static int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state)
-+int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state)
- {
- 	int error;
- 
-@@ -979,6 +979,7 @@ static int pci_platform_power_transition
- 
- 	return error;
- }
-+EXPORT_SYMBOL_GPL(pci_platform_power_transition);
- 
- /**
-  * pci_wakeup - Wake up a PCI device
-@@ -1061,7 +1062,7 @@ void pci_bus_set_current_state(struct pc
-  *
-  * This function should not be called directly by device drivers.
-  */
--int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
-+static int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
- {
- 	int ret;
- 
-@@ -1073,7 +1074,6 @@ int __pci_complete_power_transition(stru
- 		pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
- 
- /**
-  * pci_set_power_state - Set the power state of a PCI device
-Index: linux-pm/drivers/video/fbdev/aty/radeon_pm.c
-===================================================================
---- linux-pm.orig/drivers/video/fbdev/aty/radeon_pm.c
-+++ linux-pm/drivers/video/fbdev/aty/radeon_pm.c
-@@ -2593,7 +2593,7 @@ static void radeon_set_suspend(struct ra
- 		 * calling pci_set_power_state()
- 		 */
- 		radeonfb_whack_power_state(rinfo, PCI_D2);
--		__pci_complete_power_transition(rinfo->pdev, PCI_D2);
-+		pci_platform_power_transition(rinfo->pdev, PCI_D2);
- 	} else {
- 		printk(KERN_DEBUG "radeonfb (%s): switching to D0 state...\n",
- 		       pci_name(rinfo->pdev));
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -1232,7 +1232,7 @@ struct pci_cap_saved_state *pci_find_sav
- int pci_add_cap_save_buffer(struct pci_dev *dev, char cap, unsigned int size);
- int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
- 				u16 cap, unsigned int size);
--int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state);
-+int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state);
- int pci_set_power_state(struct pci_dev *dev, pci_power_t state);
- pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
- bool pci_pme_capable(struct pci_dev *dev, pci_power_t state);
+Thanks,
+Rafael
 
 
 
