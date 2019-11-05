@@ -6,127 +6,124 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E632FC010A5
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4633EC010A9
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC09721D7F
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2870821D7C
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388516AbfKEK0e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Nov 2019 05:26:34 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:43761 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388022AbfKEK0d (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:26:33 -0500
-Received: by mail-ot1-f66.google.com with SMTP id l14so2833024oti.10;
-        Tue, 05 Nov 2019 02:26:32 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=nrM4WH7ocSeoIP0D4IPJEXJdoXpjHvezDNcy0lyrxPI=;
-        b=uHNb91zdVwx1ch67levEKsnIAyvEA49hNNl4uBSsmn/SRglm6oS/D4SbF3H/l3Zlw/
-         Ad9OUCX8WrEfCgRiA+iMuRrNaFto4nJ/gdJrDdDSxUGFLtu4UgbBWGMr2AkWXdTleUyn
-         z+z6kCr+sp3KG/gtIiMdrKstBvfixkOW4oxjQ+tq2cUwMgIYR+FlWEVhfPa84hSgRKTc
-         KD7mt8G5aBa1seu9vF69aYF79fzBy+UCnPwSExc2kDDQ94aqKXUzjnuuyqu5YYDeitkh
-         zy7NFtPyLQpfkDc8SMh1kuDWxLZJfQqVbxafUx4nBhUrdNlhiYXvQs3Jceu6NU16ptfu
-         i1Wg==
-X-Gm-Message-State: APjAAAUrGzWglDfDrM3AHj/Mf/xkHMDBe80JfyiXIv8EttLCDRGrrv/w
-        bn7wM6v5PKzxGgmgeTJ6XogdAA3Ajn+DGM12nimLnQ==
-X-Google-Smtp-Source: APXvYqywAlKULKehwmF0jzj2vvJGTlbdVDUNqYoFvl1X3Ao+ET1o5TY/1F2axWN2/1Or/x8MxulRqbmKke+Rvy8DINU=
-X-Received: by 2002:a9d:422:: with SMTP id 31mr20794682otc.107.1572949592429;
- Tue, 05 Nov 2019 02:26:32 -0800 (PST)
+        id S2388465AbfKEKc0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Nov 2019 05:32:26 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:44247 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388583AbfKEKcY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:32:24 -0500
+Received: from 79.184.254.83.ipv4.supernova.orange.pl (79.184.254.83) (HELO kreacher.localnet)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.292)
+ id 31dc8ebde46860d1; Tue, 5 Nov 2019 11:32:21 +0100
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        amd-gfx@lists.freedesktop.org
+Subject: [PATCH 4/5] PCI: PM: Avoid exporting __pci_complete_power_transition()
+Date:   Tue, 05 Nov 2019 11:30:36 +0100
+Message-ID: <1731661.ykamz2Tiuf@kreacher>
+In-Reply-To: <2771503.n70vfTtcVb@kreacher>
+References: <2771503.n70vfTtcVb@kreacher>
 MIME-Version: 1.0
-References: <1572922092-12323-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
- <1572922092-12323-3-git-send-email-yoshihiro.shimoda.uh@renesas.com>
- <CAMuHMdWrQs49BFaN49odrG3k91d2rsRLPpCSvDcj5DhKeHPPaA@mail.gmail.com>
- <TYAPR01MB45448947CB09B1A8AC1774A8D87E0@TYAPR01MB4544.jpnprd01.prod.outlook.com>
- <CAMuHMdXvFaPwqo2EHiBMTot05KggRNtL56JOrW_MUrBLL6NHxQ@mail.gmail.com> <TYAPR01MB45440A377DBE627FFFCCC287D87E0@TYAPR01MB4544.jpnprd01.prod.outlook.com>
-In-Reply-To: <TYAPR01MB45440A377DBE627FFFCCC287D87E0@TYAPR01MB4544.jpnprd01.prod.outlook.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 5 Nov 2019 11:26:21 +0100
-Message-ID: <CAMuHMdUW5Zb1FXf8OzOYJjZh=yxi3f_s0D-qy3Xw-HEGQRi54A@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] PCI: rcar: Fix missing MACCTLR register setting in
- initialize sequence
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     Marek Vasut <marek.vasut+renesas@gmail.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Shimoda-san,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Tue, Nov 5, 2019 at 11:11 AM Yoshihiro Shimoda
-<yoshihiro.shimoda.uh@renesas.com> wrote:
-> > From: Geert Uytterhoeven, Sent: Tuesday, November 5, 2019 6:53 PM
-> > On Tue, Nov 5, 2019 at 10:26 AM Yoshihiro Shimoda
-> > <yoshihiro.shimoda.uh@renesas.com> wrote:
-> > > > From: Geert Uytterhoeven, Sent: Tuesday, November 5, 2019 5:50 PM
-> > > > On Tue, Nov 5, 2019 at 3:48 AM Yoshihiro Shimoda
-> > > > <yoshihiro.shimoda.uh@renesas.com> wrote:
-> > > > > According to the R-Car Gen2/3 manual, "Be sure to write the initial
-> > > > > value (= H'80FF 0000) to MACCTLR before enabling PCIETCTLR.CFINIT".
-> > > > > To avoid unexpected behaviors, this patch fixes it. Note that
-> > > > > the SPCHG bit of MACCTLR register description said "Only writing 1
-> > > > > is valid and writing 0 is invalid" but this "invalid" means
-> > > > > "ignored", not "prohibited". So, any documentation conflict doesn't
-> > > > > exist about writing the MACCTLR register.
-> > > > >
-> > > > > Reported-by: Eugeniu Rosca <erosca@de.adit-jv.com>
-> > > > > Fixes: c25da4778803 ("PCI: rcar: Add Renesas R-Car PCIe driver")
-> > > > > Fixes: be20bbcb0a8c ("PCI: rcar: Add the initialization of PCIe link in resume_noirq()")
-> > > > > Cc: <stable@vger.kernel.org> # v5.2+
-> > > > > Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> > > >
-> > > > Thanks for your patch!
-> > > >
-> > > > > --- a/drivers/pci/controller/pcie-rcar.c
-> > > > > +++ b/drivers/pci/controller/pcie-rcar.c
-> > > > > @@ -91,8 +91,12 @@
-> > > > >  #define  LINK_SPEED_2_5GTS     (1 << 16)
-> > > > >  #define  LINK_SPEED_5_0GTS     (2 << 16)
-> > > > >  #define MACCTLR                        0x011058
-> > > > > +#define  MACCTLR_RESERVED23_16 GENMASK(23, 16)
-> > > >
-> > > > MACCTLR_NFTS_MASK?
-> > >
-> > > I should have said on previous email thread [1] though,
-> > > since SH7786 PCIE HW manual said NFTS (NFTS) but
-> > > any R-Car SoCs' HW manual said just Reserved with H'FF,
-> > > so that I prefer to describe RESERVED instead of NFTS.
-> > > Do you agree?
-> > >
-> > > [1]
-> > > https://marc.info/?l=linux-renesas-soc&m=157242422327368&w=2
-> >
-> > My personal stance is to make it as easy as possible for the reader of
-> > the code ("optimize for reading, not for writing"), as code is written once,
-> > but read many more times later.
-> > This is not the first time register bits were documented before, and changed
-> > to reserved later.
-> > In this case the resemblance to the SH7786 PCIe block is obvious, and
-> > the SH7786 hardware user's manual is available publicly.
->
-> Thank you for sharing your stance. I understood it. So, I'll fix it as following.
-> Is it acceptable?
->
-> #define  MACCTLR_NFTS_MASK      GENMASK(23, 16) /* The name is from SH7786 */
+Notice that radeon_set_suspend(), which is the only caller of
+__pci_complete_power_transition() outside of pci.c, really only
+cares about the pci_platform_power_transition() invoked by it,
+so export the latter instead of it, update the radeon driver to
+call pci_platform_power_transition() directly and make
+__pci_complete_power_transition() static.
 
-Sounds great to me.
-Thanks!
+Code rearrangement, no intentional functional impact.
 
-Gr{oetje,eeting}s,
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci.c                   |    6 +++---
+ drivers/video/fbdev/aty/radeon_pm.c |    2 +-
+ include/linux/pci.h                 |    2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-                        Geert
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -963,7 +963,7 @@ void pci_refresh_power_state(struct pci_
+  * @dev: PCI device to handle.
+  * @state: State to put the device into.
+  */
+-static int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state)
++int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state)
+ {
+ 	int error;
+ 
+@@ -979,6 +979,7 @@ static int pci_platform_power_transition
+ 
+ 	return error;
+ }
++EXPORT_SYMBOL_GPL(pci_platform_power_transition);
+ 
+ /**
+  * pci_wakeup - Wake up a PCI device
+@@ -1061,7 +1062,7 @@ void pci_bus_set_current_state(struct pc
+  *
+  * This function should not be called directly by device drivers.
+  */
+-int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
++static int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
+ {
+ 	int ret;
+ 
+@@ -1073,7 +1074,6 @@ int __pci_complete_power_transition(stru
+ 		pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(__pci_complete_power_transition);
+ 
+ /**
+  * pci_set_power_state - Set the power state of a PCI device
+Index: linux-pm/drivers/video/fbdev/aty/radeon_pm.c
+===================================================================
+--- linux-pm.orig/drivers/video/fbdev/aty/radeon_pm.c
++++ linux-pm/drivers/video/fbdev/aty/radeon_pm.c
+@@ -2593,7 +2593,7 @@ static void radeon_set_suspend(struct ra
+ 		 * calling pci_set_power_state()
+ 		 */
+ 		radeonfb_whack_power_state(rinfo, PCI_D2);
+-		__pci_complete_power_transition(rinfo->pdev, PCI_D2);
++		pci_platform_power_transition(rinfo->pdev, PCI_D2);
+ 	} else {
+ 		printk(KERN_DEBUG "radeonfb (%s): switching to D0 state...\n",
+ 		       pci_name(rinfo->pdev));
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -1232,7 +1232,7 @@ struct pci_cap_saved_state *pci_find_sav
+ int pci_add_cap_save_buffer(struct pci_dev *dev, char cap, unsigned int size);
+ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
+ 				u16 cap, unsigned int size);
+-int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state);
++int pci_platform_power_transition(struct pci_dev *dev, pci_power_t state);
+ int pci_set_power_state(struct pci_dev *dev, pci_power_t state);
+ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
+ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state);
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+
