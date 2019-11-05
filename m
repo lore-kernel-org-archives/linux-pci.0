@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08CB8C010A3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD656C010A2
 	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC54021D71
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 945E021D71
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388707AbfKEKc3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Nov 2019 05:32:29 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:43855 "EHLO
+        id S2388663AbfKEKcX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Nov 2019 05:32:23 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:63694 "EHLO
         cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388700AbfKEKc3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:32:29 -0500
+        with ESMTP id S2388465AbfKEKcX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:32:23 -0500
 Received: from 79.184.254.83.ipv4.supernova.orange.pl (79.184.254.83) (HELO kreacher.localnet)
  by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.292)
- id 6bc7cd40211169eb; Tue, 5 Nov 2019 11:32:27 +0100
+ id fa89029b01134efa; Tue, 5 Nov 2019 11:32:21 +0100
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     LKML <linux-kernel@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>,
         Linux PM <linux-pm@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 3/5] PCI: PM: Fold __pci_start_power_transition() into its caller
-Date:   Tue, 05 Nov 2019 11:29:16 +0100
-Message-ID: <3458080.lsoDbfkST9@kreacher>
+Subject: [PATCH 5/5] PCI: PM: Fold __pci_complete_power_transition() into its caller
+Date:   Tue, 05 Nov 2019 11:32:02 +0100
+Message-ID: <1769241.yKxyosiRnQ@kreacher>
 In-Reply-To: <2771503.n70vfTtcVb@kreacher>
 References: <2771503.n70vfTtcVb@kreacher>
 MIME-Version: 1.0
@@ -42,8 +42,8 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Because pci_power_up() has become the only caller of
-__pci_start_power_transition(), there is no need for the latter to
+Because pci_set_power_state() has become the only caller of
+__pci_complete_power_transition(), there is no need for the latter to
 be a separate function any more, so fold it into the former, drop a
 redundant check and reduce the number of lines of code somewhat.
 
@@ -51,73 +51,64 @@ Code rearrangement, no intentional functional impact.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/pci.c |   48 ++++++++++++++++++------------------------------
- 1 file changed, 18 insertions(+), 30 deletions(-)
+ drivers/pci/pci.c |   30 ++++++------------------------
+ 1 file changed, 6 insertions(+), 24 deletions(-)
 
 Index: linux-pm/drivers/pci/pci.c
 ===================================================================
 --- linux-pm.orig/drivers/pci/pci.c
 +++ linux-pm/drivers/pci/pci.c
-@@ -1003,42 +1003,30 @@ void pci_wakeup_bus(struct pci_bus *bus)
+@@ -1056,26 +1056,6 @@ void pci_bus_set_current_state(struct pc
  }
  
  /**
-- * __pci_start_power_transition - Start power transition of a PCI device
+- * __pci_complete_power_transition - Complete power transition of a PCI device
 - * @dev: PCI device to handle.
 - * @state: State to put the device into.
-+ * pci_power_up - Put the given device into D0
-+ * @dev: PCI device to power up
-  */
--static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
-+int pci_power_up(struct pci_dev *dev)
- {
--	if (state == PCI_D0) {
--		pci_platform_power_transition(dev, PCI_D0);
-+	pci_platform_power_transition(dev, PCI_D0);
-+
-+	/*
-+	 * Mandatory power management transition delays, see PCI Express Base
-+	 * Specification Revision 2.0 Section 6.6.1: Conventional Reset.  Do not
-+	 * delay for devices powered on/off by corresponding bridge, because
-+	 * have already delayed for the bridge.
-+	 */
-+	if (dev->runtime_d3cold) {
-+		if (dev->d3cold_delay && !dev->imm_ready)
-+			msleep(dev->d3cold_delay);
- 		/*
--		 * Mandatory power management transition delays, see
--		 * PCI Express Base Specification Revision 2.0 Section
--		 * 6.6.1: Conventional Reset.  Do not delay for
--		 * devices powered on/off by corresponding bridge,
--		 * because have already delayed for the bridge.
-+		 * When powering on a bridge from D3cold, the whole hierarchy
-+		 * may be powered on into D0uninitialized state, resume them to
-+		 * give them a chance to suspend again
- 		 */
--		if (dev->runtime_d3cold) {
--			if (dev->d3cold_delay && !dev->imm_ready)
--				msleep(dev->d3cold_delay);
--			/*
--			 * When powering on a bridge from D3cold, the
--			 * whole hierarchy may be powered on into
--			 * D0uninitialized state, resume them to give
--			 * them a chance to suspend again
--			 */
--			pci_wakeup_bus(dev->subordinate);
--		}
-+		pci_wakeup_bus(dev->subordinate);
- 	}
--}
- 
--/**
-- * pci_power_up - Put the given device into D0
-- * @dev: PCI device to power up
+- *
+- * This function should not be called directly by device drivers.
 - */
--int pci_power_up(struct pci_dev *dev)
+-static int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
 -{
--	__pci_start_power_transition(dev, PCI_D0);
- 	return pci_raw_set_power_state(dev, PCI_D0);
+-	int ret;
+-
+-	if (state <= PCI_D0)
+-		return -EINVAL;
+-	ret = pci_platform_power_transition(dev, state);
+-	/* Power off the bridge may power off the whole hierarchy */
+-	if (!ret && state == PCI_D3cold)
+-		pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
+-	return ret;
+-}
+-
+-/**
+  * pci_set_power_state - Set the power state of a PCI device
+  * @dev: PCI device to handle.
+  * @state: PCI power state (D0, D1, D2, D3hot) to put the device into.
+@@ -1094,7 +1074,7 @@ static int __pci_complete_power_transiti
+  */
+ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+ {
+-	int error;
++	int error, ret;
+ 
+ 	/* Bound the state we're entering */
+ 	if (state > PCI_D3cold)
+@@ -1132,10 +1112,12 @@ int pci_set_power_state(struct pci_dev *
+ 	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+ 					PCI_D3hot : state);
+ 
+-	if (!__pci_complete_power_transition(dev, state))
+-		error = 0;
++	ret = pci_platform_power_transition(dev, state);
++	/* Powering off a bridge may power off the whole hierarchy */
++	if (!ret && state == PCI_D3cold)
++		pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
+ 
+-	return error;
++	return ret ? error : 0;
  }
+ EXPORT_SYMBOL(pci_set_power_state);
  
 
 
