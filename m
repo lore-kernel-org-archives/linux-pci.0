@@ -2,159 +2,87 @@ Return-Path: <SRS0=Ym/o=Y5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4369C5DF60
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 20:01:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 509F0C5DF60
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 20:34:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F5F521D7D
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 20:01:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572984069;
-	bh=a5LN7NuMdOkHQh+h++8Cg/SsMhKTo2CCP+g8v63uk7w=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=iRNprwhfLLnqGwq/hzUMK/E6hvWClAqsXlSgMPRCQcZRg/XQgLIhqQyvSB6sv+tNm
-	 v0BPurCmBanCqiqvghHjKm7pPgYGkxbQMNxKXPOe8A/5SnHZmROoi2YCQZqRTNl9Lb
-	 sn1Yvl9KMSWjSOiaKvXwx17YpRvGKlqG74qKqXr0=
+	by mail.kernel.org (Postfix) with ESMTP id 1A4B4217F5
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 20:34:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726219AbfKEUBI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Nov 2019 15:01:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60980 "EHLO mail.kernel.org"
+        id S1727339AbfKEUe5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Nov 2019 15:34:57 -0500
+Received: from foss.arm.com ([217.140.110.172]:60282 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726208AbfKEUBI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 5 Nov 2019 15:01:08 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 738D6217F5;
-        Tue,  5 Nov 2019 20:01:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572984067;
-        bh=a5LN7NuMdOkHQh+h++8Cg/SsMhKTo2CCP+g8v63uk7w=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=aKYJfLjcj/QY2WciTrgEYmAGYtqC3rar3SN93SG5N0ZS/p3wnt+TJOKieOVTnqavB
-         mpUhos9pAawaF82R4up5ho6qg4eTmrjI0lUM8jlwSbPrFCimBIfKFHHsFT4FI5cJDD
-         GYi2/x4C03F0CLSGyN/6UEKND7XE1LJeXSUwlyak=
-Date:   Tue, 5 Nov 2019 14:01:05 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: Add missing link delays required by the PCIe
- spec
-Message-ID: <20191105200105.GA239884@google.com>
+        id S1726608AbfKEUe5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 5 Nov 2019 15:34:57 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 8A6EBC28;
+        Tue,  5 Nov 2019 12:34:56 -0800 (PST)
+Received: from localhost (unknown [10.37.6.20])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 768253FEEB;
+        Tue,  5 Nov 2019 03:04:59 -0800 (PST)
+Date:   Tue, 5 Nov 2019 11:04:57 +0000
+From:   Andrew Murray <andrew.murray@arm.com>
+To:     Xiaowei Bao <xiaowei.bao@nxp.com>
+Cc:     robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org,
+        leoyang.li@nxp.com, minghuan.Lian@nxp.com, mingkai.hu@nxp.com,
+        roy.zang@nxp.com, lorenzo.pieralisi@arm.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: Re: [PATCH v6 3/3] PCI: layerscape: Add LS1028a support
+Message-ID: <20191105110456.GL9723@e119886-lin.cambridge.arm.com>
+References: <20190902034319.14026-1-xiaowei.bao@nxp.com>
+ <20190902034319.14026-3-xiaowei.bao@nxp.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191105125818.GW2552@lahna.fi.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190902034319.14026-3-xiaowei.bao@nxp.com>
+User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 05, 2019 at 02:58:18PM +0200, Mika Westerberg wrote:
-> On Tue, Nov 05, 2019 at 11:54:33AM +0200, Mika Westerberg wrote:
-> > > For understandability, I think the wait needs to go in some function
-> > > that contains "PCI_D0", e.g., platform_pci_set_power_state() or
-> > > pci_power_up(), so it's connected with the transition from D3cold to
-> > > D0.
-> > > 
-> > > Since pci_pm_default_resume_early() is the only caller of
-> > > pci_power_up(), maybe we should just inline pci_power_up(), e.g.,
-> > > something like this:
-> > > 
-> > >   static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
-> > >   {
-> > >     pci_power_state_t prev_state = pci_dev->current_state;
-> > > 
-> > >     if (platform_pci_power_manageable(pci_dev))
-> > >       platform_pci_set_power_state(pci_dev, PCI_D0);
-> > > 
-> > >     pci_raw_set_power_state(pci_dev, PCI_D0);
-> > >     pci_update_current_state(pci_dev, PCI_D0);
-> > > 
-> > >     pci_restore_state(pci_dev);
-> > >     pci_pme_restore(pci_dev);
-> > > 
-> > >     if (prev_state == PCI_D3cold)
-> > >       pci_bridge_wait_for_secondary_bus(dev);
-> > >   }
-> > 
-> > OK, I'll see if this works.
+On Mon, Sep 02, 2019 at 11:43:19AM +0800, Xiaowei Bao wrote:
+> Add support for the LS1028a PCIe controller.
 > 
-> Well, I think we want to execute pci_fixup_resume_early before we delay
-> for the downstream component (same for runtime resume path). Currently
-> nobody is using that for root/downstream ports but in theory at least
-> some port may need it before it works properly. Also probably good idea
-> to disable wake as soon as possible to avoid possible extra PME messages
-> coming from the port.
-
-OK, I wish we could connect it more closely with the actual power-on,
-but I guess that makes sense.
-
-> I feel that the following is the right place to perform the delay but if
-> you think we can ignore the above, I will just do what you say and do it
-> in pci_pm_default_resume_early() (and pci_restore_standard_config() for
-> runtime path).
+> Signed-off-by: Xiaowei Bao <xiaowei.bao@nxp.com>
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> ---
+> v2:
+>  - No change.
+> v3:
+>  - Reuse the ls2088 driver data structurt.
+> v4:
+>  - No change.
+> v5:
+>  - No change.
+> v6:
+>  - No change.
 > 
-> [The below diff does not have check for pci_dev->skip_bus_pm because I
->  was planning to move it inside pci_bridge_wait_for_secondary_bus() itself.]
+>  drivers/pci/controller/dwc/pci-layerscape.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
+> index 3a5fa26..f24f79a 100644
+> --- a/drivers/pci/controller/dwc/pci-layerscape.c
+> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
+> @@ -263,6 +263,7 @@ static const struct ls_pcie_drvdata ls2088_drvdata = {
+>  static const struct of_device_id ls_pcie_of_match[] = {
+>  	{ .compatible = "fsl,ls1012a-pcie", .data = &ls1046_drvdata },
+>  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
+> +	{ .compatible = "fsl,ls1028a-pcie", .data = &ls2088_drvdata },
+>  	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
+>  	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
+>  	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
 
-What do you gain by moving it?  IIUC we want them to be the same
-condition, and if one is in pci_pm_resume_noirq() and another is
-inside pci_bridge_wait_for_secondary_bus(), it's hard to see that
-they're connected.  I'd rather have pci_pm_resume_noirq() check it
-once, save the result, and test that result before calling
-pci_pm_default_resume_early() and pci_bridge_wait_for_secondary_bus().
+Reviewed-by: Andrew Murray <Andrew.Murray@arm.com>
 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 08d3bdbc8c04..3c0e52aaef79 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -890,6 +890,7 @@ static int pci_pm_resume_noirq(struct device *dev)
->  {
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-> +	pci_power_t prev_state = pci_dev->current_state;
->  
->  	if (dev_pm_may_skip_resume(dev))
->  		return 0;
-> @@ -914,6 +915,9 @@ static int pci_pm_resume_noirq(struct device *dev)
->  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
->  	pcie_pme_root_status_cleanup(pci_dev);
->  
-> +	if (prev_state == PCI_D3cold)
-> +		pci_bridge_wait_for_secondary_bus(pci_dev);
-> +
->  	if (pci_has_legacy_pm_support(pci_dev))
->  		return 0;
->  
-> @@ -1299,6 +1303,7 @@ static int pci_pm_runtime_resume(struct device *dev)
->  {
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-> +	pci_power_t prev_state = pci_dev->current_state;
->  	int error = 0;
->  
->  	/*
-> @@ -1314,6 +1319,9 @@ static int pci_pm_runtime_resume(struct device *dev)
->  	pci_fixup_device(pci_fixup_resume_early, pci_dev);
->  	pci_pm_default_resume(pci_dev);
->  
-> +	if (prev_state == PCI_D3cold)
-> +		pci_bridge_wait_for_secondary_bus(pci_dev);
-> +
->  	if (pm && pm->runtime_resume)
->  		error = pm->runtime_resume(dev);
->  
+> -- 
+> 2.9.5
+> 
