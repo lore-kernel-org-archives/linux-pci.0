@@ -2,96 +2,113 @@ Return-Path: <SRS0=Ym/o=Y5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E220C5DF60
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 16:15:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41708C5DF60
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 16:32:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1508521882
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 16:15:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572970517;
-	bh=xRGY58lp9PQsCKLD1X18lIko3kx92Dak6+o3gcsRNX8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=tNkx397eZrXb7VgpgS8FLQX47AW9Ao1tVp4mSjzCkITVCw27mrMzUef+CnewoI0L8
-	 ME6TudqwEfCN8BCddsFZxuk6z2M2UoG4zBEiaqGWfS2/L7llXt33DHeTFefQGd8ntG
-	 SCvZ1kSs8YnKycCJg2IvK9DkLrPP3k3S5w5FRle4=
+	by mail.kernel.org (Postfix) with ESMTP id 1ACDD21882
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 16:32:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390099AbfKEQPO (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Nov 2019 11:15:14 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:33317 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390096AbfKEQPN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 11:15:13 -0500
-Received: by mail-ot1-f65.google.com with SMTP id u13so18135641ote.0;
-        Tue, 05 Nov 2019 08:15:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZT4en3y5QgVMI33vOLDv0psnHaObzkIn5HyOngHG/js=;
-        b=ouyYXgW0jAZ+w+GC+edAT/Y/kTMiX8B3uANXn3hmFczhKezYkKk1td11RLnBg3WK8T
-         Hueu/SPlvr/2B95A9yIGW1E3tGNg4bYoTz4zmCDTcl1oY/AVQZPQmgMWkyNwB8OfoPWV
-         IdwbJSRl9veKpgtU2EvsAikkqqPqEJtNhRu52Eof1P6D5zWj9w9WcCtnCO/ApzKRkOnD
-         NhctdXW4XI6M1tFol2sBxXaf5lnFqMpkir9TiyjX5PidpFiAysHj0v7Gzr0b2AEbjis0
-         G0WSP1LllxbIVHIkd5UtJa1RhesXM0Qg15KjATdrboEFpK7psIzIV7+aNiIULFqh9lnW
-         AgoQ==
-X-Gm-Message-State: APjAAAWoCP1nF9LNMk9UgbaQT8RBlu3hNPuIjoHNTYTyrNJ0ohOqp2EO
-        44SFqzG/P4J5NDO8Nb1x/2JEkDlaXglw314UEKc=
-X-Google-Smtp-Source: APXvYqxPByCUHFEGufCUJNmU7TyKG4nMDGVEUpuw3GX3YTjqrQQnhSLG7mBe9+fFh64RFCNxxpPec86rL+o++PouL0s=
-X-Received: by 2002:a9d:5907:: with SMTP id t7mr12462593oth.118.1572970512569;
- Tue, 05 Nov 2019 08:15:12 -0800 (PST)
-MIME-Version: 1.0
-References: <2771503.n70vfTtcVb@kreacher> <1769241.yKxyosiRnQ@kreacher> <20191105160943.GA19190@infradead.org>
-In-Reply-To: <20191105160943.GA19190@infradead.org>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Tue, 5 Nov 2019 17:15:01 +0100
-Message-ID: <CAJZ5v0gd84S3MBjTMJfs8NZu92QcdFAin4WEwVqWVzXrrC1vrw@mail.gmail.com>
-Subject: Re: [PATCH 5/5] PCI: PM: Fold __pci_complete_power_transition() into
- its caller
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
+        id S2390240AbfKEQcL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Nov 2019 11:32:11 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:63686 "EHLO
+        cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390116AbfKEQcL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 11:32:11 -0500
+Received: from 79.184.254.83.ipv4.supernova.orange.pl (79.184.254.83) (HELO kreacher.localnet)
+ by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.292)
+ id 69623c2a3a0f6c70; Tue, 5 Nov 2019 17:32:08 +0100
+From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>,
         Linux PM <linux-pm@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH update 5/5] PCI: PM: Fold __pci_complete_power_transition() into its caller
+Date:   Tue, 05 Nov 2019 17:32:08 +0100
+Message-ID: <15576968.k611qn3UU0@kreacher>
+In-Reply-To: <2771503.n70vfTtcVb@kreacher>
+References: <2771503.n70vfTtcVb@kreacher>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 5, 2019 at 5:09 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Tue, Nov 05, 2019 at 11:32:02AM +0100, Rafael J. Wysocki wrote:
-> >       if (state > PCI_D3cold)
-> > @@ -1132,10 +1112,12 @@ int pci_set_power_state(struct pci_dev *
-> >       error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
-> >                                       PCI_D3hot : state);
-> >
-> > -     if (!__pci_complete_power_transition(dev, state))
-> > -             error = 0;
-> > +     ret = pci_platform_power_transition(dev, state);
-> > +     /* Powering off a bridge may power off the whole hierarchy */
-> > +     if (!ret && state == PCI_D3cold)
-> > +             pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
-> >
-> > -     return error;
-> > +     return ret ? error : 0;
->
-> Total nitpick, but why not:
->
->         if (pci_platform_power_transition(dev, state))
->                 return error;
->
->         /* Powering off a bridge may power off the whole hierarchy */
->         if (state == PCI_D3cold)
->                 pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
->         return 0;
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Yes, that looks better, thanks!
+Because pci_set_power_state() has become the only caller of
+__pci_complete_power_transition(), there is no need for the latter to
+be a separate function any more, so fold it into the former, drop a
+redundant check and reduce the number of lines of code somewhat.
 
-I'll send an update of this patch.
+Code rearrangement, no intentional functional impact.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+Changes from the original:
+ - Avoid using the extra local var in pci_set_power_state() (Christoph).
+
+---
+ drivers/pci/pci.c |   30 +++++++-----------------------
+ 1 file changed, 7 insertions(+), 23 deletions(-)
+
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1056,26 +1056,6 @@ void pci_bus_set_current_state(struct pc
+ }
+ 
+ /**
+- * __pci_complete_power_transition - Complete power transition of a PCI device
+- * @dev: PCI device to handle.
+- * @state: State to put the device into.
+- *
+- * This function should not be called directly by device drivers.
+- */
+-static int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state)
+-{
+-	int ret;
+-
+-	if (state <= PCI_D0)
+-		return -EINVAL;
+-	ret = pci_platform_power_transition(dev, state);
+-	/* Power off the bridge may power off the whole hierarchy */
+-	if (!ret && state == PCI_D3cold)
+-		pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
+-	return ret;
+-}
+-
+-/**
+  * pci_set_power_state - Set the power state of a PCI device
+  * @dev: PCI device to handle.
+  * @state: PCI power state (D0, D1, D2, D3hot) to put the device into.
+@@ -1132,10 +1112,14 @@ int pci_set_power_state(struct pci_dev *
+ 	error = pci_raw_set_power_state(dev, state > PCI_D3hot ?
+ 					PCI_D3hot : state);
+ 
+-	if (!__pci_complete_power_transition(dev, state))
+-		error = 0;
++	if (pci_platform_power_transition(dev, state))
++		return error;
++
++	/* Powering off a bridge may power off the whole hierarchy */
++	if (state == PCI_D3cold)
++		pci_bus_set_current_state(dev->subordinate, PCI_D3cold);
+ 
+-	return error;
++	return 0;
+ }
+ EXPORT_SYMBOL(pci_set_power_state);
+ 
+
+
+
