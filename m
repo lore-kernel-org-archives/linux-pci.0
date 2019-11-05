@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF06C010A9
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08CB8C010A3
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E767521A4A
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC54021D71
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:32:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388723AbfKEKcb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Nov 2019 05:32:31 -0500
-Received: from cloudserver094114.home.pl ([79.96.170.134]:44576 "EHLO
+        id S2388707AbfKEKc3 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Nov 2019 05:32:29 -0500
+Received: from cloudserver094114.home.pl ([79.96.170.134]:43855 "EHLO
         cloudserver094114.home.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388703AbfKEKca (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:32:30 -0500
+        with ESMTP id S2388700AbfKEKc3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:32:29 -0500
 Received: from 79.184.254.83.ipv4.supernova.orange.pl (79.184.254.83) (HELO kreacher.localnet)
  by serwer1319399.home.pl (79.96.170.134) with SMTP (IdeaSmtpServer 0.83.292)
- id 0ec36c7f3c6dcade; Tue, 5 Nov 2019 11:32:28 +0100
+ id 6bc7cd40211169eb; Tue, 5 Nov 2019 11:32:27 +0100
 From:   "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     LKML <linux-kernel@vger.kernel.org>,
         Linux PCI <linux-pci@vger.kernel.org>,
         Linux PM <linux-pm@vger.kernel.org>,
         Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 1/5] PCI: PM: Move power state update away from pci_power_up()
-Date:   Tue, 05 Nov 2019 11:13:43 +0100
-Message-ID: <37482337.udjOGdOKNb@kreacher>
+Subject: [PATCH 3/5] PCI: PM: Fold __pci_start_power_transition() into its caller
+Date:   Tue, 05 Nov 2019 11:29:16 +0100
+Message-ID: <3458080.lsoDbfkST9@kreacher>
 In-Reply-To: <2771503.n70vfTtcVb@kreacher>
 References: <2771503.n70vfTtcVb@kreacher>
 MIME-Version: 1.0
@@ -42,42 +42,83 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Move the invocation of pci_update_current_state() from pci_power_up()
-to pci_pm_default_resume_early(), which is the only caller of that
-function.
+Because pci_power_up() has become the only caller of
+__pci_start_power_transition(), there is no need for the latter to
+be a separate function any more, so fold it into the former, drop a
+redundant check and reduce the number of lines of code somewhat.
 
-Preparatory change, no functional impact.
+Code rearrangement, no intentional functional impact.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/pci-driver.c |    1 +
- drivers/pci/pci.c        |    1 -
- 2 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci.c |   48 ++++++++++++++++++------------------------------
+ 1 file changed, 18 insertions(+), 30 deletions(-)
 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -524,6 +524,7 @@ static int pci_restore_standard_config(s
- static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
- {
- 	pci_power_up(pci_dev);
-+	pci_update_current_state(pci_dev, PCI_D0);
- 	pci_restore_state(pci_dev);
- 	pci_pme_restore(pci_dev);
- }
 Index: linux-pm/drivers/pci/pci.c
 ===================================================================
 --- linux-pm.orig/drivers/pci/pci.c
 +++ linux-pm/drivers/pci/pci.c
-@@ -1148,7 +1148,6 @@ void pci_power_up(struct pci_dev *dev)
- {
- 	__pci_start_power_transition(dev, PCI_D0);
- 	pci_raw_set_power_state(dev, PCI_D0);
--	pci_update_current_state(dev, PCI_D0);
+@@ -1003,42 +1003,30 @@ void pci_wakeup_bus(struct pci_bus *bus)
  }
  
  /**
+- * __pci_start_power_transition - Start power transition of a PCI device
+- * @dev: PCI device to handle.
+- * @state: State to put the device into.
++ * pci_power_up - Put the given device into D0
++ * @dev: PCI device to power up
+  */
+-static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
++int pci_power_up(struct pci_dev *dev)
+ {
+-	if (state == PCI_D0) {
+-		pci_platform_power_transition(dev, PCI_D0);
++	pci_platform_power_transition(dev, PCI_D0);
++
++	/*
++	 * Mandatory power management transition delays, see PCI Express Base
++	 * Specification Revision 2.0 Section 6.6.1: Conventional Reset.  Do not
++	 * delay for devices powered on/off by corresponding bridge, because
++	 * have already delayed for the bridge.
++	 */
++	if (dev->runtime_d3cold) {
++		if (dev->d3cold_delay && !dev->imm_ready)
++			msleep(dev->d3cold_delay);
+ 		/*
+-		 * Mandatory power management transition delays, see
+-		 * PCI Express Base Specification Revision 2.0 Section
+-		 * 6.6.1: Conventional Reset.  Do not delay for
+-		 * devices powered on/off by corresponding bridge,
+-		 * because have already delayed for the bridge.
++		 * When powering on a bridge from D3cold, the whole hierarchy
++		 * may be powered on into D0uninitialized state, resume them to
++		 * give them a chance to suspend again
+ 		 */
+-		if (dev->runtime_d3cold) {
+-			if (dev->d3cold_delay && !dev->imm_ready)
+-				msleep(dev->d3cold_delay);
+-			/*
+-			 * When powering on a bridge from D3cold, the
+-			 * whole hierarchy may be powered on into
+-			 * D0uninitialized state, resume them to give
+-			 * them a chance to suspend again
+-			 */
+-			pci_wakeup_bus(dev->subordinate);
+-		}
++		pci_wakeup_bus(dev->subordinate);
+ 	}
+-}
+ 
+-/**
+- * pci_power_up - Put the given device into D0
+- * @dev: PCI device to power up
+- */
+-int pci_power_up(struct pci_dev *dev)
+-{
+-	__pci_start_power_transition(dev, PCI_D0);
+ 	return pci_raw_set_power_state(dev, PCI_D0);
+ }
+ 
 
 
 
