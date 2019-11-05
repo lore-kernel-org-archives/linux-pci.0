@@ -2,155 +2,87 @@ Return-Path: <SRS0=Ym/o=Y5=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EED9DC010B2
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 734E7C010B4
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BBBB92190F
-	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:50:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="XLUeNN+G"
+	by mail.kernel.org (Postfix) with ESMTP id 4998021D71
+	for <linux-pci@archiver.kernel.org>; Tue,  5 Nov 2019 10:51:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388422AbfKEKug (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 5 Nov 2019 05:50:36 -0500
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:7599 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730715AbfKEKuf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:50:35 -0500
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5dc154010001>; Tue, 05 Nov 2019 02:50:41 -0800
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 05 Nov 2019 02:50:34 -0800
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 05 Nov 2019 02:50:34 -0800
-Received: from [10.26.11.93] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 5 Nov
- 2019 10:50:31 +0000
-Subject: Re: [PATCH V3] PCI: tegra: Enable Relaxed Ordering only for Tegra20 &
- Tegra30
-From:   Jon Hunter <jonathanh@nvidia.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC:     Vidya Sagar <vidyas@nvidia.com>, <bhelgaas@google.com>,
-        <treding@nvidia.com>, <swarren@nvidia.com>,
-        <linux-tegra@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <kthota@nvidia.com>, <mmaddireddy@nvidia.com>, <sagar.tv@gmail.com>
-References: <20190704150428.4035-1-vidyas@nvidia.com>
- <20190704160948.GA28058@e121166-lin.cambridge.arm.com>
- <310ce6f7-9379-9857-ac7c-53118b80966b@nvidia.com>
- <20190705093859.GA17491@e121166-lin.cambridge.arm.com>
- <c3168cfd-69f5-b51b-6ec6-c64d447efe13@nvidia.com>
-Message-ID: <8456f10d-6ff6-f3f4-54ff-aca2e90a0c0b@nvidia.com>
-Date:   Tue, 5 Nov 2019 10:50:28 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
-MIME-Version: 1.0
-In-Reply-To: <c3168cfd-69f5-b51b-6ec6-c64d447efe13@nvidia.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1572951041; bh=Dnf+vlSNus+u9dyNKVgzdsUdsrWyiG7YB8a63UUpXss=;
-        h=X-PGP-Universal:Subject:From:To:CC:References:Message-ID:Date:
-         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
-         X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=XLUeNN+Ga6NaVfzlC50/n3DLf+146IUjbN+zV2VhXl/W4pkpqUSQjB4oCZg/H8mbz
-         ka0A2ydXqEbHeWfbAVOD9mz+IfWxEwoZQCt7wZww/JLIXa+1/EVtkmlh2zzvlzsfLp
-         yh0bgLfkxUbtpIIIUyrJol0w3mDy8xU5rLtSEe0qePrOkYkgvXUB4/19AslFTj3zqd
-         mlHvVIEf28Y6Iy8WNnD5V79K0hrsf9ncPdKxqfv9pSo8zmLion4gfYvYFmlfpO8XDo
-         f0iXxz2/fGbfSKNuCl95SCjJY6eCL8PcdHdZg1a4Pi7kMDmhBP77f/mQvOboq9m9G4
-         rpzsreutg7ubQ==
+        id S2388625AbfKEKvb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 5 Nov 2019 05:51:31 -0500
+Received: from relmlor1.renesas.com ([210.160.252.171]:32613 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730715AbfKEKva (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 5 Nov 2019 05:51:30 -0500
+X-IronPort-AV: E=Sophos;i="5.68,270,1569250800"; 
+   d="scan'208";a="30883390"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 05 Nov 2019 19:51:29 +0900
+Received: from localhost.localdomain (unknown [10.166.17.210])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 614164005153;
+        Tue,  5 Nov 2019 19:51:29 +0900 (JST)
+From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org
+Cc:     linux-renesas-soc@vger.kernel.org, stable@vger.kernel.org,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v4 1/2] Revert "PCI: rcar: Fix missing MACCTLR register setting in rcar_pcie_hw_init()"
+Date:   Tue,  5 Nov 2019 19:51:28 +0900
+Message-Id: <1572951089-19956-2-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1572951089-19956-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
+References: <1572951089-19956-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Lorenzo,
+This reverts commit 175cc093888ee74a17c4dd5f99ba9a6bc86de5be.
 
-On 09/07/2019 12:02, Jon Hunter wrote:
-> On 05/07/2019 10:38, Lorenzo Pieralisi wrote:
->> [+Greg]
->>
->> On Fri, Jul 05, 2019 at 09:57:25AM +0100, Jon Hunter wrote:
->>> Hi Lorenzo,
->>>
->>> On 04/07/2019 17:09, Lorenzo Pieralisi wrote:
->>>> On Thu, Jul 04, 2019 at 08:34:28PM +0530, Vidya Sagar wrote:
->>>>> Currently Relaxed Ordering bit in the configuration space is enabled for
->>>>> all PCIe devices as the quirk uses PCI_ANY_ID for both Vendor-ID and
->>>>> Device-ID, but, as per the Technical Reference Manual of Tegra20 which is
->>>>> available at https://developer.nvidia.com/embedded/downloads#?search=tegra%202
->>>>> in Sec 34.1, it is mentioned that Relexed Ordering bit needs to be enabled in
->>>>> its root ports to avoid deadlock in hardware. The same is applicable for
->>>>> Tegra30 as well though it is not explicitly mentioned in Tegra30 TRM document,
->>>>> but the same must not be extended to root ports of other Tegra SoCs or
->>>>> other hosts as the same issue doesn't exist there.
->>>>>
->>>>> Signed-off-by: Vidya Sagar <vidyas@nvidia.com>
->>>>
->>>> You forgot Thierry's ACK, I added it back but next time pay more
->>>> attention please.
->>>>
->>>> You should link the versions through eg git send-email
->>>> --in-reply-to=Message-Id so that it is easier to follow.
->>>>
->>>>> ---
->>>>> V3:
->>>>> * Modified commit message to make it more precise and explicit
->>>>>
->>>>> V2:
->>>>> * Modified commit message to include reference to Tegra20 TRM document.
->>>>>
->>>>>  drivers/pci/controller/pci-tegra.c | 7 +++++--
->>>>>  1 file changed, 5 insertions(+), 2 deletions(-)
->>>>
->>>> I applied it to pci/tegra after rewriting the whole commit log and
->>>> adding a Fixes: tag that you or someone at Nvidia will follow up;
->>>> I will check.
->>>
->>> I had a chat with Vidya last night to understand the issue, so now I
->>> have a good understanding of the problem this has caused, which is very
->>> unfortunate indeed!
->>>
->>> Vidya mentioned that you would like us to get this backported to stable
->>> branches. Please correct me if I am wrong here. We can certainly do
->>> that, but I do have concerns about doing so, for non-Tegra devices
->>> inparticularly, given that this has been around for sometime now. Hence,
->>> I was wondering if we should leave this soak in the mainline for at
->>> least a kernel release cycle before doing so. I really don't want to
->>> break stable for anyone. What are your thoughts on this?
->>
->> I looped in Greg to pick his brain, since it is unclear how we should
->> apply the stable kernel rules on this specific patch. Basically, this
->> technically is not a bug, it is just bad code that forces a feature on
->> ALL kernels that compile the PCI Tegra Controller driver in the kernel.
->> I would really really want to have this patch applied to all stable
->> kernels but first as you said it is better to apply it to mainline and
->> check it does not cause any issues on any other arch/platform then
->> we can think about backporting it to stable kernels.
->>
->> I am not happy to force Relaxed Ordering on any PCIe device on
->> any platform/arch compiling PCI Tegra controller in, so somehow
->> we must rectify this situation, this is gross as I said before.
-> 
-> Yes understood. Let's plan to sync up on this once v5.3 is out and see
-> how the land lies. We have an internal issue filed to track this and so
-> we should not forget!
+The commit description/code don't follow the manual accurately,
+it's difficult to understand. So, this patch reverts the commit.
 
-Please let us know if your preference it still to push this back to
-stable. I assume that there has been no fallout from this change.
+Fixes: 175cc093888e ("PCI: rcar: Fix missing MACCTLR register setting in rcar_pcie_hw_init()"
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/pci/controller/pcie-rcar.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-Cheers
-Jon
-
+diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
+index 0dadccb..40d8c54 100644
+--- a/drivers/pci/controller/pcie-rcar.c
++++ b/drivers/pci/controller/pcie-rcar.c
+@@ -91,7 +91,6 @@
+ #define  LINK_SPEED_2_5GTS	(1 << 16)
+ #define  LINK_SPEED_5_0GTS	(2 << 16)
+ #define MACCTLR			0x011058
+-#define  MACCTLR_RESERVED	BIT(0)
+ #define  SPEED_CHANGE		BIT(24)
+ #define  SCRAMBLE_DISABLE	BIT(27)
+ #define PMSR			0x01105c
+@@ -614,8 +613,6 @@ static int rcar_pcie_hw_init(struct rcar_pcie *pcie)
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		rcar_pci_write_reg(pcie, 0x801f0000, PCIEMSITXR);
+ 
+-	rcar_rmw32(pcie, MACCTLR, MACCTLR_RESERVED, 0);
+-
+ 	/* Finish initialization - establish a PCI Express link */
+ 	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
+ 
+@@ -1238,7 +1235,6 @@ static int rcar_pcie_resume_noirq(struct device *dev)
+ 		return 0;
+ 
+ 	/* Re-establish the PCIe link */
+-	rcar_rmw32(pcie, MACCTLR, MACCTLR_RESERVED, 0);
+ 	rcar_pci_write_reg(pcie, CFINIT, PCIETCTLR);
+ 	return rcar_pcie_wait_for_dl(pcie);
+ }
 -- 
-nvpublic
+2.7.4
+
