@@ -2,212 +2,122 @@ Return-Path: <SRS0=bI25=Y6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E168BFC6195
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 23:24:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D351FC6197
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 23:47:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2721217F5
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 23:24:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3FF421882
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 23:47:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573082648;
-	bh=fFvrwJdZVGd4C5JTzcFAx3oTWr1pEZQyQg9VLSTqmWA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=VFTnCgGD8ejKJxvaDIBdASAk25KH/hSTFUGksKmUiD2ntDmLRa6PI2y+Hv5nvBDXk
-	 JCMHt9yCBwllFTluUpLly2VNlWYxt3tczE1X+Vnk/W/hEOKMUWlIhIYKyl9DUt4wH7
-	 2jUv9vPUFig7oRoKmk8nFX9TF1mQilC74zbosuas=
+	s=default; t=1573084069;
+	bh=IRfW2TPrshrGbrjvCtxYGCPvw8dESmcB9+TtwPLQJps=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=EAfdkSt0tQJ1NRcDlCOa3SkWARI2Uewqe60wumFf+T0kIi/Q3EEzkDBKI0UDkoM/E
+	 r5CX9yhOtFfNz73lNjN6/F+e/EijOPx1zk91IQFtAgxztvRPWmAciTPlfOe/WNUkHF
+	 NrD+7PixRSsp+ezk3d+JjJKTz6/LgfEZ3gHc+oWM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727409AbfKFXYI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Nov 2019 18:24:08 -0500
-Received: from mail.kernel.org ([198.145.29.99]:39048 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727316AbfKFXYH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Nov 2019 18:24:07 -0500
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2E0852178F;
-        Wed,  6 Nov 2019 23:24:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573082646;
-        bh=fFvrwJdZVGd4C5JTzcFAx3oTWr1pEZQyQg9VLSTqmWA=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=Os5Ic3dGnqFLY7zkiy1TTHcIfgHDXsPNcaxI9G+TsWvTYp5n+XSrOAg1ZypQwqES/
-         WH1/97obGci71mrgooPY05J1CBuReuTOvjbOuP8q5gnYWR3pd/C3Jb7pG8JjL+xafs
-         Qz5kFcaaz/ztT9roFNDDOisKmpJniFP2yQLalJ+k=
-Date:   Wed, 6 Nov 2019 17:24:05 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Len Brown <lenb@kernel.org>,
-        Valerio Passini <passini.valerio@gmail.com>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] ACPI / hotplug / PCI: Allocate resources directly under
- the non-hotplug bridge
-Message-ID: <20191106232405.GA242013@google.com>
+        id S1732842AbfKFXrs (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Nov 2019 18:47:48 -0500
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:44086 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727316AbfKFXrr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 6 Nov 2019 18:47:47 -0500
+Received: by mail-ot1-f66.google.com with SMTP id c19so352646otr.11;
+        Wed, 06 Nov 2019 15:47:47 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=YghF0O9CdijziXRtYqs4rBgfocxRjD2jrxaldxrfZPA=;
+        b=NIubXICO4wlGVnIg5qoO8hQMroL030JH9nSoCwhvljSnEhpxfdLyzJrzx3hVxfdP0c
+         r0tGFox0C9Hf7Q94N+liKh8UxwowiRZracamg7q1JQiQ8vyebGwnGVnkQ58ZiDbaXh2A
+         hueaOzIdK717Ua8pNc1j71PBsdkKK8Wo0NSrlQqy02HkAKtimfnoY7KHLXnacmDHFTlc
+         njks2uwLhoCX/daqpk1tfj5BTeeqm38a90vpGcZFYh32ao8NkfWK0F6B++PqaBl3W/cs
+         zYIgfWHdQsehdktbT5Crcwdj+NRAwGKNUh3rb+pd9KZu6HGZJh0r2lw1pp9h8q0eiY3b
+         pA6g==
+X-Gm-Message-State: APjAAAW/slmdA4QjjHqAzq0oBq+RGaD73dpyKvLvEtwl3XoXR6/wX9rn
+        Zb5zl4G0PNLGUL3kHCvqPg==
+X-Google-Smtp-Source: APXvYqwgUlLWV9jHJ0xyKT6tWKqUtqWriZJeI42q4NAZ1iSZ8g0t2OjEoqRReV7onJSmLDH/dWe6Lw==
+X-Received: by 2002:a05:6830:232c:: with SMTP id q12mr319872otg.168.1573084066922;
+        Wed, 06 Nov 2019 15:47:46 -0800 (PST)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id t12sm150529otl.71.2019.11.06.15.47.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Nov 2019 15:47:46 -0800 (PST)
+Date:   Wed, 6 Nov 2019 17:47:45 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Andrew Murray <andrew.murray@arm.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Toan Le <toan@os.amperecomputing.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Fabio Estevam <festevam@gmail.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, rfi@lists.rocketboards.org,
+        linux-arm-kernel@axis.com, linux-mediatek@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-omap@vger.kernel.org
+Subject: Re: [PATCH v1 7/7] dt-bindings: PCI: Use IRQ flags for legacy PCI
+ IRQ interrupts
+Message-ID: <20191106234745.GA29524@bogus>
+References: <20191104163834.8932-1-andrew.murray@arm.com>
+ <20191104163834.8932-8-andrew.murray@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191030150545.19885-1-mika.westerberg@linux.intel.com>
+In-Reply-To: <20191104163834.8932-8-andrew.murray@arm.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Ben]
-
-On Wed, Oct 30, 2019 at 06:05:45PM +0300, Mika Westerberg wrote:
-> Valerio and others reported that commit 84c8b58ed3ad ("ACPI / hotplug /
-> PCI: Don't scan bridges managed by native hotplug") prevents some recent
-> LG and HP laptops from booting with endless loop of:
+On Mon,  4 Nov 2019 16:38:21 +0000, Andrew Murray wrote:
+> Replace magic numbers used to describe legacy PCI IRQ interrupts
+> with #define.
 > 
->   [   26.237796] ACPI Error: No handler or method for GPE 08, disabling event (20190215/evgpe-835)
->   [   26.238699] ACPI Error: No handler or method for GPE 09, disabling event (20190215/evgpe-835)
->   [   26.239306] ACPI Error: No handler or method for GPE 0A, disabling event (20190215/evgpe-835)
->   ...
-> 
-> What seems to happen is that during boot, after the initial PCI
-> enumeration when EC is enabled the platform triggers ACPI Notify() to
-> one of the root ports. The root port itself looks like this:
-> 
->   [    0.723757] pci 0000:00:1b.0: PCI bridge to [bus 02-3a]
->   [    0.723765] pci 0000:00:1b.0:   bridge window [mem 0xc4000000-0xda0fffff]
->   [    0.723773] pci 0000:00:1b.0:   bridge window [mem 0x80000000-0xa1ffffff 64bit pref]
->
-> The BIOS has configured the root port so that it does not have I/O
-> bridge window.
-> 
-> Now when the ACPI Notify() is triggered ACPI hotplug handler calls
-> acpiphp_native_scan_bridge() for each non-hotplug bridge (as this system
-> is using native PCIe hotplug) and pci_assign_unassigned_bridge_resources()
-> to allocate resources.
-> 
-> The device connected to the root port is a PCIe switch (Thunderbolt
-> controller) with two hotplug downstream ports. Because of the hotplug
-> ports __pci_bus_size_bridges() tries to add "additional I/O" of 256
-> bytes to each (DEFAULT_HOTPLUG_IO_SIZE). This gets further aligned to 4k
-> as that's the minimum I/O window size so each hotplug port gets 4k I/O
-> window and the same happens for the root port (which is also hotplug
-> port). This means 3 * 4k = 12k I/O window.
-> 
-> Because of this pci_assign_unassigned_bridge_resources() ends up opening
-> a I/O bridge window for the root port at first available I/O address
-> which seems to be in range 0x1000 - 0x3fff. Normally this range is used
-> for ACPI stuff such as GPE bits (below is part of /proc/ioports):
-> 
->     1800-1803 : ACPI PM1a_EVT_BLK
->     1804-1805 : ACPI PM1a_CNT_BLK
->     1808-180b : ACPI PM_TMR
->     1810-1815 : ACPI CPU throttle
->     1850-1850 : ACPI PM2_CNT_BLK
->     1854-1857 : pnp 00:05
->     1860-187f : ACPI GPE0_BLK
-
-Nice debugging work!
-
-> However, when the ACPI Notify() happened this range was not yet reserved
-> for ACPI/PNP (that happens later) so PCI gets it. 
-
-I think this is really the underlying problem.  IMO those ACPI/PNP
-resources ought to be reserved before we start assigning resources to
-PCI devices.  That would be a huge problem to fix, though.
-
-> It then starts writing
-> to this range and accidentally stomps over GPE bits among other things
-> causing the endless stream of messages about missing GPE handler.
->
-> This problem does not happen if "pci=hpiosize=0" is passed in the kernel
-> command line. The reason is that then the kernel does not try to
-> allocate the additional 256 bytes for each hotplug port.
-> 
-> Fix this by allocating resources directly below the non-hotplug bridges
-> where a new device may appear as a result of ACPI Notify(). This avoids
-> the hotplug bridges and prevents opening the additional I/O window.
-
-Looking at [1], here's the topology I see:
-
-  00:1b.0: Root Port to [bus 02-3a]                   # pciehp
-  02:00.0: Switch Upstream Port to [bus 03-3a]        # thunderbolt
-  03:00.0: Switch Downstream Port to [bus 04]         # thunderbolt
-  03:01.0: Switch Downstream Port to [bus 05-39]      # thunderbolt, pciehp
-  03:02.0: Switch Downstream Port to [bus 3a]         # thunderbolt
-  04:00.0: reg 0x10: [mem 0xda000000-0xda03ffff]
-  04:00.0: reg 0x14: [mem 0xda040000-0xda040fff]
-  3a:00.0: reg 0x10: [mem 0xd9f00000-0xd9f0ffff]
-
-In this topology, I guess the non-hotplug bridges would be 03:00.0
-and 03:02.0?  And we skip 03:01.0 because hotplug_is_native() is true
-for that?
-
-What would happen if a device below one of the non-hotplug bridges,
-e.g., 3a:00.0, had an I/O BAR?  Would this patch still work?
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=203617#c49
-
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=203617
-> Fixes: 84c8b58ed3ad ("ACPI / hotplug / PCI: Don't scan bridges managed by native hotplug")
-> Cc: stable@vger.kernel.org
-> Reported-by: Valerio Passini <passini.valerio@gmail.com>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Andrew Murray <andrew.murray@arm.com>
 > ---
-> I was able to reproduce this without access to the affected system by
-> forcing ACPI core to send Notify() to the TBT root port like this:
+>  .../devicetree/bindings/pci/83xx-512x-pci.txt | 18 ++---
+>  .../devicetree/bindings/pci/aardvark-pci.txt  | 10 +--
+>  .../devicetree/bindings/pci/altera-pcie.txt   | 10 +--
+>  .../bindings/pci/axis,artpec6-pcie.txt        | 10 +--
+>  .../bindings/pci/cdns,cdns-pcie-host.txt      | 10 +--
+>  .../bindings/pci/faraday,ftpci100.txt         | 68 +++++++++----------
+>  .../bindings/pci/fsl,imx6q-pcie.txt           | 10 +--
+>  .../bindings/pci/hisilicon-pcie.txt           | 20 +++---
+>  .../bindings/pci/host-generic-pci.txt         | 10 +--
+>  .../devicetree/bindings/pci/kirin-pcie.txt    | 10 +--
+>  .../bindings/pci/layerscape-pci.txt           | 10 +--
+>  .../devicetree/bindings/pci/mediatek-pcie.txt | 40 +++++------
+>  .../devicetree/bindings/pci/mobiveil-pcie.txt |  8 +--
+>  .../devicetree/bindings/pci/pci-rcar-gen2.txt |  8 +--
+>  .../bindings/pci/pci-thunder-pem.txt          | 10 +--
+>  .../devicetree/bindings/pci/pcie-al.txt       |  4 +-
+>  .../devicetree/bindings/pci/qcom,pcie.txt     | 20 +++---
+>  .../bindings/pci/ralink,rt3883-pci.txt        | 18 ++---
+>  .../bindings/pci/rockchip-pcie-host.txt       | 10 +--
+>  .../devicetree/bindings/pci/ti-pci.txt        | 10 +--
+>  .../devicetree/bindings/pci/uniphier-pcie.txt | 10 +--
+>  .../bindings/pci/v3-v360epc-pci.txt           | 34 +++++-----
+>  .../devicetree/bindings/pci/versatile.txt     | 40 +++++------
+>  .../devicetree/bindings/pci/xgene-pci-msi.txt | 10 +--
+>  .../devicetree/bindings/pci/xgene-pci.txt     | 10 +--
+>  .../bindings/pci/xilinx-nwl-pcie.txt          | 10 +--
+>  .../devicetree/bindings/pci/xilinx-pcie.txt   | 20 +++---
+>  27 files changed, 224 insertions(+), 224 deletions(-)
 > 
-> void acpi_notify_rp(void)
-> {
-> 	struct acpi_device *adev;
-> 	acpi_handle handle;
-> 
-> 	if (ACPI_FAILURE(acpi_get_handle(NULL, "\\_SB.PCI0.RP17", &handle)))
-> 		return;
-> 
-> 	if (acpi_bus_get_device(handle, &adev))
-> 		return;
-> 
-> 	dev_info(&adev->dev, "queueing hotplug\n");
-> 	acpiphp_hotplug_notify(adev, ACPI_NOTIFY_BUS_CHECK);
-> }
-> 
-> and calling it from acpi_init() directly after acpi_ec_init().
-> 
->  drivers/pci/hotplug/acpiphp_glue.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-> index e4c46637f32f..b3869951c0eb 100644
-> --- a/drivers/pci/hotplug/acpiphp_glue.c
-> +++ b/drivers/pci/hotplug/acpiphp_glue.c
-> @@ -449,8 +449,15 @@ static void acpiphp_native_scan_bridge(struct pci_dev *bridge)
->  
->  	/* Scan non-hotplug bridges that need to be reconfigured */
->  	for_each_pci_bridge(dev, bus) {
-> -		if (!hotplug_is_native(dev))
-> -			max = pci_scan_bridge(bus, dev, max, 1);
-> +		if (hotplug_is_native(dev))
-> +			continue;
-> +
-> +		max = pci_scan_bridge(bus, dev, max, 1);
-> +		if (dev->subordinate) {
-> +			pcibios_resource_survey_bus(dev->subordinate);
-> +			pci_bus_size_bridges(dev->subordinate);
-> +			pci_bus_assign_resources(dev->subordinate);
-> +		}
->  	}
->  }
->  
-> @@ -480,7 +487,6 @@ static void enable_slot(struct acpiphp_slot *slot, bool bridge)
->  			if (PCI_SLOT(dev->devfn) == slot->device)
->  				acpiphp_native_scan_bridge(dev);
->  		}
-> -		pci_assign_unassigned_bridge_resources(bus->self);
->  	} else {
->  		LIST_HEAD(add_list);
->  		int max, pass;
-> -- 
-> 2.23.0
-> 
+
+Reviewed-by: Rob Herring <robh@kernel.org>
