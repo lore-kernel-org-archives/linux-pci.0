@@ -3,68 +3,68 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 713E1C5DF63
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 18:10:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B02C5DF65
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 19:02:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39E3F218AE
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 18:10:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAB8D217F9
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 19:02:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573063836;
-	bh=9Mc4TTv1w7buCN3EfbAxENVmZlW/NTVD1Z1z3Oy87Ew=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=JtsbWxfapp/O+TB4hqJBrsihOe29Ibp4pliSbTr5IO5ks3IXTtr5NMHoB49VE72lU
-	 wlizDqBw//Raf9fHu+hBA6ukyPxrRTj1BqUzo4wzj0FrOA+lvXE0fsUjYSfjcY5DTW
-	 uCPWMypkXzJyD0jolcNH9BT6GiUR2uVy16mH6PMk=
+	s=default; t=1573066973;
+	bh=+8TaTPP+s7V+bVyZM+p1huKbxLpHumxhlcmvA+KgfoI=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=yg0Zz0kYI6aykLdfuoB8o71hQkZ+Fw3TVR+hagawo07D3E8A0y1zlYYrQgAaleTzn
+	 /+RZuNpcyU9QRytaTs45qEqg707L5K0co/bjFpUTfzovDvVugWaLoseAXeh0uKlton
+	 gkPD0l7sv2htg8RoVMOpqOB3jkDJskF7D5lWvZw8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726965AbfKFSKf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Nov 2019 13:10:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57754 "EHLO mail.kernel.org"
+        id S1731983AbfKFTCx (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Nov 2019 14:02:53 -0500
+Received: from mail.kernel.org ([198.145.29.99]:48228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726616AbfKFSKf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Nov 2019 13:10:35 -0500
-Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
+        id S1727411AbfKFTCx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Nov 2019 14:02:53 -0500
+Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6850E21848;
-        Wed,  6 Nov 2019 18:10:34 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D7E5220869;
+        Wed,  6 Nov 2019 19:02:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573063835;
-        bh=9Mc4TTv1w7buCN3EfbAxENVmZlW/NTVD1Z1z3Oy87Ew=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=odlAsSpyd1HjT0RYFOD/4u1SsQan3BwdNm5TAWoZjCHtJS8PPIyZkeyETc/Euq7Lx
-         zkfTgilPTZLXRIewSA7O2FLvZvw9YBQ615NolQkMfEjdqREUhaiRWHoKcL+m9R1ZVq
-         6IvHEfKuSAKD2YMaG1FH/fWfie7hSDNCBUg9dExY=
-Date:   Thu, 7 Nov 2019 03:10:32 +0900
-From:   Keith Busch <kbusch@kernel.org>
-To:     Jon Derrick <jonathan.derrick@intel.com>
-Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: vmd: Use managed irq affinities
-Message-ID: <20191106181032.GD29853@redsun51.ssa.fujisawa.hgst.com>
-References: <1573040408-3831-1-git-send-email-jonathan.derrick@intel.com>
- <1573040408-3831-4-git-send-email-jonathan.derrick@intel.com>
+        s=default; t=1573066972;
+        bh=+8TaTPP+s7V+bVyZM+p1huKbxLpHumxhlcmvA+KgfoI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=RH9E3HRrbnyNisCfWjcCsSlXQculBNgWbDTA88JGU+YwV6938EzsZVUAa+IJEoLm+
+         +O8E3ykFBgKavdcmMSG6KxkkC+19KeuEmT6fYTLk6WF1EYNHA9PZej8CoAkdkSkiTH
+         Wjp72nedyML4MlaBk+CZ1+SCws9FcDPTRu0CGI5Y=
+Date:   Wed, 6 Nov 2019 13:02:50 -0600
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH 0/5] PCI: PM: Cleanups related to power state changes
+Message-ID: <20191106190250.GA238633@google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1573040408-3831-4-git-send-email-jonathan.derrick@intel.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+In-Reply-To: <2771503.n70vfTtcVb@kreacher>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 06, 2019 at 04:40:08AM -0700, Jon Derrick wrote:
-> Using managed IRQ affinities sets up the VMD affinities identically to
-> the child devices when those devices vector counts are limited by VMD.
-> This promotes better affinity handling as interrupts won't necessarily
-> need to pass context between non-local CPUs. One pre-vector is reserved
-> for the slow interrupt and not considered in the affinity algorithm.
+On Tue, Nov 05, 2019 at 11:11:57AM +0100, Rafael J. Wysocki wrote:
+> Hi,
+> 
+> This series rearranges some PCI power management code to make it somewhat
+> easier to follow and explicitly consolidate the power-up (transitions to
+> D0) code path.
+> 
+> It is not intended to change the functionality of the code.
 
-This only works if all devices have exactly the same number of interrupts
-as the parent VMD host bridge. If a child device has less, the device
-will stop working if you offline a cpu: the child device may have a
-resource affined to other online cpus, but the VMD device affinity is to
-that single offline cpu.
+Applied with Mika's reviewed-by to pci/pm for v5.5, thanks!
+
+Thanks for the git tips, too!
