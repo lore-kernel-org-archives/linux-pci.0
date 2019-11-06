@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1660BC43331
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 22:25:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD401FC6194
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 22:25:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB65F2187F
+	by mail.kernel.org (Postfix) with ESMTP id B016D217D7
 	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 22:25:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1573079143;
-	bh=Wr7xMJjYrsbjxLJcHAFZuiwd/4pLB2LiIoF36AQSsZs=;
+	bh=kQtOLA3B3nA3S+jkpxr7YQP3yBSf6AdbgOlbifPGyrI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=1FKjmyc2pURZ8BlT5qQYS0cr2ZMu/AlaM9+NLJutO5m3ei5h7yY1Cvq3ZIqnTX1/K
-	 ZqY/m8ONWA8uKmcRYDlTqDiEFzEvIhOSgO1Fy6OlHHQXbMRaoeQDlvNo7OutrEEznk
-	 bjcy7HLyShWwviHZSbQJo/bvB4KhiLHAkCt9tpb8=
+	b=rEIeuT8gRHEJUC1c/NTo2bzNrHfuWkuscKkJE9veHi1tcs8YnEQTpzZzkoIEMcg2L
+	 sF1L33hKQvsgvhN4pf6oZ8ALw02OA4PaMuq94j1o2n8Y4HWdHG84loIOcTeV+0gXg1
+	 XWztoaV0QgIxGtsq221dliqskQZKarqzS6U+31qs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732737AbfKFWZh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Nov 2019 17:25:37 -0500
-Received: from mail.kernel.org ([198.145.29.99]:42568 "EHLO mail.kernel.org"
+        id S1732750AbfKFWZj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Nov 2019 17:25:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726779AbfKFWZg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Nov 2019 17:25:36 -0500
+        id S1726779AbfKFWZj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Nov 2019 17:25:39 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id F0BFE217D7;
-        Wed,  6 Nov 2019 22:25:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BA62D2166E;
+        Wed,  6 Nov 2019 22:25:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573079136;
-        bh=Wr7xMJjYrsbjxLJcHAFZuiwd/4pLB2LiIoF36AQSsZs=;
+        s=default; t=1573079139;
+        bh=kQtOLA3B3nA3S+jkpxr7YQP3yBSf6AdbgOlbifPGyrI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oTHc5guVQalA+UlzS1Q9sEABtP3HBhq/rFL306xwOCVo7k9f09OohfbxkP1BQgjzi
-         +eILlCRhgK9rNtjPy0l/S1fIYjrvR6RHx6R3C8+fxmLxOglS03gEreRpmqdX6dX6S8
-         Q5m29YhmyvKcAMMt/P3NLi4NFPp0vQxL8hQW3ScQ=
+        b=FsVwAkiesIZj/bchIhj2En3MwR2U034qRkJP3vGBrIhQ/DlB5hJ2MBFXcPX9M6H1b
+         S4eyyz5uFoNJVr03aJPhKxR31szwe45vxve7hpoZW0Dd2N4HjpKJJHs+ovxuFE88ln
+         TUMkkDE1MxmvZmTqnvDO9KQOf9KkLPrXVj8TbrLo=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 3/5] PCI/ASPM: Remove dependency on PCIEPORTBUS
-Date:   Wed,  6 Nov 2019 16:24:19 -0600
-Message-Id: <20191106222420.10216-4-helgaas@kernel.org>
+Subject: [PATCH 4/5] PCI: Remove PCIe Kconfig dependencies on PCI
+Date:   Wed,  6 Nov 2019 16:24:20 -0600
+Message-Id: <20191106222420.10216-5-helgaas@kernel.org>
 X-Mailer: git-send-email 2.24.0.rc1.363.gb1bccd3e3d-goog
 In-Reply-To: <20191106222420.10216-1-helgaas@kernel.org>
 References: <20191106222420.10216-1-helgaas@kernel.org>
@@ -56,24 +56,32 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-The ASPM support does not depend on the portdrv, so remove the Kconfig
-dependency.
+drivers/pci/pcie/Kconfig is only sourced by drivers/pci/Kconfig, and only
+when PCI is defined, so there's no need to depend on PCI again.  Remove the
+unnecessary dependencies.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pcie/Kconfig | 2 --
+ 1 file changed, 2 deletions(-)
 
 diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index b0d781d72d1b..b196ad816129 100644
+index b196ad816129..207dac2fd588 100644
 --- a/drivers/pci/pcie/Kconfig
 +++ b/drivers/pci/pcie/Kconfig
-@@ -63,7 +63,7 @@ config PCIE_ECRC
+@@ -4,7 +4,6 @@
+ #
+ config PCIEPORTBUS
+ 	bool "PCI Express Port Bus support"
+-	depends on PCI
+ 	help
+ 	  This enables PCI Express Port Bus support. Users can then enable
+ 	  support for Native Hot-Plug, Advanced Error Reporting, Power
+@@ -63,7 +62,6 @@ config PCIE_ECRC
  #
  config PCIEASPM
  	bool "PCI Express ASPM control" if EXPERT
--	depends on PCI && PCIEPORTBUS
-+	depends on PCI
+-	depends on PCI
  	default y
  	help
  	  This enables OS control over PCI Express ASPM (Active State
