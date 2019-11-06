@@ -2,159 +2,64 @@ Return-Path: <SRS0=bI25=Y6=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DATE_IN_PAST_06_12,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6DB7C47E49
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 17:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C97C5DF63
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 18:02:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C6A4621D82
-	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 17:42:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72254217F4
+	for <linux-pci@archiver.kernel.org>; Wed,  6 Nov 2019 18:02:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573063348;
+	bh=eWKdN8ru6T++piy7iDbmLjWjD6OLLmHmTm3seK6eKO8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=2unv0bQnOc4IxDLkq2LQbEtBh0vlz18fyq0a3LoKoD3DfcI1tIvm3RuqHTg2W+GlE
+	 kFjsy7Nfri+6gfydkq0ZuNGQa4mkEUjUKpFYrBsj24mmu1qM8f9PGkrWA6numRvnDk
+	 ghIUzr4Rzk5KWnYCiTOHj8tDMTUEyCYXg1qd8MxE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732396AbfKFRmH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 6 Nov 2019 12:42:07 -0500
-Received: from mga18.intel.com ([134.134.136.126]:23987 "EHLO mga18.intel.com"
+        id S1728191AbfKFSC2 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 6 Nov 2019 13:02:28 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54928 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728769AbfKFRmH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 6 Nov 2019 12:42:07 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 06 Nov 2019 09:42:06 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,275,1569308400"; 
-   d="scan'208";a="192539723"
-Received: from mton-linux-test2.lm.intel.com (HELO nsgsw-rhel7p6.lm.intel.com) ([10.232.117.44])
-  by orsmga007.jf.intel.com with ESMTP; 06 Nov 2019 09:42:05 -0800
-From:   Jon Derrick <jonathan.derrick@intel.com>
-To:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc:     Keith Busch <kbusch@kernel.org>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        <linux-pci@vger.kernel.org>,
-        Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 2/3] PCI: vmd: Align IRQ lists with child device vectors
-Date:   Wed,  6 Nov 2019 04:40:07 -0700
-Message-Id: <1573040408-3831-3-git-send-email-jonathan.derrick@intel.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1573040408-3831-1-git-send-email-jonathan.derrick@intel.com>
+        id S1732425AbfKFSC1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 6 Nov 2019 13:02:27 -0500
+Received: from redsun51.ssa.fujisawa.hgst.com (unknown [199.255.47.7])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9A977217D7;
+        Wed,  6 Nov 2019 18:02:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573063347;
+        bh=eWKdN8ru6T++piy7iDbmLjWjD6OLLmHmTm3seK6eKO8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=iLQFMsOVvvBS+QhWKEnx3VuSDY58I9xWozUtTQwSZs3o/u4TaYYmN9QuZjVRPNivM
+         4Wjn4QxCdaaDwjGsFidFQ1c0PL+gPnNrPsL/ZjHa8E8Iv8WypTaPHjuH0fpUl7dlrV
+         Kt1+i4eMhUT3O7eR1cynH3Llzbd0HT4bMfazKYdE=
+Date:   Thu, 7 Nov 2019 03:02:20 +0900
+From:   Keith Busch <kbusch@kernel.org>
+To:     Jon Derrick <jonathan.derrick@intel.com>
+Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: vmd: Reduce VMD vectors using NVMe calculation
+Message-ID: <20191106180220.GB29853@redsun51.ssa.fujisawa.hgst.com>
 References: <1573040408-3831-1-git-send-email-jonathan.derrick@intel.com>
+ <1573040408-3831-2-git-send-email-jonathan.derrick@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1573040408-3831-2-git-send-email-jonathan.derrick@intel.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-In order to provide better affinity alignment along the entire storage
-stack, VMD IRQ lists can be assigned to in a manner where the underlying
-IRQ can be affinitized the same as the child (NVMe) device.
+On Wed, Nov 06, 2019 at 04:40:06AM -0700, Jon Derrick wrote:
+> +	max_vectors = min_t(int, vmd->msix_count, num_possible_cpus() + 1);
+> +	if (nvec > max_vectors)
+> +		return max_vectors;
 
-This patch changes the assignment of child device vectors in IRQ lists
-from a round-robin strategy to a matching-entry strategy. NVMe
-affinities are deterministic in a VMD domain when these devices have the
-same vector count as limited by the VMD MSI domain or cpu count. When
-one or more child devices are attached on a VMD domain, this patch
-aligns the NVMe submission-side affinity with the VMD completion-side
-affinity as it completes through the VMD IRQ list.
-
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/controller/vmd.c | 57 ++++++++++++++++----------------------------
- 1 file changed, 21 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index ebe7ff6..7aca925 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -75,13 +75,10 @@ struct vmd_irq {
-  * struct vmd_irq_list - list of driver requested IRQs mapping to a VMD vector
-  * @irq_list:	the list of irq's the VMD one demuxes to.
-  * @srcu:	SRCU struct for local synchronization.
-- * @count:	number of child IRQs assigned to this vector; used to track
-- *		sharing.
-  */
- struct vmd_irq_list {
- 	struct list_head	irq_list;
- 	struct srcu_struct	srcu;
--	unsigned int		count;
- 	unsigned int		index;
- };
- 
-@@ -184,37 +181,32 @@ static irq_hw_number_t vmd_get_hwirq(struct msi_domain_info *info,
- 	return 0;
- }
- 
--/*
-- * XXX: We can be even smarter selecting the best IRQ once we solve the
-- * affinity problem.
-- */
- static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *desc)
- {
--	int i, best = 1;
--	unsigned long flags;
--
--	if (vmd->msix_count == 1)
--		return vmd->irqs[0];
--
--	/*
--	 * White list for fast-interrupt handlers. All others will share the
--	 * "slow" interrupt vector.
--	 */
--	switch (msi_desc_to_pci_dev(desc)->class) {
--	case PCI_CLASS_STORAGE_EXPRESS:
--		break;
--	default:
--		return vmd->irqs[0];
-+	int entry_nr = desc->msi_attrib.entry_nr;
-+
-+	if (vmd->msix_count == 1) {
-+		entry_nr = 0;
-+	} else {
-+
-+		/*
-+		 * White list for fast-interrupt handlers. All others will
-+		 * share the "slow" interrupt vector.
-+		 */
-+		switch (msi_desc_to_pci_dev(desc)->class) {
-+		case PCI_CLASS_STORAGE_EXPRESS:
-+			break;
-+		default:
-+			entry_nr = 0;
-+		}
- 	}
- 
--	raw_spin_lock_irqsave(&list_lock, flags);
--	for (i = 1; i < vmd->msix_count; i++)
--		if (vmd->irqs[i]->count < vmd->irqs[best]->count)
--			best = i;
--	vmd->irqs[best]->count++;
--	raw_spin_unlock_irqrestore(&list_lock, flags);
-+	if (entry_nr > vmd->msix_count)
-+		entry_nr = 0;
- 
--	return vmd->irqs[best];
-+	dev_dbg(desc->dev, "Entry %d using VMD IRQ list %d/%d\n",
-+		desc->msi_attrib.entry_nr, entry_nr, vmd->msix_count - 1);
-+	return vmd->irqs[entry_nr];
- }
- 
- static int vmd_msi_init(struct irq_domain *domain, struct msi_domain_info *info,
-@@ -243,15 +235,8 @@ static void vmd_msi_free(struct irq_domain *domain,
- 			struct msi_domain_info *info, unsigned int virq)
- {
- 	struct vmd_irq *vmdirq = irq_get_chip_data(virq);
--	unsigned long flags;
- 
- 	synchronize_srcu(&vmdirq->irq->srcu);
--
--	/* XXX: Potential optimization to rebalance */
--	raw_spin_lock_irqsave(&list_lock, flags);
--	vmdirq->irq->count--;
--	raw_spin_unlock_irqrestore(&list_lock, flags);
--
- 	kfree(vmdirq);
- }
- 
--- 
-1.8.3.1
-
+If vmd's msix vectors beyond num_possible_cpus() are inaccessible, why
+not just limit vmd's msix_count the same way?
