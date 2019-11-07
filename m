@@ -2,157 +2,74 @@ Return-Path: <SRS0=9PB/=Y7=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E54C5DF61
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Nov 2019 09:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99BBAC5DF60
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Nov 2019 09:39:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D9C7214D8
-	for <linux-pci@archiver.kernel.org>; Thu,  7 Nov 2019 09:32:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FAC321D7B
+	for <linux-pci@archiver.kernel.org>; Thu,  7 Nov 2019 09:39:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=mm-sol.com header.i=@mm-sol.com header.b="D0a+2FTc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ManZYR0e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733185AbfKGJcy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 7 Nov 2019 04:32:54 -0500
-Received: from ns.mm-sol.com ([37.157.136.199]:49136 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727278AbfKGJcy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 7 Nov 2019 04:32:54 -0500
-Received: from [192.168.27.209] (unknown [37.157.136.206])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by extserv.mm-sol.com (Postfix) with ESMTPSA id 465E0CF1E;
-        Thu,  7 Nov 2019 11:32:51 +0200 (EET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mm-sol.com; s=201706;
-        t=1573119171; bh=kHCNDH66hYlQtqftCtURnCy/XixN+D9RTn5mqQoeSzY=;
-        h=Subject:To:Cc:From:Date:From;
-        b=D0a+2FTc4psh6bsO4T9FUYhg7mG5YDf1aEfIlRIvcfXTZsmIKH5WyTIzqDE0t0+Cc
-         J4zSI7KivfBujtK2moHGJxM6RM20gjNbxZ+wouyi0loUMlSICQyu6et4xvAZpumziM
-         97YC3WVq74A1ZuffQzgPnH53fuAgKi8KTPc5kM5Mi1JYF/Sf3gtOtD5AxjZXbx4iPY
-         6FqSytF/MW+WN36brasmgubMTXQxL7S/w8086nTC6GHWOZwXg0JDOfTepqgqkh9OhA
-         g6TMkT8XrojIHVdd0IDa8zRiUsWZe7vAi5xs5yP1LNJX5APndP3CnL1sn6nPy4bYs0
-         dRLAFjxZvTsFw==
-Subject: Re: [PATCH] PCI: qcom: Fix the fixup of PCI_VENDOR_ID_QCOM
-To:     Bjorn Andersson <bjorn.andersson@linaro.org>
+        id S2387596AbfKGJjy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 7 Nov 2019 04:39:54 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:50234 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726734AbfKGJjx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 7 Nov 2019 04:39:53 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=GKBY9R45D3jLjHPP9vTN8xezy3kWbDosv9Dt0qppl+Q=; b=ManZYR0eplbkfL4+Ypqtvgcid
+        PrXa9JSfiHL7p9zWb1z2yZVj2Afuvr+qMunpdmTPmmRVWziF27ttyzgJgCLSpp9H++t3cb/ucyIJb
+        JqZF3ZSd020m22FaTU/4UvuPai/YmWkjwIw/WzaH3s33D4nPhS2UH4ejDhGBoVKMqCY2zXSV9F69M
+        3yFsHfTz5xSz3i6wVCMhv+slMhraPiGP5CummmAC/dylT0S19vhi+kOO+KZJO+Cv6u+sJbOev5K6f
+        K+Nrl+0WZKPRR0NJqi4aSEcwDUpl9dzxQD35mivaqA1QFbLVuzY40JUWwrztOrr1/WI7EMqW3QkP/
+        A6UpH9ikw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iSeGe-0003pH-8b; Thu, 07 Nov 2019 09:39:52 +0000
+Date:   Thu, 7 Nov 2019 01:39:52 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Jon Derrick <jonathan.derrick@intel.com>
 Cc:     Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Andrew Murray <andrew.murray@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-References: <20191102002420.4091061-1-bjorn.andersson@linaro.org>
- <f1e89dcc-4d5f-cc1f-8036-dcb062645cb0@mm-sol.com>
- <20191106202351.GE36595@minitux>
-From:   Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <87b791db-6e03-b1ab-934c-068521652117@mm-sol.com>
-Date:   Thu, 7 Nov 2019 11:32:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        Keith Busch <kbusch@kernel.org>,
+        Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI: vmd: Reducing tail latency by affining to the
+ storage stack
+Message-ID: <20191107093952.GA13826@infradead.org>
+References: <1573040408-3831-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20191106202351.GE36595@minitux>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1573040408-3831-1-git-send-email-jonathan.derrick@intel.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Bjorn,
-
-On 11/6/19 10:23 PM, Bjorn Andersson wrote:
-> On Mon 04 Nov 05:00 PST 2019, Stanimir Varbanov wrote:
+On Wed, Nov 06, 2019 at 04:40:05AM -0700, Jon Derrick wrote:
+> This patchset optimizes VMD performance through the storage stack by locating
+> commonly-affined NVMe interrupts on the same VMD interrupt handler lists.
 > 
->> Hi Bjorn,
->>
->> Thanks for the fix!
->>
->> On 11/2/19 2:24 AM, Bjorn Andersson wrote:
->>> There exists non-bridge PCIe devices with PCI_VENDOR_ID_QCOM, so limit
->>> the fixup to only affect the PCIe 2.0 (0x106) and PCIe 3.0 (0x107)
->>> bridges.
->>
->> Are you sure that this will not break ops_1_0_0 (Qcom IP rev.: 1.0.0
->> Synopsys IP rev.: 4.11a) i.e. apq8084 ?
-
-OK, I've checked DEVICE IDs for all supported SoCs in pcie-qcom driver:
-
-apq8084 0x101
-ipq8064 0x101
-apq8064 0x101
-msm8996 0x104
-ipq8074 0x302
-ipq4019 0x1001
-qcs404  ??? (can you check for this SoC)
-
-As you can see they are various, so I don't think we have to expose them
-in pci_ids.h. See my proposal below.
-
-Of course the last word will be from PCI maintainers.
-
->>
+> The current strategy of round-robin assignment to VMD IRQ lists can be
+> suboptimal when vectors with different affinities are assigned to the same VMD
+> IRQ list. VMD is an NVMe storage domain and this set aligns the vector
+> allocation and affinity strategy with that of the NVMe driver. This invokes the
+> kernel to do the right thing when affining NVMe submission cpus to NVMe
+> completion vectors as serviced through the VMD interrupt handler lists.
 > 
-> I am not, I've only tested this on db820c and db845c. Unfortunately I'm
-> unable to find a branch with the necessary dts snippets to test it. Do
-> you perhaps have a branch somewhere?
-> 
-> Regards,
-> Bjorn
-> 
->>>
->>> Cc: stable@vger.kernel.org
->>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->>> ---
->>>  drivers/pci/controller/dwc/pcie-qcom.c | 3 ++-
->>>  include/linux/pci_ids.h                | 2 ++
->>>  2 files changed, 4 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
->>> index 35f4980480bb..b91abf4d4905 100644
->>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
->>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
->>> @@ -1441,7 +1441,8 @@ static void qcom_fixup_class(struct pci_dev *dev)
->>>  {
->>>  	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
->>>  }
->>> -DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCI_ANY_ID, qcom_fixup_class);
->>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCIE_DEVICE_ID_QCOM_PCIE20, qcom_fixup_class);
->>> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, PCIE_DEVICE_ID_QCOM_PCIE30, qcom_fixup_class);
+> This set greatly reduced tail latency when testing 8 threads of random 4k reads
+> against two drives at queue depth=128. After pinning the tasks to reduce test
+> variability, the tests also showed a moderate tail latency reduction. A
+> one-drive configuration also shows improvements due to the alignment of VMD IRQ
+> list affinities with NVMe affinities.
 
-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0101, qcom_fixup_class);
-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0104, qcom_fixup_class);
-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0106, qcom_fixup_class);
-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0107, qcom_fixup_class);
-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0302, qcom_fixup_class);
-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1001, qcom_fixup_class);
-
->>>  
->>>  static struct platform_driver qcom_pcie_driver = {
->>>  	.probe = qcom_pcie_probe,
->>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->>> index 21a572469a4e..3d0724ee4d2f 100644
->>> --- a/include/linux/pci_ids.h
->>> +++ b/include/linux/pci_ids.h
->>> @@ -2413,6 +2413,8 @@
->>>  #define PCI_VENDOR_ID_LENOVO		0x17aa
->>>  
->>>  #define PCI_VENDOR_ID_QCOM		0x17cb
->>> +#define PCIE_DEVICE_ID_QCOM_PCIE20	0x0106
->>> +#define PCIE_DEVICE_ID_QCOM_PCIE30	0x0107
-
-... and drop these additions.
-
->>>  
->>>  #define PCI_VENDOR_ID_CDNS		0x17cd
->>>  
->>>
->>
->> -- 
->> regards,
->> Stan
-
--- 
-regards,
-Stan
+How does this compare to simplify disabling VMD?
