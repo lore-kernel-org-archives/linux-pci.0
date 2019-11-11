@@ -6,60 +6,60 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C08BFC17441
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Nov 2019 05:22:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 552C1C17446
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Nov 2019 05:22:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9B33320B7C
-	for <linux-pci@archiver.kernel.org>; Mon, 11 Nov 2019 05:22:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3439A20B7C
+	for <linux-pci@archiver.kernel.org>; Mon, 11 Nov 2019 05:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726360AbfKKFWJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S1726824AbfKKFWJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Mon, 11 Nov 2019 00:22:09 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51922 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54212 "EHLO
         mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726824AbfKKFWI (ORCPT
+        by vger.kernel.org with ESMTP id S1726829AbfKKFWI (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Mon, 11 Nov 2019 00:22:08 -0500
 Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id xAB5HXlU171141;
-        Mon, 11 Nov 2019 00:21:51 -0500
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id xAB5HW9J171109;
+        Mon, 11 Nov 2019 00:21:57 -0500
 Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2w5s551q76-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2w5s551q9w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Nov 2019 00:21:51 -0500
+        Mon, 11 Nov 2019 00:21:57 -0500
 Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id xAB5HZiJ171257;
-        Mon, 11 Nov 2019 00:21:50 -0500
-Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2w5s551q6m-1
+        by pps.reinject (8.16.0.27/8.16.0.27) with SMTP id xAB5HYM7171165;
+        Mon, 11 Nov 2019 00:21:56 -0500
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2w5s551q9h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Nov 2019 00:21:50 -0500
-Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
-        by ppma05wdc.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id xAB5K6oM005493;
-        Mon, 11 Nov 2019 05:21:48 GMT
-Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
-        by ppma05wdc.us.ibm.com with ESMTP id 2w5n35t78t-1
+        Mon, 11 Nov 2019 00:21:56 -0500
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.0.27/8.16.0.27) with SMTP id xAB5K6e2030131;
+        Mon, 11 Nov 2019 05:21:55 GMT
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+        by ppma03dal.us.ibm.com with ESMTP id 2w5n35xs1h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 11 Nov 2019 05:21:48 +0000
+        Mon, 11 Nov 2019 05:21:55 +0000
 Received: from b01ledav001.gho.pok.ibm.com (b01ledav001.gho.pok.ibm.com [9.57.199.106])
-        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id xAB5LmS238732234
+        by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id xAB5LsK355443746
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 Nov 2019 05:21:48 GMT
+        Mon, 11 Nov 2019 05:21:54 GMT
 Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 394702805E;
-        Mon, 11 Nov 2019 05:21:48 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id C96772805A;
+        Mon, 11 Nov 2019 05:21:54 +0000 (GMT)
 Received: from b01ledav001.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 849DE2805C;
-        Mon, 11 Nov 2019 05:21:47 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 1E8AE28059;
+        Mon, 11 Nov 2019 05:21:54 +0000 (GMT)
 Received: from ltcalpine2-lp18.aus.stglabs.ibm.com (unknown [9.40.195.201])
         by b01ledav001.gho.pok.ibm.com (Postfix) with ESMTP;
-        Mon, 11 Nov 2019 05:21:47 +0000 (GMT)
+        Mon, 11 Nov 2019 05:21:54 +0000 (GMT)
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
 To:     mpe@ellerman.id.au
 Cc:     benh@kernel.crashing.org, linuxppc-dev@lists.ozlabs.org,
         tlfalcon@linux.ibm.com, nathanl@linux.ibm.com, bhelgaas@google.com,
         linux-pci@vger.kernel.org, Tyrel Datwyler <tyreld@linux.ibm.com>
-Subject: [PATCH v2 2/9] powerpc/pseries: Fix drc-info mappings of logical cpus to drc-index
-Date:   Sun, 10 Nov 2019 23:21:29 -0600
-Message-Id: <1573449697-5448-3-git-send-email-tyreld@linux.ibm.com>
+Subject: [PATCH v2 9/9] powerpc/pseries: Enable support for ibm,drc-info property
+Date:   Sun, 10 Nov 2019 23:21:37 -0600
+Message-Id: <1573449697-5448-11-git-send-email-tyreld@linux.ibm.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1573449697-5448-1-git-send-email-tyreld@linux.ibm.com>
 References: <1573449697-5448-1-git-send-email-tyreld@linux.ibm.com>
@@ -76,107 +76,28 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-There are a couple subtle errors in the mapping between cpu-ids and a
-cpus associated drc-index when using the new ibm,drc-info property.
+Advertise client support for the PAPR architected ibm,drc-info device
+tree property during CAS handshake.
 
-The first is that while drc-info may have been a supported firmware
-feature at boot it is possible we have migrated to a CEC with older
-firmware that doesn't support the ibm,drc-info property. In that case
-the device tree would have been updated after migration to remove the
-ibm,drc-info property and replace it with the older style ibm,drc-*
-properties for types, indexes, names, and power-domains. PAPR even
-goes as far as dictating that if we advertise support for drc-info
-that we are capable of supporting either property type at runtime.
-
-The second is that the first value of the ibm,drc-info property is
-the int encoded count of drc-info entries. As such "value" returned
-by of_prop_next_u32() is pointing at that count, and not the first
-element of the first drc-info entry as is expected by the
-of_read_drc_info_cell() helper.
-
-Fix the first by ignoring DRC-INFO firmware feature and instead
-testing directly for ibm,drc-info, and then falling back to the
-old style ibm,drc-indexes in the case it doesn't exit.
-
-Fix the second by incrementing value to the next element prior to
-parsing drc-info entries.
-
+Fixes: c7a3275e0f9e ("powerpc/pseries: Revert support for ibm,drc-info devtree property")
 Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 ---
- arch/powerpc/platforms/pseries/pseries_energy.c | 23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ arch/powerpc/kernel/prom_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/platforms/pseries/pseries_energy.c b/arch/powerpc/platforms/pseries/pseries_energy.c
-index a96874f..09e98d3 100644
---- a/arch/powerpc/platforms/pseries/pseries_energy.c
-+++ b/arch/powerpc/platforms/pseries/pseries_energy.c
-@@ -36,6 +36,7 @@ static int sysfs_entries;
- static u32 cpu_to_drc_index(int cpu)
- {
- 	struct device_node *dn = NULL;
-+	struct property *info;
- 	int thread_index;
- 	int rc = 1;
- 	u32 ret = 0;
-@@ -47,20 +48,18 @@ static u32 cpu_to_drc_index(int cpu)
- 	/* Convert logical cpu number to core number */
- 	thread_index = cpu_core_index_of_thread(cpu);
- 
--	if (firmware_has_feature(FW_FEATURE_DRC_INFO)) {
--		struct property *info = NULL;
-+	info = of_find_property(dn, "ibm,drc-info", NULL);
-+	if (info) {
- 		struct of_drc_info drc;
- 		int j;
- 		u32 num_set_entries;
- 		const __be32 *value;
- 
--		info = of_find_property(dn, "ibm,drc-info", NULL);
--		if (info == NULL)
--			goto err_of_node_put;
--
- 		value = of_prop_next_u32(info, NULL, &num_set_entries);
- 		if (!value)
- 			goto err_of_node_put;
-+		else
-+			value++;
- 
- 		for (j = 0; j < num_set_entries; j++) {
- 
-@@ -110,6 +109,7 @@ static u32 cpu_to_drc_index(int cpu)
- static int drc_index_to_cpu(u32 drc_index)
- {
- 	struct device_node *dn = NULL;
-+	struct property *info;
- 	const int *indexes;
- 	int thread_index = 0, cpu = 0;
- 	int rc = 1;
-@@ -117,21 +117,18 @@ static int drc_index_to_cpu(u32 drc_index)
- 	dn = of_find_node_by_path("/cpus");
- 	if (dn == NULL)
- 		goto err;
--
--	if (firmware_has_feature(FW_FEATURE_DRC_INFO)) {
--		struct property *info = NULL;
-+	info = of_find_property(dn, "ibm,drc-info", NULL);
-+	if (info) {
- 		struct of_drc_info drc;
- 		int j;
- 		u32 num_set_entries;
- 		const __be32 *value;
- 
--		info = of_find_property(dn, "ibm,drc-info", NULL);
--		if (info == NULL)
--			goto err_of_node_put;
--
- 		value = of_prop_next_u32(info, NULL, &num_set_entries);
- 		if (!value)
- 			goto err_of_node_put;
-+		else
-+			value++;
- 
- 		for (j = 0; j < num_set_entries; j++) {
- 
+diff --git a/arch/powerpc/kernel/prom_init.c b/arch/powerpc/kernel/prom_init.c
+index 100f1b5..eba9d4e 100644
+--- a/arch/powerpc/kernel/prom_init.c
++++ b/arch/powerpc/kernel/prom_init.c
+@@ -1053,7 +1053,7 @@ static const struct ibm_arch_vec ibm_architecture_vec_template __initconst = {
+ 		.reserved2 = 0,
+ 		.reserved3 = 0,
+ 		.subprocessors = 1,
+-		.byte22 = OV5_FEAT(OV5_DRMEM_V2),
++		.byte22 = OV5_FEAT(OV5_DRMEM_V2) | OV5_FEAT(OV5_DRC_INFO),
+ 		.intarch = 0,
+ 		.mmu = 0,
+ 		.hash_ext = 0,
 -- 
 2.7.4
 
