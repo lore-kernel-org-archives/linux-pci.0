@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD01FC17448
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 17:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26EACC43331
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 17:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 866FF21E6F
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 17:35:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F24DC21A49
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 17:35:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573580127;
-	bh=uilhuB6pLFzYoa0ifp+SX5cMRQawFop/uGE1jazPVS0=;
+	s=default; t=1573580133;
+	bh=pJWYwPDI1b+7VTqKGjBEhvWsVOjHjFseDOVjhaStdhc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Kx54mfdhJ6a/uYZ/AcR2f51au1Y46i35da/PhSK7xUZ2+Fu8V42jKA7n6pOZonRKq
-	 rOcFWCFUZdjcU3juJiVZbhYpBZWCcWOXSfizUjSySPEsOK9pg8JnIaqS5+pbf7YleL
-	 c2MCG2pr89hHo+J8LxgB04nEV7dUKR9Pn0rV1KnQ=
+	b=VcwYun3UfBahiXzhDPsyPy25ExYkC1K9grrXQB4UK7AKIUl2fDXaILjGGUOohpwY9
+	 dTrWCdhM4Z6D1GpCSESMYouppAsM0usXPoqPaWnK8NgoKPja/CvxnvPHlxtMr9eOos
+	 hBDcRPCfXcSPi33F+zwWc9dhWFYlJLhkC3qTyJ/U=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726953AbfKLRf0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Nov 2019 12:35:26 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59720 "EHLO mail.kernel.org"
+        id S1727366AbfKLRfT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Nov 2019 12:35:19 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727478AbfKLRfU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Nov 2019 12:35:20 -0500
+        id S1726718AbfKLRfS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Nov 2019 12:35:18 -0500
 Received: from localhost (unknown [69.71.4.100])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 382EC21872;
-        Tue, 12 Nov 2019 17:35:19 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6590F21A49;
+        Tue, 12 Nov 2019 17:35:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573580119;
-        bh=uilhuB6pLFzYoa0ifp+SX5cMRQawFop/uGE1jazPVS0=;
+        s=default; t=1573580117;
+        bh=pJWYwPDI1b+7VTqKGjBEhvWsVOjHjFseDOVjhaStdhc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HjFgMibQdjL4lsrM6HzQZ7V6cSenAdF6Ku1bbCyC2ilDUQNYR2siViKdYOAy29euZ
-         x1ZcEVWxH5++ZbP3Y3PuvFaFdphbFhFaZkoMt57LVk7yH3jPJAJqY8EarCf9j9A+2S
-         AUukj+YDOpMbFR3W/4clIoBWR57L8r2/vfxo6Cx0=
+        b=NH3I85rs04Cj7LE2dCGkcVub5miRBedV4VEu+E+WzltzlWm2def9vstZwbHOlX7Uf
+         elNI4E9oHPtqqlgyWoXzuQtQHcfS4s0TX6XvSpvXFbxhEg/6RMr17xvTlx3eep9GsQ
+         Nwlp0Fw9inZ9IGaFaJwel8v4cOusWuk6JevnY0PA=
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Alex Deucher <alexander.deucher@amd.com>,
         =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -50,9 +50,9 @@ Cc:     Frederick Lawler <fred@fredlawl.com>,
         linux-pci@vger.kernel.org,
         =?UTF-8?q?Michel=20D=C3=A4nzer?= <michel@daenzer.net>,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/3] drm: correct Transmit Margin masks
-Date:   Tue, 12 Nov 2019 11:35:02 -0600
-Message-Id: <20191112173503.176611-3-helgaas@kernel.org>
+Subject: [PATCH 1/3] PCI: Add #defines for Enter Compliance, Transmit Margin
+Date:   Tue, 12 Nov 2019 11:35:01 -0600
+Message-Id: <20191112173503.176611-2-helgaas@kernel.org>
 X-Mailer: git-send-email 2.24.0.rc1.363.gb1bccd3e3d-goog
 In-Reply-To: <20191112173503.176611-1-helgaas@kernel.org>
 References: <20191112173503.176611-1-helgaas@kernel.org>
@@ -65,109 +65,27 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Previously we masked PCIe Link Control 2 register values with "7 << 9",
-which was apparently intended to be the Transmit Margin field, but instead
-was the high order bit of Transmit Margin, the Enter Modified Compliance
-bit, and the Compliance SOS bit.
-
-Correct the mask to "7 << 7", which is the Transmit Margin field.
+Add definitions for the Enter Compliance and Transmit Margin fields of the
+PCIe Link Control 2 register.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/gpu/drm/amd/amdgpu/cik.c | 8 ++++----
- drivers/gpu/drm/amd/amdgpu/si.c  | 8 ++++----
- drivers/gpu/drm/radeon/cik.c     | 8 ++++----
- drivers/gpu/drm/radeon/si.c      | 8 ++++----
- 4 files changed, 16 insertions(+), 16 deletions(-)
+ include/uapi/linux/pci_regs.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/cik.c b/drivers/gpu/drm/amd/amdgpu/cik.c
-index b81bb414fcb3..13a5696d2a6a 100644
---- a/drivers/gpu/drm/amd/amdgpu/cik.c
-+++ b/drivers/gpu/drm/amd/amdgpu/cik.c
-@@ -1498,13 +1498,13 @@ static void cik_pcie_gen3_enable(struct amdgpu_device *adev)
- 
- 				/* linkctl2 */
- 				pci_read_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				pci_read_config_word(adev->pdev, gpu_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(adev->pdev, gpu_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				tmp = RREG32_PCIE(ixPCIE_LC_CNTL4);
-diff --git a/drivers/gpu/drm/amd/amdgpu/si.c b/drivers/gpu/drm/amd/amdgpu/si.c
-index 493af42152f2..1e350172dc7b 100644
---- a/drivers/gpu/drm/amd/amdgpu/si.c
-+++ b/drivers/gpu/drm/amd/amdgpu/si.c
-@@ -1737,13 +1737,13 @@ static void si_pcie_gen3_enable(struct amdgpu_device *adev)
- 				pci_write_config_word(adev->pdev, gpu_pos + PCI_EXP_LNKCTL, tmp16);
- 
- 				pci_read_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				pci_read_config_word(adev->pdev, gpu_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(adev->pdev, gpu_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				tmp = RREG32_PCIE_PORT(PCIE_LC_CNTL4);
-diff --git a/drivers/gpu/drm/radeon/cik.c b/drivers/gpu/drm/radeon/cik.c
-index 62eab82a64f9..14cdfdf78bde 100644
---- a/drivers/gpu/drm/radeon/cik.c
-+++ b/drivers/gpu/drm/radeon/cik.c
-@@ -9619,13 +9619,13 @@ static void cik_pcie_gen3_enable(struct radeon_device *rdev)
- 
- 				/* linkctl2 */
- 				pci_read_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				pci_read_config_word(rdev->pdev, gpu_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(rdev->pdev, gpu_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				tmp = RREG32_PCIE_PORT(PCIE_LC_CNTL4);
-diff --git a/drivers/gpu/drm/radeon/si.c b/drivers/gpu/drm/radeon/si.c
-index 05894d198a79..9b7042d3ef1b 100644
---- a/drivers/gpu/drm/radeon/si.c
-+++ b/drivers/gpu/drm/radeon/si.c
-@@ -7202,13 +7202,13 @@ static void si_pcie_gen3_enable(struct radeon_device *rdev)
- 
- 				/* linkctl2 */
- 				pci_read_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (bridge_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(root, bridge_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				pci_read_config_word(rdev->pdev, gpu_pos + PCI_EXP_LNKCTL2, &tmp16);
--				tmp16 &= ~((1 << 4) | (7 << 9));
--				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 9)));
-+				tmp16 &= ~((1 << 4) | (7 << 7));
-+				tmp16 |= (gpu_cfg2 & ((1 << 4) | (7 << 7)));
- 				pci_write_config_word(rdev->pdev, gpu_pos + PCI_EXP_LNKCTL2, tmp16);
- 
- 				tmp = RREG32_PCIE_PORT(PCIE_LC_CNTL4);
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 29d6e93fd15e..5869e5778a05 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -673,6 +673,8 @@
+ #define  PCI_EXP_LNKCTL2_TLS_8_0GT	0x0003 /* Supported Speed 8GT/s */
+ #define  PCI_EXP_LNKCTL2_TLS_16_0GT	0x0004 /* Supported Speed 16GT/s */
+ #define  PCI_EXP_LNKCTL2_TLS_32_0GT	0x0005 /* Supported Speed 32GT/s */
++#define  PCI_EXP_LNKCTL2_ENTER_COMP	0x0010 /* Enter Compliance */
++#define  PCI_EXP_LNKCTL2_TX_MARGIN	0x0380 /* Transmit Margin */
+ #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
+ #define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	52	/* v2 endpoints with link end here */
+ #define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
 -- 
 2.24.0.rc1.363.gb1bccd3e3d-goog
 
