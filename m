@@ -2,48 +2,43 @@ Return-Path: <SRS0=oUFn=ZE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFECAC17441
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:00:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4E90C43331
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:00:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A88E521925
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:00:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B68712067B
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:00:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727002AbfKLP7o (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Nov 2019 10:59:44 -0500
-Received: from mx2.suse.de ([195.135.220.15]:56988 "EHLO mx1.suse.de"
+        id S1726659AbfKLP7k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Nov 2019 10:59:40 -0500
+Received: from mx2.suse.de ([195.135.220.15]:56904 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726991AbfKLP7n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Nov 2019 10:59:43 -0500
+        id S1725954AbfKLP7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Nov 2019 10:59:40 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id E3AEFB3B4;
-        Tue, 12 Nov 2019 15:59:40 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id E801CB3BC;
+        Tue, 12 Nov 2019 15:59:37 +0000 (UTC)
 From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     andrew.murray@arm.com, maz@kernel.org,
-        linux-kernel@vger.kernel.org, Eric Anholt <eric@anholt.net>,
-        Stefan Wahren <wahrenst@gmx.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Bjorn Helgaas <bhelgaas@google.com>
+To:     andrew.murray@arm.com, maz@kernel.org, linux-kernel@vger.kernel.org
 Cc:     james.quinlan@broadcom.com, mbrugger@suse.com,
-        phil@raspberrypi.org, jeremy.linton@arm.com,
+        f.fainelli@gmail.com, phil@raspberrypi.org, wahrenst@gmx.net,
+        jeremy.linton@arm.com,
         Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-rpi-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: [PATCH v2 2/6] dt-bindings: PCI: Add bindings for brcmstb's PCIe device
-Date:   Tue, 12 Nov 2019 16:59:21 +0100
-Message-Id: <20191112155926.16476-3-nsaenzjulienne@suse.de>
+        Robin Murphy <robin.murphy@arm.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, netdev@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        iommu@lists.linux-foundation.org
+Subject: [PATCH v2 0/6] Raspberry Pi 4 PCIe support
+Date:   Tue, 12 Nov 2019 16:59:19 +0100
+Message-Id: <20191112155926.16476-1-nsaenzjulienne@suse.de>
 X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191112155926.16476-1-nsaenzjulienne@suse.de>
-References: <20191112155926.16476-1-nsaenzjulienne@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
@@ -51,146 +46,60 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Jim Quinlan <james.quinlan@broadcom.com>
+This series aims at providing support for Raspberry Pi 4's PCIe
+controller, which is also shared with the Broadcom STB family of
+devices.
 
-The DT bindings description of the brcmstb PCIe device is described.
-This node can only be used for now on the Raspberry Pi 4.
+There was a previous attempt to upstream this some years ago[1] but was
+blocked as most STB PCIe integrations have a sparse DMA mapping[2] which
+is something currently not supported by the kernel.  Luckily this is not
+the case for the Raspberry Pi 4.
 
-Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
-Co-developed-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Note that the driver code is to be based on top of Rob Herring's series
+simplifying inbound and outbound range parsing.
+
+[1] https://patchwork.kernel.org/cover/10605933/
+[2] https://patchwork.kernel.org/patch/10605957/
 
 ---
 
 Changes since v1:
-  - Fix commit Subject
-  - Remove linux,pci-domain
+  - add generic rounddown/roundup_pow_two64() patch
+  - Add MAINTAINERS patch
+  - Fix Kconfig
+  - Cleanup probe, use up to date APIs, exit on MSI failure
+  - Get rid of linux,pci-domain and other unused constructs
+  - Use edge triggered setup for MSI
+  - Cleanup MSI implementation
+  - Fix multiple cosmetic issues
+  - Remove supend/resume code
 
-This was based on Jim's original submission[1], converted to yaml and
-adapted to the RPi4 case.
+Jim Quinlan (3):
+  dt-bindings: PCI: Add bindings for brcmstb's PCIe device
+  PCI: brcmstb: add Broadcom STB PCIe host controller driver
+  PCI: brcmstb: add MSI capability
 
-[1] https://patchwork.kernel.org/patch/10605937/
+Nicolas Saenz Julienne (3):
+  linux/log2.h: Add roundup/rounddown_pow_two64() family of functions
+  ARM: dts: bcm2711: Enable PCIe controller
+  MAINTAINERS: Add brcmstb PCIe controller
 
- .../bindings/pci/brcm,stb-pcie.yaml           | 110 ++++++++++++++++++
- 1 file changed, 110 insertions(+)
+ .../bindings/pci/brcm,stb-pcie.yaml           |  110 ++
+ MAINTAINERS                                   |    4 +
+ arch/arm/boot/dts/bcm2711.dtsi                |   46 +
+ drivers/net/ethernet/mellanox/mlx4/en_clock.c |    3 +-
+ drivers/pci/controller/Kconfig                |    9 +
+ drivers/pci/controller/Makefile               |    1 +
+ drivers/pci/controller/pcie-brcmstb.c         | 1179 +++++++++++++++++
+ drivers/pci/controller/pcie-cadence-ep.c      |    7 +-
+ drivers/pci/controller/pcie-cadence.c         |    7 +-
+ drivers/pci/controller/pcie-rockchip-ep.c     |    9 +-
+ include/linux/log2.h                          |   52 +
+ kernel/dma/direct.c                           |    3 +-
+ 12 files changed, 1412 insertions(+), 18 deletions(-)
  create mode 100644 Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
+ create mode 100644 drivers/pci/controller/pcie-brcmstb.c
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-new file mode 100644
-index 000000000000..4cbb18821300
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-@@ -0,0 +1,110 @@
-+# SPDX-License-Identifier: GPL-2.0
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/brcm,stb-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Brcmstb PCIe Host Controller Device Tree Bindings
-+
-+maintainers:
-+  - Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-+
-+properties:
-+  compatible:
-+    const: brcm,bcm2711-pcie # The Raspberry Pi 4
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    minItems: 1
-+    maxItems: 2
-+    items:
-+      - description: PCIe host controller
-+      - description: builtin MSI controller
-+
-+  interrupt-names:
-+    minItems: 1
-+    maxItems: 2
-+    items:
-+      - const: pcie
-+      - const: msi
-+
-+  "#address-cells":
-+    const: 3
-+
-+  "#size-cells":
-+    const: 2
-+
-+  "#interrupt-cells":
-+    const: 1
-+
-+  interrupt-map-mask: true
-+
-+  interrupt-map: true
-+
-+  ranges: true
-+
-+  dma-ranges: true
-+
-+  clocks:
-+    maxItems: 1
-+
-+  clock-names:
-+    items:
-+      - const: sw_pcie
-+
-+  msi-controller:
-+    description: Identifies the node as an MSI controller.
-+    type: boolean
-+
-+  msi-parent:
-+    description: MSI controller the device is capable of using.
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+
-+  brcm,enable-ssc:
-+    description: Indicates usage of spread-spectrum clocking.
-+    type: boolean
-+
-+required:
-+  - compatible
-+  - reg
-+  - "#address-cells"
-+  - "#size-cells"
-+  - "#interrupt-cells"
-+  - interrupt-map-mask
-+  - interrupt-map
-+  - ranges
-+  - dma-ranges
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/irq.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+    scb {
-+            #address-cells = <2>;
-+            #size-cells = <1>;
-+            pcie0: pcie@7d500000 {
-+                    compatible = "brcm,bcm2711-pcie";
-+                    reg = <0x0 0x7d500000 0x9310>;
-+                    #address-cells = <3>;
-+                    #size-cells = <2>;
-+                    #interrupt-cells = <1>;
-+                    interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-+                                 <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+                    interrupt-names = "pcie", "msi";
-+                    interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+                    interrupt-map = <0 0 0 1 &gicv2 GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH
-+                                     0 0 0 2 &gicv2 GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH
-+                                     0 0 0 3 &gicv2 GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH
-+                                     0 0 0 4 &gicv2 GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>;
-+                    msi-parent = <&pcie0>;
-+                    msi-controller;
-+                    ranges = <0x02000000 0x0 0xf8000000 0x6 0x00000000 0x0 0x04000000>;
-+                    dma-ranges = <0x02000000 0x0 0x00000000 0x0 0x00000000 0x0 0x80000000>;
-+                    brcm,enable-ssc;
-+            };
-+    };
 -- 
 2.24.0
 
