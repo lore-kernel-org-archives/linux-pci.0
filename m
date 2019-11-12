@@ -2,104 +2,85 @@ Return-Path: <SRS0=oUFn=ZE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4E90C43331
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:00:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 759FCC17440
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:56:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B68712067B
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:00:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B559214E0
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 16:56:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726659AbfKLP7k (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Nov 2019 10:59:40 -0500
-Received: from mx2.suse.de ([195.135.220.15]:56904 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725954AbfKLP7k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Nov 2019 10:59:40 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id E801CB3BC;
-        Tue, 12 Nov 2019 15:59:37 +0000 (UTC)
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     andrew.murray@arm.com, maz@kernel.org, linux-kernel@vger.kernel.org
-Cc:     james.quinlan@broadcom.com, mbrugger@suse.com,
-        f.fainelli@gmail.com, phil@raspberrypi.org, wahrenst@gmx.net,
-        jeremy.linton@arm.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Robin Murphy <robin.murphy@arm.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        linux-rpi-kernel@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, netdev@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        iommu@lists.linux-foundation.org
-Subject: [PATCH v2 0/6] Raspberry Pi 4 PCIe support
-Date:   Tue, 12 Nov 2019 16:59:19 +0100
-Message-Id: <20191112155926.16476-1-nsaenzjulienne@suse.de>
-X-Mailer: git-send-email 2.24.0
+        id S1727202AbfKLQz7 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Nov 2019 11:55:59 -0500
+Received: from mail.netline.ch ([148.251.143.178]:42025 "EHLO
+        netline-mail3.netline.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727422AbfKLQxZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 12 Nov 2019 11:53:25 -0500
+X-Greylist: delayed 484 seconds by postgrey-1.27 at vger.kernel.org; Tue, 12 Nov 2019 11:53:24 EST
+Received: from localhost (localhost [127.0.0.1])
+        by netline-mail3.netline.ch (Postfix) with ESMTP id E45422A6046;
+        Tue, 12 Nov 2019 17:45:17 +0100 (CET)
+X-Virus-Scanned: Debian amavisd-new at netline-mail3.netline.ch
+Received: from netline-mail3.netline.ch ([127.0.0.1])
+        by localhost (netline-mail3.netline.ch [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id IU3ZG7YC6ovU; Tue, 12 Nov 2019 17:45:17 +0100 (CET)
+Received: from thor (116.245.63.188.dynamic.wline.res.cust.swisscom.ch [188.63.245.116])
+        by netline-mail3.netline.ch (Postfix) with ESMTPSA id DF2832A6045;
+        Tue, 12 Nov 2019 17:45:16 +0100 (CET)
+Received: from localhost ([::1])
+        by thor with esmtp (Exim 4.93-RC1)
+        (envelope-from <michel@daenzer.net>)
+        id 1iUZI3-0007oQ-QX; Tue, 12 Nov 2019 17:45:15 +0100
+Subject: Re: [PATCH 1/2] drm: replace incorrect Compliance/Margin magic
+ numbers with PCI_EXP_LNKCTL2 definitions
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        David Zhou <David1.Zhou@amd.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>
+Cc:     Frederick Lawler <fred@fredlawl.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        amd-gfx@lists.freedesktop.org, Bjorn Helgaas <bhelgaas@google.com>
+References: <20191111192932.36048-1-helgaas@kernel.org>
+ <20191111192932.36048-2-helgaas@kernel.org>
+From:   =?UTF-8?Q?Michel_D=c3=a4nzer?= <michel@daenzer.net>
+Message-ID: <6d86246e-504a-b762-aff8-0449dd6f3d31@daenzer.net>
+Date:   Tue, 12 Nov 2019 17:45:15 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.1
 MIME-Version: 1.0
+In-Reply-To: <20191111192932.36048-2-helgaas@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
 Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series aims at providing support for Raspberry Pi 4's PCIe
-controller, which is also shared with the Broadcom STB family of
-devices.
+On 2019-11-11 8:29 p.m., Bjorn Helgaas wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Add definitions for these PCIe Link Control 2 register fields:
+> 
+>   Enter Compliance
+>   Transmit Margin
+> 
+> and use them in amdgpu and radeon.
+> 
+> NOTE: This is a functional change because "7 << 9" was apparently a typo.
+> That mask included the high order bit of Transmit Margin, the Enter
+> Modified Compliance bit, and the Compliance SOS bit, but I think what
+> was intended was the 3-bit Transmit Margin field at bits 9:7.
 
-There was a previous attempt to upstream this some years ago[1] but was
-blocked as most STB PCIe integrations have a sparse DMA mapping[2] which
-is something currently not supported by the kernel.  Luckily this is not
-the case for the Raspberry Pi 4.
+Can you split out the functional change into a separate patch 1? That
+could make things easier for anyone who bisects the functional change
+for whatever reason.
 
-Note that the driver code is to be based on top of Rob Herring's series
-simplifying inbound and outbound range parsing.
-
-[1] https://patchwork.kernel.org/cover/10605933/
-[2] https://patchwork.kernel.org/patch/10605957/
-
----
-
-Changes since v1:
-  - add generic rounddown/roundup_pow_two64() patch
-  - Add MAINTAINERS patch
-  - Fix Kconfig
-  - Cleanup probe, use up to date APIs, exit on MSI failure
-  - Get rid of linux,pci-domain and other unused constructs
-  - Use edge triggered setup for MSI
-  - Cleanup MSI implementation
-  - Fix multiple cosmetic issues
-  - Remove supend/resume code
-
-Jim Quinlan (3):
-  dt-bindings: PCI: Add bindings for brcmstb's PCIe device
-  PCI: brcmstb: add Broadcom STB PCIe host controller driver
-  PCI: brcmstb: add MSI capability
-
-Nicolas Saenz Julienne (3):
-  linux/log2.h: Add roundup/rounddown_pow_two64() family of functions
-  ARM: dts: bcm2711: Enable PCIe controller
-  MAINTAINERS: Add brcmstb PCIe controller
-
- .../bindings/pci/brcm,stb-pcie.yaml           |  110 ++
- MAINTAINERS                                   |    4 +
- arch/arm/boot/dts/bcm2711.dtsi                |   46 +
- drivers/net/ethernet/mellanox/mlx4/en_clock.c |    3 +-
- drivers/pci/controller/Kconfig                |    9 +
- drivers/pci/controller/Makefile               |    1 +
- drivers/pci/controller/pcie-brcmstb.c         | 1179 +++++++++++++++++
- drivers/pci/controller/pcie-cadence-ep.c      |    7 +-
- drivers/pci/controller/pcie-cadence.c         |    7 +-
- drivers/pci/controller/pcie-rockchip-ep.c     |    9 +-
- include/linux/log2.h                          |   52 +
- kernel/dma/direct.c                           |    3 +-
- 12 files changed, 1412 insertions(+), 18 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
- create mode 100644 drivers/pci/controller/pcie-brcmstb.c
 
 -- 
-2.24.0
-
+Earthling Michel Dänzer               |               https://redhat.com
+Libre software enthusiast             |             Mesa and X developer
