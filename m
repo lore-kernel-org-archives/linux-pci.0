@@ -2,118 +2,90 @@ Return-Path: <SRS0=oUFn=ZE=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34CD0C17448
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 09:16:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F12E8C43331
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 09:18:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 10931222C1
-	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 09:16:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCFBF21925
+	for <linux-pci@archiver.kernel.org>; Tue, 12 Nov 2019 09:18:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727302AbfKLJQY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 12 Nov 2019 04:16:24 -0500
-Received: from mga12.intel.com ([192.55.52.136]:30221 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727002AbfKLJQY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 12 Nov 2019 04:16:24 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Nov 2019 01:16:23 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,295,1569308400"; 
-   d="scan'208";a="207049929"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga003.jf.intel.com with ESMTP; 12 Nov 2019 01:16:18 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 83EB3D4; Tue, 12 Nov 2019 11:16:17 +0200 (EET)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc:     Len Brown <lenb@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Paul Menzel <pmenzel@molgen.mpg.de>,
-        Nicholas Johnson <nicholas.johnson-opensource@outlook.com.au>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v4 1/2] PCI: Introduce pcie_wait_for_link_delay()
-Date:   Tue, 12 Nov 2019 12:16:16 +0300
-Message-Id: <20191112091617.70282-2-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20191112091617.70282-1-mika.westerberg@linux.intel.com>
-References: <20191112091617.70282-1-mika.westerberg@linux.intel.com>
+        id S1727097AbfKLJSQ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 12 Nov 2019 04:18:16 -0500
+Received: from mx2.suse.de ([195.135.220.15]:43154 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725954AbfKLJSQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 12 Nov 2019 04:18:16 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id A4A7AAE65;
+        Tue, 12 Nov 2019 09:18:14 +0000 (UTC)
+Message-ID: <31e7037674b388919b28c6b13d4b4f71b011d9ee.camel@suse.de>
+Subject: Re: [PATCH 2/4] ARM: dts: bcm2711: Enable PCIe controller
+From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+To:     Andrew Murray <andrew.murray@arm.com>
+Cc:     linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        linux-rpi-kernel@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Eric Anholt <eric@anholt.net>,
+        Stefan Wahren <wahrenst@gmx.net>, james.quinlan@broadcom.com,
+        mbrugger@suse.com, f.fainelli@gmail.com, phil@raspberrypi.org,
+        linux-kernel@vger.kernel.org
+Date:   Tue, 12 Nov 2019 10:18:12 +0100
+In-Reply-To: <20191107103705.GX9723@e119886-lin.cambridge.arm.com>
+References: <20191106214527.18736-1-nsaenzjulienne@suse.de>
+         <20191106214527.18736-3-nsaenzjulienne@suse.de>
+         <20191107103705.GX9723@e119886-lin.cambridge.arm.com>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-GShpbkW8CowbTJFvOKc+"
+User-Agent: Evolution 3.34.1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This is otherwise similar to pcie_wait_for_link() but allows passing
-custom activation delay in milliseconds.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci.c | 21 ++++++++++++++++++---
- 1 file changed, 18 insertions(+), 3 deletions(-)
+--=-GShpbkW8CowbTJFvOKc+
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 37fca1e51d16..45f5c968b4fb 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4577,14 +4577,17 @@ static int pci_pm_reset(struct pci_dev *dev, int probe)
- 
- 	return pci_dev_wait(dev, "PM D3hot->D0", PCIE_RESET_READY_POLL_MS);
- }
-+
- /**
-- * pcie_wait_for_link - Wait until link is active or inactive
-+ * pcie_wait_for_link_delay - Wait until link is active or inactive
-  * @pdev: Bridge device
-  * @active: waiting for active or inactive?
-+ * @delay: Delay to wait after link has become active (in ms)
-  *
-  * Use this to wait till link becomes active or inactive.
-  */
--bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
-+static bool pcie_wait_for_link_delay(struct pci_dev *pdev, bool active,
-+				     int delay)
- {
- 	int timeout = 1000;
- 	bool ret;
-@@ -4621,13 +4624,25 @@ bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
- 		timeout -= 10;
- 	}
- 	if (active && ret)
--		msleep(100);
-+		msleep(delay);
- 	else if (ret != active)
- 		pci_info(pdev, "Data Link Layer Link Active not %s in 1000 msec\n",
- 			active ? "set" : "cleared");
- 	return ret == active;
- }
- 
-+/**
-+ * pcie_wait_for_link - Wait until link is active or inactive
-+ * @pdev: Bridge device
-+ * @active: waiting for active or inactive?
-+ *
-+ * Use this to wait till link becomes active or inactive.
-+ */
-+bool pcie_wait_for_link(struct pci_dev *pdev, bool active)
-+{
-+	return pcie_wait_for_link_delay(pdev, active, 100);
-+}
-+
- void pci_reset_secondary_bus(struct pci_dev *dev)
- {
- 	u16 ctrl;
--- 
-2.24.0
+Hi Andrew,
+
+On Thu, 2019-11-07 at 10:37 +0000, Andrew Murray wrote:
+> > +			ranges =3D <0x02000000 0x0 0xf8000000 0x6 0x00000000
+> > +				  0x0 0x04000000>;
+>=20
+> Is legacy I/O supported by this controller?
+>=20
+
+No, it isn't.
+
+Regards,
+Nicolas
+
+
+--=-GShpbkW8CowbTJFvOKc+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl3KeNQACgkQlfZmHno8
+x/5iUgf+LjXdBQ4FjWn71+T/EcTk9J/bddIQmKOu98J3Tg6Gshv3uodKu0oH8FcW
+Ebw2xoianZ+9h3R6JO4DRyXyzM8z5jSbUbzS9RtfIkjaTc1rp+/EUo4WOIos/va1
+5PtnNBT2Ked9JKSaYAfA1RUYxTyvUqRe0gmCB6tK8LDIIrtjvHw+NJt2UxatosZf
+hbdEzFV23h7dSAEtibilo0Tsu/tQG2QcrcJb2EClIwaFprttPViyFqXcLt4NdmfU
+7nYY4CJtzBsx8aLVHYXKcJ3UuhodbmFo9Z4BDA881tKDlHKRq7fA0qinkDV5LYjy
+vqUlWp8b1ko68z8uvqshd2KfjjLumA==
+=DWxZ
+-----END PGP SIGNATURE-----
+
+--=-GShpbkW8CowbTJFvOKc+--
 
