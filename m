@@ -2,71 +2,74 @@ Return-Path: <SRS0=u7li=ZF=vger.kernel.org=linux-pci-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 033C7C43331
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 06:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80C0DC43331
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 07:21:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3F39222C1
-	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 06:35:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 641E121D7F
+	for <linux-pci@archiver.kernel.org>; Wed, 13 Nov 2019 07:21:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725987AbfKMGfW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 13 Nov 2019 01:35:22 -0500
-Received: from bmailout1.hostsharing.net ([83.223.95.100]:36249 "EHLO
-        bmailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725858AbfKMGfW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 13 Nov 2019 01:35:22 -0500
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client CN "*.hostsharing.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (not verified))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id F002B3000D92B;
-        Wed, 13 Nov 2019 07:35:19 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id BCF3C30C9DD; Wed, 13 Nov 2019 07:35:19 +0100 (CET)
-Date:   Wed, 13 Nov 2019 07:35:19 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Keith Busch <keith.busch@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Frederick Lawler <fred@fredlawl.com>,
-        "Gustavo A . R . Silva" <gustavo@embeddedor.com>,
-        Sinan Kaya <okaya@kernel.org>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] PCI: pciehp: Prevent deadlock on disconnect
-Message-ID: <20191113063519.ivv2ehejxonkfufe@wunner.de>
-References: <20191029170022.57528-2-mika.westerberg@linux.intel.com>
- <20191113031752.GA227753@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191113031752.GA227753@google.com>
-User-Agent: NeoMutt/20170113 (1.7.2)
+        id S1726074AbfKMHVa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 13 Nov 2019 02:21:30 -0500
+Received: from mga18.intel.com ([134.134.136.126]:51386 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725858AbfKMHVa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 13 Nov 2019 02:21:30 -0500
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 12 Nov 2019 23:21:28 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.68,299,1569308400"; 
+   d="scan'208";a="198361776"
+Received: from sgsxdev004.isng.intel.com (HELO localhost) ([10.226.88.13])
+  by orsmga008.jf.intel.com with ESMTP; 12 Nov 2019 23:21:25 -0800
+From:   Dilip Kota <eswara.kota@linux.intel.com>
+To:     gustavo.pimentel@synopsys.com, lorenzo.pieralisi@arm.com,
+        andrew.murray@arm.com, helgaas@kernel.org, jingoohan1@gmail.com,
+        robh@kernel.org, martin.blumenstingl@googlemail.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        andriy.shevchenko@intel.com
+Cc:     linux-kernel@vger.kernel.org, cheol.yong.kim@intel.com,
+        chuanhua.lei@linux.intel.com, qi-ming.wu@intel.com,
+        Dilip Kota <eswara.kota@linux.intel.com>
+Subject: [PATCH v6 0/3] PCI: Add Intel PCIe Driver and respective dt-binding yaml file
+Date:   Wed, 13 Nov 2019 15:21:19 +0800
+Message-Id: <cover.1573613534.git.eswara.kota@linux.intel.com>
+X-Mailer: git-send-email 2.11.0
 Sender: linux-pci-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Nov 12, 2019 at 09:17:52PM -0600, Bjorn Helgaas wrote:
-> On Tue, Oct 29, 2019 at 08:00:22PM +0300, Mika Westerberg wrote:
-> > parent PCIe downstream port, who got the hot-remove event, starts
-> > removing devices below it taking pci_lock_rescan_remove() lock. When the
-> > child PCIe port is runtime resumed it calls pciehp_check_presence()
-> > which ends up calling pciehp_card_present() and pciehp_check_link_active().
-> 
-> Oh, I see, pciehp_resume() calls pciehp_check_presence(), which
-> schedules the IRQ thread via pciehp_request().  So does this deadlock
-> only happen if the port(s) have been runtime suspended?
+Intel PCIe is Synopsys based controller. Intel PCIe driver uses
+DesignWare PCIe framework for host initialization and register
+configurations.
 
-No, there is a multitude of situations when the deadlock may occur and
-this is just one of them.  See my comment on v1 of this patch:
+Changes on v6:
+	Add Reviewed by tags for all the patches.
+	Address review comments for all the patches.
 
-https://patchwork.ozlabs.org/patch/1117870/#2230798
+Dilip Kota (3):
+  dt-bindings: PCI: intel: Add YAML schemas for the PCIe RC controller
+  dwc: PCI: intel: PCIe RC controller driver
+  PCI: artpec6: Configure FTS with dwc helper function
 
-Thanks,
+ .../devicetree/bindings/pci/intel-gw-pcie.yaml     | 138 ++++++
+ drivers/pci/controller/dwc/Kconfig                 |  10 +
+ drivers/pci/controller/dwc/Makefile                |   1 +
+ drivers/pci/controller/dwc/pcie-artpec6.c          |   8 +-
+ drivers/pci/controller/dwc/pcie-designware.c       |  57 +++
+ drivers/pci/controller/dwc/pcie-designware.h       |  12 +
+ drivers/pci/controller/dwc/pcie-intel-gw.c         | 546 +++++++++++++++++
+ include/uapi/linux/pci_regs.h                      |   1 +
+ 8 files changed, 766 insertions(+), 7 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/intel-gw-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-intel-gw.c
 
-Lukas
+-- 
+2.11.0
+
